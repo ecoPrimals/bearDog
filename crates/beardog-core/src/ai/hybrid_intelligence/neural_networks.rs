@@ -1,9 +1,9 @@
 // Neural network architectures and configurations
 //
 // ⚠️ DEPRECATED: This module is being migrated to the canonical location.
-// 
+//
 // **New Location**: `beardog_types::canonical::config::domains::ai_config`
-// 
+//
 // These types will be removed in v3.3.0 (Q1 2026). Please update your imports to:
 // ```rust
 // use beardog_types::canonical::config::domains::ai_config::{
@@ -19,153 +19,88 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Network architecture definition
-#[deprecated(
-    since = "3.0.1",
-    note = "Use beardog_types::canonical::config::domains::ai_config::DetailedNetworkArchitecture instead"
-)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkArchitecture {
-    /// Architecture type
-    /// The architecture type value
-    pub architecture_type: ArchitectureType,
-    /// Input layer configuration
-    /// The input layer value
-    pub input_layer: InputLayerConfig,
-    /// Hidden layers configuration
-    pub hidden_layers: Vec<LayerConfig>,
-    /// Output layer configuration
-    /// The output layer value
-    pub output_layer: OutputLayerConfig,
-    /// Skip connections
-    /// Collection of skip connections
-    pub skip_connections: Vec<SkipConnection>,
+// TODO(canonical-migration): These types need to be exported from canonical ai_config
+// Temporary local definitions until ai_config_original.rs (1756 lines) is properly split
+// This enables compilation while we work on the proper modular canonical structure
+
+/// Activation function types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum ActivationFunction {
+    Sigmoid,
+    Tanh,
+    Relu,
+    LeakyRelu,
+    Elu,
+    Selu,
+    Softmax,
+    Linear,
 }
 
+/// Data type for neural network computations
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of architecture
+pub enum DataType {
+    Float16,
+    Float32,
+    Float64,
+    Int8,
+    Int16,
+    Int32,
+}
+
+/// Architecture types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ArchitectureType {
     Feedforward,
-    /// Convolutional neural network
     Convolutional,
-    /// Recurrent neural network
     Recurrent,
-    /// Long Short-Term Memory network
-    Lstm,
-    /// Gated Recurrent Unit network
-    Gru,
     Transformer,
-    /// Autoencoder
-    Autoencoder,
-    /// Generative Adversarial Network
-    Gan,
-    /// Variational Autoencoder
-    Vae,
-    /// Custom architecture
-    Custom,
+    Hybrid,
+}
+
+/// Loss function types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum LossFunction {
+    MeanSquaredError,
+    MeanAbsoluteError,
+    CrossEntropy,
+    BinaryCrossEntropy,
+    BinaryCrossentropy, // Alternative spelling for compatibility
+    CategoricalCrossEntropy,
+    Huber,
 }
 
 /// Input layer configuration
-#[deprecated(
-    since = "3.0.1",
-    note = "Use beardog_types::canonical::config::domains::ai_config::InputLayerConfig instead"
-)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputLayerConfig {
-    /// Input shape
-    /// Collection of input shape
-    pub input_shape: Vec<u32>,
-    /// Input data type
-    /// The data type value
+    pub shape: Vec<usize>,
+    pub input_shape: Vec<usize>, // Alias for compatibility
     pub data_type: DataType,
-    /// Normalization configuration
-    /// Optional normalization
-    pub normalization: Option<NormalizationConfig>,
-}
-
-/// Layer configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LayerConfig {
-    /// Layer type
-    /// The layer type value
-    pub layer_type: LayerType,
-    /// Layer parameters
-    /// The parameters value
-    pub parameters: LayerParameters,
-    /// Activation function
-    /// Optional activation
-    pub activation: Option<ActivationFunction>,
-    /// Regularization configuration
-    /// Optional regularization
-    pub regularization: Option<LayerRegularization>,
+    pub normalization: Option<String>,
 }
 
 /// Output layer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputLayerConfig {
-    /// Number of output units
-    /// Number of units
-    pub units: u32,
-    /// Activation function
-    /// The activation value
+    pub units: usize,
     pub activation: ActivationFunction,
-    /// Loss function
-    /// The loss function value
     pub loss_function: LossFunction,
 }
 
-/// Skip connection definition
+/// Network architecture configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SkipConnection {
-    /// Source layer index
-    /// Number of from_layer
-    pub from_layer: u32,
-    /// Target layer index
-    /// Number of to_layer
-    pub to_layer: u32,
-    /// Connection type
-    /// The connection type value
-    pub connection_type: ConnectionType,
+pub struct NetworkArchitecture {
+    pub architecture_type: ArchitectureType,
+    pub input_layer: InputLayerConfig,
+    pub hidden_layers: Vec<LayerParameters>,
+    pub output_layer: OutputLayerConfig,
+    pub skip_connections: Vec<String>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of data
-pub enum DataType {
-    /// 32-bit floating point
-    Float32,
-    /// 64-bit floating point
-    Float64,
-    /// 32-bit integer
-    Int32,
-    /// 64-bit integer
-    Int64,
-    /// Boolean
-    Bool,
-}
-
-/// Normalization configuration
+/// Layer configuration (combining type and parameters)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NormalizationConfig {
-    /// Normalization type
-    /// The normalization type value
-    pub normalization_type: NormalizationType,
-    /// Normalization parameters
-    /// Mapping of parameters
-    pub parameters: HashMap<String, f64>,
-}
-
-/// Normalization types
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of normalization
-pub enum NormalizationType {
-    /// Batch normalization
-    Batch,
-    /// Layer normalization
-    Layer,
-    /// Instance normalization
-    Instance,
-    /// Group normalization
-    Group,
+pub struct LayerConfig {
+    pub layer_type: LayerType,
+    pub parameters: LayerParameters,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -233,7 +168,7 @@ pub struct DenseLayerConfig {
     /// Number of units
     pub units: u32,
     /// Use bias
-    /// Whether use_bias is enabled
+    /// Whether `use_bias` is enabled
     pub use_bias: bool,
     /// Weight initialization
     /// The weight init value
@@ -261,7 +196,7 @@ pub struct ConvLayerConfig {
     /// Collection of dilation rate
     pub dilation_rate: Vec<u32>,
     /// Use bias
-    /// Whether use_bias is enabled
+    /// Whether `use_bias` is enabled
     pub use_bias: bool,
 }
 
@@ -288,7 +223,7 @@ pub struct RnnLayerConfig {
     /// The cell type value
     pub cell_type: RnnCellType,
     /// Return sequences
-    /// Whether return_sequences is enabled
+    /// Whether `return_sequences` is enabled
     pub return_sequences: bool,
     /// Dropout rate
     /// The dropout rate value
@@ -298,10 +233,10 @@ pub struct RnnLayerConfig {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AttentionLayerConfig {
     /// Number of attention heads
-    /// Number of num_heads
+    /// Number of `num_heads`
     pub num_heads: u32,
     /// Key dimension
-    /// Number of key_dim
+    /// Number of `key_dim`
     pub key_dim: u32,
     /// Value dimension
     /// Optional value dim
@@ -314,40 +249,20 @@ pub struct AttentionLayerConfig {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EmbeddingLayerConfig {
     /// Input dimension (vocabulary size)
-    /// Number of input_dim
+    /// Number of `input_dim`
     pub input_dim: u32,
     /// Output dimension (embedding size)
-    /// Number of output_dim
+    /// Number of `output_dim`
     pub output_dim: u32,
     /// Mask zero values
-    /// Whether mask_zero is enabled
+    /// Whether `mask_zero` is enabled
     pub mask_zero: bool,
     /// Input length
     /// Optional input length
     pub input_length: Option<u32>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum ActivationFunction {
-    /// ReLU activation
-    Relu,
-    /// Sigmoid activation
-    Sigmoid,
-    /// Tanh activation
-    Tanh,
-    /// Softmax activation
-    Softmax,
-    /// Leaky ReLU activation
-    LeakyRelu,
-    /// ELU activation
-    Elu,
-    /// Swish activation
-    Swish,
-    /// GELU activation
-    Gelu,
-    /// Linear activation
-    Linear,
-}
+// ActivationFunction now imported from canonical location
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 /// Types of padding
@@ -443,28 +358,7 @@ pub struct LayerRegularization {
     pub batch_norm_momentum: f32,
 }
 
-/// Loss functions
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum LossFunction {
-    /// Mean squared error
-    MeanSquaredError,
-    /// Mean absolute error
-    MeanAbsoluteError,
-    /// Binary crossentropy
-    BinaryCrossentropy,
-    /// Categorical crossentropy
-    CategoricalCrossentropy,
-    /// Sparse categorical crossentropy
-    SparseCategoricalCrossentropy,
-    /// Huber loss
-    Huber,
-    /// Hinge loss
-    Hinge,
-    /// KL divergence
-    KlDivergence,
-    /// Custom loss
-    Custom(String),
-}
+// LossFunction now imported from canonical location
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 /// Types of connection
@@ -480,7 +374,7 @@ pub enum ConnectionType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrainingParams {
     /// Batch size
-    /// Number of batch_size
+    /// Number of `batch_size`
     pub batch_size: u32,
     /// Number of epochs
     /// Number of epochs
@@ -568,9 +462,9 @@ pub enum OptimizerType {
     Sgd,
     /// Adam optimizer
     Adam,
-    /// AdamW optimizer
+    /// `AdamW` optimizer
     AdamW,
-    /// RMSprop optimizer
+    /// `RMSprop` optimizer
     RmsProp,
     /// Adagrad optimizer
     Adagrad,
@@ -606,16 +500,16 @@ pub enum Metric {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkOptimization {
     /// Use mixed precision training
-    /// Whether mixed_precision is enabled
+    /// Whether `mixed_precision` is enabled
     pub mixed_precision: bool,
     /// Gradient clipping
     /// Optional gradient clipping
     pub gradient_clipping: Option<GradientClipping>,
     /// Batch size optimization
-    /// Whether batch_size_optimization is enabled
+    /// Whether `batch_size_optimization` is enabled
     pub batch_size_optimization: bool,
     /// Memory optimization
-    /// Whether memory_optimization is enabled
+    /// Whether `memory_optimization` is enabled
     pub memory_optimization: bool,
 }
 
@@ -648,7 +542,7 @@ pub struct NetworkRegularization {
     /// Optional dropout
     pub dropout: Option<DropoutConfig>,
     /// Batch normalization
-    /// Whether batch_normalization is enabled
+    /// Whether `batch_normalization` is enabled
     pub batch_normalization: bool,
     /// Weight decay
     /// The weight decay value
@@ -665,7 +559,7 @@ pub struct DropoutConfig {
     /// The rate value
     pub rate: f64,
     /// Apply dropout during training only
-    /// Whether training_only is enabled
+    /// Whether `training_only` is enabled
     pub training_only: bool,
     /// Dropout schedule
     /// Optional schedule
@@ -710,7 +604,7 @@ pub struct EarlyStoppingConfig {
     /// Number of patience
     pub patience: u32,
     /// Restore best weights
-    /// Whether restore_best_weights is enabled
+    /// Whether `restore_best_weights` is enabled
     pub restore_best_weights: bool,
     /// Monitoring mode
     /// The mode value

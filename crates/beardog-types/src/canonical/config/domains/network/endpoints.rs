@@ -28,17 +28,26 @@ pub struct EndpointsConfiguration {
 impl Default for EndpointsConfiguration {
     fn default() -> Self {
         Self {
-            api_base_url: beardog_types::constants::domains::network::endpoints::api_endpoint(),
-            discovery_url: beardog_types::constants::domains::network::endpoints::discovery_endpoint(),
-            health_url: format!("{}:{}/health", 
-                beardog_types::constants::domains::network::addresses::LOCALHOST_IPV4,
-                beardog_types::constants::domains::network::ports::DEFAULT_HEALTH_PORT),
-            metrics_url: format!("{}:{}/metrics",
-                beardog_types::constants::domains::network::addresses::LOCALHOST_IPV4,
-                beardog_types::constants::domains::network::ports::DEFAULT_METRICS_PORT),
+            api_base_url: format!(
+                "http://{}:{}",
+                crate::constants::domains::network::addresses::LOCALHOST_IPV4,
+                crate::constants::domains::network::defaults::default_api_port()
+            ),
+            discovery_url: crate::constants::domains::network::config::default_discovery_endpoint(),
+            health_url: format!(
+                "{}:{}/health",
+                crate::constants::domains::network::addresses::LOCALHOST_IPV4,
+                crate::constants::domains::network::defaults::default_health_port()
+            ),
+            metrics_url: format!(
+                "{}:{}/metrics",
+                crate::constants::domains::network::addresses::LOCALHOST_IPV4,
+                crate::constants::domains::network::defaults::default_metrics_port()
+            ),
             custom_endpoints: HashMap::new(),
             enable_versioning: true,
-            default_api_version: beardog_types::constants::domains::system::versions::API_VERSION.to_string(),
+            default_api_version: crate::constants::domains::system::versions::API_VERSION
+                .to_string(),
         }
     }
 }
@@ -49,40 +58,47 @@ impl EndpointsConfiguration {
         if self.api_base_url.is_empty() {
             return Err(BearDogError::configuration("API base URL cannot be empty"));
         }
-        
+
         if self.discovery_url.is_empty() {
             return Err(BearDogError::configuration("Discovery URL cannot be empty"));
         }
-        
+
         if self.health_url.is_empty() {
             return Err(BearDogError::configuration("Health URL cannot be empty"));
         }
-        
+
         if self.metrics_url.is_empty() {
             return Err(BearDogError::configuration("Metrics URL cannot be empty"));
         }
-        
+
         if self.enable_versioning && self.default_api_version.is_empty() {
-            return Err(BearDogError::configuration("Default API version cannot be empty when versioning is enabled"));
+            return Err(BearDogError::configuration(
+                "Default API version cannot be empty when versioning is enabled",
+            ));
         }
-        
+
         Ok(())
     }
-    
+
     /// Add a custom endpoint
     pub fn add_custom_endpoint(&mut self, name: String, url: String) {
         self.custom_endpoints.insert(name, url);
     }
-    
+
     /// Get a custom endpoint URL
     pub fn get_custom_endpoint(&self, name: &str) -> Option<&String> {
         self.custom_endpoints.get(name)
     }
-    
+
     /// Get versioned API URL
     pub fn get_versioned_api_url(&self, path: &str) -> String {
         if self.enable_versioning {
-            format!("{}/v{}/{}", self.api_base_url, self.default_api_version, path.trim_start_matches('/'))
+            format!(
+                "{}/v{}/{}",
+                self.api_base_url,
+                self.default_api_version,
+                path.trim_start_matches('/')
+            )
         } else {
             format!("{}/{}", self.api_base_url, path.trim_start_matches('/'))
         }
@@ -106,8 +122,11 @@ mod tests {
     fn test_custom_endpoints() {
         let mut config = EndpointsConfiguration::default();
         config.add_custom_endpoint("custom".to_string(), "http://example.com".to_string());
-        
-        assert_eq!(config.get_custom_endpoint("custom"), Some(&"http://example.com".to_string()));
+
+        assert_eq!(
+            config.get_custom_endpoint("custom"),
+            Some(&"http://example.com".to_string())
+        );
         assert_eq!(config.get_custom_endpoint("nonexistent"), None);
     }
 
@@ -125,4 +144,4 @@ mod tests {
         config.api_base_url = String::new();
         assert!(config.validate().is_err());
     }
-} 
+}

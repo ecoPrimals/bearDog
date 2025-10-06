@@ -19,9 +19,9 @@ use uuid::Uuid;
 // ServiceCapabilityType methods are now provided by CapabilityType
 // See beardog_types::canonical::capabilities::CapabilityType for implementation
 
-/// ServiceDependency represents capability-based dependencies
+/// `ServiceDependency` represents capability-based dependencies
 /// instead of hardcoded primal dependencies
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ServiceDependency {
     /// State indicating required
     Required {
@@ -36,7 +36,7 @@ pub enum ServiceDependency {
     },
 }
 
-/// ServiceMetadata describes service capabilities without hardcoded references
+/// `ServiceMetadata` describes service capabilities without hardcoded references
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetadata {
     pub service_id: Uuid,
@@ -64,24 +64,24 @@ pub struct ServiceEndpoints {
     pub websocket: Option<String>,
 }
 
-/// CapabilityIntegrationConfig uses capability-based configuration
+/// `CapabilityIntegrationConfig` uses capability-based configuration
 /// instead of hardcoded primal flags
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityIntegrationConfig {
     /// Enable security capability integration
-    /// Whether enable_security_capability is enabled
+    /// Whether `enable_security_capability` is enabled
     pub enable_security_capability: bool,
-    /// Enable storage capability integration  
-    /// Whether enable_storage_capability is enabled
+    /// Enable storage capability integration\
+    /// Whether `enable_storage_capability` is enabled
     pub enable_storage_capability: bool,
     /// Enable compute capability integration
-    /// Whether enable_compute_capability is enabled
+    /// Whether `enable_compute_capability` is enabled
     pub enable_compute_capability: bool,
     /// Enable networking capability integration
-    /// Whether enable_networking_capability is enabled
+    /// Whether `enable_networking_capability` is enabled
     pub enable_networking_capability: bool,
     /// Enable AI capability integration
-    /// Whether enable_ai_capability is enabled
+    /// Whether `enable_ai_capability` is enabled
     pub enable_ai_capability: bool,
     /// Custom capability configurations
     /// Mapping of custom capabilities
@@ -182,14 +182,14 @@ pub struct ResponseTimeMetrics {
     pub p99: f64,
 }
 
-/// Note: PrimalType enum was removed as it violated primal sovereignty
+/// Note: `PrimalType` enum was removed as it violated primal sovereignty
 ///
 /// Migration completed: Use capability-based discovery instead
 /// ✅ SOVEREIGNTY COMPLIANCE: Use capability-based discovery instead of hardcoded primal names
-/// - Replace PrimalType::BiomeOS with ServiceCapabilityType::ContainerOrchestration discovery
+/// - Replace `PrimalType::BiomeOS` with `ServiceCapabilityType::ContainerOrchestration` discovery
 ///
 /// Each primal now only knows itself and discovers others through universal adapter.
-/// NEW: Capability-based primal identification (replaces PrimalType)
+/// NEW: Capability-based primal identification (replaces `PrimalType`)
 ///
 /// This represents a discovered primal in the ecosystem without hardcoding
 /// its name or making assumptions about its identity.
@@ -214,7 +214,7 @@ pub struct DiscoveredPrimal {
 }
 
 /// Primal metadata discovered during ecosystem bootstrap
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PrimalMetadata {
     /// Name of the display
     pub display_name: Option<String>,
@@ -246,7 +246,7 @@ pub struct PrimalMetadata {
     pub metrics_endpoint: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UniversalEndpoint {
     /// Base URL (discovered, not hardcoded)
     /// The url value
@@ -292,7 +292,7 @@ pub enum PrimalCapability {
     Custom(String),
 }
 
-///
+/// Deprecated: Primal dependency specification (use `ServiceDependency` instead)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[deprecated(note = "Use ServiceDependency for capability-based dependencies")]
 #[allow(deprecated)]
@@ -338,27 +338,27 @@ impl PrimalDependency {
     }
 }
 
-/// DEPRECATED: Use UniversalIntegrationConfig instead
+/// DEPRECATED: Use `UniversalIntegrationConfig` instead
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[deprecated(note = "Use UniversalIntegrationConfig for capability-based integration")]
 pub struct PrimalIntegrationConfig {
     /// DEPRECATED: Use capability-based discovery instead
     #[deprecated(note = "Use ServiceCapabilityType::ComputeIntelligence discovery")]
-    /// Whether enable_compute_capability is enabled
+    /// Whether `enable_compute_capability` is enabled
     pub enable_compute_capability: bool,
     /// DEPRECATED: Use capability-based discovery instead
     #[deprecated(
         note = "Use ServiceCapabilityType::DistributedIntelligence discovery instead of hardcoded AI integration"
     )]
-    /// Whether enable_ai_capability is enabled
+    /// Whether `enable_ai_capability` is enabled
     pub enable_ai_capability: bool,
     /// DEPRECATED: Use capability-based discovery instead
     #[deprecated(note = "Use ServiceCapabilityType::DataStorage discovery")]
-    /// Whether enable_storage_capability is enabled
+    /// Whether `enable_storage_capability` is enabled
     pub enable_storage_capability: bool,
     /// DEPRECATED: Use capability-based discovery instead
     #[deprecated(note = "Use ServiceCapabilityType::DistributedIntelligence discovery")]
-    /// Whether enable_ai_api is enabled
+    /// Whether `enable_ai_api` is enabled
     pub enable_ai_api: bool,
     pub custom_config: HashMap<String, serde_json::Value>,
 }
@@ -438,9 +438,9 @@ impl PrimalError {
     /// * `message` - Description of the initialization failure
     ///
     /// # Returns
-    /// A `PrimalError` with "InitializationFailed" error code
-    /// Initializes componentialization_failed
-    /// Initializes componentialization_failed
+    /// A `PrimalError` with "`InitializationFailed`" error code
+    /// Initializes `componentialization_failed`
+    /// Initializes `componentialization_failed`
     pub fn initialization_failed(message: impl Into<String>) -> Self {
         Self::new("InitializationFailed", message)
     }
@@ -452,7 +452,7 @@ impl PrimalError {
     /// * `message` - Description of the health check failure
     ///
     /// # Returns
-    /// A `PrimalError` with "HealthCheckFailed" error code
+    /// A `PrimalError` with "`HealthCheckFailed`" error code
     pub fn health_check_failed(message: impl Into<String>) -> Self {
         Self::new("HealthCheckFailed", message)
     }
@@ -465,7 +465,7 @@ impl PrimalError {
     /// * `message` - Description of the unsupported operation
     ///
     /// # Returns
-    /// A `PrimalError` with "UnsupportedOperation" error code
+    /// A `PrimalError` with "`UnsupportedOperation`" error code
     pub fn unsupported_operation(message: impl Into<String>) -> Self {
         Self::new("UnsupportedOperation", message)
     }
@@ -473,7 +473,7 @@ impl PrimalError {
 
 impl From<beardog_errors::BearDogError> for PrimalError {
     fn from(err: beardog_errors::BearDogError) -> Self {
-        Self::new("BearDogError", format!("{}", err))
+        Self::new("BearDogError", format!("{err}"))
     }
 }
 
@@ -548,11 +548,11 @@ pub struct PrimalHealthStatus {
 pub struct ResourceUsageInfo {
     /// The cpu percent value
     pub cpu_percent: f64,
-    /// Number of memory_bytes
+    /// Number of `memory_bytes`
     pub memory_bytes: u64,
-    /// Number of network_bytes_per_sec
+    /// Number of `network_bytes_per_sec`
     pub network_bytes_per_sec: u64,
-    /// Number of disk_bytes_per_sec
+    /// Number of `disk_bytes_per_sec`
     pub disk_bytes_per_sec: u64,
 }
 
@@ -567,7 +567,7 @@ pub struct PrimalConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalIntegrationConfig {
     /// Enable capability-based service discovery
-    /// Whether enable_capability_discovery is enabled
+    /// Whether `enable_capability_discovery` is enabled
     pub enable_capability_discovery: bool,
     /// Collection of required capabilities
     pub required_capabilities: Vec<ServiceCapabilityType>,
@@ -579,7 +579,7 @@ pub struct UniversalIntegrationConfig {
     /// Custom capability configurations
     pub custom_config: HashMap<String, serde_json::Value>,
     /// Fallback to environment-based discovery if explicit discovery fails
-    /// Whether enable_environment_discovery is enabled
+    /// Whether `enable_environment_discovery` is enabled
     pub enable_environment_discovery: bool,
 }
 
@@ -608,9 +608,9 @@ impl Default for UniversalIntegrationConfig {
 pub struct PrimalTypeMigrationHelper;
 
 impl PrimalTypeMigrationHelper {
-    /// Gets migration_guidance
-    /// Gets migration_guidance
-    pub fn get_migration_guidance() -> &'static str {
+    /// Gets `migration_guidance`
+    /// Gets `migration_guidance`
+    pub const fn get_migration_guidance() -> &'static str {
         r#"
 🔄 PRIMAL SOVEREIGNTY MIGRATION GUIDE
 
@@ -657,7 +657,7 @@ STEP 3: Remove hardcoded endpoint assumptions
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SecurityAttestation {
     /// The attestation type value
     pub attestation_type: String,
@@ -668,7 +668,7 @@ pub struct SecurityAttestation {
     pub issuer: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct AuthRequirements {
     /// The auth type value
     #[serde(default)]
@@ -679,9 +679,9 @@ pub struct AuthRequirements {
     pub token_lifetime: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct EndpointSecurityConfig {
-    /// Whether tls_required is enabled
+    /// Whether `tls_required` is enabled
     pub tls_required: bool,
     pub cert_validation: bool,
     /// Collection of allowed ciphers
@@ -696,7 +696,7 @@ pub struct LoadMetrics {
     pub cpu_usage: f64,
     /// The memory usage value
     pub memory_usage: f64,
-    /// Number of active_connections
+    /// Number of `active_connections`
     pub active_connections: u32,
     /// The requests per second value
     pub requests_per_second: f64,

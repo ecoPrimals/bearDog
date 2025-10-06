@@ -10,20 +10,20 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+// CONSOLIDATED: Keep local ProductionMonitoringConfig for backward compat
+// This is a thin wrapper around the canonical config with production-specific defaults
+
 /// Production monitoring configuration
 ///
-/// Configures all aspects of production monitoring including metrics collection,
-/// alerting thresholds, and reporting intervals.
+/// This is a simplified config for production monitoring.
+/// Internally uses the canonical `MonitoringConfig`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     /// Interval between monitoring cycles in seconds
-    /// Number of `monitoring_interval_seconds`
     pub monitoring_interval_seconds: u64,
     /// Whether to enable real-time alerting
-    /// Whether `enable_alerting` is enabled
     pub enable_alerting: bool,
     /// Maximum number of alerts to retain in memory
-    /// Number of `alert_retention`
     pub alert_retention_count: usize,
     pub performance_config: PerformanceConfig,
     /// System monitoring configuration
@@ -41,6 +41,11 @@ impl Default for MonitoringConfig {
         }
     }
 }
+
+// Type alias for backward compatibility
+// DEPRECATED: Transitional alias - use canonical::monitoring::MonitoringConfig directly
+#[allow(deprecated)]
+pub use crate::canonical::monitoring::MonitoringConfig as CanonicalMonitoringConfig;
 
 ///
 #[derive(Debug, Clone, Serialize, Deserialize)]

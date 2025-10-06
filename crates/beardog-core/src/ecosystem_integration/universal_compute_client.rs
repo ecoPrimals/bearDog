@@ -22,17 +22,17 @@ pub struct UniversalComputeConfig {
     /// Request timeout in milliseconds
     pub request_timeout_ms: u64,
     /// Maximum concurrent requests
-    /// Number of max_concurrent_requests
+    /// Number of `max_concurrent_requests`
     pub max_concurrent_requests: u32,
-    /// Number of retry_attempts
+    /// Number of `retry_attempts`
     pub retry_attempts: u32,
     /// Enable request batching
-    /// Whether enable_batching is enabled
+    /// Whether `enable_batching` is enabled
     pub enable_batching: bool,
-    /// Number of batch_size
+    /// Number of `batch_size`
     pub batch_size: u32,
     /// Enable metrics collection
-    /// Whether enable_metrics is enabled
+    /// Whether `enable_metrics` is enabled
     pub enable_metrics: bool,
     /// Discovery configuration
     pub discovery_config: ComputeDiscoveryConfig,
@@ -43,14 +43,14 @@ pub struct UniversalComputeConfig {
 pub struct ComputeDiscoveryConfig {
     /// Discovery timeout in milliseconds
     pub discovery_timeout_ms: u64,
-    /// Number of cache_duration_ms
+    /// Number of `cache_duration_ms`
     pub cache_duration_ms: u64,
     /// Preferred compute architectures
     /// Collection of preferred architectures
     pub preferred_architectures: Vec<ComputeArchitecture>,
     pub min_performance_score: f64,
     /// Enable automatic failover
-    /// Whether enable_failover is enabled
+    /// Whether `enable_failover` is enabled
     pub enable_failover: bool,
 }
 
@@ -65,7 +65,7 @@ pub enum ComputeArchitecture {
     RiscV,
     /// GPU compute (CUDA)
     Cuda,
-    /// GPU compute (OpenCL)
+    /// GPU compute (`OpenCL`)
     OpenCl,
     /// Custom architecture
     Custom(String),
@@ -188,13 +188,13 @@ pub struct ResourceUsageStats {
     /// The cpu usage percent value
     pub cpu_usage_percent: f64,
     /// Memory usage in MB
-    /// Number of memory_usage_mb
+    /// Number of `memory_usage_mb`
     pub memory_usage_mb: u64,
     /// GPU usage percentage
     /// Optional gpu usage percent
     pub gpu_usage_percent: Option<f64>,
     /// Network bandwidth used in MB
-    /// Number of network_usage_mb
+    /// Number of `network_usage_mb`
     pub network_usage_mb: u64,
     /// Cost estimation
     /// Optional estimated cost
@@ -213,16 +213,16 @@ pub struct UniversalComputeClient {
 
 #[derive(Debug, Clone, Default)]
 pub struct ComputeMetrics {
-    /// Number of total_requests
+    /// Number of `total_requests`
     pub total_requests: u64,
-    /// Number of successful_requests
+    /// Number of `successful_requests`
     pub successful_requests: u64,
-    /// Number of failed_requests
+    /// Number of `failed_requests`
     pub failed_requests: u64,
     pub avg_response_time_ms: f64,
     pub total_compute_time_ms: u64,
     pub providers_discovered: u64,
-    /// Number of failover_events
+    /// Number of `failover_events`
     pub failover_events: u64,
 }
 
@@ -288,8 +288,18 @@ impl UniversalComputeClient {
         // Execute computation through discovered provider
         let response = self.execute_compute_request(&request, &provider)?;
 
-        // Update metrics
-        self.update_metrics(&response);
+        // Update metrics (fire and forget - metrics update shouldn't block)
+        let metrics_clone = self.metrics.clone();
+        let response_clone = response.clone();
+        tokio::spawn(async move {
+            let mut metrics = metrics_clone.write().await;
+            metrics.total_requests += 1;
+            if response_clone.success {
+                metrics.successful_requests += 1;
+            } else {
+                metrics.failed_requests += 1;
+            }
+        });
 
         info!(
             "✅ Compute request completed: {} ({}ms)",
@@ -337,7 +347,7 @@ impl UniversalComputeClient {
     }
 
     /// Execute compute request through discovered provider
-    /// Executes compute_request
+    /// Executes `compute_request`
     fn execute_compute_request(
         &self,
         request: &UniversalComputeRequest,
@@ -390,8 +400,10 @@ impl UniversalComputeClient {
         }
 
         // Update average response time
-        let total_time = metrics.avg_response_time_ms * (metrics.total_requests - 1) as f64
-            + response.processing_time_ms as f64;
+        let total_time = metrics.avg_response_time_ms.mul_add(
+            (metrics.total_requests - 1) as f64,
+            response.processing_time_ms as f64,
+        );
         metrics.avg_response_time_ms = total_time / metrics.total_requests as f64;
 
         metrics.total_compute_time_ms += response.processing_time_ms;

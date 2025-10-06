@@ -5,7 +5,7 @@ mod integration_tests {
     use super::*;
 
     #[tokio::test]
-    fn test_module_integration() -> Result<(), BearDogError> {
+    async fn test_module_integration() -> Result<(), BearDogError> {
         Ok(())
     }
 }

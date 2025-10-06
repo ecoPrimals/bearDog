@@ -29,6 +29,29 @@ pub struct BearDogCore {
 
 impl BearDogCore {
     /// Create a new BearDog Core instance
+    ///
+    /// Initializes the BearDog Core system with the provided configuration.
+    /// This creates all internal data structures but does not start any services.
+    /// Use [`start`](Self::start) to begin operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The unified configuration for the BearDog system
+    ///
+    /// # Returns
+    ///
+    /// A new `BearDogCore` instance ready to be started
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    ///
+    /// let config = UnifiedBearDogConfig::development();
+    /// let core = BearDogCore::new(config);
+    /// // core.start().await?;
+    /// ```
     pub fn new(config: UnifiedBearDogConfig) -> Self {
         info!("Initializing BearDog Core system");
         
@@ -42,13 +65,58 @@ impl BearDogCore {
         }
     }
 
-    /// Create a BearDog Core instance with default configuration
+    /// Create a BearDog Core instance with default development configuration
+    ///
+    /// This is a convenience method that creates a `BearDogCore` instance
+    /// with sensible defaults for development and testing. For production use,
+    /// create a custom configuration and use [`new`](Self::new).
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the new `BearDogCore` instance or an error
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    ///
+    /// let core = BearDogCore::with_default_config()?;
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn with_default_config() -> BearDogResult<Self> {
         let config = UnifiedBearDogConfig::development(); // Use development config as default
         Ok(Self::new(config))
     }
 
     /// Start the BearDog Core system
+    ///
+    /// Initializes all components and begins system operation. This method:
+    /// - Initializes core components
+    /// - Starts health monitoring
+    /// - Sets the system to running state
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating success or failure
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Component initialization fails
+    /// - Health monitoring cannot be started
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// let mut core = BearDogCore::with_default_config()?;
+    /// core.start().await?;
+    /// assert!(core.is_running());
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn start(&mut self) -> BearDogResult<()> {
         if self.started {
             warn!("BearDog Core system is already started");
@@ -70,6 +138,33 @@ impl BearDogCore {
     }
 
     /// Stop the BearDog Core system
+    ///
+    /// Gracefully shuts down the BearDog Core system and all components.
+    /// This ensures all resources are properly released and any ongoing
+    /// operations are completed or cancelled safely.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating success or failure
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if component shutdown fails
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// let mut core = BearDogCore::with_default_config()?;
+    /// core.start().await?;
+    /// // ... do work ...
+    /// core.stop().await?;
+    /// assert!(!core.is_running());
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn stop(&mut self) -> BearDogResult<()> {
         if !self.started {
             warn!("BearDog Core system is not running");
@@ -88,12 +183,55 @@ impl BearDogCore {
     }
 
     /// Check if the system is running
+    ///
+    /// Returns `true` if the system has been started and not yet stopped,
+    /// `false` otherwise.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the system is running, `false` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// let mut core = BearDogCore::with_default_config()?;
+    /// assert!(!core.is_running());
+    /// core.start().await?;
+    /// assert!(core.is_running());
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn is_running(&self) -> bool {
         self.started
     }
 
     /// Get current system status
+    ///
+    /// Returns a snapshot of the current system status including health,
+    /// component states, and operational metrics.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the current `SystemStatus` or an error
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the status cannot be read (lock poisoning)
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    ///
+    /// let core = BearDogCore::with_default_config()?;
+    /// let status = core.get_status()?;
+    /// println!("System status: {:?}", status);
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn get_status(&self) -> BearDogResult<SystemStatus> {
         let status = self.status.read()
             .map_err(|e| BearDogError::system(format!("Failed to read status: {}", e)))?;

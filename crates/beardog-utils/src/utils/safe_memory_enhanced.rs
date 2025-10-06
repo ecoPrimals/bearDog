@@ -231,28 +231,28 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_buffer_pool_operations() {
+    async fn test_buffer_pool_operations() {
         let pool: SafeBufferPool<1024> = SafeBufferPool::new(2);
-        let _buffer1 = pool.get_buffer();
-        let _buffer2 = pool.get_buffer();
-        assert!(pool.metrics().total_requests >= 2);
+        let _buffer1 = pool.get_buffer().await;
+        let _buffer2 = pool.get_buffer().await;
+        assert!(pool.metrics().await.total_requests >= 2);
     }
 
     #[tokio::test]
-    fn test_enhanced_memory_pools() {
+    async fn test_enhanced_memory_pools() {
         let pools = EnhancedMemoryPools::new();
-        let small = pools.get_small();
-        let medium = pools.get_medium();
-        let large = pools.get_large();
+        let small = pools.get_small().await;
+        let medium = pools.get_medium().await;
+        let large = pools.get_large().await;
         assert_eq!(small.size(), buffer_sizes::SMALL);
         assert_eq!(medium.size(), buffer_sizes::MEDIUM);
         assert_eq!(large.size(), buffer_sizes::LARGE);
-        let metrics = pools.all_metrics();
+        let metrics = pools.all_metrics().await;
         assert!(metrics.total_requests >= 3);
     }
 
     #[tokio::test]
-    fn test_safe_pinned_buffer_operations() {
+    async fn test_safe_pinned_buffer_operations() {
         let mut buffer = SafePinnedBuffer::new(1024);
 
         buffer.with_mut_slice(|slice| {

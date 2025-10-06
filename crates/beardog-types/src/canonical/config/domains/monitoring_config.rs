@@ -1,5 +1,8 @@
 //! # Monitoring Configuration Domain
 //!
+//! ⚠️  DEPRECATED: This domain-specific monitoring config is being consolidated.
+//! Use `crate::canonical::monitoring::MonitoringConfig` instead for new code.
+//!
 //! This module contains all monitoring-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
@@ -18,63 +21,63 @@ use crate::canonical::config::r#trait::BearDogConfig;
 pub struct ConsolidatedMonitoringConfig {
     /// Enable monitoring
     pub enabled: bool,
-    
+
     /// Metrics collection configuration
     pub metrics: MetricsCollectionConfig,
-    
+
     /// Analysis and processing configuration
     pub analysis: AnalysisProcessingConfig,
-    
+
     /// Health monitoring configuration
     pub health: HealthMonitoringConfig,
-    
+
     /// Anomaly detection configuration
     pub anomaly: AnomalyDetectionConfig,
-    
+
     /// Trend analysis configuration
     pub trends: TrendAnalysisConfig,
-    
+
     /// Security monitoring configuration
     pub security: SecurityMonitoringConfig,
-    
+
     /// Export and integration configuration
     pub export: ExportIntegrationConfig,
 }
 
 /// Metrics collection configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MetricsCollectionConfig {
     /// Collection interval
     pub interval: Duration,
-    
+
     /// Metrics to collect
     pub metrics: Vec<String>,
-    
+
     /// Collection strategy
     pub strategy: String,
-    
+
     /// Buffer size for metrics
     pub buffer_size: usize,
-    
+
     /// Retention period
     pub retention_period: Duration,
 }
 
 /// Analysis and processing configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AnalysisProcessingConfig {
     /// Enable real-time analysis
     pub real_time: bool,
-    
+
     /// Analysis algorithms
     pub algorithms: Vec<String>,
-    
+
     /// Processing window size
     pub window_size: Duration,
-    
+
     /// Statistical methods
     pub statistical_methods: Vec<String>,
-    
+
     /// Machine learning models
     pub ml_models: Vec<String>,
 }
@@ -84,16 +87,16 @@ pub struct AnalysisProcessingConfig {
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
     pub enabled: bool,
-    
+
     /// Health check interval
     pub check_interval: Duration,
-    
+
     /// Health endpoints
     pub endpoints: Vec<String>,
-    
+
     /// Health thresholds
     pub thresholds: HashMap<String, f64>,
-    
+
     /// Recovery actions
     pub recovery_actions: HashMap<String, String>,
 }
@@ -103,35 +106,35 @@ pub struct HealthMonitoringConfig {
 pub struct AnomalyDetectionConfig {
     /// Enable anomaly detection
     pub enabled: bool,
-    
+
     /// Detection algorithms
     pub algorithms: Vec<String>,
-    
+
     /// Sensitivity level
     pub sensitivity: f64,
-    
+
     /// Training window
     pub training_window: Duration,
-    
+
     /// Alert thresholds
     pub alert_thresholds: HashMap<String, f64>,
 }
 
 /// Trend analysis configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TrendAnalysisConfig {
     /// Enable trend analysis
     pub enabled: bool,
-    
+
     /// Analysis period
     pub analysis_period: Duration,
-    
+
     /// Trend indicators
     pub indicators: Vec<String>,
-    
+
     /// Forecasting models
     pub forecasting_models: Vec<String>,
-    
+
     /// Prediction horizon
     pub prediction_horizon: Duration,
 }
@@ -141,61 +144,61 @@ pub struct TrendAnalysisConfig {
 pub struct SecurityMonitoringConfig {
     /// Enable security monitoring
     pub enabled: bool,
-    
+
     /// Security event types to monitor
     pub event_types: Vec<String>,
-    
+
     /// Threat detection rules
     pub threat_rules: Vec<String>,
-    
+
     /// Alert thresholds
     pub alert_thresholds: HashMap<String, f64>,
-    
+
     /// Response actions
     pub response_actions: HashMap<String, String>,
 }
 
 /// Export and integration configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExportIntegrationConfig {
     /// Export destinations
     pub destinations: Vec<ExportDestination>,
-    
+
     /// Export format
     pub format: String,
-    
+
     /// Export interval
     pub interval: Duration,
-    
+
     /// Compression settings
     pub compression: CompressionConfig,
 }
 
 /// Export destination configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExportDestination {
     /// Destination type
     pub destination_type: String,
-    
+
     /// Connection URL
     pub url: String,
-    
+
     /// Authentication
     pub auth: HashMap<String, String>,
-    
+
     /// Export filters
     pub filters: Vec<String>,
 }
 
 /// Compression configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CompressionConfig {
     /// Enable compression
     pub enabled: bool,
-    
+
     /// Compression algorithm
     pub algorithm: String,
-    
+
     /// Compression level
     pub level: u8,
 }
@@ -205,13 +208,13 @@ pub struct CompressionConfig {
 pub struct MonitoringConfig {
     /// Enable monitoring
     pub enabled: bool,
-    
+
     /// Metrics collection interval
     pub metrics_interval: Duration,
-    
+
     /// Alert configurations
     pub alerts: Vec<AlertConfig>,
-    
+
     /// Dashboard configuration
     pub dashboard: DashboardConfig,
 }
@@ -221,32 +224,32 @@ pub struct MonitoringConfig {
 pub struct AlertConfig {
     /// Alert name
     pub name: String,
-    
+
     /// Alert condition
     pub condition: String,
-    
+
     /// Alert threshold
     pub threshold: f64,
-    
+
     /// Alert severity
     pub severity: String,
-    
+
     /// Notification channels
     pub channels: Vec<String>,
 }
 
 /// Dashboard configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DashboardConfig {
     /// Enable dashboard
     pub enabled: bool,
-    
+
     /// Refresh interval
     pub refresh_interval: Duration,
-    
+
     /// Metrics to display
     pub metrics: Vec<String>,
-    
+
     /// Dashboard layout
     pub layout: String,
 }
@@ -283,7 +286,10 @@ impl Default for AnalysisProcessingConfig {
     fn default() -> Self {
         Self {
             real_time: true,
-            algorithms: vec!["moving_average".to_string(), "exponential_smoothing".to_string()],
+            algorithms: vec![
+                "moving_average".to_string(),
+                "exponential_smoothing".to_string(),
+            ],
             window_size: Duration::from_secs(300), // 5 minutes
             statistical_methods: vec!["mean".to_string(), "stddev".to_string()],
             ml_models: vec!["linear_regression".to_string()],
@@ -312,7 +318,10 @@ impl Default for AnomalyDetectionConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            algorithms: vec!["isolation_forest".to_string(), "statistical_outlier".to_string()],
+            algorithms: vec![
+                "isolation_forest".to_string(),
+                "statistical_outlier".to_string(),
+            ],
             sensitivity: 0.8,
             training_window: Duration::from_secs(86400), // 1 day
             alert_thresholds: {
@@ -423,88 +432,103 @@ impl BearDogConfig for ConsolidatedMonitoringConfig {
     fn validate(&self) -> BearDogResult<()> {
         if self.enabled {
             if self.metrics.interval.as_secs() == 0 {
-                return Err(BearDogError::validation("Metrics collection interval cannot be zero"));
+                return Err(BearDogError::validation(
+                    "Metrics collection interval cannot be zero",
+                ));
             }
-            
+
             if self.metrics.buffer_size == 0 {
-                return Err(BearDogError::validation("Metrics buffer size cannot be zero"));
+                return Err(BearDogError::validation(
+                    "Metrics buffer size cannot be zero",
+                ));
             }
-            
+
             if self.health.enabled && self.health.check_interval.as_secs() == 0 {
-                return Err(BearDogError::validation("Health check interval cannot be zero"));
+                return Err(BearDogError::validation(
+                    "Health check interval cannot be zero",
+                ));
             }
-            
-            if self.anomaly.enabled && (self.anomaly.sensitivity < 0.0 || self.anomaly.sensitivity > 1.0) {
-                return Err(BearDogError::validation("Anomaly detection sensitivity must be between 0.0 and 1.0"));
+
+            if self.anomaly.enabled
+                && (self.anomaly.sensitivity < 0.0 || self.anomaly.sensitivity > 1.0)
+            {
+                return Err(BearDogError::validation(
+                    "Anomaly detection sensitivity must be between 0.0 and 1.0",
+                ));
             }
         }
         Ok(())
     }
-    
+
     fn merge(&self, other: &Self) -> BearDogResult<Self> {
         Ok(Self {
             enabled: other.enabled,
-            metrics: if other.enabled { 
-                other.metrics.clone() 
-            } else { 
-                self.metrics.clone() 
+            metrics: if other.enabled {
+                other.metrics.clone()
+            } else {
+                self.metrics.clone()
             },
-            analysis: if other.enabled { 
-                other.analysis.clone() 
-            } else { 
-                self.analysis.clone() 
+            analysis: if other.enabled {
+                other.analysis.clone()
+            } else {
+                self.analysis.clone()
             },
-            health: if other.health.enabled { 
-                other.health.clone() 
-            } else { 
-                self.health.clone() 
+            health: if other.health.enabled {
+                other.health.clone()
+            } else {
+                self.health.clone()
             },
-            anomaly: if other.anomaly.enabled { 
-                other.anomaly.clone() 
-            } else { 
-                self.anomaly.clone() 
+            anomaly: if other.anomaly.enabled {
+                other.anomaly.clone()
+            } else {
+                self.anomaly.clone()
             },
-            trends: if other.trends.enabled { 
-                other.trends.clone() 
-            } else { 
-                self.trends.clone() 
+            trends: if other.trends.enabled {
+                other.trends.clone()
+            } else {
+                self.trends.clone()
             },
-            security: if other.security.enabled { 
-                other.security.clone() 
-            } else { 
-                self.security.clone() 
+            security: if other.security.enabled {
+                other.security.clone()
+            } else {
+                self.security.clone()
             },
             export: other.export.clone(),
         })
     }
-    
+
     fn from_env() -> BearDogResult<Self> {
         let mut config = Self::default();
-        
+
         if let Ok(enabled) = std::env::var("BEARDOG_MONITORING_ENABLED") {
             config.enabled = enabled.parse().unwrap_or(true);
         }
-        
+
         if let Ok(interval) = std::env::var("BEARDOG_MONITORING_INTERVAL") {
             if let Ok(secs) = interval.parse::<u64>() {
                 config.metrics.interval = Duration::from_secs(secs);
             }
         }
-        
+
         if let Ok(buffer_size) = std::env::var("BEARDOG_MONITORING_BUFFER_SIZE") {
             config.metrics.buffer_size = buffer_size.parse().unwrap_or(1000);
         }
-        
+
         config.validate()?;
         Ok(config)
     }
-    
+
     fn to_toml(&self) -> BearDogResult<String> {
-        toml::to_string(self)
-            .map_err(|e| BearDogError::system(format!("Failed to serialize monitoring config to TOML: {e}")))
+        toml::to_string(self).map_err(|e| {
+            BearDogError::system(format!(
+                "Failed to serialize monitoring config to TOML: {e}"
+            ))
+        })
     }
-    
+
     fn domain() -> &'static str {
         "monitoring"
     }
-} 
+}
+
+// Backward compatibility: redirect to canonical monitoring

@@ -123,21 +123,16 @@ pub struct ResourceLimits {
     pub max_concurrent_operations: Option<u32>,
 }
 
-/// Logging configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoggingConfiguration {
-    /// Log level (trace, debug, info, warn, error)
-    pub level: String,
-    
-    /// Log format (json, text)
-    pub format: String,
-    
-    /// Whether to enable structured logging
-    pub structured: bool,
-    
-    /// Log targets
-    pub targets: Vec<String>,
-}
+/// Logging configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `super::super::config::domains::system::LoggingConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::super::config::domains::system::LoggingConfig instead"
+)]
+pub type LoggingConfiguration = super::super::config::domains::system::LoggingConfig;
 
 /// Security configuration for providers
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -410,21 +405,16 @@ pub struct PerformanceConfiguration {
     pub retry: RetryConfiguration,
 }
 
-/// Connection pool configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectionPoolConfiguration {
-    /// Minimum pool size
-    pub min_size: u32,
-    
-    /// Maximum pool size
-    pub max_size: u32,
-    
-    /// Connection timeout in seconds
-    pub connection_timeout: u64,
-    
-    /// Idle timeout in seconds
-    pub idle_timeout: u64,
-}
+/// Connection pool configuration (DEPRECATED - use canonical config)
+///
+/// **MIGRATION**: Use `canonical::config::domains::network::ConnectionPoolConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
+)]
+pub type ConnectionPoolConfiguration = crate::canonical::config::domains::network::ConnectionPoolConfig;
 
 /// Caching configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

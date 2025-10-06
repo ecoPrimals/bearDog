@@ -2,7 +2,6 @@
 //!
 //! This module contains network security configurations including TLS, endpoint security, and DDoS protection.
 
-use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
 /// Network security configuration
@@ -101,4 +100,4 @@ impl Default for DdosProtectionConfiguration {
             block_duration_minutes: 15,
         }
     }
-} 
+}

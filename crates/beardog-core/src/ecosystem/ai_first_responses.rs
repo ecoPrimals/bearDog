@@ -94,11 +94,11 @@ pub struct RemediationAction {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsageInfo {
     pub cpu_time_ms: u64,
-    /// Number of memory_usage_bytes
+    /// Number of `memory_usage_bytes`
     pub memory_usage_bytes: u64,
-    /// Number of network_requests
+    /// Number of `network_requests`
     pub network_requests: u32,
-    /// Number of disk_io_operations
+    /// Number of `disk_io_operations`
     pub disk_io_operations: u32,
 }
 
@@ -116,7 +116,7 @@ pub struct QualityMetrics {
 
 impl QualityMetrics {
     /// High Security operation.
-    pub fn high_security() -> Self {
+    pub const fn high_security() -> Self {
         Self {
             accuracy: 0.98,
             completeness: 0.95,
@@ -126,7 +126,7 @@ impl QualityMetrics {
     }
 
     /// Standard operation.
-    pub fn standard() -> Self {
+    pub const fn standard() -> Self {
         Self {
             accuracy: 0.90,
             completeness: 0.85,
@@ -138,7 +138,7 @@ impl QualityMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheInfo {
-    /// Whether cache_hit is enabled
+    /// Whether `cache_hit` is enabled
     pub cache_hit: bool,
     /// Optional cache key
     pub cache_key: Option<String>,
@@ -150,7 +150,7 @@ pub struct CacheInfo {
 
 impl CacheInfo {
     /// No Cache operation.
-    pub fn no_cache() -> Self {
+    pub const fn no_cache() -> Self {
         Self {
             cache_hit: false,
             cache_key: None,
@@ -172,7 +172,7 @@ impl CacheInfo {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitInfo {
-    /// Number of remaining_requests
+    /// Number of `remaining_requests`
     pub remaining_requests: u32,
     pub reset_time: DateTime<Utc>,
     /// Number of limit
@@ -220,7 +220,7 @@ pub struct NotificationPreferences {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPreferences {
-    /// Whether require_2fa is enabled
+    /// Whether `require_2fa` is enabled
     pub require_2fa: bool,
     /// Whether biometric is enabled
     pub biometric_enabled: bool,
@@ -393,7 +393,7 @@ impl<T> AIFirstResponseBuilder<T> {
 
     /// With Confidence operation.
     /// Creates instance with confidence
-    pub fn with_confidence(mut self, confidence: f64) -> Self {
+    pub const fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence;
         self
     }
@@ -416,7 +416,11 @@ impl<T> AIFirstResponseBuilder<T> {
     /// Builds component
     /// Builds component
     pub fn build(self) -> AIFirstResponse<T> {
-        let processing_time_ms = self.start_time.elapsed().as_millis().min(u64::MAX as u128) as u64;
+        let processing_time_ms = self
+            .start_time
+            .elapsed()
+            .as_millis()
+            .min(u128::from(u64::MAX)) as u64;
         let success = self.error.is_none();
         tracing::debug!(
             "AI response built: success: {}, confidence: {:.2}, processing_time: {}ms",

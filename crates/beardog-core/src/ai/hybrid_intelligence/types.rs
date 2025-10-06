@@ -4,18 +4,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// MIGRATED: Using canonical config types from beardog-types
-use beardog_types::canonical::config::domains::ai_config::{
-    OnlineLearningConfig, TransferLearningConfig, MetaLearningConfig,
-};
 // Import core types from the new module
 use crate::ai::hybrid_intelligence::decision_engine::{
     ConsensusStrategy, DecisionCriteria, DecisionStrategy,
 };
 use crate::ai::hybrid_intelligence::learning::{
     ConstraintConfig, EnsembleConfig, HyperparameterOptimization, LearningAlgorithmType,
-    OptimizationAlgorithm, PredictionHorizon,
-    PredictionModel,
+    MetaLearningConfig, OnlineLearningConfig, OptimizationAlgorithm, PredictionHorizon,
+    PredictionModel, TransferLearningConfig,
 };
 use crate::ai::hybrid_intelligence::neural_networks::{
     NetworkArchitecture, NetworkOptimization, NetworkRegularization, TrainingParams,
@@ -24,7 +20,7 @@ use crate::ai::hybrid_intelligence::neural_networks::{
 /// Training configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrainingConfig {
-    /// Number of batch_size
+    /// Number of `batch_size`
     pub batch_size: u32,
     /// Number of training epochs
     /// Number of epochs
@@ -62,7 +58,7 @@ impl Default for TrainingConfig {
 /// Inference configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InferenceConfig {
-    /// Number of batch_size
+    /// Number of `batch_size`
     pub batch_size: u32,
     /// Maximum inference time in milliseconds
     pub max_inference_time_ms: u64,
@@ -91,20 +87,20 @@ pub struct ModelManagementConfig {
     /// The versioning strategy value
     pub versioning_strategy: VersioningStrategy,
     /// Model registry configuration
-    pub registry_config: RegistryConfig,
+    pub registry_config: AIRegistryConfig,
     /// Model deployment configuration
     pub deployment_config: DeploymentConfig,
     /// Model monitoring configuration
-    pub monitoring_config: MonitoringConfig,
+    pub monitoring_config: AIMonitoringConfig,
 }
 
 impl Default for ModelManagementConfig {
     fn default() -> Self {
         Self {
             versioning_strategy: VersioningStrategy::Semantic,
-            registry_config: RegistryConfig::default(),
+            registry_config: AIRegistryConfig::default(),
             deployment_config: DeploymentConfig::default(),
-            monitoring_config: MonitoringConfig::default(),
+            monitoring_config: AIMonitoringConfig::default(),
         }
     }
 }
@@ -161,6 +157,7 @@ impl Default for NeuralNetworkConfig {
             architecture: NetworkArchitecture {
                 architecture_type: crate::ai::hybrid_intelligence::neural_networks::ArchitectureType::Feedforward,
                 input_layer: crate::ai::hybrid_intelligence::neural_networks::InputLayerConfig {
+                    shape: vec![32],
                     input_shape: vec![32],
                     data_type: crate::ai::hybrid_intelligence::neural_networks::DataType::Float32,
                     normalization: None,
@@ -228,7 +225,9 @@ pub struct DecisionEngineConfig {
 
 impl Default for DecisionEngineConfig {
     fn default() -> Self {
-        use crate::ai::hybrid_intelligence::decision_engine::*;
+        use crate::ai::hybrid_intelligence::decision_engine::{
+            ConsensusStrategy, DecisionCriteria, DecisionStrategy,
+        };
         Self {
             strategies: vec![DecisionStrategy::MachineLearning],
             criteria: DecisionCriteria {
@@ -244,7 +243,7 @@ impl Default for DecisionEngineConfig {
 }
 
 /// Learning configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LearningConfig {
     /// Learning algorithms to use
     /// Collection of algorithms
@@ -262,19 +261,8 @@ pub struct LearningConfig {
 
 // Types moved to avoid duplication - using existing definitions
 
-impl Default for LearningConfig {
-    fn default() -> Self {
-        Self {
-            algorithms: Vec::new(),
-            online_learning: Default::default(),
-            transfer_learning: None,
-            meta_learning: None,
-        }
-    }
-}
-
 /// Prediction configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PredictionConfig {
     /// Prediction models to use
     /// Collection of models
@@ -283,32 +271,21 @@ pub struct PredictionConfig {
     /// Optional ensemble
     pub ensemble: Option<EnsembleConfig>,
     /// Uncertainty quantification
-    /// Whether uncertainty_quantification is enabled
+    /// Whether `uncertainty_quantification` is enabled
     pub uncertainty_quantification: bool,
     /// Prediction horizons
     /// Collection of horizons
     pub horizons: Vec<PredictionHorizon>,
 }
 
-impl Default for PredictionConfig {
-    fn default() -> Self {
-        Self {
-            models: Vec::new(),
-            ensemble: None,
-            uncertainty_quantification: false,
-            horizons: Vec::new(),
-        }
-    }
-}
-
 /// Optimization configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OptimizationConfig {
     /// Optimization algorithms
     /// Collection of algorithms
     pub algorithms: Vec<OptimizationAlgorithm>,
     /// Multi-objective optimization
-    /// Whether multi_objective is enabled
+    /// Whether `multi_objective` is enabled
     pub multi_objective: bool,
     /// Constraint handling
     /// Optional constraints
@@ -319,17 +296,6 @@ pub struct OptimizationConfig {
 }
 
 // Optimization types moved to avoid duplication - using existing definitions
-
-impl Default for OptimizationConfig {
-    fn default() -> Self {
-        Self {
-            algorithms: Vec::new(),
-            multi_objective: false,
-            constraints: None,
-            hyperparameter_optimization: None,
-        }
-    }
-}
 
 /// Early stopping configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -344,7 +310,7 @@ pub struct EarlyStoppingConfig {
     /// Number of patience
     pub patience: u32,
     /// Restore best weights
-    /// Whether restore_best_weights is enabled
+    /// Whether `restore_best_weights` is enabled
     pub restore_best_weights: bool,
 }
 
@@ -360,7 +326,7 @@ pub struct RegularizationConfig {
     /// The dropout value
     pub dropout: f64,
     /// Batch normalization
-    /// Whether batch_normalization is enabled
+    /// Whether `batch_normalization` is enabled
     pub batch_normalization: bool,
 }
 
@@ -411,14 +377,14 @@ pub enum OptimizerType {
         /// Small epsilon value to prevent division by zero
         epsilon: f64,
     },
-    /// AdamW optimizer with weight decay
+    /// `AdamW` optimizer with weight decay
     AdamW {
         beta1: f64,
         beta2: f64,
         /// Small epsilon value to prevent division by zero
         epsilon: f64,
     },
-    /// RMSprop optimizer with moving average of squared gradients
+    /// `RMSprop` optimizer with moving average of squared gradients
     RmsProp {
         alpha: f64,
         /// Small epsilon value to prevent division by zero
@@ -465,7 +431,7 @@ pub enum LearningRateSchedule {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServingConfig {
     /// Maximum concurrent requests
-    /// Number of max_concurrent_requests
+    /// Number of `max_concurrent_requests`
     pub max_concurrent_requests: u32,
     /// Request timeout
     pub request_timeout: Duration,
@@ -488,7 +454,7 @@ impl Default for ServingConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachingConfig {
     /// Cache size limit
-    /// Number of max_cache_size
+    /// Number of `max_cache_size`
     pub max_cache_size: u64,
     /// Cache TTL
     /// The ttl value
@@ -510,9 +476,10 @@ pub enum VersioningStrategy {
     Incremental,
 }
 
-/// Registry configuration
+/// Registry configuration for AI systems
+/// Renamed from `RegistryConfig` to `AIRegistryConfig` for clarity
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RegistryConfig {
+pub struct AIRegistryConfig {
     /// Registry type
     /// The registry type value
     pub registry_type: RegistryType,
@@ -524,7 +491,11 @@ pub struct RegistryConfig {
     pub auth: Option<AuthConfig>,
 }
 
-impl Default for RegistryConfig {
+/// Backward compatibility alias
+#[deprecated(since = "3.2.0", note = "Use AIRegistryConfig instead")]
+pub type RegistryConfig = AIRegistryConfig;
+
+impl Default for AIRegistryConfig {
     fn default() -> Self {
         Self {
             registry_type: RegistryType::Local,
@@ -558,7 +529,8 @@ pub struct DeploymentConfig {
     pub resources: ResourceRequirements,
     /// Health check configuration
     /// The health check value
-    pub health_check: HealthCheckConfig,
+    pub health_check:
+        beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration,
 }
 
 impl Default for DeploymentConfig {
@@ -566,34 +538,38 @@ impl Default for DeploymentConfig {
         Self {
             strategy: DeploymentStrategy::Rolling,
             resources: ResourceRequirements::default(),
-            health_check: HealthCheckConfig::default(),
+            health_check: beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration::default(),
         }
     }
 }
 
-/// Monitoring configuration
+/// AI-specific monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitoringConfig {
-    /// Metrics to collect
-    /// Collection of metrics
-    pub metrics: Vec<MetricType>,
-    /// Alerting configuration
-    /// Optional alerting
-    pub alerting: Option<AlertingConfig>,
-    /// Logging configuration
-    /// The logging value
-    pub logging: LoggingConfig,
+pub struct AIMonitoringConfig {
+    /// Training metrics collection
+    pub collect_training_metrics: bool,
+    /// Inference metrics collection
+    pub collect_inference_metrics: bool,
+    /// Model performance tracking
+    pub track_model_performance: bool,
+    /// Resource usage monitoring
+    pub monitor_resource_usage: bool,
 }
 
-impl Default for MonitoringConfig {
+impl Default for AIMonitoringConfig {
     fn default() -> Self {
         Self {
-            metrics: vec![MetricType::RequestLatency, MetricType::RequestThroughput],
-            alerting: None,
-            logging: LoggingConfig::default(),
+            collect_training_metrics: true,
+            collect_inference_metrics: true,
+            track_model_performance: true,
+            monitor_resource_usage: true,
         }
     }
 }
+
+// Backward compatibility alias
+#[deprecated(since = "3.1.0", note = "Use AIMonitoringConfig instead")]
+pub type MonitoringConfig = AIMonitoringConfig;
 
 /// Normalization strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -738,7 +714,7 @@ pub enum AuthType {
     BearerToken,
     /// Basic authentication
     Basic,
-    /// OAuth2 authentication
+    /// `OAuth2` authentication
     OAuth2,
 }
 
@@ -784,29 +760,14 @@ impl Default for ResourceRequirements {
 }
 
 /// Health check configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthCheckConfig {
-    /// Health check endpoint
-    /// The endpoint value
-    pub endpoint: String,
-    /// Check interval
-    /// The interval value
-    pub interval: Duration,
-    pub timeout: Duration,
-    /// Number of failure_threshold
-    pub failure_threshold: u32,
-}
-
-impl Default for HealthCheckConfig {
-    fn default() -> Self {
-        Self {
-            endpoint: "/health".to_string(),
-            interval: Duration::from_secs(30),
-            timeout: Duration::from_secs(5),
-            failure_threshold: 3,
-        }
-    }
-}
+///
+/// **DEPRECATED**: Use `beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
+)]
+pub type HealthCheckConfig =
+    beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration;
 
 /// Metric types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -885,59 +846,40 @@ pub enum NotificationChannel {
     Webhook,
 }
 
-/// Logging configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoggingConfig {
-    /// Log level
-    /// The level value
-    pub level: LogLevel,
-    pub format: LogFormat,
-    /// Log destinations
-    /// Collection of destinations
-    pub destinations: Vec<LogDestination>,
-}
+/// Logging configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LoggingConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::system::LoggingConfig instead"
+)]
+pub type LoggingConfig = beardog_types::canonical::config::domains::system::LoggingConfig;
 
-impl Default for LoggingConfig {
-    fn default() -> Self {
-        Self {
-            level: LogLevel::Info,
-            format: LogFormat::Json,
-            destinations: vec![LogDestination::Stdout],
-        }
-    }
-}
+/// Log levels (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogLevel` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::system::LogLevel instead"
+)]
+pub type LogLevel = beardog_types::canonical::config::domains::system::LogLevel;
 
-/// Log levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum LogLevel {
-    /// Trace level
-    Trace,
-    /// Debug level
-    Debug,
-    /// Info level
-    Info,
-    /// Warning level
-    Warn,
-    /// Error level
-    Error,
-}
+/// Log format (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogFormat` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::system::LogFormat instead"
+)]
+pub type LogFormat = beardog_types::canonical::config::domains::system::LogFormat;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum LogFormat {
-    Json,
-    Text,
-    Structured,
-}
-
-/// Log destinations
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum LogDestination {
-    /// Standard output
-    Stdout,
-    /// File output
-    File,
-    /// Remote logging service
-    Remote,
-    /// Database logging
-    Database,
-}
+/// Log destinations (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogTargetType` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::system::LogTargetType instead"
+)]
+pub type LogDestination = beardog_types::canonical::config::domains::system::LogTargetType;

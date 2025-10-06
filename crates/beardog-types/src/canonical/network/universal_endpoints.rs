@@ -195,8 +195,9 @@ impl UniversalEndpointConfig {
     /// Gets monitoring_endpoints
     pub fn get_monitoring_endpoints(&self) -> MonitoringEndpoints {
         MonitoringEndpoints {
-            prometheus: env::var("PROMETHEUS_ENDPOINT")
-                .unwrap_or_else(|_| "http://prometheus.ecosystem.internal:9090".to_string()),
+            prometheus: env::var("BEARDOG_METRICS_ENDPOINT")
+                .or_else(|_| env::var("PROMETHEUS_ENDPOINT"))
+                .unwrap_or_else(|_| "http://metrics.ecosystem.internal:9090".to_string()),
             grafana: env::var("GRAFANA_ENDPOINT")
                 .unwrap_or_else(|_| "http://grafana.ecosystem.internal:3000".to_string()),
             jaeger: env::var("JAEGER_ENDPOINT")

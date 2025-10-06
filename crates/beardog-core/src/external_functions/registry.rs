@@ -2,9 +2,9 @@
 
 use super::safety::{ParameterValue, SafetyChecker};
 use super::types::{
-    ExternalFunction, ExternalFunctionsRegistryConfig, FunctionHandle, FunctionMetadata, FunctionParameter, FunctionResult,
-    FunctionSignature, FunctionValue, LibraryHandle, LibraryMetadata, LibraryStatus,
-    SecurityClearance,
+    ExternalFunction, ExternalFunctionsRegistryConfig, FunctionHandle, FunctionMetadata,
+    FunctionParameter, FunctionResult, FunctionSignature, FunctionValue, LibraryHandle,
+    LibraryMetadata, LibraryStatus, SecurityClearance,
 };
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
@@ -50,13 +50,13 @@ impl ExternalFunctionRegistry {
             id: library_id.clone(),
             name: library_path
                 .split('/')
-                .last()
+                .next_back()
                 .unwrap_or("unknown")
                 .to_string(),
             path: library_path.into(),
             metadata: LibraryMetadata {
                 version: "1.0.0".to_string(),
-                description: format!("Library loaded from {}", library_path),
+                description: format!("Library loaded from {library_path}"),
                 author: "Unknown".to_string(),
                 license: "Unknown".to_string(),
                 exported_functions: vec![],
@@ -80,19 +80,18 @@ impl ExternalFunctionRegistry {
             Ok(())
         } else {
             Err(BearDogError::not_found(format!(
-                "Library not found: {}",
-                library_id
+                "Library not found: {library_id}"
             )))
         }
     }
 
-    /// Gets library_info
-    /// Gets library_info
+    /// Gets `library_info`
+    /// Gets `library_info`
     pub fn get_library_info(&self, library_id: &str) -> Result<LibraryHandle, BearDogError> {
         self.libraries
             .get(library_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Library not found: {}", library_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Library not found: {library_id}")))
     }
 
     /// List all loaded libraries
@@ -111,8 +110,7 @@ impl ExternalFunctionRegistry {
         // Verify library exists
         if !self.libraries.contains_key(library_id) {
             return Err(BearDogError::not_found(format!(
-                "Library not found: {}",
-                library_id
+                "Library not found: {library_id}"
             )));
         }
 
@@ -137,8 +135,7 @@ impl ExternalFunctionRegistry {
             Ok(())
         } else {
             Err(BearDogError::not_found(format!(
-                "Function not found: {}",
-                function_id
+                "Function not found: {function_id}"
             )))
         }
     }
@@ -199,19 +196,18 @@ impl ExternalFunctionRegistry {
             Ok(result)
         } else {
             Err(BearDogError::not_found(format!(
-                "Function not found: {}",
-                function_id
+                "Function not found: {function_id}"
             )))
         }
     }
 
-    /// Gets function_info
-    /// Gets function_info
+    /// Gets `function_info`
+    /// Gets `function_info`
     pub fn get_function_info(&self, function_id: &str) -> Result<FunctionHandle, BearDogError> {
         self.functions
             .get(function_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Function not found: {}", function_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Function not found: {function_id}")))
     }
 
     /// Checks if a library path is allowed

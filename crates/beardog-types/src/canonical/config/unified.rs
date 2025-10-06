@@ -1,12 +1,12 @@
 // Unified Configuration System - Single Source of Truth
 //
-// This module provides the **MASTER** configuration system for BearDog that eliminates
+// This module provides the **PRIMARY** configuration system for BearDog that eliminates
 // all fragmentation by consolidating 80+ Config structs into a unified hierarchy.
 //
 // ## Configuration Unification Strategy
 //
 // ### **ELIMINATED FRAGMENTATION**
-// - ✅ **80+ Config structs** → **1 Master Config** + **Domain modules**
+// - ✅ **80+ Config structs** → **1 Unified Config** + **Domain modules**
 // - ✅ **364 files** with configs → **Centralized system**
 // - ✅ **Multiple version constants** → **Single version source**
 // - ✅ **3 different systems** → **1 unified system**
@@ -26,86 +26,117 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 // Import canonical configuration types
-use crate::canonical::config::network::{
-    CircuitBreakerConfig, LoadBalancingConfig,
-};
+use crate::canonical::config::network::{CircuitBreakerConfig, LoadBalancingConfig};
 use crate::canonical::config::security::{
     CanonicalAuditConfig, CanonicalAuthenticationConfig, CanonicalAuthorizationConfig,
     CanonicalEncryptionConfig, CanonicalMfaConfig, CanonicalSessionConfig,
 };
 // Import unified monitoring configuration
 
+use crate::canonical::config::hsm::UnifiedHsmConfig;
 use crate::canonical::config::type_aliases::{
     DatabaseBackupConfig, EntropyCollectionConfig, EntropyHierarchyConfig, GeneticAlgorithmConfig,
     HumanEntropyConfig, SimdOptimizationConfig,
 };
-use crate::canonical::config::hsm::UnifiedHsmConfig;
 // Removed unused import: RetryConfig (used directly where needed)
 // Note: SecurityPolicy will be aliased to SecurityConfig for now
 
 // Type aliases for compatibility - REMOVED October 2025
 // Use the canonical types directly: RetryConfig, RateLimitConfig, SecurityConfig, etc.
 
+/// Unified BearDog Configuration - Single Source of Truth
 ///
 /// This is the **ROOT** of the unified configuration system that eliminates all
-/// fragmentation by providing one comprehensive configuration structure.
+/// fragmentation by consolidating 80+ Config structs into one comprehensive structure.
+///
+/// ## Architecture
+///
+/// The configuration is organized into three main layers:
+///
+/// 1. **Core Domains** - Essential system configurations (app, network, security, hsm, database, monitoring)
+/// 2. **Specialized Domains** - Advanced capabilities (genetics, workflows, compliance, performance)
+/// 3. **Infrastructure Domains** - System operations (production, deployment)
+///
+/// ## Benefits
+///
+/// - **Single Source of Truth** - No configuration fragmentation
+/// - **Type Safety** - Strongly typed with validation
+/// - **Zero Duplication** - Consolidates 364 files with configs
+/// - **Performance** - Zero-cost abstractions
+/// - **Migration Friendly** - Maintains compatibility
+///
+/// ## Example
+///
+/// ```rust
+/// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+///
+/// // Load from environment
+/// let config = UnifiedBearDogConfig::from_env()?;
+///
+/// // Access domain configs
+/// println!("API Port: {}", config.app.api_port);
+/// println!("Network timeout: {:?}", config.network.request_timeout);
+/// println!("HSM enabled: {}", config.hsm.enabled);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedBearDogConfig {
-    /// **SYSTEM METADATA**
-    /// The metadata value
+    /// System metadata including version, environment, and instance information
     pub metadata: SystemMetadata,
 
     /// **CORE DOMAINS** - Essential system configurations
-    /// Application-level configuration settings
-    /// The app value
+
+    /// Application-level configuration (ports, service name, operational parameters)
     pub app: UnifiedAppConfig,
-    /// Network communication and connectivity configuration
-    /// The network value
+
+    /// Network communication and connectivity (timeouts, TLS, load balancing)
     pub network: UnifiedNetworkConfig,
-    /// Security policies and authentication configuration
-    /// The security value
+
+    /// Security policies and authentication (encryption, access control, threat detection)
     pub security: UnifiedSecurityConfig,
-    /// Hardware Security Module configuration
-    /// The hsm value
+
+    /// Hardware Security Module integration (YubiKey, TPM, PKCS#11)
     pub hsm: UnifiedHsmConfig,
-    /// Database connectivity and storage configuration
-    /// The database value
+
+    /// Database connectivity and storage (pools, migrations, backups)
     pub database: UnifiedDatabaseConfig,
-    /// Monitoring, metrics, and observability configuration
-    /// The monitoring value
-    pub monitoring: crate::canonical::config::monitoring::UnifiedMonitoringConfig,
+
+    /// Monitoring, metrics, and observability (telemetry, alerts, dashboards)
+    pub monitoring: crate::canonical::monitoring::MonitoringConfig,
 
     /// **SPECIALIZED DOMAINS** - Advanced capabilities
-    /// Genetic algorithms and AI configuration
-    /// The genetics value
+
+    /// Genetic algorithms and AI configuration (entropy, biome sovereignty, key evolution)
     pub genetics: UnifiedGeneticsConfig,
-    /// Workflow engine and automation configuration
-    /// The workflows value
+
+    /// Workflow engine and automation (orchestration, business processes)
     pub workflows: UnifiedWorkflowConfig,
-    /// Compliance and regulatory configuration
-    /// The compliance value
+
+    /// Compliance and regulatory settings (GDPR, HIPAA, SOC 2)
     pub compliance: UnifiedComplianceConfig,
+
+    /// Performance optimization (concurrency, buffers, zero-copy)
     pub performance: UnifiedPerformanceConfig,
 
     /// **INFRASTRUCTURE DOMAINS** - System operations
-    /// Production environment configuration
-    /// The production value
+
+    /// Production environment configuration (deployment, scaling, reliability)
     pub production: UnifiedProductionConfig,
-    /// Deployment and orchestration configuration
-    /// The deployment value
+
+    /// Deployment and orchestration (K8s, containers, service mesh)
     pub deployment: UnifiedDeploymentConfig,
+
     /// Testing framework and validation configuration
-    /// The testing value
     pub testing: UnifiedTestingConfig,
-    /// Development environment configuration
-    /// The development value
+
+    /// Development environment configuration (dev tools, hot reload, debug settings)
     pub development: UnifiedDevelopmentConfig,
 
     /// **INTEGRATION DOMAINS** - External connectivity
-    /// External adapter and integration configuration
-    /// The adapters value
+
+    /// External adapter and integration configuration (API adapters, protocol bridges)
     pub adapters: UnifiedAdapterConfig,
-    /// Secure tunnel and VPN configuration
+
+    /// Secure tunnel and VPN configuration (encrypted channels, peer discovery)
     /// The tunnel value
     pub tunnel: UnifiedTunnelConfig,
     /// Federation and distributed system configuration
@@ -348,7 +379,7 @@ pub struct UnifiedSecurityConfig {
 
     /// **THREAT DETECTION**
     /// The threat detection value
-    pub threat_detection: crate::canonical::monitoring::ThreatDetectionConfig,
+    pub threat_detection: crate::canonical::config::domains::threat::CanonicalThreatDetectionConfig,
 }
 
 /// **UNIFIED HSM CONFIG** - Consolidates all HSM configurations
@@ -644,7 +675,7 @@ pub struct UnifiedEcosystemConfig {}
 /// **SIMPLIFIED CONFIGURATION** - Lightweight alternative for simple deployments
 ///
 /// This provides a simplified configuration structure for projects that don't need
-/// the full complexity of UnifiedBearDogConfig. It includes only the most essential
+/// the full complexity of `UnifiedBearDogConfig`. It includes only the most essential
 /// configuration domains with sensible defaults.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimplifiedBearDogConfig {
@@ -824,20 +855,24 @@ impl SimplifiedBearDogConfig {
 
     /// Validate the configuration
     pub fn validate(&self) -> BearDogResult<()> {
-        use super::r#trait::validation::*;
-        
+        use super::r#trait::validation::{validate_port, validate_range};
+
         validate_port(self.network.port, "network.port")?;
-        
+
         if self.network.max_connections == 0 {
-            return Err(BearDogError::configuration("network.max_connections must be greater than 0"));
+            return Err(BearDogError::configuration(
+                "network.max_connections must be greater than 0",
+            ));
         }
-        
+
         validate_range(self.security.hash_rounds, 4, 31, "security.hash_rounds")?;
-        
+
         if self.database.pool_size == 0 {
-            return Err(BearDogError::configuration("database.pool_size must be greater than 0"));
+            return Err(BearDogError::configuration(
+                "database.pool_size must be greater than 0",
+            ));
         }
-        
+
         Ok(())
     }
 
@@ -902,9 +937,18 @@ impl SimplifiedBearDogConfig {
         summary.insert("version".to_string(), self.version.clone());
         summary.insert("environment".to_string(), self.environment.clone());
         summary.insert("network_port".to_string(), self.network.port.to_string());
-        summary.insert("security_mfa".to_string(), self.security.enable_mfa.to_string());
-        summary.insert("database_pool_size".to_string(), self.database.pool_size.to_string());
-        summary.insert("monitoring_enabled".to_string(), self.monitoring.enable_metrics.to_string());
+        summary.insert(
+            "security_mfa".to_string(),
+            self.security.enable_mfa.to_string(),
+        );
+        summary.insert(
+            "database_pool_size".to_string(),
+            self.database.pool_size.to_string(),
+        );
+        summary.insert(
+            "monitoring_enabled".to_string(),
+            self.monitoring.enable_metrics.to_string(),
+        );
         summary
     }
 }

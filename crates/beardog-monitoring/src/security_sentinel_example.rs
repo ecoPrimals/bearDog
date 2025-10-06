@@ -29,9 +29,15 @@ pub async fn demonstrate_security_sentinel() -> Result<(), BearDogError> {
     event_data.insert("source_ip", "192.168.1.100");
     event_data.insert("user_id", "user123");
 
-    sentinel.process_security_event("auth_failure", event_data.clone()).await?;
-    sentinel.process_security_event("access_violation", event_data.clone()).await?;
-    sentinel.process_security_event("compliance_violation", event_data).await?;
+    sentinel
+        .process_security_event("auth_failure", event_data.clone())
+        .await?;
+    sentinel
+        .process_security_event("access_violation", event_data.clone())
+        .await?;
+    sentinel
+        .process_security_event("compliance_violation", event_data)
+        .await?;
 
     // Get status report
     let report = sentinel.get_status_report().await?;
@@ -75,7 +81,9 @@ mod tests {
         let mut event_data = HashMap::new();
         event_data.insert("test", "data");
 
-        sentinel.process_security_event("auth_failure", event_data).await?;
+        sentinel
+            .process_security_event("auth_failure", event_data)
+            .await?;
 
         let stats = sentinel.get_statistics().await;
         assert!(stats.auth_failures > 0);

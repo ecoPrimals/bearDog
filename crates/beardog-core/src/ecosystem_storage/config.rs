@@ -19,22 +19,22 @@ pub struct EcosystemStorageConfig {
     /// The cache storage path value
     pub cache_storage_path: PathBuf,
     /// Maximum storage size in bytes
-    /// Number of max_storage_size_bytes
+    /// Number of `max_storage_size_bytes`
     pub max_storage_size_bytes: u64,
     /// Cache size limit in bytes
-    /// Number of cache_size_limit_bytes
+    /// Number of `cache_size_limit_bytes`
     pub cache_size_limit_bytes: u64,
     /// Enable data compression
-    /// Whether enable_compression is enabled
+    /// Whether `enable_compression` is enabled
     pub enable_compression: bool,
     /// Enable encryption at rest
-    /// Whether enable_encryption is enabled
+    /// Whether `enable_encryption` is enabled
     pub enable_encryption: bool,
     /// Replication factor
-    /// Number of replication_factor
+    /// Number of `replication_factor`
     pub replication_factor: u32,
     /// Backup interval in seconds
-    /// Number of backup_interval_secs
+    /// Number of `backup_interval_secs`
     pub backup_interval_secs: u64,
     /// Cache eviction policy
     /// The cache eviction policy value

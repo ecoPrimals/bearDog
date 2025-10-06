@@ -99,10 +99,10 @@ pub enum InteractionTrend {
 /// Binary access patterns (being evolved away from)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryAccessPattern {
-    /// Traditional whitelist approach
-    Whitelist,
-    /// Traditional blacklist approach
-    Blacklist,
+    /// Traditional allowlist approach
+    Allowlist,
+    /// Traditional blocklist approach
+    Blocklist,
 }
 
 /// Binary trust patterns (being evolved away from)
@@ -126,7 +126,7 @@ pub enum HierarchicalPattern {
 }
 
 
-/// Ecosystem membership spectrum - replaces binary whitelist/blacklist patterns
+/// Ecosystem membership spectrum - replaces binary allowlist/blocklist patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EcosystemMembership {
     /// Trusted ecosystem maintainer with stewardship responsibilities
@@ -166,7 +166,7 @@ pub enum TrustEvolution {
     },
 }
 
-/// Symbiotic coordination models - replaces master/slave hierarchical patterns
+/// Symbiotic coordination models - replaces primary/replica hierarchical patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CoordinationModel {
     /// Collective decision making with no single authority

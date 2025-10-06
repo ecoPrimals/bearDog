@@ -397,11 +397,11 @@ pub enum McdaMethod {
     Topsis,
     /// Analytic Hierarchy Process
     Ahp,
-    /// ELimination Et Choix Traduisant la REalité
+    /// `ELimination` Et Choix Traduisant la `REalité`
     Electre,
-    /// Preference Ranking Organization METHod
+    /// Preference Ranking Organization `METHod`
     Promethee,
-    /// VlseKriterijumska Optimizacija I Kompromisno Resenje
+    /// `VlseKriterijumska` Optimizacija I Kompromisno Resenje
     Vikor,
 }
 
@@ -640,13 +640,13 @@ pub enum CombinationMethod {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DecisionEngineStats {
     /// Total number of decisions processed
-    /// Number of decisions_made
+    /// Number of `decisions_made`
     pub decisions_made: u64,
     /// Average decision processing time in milliseconds
     pub avg_decision_time: f64,
     pub confidence_score: f64,
     /// Number of decisions that required human intervention
-    /// Number of human_interventions
+    /// Number of `human_interventions`
     pub human_interventions: u64,
     /// Percentage of autonomous decisions made successfully
     /// The autonomy rate value
@@ -665,11 +665,11 @@ pub struct DecisionEngineStats {
     pub peak_load: f64,
     pub feedback_wait_time: f64,
     /// Number of decisions currently pending
-    /// Number of pending_decisions
+    /// Number of `pending_decisions`
     pub pending_decisions: u32,
     /// System uptime in seconds since last restart
     pub uptime_seconds: u64,
     /// Total memory usage in bytes
-    /// Number of memory_usage_bytes
+    /// Number of `memory_usage_bytes`
     pub memory_usage_bytes: u64,
 }

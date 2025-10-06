@@ -23,7 +23,7 @@ pub struct NetworkConfig {
     pub tls_key_path: Option<String>,
     /// Connection pool configuration
     /// The connection pool value
-    pub connection_pool: ConnectionPoolConfig,
+    pub connection_pool: crate::canonical::config::domains::network::ConnectionPoolConfig,
     /// Timeout configurations
     pub timeouts: TimeoutConfig,
 }
@@ -36,44 +36,23 @@ impl Default for NetworkConfig {
             tls_enabled: true,
             tls_cert_path: None,
             tls_key_path: None,
-            connection_pool: ConnectionPoolConfig::default(),
+            connection_pool:
+                crate::canonical::config::domains::network::ConnectionPoolConfig::default(),
             timeouts: TimeoutConfig::default(),
         }
     }
 }
 
-/// Connection pool configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectionPoolConfig {
-    /// Maximum pool size
-    /// Number of `pool_size`
-    pub pool_size: u32,
-    /// Idle timeout duration
-    pub idle_timeout: Duration,
-    /// Maximum connection lifetime
-    pub max_lifetime: Duration,
-    /// Test connections on borrow
-    /// Whether `test_on_borrow` is enabled
-    pub test_on_borrow: bool,
-    /// Test connections on return
-    /// Whether `test_on_return` is enabled
-    pub test_on_return: bool,
-    /// Test idle connections
-    pub test_while_idle: bool,
-}
-
-impl Default for ConnectionPoolConfig {
-    fn default() -> Self {
-        Self {
-            pool_size: 10,
-            idle_timeout: Duration::from_secs(300),
-            max_lifetime: Duration::from_secs(3600),
-            test_on_borrow: true,
-            test_on_return: false,
-            test_while_idle: true,
-        }
-    }
-}
+/// Connection pool configuration (DEPRECATED - use canonical config)
+///
+/// **MIGRATION**: Use `canonical::config::domains::network::ConnectionPoolConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
+)]
+pub type ConnectionPoolConfig = crate::canonical::config::domains::network::ConnectionPoolConfig;
 
 /// Timeout configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -212,8 +191,12 @@ impl NetworkConfig {
             }
         }
 
-        if self.connection_pool.pool_size == 0 {
-            return Err("Connection pool size must be greater than 0".to_string());
+        if self.connection_pool.max_size == 0 {
+            return Err("Connection pool max size must be greater than 0".to_string());
+        }
+
+        if self.connection_pool.max_size < self.connection_pool.min_size {
+            return Err("Connection pool max size must be >= min size".to_string());
         }
 
         Ok(())

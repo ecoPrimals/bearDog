@@ -133,7 +133,7 @@ mod tests {
     use beardog_auth::auth::{NodeCapability, SecurityClearance};
 
     #[tokio::test]
-    fn test_basic_spawning() -> Result<(), BearDogError> {
+    async fn test_basic_spawning() -> Result<(), BearDogError> {
         let engine = GeneticSpawningEngine::new();
 
         let request = SpawnRequest {
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_inheritance_spawning() -> Result<(), BearDogError> {
+    async fn test_inheritance_spawning() -> Result<(), BearDogError> {
         let engine = GeneticSpawningEngine::new();
 
         let parent = BearDogGenetics {

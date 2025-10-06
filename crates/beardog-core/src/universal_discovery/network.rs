@@ -14,13 +14,13 @@ pub struct NetworkConfig {
     /// The multicast address value
     pub multicast_address: IpAddr,
     /// Multicast port
-    /// Number of multicast_port
+    /// Number of `multicast_port`
     pub multicast_port: u16,
     /// Discovery port range
     /// The discovery port range value
     pub discovery_port_range: (u16, u16),
     /// Maximum packet size
-    /// Number of max_packet_size
+    /// Number of `max_packet_size`
     pub max_packet_size: usize,
     /// Connection timeout in milliseconds
     pub connection_timeout_ms: u64,
@@ -29,7 +29,7 @@ pub struct NetworkConfig {
     /// Write timeout in milliseconds
     pub write_timeout_ms: u64,
     /// Enable IPv6
-    /// Whether enable_ipv6 is enabled
+    /// Whether `enable_ipv6` is enabled
     pub enable_ipv6: bool,
     /// Network interface to bind to
     /// Optional interface
@@ -90,7 +90,7 @@ pub struct TlsConfig {
     /// Optional ca file
     pub ca_file: Option<String>,
     /// Enable client certificate verification
-    /// Whether verify_client is enabled
+    /// Whether `verify_client` is enabled
     pub verify_client: bool,
     /// TLS version minimum
     /// The min version value
@@ -111,19 +111,19 @@ pub enum TlsVersion {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CacheConfig {
     /// Enable service discovery cache
-    /// Whether enable_cache is enabled
+    /// Whether `enable_cache` is enabled
     pub enable_cache: bool,
     /// Cache TTL in seconds
-    /// Number of cache_ttl_secs
+    /// Number of `cache_ttl_secs`
     pub cache_ttl_secs: u64,
     /// Maximum cache entries
-    /// Number of max_cache_entries
+    /// Number of `max_cache_entries`
     pub max_cache_entries: usize,
     /// Cache cleanup interval in seconds
-    /// Number of cleanup_interval_secs
+    /// Number of `cleanup_interval_secs`
     pub cleanup_interval_secs: u64,
     /// Enable cache compression
-    /// Whether enable_compression is enabled
+    /// Whether `enable_compression` is enabled
     pub enable_compression: bool,
 }
 
@@ -142,7 +142,7 @@ impl Default for CacheConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     /// Enable authentication
-    /// Whether enable_auth is enabled
+    /// Whether `enable_auth` is enabled
     pub enable_auth: bool,
     /// The auth method value
     pub auth_method: AuthenticationMethod,
@@ -151,18 +151,18 @@ pub struct SecurityConfig {
     /// Optional jwt secret
     pub jwt_secret: Option<String>,
     /// Enable rate limiting
-    /// Whether enable_rate_limiting is enabled
+    /// Whether `enable_rate_limiting` is enabled
     pub enable_rate_limiting: bool,
     /// Rate limit: requests per minute
-    /// Number of rate_limit_rpm
+    /// Number of `rate_limit_rpm`
     pub rate_limit_rpm: u32,
-    /// Enable IP whitelisting
-    /// Whether enable_ip_whitelist is enabled
-    pub enable_ip_whitelist: bool,
-    /// Whitelisted IP addresses
-    /// Collection of whitelisted ips
-    pub whitelisted_ips: Vec<IpAddr>,
-    /// Whether enable_encryption is enabled
+    /// Enable IP allowlisting
+    /// Whether `enable_ip_allowlist` is enabled
+    pub enable_ip_allowlist: bool,
+    /// Allowed IP addresses
+    /// Collection of allowed ips
+    pub allowed_ips: Vec<IpAddr>,
+    /// Whether `enable_encryption` is enabled
     pub enable_encryption: bool,
     /// Encryption algorithm
     /// The encryption algorithm value
@@ -178,8 +178,8 @@ impl Default for SecurityConfig {
             jwt_secret: None,
             enable_rate_limiting: true,
             rate_limit_rpm: 1000,
-            enable_ip_whitelist: false,
-            whitelisted_ips: vec![],
+            enable_ip_allowlist: false,
+            allowed_ips: vec![],
             enable_encryption: false,
             encryption_algorithm: "AES-256-GCM".to_string(),
         }
@@ -206,9 +206,9 @@ pub struct NetworkUtils;
 
 impl NetworkUtils {
     /// Get available network interfaces
-    /// Gets network_interfaces
-    /// Gets network_interfaces
-    pub fn get_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
+    /// Gets `network_interfaces`
+    /// Gets `network_interfaces`
+    pub const fn get_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
         // Implementation would enumerate network interfaces
         Ok(vec![])
     }
@@ -227,8 +227,8 @@ impl NetworkUtils {
     /// Find available port in range
     pub async fn find_available_port(start: u16, end: u16) -> Result<Option<u16>, BearDogError> {
         for port in start..=end {
-            let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().map_err(|e| {
-                BearDogError::system(format!("Invalid address format for port {}: {}", port, e))
+            let addr: SocketAddr = format!("127.0.0.1:{port}").parse().map_err(|e| {
+                BearDogError::system(format!("Invalid address format for port {port}: {e}"))
             })?;
             if Self::is_port_available(&addr).await? {
                 return Ok(Some(port));
@@ -268,10 +268,10 @@ pub struct NetworkInterface {
     /// Collection of addresses
     pub addresses: Vec<IpAddr>,
     /// Whether the interface is currently up and running
-    /// Whether is_up is enabled
+    /// Whether `is_up` is enabled
     pub is_up: bool,
     /// Whether this is a loopback interface
-    /// Whether is_loopback is enabled
+    /// Whether `is_loopback` is enabled
     pub is_loopback: bool,
     /// Maximum transmission unit size in bytes
     /// Optional mtu

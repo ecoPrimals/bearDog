@@ -20,13 +20,13 @@ pub struct UniversalAdapterConfig {
     /// Request timeout in milliseconds
     pub request_timeout_ms: u64,
     /// Maximum retry attempts
-    /// Number of max_retries
+    /// Number of `max_retries`
     pub max_retries: u32,
     /// Enable automatic reconnection
-    /// Whether auto_reconnect is enabled
+    /// Whether `auto_reconnect` is enabled
     pub auto_reconnect: bool,
     /// Health check interval in seconds
-    /// Number of health_check_interval_secs
+    /// Number of `health_check_interval_secs`
     pub health_check_interval_secs: u64,
     /// Custom configuration parameters
     pub custom_config: HashMap<String, serde_json::Value>,
@@ -53,22 +53,22 @@ impl Default for UniversalAdapterConfig {
 }
 
 /// Production configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ProductionConfig {
     /// Enable production features
-    /// Whether production_mode is enabled
+    /// Whether `production_mode` is enabled
     pub production_mode: bool,
     /// Enhanced logging
-    /// Whether enhanced_logging is enabled
+    /// Whether `enhanced_logging` is enabled
     pub enhanced_logging: bool,
     /// Metrics collection
     /// Whether metrics is enabled
     pub metrics_enabled: bool,
     /// Circuit breaker enabled
-    /// Whether circuit_breaker is enabled
+    /// Whether `circuit_breaker` is enabled
     pub circuit_breaker_enabled: bool,
     /// Rate limiting enabled
-    /// Whether rate_limiting is enabled
+    /// Whether `rate_limiting` is enabled
     pub rate_limiting_enabled: bool,
 }
 
@@ -84,28 +84,13 @@ impl Default for ProductionConfig {
     }
 }
 
-/// Connection pool configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PoolConfig {
-    /// Maximum number of connections
-    /// Number of max_connections
-    pub max_connections: u32,
-    /// Minimum number of connections
-    /// Number of min_connections
-    pub min_connections: u32,
-    /// Connection idle timeout in seconds
-    pub idle_timeout_secs: u64,
-    /// Connection maximum lifetime in seconds
-    pub max_lifetime_secs: u64,
-}
-
-impl Default for PoolConfig {
-    fn default() -> Self {
-        Self {
-            max_connections: 10,
-            min_connections: 2,
-            idle_timeout_secs: 300,
-            max_lifetime_secs: 3600,
-        }
-    }
-}
+/// Connection pool configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::network::ConnectionPoolConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::network::ConnectionPoolConfig instead"
+)]
+pub type PoolConfig = beardog_types::canonical::config::domains::network::ConnectionPoolConfig;

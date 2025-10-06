@@ -1,6 +1,59 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! # BearDog Utilities Crate
+//!
+//! Essential utilities and optimizations for the BearDog platform, providing
+//! zero-copy operations, SIMD acceleration, memory pooling, and AI-powered
+//! optimizations.
+//!
+//! ## Features
+//!
+//! - **Zero-Copy Operations**: Minimize memory allocations and copies
+//! - **SIMD Acceleration**: Hardware-accelerated operations for performance
+//! - **Memory Pooling**: Efficient buffer and memory management
+//! - **Property Testing**: QuickCheck-based property testing framework
+//! - **AI Optimization**: Intelligent performance optimization
+//! - **100% Safe**: Zero unsafe code in all utilities
+//!
+//! ## Core Modules
+//!
+//! ### Performance
+//! - [`zero_copy`]: Zero-copy buffer management and operations
+//! - [`simd_optimizations`]: SIMD-accelerated operations
+//! - [`performance_optimizations`]: General performance patterns
+//! - [`memory_pools_safe`]: Safe memory pooling
+//!
+//! ### Utilities
+//! - [`utils`]: Common utility functions and helpers
+//! - [`const_eval`]: Compile-time evaluations
+//! - [`benchmarks`]: Performance benchmarking utilities
+//!
+//! ### Testing
+//! - [`property_testing`]: Property-based testing framework
+//!
+//! ## Example
+//!
+//! ```rust
+//! use beardog_utils::utils::env_utils;
+//!
+//! // Environment variable utilities with fallbacks
+//! let value = env_utils::get_env_or_default("BEARDOG_PORT", "8080");
+//! println!("Port: {}", value);
+//! ```
+//!
+//! ## Zero-Copy Patterns
+//!
+//! The zero-copy module provides efficient buffer management:
+//!
+//! ```rust,ignore
+//! use beardog_utils::zero_copy::SafeZeroCopyBuffer;
+//!
+//! let buffer = SafeZeroCopyBuffer::new(1024);
+//! // Use buffer without copies
+//! ```
+//!
+//! ## Performance
+//!
+//! SIMD operations provide significant performance improvements when available.
+//! All operations automatically fall back to safe scalar implementations.
 
 pub mod ai_optimization;
 pub mod benchmarks;
@@ -22,6 +75,13 @@ pub mod simd_optimizations;
 pub mod utils;
 pub mod zero_copy;
 pub mod zero_copy_optimized;
+
+// Testing frameworks - canonical location
+pub mod property_testing;
+
+// Deprecated modules - for backward compatibility
+#[deprecated(since = "3.0.2", note = "Use property_testing module instead")]
+pub mod property_based_testing;
 
 // Export safe implementations by default - specific imports to avoid ambiguity
 pub use buffer_pools_safe::{PoolStats as BufferPoolStats, SafeBufferPool as BufferPoolSafe};

@@ -8,7 +8,7 @@ use beardog_types::canonical::{ComponentStatus, HealthStatus};
 use chrono::Utc;
 use tracing::info;
 
-///
+/// Health check result for a component
 #[derive(Debug, Clone)]
 pub struct HealthCheck {
     /// Name of the component that was checked
@@ -63,11 +63,11 @@ impl BearDogCore {
 
         {
             let mut state = self.state.write().await;
-            for (_name, status) in state.components.iter_mut() {
+            for status in state.components.values_mut() {
                 *status = ComponentStatus::Inactive;
             }
 
-            for (_name, status) in state.components.iter_mut() {
+            for status in state.components.values_mut() {
                 *status = ComponentStatus::Inactive;
             }
             state.overall_health = HealthStatus::Unhealthy;

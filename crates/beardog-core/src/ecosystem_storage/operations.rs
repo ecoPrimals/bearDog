@@ -48,7 +48,7 @@ pub struct StorageResponse {
     /// Response timestamp
     pub timestamp: DateTime<Utc>,
     /// Operation duration in milliseconds
-    /// Number of duration_ms
+    /// Number of `duration_ms`
     pub duration_ms: u64,
     /// Error message (if operation failed)
     /// Optional error message

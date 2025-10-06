@@ -24,7 +24,7 @@ pub struct MetricsConfig {
     pub analysis: AnalysisConfig,
     /// Health check configuration
     /// The health checks value
-    pub health_checks: HealthCheckConfig,
+    pub health_checks: MetricsHealthCheckConfig,
 }
 
 /// Analysis configuration
@@ -47,9 +47,13 @@ pub struct AnalysisConfig {
     pub trend: TrendConfig,
 }
 
-/// Health check configuration
+/// Metrics system health check configuration
+///
+/// Domain-specific configuration for metrics health monitoring.
+/// Renamed from `HealthCheckConfig` for clarity - tracks health metrics
+/// with thresholds and degradation alerts.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthCheckConfig {
+pub struct MetricsHealthCheckConfig {
     /// Enable health monitoring
     /// Whether feature is enabled
     pub enabled: bool,
@@ -63,6 +67,13 @@ pub struct HealthCheckConfig {
     /// Whether alert_on_degraded is enabled
     pub alert_on_degraded: bool,
 }
+
+/// Deprecated: Use `MetricsHealthCheckConfig` instead
+#[deprecated(
+    since = "3.6.0",
+    note = "Use `MetricsHealthCheckConfig` for metrics health monitoring"
+)]
+pub type HealthCheckConfig = MetricsHealthCheckConfig;
 
 /// Anomaly detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,7 +110,7 @@ impl Default for MetricsConfig {
             max_history_size: 1000,
             enable_broadcasting: true,
             analysis: AnalysisConfig::default(),
-            health_checks: HealthCheckConfig::default(),
+            health_checks: MetricsHealthCheckConfig::default(),
         }
     }
 }
@@ -116,7 +127,7 @@ impl Default for AnalysisConfig {
     }
 }
 
-impl Default for HealthCheckConfig {
+impl Default for MetricsHealthCheckConfig {
     fn default() -> Self {
         Self {
             enabled: true,

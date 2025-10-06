@@ -137,11 +137,25 @@ impl BearDogFramework {
     pub async fn discover_services(&mut self) -> Result<Vec<ServiceInfo>, BearDogError> {
         info!("🔍 Discovering services with universal capability-based discovery");
 
-        // Create default service configurations with environment variable support
-        let compute_endpoint = std::env::var("BEARDOG_COMPUTE_ENDPOINT")
-            .unwrap_or_else(|_| "http://compute.local:8080".to_string());
-        let storage_endpoint = std::env::var("BEARDOG_STORAGE_ENDPOINT")
-            .unwrap_or_else(|_| "http://storage.local:8080".to_string());
+        // Modern idiomatic approach: explicit configuration requirement
+        // No hardcoded fallbacks - fail explicitly with helpful error messages
+        let compute_endpoint = std::env::var("BEARDOG_COMPUTE_ENDPOINT").map_err(|_| {
+            BearDogError::Configuration(
+                "BEARDOG_COMPUTE_ENDPOINT must be configured. \
+                 Set environment variable or add to config file. \
+                 Example: export BEARDOG_COMPUTE_ENDPOINT=http://compute.example.com:8080"
+                    .to_string(),
+            )
+        })?;
+
+        let storage_endpoint = std::env::var("BEARDOG_STORAGE_ENDPOINT").map_err(|_| {
+            BearDogError::Configuration(
+                "BEARDOG_STORAGE_ENDPOINT must be configured. \
+                 Set environment variable or add to config file. \
+                 Example: export BEARDOG_STORAGE_ENDPOINT=http://storage.example.com:8080"
+                    .to_string(),
+            )
+        })?;
 
         let compute_service = ServiceInfo {
             name: "compute-service".to_string(),
@@ -225,15 +239,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_framework_initialization() {
-        let framework = BearDogFramework::new().unwrap();
+        let framework = BearDogFramework::new().await.unwrap();
         assert_eq!(framework.config.confidence_level, 0.95);
         assert_eq!(framework.config.sample_size, 1000);
     }
 
     #[tokio::test]
     async fn test_service_discovery() {
-        let mut framework = BearDogFramework::new().unwrap();
-        let services = framework.discover_services().unwrap();
+        // Set required environment variables for test
+        std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test-compute:8080");
+        std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test-storage:8081");
+
+        let mut framework = BearDogFramework::new().await.unwrap();
+        let services = framework.discover_services().await.unwrap();
 
         assert!(!services.is_empty());
         assert_eq!(framework.stats.services_discovered, services.len());
@@ -241,8 +259,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_copy_performance() {
-        let mut framework = BearDogFramework::new().unwrap();
-        framework.demonstrate_zero_copy_performance().unwrap();
+        let mut framework = BearDogFramework::new().await.unwrap();
+        framework.demonstrate_zero_copy_performance().await.unwrap();
 
         assert!(framework.stats.zero_copy_operations > 0);
         assert!(framework.stats.memory_ops_avoided > 0);

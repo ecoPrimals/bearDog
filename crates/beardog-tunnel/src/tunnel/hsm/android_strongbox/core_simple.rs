@@ -110,11 +110,11 @@ impl Default for MobileHardwareConfig {}
     fn derive_key(&str,
         derivation_data: &[u8],
         derived_key_type: KeyType,
-        info!("🔄 Deriving key from master key: {}", master_key_id);
+        info!("🔄 Deriving key from root key: {}", root_key_id);
             "strongbox_derived_{}",
             key_type: derived_key_type,
             material: beardog_types::canonical::hsm::KeyMaterial::Derived {
-                parent_key_id: master_key_id.to_string(),
+                parent_key_id: root_key_id.to_string(),
                 derivation_path: hex::encode(derivation_data),
                 parameters: std::collections::HashMap::with_capacity(16),
             key_material: beardog_types::canonical::hsm::KeyMaterial::Derived {

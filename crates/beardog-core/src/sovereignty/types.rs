@@ -17,8 +17,22 @@ pub use crate::ecosystem_simple::{
 };
 
 pub type SovereigntyLevel = u8;
-pub type SovereigntyConfig = SimpleEcosystemConfig;
 
+// FIXED: Renamed to avoid collision with EcosystemSovereigntyConfig in sovereignty.rs
+// This is specifically for simple ecosystem configuration
+pub type SimpleSovereigntyConfig = SimpleEcosystemConfig;
+
+/// EcoPrimal trait for sovereignty domain (DEPRECATED)
+/// 
+/// This trait definition is deprecated in favor of the canonical version in
+/// `beardog-core::ecosystem::primal_trait`. The canonical version provides
+/// a more complete interface including shutdown lifecycle management.
+/// 
+/// **Migration Path**: Use `beardog_core::ecosystem::EcoPrimal` instead.
+#[deprecated(
+    since = "3.6.0",
+    note = "Use beardog_core::ecosystem::EcoPrimal for the canonical EcoPrimal trait"
+)]
 pub trait EcoPrimal: Send + Sync {
     fn metadata(&self) -> &PrimalMetadata;
 

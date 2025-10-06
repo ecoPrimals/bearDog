@@ -26,7 +26,7 @@
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // Create AI optimization engine
 //! let engine = AIOptimizationEngine::new(Duration::from_secs(60))?;
-//! 
+//!
 //! // Start AI-driven optimization
 //! engine.start_optimization().await?;
 //! # Ok(())

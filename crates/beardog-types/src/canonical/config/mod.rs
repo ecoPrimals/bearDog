@@ -20,52 +20,105 @@
 // - **Type Safety**: Strongly typed configuration with validation
 // - **Performance Optimized**: Zero-cost abstractions and efficient loading
 
-// BearDogError no longer needed in this module after BearDogMasterConfig removal
+// BearDogError no longer needed in this module after deprecated config removal
 use serde::{Deserialize, Serialize};
 // use std::collections::HashMap; // Unused import
 
 // Domain-specific configuration modules
-/// App module
+
+/// Application configuration
+///
+/// Core application settings including service name, version, environment,
+/// and operational parameters.
 pub mod app;
-/// Auth module
+
+/// Authentication and authorization configuration
+///
+/// Settings for authentication mechanisms, JWT tokens, OAuth, and
+/// authorization policies.
 pub mod auth;
-/// Cache module
+
+/// Caching configuration
+///
+/// Settings for caching layers, TTLs, eviction policies, and
+/// distributed caching strategies.
 pub mod cache;
-/// Compliance module
+
+/// Compliance and regulatory configuration
+///
+/// Settings for GDPR, HIPAA, SOC 2, and other regulatory compliance
+/// requirements.
 pub mod compliance;
-/// Database module
+
+/// Database configuration
+///
+/// Database connection settings, pool configuration, migration settings,
+/// and backup strategies.
 pub mod database;
-/// Genetics module
+
+/// Genetics and entropy configuration
+///
+/// Settings for genetic algorithms, human entropy collection, biome
+/// sovereignty, and key evolution.
 pub mod genetics;
-/// Hsm module
+
+/// Hardware Security Module (HSM) configuration
+///
+/// Settings for HSM integration including YubiKey, TPM, PKCS#11,
+/// and software HSM configurations.
 pub mod hsm;
-/// Monitoring module
-pub mod monitoring;
-/// Monitoring Migration module
-pub mod monitoring_migration; // MONITORING MIGRATION UTILITY - Consolidates fragmented monitoring configs
-/// Network module
+
+// Monitoring moved to: canonical/monitoring/ (now the canonical location)
+
+/// Monitoring migration utilities
+///
+/// Consolidates fragmented monitoring configs into the unified system.
+/// Used during the migration from old monitoring configurations.
+pub mod monitoring_migration;
+
+/// Network configuration
+///
+/// Network communication settings including ports, timeouts, TLS,
+/// load balancing, and circuit breakers.
 pub mod network;
+
+/// Performance configuration
+///
+/// Performance optimization settings including concurrency limits,
+/// buffer sizes, and zero-copy optimizations.
 pub mod performance;
-/// Production module
+
+/// Production environment configuration
+///
+/// Production-specific settings for deployment, scaling, reliability,
+/// and operational excellence.
 pub mod production;
-/// Security module
+
+/// Security configuration
+///
+/// Core security settings including encryption, key management,
+/// access control, and threat detection.
 pub mod security;
-/// Workflow module
+
+/// Workflow configuration
+///
+/// Workflow engine settings for automation, orchestration, and
+/// business process management.
 pub mod workflow;
 
 // Domain configuration submodules (consolidated types)
 /// Domains module containing consolidated configuration types
-/// 
+///
 /// NOTE: bootstrap.rs exists but needs proper module system integration
 /// For now, domains/ uses simple directory structure
 pub mod domains;
 
 // UNIFIED CONFIGURATION SYSTEM - Single source of truth
-/// Type Aliases module
-pub mod type_aliases;
 /// Unified configuration trait and validation utilities
 #[path = "trait.rs"]
 pub mod r#trait;
+/// Type Aliases module
+pub mod type_aliases;
 /// Unified module
 pub mod unified;
 // unified_simple module REMOVED in Phase 2 (October 2025)
@@ -78,6 +131,14 @@ pub mod unified_trait;
 // This replaces the 1,436-line production.rs file with focused domain modules
 
 // Re-export canonical config types (avoiding naming conflicts)
+pub use crate::canonical::monitoring::{
+    MonitoringConfig, // The canonical monitoring configuration
+    UnifiedAlertingConfig,
+    UnifiedHealthConfig,
+    UnifiedLoggingConfig,
+    UnifiedMetricsConfig,
+    UnifiedTracingConfig,
+};
 pub use app::{AppConfig, ApplicationConfig, CanonicalAppConfig};
 pub use auth::*;
 pub use cache::*;
@@ -85,23 +146,12 @@ pub use compliance::*;
 pub use database::*;
 pub use genetics::*;
 pub use hsm::{UnifiedHsmConfig as ConfigHsmConfig, UnifiedHsmConfig as ConfigHsm};
-pub use monitoring::{
-    UnifiedAlertingConfig,
-    // ProductionMonitoringConfig, // Removed - now part of UnifiedMonitoringConfig
-    UnifiedHealthConfig,
-    UnifiedLoggingConfig,
-    UnifiedMetricsConfig,
-    UnifiedMonitoringConfig,
-    UnifiedTracingConfig,
-};
 pub use monitoring_migration::{
     create_configuration_legacy_monitoring, migrate_monitoring_configurations,
     LegacyMonitoringConfig, MonitoringMigrationReport, MonitoringMigrationResult,
     MonitoringMigrationService,
 };
-pub use network::{
-    CanonicalNetworkConfig as ConfigNetworkConfig, NetworkConfig as ConfigNetwork,
-};
+pub use network::{CanonicalNetworkConfig as ConfigNetworkConfig, NetworkConfig as ConfigNetwork};
 pub use performance::*;
 pub use production::*;
 pub use production::{EnvironmentLevel, EnvironmentType}; // Explicit re-export for compatibility
@@ -116,49 +166,47 @@ pub use security::CanonicalSecurityConfig;
 
 // Re-export the UNIFIED CONFIGURATION TRAIT SYSTEM
 pub use r#trait::{
-    BearDogConfig, ConfigBuilder, ConfigLoader, ConfigMetadata, ConfigSource, ValidationStatus,
-    validation,
+    validation, BearDogConfig, ConfigBuilder, ConfigLoader, ConfigMetadata, ConfigSource,
+    ValidationStatus,
 };
 
 // Re-export the UNIFIED CONFIGURATION SYSTEM as primary interface
 pub use unified::{
-    // Comprehensive configuration
-    UnifiedBearDogConfig,
-    // Simplified configuration (NEW - merged from unified_simple.rs)
-    SimplifiedBearDogConfig,
+    DatabaseSettings,
     // Supporting types
     DeploymentMode,
     Environment,
     LogLevel,
+    MonitoringSettings,
+    // Simplified config types (NEW - merged from unified_simple.rs)
+    NetworkSettings,
     PasswordSource,
+    PerformanceSettings,
     RolloutConfig,
     RolloutStrategy,
+    SecuritySettings,
+    // Simplified configuration (NEW - merged from unified_simple.rs)
+    SimplifiedBearDogConfig,
     SystemMetadata,
     UnifiedAppConfig,
+    // Comprehensive configuration
+    UnifiedBearDogConfig,
     UnifiedDatabaseConfig,
     UnifiedGeneticsConfig,
     UnifiedNetworkConfig,
     UnifiedSecurityConfig,
     UnifiedVersionInfo,
-    // Simplified config types (NEW - merged from unified_simple.rs)
-    NetworkSettings,
-    SecuritySettings,
-    DatabaseSettings,
-    MonitoringSettings,
-    PerformanceSettings,
 };
 
 // Backward compatibility aliases
 pub use unified::SimplifiedBearDogConfig as WorkingUnifiedConfig;
-pub use UnifiedBearDogConfig as MasterUnifiedBearDogConfig;
+pub use UnifiedBearDogConfig as PrimaryUnifiedBearDogConfig;
 
 // NOTE: unified_simple module removed in Phase 2 cleanup (October 2025)
 // All functionality migrated to unified.rs
 
-
-// REMOVED: Deprecated BearDogMasterConfig (337 lines)
+// REMOVED: Deprecated legacy config types (337 lines)
 // Migrated to UnifiedBearDogConfig - October 2025
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigurationSummary {
@@ -190,5 +238,5 @@ pub struct ConfigurationSummary {
 
 // Compatibility aliases for migration (DEPRECATED - use actual types from unified module)
 // REMOVED: Duplicate aliases (Phase 2 cleanup - October 2025)
-// Use UnifiedBearDogConfig directly instead of MasterConfig or GlobalConfig  
-// CLEANED: Removed ambiguous aliases - use UnifiedBearDogConfig or BearDogMasterConfig directly
+// Use UnifiedBearDogConfig directly instead of deprecated legacy config types
+// CLEANED: Removed ambiguous aliases - use UnifiedBearDogConfig directly

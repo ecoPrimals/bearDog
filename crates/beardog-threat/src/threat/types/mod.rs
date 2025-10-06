@@ -13,50 +13,8 @@ pub mod engine;
 // Re-export engine types
 pub use engine::threat_engine::*;
 
-/// Threat detection configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatDetectionConfig {
-    /// Enable machine learning enhancement
-    /// Whether `ml_enhancement` is enabled
-    /// Whether `ml_enhancement` is enabled
-    pub ml_enhancement: bool,
-    /// Maximum number of active threats to track
-    /// Number of `max_active_threats`
-    /// Number of `max_active_threats`
-    pub max_active_threats: usize,
-    /// Threat detection sensitivity level (0.0 - 1.0)
-    /// The sensitivity value
-    /// The sensitivity value
-    pub sensitivity: f64,
-    /// Enable real-time monitoring
-    pub real_time_monitoring: bool,
-    /// Automatic response enabled
-    /// Whether `auto_response` is enabled
-    /// Whether `auto_response` is enabled
-    pub auto_response: bool,
-    /// Quarantine threshold score
-    /// The quarantine threshold value
-    /// The quarantine threshold value
-    pub quarantine_threshold: f64,
-    /// Block threshold score
-    /// The block threshold value
-    /// The block threshold value
-    pub block_threshold: f64,
-}
-
-impl Default for ThreatDetectionConfig {
-    fn default() -> Self {
-        Self {
-            ml_enhancement: true,
-            max_active_threats: 1000,
-            sensitivity: 0.7,
-            real_time_monitoring: true,
-            auto_response: false,
-            quarantine_threshold: 0.8,
-            block_threshold: 0.9,
-        }
-    }
-}
+// Re-export canonical threat detection configuration
+pub use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 
 /// Threat event representing a detected security incident
 #[derive(Debug, Clone, Serialize, Deserialize)]

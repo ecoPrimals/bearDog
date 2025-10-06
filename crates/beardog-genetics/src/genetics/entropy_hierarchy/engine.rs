@@ -216,13 +216,13 @@ mod tests {
     use chrono::Utc;
 
     #[tokio::test]
-    fn test_entropy_hierarchy_manager_creation() {
+    async fn test_entropy_hierarchy_manager_creation() {
         let config = EntropyHierarchyConfig::default();
         let _manager = EntropyHierarchyManager::new(config);
     }
 
     #[tokio::test]
-    fn test_create_human_seed() {
+    async fn test_create_human_seed() {
         let config = EntropyHierarchyConfig::default();
         let mut manager = EntropyHierarchyManager::new(config);
 
@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_seed_usage() {
+    async fn test_seed_usage() {
         let config = EntropyHierarchyConfig::default();
         let mut manager = EntropyHierarchyManager::new(config);
 

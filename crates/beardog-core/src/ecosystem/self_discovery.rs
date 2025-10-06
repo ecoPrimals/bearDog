@@ -16,7 +16,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SelfIdentity {
     pub id: String,
-    /// Human-readable name (e.g., "BearDog", "ComputePrimal", etc.)
+    /// Human-readable name (e.g., "`BearDog`", "`ComputePrimal`", etc.)
     /// Name of the item
     pub name: String,
     /// Version of this primal
@@ -35,7 +35,7 @@ pub struct SelfIdentity {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStatus {
     /// Represents healthy variant
     Healthy,
@@ -49,7 +49,7 @@ pub enum HealthStatus {
 
 /// Universal capability discovery service
 ///
-/// Provides capability-based service discovery across the BearDog ecosystem,
+/// Provides capability-based service discovery across the `BearDog` ecosystem,
 /// allowing components to find and connect to services based on their capabilities
 /// rather than hardcoded endpoints.
 #[derive(Debug, Clone)]
@@ -66,7 +66,7 @@ impl UniversalCapabilityDiscovery {
     /// - `Ok(UniversalCapabilityDiscovery)` if initialization succeeds
     /// - `Err(BearDogError)` if initialization fails
     /// Creates a new instance
-    pub fn new() -> Result<Self, BearDogError> {
+    pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self {})
     }
 
@@ -99,7 +99,7 @@ impl UniversalCapabilityDiscovery {
 
 ///
 /// Manages the process of discovering and integrating with other services
-/// in the BearDog ecosystem, handling identity, capability matching,
+/// in the `BearDog` ecosystem, handling identity, capability matching,
 /// and service registration.
 #[derive(Debug, Clone)]
 pub struct SelfDiscoveryManager {
@@ -123,8 +123,8 @@ impl SelfDiscoveryManager {
 
         Ok(Self {
             identity,
-            capability_discovery,
             config,
+            capability_discovery,
             required_capabilities,
         })
     }
@@ -177,8 +177,7 @@ impl SelfDiscoveryManager {
                         capability
                     );
                     return Err(BearDogError::validation(&format!(
-                        "Required capability not available: {:?}",
-                        capability
+                        "Required capability not available: {capability:?}"
                     )));
                 }
                 Err(e) => {
@@ -239,13 +238,13 @@ impl SelfDiscoveryManager {
     }
 
     /// Get this primal's identity (read-only)
-    pub fn identity(&self) -> &SelfIdentity {
+    pub const fn identity(&self) -> &SelfIdentity {
         &self.identity
     }
 
     /// Update health status
-    /// Updates health_status
-    /// Updates health_status
+    /// Updates `health_status`
+    /// Updates `health_status`
     pub fn update_health_status(&mut self, status: HealthStatus) {
         self.identity.health_status = status;
     }
@@ -296,7 +295,7 @@ impl Default for DiscoveredService {
 }
 
 impl SelfIdentity {
-    /// Create BearDog self-identity
+    /// Create `BearDog` self-identity
     pub fn beardog() -> Self {
         Self {
             id: Uuid::new_v4().to_string(),

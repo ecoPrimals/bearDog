@@ -568,7 +568,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_performance_optimizer_creation() {
+    async fn test_performance_optimizer_creation() {
         let optimizer = PerformanceOptimizer::new().unwrap();
 
         assert_eq!(optimizer.config.target_discovery_time_ms, 100);
@@ -577,7 +577,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_performance_metrics() {
+    async fn test_performance_metrics() {
         let mut optimizer = PerformanceOptimizer::new().unwrap();
 
         // Simulate some discovery operations
@@ -592,7 +592,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_performance_grading() {
+    async fn test_performance_grading() {
         let mut optimizer = PerformanceOptimizer::new().unwrap();
 
         // Test excellent performance
@@ -612,7 +612,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_cache_effectiveness() {
+    async fn test_cache_effectiveness() {
         let mut optimizer = PerformanceOptimizer::new().unwrap();
 
         // Simulate cache hits and misses

@@ -3,7 +3,9 @@
 use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
 use super::core_types::{IntelligenceCapability, MachineLearningConfig};
 use super::learning::PredictionHorizon;
-use super::types::*;
+use super::types::{
+    DecisionEngineConfig, LearningConfig, NeuralNetworkConfig, OptimizationConfig, PredictionConfig,
+};
 
 // Configuration types moved to config.rs module
 
@@ -73,7 +75,7 @@ pub enum OptimizationAlgorithm {
     GradientDescent,
     /// Adam optimizer with adaptive learning rates
     Adam,
-    /// RMSprop optimizer with moving average of squared gradients
+    /// `RMSprop` optimizer with moving average of squared gradients
     RMSprop,
 }
 
@@ -91,7 +93,7 @@ pub enum Optimizer {
 pub struct DecisionContext {
     pub context_id: String,
     /// Priority level of the decision (0-100)
-    /// Number of priority_level
+    /// Number of `priority_level`
     pub priority_level: u8,
     pub time_limit_ms: u64,
     pub required_confidence: f64,
@@ -243,13 +245,13 @@ pub enum IntelligenceEventType {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct IntelligenceMetrics {
     /// Total predictions made
-    /// Number of total_predictions
+    /// Number of `total_predictions`
     pub total_predictions: u64,
     /// Total decisions made
-    /// Number of total_decisions
+    /// Number of `total_decisions`
     pub total_decisions: u64,
     /// Total models trained
-    /// Number of total_models_trained
+    /// Number of `total_models_trained`
     pub total_models_trained: u64,
     /// Average prediction accuracy
     /// The avg prediction accuracy value
@@ -324,7 +326,7 @@ impl HybridIntelligenceSystem {
         }
 
         // Start monitoring
-        let _monitoring_task = self.start_monitoring();
+        self.start_monitoring();
 
         // Update health status
         {
@@ -425,9 +427,10 @@ impl HybridIntelligenceSystem {
             metrics.total_decisions += 1;
             // Update average confidence (simple moving average)
             let total_decisions = metrics.total_decisions as f64;
-            metrics.avg_decision_confidence =
-                (metrics.avg_decision_confidence * (total_decisions - 1.0) + decision.confidence)
-                    / total_decisions;
+            metrics.avg_decision_confidence = metrics
+                .avg_decision_confidence
+                .mul_add(total_decisions - 1.0, decision.confidence)
+                / total_decisions;
         }
 
         // Send decision event
@@ -473,7 +476,7 @@ impl HybridIntelligenceSystem {
     /// Gets metrics
     /// Gets metrics
     pub async fn get_metrics(&self) -> IntelligenceMetrics {
-        self.metrics.read().await.clone()
+        *self.metrics.read().await
     }
 
     /// Gets current system health
@@ -484,7 +487,7 @@ impl HybridIntelligenceSystem {
     }
 
     /// Initializes a capability
-    /// Initializes componentialize_capability
+    /// Initializes `componentialize_capability`
     fn initialize_capability(
         &self,
         capability: IntelligenceCapability,
@@ -679,7 +682,7 @@ pub struct HybridIntelligenceBuilder {
 impl HybridIntelligenceBuilder {
     /// Creates a new builder
     /// Creates a new instance
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             system_id: None,
             capabilities: Vec::new(),
@@ -747,15 +750,20 @@ impl HybridIntelligenceBuilder {
         let system_id = self.system_id.unwrap_or_else(|| Uuid::new_v4().to_string());
 
         // Create default configurations if not provided
-        let _ml_config = self.ml_config.unwrap_or_else(|| MachineLearningConfig::default());
+        let _ml_config = self.ml_config.unwrap_or_default();
 
         // Create simplified default neural configuration for compilation
         let _neural_config = self.neural_config.unwrap_or_else(|| {
-            use super::neural_networks::*;
+            use super::neural_networks::{
+                ActivationFunction, ArchitectureType, DataType, InputLayerConfig, LossFunction,
+                Metric, NetworkArchitecture, NetworkOptimization, NetworkRegularization, Optimizer,
+                OptimizerType, OutputLayerConfig, TrainingParams,
+            };
             NeuralNetworkConfig {
                 architecture: NetworkArchitecture {
                     architecture_type: ArchitectureType::Feedforward,
                     input_layer: InputLayerConfig {
+                        shape: vec![128],
                         input_shape: vec![128],
                         data_type: DataType::Float32,
                         normalization: None,
@@ -829,13 +837,13 @@ fn create_simple_ml_config() -> MachineLearningConfig {
     MachineLearningConfig::default()
 }
 
-/// Creates default_neural_config
+/// Creates `default_neural_config`
 fn create_default_neural_config() -> NeuralNetworkConfig {
     // Create a simplified neural network configuration
     NeuralNetworkConfig::default()
 }
 
-/// Creates default_decision_config
+/// Creates `default_decision_config`
 fn create_default_decision_config() -> DecisionEngineConfig {
     // Create a simplified decision engine configuration
     DecisionEngineConfig::default()

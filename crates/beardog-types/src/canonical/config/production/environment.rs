@@ -290,7 +290,7 @@ impl EnvironmentType {
             Self::Development | Self::Local => "debug",
             Self::Staging | Self::Testing => "info",
             Self::Production => "warn",
-            Self::Disaster => "error ",
+            Self::Disaster => "error",
         }
     }
 
@@ -332,7 +332,7 @@ impl ModernSecretsConfig {
 
     #[deprecated(note = "Use universal adapter to discover backup capabilities")]
     #[must_use]
-    pub fn recommended_backup(&self) -> Option<ModernSecretsConfig> {
+    pub fn recommended_backup(&self) -> Option<Self> {
         // This logic is now handled by required_capabilities and preferred_capabilities
         // For now, we'll return a placeholder or remove if not directly applicable.
         // The ModernSecretsConfig struct manages fallback_config.

@@ -440,46 +440,12 @@ pub enum ParallelizationStrategy {
     IslandModel { islands: usize, migration_rate: f64 },
     IslandModel { islands: usize, migration_rate: f64 },
     IslandModel { islands: usize, migration_rate: f64 },
-    /// Master-slave model
-    MasterSlave,
+    /// Primary-replica model
+    PrimaryReplica,
 }
 
-/// Monitoring and logging configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitoringConfig {
-    /// Enable progress logging
-    /// Whether logging is enabled
-    pub logging_enabled: bool,
-    /// Log interval (generations)
-    /// Number of log_interval
-    pub log_interval: usize,
-    /// Metrics to collect
-    /// Collection of metrics
-    pub metrics: Vec<String>,
-    /// Export results to file
-    /// Whether export_results is enabled
-    pub export_results: bool,
-    /// Results file path
-    /// Optional results path
-    pub results_path: Option<String>,
-}
-
-impl Default for MonitoringConfig {
-    fn default() -> Self {
-        Self {
-            logging_enabled: true,
-            log_interval: 10,
-            metrics: vec![
-                "best_fitness".to_string(),
-                "average_fitness".to_string(),
-                "diversity".to_string(),
-                "convergence".to_string(),
-            ],
-            export_results: false,
-            results_path: None,
-        }
-    }
-}
+// CONSOLIDATED: Genetics monitoring now uses canonical MonitoringConfig
+// Old genetics-specific MonitoringConfig removed - use canonical version with genetics-specific tags
 
 impl GeneticsSystemConfig {
     /// Create new genetics system configuration with defaults

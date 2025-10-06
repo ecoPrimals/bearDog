@@ -28,7 +28,6 @@ pub mod production;
 pub mod types;
 
 // Re-export main types for backwards compatibility
-pub use config::PoolConfig;
 pub use config::*;
 pub use connection::ConnectionPool;
 pub use core::UniversalAdapter;
@@ -36,3 +35,6 @@ pub use events::{AdapterEvent, EventSubscriber};
 pub use metrics::{AdapterMetrics, ConnectionMetrics};
 pub use production::ProductionUniversalAdapter;
 pub use types::*;
+
+// Re-export canonical connection pool config
+pub use beardog_types::canonical::config::domains::network::ConnectionPoolConfig;

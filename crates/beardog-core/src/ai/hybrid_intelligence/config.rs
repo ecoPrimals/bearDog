@@ -36,13 +36,13 @@ pub enum LearningAlgorithm {
 pub struct MLConfig {
     /// The learning rate value
     pub learning_rate: f64,
-    /// Number of batch_size
+    /// Number of `batch_size`
     pub batch_size: usize,
     /// Maximum number of training epochs
-    /// Number of max_epochs
+    /// Number of `max_epochs`
     pub max_epochs: u32,
     /// Enable early stopping to prevent overfitting
-    /// Whether early_stopping is enabled
+    /// Whether `early_stopping` is enabled
     pub early_stopping: bool,
 }
 
@@ -55,7 +55,7 @@ pub struct NeuralConfig {
     pub activation: String,
     /// The dropout rate value
     pub dropout_rate: f64,
-    /// Whether batch_norm is enabled
+    /// Whether `batch_norm` is enabled
     pub batch_norm: bool,
 }
 
@@ -63,7 +63,7 @@ pub struct NeuralConfig {
 pub struct DecisionConfig {
     pub confidence_threshold: f64,
     /// Enable human feedback integration
-    /// Whether enable_human_feedback is enabled
+    /// Whether `enable_human_feedback` is enabled
     pub enable_human_feedback: bool,
     /// Maximum decision processing time in milliseconds
     pub max_processing_time_ms: u64,
@@ -73,13 +73,13 @@ pub struct DecisionConfig {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LearningConfig {
     /// Enable online learning
-    /// Whether online_learning is enabled
+    /// Whether `online_learning` is enabled
     pub online_learning: bool,
     /// Experience replay buffer size
-    /// Number of replay_buffer_size
+    /// Number of `replay_buffer_size`
     pub replay_buffer_size: usize,
     /// Learning update frequency
-    /// Number of update_frequency
+    /// Number of `update_frequency`
     pub update_frequency: u32,
     /// Exploration vs exploitation balance
     /// The exploration rate value
@@ -96,7 +96,7 @@ pub struct PredictionConfig {
     /// The uncertainty method value
     pub uncertainty_method: String,
     /// Monte Carlo sample count
-    /// Number of mc_samples
+    /// Number of `mc_samples`
     pub mc_samples: u32,
     /// Prediction confidence threshold
     pub confidence_threshold: f64,
@@ -109,7 +109,7 @@ pub struct OptimizationConfig {
     /// The algorithm value
     pub algorithm: OptimizationAlgorithm,
     /// Maximum optimization iterations
-    /// Number of max_iterations
+    /// Number of `max_iterations`
     pub max_iterations: u32,
     /// Convergence tolerance
     /// The tolerance value
@@ -140,7 +140,7 @@ pub struct HybridIntelligenceConfig {
     pub human_feedback_weight: f64,
     pub ai_confidence_threshold: f64,
     pub system_id: String,
-    /// Whether feature_capabilities is enabled
+    /// Whether `feature_capabilities` is enabled
     pub enabled_capabilities: Vec<IntelligenceCapability>,
     /// Machine learning configuration settings
     pub ml_config: MachineLearningConfig,

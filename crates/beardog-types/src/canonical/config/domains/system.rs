@@ -38,40 +38,235 @@ pub struct ApplicationConfig {
     pub features: HashMap<String, bool>,
 }
 
-/// Logging configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// **CANONICAL** Logging configuration
+///
+/// This is the single source of truth for logging settings across BearDog.
+/// Consolidates all LoggingConfig variants from:
+/// - `beardog-types/src/canonical/config/type_aliases.rs`
+/// - `beardog-types/src/canonical/monitoring_unified/logging.rs`
+/// - `beardog-types/src/canonical/providers_unified/monitoring.rs`
+/// - `beardog-types/src/canonical/providers/base.rs` (LoggingConfiguration)
+/// - `beardog-production/src/config_management.rs`
+/// - `beardog-core/src/ai/hybrid_intelligence/types.rs`
+///
+/// # Features
+/// - Typed log levels (Trace, Debug, Info, Warn, Error)
+/// - Multiple output targets (stdout, file, syslog, etc.)
+/// - Structured logging support
+/// - Log rotation configuration
+/// - Correlation ID tracking
+/// - Performance and audit logging
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LoggingConfig {
-    /// Log level (trace, debug, info, warn, error)
-    pub level: String,
-    /// Log format (json, text, structured)
-    pub format: String,
+    /// Enable logging
+    pub enabled: bool,
+
+    /// Log level
+    pub level: LogLevel,
+
+    /// Log format
+    pub format: LogFormat,
+
     /// Log output targets
     pub targets: Vec<LogTarget>,
+
     /// Enable structured logging
     pub structured: bool,
+
     /// Log rotation settings
-    pub rotation: LogRotationConfig,
+    pub rotation: Option<LogRotationConfig>,
+
+    /// Enable correlation ID tracking for request tracing
+    pub correlation_id_tracking: bool,
+
+    /// Enable performance logging (timing, metrics)
+    pub performance_logging: bool,
+
+    /// Enable audit logging (security events, access logs)
+    pub audit_logging: bool,
+}
+
+/// Log level enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum LogLevel {
+    /// Trace level (most verbose)
+    Trace,
+    /// Debug level
+    Debug,
+    /// Info level (default)
+    Info,
+    /// Warning level
+    Warn,
+    /// Error level (least verbose)
+    Error,
+}
+
+/// Log format enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LogFormat {
+    /// JSON format (machine-readable)
+    Json,
+    /// Plain text format (human-readable)
+    Text,
+    /// Structured format (key=value pairs)
+    Structured,
+    /// Compact format (minimal output)
+    Compact,
 }
 
 /// Log target configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LogTarget {
-    /// Target type (stdout, file, syslog, etc.)
-    pub target_type: String,
+    /// Target type
+    pub target_type: LogTargetType,
+
     /// Target-specific configuration
     pub config: HashMap<String, String>,
 }
 
+/// Log target type enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LogTargetType {
+    /// Standard output
+    Stdout,
+    /// Standard error
+    Stderr,
+    /// File output
+    File,
+    /// Syslog
+    Syslog,
+    /// Remote logging service
+    Remote,
+    /// Database logging
+    Database,
+    /// Custom target
+    Custom(String),
+}
+
 /// Log rotation configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LogRotationConfig {
-    /// Maximum file size before rotation
+    /// Maximum file size before rotation (in MB)
     pub max_size_mb: u64,
+
     /// Maximum number of log files to keep
     pub max_files: u32,
+
     /// Rotation frequency
-    pub frequency: String,
+    pub frequency: LogRotationFrequency,
 }
+
+/// Log rotation frequency
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LogRotationFrequency {
+    /// Rotate hourly
+    Hourly,
+    /// Rotate daily
+    Daily,
+    /// Rotate weekly
+    Weekly,
+    /// Rotate monthly
+    Monthly,
+    /// Rotate based on size only
+    SizeOnly,
+}
+
+impl Default for LoggingConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            level: LogLevel::Info,
+            format: LogFormat::Json,
+            targets: vec![LogTarget {
+                target_type: LogTargetType::Stdout,
+                config: HashMap::new(),
+            }],
+            structured: true,
+            rotation: None,
+            correlation_id_tracking: true,
+            performance_logging: false,
+            audit_logging: false,
+        }
+    }
+}
+
+impl Default for LogLevel {
+    fn default() -> Self {
+        Self::Info
+    }
+}
+
+impl Default for LogFormat {
+    fn default() -> Self {
+        Self::Json
+    }
+}
+
+impl Default for LogRotationConfig {
+    fn default() -> Self {
+        Self {
+            max_size_mb: 100,
+            max_files: 10,
+            frequency: LogRotationFrequency::Daily,
+        }
+    }
+}
+
+impl LoggingConfig {
+    /// Create a minimal configuration for stdout only
+    pub fn stdout_only() -> Self {
+        Self {
+            targets: vec![LogTarget {
+                target_type: LogTargetType::Stdout,
+                config: HashMap::new(),
+            }],
+            ..Default::default()
+        }
+    }
+
+    /// Create a file-based configuration with rotation
+    pub fn file_with_rotation(path: &str) -> Self {
+        let mut config = HashMap::new();
+        config.insert("path".to_string(), path.to_string());
+
+        Self {
+            targets: vec![LogTarget {
+                target_type: LogTargetType::File,
+                config,
+            }],
+            rotation: Some(LogRotationConfig::default()),
+            ..Default::default()
+        }
+    }
+
+    /// Validate logging configuration
+    pub fn validate(&self) -> Result<(), BearDogError> {
+        if self.enabled && self.targets.is_empty() {
+            return Err(BearDogError::configuration(
+                "Logging enabled but no targets configured",
+            ));
+        }
+
+        if let Some(rotation) = &self.rotation {
+            if rotation.max_size_mb == 0 {
+                return Err(BearDogError::configuration(
+                    "Log rotation max_size_mb cannot be zero",
+                ));
+            }
+            if rotation.max_files == 0 {
+                return Err(BearDogError::configuration(
+                    "Log rotation max_files cannot be zero",
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
+/// Backward compatibility alias
+#[deprecated(since = "3.1.0", note = "Use LoggingConfig instead")]
+pub type LoggingConfiguration = LoggingConfig;
 
 /// Threading configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -134,38 +329,15 @@ impl Default for ApplicationConfig {
     }
 }
 
-impl Default for LoggingConfig {
-    fn default() -> Self {
-        Self {
-            level: "info".to_string(),
-            format: "structured".to_string(),
-            targets: vec![LogTarget {
-                target_type: "stdout".to_string(),
-                config: HashMap::new(),
-            }],
-            structured: true,
-            rotation: LogRotationConfig::default(),
-        }
-    }
-}
-
-impl Default for LogRotationConfig {
-    fn default() -> Self {
-        Self {
-            max_size_mb: 100,
-            max_files: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_S as u32I as u32Z as u32E as u32,
-            frequency: "daily".to_string(),
-        }
-    }
-}
+// LoggingConfig and LogRotationConfig Default implementations moved to their type definitions above
 
 impl Default for ThreadingConfig {
     fn default() -> Self {
         Self {
             worker_threads: std::thread::available_parallelism()
-                .map(|n| n.get())
+                .map(std::num::NonZeroUsize::get)
                 .unwrap_or(4),
-            blocking_threads: beardog_types::constants::domains::system::defaults::DEFAULT_CACHE_SIZE,
+            blocking_threads: crate::constants::domains::system::defaults::DEFAULT_CACHE_SIZE,
             stack_size: None,
             enable_tls_optimization: true,
         }
@@ -206,22 +378,37 @@ impl SystemDomainConfig {
 
         // Load logging configuration
         if let Ok(log_level) = std::env::var("BEARDOG_LOG_LEVEL") {
-            config.logging.level = log_level;
+            config.logging.level = match log_level.to_lowercase().as_str() {
+                "trace" => LogLevel::Trace,
+                "debug" => LogLevel::Debug,
+                "info" => LogLevel::Info,
+                "warn" | "warning" => LogLevel::Warn,
+                "error" => LogLevel::Error,
+                _ => LogLevel::Info, // Default to Info if invalid
+            };
         }
 
         if let Ok(log_format) = std::env::var("BEARDOG_LOG_FORMAT") {
-            config.logging.format = log_format;
+            config.logging.format = match log_format.to_lowercase().as_str() {
+                "json" => LogFormat::Json,
+                "text" => LogFormat::Text,
+                "structured" => LogFormat::Structured,
+                "compact" => LogFormat::Compact,
+                _ => LogFormat::Json, // Default to JSON if invalid
+            };
         }
 
         // Load threading configuration
         if let Ok(worker_threads) = std::env::var("BEARDOG_WORKER_THREADS") {
-            config.threading.worker_threads = worker_threads.parse()
+            config.threading.worker_threads = worker_threads
+                .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_WORKER_THREADS value"))?;
         }
 
         // Load resource limits
         if let Ok(max_connections) = std::env::var("BEARDOG_MAX_CONNECTIONS") {
-            config.resources.max_connections = max_connections.parse()
+            config.resources.max_connections = max_connections
+                .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_MAX_CONNECTIONS value"))?;
         }
 
@@ -232,24 +419,27 @@ impl SystemDomainConfig {
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate threading configuration
         if self.threading.worker_threads == 0 {
-            return Err(BearDogError::validation("Worker threads must be greater than 0"));
+            return Err(BearDogError::validation(
+                "Worker threads must be greater than 0",
+            ));
         }
 
         if self.threading.blocking_threads == 0 {
-            return Err(BearDogError::validation("Blocking threads must be greater than 0"));
+            return Err(BearDogError::validation(
+                "Blocking threads must be greater than 0",
+            ));
         }
 
         // Validate resource limits
         if self.resources.max_connections == 0 {
-            return Err(BearDogError::validation("Max connections must be greater than 0"));
+            return Err(BearDogError::validation(
+                "Max connections must be greater than 0",
+            ));
         }
 
-        // Validate log level
-        match self.logging.level.as_str() {
-            "trace" | "debug" | "info" | "warn" | "error" => {},
-            _ => return Err(BearDogError::validation("Invalid log level")),
-        }
+        // Validate logging configuration (delegates to LoggingConfig::validate)
+        self.logging.validate()?;
 
         Ok(())
     }
-} 
+}

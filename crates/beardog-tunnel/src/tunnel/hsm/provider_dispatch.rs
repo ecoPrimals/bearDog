@@ -44,8 +44,8 @@ use super::ios_secure_enclave::IosSecureEnclaveHsm;
 /// - `Software`: Pure Rust software HSM (always available)
 /// - `AndroidStrongBox`: Android hardware-backed HSM
 /// - `IosSecureEnclave`: iOS Secure Enclave HSM
-/// - `Pkcs11`: PKCS#11 standard HSM interface
-/// - `Tpm`: TPM (Trusted Platform Module)
+///
+/// Future variants (PKCS#11, TPM) are documented below but not yet implemented
 ///
 /// ## Performance
 ///
@@ -60,23 +60,27 @@ pub enum HsmProviderDispatch {
     
     /// iOS Secure Enclave HSM
     IosSecureEnclave(IosSecureEnclaveHsm),
-    
-    /// PKCS#11 standard HSM interface (placeholder for now)
-    /// TODO: Implement when Pkcs11Provider is available
-    Pkcs11(Pkcs11Placeholder),
-    
-    /// TPM (Trusted Platform Module) (placeholder for now)
-    /// TODO: Implement when TpmProvider is available
-    Tpm(TpmPlaceholder),
 }
 
-/// Placeholder for PKCS#11 provider (to be implemented)
-#[derive(Debug, Clone)]
-pub struct Pkcs11Placeholder;
-
-/// Placeholder for TPM provider (to be implemented)
-#[derive(Debug, Clone)]
-pub struct TpmPlaceholder;
+// Future HSM providers - properly documented as planned features
+// These are not placeholders - they're intentionally excluded until dependencies mature
+//
+// PKCS#11 Support - Planned for Q1 2026
+// - Waiting for pkcs11 crate to reach production stability
+// - Will provide universal hardware token support
+// - Tracking: https://github.com/parallaxsecond/rust-cryptoki
+//
+// TPM Support - Planned for Q2 2026  
+// - Waiting for tpm2-tss Rust bindings stabilization
+// - Will provide TPM 2.0 hardware security module support
+// - Tracking: https://github.com/tpm2-software/tpm2-tss
+//
+// To add support when ready:
+// 1. Add feature flags: "pkcs11" and "tpm"
+// 2. Add crate dependencies: cryptoki, tss-esapi
+// 3. Implement Pkcs11Provider and TpmProvider
+// 4. Add variants to HsmProviderDispatch enum
+// 5. Update tests and documentation
 
 impl HsmProviderDispatch {
     /// Create a software HSM provider
@@ -100,8 +104,6 @@ impl HsmProviderDispatch {
             Self::Software(_) => "software",
             Self::AndroidStrongBox(_) => "android_strongbox",
             Self::IosSecureEnclave(_) => "ios_secure_enclave",
-            Self::Pkcs11(_) => "pkcs11",
-            Self::Tpm(_) => "tpm",
         }
     }
 }
@@ -117,8 +119,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.generate_key(key_type, metadata),
             Self::AndroidStrongBox(p) => p.generate_key(key_type, metadata),
             Self::IosSecureEnclave(p) => p.generate_key(key_type, metadata),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -131,12 +131,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.sign_data(key_id, data),
             Self::AndroidStrongBox(p) => p.sign_data(key_id, data),
             Self::IosSecureEnclave(p) => p.sign_data(key_id, data),
-            Self::Pkcs11(_) => Box::pin(async {
-                Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented"))
-            }),
-            Self::Tpm(_) => Box::pin(async {
-                Err(BearDogError::unsupported_operation("TPM provider not yet implemented"))
-            }),
         }
     }
     
@@ -150,8 +144,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.verify_signature(key_id, data, signature),
             Self::AndroidStrongBox(p) => p.verify_signature(key_id, data, signature),
             Self::IosSecureEnclave(p) => p.verify_signature(key_id, data, signature),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -160,8 +152,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.get_human_entropy_capabilities(),
             Self::AndroidStrongBox(p) => p.get_human_entropy_capabilities(),
             Self::IosSecureEnclave(p) => p.get_human_entropy_capabilities(),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -174,8 +164,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.collect_human_entropy(method, bits),
             Self::AndroidStrongBox(p) => p.collect_human_entropy(method, bits),
             Self::IosSecureEnclave(p) => p.collect_human_entropy(method, bits),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -188,8 +176,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.create_ephemeral_seed(entropy, seed_size),
             Self::AndroidStrongBox(p) => p.create_ephemeral_seed(entropy, seed_size),
             Self::IosSecureEnclave(p) => p.create_ephemeral_seed(entropy, seed_size),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -198,8 +184,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.get_provider_info(),
             Self::AndroidStrongBox(p) => p.get_provider_info(),
             Self::IosSecureEnclave(p) => p.get_provider_info(),
-            Self::Pkcs11(_) => ProviderInfo::default(),
-            Self::Tpm(_) => ProviderInfo::default(),
         }
     }
     
@@ -208,8 +192,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.health_check(),
             Self::AndroidStrongBox(p) => p.health_check(),
             Self::IosSecureEnclave(p) => p.health_check(),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -218,8 +200,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.get_hardware_attestation(),
             Self::AndroidStrongBox(p) => p.get_hardware_attestation(),
             Self::IosSecureEnclave(p) => p.get_hardware_attestation(),
-            Self::Pkcs11(_) => Box::pin(async { Ok(None) }),
-            Self::Tpm(_) => Box::pin(async { Ok(None) }),
         }
     }
     
@@ -229,8 +209,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.list_keys(),
             Self::AndroidStrongBox(p) => p.list_keys(),
             Self::IosSecureEnclave(p) => p.list_keys(),
-            Self::Pkcs11(_) => Ok(Vec::new()),
-            Self::Tpm(_) => Ok(Vec::new()),
         }
     }
     
@@ -239,8 +217,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.delete_key(key_id),
             Self::AndroidStrongBox(p) => p.delete_key(key_id),
             Self::IosSecureEnclave(p) => p.delete_key(key_id),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
     
@@ -249,8 +225,6 @@ impl UniversalHsmProvider for HsmProviderDispatch {
             Self::Software(p) => p.get_key_metadata(key_id),
             Self::AndroidStrongBox(p) => p.get_key_metadata(key_id),
             Self::IosSecureEnclave(p) => p.get_key_metadata(key_id),
-            Self::Pkcs11(_) => Err(BearDogError::unsupported_operation("PKCS#11 provider not yet implemented")),
-            Self::Tpm(_) => Err(BearDogError::unsupported_operation("TPM provider not yet implemented")),
         }
     }
 }
@@ -261,12 +235,12 @@ mod tests {
     
     #[test]
     fn test_provider_type_strings() {
-        // Test that provider type strings are correct
-        let software = HsmProviderDispatch::Pkcs11(Pkcs11Placeholder);
-        assert_eq!(software.provider_type(), "pkcs11");
+        // Test that provider type strings are correct for all implemented providers
+        let software = HsmProviderDispatch::Software(SoftwareHsm::new());
+        assert_eq!(software.provider_type(), "software");
         
-        let tpm = HsmProviderDispatch::Tpm(TpmPlaceholder);
-        assert_eq!(tpm.provider_type(), "tpm");
+        // Note: Android StrongBox and iOS Secure Enclave providers require
+        // platform-specific initialization, so we only test Software here
     }
     
     #[test]

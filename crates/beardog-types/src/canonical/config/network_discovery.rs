@@ -286,9 +286,9 @@ impl ServiceEndpointConfig {
             primary: std::env::var("BEARDOG_COMPUTE_ENDPOINT").ok(),
             backups: Self::parse_backup_endpoints("BEARDOG_COMPUTE_BACKUPS"),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_COMPUTE_PORT", crate::constants::domains::network::defaults::DEFAULT_API_PORT),
-                health: Self::parse_port("BEARDOG_COMPUTE_HEALTH_PORT", beardog_types::constants::domains::network::ports::DEFAULT_HEALTH_PORT),
-                metrics: Self::parse_port("BEARDOG_COMPUTE_METRICS_PORT", beardog_types::constants::domains::network::ports::DEFAULT_METRICS_PORT),
+                service: Self::parse_port("BEARDOG_COMPUTE_PORT", crate::constants::domains::network::defaults::default_api_port()),
+                health: Self::parse_port("BEARDOG_COMPUTE_HEALTH_PORT", crate::constants::domains::network::defaults::default_health_port()),
+                metrics: Self::parse_port("BEARDOG_COMPUTE_METRICS_PORT", crate::constants::domains::network::defaults::default_metrics_port()),
                 admin: Self::parse_port("BEARDOG_COMPUTE_ADMIN_PORT", 8082),
             },
             health_check: std::env::var("BEARDOG_COMPUTE_HEALTH_ENDPOINT").ok(),
@@ -350,7 +350,7 @@ impl ServiceEndpointConfig {
             primary: std::env::var("BEARDOG_DISCOVERY_ENDPOINT").ok(),
             backups: Self::parse_backup_endpoints("BEARDOG_DISCOVERY_BACKUPS"),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_DISCOVERY_PORT", beardog_types::constants::domains::network::ports::DEFAULT_HEALTH_PORT),
+                service: Self::parse_port("BEARDOG_DISCOVERY_PORT", crate::constants::domains::network::defaults::default_health_port()),
                 health: Self::parse_port("BEARDOG_DISCOVERY_HEALTH_PORT", 8091),
                 metrics: Self::parse_port("BEARDOG_DISCOVERY_METRICS_PORT", 9094),
                 admin: Self::parse_port("BEARDOG_DISCOVERY_ADMIN_PORT", 8092),
@@ -443,11 +443,12 @@ impl Default for DatabaseSslConfig {
 impl Default for FallbackNetworkConfig {
     fn default() -> Self {
         let mut port_ranges = HashMap::new();
+        let api_port = crate::constants::domains::network::defaults::default_api_port();
         
         port_ranges.insert("compute".to_string(), PortRange {
-            start: crate::constants::domains::network::defaults::DEFAULT_API_PORT,
+            start: api_port,
             end: 8089,
-            default: crate::constants::domains::network::defaults::DEFAULT_API_PORT,
+            default: api_port,
         });
         
         port_ranges.insert("storage".to_string(), PortRange {
@@ -625,10 +626,11 @@ mod tests {
     #[test]
     fn test_service_endpoint_fallback() {
         let compute_config = ServiceEndpointConfig::compute();
-        let url = compute_config.get_endpoint_url( test"-host");
+        let url = compute_config.get_endpoint_url("test-host");
         
         // Should use fallback since no environment variable is set
-        assert!(url.contains( test"-host"));
-        assert!(url.contains("crate::constants::domains::network::defaults::DEFAULT_API_PORT"));
+        assert!(url.contains("test-host"));
+        let expected_port = crate::constants::domains::network::defaults::default_api_port();
+        assert!(url.contains(&expected_port.to_string()));
     }
 } 

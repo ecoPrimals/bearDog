@@ -276,22 +276,28 @@ pub enum AlertSeverity {
 pub type AlertLevel = AlertSeverity;
 
 /// Monitoring configuration
+///
+/// ⚠️  CONSOLIDATED: This local MonitoringConfig has been replaced.
+/// Use `beardog_types::canonical::monitoring::MonitoringConfig` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::monitoring::MonitoringConfig instead"
+)]
+pub use beardog_types::canonical::monitoring::MonitoringConfig as LocalMonitoringConfig;
+
+// Temporary backward compatibility - will be removed in v4.0
+// For now, keep a simplified local version that wraps the canonical one
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     /// Whether monitoring is enabled
-    /// Whether feature is enabled
     pub enabled: bool,
     /// Maximum number of snapshots to retain
-    /// Number of max_snapshots
     pub max_snapshots: usize,
     /// Snapshot interval in seconds
-    /// Number of snapshot_interval_seconds
     pub snapshot_interval_seconds: u64,
     /// Alert thresholds configuration
-    /// The alert thresholds value
     pub alert_thresholds: AlertThresholds,
     /// Prometheus configuration
-    /// The prometheus value
     pub prometheus: PrometheusConfig,
 }
 
@@ -299,15 +305,11 @@ pub struct MonitoringConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrometheusConfig {
     /// Whether Prometheus export is enabled
-    /// Whether feature is enabled
     pub enabled: bool,
     /// Prometheus metrics endpoint
-    /// The endpoint value
     pub endpoint: String,
     /// Prometheus server port
-    /// Number of port
     pub port: u16,
-    /// The prefix value
     pub prefix: String,
 }
 

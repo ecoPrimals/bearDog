@@ -20,7 +20,7 @@ use std::hash::{Hash, Hasher};
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
-/// **CONSOLIDATED DISCOVERY CONFIGURATION** - Master discovery system configuration
+/// **CONSOLIDATED DISCOVERY CONFIGURATION** - Primary discovery system configuration
 ///
 /// This is the single source of truth for all service discovery configuration across BearDog.
 /// It consolidates and replaces all scattered discovery config types.
@@ -138,21 +138,13 @@ pub struct ServiceRegistryConfig {
 }
 
 /// Health Check Configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthCheckConfig {
-    /// Health check interval
-    pub check_interval: Duration,
-    /// Health check timeout
-    pub check_timeout: Duration,
-    /// Number of consecutive failures before marking unhealthy
-    pub failure_threshold: u32,
-    /// Number of consecutive successes before marking healthy
-    pub success_threshold: u32,
-    /// Enable detailed health metrics
-    pub enable_metrics: bool,
-    /// Health check endpoints
-    pub endpoints: Vec<HealthEndpoint>,
-}
+///
+/// **DEPRECATED**: Use `super::domains::network::monitoring::HealthCheckConfiguration` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
+)]
+pub type HealthCheckConfig = super::domains::network::monitoring::HealthCheckConfiguration;
 
 /// Load Balancing Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -437,7 +429,7 @@ impl Default for ConsolidatedDiscoveryConfig {
             service_id: "beardog-discovery".to_string(),
             enabled_protocols: vec![
                 DiscoveryProtocol::Http {
-                    endpoint: "http://localhost:beardog_types::constants::domains::network::ports::DEFAULT_API_PORT/discovery".to_string(),
+                    endpoint: format!("http://localhost:{}/discovery", crate::constants::domains::network::defaults::default_api_port()),
                     headers: HashMap::new(),
                     timeout_ms: beardog_types::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_millis() as u64,
                 },
@@ -532,11 +524,12 @@ impl Default for RetryConfig {
 impl Default for NetworkConfig {
     fn default() -> Self {
         use std::str::FromStr;
+        let api_port = crate::constants::domains::network::defaults::default_api_port();
         Self {
-            bind_address: SocketAddr::from_str("0.0.0.0:beardog_types::constants::domains::network::ports::DEFAULT_API_PORT").unwrap(),
+            bind_address: SocketAddr::from_str(&format!("0.0.0.0:{}", api_port)).unwrap(),
             multicast_address: IpAddr::from_str("224.0.0.251").unwrap(),
             multicast_port: 5353,
-            discovery_port_range: (beardog_types::constants::domains::network::ports::DEFAULT_API_PORT, 8090),
+            discovery_port_range: (api_port, 8090),
             max_packet_size: 1500,
             connection_timeout: Duration::from_secs(beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64),
             read_timeout: Duration::from_secs(30),

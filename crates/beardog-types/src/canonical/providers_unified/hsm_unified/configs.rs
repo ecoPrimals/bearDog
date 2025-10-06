@@ -73,8 +73,8 @@ pub struct SoftwareHsmConfig {
     pub key_storage_path: String,
     /// Enable encryption of stored keys
     pub encrypt_stored_keys: bool,
-    /// Master password for key encryption
-    pub master_password: Option<String>,
+    /// Primary password for key encryption
+    pub primary_password: Option<String>,
     /// Additional software HSM parameters
     pub software_params: HashMap<String, String>,
 }
@@ -85,7 +85,7 @@ impl Default for SoftwareHsmConfig {
             security_level: SecurityLevel::Software,
             key_storage_path: "/tmp/beardog_hsm_keys".to_string(),
             encrypt_stored_keys: true,
-            master_password: None,
+            primary_password: None,
             software_params: HashMap::new(),
         }
     }
@@ -159,16 +159,16 @@ impl SoftwareHsmConfig {
     pub fn for_development() -> Self {
         Self {
             encrypt_stored_keys: false,
-            master_password: None,
+            primary_password: None,
             ..Self::default()
         }
     }
     
     /// Create a new software HSM config with encryption
-    pub fn with_encryption(master_password: String) -> Self {
+    pub fn with_encryption(primary_password: String) -> Self {
         Self {
             encrypt_stored_keys: true,
-            master_password: Some(master_password),
+            primary_password: Some(primary_password),
             ..Self::default()
         }
     }

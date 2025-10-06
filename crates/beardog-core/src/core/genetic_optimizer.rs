@@ -19,7 +19,7 @@ pub struct GeneticOptimizer {
 
 #[derive(Debug, Clone)]
 pub struct GeneticOptimizerConfig {
-    /// Number of population_size
+    /// Number of `population_size`
     pub population_size: usize,
     /// Rate of mutation (0.0 to 1.0)
     /// The mutation rate value
@@ -28,7 +28,7 @@ pub struct GeneticOptimizerConfig {
     /// The crossover rate value
     pub crossover_rate: f64,
     /// Maximum number of generations to run
-    /// Number of max_generations
+    /// Number of `max_generations`
     pub max_generations: usize,
     /// The convergence threshold value
     pub convergence_threshold: f64,
@@ -50,7 +50,7 @@ impl Default for GeneticOptimizerConfig {
 #[derive(Debug, Clone, Copy, Default)]
 pub struct OptimizationState {
     /// Current generation number in the optimization process
-    /// Number of current_generation
+    /// Number of `current_generation`
     pub current_generation: usize,
     /// Best fitness score achieved so far
     /// The best fitness value
@@ -59,11 +59,11 @@ pub struct OptimizationState {
     /// Number of convergence
     pub convergence_count: usize,
     /// Whether the optimization has converged to a stable solution
-    /// Whether is_converged is enabled
+    /// Whether `is_converged` is enabled
     pub is_converged: bool,
 }
 
-///
+/// Performance metrics captured during genetic optimization
 #[derive(Debug, Clone)]
 pub struct PerformanceMetric {
     /// Timestamp when this metric was recorded
@@ -204,7 +204,7 @@ impl GeneticOptimizer {
         Ok(best_solution)
     }
 
-    /// Initializes componentialize_population
+    /// Initializes `componentialize_population`
     fn initialize_population(&self) -> Result<Vec<Vec<f64>>, BearDogError> {
         let mut rng = rand::thread_rng();
 
@@ -219,7 +219,7 @@ impl GeneticOptimizer {
         Ok(population)
     }
 
-    /// Creates next_generation
+    /// Creates `next_generation`
     fn create_next_generation(
         &self,
         population: Vec<Vec<f64>>,
@@ -297,10 +297,10 @@ impl GeneticOptimizer {
     }
 
     /// Get the current optimization state
-    /// Gets optimization_state
-    /// Gets optimization_state
+    /// Gets `optimization_state`
+    /// Gets `optimization_state`
     pub async fn get_optimization_state(&self) -> OptimizationState {
-        self.optimization_state.read().await.clone()
+        *self.optimization_state.read().await
     }
 
     pub async fn get_performance_history(&self) -> Vec<PerformanceMetric> {

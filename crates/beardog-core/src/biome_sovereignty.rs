@@ -13,13 +13,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeSovereigntyConfig {
     /// Enable genetic algorithm features
-    /// Whether enable_genetic_algorithms is enabled
+    /// Whether `enable_genetic_algorithms` is enabled
     pub enable_genetic_algorithms: bool,
     /// Enable mixed lineage key management
-    /// Whether enable_mixed_lineage is enabled
+    /// Whether `enable_mixed_lineage` is enabled
     pub enable_mixed_lineage: bool,
     /// Maximum number of genetic iterations
-    /// Number of max_genetic_iterations
+    /// Number of `max_genetic_iterations`
     pub max_genetic_iterations: u32,
     /// Entropy collection preferences
     /// The entropy preferences value
@@ -43,7 +43,7 @@ pub enum SovereigntyLevel {
     HighlyDependent,
 }
 
-/// BiomeSovereigntyManager provides core sovereignty functionality
+/// `BiomeSovereigntyManager` provides core sovereignty functionality
 #[derive(Debug)]
 pub struct BiomeSovereigntyManager {
     pub config: BiomeSovereigntyConfig,
@@ -54,7 +54,7 @@ pub struct BiomeSovereigntyManager {
 }
 
 impl BiomeSovereigntyManager {
-    /// Create a new BiomeSovereigntyManager with default configuration
+    /// Create a new `BiomeSovereigntyManager` with default configuration
     /// Creates a new instance
     pub fn new(biome_id: String) -> Self {
         Self {
@@ -92,24 +92,24 @@ impl BiomeSovereigntyManager {
     }
 
     /// Initialize genetic algorithm capabilities
-    /// Initializes componentialize_genetic_algorithms
-    fn initialize_genetic_algorithms(&self) -> Result<(), BearDogError> {
+    /// Initializes `componentialize_genetic_algorithms`
+    const fn initialize_genetic_algorithms(&self) -> Result<(), BearDogError> {
         // Placeholder for genetic algorithm initialization
         // This would integrate with the beardog-genetics crate
         Ok(())
     }
 
     /// Initialize mixed lineage key management
-    /// Initializes componentialize_mixed_lineage
-    fn initialize_mixed_lineage(&self) -> Result<(), BearDogError> {
+    /// Initializes `componentialize_mixed_lineage`
+    const fn initialize_mixed_lineage(&self) -> Result<(), BearDogError> {
         // Placeholder for mixed lineage initialization
         // This would integrate with partnership and key management systems
         Ok(())
     }
 
     /// Get the current sovereignty status
-    /// Gets sovereignty_status
-    /// Gets sovereignty_status
+    /// Gets `sovereignty_status`
+    /// Gets `sovereignty_status`
     pub fn get_sovereignty_status(&self) -> SovereigntyStatus {
         SovereigntyStatus {
             biome_id: self.biome_id.clone(),
@@ -131,13 +131,13 @@ pub struct SovereigntyStatus {
     /// Biome identifier
     pub biome_id: String,
     /// Whether this biome is operating in sovereign mode
-    /// Whether is_sovereign is enabled
+    /// Whether `is_sovereign` is enabled
     pub is_sovereign: bool,
     /// Whether genetic algorithms are active
-    /// Whether genetic_algorithms_active is enabled
+    /// Whether `genetic_algorithms_active` is enabled
     pub genetic_algorithms_active: bool,
     /// Whether mixed lineage features are active
-    /// Whether mixed_lineage_active is enabled
+    /// Whether `mixed_lineage_active` is enabled
     pub mixed_lineage_active: bool,
     /// Current entropy quality level
     /// The entropy quality value

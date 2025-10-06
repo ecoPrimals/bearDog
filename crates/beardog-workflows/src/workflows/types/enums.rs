@@ -125,7 +125,7 @@ pub enum WorkflowType {
     ComplianceAudit,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ApprovalDecision {
     /// State indicating granted
     Granted,
@@ -183,13 +183,13 @@ pub enum WorkflowAction {
     Resume,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WorkflowIdentifier {
     Named { identifier: String },
     Generated { uuid: String },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NotificationStatus {
     /// Operation in progress
     Pending,
@@ -279,7 +279,7 @@ pub struct EscalationConfig {
     pub notification_sent: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ApprovalStatus {
     /// Operation in progress
     Pending,

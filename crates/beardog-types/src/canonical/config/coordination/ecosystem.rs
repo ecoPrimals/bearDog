@@ -111,28 +111,28 @@ pub struct MembershipTransitionRule {
     pub requirements: Vec<String>,
 }
 
-/// Migration utility to evolve from master/slave patterns to coordination models
-pub fn migrate_from_master_slave(
-    master_config: &str,
-    slave_configs: &[String],
+/// Migration utility to evolve from primary/replica patterns to coordination models
+pub fn migrate_from_primary_replica(
+    primary_config: &str,
+    replica_configs: &[String],
 ) -> Result<CoordinationConfig, BearDogError> {
-    // This implements the actual migration logic from legacy master/slave patterns
+    // This implements the actual migration logic from legacy primary/replica patterns
     // to modern symbiotic coordination models
     
     let mut config = CoordinationConfig::default();
     
-    // Set up collaborative model based on master/slave structure
+    // Set up collaborative model based on primary/replica structure
     if let super::core::CoordinationModel::Collaborative { 
         decision_protocol, 
         collaboration_frameworks,
         .. 
     } = &mut config.coordination_model {
-        // Create a decision protocol that includes the former "master" as a facilitator
+        // Create a decision protocol that includes the former "primary" as a facilitator
         decision_protocol.decision_steps.push(DecisionStep {
             step_id: "proposal".to_string(),
             description: "Propose decision for collaborative review".to_string(),
-            required_participants: vec![master_config.to_string()],
-            optional_participants: slave_configs.to_vec(),
+            required_participants: vec![primary_config.to_string()],
+            optional_participants: replica_configs.to_vec(),
             min_participation: 0.5,
         });
         
@@ -184,30 +184,30 @@ pub fn assess_coordination_health(config: &CoordinationConfig) -> f64 {
     health_score / factors as f64
 }
 
-/// Migrate legacy whitelist/blacklist patterns to ecosystem membership
+/// Migrate legacy allowlist/blocklist patterns to ecosystem membership
 pub fn migrate_legacy_access_patterns(
-    whitelist: &[String],
-    blacklist: &[String],
+    allowlist: &[String],
+    blocklist: &[String],
 ) -> Result<EcosystemMembershipConfig, BearDogError> {
     let mut membership_config = EcosystemMembershipConfig::default();
     
-    // Convert whitelist entries to core steward or active contributor levels
-    for entry in whitelist {
+    // Convert allowlist entries to core steward or active contributor levels
+    for entry in allowlist {
         membership_config.membership_levels.push(MembershipLevel {
             level_id: format!("migrated_trusted_{}", entry),
             level_name: "Active Contributor".to_string(),
-            description: format!("Migrated from whitelist entry: {}", entry),
+            description: format!("Migrated from allowlist entry: {}", entry),
             required_capabilities: vec!["trusted_participant".to_string()],
             permissions: vec!["full_access".to_string()],
         });
     }
     
-    // Convert blacklist entries to ecosystem protection level
-    for entry in blacklist {
+    // Convert blocklist entries to ecosystem protection level
+    for entry in blocklist {
         membership_config.membership_levels.push(MembershipLevel {
             level_id: format!("migrated_blocked_{}", entry),
             level_name: "Ecosystem Protection".to_string(),
-            description: format!("Migrated from blacklist entry: {}", entry),
+            description: format!("Migrated from blocklist entry: {}", entry),
             required_capabilities: vec![],
             permissions: vec!["restricted_access".to_string()],
         });
@@ -227,17 +227,18 @@ impl Default for EcosystemIntegrationConfig {
             },
             cross_primal_coordination: CrossPrimalCoordinationConfig {
                 enabled: true,
+                // Generic primal names - actual primals discovered via capability-based discovery
                 supported_primals: vec![
-                    "squirrel".to_string(),
-                    "songbird".to_string(),
-                    "nestgate".to_string(),
-                    "toadstool".to_string(),
+                    "primal_compute_1".to_string(),
+                    "primal_network_1".to_string(),
+                    "primal_storage_1".to_string(),
+                    "primal_ai_1".to_string(),
                 ],
                 primal_protocols: HashMap::from([
-                    ("squirrel".to_string(), "data_processing_coordination".to_string()),
-                    ("songbird".to_string(), "service_mesh_coordination".to_string()),
-                    ("nestgate".to_string(), "storage_coordination".to_string()),
-                    ("toadstool".to_string(), "network_coordination".to_string()),
+                    ("primal_compute_1".to_string(), "data_processing_coordination".to_string()),
+                    ("primal_network_1".to_string(), "service_mesh_coordination".to_string()),
+                    ("primal_storage_1".to_string(), "storage_coordination".to_string()),
+                    ("primal_ai_1".to_string(), "network_coordination".to_string()),
                 ]),
             },
             ecosystem_membership: EcosystemMembershipConfig::default(),

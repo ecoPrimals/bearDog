@@ -38,10 +38,10 @@ pub struct SystemMonitor {
 
 ///
 /// Controls monitoring intervals, alert thresholds, and system limits
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct SystemMonitorConfig {
     /// Interval between system checks in milliseconds
-    /// Number of check_interval_ms
+    /// Number of `check_interval_ms`
     pub check_interval_ms: u64,
     /// The alert threshold cpu value
     pub alert_threshold_cpu: f64,
@@ -50,7 +50,7 @@ pub struct SystemMonitorConfig {
     /// The alert threshold disk value
     pub alert_threshold_disk: f64,
     /// Maximum number of alerts to keep in history
-    /// Number of max_alert_history
+    /// Number of `max_alert_history`
     pub max_alert_history: usize,
 }
 
@@ -80,10 +80,10 @@ pub struct SystemMetrics {
     /// The disk usage percent value
     pub disk_usage_percent: f64,
     /// Total bytes received over network interfaces
-    /// Number of network_bytes_in
+    /// Number of `network_bytes_in`
     pub network_bytes_in: u64,
     /// Total bytes sent over network interfaces
-    /// Number of network_bytes_out
+    /// Number of `network_bytes_out`
     pub network_bytes_out: u64,
     /// System uptime in seconds
     pub uptime_seconds: u64,
@@ -160,7 +160,7 @@ pub struct SystemAlert {
 ///
 /// Categorizes different kinds of system events that warrant attention,
 /// from resource utilization issues to component failures.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 /// Types of alert
 pub enum AlertType {
     /// CPU usage has exceeded the configured threshold
@@ -180,7 +180,7 @@ pub enum AlertType {
 ///
 /// Indicates the urgency and impact level of system alerts,
 /// helping prioritize response actions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum AlertSeverity {
     Info,
     /// Warning condition that should be monitored
@@ -243,7 +243,7 @@ impl SystemMonitor {
         let metrics_clone = Arc::clone(&self.metrics);
         let health_checks_clone = Arc::clone(&self.health_checks);
         let alert_handlers_clone = Arc::clone(&self.alert_handlers);
-        let config = self.config.clone();
+        let config = self.config;
 
         let _monitoring_task = tokio::spawn(async move {
             let mut interval =
@@ -268,7 +268,9 @@ impl SystemMonitor {
                     &health_checks_clone,
                     &alert_handlers_clone,
                     &config,
-                ).await {
+                )
+                .await
+                {
                     error!("Failed to process alerts: {}", e);
                 }
             }
@@ -278,7 +280,9 @@ impl SystemMonitor {
         Ok(())
     }
 
-    async fn collect_system_metrics(metrics: &Arc<RwLock<SystemMetrics>>) -> Result<(), BearDogError> {
+    async fn collect_system_metrics(
+        metrics: &Arc<RwLock<SystemMetrics>>,
+    ) -> Result<(), BearDogError> {
         // In a real implementation, this would use system APIs to collect metrics
         // For now, we'll simulate with reasonable values using a thread-safe random source
         use rand::rngs::StdRng;
@@ -391,7 +395,7 @@ impl SystemMonitor {
             if matches!(health.status, HealthStatus::Unhealthy) {
                 let alert = SystemAlert {
                     alert_type: AlertType::ComponentDown,
-                    message: format!("Component {} is unhealthy", component_name),
+                    message: format!("Component {component_name} is unhealthy"),
                     severity: AlertSeverity::Critical,
                     timestamp: chrono::Utc::now(),
                     component: Some(component_name.clone()),
@@ -415,10 +419,10 @@ impl SystemMonitor {
     ///
     /// # Returns
     /// Current `SystemMetrics` with resource utilization data
-    /// Gets system_metrics
-    /// Gets system_metrics
+    /// Gets `system_metrics`
+    /// Gets `system_metrics`
     pub async fn get_system_metrics(&self) -> SystemMetrics {
-        self.metrics.read().await.clone()
+        *self.metrics.read().await
     }
 
     ///
@@ -430,8 +434,8 @@ impl SystemMonitor {
     /// # Returns
     /// - `Some(ComponentHealth)` if the component exists and has health data
     /// - `None` if the component is not being monitored
-    /// Gets component_health
-    /// Gets component_health
+    /// Gets `component_health`
+    /// Gets `component_health`
     pub async fn get_component_health(&self, component: &str) -> Option<ComponentHealth> {
         self.health_checks.read().await.get(component).cloned()
     }
@@ -492,12 +496,12 @@ impl CoreSecurityProvider {
     /// setting up security policies and cryptographic parameters.
     ///
     /// # Arguments
-    /// * `config` - BearDog configuration containing security settings
+    /// * `config` - `BearDog` configuration containing security settings
     ///
     /// # Returns
     /// A new `CoreSecurityProvider` instance
     /// Creates a new instance
-    pub fn new(config: BearDogConfig) -> Self {
+    pub const fn new(config: BearDogConfig) -> Self {
         Self { config }
     }
 }
@@ -507,84 +511,74 @@ impl BearDogProvider for CoreSecurityProvider {
     type Error = BearDogError;
     type Config = beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
-    fn provider_id(&self) -> &str {
+    fn provider_id(&self) -> &'static str {
         "core_security"
     }
 
-    fn provider_version(&self) -> &str {
+    fn provider_version(&self) -> &'static str {
         "1.0.0"
     }
 
-    fn health_check(
+    async fn health_check(
         &self,
-    ) -> impl std::future::Future<
-        Output = Result<
-            beardog_types::canonical::providers_unified::traits::ProviderHealth,
-            Self::Error,
-        >,
-    > + Send {
-        async move {
-            Ok(
-                beardog_types::canonical::providers_unified::traits::ProviderHealth {
-                    status: beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy,
-                    timestamp: std::time::SystemTime::now(),
-                    details: {
-                        let mut details = HashMap::new();
-                        details.insert("status".to_string(), "OK".to_string());
-                        details.insert("response_time_ms".to_string(), "5".to_string());
-                        details
-                    },
-                    resource_usage: beardog_types::canonical::providers_unified::traits::ResourceUsage {
+    ) -> Result<beardog_types::canonical::providers_unified::traits::ProviderHealth, Self::Error>
+    {
+        Ok(
+            beardog_types::canonical::providers_unified::traits::ProviderHealth {
+                status: beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy,
+                timestamp: std::time::SystemTime::now(),
+                details: {
+                    let mut details = HashMap::new();
+                    details.insert("status".to_string(), "OK".to_string());
+                    details.insert("response_time_ms".to_string(), "5".to_string());
+                    details
+                },
+                resource_usage:
+                    beardog_types::canonical::providers_unified::traits::ResourceUsage {
                         cpu_percent: 5.0,
                         memory_bytes: 1024 * 1024,
                         memory_percent: 2.0,
-                        network_io: beardog_types::canonical::providers_unified::traits::NetworkIoMetrics {
-                            bytes_sent: 0,
-                            bytes_received: 0,
-                            packets_sent: 0,
-                            packets_received: 0,
-                        },
+                        network_io:
+                            beardog_types::canonical::providers_unified::traits::NetworkIoMetrics {
+                                bytes_sent: 0,
+                                bytes_received: 0,
+                                packets_sent: 0,
+                                packets_received: 0,
+                            },
                         disk_io: HashMap::new(),
                     },
-                    last_error: None,
-                },
-            )
-        }
+                last_error: None,
+            },
+        )
     }
 
-    fn metrics(
+    async fn metrics(
         &self,
-    ) -> impl std::future::Future<
-        Output = Result<
-            beardog_types::canonical::providers_unified::traits::ProviderMetrics,
-            Self::Error,
-        >,
-    > + Send {
-        async move {
-            Ok(
-                beardog_types::canonical::providers_unified::traits::ProviderMetrics {
-                    timestamp: std::time::SystemTime::now(),
-                    performance: {
-                        let mut perf = HashMap::new();
-                        perf.insert("requests_per_second".to_string(), 0.0);
-                        perf.insert("average_response_time_ms".to_string(), 5.0);
-                        perf.insert("error_rate".to_string(), 0.0);
-                        perf
-                    },
-                    custom_metrics: Vec::new(),
-                    system_metrics:
-                        beardog_types::canonical::providers_unified::traits::SystemMetrics {
-                            uptime_seconds: 0,
-                            total_requests: 0,
-                            successful_requests: 0,
-                            failed_requests: 0,
-                            avg_response_time_ms: 5.0,
-                            active_connections: 0,
-                            error_rate: 0.0,
-                        },
+    ) -> Result<beardog_types::canonical::providers_unified::traits::ProviderMetrics, Self::Error>
+    {
+        Ok(
+            beardog_types::canonical::providers_unified::traits::ProviderMetrics {
+                timestamp: std::time::SystemTime::now(),
+                performance: {
+                    let mut perf = HashMap::new();
+                    perf.insert("requests_per_second".to_string(), 0.0);
+                    perf.insert("average_response_time_ms".to_string(), 5.0);
+                    perf.insert("error_rate".to_string(), 0.0);
+                    perf
                 },
-            )
-        }
+                custom_metrics: Vec::new(),
+                system_metrics:
+                    beardog_types::canonical::providers_unified::traits::SystemMetrics {
+                        uptime_seconds: 0,
+                        total_requests: 0,
+                        successful_requests: 0,
+                        failed_requests: 0,
+                        avg_response_time_ms: 5.0,
+                        active_connections: 0,
+                        error_rate: 0.0,
+                    },
+            },
+        )
     }
 
     fn capabilities(
@@ -638,7 +632,7 @@ impl SecurityProvider for CoreSecurityProvider {
 
     /// Creates session
     async fn create_session(&self, user_id: &str) -> Result<Self::Session, Self::Error> {
-        Ok(format!("session_{}", user_id))
+        Ok(format!("session_{user_id}"))
     }
 
     /// Validates session
@@ -659,7 +653,7 @@ impl SecurityProvider for CoreSecurityProvider {
         Ok(true)
     }
 
-    /// Gets security_requirements
+    /// Gets `security_requirements`
     async fn get_security_requirements(&self, _resource: &str) -> Result<Vec<String>, Self::Error> {
         Ok(vec!["authentication".to_string()])
     }
@@ -671,7 +665,7 @@ pub struct UniversalAdapter {
 }
 
 impl UniversalAdapter {
-    /// Creates a new UniversalAdapter instance
+    /// Creates a new `UniversalAdapter` instance
     ///
     /// Initializes an empty adapter with no registered capabilities.
     /// Creates a new instance
@@ -751,7 +745,7 @@ impl Default for CoreState {
     }
 }
 
-/// Main BearDog core system
+/// Main `BearDog` core system
 #[derive(Debug)]
 pub struct BearDogCore {
     /// System configuration settings
@@ -819,8 +813,8 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if HSM initialization fails.
-    /// Initializes componentialize_hsm_management
-    /// Initializes componentialize_hsm_management
+    /// Initializes `componentialize_hsm_management`
+    /// Initializes `componentialize_hsm_management`
     pub async fn initialize_hsm_management(&self) -> Result<(), BearDogError> {
         info!("🔐 Initializing HSM management capabilities");
 

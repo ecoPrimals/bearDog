@@ -12,7 +12,7 @@ use std::time::Duration;
 pub struct OperationalConfig {
     /// Health check configuration
     /// The health checks value
-    pub health_checks: HealthCheckConfig,
+    pub health_checks: super::super::domains::network::monitoring::HealthCheckConfiguration,
 
     /// Maintenance windows
     /// The maintenance value
@@ -32,21 +32,13 @@ pub struct OperationalConfig {
 }
 
 /// Health check configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthCheckConfig {
-    /// Enable health checks
-    /// Whether feature is enabled
-    pub enabled: bool,
-    /// Health check interval
-    /// The interval value
-    pub interval: Duration,
-    /// Health check timeout
-    pub timeout: Duration,
-    /// Number of `failure_threshold`
-    pub failure_threshold: u32,
-    /// Number of `success_threshold`
-    pub success_threshold: u32,
-}
+///
+/// **DEPRECATED**: Use `super::super::domains::network::monitoring::HealthCheckConfiguration` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
+)]
+pub type HealthCheckConfig = super::super::domains::network::monitoring::HealthCheckConfiguration;
 
 /// Maintenance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -89,17 +81,7 @@ pub struct ProcedureConfig {
     pub automated: bool,
 }
 
-impl Default for HealthCheckConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            interval: Duration::from_secs(30),
-            timeout: Duration::from_secs(5),
-            failure_threshold: 3,
-            success_threshold: 1,
-        }
-    }
-}
+// Default impl removed - HealthCheckConfig now uses canonical HealthCheckConfiguration::default()
 
 impl Default for MaintenanceConfig {
     fn default() -> Self {

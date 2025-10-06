@@ -13,7 +13,7 @@ pub use zero_cost_provider::{
     HsmProviderTrait, migrate_to_zero_cost,
 };
 
-pub use provider_dispatch::{HsmProviderDispatch, Pkcs11Placeholder, TpmPlaceholder};
+pub use provider_dispatch::HsmProviderDispatch;
 pub use crypto_dispatch::CryptoProviderDispatch;
 
 use beardog_errors::BearDogError;

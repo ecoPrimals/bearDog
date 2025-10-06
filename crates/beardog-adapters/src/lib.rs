@@ -213,7 +213,9 @@ impl UniversalAdapter {
         match timeout(
             timeout_duration,
             self.simulate_capability_execution(request),
-        ).await {
+        )
+        .await
+        {
             Ok(result) => result,
             Err(_) => Err(BearDogError::Adapter {
                 message: format!(
@@ -277,7 +279,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_capability_execution() {
+    async fn test_capability_execution() {
         let mut adapter = UniversalAdapter::new(AdapterConfig::default());
         adapter.register_capability("test".to_string(), "http://test.com".to_string());
 
@@ -289,6 +291,7 @@ mod tests {
 
         let response = adapter
             .execute_capability(request)
+            .await
             .expect("Adapter capability execution should succeed in test");
         assert!(response.success);
     }

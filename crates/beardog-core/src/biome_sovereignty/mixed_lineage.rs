@@ -60,12 +60,12 @@ pub struct PartnershipRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryConfig {
     /// Enable automatic partner discovery
-    /// Whether auto_discovery is enabled
+    /// Whether `auto_discovery` is enabled
     pub auto_discovery: bool,
     /// Discovery timeout in seconds
     pub discovery_timeout_secs: u64,
     /// Maximum discovery attempts
-    /// Number of max_discovery_attempts
+    /// Number of `max_discovery_attempts`
     pub max_discovery_attempts: u32,
 }
 
@@ -163,10 +163,10 @@ pub struct PartnershipManager {
     /// The trust algorithm value
     pub trust_algorithm: String,
     /// Maximum number of simultaneous partnerships
-    /// Number of max_partnerships
+    /// Number of `max_partnerships`
     pub max_partnerships: usize,
     /// Default partnership duration in seconds
-    /// Number of default_duration
+    /// Number of `default_duration`
     pub default_duration: u64,
     /// Partnership discovery and negotiation settings
     pub discovery_config: DiscoveryConfig,

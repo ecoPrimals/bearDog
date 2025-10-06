@@ -273,7 +273,7 @@ mod pedantic_compliance_tests {
     }
 
     #[tokio::test]
-    fn test_pedantic_async_handler() {
+    async fn test_pedantic_async_handler() {
         let success_result = pedantic_async_handler("test_success", || async {
             Ok::<String, BearDogError>("success ".to_string())
         });

@@ -21,14 +21,14 @@ mod tests {
     use crate::threat::types::*;
     use beardog_errors::BearDogError;
     #[tokio::test]
-    fn test_threat_detection_engine_creation() -> Result<(), BearDogError> {
+    async fn test_threat_detection_engine_creation() -> Result<(), BearDogError> {
         let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())?;
         assert_eq!(engine.detection_rules.len(), 0);
         assert_eq!(engine.ml_models.len(), 0);
         Ok(())
     }
     #[tokio::test]
-    fn test_placeholder_engine() -> Result<(), BearDogError> {
+    async fn test_placeholder_engine() -> Result<(), BearDogError> {
         let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())?;
         assert!(engine.blocked_sources.is_empty());
         assert!(engine.quarantined_systems.is_empty());
@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_basic_event_analysis() {
+    async fn test_basic_event_analysis() {
         let _engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
         let event = SecurityEvent::new("test_event", chrono::Utc::now(), "login")
             .with_source_ip("192.168.1.1")
@@ -47,7 +47,7 @@ mod tests {
         assert_eq!(event.event_type, "test_event");
     }
     #[tokio::test]
-    fn test_rule_management() -> Result<(), BearDogError> {
+    async fn test_rule_management() -> Result<(), BearDogError> {
         let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())?;
         let initial_count = engine.detection_rules.len();
         let rule = crate::threat::types::DetectionRule {
@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_statistics_collection() -> Result<(), BearDogError> {
+    async fn test_statistics_collection() -> Result<(), BearDogError> {
         let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())?;
         let stats = engine.get_feed_statistics();
         assert_eq!(stats.total_feeds, 0);
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_ml_model_management() -> Result<(), BearDogError> {
+    async fn test_ml_model_management() -> Result<(), BearDogError> {
         let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())?;
         let initial_count = engine.ml_models.len();
         let now = chrono::Utc::now();

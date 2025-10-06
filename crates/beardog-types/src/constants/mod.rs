@@ -25,7 +25,8 @@ pub use domains::system::{
 };
 
 pub use domains::network::{
-    addresses::{DEFAULT_DNS_PORT, DEFAULT_METRICS_BIND},
+    addresses::DEFAULT_DNS_PORT,
+    // Note: Use default_metrics_bind() for environment-aware configuration
     timeouts::RETRY_TIMEOUT,
 };
 

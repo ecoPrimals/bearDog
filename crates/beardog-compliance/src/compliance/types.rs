@@ -1,7 +1,7 @@
 //! # Compliance Types Module
 //!
 //! This module provides compliance-related types for the BearDog ecosystem.
-//! 
+//!
 //! **Configuration types** are imported from the canonical location in beardog-types.
 //! **Runtime/operational types** (events, reports, metrics) are defined here.
 
@@ -16,13 +16,10 @@ use std::collections::HashMap;
 // Import configuration types from canonical location
 // Note: File is in domains/ directory but exported at config:: level
 pub use beardog_types::canonical::config::compliance::{
-    ComplianceStandard,
-    ConsolidatedComplianceConfiguration as ComplianceConfig,
+    ComplianceStandard, ConsolidatedComplianceConfiguration as ComplianceConfig,
     DataSovereigntyConfiguration as DataSovereigntyConfig,
-    PrivacyAuditConfiguration as PrivacyAuditConfig,
+    PrivacyAuditConfiguration as PrivacyAuditConfig, ReportFormat, ReportFrequency,
     ReportingConfiguration as ReportingConfig,
-    ReportFormat,
-    ReportFrequency,
 };
 
 // ============================================================================

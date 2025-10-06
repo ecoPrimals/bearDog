@@ -1,6 +1,6 @@
 // # Ecosystem Evolution Genetics
 //
-// This module implements the horizontal gene transfer integration from the Squirrel team's
+// This module implements horizontal gene transfer integration across ecosystem primals'
 // ecosystem evolution initiative. It provides the genetic foundation for evolving from
 // binary relationship patterns to spectrum-based ecosystem intelligence.
 
@@ -42,7 +42,7 @@ pub struct EcosystemGeneticEngine {
     pub contextual_decision_making: ContextualDecisionGenetics,
 }
 
-/// EcosystemMembership spectrum - replaces binary whitelist/blacklist patterns
+/// EcosystemMembership spectrum - replaces binary allowlist/blocklist patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EcosystemMembership {
     /// Trusted ecosystem maintainer with stewardship responsibilities
@@ -135,7 +135,7 @@ pub enum TrustEvolution {
     },
 }
 
-/// Symbiotic coordination models - replaces master/slave hierarchical patterns
+/// Symbiotic coordination models - replaces primary/replica hierarchical patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CoordinationModel {
     /// Collective decision making with no single authority
@@ -403,11 +403,11 @@ impl EcosystemGeneticEngine {
         info!("🌱 Evolving binary access pattern to ecosystem membership");
 
         match current_pattern {
-            BinaryAccessPattern::Whitelist { allowed_entities } => {
-                self.evolve_whitelist_to_membership(allowed_entities, ecosystem_context)
+            BinaryAccessPattern::Allowlist { allowed_entities } => {
+                self.evolve_allowlist_to_membership(allowed_entities, ecosystem_context)
             }
-            BinaryAccessPattern::Blacklist { blocked_entities } => {
-                self.evolve_blacklist_to_protection(blocked_entities, ecosystem_context)
+            BinaryAccessPattern::Blocklist { blocked_entities } => {
+                self.evolve_blocklist_to_protection(blocked_entities, ecosystem_context)
             }
             BinaryAccessPattern::Simple { is_allowed } => {
                 self.evolve_simple_to_spectrum(is_allowed, ecosystem_context)
@@ -449,10 +449,10 @@ impl EcosystemGeneticEngine {
         info!("🌱 Evolving hierarchical pattern to symbiotic coordination");
 
         match current_hierarchy {
-            HierarchicalPattern::MasterSlave { master, slaves } => {
+            HierarchicalPattern::PrimaryReplica { primary, replicas } => {
                 Ok(CoordinationModel::Collaborative {
-                    decision_protocol: format!("collaborative_with_facilitator_{}", master),
-                    collaboration_frameworks: slaves,
+                    decision_protocol: format!("collaborative_with_facilitator_{}", primary),
+                    collaboration_frameworks: replicas,
                     mutual_accountability: "shared_responsibility".to_string(),
                     active_sessions: vec![],
                 })
@@ -521,12 +521,12 @@ impl EcosystemGeneticEngine {
         })
     }
 
-    fn evolve_whitelist_to_membership(
+    fn evolve_allowlist_to_membership(
         &self,
         _allowed_entities: Vec<String>,
         _context: EcosystemContext,
     ) -> Result<EcosystemMembership, BearDogError> {
-        debug!("Evolving whitelist entries to ecosystem membership spectrum");
+        debug!("Evolving allowlist entries to ecosystem membership spectrum");
 
         Ok(EcosystemMembership::ActiveContributor {
             contribution_types: vec![ContributionType::CommunitySupport],
@@ -544,12 +544,12 @@ impl EcosystemGeneticEngine {
         })
     }
 
-    fn evolve_blacklist_to_protection(
+    fn evolve_blocklist_to_protection(
         &self,
         _blocked_entities: Vec<String>,
         _context: EcosystemContext,
     ) -> Result<EcosystemMembership, BearDogError> {
-        debug!("Evolving blacklist entries to ecosystem protection with restoration");
+        debug!("Evolving blocklist entries to ecosystem protection with restoration");
 
         Ok(EcosystemMembership::EcosystemProtection {
             protection_reason: ProtectionReason::PreviousConcerns,
@@ -669,8 +669,8 @@ pub struct AdaptiveSecurity {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryAccessPattern {
-    Whitelist { allowed_entities: Vec<String> },
-    Blacklist { blocked_entities: Vec<String> },
+    Allowlist { allowed_entities: Vec<String> },
+    Blocklist { blocked_entities: Vec<String> },
     Simple { is_allowed: bool },
 }
 
@@ -684,8 +684,11 @@ pub enum BinaryTrust {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HierarchicalPattern {
-    /// Represents master slave variant
-    MasterSlave { master: String, slaves: Vec<String> },
+    /// Represents primary replica variant
+    PrimaryReplica {
+        primary: String,
+        replicas: Vec<String>,
+    },
     ClientServer {
         server: String,
         clients: Vec<String>,
@@ -939,13 +942,13 @@ pub struct RestorationPath {
 
 /// Migration utility to evolve from binary patterns to ecosystem models
 pub fn migrate_from_binary_patterns(
-    whitelist_entries: Vec<String>,
-    blacklist_entries: Vec<String>,
+    allowlist_entries: Vec<String>,
+    blocklist_entries: Vec<String>,
 ) -> Result<Vec<EcosystemMembership>, BearDogError> {
     let mut memberships = Vec::new();
 
-    // Convert whitelist entries to active contributors
-    for _entry in whitelist_entries {
+    // Convert allowlist entries to active contributors
+    for _entry in allowlist_entries {
         memberships.push(EcosystemMembership::ActiveContributor {
             contribution_types: vec![ContributionType::CommunitySupport],
             trust_level: 0.7,
@@ -962,8 +965,8 @@ pub fn migrate_from_binary_patterns(
         });
     }
 
-    // Convert blacklist entries to ecosystem protection
-    for _entry in blacklist_entries {
+    // Convert blocklist entries to ecosystem protection
+    for _entry in blocklist_entries {
         memberships.push(EcosystemMembership::EcosystemProtection {
             protection_reason: ProtectionReason::PreviousConcerns,
             protection_level: ProtectionLevel::Moderate,

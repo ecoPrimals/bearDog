@@ -135,8 +135,8 @@ pub enum SourceClassification {
     Malicious,
     /// Represents known malicious variant
     KnownMalicious,
-    /// State indicating blacklisted
-    Blacklisted,
+    /// State indicating blocklisted
+    Blocklisted,
     /// Unknown or undefined state
     Unknown,
     /// Represents external variant
@@ -399,7 +399,7 @@ impl SourceClassification {
             SourceClassification::Suspicious => 0.6,
             SourceClassification::Malicious => 0.8,
             SourceClassification::KnownMalicious => 0.9,
-            SourceClassification::Blacklisted => 1.0,
+            SourceClassification::Blocklisted => 1.0,
             SourceClassification::Unknown => 0.5,
             SourceClassification::External => 0.4,
             SourceClassification::Internal => 0.2,
@@ -447,7 +447,7 @@ impl std::fmt::Display for SourceClassification {
             SourceClassification::Suspicious => write!(f, "Suspicious"),
             SourceClassification::Malicious => write!(f, "Malicious"),
             SourceClassification::KnownMalicious => write!(f, "Known Malicious"),
-            SourceClassification::Blacklisted => write!(f, "Blacklisted"),
+            SourceClassification::Blocklisted => write!(f, "Blocklisted"),
             SourceClassification::Unknown => write!(f, "Unknown"),
             SourceClassification::External => write!(f, "External"),
             SourceClassification::Internal => write!(f, "Internal"),

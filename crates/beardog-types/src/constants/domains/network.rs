@@ -90,25 +90,107 @@ pub mod config {
     }
 }
 
-/// **DEFAULT NETWORK SETTINGS** - Standard network configuration
+/// **DEFAULT NETWORK SETTINGS** - Standard network configuration with environment awareness
 pub mod defaults {
     use super::Duration;
 
-    /// Connection defaults
-    pub const DEFAULT_API_PORT: u16 = 8080;
-    pub const DEFAULT_METRICS_PORT: u16 = 9090;
-    pub const DEFAULT_HEALTH_PORT: u16 = 8081;
-    pub const DEFAULT_ADMIN_PORT: u16 = 8082;
-    pub const DEFAULT_DEBUG_PORT: u16 = 8083;
+    // Private fallback constants
+    const FALLBACK_API_PORT: u16 = 8080;
+    const FALLBACK_METRICS_PORT: u16 = 9090;
+    const FALLBACK_HEALTH_PORT: u16 = 8081;
+    const FALLBACK_ADMIN_PORT: u16 = 8082;
+    const FALLBACK_DEBUG_PORT: u16 = 8083;
 
-    /// Timeout defaults
+    /// Get default API port from environment or fallback to 8080
+    ///
+    /// Checks `BEARDOG_API_PORT` environment variable first.
+    #[must_use]
+    pub fn default_api_port() -> u16 {
+        std::env::var("BEARDOG_API_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(FALLBACK_API_PORT)
+    }
+
+    /// Get default metrics port from environment or fallback to 9090
+    ///
+    /// Checks `BEARDOG_METRICS_PORT` environment variable first.
+    #[must_use]
+    pub fn default_metrics_port() -> u16 {
+        std::env::var("BEARDOG_METRICS_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(FALLBACK_METRICS_PORT)
+    }
+
+    /// Get default health check port from environment or fallback to 8081
+    ///
+    /// Checks `BEARDOG_HEALTH_PORT` environment variable first.
+    #[must_use]
+    pub fn default_health_port() -> u16 {
+        std::env::var("BEARDOG_HEALTH_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(FALLBACK_HEALTH_PORT)
+    }
+
+    /// Get default admin port from environment or fallback to 8082
+    ///
+    /// Checks `BEARDOG_ADMIN_PORT` environment variable first.
+    #[must_use]
+    pub fn default_admin_port() -> u16 {
+        std::env::var("BEARDOG_ADMIN_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(FALLBACK_ADMIN_PORT)
+    }
+
+    /// Get default debug port from environment or fallback to 8083
+    ///
+    /// Checks `BEARDOG_DEBUG_PORT` environment variable first.
+    #[must_use]
+    pub fn default_debug_port() -> u16 {
+        std::env::var("BEARDOG_DEBUG_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(FALLBACK_DEBUG_PORT)
+    }
+
+    // Legacy const exports for backward compatibility (deprecated)
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_api_port() for environment-aware configuration"
+    )]
+    pub const DEFAULT_API_PORT: u16 = FALLBACK_API_PORT;
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_metrics_port() for environment-aware configuration"
+    )]
+    pub const DEFAULT_METRICS_PORT: u16 = FALLBACK_METRICS_PORT;
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_health_port() for environment-aware configuration"
+    )]
+    pub const DEFAULT_HEALTH_PORT: u16 = FALLBACK_HEALTH_PORT;
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_admin_port() for environment-aware configuration"
+    )]
+    pub const DEFAULT_ADMIN_PORT: u16 = FALLBACK_ADMIN_PORT;
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_debug_port() for environment-aware configuration"
+    )]
+    pub const DEFAULT_DEBUG_PORT: u16 = FALLBACK_DEBUG_PORT;
+
+    /// Timeout defaults (these are reasonable compile-time constants)
     pub const DEFAULT_CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
     pub const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(60);
     pub const DEFAULT_WRITE_TIMEOUT: Duration = Duration::from_secs(30);
     pub const DEFAULT_IDLE_TIMEOUT: Duration = Duration::from_secs(300);
     pub const DEFAULT_KEEP_ALIVE_TIMEOUT: Duration = Duration::from_secs(60);
 
-    /// Buffer sizes
+    /// Buffer sizes (compile-time constants are appropriate here)
     /// Default socket buffer size in bytes (64KB)
     pub const DEFAULT_SOCKET_BUFFER_SIZE: usize = 65536;
     /// Default send buffer size in bytes (32KB)
@@ -117,7 +199,7 @@ pub mod defaults {
     pub const DEFAULT_RECEIVE_BUFFER_SIZE: usize = 32768;
     pub const DEFAULT_BACKLOG_SIZE: u32 = 128;
 
-    /// Connection pool defaults
+    /// Connection pool defaults (compile-time constants are appropriate here)
     /// Default maximum number of concurrent connections
     pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
     /// Default minimum number of connections to maintain
@@ -127,7 +209,7 @@ pub mod defaults {
     /// Default maximum number of idle connections to keep
     pub const DEFAULT_MAX_IDLE_CONNECTIONS: usize = 5;
 
-    /// Protocol defaults
+    /// Protocol defaults (compile-time constants are appropriate here)
     /// Default HTTP protocol version
     pub const DEFAULT_HTTP_VERSION: &str = "HTTP/1.1";
     pub const DEFAULT_TLS_VERSION: &str = "TLSv1.3";
@@ -135,9 +217,9 @@ pub mod defaults {
     pub const DEFAULT_PROTOCOL_VERSION: &str = "2.0";
 }
 
-/// **NETWORK ADDRESSES** - Standard network addresses and endpoints
+/// **NETWORK ADDRESSES** - Standard network addresses and endpoints with environment awareness
 pub mod addresses {
-    /// Localhost addresses
+    /// Localhost addresses (these are universal constants)
     /// IPv4 localhost address
     pub const LOCALHOST_IPV4: &str = "127.0.0.1";
     /// IPv6 localhost address
@@ -147,19 +229,96 @@ pub mod addresses {
     /// IPv6 wildcard address (bind to all interfaces)
     pub const WILDCARD_IPV6: &str = "::";
 
-    /// Default bind addresses
-    /// Default address to bind services to (all interfaces)
-    pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
-    pub const DEFAULT_API_BIND: &str = "0.0.0.0:8080";
-    pub const DEFAULT_METRICS_BIND: &str = "0.0.0.0:9090";
-    pub const DEFAULT_HEALTH_BIND: &str = "0.0.0.0:8081";
+    /// Get default bind address from environment or fallback to 0.0.0.0
+    ///
+    /// Checks `BEARDOG_BIND_ADDRESS` environment variable first.
+    #[must_use]
+    pub fn default_bind_address() -> String {
+        std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| WILDCARD_IPV4.to_string())
+    }
 
-    /// Service discovery addresses
+    /// Get default API bind address from environment or construct from defaults
+    ///
+    /// Checks `BEARDOG_API_BIND` environment variable first.
+    #[must_use]
+    pub fn default_api_bind() -> String {
+        std::env::var("BEARDOG_API_BIND").unwrap_or_else(|_| {
+            format!(
+                "{}:{}",
+                default_bind_address(),
+                super::defaults::default_api_port()
+            )
+        })
+    }
+
+    /// Get default metrics bind address from environment or construct from defaults
+    ///
+    /// Checks `BEARDOG_METRICS_BIND` environment variable first.
+    #[must_use]
+    pub fn default_metrics_bind() -> String {
+        std::env::var("BEARDOG_METRICS_BIND").unwrap_or_else(|_| {
+            format!(
+                "{}:{}",
+                default_bind_address(),
+                super::defaults::default_metrics_port()
+            )
+        })
+    }
+
+    /// Get default health check bind address from environment or construct from defaults
+    ///
+    /// Checks `BEARDOG_HEALTH_BIND` environment variable first.
+    #[must_use]
+    pub fn default_health_bind() -> String {
+        std::env::var("BEARDOG_HEALTH_BIND").unwrap_or_else(|_| {
+            format!(
+                "{}:{}",
+                default_bind_address(),
+                super::defaults::default_health_port()
+            )
+        })
+    }
+
+    /// Get multicast address from environment or fallback to 224.0.0.251
+    ///
+    /// Checks `BEARDOG_MULTICAST_ADDRESS` environment variable first.
+    #[must_use]
+    pub fn multicast_address() -> String {
+        std::env::var("BEARDOG_MULTICAST_ADDRESS").unwrap_or_else(|_| "224.0.0.251".to_string())
+    }
+
+    // Legacy const exports for backward compatibility (deprecated)
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_bind_address() for environment-aware configuration"
+    )]
+    pub const DEFAULT_BIND_ADDRESS: &str = WILDCARD_IPV4;
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_api_bind() for environment-aware configuration"
+    )]
+    pub const DEFAULT_API_BIND: &str = "0.0.0.0:8080";
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_metrics_bind() for environment-aware configuration"
+    )]
+    pub const DEFAULT_METRICS_BIND: &str = "0.0.0.0:9090";
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use default_health_bind() for environment-aware configuration"
+    )]
+    pub const DEFAULT_HEALTH_BIND: &str = "0.0.0.0:8081";
+    #[deprecated(
+        since = "3.1.0",
+        note = "Use multicast_address() for environment-aware configuration"
+    )]
     pub const MULTICAST_ADDRESS: &str = "224.0.0.251";
+
+    /// Broadcast address (universal constant)
     /// Configuration constant: broadcast address
     pub const BROADCAST_ADDRESS: &str = "255.255.255.255";
 
-    /// DNS settings
+    /// DNS settings (these can remain as compile-time constants)
     pub const DEFAULT_DNS_PORT: u16 = 53;
     /// Configuration constant: default dns servers
     pub const DEFAULT_DNS_SERVERS: &[&str] = &["8.8.8.8", "8.8.4.4", "1.1.1.1"];
@@ -729,8 +888,9 @@ pub mod rate_limiting {
 }
 
 // Re-export commonly used constants for convenience
-pub use addresses::{DEFAULT_DNS_PORT, DEFAULT_METRICS_BIND};
-pub use defaults::{DEFAULT_API_PORT, DEFAULT_METRICS_PORT};
+pub use addresses::DEFAULT_DNS_PORT;
+// Note: Use default_api_port(), default_metrics_port(), default_metrics_bind() functions
+// instead of the deprecated constants for environment-aware configuration
 pub use limits::{MAX_CONNECTIONS, MAX_HEADER_SIZE};
 pub use timeouts::{CONNECTION_TIMEOUT, REQUEST_TIMEOUT};
 
@@ -738,7 +898,8 @@ pub use timeouts::{CONNECTION_TIMEOUT, REQUEST_TIMEOUT};
 pub mod api {
     pub use super::defaults::DEFAULT_HTTP_VERSION;
     /// API-related network constants
-    pub use super::defaults::{DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT};
+    /// Note: Use default_api_port(), default_health_port(), default_metrics_port()
+    /// functions for environment-aware configuration
     pub use super::timeouts::{REQUEST_TIMEOUT, RESPONSE_TIMEOUT};
 }
 
@@ -768,7 +929,8 @@ pub mod http {
 
 /// Service discovery constants
 pub mod services {
-    pub use super::defaults::{DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT};
+    /// Note: Use default_health_port(), default_metrics_port()
+    /// functions for environment-aware configuration
     pub use super::timeouts::DNS_RESOLUTION_TIMEOUT;
 
     /// Service types

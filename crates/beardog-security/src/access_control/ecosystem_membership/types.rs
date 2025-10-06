@@ -95,19 +95,19 @@ pub struct EvolutionFactor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LegacyIntegrationConfig {
-    /// Enable legacy whitelist integration
-    /// Whether whitelist is enabled
-    pub whitelist_enabled: bool,
+    /// Enable legacy allowlist integration
+    /// Whether allowlist is enabled
+    pub allowlist_enabled: bool,
     
-    /// Enable legacy blacklist integration
-    /// Whether blacklist is enabled
-    pub blacklist_enabled: bool,
+    /// Enable legacy blocklist integration
+    /// Whether blocklist is enabled
+    pub blocklist_enabled: bool,
     
-    /// The whitelist trust boost value
-    pub whitelist_trust_boost: f64,
+    /// The allowlist trust boost value
+    pub allowlist_trust_boost: f64,
     
-    /// The blacklist trust penalty value
-    pub blacklist_trust_penalty: f64,
+    /// The blocklist trust penalty value
+    pub blocklist_trust_penalty: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -201,7 +201,7 @@ pub enum MembershipSource {
     /// Inherited from genetic relationships
     Genetic { parent_entity: String },
     
-    /// Migrated from legacy whitelist/blacklist
+    /// Migrated from legacy allowlist/blocklist
     Legacy { original_list: String },
     
     /// Established through community consensus

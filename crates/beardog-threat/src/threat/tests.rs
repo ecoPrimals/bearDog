@@ -17,7 +17,7 @@ mod tests {
     use std::time::SystemTime;
 
     #[tokio::test]
-    fn test_threat_detection_engine_creation() {
+    async fn test_threat_detection_engine_creation() {
         let config = ThreatDetectionConfig::default();
         let engine_result = ThreatDetectionEngine::new(config);
 
@@ -31,7 +31,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_threat_detection_config_default() {
+    async fn test_threat_detection_config_default() {
         let config = ThreatDetectionConfig::default();
 
         assert!(config.ml_enhancement);
@@ -43,7 +43,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_threat_event_creation() {
+    async fn test_threat_event_creation() {
         let now = SystemTime::now();
         let threat_event = ThreatEvent {
             id: "test-threat-001".to_string(),
@@ -77,14 +77,14 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_threat_severity_ordering() {
+    async fn test_threat_severity_ordering() {
         assert!(ThreatSeverity::Critical > ThreatSeverity::High);
         assert!(ThreatSeverity::High > ThreatSeverity::Medium);
         assert!(ThreatSeverity::Medium > ThreatSeverity::Low);
     }
 
     #[tokio::test]
-    fn test_mitigation_step_creation() {
+    async fn test_mitigation_step_creation() {
         let step = MitigationStep {
             id: "step-001".to_string(),
             action: "Isolate affected system".to_string(),

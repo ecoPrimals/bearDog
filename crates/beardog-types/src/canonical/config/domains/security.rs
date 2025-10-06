@@ -5,10 +5,10 @@
 //! by providing a canonical security configuration that replaces 15+ scattered security configs.
 //!
 //! ## 🎯 **Consolidation Impact**
-//! 
+//!
 //! This module unifies and replaces:
 //! - `SecurityProviderConfig` (beardog-security)
-//! - `RateLimitConfig` (beardog-security) 
+//! - `RateLimitConfig` (beardog-security)
 //! - `AuditConfig` (beardog-security)
 //! - `EncryptionConfig` (beardog-security)
 //! - `SafeCryptoConfig` (beardog-security)
@@ -27,6 +27,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // use std::time::Duration; // Currently unused
 
+// Import canonical threat detection config
+use super::threat::CanonicalThreatDetectionConfig;
+
 /// **CONSOLIDATED SECURITY CONFIGURATION** - Single source of truth for all security settings
 ///
 /// This structure consolidates all security-related configurations across the `BearDog` ecosystem,
@@ -37,26 +40,26 @@ pub struct ConsolidatedSecurityConfiguration {
     pub authentication: AuthenticationConfiguration,
     pub authorization: AuthorizationConfiguration,
     pub access_control: AccessControlConfiguration,
-    
+
     /// **CRYPTOGRAPHIC OPERATIONS**
     pub encryption: EncryptionConfiguration,
     pub key_management: KeyManagementConfiguration,
     pub crypto_provider: CryptoProviderConfiguration,
-    
+
     /// **SECURITY MONITORING & AUDITING**
     pub audit: AuditConfiguration,
     pub monitoring: SecurityMonitoringConfiguration,
-    pub rate_limiting: RateLimitConfiguration,
-    
+    pub rate_limiting: super::network::RateLimitConfig,
+
     /// **THREAT DETECTION & RESPONSE**
-    pub threat_detection: ThreatDetectionConfiguration,
+    pub threat_detection: CanonicalThreatDetectionConfig,
     pub threat_response: ThreatResponseConfiguration,
-    
+
     /// **ADVANCED SECURITY FEATURES**
     pub genetic_security: GeneticSecurityConfiguration,
     pub ecosystem_membership: EcosystemMembershipConfiguration,
     pub trust_computation: TrustComputationConfiguration,
-    
+
     /// **COMPLIANCE & GOVERNANCE**
     pub compliance: SecurityComplianceConfiguration,
     pub data_sovereignty: DataSovereigntyConfiguration,
@@ -170,7 +173,8 @@ impl Default for AutoEvolutionConfiguration {
             enable_auto_evolution: true,
             evolution_threshold: 0.8,
             evolution_interval_seconds: 3600, // 1 hour
-            max_evolution_steps: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32,
+            max_evolution_steps: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
+                as u32,
         }
     }
 }
@@ -287,7 +291,7 @@ impl Default for GeneticRenewalConfiguration {
         genetic_parameters.insert("mutation_rate".to_string(), 0.1);
         genetic_parameters.insert("crossover_rate".to_string(), 0.8);
         genetic_parameters.insert("selection_pressure".to_string(), 0.7);
-        
+
         Self {
             enable_genetic_renewal: true,
             genetic_parameters,
@@ -339,11 +343,7 @@ impl Default for AuditConfiguration {
             log_format: "json".to_string(),
             enable_realtime_monitoring: true,
             storage_backend: "encrypted_file".to_string(),
-            compliance_standards: vec![
-                "SOX".to_string(),
-                "GDPR".to_string(),
-                "CCPA".to_string(),
-            ],
+            compliance_standards: vec!["SOX".to_string(), "GDPR".to_string(), "CCPA".to_string()],
         }
     }
 }
@@ -389,115 +389,16 @@ pub struct SiemIntegrationConfiguration {
     pub event_format: String,
 }
 
-/// Rate limiting configuration - consolidates `RateLimitConfig`
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RateLimitConfiguration {
-    /// Enable rate limiting
-    pub enabled: bool,
-    /// Requests per minute limit
-    pub requests_per_minute: u32,
-    /// Burst capacity
-    pub burst_capacity: u32,
-    /// Rate limiting algorithm
-    pub algorithm: String,
-    /// Whitelist for rate limiting exemptions
-    pub whitelist: Vec<String>,
-    /// Rate limit enforcement level
-    pub enforcement_level: String,
-}
-
-impl Default for RateLimitConfiguration {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            requests_per_minute: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u32,
-            burst_capacity: 100,
-            algorithm: "token_bucket".to_string(),
-            whitelist: vec![crate::constants::domains::network::addresses::LOCALHOST_IPV4.to_string()],
-            enforcement_level: "strict".to_string(),
-        }
-    }
-}
-
-/// **THREAT DETECTION CONFIGURATION** - Consolidated threat detection settings
+/// Rate limiting configuration (DEPRECATED - use canonical network config)
 ///
-/// This structure consolidates threat detection configs from:
-/// - `beardog-threat/src/threat/handlers/analysis.rs`
-/// - `beardog-threat/src/threat/types/modules/core.rs`
-/// - `beardog-threat/src/threat/types/config.rs`
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatDetectionConfiguration {
-    /// Enable the threat detection system
-    pub enabled: bool,
-    /// Enable real-time threat detection
-    pub realtime_detection: bool,
-    /// Maximum concurrent threat analyses
-    pub max_concurrent_analyses: usize,
-    /// Detection sensitivity level (0.0 - 1.0)
-    pub detection_sensitivity: f64,
-    /// Enable threat intelligence feeds
-    pub enable_threat_feeds: bool,
-    /// Threat intelligence feed URLs
-    pub threat_feeds: Vec<String>,
-    /// Enable machine learning enhancement
-    pub ml_enhancement: bool,
-    /// Maximum active threats to track
-    pub max_active_threats: usize,
-    /// Enable real-time monitoring
-    pub real_time_monitoring: bool,
-    /// Enable automated response
-    pub auto_response: bool,
-    /// Automated quarantine threshold score
-    pub quarantine_threshold: f64,
-    /// Automated block threshold score
-    pub block_threshold: f64,
-    /// Threat score threshold (0-100)
-    pub threat_threshold: u8,
-    /// Alert threshold for notifications (0.0 - 1.0)
-    pub alert_threshold: f64,
-    /// Maximum alerts per minute
-    pub max_alerts_per_minute: u32,
-    /// Enable auto-quarantine
-    pub auto_quarantine: bool,
-    /// Notification endpoints for alerts
-    pub notification_endpoints: Vec<String>,
-    /// Path to threat detection rules
-    pub rules_path: String,
-    /// Paths to monitor for threats
-    pub monitor_paths: Vec<String>,
-    /// Cache size for threat data
-    pub cache_size: usize,
-    /// Monitoring interval in seconds
-    pub monitoring_interval_seconds: u64,
-}
+/// **MIGRATION**: Use `super::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(since = "3.1.0", note = "Use super::network::RateLimitConfig instead")]
+pub type RateLimitConfiguration = super::network::RateLimitConfig;
 
-impl Default for ThreatDetectionConfiguration {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            realtime_detection: true,
-            max_concurrent_analyses: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            detection_sensitivity: 0.7,
-            enable_threat_feeds: true,
-            threat_feeds: Vec::new(),
-            ml_enhancement: true,
-            max_active_threats: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
-            real_time_monitoring: true,
-            auto_response: false,
-            quarantine_threshold: 0.8,
-            block_threshold: 0.9,
-            threat_threshold: 70,
-            alert_threshold: 0.8,
-            max_alerts_per_minute: 100,
-            auto_quarantine: false,
-            notification_endpoints: Vec::new(),
-            rules_path: "/etc/beardog/threat-rules".to_string(),
-            monitor_paths: Vec::new(),
-            cache_size: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
-            monitoring_interval_seconds: 300,
-        }
-    }
-}
+// Deprecated ThreatDetectionConfiguration removed
+// Use beardog_types::canonical::config::domains::threat::CanonicalThreatDetectionConfig instead
 
 /// **THREAT RESPONSE CONFIGURATION** - Automated threat response settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -776,8 +677,8 @@ impl Default for ConsolidatedSecurityConfiguration {
                 metrics_enabled: true,
                 siem_integration: None,
             },
-            rate_limiting: RateLimitConfiguration::default(),
-            threat_detection: ThreatDetectionConfiguration::default(),
+            rate_limiting: super::network::RateLimitConfig::default(),
+            threat_detection: CanonicalThreatDetectionConfig::default(),
             threat_response: ThreatResponseConfiguration::default(),
             genetic_security: GeneticSecurityConfiguration {
                 enable_genetic_security: true,
@@ -849,57 +750,69 @@ impl ConsolidatedSecurityConfiguration {
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate authentication settings
         if self.authentication.session_timeout_seconds == 0 {
-            return Err(BearDogError::configuration("Session timeout cannot be zero"));
+            return Err(BearDogError::configuration(
+                "Session timeout cannot be zero",
+            ));
         }
-        
+
         if self.authentication.max_login_attempts == 0 {
-            return Err(BearDogError::configuration("Max login attempts cannot be zero"));
+            return Err(BearDogError::configuration(
+                "Max login attempts cannot be zero",
+            ));
         }
-        
+
         // Validate encryption settings
         if self.encryption.key_size_bits < 128 {
-            return Err(BearDogError::configuration("Key size must be at least 128 bits"));
+            return Err(BearDogError::configuration(
+                "Key size must be at least 128 bits",
+            ));
         }
-        
+
         // Validate rate limiting
-        if self.rate_limiting.enabled && self.rate_limiting.requests_per_minute == 0 {
-            return Err(BearDogError::configuration("Rate limit cannot be zero when enabled"));
+        if self.rate_limiting.enabled && self.rate_limiting.max_requests == 0 {
+            return Err(BearDogError::configuration(
+                "Rate limit cannot be zero when enabled",
+            ));
         }
-        
+
         // Validate trust computation
         if self.trust_computation.enabled && self.trust_computation.trust_decay.decay_rate > 1.0 {
-            return Err(BearDogError::configuration("Trust decay rate cannot exceed 1.0"));
+            return Err(BearDogError::configuration(
+                "Trust decay rate cannot exceed 1.0",
+            ));
         }
-        
+
         Ok(())
     }
-    
+
     /// Create a development-friendly configuration
     pub fn development() -> Self {
         let mut config = Self::default();
-        
+
         // Relaxed settings for development
         config.authentication.session_timeout_seconds = 86400; // 24 hours
-        config.authentication.max_login_attempts = crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32;
-        config.rate_limiting.requests_per_minute = 10000;
+        config.authentication.max_login_attempts =
+            crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32;
+        config.rate_limiting.max_requests = 10000;
         config.audit.retention_days = 30;
         config.compliance.validation.strictness_level = "moderate".to_string();
-        
+
         config
     }
-    
+
     /// Create a production-hardened configuration
     pub fn production() -> Self {
         let mut config = Self::default();
-        
+
         // Strict settings for production
         config.authentication.session_timeout_seconds = 3600; // 1 hour
         config.authentication.max_login_attempts = 3;
-        config.rate_limiting.requests_per_minute = crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u32;
+        config.rate_limiting.max_requests =
+            crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64;
         config.audit.retention_days = 2555; // 7 years
         config.compliance.validation.strictness_level = "strict".to_string();
         config.data_sovereignty.validation.enforcement_level = "strict".to_string();
-        
+
         config
     }
 }
@@ -918,7 +831,10 @@ mod tests {
     fn test_development_config() {
         let config = ConsolidatedSecurityConfiguration::development();
         assert_eq!(config.authentication.session_timeout_seconds, 86400);
-        assert_eq!(config.authentication.max_login_attempts, crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE);
+        assert_eq!(
+            config.authentication.max_login_attempts,
+            crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32
+        );
         assert!(config.validate().is_ok());
     }
 
@@ -937,4 +853,4 @@ mod tests {
         config.authentication.session_timeout_seconds = 0;
         assert!(config.validate().is_err());
     }
-} 
+}

@@ -1,7 +1,7 @@
 // Symbiotic Coordination - Collaborative Relationship Models
 //
 // This module implements SymbioticCoordination patterns that replace hierarchical
-// master/slave patterns with biological symbiosis models based on mutual benefit
+// primary/replica patterns with biological symbiosis models based on mutual benefit
 // and collaborative coordination.
 
 // Note: BearDogError and BearDogResult available for future extensions
@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-/// Symbiotic coordination models - replaces master/slave hierarchical patterns
+/// Symbiotic coordination models - replaces primary/replica hierarchical patterns
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SymbioticCoordination {
     /// Distributed coordination with shared responsibility

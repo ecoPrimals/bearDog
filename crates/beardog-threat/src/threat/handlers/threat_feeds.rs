@@ -248,6 +248,7 @@ pub struct ThreatFeedStats {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::threat::ThreatDetectionConfig;
 
     #[test]
     fn test_indicator_type_display() {
@@ -257,7 +258,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_threat_feed_processing() -> Result<(), BearDogError> {
+    async fn test_threat_feed_processing() -> Result<(), BearDogError> {
         let config = ThreatDetectionConfig::default();
         let mut engine = ThreatDetectionEngine::new(config)?;
 

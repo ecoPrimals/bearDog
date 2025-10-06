@@ -2,7 +2,13 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-use super::types::*;
+use super::types::{
+    AiResourceAllocation, ComputeResourceAllocation, EcosystemGeneticBlueprint,
+    EcosystemHybridNode, EcosystemResourceAllocation, EcosystemSpawningOperation,
+    EcosystemSpawningRequirements, EcosystemSpawningStatistics, NetworkingResourceAllocation,
+    NodeHealthStatus, NodePerformanceMetrics, SecurityLevel, SecurityResourceAllocation,
+    SpawningStage, SpawningStatus, StorageResourceAllocation,
+};
 use crate::ecosystem_integration::universal_compute_client::UniversalComputeClient;
 // Universal service meshServiceDiscovery - using universal adapter pattern
 use beardog_errors::BearDogError;
@@ -15,15 +21,21 @@ use uuid::Uuid;
 /// Universal Hardware Security Module (HSM) manager
 ///
 /// Provides unified management and access to various HSM implementations
-/// across the BearDog ecosystem, abstracting hardware-specific details
+/// across the `BearDog` ecosystem, abstracting hardware-specific details
 #[derive(Debug)]
 pub struct UniversalHsmManager {
     // Placeholder fields
 }
 
+impl Default for UniversalHsmManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UniversalHsmManager {
     /// Creates a new instance
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {}
     }
 
@@ -35,8 +47,8 @@ impl UniversalHsmManager {
     ///
     /// # Returns
     /// - `Err(BearDogError)` if status retrieval fails
-    /// Gets ecosystem_status
-    /// Gets ecosystem_status
+    /// Gets `ecosystem_status`
+    /// Gets `ecosystem_status`
     pub fn get_ecosystem_status(&self) -> Result<serde_json::Value, BearDogError> {
         // Placeholder implementation
         Ok(serde_json::json!({
@@ -164,7 +176,7 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Execute Ecosystem Spawning operation.
-    /// Executes ecosystem_spawning
+    /// Executes `ecosystem_spawning`
     fn execute_ecosystem_spawning(
         &self,
         operation: &mut EcosystemSpawningOperation,
@@ -202,14 +214,14 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Update Operation Stage operation.
-    /// Updates operation_stage
+    /// Updates `operation_stage`
     fn update_operation_stage(
         &self,
         operation: &mut EcosystemSpawningOperation,
         stage: SpawningStage,
         progress: f64,
     ) -> Result<(), BearDogError> {
-        operation.current_stage = stage.clone();
+        operation.current_stage = stage;
         operation.progress_percentage = progress;
         debug!(
             "📊 Operation {} progress: {:.1}% - {:?}",
@@ -245,10 +257,7 @@ impl EcosystemGeneticSpawner {
             primary_contributions: Vec::new(),
             expected_performance: NodePerformanceMetrics::default(),
             resource_requirements: self.calculate_resource_requirements(requirements)?,
-            security_level: requirements
-                .security_requirements
-                .min_security_level
-                .clone(),
+            security_level: requirements.security_requirements.min_security_level,
             heartbeat_interval_seconds: 300, // 5 minutes
             compatibility_score: 0.85,
             expected_services: 5,
@@ -276,7 +285,7 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Calculate Resource Requirements operation.
-    fn calculate_resource_requirements(
+    const fn calculate_resource_requirements(
         &self,
         requirements: &EcosystemSpawningRequirements,
     ) -> Result<EcosystemResourceAllocation, BearDogError> {
@@ -323,7 +332,7 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Create Hybrid Node operation.
-    /// Creates hybrid_node
+    /// Creates `hybrid_node`
     fn create_hybrid_node(
         &self,
         blueprint: &EcosystemGeneticBlueprint,
@@ -341,7 +350,7 @@ impl EcosystemGeneticSpawner {
             performance_metrics: NodePerformanceMetrics::default(),
             created_at: chrono::Utc::now(),
             last_heartbeat: Some(chrono::Utc::now()),
-            security_level: blueprint.security_level.clone(),
+            security_level: blueprint.security_level,
             active_capabilities: Vec::new(),
         };
 
@@ -350,7 +359,7 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Validate Hybrid Node Health operation.
-    /// Validates hybrid_node_health
+    /// Validates `hybrid_node_health`
     fn validate_hybrid_node_health(&self, node: &EcosystemHybridNode) -> Result<(), BearDogError> {
         debug!("🏥 Validating hybrid node health: {}", node.node_id);
 
@@ -381,19 +390,21 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Get Spawning Statistics operation.
-    /// Gets spawning_statistics
-    /// Gets spawning_statistics
-    pub async fn get_spawning_statistics(&self) -> Result<EcosystemSpawningStatistics, BearDogError> {
+    /// Gets `spawning_statistics`
+    /// Gets `spawning_statistics`
+    pub async fn get_spawning_statistics(
+        &self,
+    ) -> Result<EcosystemSpawningStatistics, BearDogError> {
         let stats = self.statistics.read().await;
-        Ok(stats.clone())
+        Ok(*stats)
     }
 
     /// Get Active Spawns operation.
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets active_spawns
-    /// Gets active_spawns
+    /// Gets `active_spawns`
+    /// Gets `active_spawns`
     pub async fn get_active_spawns(&self) -> Result<Vec<EcosystemSpawningOperation>, BearDogError> {
         let active_spawns = self.active_spawns.read().await;
         Ok(active_spawns.values().cloned().collect())
@@ -403,8 +414,8 @@ impl EcosystemGeneticSpawner {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets hybrid_nodes
-    /// Gets hybrid_nodes
+    /// Gets `hybrid_nodes`
+    /// Gets `hybrid_nodes`
     pub async fn get_hybrid_nodes(&self) -> Result<Vec<EcosystemHybridNode>, BearDogError> {
         let nodes = self.hybrid_nodes.read().await;
         Ok(nodes.values().cloned().collect())

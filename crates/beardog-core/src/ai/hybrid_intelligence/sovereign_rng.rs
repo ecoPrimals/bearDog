@@ -36,17 +36,17 @@ pub struct SovereignRng {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SovereignRngConfig {
-    /// Number of min_entropy_tier
+    /// Number of `min_entropy_tier`
     pub min_entropy_tier: u8,
-    /// Whether cache_entropy is enabled
+    /// Whether `cache_entropy` is enabled
     pub cache_entropy: bool,
     /// Maximum cache age in seconds
-    /// Number of cache_max_age_seconds
+    /// Number of `cache_max_age_seconds`
     pub cache_max_age_seconds: u64,
     /// Fallback to machine entropy when human entropy unavailable
-    /// Whether allow_machine_fallback is enabled
+    /// Whether `allow_machine_fallback` is enabled
     pub allow_machine_fallback: bool,
-    /// Whether audit_entropy_usage is enabled
+    /// Whether `audit_entropy_usage` is enabled
     pub audit_entropy_usage: bool,
 }
 
@@ -68,7 +68,7 @@ struct CachedEntropySeed {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyWeightInitializer {
     /// Required entropy tier
-    /// Number of entropy_tier
+    /// Number of `entropy_tier`
     pub entropy_tier: u8,
     pub human_identity_id: String,
     /// Distribution configuration
@@ -106,8 +106,8 @@ impl SovereignRng {
         }
     }
 
-    /// Initializes componentialize_weights
-    /// Initializes componentialize_weights
+    /// Initializes `componentialize_weights`
+    /// Initializes `componentialize_weights`
     pub fn initialize_weights(
         &mut self,
         initializer: &HumanEntropyWeightInitializer,
@@ -141,7 +141,7 @@ impl SovereignRng {
         Ok(weights)
     }
 
-    /// Gets entropy_seed
+    /// Gets `entropy_seed`
     fn get_entropy_seed(
         &mut self,
         human_identity_id: &str,
@@ -249,8 +249,7 @@ impl SovereignRng {
             }
             _ => {
                 return Err(BearDogError::system(format!(
-                    "Invalid entropy tier: {}. Must be 1-3",
-                    required_tier
+                    "Invalid entropy tier: {required_tier}. Must be 1-3"
                 )))
             }
         };
@@ -263,7 +262,7 @@ impl SovereignRng {
     }
 
     /// Create a seeded RNG from entropy bytes
-    /// Creates seeded_rng
+    /// Creates `seeded_rng`
     fn create_seeded_rng(&self, entropy_bytes: &[u8]) -> Result<ChaCha20Rng, BearDogError> {
         if entropy_bytes.len() < 32 {
             return Err(BearDogError::System {
@@ -330,7 +329,7 @@ impl SovereignRng {
         let u1: f64 = rng.gen();
         let u2: f64 = rng.gen();
         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-        mean + stddev * z
+        stddev.mul_add(z, mean)
     }
 
     /// Check if cached entropy is still valid
@@ -378,8 +377,8 @@ impl SovereignRng {
     }
 
     /// Get entropy usage statistics
-    /// Gets entropy_stats
-    /// Gets entropy_stats
+    /// Gets `entropy_stats`
+    /// Gets `entropy_stats`
     pub fn get_entropy_stats(&self) -> SovereignRngStats {
         SovereignRngStats {
             cached_seeds: self.entropy_cache.len(),
@@ -391,7 +390,7 @@ impl SovereignRng {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SovereignRngStats {
     /// Number of cached entropy seeds
-    /// Number of cached_seeds
+    /// Number of `cached_seeds`
     pub cached_seeds: usize,
     /// Current configuration
     pub config: SovereignRngConfig,
@@ -401,9 +400,9 @@ pub struct SovereignRngStats {
 pub struct NeuralNetworkEntropyIntegration;
 
 impl NeuralNetworkEntropyIntegration {
-    /// Convert WeightInitialization enum to human entropy initializer
-    /// Creates human_entropy_initializer
-    /// Creates human_entropy_initializer
+    /// Convert `WeightInitialization` enum to human entropy initializer
+    /// Creates `human_entropy_initializer`
+    /// Creates `human_entropy_initializer`
     pub fn create_human_entropy_initializer(
         weight_init: &WeightInitialization,
         layer_shape: (usize, usize),
@@ -417,7 +416,7 @@ impl NeuralNetworkEntropyIntegration {
             } => Some(HumanEntropyWeightInitializer {
                 entropy_tier: *required_entropy_tier,
                 human_identity_id: human_identity_id.clone(),
-                distribution: distribution.clone(),
+                distribution: *distribution,
                 layer_shape,
             }),
             _ => None,
@@ -425,7 +424,7 @@ impl NeuralNetworkEntropyIntegration {
     }
 
     /// Check if a weight initialization uses human entropy
-    pub fn uses_human_entropy(weight_init: &WeightInitialization) -> bool {
+    pub const fn uses_human_entropy(weight_init: &WeightInitialization) -> bool {
         matches!(
             weight_init,
             WeightInitialization::HumanEntropyInitialization { .. }
@@ -438,7 +437,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_sovereign_rng_creation() {
+    async fn test_sovereign_rng_creation() {
         let entropy_manager = EntropyHierarchyManager::default();
         let config = SovereignRngConfig::default();
         let _rng = SovereignRng::new(entropy_manager, config);

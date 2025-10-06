@@ -93,6 +93,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
+    #[allow(clippy::unused_self)] // Mock implementation - will use self in production
     pub fn check_device(&self) -> DeviceInfo {
         info!("Checking device availability...");
 
@@ -147,6 +148,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)] // Mock implementation
     pub fn deploy_app(&self, release: bool) -> BearDogResult<()> {
         let build_type = if release { "release" } else { "debug" };
         info!("📲 Deploying {} build to device...", build_type);
@@ -160,8 +162,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Runs app
-    /// Runs app
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)] // Mock implementation
     pub fn run_app(&self, args: &[String]) -> BearDogResult<()> {
         info!("🚀 Running app with args: {:?}", args);
 
@@ -174,6 +175,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)] // Mock implementation
     pub fn show_logs(&self, package: &str, follow: bool) -> BearDogResult<()> {
         let follow_msg = if follow { " (following)" } else { "" };
         info!("📊 Showing logs for package: {}{}", package, follow_msg);

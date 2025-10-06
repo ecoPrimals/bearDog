@@ -32,8 +32,9 @@ impl Default for ModelManagementConfig {
 }
 
 /// Model registry configuration
+/// Renamed from RegistryConfig to AIModelRegistryConfig for clarity
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RegistryConfig {
+pub struct AIModelRegistryConfig {
     /// Registry type
     pub registry_type: RegistryType,
     /// Registry URL
@@ -50,7 +51,11 @@ pub struct RegistryConfig {
     pub ssl_verify: bool,
 }
 
-impl Default for RegistryConfig {
+/// Backward compatibility alias
+#[deprecated(since = "3.2.0", note = "Use AIModelRegistryConfig instead")]
+pub type RegistryConfig = AIModelRegistryConfig;
+
+impl Default for AIModelRegistryConfig {
     fn default() -> Self {
         Self {
             registry_type: RegistryType::Local,
@@ -297,35 +302,30 @@ impl Default for UpdateStrategy {
     }
 }
 
-/// Monitoring configuration
+/// AI Management monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitoringConfig {
-    /// Enable monitoring
-    pub enabled: bool,
-    /// Metrics collection interval
-    pub metrics_interval: Duration,
-    /// Log level
-    pub log_level: LogLevel,
-    /// Metrics storage backend
-    pub metrics_backend: MetricsBackend,
-    /// Alert configuration
-    pub alerts: AlertConfig,
-    /// Custom metrics
-    pub custom_metrics: Vec<CustomMetric>,
+pub struct AIManagementMonitoringConfig {
+    /// Management operations monitoring
+    pub monitor_operations: bool,
+    /// Resource allocation tracking
+    pub track_resource_allocation: bool,
+    /// Performance metrics
+    pub performance_metrics: bool,
 }
 
-impl Default for MonitoringConfig {
+impl Default for AIManagementMonitoringConfig {
     fn default() -> Self {
         Self {
-            enabled: true,
-            metrics_interval: Duration::from_secs(60),
-            log_level: LogLevel::Info,
-            metrics_backend: MetricsBackend::Prometheus,
-            alerts: AlertConfig::default(),
-            custom_metrics: Vec::new(),
+            monitor_operations: true,
+            track_resource_allocation: true,
+            performance_metrics: true,
         }
     }
 }
+
+// Backward compatibility alias
+#[deprecated(since = "3.1.0", note = "Use AIManagementMonitoringConfig instead")]
+pub type MonitoringConfig = AIManagementMonitoringConfig;
 
 /// Log levels
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

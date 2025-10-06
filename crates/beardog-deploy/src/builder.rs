@@ -227,7 +227,9 @@ impl RustBuilder {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(BearDogError::system(format!("Library build failed: {stderr}")));
+            return Err(BearDogError::system(format!(
+                "Library build failed: {stderr}"
+            )));
         }
 
         info!("✅ Android library built successfully");
@@ -265,7 +267,9 @@ impl RustBuilder {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(BearDogError::system(format!("Example app build failed: {stderr}")));
+            return Err(BearDogError::system(format!(
+                "Example app build failed: {stderr}"
+            )));
         }
 
         info!("✅ Android example app built successfully");

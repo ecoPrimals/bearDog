@@ -120,13 +120,13 @@ impl BaseProvider for RustSoftwareHsm {}
         use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
-        master_key_id.hash(&mut hasher);
+        root_key_id.hash(&mut hasher);
         derivation_data.hash(&mut hasher);
         let derivation_hash = hasher.finish();
         let key_id = format!("rust_hsm_derived_{}_{:x}", Uuid::new_v4(), derivation_hash);
             key_type: derived_key_type.clone(),
                     meta.insert("type".to_string(), format!("{derived_key_type:?}"));
-                    meta.insert("derived_from".to_string(), master_key_id);
+                    meta.insert("derived_from".to_string(), root_key_id);
                     meta.insert(
                         "derivation_hash".to_string(),
                         format!("{derivation_hash:x}"),

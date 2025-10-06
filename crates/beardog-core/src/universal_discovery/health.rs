@@ -2,7 +2,7 @@
 //
 // This module contains health checking, monitoring, and status management functionality.
 
-use super::*;
+use super::{DateTime, HealthStatus, Utc};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -13,16 +13,16 @@ use tokio::sync::RwLock;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
     /// Health check interval in seconds
-    /// Number of check_interval_secs
+    /// Number of `check_interval_secs`
     pub check_interval_secs: u64,
     /// Health check timeout in milliseconds
     pub check_timeout_ms: u64,
-    /// Number of failure_threshold
+    /// Number of `failure_threshold`
     pub failure_threshold: u32,
-    /// Number of success_threshold
+    /// Number of `success_threshold`
     pub success_threshold: u32,
     /// Enable detailed health metrics
-    /// Whether enable_detailed_metrics is enabled
+    /// Whether `enable_detailed_metrics` is enabled
     pub enable_detailed_metrics: bool,
     /// Health check methods to use
     /// Collection of check methods
@@ -64,31 +64,31 @@ pub struct ServiceHealthConfig {
     /// The check method value
     pub check_method: HealthCheckMethod,
     /// Health check interval in seconds
-    /// Number of check_interval_secs
+    /// Number of `check_interval_secs`
     pub check_interval_secs: u64,
-    /// Number of failure_threshold
+    /// Number of `failure_threshold`
     pub failure_threshold: u32,
-    /// Number of success_threshold
+    /// Number of `success_threshold`
     pub success_threshold: u32,
 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct HealthStatistics {
     /// Total number of services being monitored
-    /// Number of total_services
+    /// Number of `total_services`
     pub total_services: usize,
     /// Number of services currently healthy
-    /// Number of healthy_services
+    /// Number of `healthy_services`
     pub healthy_services: usize,
     /// Number of services currently unhealthy
-    /// Number of unhealthy_services
+    /// Number of `unhealthy_services`
     pub unhealthy_services: usize,
     /// Average response time across all services in milliseconds
     pub average_response_time_ms: f64,
-    /// Number of total_health_checks
+    /// Number of `total_health_checks`
     pub total_health_checks: u64,
     /// Total number of failed health checks
-    /// Number of total_failures
+    /// Number of `total_failures`
     pub total_failures: u64,
 }
 
@@ -107,18 +107,18 @@ pub struct ServiceHealthState {
     /// Current status of the current
     pub current_status: HealthStatus,
     /// Number of consecutive health check failures
-    /// Number of consecutive_failures
+    /// Number of `consecutive_failures`
     pub consecutive_failures: u32,
     /// Number of consecutive health check successes
-    /// Number of consecutive_successes
+    /// Number of `consecutive_successes`
     pub consecutive_successes: u32,
     /// Timestamp of the last health check
     /// The last check value
     pub last_check: DateTime<Utc>,
-    /// Number of total_checks
+    /// Number of `total_checks`
     pub total_checks: u64,
     /// Total number of failed health checks
-    /// Number of total_failures
+    /// Number of `total_failures`
     pub total_failures: u64,
 }
 
@@ -135,7 +135,7 @@ impl HealthMonitor {
     /// Start the health monitoring background tasks
     /// Starts service
     /// Starts service
-    pub fn start(&self) -> Result<(), BearDogError> {
+    pub const fn start(&self) -> Result<(), BearDogError> {
         // Implementation would start background health checking tasks
         Ok(())
     }
@@ -143,7 +143,7 @@ impl HealthMonitor {
     /// Stop all health monitoring activities
     /// Stops service
     /// Stops service
-    pub fn stop(&self) -> Result<(), BearDogError> {
+    pub const fn stop(&self) -> Result<(), BearDogError> {
         // Implementation would stop background tasks and cleanup
         Ok(())
     }
@@ -161,27 +161,30 @@ impl HealthMonitor {
     /// Remove a service from health monitoring
     /// Removes service
     /// Removes service
-    pub fn remove_service(&self, _service_id: &str) -> Result<(), BearDogError> {
+    pub const fn remove_service(&self, _service_id: &str) -> Result<(), BearDogError> {
         // Implementation would remove service from monitoring
         Ok(())
     }
 
     /// Get the current health status of a specific service
-    /// Gets service_health
-    /// Gets service_health
-    pub fn get_service_health(&self, _service_id: &str) -> Option<HealthStatus> {
+    /// Gets `service_health`
+    /// Gets `service_health`
+    pub const fn get_service_health(&self, _service_id: &str) -> Option<HealthStatus> {
         // Implementation would return current health status
         None
     }
 
-    /// Gets health_statistics
-    /// Gets health_statistics
+    /// Gets `health_statistics`
+    /// Gets `health_statistics`
     pub fn get_health_statistics(&self) -> HealthStatistics {
         // Implementation would return detailed health statistics
         HealthStatistics::default()
     }
 
-    pub fn check_service_health(&self, _service_id: &str) -> Result<HealthStatus, BearDogError> {
+    pub const fn check_service_health(
+        &self,
+        _service_id: &str,
+    ) -> Result<HealthStatus, BearDogError> {
         // Implementation would perform immediate health check
         Ok(HealthStatus::Unknown)
     }

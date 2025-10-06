@@ -160,15 +160,15 @@ mod tests {
     use tokio::sync::RwLock;
 
     #[tokio::test]
-    fn test_safe_lock_operations() {
+    async fn test_safe_lock_operations() {
         let data = RwLock::new(42);
         let timeout_duration = Duration::from_millis(100);
 
-        let read_guard = SafeLock::safe_read_lock(&data, timeout_duration);
+        let read_guard = SafeLock::safe_read_lock(&data, timeout_duration).await;
         assert!(read_guard.is_ok());
 
         drop(read_guard);
-        let write_guard = SafeLock::safe_write_lock(&data, timeout_duration);
+        let write_guard = SafeLock::safe_write_lock(&data, timeout_duration).await;
         assert!(write_guard.is_ok());
     }
 

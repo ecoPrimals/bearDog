@@ -14,7 +14,7 @@ use super::{ProtocolStatistics, ServiceInfo};
 /// Modern capability-based service discovery
 ///
 /// Replaces deprecated hardcoded protocol handlers with dynamic capability discovery.
-/// This allows BearDog to work with any service discovery system that implements
+/// This allows `BearDog` to work with any service discovery system that implements
 /// the required capabilities.
 #[derive(Debug)]
 pub struct ModernServiceDiscovery {
@@ -26,6 +26,12 @@ pub struct ModernServiceDiscovery {
 
     /// Discovered service providers
     pub discovered_providers: std::collections::HashMap<String, serde_json::Value>,
+}
+
+impl Default for ModernServiceDiscovery {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ModernServiceDiscovery {

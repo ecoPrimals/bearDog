@@ -1,13 +1,63 @@
-// Canonical capability definitions for BearDog
-// Provides structured capability types for security, performance, and compliance
+//! Canonical Capability Definitions for BearDog
+//!
+//! Provides structured capability types for security, performance, compliance,
+//! and ecosystem integration. This module defines the capability-based discovery
+//! system that eliminates hardcoded dependencies.
+//!
+//! ## Capability-Based Architecture
+//!
+//! Instead of hardcoding which services exist, BearDog discovers capabilities
+//! dynamically through:
+//!
+//! 1. **Vendor Capabilities** - External services (AWS KMS, Azure KeyVault, etc.)
+//! 2. **Primal Capabilities** - Other primals in the ecosystem
+//! 3. **Cross-Cutting Capabilities** - Monitoring, logging, metrics
+//! 4. **Specialized Capabilities** - Biometrics, quantum crypto, zero-knowledge
+//!
+//! ## Example
+//!
+//! ```rust
+//! use beardog_types::canonical::capabilities::CapabilityType;
+//!
+//! // Discover who provides key management
+//! let providers = discover_capability(CapabilityType::KeyManagement)?;
+//!
+//! // Use any provider with the KeyManagement capability
+//! for provider in providers {
+//!     println!("Found provider: {}", provider.name());
+//! }
+//! ```
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // Removed incorrect imports added by migration script
 // These types are defined in this file, not imported from elsewhere
 
+/// Capability Type - Types of capabilities in the BearDog ecosystem
+///
+/// Defines all discoverable capabilities that can be provided by:
+/// - External vendors (AWS, Azure, Google Cloud)
+/// - Other primals in the ecosystem
+/// - Internal BearDog services
+///
+/// ## Categories
+///
+/// - **Vendor Capabilities**: External cloud services
+/// - **Primal Capabilities**: Ecosystem services
+/// - **Cross-Cutting**: Monitoring, logging, metrics
+/// - **Specialized**: Advanced cryptographic and AI features
+///
+/// ## Usage
+///
+/// Capabilities are discovered dynamically rather than hardcoded:
+///
+/// ```rust
+/// # use beardog_types::canonical::capabilities::CapabilityType;
+/// // Query for capability providers
+/// let cap = CapabilityType::HardwareSecurityModule;
+/// println!("Looking for: {}", cap.name());
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of capability
 pub enum CapabilityType {
     // === VENDOR CAPABILITIES ===
     /// Key Management Service (discovered through capability-based detection)

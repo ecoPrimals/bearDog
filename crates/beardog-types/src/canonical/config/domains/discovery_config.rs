@@ -16,38 +16,38 @@ use crate::canonical::config::r#trait::BearDogConfig;
 pub struct ConsolidatedDiscoveryConfig {
     /// Enable discovery services
     pub enabled: bool,
-    
+
     /// Service registry configuration
     pub registry: ServiceRegistryConfig,
-    
+
     /// Network discovery configuration
     pub network: NetworkDiscoveryConfig,
-    
+
     /// Quantum discovery configuration
     pub quantum: QuantumDiscoveryConfig,
-    
+
     /// Cache configuration for discovery
     pub cache: DiscoveryCacheConfig,
-    
+
     /// Security configuration for discovery
     pub security: DiscoverySecurityConfig,
 }
 
 /// Service registry configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ServiceRegistryConfig {
     /// Registry backend type
     pub backend: String,
-    
+
     /// Registry endpoints
     pub endpoints: Vec<String>,
-    
+
     /// Service TTL
     pub service_ttl: Duration,
-    
+
     /// Health check interval
     pub health_check_interval: Duration,
-    
+
     /// Cleanup interval
     pub cleanup_interval: Duration,
 }
@@ -57,13 +57,13 @@ pub struct ServiceRegistryConfig {
 pub struct NetworkDiscoveryConfig {
     /// Discovery protocols
     pub protocols: Vec<String>,
-    
+
     /// Discovery ports
     pub ports: Vec<u16>,
-    
+
     /// Discovery timeout
     pub timeout: Duration,
-    
+
     /// Retry configuration
     pub retry: RetryConfig,
 }
@@ -73,45 +73,45 @@ pub struct NetworkDiscoveryConfig {
 pub struct QuantumDiscoveryConfig {
     /// Enable quantum discovery
     pub enabled: bool,
-    
+
     /// Quantum algorithms
     pub algorithms: Vec<String>,
-    
+
     /// Quantum coherence time
     pub coherence_time: Duration,
-    
+
     /// Error correction threshold
     pub error_threshold: f64,
 }
 
 /// Discovery cache configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiscoveryCacheConfig {
     /// Enable caching
     pub enabled: bool,
-    
+
     /// Cache size
     pub size: usize,
-    
+
     /// Cache TTL
     pub ttl: Duration,
-    
+
     /// Eviction policy
     pub eviction_policy: String,
 }
 
 /// Discovery security configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiscoverySecurityConfig {
     /// Enable security
     pub enabled: bool,
-    
+
     /// Authentication required
     pub auth_required: bool,
-    
+
     /// Encryption required
     pub encryption_required: bool,
-    
+
     /// Trusted networks
     pub trusted_networks: Vec<String>,
 }
@@ -121,13 +121,13 @@ pub struct DiscoverySecurityConfig {
 pub struct RetryConfig {
     /// Maximum retry attempts
     pub max_attempts: usize,
-    
+
     /// Initial delay
     pub initial_delay: Duration,
-    
+
     /// Backoff multiplier
     pub backoff_multiplier: f64,
-    
+
     /// Maximum delay
     pub max_delay: Duration,
 }
@@ -218,32 +218,42 @@ impl BearDogConfig for ConsolidatedDiscoveryConfig {
     fn validate(&self) -> BearDogResult<()> {
         if self.enabled {
             if self.registry.endpoints.is_empty() {
-                return Err(BearDogError::validation("Registry endpoints cannot be empty"));
+                return Err(BearDogError::validation(
+                    "Registry endpoints cannot be empty",
+                ));
             }
-            
+
             if self.registry.service_ttl.as_secs() == 0 {
                 return Err(BearDogError::validation("Service TTL cannot be zero"));
             }
-            
+
             if self.network.ports.is_empty() {
                 return Err(BearDogError::validation("Discovery ports cannot be empty"));
             }
-            
+
             if self.network.timeout.as_secs() == 0 {
-                return Err(BearDogError::validation("Network discovery timeout cannot be zero"));
+                return Err(BearDogError::validation(
+                    "Network discovery timeout cannot be zero",
+                ));
             }
-            
+
             if self.cache.enabled && self.cache.size == 0 {
-                return Err(BearDogError::validation("Cache size cannot be zero when caching is enabled"));
+                return Err(BearDogError::validation(
+                    "Cache size cannot be zero when caching is enabled",
+                ));
             }
-            
-            if self.quantum.enabled && (self.quantum.error_threshold < 0.0 || self.quantum.error_threshold > 1.0) {
-                return Err(BearDogError::validation("Quantum error threshold must be between 0.0 and 1.0"));
+
+            if self.quantum.enabled
+                && (self.quantum.error_threshold < 0.0 || self.quantum.error_threshold > 1.0)
+            {
+                return Err(BearDogError::validation(
+                    "Quantum error threshold must be between 0.0 and 1.0",
+                ));
             }
         }
         Ok(())
     }
-    
+
     fn merge(&self, other: &Self) -> BearDogResult<Self> {
         Ok(Self {
             enabled: other.enabled,
@@ -274,46 +284,48 @@ impl BearDogConfig for ConsolidatedDiscoveryConfig {
             },
         })
     }
-    
+
     fn from_env() -> BearDogResult<Self> {
         let mut config = Self::default();
-        
+
         if let Ok(enabled) = std::env::var("BEARDOG_DISCOVERY_ENABLED") {
             config.enabled = enabled.parse().unwrap_or(true);
         }
-        
+
         if let Ok(backend) = std::env::var("BEARDOG_DISCOVERY_BACKEND") {
             config.registry.backend = backend;
         }
-        
+
         if let Ok(endpoints) = std::env::var("BEARDOG_DISCOVERY_ENDPOINTS") {
-            config.registry.endpoints = endpoints.split(',').map(|s| s.trim().to_string()).collect();
+            config.registry.endpoints =
+                endpoints.split(',').map(|s| s.trim().to_string()).collect();
         }
-        
+
         if let Ok(ttl) = std::env::var("BEARDOG_DISCOVERY_TTL") {
             if let Ok(secs) = ttl.parse::<u64>() {
                 config.registry.service_ttl = Duration::from_secs(secs);
             }
         }
-        
+
         if let Ok(cache_enabled) = std::env::var("BEARDOG_DISCOVERY_CACHE_ENABLED") {
             config.cache.enabled = cache_enabled.parse().unwrap_or(true);
         }
-        
+
         if let Ok(cache_size) = std::env::var("BEARDOG_DISCOVERY_CACHE_SIZE") {
             config.cache.size = cache_size.parse().unwrap_or(1000);
         }
-        
+
         config.validate()?;
         Ok(config)
     }
-    
+
     fn to_toml(&self) -> BearDogResult<String> {
-        toml::to_string(self)
-            .map_err(|e| BearDogError::system(format!("Failed to serialize discovery config to TOML: {e}")))
+        toml::to_string(self).map_err(|e| {
+            BearDogError::system(format!("Failed to serialize discovery config to TOML: {e}"))
+        })
     }
-    
+
     fn domain() -> &'static str {
         "discovery"
     }
-} 
+}

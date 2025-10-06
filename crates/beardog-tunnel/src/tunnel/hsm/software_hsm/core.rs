@@ -232,19 +232,19 @@ impl HsmProvider for RustSoftwareHsm {
         derivation_data: &[u8],
     ) -> Result<HsmKey, BearDogError> {
         info!(
-            "🔑 Deriving key from software master key: {}",
-            master_key_id
+            "🔑 Deriving key from software root key: {}",
+            root_key_id
 
-        let master_key = key_store.get_key(master_key_id)?;
-        let master_key_material = self
-            .unprotect_key_material(&master_key.key_material)
+        let root_key = key_store.get_key(root_key_id)?;
+        let root_key_material = self
+            .unprotect_key_material(&root_key.key_material)
 
         let derived_key_material = self
-            .derive_key(&master_key_material, derivation_data)
+            .derive_key(&root_key_material, derivation_data)
 
-            .zeroize_key_material(&master_key_material)
+            .zeroize_key_material(&root_key_material)
 
-        let derived_key_id = format!("{}_{}", master_key_id, hex::encode(&derivation_data[..8]));
+        let derived_key_id = format!("{}_{}", root_key_id, hex::encode(&derivation_data[..8]));
         let derived_metadata = KeyMetadata {
             key_id: derived_key_id.clone(),
             key_name: format!("derived-{derived_key_id}"),

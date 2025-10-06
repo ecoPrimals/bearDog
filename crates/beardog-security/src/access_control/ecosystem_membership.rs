@@ -1,17 +1,17 @@
 // # Ecosystem Membership Access Control
 //
 // This module implements the evolved access control system based on ecosystem membership
-// rather than binary whitelist/blacklist patterns. It integrates with BearDog's genetic
+// rather than binary allowlist/blocklist patterns. It integrates with BearDog's genetic
 // system to provide spectrum-based access control that adapts to relationship dynamics.
 //
 // ## Evolution from Binary to Spectrum
 //
-// **OLD**: Binary whitelist/blacklist access control
+// **OLD**: Binary allowlist/blocklist access control
 // **NEW**: Spectrum-based ecosystem membership with adaptive access levels
 //
 // ## Horizontal Gene Transfer Integration
 //
-// This system integrates genetic material from the Squirrel team's ecosystem evolution
+// This system integrates genetic material from cross-primal ecosystem evolution patterns
 // initiative, enabling biological relationship patterns in access control.
 //
 // ## Membership Spectrum

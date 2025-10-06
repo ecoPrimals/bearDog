@@ -91,11 +91,11 @@ pub struct EcosystemGeneticBlueprint {
     pub resource_requirements: EcosystemResourceAllocation,
     /// The security level value
     pub security_level: SecurityLevel,
-    /// Number of heartbeat_interval_seconds
+    /// Number of `heartbeat_interval_seconds`
     pub heartbeat_interval_seconds: u64,
     /// The compatibility score value
     pub compatibility_score: f64,
-    /// Number of expected_services
+    /// Number of `expected_services`
     pub expected_services: usize,
 }
 
@@ -127,16 +127,16 @@ pub struct EcosystemResourceAllocation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityResourceAllocation {
     /// Number of HSM slots allocated
-    /// Number of hsm_slots
+    /// Number of `hsm_slots`
     pub hsm_slots: u32,
     /// Key storage capacity in megabytes
-    /// Number of key_storage_mb
+    /// Number of `key_storage_mb`
     pub key_storage_mb: u32,
     /// Cryptographic operations per second capacity
-    /// Number of crypto_ops_per_second
+    /// Number of `crypto_ops_per_second`
     pub crypto_ops_per_second: u32,
     /// Audit log retention period in days
-    /// Number of audit_retention_days
+    /// Number of `audit_retention_days`
     pub audit_retention_days: u32,
 }
 
@@ -145,13 +145,13 @@ pub struct SecurityResourceAllocation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeResourceAllocation {
     /// Number of CPU cores allocated
-    /// Number of cpu_cores
+    /// Number of `cpu_cores`
     pub cpu_cores: u32,
     /// Memory allocation in gigabytes
-    /// Number of memory_gb
+    /// Number of `memory_gb`
     pub memory_gb: u32,
     /// Compute units per second capacity
-    /// Number of compute_units_per_second
+    /// Number of `compute_units_per_second`
     pub compute_units_per_second: u64,
 }
 
@@ -163,7 +163,7 @@ pub struct NetworkingResourceAllocation {
     /// Bandwidth allocation in megabits per second
     pub bandwidth_mbps: u32,
     /// Maximum connections per second
-    /// Number of connections_per_second
+    /// Number of `connections_per_second`
     pub connections_per_second: u32,
 }
 
@@ -173,7 +173,7 @@ pub struct NetworkingResourceAllocation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResourceAllocation {
     /// Storage capacity allocation in gigabytes
-    /// Number of capacity_gb
+    /// Number of `capacity_gb`
     pub capacity_gb: u32,
     /// Input/output operations per second capacity
     /// Number of iops
@@ -185,9 +185,9 @@ pub struct StorageResourceAllocation {
 /// including GPU compute and model storage requirements.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiResourceAllocation {
-    /// Number of gpu_compute_units
+    /// Number of `gpu_compute_units`
     pub gpu_compute_units: u32,
-    /// Number of model_storage_gb
+    /// Number of `model_storage_gb`
     pub model_storage_gb: u32,
 }
 
@@ -231,7 +231,7 @@ pub struct EcosystemSpawningRequirements {
     /// The security requirements value
     pub security_requirements: EcosystemSecurityRequirements,
     pub performance_requirements: EcosystemPerformanceRequirements,
-    /// Whether high_availability is enabled
+    /// Whether `high_availability` is enabled
     pub high_availability: bool,
     /// Collection of geographic preferences
     pub geographic_preferences: Vec<String>,
@@ -263,11 +263,11 @@ pub struct EcosystemSecurityRequirements {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionRequirements {
-    /// Whether data_at_rest is enabled
+    /// Whether `data_at_rest` is enabled
     pub data_at_rest: bool,
-    /// Whether data_in_transit is enabled
+    /// Whether `data_in_transit` is enabled
     pub data_in_transit: bool,
-    /// Number of key_rotation_days
+    /// Number of `key_rotation_days`
     pub key_rotation_days: u32,
 }
 
@@ -275,16 +275,16 @@ pub struct EncryptionRequirements {
 pub struct AuditRequirements {
     /// The audit level value
     pub audit_level: AuditLevel,
-    /// Number of log_retention_days
+    /// Number of `log_retention_days`
     pub log_retention_days: u32,
     pub real_time_alerting: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemPerformanceRequirements {
-    /// Number of min_throughput_rps
+    /// Number of `min_throughput_rps`
     pub min_throughput_rps: u32,
-    /// Number of max_latency_ms
+    /// Number of `max_latency_ms`
     pub max_latency_ms: u32,
     pub min_uptime_percentage: f64,
 }
@@ -317,13 +317,13 @@ pub struct EcosystemSpawningOperation {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EcosystemSpawningStatistics {
     /// Total number of spawn operations attempted
-    /// Number of total_spawns
+    /// Number of `total_spawns`
     pub total_spawns: u64,
     /// Number of successful spawn operations
-    /// Number of successful_spawns
+    /// Number of `successful_spawns`
     pub successful_spawns: u64,
-    /// Number of failed spawn operations  
-    /// Number of failed_spawns
+    /// Number of failed spawn operations\
+    /// Number of `failed_spawns`
     pub failed_spawns: u64,
     /// Total number of hybrid nodes created
     pub total_hybrid_nodes: u64,

@@ -9,13 +9,13 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetrics {
     /// Total storage capacity in bytes
-    /// Number of total_capacity_bytes
+    /// Number of `total_capacity_bytes`
     pub total_capacity_bytes: u64,
     /// Used storage space in bytes
-    /// Number of used_space_bytes
+    /// Number of `used_space_bytes`
     pub used_space_bytes: u64,
     /// Available storage space in bytes
-    /// Number of available_space_bytes
+    /// Number of `available_space_bytes`
     pub available_space_bytes: u64,
     /// Storage utilization percentage (0.0 to 1.0)
     /// The utilization percentage value
@@ -24,7 +24,7 @@ pub struct StorageMetrics {
     /// Mapping of operation metrics
     pub operation_metrics: HashMap<String, StorageOperationMetrics>,
     /// Total number of stored items
-    /// Number of total_items
+    /// Number of `total_items`
     pub total_items: u64,
     /// Average item size in bytes
     /// The avg item size bytes value

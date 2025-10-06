@@ -14,29 +14,112 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 use tracing::{debug, info, warn};
 
+/// Primal Trait - Core interface for all primal components
 ///
 /// Defines the essential interface that all primal components must implement
-/// health monitoring, request handling, and capability discovery.
+/// for health monitoring, request handling, and capability discovery.
+///
+/// This trait enables the ecosystem integration pattern where each primal:
+/// 1. Provides metadata about itself
+/// 2. Can be initialized with configuration
+/// 3. Reports health status
+/// 4. Handles requests from other primals
+/// 5. Advertises its capabilities
+///
+/// ## Example Implementation
+///
+/// ```rust,ignore
+/// impl PrimalTrait for MyCustomPrimal {
+///     fn metadata(&self) -> PrimalMetadata {
+///         PrimalMetadata {
+///             name: "my-custom-primal".to_string(),
+///             version: "1.0.0".to_string(),
+///             // ...
+///         }
+///     }
+///     
+///     async fn health_check(&self) -> Result<PrimalHealth, PrimalError> {
+///         Ok(PrimalHealth::Healthy)
+///     }
+///     // ... other trait methods
+/// }
+/// ```
 pub trait PrimalTrait {
     /// Get metadata about this primal component
+    ///
+    /// Returns information such as name, version, description, and endpoints.
     fn metadata(&self) -> PrimalMetadata;
 
     /// Initialize the primal component with the given configuration
-    /// Initializes componentialize
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Universal integration configuration for ecosystem coordination
+    ///
+    /// # Errors
+    ///
+    /// Returns `PrimalError` if initialization fails.
     async fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError>;
 
+    /// Check the health status of this primal component
+    ///
+    /// # Returns
+    ///
+    /// Returns `PrimalHealth` indicating the current operational status.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PrimalError` if health check fails to complete.
     async fn health_check(&self) -> Result<PrimalHealth, PrimalError>;
 
     /// Handle an incoming request to the primal component
-    /// Handles request
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The request to process
+    ///
+    /// # Returns
+    ///
+    /// Returns `PrimalResponse` containing the result of the request.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PrimalError` if the request cannot be processed.
     async fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError>;
 
     /// Discover AI capabilities available in this primal component
+    ///
+    /// Returns a list of AI-related capabilities such as machine learning,
+    /// natural language processing, or hybrid intelligence features.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if capability discovery fails.
     async fn discover_ai_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
 
     /// Discover compute capabilities available in this primal component
-    async fn discover_compute_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
-    async fn discover_storage_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
+    ///
+    /// Returns a list of compute-related capabilities such as processing power,
+    /// parallel execution, or specialized hardware acceleration.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if capability discovery fails.
+    async fn discover_compute_capabilities(
+        &self,
+    ) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
+
+    /// Discover storage capabilities available in this primal component
+    ///
+    /// Returns a list of storage-related capabilities such as persistent storage,
+    /// caching, or distributed storage systems.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if capability discovery fails.
+    async fn discover_storage_capabilities(
+        &self,
+    ) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
 }
 
 impl PrimalTrait for BearDogCore {
@@ -123,7 +206,7 @@ impl PrimalTrait for BearDogCore {
         let health_status = self
             .get_ecosystem_integration_health()
             .await
-            .map_err(|e| PrimalError::health_check_failed(format!("Health check failed: {}", e)))?;
+            .map_err(|e| PrimalError::health_check_failed(format!("Health check failed: {e}")))?;
 
         Ok(PrimalHealth {
             status: health_status,
@@ -205,7 +288,9 @@ impl PrimalTrait for BearDogCore {
         Ok(capabilities)
     }
 
-    async fn discover_compute_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
+    async fn discover_compute_capabilities(
+        &self,
+    ) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
         info!("🔧 Discovering compute capabilities through universal adapter");
 
         let mut capabilities = Vec::new();
@@ -230,7 +315,9 @@ impl PrimalTrait for BearDogCore {
         Ok(capabilities)
     }
 
-    async fn discover_storage_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
+    async fn discover_storage_capabilities(
+        &self,
+    ) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
         info!("💾 Discovering storage capabilities through universal adapter");
 
         let mut capabilities = Vec::new();
@@ -260,15 +347,22 @@ impl PrimalTrait for BearDogCore {
 
 impl BearDogCore {
     /// Generic capability discovery method (private helper)
-    async fn discover_capability(&self, capability: &ServiceCapabilityType) -> Result<(), BearDogError> {
+    async fn discover_capability(
+        &self,
+        capability: &ServiceCapabilityType,
+    ) -> Result<(), BearDogError> {
         info!("🔍 Discovering capability: {:?}", capability);
 
         match capability {
             ServiceCapabilityType::ArtificialIntelligence => {
                 self.discover_ai_capabilities().await.map(|_| ())
             }
-            ServiceCapabilityType::Compute => self.discover_compute_capabilities().await.map(|_| ()),
-            ServiceCapabilityType::Storage => self.discover_storage_capabilities().await.map(|_| ()),
+            ServiceCapabilityType::Compute => {
+                self.discover_compute_capabilities().await.map(|_| ())
+            }
+            ServiceCapabilityType::Storage => {
+                self.discover_storage_capabilities().await.map(|_| ())
+            }
             _ => {
                 debug!(
                     "ℹ️ Capability {:?} discovery not yet implemented",
