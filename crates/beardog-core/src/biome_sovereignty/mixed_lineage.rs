@@ -69,9 +69,9 @@ pub struct DiscoveryConfig {
     pub max_discovery_attempts: u32,
 }
 
+/// Represents the cryptographic identity and sovereignty proof of a Primal entity.
 ///
-/// Represents the cryptographic identity and sovereignty proof of a Primal entity
-/// in a mixed human-primal partnership. This component ensures autonomous identity
+/// This component ensures autonomous identity in a mixed human-primal partnership
 /// while enabling collaborative operations with human partners.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalKeyComponent {

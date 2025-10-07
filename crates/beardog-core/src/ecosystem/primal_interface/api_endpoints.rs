@@ -25,7 +25,7 @@ impl BearDogCore {
     ///
     /// Returns `BearDogError` if the server fails to start or initialize.
     #[allow(dead_code)]
-    pub(crate) fn start_ai_first_api_server(&self) -> Result<(), BearDogError> {
+    pub(crate) fn start_ai_first_api_server() -> Result<(), BearDogError> {
         info!("🤖 Starting AI-first API server via universal adapter");
 
         let _payload = json!({
@@ -55,7 +55,7 @@ impl BearDogCore {
     ///
     /// Returns `BearDogError` if the gateway fails to initialize.
     #[allow(dead_code)]
-    pub(crate) fn start_universal_api_gateway(&self) -> Result<(), BearDogError> {
+    pub(crate) fn start_universal_api_gateway() -> Result<(), BearDogError> {
         info!("🌐 Starting universal API gateway via adapter");
 
         let _payload = json!({
@@ -84,7 +84,7 @@ impl BearDogCore {
     ///
     /// Returns `BearDogError` if service mesh initialization fails.
     #[allow(dead_code)]
-    pub(crate) fn initialize_service_mesh(&self) -> Result<(), BearDogError> {
+    pub(crate) fn initialize_service_mesh() -> Result<(), BearDogError> {
         info!("🕸️ Initializing service mesh via universal adapter");
 
         let _payload = json!({
