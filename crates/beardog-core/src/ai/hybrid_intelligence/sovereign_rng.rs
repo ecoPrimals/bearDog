@@ -93,6 +93,7 @@ impl Default for SovereignRngConfig {
 impl SovereignRng {
     /// Create a new sovereign RNG with entropy hierarchy integration
     /// Creates a new instance
+    #[allow(clippy::cognitive_complexity)]
     pub fn new(entropy_manager: EntropyHierarchyManager, config: SovereignRngConfig) -> Self {
         info!("🎲 Initializing Sovereign Entropy-Driven RNG for Neural Networks");
         info!("   Min entropy tier: {}", config.min_entropy_tier);
@@ -106,8 +107,12 @@ impl SovereignRng {
         }
     }
 
-    /// Initializes `componentialize_weights`
-    /// Initializes `componentialize_weights`
+    /// Initializes neural network weights using human entropy
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if entropy generation fails or weight initialization cannot be completed.
+    #[allow(clippy::cognitive_complexity)]
     pub fn initialize_weights(
         &mut self,
         initializer: &HumanEntropyWeightInitializer,
@@ -122,12 +127,12 @@ impl SovereignRng {
             self.get_entropy_seed(&initializer.human_identity_id, initializer.entropy_tier)?;
 
         // Create seeded RNG from human entropy
-        let mut rng = self.create_seeded_rng(&entropy_seed)?;
+        let mut rng = Self::create_seeded_rng(&entropy_seed)?;
 
         // Generate weight matrix based on distribution
         let weights = self.generate_weight_matrix(
             &mut rng,
-            &initializer.distribution,
+            initializer.distribution,
             initializer.layer_shape,
         )?;
 
@@ -158,7 +163,7 @@ impl SovereignRng {
         }
 
         // Generate fresh entropy from hierarchy
-        let entropy_seed = self.generate_fresh_entropy(human_identity_id, required_tier)?;
+        let entropy_seed = Self::generate_fresh_entropy(human_identity_id, required_tier)?;
 
         // Cache the result
         if self.config.cache_entropy {
@@ -177,8 +182,8 @@ impl SovereignRng {
     }
 
     /// Generate fresh entropy from the hierarchy
+    #[allow(clippy::cognitive_complexity)]
     fn generate_fresh_entropy(
-        &self,
         human_identity_id: &str,
         required_tier: u8,
     ) -> Result<Vec<u8>, BearDogError> {
@@ -263,7 +268,7 @@ impl SovereignRng {
 
     /// Create a seeded RNG from entropy bytes
     /// Creates `seeded_rng`
-    fn create_seeded_rng(&self, entropy_bytes: &[u8]) -> Result<ChaCha20Rng, BearDogError> {
+    fn create_seeded_rng(entropy_bytes: &[u8]) -> Result<ChaCha20Rng, BearDogError> {
         if entropy_bytes.len() < 32 {
             return Err(BearDogError::System {
                 message: "Insufficient entropy bytes for RNG seeding".to_string(),
@@ -279,10 +284,15 @@ impl SovereignRng {
     }
 
     /// Generate weight matrix using specified distribution
+    #[allow(
+        clippy::unnecessary_wraps,
+        clippy::needless_range_loop,
+        clippy::cast_precision_loss
+    )]
     fn generate_weight_matrix(
         &self,
         rng: &mut ChaCha20Rng,
-        distribution: &EntropyDistribution,
+        distribution: EntropyDistribution,
         shape: (usize, usize),
     ) -> Result<Vec<Vec<f64>>, BearDogError> {
         let (rows, cols) = shape;
@@ -292,14 +302,14 @@ impl SovereignRng {
             EntropyDistribution::Normal { mean, stddev } => {
                 for i in 0..rows {
                     for j in 0..cols {
-                        weights[i][j] = self.sample_normal(rng, *mean, *stddev);
+                        weights[i][j] = self.sample_normal(rng, mean, stddev);
                     }
                 }
             }
             EntropyDistribution::Uniform { min, max } => {
                 for i in 0..rows {
                     for j in 0..cols {
-                        weights[i][j] = rng.gen_range(*min..*max);
+                        weights[i][j] = rng.gen_range(min..max);
                     }
                 }
             }

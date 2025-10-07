@@ -177,7 +177,7 @@ pub enum SystemCommand {
     /// Restart the system
     Restart,
     /// Update configuration
-    UpdateConfig(HybridIntelligenceConfig),
+    UpdateConfig(Box<HybridIntelligenceConfig>),
     /// Add capability
     AddCapability(IntelligenceCapability),
     /// Remove capability
@@ -289,7 +289,9 @@ impl Default for IntelligenceMetrics {
 
 impl HybridIntelligenceSystem {
     /// Creates a new hybrid intelligence system
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns an error if system creation fails.
     pub fn new(config: HybridIntelligenceConfig) -> Result<Self, BearDogError> {
         let (event_sender, _) = broadcast::channel(1000);
         let (_command_sender, command_receiver) = mpsc::channel(100);
@@ -305,8 +307,10 @@ impl HybridIntelligenceSystem {
     }
 
     /// Initializes the hybrid intelligence system
-    /// Initializes componentialize
-    /// Initializes componentialize
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails.
+    #[allow(clippy::cognitive_complexity)]
     pub fn initialize(&self) -> Result<(), BearDogError> {
         info!(
             "Initializing hybrid intelligence system: {}",
@@ -339,6 +343,9 @@ impl HybridIntelligenceSystem {
     }
 
     /// Makes a prediction using the hybrid intelligence system
+    ///
+    /// # Errors
+    /// Returns an error if prediction fails.
     pub async fn predict(
         &self,
         input_data: Vec<f64>,
@@ -402,6 +409,10 @@ impl HybridIntelligenceSystem {
     }
 
     /// Makes a decision using the hybrid intelligence system
+    /// Makes a decision based on context
+    ///
+    /// # Errors
+    /// Returns an error if decision making fails.
     pub async fn make_decision(
         &self,
         context: HashMap<String, serde_json::Value>,
@@ -426,6 +437,7 @@ impl HybridIntelligenceSystem {
             let mut metrics = self.metrics.write().await;
             metrics.total_decisions += 1;
             // Update average confidence (simple moving average)
+            #[allow(clippy::cast_precision_loss)]
             let total_decisions = metrics.total_decisions as f64;
             metrics.avg_decision_confidence = metrics
                 .avg_decision_confidence
@@ -488,29 +500,17 @@ impl HybridIntelligenceSystem {
 
     /// Initializes a capability
     /// Initializes `componentialize_capability`
+    #[allow(clippy::unnecessary_wraps)]
+    #[allow(clippy::unused_self)]
     fn initialize_capability(
         &self,
         capability: IntelligenceCapability,
     ) -> Result<(), BearDogError> {
         debug!("Initializing intelligence capability: {:?}", capability);
 
-        match capability {
-            IntelligenceCapability::PredictiveAnalytics => {
-                // Initialize predictive models
-            }
-            IntelligenceCapability::AnomalyDetection => {
-                // Initialize anomaly detection algorithms
-            }
-            IntelligenceCapability::PatternRecognition => {
-                // Initialize pattern recognition systems
-            }
-            IntelligenceCapability::NeuralNetworks => {
-                // Initialize neural network architectures
-            }
-            _ => {
-                // Initialize other capabilities
-            }
-        }
+        // All capabilities are initialized with the same placeholder logic
+        // In production, each would have distinct initialization
+        let _ = capability; // Acknowledge we're aware it's unused in this stub
 
         Ok(())
     }
@@ -529,13 +529,18 @@ impl HybridIntelligenceSystem {
 
                 // Update uptime
                 let mut metrics_guard = metrics.write().await;
-                metrics_guard.uptime_secs =
-                    Utc::now().signed_duration_since(start_time).num_seconds() as u64;
+                #[allow(clippy::cast_sign_loss)]
+                {
+                    metrics_guard.uptime_secs =
+                        Utc::now().signed_duration_since(start_time).num_seconds() as u64;
+                }
             }
         });
     }
 
     /// Compute statistical predictions from input data
+    #[allow(clippy::unnecessary_wraps)]
+    #[allow(clippy::unused_self)]
     fn compute_statistical_predictions(
         &self,
         input_data: &[f64],
@@ -548,6 +553,7 @@ impl HybridIntelligenceSystem {
                 value * 1.05 // Simple 5% increase prediction for first value
             } else {
                 // Use previous values to predict trend
+                #[allow(clippy::cast_precision_loss)]
                 let avg = input_data[..=i].iter().sum::<f64>() / (i + 1) as f64;
                 let trend = if i > 1 {
                     (input_data[i] - input_data[i - 1]) * 0.7 // Damped trend continuation
@@ -562,6 +568,7 @@ impl HybridIntelligenceSystem {
         Ok(predictions)
     }
 
+    #[allow(clippy::unused_self)]
     fn compute_confidence_intervals(
         &self,
         predictions: &[f64],
@@ -578,6 +585,7 @@ impl HybridIntelligenceSystem {
     }
 
     /// Compute uncertainty estimates
+    #[allow(clippy::unused_self)]
     fn compute_uncertainty_estimates(&self, predictions: &[f64], input_data: &[f64]) -> Vec<f64> {
         predictions
             .iter()
@@ -644,6 +652,9 @@ impl HybridIntelligenceSystem {
     }
 
     /// Shuts down the system gracefully
+    ///
+    /// # Errors
+    /// Returns an error if shutdown fails.
     pub fn shutdown(&self) -> Result<(), BearDogError> {
         info!(
             "Shutting down hybrid intelligence system: {}",
@@ -696,56 +707,66 @@ impl HybridIntelligenceBuilder {
     }
 
     /// Sets the system ID
+    #[must_use]
     pub fn system_id<S: Into<String>>(mut self, id: S) -> Self {
         self.system_id = Some(id.into());
         self
     }
 
     /// Adds a capability
+    #[must_use]
     pub fn capability(mut self, capability: IntelligenceCapability) -> Self {
         self.capabilities.push(capability);
         self
     }
 
     /// Sets machine learning configuration
+    #[must_use]
     pub fn ml_config(mut self, config: MachineLearningConfig) -> Self {
         self.ml_config = Some(config);
         self
     }
 
     /// Sets neural network configuration
+    #[must_use]
     pub fn neural_config(mut self, config: NeuralNetworkConfig) -> Self {
         self.neural_config = Some(config);
         self
     }
 
     /// Sets decision engine configuration
+    #[must_use]
     pub fn decision_config(mut self, config: DecisionEngineConfig) -> Self {
         self.decision_config = Some(config);
         self
     }
 
     /// Sets learning configuration
+    #[must_use]
     pub fn learning_config(mut self, config: LearningConfig) -> Self {
         self.learning_config = Some(config);
         self
     }
 
     /// Sets prediction configuration
+    #[must_use]
     pub fn prediction_config(mut self, config: PredictionConfig) -> Self {
         self.prediction_config = Some(config);
         self
     }
 
     /// Sets optimization configuration
+    #[must_use]
     pub fn optimization_config(mut self, config: OptimizationConfig) -> Self {
         self.optimization_config = Some(config);
         self
     }
 
     /// Builds the hybrid intelligence system
-    /// Builds component
-    /// Builds component
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if system initialization fails or required components cannot be created.
     pub fn build(self) -> Result<HybridIntelligenceSystem, BearDogError> {
         let system_id = self.system_id.unwrap_or_else(|| Uuid::new_v4().to_string());
 
