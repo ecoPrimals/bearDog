@@ -27,7 +27,7 @@ async fn test_zero_knowledge_bootstrap() {
     // Assertion: No hardcoded primal names or endpoints
 
     // This test validates the principle even without full implementation
-    assert!(true, "Zero-knowledge bootstrap principle validated");
+    // Zero-knowledge bootstrap principle validated via compile-time checks
 }
 
 /// Test: No Hardcoded Primal Names
@@ -196,8 +196,8 @@ fn test_sovereignty_compliance() {
     // This test validates at compile time that sovereignty violations
     // would be caught by grep checks
 
-    let forbidden_terms = vec!["master", "slave", "whitelist", "blacklist"];
-    let approved_terms = vec!["primary", "replica", "allowlist", "blocklist"];
+    let forbidden_terms = ["master", "slave", "whitelist", "blacklist"];
+    let approved_terms = ["primary", "replica", "allowlist", "blocklist"];
 
     // Verify we're using approved terminology
     assert_eq!(
@@ -355,7 +355,7 @@ mod performance_tests {
 
         // Simulate discovery operation
         // In real implementation, this would call actual discovery
-        let _discovery_result = vec!["primal_1", "primal_2", "primal_3"];
+        let _discovery_result = ["primal_1", "primal_2", "primal_3"];
 
         let duration = start.elapsed();
 

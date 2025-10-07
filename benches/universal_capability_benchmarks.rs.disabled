@@ -8,10 +8,12 @@ use beardog_adapters::universal::{
     capability_discovery_cache::{CacheConfig, CachePriority, CapabilityDiscoveryCache},
 };
 use beardog_types::canonical::capabilities::{
-    CapabilityDiscoveryRequest, CapabilityType, ComplianceLevel, HealthStatus, PerformanceMetrics,
-    ProviderInfo, SecurityLevel, UniversalCapability,
+    AuthConfig, CapabilityDiscoveryRequest, CapabilityType, ComplianceLevel, EndpointConfig,
+    HealthStatus, PerformanceMetrics, ProviderInfo, SecurityLevel, UniversalCapability,
 };
+use beardog_types::canonical::providers_unified::core::ProviderType;
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::collections::HashMap;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
@@ -21,18 +23,27 @@ fn create_test_capability(id: &str, cap_type: CapabilityType) -> UniversalCapabi
         provider: ProviderInfo {
             provider_id: id.to_string(),
             provider_name: format!("Test Provider {}", id),
-            endpoint: format!("http://test-{}.ecosystem.internal", id),
-            region: "test-region".to_string(),
-            availability_zone: Some("test-az".to_string()),
+            provider_type: ProviderType::Vendor,
+            version: "1.0.0".to_string(),
+            region: Some("test-region".to_string()),
         },
+        endpoint: EndpointConfig {
+            base_url: format!("http://test-{}.ecosystem.internal", id),
+            api_version: Some("v1".to_string()),
+            timeout_ms: 5000,
+            max_retries: 3,
+        },
+        auth_config: AuthConfig::None,
         health_status: HealthStatus::Healthy,
         performance: PerformanceMetrics {
             avg_response_time_ms: 50.0,
             success_rate: 0.99,
             throughput_rps: 1000.0,
+            current_load: 0.5,
+            last_updated: chrono::Utc::now(),
         },
-        // Add other required fields with defaults
-        ..Default::default()
+        security_level: SecurityLevel::High,
+        metadata: HashMap::new(),
     }
 }
 

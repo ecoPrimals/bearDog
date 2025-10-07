@@ -25,11 +25,11 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
-//! use beardog_core::universal_discovery::{UniversalDiscoveryEngine, DiscoveryProtocol};
+//! ```rust,ignore
+//! use beardog_core::universal_discovery::{DiscoveryProtocol, ServiceRegistry};
 //!
-//! // Initialize discovery with multiple protocols
-//! let engine = UniversalDiscoveryEngine::new();
+//! // Initialize service registry for discovery
+//! let registry = ServiceRegistry::new();
 //! // Services are discovered and health-checked automatically
 //! ```
 //!

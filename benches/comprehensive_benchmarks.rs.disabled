@@ -3,8 +3,8 @@
 
 use beardog_core::BearDogCore;
 use beardog_errors::BearDogError;
-use beardog_security::SecurityProvider;
-use beardog_utils::optimization::OptimizationEngine;
+// SecurityProvider was removed - use BearDogSecurityProvider if needed
+// use beardog_security::handlers::BearDogSecurityProvider;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::time::Duration;
 use tokio::runtime::Runtime;

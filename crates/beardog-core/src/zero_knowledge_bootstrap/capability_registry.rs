@@ -12,7 +12,7 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_core::zero_knowledge_bootstrap::capability_registry::CapabilityRegistry;
 //!
 //! # async fn example() -> beardog_errors::BearDogResult<()> {

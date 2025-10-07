@@ -39,13 +39,13 @@
 → Read [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
 
 #### 4. **See the Code Quality** 📊
-→ Read [AUDIT_COMPLETE_SUMMARY.md](AUDIT_COMPLETE_SUMMARY.md)
+→ Read [Audit Reports](docs/audit-reports-2025-10-07/README.md)
 
 #### 5. **Contribute** 🤝
 → Read [BEARDOG_CODING_STANDARDS.md](BEARDOG_CODING_STANDARDS.md)
 
 #### 6. **Understand Current State** 📋
-→ Read [CURRENT_STATE_OCT_7_2025.md](CURRENT_STATE_OCT_7_2025.md)
+→ Read [STATUS.md](STATUS.md)
 
 ---
 
@@ -152,19 +152,18 @@ cargo run --example genetics_demo
 | Document | Purpose | Priority |
 |----------|---------|----------|
 | [README.md](README.md) | Project overview | ⭐⭐⭐ |
-| [CURRENT_STATE_OCT_7_2025.md](CURRENT_STATE_OCT_7_2025.md) | Current status | ⭐⭐⭐ |
-| [STATUS.md](STATUS.md) | Detailed status | ⭐⭐⭐ |
+| [STATUS.md](STATUS.md) | Current status | ⭐⭐⭐ |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture | ⭐⭐ |
 | [API_OVERVIEW.md](API_OVERVIEW.md) | API reference | ⭐⭐ |
+| [SECURITY.md](SECURITY.md) | Security practices | ⭐⭐ |
 
 ### Audit Reports (October 7, 2025)
 
 | Document | Purpose |
 |----------|---------|
-| [AUDIT_COMPLETE_SUMMARY.md](AUDIT_COMPLETE_SUMMARY.md) | Executive summary |
-| [COMPREHENSIVE_AUDIT_REPORT_UPDATED_OCT_7_2025.md](COMPREHENSIVE_AUDIT_REPORT_UPDATED_OCT_7_2025.md) | Full audit (24KB) |
-| [AUDIT_QUICK_SUMMARY_OCT_7_EVENING.md](AUDIT_QUICK_SUMMARY_OCT_7_EVENING.md) | Quick reference |
-| [P0_FIXES_APPLIED_OCT_7.md](P0_FIXES_APPLIED_OCT_7.md) | What was fixed |
+| [Audit Reports Index](docs/audit-reports-2025-10-07/README.md) | Complete audit documentation |
+| [Final Audit Report](docs/audit-reports-2025-10-07/FINAL_AUDIT_REPORT_OCT_7.md) | Comprehensive findings |
+| [Session Summary](docs/audit-reports-2025-10-07/SESSION_SUMMARY_OCT_7_FINAL.md) | Quick overview |
 
 ### Specifications
 
@@ -342,12 +341,8 @@ E2E and chaos frameworks exist (need restoration)
 
 ### Current Status
 
-- [STATUS.md](STATUS.md) - Detailed status
-- [CURRENT_STATE_OCT_7_2025.md](CURRENT_STATE_OCT_7_2025.md) - Latest state
-
-### Audit Reports
-
-- See `*OCT_7*.md` files for comprehensive audit results
+- [STATUS.md](STATUS.md) - Detailed production readiness status
+- [Audit Reports](docs/audit-reports-2025-10-07/README.md) - October 7, 2025 comprehensive audit
 
 ---
 

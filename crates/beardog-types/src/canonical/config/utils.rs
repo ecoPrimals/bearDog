@@ -501,7 +501,8 @@ impl SharedConfigManager {
     {
         // Try to get existing config
         {
-            let configs = self.configs.read().unwrap();
+            let configs = self.configs.read()
+                .expect("SharedConfigManager lock poisoned - unrecoverable state");
             if let Some(config) = configs.get(key) {
                 if let Ok(typed_config) = config.clone().downcast::<T>() {
                     debug!("📋 Retrieved shared config: {}", key);
@@ -513,7 +514,8 @@ impl SharedConfigManager {
         // Create new config
         let config = Arc::new(factory());
         {
-            let mut configs = self.configs.write().unwrap();
+            let mut configs = self.configs.write()
+                .expect("SharedConfigManager lock poisoned - unrecoverable state");
             configs.insert(key.to_string(), config.clone());
         }
         
@@ -523,7 +525,8 @@ impl SharedConfigManager {
 
     /// Remove configuration
     pub fn remove(&self, key: &str) -> bool {
-        let mut configs = self.configs.write().unwrap();
+        let mut configs = self.configs.write()
+            .expect("SharedConfigManager lock poisoned - unrecoverable state");
         let removed = configs.remove(key).is_some();
         if removed {
             debug!("🗑️ Removed shared config: {}", key);
@@ -533,7 +536,8 @@ impl SharedConfigManager {
 
     /// Clear all configurations
     pub fn clear(&self) {
-        let mut configs = self.configs.write().unwrap();
+        let mut configs = self.configs.write()
+            .expect("SharedConfigManager lock poisoned - unrecoverable state");
         let count = configs.len();
         configs.clear();
         debug!("🧹 Cleared {} shared configs", count);
@@ -541,12 +545,16 @@ impl SharedConfigManager {
 
     /// Get number of configurations
     pub fn len(&self) -> usize {
-        self.configs.read().unwrap().len()
+        self.configs.read()
+            .expect("SharedConfigManager lock poisoned - unrecoverable state")
+            .len()
     }
 
     /// Check if empty
     pub fn is_empty(&self) -> bool {
-        self.configs.read().unwrap().is_empty()
+        self.configs.read()
+            .expect("SharedConfigManager lock poisoned - unrecoverable state")
+            .is_empty()
     }
 
     /// Get statistics

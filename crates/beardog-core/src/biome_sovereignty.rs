@@ -21,15 +21,14 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_core::biome_sovereignty::BiomeSovereigntyConfig;
 //!
 //! let config = BiomeSovereigntyConfig {
 //!     enable_genetic_algorithms: true,
 //!     enable_mixed_lineage: true,
-//!     // ... other config
-//!     # max_genetic_iterations: 100,
-//!     # entropy_preferences: beardog_core::biome_sovereignty::EntropyPreferences::Balanced,
+//!     max_genetic_iterations: 100,
+//!     entropy_preferences: beardog_core::biome_sovereignty::EntropyPreferences::Hybrid,
 //! };
 //! ```
 

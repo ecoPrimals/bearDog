@@ -233,15 +233,17 @@ impl SystemMonitor {
         })
     }
 
-    /// Start the system monitoring service
+    /// Starts the system monitoring service.
     ///
     /// Begins continuous monitoring of system resources and component health.
     ///
     /// # Returns
-    /// - `Ok(())` if monitoring starts successfully
-    /// - `Err(BearDogError)` if monitoring fails to start
-    /// Starts service
-    /// Starts service
+    ///
+    /// `Ok(())` if monitoring starts successfully
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(BearDogError)` if monitoring fails to start
     pub fn start(&mut self) -> Result<(), BearDogError> {
         info!(
             "📊 Starting SystemMonitor with check interval: {}ms",
@@ -299,14 +301,16 @@ impl SystemMonitor {
 
         let mut rng = StdRng::from_entropy();
 
-        let mut system_metrics = metrics.write().await;
-        system_metrics.cpu_usage_percent = rng.gen_range(10.0..70.0);
-        system_metrics.memory_usage_percent = rng.gen_range(20.0..60.0);
-        system_metrics.disk_usage_percent = rng.gen_range(30.0..80.0);
-        system_metrics.network_bytes_in += rng.gen_range(1000..10000);
-        system_metrics.network_bytes_out += rng.gen_range(1000..10000);
-        system_metrics.uptime_seconds += 5; // Assuming 5-second intervals
-        system_metrics.last_updated = Some(chrono::Utc::now());
+        {
+            let mut system_metrics = metrics.write().await;
+            system_metrics.cpu_usage_percent = rng.gen_range(10.0..70.0);
+            system_metrics.memory_usage_percent = rng.gen_range(20.0..60.0);
+            system_metrics.disk_usage_percent = rng.gen_range(30.0..80.0);
+            system_metrics.network_bytes_in += rng.gen_range(1000..10000);
+            system_metrics.network_bytes_out += rng.gen_range(1000..10000);
+            system_metrics.uptime_seconds += 5; // Assuming 5-second intervals
+            system_metrics.last_updated = Some(chrono::Utc::now());
+        } // Drop system_metrics early to release lock
 
         Ok(())
     }
@@ -320,51 +324,61 @@ impl SystemMonitor {
         let mut rng = StdRng::from_entropy();
 
         let components = vec!["core", "security", "monitoring", "genetics", "adapters"];
-        let mut health_map = health_checks.write().await;
 
-        for component in components {
-            let health = ComponentHealth {
-                component_name: component.to_string(),
-                status: if rng.gen_bool(0.95) {
-                    HealthStatus::Healthy
-                } else {
-                    HealthStatus::Degraded
-                },
-                last_check: chrono::Utc::now(),
-                response_time_ms: rng.gen_range(1..50),
-                error_count: rng.gen_range(0..5),
-                uptime_percent: rng.gen_range(95.0..100.0),
-            };
-            health_map.insert(component.to_string(), health);
-        }
+        {
+            let mut health_map = health_checks.write().await;
+
+            for component in components {
+                let health = ComponentHealth {
+                    component_name: component.to_string(),
+                    status: if rng.gen_bool(0.95) {
+                        HealthStatus::Healthy
+                    } else {
+                        HealthStatus::Degraded
+                    },
+                    last_check: chrono::Utc::now(),
+                    response_time_ms: rng.gen_range(1..50),
+                    error_count: rng.gen_range(0..5),
+                    uptime_percent: rng.gen_range(95.0..100.0),
+                };
+                health_map.insert(component.to_string(), health);
+            }
+        } // Drop health_map early to release lock
 
         Ok(())
     }
 
     /// Processes alerts
+    #[allow(clippy::cognitive_complexity)]
     async fn process_alerts(
         metrics: &Arc<RwLock<SystemMetrics>>,
         health_checks: &Arc<RwLock<HashMap<String, ComponentHealth>>>,
         alert_handlers: &Arc<RwLock<Vec<Box<dyn AlertHandler + Send + Sync>>>>,
         config: &SystemMonitorConfig,
     ) -> Result<(), BearDogError> {
-        let system_metrics = metrics.read().await;
-        let health_map = health_checks.read().await;
+        let cpu_usage = metrics.read().await.cpu_usage_percent;
+        let memory_usage = metrics.read().await.memory_usage_percent;
+        let health_statuses: Vec<(String, HealthStatus)> = health_checks
+            .read()
+            .await
+            .iter()
+            .map(|(k, v)| (k.clone(), v.status.clone()))
+            .collect();
         let handlers = alert_handlers.read().await;
 
         // Check for CPU alerts
-        if system_metrics.cpu_usage_percent > config.alert_threshold_cpu {
+        if cpu_usage > config.alert_threshold_cpu {
             let alert = SystemAlert {
                 alert_type: AlertType::HighCpuUsage,
-                message: format!("High CPU usage: {:.2}%", system_metrics.cpu_usage_percent),
-                severity: if system_metrics.cpu_usage_percent > 95.0 {
+                message: format!("High CPU usage: {cpu_usage:.2}%"),
+                severity: if cpu_usage > 95.0 {
                     AlertSeverity::Critical
                 } else {
                     AlertSeverity::Warning
                 },
                 timestamp: chrono::Utc::now(),
                 component: None,
-                metric_value: Some(system_metrics.cpu_usage_percent),
+                metric_value: Some(cpu_usage),
             };
 
             for handler in handlers.iter() {
@@ -375,21 +389,18 @@ impl SystemMonitor {
         }
 
         // Check for memory alerts
-        if system_metrics.memory_usage_percent > config.alert_threshold_memory {
+        if memory_usage > config.alert_threshold_memory {
             let alert = SystemAlert {
                 alert_type: AlertType::HighMemoryUsage,
-                message: format!(
-                    "High memory usage: {:.2}%",
-                    system_metrics.memory_usage_percent
-                ),
-                severity: if system_metrics.memory_usage_percent > 95.0 {
+                message: format!("High memory usage: {memory_usage:.2}%"),
+                severity: if memory_usage > 95.0 {
                     AlertSeverity::Critical
                 } else {
                     AlertSeverity::Warning
                 },
                 timestamp: chrono::Utc::now(),
                 component: None,
-                metric_value: Some(system_metrics.memory_usage_percent),
+                metric_value: Some(memory_usage),
             };
 
             for handler in handlers.iter() {
@@ -400,8 +411,8 @@ impl SystemMonitor {
         }
 
         // Check component health alerts
-        for (component_name, health) in health_map.iter() {
-            if matches!(health.status, HealthStatus::Unhealthy) {
+        for (component_name, health_status) in &health_statuses {
+            if matches!(health_status, HealthStatus::Unhealthy) {
                 let alert = SystemAlert {
                     alert_type: AlertType::ComponentDown,
                     message: format!("Component {component_name} is unhealthy"),
@@ -440,16 +451,17 @@ impl SystemMonitor {
     /// # Arguments
     /// * `component` - Name of the component to check
     ///
+    /// Gets component health status for a specific component.
+    ///
     /// # Returns
+    ///
     /// - `Some(ComponentHealth)` if the component exists and has health data
     /// - `None` if the component is not being monitored
-    /// Gets `component_health`
-    /// Gets `component_health`
     pub async fn get_component_health(&self, component: &str) -> Option<ComponentHealth> {
         self.health_checks.read().await.get(component).cloned()
     }
 
-    /// Add an alert handler to the monitoring system
+    /// Adds an alert handler to the monitoring system.
     ///
     /// Registers a new alert handler that will be called when system alerts
     /// are generated. Multiple handlers can be registered.
@@ -458,8 +470,12 @@ impl SystemMonitor {
     /// * `handler` - Alert handler implementation
     ///
     /// # Returns
-    /// - `Ok(())` if the handler was added successfully
-    /// - `Err(BearDogError)` if adding the handler failed
+    ///
+    /// `Ok(())` if the handler was added successfully
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(BearDogError)` if adding the handler failed
     pub async fn add_alert_handler(
         &self,
         handler: Box<dyn AlertHandler + Send + Sync>,
@@ -486,7 +502,19 @@ impl SystemMonitor {
 
 impl Default for SystemMonitor {
     fn default() -> Self {
-        Self::new().expect("SystemMonitor::new() should never fail with default config")
+        // SystemMonitor::new() with default config is infallible in practice,
+        // but we handle the Result properly for defensive programming
+        Self::new().unwrap_or_else(|e| {
+            // This should never happen with default config, but we provide
+            // a minimal fallback monitor if it does
+            error!("Failed to create SystemMonitor with default config: {}", e);
+            Self {
+                config: SystemMonitorConfig::default(),
+                metrics: Arc::new(RwLock::new(SystemMetrics::default())),
+                health_checks: Arc::new(RwLock::new(HashMap::new())),
+                alert_handlers: Arc::new(RwLock::new(Vec::new())),
+            }
+        })
     }
 }
 
