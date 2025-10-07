@@ -5,14 +5,18 @@
 //! ## Usage
 //!
 //! ```rust
-//! use beardog_types::canonical::rate_limiting::{RateLimitConfig, RateLimitAlgorithm};
+//! use beardog_types::canonical::config::domains::network::{
+//!     RateLimitConfig, RateLimitStrategy, RateLimitScope
+//! };
 //!
 //! let config = RateLimitConfig {
 //!     enabled: true,
-//!     requests_per_second: 100.0,
-//!     burst_capacity: 200,
+//!     max_requests: 100,
 //!     window: std::time::Duration::from_secs(60),
-//!     algorithm: RateLimitAlgorithm::TokenBucket,
+//!     burst_size: Some(200),
+//!     strategy: RateLimitStrategy::TokenBucket,
+//!     scope: RateLimitScope::Global,
+//!     allowlist: Vec::new(),
 //! };
 //! ```
 //!

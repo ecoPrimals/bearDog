@@ -15,15 +15,16 @@
 //!
 //! **Migration Guide**:
 //! ```rust
-//! // Old (scattered)
-//! use crate::TestConfig;
-//!
 //! // New (canonical)
 //! use beardog_types::canonical::config::domains::testing::{
 //!     CanonicalTestConfig,
 //!     CanonicalApiTestConfig,
 //!     CanonicalBenchmarkConfig,
 //! };
+//!
+//! // Create test configuration
+//! let test_config = CanonicalTestConfig::default();
+//! println!("Parallel execution: {}", test_config.parallel_execution);
 //! ```
 
 use beardog_errors::BearDogResult;
