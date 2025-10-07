@@ -31,8 +31,10 @@ impl ComponentManager {
         name: &str,
         status: ComponentStatus,
     ) -> Result<(), BearDogError> {
-        let mut components = self.components.write().await;
-        components.insert(name.to_string(), status);
+        self.components
+            .write()
+            .await
+            .insert(name.to_string(), status);
         Ok(())
     }
 
@@ -47,15 +49,14 @@ impl ComponentManager {
         name: &str,
         status: ComponentStatus,
     ) -> Result<(), BearDogError> {
-        let mut components = self.components.write().await;
-        if let Some(component_status) = components.get_mut(name) {
-            *component_status = status;
-            Ok(())
-        } else {
-            Err(BearDogError::system(format!(
-                "Component '{name}' not found"
-            )))
-        }
+        self.components
+            .write()
+            .await
+            .get_mut(name)
+            .map(|component_status| {
+                *component_status = status;
+            })
+            .ok_or_else(|| BearDogError::system(format!("Component '{name}' not found")))
     }
 
     /// Get Component Status operation.
@@ -73,8 +74,9 @@ impl ComponentManager {
     }
 
     /// Get All Components operation.
-    /// Gets `all_components`
-    /// Gets `all_components`
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub async fn get_all_components(
         &self,
     ) -> Result<HashMap<String, ComponentStatus>, BearDogError> {
@@ -87,8 +89,10 @@ impl ComponentManager {
     /// # Errors
     /// Returns an error if the operation fails.
     pub async fn all_components_healthy(&self) -> Result<bool, BearDogError> {
-        let components = self.components.read().await;
-        let all_healthy = components
+        let all_healthy = self
+            .components
+            .read()
+            .await
             .values()
             .all(|status| matches!(status, ComponentStatus::Running));
         Ok(all_healthy)

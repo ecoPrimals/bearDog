@@ -385,25 +385,28 @@ pre-release-replacements = [
 name = "basic_validation"
 path = "examples/basic_validation.rs"
 
-[[example]]
-name = "live_validation"
-path = "examples/broken/live_validation.rs"
+# Experimental examples requiring external beardog_sovereign_science framework (disabled)
+# These require experiments/beardog-sovereign-science/ to be built first
+# [[example]]
+# name = "live_validation"
+# path = "examples/broken/live_validation.rs"
 
-[[example]]
-name = "full_validation"
-path = "examples/broken/full_validation.rs"
+# [[example]]
+# name = "data_collection_experiment"
+# path = "examples/broken/data_collection_experiment.rs"
+
+# [[example]]
+# name = "test_live_statistics"
+# path = "examples/broken/test_live_statistics.rs"
+
+# Removed - file doesn't exist
+# [[example]]
+# name = "full_validation"
+# path = "examples/broken/full_validation.rs"
 
 # [[example]]
 # name = "cryptographic_validation"
 # path = "examples/cryptographic_validation.rs"
-
-[[example]]
-name = "data_collection_experiment"
-path = "examples/broken/data_collection_experiment.rs"
-
-[[example]]
-name = "test_live_statistics"
-path = "examples/broken/test_live_statistics.rs"
 
 
 

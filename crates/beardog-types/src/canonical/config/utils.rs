@@ -409,10 +409,11 @@ impl UnifiedConfigUtils {
 
         // Apply environment overrides
         for (key, value) in std::env::vars() {
-            if key.starts_with(&format!("{}_", env_prefix)) {
+            let prefix_with_underscore = format!("{}_", env_prefix);
+            if key.starts_with(&prefix_with_underscore) {
                 let config_key = key
-                    .strip_prefix(&format!("{}_", env_prefix))
-                    .unwrap()
+                    .strip_prefix(&prefix_with_underscore)
+                    .ok_or_else(|| BearDogError::validation(&format!("Failed to strip prefix from env var: {}", key)))?
                     .to_lowercase()
                     .replace('_', ".");
 

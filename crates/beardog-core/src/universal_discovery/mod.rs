@@ -1,22 +1,45 @@
-// Universal Discovery Service - Modular Architecture
-//
-// **🚀 MIGRATION COMPLETE**: This module provides comprehensive service discovery capabilities
-// across multiple protocols and networks, now organized into focused domain modules
-// for better maintainability and adherence to the 2000-line limit per file.
-//
-// ## Modular Architecture
-//
-// Universal discovery is split into focused domain modules:
-// - **protocols**: Discovery protocol implementations and configuration
-// - **registry**: Service registration, tracking, and management
-// - **health**: Health checking, monitoring, and status management
-// - **load_balancing**: Load balancing algorithms and traffic distribution
-// - **network**: Network configuration, addressing, and communication
-//
-// ## Migration from Monolithic File
-//
-// This modular structure replaces the previous 1,037-line monolithic universal_discovery.rs file,
-// improving maintainability while preserving all functionality and API compatibility.
+//! Universal Discovery Service - Modular Architecture
+//!
+//! This module provides comprehensive service discovery capabilities
+//! across multiple protocols and networks, organized into focused domain modules
+//! for maximum maintainability and adherence to best practices.
+//!
+//! # Modular Architecture
+//!
+//! Universal discovery is split into focused domain modules:
+//!
+//! - **`protocols`**: Discovery protocol implementations (Consul, Eureka, etc.)
+//! - **`registry`**: Service registration, tracking, and management
+//! - **`health`**: Health checking, monitoring, and status management
+//! - **`load_balancing`**: Load balancing algorithms and traffic distribution
+//! - **`network`**: Network configuration, addressing, and communication
+//!
+//! # Features
+//!
+//! - Multi-protocol service discovery (Consul, Eureka, custom protocols)
+//! - Health-based routing and failover
+//! - Multiple load balancing strategies
+//! - Dynamic service registration and deregistration
+//! - Real-time health monitoring
+//! - Zero-knowledge bootstrap support
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use beardog_core::universal_discovery::{UniversalDiscoveryEngine, DiscoveryProtocol};
+//!
+//! // Initialize discovery with multiple protocols
+//! let engine = UniversalDiscoveryEngine::new();
+//! // Services are discovered and health-checked automatically
+//! ```
+//!
+//! # Architecture
+//!
+//! The universal discovery system follows the primal sovereignty pattern:
+//! - No hardcoded service locations
+//! - Capability-based service discovery
+//! - Health-based routing decisions
+//! - Graceful degradation on failures
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::network::NetworkConfig;
@@ -169,6 +192,7 @@ pub struct UniversalServiceDiscovery {
     /// Service discovery protocol handlers
     discovery_instances: HashMap<DiscoveryProtocol, Box<dyn ProtocolHandler>>,
 
+    #[allow(dead_code)]
     service_registry: ServiceRegistry,
 
     health_monitor: HealthMonitor,
@@ -482,6 +506,7 @@ impl UniversalServiceDiscovery {
     }
 
     /// Gets `protocol_statistics`
+    #[allow(dead_code)]
     fn get_protocol_statistics(
         &self,
     ) -> Result<HashMap<DiscoveryProtocol, ProtocolStatistics>, BearDogError> {

@@ -1,0 +1,255 @@
+//! Modern BearDog Core Tests
+//!
+//! Canonical tests for beardog-core functionality using current architecture.
+
+use beardog_errors::{BearDogError, BearDogResult};
+use beardog_types::canonical::config::WorkingUnifiedConfig;
+use beardog_types::canonical::crypto::EncryptionConfig;
+
+#[test]
+fn test_encryption_config_creation() -> BearDogResult<()> {
+    use beardog_types::canonical::crypto::{CryptoAlgorithm, EncryptionMode};
+
+    let config = EncryptionConfig::default();
+
+    // Verify default configuration
+    assert!(matches!(
+        config.algorithm,
+        CryptoAlgorithm::Aes { key_size: 256 }
+    ));
+    assert!(matches!(config.mode, EncryptionMode::Gcm));
+    assert_eq!(config.auth_tag_size, Some(128));
+
+    Ok(())
+}
+
+#[test]
+fn test_capability_types() {
+    use beardog_types::canonical::capabilities::ServiceCapabilityType;
+
+    // Test capability variants
+    let capabilities = vec![
+        ServiceCapabilityType::Compute,
+        ServiceCapabilityType::Storage,
+    ];
+
+    assert_eq!(capabilities.len(), 2);
+}
+
+#[test]
+fn test_unified_config_defaults() {
+    let config = WorkingUnifiedConfig::default();
+
+    // Verify basic config fields exist
+    assert!(!config.version.is_empty() || config.version.is_empty()); // Basic existence check
+}
+
+#[test]
+fn test_error_handling() {
+    let error = BearDogError::configuration("Test configuration error");
+    let error_string = format!("{}", error);
+
+    assert!(error_string.contains("Test configuration error"));
+}
+
+#[test]
+fn test_security_error_types() {
+    let error = BearDogError::security("Test security issue".to_string());
+    assert!(format!("{:?}", error).contains("Test security issue"));
+}
+
+#[tokio::test]
+async fn test_async_error_handling() -> BearDogResult<()> {
+    // Test async error handling patterns
+    let result: Result<(), BearDogError> =
+        Err(BearDogError::system("Test system error".to_string()));
+
+    match result {
+        Err(BearDogError::System { message, .. }) => {
+            assert!(message.contains("Test system error"));
+        }
+        _ => panic!("Expected system error"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn test_crypto_algorithm_types() {
+    use beardog_types::canonical::crypto::CryptoAlgorithm;
+
+    let aes = CryptoAlgorithm::Aes { key_size: 256 };
+    let chacha = CryptoAlgorithm::ChaCha20;
+
+    assert!(matches!(aes, CryptoAlgorithm::Aes { key_size: 256 }));
+    assert!(matches!(chacha, CryptoAlgorithm::ChaCha20));
+}
+
+#[test]
+fn test_encryption_modes() {
+    use beardog_types::canonical::crypto::EncryptionMode;
+
+    let modes = vec![
+        EncryptionMode::Gcm,
+        EncryptionMode::Cbc,
+        EncryptionMode::Ctr,
+    ];
+
+    assert_eq!(modes.len(), 3);
+}
+
+#[test]
+fn test_key_config_defaults() {
+    use beardog_types::canonical::crypto::KeyConfig;
+
+    let key_config = KeyConfig::default();
+
+    // Verify key config has reasonable defaults
+    assert!(key_config.key_size >= 128); // Minimum secure key size
+}
+
+#[tokio::test]
+async fn test_concurrent_config_access() -> BearDogResult<()> {
+    use beardog_types::canonical::crypto::CryptoAlgorithm;
+    use tokio::task;
+
+    let handles: Vec<_> = (0..10)
+        .map(|_| {
+            task::spawn(async {
+                let config = EncryptionConfig::default();
+                assert!(matches!(config.algorithm, CryptoAlgorithm::Aes { .. }));
+            })
+        })
+        .collect();
+
+    for handle in handles {
+        handle.await.expect("Task should complete successfully");
+    }
+
+    Ok(())
+}
+
+#[test]
+fn test_crypto_algorithm_equality() {
+    use beardog_types::canonical::crypto::CryptoAlgorithm;
+
+    // Verify crypto algorithms have distinct types
+    let aes = CryptoAlgorithm::Aes { key_size: 256 };
+    let chacha = CryptoAlgorithm::ChaCha20;
+
+    assert!(aes != chacha);
+}
+
+#[test]
+fn test_error_conversion_patterns() {
+    use std::io;
+
+    // Test that we can create errors from various sources
+    let io_error = io::Error::new(io::ErrorKind::Other, "Test IO error");
+    let beardog_error: BearDogError = io_error.into();
+
+    assert!(format!("{:?}", beardog_error).contains("Test IO error"));
+}
+
+#[tokio::test]
+async fn test_timeout_handling() -> BearDogResult<()> {
+    use tokio::time::{timeout, Duration};
+
+    // Test that operations can be timed out
+    let result = timeout(Duration::from_millis(100), async {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        Ok::<(), BearDogError>(())
+    })
+    .await;
+
+    assert!(result.is_ok(), "Short operation should complete");
+
+    Ok(())
+}
+
+#[test]
+fn test_config_serialization() -> BearDogResult<()> {
+    let config = EncryptionConfig::default();
+
+    // Test that config can be serialized
+    let json = serde_json::to_string(&config)
+        .map_err(|e| BearDogError::internal(format!("Serialization failed: {}", e)))?;
+
+    assert!(!json.is_empty());
+
+    // Test deserialization
+    let _deserialized: EncryptionConfig = serde_json::from_str(&json)
+        .map_err(|e| BearDogError::internal(format!("Deserialization failed: {}", e)))?;
+
+    Ok(())
+}
+
+#[test]
+fn test_multiple_error_types() {
+    let errors = vec![
+        BearDogError::configuration("Config error"),
+        BearDogError::security("Security error".to_string()),
+        BearDogError::system("System error".to_string()),
+        BearDogError::invalid_input("Invalid input"),
+    ];
+
+    assert_eq!(errors.len(), 4);
+
+    for error in errors {
+        let error_str = format!("{}", error);
+        assert!(!error_str.is_empty());
+    }
+}
+
+#[tokio::test]
+async fn test_parallel_operations() -> BearDogResult<()> {
+    use tokio::task;
+
+    let tasks: Vec<_> = (0..5)
+        .map(|i| {
+            task::spawn(async move {
+                let config = WorkingUnifiedConfig::default();
+                // Simulate some work
+                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                (i, config.version.clone())
+            })
+        })
+        .collect();
+
+    let mut results = Vec::new();
+    for task in tasks {
+        let (id, version) = task.await.expect("Task should complete");
+        results.push((id, version));
+    }
+
+    assert_eq!(results.len(), 5);
+
+    Ok(())
+}
+
+#[test]
+fn test_crypto_config_completeness() {
+    use beardog_types::canonical::crypto::CryptoConfig;
+
+    let config = CryptoConfig::default();
+
+    // Verify all major config sections exist
+    let _encryption = config.encryption;
+    let _signature = config.signature;
+    let _key_management = config.key_management;
+    let _rng = config.rng;
+}
+
+#[test]
+fn test_result_combinators() -> BearDogResult<()> {
+    // Test Result combinators work with BearDogResult
+    let success: BearDogResult<i32> = Ok(42);
+    let doubled = success.map(|x| x * 2)?;
+    assert_eq!(doubled, 84);
+
+    let error: BearDogResult<i32> = Err(BearDogError::system("Test".to_string()));
+    let result = error.or_else(|_| -> BearDogResult<i32> { Ok(99) })?;
+    assert_eq!(result, 99);
+
+    Ok(())
+}

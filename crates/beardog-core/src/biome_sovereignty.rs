@@ -1,7 +1,39 @@
-/// Genetic algorithms and mixed lineage key management
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Biome Sovereignty and Human-Centric Key Management
+//!
+//! This module implements the core principles of biome sovereignty, ensuring
+//! human control over cryptographic keys and entropy generation without
+//! corporate surveillance or extraction.
+//!
+//! # Key Features
+//!
+//! - **Human-Owned Entropy**: Humans generate and own their randomness
+//! - **Genetic Algorithms**: Key evolution and optimization
+//! - **Mixed Lineage**: Partnership-based key sharing
+//! - **Genesis Keys**: Foundational key generation
+//! - **Zero Corporate Control**: No backdoors or surveillance
+//!
+//! # Sovereignty Principles
+//!
+//! 1. **Human Dignity**: Humans control their cryptographic identity
+//! 2. **Owned Randomness**: Entropy is generated and owned by humans
+//! 3. **Partnership Not Extraction**: Keys can be shared, not extracted
+//! 4. **Genetic Evolution**: Keys can evolve while maintaining sovereignty
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use beardog_core::biome_sovereignty::BiomeSovereigntyConfig;
+//!
+//! let config = BiomeSovereigntyConfig {
+//!     enable_genetic_algorithms: true,
+//!     enable_mixed_lineage: true,
+//!     // ... other config
+//!     # max_genetic_iterations: 100,
+//!     # entropy_preferences: beardog_core::biome_sovereignty::EntropyPreferences::Balanced,
+//! };
+//! ```
+
+/// Genetic algorithms and key genesis functionality
 pub mod genesis;
 /// Mixed lineage key components and partnership management
 pub mod mixed_lineage;

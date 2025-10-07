@@ -241,7 +241,7 @@ impl SIMDAlignedPool {
             .copied()
             .unwrap_or_else(|| {
                 // For very large requests, round up to next 64KB boundary
-                ((required_size + 65535) / 65536) * 65536
+                required_size.div_ceil(65536) * 65536
             })
     }
 

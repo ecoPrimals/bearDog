@@ -56,8 +56,11 @@ impl Default for SovereigntyState {
 #[derive(Debug)]
 pub struct SovereigntyManager {
     config: PrimalSovereigntyConfig,
+    #[allow(dead_code)]
     genetics: GeneticSpawningEngine,
+    #[allow(dead_code)]
     crypto_config: EncryptionConfig,
+    #[allow(dead_code)]
     hierarchy_manager: EntropyHierarchyManager,
     sovereignty_state: SovereigntyState,
 }

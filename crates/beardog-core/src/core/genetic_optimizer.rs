@@ -97,8 +97,9 @@ impl GeneticOptimizer {
     }
 
     /// Initialize the genetic optimizer with default state
-    /// Initializes componentialize
-    /// Initializes componentialize
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails.
     pub fn initialize(&self) -> Result<(), BearDogError> {
         info!(
             "🧬 Initializing GeneticOptimizer with population size: {}",
@@ -106,17 +107,23 @@ impl GeneticOptimizer {
         );
 
         // Initialize optimization state
-        let mut state = self.optimization_state.blocking_write();
-        state.current_generation = 0;
-        state.best_fitness = 0.0;
-        state.convergence_count = 0;
-        state.is_converged = false;
+        {
+            let mut state = self.optimization_state.blocking_write();
+            state.current_generation = 0;
+            state.best_fitness = 0.0;
+            state.convergence_count = 0;
+            state.is_converged = false;
+        } // Drop state lock early
 
         info!("✅ GeneticOptimizer initialized successfully");
         Ok(())
     }
 
     /// Run the genetic optimization algorithm
+    ///
+    /// # Errors
+    /// Returns an error if population initialization fails or optimization encounters an error.
+    #[allow(clippy::cognitive_complexity)]
     pub async fn optimize(
         &self,
         fitness_function: impl Fn(&[f64]) -> f64 + Send + Sync,
@@ -124,7 +131,7 @@ impl GeneticOptimizer {
         info!("🧬 Starting genetic optimization process");
 
         // Initialize population
-        let mut population = self.initialize_population()?;
+        let mut population = self.initialize_population();
         let mut best_solution = population[0].clone();
         let mut best_fitness = fitness_function(&best_solution);
 
@@ -143,7 +150,7 @@ impl GeneticOptimizer {
             {
                 if current_best_fitness > best_fitness {
                     best_fitness = current_best_fitness;
-                    best_solution = population[best_idx].clone();
+                    best_solution.clone_from(&population[best_idx]);
                 }
             }
 
@@ -176,11 +183,9 @@ impl GeneticOptimizer {
             {
                 let mut history = self.performance_history.write().await;
                 let improvement_rate = if generation > 0 {
-                    if let Some(last_metric) = history.last() {
-                        best_fitness - last_metric.fitness_score
-                    } else {
-                        0.0
-                    }
+                    history
+                        .last()
+                        .map_or(0.0, |last_metric| best_fitness - last_metric.fitness_score)
                 } else {
                     0.0
                 };
@@ -194,7 +199,7 @@ impl GeneticOptimizer {
             }
 
             // Create next generation
-            population = self.create_next_generation(population, fitness_scores)?;
+            population = self.create_next_generation(&population, &fitness_scores);
         }
 
         info!(
@@ -205,7 +210,7 @@ impl GeneticOptimizer {
     }
 
     /// Initializes `componentialize_population`
-    fn initialize_population(&self) -> Result<Vec<Vec<f64>>, BearDogError> {
+    fn initialize_population(&self) -> Vec<Vec<f64>> {
         let mut rng = rand::thread_rng();
 
         let mut population = Vec::with_capacity(self.config.population_size);
@@ -216,46 +221,46 @@ impl GeneticOptimizer {
             population.push(individual);
         }
 
-        Ok(population)
+        population
     }
 
     /// Creates `next_generation`
     fn create_next_generation(
         &self,
-        population: Vec<Vec<f64>>,
-        fitness_scores: Vec<f64>,
-    ) -> Result<Vec<Vec<f64>>, BearDogError> {
+        population: &[Vec<f64>],
+        fitness_scores: &[f64],
+    ) -> Vec<Vec<f64>> {
         let mut rng = rand::thread_rng();
         let mut next_generation = Vec::with_capacity(self.config.population_size);
 
         // Selection, crossover, and mutation
         for _ in 0..self.config.population_size {
             // Tournament selection
-            let parent1_idx = self.tournament_selection(&fitness_scores, &mut rng);
-            let parent2_idx = self.tournament_selection(&fitness_scores, &mut rng);
+            let parent1_idx = Self::tournament_selection(fitness_scores, &mut rng);
+            let parent2_idx = Self::tournament_selection(fitness_scores, &mut rng);
 
             let parent1 = &population[parent1_idx];
             let parent2 = &population[parent2_idx];
 
             // Crossover
             let mut offspring = if rng.gen::<f64>() < self.config.crossover_rate {
-                self.crossover(parent1, parent2, &mut rng)
+                Self::crossover(parent1, parent2, &mut rng)
             } else {
                 parent1.clone()
             };
 
             // Mutation
             if rng.gen::<f64>() < self.config.mutation_rate {
-                self.mutate(&mut offspring, &mut rng);
+                Self::mutate(&mut offspring, &mut rng);
             }
 
             next_generation.push(offspring);
         }
 
-        Ok(next_generation)
+        next_generation
     }
 
-    fn tournament_selection(&self, fitness_scores: &[f64], rng: &mut impl Rng) -> usize {
+    fn tournament_selection(fitness_scores: &[f64], rng: &mut impl Rng) -> usize {
         let tournament_size = 3;
         let mut best_idx = rng.gen_range(0..fitness_scores.len());
         let mut best_fitness = fitness_scores[best_idx];
@@ -271,7 +276,7 @@ impl GeneticOptimizer {
         best_idx
     }
 
-    fn crossover(&self, parent1: &[f64], parent2: &[f64], rng: &mut impl Rng) -> Vec<f64> {
+    fn crossover(parent1: &[f64], parent2: &[f64], rng: &mut impl Rng) -> Vec<f64> {
         let crossover_point = rng.gen_range(1..parent1.len());
         let mut offspring = Vec::with_capacity(parent1.len());
 
@@ -286,7 +291,7 @@ impl GeneticOptimizer {
         offspring
     }
 
-    fn mutate(&self, individual: &mut [f64], rng: &mut impl Rng) {
+    fn mutate(individual: &mut [f64], rng: &mut impl Rng) {
         for gene in individual.iter_mut() {
             if rng.gen::<f64>() < 0.1 {
                 // 10% chance to mutate each gene

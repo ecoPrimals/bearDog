@@ -6,13 +6,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==================");
 
     println!("[SEARCH] Security Event Analysis:");
-    demo_security_analysis()?;
+    demo_security_analysis().await?;
 
     println!("🧠 ML Threat Prediction:");
-    demo_ml_predictions()?;
+    demo_ml_predictions().await?;
 
     println!("[LIGHTNING] Performance Features:");
-    demo_performance()?;
+    demo_performance().await?;
 
     println!("[OK] API Demo completed!");
 

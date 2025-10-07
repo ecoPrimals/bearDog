@@ -175,7 +175,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "experiment_id": experiment_id,
         "framework_version": "1.0.0",
         "methodology": "BearDog Sovereign Science",
-        "start_time": experiment_start,
+        "start_time": format!("{:?}", experiment_start),
         "total_duration_secs": total_duration.as_secs_f64(),
         "validation_cycles": validation_cycles,
         "aggregate_statistics": {

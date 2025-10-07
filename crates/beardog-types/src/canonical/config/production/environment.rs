@@ -142,29 +142,16 @@ impl EnvironmentConfig {
     }
 
     /// Validate the environment configuration
-    /// Validates input
-    /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Validation interval is less than 60 seconds for periodic validation
     pub fn validate(&self) -> Result<(), BearDogError> {
-        // Validate environment type consistency
+        // Note: Production-specific secrets validation is now handled via
+        // ModernSecretsConfig.required_capabilities
         if self.environment_type == EnvironmentType::Production {
-            // The ModernSecretsConfig struct manages encryption_at_rest and audit_access
-            // via required_capabilities.
-            // For now, we'll keep this check as a placeholder.
-            // if !self.secrets.encryption_at_rest {
-            //     return Err(BearDogError::Security {
-            //         message: "Production environments must have encryption at rest enabled"
-            //             .to_string(),
-            //         category: beardog_errors::SecurityErrorCategory::Configuration,
-            //     });
-            // }
-
-            // if !self.secrets.audit_access {
-            //     return Err(BearDogError::Security {
-            //         message: "Production environments must have secret access auditing enabled"
-            //             .to_string(),
-            //         category: beardog_errors::SecurityErrorCategory::Configuration,
-            //     });
-            // }
+            // Validation moved to capability-based system
         }
 
         // Validate validation settings
@@ -177,33 +164,18 @@ impl EnvironmentConfig {
             });
         }
 
-        // Validate secrets rotation settings
-        // The ModernSecretsConfig struct manages rotation via required_capabilities.
-        // This check is no longer directly applicable here.
-        // if self.secrets.rotation_enabled
-        //     && self.secrets.rotation_interval < Duration::from_secs(3600)
-        // {
-        //     return Err(BearDogError::Security {
-        //         message: "Secret rotation interval must be at least 1 hour".to_string(),
-        //         category: beardog_errors::SecurityErrorCategory::Configuration,
-        //     });
-        // }
-
+        // Note: Secrets rotation validation now handled via required_capabilities
         Ok(())
     }
 
     /// Get an environment override value
     #[must_use]
-    /// Gets override
-    /// Gets override
     pub fn get_override(&self, key: &str) -> Option<&String> {
         self.overrides.get(key)
     }
 
     /// Check if this is a production-like environment
     #[must_use]
-    /// Checks if production like
-    /// Checks if production like
     pub fn is_production_like(&self) -> bool {
         matches!(
             self.environment_type,
@@ -218,43 +190,26 @@ impl EnvironmentConfig {
         match env_type {
             EnvironmentType::Local => {
                 config.validation.validate_on_startup = false;
-                // config.secrets.encryption_at_rest = false; // Removed
-                // config.secrets.audit_access = false; // Removed
             }
             EnvironmentType::Development => {
                 config.validation.validate_on_startup = true;
-                // config.secrets.encryption_at_rest = false; // Removed
-                // config.secrets.audit_access = false; // Removed
             }
             EnvironmentType::Testing => {
                 config.validation.validate_on_startup = true;
                 config.validation.validate_periodically = true;
-                // config.secrets.encryption_at_rest = true; // Removed
-                // config.secrets.audit_access = false; // Removed
             }
             EnvironmentType::Staging => {
                 config.validation.validate_on_startup = true;
                 config.validation.validate_periodically = true;
-                // config.secrets.encryption_at_rest = true; // Removed
-                // config.secrets.audit_access = true; // Removed
-                // config.secrets.rotation_enabled = true; // Removed
             }
             EnvironmentType::Production => {
                 config.validation.validate_on_startup = true;
                 config.validation.validate_periodically = true;
-                // config.secrets.encryption_at_rest = true; // Removed
-                // config.secrets.audit_access = true; // Removed
-                // config.secrets.rotation_enabled = true; // Removed
-                // config.secrets.rotation_interval = Duration::from_secs(86400 * 7); // Removed
-                // 7 days
+                // Note: Secrets settings now configured via ModernSecretsConfig.required_capabilities
             }
             EnvironmentType::Disaster => {
                 config.validation.validate_on_startup = true;
                 config.validation.validate_periodically = true;
-                // config.secrets.encryption_at_rest = true; // Removed
-                // config.secrets.audit_access = true; // Removed
-                // config.secrets.rotation_enabled = true; // Removed
-                // config.secrets.backup_provider = Some(SecretsProviderType::Vault); // Removed
             }
         }
 
@@ -342,17 +297,14 @@ impl ModernSecretsConfig {
     /// Check if provider is deprecated
     #[allow(deprecated)]
     #[must_use]
-    /// Checks if deprecated
-    /// Checks if deprecated
     pub fn is_deprecated(&self) -> bool {
         // This check is now handled by required_capabilities
         self.required_capabilities
             .contains(&CapabilityType::SecretsManagement)
     }
 
+    /// Get the modern replacement configuration
     #[must_use]
-    /// Gets `modern_replacement`
-    /// Gets `modern_replacement`
     pub fn get_modern_replacement(&self) -> Option<Self> {
         // This logic is now handled by required_capabilities
         if self
@@ -369,9 +321,8 @@ impl ModernSecretsConfig {
         }
     }
 
+    /// Get migration guidance for transitioning to modern configuration
     #[must_use]
-    /// Gets `migration_guidance`
-    /// Gets `migration_guidance`
     pub fn get_migration_guidance(&self) -> Option<&'static str> {
         // This logic is now handled by required_capabilities
         if self

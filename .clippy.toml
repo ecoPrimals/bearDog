@@ -2,7 +2,7 @@
 # Enforces high standards while maintaining practicality
 
 # Version requirements
-msrv = "1.70.0"
+msrv = "1.75.0"
 
 # Cognitive complexity limits (reasonable)
 cognitive-complexity-threshold = 15
