@@ -30,21 +30,18 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
+//! use beardog_types::canonical::config::domains::bootstrap::{
+//!     UnifiedBootstrapConfig, CoreBootstrapConfig, RetryStrategy
+//! };
 //!
 //! // Use defaults for most cases
 //! let config = UnifiedBootstrapConfig::default();
 //!
 //! // Or customize for specific needs
-//! let config = UnifiedBootstrapConfig {
-//!     core: CoreBootstrapConfig {
-//!         discovery_timeout_ms: 60000, // 1 minute
-//!         max_discovery_attempts: 10,
-//!         min_capabilities_threshold: 5,
-//!         ..Default::default()
-//!     },
-//!     ..Default::default()
-//! };
+//! let mut config = UnifiedBootstrapConfig::default();
+//! config.core.discovery_timeout_ms = 60000; // 1 minute
+//! config.core.max_discovery_attempts = 10;
+//! config.core.min_capabilities_threshold = 5;
 //! ```
 //!
 //! ## Consolidated Configs
@@ -88,22 +85,23 @@ use crate::canonical::config::r#trait::BearDogConfig;
 /// ## Example
 ///
 /// ```rust
-/// use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
+/// use beardog_types::canonical::config::domains::bootstrap::{
+///     UnifiedBootstrapConfig, CoreBootstrapConfig, RetryStrategy
+/// };
 ///
 /// // Quick start with sensible defaults
 /// let config = UnifiedBootstrapConfig::default();
 ///
 /// // Customize for production
-/// let prod_config = UnifiedBootstrapConfig {
-///     core: CoreBootstrapConfig {
-///         discovery_timeout_ms: 60000, // Extended timeout
-///         max_discovery_attempts: 10,   // More retries
-///         min_capabilities_threshold: 5, // Require more capabilities
-///         enable_passive_listening: true,
-///         retry_strategy: RetryStrategy::Exponential,
-///     },
-///     ..Default::default()
-/// };
+/// let mut prod_config = UnifiedBootstrapConfig::default();
+/// prod_config.core.discovery_timeout_ms = 60000; // Extended timeout
+/// prod_config.core.max_discovery_attempts = 10;   // More retries
+/// prod_config.core.min_capabilities_threshold = 5; // Require more capabilities
+/// prod_config.core.enable_passive_listening = true;
+/// prod_config.core.retry_strategy = RetryStrategy::Exponential;
+///
+/// // Use the config
+/// println!("Timeout: {}ms", prod_config.core.discovery_timeout_ms);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UnifiedBootstrapConfig {

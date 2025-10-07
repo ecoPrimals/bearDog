@@ -69,14 +69,18 @@ use crate::canonical::config::type_aliases::{
 ///
 /// ```rust
 /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+/// # use beardog_errors::BearDogError;
 ///
+/// # fn example() -> Result<(), BearDogError> {
 /// // Load from environment
-/// let config = UnifiedBearDogConfig::from_env()?;
+/// let config = UnifiedBearDogConfig::load()?;
 ///
 /// // Access domain configs
-/// println!("API Port: {}", config.app.api_port);
+/// println!("App name: {}", config.app.app_name);
 /// println!("Network timeout: {:?}", config.network.request_timeout);
 /// println!("HSM enabled: {}", config.hsm.enabled);
+/// # Ok(())
+/// # }
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedBearDogConfig {

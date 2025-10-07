@@ -351,10 +351,11 @@
 //! ## Examples
 //!
 //! ```rust
-//! use beardog_types::canonical::BearDogConfig;
+//! use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 //!
-//! // Create a new configuration
-//! let config = BearDogConfig::default();
+//! // Create a new unified configuration
+//! let config = UnifiedBearDogConfig::default();
+//! println!("Config created successfully");
 //! ```
 //!
 //! ## Safety
