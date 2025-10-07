@@ -106,17 +106,19 @@ impl BiomeSovereigntyManager {
         }
     }
 
-    /// Initializes componentialize
-    /// Initializes componentialize
+    /// Initializes biome sovereignty components
+    ///
+    /// # Errors
+    /// Returns error if genetic algorithms or mixed lineage initialization fails
     pub fn initialize(&mut self) -> Result<(), BearDogError> {
         // Initialize genetic algorithms if enabled
         if self.config.enable_genetic_algorithms {
-            self.initialize_genetic_algorithms()?;
+            Self::initialize_genetic_algorithms()?;
         }
 
         // Initialize mixed lineage features if enabled
         if self.config.enable_mixed_lineage {
-            self.initialize_mixed_lineage()?;
+            Self::initialize_mixed_lineage()?;
         }
 
         Ok(())
@@ -124,7 +126,8 @@ impl BiomeSovereigntyManager {
 
     /// Initialize genetic algorithm capabilities
     /// Initializes `componentialize_genetic_algorithms`
-    const fn initialize_genetic_algorithms(&self) -> Result<(), BearDogError> {
+    #[allow(clippy::unnecessary_wraps)] // Future implementation will use Result
+    const fn initialize_genetic_algorithms() -> Result<(), BearDogError> {
         // Placeholder for genetic algorithm initialization
         // This would integrate with the beardog-genetics crate
         Ok(())
@@ -132,7 +135,8 @@ impl BiomeSovereigntyManager {
 
     /// Initialize mixed lineage key management
     /// Initializes `componentialize_mixed_lineage`
-    const fn initialize_mixed_lineage(&self) -> Result<(), BearDogError> {
+    #[allow(clippy::unnecessary_wraps)] // Future implementation will use Result
+    const fn initialize_mixed_lineage() -> Result<(), BearDogError> {
         // Placeholder for mixed lineage initialization
         // This would integrate with partnership and key management systems
         Ok(())

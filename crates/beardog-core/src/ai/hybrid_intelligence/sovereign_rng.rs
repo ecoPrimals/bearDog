@@ -130,7 +130,7 @@ impl SovereignRng {
         let mut rng = Self::create_seeded_rng(&entropy_seed)?;
 
         // Generate weight matrix based on distribution
-        let weights = self.generate_weight_matrix(
+        let weights = Self::generate_weight_matrix(
             &mut rng,
             initializer.distribution,
             initializer.layer_shape,
@@ -290,7 +290,6 @@ impl SovereignRng {
         clippy::cast_precision_loss
     )]
     fn generate_weight_matrix(
-        &self,
         rng: &mut ChaCha20Rng,
         distribution: EntropyDistribution,
         shape: (usize, usize),
@@ -302,7 +301,7 @@ impl SovereignRng {
             EntropyDistribution::Normal { mean, stddev } => {
                 for i in 0..rows {
                     for j in 0..cols {
-                        weights[i][j] = self.sample_normal(rng, mean, stddev);
+                        weights[i][j] = Self::sample_normal(rng, mean, stddev);
                     }
                 }
             }
@@ -325,7 +324,7 @@ impl SovereignRng {
                 let std = (2.0_f64 / rows as f64).sqrt();
                 for i in 0..rows {
                     for j in 0..cols {
-                        weights[i][j] = self.sample_normal(rng, 0.0, std);
+                        weights[i][j] = Self::sample_normal(rng, 0.0, std);
                     }
                 }
             }
@@ -334,7 +333,7 @@ impl SovereignRng {
         Ok(weights)
     }
 
-    fn sample_normal(&self, rng: &mut ChaCha20Rng, mean: f64, stddev: f64) -> f64 {
+    fn sample_normal(rng: &mut ChaCha20Rng, mean: f64, stddev: f64) -> f64 {
         // Box-Muller transform
         let u1: f64 = rng.gen();
         let u2: f64 = rng.gen();
@@ -344,6 +343,7 @@ impl SovereignRng {
 
     /// Check if cached entropy is still valid
     /// Checks if cache valid
+    #[allow(clippy::cast_sign_loss)] // Age is always positive duration
     fn is_cache_valid(&self, cached: &CachedEntropySeed) -> bool {
         let age = chrono::Utc::now()
             .signed_duration_since(cached.cached_at)
@@ -354,6 +354,7 @@ impl SovereignRng {
     /// Clear expired cache entries
     /// Cleans up cache
     /// Cleans up cache
+    #[allow(clippy::cast_sign_loss)] // Age is always positive duration
     pub fn cleanup_cache(&mut self) {
         let initial_count = self.entropy_cache.len();
         let max_age = self.config.cache_max_age_seconds;
@@ -370,6 +371,10 @@ impl SovereignRng {
         }
     }
 
+    /// Generate entropy bytes for the given identity and tier
+    ///
+    /// # Errors
+    /// Returns error if entropy generation fails
     pub fn generate_entropy_bytes(
         &mut self,
         _identity: &HumanIdentity,

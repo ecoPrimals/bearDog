@@ -6,9 +6,8 @@
 
 use beardog_types::{
     canonical::{
-        CanonicalProviderConfig, 
-        CanonicalSecurityConfig,
-        config::{CanonicalAppConfig, unified::UnifiedBearDogConfig},
+        config::{unified::UnifiedBearDogConfig, CanonicalAppConfig},
+        CanonicalProviderConfig, CanonicalSecurityConfig,
     },
     // zero_cost module structure has changed - using available types
 };

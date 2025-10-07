@@ -19,13 +19,9 @@
 //! ```rust
 //! use beardog_types::canonical::capabilities::CapabilityType;
 //!
-//! // Discover who provides key management
-//! let providers = discover_capability(CapabilityType::KeyManagement)?;
-//!
-//! // Use any provider with the KeyManagement capability
-//! for provider in providers {
-//!     println!("Found provider: {}", provider.name());
-//! }
+//! // Define a capability type
+//! let capability = CapabilityType::KeyManagement;
+//! println!("Capability: {:?}", capability);
 //! ```
 
 use serde::{Deserialize, Serialize};

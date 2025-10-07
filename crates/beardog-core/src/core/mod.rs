@@ -490,9 +490,9 @@ impl SystemMonitor {
     ///
     /// # Returns
     /// - `Ok(())` if monitoring stops successfully
-    /// - `Err(BearDogError)` if stopping fails
-    /// Stops service
-    /// Stops service
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if stopping fails
     pub fn stop(&mut self) -> Result<(), BearDogError> {
         // The original code had a borrow checker issue here, as `self.monitoring_task` was removed.
         // Since the task is no longer stored, this function is effectively a no-op.
@@ -720,7 +720,9 @@ impl UniversalAdapter {
     ///
     /// # Returns
     /// - `Ok(String)` containing the endpoint URL if the capability is registered
-    /// - `Err(BearDogError)` if the capability is not available
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the capability is not available
     pub async fn discover_capability_endpoint(
         &self,
         capability: CapabilityType,
@@ -743,14 +745,15 @@ impl UniversalAdapter {
     ///
     /// # Returns
     /// - `Ok(())` if the capability was registered successfully
-    /// - `Err(BearDogError)` if registration failed
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if registration failed
     pub async fn register_capability(
         &self,
         capability: CapabilityType,
         endpoint: String,
     ) -> Result<(), BearDogError> {
-        let mut capabilities = self.capabilities.write().await;
-        capabilities.insert(capability, endpoint);
+        self.capabilities.write().await.insert(capability, endpoint);
         Ok(())
     }
 }
@@ -815,7 +818,7 @@ impl BearDogCore {
         }
     }
 
-    /// Create BearDog Core with default configuration
+    /// Create `BearDog` Core with default configuration
     ///
     /// # Errors
     /// Returns an error if default configuration cannot be created.
@@ -830,6 +833,7 @@ impl BearDogCore {
     /// Returns an error if the operation fails.
     /// Initializes componentialize
     /// Initializes componentialize
+    #[allow(clippy::cognitive_complexity)]
     pub async fn initialize(&mut self) -> Result<(), BearDogError> {
         info!("🚀 Initializing BearDog Core");
 
@@ -861,6 +865,7 @@ impl BearDogCore {
     /// Returns an error if HSM initialization fails.
     /// Initializes `componentialize_hsm_management`
     /// Initializes `componentialize_hsm_management`
+    #[allow(clippy::cognitive_complexity)]
     pub async fn initialize_hsm_management(&self) -> Result<(), BearDogError> {
         info!("🔐 Initializing HSM management capabilities");
 
@@ -893,6 +898,7 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if registration fails.
+    #[allow(clippy::cognitive_complexity)]
     pub async fn register_with_ai_service_alt(&self) -> Result<(), BearDogError> {
         info!("🐿️ Registering with AI coordination services via capability discovery");
 

@@ -386,6 +386,7 @@ impl<T> AIFirstResponseBuilder<T> {
 
     /// With Error operation.
     /// Creates instance with error
+    #[must_use]
     pub fn with_error(mut self, error: AIFirstError) -> Self {
         self.error = Some(error);
         self
@@ -393,6 +394,7 @@ impl<T> AIFirstResponseBuilder<T> {
 
     /// With Confidence operation.
     /// Creates instance with confidence
+    #[must_use]
     pub const fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence;
         self
@@ -400,6 +402,7 @@ impl<T> AIFirstResponseBuilder<T> {
 
     /// With Human Context operation.
     /// Creates instance with human context
+    #[must_use]
     pub fn with_human_context(mut self, context: HumanInteractionContext) -> Self {
         self.human_context = Some(context);
         self
@@ -407,6 +410,7 @@ impl<T> AIFirstResponseBuilder<T> {
 
     /// With Suggested Action operation.
     /// Creates instance with suggested action
+    #[must_use]
     pub fn with_suggested_action(mut self, action: SuggestedAction) -> Self {
         self.suggested_actions.push(action);
         self
@@ -415,6 +419,7 @@ impl<T> AIFirstResponseBuilder<T> {
     /// Build operation.
     /// Builds component
     /// Builds component
+    #[allow(clippy::cast_possible_truncation)] // Explicitly bounded to u64::MAX
     pub fn build(self) -> AIFirstResponse<T> {
         let processing_time_ms = self
             .start_time

@@ -8,6 +8,10 @@ use uuid::Uuid;
 
 impl BearDogCore {
     /// Execute ecosystem coordination with multiple services
+    ///
+    /// # Errors
+    /// Returns error if insufficient services available or coordination fails
+    #[allow(clippy::cognitive_complexity)] // Complex coordination logic justified
     pub async fn coordinate_ecosystem_operation(
         &self,
         operation_id: Uuid,
@@ -57,7 +61,7 @@ impl BearDogCore {
         // Execute coordinated operation
         if available_services.len() >= required_capabilities.len() / 2 {
             // Sufficient services available for coordination
-            self.execute_coordinated_operation(operation_id, &available_services)
+            Self::execute_coordinated_operation(operation_id, &available_services)
         } else {
             Err(BearDogError::validation(
                 "Insufficient services for coordination",
@@ -82,8 +86,8 @@ impl BearDogCore {
 
     /// Execute coordinated operation with available services
     /// Executes `coordinated_operation`
+    #[allow(clippy::unnecessary_wraps)] // Result for future error cases
     fn execute_coordinated_operation(
-        &self,
         operation_id: Uuid,
         available_services: &[CapabilityType],
     ) -> Result<Value, BearDogError> {
