@@ -212,6 +212,7 @@ impl ExternalFunctionRegistry {
 
     /// Checks if a library path is allowed
     /// Checks if library path allowed
+    #[allow(dead_code)]
     fn is_library_path_allowed(&self, path: &str) -> bool {
         let path_buf = std::path::PathBuf::from(path);
 

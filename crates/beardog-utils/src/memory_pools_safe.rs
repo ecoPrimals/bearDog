@@ -48,12 +48,12 @@ where
         let mut pool = self
             .pool
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Pool mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
 
         let mut stats = self
             .stats
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Stats mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Stats mutex poisoned"))?;
 
         if let Some(element) = pool.pop_front() {
             stats.pool_hits += 1;
@@ -78,12 +78,12 @@ where
         let mut pool = self
             .pool
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Pool mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
 
         let mut stats = self
             .stats
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Stats mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Stats mutex poisoned"))?;
 
         if pool.len() < self.max_size {
             pool.push_back(element);
@@ -102,7 +102,7 @@ where
         let pool = self
             .pool
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Pool mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
         Ok(pool.len())
     }
 
@@ -113,7 +113,7 @@ where
         let stats = self
             .stats
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Stats mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Stats mutex poisoned"))?;
         Ok(stats.clone())
     }
 
@@ -122,7 +122,7 @@ where
         let mut pool = self
             .pool
             .lock()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Pool mutex poisoned"))?;
+            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
         pool.clear();
         Ok(())
     }

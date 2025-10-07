@@ -18,6 +18,26 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
+/// Ecosystem Listener for Zero-Knowledge Discovery
+///
+/// This component passively listens for announcements from other primals in the ecosystem,
+/// enabling discovery without hardcoded knowledge. It implements the "infant learning" pattern
+/// where the system learns about the ecosystem by observing communication.
+///
+/// The listener supports multiple discovery protocols:
+/// - mDNS (multicast DNS) for local network discovery
+/// - HTTP polling of discovery endpoints
+/// - Environment variable configuration
+/// - Service mesh integration
+///
+/// # Examples
+///
+/// ```ignore
+/// use beardog_core::zero_knowledge_bootstrap::EcosystemListener;
+///
+/// let listener = EcosystemListener::new(config, primals, capabilities)?;
+/// listener.start_listening().await?;
+/// ```
 pub struct EcosystemListener {
     config: UnifiedBootstrapConfig,
     discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
@@ -26,32 +46,39 @@ pub struct EcosystemListener {
     metrics: EcosystemListenerMetrics,
 }
 
+/// Metrics for ecosystem listening operations
 #[derive(Debug, Default)]
 pub struct EcosystemListenerMetrics {
-    /// Number of `announcements_received`
+    /// Number of valid announcements received from other primals
     pub announcements_received: u64,
-    /// Number of `primals_discovered`
+    /// Number of unique primals discovered through listening
     pub primals_discovered: u64,
-    /// Number of `capabilities_discovered`
+    /// Number of unique capabilities discovered across all primals
     pub capabilities_discovered: u64,
+    /// Number of invalid or malformed announcements rejected
     pub invalid_announcements: u64,
-    /// Number of `listening_duration_ms`
+    /// Total time spent listening for announcements (in milliseconds)
     pub listening_duration_ms: u64,
 }
 
 /// Primal announcement received from ecosystem
+///
+/// Represents an announcement from another primal in the ecosystem, containing
+/// all information needed to identify and communicate with that primal.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalAnnouncement {
+    /// Unique identifier for the announcing primal
     pub primal_id: String,
-    /// Collection of capabilities
+    /// Capabilities offered by this primal
     pub capabilities: Vec<ServiceCapabilityType>,
-    /// Collection of endpoints
+    /// Communication endpoints for reaching this primal
     pub endpoints: Vec<UniversalEndpoint>,
-    /// The metadata value
+    /// Additional metadata about the primal
     pub metadata: PrimalMetadata,
+    /// Timestamp when this announcement was broadcast
     pub announcement_timestamp: std::time::SystemTime,
-    /// The source protocol value
-    pub source_protocol: String, // mDNS, HTTP, etc.
+    /// Protocol used to discover this announcement (mDNS, HTTP, etc.)
+    pub source_protocol: String,
 }
 
 /// Ecosystem discovery event
@@ -711,7 +738,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_capability_based_discovery() {
-        let config = UnifiedBootstrapConfig::default();
+        let _config = UnifiedBootstrapConfig::default();
         let primals = Arc::new(RwLock::new(HashMap::new()));
         let capabilities = Arc::new(RwLock::new(HashMap::new()));
 

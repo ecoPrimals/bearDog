@@ -1,20 +1,40 @@
-// Zero-Knowledge Bootstrap Module
-//
-// This module implements the "infant discovery pattern" where BearDog starts
-// with absolutely zero hardcoded knowledge about the ecosystem and learns
-// everything dynamically through capability-based discovery.
-//
-// ## Core Principle
-// "Each primal only knows itself and discovers others via the universal adapter"
-//
-// ## Bootstrap Process
-// 1. **Self-Discovery**: Learn own capabilities and identity
-// 2. **Ecosystem Announcement**: Broadcast self to ecosystem
-// 3. **Passive Listening**: Listen for other primals announcing themselves
-// 4. **Capability Registry Building**: Build dynamic capability registry
-// 5. **Network Effects**: Enable primal-to-primal communication
-//
-// This eliminates the 2^n hardcoding problem by using O(1) universal adapter patterns.
+//! Zero-Knowledge Bootstrap System
+//!
+//! This module implements the revolutionary "infant discovery pattern" where BearDog starts
+//! with absolutely zero hardcoded knowledge about the ecosystem and learns
+//! everything dynamically through capability-based discovery.
+//!
+//! # Core Principle
+//!
+//! > "Each primal only knows itself and discovers others via the universal adapter"
+//!
+//! # Bootstrap Process
+//!
+//! 1. **Self-Discovery**: Learn own capabilities and identity
+//! 2. **Ecosystem Announcement**: Broadcast self to ecosystem
+//! 3. **Passive Listening**: Listen for other primals announcing themselves
+//! 4. **Capability Registry Building**: Build dynamic capability registry
+//! 5. **Network Effects**: Enable primal-to-primal communication
+//!
+//! This eliminates the 2^n hardcoding problem by using O(1) universal adapter patterns.
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use beardog_core::zero_knowledge_bootstrap::ZeroKnowledgeBootstrap;
+//!
+//! // Bootstrap with zero prior knowledge
+//! let bootstrap = ZeroKnowledgeBootstrap::new();
+//! // System discovers all capabilities dynamically
+//! ```
+//!
+//! # Architecture Benefits
+//!
+//! - **Zero Hardcoding**: No primal names, endpoints, or capabilities are hardcoded
+//! - **Dynamic Discovery**: All services discovered at runtime
+//! - **Infant Learning**: Learn by observation, like a human infant
+//! - **Network Effects**: Each discovered service enables more discoveries
+//! - **Sovereignty Compliant**: No forced dependencies on specific services
 
 use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetadata, UniversalEndpoint};
 use beardog_errors::BearDogResult;
@@ -98,6 +118,7 @@ pub struct ZeroKnowledgeBootstrap {
     metrics: BootstrapMetrics,
     ecosystem_listener: Option<ecosystem_listener::EcosystemListener>,
     /// Self-discovery engine
+    #[allow(dead_code)]
     self_discovery: self_discovery::SelfDiscoveryEngine,
     // TODO: Add capability registry when module is implemented
     // capability_registry: capability_registry::DynamicCapabilityRegistry,

@@ -102,7 +102,9 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity<KEY_SIZE> {
 /// Zero-cost `BearDog` system
 #[derive(Debug)]
 pub struct ZeroCostBearDog<C, S> {
+    #[allow(dead_code)]
     cache: C,
+    #[allow(dead_code)]
     security: S,
 }
 

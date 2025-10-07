@@ -469,8 +469,8 @@ mod tests {
     #[test]
     fn test_performance_grading() -> Result<(), Box<dyn std::error::Error>> {
         let mut suite = BenchmarkSuite::new(BenchmarkConfig {
-            warmup_iterations: 1,
-            measurement_iterations: 10,
+            warmup_iterations: 10,
+            measurement_iterations: 100_000, // Increased to ensure sufficient ops/sec
             ..BenchmarkConfig::default()
         });
 

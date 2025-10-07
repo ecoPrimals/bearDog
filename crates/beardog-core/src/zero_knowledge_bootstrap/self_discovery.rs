@@ -14,9 +14,32 @@ use std::collections::HashMap;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
+/// Self-Discovery Engine for Zero-Knowledge Bootstrap
+///
+/// This engine enables a primal to discover its own capabilities and identity
+/// without any hardcoded knowledge about the ecosystem. It implements the core
+/// zero-knowledge bootstrap functionality by:
+///
+/// - Generating unique primal IDs without hardcoded names
+/// - Auto-detecting available capabilities from the runtime environment
+/// - Discovering communication endpoints dynamically
+/// - Building self-metadata based on discovered information
+/// - Validating self-knowledge before announcing to the ecosystem
+///
+/// # Examples
+///
+/// ```ignore
+/// use beardog_core::zero_knowledge_bootstrap::SelfDiscoveryEngine;
+///
+/// let mut engine = SelfDiscoveryEngine::new()?;
+/// let identity = engine.discover_self_identity()?;
+/// println!("Discovered primal ID: {}", identity.primal_id);
+/// ```
 pub struct SelfDiscoveryEngine {
+    #[allow(dead_code)] // TODO: Use for configuration-based discovery behavior
     config: UnifiedBootstrapConfig,
     discovered_capabilities: Vec<ServiceCapabilityType>,
+    #[allow(dead_code)] // TODO: Cache metadata for reuse in subsequent operations
     self_metadata: Option<PrimalMetadata>,
 }
 
@@ -25,7 +48,9 @@ pub struct SelfDiscoveryEngine {
 pub struct SelfCapabilityDetection {
     /// The capability type value
     pub capability_type: ServiceCapabilityType,
-    pub confidence_score: f64, // 0.0 to 1.0
+    /// Confidence score for this capability detection (0.0 to 1.0)
+    pub confidence_score: f64,
+    /// Evidence supporting this capability detection
     pub evidence: Vec<String>,
     /// Whether `auto_detected` is enabled
     pub auto_detected: bool,
@@ -34,6 +59,7 @@ pub struct SelfCapabilityDetection {
 /// Self-identity discovery result
 #[derive(Debug, Clone)]
 pub struct SelfIdentityDiscovery {
+    /// The unique primal identifier for this service
     pub primal_id: String,
     /// Collection of detected capabilities
     pub detected_capabilities: Vec<SelfCapabilityDetection>,

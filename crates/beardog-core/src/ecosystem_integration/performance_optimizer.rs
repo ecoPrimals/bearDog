@@ -29,10 +29,13 @@ pub struct CapabilityConnectionPool {
     /// Active connections to service mesh capabilities
     service_mesh_connections: RwLock<HashMap<String, PooledConnection>>,
     /// Active connections to compute capabilities
+    #[allow(dead_code)]
     compute_connections: RwLock<HashMap<String, PooledConnection>>,
     /// Connection health monitor
+    #[allow(dead_code)]
     health_monitor: RwLock<HashMap<String, ConnectionHealth>>,
     /// Pool configuration
+    #[allow(dead_code)]
     config: PoolConfig,
 }
 
@@ -106,8 +109,10 @@ pub enum ConnectionState {
 #[derive(Debug)]
 pub struct ComputeCache {
     /// Cached compute results
+    #[allow(dead_code)]
     cache: HashMap<String, CachedResult>,
     /// Cache statistics
+    #[allow(dead_code)]
     stats: CacheStats,
 }
 
@@ -259,6 +264,7 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Gets `cached_result`
+    #[allow(dead_code)]
     async fn get_cached_result(
         &self,
         request_id: &str,
@@ -274,6 +280,7 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Executes `compute_request`
+    #[allow(dead_code)]
     fn execute_compute_request(
         &self,
         _connection: &PooledConnection,

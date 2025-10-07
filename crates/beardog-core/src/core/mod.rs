@@ -127,7 +127,10 @@ pub trait AlertHandler: std::fmt::Debug {
     /// # Returns
     /// - `Ok(())` if the alert was handled successfully
     /// - `Err(BearDogError)` if alert handling failed
-    /// Handles alert
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if alert handling fails
     fn handle_alert(&self, alert: SystemAlert) -> Result<(), BearDogError>;
 }
 
@@ -199,7 +202,10 @@ impl SystemMonitor {
     /// # Returns
     /// - `Ok(SystemMonitor)` if initialization succeeds
     /// - `Err(BearDogError)` if initialization fails
-    /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if initialization fails
     pub fn new() -> Result<Self, BearDogError> {
         Self::with_config(SystemMonitorConfig::default())
     }
@@ -214,7 +220,10 @@ impl SystemMonitor {
     /// # Returns
     /// - `Ok(SystemMonitor)` if initialization succeeds
     /// - `Err(BearDogError)` if initialization fails
-    /// Creates instance with config
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if configuration is invalid or initialization fails
     pub fn with_config(config: SystemMonitorConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             config,
@@ -776,6 +785,15 @@ impl BearDogCore {
             genetic_optimizer: GeneticOptimizer::new(),
             universal_adapter: UniversalAdapter::new(),
         }
+    }
+
+    /// Create BearDog Core with default configuration
+    ///
+    /// # Errors
+    /// Returns an error if default configuration cannot be created.
+    pub fn with_default_config() -> Result<Self, BearDogError> {
+        let config = BearDogConfig::default();
+        Ok(Self::new(config))
     }
 
     /// Initialize operation.

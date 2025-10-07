@@ -33,6 +33,7 @@ impl BearDogCore {
     /// Returns an error if the operation fails.
     /// Starts serviceup
     /// Starts serviceup
+    #[allow(clippy::cognitive_complexity)]
     pub async fn startup(&self) -> Result<(), BearDogError> {
         info!("🚀 BearDog Core startup initiated");
 
@@ -58,6 +59,7 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
+    #[allow(clippy::cognitive_complexity)]
     pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("🛑 BearDog Core shutdown initiated");
 

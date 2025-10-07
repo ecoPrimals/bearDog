@@ -205,6 +205,7 @@ pub struct ResourceUsageStats {
 #[derive(Debug)]
 pub struct UniversalComputeClient {
     /// Configuration
+    #[allow(dead_code)]
     config: UniversalComputeConfig,
     /// Discovered compute capabilities
     discovered_capabilities: Arc<tokio::sync::RwLock<Vec<UniversalCapability>>>,
@@ -389,6 +390,7 @@ impl UniversalComputeClient {
     }
 
     /// Updates metrics
+    #[allow(dead_code)]
     async fn update_metrics(&self, response: &UniversalComputeResponse) {
         let mut metrics = self.metrics.write().await;
         metrics.total_requests += 1;
