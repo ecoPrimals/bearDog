@@ -29,9 +29,9 @@ pub use crate::categories::{
 /// use beardog_errors::BearDogError;
 ///
 /// // Create domain-specific errors
-/// let security_error = BearDogError::security("Authentication failed");
-/// let system_error = BearDogError::system("Database connection lost");
-/// let business_error = BearDogError::business("Invalid user input");
+/// let _security_error = BearDogError::security("Authentication failed".to_string());
+/// let _system_error = BearDogError::system("Database connection lost".to_string());
+/// let _business_error = BearDogError::business("Invalid user input".to_string());
 /// ```
 #[derive(Error, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum BearDogError {

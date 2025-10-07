@@ -187,7 +187,7 @@ async fn test_concurrent_metrics_access() -> BearDogResult<()> {
 fn test_performance_tracking_calculations() {
     // Test performance calculation logic
 
-    let response_times = vec![100, 150, 120, 200, 180];
+    let response_times = [100, 150, 120, 200, 180];
 
     // Calculate average
     let sum: u64 = response_times.iter().sum();
@@ -231,6 +231,7 @@ fn test_time_series_data_concept() {
     use std::collections::VecDeque;
     use std::time::Instant;
 
+    #[allow(dead_code)]
     #[derive(Debug)]
     struct DataPoint {
         timestamp: Instant,

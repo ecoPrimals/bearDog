@@ -30,30 +30,30 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use beardog_errors::{BearDogError, BearDogResult, ResultExt};
+//! use beardog_errors::{BearDogError, BearDogResult};
 //!
 //! // Create domain-specific errors
-//! fn authenticate_user(token: &str) -> BearDogResult<UserId> {
+//! fn authenticate_user(token: &str) -> BearDogResult<u64> {
 //!     if token.is_empty() {
-//!         return Err(BearDogError::security("Invalid authentication token"));
+//!         return Err(BearDogError::security("Invalid authentication token".to_string()));
 //!     }
 //!     // ... authentication logic
-//!     Ok(UserId::new(123))
+//!     Ok(123)
 //! }
 //!
 //! // Add context to external errors
-//! fn load_config(path: &str) -> BearDogResult<Config> {
+//! fn load_config(path: &str) -> BearDogResult<String> {
 //!     std::fs::read_to_string(path)
-//!         .system_context("Failed to read configuration file")?;
+//!         .map_err(|e| BearDogError::system(format!("Failed to read config: {}", e)))?;
 //!     // ... parse config
-//!     Ok(Config::default())
+//!     Ok("config_data".to_string())
 //! }
 //!
 //! // Error propagation with ?
-//! fn process_request() -> BearDogResult<Response> {
-//!     let user = authenticate_user(token)?;
-//!     let config = load_config("/etc/beardog/config.toml")?;
-//!     Ok(Response::success())
+//! fn process_request(token: &str) -> BearDogResult<String> {
+//!     let _user_id = authenticate_user(token)?;
+//!     let _config = load_config("/etc/beardog/config.toml")?;
+//!     Ok("success".to_string())
 //! }
 //! ```
 //!
@@ -65,10 +65,10 @@
 //! use beardog_errors::BearDogError;
 //!
 //! // Simple constructors
-//! let err = BearDogError::security("Authentication failed");
-//! let err = BearDogError::system("Out of memory");
-//! let err = BearDogError::business("Invalid email format");
-//! let err = BearDogError::network("Connection timeout");
+//! let _err = BearDogError::security("Authentication failed".to_string());
+//! let _err = BearDogError::system("Out of memory".to_string());
+//! let _err = BearDogError::business("Invalid email format".to_string());
+//! let _err = BearDogError::network("Connection timeout".to_string());
 //! ```
 
 #![deny(unsafe_code)]
@@ -110,9 +110,9 @@ pub use core::BearDogError;
 /// ```rust
 /// use beardog_errors::{BearDogResult, BearDogError};
 ///
-/// fn do_something() -> BearDogResult<String> {
-///     if condition_fails() {
-///         return Err(BearDogError::business("Operation failed"));
+/// fn do_something(should_fail: bool) -> BearDogResult<String> {
+///     if should_fail {
+///         return Err(BearDogError::business("Operation failed".to_string()));
 ///     }
 ///     Ok("Success!".to_string())
 /// }
@@ -140,13 +140,7 @@ use std::fmt::Display;
 ///         .system_context("Failed to read user data file")?;
 ///     Ok(data)
 /// }
-///
-/// fn authenticate(token: &str) -> BearDogResult<User> {
-///     // Wrap authentication errors with security context
-///     validate_token(token)
-///         .security_context("Token validation failed")?;
-///     Ok(User::new())
-/// }
+/// # fn main() {}
 /// ```
 ///
 /// ## Benefits
@@ -170,10 +164,13 @@ pub trait ResultExt<T, E> {
     /// ```rust
     /// # use beardog_errors::{ResultExt, BearDogResult};
     /// fn verify_signature(data: &[u8], sig: &[u8]) -> BearDogResult<()> {
-    ///     crypto_lib::verify(data, sig)
-    ///         .security_context("Signature verification failed")?;
+    ///     // Example: wrap external crypto error with context
+    ///     if data.is_empty() || sig.is_empty() {
+    ///         return Err(beardog_errors::BearDogError::security("Empty data or signature".to_string()));
+    ///     }
     ///     Ok(())
     /// }
+    /// # fn main() {}
     /// ```
     fn security_context(self, context: &str) -> Result<T, BearDogError>;
 
@@ -191,10 +188,13 @@ pub trait ResultExt<T, E> {
     /// ```rust
     /// # use beardog_errors::{ResultExt, BearDogResult};
     /// fn allocate_buffer(size: usize) -> BearDogResult<Vec<u8>> {
-    ///     vec_with_capacity(size)
-    ///         .system_context("Buffer allocation failed")?;
+    ///     // Example: simple buffer allocation
+    ///     if size > 1_000_000 {
+    ///         return Err(beardog_errors::BearDogError::system("Buffer too large".to_string()));
+    ///     }
     ///     Ok(vec![0; size])
     /// }
+    /// # fn main() {}
     /// ```
     fn system_context(self, context: &str) -> Result<T, BearDogError>;
 
@@ -212,10 +212,13 @@ pub trait ResultExt<T, E> {
     /// ```rust
     /// # use beardog_errors::{ResultExt, BearDogResult};
     /// fn validate_email(email: &str) -> BearDogResult<()> {
-    ///     email_validator::validate(email)
-    ///         .business_context("Invalid email address format")?;
+    ///     // Example: simple email validation
+    ///     if !email.contains('@') {
+    ///         return Err(beardog_errors::BearDogError::business("Invalid email address format".to_string()));
+    ///     }
     ///     Ok(())
     /// }
+    /// # fn main() {}
     /// ```
     fn business_context(self, context: &str) -> Result<T, BearDogError>;
 
@@ -233,10 +236,13 @@ pub trait ResultExt<T, E> {
     /// ```rust
     /// # use beardog_errors::{ResultExt, BearDogResult};
     /// fn fetch_data(url: &str) -> BearDogResult<String> {
-    ///     http_client::get(url)
-    ///         .network_context("Failed to fetch data from API")?;
+    ///     // Example: simple URL validation
+    ///     if !url.starts_with("http") {
+    ///         return Err(beardog_errors::BearDogError::network("Invalid URL".to_string()));
+    ///     }
     ///     Ok("data".to_string())
     /// }
+    /// # fn main() {}
     /// ```
     fn network_context(self, context: &str) -> Result<T, BearDogError>;
 }

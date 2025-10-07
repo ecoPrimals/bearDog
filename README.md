@@ -39,6 +39,9 @@ BearDog is a **world-class Rust security library** with exceptional memory safet
 
 **Bottom Line**: World-class library code that needs comprehensive testing infrastructure.
 
+**📚 Documentation**: See [ROOT_DOCS_INDEX.md](ROOT_DOCS_INDEX.md) for complete documentation index.  
+**📊 Latest Audit**: See [docs/audit-reports-2025-10-07/](docs/audit-reports-2025-10-07/) for comprehensive October 7, 2025 audit.
+
 ---
 
 ## 🚀 Quick Start

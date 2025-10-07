@@ -5,11 +5,12 @@
 //! unified configurations, and modular architecture benefits.
 
 use beardog_types::{
-    canonical::{CanonicalProviderConfig, CanonicalSecurityConfig},
-    configuration::{AppConfig, BearDogConfig},
-    zero_cost::{
-        benchmarks::PerformanceBenchmark, workflow::ZeroCostWorkflowEngine, SafeZeroCopyMemoryPool,
+    canonical::{
+        CanonicalProviderConfig, 
+        CanonicalSecurityConfig,
+        config::{CanonicalAppConfig, unified::UnifiedBearDogConfig},
     },
+    // zero_cost module structure has changed - using available types
 };
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Duration;
