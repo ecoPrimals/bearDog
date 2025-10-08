@@ -464,7 +464,7 @@ mod tests {
         assert!(response.success);
         assert_eq!(response.data, "test_data");
         assert_eq!(response.request_id, request_id);
-        assert_eq!(response.confidence_score, 0.85);
+        assert!((response.confidence_score - 0.85).abs() < f64::EPSILON);
         assert!(response.processing_time_ms < 10000); // Reasonable upper bound
     }
 
@@ -481,7 +481,7 @@ mod tests {
     fn test_cache_info() {
         let no_cache = CacheInfo::no_cache();
         assert!(!no_cache.cache_hit);
-        assert_eq!(no_cache.freshness, 1.0);
+        assert!((no_cache.freshness - 1.0).abs() < f64::EPSILON);
         let cache_hit = CacheInfo::cache_hit("test_key", 300, 0.8);
         assert!(cache_hit.cache_hit);
         assert_eq!(cache_hit.cache_key, Some("test_key".to_string()));

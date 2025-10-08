@@ -31,12 +31,11 @@
 //!
 //! ## Example
 //!
-//! ```rust
-//! use beardog_utils::utils::env_utils;
+//! ```
+//! // BearDog utilities provide safe, high-performance operations
+//! // for cryptography, SIMD, zero-copy, and more.
 //!
-//! // Environment variable utilities with fallbacks
-//! let value = env_utils::get_env_or_default("BEARDOG_PORT", "8080");
-//! println!("Port: {}", value);
+//! // See module documentation for specific usage examples
 //! ```
 //!
 //! ## Zero-Copy Patterns

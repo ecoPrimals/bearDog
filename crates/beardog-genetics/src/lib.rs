@@ -1,7 +1,42 @@
-// BearDog Genetics - Advanced Genetic Algorithms and Entropy Management
-//
-// This crate provides comprehensive genetic algorithms, entropy hierarchy management,
-// and ecosystem evolution capabilities for the BearDog security system.
+//! # BearDog Genetics - Advanced Genetic Algorithms and Entropy Management
+//!
+//! Comprehensive genetic algorithms, entropy hierarchy management, and ecosystem evolution
+//! capabilities for the BearDog security system with human-centric entropy generation.
+//!
+//! ## Features
+//!
+//! - **Genetic Algorithms**: Advanced evolution and optimization algorithms
+//! - **Entropy Hierarchy**: Human and machine entropy source management
+//! - **Genetic Spawning**: Dynamic primal generation and evolution
+//! - **Ecosystem Evolution**: Binary pattern elimination and relationship evolution
+//! - **Biometric Entropy**: Human-owned entropy without corporate control
+//!
+//! ## Example
+//!
+//! ```rust,no_run
+//! use beardog_genetics::{GeneticsManager, GeneticsConfig};
+//!
+//! # fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Initialize genetics manager
+//! let genetics = GeneticsManager::new();
+//!
+//! // Use genetic algorithms for key evolution
+//! // (implementation details)
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Architecture
+//!
+//! The genetics system implements several key patterns:
+//! - **Human Entropy Sovereignty**: Humans own their biometric entropy
+//! - **Genetic Evolution**: Keys and algorithms evolve over time
+//! - **Ecosystem Relationships**: Non-binary relationship modeling
+//! - **Zero Corporate Control**: No extraction or surveillance
+//!
+//! ## Safety
+//!
+//! All genetic operations maintain memory safety with zero unsafe code.
 
 use serde::{Deserialize, Serialize};
 

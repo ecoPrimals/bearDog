@@ -1,5 +1,49 @@
-// BearDog API module
-// Provides RESTful API endpoints for the BearDog security platform
+//! # BearDog API - RESTful API Server
+//!
+//! RESTful API endpoints for the BearDog security platform, providing HTTP/HTTPS access
+//! to security operations, health monitoring, and system management.
+//!
+//! ## Features
+//!
+//! - **RESTful Endpoints**: Standard HTTP API for BearDog operations
+//! - **Health Monitoring**: System health and readiness endpoints
+//! - **Security Operations**: Cryptographic operations via API
+//! - **Metrics & Monitoring**: Real-time system metrics endpoints
+//! - **CORS Support**: Cross-origin resource sharing
+//! - **JSON API**: Structured JSON request/response
+//!
+//! ## Example
+//!
+//! ```rust,no_run
+//! use beardog_api::{ApiServer, ApiConfig};
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Initialize API server
+//! let config = ApiConfig::default();
+//! let server = ApiServer::new(config)?;
+//!
+//! // Start serving requests
+//! server.serve().await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## API Endpoints
+//!
+//! - `GET /health` - Health check endpoint
+//! - `GET /metrics` - System metrics
+//! - `GET /api/v1/...` - API operations
+//!
+//! ## Architecture
+//!
+//! The API server is built on:
+//! - **Axum Framework**: High-performance async HTTP
+//! - **Tower Middleware**: CORS, logging, rate limiting
+//! - **JSON Serialization**: Serde-based request/response
+//!
+//! ## Safety
+//!
+//! All API operations maintain memory safety with zero unsafe code.
 
 use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
 use beardog_core::core::BearDogCore;

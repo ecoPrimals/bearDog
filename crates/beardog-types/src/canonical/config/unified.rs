@@ -569,8 +569,57 @@ impl Default for PasswordSource {
 // (LoadBalancingConfig, CircuitBreakerConfig, etc.)
 
 impl UnifiedBearDogConfig {
-    /// Loads data
-    /// Loads data
+    /// Loads configuration from environment variables and default sources
+    ///
+    /// This is the primary method for loading BearDog configuration in production.
+    /// It automatically detects the environment, loads appropriate settings, and
+    /// validates the complete configuration.
+    ///
+    /// ## Loading Strategy
+    ///
+    /// 1. Detects current environment (production, staging, development)
+    /// 2. Loads environment-specific defaults
+    /// 3. Overlays environment variable overrides
+    /// 4. Validates complete configuration
+    /// 5. Returns validated, ready-to-use configuration
+    ///
+    /// ## Environment Variables
+    ///
+    /// Key environment variables:
+    /// - `BEARDOG_ENV` - Environment name (production/staging/development)
+    /// - `BEARDOG_APP_NAME` - Application name override
+    /// - `BEARDOG_HTTP_PORT` - HTTP server port override
+    /// - `DATABASE_URL` - Database connection string
+    /// - `REDIS_URL` - Redis connection string
+    ///
+    /// ## Returns
+    ///
+    /// - `Ok(UnifiedBearDogConfig)` - Validated, ready-to-use configuration
+    /// - `Err(BearDogError)` - If loading or validation fails
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if:
+    /// - Required environment variables are missing
+    /// - Configuration values are invalid (out of range, malformed, etc.)
+    /// - Environment detection fails
+    /// - Validation fails for any domain configuration
+    ///
+    /// ## Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    /// # use beardog_errors::BearDogError;
+    ///
+    /// # fn main() -> Result<(), BearDogError> {
+    /// // Load configuration with automatic environment detection
+    /// let config = UnifiedBearDogConfig::load()?;
+    ///
+    /// println!("Running in {} environment", config.metadata.environment);
+    /// println!("Application: {} v{}", config.app.app_name, config.metadata.version);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn load() -> Result<UnifiedBearDogConfig, BearDogError> {
         let mut config = UnifiedBearDogConfig::default();
 
@@ -589,9 +638,54 @@ impl UnifiedBearDogConfig {
         Ok(config)
     }
 
-    /// **CONFIGURATION VALIDATION** - Comprehensive validation across all domains
-    /// Validates input
-    /// Validates input
+    /// Validates the complete configuration across all domains
+    ///
+    /// Performs comprehensive validation of all configuration sections including
+    /// network settings, security policies, database connections, HSM configuration,
+    /// and all other domains. This ensures the configuration is internally consistent
+    /// and all values are within valid ranges.
+    ///
+    /// ## Validation Checks
+    ///
+    /// - **Network**: Port ranges, timeout values, connection limits
+    /// - **Security**: Encryption settings, authentication config, policy consistency
+    /// - **Database**: Connection strings, pool sizes, timeout values
+    /// - **HSM**: Module availability, key access permissions
+    /// - **Application**: Port uniqueness, resource limits
+    /// - **Performance**: Buffer sizes, thread counts, memory limits
+    ///
+    /// ## Returns
+    ///
+    /// - `Ok(())` - All validation checks passed
+    /// - `Err(BearDogError)` - Validation failed with detailed error context
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if:
+    /// - Port numbers are out of range (1-65535)
+    /// - Timeout values are invalid or negative
+    /// - Required fields are missing or empty
+    /// - Values are inconsistent across domains
+    /// - Database connection settings are malformed
+    /// - Security policies have conflicting requirements
+    ///
+    /// ## Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    /// # use beardog_errors::BearDogError;
+    ///
+    /// # fn main() -> Result<(), BearDogError> {
+    /// let mut config = UnifiedBearDogConfig::default();
+    /// config.app.http_port = 8080;
+    /// config.app.grpc_port = 9090;
+    ///
+    /// // Validate before use
+    /// config.validate()?;
+    /// println!("Configuration is valid!");
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate metadata
         if self.metadata.version.beardog_version.is_empty() {
@@ -608,7 +702,55 @@ impl UnifiedBearDogConfig {
         Ok(())
     }
 
-    /// **CONFIGURATION MIGRATION** - Migrate from legacy configurations
+    /// Migrates from legacy configuration formats to unified configuration
+    ///
+    /// This method provides a migration path from older BearDog configuration
+    /// formats (pre-unification) to the new unified configuration system. It
+    /// handles configuration consolidation, field mapping, and validation.
+    ///
+    /// ## Migration Process
+    ///
+    /// 1. Detects legacy configuration format and version
+    /// 2. Maps legacy fields to unified configuration structure
+    /// 3. Applies sensible defaults for new fields
+    /// 4. Validates migrated configuration
+    /// 5. Returns ready-to-use unified configuration
+    ///
+    /// ## Supported Legacy Formats
+    ///
+    /// - BearDog v2.x fragmented configurations
+    /// - Environment variable-based configs
+    /// - TOML-based legacy configs
+    ///
+    /// ## Returns
+    ///
+    /// - `Ok(UnifiedBearDogConfig)` - Successfully migrated and validated configuration
+    /// - `Err(BearDogError)` - If migration fails
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if:
+    /// - Legacy configuration cannot be located
+    /// - Legacy format is unsupported or corrupted
+    /// - Required fields are missing in legacy config
+    /// - Migration validation fails
+    /// - File system access errors occur
+    ///
+    /// ## Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    /// # use beardog_errors::BearDogError;
+    ///
+    /// # fn main() -> Result<(), BearDogError> {
+    /// // Migrate from legacy v2.x configuration
+    /// let config = UnifiedBearDogConfig::migrate_from_legacy()?;
+    ///
+    /// println!("Successfully migrated to unified configuration");
+    /// println!("Version: {}", config.metadata.version);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn migrate_from_legacy() -> Result<UnifiedBearDogConfig, BearDogError> {
         let mut config = UnifiedBearDogConfig::default();
 

@@ -1,8 +1,50 @@
-// Removed unused Workflow trait import
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! # BearDog Workflows - Process Orchestration
+//!
+//! Comprehensive workflow orchestration and process management for BearDog applications,
+//! providing stateful workflow execution with audit logging and error recovery.
+//!
+//! ## Features
+//!
+//! - **Stateful Workflows**: Multi-step process orchestration
+//! - **Audit Logging**: Complete workflow execution history
+//! - **Error Recovery**: Automatic retry and failure handling
+//! - **Concurrent Execution**: Parallel workflow processing
+//! - **Pluggable Storage**: Flexible workflow state persistence
+//!
+//! ## Example
+//!
+//! ```rust,no_run
+//! use beardog_workflows::{WorkflowService, WorkflowConfig};
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Configure workflow system
+//! let config = WorkflowConfig {
+//!     max_concurrent_workflows: 10,
+//!     default_timeout_seconds: 300,
+//!     retry_attempts: 3,
+//!     enable_audit_logging: true,
+//!     workflow_storage_path: "/var/lib/beardog/workflows".to_string(),
+//! };
+//!
+//! // Initialize workflow service
+//! // (implementation details)
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Architecture
+//!
+//! The workflow system is built on several components:
+//! - **Workflow Service**: Orchestrates workflow execution
+//! - **Repository**: Persists workflow state
+//! - **Processor**: Executes workflow steps
+//! - **Observer**: Monitors workflow progress
+//!
+//! ## Safety
+//!
+//! All workflow operations are memory-safe with zero unsafe code.
 
+/// Core workflow functionality and types
 pub mod workflows;
 
 // Canonical workflow configuration - modernized
