@@ -106,6 +106,8 @@ impl BearDogCore {
     }
 
     #[allow(dead_code)]
+    #[allow(clippy::unused_self)] // Method signature required for future health check implementation
+    #[allow(clippy::unnecessary_wraps)] // Result for future error cases
     fn probe_service_endpoint(
         &self,
         capability: &CapabilityType,
@@ -128,8 +130,13 @@ impl BearDogCore {
     }
 
     /// Get ecosystem integration health status
-    /// Gets `ecosystem_integration_health`
-    /// Gets `ecosystem_integration_health`
+    ///
+    /// Checks the availability of core ecosystem capabilities and returns
+    /// the overall health status based on service availability.
+    ///
+    /// # Errors
+    /// Returns error if service availability check fails or if communication
+    /// with the universal adapter encounters issues.
     pub async fn get_ecosystem_integration_health(&self) -> Result<HealthStatus, BearDogError> {
         info!("🏥 Checking ecosystem integration health");
 
