@@ -1,7 +1,7 @@
 /// Core component implementations and lifecycle management
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+///
+/// Provides component registration, health checking, and lifecycle management
+/// for BearDog system components.
 pub mod components;
 /// Genetic algorithm optimization components
 pub mod genetic_optimizer;
@@ -787,26 +787,73 @@ impl Default for CoreState {
 
 /// Main `BearDog` core system
 #[derive(Debug)]
+/// Core BearDog system instance
+///
+/// The main entry point for the BearDog security and cryptography platform.
+/// Provides AI-powered hybrid intelligence, sovereign key management, universal
+/// service discovery, and ecosystem integration capabilities.
+///
+/// # Features
+///
+/// - **Zero Unsafe Code**: Complete memory safety without unsafe blocks
+/// - **AI-Hybrid Intelligence**: Human-controlled AI assistance
+/// - **Sovereign Cryptography**: User-owned entropy and key management
+/// - **Universal Service Discovery**: Zero-knowledge capability discovery
+/// - **Ecosystem Integration**: Primal coordination and orchestration
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use beardog_core::BearDogCore;
+/// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+///
+/// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+/// let config = UnifiedBearDogConfig::default();
+/// let core = BearDogCore::new(config);
+///
+/// // Core is ready for operation
+/// # Ok(())
+/// # }
+/// ```
 pub struct BearDogCore {
     /// System configuration settings
     pub config: BearDogConfig,
     /// Shared system state with thread-safe access
-    /// The state value
     pub state: Arc<RwLock<CoreState>>,
-    /// The security value
+    /// Core security provider for cryptographic operations
     pub security: CoreSecurityProvider,
     /// System monitoring and health tracking
-    /// The monitor value
     pub monitor: SystemMonitor,
-    /// The genetic optimizer value
+    /// Genetic algorithm optimizer for performance tuning
     pub genetic_optimizer: GeneticOptimizer,
-    /// The universal adapter value
+    /// Universal adapter for ecosystem service discovery
     pub universal_adapter: UniversalAdapter,
 }
 
 impl BearDogCore {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new BearDog Core instance
+    ///
+    /// Initializes the core system with the provided configuration, creating
+    /// all necessary internal components including security providers, monitoring
+    /// systems, and ecosystem adapters.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Unified configuration for the BearDog system
+    ///
+    /// # Returns
+    ///
+    /// Returns a new `BearDogCore` instance ready for operation.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    ///
+    /// let config = UnifiedBearDogConfig::development();
+    /// let core = BearDogCore::new(config);
+    /// ```
     pub fn new(config: BearDogConfig) -> Self {
         Self {
             security: CoreSecurityProvider::new(config.clone()),
@@ -818,10 +865,35 @@ impl BearDogCore {
         }
     }
 
-    /// Create `BearDog` Core with default configuration
+    /// Creates a BearDog Core instance with default configuration
+    ///
+    /// Convenience method that creates a `BearDogCore` instance using default
+    /// development-friendly settings. For production use, prefer creating a
+    /// custom configuration with [`UnifiedBearDogConfig::production()`].
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(BearDogCore)` - Successfully created instance with default config
+    /// - `Err(BearDogError)` - If default configuration cannot be created
     ///
     /// # Errors
-    /// Returns an error if default configuration cannot be created.
+    ///
+    /// Returns an error if:
+    /// - Default configuration validation fails
+    /// - Required system resources are unavailable
+    /// - Internal component initialization fails
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::BearDogCore;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// let core = BearDogCore::with_default_config()?;
+    /// // Core is ready with development defaults
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn with_default_config() -> Result<Self, BearDogError> {
         let config = BearDogConfig::default();
         Ok(Self::new(config))

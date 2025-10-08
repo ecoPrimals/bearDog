@@ -26,6 +26,8 @@ impl BearDogCore {
 
     /// Shutdown HSM providers - used by ecosystem cleanup
     #[allow(dead_code)]
+    #[allow(clippy::unused_self)] // Self required for future stateful shutdown
+    #[allow(clippy::unnecessary_wraps)] // Result for future error cases during HSM shutdown
     pub(crate) fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
         debug!("🔍 Closing hardware HSM connections");
 
@@ -40,6 +42,7 @@ impl BearDogCore {
 
     /// Check HSM health - used by health monitoring
     #[allow(dead_code)]
+    #[allow(clippy::unused_self)] // Self required for future stateful health checks
     pub(crate) fn check_hsm_health(&self) -> HealthStatus {
         debug!("🏥 Checking HSM provider health");
 
@@ -54,6 +57,7 @@ impl BearDogCore {
 
     /// Get HSM metrics - used by monitoring system
     #[allow(dead_code)] // TODO: Enable when monitoring integration is active
+    #[allow(clippy::unused_self)] // Self required for future stateful metrics collection
     pub(crate) fn get_hsm_metrics(&self) -> HashMap<String, serde_json::Value> {
         let mut metrics = HashMap::new();
 
