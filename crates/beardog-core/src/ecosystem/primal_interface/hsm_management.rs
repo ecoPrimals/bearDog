@@ -8,6 +8,8 @@ use tracing::{debug, info};
 impl BearDogCore {
     /// Initialize HSM providers - used by ecosystem integration
     #[allow(dead_code)]
+    #[allow(clippy::unused_self)] // Self required for future stateful initialization
+    #[allow(clippy::unnecessary_wraps)] // Result for future error cases during HSM init
     pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
         info!("🔧 Initializing universal HSM providers");
         info!("🛠️ Initializing Software HSM provider");
