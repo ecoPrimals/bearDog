@@ -1,5 +1,31 @@
-// BearDog Universal Adapters
-// Provides capability-based adapters for ecosystem integration
+//! # BearDog Universal Adapters
+//!
+//! Provides capability-based adapters for ecosystem integration, enabling
+//! BearDog to work with multiple security providers, cloud vendors, and HSM hardware
+//! without vendor lock-in.
+//!
+//! ## Features
+//!
+//! - **Universal Adapter Pattern**: Works with any security provider
+//! - **Capability-Based Discovery**: Services discovered by capability, not name
+//! - **Zero Vendor Lock-in**: Pluggable providers (AWS, Azure, GCP, Vault)
+//! - **Automatic Failover**: Graceful degradation when providers unavailable
+//! - **Response Caching**: Efficient request deduplication
+//!
+//! ## Example
+//!
+//! ```rust
+//! use beardog_adapters::{UniversalAdapter, AdapterConfig};
+//!
+//! let config = AdapterConfig::default();
+//! let adapter = UniversalAdapter::new(config);
+//! // Adapter automatically discovers and connects to available providers
+//! ```
+//!
+//! ## Sovereignty
+//!
+//! This crate implements sovereign computing principles - no hardcoded
+//! provider dependencies, all services discovered dynamically.
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
