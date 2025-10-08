@@ -4,6 +4,10 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Legacy `BearDog` configuration structure
+///
+/// **Note:** This is a legacy configuration type. New code should use
+/// `UnifiedBearDogConfig` from `beardog-types::canonical::config::unified`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogConfig {
     /// Environment in which the system is running (development, production, etc.)
@@ -11,6 +15,7 @@ pub struct BearDogConfig {
     pub environment: String,
     /// The version value
     pub version: String,
+    /// Unique identifier for this node instance
     pub node_id: String,
 }
 

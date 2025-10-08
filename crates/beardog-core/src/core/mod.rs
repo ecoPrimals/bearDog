@@ -1,7 +1,7 @@
 /// Core component implementations and lifecycle management
 ///
 /// Provides component registration, health checking, and lifecycle management
-/// for BearDog system components.
+/// for `BearDog` system components.
 pub mod components;
 /// Genetic algorithm optimization components
 pub mod genetic_optimizer;
@@ -185,6 +185,7 @@ pub enum AlertType {
 /// helping prioritize response actions.
 #[derive(Debug, Clone, Copy)]
 pub enum AlertSeverity {
+    /// Informational message, no immediate action required
     Info,
     /// Warning condition that should be monitored
     Warning,
@@ -696,8 +697,14 @@ impl SecurityProvider for CoreSecurityProvider {
     }
 }
 
+/// Universal adapter for ecosystem service discovery
+///
+/// Provides zero-knowledge capability discovery and service coordination
+/// across the BearDog ecosystem. Maintains a registry of available
+/// capabilities and their endpoints.
 #[derive(Debug, Clone)]
 pub struct UniversalAdapter {
+    /// Mapping of capability types to their service endpoints
     capabilities: Arc<RwLock<HashMap<CapabilityType, String>>>,
 }
 
@@ -764,6 +771,10 @@ impl Default for UniversalAdapter {
     }
 }
 
+/// Core system state tracking
+///
+/// Maintains the current state of all `BearDog` system components including
+/// health status, component registry, and system uptime information.
 #[derive(Debug, Clone)]
 pub struct CoreState {
     /// Status of individual system components
@@ -772,6 +783,7 @@ pub struct CoreState {
     /// Overall system health status
     /// The overall health value
     pub overall_health: HealthStatus,
+    /// System start time for uptime calculation
     pub start_time: std::time::Instant,
 }
 
@@ -831,7 +843,7 @@ pub struct BearDogCore {
 }
 
 impl BearDogCore {
-    /// Creates a new BearDog Core instance
+    /// Creates a new `BearDog` Core instance
     ///
     /// Initializes the core system with the provided configuration, creating
     /// all necessary internal components including security providers, monitoring
@@ -839,7 +851,7 @@ impl BearDogCore {
     ///
     /// # Arguments
     ///
-    /// * `config` - Unified configuration for the BearDog system
+    /// * `config` - Unified configuration for the `BearDog` system
     ///
     /// # Returns
     ///
@@ -865,7 +877,7 @@ impl BearDogCore {
         }
     }
 
-    /// Creates a BearDog Core instance with default configuration
+    /// Creates a `BearDog` Core instance with default configuration
     ///
     /// Convenience method that creates a `BearDogCore` instance using default
     /// development-friendly settings. For production use, prefer creating a

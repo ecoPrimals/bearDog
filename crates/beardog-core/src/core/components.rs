@@ -8,8 +8,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Manages registration and lifecycle of `BearDog` system components
+///
+/// Provides centralized component tracking, status monitoring, and health
+/// checks for all registered system components.
 #[derive(Debug, Clone)]
 pub struct ComponentManager {
+    /// Thread-safe registry of component statuses
     components: Arc<RwLock<HashMap<String, ComponentStatus>>>,
 }
 

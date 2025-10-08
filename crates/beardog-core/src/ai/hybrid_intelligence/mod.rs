@@ -2,18 +2,21 @@
 //
 // This module provides advanced AI capabilities with human-in-the-loop intelligence,
 // combining machine learning with human expertise for optimal decision making.
-/// Configuration management
-/// Configuration management
+/// Configuration management for hybrid intelligence
 pub mod config;
-/// Core functionality
-/// Core functionality
+/// Core hybrid intelligence functionality
 pub mod core;
+/// Core type definitions for hybrid intelligence
 pub mod core_types;
+/// AI-powered decision engine with human oversight
 pub mod decision_engine;
+/// Machine learning and model training components
 pub mod learning;
+/// Neural network implementations and architectures
 pub mod neural_networks;
+/// Shared type definitions
 pub mod types;
-
+/// Sovereign random number generation with cryptographic guarantees
 pub mod sovereign_rng;
 
 // Selective re-exports to avoid ambiguity
