@@ -3,6 +3,10 @@
 use super::{IntelligenceCapability, MachineLearningConfig};
 use serde::{Deserialize, Serialize};
 
+/// Strategy for reaching consensus in multi-agent decision making
+///
+/// Defines how multiple AI agents or human experts combine their inputs
+/// to reach a unified decision.
 #[derive(Debug, Clone, Copy)]
 pub enum ConsensusStrategy {
     /// Majority rule consensus requiring >50% agreement
@@ -13,6 +17,10 @@ pub enum ConsensusStrategy {
     Unanimous,
 }
 
+/// Operating mode for the hybrid intelligence system
+///
+/// Controls the balance between human decision-making and AI automation,
+/// ranging from pure human control to AI autonomy with oversight.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum IntelligenceMode {
     /// Pure human decision making without AI assistance
@@ -23,8 +31,13 @@ pub enum IntelligenceMode {
     AutonomousAI,
 }
 
+/// Machine learning algorithm type
+///
+/// Specifies the type of learning algorithm used for model training
+/// and optimization.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum LearningAlgorithm {
+    /// Reward-based learning through trial and error
     ReinforcementLearning,
     /// Supervised learning with human-labeled training datasets
     SupervisedLearning,

@@ -17,9 +17,13 @@ pub struct GeneticOptimizer {
     performance_history: Arc<RwLock<Vec<PerformanceMetric>>>,
 }
 
+/// Configuration for the genetic algorithm optimizer
+///
+/// Controls the behavior of the genetic optimization algorithm including
+/// population size, mutation/crossover rates, and convergence criteria.
 #[derive(Debug, Clone)]
 pub struct GeneticOptimizerConfig {
-    /// Number of `population_size`
+    /// Number of individuals in each generation
     pub population_size: usize,
     /// Rate of mutation (0.0 to 1.0)
     /// The mutation rate value
