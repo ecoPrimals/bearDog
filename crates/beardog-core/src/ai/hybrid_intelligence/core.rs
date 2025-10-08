@@ -43,7 +43,7 @@ pub enum LearningFeedback {
 // CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
 // use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum LearningRateAdaptation {
     /// Fixed learning rate throughout training
     Fixed,
@@ -52,7 +52,7 @@ pub enum LearningRateAdaptation {
     Scheduled,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum UpdateFrequency {
     /// Update model after each batch
     PerBatch,
@@ -62,7 +62,7 @@ pub enum UpdateFrequency {
     PerSample,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum PredictionModel {
     Classification,
     Regression,

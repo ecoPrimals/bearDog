@@ -526,8 +526,10 @@ impl Default for NetworkConfig {
         use std::str::FromStr;
         let api_port = crate::constants::domains::network::defaults::default_api_port();
         Self {
-            bind_address: SocketAddr::from_str(&format!("0.0.0.0:{}", api_port)).unwrap(),
-            multicast_address: IpAddr::from_str("224.0.0.251").unwrap(),
+            bind_address: SocketAddr::from_str(&format!("0.0.0.0:{}", api_port))
+                .expect("Hardcoded bind address should be valid"),
+            multicast_address: IpAddr::from_str("224.0.0.251")
+                .expect("Hardcoded multicast address should be valid"),
             multicast_port: 5353,
             discovery_port_range: (api_port, 8090),
             max_packet_size: 1500,

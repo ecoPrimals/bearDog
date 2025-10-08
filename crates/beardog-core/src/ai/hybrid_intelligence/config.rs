@@ -3,7 +3,7 @@
 use super::{IntelligenceCapability, MachineLearningConfig};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum ConsensusStrategy {
     /// Majority rule consensus requiring >50% agreement
     Majority,

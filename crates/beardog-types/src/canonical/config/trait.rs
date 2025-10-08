@@ -230,7 +230,9 @@ impl ConfigLoader {
         }
 
         let mut configs_iter = configs.into_iter();
-        let mut result = configs_iter.next().unwrap();
+        let mut result = configs_iter
+            .next()
+            .expect("Iterator cannot be empty after empty check above");
 
         for config in configs_iter {
             result = result.merge(&config)?;
