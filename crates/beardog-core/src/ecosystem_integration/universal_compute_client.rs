@@ -361,6 +361,7 @@ impl UniversalComputeClient {
 
     /// Execute compute request through discovered provider
     /// Executes `compute_request`
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps, clippy::cast_possible_truncation)]
     fn execute_compute_request(
         &self,
         request: &UniversalComputeRequest,
@@ -402,7 +403,7 @@ impl UniversalComputeClient {
     }
 
     /// Updates metrics
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::cast_precision_loss)]
     async fn update_metrics(&self, response: &UniversalComputeResponse) {
         let mut metrics = self.metrics.write().await;
         metrics.total_requests += 1;

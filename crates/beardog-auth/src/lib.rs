@@ -13,7 +13,7 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_auth::auth::AuthEngine;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {

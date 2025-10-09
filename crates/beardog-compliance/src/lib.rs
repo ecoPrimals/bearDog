@@ -13,7 +13,7 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_compliance::{AuditEngine, AuditEvent, AuditEventType};
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {

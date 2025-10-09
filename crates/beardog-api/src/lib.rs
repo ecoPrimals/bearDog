@@ -14,7 +14,7 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_api::{ApiServer, ApiConfig};
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {

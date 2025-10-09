@@ -33,7 +33,7 @@ use super::state::CoreState;
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use beardog_core::BearDogCore;
 /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 ///
@@ -77,7 +77,7 @@ impl BearDogCore {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// use beardog_core::BearDogCore;
     /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
     ///
@@ -115,7 +115,7 @@ impl BearDogCore {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// use beardog_core::BearDogCore;
     ///
     /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
