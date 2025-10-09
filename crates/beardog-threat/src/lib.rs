@@ -14,15 +14,16 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust
 //! use beardog_threat::ThreatDetectionEngine;
+//! use beardog_types::canonical::config::domains::threat::CanonicalThreatDetectionConfig;
 //!
-//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
-//! // Initialize threat detection
-//! let engine = ThreatDetectionEngine::new()?;
+//! # fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Initialize threat detection with default configuration
+//! let config = CanonicalThreatDetectionConfig::default();
+//! let engine = ThreatDetectionEngine::new(config)?;
 //!
-//! // Analyze potential threats
-//! let threat_level = engine.analyze_activity("suspicious_pattern").await?;
+//! // Engine is now ready for threat detection
 //! # Ok(())
 //! # }
 //! ```

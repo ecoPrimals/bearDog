@@ -10,3 +10,4 @@ pub mod auth_handler_tests;
 pub mod authorization_tests;
 pub mod node_registry_tests;
 pub mod permission_tests;
+pub mod comprehensive_auth_tests;  // Week 1 test coverage push

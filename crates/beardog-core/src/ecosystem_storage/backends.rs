@@ -8,19 +8,33 @@ use beardog_errors::BearDogError;
 #[async_trait::async_trait]
 pub trait StorageBackend: Send + Sync {
     /// Store data
+    ///
+    /// # Errors
+    /// Returns an error if the storage operation fails
     fn store(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError>;
 
     /// Retrieve data
+    ///
+    /// # Errors
+    /// Returns an error if the retrieval operation fails
     fn retrieve(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError>;
 
     /// Delete data
-    /// Removes
+    ///
+    /// # Errors
+    /// Returns an error if the deletion operation fails
     fn delete(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError>;
 
     /// List stored items
+    ///
+    /// # Errors
+    /// Returns an error if the listing operation fails
     fn list(&self, request: StorageRequest) -> Result<Vec<StorageItem>, BearDogError>;
 
     /// Check if backend is healthy
+    ///
+    /// # Errors
+    /// Returns an error if the health check fails
     fn health_check(&self) -> Result<bool, BearDogError>;
 
     fn backend_info(&self) -> BackendInfo;

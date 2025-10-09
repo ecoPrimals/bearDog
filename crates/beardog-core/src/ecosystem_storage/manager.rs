@@ -55,6 +55,9 @@ impl EcosystemStorageManager {
     /// Process a storage request
     /// Processes request
     /// Processes request
+    ///
+    /// # Errors
+    /// Returns an error if the storage operation fails
     pub async fn process_request(
         &self,
         request: StorageRequest,
@@ -63,7 +66,7 @@ impl EcosystemStorageManager {
             StorageOperation::Store => self.handle_store(request).await,
             StorageOperation::Retrieve => self.handle_retrieve(request).await,
             StorageOperation::Delete => self.handle_delete(request).await,
-            StorageOperation::List => self.handle_list(request),
+            StorageOperation::List => self.handle_list(&request),
             _ => Err(BearDogError::business(
                 "Operation not implemented".to_string(),
             )),
@@ -154,15 +157,14 @@ impl EcosystemStorageManager {
         }
 
         // Delete from backend
-        if let Some(backend) = self.backends.first() {
-            backend.delete(request)
-        } else {
-            Err(BearDogError::business(NO_BACKEND_AVAILABLE.to_string()))
-        }
+        self.backends.first().map_or_else(
+            || Err(BearDogError::business(NO_BACKEND_AVAILABLE.to_string())),
+            |backend| backend.delete(request),
+        )
     }
 
     /// Handles list
-    fn handle_list(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+    fn handle_list(&self, request: &StorageRequest) -> Result<StorageResponse, BearDogError> {
         if let Some(backend) = self.backends.first() {
             let items = backend.list(request.clone())?;
             let response_data = serde_json::to_vec(&items)

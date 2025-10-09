@@ -13,16 +13,14 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
-//! use beardog_tunnel::{SessionManager, BStpConfig, SecurityLevel};
+//! ```rust
+//! use beardog_tunnel::SessionManager;
 //!
-//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! # fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // Initialize session manager
-//! let config = BStpConfig::default();
-//! let session_mgr = SessionManager::new(config)?;
+//! let session_mgr = SessionManager::new();
 //!
-//! // Create secure session
-//! let session = session_mgr.create_session(SecurityLevel::High).await?;
+//! // Session manager is ready for secure sessions
 //! # Ok(())
 //! # }
 //! ```

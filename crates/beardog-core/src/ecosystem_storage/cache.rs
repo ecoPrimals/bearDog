@@ -75,15 +75,10 @@ impl CacheManager {
     /// Gets value
     pub fn get(&mut self, key: &str) -> Option<std::sync::Arc<Vec<u8>>> {
         // Check TTL first
-        let should_remove = if let Some(entry) = self.entries.get(key) {
-            if let Some(ttl) = entry.ttl {
-                Utc::now() > ttl
-            } else {
-                false
-            }
-        } else {
-            false
-        };
+        let should_remove = self
+            .entries
+            .get(key)
+            .is_some_and(|entry| entry.ttl.is_some_and(|ttl| Utc::now() > ttl));
 
         if should_remove {
             self.entries.remove(key);
@@ -126,7 +121,12 @@ impl CacheManager {
             last_accessed: Utc::now(),
             access_count: 0,
             size_bytes,
-            ttl: Some(Utc::now() + chrono::Duration::seconds(self.config.default_ttl_secs as i64)),
+            ttl: Some(
+                Utc::now()
+                    + chrono::Duration::seconds(
+                        i64::try_from(self.config.default_ttl_secs).unwrap_or(3600),
+                    ),
+            ),
         };
 
         self.entries.insert(key, entry);
@@ -178,6 +178,7 @@ impl CacheManager {
     }
 
     /// Updates `hit_rate`
+    #[allow(clippy::cast_precision_loss)]
     fn update_hit_rate(&mut self) {
         let total_requests = self.metrics.hits + self.metrics.misses;
         if total_requests > 0 {

@@ -13,16 +13,25 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
-//! use beardog_monitoring::{SecuritySentinel, MonitoringConfig};
+//! ```rust
+//! use beardog_monitoring::security_sentinel::{SecuritySentinel, SecuritySentinelConfig};
+//! use std::collections::HashMap;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // Initialize security sentinel
-//! let config = MonitoringConfig::default();
-//! let sentinel = SecuritySentinel::new(config)?;
+//! let config = SecuritySentinelConfig::default();
+//! let sentinel = SecuritySentinel::new(config);
 //!
-//! // Monitor security events
-//! sentinel.monitor_authentication_attempt("user123", true).await?;
+//! // Start monitoring
+//! sentinel.start_monitoring()?;
+//!
+//! // Process security events
+//! let event_data = HashMap::new();
+//! sentinel.process_security_event("auth_failure", event_data).await?;
+//!
+//! // Get statistics
+//! let stats = sentinel.get_statistics().await;
+//! println!("Total events: {}", stats.total_events);
 //! # Ok(())
 //! # }
 //! ```
