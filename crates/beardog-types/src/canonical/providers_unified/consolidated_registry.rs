@@ -188,7 +188,11 @@ impl ConsolidatedProviderRegistry {
         let provider_id = provider_info.id.clone();
 
         // Check capacity
-        let providers_guard = self.providers.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on read, recovering");
+                poisoned.into_inner()
+            });
         if providers_guard.len() >= self.config.max_providers {
             return Err(BearDogError::system(
                 format!("Provider registry at capacity: {}", self.config.max_providers)
@@ -198,7 +202,11 @@ impl ConsolidatedProviderRegistry {
 
         // Register provider
         {
-            let mut providers_guard = self.providers.write().unwrap();
+            let mut providers_guard = self.providers.write()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Provider registry lock poisoned on write, recovering");
+                    poisoned.into_inner()
+                });
             if providers_guard.contains_key(&provider_id) {
                 warn!("Provider {} already registered, updating", provider_id);
             }
@@ -207,7 +215,11 @@ impl ConsolidatedProviderRegistry {
 
         // Cache metadata
         {
-            let mut metadata_guard = self.metadata_cache.write().unwrap();
+            let mut metadata_guard = self.metadata_cache.write()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Metadata cache lock poisoned on write, recovering");
+                    poisoned.into_inner()
+                });
             metadata_guard.insert(provider_id.clone(), provider_info.clone());
         }
 
@@ -229,7 +241,11 @@ impl ConsolidatedProviderRegistry {
     pub async fn unregister_provider(&self, provider_id: &str) -> BearDogResult<()> {
         // Remove from providers
         let removed = {
-            let mut providers_guard = self.providers.write().unwrap();
+            let mut providers_guard = self.providers.write()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Provider registry lock poisoned on unregister, recovering");
+                    poisoned.into_inner()
+                });
             providers_guard.remove(provider_id).is_some()
         };
 
@@ -241,11 +257,19 @@ impl ConsolidatedProviderRegistry {
 
         // Clean up caches
         {
-            let mut metadata_guard = self.metadata_cache.write().unwrap();
+            let mut metadata_guard = self.metadata_cache.write()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Metadata cache lock poisoned on cleanup, recovering");
+                    poisoned.into_inner()
+                });
             metadata_guard.remove(provider_id);
         }
         {
-            let mut health_guard = self.health_cache.write().unwrap();
+            let mut health_guard = self.health_cache.write()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Health cache lock poisoned on cleanup, recovering");
+                    poisoned.into_inner()
+                });
             health_guard.remove(provider_id);
         }
 
@@ -255,7 +279,11 @@ impl ConsolidatedProviderRegistry {
 
     /// Get provider by ID
     pub async fn get_provider(&self, provider_id: &str) -> BearDogResult<Arc<dyn ErasedProvider>> {
-        let providers_guard = self.providers.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on get, recovering");
+                poisoned.into_inner()
+            });
         providers_guard
             .get(provider_id)
             .cloned()
@@ -264,8 +292,16 @@ impl ConsolidatedProviderRegistry {
 
     /// Find providers by type
     pub async fn find_providers_by_type(&self, provider_type: ProviderType) -> BearDogResult<Vec<Arc<dyn ErasedProvider>>> {
-        let providers_guard = self.providers.read().unwrap();
-        let metadata_guard = self.metadata_cache.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on find, recovering");
+                poisoned.into_inner()
+            });
+        let metadata_guard = self.metadata_cache.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Metadata cache lock poisoned on find, recovering");
+                poisoned.into_inner()
+            });
 
         let mut matching_providers = Vec::new();
         
@@ -283,19 +319,31 @@ impl ConsolidatedProviderRegistry {
     /// Find providers by tags
     pub async fn find_providers_by_tags(&self, _tags: &[String]) -> BearDogResult<Vec<String>> {
         // This would require storing registration data, simplified for now
-        let providers_guard = self.providers.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on find by tags, recovering");
+                poisoned.into_inner()
+            });
         Ok(providers_guard.keys().cloned().collect())
     }
 
     /// Get all registered provider IDs
     pub async fn list_providers(&self) -> BearDogResult<Vec<String>> {
-        let providers_guard = self.providers.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on list, recovering");
+                poisoned.into_inner()
+            });
         Ok(providers_guard.keys().cloned().collect())
     }
 
     /// Get provider metadata from cache
     pub async fn get_provider_metadata(&self, provider_id: &str) -> BearDogResult<ProviderInfo> {
-        let metadata_guard = self.metadata_cache.read().unwrap();
+        let metadata_guard = self.metadata_cache.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Metadata cache lock poisoned on get metadata, recovering");
+                poisoned.into_inner()
+            });
         metadata_guard
             .get(provider_id)
             .cloned()
@@ -304,7 +352,11 @@ impl ConsolidatedProviderRegistry {
 
     /// Perform health check on all providers
     pub async fn health_check_all(&self) -> BearDogResult<HashMap<String, ProviderHealth>> {
-        let providers_guard = self.providers.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on health check, recovering");
+                poisoned.into_inner()
+            });
         let mut health_results = HashMap::new();
 
         for (provider_id, provider) in providers_guard.iter() {
@@ -313,7 +365,11 @@ impl ConsolidatedProviderRegistry {
                     health_results.insert(provider_id.clone(), health.clone());
                     
                     // Update cache
-                    let mut health_guard = self.health_cache.write().unwrap();
+                    let mut health_guard = self.health_cache.write()
+                        .unwrap_or_else(|poisoned| {
+                            tracing::warn!("Health cache lock poisoned on update, recovering");
+                            poisoned.into_inner()
+                        });
                     health_guard.insert(provider_id.clone(), health);
                 }
                 Err(e) => {
@@ -336,14 +392,26 @@ impl ConsolidatedProviderRegistry {
 
     /// Get cached health status
     pub async fn get_cached_health(&self, provider_id: &str) -> Option<ProviderHealth> {
-        let health_guard = self.health_cache.read().unwrap();
+        let health_guard = self.health_cache.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Health cache lock poisoned on get cached, recovering");
+                poisoned.into_inner()
+            });
         health_guard.get(provider_id).cloned()
     }
 
     /// Get registry statistics
     pub async fn get_statistics(&self) -> RegistryStatistics {
-        let providers_guard = self.providers.read().unwrap();
-        let health_guard = self.health_cache.read().unwrap();
+        let providers_guard = self.providers.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Provider registry lock poisoned on get stats, recovering");
+                poisoned.into_inner()
+            });
+        let health_guard = self.health_cache.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Health cache lock poisoned on get stats, recovering");
+                poisoned.into_inner()
+            });
         
         let total_providers = providers_guard.len();
         let healthy_providers = health_guard
@@ -419,6 +487,7 @@ mod tests {
     #[test]
     fn test_registry_creation() {
         let registry = ConsolidatedProviderRegistry::default();
-        assert_eq!(registry.providers.try_read().unwrap().len(), 0);
+        assert_eq!(registry.providers.try_read()
+            .expect("Failed to acquire read lock in test").len(), 0);
     }
 } 
