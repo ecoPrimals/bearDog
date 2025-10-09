@@ -52,8 +52,8 @@ pub struct NetworkSettings {
 impl Default for NetworkSettings {
     fn default() -> Self {
         Self {
-            bind_address: "127.0.0.1".to_string(),
-            port: 8080,
+            bind_address: crate::constants::domains::network::addresses::default_bind_address(),
+            port: crate::constants::domains::network::defaults::default_api_port(),
             max_connections: 1000,
             timeout_seconds: 30,
             enable_tls: true,

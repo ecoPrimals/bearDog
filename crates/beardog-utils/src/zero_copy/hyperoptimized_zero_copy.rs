@@ -179,11 +179,10 @@ impl SIMDAlignedPool {
 
         // Try to reuse existing buffer
         {
-            let mut buffers = self.buffers.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Buffer pool lock poisoned on write, recovering");
-                    poisoned.into_inner()
-                });
+            let mut buffers = self.buffers.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("Buffer pool lock poisoned on write, recovering");
+                poisoned.into_inner()
+            });
             for i in (0..buffers.len()).rev() {
                 if buffers[i].capacity() >= optimal_size
                     && buffers[i].ref_count.load(Ordering::Relaxed) == 0
@@ -227,11 +226,10 @@ impl SIMDAlignedPool {
             // Last reference, return to pool
             buffer.set_length(0);
 
-            let mut buffers = self.buffers.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Buffer pool lock poisoned on return, recovering");
-                    poisoned.into_inner()
-                });
+            let mut buffers = self.buffers.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("Buffer pool lock poisoned on return, recovering");
+                poisoned.into_inner()
+            });
             if buffers.len() < 64 {
                 // Limit pool size
                 buffers.push(buffer);
@@ -266,11 +264,10 @@ impl SIMDAlignedPool {
             return; // Cleanup at most once per minute
         }
 
-        let mut buffers = self.buffers.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Buffer pool lock poisoned on cleanup, recovering");
-                poisoned.into_inner()
-            });
+        let mut buffers = self.buffers.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Buffer pool lock poisoned on cleanup, recovering");
+            poisoned.into_inner()
+        });
         let initial_count = buffers.len();
 
         buffers.retain(|buffer| !buffer.is_expired());
@@ -287,11 +284,10 @@ impl SIMDAlignedPool {
     /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> HyperZeroCopyStats {
-        let buffers = self.buffers.read()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Buffer pool lock poisoned on stats read, recovering");
-                poisoned.into_inner()
-            });
+        let buffers = self.buffers.read().unwrap_or_else(|poisoned| {
+            tracing::warn!("Buffer pool lock poisoned on stats read, recovering");
+            poisoned.into_inner()
+        });
         let pool_size = buffers.len();
         let active_buffers = buffers
             .iter()
@@ -372,11 +368,10 @@ impl HyperZeroCopyManager {
     pub fn intern_string(&self, s: &str) -> Arc<str> {
         // Fast path: check if already interned
         {
-            let cache = self.string_cache.read()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("String cache lock poisoned on read, recovering");
-                    poisoned.into_inner()
-                });
+            let cache = self.string_cache.read().unwrap_or_else(|poisoned| {
+                tracing::warn!("String cache lock poisoned on read, recovering");
+                poisoned.into_inner()
+            });
             if let Some(interned) = cache.get(s) {
                 self.stats
                     .memory_ops_avoided
@@ -389,11 +384,10 @@ impl HyperZeroCopyManager {
         }
 
         // Slow path: intern new string
-        let mut cache = self.string_cache.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("String cache lock poisoned on write, recovering");
-                poisoned.into_inner()
-            });
+        let mut cache = self.string_cache.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("String cache lock poisoned on write, recovering");
+            poisoned.into_inner()
+        });
         if let Some(interned) = cache.get(s) {
             return Arc::clone(interned);
         }
@@ -421,11 +415,10 @@ impl HyperZeroCopyManager {
 
         // Cleanup string cache if it gets too large
         {
-            let mut cache = self.string_cache.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("String cache lock poisoned on optimize, recovering");
-                    poisoned.into_inner()
-                });
+            let mut cache = self.string_cache.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("String cache lock poisoned on optimize, recovering");
+                poisoned.into_inner()
+            });
             if cache.len() > 1024 {
                 cache.retain(|_, arc_str| Arc::strong_count(arc_str) > 1);
                 info!("Cleaned up string cache, {} entries remaining", cache.len());
@@ -434,11 +427,10 @@ impl HyperZeroCopyManager {
 
         // Cleanup config cache
         {
-            let mut cache = self.config_cache.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Config cache lock poisoned on optimize, recovering");
-                    poisoned.into_inner()
-                });
+            let mut cache = self.config_cache.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("Config cache lock poisoned on optimize, recovering");
+                poisoned.into_inner()
+            });
             if cache.len() > 128 {
                 cache.retain(|_, arc_obj| Arc::strong_count(arc_obj) > 1);
                 info!("Cleaned up config cache, {} entries remaining", cache.len());

@@ -262,7 +262,9 @@ impl ConditionBuilder {
     #[must_use]
     pub fn build_and(self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            self.conditions.into_iter().next()
+            self.conditions
+                .into_iter()
+                .next()
                 .expect("Invariant violated: conditions.len() == 1 but iterator empty")
         } else {
             RuleCondition::and(self.conditions)
@@ -275,7 +277,9 @@ impl ConditionBuilder {
     #[must_use]
     pub fn build_or(self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            self.conditions.into_iter().next()
+            self.conditions
+                .into_iter()
+                .next()
                 .expect("Invariant violated: conditions.len() == 1 but iterator empty")
         } else {
             RuleCondition::or(self.conditions)

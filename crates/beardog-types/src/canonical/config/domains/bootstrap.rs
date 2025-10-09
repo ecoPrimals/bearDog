@@ -386,8 +386,8 @@ pub struct BootstrapNetworkConfig {
 impl Default for BootstrapNetworkConfig {
     fn default() -> Self {
         Self {
-            listen_interface: "0.0.0.0".to_string(),
-            multicast_group: "224.0.0.251".to_string(),
+            listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
+            multicast_group: crate::constants::domains::network::addresses::multicast_address(),
             discovery_port: 5353,
             enable_ipv6: true,
             buffer_size: 8192,
