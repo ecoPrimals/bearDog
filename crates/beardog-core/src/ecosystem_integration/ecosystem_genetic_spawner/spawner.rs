@@ -46,9 +46,12 @@ impl UniversalHsmManager {
     /// overall system health indicators.
     ///
     /// # Returns
-    /// - `Err(BearDogError)` if status retrieval fails
-    /// Gets `ecosystem_status`
-    /// Gets `ecosystem_status`
+    ///
+    /// Returns a JSON value containing the ecosystem status.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(BearDogError)` if status retrieval fails.
     pub fn get_ecosystem_status(&self) -> Result<serde_json::Value, BearDogError> {
         // Placeholder implementation
         Ok(serde_json::json!({

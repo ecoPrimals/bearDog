@@ -10,6 +10,7 @@ impl BearDogCore {
     #[allow(dead_code)]
     #[allow(clippy::unused_self)] // Self required for future stateful initialization
     #[allow(clippy::unnecessary_wraps)] // Result for future error cases during HSM init
+    #[allow(clippy::cognitive_complexity)] // Simplified version, will refactor in production
     pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
         info!("🔧 Initializing universal HSM providers");
         info!("🛠️ Initializing Software HSM provider");

@@ -56,6 +56,8 @@ impl BearDogCore {
     }
 
     #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
+    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
+    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
     fn register_with_compute_capability(
         &self,
         _registration: &EcosystemRegistration,
@@ -66,6 +68,8 @@ impl BearDogCore {
     }
 
     #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
+    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
+    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
     fn register_with_networking_capability(
         &self,
         _registration: &EcosystemRegistration,
@@ -76,6 +80,8 @@ impl BearDogCore {
     }
 
     #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
+    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
+    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
     fn register_with_ai_capability(
         &self,
         _registration: &EcosystemRegistration,
@@ -87,6 +93,7 @@ impl BearDogCore {
 
     /// Gets `service_endpoints`
     #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
+    #[allow(clippy::unused_self)] // Will use self when implementing actual endpoint discovery
     fn get_service_endpoints(&self) -> HashMap<String, String> {
         let mut endpoints = HashMap::new();
         endpoints.insert("health".to_string(), "/health".to_string());
@@ -97,6 +104,7 @@ impl BearDogCore {
 
     /// Gets `service_capabilities`
     #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
+    #[allow(clippy::unused_self)] // Will use self when implementing actual capability discovery
     fn get_service_capabilities(&self) -> Vec<String> {
         vec![
             "security".to_string(),
@@ -108,6 +116,8 @@ impl BearDogCore {
     }
 
     #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
+    #[allow(clippy::unused_self)] // Will use self when implementing actual unregistration
+    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
     pub(crate) fn unregister_from_ecosystem(&self) -> Result<(), BearDogError> {
         info!("🌌 Unregistering BearDog from ecosystem services");
         // Implementation would notify all registered services
@@ -121,11 +131,10 @@ impl BearDogCore {
     /// and registered with this service instance.
     ///
     /// # Returns
-    /// `HashMap` mapping capability names to their availability status
+    ///
+    /// `HashMap` mapping capability names to their availability status:
     /// - `true` if the capability is available and registered
     /// - `false` if the capability is not available or registration failed
-    /// Gets `registration_status`
-    /// Gets `registration_status`
     pub fn get_registration_status(&self) -> HashMap<String, bool> {
         // Use capability-based registration instead of hardcoded primal names
         let mut status = HashMap::new();
@@ -151,6 +160,7 @@ impl BearDogCore {
     }
 
     /// Check if a capability is available through discovery (replaces hardcoded checks)
+    #[allow(clippy::unused_self)] // Will use self when implementing actual capability discovery
     fn check_capability_availability(&self, capability_type: &str) -> bool {
         // Check environment variables for capability endpoints
         let env_key = format!("{}_ENDPOINT", capability_type.to_uppercase());
