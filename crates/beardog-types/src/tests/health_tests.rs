@@ -1,6 +1,8 @@
 //! Unit tests for health status types
 
-use crate::health_status::{HealthCheck, HealthStatus, HealthSummary, ServiceHealth, SystemHealthReport};
+use crate::health_status::{
+    HealthCheck, HealthStatus, HealthSummary, ServiceHealth, SystemHealthReport,
+};
 use chrono::Utc;
 use std::collections::HashMap;
 
@@ -407,7 +409,7 @@ mod health_integration_tests {
     fn test_full_health_hierarchy() {
         // Create a complete health check hierarchy
         let details = HashMap::new();
-        
+
         let check = HealthCheck {
             name: "database_connection".to_string(),
             status: HealthStatus::Healthy,
@@ -489,4 +491,3 @@ mod health_integration_tests {
         assert_eq!(report.services.len(), 2);
     }
 }
-

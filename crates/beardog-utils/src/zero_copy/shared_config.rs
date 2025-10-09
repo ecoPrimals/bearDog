@@ -31,11 +31,10 @@ impl SharedConfigManager {
     {
         // Try to get existing config
         {
-            let configs = self.configs.read()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Shared config lock poisoned on read, recovering");
-                    poisoned.into_inner()
-                });
+            let configs = self.configs.read().unwrap_or_else(|poisoned| {
+                tracing::warn!("Shared config lock poisoned on read, recovering");
+                poisoned.into_inner()
+            });
             if let Some(config) = configs.get(key) {
                 if let Ok(typed_config) = config.clone().downcast::<T>() {
                     return typed_config;
@@ -46,11 +45,10 @@ impl SharedConfigManager {
         // Create new config
         let config = Arc::new(factory());
         {
-            let mut configs = self.configs.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Shared config lock poisoned on write, recovering");
-                    poisoned.into_inner()
-                });
+            let mut configs = self.configs.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("Shared config lock poisoned on write, recovering");
+                poisoned.into_inner()
+            });
             configs.insert(key.to_string(), config.clone());
         }
         config
@@ -60,27 +58,26 @@ impl SharedConfigManager {
     /// Removes item
     /// Removes item
     pub fn remove(&self, key: &str) -> bool {
-        let mut configs = self.configs.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Shared config lock poisoned on remove, recovering");
-                poisoned.into_inner()
-            });
+        let mut configs = self.configs.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Shared config lock poisoned on remove, recovering");
+            poisoned.into_inner()
+        });
         configs.remove(key).is_some()
     }
 
     /// Clear all configurations
     pub fn clear(&self) {
-        let mut configs = self.configs.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Shared config lock poisoned on clear, recovering");
-                poisoned.into_inner()
-            });
+        let mut configs = self.configs.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Shared config lock poisoned on clear, recovering");
+            poisoned.into_inner()
+        });
         configs.clear();
     }
 
     /// Get number of configurations
     pub fn len(&self) -> usize {
-        self.configs.read()
+        self.configs
+            .read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Shared config lock poisoned on len, recovering");
                 poisoned.into_inner()
@@ -92,7 +89,8 @@ impl SharedConfigManager {
     /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
-        self.configs.read()
+        self.configs
+            .read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Shared config lock poisoned on is_empty, recovering");
                 poisoned.into_inner()

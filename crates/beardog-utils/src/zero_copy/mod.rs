@@ -90,11 +90,10 @@ impl ZeroCopyManager {
 
         // Try to get from cache first
         {
-            let cache = self.string_cache.read()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("String cache lock poisoned on read, recovering");
-                    poisoned.into_inner()
-                });
+            let cache = self.string_cache.read().unwrap_or_else(|poisoned| {
+                tracing::warn!("String cache lock poisoned on read, recovering");
+                poisoned.into_inner()
+            });
             if let Some(weak_str) = cache.get(s_ref) {
                 if let Some(arc_str) = weak_str.upgrade() {
                     self.stats
@@ -109,11 +108,10 @@ impl ZeroCopyManager {
         // Create new shared string
         let arc_str: Arc<str> = Arc::from(s_ref);
         {
-            let mut cache = self.string_cache.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("String cache lock poisoned on write, recovering");
-                    poisoned.into_inner()
-                });
+            let mut cache = self.string_cache.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("String cache lock poisoned on write, recovering");
+                poisoned.into_inner()
+            });
             cache.insert(s_ref.to_string(), Arc::downgrade(&arc_str));
         }
 
@@ -135,11 +133,10 @@ impl ZeroCopyManager {
 
         // Try to get from cache first
         {
-            let cache = self.config_cache.read()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Config cache lock poisoned on read, recovering");
-                    poisoned.into_inner()
-                });
+            let cache = self.config_cache.read().unwrap_or_else(|poisoned| {
+                tracing::warn!("Config cache lock poisoned on read, recovering");
+                poisoned.into_inner()
+            });
             if let Some(any_config) = cache.get(&type_key) {
                 if let Ok(typed_config) = any_config.clone().downcast::<T>() {
                     self.stats
@@ -154,11 +151,10 @@ impl ZeroCopyManager {
         // Create new config if not found
         let config = Arc::new(factory());
         {
-            let mut cache = self.config_cache.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("Config cache lock poisoned on write, recovering");
-                    poisoned.into_inner()
-                });
+            let mut cache = self.config_cache.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("Config cache lock poisoned on write, recovering");
+                poisoned.into_inner()
+            });
             cache.insert(type_key, config.clone());
         }
 
@@ -172,11 +168,10 @@ impl ZeroCopyManager {
     /// Cleans up expired
     /// Cleans up expired
     pub fn cleanup_expired(&self) {
-        let mut last_cleanup = self.last_cleanup.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Last cleanup lock poisoned on write, recovering");
-                poisoned.into_inner()
-            });
+        let mut last_cleanup = self.last_cleanup.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Last cleanup lock poisoned on write, recovering");
+            poisoned.into_inner()
+        });
         let now = Instant::now();
         if now.duration_since(*last_cleanup) < Duration::from_secs(60) {
             return; // Cleanup at most once per minute
@@ -184,11 +179,10 @@ impl ZeroCopyManager {
 
         let mut removed_count = 0;
         {
-            let mut cache = self.string_cache.write()
-                .unwrap_or_else(|poisoned| {
-                    tracing::warn!("String cache lock poisoned on cleanup, recovering");
-                    poisoned.into_inner()
-                });
+            let mut cache = self.string_cache.write().unwrap_or_else(|poisoned| {
+                tracing::warn!("String cache lock poisoned on cleanup, recovering");
+                poisoned.into_inner()
+            });
             cache.retain(|_k, weak_str| {
                 if weak_str.strong_count() == 0 {
                     removed_count += 1;

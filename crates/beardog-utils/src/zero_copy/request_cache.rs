@@ -42,11 +42,10 @@ impl<T: Clone> RequestCache<T> {
             ttl: self.default_ttl,
         };
 
-        let mut cache = self.cache.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Request cache lock poisoned on write, recovering");
-                poisoned.into_inner()
-            });
+        let mut cache = self.cache.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Request cache lock poisoned on write, recovering");
+            poisoned.into_inner()
+        });
         cache.insert(key, entry);
     }
 
@@ -54,11 +53,10 @@ impl<T: Clone> RequestCache<T> {
     /// Gets value
     /// Gets value
     pub fn get(&self, key: &str) -> Option<T> {
-        let cache = self.cache.read()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Request cache lock poisoned on read, recovering");
-                poisoned.into_inner()
-            });
+        let cache = self.cache.read().unwrap_or_else(|poisoned| {
+            tracing::warn!("Request cache lock poisoned on read, recovering");
+            poisoned.into_inner()
+        });
         if let Some(entry) = cache.get(key) {
             if entry.timestamp.elapsed() < entry.ttl {
                 return Some(entry.data.clone());
@@ -71,18 +69,18 @@ impl<T: Clone> RequestCache<T> {
     /// Cleans up expired
     /// Cleans up expired
     pub fn cleanup_expired(&self) {
-        let mut cache = self.cache.write()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Request cache lock poisoned on cleanup, recovering");
-                poisoned.into_inner()
-            });
+        let mut cache = self.cache.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Request cache lock poisoned on cleanup, recovering");
+            poisoned.into_inner()
+        });
         let now = Instant::now();
         cache.retain(|_, entry| now.duration_since(entry.timestamp) < entry.ttl);
     }
 
     /// Get cache size
     pub fn len(&self) -> usize {
-        self.cache.read()
+        self.cache
+            .read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Request cache lock poisoned on len, recovering");
                 poisoned.into_inner()
@@ -94,7 +92,8 @@ impl<T: Clone> RequestCache<T> {
     /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
-        self.cache.read()
+        self.cache
+            .read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Request cache lock poisoned on is_empty, recovering");
                 poisoned.into_inner()
