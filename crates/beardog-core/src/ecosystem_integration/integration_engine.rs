@@ -70,6 +70,9 @@ impl IntegrationEngine {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
+    #[allow(clippy::cognitive_complexity)]
+    #[allow(clippy::used_underscore_binding)]
+    #[allow(clippy::option_if_let_else)]
     pub fn integrate_with_ecosystem(&mut self) -> Result<(), BearDogError> {
         info!("🌐 Starting Phase 4: Ecosystem Integration");
 
@@ -135,6 +138,7 @@ impl IntegrationEngine {
     }
 
     /// Discover Ecosystem Services operation.
+    #[allow(clippy::option_if_let_else)]
     fn discover_ecosystem_services(&self) -> Result<Vec<String>, BearDogError> {
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
             // Simulate service discovery
@@ -152,6 +156,9 @@ impl IntegrationEngine {
 
     /// Get Discovered Services Count operation.
     /// Gets `discovered_services_count`
+    #[allow(clippy::unnecessary_wraps)]
+    #[allow(clippy::option_if_let_else)]
+    #[allow(clippy::cast_possible_truncation)]
     fn get_discovered_services_count(&self) -> Result<u32, BearDogError> {
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
             match self.discover_ecosystem_services() {
@@ -169,6 +176,8 @@ impl IntegrationEngine {
     ///
     /// # Returns
     /// - `Ok(())` if all integration components are healthy
+    ///
+    /// # Errors
     /// - `Err(BearDogError)` if any critical integration component fails
     pub fn check_integration_health(&self) -> Result<(), BearDogError> {
         let mut health_status = serde_json::Map::new();
@@ -197,6 +206,10 @@ impl IntegrationEngine {
     ///
     /// # Returns
     /// - `Err(BearDogError)` if the comprehensive health check fails
+    /// Comprehensive integration health check.
+    ///
+    /// # Errors
+    /// Returns an error if the health check fails.
     pub fn comprehensive_integration_health_check(
         &self,
     ) -> Result<serde_json::Value, BearDogError> {

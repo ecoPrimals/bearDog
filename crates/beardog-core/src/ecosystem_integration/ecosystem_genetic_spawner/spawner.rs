@@ -114,18 +114,27 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Register Primal Client operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub async fn register_primal_client(
         &self,
         primal_id: &str,
         client: UniversalComputeClient,
     ) -> Result<(), BearDogError> {
-        let mut clients = self.primal_clients.write().await;
-        clients.insert(primal_id.to_string(), client);
+        self.primal_clients
+            .write()
+            .await
+            .insert(primal_id.to_string(), client);
         debug!("🔌 Registered primal client: {}", primal_id);
         Ok(())
     }
 
     /// Spawn Ecosystem Hybrid Node operation.
+    ///
+    /// # Errors
+    /// Returns an error if spawning fails at any stage.
+    #[allow(clippy::cognitive_complexity)]
     pub async fn spawn_ecosystem_hybrid_node(
         &self,
         requirements: EcosystemSpawningRequirements,
@@ -152,7 +161,7 @@ impl EcosystemGeneticSpawner {
             active_spawns.insert(operation_id.clone(), operation.clone());
         }
 
-        match self.execute_ecosystem_spawning(&mut operation) {
+        match Self::execute_ecosystem_spawning(&mut operation) {
             Ok(hybrid_node) => {
                 {
                     let mut stats = self.statistics.write().await;
@@ -180,33 +189,33 @@ impl EcosystemGeneticSpawner {
 
     /// Execute Ecosystem Spawning operation.
     /// Executes `ecosystem_spawning`
+    #[allow(clippy::cognitive_complexity)]
     fn execute_ecosystem_spawning(
-        &self,
         operation: &mut EcosystemSpawningOperation,
     ) -> Result<EcosystemHybridNode, BearDogError> {
-        self.update_operation_stage(operation, SpawningStage::RequirementAnalysis, 10.0)?;
-        let analyzed_requirements = self.analyze_spawning_requirements(&operation.requirements)?;
+        Self::update_operation_stage(operation, SpawningStage::RequirementAnalysis, 10.0);
+        let analyzed_requirements = Self::analyze_spawning_requirements(&operation.requirements);
 
-        self.update_operation_stage(operation, SpawningStage::BlueprintGeneration, 30.0)?;
-        let blueprints = self.generate_genetic_blueprints(&analyzed_requirements)?;
+        Self::update_operation_stage(operation, SpawningStage::BlueprintGeneration, 30.0);
+        let blueprints = Self::generate_genetic_blueprints(&analyzed_requirements);
         operation.genetic_blueprints = blueprints;
 
-        self.update_operation_stage(operation, SpawningStage::BlueprintSelection, 50.0)?;
+        Self::update_operation_stage(operation, SpawningStage::BlueprintSelection, 50.0);
         let selected_blueprint =
-            self.select_optimal_blueprint(&operation.genetic_blueprints, &operation.requirements)?;
+            Self::select_optimal_blueprint(&operation.genetic_blueprints, &operation.requirements)?;
         operation.selected_blueprint = Some(selected_blueprint.clone());
 
-        self.update_operation_stage(operation, SpawningStage::ResourceAllocation, 70.0)?;
+        Self::update_operation_stage(operation, SpawningStage::ResourceAllocation, 70.0);
         let resource_allocation =
-            self.allocate_ecosystem_resources(&selected_blueprint, &operation.requirements)?;
+            Self::allocate_ecosystem_resources(&selected_blueprint, &operation.requirements);
 
-        self.update_operation_stage(operation, SpawningStage::NodeCreation, 85.0)?;
-        let hybrid_node = self.create_hybrid_node(&selected_blueprint, &resource_allocation)?;
+        Self::update_operation_stage(operation, SpawningStage::NodeCreation, 85.0);
+        let hybrid_node = Self::create_hybrid_node(&selected_blueprint, &resource_allocation);
 
-        self.update_operation_stage(operation, SpawningStage::HealthValidation, 95.0)?;
-        self.validate_hybrid_node_health(&hybrid_node)?;
+        Self::update_operation_stage(operation, SpawningStage::HealthValidation, 95.0);
+        Self::validate_hybrid_node_health(&hybrid_node)?;
 
-        self.update_operation_stage(operation, SpawningStage::Finalization, 100.0)?;
+        Self::update_operation_stage(operation, SpawningStage::Finalization, 100.0);
         operation.status = SpawningStatus::Completed;
 
         info!(
@@ -219,37 +228,33 @@ impl EcosystemGeneticSpawner {
     /// Update Operation Stage operation.
     /// Updates `operation_stage`
     fn update_operation_stage(
-        &self,
         operation: &mut EcosystemSpawningOperation,
         stage: SpawningStage,
         progress: f64,
-    ) -> Result<(), BearDogError> {
+    ) {
         operation.current_stage = stage;
         operation.progress_percentage = progress;
         debug!(
             "📊 Operation {} progress: {:.1}% - {:?}",
             operation.operation_id, progress, operation.current_stage
         );
-        Ok(())
     }
 
     /// Analyze Spawning Requirements operation.
     fn analyze_spawning_requirements(
-        &self,
         requirements: &EcosystemSpawningRequirements,
-    ) -> Result<EcosystemSpawningRequirements, BearDogError> {
+    ) -> EcosystemSpawningRequirements {
         debug!(
             "🔍 Analyzing spawning requirements for {} capabilities",
             requirements.required_capabilities.len()
         );
-        Ok(requirements.clone())
+        requirements.clone()
     }
 
     /// Generate Genetic Blueprints operation.
     fn generate_genetic_blueprints(
-        &self,
         requirements: &EcosystemSpawningRequirements,
-    ) -> Result<Vec<EcosystemGeneticBlueprint>, BearDogError> {
+    ) -> Vec<EcosystemGeneticBlueprint> {
         debug!("🧬 Generating genetic blueprints");
 
         let mut blueprints = Vec::new();
@@ -259,7 +264,7 @@ impl EcosystemGeneticSpawner {
             name: "Hybrid Security-Compute Node".to_string(),
             primary_contributions: Vec::new(),
             expected_performance: NodePerformanceMetrics::default(),
-            resource_requirements: self.calculate_resource_requirements(requirements)?,
+            resource_requirements: Self::calculate_resource_requirements(requirements),
             security_level: requirements.security_requirements.min_security_level,
             heartbeat_interval_seconds: 300, // 5 minutes
             compatibility_score: 0.85,
@@ -267,12 +272,11 @@ impl EcosystemGeneticSpawner {
         };
 
         blueprints.push(blueprint);
-        Ok(blueprints)
+        blueprints
     }
 
     /// Select Optimal Blueprint operation.
     fn select_optimal_blueprint(
-        &self,
         blueprints: &[EcosystemGeneticBlueprint],
         _requirements: &EcosystemSpawningRequirements,
     ) -> Result<EcosystemGeneticBlueprint, BearDogError> {
@@ -289,10 +293,9 @@ impl EcosystemGeneticSpawner {
 
     /// Calculate Resource Requirements operation.
     const fn calculate_resource_requirements(
-        &self,
         requirements: &EcosystemSpawningRequirements,
-    ) -> Result<EcosystemResourceAllocation, BearDogError> {
-        Ok(EcosystemResourceAllocation {
+    ) -> EcosystemResourceAllocation {
+        EcosystemResourceAllocation {
             security: SecurityResourceAllocation {
                 hsm_slots: 4,
                 key_storage_mb: 512,
@@ -320,27 +323,24 @@ impl EcosystemGeneticSpawner {
                 gpu_compute_units: 4,
                 model_storage_gb: 100,
             },
-        })
+        }
     }
 
     /// Allocate Ecosystem Resources operation.
     fn allocate_ecosystem_resources(
-        &self,
         blueprint: &EcosystemGeneticBlueprint,
         _requirements: &EcosystemSpawningRequirements,
-    ) -> Result<EcosystemResourceAllocation, BearDogError> {
+    ) -> EcosystemResourceAllocation {
         debug!("💾 Allocating ecosystem resources");
-        let allocation = blueprint.resource_requirements.clone();
-        Ok(allocation)
+        blueprint.resource_requirements.clone()
     }
 
     /// Create Hybrid Node operation.
     /// Creates `hybrid_node`
     fn create_hybrid_node(
-        &self,
         blueprint: &EcosystemGeneticBlueprint,
         resource_allocation: &EcosystemResourceAllocation,
-    ) -> Result<EcosystemHybridNode, BearDogError> {
+    ) -> EcosystemHybridNode {
         let node_id = Uuid::new_v4().to_string();
         info!("🏗️ Creating hybrid node: {}", node_id);
 
@@ -358,12 +358,12 @@ impl EcosystemGeneticSpawner {
         };
 
         debug!("✨ Hybrid node created: {}", node_id);
-        Ok(hybrid_node)
+        hybrid_node
     }
 
     /// Validate Hybrid Node Health operation.
     /// Validates `hybrid_node_health`
-    fn validate_hybrid_node_health(&self, node: &EcosystemHybridNode) -> Result<(), BearDogError> {
+    fn validate_hybrid_node_health(node: &EcosystemHybridNode) -> Result<(), BearDogError> {
         debug!("🏥 Validating hybrid node health: {}", node.node_id);
 
         if node.health_status == NodeHealthStatus::Critical
@@ -393,7 +393,10 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Get Spawning Statistics operation.
-    /// Gets `spawning_statistics`
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    ///
     /// Gets `spawning_statistics`
     pub async fn get_spawning_statistics(
         &self,
