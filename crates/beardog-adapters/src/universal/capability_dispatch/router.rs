@@ -209,7 +209,11 @@ impl ZeroCostCapabilityRouter {
     /// Get round-robin index (thread-safe counter)
     fn get_round_robin_index(&self) -> usize {
         // Simple implementation using statistics counter
-        let stats = self.statistics.read().unwrap();
+        let stats = self.statistics.read()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Statistics lock poisoned on read, recovering");
+                poisoned.into_inner()
+            });
         stats.total_requests as usize
     }
 
