@@ -249,13 +249,17 @@ impl IntegrationEngine {
         Ok(serde_json::Value::Object(health_status))
     }
 
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
     const fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
         // Universal adapter health check implementation
+        // This is a placeholder for future health check logic
         Ok(())
     }
 
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
     const fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
         // Capability discovery health check implementation
+        // This is a placeholder for future health check logic
         Ok(())
     }
 }

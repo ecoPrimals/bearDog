@@ -1,24 +1,37 @@
-// Canonical Configuration System
-//
-// This module provides the **single source of truth** for all configuration types
-// across the BearDog ecosystem. It consolidates 50+ fragmented Config structs
-// into a unified, maintainable system.
-//
-// ## Unification Strategy
-//
-// This module replaces fragmented configurations from:
-// - `beardog-types/src/configuration/` - Legacy configuration types
-// - `beardog-types/src/production/` - Production-specific configs
-// - Individual crate configurations scattered across 22 crates
-//
-// ## Modern Architecture Principles
-//
-// - **Single Source of Truth**: All config types in one canonical location
-// - **Domain Organization**: Logical grouping by functional area
-// - **Zero Fragmentation**: No duplicate config types across crates
-// - **Compatibility Preservation**: Maintains existing APIs during migration
-// - **Type Safety**: Strongly typed configuration with validation
-// - **Performance Optimized**: Zero-cost abstractions and efficient loading
+//! Canonical Configuration System
+//!
+//! This module provides the **single source of truth** for all configuration types
+//! across the BearDog ecosystem. It consolidates 50+ fragmented Config structs
+//! into a unified, maintainable system.
+//!
+//! ## Unification Strategy
+//!
+//! This module replaces fragmented configurations from:
+//! - `beardog-types/src/configuration/` - Legacy configuration types
+//! - `beardog-types/src/production/` - Production-specific configs
+//! - Individual crate configurations scattered across 22 crates
+//!
+//! ## Modern Architecture Principles
+//!
+//! - **Single Source of Truth**: All config types in one canonical location
+//! - **Domain Organization**: Logical grouping by functional area
+//! - **Zero Fragmentation**: No duplicate config types across crates
+//! - **Compatibility Preservation**: Maintains existing APIs during migration
+//! - **Type Safety**: Strongly typed configuration with validation
+//! - **Performance Optimized**: Zero-cost abstractions and efficient loading
+//!
+//! ## Example
+//!
+//! ```rust
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // Load unified configuration
+//! let config = UnifiedBearDogConfig::default();
+//! 
+//! // Access domain-specific configs
+//! let app_config = &config.app;
+//! let security_config = &config.security;
+//! ```
 
 // BearDogError no longer needed in this module after deprecated config removal
 use serde::{Deserialize, Serialize};
