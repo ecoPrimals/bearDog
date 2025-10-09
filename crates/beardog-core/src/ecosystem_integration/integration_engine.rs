@@ -250,14 +250,14 @@ impl IntegrationEngine {
     }
 
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
-    const fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
+    fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
         // Universal adapter health check implementation
         // This is a placeholder for future health check logic
         Ok(())
     }
 
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
-    const fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
+    fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
         // Capability discovery health check implementation
         // This is a placeholder for future health check logic
         Ok(())
