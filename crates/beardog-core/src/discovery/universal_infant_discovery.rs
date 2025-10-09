@@ -149,7 +149,7 @@ impl UniversalInfantDiscovery {
 
         let start_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
 
         // Update discovery state
@@ -244,7 +244,7 @@ impl UniversalInfantDiscovery {
             metadata: beardog_types::canonical::discovery::DiscoveryMetadata {
                 discovery_timestamp: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .unwrap_or_default()
                     .as_secs(),
                 discovery_duration_ms: 0, // Will be calculated by caller
                 services_discovered: discovered.len(),
