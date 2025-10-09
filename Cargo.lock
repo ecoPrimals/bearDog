@@ -557,6 +557,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "beardog-integration-tests"
+version = "3.0.0"
+dependencies = [
+ "beardog-auth",
+ "beardog-core",
+ "beardog-errors",
+ "beardog-genetics",
+ "beardog-security",
+ "beardog-tunnel",
+ "beardog-types",
+ "chrono",
+ "serde",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "beardog-monitoring"
 version = "3.0.0"
 dependencies = [

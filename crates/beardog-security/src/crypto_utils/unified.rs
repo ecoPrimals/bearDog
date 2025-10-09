@@ -257,9 +257,12 @@ impl UnifiedBearDogCrypto {
         }
 
         let mut key = vec![0u8; key_length];
+        let iterations_nonzero = NonZeroU32::new(iterations)
+            .ok_or_else(|| BearDogError::validation("PBKDF2 iterations must be non-zero"))?;
+        
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
-            NonZeroU32::new(iterations).unwrap(),
+            iterations_nonzero,
             salt,
             password,
             &mut key,

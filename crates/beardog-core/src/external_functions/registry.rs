@@ -42,6 +42,9 @@ impl ExternalFunctionRegistry {
     /// Load a library
     /// Loads library
     /// Loads library
+    ///
+    /// # Errors
+    /// Returns an error if the library loading fails
     pub fn load_library(&mut self, library_path: &str) -> Result<String, BearDogError> {
         let library_id = Uuid::new_v4().to_string();
 
@@ -72,6 +75,9 @@ impl ExternalFunctionRegistry {
     }
 
     /// Unload a library
+    ///
+    /// # Errors
+    /// Returns an error if the library is not found
     pub fn unload_library(&mut self, library_id: &str) -> Result<(), BearDogError> {
         if self.libraries.remove(library_id).is_some() {
             // Also remove all functions from this library
@@ -87,6 +93,9 @@ impl ExternalFunctionRegistry {
 
     /// Gets `library_info`
     /// Gets `library_info`
+    ///
+    /// # Errors
+    /// Returns an error if the library is not found
     pub fn get_library_info(&self, library_id: &str) -> Result<LibraryHandle, BearDogError> {
         self.libraries
             .get(library_id)
@@ -95,11 +104,17 @@ impl ExternalFunctionRegistry {
     }
 
     /// List all loaded libraries
+    ///
+    /// # Errors
+    /// Returns an error if listing fails
     pub fn list_libraries(&self) -> Result<Vec<LibraryHandle>, BearDogError> {
         Ok(self.libraries.values().cloned().collect())
     }
 
     /// Register a function
+    ///
+    /// # Errors
+    /// Returns an error if the library is not found or registration fails
     pub fn register_function(
         &mut self,
         library_id: &str,

@@ -361,7 +361,11 @@ impl UniversalComputeClient {
 
     /// Execute compute request through discovered provider
     /// Executes `compute_request`
-    #[allow(clippy::unused_self, clippy::unnecessary_wraps, clippy::cast_possible_truncation)]
+    #[allow(
+        clippy::unused_self,
+        clippy::unnecessary_wraps,
+        clippy::cast_possible_truncation
+    )]
     fn execute_compute_request(
         &self,
         request: &UniversalComputeRequest,
@@ -434,6 +438,7 @@ impl UniversalComputeClient {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if the capability refresh fails
+    #[allow(clippy::cognitive_complexity)]
     pub async fn refresh_capabilities(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing compute capabilities through universal discovery");
 

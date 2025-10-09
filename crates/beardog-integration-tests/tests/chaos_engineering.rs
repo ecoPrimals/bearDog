@@ -1,5 +1,3 @@
-
-
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
@@ -21,7 +19,15 @@ async fn test_memory_pressure_resilience() {
 
     let mut completed = 0;
     for handle in handles {
-        if (tokio::time::timeout(Duration::from_secs({}/{} tasks completed in {:?}",
+        if (tokio::time::timeout(Duration::from_secs(2), handle).await).is_ok() {
+            completed += 1;
+        }
+    }
+
+    let duration = start.elapsed();
+
+    println!(
+        "✅ Memory pressure: {}/{} tasks completed in {:?}",
         completed, 100, duration
     );
 
@@ -44,27 +50,26 @@ async fn test_concurrent_operation_resilience() {
 
     for i in 0..50 {
         let handle = tokio::spawn(async move {
-
             match i % 4 {
                 0 => {
-
+                    // Crypto operation
                     let data = format!("crypto_data_{i}");
-                    sleep(Duration::from_millis(5));
+                    sleep(Duration::from_millis(5)).await;
                     data.len()
                 }
                 1 => {
-
-                    sleep(Duration::from_millis(10));
+                    // Database operation
+                    sleep(Duration::from_millis(10)).await;
                     42
                 }
                 2 => {
-
-                    sleep(Duration::from_millis(8));
+                    // Network operation
+                    sleep(Duration::from_millis(8)).await;
                     i * 2
                 }
                 _ => {
-
-                    sleep(Duration::from_millis(3));
+                    // Lightweight operation
+                    sleep(Duration::from_millis(3)).await;
                     i + 100
                 }
             }
@@ -74,7 +79,15 @@ async fn test_concurrent_operation_resilience() {
 
     let mut results = Vec::new();
     for handle in handles {
-        if let Ok(Ok(value)) = tokio::time::timeout(Duration::from_secs({}/{} operations completed in {:?}",
+        if let Ok(Ok(value)) = tokio::time::timeout(Duration::from_secs(2), handle).await {
+            results.push(value);
+        }
+    }
+
+    let duration = start.elapsed();
+
+    println!(
+        "✅ Concurrent operations: {}/{} operations completed in {:?}",
         results.len(),
         50,
         duration
@@ -100,9 +113,9 @@ async fn test_network_fault_tolerance() {
         let _operation_start = Instant::now();
 
         let result = tokio::spawn(async move {
-
+            // Simulate network operation
             let delay = if i % 3 == 0 { 50 } else { 5 }; // Some operations are slow
-            sleep(Duration::from_millis(delay));
+            sleep(Duration::from_millis(delay)).await;
 
             if i % 7 == 0 {
                 Err(format!("Network timeout for operation {i}"))
@@ -110,7 +123,7 @@ async fn test_network_fault_tolerance() {
                 Ok(format!("Success: operation_{i}"))
             }
         })
-        ;
+        .await;
 
         match result {
             Ok(Ok(_)) => successful_operations += 1,
@@ -118,7 +131,7 @@ async fn test_network_fault_tolerance() {
             Err(_) => println!("❌ Task panic"),
         }
 
-        sleep(Duration::from_millis(10));
+        sleep(Duration::from_millis(10)).await;
     }
 
     let duration = start.elapsed();
@@ -148,7 +161,7 @@ async fn test_resource_exhaustion_recovery() {
     for i in 0..10 {
         let op_start = Instant::now();
         let _result = format!("baseline_op_{i}");
-        sleep(Duration::from_millis(1));
+        sleep(Duration::from_millis(1)).await;
         baseline_performance.push(op_start.elapsed());
     }
 
@@ -158,7 +171,7 @@ async fn test_resource_exhaustion_recovery() {
     for i in 0..20 {
         let handle = tokio::spawn(async move {
             let _heavy_data = vec![0u8; 1024 * 50]; // 50KB per task
-            sleep(Duration::from_millis(20));
+            sleep(Duration::from_millis(20)).await;
             i
         });
         exhaustion_handles.push(handle);
@@ -168,10 +181,10 @@ async fn test_resource_exhaustion_recovery() {
     for i in 0..5 {
         let op_start = Instant::now();
         let result = tokio::spawn(async move {
-            sleep(Duration::from_millis(5));
+            sleep(Duration::from_millis(5)).await;
             format!("concurrent_op_{i}")
         })
-        ;
+        .await;
 
         if result.is_ok() {
             concurrent_results.push(op_start.elapsed());
@@ -186,7 +199,7 @@ async fn test_resource_exhaustion_recovery() {
     for i in 0..10 {
         let op_start = Instant::now();
         let _result = format!("recovery_op_{i}");
-        sleep(Duration::from_millis(1));
+        sleep(Duration::from_millis(1)).await;
         recovery_performance.push(op_start.elapsed());
     }
 
