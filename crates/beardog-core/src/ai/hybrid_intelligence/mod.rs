@@ -14,10 +14,10 @@ pub mod decision_engine;
 pub mod learning;
 /// Neural network implementations and architectures
 pub mod neural_networks;
-/// Shared type definitions
-pub mod types;
 /// Sovereign random number generation with cryptographic guarantees
 pub mod sovereign_rng;
+/// Shared type definitions
+pub mod types;
 
 // Selective re-exports to avoid ambiguity
 pub use config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};

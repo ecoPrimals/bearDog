@@ -615,8 +615,8 @@ impl UnifiedBearDogConfig {
     /// // Load configuration with automatic environment detection
     /// let config = UnifiedBearDogConfig::load()?;
     ///
-    /// println!("Running in {} environment", config.metadata.environment);
-    /// println!("Application: {} v{}", config.app.app_name, config.metadata.version);
+    /// println!("Running in {:?} environment", config.metadata.environment);
+    /// println!("Application: {} v{:?}", config.app.app_name, config.metadata.version);
     /// # Ok(())
     /// # }
     /// ```
@@ -677,8 +677,8 @@ impl UnifiedBearDogConfig {
     ///
     /// # fn main() -> Result<(), BearDogError> {
     /// let mut config = UnifiedBearDogConfig::default();
-    /// config.app.http_port = 8080;
-    /// config.app.grpc_port = 9090;
+    /// config.app.app_name = "MyApp".to_string();
+    /// config.app.organization = "MyOrg".to_string();
     ///
     /// // Validate before use
     /// config.validate()?;
@@ -747,7 +747,7 @@ impl UnifiedBearDogConfig {
     /// let config = UnifiedBearDogConfig::migrate_from_legacy()?;
     ///
     /// println!("Successfully migrated to unified configuration");
-    /// println!("Version: {}", config.metadata.version);
+    /// println!("Version: {:?}", config.metadata.version);
     /// # Ok(())
     /// # }
     /// ```

@@ -700,7 +700,7 @@ impl SecurityProvider for CoreSecurityProvider {
 /// Universal adapter for ecosystem service discovery
 ///
 /// Provides zero-knowledge capability discovery and service coordination
-/// across the BearDog ecosystem. Maintains a registry of available
+/// across the `BearDog` ecosystem. Maintains a registry of available
 /// capabilities and their endpoints.
 #[derive(Debug, Clone)]
 pub struct UniversalAdapter {
@@ -799,9 +799,9 @@ impl Default for CoreState {
 
 /// Main `BearDog` core system
 #[derive(Debug)]
-/// Core BearDog system instance
+/// Core `BearDog` system instance
 ///
-/// The main entry point for the BearDog security and cryptography platform.
+/// The main entry point for the `BearDog` security and cryptography platform.
 /// Provides AI-powered hybrid intelligence, sovereign key management, universal
 /// service discovery, and ecosystem integration capabilities.
 ///

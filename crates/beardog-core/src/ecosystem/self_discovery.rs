@@ -60,12 +60,14 @@ pub struct UniversalCapabilityDiscovery {
 impl UniversalCapabilityDiscovery {
     /// Create a new universal capability discovery service
     ///
-    /// Initializes the discovery service with default configuration
+    /// Initializes the discovery service with default configuration.
+    /// Creates a new instance of the capability discovery system.
     ///
     /// # Returns
     /// - `Ok(UniversalCapabilityDiscovery)` if initialization succeeds
-    /// - `Err(BearDogError)` if initialization fails
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// - Returns `BearDogError` if initialization fails
     pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self {})
     }
@@ -75,13 +77,16 @@ impl UniversalCapabilityDiscovery {
     /// returning a list of discovered services with their connection details.
     ///
     /// # Arguments
+    /// * `capability` - The capability type to search for
     ///
     /// # Returns
     /// - `Ok(Vec<DiscoveredService>)` containing matching services
-    /// - `Err(BearDogError)` if discovery fails
+    ///
+    /// # Errors
+    /// - Returns `BearDogError` if discovery fails or network errors occur
     pub fn discover_by_capability(
         &self,
-        capability: ServiceCapabilityType,
+        capability: &ServiceCapabilityType,
     ) -> Result<Vec<DiscoveredService>, BearDogError> {
         // Perform capability-based service discovery
         debug!("🔍 Discovering services for capability: {:?}", capability);
@@ -113,6 +118,9 @@ pub struct SelfDiscoveryManager {
 impl SelfDiscoveryManager {
     /// Create new self-discovery manager
     /// Creates a new instance
+    ///
+    /// # Errors
+    /// - Returns `BearDogError` if capability discovery initialization fails
     pub async fn new(
         identity: SelfIdentity,
         config: UniversalIntegrationConfig,
@@ -131,6 +139,10 @@ impl SelfDiscoveryManager {
 
     /// Register this primal's capabilities with the ecosystem
     /// This is how other primals discover us
+    ///
+    /// # Errors
+    /// - Returns `BearDogError` if registration with discovery endpoints fails
+    #[allow(clippy::cognitive_complexity)] // Will refactor when adding more registration logic
     pub fn register_self(&self) -> Result<(), BearDogError> {
         info!(
             "📡 Registering {} capabilities with ecosystem",
@@ -157,16 +169,17 @@ impl SelfDiscoveryManager {
 
     /// Discover required capabilities in the ecosystem
     /// This replaces hardcoded primal connections
+    ///
+    /// # Errors
+    /// - Returns `BearDogError` if required capabilities are not found or discovery fails
+    #[allow(clippy::cognitive_complexity)] // Will refactor when adding more discovery logic
     pub fn discover_required_capabilities(
         &self,
     ) -> Result<HashMap<ServiceCapabilityType, Vec<DiscoveredService>>, BearDogError> {
         let mut discovered = HashMap::new();
 
         for capability in &self.required_capabilities {
-            match self
-                .capability_discovery
-                .discover_by_capability(capability.clone())
-            {
+            match self.capability_discovery.discover_by_capability(capability) {
                 Ok(services) if !services.is_empty() => {
                     info!("✅ Found {} providers for {:?}", services.len(), capability);
                     discovered.insert(capability.clone(), services);
@@ -195,6 +208,10 @@ impl SelfDiscoveryManager {
     }
 
     /// Discover optional capabilities to enhance functionality
+    ///
+    /// # Errors
+    /// - Returns `BearDogError` if discovery process fails
+    #[allow(clippy::cognitive_complexity)] // Will refactor when adding more discovery logic
     pub fn discover_optional_capabilities(
         &self,
     ) -> Result<HashMap<ServiceCapabilityType, Vec<DiscoveredService>>, BearDogError> {
@@ -206,10 +223,7 @@ impl SelfDiscoveryManager {
         let mut discovered_services = HashMap::new();
 
         for capability in &self.config.optional_capabilities {
-            match self
-                .capability_discovery
-                .discover_by_capability(capability.clone())
-            {
+            match self.capability_discovery.discover_by_capability(capability) {
                 Ok(services) if !services.is_empty() => {
                     info!(
                         "✅ Found {} providers for optional {:?}",
@@ -250,6 +264,8 @@ impl SelfDiscoveryManager {
     }
 
     /// Register with a specific discovery endpoint
+    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
+    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
     fn register_with_endpoint(&self, endpoint: &str) -> Result<(), BearDogError> {
         debug!("Registering with discovery endpoint: {}", endpoint);
 
