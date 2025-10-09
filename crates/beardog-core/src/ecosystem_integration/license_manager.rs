@@ -62,7 +62,7 @@ impl BearDogCore {
     }
 
     /// Loads `license_configuration`
-    #[allow(dead_code)] // TODO: Enable when licensing module is activated
+    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)] // TODO: Enable when licensing module is activated
     fn load_license_configuration(&self) -> Result<LicenseInfo, BearDogError> {
         debug!("📄 Loading license configuration");
 
