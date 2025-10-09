@@ -10,14 +10,14 @@ pub mod lifecycle;
 
 // Core submodules
 pub mod adapter;
-pub mod system;
+pub mod core;
 pub mod monitoring;
 pub mod security;
 pub mod state;
 
 // Re-export key types for convenience
 pub use adapter::UniversalAdapter;
-pub use system::BearDogCore;
+pub use core::BearDogCore;
 pub use genetic_optimizer::{
     GeneticOptimizer, GeneticOptimizerConfig, OptimizationState, PerformanceMetric,
 };
@@ -27,3 +27,4 @@ pub use monitoring::{
 };
 pub use security::CoreSecurityProvider;
 pub use state::CoreState;
+

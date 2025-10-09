@@ -204,8 +204,6 @@ impl IntegrationEngine {
     /// and diagnostic purposes. This is a more thorough check than the
     /// basic integration health check.
     ///
-    /// # Returns
-    /// - `Err(BearDogError)` if the comprehensive health check fails
     /// Comprehensive integration health check.
     ///
     /// # Errors
