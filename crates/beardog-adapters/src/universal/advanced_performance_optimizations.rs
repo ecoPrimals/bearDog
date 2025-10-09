@@ -212,7 +212,11 @@ where
 
     /// Pre-warm the pool with objects
     pub fn prewarm(&self, count: usize) {
-        let mut pool = self.pool.lock().unwrap();
+        let mut pool = self.pool.lock()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Object pool lock poisoned on prewarm, recovering");
+                poisoned.into_inner()
+            });
         let to_create = count.min(self.max_size - pool.len());
         
         for _ in 0..to_create {
@@ -257,12 +261,14 @@ pub struct PooledObject<T> {
 impl<T> PooledObject<T> {
     /// Get reference to the pooled object
     pub fn as_ref(&self) -> &T {
-        self.object.as_ref().unwrap()
+        self.object.as_ref()
+            .expect("PooledObject invariant violated: object should always be Some until dropped")
     }
 
     /// Get mutable reference to the pooled object
     pub fn as_mut(&mut self) -> &mut T {
-        self.object.as_mut().unwrap()
+        self.object.as_mut()
+            .expect("PooledObject invariant violated: object should always be Some until dropped")
     }
 }
 
@@ -283,7 +289,11 @@ impl<T> std::ops::DerefMut for PooledObject<T> {
 impl<T> Drop for PooledObject<T> {
     fn drop(&mut self) {
         if let Some(obj) = self.object.take() {
-            let mut pool = self.pool.lock().unwrap();
+            let mut pool = self.pool.lock()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Object pool lock poisoned on drop, recovering");
+                    poisoned.into_inner()
+                });
             pool.push_back(obj);
             
             // 🛡️ 100% SAFE: Arc provides all safety guarantees!
