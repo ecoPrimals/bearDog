@@ -97,7 +97,10 @@ impl PerformanceBenchmarkSuite {
         let throughput = successful_ops as f64 / total_duration.as_secs_f64();
 
         // Calculate latency percentiles
-        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        latencies.sort_by(|a, b| {
+            a.partial_cmp(b)
+                .unwrap_or(std::cmp::Ordering::Equal) // Handle NaN gracefully
+        });
         let mut percentiles = HashMap::new();
         for &p in &self.config.percentiles {
             let index = ((p / 100.0) * latencies.len() as f64) as usize;
@@ -227,7 +230,10 @@ impl PerformanceBenchmarkSuite {
         let throughput = successful_ops as f64 / total_duration.as_secs_f64();
 
         // Calculate latency percentiles
-        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        latencies.sort_by(|a, b| {
+            a.partial_cmp(b)
+                .unwrap_or(std::cmp::Ordering::Equal) // Handle NaN gracefully
+        });
         let mut percentiles = HashMap::new();
         for &p in &self.config.percentiles {
             let index = ((p / 100.0) * latencies.len() as f64) as usize;

@@ -286,7 +286,11 @@ mod rand {
         T: 'static,
     {
         let mut hasher = DefaultHasher::new();
-        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos().hash(&mut hasher);
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+            .hash(&mut hasher);
         std::any::TypeId::of::<T>().hash(&mut hasher);
         let hash = hasher.finish();
         (hash as f64) / (u64::MAX as f64)
