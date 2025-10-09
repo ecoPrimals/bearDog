@@ -255,7 +255,10 @@ impl Default for ComputeDiscoveryConfig {
 
 impl UniversalComputeClient {
     /// Create new universal compute client
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if client initialization fails
+    #[allow(clippy::cognitive_complexity)]
     pub fn new(discovered_capabilities: Vec<UniversalCapability>) -> Result<Self, BearDogError> {
         let config = UniversalComputeConfig::default();
 
@@ -276,6 +279,10 @@ impl UniversalComputeClient {
     }
 
     /// Submit compute request using capability-based routing
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the compute request submission or processing fails
+    #[allow(clippy::cognitive_complexity, clippy::cast_possible_truncation, clippy::cast_precision_loss)]
     pub async fn submit_compute(
         &self,
         request: UniversalComputeRequest,
@@ -310,6 +317,7 @@ impl UniversalComputeClient {
         Ok(response)
     }
 
+    #[allow(clippy::significant_drop_tightening)]
     async fn discover_best_provider(
         &self,
         _request: &UniversalComputeRequest,
@@ -418,6 +426,9 @@ impl UniversalComputeClient {
     }
 
     /// Refresh discovered compute capabilities
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the capability refresh fails
     pub async fn refresh_capabilities(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing compute capabilities through universal discovery");
 

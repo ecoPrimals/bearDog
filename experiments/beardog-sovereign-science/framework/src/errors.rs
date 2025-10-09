@@ -24,8 +24,17 @@ pub enum SovereignScienceError {
     #[error("Statistical analysis failed: {0}")]
     StatisticalAnalysisFailed(String),
     
+    #[error("Statistical error: {0}")]
+    StatisticalError(String),
+    
     #[error("Telemetry error: {0}")]
     TelemetryError(String),
+    
+    #[error("Infrastructure error: {0}")]
+    InfrastructureError(String),
+    
+    #[error("Validation error: {0}")]
+    ValidationError(String),
     
     #[error("Configuration error: {0}")]
     ConfigurationError(String),

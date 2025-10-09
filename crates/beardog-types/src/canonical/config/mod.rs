@@ -27,7 +27,7 @@
 //!
 //! // Load unified configuration
 //! let config = UnifiedBearDogConfig::default();
-//! 
+//!
 //! // Access domain-specific configs
 //! let app_config = &config.app;
 //! let security_config = &config.security;

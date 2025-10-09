@@ -198,6 +198,7 @@ impl AdapterRequest {
 
     /// Add a header to the request
     /// Creates instance with header
+    #[must_use]
     pub fn with_header(mut self, key: String, value: String) -> Self {
         self.headers.insert(key, value);
         self
@@ -205,6 +206,7 @@ impl AdapterRequest {
 
     /// Set the request payload
     /// Creates instance with payload
+    #[must_use]
     pub fn with_payload(mut self, payload: serde_json::Value) -> Self {
         self.payload = Some(payload);
         self
@@ -212,6 +214,7 @@ impl AdapterRequest {
 
     /// Add metadata to the request
     /// Creates instance with metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
@@ -219,6 +222,7 @@ impl AdapterRequest {
 
     /// Set request timeout
     /// Creates instance with timeout
+    #[must_use]
     pub const fn with_timeout(mut self, timeout_ms: u64) -> Self {
         self.timeout_ms = Some(timeout_ms);
         self

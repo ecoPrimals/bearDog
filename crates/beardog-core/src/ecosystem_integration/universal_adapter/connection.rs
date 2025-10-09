@@ -30,10 +30,10 @@ impl ConnectionPool {
     pub async fn stats(&self) -> PoolStats {
         let connections = self.connections.read().await;
         PoolStats {
-            total_connections: connections.len() as u32,
-            active_connections: connections.len() as u32, // Simplified
+            total_connections: u32::try_from(connections.len()).unwrap_or(u32::MAX),
+            active_connections: u32::try_from(connections.len()).unwrap_or(u32::MAX),
             idle_connections: 0,
-            max_connections: self.config.max_size as u32,
+            max_connections: u32::try_from(self.config.max_size).unwrap_or(u32::MAX),
         }
     }
 }
