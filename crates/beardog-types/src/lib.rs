@@ -469,6 +469,10 @@ pub mod metrics;
 /// Health check and system status types.
 pub mod health_status;
 
+// Test modules
+#[cfg(test)]
+mod tests;
+
 /// 🔄 **WORKFLOWS** - Workflow orchestration types
 ///
 pub mod workflow;
