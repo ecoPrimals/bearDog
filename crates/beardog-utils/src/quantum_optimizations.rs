@@ -281,7 +281,9 @@ impl QuantumOptimizationEngine {
         }
 
         // Final measurement collapse
-        let final_solution = self.final_measurement_collapse(best_solution.unwrap()).await?;
+        let best_solution = best_solution
+            .ok_or_else(|| beardog_errors::BearDogError::internal("Quantum optimization failed to find solution"))?;
+        let final_solution = self.final_measurement_collapse(best_solution).await?;
 
         // Calculate quantum speedup
         let speedup = self.calculate_quantum_speedup(problem);
@@ -414,7 +416,10 @@ impl QuantumOptimizationEngine {
             }
         }
 
-        patterns.sort_by(|a, b| b.significance.partial_cmp(&a.significance).unwrap());
+        patterns.sort_by(|a, b| {
+            b.significance.partial_cmp(&a.significance)
+                .unwrap_or(std::cmp::Ordering::Equal) // Handle NaN by treating as equal
+        });
         patterns
     }
 
