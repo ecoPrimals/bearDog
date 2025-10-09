@@ -282,7 +282,11 @@ impl UniversalComputeClient {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if the compute request submission or processing fails
-    #[allow(clippy::cognitive_complexity, clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+    #[allow(
+        clippy::cognitive_complexity,
+        clippy::cast_possible_truncation,
+        clippy::cast_precision_loss
+    )]
     pub async fn submit_compute(
         &self,
         request: UniversalComputeRequest,
