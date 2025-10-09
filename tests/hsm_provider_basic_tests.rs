@@ -136,6 +136,7 @@ async fn test_key_storage_concepts() -> BearDogResult<()> {
     use tokio::sync::RwLock;
 
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     struct StoredKey {
         key_id: String,
         key_data: Vec<u8>,
@@ -209,6 +210,7 @@ fn test_key_rotation_concepts() {
     // Test key rotation concepts
 
     #[derive(Debug)]
+    #[allow(dead_code)]
     struct KeyVersion {
         version: u32,
         created_at: std::time::SystemTime,
