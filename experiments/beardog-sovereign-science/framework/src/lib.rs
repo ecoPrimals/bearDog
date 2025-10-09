@@ -84,6 +84,8 @@ pub struct FrameworkConfig {
     pub minimum_effect_size: f64,
     /// Maximum acceptable p-value for statistical significance
     pub significance_threshold: f64,
+    /// Optional Prometheus metrics exporter address
+    pub prometheus_addr: Option<std::net::SocketAddr>,
 }
 
 impl Default for FrameworkConfig {
@@ -97,6 +99,7 @@ impl Default for FrameworkConfig {
             confidence_level: 0.95,
             minimum_effect_size: 0.5, // Medium effect size
             significance_threshold: 0.05, // p < 0.05
+            prometheus_addr: None, // No Prometheus by default
         }
     }
 }
@@ -117,6 +120,7 @@ pub struct ValidationResults {
     pub enterprise_results: Option<stages::EnterpriseResults>,
     
     /// Overall validation status
+    pub all_stages_passed: bool,
     pub mathematical_certainty: bool,
     pub performance_excellence: bool,
     pub human_dignity_preserved: bool,
@@ -140,7 +144,7 @@ impl SovereignScienceFramework {
         let experiment_id = format!("BEARDOG-SOVEREIGN-SCIENCE-{}", 
             chrono::Utc::now().format("%Y%m%d-%H%M%S"));
         
-        let telemetry = telemetry::TelemetryFramework::initialize().await?;
+        let telemetry = telemetry::TelemetryFramework::initialize(config.prometheus_addr).await?;
         let statistical = statistical::StatisticalFramework::new(
             config.confidence_level,
             config.significance_threshold,
@@ -175,6 +179,7 @@ impl SovereignScienceFramework {
             distributed_security_results: None,
             human_dignity_results: None,
             enterprise_results: None,
+            all_stages_passed: false,
             mathematical_certainty: false,
             performance_excellence: false,
             human_dignity_preserved: false,
@@ -411,6 +416,7 @@ mod tests {
             distributed_security_results: None,
             human_dignity_results: None,
             enterprise_results: None,
+            all_stages_passed: true,
             mathematical_certainty: true,
             performance_excellence: true,
             human_dignity_preserved: true,
