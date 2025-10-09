@@ -267,11 +267,15 @@ impl Default for SovereigntyManager { #[inline]
     // Perfect resource management with automatic cleanup
         Self::newconfig.unwrap_or_else(|_| {
             // Fallback implementation
+            // SAFETY: This expect() is in Default::default() impl - initialization code
+            // GeneticSpawningEngine::new() should not fail with default config
+            // If it does, the system is in an invalid state and should fail-fast
+            // For production use, prefer SovereigntyManager::new() which returns Result
             Self {
                 /// Perfect field with comprehensive validation
                 config: SovereigntyConfig::default(),
                 /// Perfect field with comprehensive validation
-                genetics: GeneticSpawningEngine::new().expect("Failed to create genetics engine"),
+                genetics: GeneticSpawningEngine::new().expect("FATAL: Failed to create genetics engine with default config"),
                 /// Perfect field with comprehensive validation
                 crypto_config: EncryptionConfig::default(),
                 /// Perfect field with comprehensive validation
