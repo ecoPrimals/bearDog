@@ -31,8 +31,9 @@ impl ProductionUniversalAdapter {
     }
 
     /// Process request with production enhancements
-    /// Processes request
-    /// Processes request
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the request processing fails
     pub async fn process_request(
         &self,
         request: AdapterRequest,
@@ -52,8 +53,9 @@ impl ProductionUniversalAdapter {
     }
 
     /// Execute operation on a specific system
-    /// Executes `on_system`
-    /// Executes `on_system`
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the system operation fails
     pub fn execute_on_system(
         &self,
         system: &str,
@@ -72,6 +74,10 @@ impl ProductionUniversalAdapter {
         }))
     }
 
+    /// Performs health check on all systems
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the health check fails
     pub fn health_check_all(&self) -> Result<serde_json::Value, BearDogError> {
         info!("Performing health check on all systems");
 

@@ -85,7 +85,7 @@ impl BearDogCore {
     }
 
     /// Validates `license_integrity`
-    #[allow(dead_code)] // TODO: Enable when licensing module is activated
+    #[allow(dead_code, clippy::unused_self, clippy::cognitive_complexity)] // TODO: Enable when licensing module is activated
     fn validate_license_integrity(&self, license: &LicenseInfo) -> Result<(), BearDogError> {
         debug!("🔍 Validating license integrity");
 
@@ -100,7 +100,7 @@ impl BearDogCore {
         Ok(())
     }
 
-    #[allow(dead_code)] // TODO: Enable when licensing module is activated
+    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)] // TODO: Enable when licensing module is activated
     fn register_license_with_ecosystem(&self, _license: &LicenseInfo) -> Result<(), BearDogError> {
         debug!("🌐 Registering license with ecosystem");
 
@@ -145,7 +145,9 @@ impl BearDogCore {
     /// # Returns
     /// - `Ok(true)` if the capability is licensed and available
     /// - `Ok(false)` if the capability is not licensed
-    /// - `Err(BearDogError)` if the license check fails
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the license validation check fails
     pub fn check_capability_license(&self, capability: &str) -> Result<bool, BearDogError> {
         debug!("🔐 Checking license for capability: {}", capability);
 
@@ -155,7 +157,7 @@ impl BearDogCore {
             .contains(&capability.to_string()))
     }
 
-    #[allow(dead_code)] // TODO: Enable when licensing module is activated
+    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)] // TODO: Enable when licensing module is activated
     pub(crate) fn refresh_license(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing license information");
 

@@ -37,6 +37,7 @@ blake3 = "1.0"
 # Statistics and analysis
 statrs = "0.16"
 nalgebra = "0.32"
+rand = "0.8"
 
 # Monitoring and telemetry
 tracing = "0.1"

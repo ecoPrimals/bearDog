@@ -245,6 +245,9 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Optimize service mesh capability discovery
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if rate limiting fails or service discovery encounters an error
     pub async fn optimize_service_mesh_discovery(
         &self,
         service_type: &str,
@@ -264,7 +267,7 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Gets `cached_result`
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::significant_drop_tightening)]
     async fn get_cached_result(
         &self,
         request_id: &str,
@@ -280,7 +283,7 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Executes `compute_request`
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
     fn execute_compute_request(
         &self,
         _connection: &PooledConnection,
@@ -309,7 +312,9 @@ impl CapabilityConnectionPool {
     }
 
     /// Gets connection
-    /// Gets connection
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if the connection is not available for the specified capability
     pub async fn get_connection(&self, capability: &str) -> Result<String, BearDogError> {
         let connections = self.service_mesh_connections.read().await;
         connections
@@ -318,6 +323,11 @@ impl CapabilityConnectionPool {
             .ok_or_else(|| BearDogError::validation("Connection not available"))
     }
 
+    /// Adds a connection to the pool
+    ///
+    /// # Errors
+    /// Returns `Err(BearDogError)` if adding the connection fails
+    #[allow(clippy::significant_drop_tightening)]
     pub async fn add_connection(
         &self,
         capability: String,

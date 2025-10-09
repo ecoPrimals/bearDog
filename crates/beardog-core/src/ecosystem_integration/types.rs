@@ -151,12 +151,14 @@ impl EcosystemEvent {
     }
 
     /// Creates instance with target
+    #[must_use]
     pub fn with_target(mut self, target: String) -> Self {
         self.target = Some(target);
         self
     }
 
     /// Creates instance with priority
+    #[must_use]
     pub const fn with_priority(mut self, priority: EventPriority) -> Self {
         self.priority = priority;
         self
@@ -164,6 +166,7 @@ impl EcosystemEvent {
 
     /// Adds data to the event
     /// Creates instance with data
+    #[must_use]
     pub fn with_data(mut self, key: String, value: serde_json::Value) -> Self {
         self.data.insert(key, value);
         self
@@ -184,6 +187,7 @@ impl EcosystemNode {
 
     /// Adds a capability to the node
     /// Creates instance with capability
+    #[must_use]
     pub fn with_capability(mut self, capability: String) -> Self {
         self.capabilities.push(capability);
         self
@@ -191,6 +195,7 @@ impl EcosystemNode {
 
     /// Adds metadata to the node
     /// Creates instance with metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
