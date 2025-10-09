@@ -97,6 +97,10 @@ pub mod constructors_unified;
 /// Extension traits and helpers for idiomatic error handling in Rust.
 pub mod idiomatic;
 
+/// Comprehensive test suites
+#[cfg(test)]
+mod tests;
+
 pub use categories::*;
 pub use core::BearDogError;
 
@@ -285,7 +289,7 @@ pub mod validation {
 }
 
 #[cfg(test)]
-mod tests {
+mod existing_tests {
     use super::*;
 
     /// Test unified error constructor functionality.
