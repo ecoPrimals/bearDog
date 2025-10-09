@@ -1,0 +1,151 @@
+# Alert Manager Configuration for BearDog Sovereign Science Validation
+
+global:
+  # Default timeout for all communications
+  resolve_timeout: 5m
+  
+  # SMTP configuration (for email alerts - configure with your SMTP server)
+  # smtp_from: 'beardog-alerts@example.com'
+  # smtp_smarthost: 'smtp.example.com:587'
+  # smtp_auth_username: 'alerts@example.com'
+  # smtp_auth_password: 'password'
+  # smtp_require_tls: true
+
+# Template files for notifications
+templates:
+  - '/etc/alertmanager/*.tmpl'
+
+# Route tree for alert dispatching
+route:
+  # Default receiver for all alerts
+  receiver: 'default-receiver'
+  
+  # Group alerts by these labels
+  group_by: ['alertname', 'cluster', 'service']
+  
+  # How long to wait before sending initial notification
+  group_wait: 10s
+  
+  # How long to wait before sending notification about new alerts in group
+  group_interval: 10s
+  
+  # How long to wait before repeating notifications
+  repeat_interval: 12h
+  
+  # Child routes with specific receivers
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 5s
+      group_interval: 5s
+      repeat_interval: 1h
+      continue: true  # Also send to default receiver
+    
+    # Security alerts - immediate notification
+    - match:
+        component: security
+      receiver: 'security-alerts'
+      group_wait: 5s
+      group_interval: 5s
+      repeat_interval: 30m
+      continue: true
+    
+    # Validation failures - grouped notification
+    - match:
+        component: validation
+      receiver: 'validation-alerts'
+      group_wait: 30s
+      group_interval: 1m
+      repeat_interval: 4h
+    
+    # Warning alerts - less frequent
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 1m
+      group_interval: 5m
+      repeat_interval: 24h
+    
+    # Info alerts - low priority
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 5m
+      group_interval: 10m
+      repeat_interval: 48h
+
+# Inhibit rules - suppress alerts based on other active alerts
+inhibit_rules:
+  # Inhibit info/warning alerts if critical alert is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+  
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'cluster', 'service']
+  
+  # Inhibit validation alerts if system is down
+  - source_match:
+      alertname: 'PrometheusScrapeFailure'
+    target_match:
+      component: 'validation'
+    equal: ['instance']
+
+# Receivers - where to send notifications
+receivers:
+  # Default receiver - logs to console
+  - name: 'default-receiver'
+    webhook_configs:
+      - url: 'http://localhost:9093/api/v1/alerts'  # Self-reference for logging
+        send_resolved: true
+
+  # Critical alerts - multiple channels
+  - name: 'critical-alerts'
+    # Email notification (configure SMTP above)
+    # email_configs:
+    #   - to: 'oncall@example.com'
+    #     subject: '[CRITICAL] BearDog Validation Alert: {{ .GroupLabels.alertname }}'
+    #     html: '{{ template "email.default.html" . }}'
+    
+    # Webhook for external integrations (Slack, PagerDuty, etc.)
+    webhook_configs:
+      - url: 'http://localhost:9093/api/v1/alerts'  # Replace with your webhook
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+        # For Slack integration example:
+        # - url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        #   send_resolved: true
+
+  # Security alerts
+  - name: 'security-alerts'
+    # Configure security team notifications
+    webhook_configs:
+      - url: 'http://localhost:9093/api/v1/alerts'
+        send_resolved: true
+
+  # Validation alerts
+  - name: 'validation-alerts'
+    webhook_configs:
+      - url: 'http://localhost:9093/api/v1/alerts'
+        send_resolved: true
+
+  # Warning alerts
+  - name: 'warning-alerts'
+    webhook_configs:
+      - url: 'http://localhost:9093/api/v1/alerts'
+        send_resolved: true
+
+  # Info alerts
+  - name: 'info-alerts'
+    webhook_configs:
+      - url: 'http://localhost:9093/api/v1/alerts'
+        send_resolved: true
+
