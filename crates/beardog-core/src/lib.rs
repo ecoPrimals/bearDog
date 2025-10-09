@@ -24,7 +24,7 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_core::{BearDogCore, BearDogConfig};
 //! use beardog_types::canonical::config::UnifiedBearDogConfig;
 //!

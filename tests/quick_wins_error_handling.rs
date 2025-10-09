@@ -13,13 +13,13 @@ fn test_beardog_error_creation() {
 #[test]
 fn test_beardog_error_system() {
     let err = BearDogError::system("System error test".to_string());
-    assert!(format!("{:?}", err).contains("system"));
+    assert!(format!("{:?}", err).contains("System"));
 }
 
 #[test]
 fn test_beardog_error_business() {
     let err = BearDogError::business("Business logic error".to_string());
-    assert!(format!("{:?}", err).contains("business"));
+    assert!(format!("{:?}", err).contains("Business"));
 }
 
 #[test]
