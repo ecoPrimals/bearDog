@@ -366,8 +366,10 @@ impl VendorAgnosticHsmDiscovery {
                 let library_path = library_paths
                     .iter()
                     .find(|path| std::path::Path::new(path).exists())
-                    .unwrap()
-                    .clone();
+                    .ok_or_else(|| BearDogError::system(format!(
+                        "No PKCS#11 library found in paths: {:?}", library_paths
+                    )))?
+                    .to_string();
 
                 HsmInterface::Pkcs11 {
                     library_path,
