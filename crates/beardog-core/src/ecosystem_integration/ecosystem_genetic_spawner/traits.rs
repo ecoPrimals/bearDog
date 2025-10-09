@@ -11,24 +11,45 @@ use std::collections::HashMap;
 #[allow(async_fn_in_trait)]
 pub trait EcosystemPrimalClient: Send + Sync {
     /// Gets `primal_id`
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     fn get_primal_id(&self, capabilities: &[EcosystemCapability]) -> Result<bool, BearDogError>;
 
     /// Gets `resource_availability`
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     fn get_resource_availability(
         &self,
         allocation: &EcosystemResourceAllocation,
     ) -> Result<String, BearDogError>;
 
+    /// Release resources
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     fn release_resources(&self, reservation_id: &str) -> Result<(), BearDogError>;
 
     /// Creates `hybrid_component`
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     fn create_hybrid_component(
         &self,
         blueprint: &EcosystemGeneticBlueprint,
     ) -> Result<serde_json::Value, BearDogError>;
 
+    /// Health check
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     fn health_check(&self) -> Result<bool, BearDogError>;
 
+    /// Get resource utilization
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     fn get_resource_utilization(&self) -> Result<HashMap<String, f64>, BearDogError>;
 }
 
