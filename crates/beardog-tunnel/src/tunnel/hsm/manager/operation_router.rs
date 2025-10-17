@@ -1,191 +1,50 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! HSM Operation Router
+//!
+//! Routes operations to appropriate HSM providers based on requirements and availability.
 
 use beardog_errors::BearDogError;
-use beardog_traits::unified::HsmProvider;
-use beardog_types::canonical::hsm::{HsmKey, HsmTier, KeyMetadata, KeyType};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, info, warn};
 
-pub struct HsmOperationRouter<P: HsmProvider + Clone + 'static> {
-
-    primary_provider: P,
-
-    fallback_provider: Option<P>,
-
-    routing_rules: OperationRoutingRules,
-
-    performance_metrics: RoutingMetrics,
+/// Operation types for routing
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum OperationType {
+    /// Key generation
+    KeyGeneration,
+    /// Encryption
+    Encryption,
+    /// Decryption
+    Decryption,
+    /// Signing
+    Signing,
+    /// Verification
+    Verification,
+    /// Key derivation
+    KeyDerivation,
 }
 
+/// Operation routing configuration
 #[derive(Debug, Clone)]
-    preferred_mobile_operations: Vec<OperationType>,
-
-    flexible_operations: Vec<OperationType>,
-
-    software_preferred_operations: Vec<OperationType>,
-
-    max_retries: u32,
-
-    operation_timeout_ms: u64,
+pub struct OperationRouterConfig {
+    /// Prefer hardware for these operations
+    pub hardware_preferred_operations: Vec<OperationType>,
+    /// Prefer software for these operations
+    pub software_preferred_operations: Vec<OperationType>,
+    /// Maximum retry attempts
+    pub max_retries: u32,
+    /// Operation timeout in milliseconds
+    pub operation_timeout_ms: u64,
 }
 
-#[derive(HashMap<String, f64>,
-
-    average_latency_ms: HashMap<String, f64>,
-
-    operations_processed: HashMap<String, u64>,
-
-    error_counts: HashMap<String, u64>,
-}
-
-#[derive(Debug, Clone)]
-    /// Number of priority
-    pub priority: u8,
-
-    /// Whether requires_hardware is enabled
-    pub requires_hardware: bool,
-
-    /// Optional max latency ms
-    pub max_latency_ms: Option<u64>,
-}
-
-impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
-
-/// New operation.
-    /// Creates a new instance
-    pub fn new(P,
-        fallback_provider: Option<P>,
-    ) -> Self {
+impl Default for OperationRouterConfig {
+    fn default() -> Self {
         Self {
-            primary_provider,
-            fallback_provider,
-            routing_rules: OperationRoutingRules::default(),
-            performance_metrics: RoutingMetrics::default(RoutingContext,
-        operation: F,
-    ) -> Result<T, BearDogError>
-    where
-        F: Fn(std::future::Future<Output = Result<T, BearDogError>> + Send,
-        T: Send,
-    {
-        debug!("Routing operation: {:?}", context.operation_type);
-
-        let should_use_primary = self.should_use_primary_provider({}", e);
-                    self.update_error_metrics({}", e);
-                    self.update_error_metrics(&P,
-        operation: &F,
-    ) -> Result<T, BearDogError>
-    where
-        F: Fn(std::future::Future<Output = Result<T, BearDogError>> + Send,
-        T: Send,
-    {
-        let start_time = std::time::Instant::now();
-        
-        let result = operation(&provider);
-        
-        let elapsed = start_time.elapsed();
-        debug!("Operation completed in {:?}", elapsed);
-        
-        result
-    }
-
-
-    fn should_use_primary_provider(&self, context: &RoutingContext) -> bool {
-
-        if context.priority >= 8 {
-            return true;
-        }
-
-        if context.requires_hardware {
-            return true;
-        }
-
-        if self.routing_rules.critical_operations.contains(&context.operation_type) {
-            return true;
-        }
-
-        let primary_success_rate = self.performance_metrics
-            .success_rates
-            .get("primary")
-            .unwrap_or(&0.95);
-
-        let fallback_success_rate = self.performance_metrics
-            .success_rates
-            .get("fallback")
-            .unwrap_or(&0.90);
-
-        primary_success_rate > fallback_success_rate
-    }
-
-    /// Updates success_metrics
-    fn update_success_metrics(&mut self, provider_name: &str) {
-        let current_rate = self.performance_metrics
-            .success_rates
-            .get(provider_name)
-            .unwrap_or(&0.95);
-
-        let new_rate = current_rate * 0.9 + 0.1;
-        self.performance_metrics.success_rates.insert(provider_name.to_string(), new_rate);
-        
-        let operations = self.performance_metrics
-            .operations_processed
-            .get(provider_name)
-            .unwrap_or(&0);
-        self.performance_metrics.operations_processed.insert(provider_name.to_string(), operations + 1);
-    }
-
-    /// Updates error_metrics
-    fn update_error_metrics(&mut self, provider_name: &str) {
-        let current_rate = self.performance_metrics
-            .success_rates
-            .get(provider_name)
-            .unwrap_or(&0.95);
-
-        let new_rate = current_rate * 0.9;
-        self.performance_metrics.success_rates.insert(provider_name.to_string(), new_rate);
-        
-        let errors = self.performance_metrics
-            .error_counts
-            .get(provider_name)
-            .unwrap_or(&0);
-        self.performance_metrics.error_counts.insert(provider_name.to_string(), errors + 1);
-    }
-
-/// Get Metrics operation.
-    /// Gets metrics
-    /// Gets metrics
-    pub fn get_metrics(&self) -> &RoutingMetrics {
-        &self.performance_metrics
-    }
-
-/// Update Routing Rules operation.
-    /// Updates routing_rules
-    /// Updates routing_rules
-    pub fn update_routing_rules(&mut self, rules: OperationRoutingRules) {
-        self.routing_rules = rules;
-    }
-}
-
-impl Default for OperationRoutingRules {
-    fn default(vec![
+            hardware_preferred_operations: vec![
                 OperationType::KeyGeneration,
-                OperationType::DigitalSigning,
-            ],
-            preferred_mobile_operations: vec![
-                OperationType::Authentication,
-                OperationType::KeyDerivation,
-            ],
-            flexible_operations: vec![
-                OperationType::Encryption,
-                OperationType::RandomGeneration,
+                OperationType::Signing,
             ],
             software_preferred_operations: vec![
-                OperationType::HealthCheck,
+                OperationType::Encryption,
+                OperationType::Decryption,
             ],
             max_retries: 3,
             operation_timeout_ms: 5000,
@@ -193,33 +52,274 @@ impl Default for OperationRoutingRules {
     }
 }
 
-impl RoutingMetrics {
+/// Operation routing statistics
+#[derive(Debug, Clone)]
+pub struct OperationStats {
+    /// Success rate per provider
+    pub success_rate: HashMap<String, f64>,
+    /// Average latency per provider
+    pub average_latency_ms: HashMap<String, f64>,
+    /// Operations processed per provider
+    pub operations_processed: HashMap<String, u64>,
+    /// Error counts per provider
+    pub error_counts: HashMap<String, u64>,
+}
 
-/// Get Success Rate operation.
-    /// Gets success_rate
-    /// Gets success_rate
-    pub fn get_success_rate(&self, provider: &str) -> f64 {
-        self.success_rates.get(provider).copied().unwrap_or(0.0)
+impl Default for OperationStats {
+    fn default() -> Self {
+        Self {
+            success_rate: HashMap::new(),
+            average_latency_ms: HashMap::new(),
+            operations_processed: HashMap::new(),
+            error_counts: HashMap::new(),
+        }
+    }
+}
+
+/// Routing decision information
+#[derive(Debug, Clone)]
+pub struct RoutingDecision {
+    /// Selected provider ID
+    pub provider_id: String,
+    /// Operation priority
+    pub priority: u8,
+    /// Estimated latency
+    pub estimated_latency_ms: f64,
+    /// Routing reason
+    pub reason: String,
+}
+
+/// HSM selection result
+pub type HsmSelectionResult = Result<String, BearDogError>;
+
+/// Operation routing rules
+#[derive(Debug, Clone)]
+pub struct OperationRoutingRules {
+    /// Rules for operation types
+    pub rules: HashMap<OperationType, Vec<String>>,
+}
+
+impl Default for OperationRoutingRules {
+    fn default() -> Self {
+        Self {
+            rules: HashMap::new(),
+        }
+    }
+}
+
+/// HSM operation router
+pub struct HsmOperationRouter {
+    /// Routing configuration
+    config: OperationRouterConfig,
+    /// Operation statistics
+    stats: OperationStats,
+}
+
+impl HsmOperationRouter {
+    /// Create a new operation router
+    pub fn new() -> Self {
+        Self {
+            config: OperationRouterConfig::default(),
+            stats: OperationStats::default(),
+        }
     }
 
-/// Get Average Latency operation.
-    /// Gets average_latency
-    /// Gets average_latency
-    pub fn get_average_latency(&self, provider: &str) -> f64 {
-        self.average_latency_ms.get(provider).copied().unwrap_or(0.0)
+    /// Create with custom configuration
+    pub fn with_config(config: OperationRouterConfig) -> Self {
+        Self {
+            config,
+            stats: OperationStats::default(),
+        }
     }
 
-/// Get Operations Count operation.
-    /// Gets operations_count
-    /// Gets operations_count
-    pub fn get_operations_count(&self, provider: &str) -> u64 {
-        self.operations_processed.get(provider).copied().unwrap_or(0)
+    /// Route an operation to the best provider
+    pub fn route_operation(
+        &self,
+        operation_type: &OperationType,
+        available_providers: &[String],
+    ) -> Result<RoutingDecision, BearDogError> {
+        if available_providers.is_empty() {
+            return Err(BearDogError::unavailable(
+                "No providers available for operation".to_string(),
+            ));
+        }
+
+        // Simple routing logic: prefer hardware for certain operations
+        let is_hardware_preferred = self
+            .config
+            .hardware_preferred_operations
+            .contains(operation_type);
+
+        let provider_id = if is_hardware_preferred {
+            // Try to find a hardware provider
+            available_providers
+                .iter()
+                .find(|p| {
+                    p.contains("hardware") || p.contains("strongbox") || p.contains("enclave")
+                })
+                .or_else(|| available_providers.first())
+                // Safe: available_providers is guaranteed non-empty by check on line 141
+                .expect("BUG: available_providers should not be empty after non-empty check")
+                .clone()
+        } else {
+            // Prefer software
+            available_providers
+                .iter()
+                .find(|p| p.contains("software"))
+                .or_else(|| available_providers.first())
+                // Safe: available_providers is guaranteed non-empty by check on line 141
+                .expect("BUG: available_providers should not be empty after non-empty check")
+                .clone()
+        };
+
+        let estimated_latency = self
+            .stats
+            .average_latency_ms
+            .get(&provider_id)
+            .copied()
+            .unwrap_or(10.0);
+
+        Ok(RoutingDecision {
+            provider_id: provider_id.clone(),
+            priority: if is_hardware_preferred { 1 } else { 2 },
+            estimated_latency_ms: estimated_latency,
+            reason: format!("Routed {:?} to {}", operation_type, provider_id),
+        })
     }
 
-/// Get Error Count operation.
-    /// Gets error_count
-    /// Gets error_count
-    pub fn get_error_count(&self, provider: &str) -> u64 {
-        self.error_counts.get(provider).copied().unwrap_or(0)
+    /// Update operation statistics
+    pub fn update_stats(&mut self, provider_id: String, success: bool, latency_ms: f64) {
+        // Update operation count
+        *self
+            .stats
+            .operations_processed
+            .entry(provider_id.clone())
+            .or_insert(0) += 1;
+
+        // Update error count
+        if !success {
+            *self
+                .stats
+                .error_counts
+                .entry(provider_id.clone())
+                .or_insert(0) += 1;
+        }
+
+        // Update average latency (simple moving average)
+        let current_avg = self
+            .stats
+            .average_latency_ms
+            .entry(provider_id.clone())
+            .or_insert(0.0);
+        *current_avg = (*current_avg * 0.9) + (latency_ms * 0.1);
+
+        // Calculate success rate
+        let total_ops = self.stats.operations_processed[&provider_id];
+        let errors = self
+            .stats
+            .error_counts
+            .get(&provider_id)
+            .copied()
+            .unwrap_or(0);
+        let success_rate = 1.0 - (errors as f64 / total_ops as f64);
+        self.stats.success_rate.insert(provider_id, success_rate);
+    }
+
+    /// Get statistics
+    pub fn stats(&self) -> &OperationStats {
+        &self.stats
+    }
+
+    /// Get configuration
+    pub fn config(&self) -> &OperationRouterConfig {
+        &self.config
+    }
+}
+
+impl Default for HsmOperationRouter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_router_creation() {
+        let router = HsmOperationRouter::new();
+        assert!(router.stats().success_rate.is_empty());
+    }
+
+    #[test]
+    fn test_route_operation() {
+        let router = HsmOperationRouter::new();
+        let providers = vec!["software-hsm".to_string(), "hardware-hsm".to_string()];
+
+        let decision = router.route_operation(&OperationType::KeyGeneration, &providers);
+        assert!(decision.is_ok());
+
+        let decision = decision.unwrap();
+        assert!(decision.provider_id.contains("hardware"));
+    }
+
+    #[test]
+    fn test_route_operation_no_providers() {
+        let router = HsmOperationRouter::new();
+        let providers = vec![];
+
+        let decision = router.route_operation(&OperationType::Encryption, &providers);
+        assert!(decision.is_err());
+    }
+
+    #[test]
+    fn test_update_stats() {
+        let mut router = HsmOperationRouter::new();
+
+        router.update_stats("test-provider".to_string(), true, 15.0);
+        router.update_stats("test-provider".to_string(), true, 25.0);
+        router.update_stats("test-provider".to_string(), false, 50.0);
+
+        assert_eq!(router.stats().operations_processed["test-provider"], 3);
+        assert_eq!(router.stats().error_counts.get("test-provider"), Some(&1));
+    }
+
+    #[test]
+    fn test_success_rate_calculation() {
+        let mut router = HsmOperationRouter::new();
+
+        router.update_stats("provider-1".to_string(), true, 10.0);
+        router.update_stats("provider-1".to_string(), true, 10.0);
+        router.update_stats("provider-1".to_string(), false, 10.0);
+
+        let success_rate = router.stats().success_rate["provider-1"];
+        assert!((success_rate - 0.666).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_average_latency() {
+        let mut router = HsmOperationRouter::new();
+
+        router.update_stats("provider-1".to_string(), true, 10.0);
+        router.update_stats("provider-1".to_string(), true, 20.0);
+
+        let avg_latency = router.stats().average_latency_ms["provider-1"];
+        assert!(avg_latency > 0.0);
+        assert!(avg_latency <= 20.0);
+    }
+
+    #[test]
+    fn test_operation_type_equality() {
+        assert_eq!(OperationType::Signing, OperationType::Signing);
+        assert_ne!(OperationType::Signing, OperationType::Encryption);
+    }
+
+    #[test]
+    fn test_routing_config_default() {
+        let config = OperationRouterConfig::default();
+        assert!(!config.hardware_preferred_operations.is_empty());
+        assert!(!config.software_preferred_operations.is_empty());
+        assert_eq!(config.max_retries, 3);
     }
 }

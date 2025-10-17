@@ -2,7 +2,7 @@
 //
 // This module provides monitoring and analytics capabilities for entropy hierarchy operations.
 
-use super::types::*;
+use super::types::{EntropyClass, EntropyHierarchyConfig, EntropySeed};
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -17,6 +17,7 @@ pub struct EntropyMonitor {
 impl EntropyMonitor {
     /// Create new entropy monitor
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: &EntropyHierarchyConfig) -> Self {
         Self {
             config: EntropyMonitoringConfig {
@@ -30,8 +31,8 @@ impl EntropyMonitor {
     }
 
     /// Clean up expired seeds
-    /// Cleans up expired_seeds
-    /// Cleans up expired_seeds
+    /// Cleans up `expired_seeds`
+    /// Cleans up `expired_seeds`
     pub fn cleanup_expired_seeds(&mut self, active_seeds: &mut HashMap<Uuid, EntropySeed>) {
         let now = Utc::now();
         let mut expired_seeds = Vec::new();
@@ -52,6 +53,7 @@ impl EntropyMonitor {
     /// Get entropy hierarchy statistics
     /// Gets statistics
     /// Gets statistics
+    #[must_use]
     pub fn get_statistics(
         &self,
         active_seeds: &HashMap<Uuid, EntropySeed>,
@@ -81,6 +83,7 @@ impl EntropyMonitor {
     /// Get analytics data
     /// Gets analytics
     /// Gets analytics
+    #[must_use]
     pub fn get_analytics(&self, active_seeds: &HashMap<Uuid, EntropySeed>) -> EntropyAnalytics {
         let stats = self.get_statistics(active_seeds);
         let mut quality_scores = Vec::new();
@@ -109,8 +112,9 @@ impl EntropyMonitor {
     }
 
     /// Get health status
-    /// Gets health_status
-    /// Gets health_status
+    /// Gets `health_status`
+    /// Gets `health_status`
+    #[must_use]
     pub fn get_health_status(&self) -> EntropyHealthStatus {
         EntropyHealthStatus {
             overall_health: "Healthy".to_string(),
@@ -174,7 +178,8 @@ impl EntropyMonitor {
         self.metrics = metrics;
     }
 
-    pub fn get_performance_metrics(&self) -> &PerformanceMetrics {
+    #[must_use]
+    pub const fn get_performance_metrics(&self) -> &PerformanceMetrics {
         &self.metrics
     }
 }
@@ -182,17 +187,17 @@ impl EntropyMonitor {
 /// Entropy hierarchy statistics
 #[derive(Debug, Clone)]
 pub struct EntropyHierarchyStats {
-    /// Number of total_seeds
+    /// Number of `total_seeds`
     pub total_seeds: usize,
-    /// Number of human_entropy_seeds
+    /// Number of `human_entropy_seeds`
     pub human_entropy_seeds: u32,
-    /// Number of human_supervised_seeds
+    /// Number of `human_supervised_seeds`
     pub human_supervised_seeds: u32,
-    /// Number of machine_entropy_seeds
+    /// Number of `machine_entropy_seeds`
     pub machine_entropy_seeds: u32,
-    /// Number of event_seeds
+    /// Number of `event_seeds`
     pub event_seeds: u32,
-    /// Number of self_sovereign_seeds
+    /// Number of `self_sovereign_seeds`
     pub self_sovereign_seeds: u32,
 }
 
@@ -222,31 +227,31 @@ pub struct EntropyHealthStatus {
 
 #[derive(Debug, Clone, Default)]
 pub struct PerformanceMetrics {
-    /// Number of active_seeds
+    /// Number of `active_seeds`
     pub active_seeds_count: usize,
-    /// Number of total_entropy_generated
+    /// Number of `total_entropy_generated`
     pub total_entropy_generated: u64,
     /// The average quality score value
     pub average_quality_score: f64,
     pub seed_creation_time_ms: f64,
     pub entropy_mixing_time_ms: f64,
     pub validation_time_ms: f64,
-    /// Number of total_operations
+    /// Number of `total_operations`
     pub total_operations: u64,
-    /// Number of successful_operations
+    /// Number of `successful_operations`
     pub successful_operations: u64,
-    /// Number of failed_operations
+    /// Number of `failed_operations`
     pub failed_operations: u64,
 }
 
 /// Monitoring configuration
 #[derive(Debug, Clone, Default)]
 pub struct EntropyMonitoringConfig {
-    /// Whether enable_detailed_analytics is enabled
+    /// Whether `enable_detailed_analytics` is enabled
     pub enable_detailed_analytics: bool,
-    /// Number of cleanup_interval_seconds
+    /// Number of `cleanup_interval_seconds`
     pub cleanup_interval_seconds: u64,
-    /// Number of max_seed_age_days
+    /// Number of `max_seed_age_days`
     pub max_seed_age_days: u32,
     /// The quality threshold value
     pub quality_threshold: f64,

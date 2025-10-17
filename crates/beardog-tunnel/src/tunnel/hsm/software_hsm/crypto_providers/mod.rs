@@ -1,8 +1,3 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
 use beardog_errors::BearDogError;
 
 pub mod factory;
@@ -16,52 +11,68 @@ pub use factory::{
     is_crypto_backend_supported, CryptoProviderCapabilities,
 };
 
-pub use super::types::{CryptoProvider, OpenSslCryptoProvider, RustCryptoProvider};
+// Use canonical CryptoProvider trait from beardog-types
+pub use beardog_types::hsm::CryptoProvider;
 pub use ring_crypto::RingCryptoProvider;
 #[cfg(test)]
-mod tests {};
+mod tests {}
 
     use super::*;
     use crate::tunnel::hsm::types::*;
     use tokio;
     #[tokio::test]
-    fn test_all_crypto_providers() -> Result<(), BearDogError> {
+    async fn test_all_crypto_providers() -> Result<(), BearDogError> {
         let backends = get_supported_crypto_backends();
         for backend in backends {
-            let provider = create_crypto_provider(&backend).map_err(|e| {
+            let provider = create_crypto_provider(&backend).await.map_err(|e| {
                 tracing::error!("Operation failed: {e:?}");
                 beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
             })?;
-            assert!(provider.initialize().is_ok());
+            assert!(provider.initialize().await.is_ok());
             let capabilities = get_crypto_provider_capabilities(&backend);
             assert!(capabilities.supports_aes);
             assert!(capabilities.supports_ecc);
         }
         Ok(())
     }
-    fn test_crypto_provider_operations() -> Result<(), BearDogError> {
-
+    async fn test_crypto_provider_operations() -> Result<(), BearDogError> {
         let provider = create_crypto_provider(&CryptoBackend::RustCrypto)
+            .await
             .map_err(|e| {
+                tracing::error!("Failed to create provider: {e:?}");
+                beardog_errors::BearDogError::internal(format!("Failed to create provider: {e:?}"))
+            })?;
 
         let key = provider
             .generate_key_material(&KeyType::Aes256)
+            .await?;
         assert_eq!(key.len(), 32);
 
         let plaintext = b"Hello, World!";
-        let ciphertext = provider.encrypt(&key, plaintext).map_err(|e| {
+        let ciphertext = provider.encrypt(&key, plaintext).await.map_err(|e| {
             tracing::error!("Operation failed: {e:?}");
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         })?;
-        let decrypted = provider.decrypt(&key, &ciphertext).map_err(|e| {
+        let decrypted = provider.decrypt(&key, &ciphertext).await.map_err(|e| {
+            tracing::error!("Decryption failed: {e:?}");
+            beardog_errors::BearDogError::internal(format!("Decryption failed: {e:?}"))
+        })?;
         assert_eq!(plaintext, decrypted.as_slice());
 
         let ecc_key = provider
             .generate_key_material(&KeyType::EccP256)
-        let signature = provider.sign(&ecc_key, plaintext).map_err(|e| {
+            .await?;
+        let signature = provider.sign(&ecc_key, plaintext).await.map_err(|e| {
+            tracing::error!("Signing failed: {e:?}");
+            beardog_errors::BearDogError::internal(format!("Signing failed: {e:?}"))
+        })?;
         let is_valid = provider
             .verify(&ecc_key, plaintext, &signature)
+            .await?;
         assert!(is_valid);
+        Ok(())
+    }
+
     #[test]
     fn test_capabilities_comparison() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
@@ -74,9 +85,11 @@ mod tests {};
 
         assert!(!rust_caps.supports_hardware_acceleration);
         assert!(ring_caps.supports_hardware_acceleration);
-        assert!(openssl_caps.supports_hardware_acceleration);}
+        assert!(openssl_caps.supports_hardware_acceleration);
+        Ok(())
+    }
 
-
+    #[test]
     fn test_backend_utilities() -> Result<(), BearDogError> {
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
         assert!(!is_crypto_backend_supported(&CryptoBackend::Custom(
@@ -88,4 +101,5 @@ mod tests {};
             Some(CryptoBackend::Ring)
         );
         assert_eq!(get_crypto_backend_by_name("unknown"), None);
-}
+        Ok(())
+    }

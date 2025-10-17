@@ -201,7 +201,11 @@ impl EcosystemMembershipManager {
 
 impl Default for EcosystemMembershipManager {
     fn default() -> Self {
-        Self::new(MembershipConfig::default()).unwrap()
+        // SAFETY: Default configuration should always be valid.
+        // If this fails, it indicates a programming error in MembershipConfig::default()
+        // or TrustEvolutionTracker/GeneticsIntegration initialization.
+        Self::new(MembershipConfig::default())
+            .expect("Default EcosystemMembershipManager configuration must be valid")
     }
 }
 

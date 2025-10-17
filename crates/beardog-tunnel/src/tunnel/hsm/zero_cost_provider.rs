@@ -1,12 +1,10 @@
-
-
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
 
-
+use crate::tunnel::hsm::types::HsmOperation;
 use beardog_errors::BearDogError;
-use beardog_types::canonical::{HsmKey, HsmOperation};
+use beardog_types::canonical::HsmKey;
 use std::marker::PhantomData;
 
 pub struct ZeroCostHsmProvider<P> {
@@ -18,8 +16,7 @@ impl<P> ZeroCostHsmProvider<P>
 where
     P: HsmProviderTrait,
 {
-
-/// New operation.
+    /// New operation.
     /// Creates a new instance
     pub fn new(provider: P) -> Self {
         Self {
@@ -28,61 +25,78 @@ where
         }
     }
 
-
     pub const fn capabilities() -> &'static P::Capabilities {
-
         P::CAPABILITIES
     }
 
-/// Execute Operation operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
+    /// Execute Operation operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     /// Executes operation
     /// Executes operation
     pub fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError> {
-
         self.provider.execute_operation(operation)
     }
 
-/// Generate Key operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    pub fn generate_key<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError> 
+    /// Generate Key operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub fn generate_key<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError>
     where
         A: KeyAlgorithm,
         P: SupportsAlgorithm<A>,
     {
+        self.provider.generate_key_typed(algorithm)
+    }
+}
 
-        self.provider.generate_key_typed(Send + Sync + \'static {
+/// HSM provider trait
+pub trait HsmProviderTrait: Send + Sync + 'static {
     type Capabilities: HsmCapabilities;
     const CAPABILITIES: &'static Self::Capabilities;
 
     /// Executes operation
     fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError>;
 
-
+    /// Generates typed key
     fn generate_key_typed<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError>
     where
         A: KeyAlgorithm,
         Self: SupportsAlgorithm<A>;
 }
 
-pub trait HsmCapabilities: Send + Sync + \'static {
+/// HSM capabilities trait
+pub trait HsmCapabilities: Send + Sync + 'static {
     const ALGORITHMS: &'static [&'static str];
     const MAX_KEY_SIZE: usize;
     const SECURITY_LEVEL: SecurityLevel;
 }
 
-pub trait KeyAlgorithm: Send + Sync + \'static {
+/// Key algorithm trait
+pub trait KeyAlgorithm: Send + Sync + 'static {
     const NAME: &'static str;
     const KEY_SIZE: usize;
 }
 
+/// Algorithm support marker trait
 pub trait SupportsAlgorithm<A: KeyAlgorithm>: HsmProviderTrait {}
 
-#[derive(&'static [&'static str] = &["AES-256", "RSA-2048", "ECDSA-P256"];
+/// Security levels
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SecurityLevel {
+    Software,
+    TrustedExecutionEnvironment,
+    SecureEnclave,
+    HardwareSecurityModule,
+}
+
+/// Software HSM capabilities
+pub struct SoftwareHsmCapabilities;
+
+impl HsmCapabilities for SoftwareHsmCapabilities {
+    const ALGORITHMS: &'static [&'static str] = &["AES-256", "RSA-2048", "ECDSA-P256"];
     const MAX_KEY_SIZE: usize = 4096;
     const SECURITY_LEVEL: SecurityLevel = SecurityLevel::Software;
 }

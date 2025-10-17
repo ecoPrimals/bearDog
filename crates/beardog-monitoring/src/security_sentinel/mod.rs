@@ -17,20 +17,20 @@ pub struct SecuritySentinelConfig {
     /// Whether feature is enabled
     pub enabled: bool,
     /// Maximum number of events to track
-    /// Number of max_events
+    /// Number of `max_events`
     pub max_events: usize,
     /// Event retention period in hours
-    /// Number of retention_hours
+    /// Number of `retention_hours`
     pub retention_hours: u64,
     /// Whether to log security events
-    /// Whether log_events is enabled
+    /// Whether `log_events` is enabled
     pub log_events: bool,
-    /// Number of alert_threshold
+    /// Number of `alert_threshold`
     pub alert_threshold: u32,
     /// Whether to enable real-time monitoring
     pub real_time_monitoring: bool,
     /// Monitoring interval in seconds
-    /// Number of monitoring_interval_seconds
+    /// Number of `monitoring_interval_seconds`
     pub monitoring_interval_seconds: u64,
 }
 
@@ -52,22 +52,22 @@ impl Default for SecuritySentinelConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySentinelStats {
     /// Total number of security events processed
-    /// Number of total_events
+    /// Number of `total_events`
     pub total_events: u64,
     /// Number of authentication failures
-    /// Number of auth_failures
+    /// Number of `auth_failures`
     pub auth_failures: u64,
     /// Number of access violations
-    /// Number of access_violations
+    /// Number of `access_violations`
     pub access_violations: u64,
     /// Number of compliance violations
-    /// Number of compliance_violations
+    /// Number of `compliance_violations`
     pub compliance_violations: u64,
     /// Number of suspicious activities detected
-    /// Number of suspicious_activities
+    /// Number of `suspicious_activities`
     pub suspicious_activities: u64,
     /// Number of blocked requests
-    /// Number of blocked_requests
+    /// Number of `blocked_requests`
     pub blocked_requests: u64,
     /// Last event timestamp
     pub last_event_time: Option<DateTime<Utc>>,
@@ -156,8 +156,8 @@ impl SecuritySentinel {
     ///
     /// # Errors
     /// Returns an error if the event cannot be processed
-    /// Processes security_event
-    /// Processes security_event
+    /// Processes `security_event`
+    /// Processes `security_event`
     pub async fn process_security_event(
         &self,
         event_type: &str,
@@ -201,8 +201,8 @@ impl SecuritySentinel {
     ///
     /// # Errors
     /// Returns an error if the status report cannot be generated
-    /// Gets status_report
-    /// Gets status_report
+    /// Gets `status_report`
+    /// Gets `status_report`
     pub async fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
         let stats = self.stats.read().await.clone();
         let status = if self.monitoring_active.load(Ordering::Relaxed) {
@@ -239,8 +239,8 @@ impl SecuritySentinel {
 
     /// Gets the current event count
     #[must_use]
-    /// Gets event_count
-    /// Gets event_count
+    /// Gets `event_count`
+    /// Gets `event_count`
     pub fn get_event_count(&self) -> usize {
         self.event_counter.load(Ordering::Relaxed)
     }

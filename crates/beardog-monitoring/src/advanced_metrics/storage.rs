@@ -1,6 +1,9 @@
 // Metrics Storage System
 
-use super::types::*;
+use super::types::{
+    CustomMetric, EcosystemMetric, MetricsMetadata, PerformanceMetric, SecurityEventType,
+    SecurityMetric,
+};
 use std::collections::HashMap;
 
 /// Comprehensive metrics storage
@@ -24,10 +27,12 @@ pub struct MetricsStore {
 impl MetricsStore {
     /// Create a new metrics store
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[must_use]
     pub fn get_performance_metric(&self, name: &str) -> Option<&PerformanceMetric> {
         self.performance.get(name)
     }
@@ -38,10 +43,11 @@ impl MetricsStore {
     }
 
     /// Get security metric by event type
-    /// Gets security_metric
-    /// Gets security_metric
+    /// Gets `security_metric`
+    /// Gets `security_metric`
+    #[must_use]
     pub fn get_security_metric(&self, event_type: &SecurityEventType) -> Option<&SecurityMetric> {
-        self.security.get(&format!("{:?}", event_type))
+        self.security.get(&format!("{event_type:?}"))
     }
 
     /// Store security metric
@@ -51,8 +57,9 @@ impl MetricsStore {
     }
 
     /// Get ecosystem metric by service
-    /// Gets ecosystem_metric
-    /// Gets ecosystem_metric
+    /// Gets `ecosystem_metric`
+    /// Gets `ecosystem_metric`
+    #[must_use]
     pub fn get_ecosystem_metric(&self, service: &str) -> Option<&EcosystemMetric> {
         self.ecosystem.get(service)
     }
@@ -64,8 +71,9 @@ impl MetricsStore {
     }
 
     /// Get custom metric by name
-    /// Gets custom_metric
-    /// Gets custom_metric
+    /// Gets `custom_metric`
+    /// Gets `custom_metric`
+    #[must_use]
     pub fn get_custom_metric(&self, name: &str) -> Option<&CustomMetric> {
         self.custom.get(name)
     }
@@ -77,7 +85,8 @@ impl MetricsStore {
     }
 
     /// Get total metrics count
-    pub fn total_metrics(&self) -> u64 {
+    #[must_use]
+    pub const fn total_metrics(&self) -> u64 {
         self.metadata.total_metrics
     }
 }

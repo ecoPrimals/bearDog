@@ -3,7 +3,9 @@
 // This module provides validation capabilities for entropy hierarchy management,
 // including quality assessment and ownership verification.
 
-use super::types::*;
+use super::types::{
+    BiometricHash, EntropyClass, EntropyHierarchyConfig, HumanIdentity, OwnershipProof,
+};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
@@ -19,6 +21,7 @@ pub struct EntropyValidator {
 impl EntropyValidator {
     /// Create new entropy validator
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: EntropyHierarchyConfig) -> Self {
         let mut quality_thresholds = HashMap::new();
         quality_thresholds.insert("human".to_string(), config.min_human_quality);
@@ -31,8 +34,8 @@ impl EntropyValidator {
     }
 
     /// Validate entropy class quality
-    /// Validates entropy_quality
-    /// Validates entropy_quality
+    /// Validates `entropy_quality`
+    /// Validates `entropy_quality`
     pub fn validate_entropy_quality(
         &self,
         entropy_class: &EntropyClass,
@@ -83,8 +86,8 @@ impl EntropyValidator {
     }
 
     /// Validate entropy age
-    /// Validates entropy_age
-    /// Validates entropy_age
+    /// Validates `entropy_age`
+    /// Validates `entropy_age`
     pub fn validate_entropy_age(&self, entropy_class: &EntropyClass) -> Result<bool, BearDogError> {
         let timestamp = match entropy_class {
             EntropyClass::HumanLivedExperience {
@@ -105,7 +108,7 @@ impl EntropyValidator {
     }
 
     /// Create ownership proof data
-    /// Creates ownership_proof_data
+    /// Creates `ownership_proof_data`
     fn create_ownership_proof_data(
         &self,
         owner_identity: &HumanIdentity,

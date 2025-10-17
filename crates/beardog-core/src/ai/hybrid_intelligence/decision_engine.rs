@@ -19,6 +19,7 @@ pub enum DecisionStrategy {
     MultiCriteria,
     /// Game theory-based decisions
     GameTheory,
+    /// Reinforcement learning-based decisions
     ReinforcementLearning,
     /// Ensemble decision making
     Ensemble,
@@ -71,6 +72,10 @@ pub enum CriterionType {
     Categorical,
 }
 
+/// Evaluation function types for criterion assessment
+///
+/// Defines mathematical functions used to evaluate decision criteria
+/// and transform raw values into normalized scores.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EvaluationFunction {
     /// Linear evaluation
@@ -87,6 +92,10 @@ pub enum EvaluationFunction {
     Custom(String),
 }
 
+/// Consensus strategy for multi-agent decisions
+///
+/// Specifies how multiple decision makers reach consensus
+/// in collaborative decision scenarios.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ConsensusStrategy {
     /// Simple majority voting
@@ -105,6 +114,10 @@ pub enum ConsensusStrategy {
     Condorcet,
 }
 
+/// Decision priority levels
+///
+/// Indicates the urgency and importance of a decision,
+/// affecting scheduling and resource allocation.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum DecisionPriority {
     /// Low priority tasks
@@ -288,6 +301,12 @@ pub struct FuzzySet {
     pub universe: (f64, f64),
 }
 
+/// Membership functions for fuzzy logic
+///
+/// Defines the shape of fuzzy set membership functions. Different function types
+/// are suited for different fuzzy logic applications - triangular for simplicity,
+/// Gaussian for smoothness, trapezoidal for stability regions, and sigmoid for
+/// smooth transitions.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum MembershipFunction {
     /// Triangular membership function with three control points
@@ -342,8 +361,13 @@ pub struct FuzzyRule {
     pub weight: f64,
 }
 
+/// Fuzzy logic expressions for rules
+///
+/// Represents logical expressions in fuzzy logic rules, supporting variables,
+/// AND/OR operations, and NOT operations for building complex rule conditions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FuzzyExpression {
+    /// A fuzzy variable with its associated fuzzy set
     Variable {
         /// Name of the fuzzy variable
         variable: String,

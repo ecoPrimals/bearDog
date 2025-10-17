@@ -1,6 +1,6 @@
 //! # AI Optimization Module
 //!
-//! **Ultra-pedantic AI-driven performance optimization for the BearDog ecosystem.**
+//! **Ultra-pedantic AI-driven performance optimization for the `BearDog` ecosystem.**
 //!
 //! This module provides sophisticated artificial intelligence capabilities for:
 //! - **Performance Prediction**: ML-based resource usage forecasting
@@ -46,7 +46,7 @@
 //! All AI operations maintain:
 //! - **Memory safety** with zero unsafe code
 //! - **Input validation** for all external data
-//! - **Resource bounds** to prevent DoS attacks
+//! - **Resource bounds** to prevent `DoS` attacks
 //! - **Privacy preservation** in ML model training
 
 pub mod engine;

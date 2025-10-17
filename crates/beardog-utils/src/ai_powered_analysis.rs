@@ -410,9 +410,15 @@ impl AICodeAnalysisEngine {
         recommendations.extend(feature_recommendations);
 
         // Rank recommendations by priority and impact
+        // SAFETY: Overall scores should always be valid floats (not NaN).
+        // If NaN is encountered, treat as less than (fallback to Equal for defensive handling).
         recommendations.sort_by(|a, b| {
             b.priority.cmp(&a.priority)
-                .then_with(|| b.expected_impact.overall_score.partial_cmp(&a.expected_impact.overall_score).unwrap())
+                .then_with(|| {
+                    b.expected_impact.overall_score
+                        .partial_cmp(&a.expected_impact.overall_score)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
         });
 
         self.ai_stats.optimizations_recommended.fetch_add(recommendations.len() as u64, Ordering::Relaxed);

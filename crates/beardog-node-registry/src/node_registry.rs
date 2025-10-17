@@ -137,9 +137,9 @@ mod tests {
     #[tokio::test]
     async fn test_node_trust_management() {
         let registry = create_federation_test_registry().unwrap();
-        // Test trust management functionality
-        // This is a placeholder test
-        assert!(true);
+        // Test trust management functionality - pending full implementation
+        // Verify registry was created successfully
+        assert!(registry.health_check().is_ok());
     }
 
     #[tokio::test]

@@ -184,6 +184,7 @@ pub struct ServiceEndpoint {
 impl AdapterRequest {
     /// Create a new adapter request
     /// Creates a new instance
+    #[must_use]
     pub fn new(operation: AdapterOperation, endpoint: String) -> Self {
         Self {
             request_id: Uuid::new_v4(),

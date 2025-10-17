@@ -13,14 +13,22 @@ use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, Semaphore};
 use tracing::debug;
 
+/// Advanced performance optimization for ecosystem integration
+///
+/// Currently defined but not actively used. This module provides connection pooling,
+/// intelligent caching, and zero-copy patterns for cross-capability communication.
+/// Activation pending ecosystem performance requirements.
 #[derive(Debug)]
-#[allow(dead_code)] // TODO: Enable when ecosystem performance optimization is activated
 pub struct EcosystemPerformanceOptimizer {
+    #[allow(dead_code)]
     capability_pool: Arc<CapabilityConnectionPool>,
+    #[allow(dead_code)]
     compute_cache: Arc<RwLock<ComputeCache>>,
+    #[allow(dead_code)]
     metrics: Arc<RwLock<PerformanceMetrics>>,
     rate_limiter: Arc<Semaphore>,
     /// Configuration
+    #[allow(dead_code)]
     config: EcosystemOptimizerConfig,
 }
 
@@ -227,6 +235,7 @@ pub struct PoolConfig {
 
 impl EcosystemPerformanceOptimizer {
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: EcosystemOptimizerConfig) -> Self {
         let pool_config = PoolConfig {
             max_pool_size: config.max_connections,
@@ -302,6 +311,7 @@ impl EcosystemPerformanceOptimizer {
 impl CapabilityConnectionPool {
     /// Create a new connection pool with the given configuration
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: PoolConfig) -> Self {
         Self {
             service_mesh_connections: RwLock::new(HashMap::new()),

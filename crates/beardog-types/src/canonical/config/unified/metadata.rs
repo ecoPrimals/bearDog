@@ -36,7 +36,7 @@ pub struct SystemMetadata {
 }
 
 /// **UNIFIED VERSION INFORMATION** - Eliminates all version constant duplication
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedVersionInfo {
     /// **PRIMARY VERSIONS** - Core system versions
     /// Main `BearDog` system version (e.g., "3.0.0")
@@ -82,7 +82,28 @@ pub struct UnifiedVersionInfo {
     pub build_profile: String, // "release", "debug", "production"
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+impl Default for UnifiedVersionInfo {
+    fn default() -> Self {
+        Self {
+            beardog_version: env!("CARGO_PKG_VERSION").to_string(),
+            config_schema_version: "1.0.0".to_string(),
+            api_version: "2.0".to_string(),
+            workflow_system_version: "3.1.0".to_string(),
+            hsm_foundation_version: "2.0.0".to_string(),
+            software_hsm_version: "1.0.0".to_string(),
+            tunnel_version: "1.0.0".to_string(),
+            genetics_version: "1.0.0".to_string(),
+            min_client_version: "1.0.0".to_string(),
+            min_rust_version: "1.70.0".to_string(),
+            max_supported_version: "4.0.0".to_string(),
+            build_timestamp: String::new(),
+            git_commit: None,
+            build_profile: "development".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 /// Deployment environment configuration
 pub enum Environment {
     #[default]

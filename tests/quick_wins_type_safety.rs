@@ -36,7 +36,7 @@ fn test_log_level_enum_variants() {
     let error = LogLevel::Error;
 
     // All should be distinct
-    let levels = vec![trace, debug, info, warn, error];
+    let levels = [trace, debug, info, warn, error];
     assert_eq!(levels.len(), 5);
 }
 
@@ -57,7 +57,7 @@ fn test_config_implements_clone() {
 fn test_config_implements_debug() {
     let config = UnifiedBearDogConfig::default();
     let debug_output = format!("{:?}", config);
-    assert!(debug_output.len() > 0);
+    assert!(!debug_output.is_empty());
 }
 
 #[test]

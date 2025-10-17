@@ -14,7 +14,7 @@ pub struct CrossNodeAuthConfig {
     /// The spawning mode value
     pub spawning_mode: SpawningMode,
     pub consensus_config: ConsensusConfig,
-    /// Number of max_spawns_per_node
+    /// Number of `max_spawns_per_node`
     pub max_spawns_per_node: u32,
     /// The approval mode value
     pub approval_mode: ApprovalMode,
@@ -60,7 +60,7 @@ pub struct CrossNodeAuthorization {
     pub expires_at: DateTime<Utc>,
     /// The signature value
     pub signature: String,
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
 }
 
@@ -68,6 +68,7 @@ impl CrossNodeAuthorization {
     /// Is Valid operation.
     /// Checks if valid
     /// Checks if valid
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         self.is_active && Utc::now() < self.expires_at
     }
@@ -75,6 +76,7 @@ impl CrossNodeAuthorization {
     /// Has Permission operation.
     /// Checks if permission
     /// Checks if permission
+    #[must_use]
     pub fn has_permission(&self, permission: &ResourcePermission) -> bool {
         self.permissions.iter().any(|p| p.implies(permission))
     }
@@ -130,33 +132,35 @@ pub enum ResourcePermission {
 
 impl ResourcePermission {
     /// Implies operation.
+    #[must_use]
     pub fn implies(&self, other: &Self) -> bool {
         match (self, other) {
-            (ResourcePermission::Admin, _) => true,
-            (ResourcePermission::Write, ResourcePermission::Read) => true,
-            (ResourcePermission::Delete, ResourcePermission::Write) => true,
-            (ResourcePermission::Spawn, ResourcePermission::Create) => true,
+            (Self::Admin, _) => true,
+            (Self::Write, Self::Read) => true,
+            (Self::Delete, Self::Write) => true,
+            (Self::Spawn, Self::Create) => true,
             (a, b) => a == b,
         }
     }
 
+    #[must_use]
     pub const fn security_level(&self) -> u8 {
         match self {
-            ResourcePermission::Read => 1,
-            ResourcePermission::Audit => 2,
-            ResourcePermission::Backup => 3,
-            ResourcePermission::Execute => 4,
-            ResourcePermission::Create => 5,
-            ResourcePermission::Write => 6,
-            ResourcePermission::Share => 7,
-            ResourcePermission::Replicate => 8,
-            ResourcePermission::Restore => 9,
-            ResourcePermission::Consensus => 10,
-            ResourcePermission::Compliance => 11,
-            ResourcePermission::GeneticModify => 12,
-            ResourcePermission::Spawn => 13,
-            ResourcePermission::Delete => 14,
-            ResourcePermission::Admin => 15,
+            Self::Read => 1,
+            Self::Audit => 2,
+            Self::Backup => 3,
+            Self::Execute => 4,
+            Self::Create => 5,
+            Self::Write => 6,
+            Self::Share => 7,
+            Self::Replicate => 8,
+            Self::Restore => 9,
+            Self::Consensus => 10,
+            Self::Compliance => 11,
+            Self::GeneticModify => 12,
+            Self::Spawn => 13,
+            Self::Delete => 14,
+            Self::Admin => 15,
         }
     }
 }
@@ -261,7 +265,7 @@ pub struct AuthorizationProof {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsensusResult {
-    /// Whether consensus_reached is enabled
+    /// Whether `consensus_reached` is enabled
     pub consensus_reached: bool,
     /// Mapping of votes
     pub votes: HashMap<String, bool>,

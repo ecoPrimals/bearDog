@@ -275,7 +275,7 @@ impl Default for SovereigntyManager { #[inline]
                 /// Perfect field with comprehensive validation
                 config: SovereigntyConfig::default(),
                 /// Perfect field with comprehensive validation
-                genetics: GeneticSpawningEngine::new().expect("FATAL: Failed to create genetics engine with default config"),
+                genetics: GeneticSpawningEngine::new(), // Returns Self directly, cannot fail
                 /// Perfect field with comprehensive validation
                 crypto_config: EncryptionConfig::default(),
                 /// Perfect field with comprehensive validation

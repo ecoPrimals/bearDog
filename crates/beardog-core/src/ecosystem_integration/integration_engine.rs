@@ -32,6 +32,7 @@ impl Default for IntegrationEngine {
 impl IntegrationEngine {
     /// New operation.
     /// Creates a new instance
+    #[must_use]
     pub const fn new(config: IntegrationConfig) -> Self {
         Self {
             config,
@@ -42,6 +43,7 @@ impl IntegrationEngine {
 
     /// From Config operation.
     /// Creates instance from config
+    #[must_use]
     pub const fn from_config(config: IntegrationConfig) -> Self {
         Self {
             config,

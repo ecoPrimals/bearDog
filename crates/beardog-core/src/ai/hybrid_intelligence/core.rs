@@ -1,137 +1,29 @@
 // Main implementation and system orchestration for hybrid intelligence
 
 use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
+use super::core_enums::*;
 use super::core_types::{IntelligenceCapability, MachineLearningConfig};
 use super::learning::PredictionHorizon;
 use super::types::{
     DecisionEngineConfig, LearningConfig, NeuralNetworkConfig, OptimizationConfig, PredictionConfig,
 };
 
-// Configuration types moved to config.rs module
+// Enum types moved to core_enums.rs module for better organization
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum DecisionConfidence {
-    /// Low confidence, requires human review
-    Low,
-    /// Medium confidence, human review recommended
-    Medium,
-    /// High confidence, can proceed autonomously
-    High,
-}
-
-/// AI model types supported by the hybrid intelligence system
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of a i model
-pub enum AIModelType {
-    NeuralNetwork,
-    DecisionTree,
-    /// Ensemble models combining multiple approaches
-    Ensemble,
-}
-
-/// Learning feedback types from human operators
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum LearningFeedback {
-    /// Positive feedback - AI decision was correct
-    Positive,
-    /// Negative feedback - AI decision was incorrect
-    Negative,
-    /// Neutral feedback - AI decision was acceptable but not optimal
-    Neutral,
-}
-
-// CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
-// use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
-
-#[derive(Debug, Clone, Copy)]
-pub enum LearningRateAdaptation {
-    /// Fixed learning rate throughout training
-    Fixed,
-    Adaptive,
-    /// Scheduled learning rate decay over time
-    Scheduled,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum UpdateFrequency {
-    /// Update model after each batch
-    PerBatch,
-    /// Update model after each epoch
-    PerEpoch,
-    /// Update model after each sample
-    PerSample,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum PredictionModel {
-    Classification,
-    Regression,
-    TimeSeries,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum OptimizationAlgorithm {
-    /// Standard gradient descent optimization
-    GradientDescent,
-    /// Adam optimizer with adaptive learning rates
-    Adam,
-    /// `RMSprop` optimizer with moving average of squared gradients
-    RMSprop,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum Optimizer {
-    /// Stochastic Gradient Descent with momentum
-    SGD,
-    /// Adam optimizer with adaptive learning rates
-    Adam,
-    AdaGrad,
-    RMSprop,
-}
-
+/// Decision context information
+///
+/// Provides contextual information for making a decision, including
+/// priority, time constraints, and confidence requirements.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecisionContext {
+    /// Unique identifier for this decision context
     pub context_id: String,
-    /// Priority level of the decision (0-100)
-    /// Number of `priority_level`
+    /// Priority level of the decision (0-100, higher is more urgent)
     pub priority_level: u8,
+    /// Maximum time allowed for decision in milliseconds
     pub time_limit_ms: u64,
+    /// Required confidence level for automated decision (0.0-1.0)
     pub required_confidence: f64,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum InferenceMode {
-    /// Real-time inference with immediate responses
-    Realtime,
-    Batch,
-    Streaming,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of learning algorithm
-pub enum LearningAlgorithmType {
-    /// Deep neural network learning
-    DeepLearning,
-    /// Traditional machine learning algorithms
-    Classical,
-    /// Hybrid approach combining multiple algorithms
-    Hybrid,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum OptimizationStrategy {
-    Speed,
-    Accuracy,
-    /// Balance between speed and accuracy
-    Balanced,
-}
-
-/// Model optimization configuration settings
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum OptimizationLevel {
-    Basic,
-    Advanced,
-    Maximum,
 }
 
 // AI module temporarily disabled to avoid compilation conflicts
@@ -149,25 +41,30 @@ use tokio::time::interval;
 use tracing::{debug, info};
 use uuid::Uuid;
 
+/// Hybrid intelligence system orchestrator
+///
+/// Main system that coordinates AI and human intelligence,
+/// managing models, predictions, decisions, and learning processes.
 #[derive(Debug)]
 pub struct HybridIntelligenceSystem {
     /// System configuration
     pub config: HybridIntelligenceConfig,
     /// System health status
-    /// The health value
     pub health: Arc<RwLock<HealthStatus>>,
     /// System metrics
-    /// The metrics value
     pub metrics: Arc<RwLock<IntelligenceMetrics>>,
-    /// The event sender value
+    /// Event sender for broadcasting intelligence events
     pub event_sender: broadcast::Sender<IntelligenceEvent>,
-    /// The command receiver value
+    /// Command receiver for system control
     pub command_receiver: Arc<RwLock<mpsc::Receiver<SystemCommand>>>,
-    /// Active capabilities
-    /// The active capabilities value
+    /// Active intelligence capabilities
     pub active_capabilities: Arc<RwLock<Vec<IntelligenceCapability>>>,
 }
 
+/// System control commands
+///
+/// Commands for controlling the hybrid intelligence system lifecycle,
+/// configuration, and capabilities.
 #[derive(Debug, Clone)]
 pub enum SystemCommand {
     /// Start the system
@@ -199,8 +96,8 @@ pub struct PredictionResult {
     /// Confidence intervals (if available)
     pub confidence_intervals: Option<Vec<(f64, f64)>>,
     /// Uncertainty estimates (if available)
-    /// Optional uncertainty
     pub uncertainty: Option<Vec<f64>>,
+    /// Identifier of the model that generated this prediction
     pub model_id: String,
     /// Prediction timestamp
     pub timestamp: DateTime<Utc>,
@@ -239,24 +136,25 @@ pub enum IntelligenceEventType {
     OptimizationCompleted,
     /// Anomaly detected
     AnomalyDetected,
+    /// Performance threshold crossed (above or below limit)
     PerformanceThresholdCrossed,
 }
 
+/// Intelligence system performance metrics
+///
+/// Tracks key performance indicators for the hybrid intelligence system
+/// including predictions, decisions, and model training statistics.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct IntelligenceMetrics {
     /// Total predictions made
-    /// Number of `total_predictions`
     pub total_predictions: u64,
     /// Total decisions made
-    /// Number of `total_decisions`
     pub total_decisions: u64,
     /// Total models trained
-    /// Number of `total_models_trained`
     pub total_models_trained: u64,
-    /// Average prediction accuracy
-    /// The avg prediction accuracy value
+    /// Average prediction accuracy (0.0 to 1.0)
     pub avg_prediction_accuracy: f64,
-    /// Average decision confidence
+    /// Average decision confidence (0.0 to 1.0)
     pub avg_decision_confidence: f64,
     /// System uptime in seconds
     pub uptime_secs: u64,
@@ -422,12 +320,15 @@ impl HybridIntelligenceSystem {
             context.keys().collect::<Vec<_>>()
         );
 
-        // Create decision result (simplified implementation)
+        // Create decision result with real logic based on context analysis
+        let (decision_action, confidence, reasoning) =
+            Self::calculate_decision_from_context(&context);
+
         let decision = DecisionResult {
             decision_id: Uuid::new_v4(),
-            decision: "proceed".to_string(), // Placeholder decision
-            confidence: 0.8,
-            reasoning: "Based on available context and configured strategies".to_string(),
+            decision: decision_action,
+            confidence,
+            reasoning,
             timestamp: Utc::now(),
             context,
         };
@@ -480,6 +381,7 @@ impl HybridIntelligenceSystem {
     }
 
     /// Subscribes to intelligence events
+    #[must_use]
     pub fn subscribe_to_events(&self) -> broadcast::Receiver<IntelligenceEvent> {
         self.event_sender.subscribe()
     }
@@ -495,7 +397,7 @@ impl HybridIntelligenceSystem {
     /// Gets health
     /// Gets health
     pub async fn get_health(&self) -> HealthStatus {
-        self.health.read().await.clone()
+        *self.health.read().await
     }
 
     /// Initializes a capability
@@ -609,16 +511,18 @@ pub struct DecisionResult {
     pub decision: String,
     /// Confidence level
     pub confidence: f64,
-    /// Reasoning explanation
-    /// The reasoning value
+    /// Reasoning explanation for the decision
     pub reasoning: String,
     /// Decision timestamp
     pub timestamp: DateTime<Utc>,
-    /// Decision context
-    /// Mapping of context
+    /// Additional contextual data used to make the decision
     pub context: HashMap<String, serde_json::Value>,
 }
 
+/// System status information for the hybrid intelligence system
+///
+/// Provides comprehensive status including health, active capabilities,
+/// metrics, and last update timestamp.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemStatus {
     /// System ID
@@ -638,9 +542,9 @@ pub struct SystemStatus {
 }
 
 impl HybridIntelligenceSystem {
-    /// Gets comprehensive system status
-    /// Gets status
-    /// Gets status
+    /// Get comprehensive system status
+    ///
+    /// Returns complete system status including health, capabilities, and metrics.
     pub async fn get_status(&self) -> SystemStatus {
         SystemStatus {
             system_id: self.config.system_id.clone(),
@@ -676,6 +580,69 @@ impl HybridIntelligenceSystem {
         info!("Hybrid intelligence system shut down successfully");
         Ok(())
     }
+
+    /// Calculate an intelligent decision based on context analysis
+    ///
+    /// Returns tuple of (`decision_action`, confidence, reasoning)
+    fn calculate_decision_from_context(
+        context: &HashMap<String, serde_json::Value>,
+    ) -> (String, f64, String) {
+        // Extract relevant context values as floats
+        let risk_level = context
+            .get("risk_level")
+            .and_then(serde_json::Value::as_f64)
+            .unwrap_or(0.5);
+
+        let data_quality = context
+            .get("data_quality")
+            .and_then(serde_json::Value::as_f64)
+            .unwrap_or(0.7);
+
+        let system_confidence = context
+            .get("system_confidence")
+            .and_then(serde_json::Value::as_f64)
+            .unwrap_or(0.8);
+
+        // Calculate overall confidence score
+        let confidence = (data_quality * 0.4 + system_confidence * 0.6) * (1.0 - risk_level * 0.3);
+        let confidence = confidence.clamp(0.0, 1.0);
+
+        // Make decision based on confidence and risk
+        let (action, reasoning) = match (confidence, risk_level) {
+            (c, _) if c > 0.9 => (
+                "approve",
+                format!("High confidence ({c:.2}), low risk - approved for execution"),
+            ),
+            (c, r) if c > 0.75 && r < 0.3 => (
+                "approve_with_monitoring",
+                format!(
+                    "Good confidence ({c:.2}), acceptable risk ({r:.2}) - approved with monitoring"
+                ),
+            ),
+            (c, r) if c > 0.6 && r < 0.5 => (
+                "conditional_approve",
+                format!(
+                    "Moderate confidence ({c:.2}), moderate risk ({r:.2}) - conditional approval"
+                ),
+            ),
+            (c, r) if c > 0.5 => (
+                "review_required",
+                format!(
+                    "Moderate confidence ({c:.2}), elevated risk ({r:.2}) - human review required"
+                ),
+            ),
+            (_c, r) if r > 0.7 => (
+                "reject_high_risk",
+                format!("Risk level ({r:.2}) exceeds acceptable threshold - rejected for safety"),
+            ),
+            (c, r) => (
+                "reject_low_confidence",
+                format!("Insufficient confidence ({c:.2}) for risk level ({r:.2}) - rejected"),
+            ),
+        };
+
+        (action.to_string(), confidence, reasoning)
+    }
 }
 
 #[derive(Debug)]
@@ -693,6 +660,7 @@ pub struct HybridIntelligenceBuilder {
 impl HybridIntelligenceBuilder {
     /// Creates a new builder
     /// Creates a new instance
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             system_id: None,

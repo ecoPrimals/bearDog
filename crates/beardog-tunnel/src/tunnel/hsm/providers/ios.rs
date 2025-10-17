@@ -1,60 +1,92 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! iOS HSM Provider
+//!
+//! Universal provider implementation for iOS HSM capabilities,
+//! including Secure Enclave support.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::{
-    crypto::KeyType,
-    hsm::{
-        traits::{
-            AttestationData, AttestationProvider, AttestationResult, AuthenticationContext,
-            AuthenticationToken, CryptoOperation, HsmCapabilities, HsmRequirements,
-            MobileHsmProvider, SecurityLevel, UniversalHsmProvider, VendorInfo, HsmHealthStatus,
-            HardwareFeatures, PerformanceProfile, LatencyProfile, TamperResistance,
-            AuthenticationMethod, ComplianceCertification, PhysicalSecurityFeature,
-        },
-        HsmKey, KeyMetadata,
-    },
-};
 use std::collections::HashMap;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
+/// iOS Universal HSM Provider
 pub struct IosUniversalProvider {
-
-    capabilities: Option<HsmCapabilities>,
-
+    /// HSM capabilities
+    capabilities: Option<IosCapabilities>,
+    /// Secure Enclave availability
     secure_enclave_available: bool,
-
+    /// Biometric authentication availability
     biometric_available: bool,
-
+    /// Device metadata
     device_metadata: HashMap<String, String>,
 }
-impl IosUniversalProvider {
 
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
-    pub async fn new(None,
+/// iOS-specific HSM capabilities
+#[derive(Debug, Clone)]
+pub struct IosCapabilities {
+    /// Secure Enclave level
+    pub secure_enclave_level: SecureEnclaveLevel,
+    /// Chip type (A-series, M-series)
+    pub chip_type: Option<String>,
+    /// Key attestation support
+    pub attestation_supported: bool,
+    /// Hardware-backed keychain
+    pub hardware_backed: bool,
+    /// Biometric type
+    pub biometric_type: Option<BiometricType>,
+}
+
+/// Secure Enclave security levels
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SecureEnclaveLevel {
+    /// No Secure Enclave support
+    None,
+    /// Basic Secure Enclave
+    Basic,
+    /// Secure Enclave with biometrics
+    WithBiometrics,
+    /// Full Secure Enclave implementation
+    Full,
+}
+
+/// Biometric authentication types
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BiometricType {
+    /// Touch ID
+    TouchId,
+    /// Face ID
+    FaceId,
+    /// Both Touch ID and Face ID
+    Both,
+}
+
+impl IosUniversalProvider {
+    /// Create a new iOS HSM provider
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
+    pub async fn new() -> Result<Self, BearDogError> {
+        let mut provider = Self {
+            capabilities: None,
             secure_enclave_available: false,
             biometric_available: false,
             device_metadata: HashMap::with_capacity(16),
         };
 
-        let capabilities = provider.discover_capabilities()?;
+        // Detect platform capabilities
+        provider.detect_secure_enclave();
+        provider.detect_biometrics();
+
+        let capabilities = provider.discover_capabilities().await?;
         provider.capabilities = Some(capabilities);
+
         Ok(provider)
     }
 
-
+    /// Check if running on iOS platform
     fn is_ios_platform() -> bool {
         cfg!(target_os = "ios")
+    }
 
-
+    /// Detect Secure Enclave availability
     fn detect_secure_enclave(&mut self) -> bool {
         if !Self::is_ios_platform() {
             debug!("Not on iOS platform, Secure Enclave not available");
@@ -66,236 +98,272 @@ impl IosUniversalProvider {
         let has_secure_enclave = self.simulate_secure_enclave_detection();
         if has_secure_enclave {
             info!("✅ Secure Enclave detected and available");
-            self.device_metadata.insert("secure_enclave_version".to_string(), "1.0");
+            self.device_metadata
+                .insert("secure_enclave_version".to_string(), "2.0".to_string());
         } else {
             info!("❌ Secure Enclave not available on this device");
+        }
+
         self.secure_enclave_available = has_secure_enclave;
         has_secure_enclave
+    }
 
-
-    fn detect_biometric_auth(&mut self) -> bool {
-
+    /// Detect biometric authentication availability
+    fn detect_biometrics(&mut self) -> bool {
         info!("Detecting biometric authentication availability");
-        let has_biometric = true; // Simulate - most devices have biometrics
+
+        // Most modern iOS devices have biometrics
+        let has_biometric = true;
+
         if has_biometric {
-            info!("✅ Touch ID/Face ID detected and available");
-            self.device_metadata.insert("biometric_type".to_string(), "face_id");
+            info!("✅ Biometric authentication detected");
+            self.device_metadata
+                .insert("biometric_type".to_string(), "FaceID".to_string());
+        }
+
         self.biometric_available = has_biometric;
         has_biometric
+    }
 
-
+    /// Simulate Secure Enclave detection based on device model
     fn simulate_secure_enclave_detection(&mut self) -> bool {
-
         if let Ok(model) = std::env::var("IOS_MODEL") {
-            self.device_metadata.insert("device_model".to_string(), model.clone());
+            self.device_metadata
+                .insert("device_model".to_string(), model.clone());
 
-            if model.contains("iPhone") || 
-               model.contains("iPad") {
+            // Secure Enclave available on iPhone 5s and later, iPad with A7+ chips
+            if model.contains("iPhone") || model.contains("iPad") || model.contains("Mac") {
+                // Detect chip type
+                if model.contains("M1") || model.contains("M2") || model.contains("M3") {
+                    self.device_metadata
+                        .insert("chip_type".to_string(), "M-series".to_string());
+                } else {
+                    self.device_metadata
+                        .insert("chip_type".to_string(), "A-series".to_string());
+                }
                 return true;
             }
+        }
 
+        // Default: assume Secure Enclave on modern iOS
         true
+    }
 
-    /// Gets security_level
-    fn get_security_level(&self) -> SecurityLevel {
+    /// Discover iOS HSM capabilities
+    async fn discover_capabilities(&self) -> Result<IosCapabilities, BearDogError> {
+        let secure_enclave_level = if self.secure_enclave_available && self.biometric_available {
+            SecureEnclaveLevel::Full
+        } else if self.secure_enclave_available {
+            SecureEnclaveLevel::Basic
+        } else {
+            SecureEnclaveLevel::None
+        };
+
+        let biometric_type = if self.biometric_available {
+            // Determine biometric type from metadata
+            match self
+                .device_metadata
+                .get("biometric_type")
+                .map(|s| s.as_str())
+            {
+                Some("TouchID") => Some(BiometricType::TouchId),
+                Some("FaceID") => Some(BiometricType::FaceId),
+                _ => Some(BiometricType::FaceId), // Default to FaceID for modern devices
+            }
+        } else {
+            None
+        };
+
+        Ok(IosCapabilities {
+            secure_enclave_level,
+            chip_type: self.device_metadata.get("chip_type").cloned(),
+            attestation_supported: self.secure_enclave_available,
+            hardware_backed: self.secure_enclave_available,
+            biometric_type,
+        })
+    }
+
+    /// Get security level
+    pub fn get_security_level(&self) -> u8 {
         if self.secure_enclave_available {
-            SecurityLevel::Hardware
-            SecurityLevel::Software
+            3 // Highest: Secure Enclave
+        } else {
+            1 // Basic: Software
+        }
+    }
 
-
-    fn generate_performance_profile(12.0,
-                    p95_ms: 25.0,
-                    max_ms: 80.0,
-                })
-            } else {
-
-                (800.0, 1500.0, 400.0, LatencyProfile {
-                    average_ms: 3.0,
-                    p95_ms: 8.0,
-                    max_ms: 25.0,
-            };
-        PerformanceProfile {
-            key_generation_speed: key_gen_speed,
-            signing_speed,
-            encryption_throughput,
-            latency,
-
-impl UniversalHsmProvider for IosUniversalProvider {
-    fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
-        if let Some(ref capabilities) = self.capabilities {
-            return Ok(capabilities);
-
-        let mut provider = self.clone();
-        provider.detect_secure_enclave();
-        provider.detect_biometric_auth();
-        let security_level = provider.get_security_level();
-
-        let mut crypto_operations = vec![
-            CryptoOperation::KeyGeneration,
-            CryptoOperation::DigitalSigning,
-            CryptoOperation::SignatureVerification,
-            CryptoOperation::RandomGeneration,
-            CryptoOperation::Hashing,
-        ];
-        if provider.secure_enclave_available {
-            crypto_operations.push(CryptoOperation::Attestation);
-            crypto_operations.push(CryptoOperation::KeyDerivation);
-            crypto_operations.push(CryptoOperation::Encryption);
-            crypto_operations.push(CryptoOperation::Decryption);
-
-        let supported_key_types = vec![
-            KeyType::EcdsaP256, // Secure Enclave's preferred key type
-            KeyType::Ed25519,   // Software fallback
-            KeyType::Aes256Gcm, // Symmetric encryption
-
-        let mut auth_methods = vec![AuthenticationMethod::None];
-        if provider.biometric_available {
-            auth_methods.push(AuthenticationMethod::Biometric);
-            auth_methods.push(AuthenticationMethod::UserPresence);
-            auth_methods.push(AuthenticationMethod::Pin);
-
-        let hardware_features = HardwareFeatures {
-            tamper_resistance: if provider.secure_enclave_available {
-                TamperResistance::Resistant
-                TamperResistance::None
-            },
-            true_rng: provider.secure_enclave_available,
-            secure_storage: true, // iOS Keychain is always secure
-            attestation: provider.secure_enclave_available,
-            physical_security: if provider.secure_enclave_available {
-                vec![
-                    PhysicalSecurityFeature::SecureBoot,
-                    PhysicalSecurityFeature::HardwareIsolation,
-                    PhysicalSecurityFeature::SideChannelResistance,
-                ]
-                vec![]
-
-        let certifications = if provider.secure_enclave_available {
-            vec![
-                ComplianceCertification::CommonCriteria(5), // iOS has high CC rating
-                ComplianceCertification::Fips140_2(2),      // FIPS 140-2 Level 2
-            ]
-            vec![]
-        let capabilities = HsmCapabilities {
-            vendor_info: VendorInfo {
-                name: "Apple".to_string(),
-                product: if provider.secure_enclave_available {
-                    "iOS Secure Enclave".to_string()
-                } else {
-                    "iOS Keychain Services".to_string()
-                },
-                version: "1.0".to_string(&provider.device_metadata,
-            security_level,
-            crypto_operations,
-            supported_key_types,
-            authentication_methods: auth_methods,
-            hardware_features,
-            performance_profile: provider.generate_performance_profile(),
-            certifications,
-        Ok(capabilities)
-    fn supports_operation(&self, operation: &CryptoOperation) -> bool {
-        if let Ok(KeyType,
-        metadata: KeyMetadata,
-        _auth: Option<AuthenticationContext>,
-    ) -> Result<HsmKey, BearDogError> {
-        info!("🔑 Generating iOS key with type: {:?}", key_type);
-            return Err(BearDogError::Unavailable {
-                message: "iOS provider not available on non-iOS platform".to_string(),
-            });
-
-        let key_id = uuid::Uuid::new_v4().to_string();
-        let hsm_key = HsmKey {
-            id: key_id.clone(),
-            key_type,
-            material: beardog_types::canonical::hsm::KeyMaterial::Reference(beardog_types::canonical::hsm::KeyHealth::Healthy,
-            created_at: chrono::Utc::now(None,
-            key_name: Some(None,
-            usage_count: 0,
-            is_hardware_backed: self.secure_enclave_available,
-        info!("✅ iOS key generated successfully: {}", key_id);
-        Ok(&str,
-        data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError>> {
-        info!("✍️ Signing data with iOS key: {}", key_id);
-
-        let mut signature = Vec::new();
-        signature.extend_from_slice(b"ios_signature_");
-        signature.extend_from_slice(&data[..std::cmp::min(&[u8],
-    ) -> Result<bool, BearDogError> {
-        info!("🔍 Verifying signature with iOS key: {}", key_id);
-
-        let expected_prefix = b"ios_signature_";
-        let valid = signature.starts_with({}", valid);
-        Ok(valid)
-    /// Gets provider_info
-    fn get_provider_info(&self) -> VendorInfo {
+    /// Get vendor information
+    pub fn get_vendor_info(&self) -> VendorInfo {
         VendorInfo {
             name: "Apple".to_string(),
-            product: "iOS Universal HSM".to_string(),
-            version: "1.0.0".to_string(&self.device_metadata,}
+            model: self
+                .device_metadata
+                .get("device_model")
+                .cloned()
+                .unwrap_or_else(|| "Unknown".to_string()),
+            version: self
+                .device_metadata
+                .get("ios_version")
+                .cloned()
+                .unwrap_or_else(|| "Unknown".to_string()),
+        }
+    }
 
+    /// Check if Secure Enclave is available
+    pub fn has_secure_enclave(&self) -> bool {
+        self.secure_enclave_available
+    }
 
-    fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
-            return Ok(HsmHealthStatus::Unavailable);
-            Ok(HsmHealthStatus::Healthy)
-            Ok(HsmHealthStatus::Warning {
-                message: "Only Keychain Services available (no Secure Enclave)".to_string(),
-            })
-impl MobileHsmProvider for IosUniversalProvider {
-    fn authenticate_biometric(&self) -> Result<AuthenticationToken, BearDogError> {
-        if !self.biometric_available {
-            return Err(BearDogError::unsupported_operation("Biometric authentication not available on this iOS device"));
-        info!("🔐 Performing iOS biometric authentication (Touch ID/Face ID)");
+    /// Check if biometric authentication is available
+    pub fn has_biometric_auth(&self) -> bool {
+        self.biometric_available
+    }
 
-        let token = AuthenticationToken {
-            token: b"ios_biometric_token".to_vec(),
-            expires_at: chrono::Utc::now() + chrono::Duration::minutes(AuthenticationMethod::Biometric,
-        info!("✅ iOS biometric authentication successful");
-        Ok(token)}
+    /// Get capabilities
+    pub fn capabilities(&self) -> Option<&IosCapabilities> {
+        self.capabilities.as_ref()
+    }
+}
 
+/// Vendor information
+#[derive(Debug, Clone)]
+pub struct VendorInfo {
+    /// Vendor name
+    pub name: String,
+    /// Device model
+    pub model: String,
+    /// Software version
+    pub version: String,
+}
 
-    fn require_user_presence(&self, message: &str) -> Result<(), BearDogError> {
-        info!("👆 Requiring user presence: {}", message);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        info!("✅ User presence confirmed via iOS authentication");
-        Ok(())
-    /// Gets device_attestation
-    fn get_device_attestation(&self) -> Result<AttestationData, BearDogError> {
-        if !self.secure_enclave_available {
-            return Err(BearDogError::unsupported_operation("Device attestation requires Secure Enclave".to_string(),
-        info!("📜 Generating iOS device attestation");
+    #[tokio::test]
+    async fn test_ios_provider_creation() {
+        let provider = IosUniversalProvider::new().await;
+        assert!(provider.is_ok());
+    }
 
-        let attestation = AttestationData {
-            certificate_chain: vec![b"ios_cert_chain".to_vec()],
-            attestation_record: b"ios_attestation_record".to_vec(),
-            signature: b"ios_attestation_signature".to_vec(),
-            timestamp: chrono::Utc::now(&[u8],
-    ) -> Result<AttestationData, BearDogError> {
-            return Err(BearDogError::unsupported_operation({}", key_id);
+    #[tokio::test]
+    async fn test_capabilities_detection() {
+        let provider = IosUniversalProvider::new().await.unwrap();
+        let caps = provider.capabilities();
+        assert!(caps.is_some());
+    }
 
-        let mut attestation_record = Vec::new();
-        attestation_record.extend_from_slice(b"ios_key_attestation_");
-        attestation_record.extend_from_slice(key_id.as_bytes());
-        attestation_record.extend_from_slice(challenge);
-            certificate_chain: vec![b"ios_key_cert_chain".to_vec()],
-            attestation_record,
-            signature: b"ios_key_attestation_signature".to_vec(&AttestationData,
-    ) -> Result<AttestationResult, BearDogError> {
-        info!("🔍 Verifying iOS attestation");
+    #[test]
+    fn test_security_levels() {
+        let provider_with_enclave = IosUniversalProvider {
+            capabilities: None,
+            secure_enclave_available: true,
+            biometric_available: true,
+            device_metadata: HashMap::new(),
+        };
+        assert_eq!(provider_with_enclave.get_security_level(), 3);
 
-        let valid = attestation.attestation_record.starts_with(b"ios_key_attestation_");
-        let result = AttestationResult {
-            valid,
-            trust_level: if valid && self.secure_enclave_available {
-                SecurityLevel::Hardware
-                SecurityLevel::Software
-            details: if valid {
-                "iOS Secure Enclave attestation verified".to_string();
-        Ok(&self.capabilities,
-            secure_enclave_available: self.secure_enclave_available,
-            biometric_available: self.biometric_available,
-            device_metadata: &self.device_metadata,
-impl Default for IosUniversalProvider {}
+        let provider_without = IosUniversalProvider {
+            capabilities: None,
+            secure_enclave_available: false,
+            biometric_available: false,
+            device_metadata: HashMap::new(),
+        };
+        assert_eq!(provider_without.get_security_level(), 1);
+    }
 
-    fn default() -> Self {
-} 
+    #[test]
+    fn test_secure_enclave_level() {
+        assert_eq!(SecureEnclaveLevel::Full, SecureEnclaveLevel::Full);
+        assert_ne!(SecureEnclaveLevel::Full, SecureEnclaveLevel::Basic);
+    }
+
+    #[test]
+    fn test_biometric_type() {
+        assert_eq!(BiometricType::FaceId, BiometricType::FaceId);
+        assert_ne!(BiometricType::FaceId, BiometricType::TouchId);
+    }
+
+    #[test]
+    fn test_vendor_info() {
+        let mut provider = IosUniversalProvider {
+            capabilities: None,
+            secure_enclave_available: true,
+            biometric_available: true,
+            device_metadata: HashMap::new(),
+        };
+
+        provider
+            .device_metadata
+            .insert("device_model".to_string(), "iPhone 15 Pro".to_string());
+
+        let info = provider.get_vendor_info();
+        assert_eq!(info.name, "Apple");
+        assert_eq!(info.model, "iPhone 15 Pro");
+    }
+
+    #[test]
+    fn test_has_capabilities() {
+        let provider_with_all = IosUniversalProvider {
+            capabilities: None,
+            secure_enclave_available: true,
+            biometric_available: true,
+            device_metadata: HashMap::new(),
+        };
+
+        assert!(provider_with_all.has_secure_enclave());
+        assert!(provider_with_all.has_biometric_auth());
+
+        let provider_without = IosUniversalProvider {
+            capabilities: None,
+            secure_enclave_available: false,
+            biometric_available: false,
+            device_metadata: HashMap::new(),
+        };
+
+        assert!(!provider_without.has_secure_enclave());
+        assert!(!provider_without.has_biometric_auth());
+    }
+
+    #[tokio::test]
+    async fn test_ios_capabilities() {
+        let provider = IosUniversalProvider::new().await.unwrap();
+
+        if let Some(caps) = provider.capabilities() {
+            // On actual iOS devices, we'd have hardware backing
+            // On other platforms (Linux build), capabilities may be mock/stub values
+            #[cfg(target_os = "ios")]
+            {
+                // Modern iOS devices should have Secure Enclave
+                assert!(
+                    caps.hardware_backed || caps.secure_enclave_level != SecureEnclaveLevel::None
+                );
+            }
+
+            #[cfg(not(target_os = "ios"))]
+            {
+                // On non-iOS platforms, just verify structure exists
+                let _ = caps.hardware_backed;
+                let _ = caps.secure_enclave_level;
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_chip_detection() {
+        let mut provider = IosUniversalProvider {
+            capabilities: None,
+            secure_enclave_available: false,
+            biometric_available: false,
+            device_metadata: HashMap::new(),
+        };
+
+        std::env::set_var("IOS_MODEL", "iPhone 15 Pro (M3)");
+        provider.simulate_secure_enclave_detection();
+
+        assert_eq!(
+            provider.device_metadata.get("chip_type"),
+            Some(&"M-series".to_string())
+        );
+    }
+}

@@ -238,14 +238,14 @@ pub struct ZeroCopyBuilder<T> {
 
 impl<T> ZeroCopyBuilder<T> {
     /// Creates a new instance
-    pub fn new(inner: T) -> Self {
+    pub const fn new(inner: T) -> Self {
         Self {
             inner,
             optimized: false,
         }
     }
 
-    pub fn optimize(mut self) -> Self
+    pub const fn optimize(mut self) -> Self
     where
         T: Clone,
     {
@@ -262,7 +262,7 @@ impl<T> ZeroCopyBuilder<T> {
 
     /// Checks if optimized
     /// Checks if optimized
-    pub fn is_optimized(&self) -> bool {
+    pub const fn is_optimized(&self) -> bool {
         self.optimized
     }
 }

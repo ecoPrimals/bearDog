@@ -175,7 +175,7 @@ impl SimdCryptoAccelerator {
     }
 
     #[must_use]
-    pub fn capabilities(&self) -> &SimdCapabilities {
+    pub const fn capabilities(&self) -> &SimdCapabilities {
         &self.capabilities
     }
 }

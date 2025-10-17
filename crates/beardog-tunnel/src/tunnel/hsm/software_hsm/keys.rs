@@ -1,8 +1,3 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
 use beardog_errors::BearDogError;
 
 use chrono::{DateTime, Utc};
@@ -15,29 +10,27 @@ use beardog_types::canonical::hsm::KeyMetadata;
 use super::encryption::EncryptionKey;
 use super::storage::StorageBackend;
 
-#[derive(Debug, Clone)]
-    /// Collection of key data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+    /// SoftwareKey configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
+pub struct SoftwareKey {
+    pub key_id: String,
     pub key_data: Vec<u8>,
-    /// The metadata value
     pub metadata: KeyMetadata,
-    /// The created at value
     pub created_at: DateTime<Utc>,
-    /// Optional last accessed
     pub last_accessed: Option<DateTime<Utc>>,
 }
 
+/// Zero-cost software key store with compile-time dispatch
 pub struct SoftwareKeyStore<S = DefaultStorageBackend, E = DefaultEncryptionKey> 
 where
     S: StorageBackend + Send + Sync + 'static,
     E: EncryptionKey + Send + Sync + 'static,
 {
-    /// The storage backend value
     pub storage_backend: S,
-    /// The encryption key value
     pub encryption_key: E,
-    /// The key cache value
     pub key_cache: Arc<RwLock<HashMap<String, SoftwareKey>>>,
-    /// Number of max_cached_keys
     pub max_cached_keys: usize,
 }
 
@@ -46,9 +39,12 @@ where
     S: StorageBackend + Send + Sync + 'static,
     E: EncryptionKey + Send + Sync + 'static,
 {
-/// New operation.
-    /// Creates a new instance
-    pub fn new(S,
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub fn new(
+        storage_backend: S,
         encryption_key: E,
         max_cached_keys: usize,
     ) -> Self {
@@ -60,92 +56,165 @@ where
         }
     }
 
-/// Store Key operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    pub fn store_key(&self, key: &SoftwareKey) -> Result<(), BearDogError> {
-        let encrypted_data = self.encryption_key.encrypt(&str,
-    ) -> Result<Option<SoftwareKey>, BearDogError>> {
+    /// Store Key operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub async fn store_key(&self, key: &SoftwareKey) -> Result<(), BearDogError> {
+        let encrypted_data = self.encryption_key.encrypt(&key.key_data).await?;
 
+        self.storage_backend
+            .store(&key.key_id, &encrypted_data)
+            .await?;
+
+        // Update cache
+        let mut cache = self.key_cache.write().await;
+        if cache.len() >= self.max_cached_keys {
+            // Simple LRU eviction - remove oldest entry
+            if let Some((oldest_key, _)) = cache.iter().next() {
+                let oldest_key = oldest_key.clone();
+                cache.remove(&oldest_key);
+            }
+        }
+        cache.insert(key.key_id.clone(), key.clone());
+
+        Ok(())
+    }
+
+    /// Retrieve Key operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub async fn retrieve_key(
+        &self,
+        key_id: &str,
+    ) -> Result<Option<SoftwareKey>, BearDogError>> {
+        // Check cache first
         {
-            let cache = self.key_cache.read();
+            let cache = self.key_cache.read().await;
             if let Some(key) = cache.get(key_id) {
-                return Ok(Some(key));
+                return Ok(Some(key.clone()));
             }
         }
 
-        if let Some(encrypted_data) = self.storage_backend.retrieve(key_id)? {
-            let key_data = self.encryption_key.decrypt(&encrypted_data)?;
-
+        // Load from storage
+        if let Some(encrypted_data) = self.storage_backend.retrieve(key_id).await? {
+            let key_data = self.encryption_key.decrypt(&encrypted_data).await?;
+            
+            // Reconstruct the key (simplified)
             let key = SoftwareKey {
                 key_id: key_id.to_string(),
                 key_data,
                 metadata: KeyMetadata::default(),
                 created_at: Utc::now(),
-                last_accessed: Some(Utc::now(&str, _data: &[u8]) -> Result<(), BearDogError> {
+                last_accessed: Some(Utc::now()),
+            };
 
+            // Update cache
+            let mut cache = self.key_cache.write().await;
+            cache.insert(key_id.to_string(), key.clone());
+
+            Ok(Some(key))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+// Default implementations for backward compatibility
+    /// DefaultStorageBackend configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
+pub struct DefaultStorageBackend;
+    /// DefaultEncryptionKey configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
+pub struct DefaultEncryptionKey;
+
+impl StorageBackend for DefaultStorageBackend {
+    async fn store(&self, _key_id: &str, _data: &[u8]) -> Result<(), BearDogError> {
+        // In-memory storage for testing
         Ok(())
     }
 
-
-    fn retrieve(&self, _key_id: &str) -> Result<Option<Vec<u8>, BearDogError>>> {
+    async fn retrieve(&self, _key_id: &str) -> Result<Option<Vec<u8>, BearDogError>>> {
         Ok(None)
     }
 
-    /// Removes 
-    fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
+    async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }
 
 impl EncryptionKey for DefaultEncryptionKey {
-    fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-
+    async fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+        // Simple XOR encryption for testing
         Ok(data.iter().map(|b| b ^ 0x42).collect())
     }
 
+    async fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+        // Simple XOR decryption
+        Ok(data.iter().map(|b| b ^ 0x42).collect())
+    }
+}
 
-    fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+// Type aliases for common configurations
+pub type InMemoryKeyStore = SoftwareKeyStore<DefaultStorageBackend, DefaultEncryptionKey>;
 
-        Ok(Option<String>,
+// Builder for legacy compatibility
+    /// SoftwareKeyBuilder configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
+pub struct SoftwareKeyBuilder {
+    key_id: Option<String>,
     key_data: Option<Vec<u8>>,
     metadata: Option<KeyMetadata>,
 }
 
 impl SoftwareKeyBuilder {
-/// New operation.
-    /// Creates a new instance
-    pub fn new(None,
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub fn new() -> Self {
+        Self {
+            key_id: None,
             key_data: None,
             metadata: None,
         }
     }
 
-/// Key Id operation.
-    pub fn key_id(mut self, key_id: &str) -> Self {
+    /// Key Id operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub fn key_id(mut self, key_id: String) -> Self {
         self.key_id = Some(key_id);
         self
     }
 
-/// Key Data operation.
+    /// Key Data operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn key_data(mut self, key_data: Vec<u8>) -> Self {
         self.key_data = Some(key_data);
         self
     }
 
-/// Metadata operation.
+    /// Metadata operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn metadata(mut self, metadata: KeyMetadata) -> Self {
         self.metadata = Some(metadata);
         self
     }
 
-/// Build operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Builds component
-    /// Builds component
+    /// Build operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn build(self) -> Result<SoftwareKey, BearDogError> {
         let key_id = self.key_id.ok_or_else(|| {
             beardog_errors::BearDogError::Validation {
@@ -161,7 +230,8 @@ impl SoftwareKeyBuilder {
             key_id,
             key_data,
             metadata,
-            created_at: Utc::now(None,
+            created_at: Utc::now(),
+            last_accessed: None,
         })
     }
 }

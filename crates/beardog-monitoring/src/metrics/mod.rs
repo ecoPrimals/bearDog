@@ -137,8 +137,8 @@ impl UnifiedMetricsSystem {
     ///
     /// # Errors
     /// Returns an error if system metrics cannot be collected
-    /// Gets system_metrics
-    /// Gets system_metrics
+    /// Gets `system_metrics`
+    /// Gets `system_metrics`
     pub fn get_system_metrics(&self) -> Result<SystemMetrics, BearDogError> {
         let performance_metrics = self.performance.get_metrics()?;
         let security_metrics = self.security.get_metrics()?;
@@ -181,7 +181,7 @@ pub struct UnifiedMetricsConfig {
     pub export: ExportConfig,
 
     /// Broadcast buffer size
-    /// Number of broadcast_buffer_size
+    /// Number of `broadcast_buffer_size`
     pub broadcast_buffer_size: usize,
 }
 

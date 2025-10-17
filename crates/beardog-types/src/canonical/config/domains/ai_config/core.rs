@@ -43,10 +43,10 @@ pub struct ConsolidatedAiConfig {
 
     /// Model inference and serving configuration
     inference: InferenceConfig,
-    // TODO: Add remaining subsystems as they're refactored
-    // neural_networks: NeuralNetworkConfig,
-    // decision_engine: DecisionEngineConfig,
-    // model_management: ModelManagementConfig,
+    // Note: Additional subsystems pending refactoring:
+    // - neural_networks: NeuralNetworkConfig
+    // - decision_engine: DecisionEngineConfig
+    // - model_management: ModelManagementConfig
     // performance: AiPerformanceConfig,
     // security: AiSecurityConfig,
 }

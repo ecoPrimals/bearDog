@@ -206,16 +206,18 @@ pub struct NetworkUtils;
 
 impl NetworkUtils {
     /// Get available network interfaces
-    /// Gets `network_interfaces`
-    /// Gets `network_interfaces`
+    ///
+    /// # Errors
+    /// Returns an error if the system fails to enumerate network interfaces or if access is denied.
     pub const fn get_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
         // Implementation would enumerate network interfaces
         Ok(vec![])
     }
 
     /// Check if port is available
-    /// Checks if port available
-    /// Checks if port available
+    ///
+    /// # Errors
+    /// Returns an error if the network address binding check fails or if the socket address is invalid.
     pub async fn is_port_available(addr: &SocketAddr) -> Result<bool, BearDogError> {
         use tokio::net::TcpListener;
         match TcpListener::bind(addr).await {
@@ -225,6 +227,9 @@ impl NetworkUtils {
     }
 
     /// Find available port in range
+    ///
+    /// # Errors
+    /// Returns an error if address format parsing fails or if network operations encounter errors during port scanning.
     pub async fn find_available_port(start: u16, end: u16) -> Result<Option<u16>, BearDogError> {
         for port in start..=end {
             let addr: SocketAddr = format!("127.0.0.1:{port}").parse().map_err(|e| {
@@ -238,8 +243,9 @@ impl NetworkUtils {
     }
 
     /// Validate network configuration
-    /// Validates config
-    /// Validates config
+    ///
+    /// # Errors
+    /// Returns an error if the configuration has invalid port ranges, zero packet size, or other invalid network settings.
     pub fn validate_config(config: &NetworkConfig) -> Result<(), BearDogError> {
         if config.discovery_port_range.0 >= config.discovery_port_range.1 {
             return Err(BearDogError::Network {

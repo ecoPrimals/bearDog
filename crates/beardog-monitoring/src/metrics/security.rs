@@ -14,7 +14,7 @@ pub struct SecurityMetricsEngine {
 
 impl SecurityMetricsEngine {
     /// Creates a new instance
-    pub fn new(config: SecurityMetricsConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: SecurityMetricsConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 
@@ -25,14 +25,14 @@ impl SecurityMetricsEngine {
         Ok(())
     }
 
-    pub fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
+    pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Security event processing logic
         Ok(())
     }
 
     /// Gets metrics
     /// Gets metrics
-    pub fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
+    pub const fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
         Ok(SecurityMetrics {
             failed_auth_attempts: 5,
             successful_auths: 1250,
@@ -45,11 +45,11 @@ impl SecurityMetricsEngine {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityMetrics {
-    /// Number of failed_auth_attempts
+    /// Number of `failed_auth_attempts`
     pub failed_auth_attempts: u64,
-    /// Number of successful_auths
+    /// Number of `successful_auths`
     pub successful_auths: u64,
-    /// Number of blocked_requests
+    /// Number of `blocked_requests`
     pub blocked_requests: u64,
     /// The threat level value
     pub threat_level: f64,
@@ -59,7 +59,7 @@ pub struct SecurityMetrics {
 
 #[derive(Debug, Clone)]
 pub struct SecurityMetricsConfig {
-    /// Whether enable_threat_detection is enabled
+    /// Whether `enable_threat_detection` is enabled
     pub enable_threat_detection: bool,
     /// The alert threshold value
     pub alert_threshold: f64,

@@ -1,13 +1,15 @@
-//! # BearDog Security Crate
+//! # `BearDog` Security Crate
 //!
-//! Comprehensive security functionality for the BearDog platform, providing
+//! Comprehensive security functionality for the `BearDog` platform, providing
 //! cryptographic operations, key management, and hardware security module (HSM) integration.
 //!
 //! ## Features
 //!
 //! - **Quantum-Resistant Cryptography**: Post-quantum cryptographic algorithms
-//! - **Hardware Security Modules**: Integration with YubiKey, TPM, and software HSMs
+//! - **Hardware Security Modules**: Integration with `YubiKey`, TPM, and software HSMs
 //! - **Zero Unsafe Code**: All operations are memory-safe
+
+#![deny(unsafe_code)]
 //! - **SIMD Acceleration**: Hardware-accelerated cryptographic operations
 //! - **Secure Key Management**: Safe key storage and lifecycle management
 //!
@@ -40,9 +42,18 @@
 //! operations when available, automatically falling back to safe scalar
 //! implementations on unsupported platforms.
 
+pub mod crypto_utils;
 pub mod encryption;
 pub mod memory_key_manager;
 pub mod simd_crypto;
+// pub mod recovery; // Module conflict - has both .rs and /mod.rs
+
+// Comprehensive test modules
+#[cfg(test)]
+mod security_operations_comprehensive_tests;
+
+#[cfg(test)]
+mod tests;
 
 // Re-export main types and functions
 pub use encryption::*;
@@ -158,16 +169,4 @@ pub fn secure_zero_memory(data: &mut [u8]) {
     // No unsafe code needed - zeroize handles everything safely!
     use zeroize::Zeroize;
     data.zeroize();
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_hash_functions() {
-        let data = b"test";
-        let hash = compute_sha256_hash(data).unwrap();
-        assert_eq!(hash.len(), 32);
-    }
 }

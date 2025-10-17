@@ -121,6 +121,7 @@ impl PropertyBasedTestFramework {
     }
 
     /// Generate comprehensive property test report
+    #[must_use]
     pub fn generate_property_test_report(&self) -> HashMap<String, String> {
         let mut report = HashMap::new();
 
@@ -130,7 +131,7 @@ impl PropertyBasedTestFramework {
             0.0
         };
 
-        report.insert("success_rate".to_string(), format!("{:.2}%", success_rate));
+        report.insert("success_rate".to_string(), format!("{success_rate:.2}%"));
         report.insert(
             "total_tests".to_string(),
             self.statistics.total_tests.to_string(),
@@ -175,9 +176,9 @@ impl PropertyBasedTestFramework {
             report.insert(
                 format!(
                     "property_{}_success_rate",
-                    property.replace(" ", "_").to_lowercase()
+                    property.replace(' ', "_").to_lowercase()
                 ),
-                format!("{:.1}%", success_rate),
+                format!("{success_rate:.1}%"),
             );
         }
 

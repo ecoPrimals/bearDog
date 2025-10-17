@@ -23,7 +23,7 @@
 //! ```
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::{KeyMetadata, KeyType};
+use crate::tunnel::hsm::types::{KeyMetadata, KeyType};
 use crate::universal_hsm::traits::{
     AttestationData, EphemeralSeed, HumanEntropyCapabilities,
     HumanEntropyData, HumanEntropyMethod, ProviderHealth, ProviderInfo,
@@ -31,8 +31,7 @@ use crate::universal_hsm::traits::{
 };
 
 use super::software_hsm::SoftwareHsm;
-use super::android_strongbox::AndroidStrongBoxHsm;
-use super::ios_secure_enclave::IosSecureEnclaveHsm;
+use super::{AndroidStrongBoxHsm, IosSecureEnclaveHsm};
 
 /// **Zero-Cost HSM Provider Dispatch**
 ///

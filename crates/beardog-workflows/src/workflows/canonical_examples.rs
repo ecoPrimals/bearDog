@@ -275,7 +275,7 @@ impl ExampleWorkflowProcessor {
     /// New operation.
     /// Creates a new instance
     #[must_use]
-    pub fn new(name: &'static str) -> Self {
+    pub const fn new(name: &'static str) -> Self {
         Self { name }
     }
 }
@@ -435,13 +435,13 @@ impl StartWorkflowCommand {
     /// New operation.
     /// Creates a new instance
     #[must_use]
-    pub fn new(context: ProcessingContext) -> Self {
+    pub const fn new(context: ProcessingContext) -> Self {
         Self { context }
     }
 
     /// Context operation.
     #[must_use]
-    pub fn context(&self) -> &ProcessingContext {
+    pub const fn context(&self) -> &ProcessingContext {
         &self.context
     }
 }

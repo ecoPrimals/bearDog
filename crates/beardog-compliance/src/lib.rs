@@ -1,6 +1,6 @@
-//! # BearDog Compliance Framework
+//! # `BearDog` Compliance Framework
 //!
-//! Comprehensive compliance and auditing capabilities for BearDog applications,
+//! Comprehensive compliance and auditing capabilities for `BearDog` applications,
 //! ensuring adherence to security standards and regulatory requirements.
 //!
 //! ## Features

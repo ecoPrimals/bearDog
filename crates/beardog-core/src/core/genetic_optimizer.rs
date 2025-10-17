@@ -21,7 +21,7 @@ pub struct GeneticOptimizer {
 ///
 /// Controls the behavior of the genetic optimization algorithm including
 /// population size, mutation/crossover rates, and convergence criteria.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct GeneticOptimizerConfig {
     /// Number of individuals in each generation
     pub population_size: usize,
@@ -86,12 +86,14 @@ pub struct PerformanceMetric {
 impl GeneticOptimizer {
     /// Create a new genetic optimizer with default configuration
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self::with_config(GeneticOptimizerConfig::default())
     }
 
     /// Create a new genetic optimizer with custom configuration
     /// Creates instance with config
+    #[must_use]
     pub fn with_config(config: GeneticOptimizerConfig) -> Self {
         Self {
             config,
@@ -104,7 +106,8 @@ impl GeneticOptimizer {
     ///
     /// # Errors
     /// Returns an error if initialization fails.
-    pub fn initialize(&self) -> Result<(), BearDogError> {
+    #[allow(clippy::cognitive_complexity)]
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!(
             "🧬 Initializing GeneticOptimizer with population size: {}",
             self.config.population_size
@@ -112,7 +115,7 @@ impl GeneticOptimizer {
 
         // Initialize optimization state
         {
-            let mut state = self.optimization_state.blocking_write();
+            let mut state = self.optimization_state.write().await;
             state.current_generation = 0;
             state.best_fitness = 0.0;
             state.convergence_count = 0;
@@ -213,7 +216,10 @@ impl GeneticOptimizer {
         Ok(best_solution)
     }
 
-    /// Initializes `componentialize_population`
+    /// Initialize the population with random individuals
+    ///
+    /// Creates the initial population of candidate solutions with random
+    /// values in the optimization space.
     fn initialize_population(&self) -> Vec<Vec<f64>> {
         let mut rng = rand::thread_rng();
 
@@ -228,7 +234,9 @@ impl GeneticOptimizer {
         population
     }
 
-    /// Creates `next_generation`
+    /// Create the next generation through selection, crossover, and mutation
+    ///
+    /// Applies genetic operators to evolve the population toward better solutions.
     fn create_next_generation(
         &self,
         population: &[Vec<f64>],
@@ -306,12 +314,17 @@ impl GeneticOptimizer {
     }
 
     /// Get the current optimization state
-    /// Gets `optimization_state`
-    /// Gets `optimization_state`
+    ///
+    /// Returns a snapshot of the current genetic algorithm state including
+    /// generation number, best fitness, and convergence information.
     pub async fn get_optimization_state(&self) -> OptimizationState {
         *self.optimization_state.read().await
     }
 
+    /// Get the complete performance history
+    ///
+    /// Returns all performance metrics collected during the optimization process,
+    /// including fitness scores and improvement rates for each generation.
     pub async fn get_performance_history(&self) -> Vec<PerformanceMetric> {
         self.performance_history.read().await.clone()
     }

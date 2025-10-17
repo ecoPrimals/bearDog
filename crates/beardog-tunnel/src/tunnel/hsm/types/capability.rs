@@ -1,21 +1,59 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! HSM Capability Types
+//!
+//! Type definitions for HSM capability requirements and feature support.
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
-    /// Whether hardware_required is enabled
-    pub hardware_required: bool,
+// Re-export from parent module for convenience
+pub use super::HsmCapabilities;
 
-    /// Whether attestation_required is enabled
+/// HSM capability enumeration
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum HsmCapability {
+    /// Key generation capability
+    KeyGeneration,
+    /// Signing capability
+    Signing,
+    /// Encryption capability
+    Encryption,
+    /// Decryption capability
+    Decryption,
+    /// Key derivation capability
+    KeyDerivation,
+    /// Attestation capability
+    Attestation,
+    /// Hardware-backed storage
+    HardwareStorage,
+    /// Biometric authentication
+    BiometricAuth,
+}
+
+/// HSM capability requirements
+#[derive(Debug, Clone)]
+pub struct CapabilityRequirements {
+    /// Minimum security level required
+    pub min_security_level: String,
+    /// Key management capabilities
+    pub key_management: KeyManagementCapabilities,
+    /// Advanced feature capabilities
+    pub advanced_features: AdvancedFeatureCapabilities,
+    /// Performance capabilities
+    pub performance: PerformanceCapabilities,
+    /// Security capabilities
+    pub security: SecurityCapabilities,
+    /// Human entropy capabilities
+    pub human_entropy: HumanEntropyCapabilities,
+    /// API support capabilities
+    pub api_support: ApiSupportCapabilities,
+    /// Compliance capabilities
+    pub compliance: ComplianceCapabilities,
+    /// Whether hardware is required
+    pub hardware_required: bool,
+    /// Whether attestation is required
     pub attestation_required: bool,
 }
-impl Default for CapabilityRequirements {}
 
+impl Default for CapabilityRequirements {
     fn default() -> Self {
         Self {
             min_security_level: "software".to_string(),
@@ -25,152 +63,282 @@ impl Default for CapabilityRequirements {}
             security: SecurityCapabilities::default(),
             human_entropy: HumanEntropyCapabilities::default(),
             api_support: ApiSupportCapabilities::default(),
-            compliance: ComplianceCapabilities::default(f64,
+            compliance: ComplianceCapabilities::default(),
+            hardware_required: false,
+            attestation_required: false,
+        }
+    }
+}
 
-    /// The avg latency ms value
-    pub avg_latency_ms: f64,
-
-    /// The error rate percent value
-    pub error_rate_percent: f64,
-
-
-    pub uptime_percent: f64,}
-
-impl Default for HsmMetrics {
-            ops_per_second: 0.0,
-            avg_latency_ms: 0.0,
-            error_rate_percent: 0.0,
-            uptime_percent: 100.0,
-
-pub enum TamperResistance {
-
-
-    /// Represents evidence variant
-    Evidence,
-
-
-    /// Represents response variant
-    Response,
-
-impl Default for TamperResistance {
-        /// Represents tamper resistance:: none variant
-        TamperResistance::None
-
+/// Key management capabilities
 #[derive(Debug, Clone)]
-    /// Collection of signing algorithms
-    pub signing_algorithms: Vec<String>,
-    /// Collection of hashing algorithms
-    pub hashing_algorithms: Vec<String>,
-    /// Collection of key agreement algorithms
-    pub key_agreement_algorithms: Vec<String>,
-    /// Whether supports_streaming is enabled
-    pub supports_streaming: bool,
-    /// Whether supports_batch_operations is enabled
-    pub supports_batch_operations: bool,
-    /// Optional max data size
-    pub max_data_size: Option<usize>,
-    /// Whether hardware_acceleration is enabled
-    pub hardware_acceleration: bool,
-
 pub struct KeyManagementCapabilities {
-    /// Whether supports_key_backup is enabled
-    pub supports_key_backup: bool,
-    /// Whether supports_key_recovery is enabled
-    pub supports_key_recovery: bool,
-    /// Whether supports_key_escrow is enabled
-    pub supports_key_escrow: bool,
-    /// Whether supports_key_rotation is enabled
-    pub supports_key_rotation: bool,
-    /// Whether supports_key_versioning is enabled
-    pub supports_key_versioning: bool,
-    /// Whether supports_key_attestation is enabled
-    pub supports_key_attestation: bool,
-    /// Collection of key storage types
-    pub key_storage_types: Vec<String>,
-    /// Optional max keys
-    pub max_keys: Option<u32>,
+    /// Maximum number of keys supported
+    pub max_keys: Option<u64>,
+    /// Supported key types
+    pub key_types: Vec<String>,
+    /// Key rotation support
+    pub rotation_supported: bool,
+    /// Key derivation support
+    pub derivation_supported: bool,
+}
 
+impl Default for KeyManagementCapabilities {
+    fn default() -> Self {
+        Self {
+            max_keys: None,
+            key_types: vec!["AES256".to_string(), "Ed25519".to_string()],
+            rotation_supported: true,
+            derivation_supported: true,
+        }
+    }
+}
+
+/// Advanced feature capabilities
+#[derive(Debug, Clone)]
 pub struct AdvancedFeatureCapabilities {
-    /// Whether supports_secure_boot is enabled
-    pub supports_secure_boot: bool,
-    /// Whether supports_remote_attestation is enabled
-    pub supports_remote_attestation: bool,
-    /// Whether supports_secure_channels is enabled
-    pub supports_secure_channels: bool,
-    /// Whether supports_multi_tenancy is enabled
-    pub supports_multi_tenancy: bool,
-    /// Whether supports_role_based_access is enabled
-    pub supports_role_based_access: bool,
-    /// Whether supports_load_balancing is enabled
-    pub supports_load_balancing: bool,
-    /// Whether supports_clustering is enabled
-    pub supports_clustering: bool,
-    /// Collection of custom extensions
-    pub custom_extensions: Vec<String>,
+    /// Secure enclave support
+    pub secure_enclave: bool,
+    /// Hardware-backed keystore
+    pub hardware_keystore: bool,
+    /// Biometric authentication
+    pub biometric_auth: bool,
+    /// Key attestation
+    pub attestation: bool,
+}
 
+impl Default for AdvancedFeatureCapabilities {
+    fn default() -> Self {
+        Self {
+            secure_enclave: false,
+            hardware_keystore: false,
+            biometric_auth: false,
+            attestation: false,
+        }
+    }
+}
+
+/// Performance capabilities
+#[derive(Debug, Clone)]
 pub struct PerformanceCapabilities {
-    /// Number of concurrent_operations
-    pub concurrent_operations: u32,
-    /// Number of operations_per_second
-    pub operations_per_second: u32,
-    /// Number of key_generation_speed
-    pub key_generation_speed: u32,
-    /// Number of signing_speed
-    pub signing_speed: u32,
-    /// Number of verification_speed
-    pub verification_speed: u32,
-    /// Number of encryption_speed
-    pub encryption_speed: u32,
-    /// Number of decryption_speed
-    pub decryption_speed: u32,
-    /// Number of memory_usage
-    pub memory_usage: u64,
+    /// Operations per second
+    pub ops_per_second: f64,
+    /// Average latency in milliseconds
+    pub avg_latency_ms: f64,
+    /// Maximum throughput in MB/s
+    pub max_throughput_mbps: f64,
+}
 
+impl Default for PerformanceCapabilities {
+    fn default() -> Self {
+        Self {
+            ops_per_second: 1000.0,
+            avg_latency_ms: 10.0,
+            max_throughput_mbps: 100.0,
+        }
+    }
+}
+
+/// Security capabilities
+#[derive(Debug, Clone)]
+pub struct SecurityCapabilities {
+    /// Tamper detection
+    pub tamper_detection: bool,
+    /// Secure boot
+    pub secure_boot: bool,
+    /// Memory protection
+    pub memory_protection: bool,
+    /// Side-channel resistance
+    pub side_channel_resistant: bool,
+}
+
+impl Default for SecurityCapabilities {
+    fn default() -> Self {
+        Self {
+            tamper_detection: false,
+            secure_boot: false,
+            memory_protection: true,
+            side_channel_resistant: false,
+        }
+    }
+}
+
+/// Human entropy capabilities
+#[derive(Debug, Clone)]
 pub struct HumanEntropyCapabilities {
-    /// Whether supports_human_entropy is enabled
-    pub supports_human_entropy: bool,
-    /// Whether supports_ephemeral_seeds is enabled
-    pub supports_ephemeral_seeds: bool,
-    /// Collection of entropy collection methods
-    pub entropy_collection_methods: Vec<String>,
-    /// The entropy quality score value
-    pub entropy_quality_score: f64,
-    /// Whether supports_biometric_entropy is enabled
-    pub supports_biometric_entropy: bool,
-    /// Whether supports_behavioral_entropy is enabled
-    pub supports_behavioral_entropy: bool,
+    /// Support for human entropy input
+    pub supported: bool,
+    /// Minimum entropy bits required
+    pub min_entropy_bits: u32,
+    /// Quality verification
+    pub quality_verification: bool,
+}
 
+impl Default for HumanEntropyCapabilities {
+    fn default() -> Self {
+        Self {
+            supported: true,
+            min_entropy_bits: 128,
+            quality_verification: true,
+        }
+    }
+}
+
+/// API support capabilities
+#[derive(Debug, Clone)]
 pub struct ApiSupportCapabilities {
-    /// Whether pkcs11_support is enabled
-    pub pkcs11_support: bool,
-    /// Whether rest_api_support is enabled
-    pub rest_api_support: bool,
-    /// Whether grpc_support is enabled
-    pub grpc_support: bool,
-    /// Whether websocket_support is enabled
-    pub websocket_support: bool,
-    /// Collection of supported protocols
-    pub supported_protocols: Vec<String>,
-    /// Collection of authentication methods
-    pub authentication_methods: Vec<String>,
+    /// REST API support
+    pub rest_api: bool,
+    /// gRPC support
+    pub grpc: bool,
+    /// WebSocket support
+    pub websocket: bool,
+    /// GraphQL support
+    pub graphql: bool,
+}
 
+impl Default for ApiSupportCapabilities {
+    fn default() -> Self {
+        Self {
+            rest_api: true,
+            grpc: false,
+            websocket: false,
+            graphql: false,
+        }
+    }
+}
+
+/// Compliance capabilities
+#[derive(Debug, Clone)]
 pub struct ComplianceCapabilities {
-    /// Whether fips_140_certified is enabled
-    pub fips_140_certified: bool,
-    /// Whether common_criteria_certified is enabled
-    pub common_criteria_certified: bool,
-    /// Whether pci_dss_compliant is enabled
-    pub pci_dss_compliant: bool,
-    /// Whether hipaa_compliant is enabled
-    pub hipaa_compliant: bool,
-    /// Whether gdpr_compliant is enabled
-    pub gdpr_compliant: bool,
-    /// Whether sox_compliant is enabled
-    pub sox_compliant: bool,
-    /// Collection of compliance reports
-    pub compliance_reports: Vec<String>,
+    /// FIPS 140-2/3 certified
+    pub fips_certified: bool,
+    /// Common Criteria certified
+    pub common_criteria: bool,
+    /// PCI DSS compliant
+    pub pci_dss: bool,
+    /// GDPR compliant
+    pub gdpr: bool,
+}
 
+impl Default for ComplianceCapabilities {
+    fn default() -> Self {
+        Self {
+            fips_certified: false,
+            common_criteria: false,
+            pci_dss: false,
+            gdpr: true,
+        }
+    }
+}
+
+/// Crypto operation capabilities
+#[derive(Debug, Clone, Default)]
+pub struct CryptoOperationCapabilities {
+    /// Supports encryption operations
+    pub supports_encryption: bool,
+    /// Supports decryption operations
+    pub supports_decryption: bool,
+    /// Supports signing operations
+    pub supports_signing: bool,
+    /// Supports verification operations
+    pub supports_verification: bool,
+}
+
+/// Key generation capabilities
+#[derive(Debug, Clone, Default)]
+pub struct KeyGenerationCapabilities {
+    /// Supports key generation
+    pub supports_generation: bool,
+    /// Supports key import
+    pub supports_import: bool,
+    /// Supports key derivation
+    pub supports_derivation: bool,
+    /// Maximum key size
+    pub max_key_size: usize,
+}
+
+/// Tamper resistance level
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TamperResistanceLevel {
-    #[default]
-    /// Represents detection variant
-    Detection,
+    /// No tamper resistance
+    None,
+    /// Software-based tamper detection
+    Software,
+    /// Hardware-based tamper detection
+    Hardware,
+    /// Military-grade tamper resistance
+    MilitaryGrade,
+}
+
+impl Default for TamperResistanceLevel {
+    fn default() -> Self {
+        Self::Software
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_capability_requirements_default() {
+        let caps = CapabilityRequirements::default();
+        assert_eq!(caps.min_security_level, "software");
+        assert!(!caps.hardware_required);
+        assert!(!caps.attestation_required);
+    }
+
+    #[test]
+    fn test_key_management_capabilities() {
+        let caps = KeyManagementCapabilities::default();
+        assert!(caps.rotation_supported);
+        assert!(caps.derivation_supported);
+        assert_eq!(caps.key_types.len(), 2);
+    }
+
+    #[test]
+    fn test_advanced_features() {
+        let caps = AdvancedFeatureCapabilities::default();
+        assert!(!caps.secure_enclave);
+        assert!(!caps.hardware_keystore);
+    }
+
+    #[test]
+    fn test_performance_capabilities() {
+        let caps = PerformanceCapabilities::default();
+        assert_eq!(caps.ops_per_second, 1000.0);
+        assert_eq!(caps.avg_latency_ms, 10.0);
+    }
+
+    #[test]
+    fn test_security_capabilities() {
+        let caps = SecurityCapabilities::default();
+        assert!(caps.memory_protection);
+        assert!(!caps.tamper_detection);
+    }
+
+    #[test]
+    fn test_human_entropy_capabilities() {
+        let caps = HumanEntropyCapabilities::default();
+        assert!(caps.supported);
+        assert_eq!(caps.min_entropy_bits, 128);
+        assert!(caps.quality_verification);
+    }
+
+    #[test]
+    fn test_api_support_capabilities() {
+        let caps = ApiSupportCapabilities::default();
+        assert!(caps.rest_api);
+        assert!(!caps.grpc);
+        assert!(!caps.websocket);
+    }
+
+    #[test]
+    fn test_compliance_capabilities() {
+        let caps = ComplianceCapabilities::default();
+        assert!(caps.gdpr);
+        assert!(!caps.fips_certified);
+        assert!(!caps.pci_dss);
+    }
+}

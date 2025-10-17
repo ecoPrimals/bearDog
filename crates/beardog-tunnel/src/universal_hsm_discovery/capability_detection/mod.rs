@@ -1,9 +1,7 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! HSM Capability Detection Module
+//!
+//! Provides functionality for detecting and probing HSM capabilities
+//! across different providers and platforms.
 
 use crate::tunnel::hsm::types::capability::{
     AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
@@ -11,123 +9,131 @@ use crate::tunnel::hsm::types::capability::{
     KeyGenerationCapabilities, KeyManagementCapabilities, PerformanceCapabilities,
     SecurityCapabilities,
 };
-pub mod cloud_kms_prober;
-pub mod mobile_hsm_prober;
-pub mod performance_benchmarker;
-pub mod pkcs11_prober;
-pub mod software_hsm_prober;
 use super::*;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{debug, error, info, warn};
 
-use crate::tunnel::hsm::types::{HsmInterfaceType, TamperResistanceLevel};
+// Submodules
+pub mod cloud_kms_prober;
+pub mod mobile_hsm_prober;
+pub mod performance_benchmarker;
+pub mod pkcs11_prober;
+pub mod software_hsm_prober;
+
 use cloud_kms_prober::CloudKmsCapabilityProber;
 use mobile_hsm_prober::MobileHsmCapabilityProber;
 use performance_benchmarker::PerformanceBenchmarker;
 use pkcs11_prober::Pkcs11CapabilityProber;
 use software_hsm_prober::SoftwareHsmCapabilityProber;
 
+/// Capability detector for HSMs
 #[derive(Debug, Clone)]
+pub struct CapabilityDetector {
+    /// PKCS#11 capability prober
+    pkcs11_prober: Pkcs11CapabilityProber,
+    /// Cloud KMS capability prober
     cloud_kms_prober: CloudKmsCapabilityProber,
+    /// Mobile HSM capability prober
     mobile_hsm_prober: MobileHsmCapabilityProber,
+    /// Software HSM capability prober
     software_hsm_prober: SoftwareHsmCapabilityProber,
+    /// Performance benchmarker
     performance_benchmarker: PerformanceBenchmarker,
 }
-impl CapabilityDetector {}
 
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
+impl CapabilityDetector {
+    /// Create a new capability detector
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
     pub fn new() -> Result<Self, BearDogError> {
+        info!("Creating HSM capability detector");
+        
         Ok(Self {
             pkcs11_prober: Pkcs11CapabilityProber::new()?,
             cloud_kms_prober: CloudKmsCapabilityProber::new()?,
             mobile_hsm_prober: MobileHsmCapabilityProber::new()?,
             software_hsm_prober: SoftwareHsmCapabilityProber::new()?,
-            performance_benchmarker: PerformanceBenchmarker::new(&HsmInterfaceType,
-    ) -> Result<beardog_types::HsmCapabilities, BearDogError> {
-        debug!(
-            "🔍 Detecting capabilities for interface: {:?}",
-            interface_type
-        );
-        let start_time = Instant::now();
-        let capabilities = match interface_type {
-            HsmInterfaceType::Pkcs11 { library_path, .. } => {
-                self.pkcs11_prober.probe_capabilities(library_path)?
-            }
+            performance_benchmarker: PerformanceBenchmarker::new()?,
+        })
+    }
 
-            _ => self.create_default_hsm_capabilities()?,
-        };
-
-        let final_capabilities = capabilities;
-        let detection_time = start_time.elapsed();
-        info!("✅ Capability detection completed in {:?}", detection_time);
-        Ok(&str,
-        protocol: &str,
+    /// Detect capabilities for a given HSM
+    ///
+    /// # Errors
+    /// Returns an error if detection fails
+    pub async fn detect_capabilities(
+        &self,
+        hsm_type: &HsmType,
     ) -> Result<HsmCapabilities, BearDogError> {
-        debug!("🌐 Analyzing Network HSM: {} ({})", endpoint, protocol);
-        Ok(HsmCapabilities {
-            key_generation: KeyGenerationCapabilities {
-                supported_key_types: vec![
-                    "RSA".to_string();
+        debug!("Detecting capabilities for HSM type: {:?}", hsm_type);
 
-        Ok(HsmCapabilities::default(&str,
-        debug!("💳 Analyzing Smart Card: {}", reader_name);
-    /// Creates tpm_capabilities
-    fn create_tpm_capabilities(&self, version: &str) -> Result<HsmCapabilities, BearDogError> {
-        debug!("🔒 Analyzing TPM: {}", version);
-    /// Creates windows_cng_capabilities
-    fn create_windows_cng_capabilities(&str,
-        debug!("🪟 Analyzing Windows CNG: {}", provider_name);
-    /// Creates macos_keychain_capabilities
-    fn create_macos_keychain_capabilities(&str,
-        debug!("🍏 Analyzing macOS Keychain: {}", keychain_path);
-    /// Creates custom_api_capabilities
-    fn create_custom_api_capabilities(&str,
-        api_version: &str,
-            "🔧 Analyzing Custom API: {} ({})",
-            api_endpoint, api_version
-    /// Creates proprietary_driver_capabilities
-    fn create_proprietary_driver_capabilities(&str,
-        driver_version: &str,
-            "🔌 Analyzing Proprietary Driver: {} ({})",
-            driver_path, driver_version
-    /// Creates default_hsm_capabilities
-    fn create_default_hsm_capabilities(
-        debug!("Creating default HSM capabilities");
+        match hsm_type {
+            HsmType::Pkcs11 => self.pkcs11_prober.probe_capabilities().await,
+            HsmType::Cloud => self.cloud_kms_prober.probe_capabilities().await,
+            HsmType::Smartphone => self.mobile_hsm_prober.probe_capabilities().await,
+            HsmType::Software => self.software_hsm_prober.probe_capabilities().await,
+            _ => {
+                warn!("Unsupported HSM type for capability detection: {:?}", hsm_type);
+                Ok(HsmCapabilities::default())
+            }
+        }
+    }
 
-        Ok(beardog_types::HsmCapabilities {
-            vendor: "Generic".to_string(),
-            model: "Default HSM".to_string(),
-            firmware_version: "1.0.0".to_string(),
-            supported_algorithms: vec!["AES".to_string(), "RSA".to_string()],
-            supported_key_types: vec!["RSA".to_string(), "ECDSA".to_string()],
-            max_keys: Some(1000),
-            supported_operations: vec![
-                "encrypt".to_string(),
-                "decrypt".to_string(),
-                "sign".to_string(),
-            ],
-            security_features: vec!["Software-based".to_string()],
-            performance_metrics: std::collections::HashMap::with_capacity(vec![],
-            key_generation:
-                beardog_types::canonical::hsm::capabilities::KeyGenerationCapabilities {
-                    hardware_generation: false,
-                    supported_key_sizes: vec![2048, 4096],
-                    generation_speed: Some(100),
-                },
-            key_management:
-                beardog_types::canonical::hsm::capabilities::KeyManagementCapabilities {
-                    backup_recovery: false,
-                    key_migration: false,
-                    key_versioning: false,
-                    lifecycle_management: true,
-                    max_keys: Some(1000),
-            advanced_features:
-                beardog_types::canonical::hsm::capabilities::AdvancedFeatureCapabilities {
-                    physical_security_level: "Software".to_string(),
-            custom_capabilities: std::collections::HashMap::with_capacity(16),
+    /// Benchmark HSM performance
+    ///
+    /// # Errors
+    /// Returns an error if benchmarking fails
+    pub async fn benchmark_performance(
+        &self,
+        hsm_type: &HsmType,
+    ) -> Result<PerformanceCapabilities, BearDogError> {
+        debug!("Benchmarking performance for HSM type: {:?}", hsm_type);
+        self.performance_benchmarker
+            .benchmark(hsm_type)
+            .await
+    }
+
+    /// Detect all capabilities including performance
+    ///
+    /// # Errors
+    /// Returns an error if detection fails
+    pub async fn detect_all_capabilities(
+        &self,
+        hsm_type: &HsmType,
+    ) -> Result<HsmCapabilities, BearDogError> {
+        let mut capabilities = self.detect_capabilities(hsm_type).await?;
+        
+        // Add performance metrics
+        if let Ok(perf) = self.benchmark_performance(hsm_type).await {
+            capabilities.performance = perf;
+        }
+
+        Ok(capabilities)
+    }
+}
+
+// NOTE: Default implementation removed - use Type::new() instead since it returns Result
+// Previous unsafe implementation used .expect() which could panic
+// Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_capability_detector_creation() {
+        let detector = CapabilityDetector::new();
+        assert!(detector.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_software_hsm_detection() -> Result<(), BearDogError> {
+        let detector = CapabilityDetector::new()?;
+        let capabilities = detector.detect_capabilities(&HsmType::Software).await?;
+        assert!(capabilities.supports_key_generation);
+        Ok(())
+    }
+}

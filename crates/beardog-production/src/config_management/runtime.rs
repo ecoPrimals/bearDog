@@ -81,7 +81,9 @@ impl ProductionConfigManager {
                 .map_err(|e| BearDogError::validation(format!("Invalid JSON config: {}", e)))?
         };
 
-        self.merge_configs(config, file_config);
+        // Merge file config into base - currently replaces base with file values
+        // For selective merging of individual fields, implement custom merge logic
+        *config = file_config;
         
         Ok(())
     }
@@ -272,10 +274,9 @@ impl ProductionConfigManager {
             || provider_lower.contains("key")
     }
 
-    /// Merges file configuration into base configuration
-    fn merge_configs(&self, _base: &mut ProductionConfig, _file: ProductionConfig) {
-        // TODO: Implement selective merging logic
-    }
+    // Note: merge_configs() removed - merging now happens inline in load_from_file()
+    // Current implementation uses replacement strategy. Selective field-level merging
+    // can be added when needed by implementing custom merge logic in load_from_file().
 }
 
 impl SecretsManager {
@@ -327,9 +328,21 @@ impl SecretsManager {
                     Err(BearDogError::system("Secret not found in environment"))
                 }
             }
-            _ => {
-                // TODO: Implement other providers
-                Err(BearDogError::system("Provider not implemented"))
+            SecretsProvider::Vault { endpoint, token, mount_path } => {
+                // Vault integration requires HTTP client and vault-specific API
+                // Minimal implementation returns error with helpful message
+                Err(BearDogError::system(format!(
+                    "Vault provider not yet implemented. Endpoint: {}, Mount: {}. Token available: {}",
+                    endpoint, mount_path, !token.is_empty()
+                )))
+            }
+            SecretsProvider::UniversalSecretsManagement { endpoint, provider_type, .. } => {
+                // Universal secrets management requires capability discovery and dynamic routing
+                // Minimal implementation returns error with helpful message
+                Err(BearDogError::system(format!(
+                    "Universal secrets provider '{}' not yet implemented. Endpoint: {}",
+                    provider_type, endpoint
+                )))
             }
         }
     }

@@ -81,7 +81,7 @@ pub struct HsmSecurityPolicyConfig {
     /// Enable comprehensive audit logging for all HSM operations
     pub audit_all_operations: bool,
 
-    /// Whitelist of allowed cryptographic algorithms (e.g., "Ed25519", "AES-256-GCM")
+    /// Allowlist of approved cryptographic algorithms (e.g., "Ed25519", "AES-256-GCM")
     pub allowed_algorithms: Vec<String>,
 }
 

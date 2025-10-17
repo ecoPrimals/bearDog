@@ -107,7 +107,10 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 .map(&|e| e.url)
                 .unwrap_or_else(|| {
                     std::env::var("BEARDOG_SERVICE_HOST")
-                        .unwrap_or_else(|_| "localhost".to_string())
+                        .unwrap_or_else(|_| {
+                            std::env::var("BEARDOG_SERVICE_HOST")
+                                .unwrap_or_else(|_| "localhost".to_string())
+                        })
                         + ":" + &std::env::var(self.&config.load_balancer_algorithm,
             weight: 100,
             max_requests: 1000,
@@ -144,9 +147,12 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 },
                 endpoints: ServiceEndpoints {
                     health: health_check_url.clone(),
-                    metrics: "http://0.0.0.0:9090/metrics".to_string(),
-                    admin: "http://0.0.0.0:8080/admin".to_string(),
-                    primary: "http://0.0.0.0:8080/api/v1".to_string(),
+                    metrics: std::env::var("BEARDOG_METRICS_URL")
+                        .unwrap_or_else(|_| "http://0.0.0.0:9090/metrics".to_string()),
+                    admin: std::env::var("BEARDOG_ADMIN_URL")
+                        .unwrap_or_else(|_| "http://0.0.0.0:8080/admin".to_string()),
+                    primary: std::env::var("BEARDOG_PRIMARY_URL")
+                        .unwrap_or_else(|_| "http://0.0.0.0:8080/api/v1".to_string()),
                 resource_requirements: ResourceSpec {
                     cpu_cores: Some(1.0),
                     memory_mb: Some(512),
@@ -195,7 +201,8 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 endpoint_type: EndpointType::Custom("grpc".to_string()),
                 protocol: "grpc".to_string(),
 
-                url: "http://0.0.0.0:9090/metrics".to_string(),
+                url: std::env::var("BEARDOG_METRICS_URL")
+                    .unwrap_or_else(|_| "http://0.0.0.0:9090/metrics".to_string()),
                 protocol: "http".to_string(),
         ];
         Ok(&[Capability],

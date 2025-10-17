@@ -33,19 +33,19 @@ pub enum HealthCheckerType {
 impl HealthChecker for HealthCheckerType {
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         match self {
-            HealthCheckerType::Database(checker) => checker.check_health().await,
-            HealthCheckerType::Cache(checker) => checker.check_health().await,
-            HealthCheckerType::ExternalApi(checker) => checker.check_health().await,
-            HealthCheckerType::Hsm(checker) => checker.check_health().await,
+            Self::Database(checker) => checker.check_health().await,
+            Self::Cache(checker) => checker.check_health().await,
+            Self::ExternalApi(checker) => checker.check_health().await,
+            Self::Hsm(checker) => checker.check_health().await,
         }
     }
 
     fn component_name(&self) -> &str {
         match self {
-            HealthCheckerType::Database(checker) => checker.component_name(),
-            HealthCheckerType::Cache(checker) => checker.component_name(),
-            HealthCheckerType::ExternalApi(checker) => checker.component_name(),
-            HealthCheckerType::Hsm(checker) => checker.component_name(),
+            Self::Database(checker) => checker.component_name(),
+            Self::Cache(checker) => checker.component_name(),
+            Self::ExternalApi(checker) => checker.component_name(),
+            Self::Hsm(checker) => checker.component_name(),
         }
     }
 }
@@ -62,7 +62,8 @@ impl Default for DatabaseHealthChecker {
 impl DatabaseHealthChecker {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 }
@@ -93,7 +94,7 @@ impl HealthChecker for DatabaseHealthChecker {
         })
     }
 
-    fn component_name(&self) -> &str {
+    fn component_name(&self) -> &'static str {
         "Database"
     }
 }
@@ -110,7 +111,8 @@ impl Default for CacheHealthChecker {
 impl CacheHealthChecker {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 }
@@ -141,7 +143,7 @@ impl HealthChecker for CacheHealthChecker {
         })
     }
 
-    fn component_name(&self) -> &str {
+    fn component_name(&self) -> &'static str {
         "Cache"
     }
 }
@@ -163,6 +165,7 @@ impl Default for ExternalApiHealthChecker {
 impl ExternalApiHealthChecker {
     /// New operation.
     /// Creates a new instance
+    #[must_use]
     pub fn new(api_endpoint: &str) -> Self {
         Self {
             api_endpoint: api_endpoint.to_string(),
@@ -189,7 +192,7 @@ impl HealthChecker for ExternalApiHealthChecker {
         })
     }
 
-    fn component_name(&self) -> &str {
+    fn component_name(&self) -> &'static str {
         "External API"
     }
 }
@@ -206,7 +209,8 @@ impl Default for HsmHealthChecker {
 impl HsmHealthChecker {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 }
@@ -231,7 +235,7 @@ impl HealthChecker for HsmHealthChecker {
         })
     }
 
-    fn component_name(&self) -> &str {
+    fn component_name(&self) -> &'static str {
         "HSM"
     }
 }
@@ -244,7 +248,8 @@ pub struct HealthCheckAggregator {
 impl HealthCheckAggregator {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             checkers: Vec::new(),
         }
@@ -285,8 +290,8 @@ impl HealthCheckAggregator {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets overall_status
-    /// Gets overall_status
+    /// Gets `overall_status`
+    /// Gets `overall_status`
     pub async fn get_overall_status(&self) -> Result<HealthStatus, BearDogError> {
         let results = self.check_all().await?;
 

@@ -125,7 +125,12 @@ pub struct ServiceHealthState {
 
 impl HealthMonitor {
     /// Create a new health monitor with the given configuration
-    /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Configuration is invalid
+    /// - Required fields are missing
     pub fn new(config: &HealthCheckConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             config: config.clone(),
@@ -134,22 +139,37 @@ impl HealthMonitor {
     }
 
     /// Start the health monitoring background tasks
-    /// Starts service
-    /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Background tasks fail to start
+    /// - Monitoring system is already running
     pub const fn start(&self) -> Result<(), BearDogError> {
         // Implementation would start background health checking tasks
         Ok(())
     }
 
     /// Stop all health monitoring activities
-    /// Stops service
-    /// Stops service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Background tasks fail to stop gracefully
+    /// - Cleanup operations fail
     pub const fn stop(&self) -> Result<(), BearDogError> {
         // Implementation would stop background tasks and cleanup
         Ok(())
     }
 
     /// Add a service to the health monitoring system
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Service ID is invalid or already exists
+    /// - Health configuration is invalid
+    /// - Monitoring setup fails
     pub fn add_service(
         &self,
         _service_id: String,
@@ -160,8 +180,12 @@ impl HealthMonitor {
     }
 
     /// Remove a service from health monitoring
-    /// Removes service
-    /// Removes service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Service ID does not exist
+    /// - Removal operation fails
     pub const fn remove_service(&self, _service_id: &str) -> Result<(), BearDogError> {
         // Implementation would remove service from monitoring
         Ok(())
@@ -170,6 +194,7 @@ impl HealthMonitor {
     /// Get the current health status of a specific service
     /// Gets `service_health`
     /// Gets `service_health`
+    #[must_use]
     pub const fn get_service_health(&self, _service_id: &str) -> Option<HealthStatus> {
         // Implementation would return current health status
         None
@@ -177,11 +202,19 @@ impl HealthMonitor {
 
     /// Gets `health_statistics`
     /// Gets `health_statistics`
+    #[must_use]
     pub fn get_health_statistics(&self) -> HealthStatistics {
         // Implementation would return detailed health statistics
         HealthStatistics::default()
     }
 
+    /// Check the health status of a specific service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Service ID does not exist
+    /// - Health check operation fails
     pub const fn check_service_health(
         &self,
         _service_id: &str,
@@ -190,8 +223,13 @@ impl HealthMonitor {
         Ok(HealthStatus::Unknown)
     }
 
-    /// Updates config
-    /// Updates config
+    /// Updates configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - New configuration is invalid
+    /// - Configuration update fails
     pub fn update_config(&mut self, config: HealthCheckConfig) -> Result<(), BearDogError> {
         self.config = config;
         Ok(())

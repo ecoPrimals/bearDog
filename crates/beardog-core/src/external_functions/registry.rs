@@ -30,6 +30,7 @@ impl Default for ExternalFunctionRegistry {
 impl ExternalFunctionRegistry {
     /// Create a new registry
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: ExternalFunctionsRegistryConfig) -> Self {
         Self {
             config,
@@ -145,6 +146,10 @@ impl ExternalFunctionRegistry {
     }
 
     /// Unregister a function
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the function is not found in the registry
     pub fn unregister_function(&mut self, function_id: &str) -> Result<(), BearDogError> {
         if self.functions.remove(function_id).is_some() {
             Ok(())
@@ -156,6 +161,13 @@ impl ExternalFunctionRegistry {
     }
 
     /// Call a function by ID
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The function is not found
+    /// - The function execution fails
+    /// - Parameter validation fails
     pub fn call_function(
         &mut self,
         function_id: &str,
@@ -206,7 +218,9 @@ impl ExternalFunctionRegistry {
                     "Function called successfully".to_string(),
                 )),
                 error: None,
-                execution_time_us: start_time.elapsed().as_micros() as u64,
+                #[allow(clippy::cast_possible_truncation)]
+                execution_time_us: start_time.elapsed().as_micros().min(u128::from(u64::MAX))
+                    as u64,
             };
             Ok(result)
         } else {
@@ -216,8 +230,11 @@ impl ExternalFunctionRegistry {
         }
     }
 
-    /// Gets `function_info`
-    /// Gets `function_info`
+    /// Gets function information
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the function is not found in the registry
     pub fn get_function_info(&self, function_id: &str) -> Result<FunctionHandle, BearDogError> {
         self.functions
             .get(function_id)

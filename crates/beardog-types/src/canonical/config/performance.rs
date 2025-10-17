@@ -43,3 +43,84 @@ pub struct ResourceLimits {
 }
 
 pub type PerformanceConfig = CanonicalPerformanceConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_performance_config_default() {
+        let config = CanonicalPerformanceConfig::default();
+        assert!(!config.enabled);
+        assert!(!config.caching_enabled);
+        assert!(!config.parallel_processing);
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::Medium
+        ));
+    }
+
+    #[test]
+    fn test_optimization_level_default() {
+        let level = OptimizationLevel::default();
+        assert!(matches!(level, OptimizationLevel::Medium));
+    }
+
+    #[test]
+    fn test_resource_limits_default() {
+        let limits = ResourceLimits::default();
+        assert_eq!(limits.max_memory_mb, 0);
+        assert_eq!(limits.max_cpu_cores, 0);
+        assert_eq!(limits.max_connections, 0);
+    }
+
+    #[test]
+    fn test_performance_config_serialization() {
+        let config = CanonicalPerformanceConfig {
+            enabled: true,
+            optimization_level: OptimizationLevel::High,
+            caching_enabled: true,
+            parallel_processing: true,
+            resource_limits: ResourceLimits {
+                max_memory_mb: 2048,
+                max_cpu_cores: 4,
+                max_connections: 100,
+            },
+        };
+
+        let json = serde_json::to_string(&config).expect("Serialization failed");
+        assert!(json.contains("\"enabled\":true"));
+        assert!(json.contains("\"max_memory_mb\":2048"));
+    }
+
+    #[test]
+    fn test_performance_config_deserialization() {
+        let json = r#"{
+            "enabled": true,
+            "optimization_level": "Maximum",
+            "caching_enabled": true,
+            "parallel_processing": false,
+            "resource_limits": {
+                "max_memory_mb": 4096,
+                "max_cpu_cores": 8,
+                "max_connections": 200
+            }
+        }"#;
+
+        let config: CanonicalPerformanceConfig =
+            serde_json::from_str(json).expect("Deserialization failed");
+
+        assert!(config.enabled);
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::Maximum
+        ));
+        assert_eq!(config.resource_limits.max_memory_mb, 4096);
+    }
+
+    #[test]
+    fn test_type_alias() {
+        // Ensure type alias works
+        let _config: PerformanceConfig = CanonicalPerformanceConfig::default();
+    }
+}

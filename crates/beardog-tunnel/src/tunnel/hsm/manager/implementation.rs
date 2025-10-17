@@ -1,104 +1,288 @@
+//! HSM Provider Implementation
+//!
+//! Default implementation of the HSM Provider trait
 
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
-use super::*;
-use crate::tunnel::hsm::{AndroidStrongBoxHsm, RustSoftwareHsm};
+use super::super::types::HsmKey;
+// GenerateKeyRequest imported in tests
+use async_trait::async_trait;
 use beardog_errors::BearDogError;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
-impl HsmManager {
 
-/// New operation.
-    /// Creates a new instance
+/// Provider information structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProviderInfo {
+    /// Provider ID
+    pub id: String,
+    /// Provider name
+    pub name: String,
+    /// Security level (1-5, where 5 is highest)
+    pub security_level: u8,
+}
+
+/// Key information structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KeyInfo {
+    /// Key ID
+    pub id: String,
+    /// Key algorithm
+    pub algorithm: String,
+}
+
+/// Health status structure  
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthStatus {
+    /// Whether the provider is healthy
+    pub is_healthy: bool,
+    /// Optional error message
+    pub error_message: Option<String>,
+}
+
+/// HSM Provider trait
+#[async_trait]
+pub trait HsmProvider: Send + Sync {
+    /// Get provider information
+    async fn get_info(&self) -> Result<ProviderInfo, BearDogError>;
+
+    /// Generate a new key
+    async fn generate_key(
+        &self,
+        request: crate::tunnel::hsm::GenerateKeyRequest,
+    ) -> Result<HsmKey, BearDogError>;
+
+    /// Sign data with a key
+    async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+
+    /// Verify a signature
+    async fn verify(
+        &self,
+        key_id: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, BearDogError>;
+
+    /// Encrypt data
+    async fn encrypt(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+
+    /// Decrypt data
+    async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>;
+
+    /// Import a key
+    async fn import_key(&self, key_data: &[u8], key_id: &str) -> Result<HsmKey, BearDogError>;
+
+    /// Delete a key
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError>;
+
+    /// Get key information
+    async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError>;
+
+    /// Perform a health check
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError>;
+
+    /// Check if provider is available
+    fn is_available(&self) -> bool;
+}
+
+/// Default HSM manager
+pub struct DefaultHsmManager {
+    /// Registered HSM providers
+    pub hsm_providers: HashMap<String, Box<dyn HsmProvider>>,
+}
+
+impl DefaultHsmManager {
+    /// Create a new HSM manager
     pub fn new() -> Self {
-        let config = HsmManagerConfig::default();
         Self {
-            hsm_providers: HashMap::with_capacity(16),
-            config: config.clone(),
-            health_monitor: Arc::new(DefaultHsmHealthMonitor {
-                provider_health: Arc::new(RwLock::new(HashMap::with_capacity(&config.health_config,
-                monitoring_active: Arc::new(RwLock::new(false)),
-            }),
-            failover_manager: Arc::new(DefaultHsmFailoverManager {
-                circuit_breakers: Arc::new(RwLock::new(HashMap::with_capacity(&config.failover_config,
-                retry_counts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            capability_detector: Arc::new(DefaultHsmCapabilityDetector {
-                provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            performance_tracker: Arc::new(HsmPerformanceTracker {
-                operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(config.performance_config,
-            operation_router: Arc::new(RwLock::new(HsmOperationRouter::new(&str,
-    ) -> Result<ZeroCostsuper<impl super, BearDogError>> {
-        let config = &self.config;
+            hsm_providers: HashMap::new(),
+        }
+    }
 
-        let provider_type = "software"; // Default fallback
-        match provider_type {
-            "hardware" => {
-                if cfg!(target_os = "android") {
-                    let android_hsm = AndroidStrongBoxHsm::new()?;
-                    Ok(Arc::new(android_hsm))
-                } else {
-                    let software_config =
-                        crate::tunnel::hsm::types::config::SoftwareHsmConfig::default();
-                    let software_hsm = RustSoftwareHsm::new(software_config)?;
-                    Ok(Arc::new(software_hsm))
-                }
-            }
-            _ => {
-                let software_config =
-                    crate::tunnel::hsm::types::config::SoftwareHsmConfig::default();
-                let software_hsm = RustSoftwareHsm::new(software_config)?;
-                Ok(Arc::new(&SecurityRequirements,
-    ) -> Result<String, BearDogError> {
-        info!(
-            "🔍 Selecting best HSM provider for requirements: {:?}",
-            requirements
-        );
-
-        let mut best_provider = None;
-        let mut best_score = 0;
-        for (provider_id, _provider) in &self.hsm_providers {
-            let score = self
-                .calculate_provider_score(provider_id, requirements)
-                ?;
-            if score > best_score {
-                best_score = score;
-                best_provider = Some(provider_id);
-        best_provider.ok_or_else(|| BearDogError::not_found(&str,
-    ) -> Result<u32, BearDogError> {
-        let mut score = 0;
-
-        score += 10;
-
-        if requirements.require_hardware_backing && provider_id.contains(42,
-            successful_requests: 40,
-            failed_requests: 2,
-            average_response_time_ms: 150,
-            provider_utilization: std::collections::HashMap::with_capacity(&str,
-        provider: impl super,
+    /// Register an HSM provider
+    pub fn register_provider(
+        &mut self,
+        id: String,
+        provider: Box<dyn HsmProvider>,
     ) -> Result<(), BearDogError> {
-        info!("Registering HSM provider for tier: {}", tier);
-        self.hsm_providers.insert(bool,
-    /// Whether require_attestation is enabled
-    pub require_attestation: bool,
-    /// Number of minimum_key_size
-    pub minimum_key_size: u32,
+        self.hsm_providers.insert(id, provider);
+        Ok(())
+    }
 
-pub struct RoutingMetrics {
-    /// Number of total_requests
-    pub total_requests: u64,
-    /// Number of successful_requests
-    pub successful_requests: u64,
-    /// Number of failed_requests
-    pub failed_requests: u64,
-    pub average_response_time_ms: u64,
-    pub provider_utilization: std::collections::HashMap<String, f64>,
+    /// Get a provider by ID
+    pub fn get_provider(&self, id: &str) -> Result<&dyn HsmProvider, BearDogError> {
+        self.hsm_providers
+            .get(id)
+            .map(|p| p.as_ref())
+            .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {}", id)))
+    }
 
-use crate::tunnel::hsm::types::HsmTier;
+    /// List all registered providers
+    pub fn list_providers(&self) -> Vec<String> {
+        self.hsm_providers.keys().cloned().collect()
+    }
+}
+
+impl Default for DefaultHsmManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tunnel::hsm::types::key::{
+        KeyAttestation, KeyHealthStatus, KeyMaterial, KeyMetadata, KeyType,
+    };
+    use crate::tunnel::hsm::GenerateKeyRequest;
+    use chrono::Utc;
+
+    struct MockProvider {
+        id: String,
+    }
+
+    #[async_trait]
+    impl HsmProvider for MockProvider {
+        async fn get_info(&self) -> Result<ProviderInfo, BearDogError> {
+            Ok(ProviderInfo {
+                id: self.id.clone(),
+                name: "Mock Provider".to_string(),
+                security_level: 1,
+            })
+        }
+
+        fn is_available(&self) -> bool {
+            true
+        }
+
+        async fn generate_key(&self, request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
+            Ok(HsmKey {
+                id: request.key_id.clone(),
+                hsm_type: "mock".to_string(),
+                key_type: request.key_type.clone(),
+                metadata: KeyMetadata::new(request.key_id.clone(), request.key_type),
+                key_material: KeyMaterial::Encrypted {
+                    encrypted_data: vec![0u8; 32],
+                    encryption_algorithm: "AES-256-GCM".to_string(),
+                    kdf_params: None,
+                },
+                hsm_tier: "Software".to_string(),
+                health_status: KeyHealthStatus::Healthy,
+                attestation: Some(KeyAttestation {
+                    certificate_chain: vec![],
+                    attestation_statement: vec![],
+                    format: "mock".to_string(),
+                    timestamp: Utc::now(),
+                }),
+                created_at: Utc::now(),
+            })
+        }
+
+        async fn sign(&self, _key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(data.to_vec())
+        }
+
+        async fn verify(
+            &self,
+            _key_id: &str,
+            _data: &[u8],
+            _signature: &[u8],
+        ) -> Result<bool, BearDogError> {
+            Ok(true)
+        }
+
+        async fn encrypt(&self, _key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(data.to_vec())
+        }
+
+        async fn decrypt(&self, _key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(ciphertext.to_vec())
+        }
+
+        async fn import_key(&self, key_data: &[u8], key_id: &str) -> Result<HsmKey, BearDogError> {
+            let _ = key_data; // Suppress warning
+            Ok(HsmKey {
+                id: key_id.to_string(),
+                hsm_type: "mock".to_string(),
+                key_type: KeyType::Ed25519,
+                metadata: KeyMetadata::new(key_id.to_string(), KeyType::Ed25519),
+                key_material: KeyMaterial::Encrypted {
+                    encrypted_data: vec![0u8; 32],
+                    encryption_algorithm: "AES-256-GCM".to_string(),
+                    kdf_params: None,
+                },
+                hsm_tier: "Software".to_string(),
+                health_status: KeyHealthStatus::Healthy,
+                attestation: Some(KeyAttestation {
+                    certificate_chain: vec![],
+                    attestation_statement: vec![],
+                    format: "mock".to_string(),
+                    timestamp: Utc::now(),
+                }),
+                created_at: Utc::now(),
+            })
+        }
+
+        async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
+            Ok(())
+        }
+
+        async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
+            Ok(KeyInfo {
+                id: key_id.to_string(),
+                algorithm: "Ed25519".to_string(),
+            })
+        }
+
+        async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
+            Ok(HealthStatus {
+                is_healthy: true,
+                error_message: None,
+            })
+        }
+    }
+
+    #[test]
+    fn test_manager_creation() {
+        let manager = DefaultHsmManager::new();
+        assert!(manager.hsm_providers.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_register_provider() {
+        let mut manager = DefaultHsmManager::new();
+        let provider = Box::new(MockProvider {
+            id: "mock-1".to_string(),
+        });
+
+        let result = manager.register_provider("mock-1".to_string(), provider);
+        assert!(result.is_ok());
+        assert_eq!(manager.list_providers().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_provider() {
+        let mut manager = DefaultHsmManager::new();
+        let provider = Box::new(MockProvider {
+            id: "mock-1".to_string(),
+        });
+
+        manager
+            .register_provider("mock-1".to_string(), provider)
+            .unwrap();
+
+        let retrieved = manager.get_provider("mock-1");
+        assert!(retrieved.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_provider_info() {
+        let provider = MockProvider {
+            id: "mock-1".to_string(),
+        };
+        let info = provider.get_info().await.unwrap();
+
+        assert_eq!(info.id, "mock-1");
+        assert_eq!(info.name, "Mock Provider");
+        assert_eq!(info.security_level, 1);
+    }
+}

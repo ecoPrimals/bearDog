@@ -38,6 +38,7 @@ impl std::fmt::Debug for EcosystemStorageManager {
 impl EcosystemStorageManager {
     /// Create a new storage manager
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: EcosystemStorageConfig) -> Self {
         let cache_config = super::cache::CacheConfig {
             max_size_bytes: config.cache_size_limit_bytes,
@@ -86,6 +87,7 @@ impl EcosystemStorageManager {
     }
 
     /// Get configuration
+    #[must_use]
     pub const fn config(&self) -> &EcosystemStorageConfig {
         &self.config
     }

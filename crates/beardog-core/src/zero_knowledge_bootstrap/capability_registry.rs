@@ -39,7 +39,10 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-// Type alias for consistency with the codebase
+/// Type alias for service capability types
+///
+/// Provides a semantic alias for `CapabilityType` when used in service contexts.
+/// This helps distinguish between general capabilities and service-specific capabilities.
 pub type ServiceCapabilityType = CapabilityType;
 
 /// Unique identifier for a registered capability
@@ -48,16 +51,19 @@ pub struct CapabilityId(String);
 
 impl CapabilityId {
     /// Create a new unique capability ID
+    #[must_use]
     pub fn new() -> Self {
         Self(Uuid::new_v4().to_string())
     }
 
     /// Create from existing string
+    #[must_use]
     pub const fn from_string(id: String) -> Self {
         Self(id)
     }
 
     /// Get the inner string
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -76,22 +82,35 @@ impl std::fmt::Display for CapabilityId {
 }
 
 /// Health status for capability tracking
-/// Simplified version for internal use
+///
+/// Tracks the operational health of registered capabilities in the registry.
+/// Health checks run periodically to ensure capabilities remain available.
+///
+/// # Health Status Lifecycle
+/// - `Unknown`: Initial state after registration
+/// - `Healthy`: Passing health checks consistently
+/// - `Degraded`: Experiencing issues but still functional
+/// - `Unhealthy`: Failed health checks, may be removed
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HealthStatus {
-    /// Health status unknown (just registered)
+    /// Health status unknown (capability just registered, not yet checked)
     Unknown,
-    /// Capability is healthy and operational
+    /// Capability is healthy and fully operational
     Healthy,
-    /// Capability is degraded but functional
+    /// Capability is degraded but still functional
     Degraded,
-    /// Capability is unhealthy
+    /// Capability is unhealthy or non-responsive
     Unhealthy,
 }
 
 // Removed CapabilityMetadata - using UniversalCapability's metadata field directly
 
-/// A registered capability in the ecosystem
+/// A registered capability in the ecosystem with tracking metadata
+///
+/// Wraps a `UniversalCapability` with additional registry-specific metadata
+/// including registration time, health status, and failure tracking.
+///
+/// Used internally by the `CapabilityRegistry` to manage discovered capabilities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegisteredCapability {
     /// Unique identifier
@@ -107,7 +126,23 @@ pub struct RegisteredCapability {
 }
 
 /// Configuration for the capability registry
-#[derive(Debug, Clone)]
+///
+/// Controls how the capability registry operates, including health check
+/// frequency, failure tolerance, and automatic cleanup behavior.
+///
+/// # Examples
+/// ```
+/// use std::time::Duration;
+/// use beardog_core::zero_knowledge_bootstrap::capability_registry::CapabilityRegistryConfig;
+///
+/// let config = CapabilityRegistryConfig {
+///     health_check_interval: Duration::from_secs(30),
+///     max_consecutive_failures: 3,
+///     health_check_timeout: Duration::from_secs(300),
+///     auto_remove_unhealthy: true,
+/// };
+/// ```
+#[derive(Debug, Clone, Copy)]
 pub struct CapabilityRegistryConfig {
     /// How often to perform health checks
     pub health_check_interval: Duration,
@@ -134,6 +169,7 @@ impl Default for CapabilityRegistryConfig {
 ///
 /// This registry implements the zero-knowledge bootstrap pattern by dynamically
 /// discovering and tracking capabilities without any hardcoded knowledge.
+#[derive(Debug)]
 pub struct CapabilityRegistry {
     /// Registered capabilities by ID
     capabilities: Arc<RwLock<HashMap<CapabilityId, RegisteredCapability>>>,
@@ -145,11 +181,13 @@ pub struct CapabilityRegistry {
 
 impl CapabilityRegistry {
     /// Create a new capability registry with default configuration
+    #[must_use]
     pub fn new() -> Self {
         Self::with_config(CapabilityRegistryConfig::default())
     }
 
     /// Create a new capability registry with custom configuration
+    #[must_use]
     pub fn with_config(config: CapabilityRegistryConfig) -> Self {
         Self {
             capabilities: Arc::new(RwLock::new(HashMap::new())),
@@ -167,6 +205,10 @@ impl CapabilityRegistry {
     /// # Returns
     ///
     /// Unique ID assigned to this capability
+    ///
+    /// # Errors
+    /// Returns an error if capability registration fails, if storage operations encounter issues,
+    /// or if the capability type is invalid.
     ///
     /// # Example
     ///
@@ -223,6 +265,9 @@ impl CapabilityRegistry {
     ///
     /// * `capability_type` - The type of capabilities to discover
     ///
+    /// # Errors
+    /// Returns an error if capability lookup fails or if internal storage access encounters issues.
+    ///
     /// # Example
     ///
     /// ```rust,no_run
@@ -278,6 +323,9 @@ impl CapabilityRegistry {
     /// # Returns
     ///
     /// The registered capability if found, None otherwise
+    ///
+    /// # Errors
+    /// Returns an error if internal storage access fails or if the lookup operation encounters issues.
     pub async fn get(&self, id: &CapabilityId) -> BearDogResult<Option<RegisteredCapability>> {
         Ok(self.capabilities.read().await.get(id).cloned())
     }
@@ -288,6 +336,9 @@ impl CapabilityRegistry {
     ///
     /// * `id` - The capability ID
     /// * `status` - The new health status
+    ///
+    /// # Errors
+    /// Returns an error if the capability is not found or if the health status update fails.
     pub async fn update_health_status(
         &self,
         id: &CapabilityId,
@@ -307,7 +358,7 @@ impl CapabilityRegistry {
                 HealthStatus::Unhealthy | HealthStatus::Degraded => {
                     registered.consecutive_failures += 1;
                 }
-                _ => {}
+                HealthStatus::Unknown => {}
             }
 
             debug!(
@@ -328,6 +379,9 @@ impl CapabilityRegistry {
     /// # Arguments
     ///
     /// * `id` - The capability ID to remove
+    ///
+    /// # Errors
+    /// Returns an error if the capability is not found or if the removal operation fails.
     pub async fn remove(&self, id: &CapabilityId) -> BearDogResult<()> {
         debug!("Removing capability: {}", id);
 
@@ -336,9 +390,11 @@ impl CapabilityRegistry {
 
         if let Some(registered) = removed {
             // Remove from type index
-            let mut type_index = self.type_index.write().await;
-            if let Some(ids) = type_index.get_mut(&registered.capability.capability_type) {
-                ids.retain(|cap_id| cap_id != id);
+            {
+                let mut type_index = self.type_index.write().await;
+                if let Some(ids) = type_index.get_mut(&registered.capability.capability_type) {
+                    ids.retain(|cap_id| cap_id != id);
+                }
             }
 
             info!("Successfully removed capability: {}", id);
@@ -355,6 +411,9 @@ impl CapabilityRegistry {
     /// # Returns
     ///
     /// Vector of all registered capabilities
+    ///
+    /// # Errors
+    /// Returns an error if internal storage access fails or if the listing operation encounters issues.
     pub async fn list_all(&self) -> BearDogResult<Vec<RegisteredCapability>> {
         Ok(self.capabilities.read().await.values().cloned().collect())
     }
@@ -364,6 +423,9 @@ impl CapabilityRegistry {
     /// # Returns
     ///
     /// Registry statistics including counts by type and health status
+    ///
+    /// # Errors
+    /// Returns an error if statistics calculation fails or if internal storage access encounters issues.
     pub async fn statistics(&self) -> BearDogResult<RegistryStatistics> {
         let capabilities = self.capabilities.read().await;
 
@@ -392,6 +454,9 @@ impl CapabilityRegistry {
             *stats.by_health_status.entry(health).or_insert(0) += 1;
         }
 
+        // Explicitly drop the lock early to avoid holding it unnecessarily
+        drop(capabilities);
+
         Ok(stats)
     }
 
@@ -402,6 +467,9 @@ impl CapabilityRegistry {
     /// # Returns
     ///
     /// Number of capabilities removed
+    ///
+    /// # Errors
+    /// Returns an error if the cleanup operation fails or if capability removal encounters issues.
     pub async fn cleanup_unhealthy(&self) -> BearDogResult<usize> {
         let mut removed_count = 0;
         let capabilities = self.capabilities.read().await;

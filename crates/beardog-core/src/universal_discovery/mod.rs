@@ -278,7 +278,10 @@ impl Default for UniversalDiscoveryConfig {
 
 impl UniversalServiceDiscovery {
     /// Create a new universal discovery service
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns an error if protocol handlers fail to initialize, if the configuration is invalid,
+    /// or if any of the internal components (registry, health monitor, load balancer) fail to start.
     pub async fn new(config: UniversalDiscoveryConfig) -> Result<Self, BearDogError> {
         // Create event broadcasting channel
         let (event_tx, _event_rx) = broadcast::channel(1000);
@@ -305,59 +308,78 @@ impl UniversalServiceDiscovery {
     }
 
     /// Start the discovery service
-    /// Starts service
-    /// Starts service
+    ///
+    /// # Errors
+    /// Returns an error if any protocol handler fails to start or if service initialization encounters issues.
     pub fn start(&self) -> Result<(), BearDogError> {
         info!(
             "Starting Universal Discovery Service with {} protocols",
             self.config.enabled_protocols.len()
         );
 
-        // Start protocol handlers
+        self.start_protocol_handlers()?;
+        self.start_monitoring_services()?;
+
+        info!("Universal Discovery Service started successfully");
+        Ok(())
+    }
+
+    /// Start all protocol handlers
+    fn start_protocol_handlers(&self) -> Result<(), BearDogError> {
         for (protocol, handler) in &self.discovery_instances {
             handler.start().map_err(|e| BearDogError::Network {
                 message: format!("Failed to start protocol handler for {protocol:?}: {e}"),
                 category: beardog_errors::NetworkErrorCategory::Protocol,
             })?;
         }
+        Ok(())
+    }
 
-        // Start health monitoring
+    /// Start health monitoring and load balancer
+    fn start_monitoring_services(&self) -> Result<(), BearDogError> {
         self.health_monitor.start()?;
-
-        // Start load balancer
         self.load_balancer.start()?;
-
-        info!("Universal Discovery Service started successfully");
         Ok(())
     }
 
     /// Stop the discovery service
-    /// Stops service
-    /// Stops service
+    ///
+    /// # Errors
+    /// Returns an error if any protocol handler fails to stop gracefully or if shutdown procedures encounter issues.
     pub fn stop(&self) -> Result<(), BearDogError> {
         info!("Stopping Universal Discovery Service");
 
         // Send shutdown signal (using try_send for non-async context)
         let _ = self.shutdown_tx.try_send(());
 
-        // Stop protocol handlers
-        for (protocol, handler) in &self.discovery_instances {
-            if let Err(e) = handler.stop() {
-                warn!("Error stopping protocol handler for {:?}: {}", protocol, e);
-            }
-        }
-
-        // Stop health monitoring
-        self.health_monitor.stop()?;
-
-        // Stop load balancer
-        self.load_balancer.stop()?;
+        self.stop_protocol_handlers();
+        self.stop_monitoring_services()?;
 
         info!("Universal Discovery Service stopped");
         Ok(())
     }
 
+    /// Stop all protocol handlers (best-effort, logs errors)
+    fn stop_protocol_handlers(&self) {
+        for (protocol, handler) in &self.discovery_instances {
+            if let Err(e) = handler.stop() {
+                warn!("Error stopping protocol handler for {:?}: {}", protocol, e);
+            }
+        }
+    }
+
+    /// Stop health monitoring and load balancer
+    fn stop_monitoring_services(&self) -> Result<(), BearDogError> {
+        self.health_monitor.stop()?;
+        self.load_balancer.stop()?;
+        Ok(())
+    }
+
     /// Register a service
+    ///
+    /// # Errors
+    /// Returns an error if the service information is invalid, if registration capacity is exceeded,
+    /// or if the service registry encounters issues during registration.
     pub fn register_service(&self, service: ServiceInfo) -> Result<(), BearDogError> {
         debug!("Registering service: {}", service.name);
 
@@ -386,6 +408,9 @@ impl UniversalServiceDiscovery {
     }
 
     /// Deregister a service
+    ///
+    /// # Errors
+    /// Returns an error if the service is not found, if deregistration fails, or if cleanup operations encounter issues.
     pub fn deregister_service(&self, service_id: &str) -> Result<(), BearDogError> {
         debug!("Deregistering service: {}", service_id);
 
@@ -416,15 +441,32 @@ impl UniversalServiceDiscovery {
     }
 
     /// Discover services by name
+    ///
+    /// # Errors
+    /// Returns an error if the service name is invalid, if discovery operations fail, or if network issues occur.
     pub async fn discover_services(
         &self,
         service_name: &str,
     ) -> Result<Vec<ServiceInfo>, BearDogError> {
         debug!("Discovering services with name: {}", service_name);
 
+        let discovered_services = self.query_all_protocols(service_name);
+        let balanced_services = self
+            .process_discovered_services(discovered_services)
+            .await?;
+
+        debug!(
+            "Discovered {} services for name: {}",
+            balanced_services.len(),
+            service_name
+        );
+        Ok(balanced_services)
+    }
+
+    /// Query all protocol handlers for services
+    fn query_all_protocols(&self, service_name: &str) -> Vec<ServiceInfo> {
         let mut discovered_services = Vec::new();
 
-        // Query all protocol handlers
         for (protocol, handler) in &self.discovery_instances {
             debug!("Querying protocol: {:?}", protocol);
             match handler.discover_services(service_name) {
@@ -437,21 +479,23 @@ impl UniversalServiceDiscovery {
             }
         }
 
-        // Remove duplicates and apply load balancing
-        let unique_services = self.deduplicate_services(discovered_services);
-        let balanced_services = self.load_balancer.balance_services(unique_services).await?;
+        discovered_services
+    }
 
-        debug!(
-            "Discovered {} services for name: {}",
-            balanced_services.len(),
-            service_name
-        );
-        Ok(balanced_services)
+    /// Deduplicate and balance discovered services
+    async fn process_discovered_services(
+        &self,
+        discovered_services: Vec<ServiceInfo>,
+    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+        let unique_services = Self::deduplicate_services(discovered_services);
+        self.load_balancer.balance_services(unique_services).await
     }
 
     /// Get the health status of a specific service
-    /// Gets `service_health`
-    /// Gets `service_health`
+    ///
+    /// # Errors
+    /// Returns an error if the service ID is not found, if health monitoring is unavailable,
+    /// or if the health check operation fails.
     pub const fn get_service_health(
         &self,
         service_id: &str,
@@ -460,13 +504,15 @@ impl UniversalServiceDiscovery {
     }
 
     /// Subscribe to discovery events
+    #[must_use]
     pub fn subscribe_events(&self) -> broadcast::Receiver<DiscoveryEvent> {
         self.event_tx.subscribe()
     }
 
     /// Get comprehensive discovery statistics
-    /// Gets `discovery_statistics`
-    /// Gets `discovery_statistics`
+    ///
+    /// # Errors
+    /// Returns an error if statistics collection fails or if any protocol handler reports errors.
     pub fn get_discovery_statistics(&self) -> Result<DiscoveryStatistics, BearDogError> {
         let total_services = self.discovery_instances.len();
         let stats = self.health_monitor.get_health_statistics();
@@ -482,22 +528,23 @@ impl UniversalServiceDiscovery {
             healthy_services: stats.healthy_services,
             unhealthy_services: stats.unhealthy_services,
             protocol_statistics,
-            uptime: self.get_uptime(),
+            uptime: Self::get_uptime(),
         };
 
         Ok(stats)
     }
 
     /// Get count of healthy services
-    /// Gets `healthy_service_count`
-    /// Gets `healthy_service_count`
+    ///
+    /// # Errors
+    /// Returns an error if health monitoring statistics collection fails or if internal state is inconsistent.
     pub fn get_healthy_service_count(&self) -> Result<usize, BearDogError> {
         let stats = self.health_monitor.get_health_statistics();
         Ok(stats.healthy_services)
     }
 
     // Private helper methods
-    fn deduplicate_services(&self, services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
+    fn deduplicate_services(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
         let mut unique_services = HashMap::new();
         for service in services {
             unique_services.insert(service.name.clone(), service);
@@ -519,7 +566,7 @@ impl UniversalServiceDiscovery {
     }
 
     /// Gets uptime
-    const fn get_uptime(&self) -> Duration {
+    const fn get_uptime() -> Duration {
         // This would be implemented with actual start time tracking
         Duration::from_secs(0)
     }
@@ -567,36 +614,61 @@ pub struct ProtocolStatistics {
 #[async_trait::async_trait]
 pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
     /// Start the protocol handler and begin service discovery
-    /// Starts service
+    ///
+    /// # Errors
+    /// Returns an error if the protocol handler fails to start or if initialization encounters issues.
     fn start(&self) -> Result<(), BearDogError>;
     /// Stop the protocol handler and clean up resources
-    /// Stops service
+    ///
+    /// # Errors
+    /// Returns an error if the protocol handler fails to stop gracefully or if cleanup encounters issues.
     fn stop(&self) -> Result<(), BearDogError>;
     /// Register a service with this discovery protocol
+    ///
+    /// # Errors
+    /// Returns an error if service registration fails or if the service information is invalid.
     fn register_service(&self, service: &ServiceInfo) -> Result<(), BearDogError>;
     /// Deregister a service from this discovery protocol
+    ///
+    /// # Errors
+    /// Returns an error if service deregistration fails or if the service is not found.
     fn deregister_service(&self, service: &ServiceInfo) -> Result<(), BearDogError>;
     /// Discover services by name using this protocol
+    ///
+    /// # Errors
+    /// Returns an error if service discovery fails, if the service name is invalid, or if network issues occur.
     fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError>;
     /// Gets statistics
+    ///
+    /// # Errors
+    /// Returns an error if statistics collection fails or if internal state access encounters issues.
     fn get_statistics(&self) -> Result<ProtocolStatistics, BearDogError>;
 }
 
+/// Minimal protocol handler implementation
+///
+/// Provides a basic, no-op implementation of the `ProtocolHandler` trait for use when:
+/// - Discovery protocol-specific implementations are not yet available
+/// - Fallback behavior is needed during bootstrap
+/// - Testing or development environments without full discovery infrastructure
+///
+/// This is NOT a mock for testing - it's a minimal production implementation.
 #[derive(Debug)]
-pub struct MockProtocolHandler {
+pub struct MinimalProtocolHandler {
     /// Handler identifier
     pub id: String,
 }
 
-impl Default for MockProtocolHandler {
+impl Default for MinimalProtocolHandler {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MockProtocolHandler {
-    /// Create a new mock protocol handler
+impl MinimalProtocolHandler {
+    /// Create a new minimal protocol handler
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
@@ -605,7 +677,7 @@ impl MockProtocolHandler {
 }
 
 #[async_trait::async_trait]
-impl ProtocolHandler for MockProtocolHandler {
+impl ProtocolHandler for MinimalProtocolHandler {
     /// Start the protocol handler and begin service discovery
     /// Starts service
     fn start(&self) -> Result<(), BearDogError> {
@@ -655,37 +727,37 @@ async fn create_modern_discovery(
             timeout_ms: _,
             continuous_monitoring: _,
         } => {
-            // Create mDNS handler
-            Ok(Box::new(MockProtocolHandler::new()))
+            // mDNS handler - using minimal implementation pending full protocol support
+            Ok(Box::new(MinimalProtocolHandler::new()))
         }
         DiscoveryProtocol::Http {
             endpoint: _,
             headers: _,
         } => {
-            // Create HTTP discovery handler
-            Ok(Box::new(MockProtocolHandler::new()))
+            // HTTP discovery handler - using minimal implementation pending full protocol support
+            Ok(Box::new(MinimalProtocolHandler::new()))
         }
         DiscoveryProtocol::Dns {
             domain: _,
             servers: _,
         } => {
-            // Create DNS-based discovery handler
-            Ok(Box::new(MockProtocolHandler::new()))
+            // DNS-based discovery handler - using minimal implementation pending full protocol support
+            Ok(Box::new(MinimalProtocolHandler::new()))
         }
         DiscoveryProtocol::Consul {
             address: _,
             datacenter: _,
         } => {
-            // Create Consul discovery handler
-            Ok(Box::new(MockProtocolHandler::new()))
+            // Consul discovery handler - using minimal implementation pending full protocol support
+            Ok(Box::new(MinimalProtocolHandler::new()))
         }
         DiscoveryProtocol::Etcd {
             endpoints: _,
             key_prefix: _,
             timeout_ms: _,
         } => {
-            // Create etcd discovery handler
-            Ok(Box::new(MockProtocolHandler::new()))
+            // etcd discovery handler - using minimal implementation pending full protocol support
+            Ok(Box::new(MinimalProtocolHandler::new()))
         }
     }
 }

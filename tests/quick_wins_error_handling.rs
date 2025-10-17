@@ -66,7 +66,7 @@ fn test_error_from_string() {
 
 #[test]
 fn test_multiple_error_types() {
-    let errors = vec![
+    let errors = [
         BearDogError::validation("error1"),
         BearDogError::system("error2".to_string()),
         BearDogError::business("error3".to_string()),

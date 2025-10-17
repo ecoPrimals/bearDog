@@ -129,3 +129,108 @@ impl HealthChecker {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_health_config_default() {
+        let config = HealthConfig::default();
+        assert_eq!(config.check_interval_seconds, 0);
+        assert_eq!(config.timeout_seconds, 0);
+        assert!(!config.enabled);
+    }
+
+    #[test]
+    fn test_health_status_variants() {
+        let statuses = [
+            HealthStatus::Healthy,
+            HealthStatus::Degraded,
+            HealthStatus::Unhealthy,
+            HealthStatus::Critical,
+        ];
+
+        assert_eq!(statuses.len(), 4);
+        assert_eq!(statuses[0], HealthStatus::Healthy);
+    }
+
+    #[test]
+    fn test_component_health_creation() {
+        let mut metadata = HashMap::new();
+        metadata.insert("version".to_string(), "1.0".to_string());
+
+        let component = ComponentHealth {
+            name: "api".to_string(),
+            status: HealthStatus::Healthy,
+            response_time_ms: 25.5,
+            metadata,
+        };
+
+        assert_eq!(component.name, "api");
+        assert_eq!(component.response_time_ms, 25.5);
+    }
+
+    #[test]
+    fn test_health_checker_new() {
+        let config = HealthConfig::default();
+        let checker = HealthChecker::new(&config);
+        assert!(checker.is_ok());
+    }
+
+    #[test]
+    fn test_health_checker_lifecycle() {
+        let config = HealthConfig {
+            enabled: true,
+            check_interval_seconds: 30,
+            timeout_seconds: 5,
+        };
+
+        let mut checker = HealthChecker::new(&config).unwrap();
+
+        let result = checker.start_health_monitoring();
+        assert!(result.is_ok());
+
+        let result = checker.stop_monitoring();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_comprehensive_health_check() {
+        let config = HealthConfig::default();
+        let checker = HealthChecker::new(&config).unwrap();
+
+        let report = checker.comprehensive_health_check();
+        assert!(report.is_ok());
+
+        let report = report.unwrap();
+        assert_eq!(report.overall_status, HealthStatus::Healthy);
+        assert_eq!(report.component_statuses.len(), 2);
+    }
+
+    #[test]
+    fn test_health_report_serialization() {
+        let report = HealthReport {
+            overall_status: HealthStatus::Healthy,
+            component_statuses: vec![],
+            timestamp: 1_234_567_890,
+        };
+
+        let json = serde_json::to_string(&report);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    fn test_health_status_serialization() {
+        for status in &[
+            HealthStatus::Healthy,
+            HealthStatus::Degraded,
+            HealthStatus::Unhealthy,
+            HealthStatus::Critical,
+        ] {
+            let json = serde_json::to_string(status);
+            assert!(json.is_ok());
+        }
+    }
+}

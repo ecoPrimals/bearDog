@@ -9,24 +9,20 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Configuration for load balancing behavior
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LoadBalancingConfig {
     /// Load balancing algorithm to use
-    /// The algorithm value
     pub algorithm: LoadBalancingAlgorithm,
     /// Enable sticky sessions
-    /// Whether `enable_sticky_sessions` is enabled
     pub enable_sticky_sessions: bool,
     /// Session affinity timeout in seconds
     pub session_timeout_secs: u64,
     /// Health check weight factor (0.0 to 1.0)
-    /// The health weight factor value
     pub health_weight_factor: f64,
     /// Enable adaptive load balancing
-    /// Whether `enable_adaptive` is enabled
     pub enable_adaptive: bool,
     /// Circuit breaker configuration
-    /// The circuit breaker value
     pub circuit_breaker: CircuitBreakerConfig,
 }
 
@@ -97,7 +93,12 @@ struct LoadBalancerState {
 
 impl LoadBalancer {
     /// Create a new load balancer with the specified configuration
-    /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Configuration is invalid
+    /// - Required fields are missing
     pub fn new(config: &LoadBalancingConfig) -> Result<Self, BearDogError> {
         let state = LoadBalancerState {
             current_index: 0,
@@ -113,22 +114,37 @@ impl LoadBalancer {
     }
 
     /// Start the load balancer background tasks
-    /// Starts service
-    /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Background tasks fail to start
+    /// - Load balancer is already running
     pub const fn start(&self) -> Result<(), BearDogError> {
         // Implementation would start background tasks for adaptive load balancing
         Ok(())
     }
 
     /// Stop the load balancer and clean up resources
-    /// Stops service
-    /// Stops service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Background tasks fail to stop gracefully
+    /// - Resource cleanup fails
     pub const fn stop(&self) -> Result<(), BearDogError> {
         // Implementation would stop background tasks
         Ok(())
     }
 
     /// Apply load balancing algorithm
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Load balancing algorithm fails
+    /// - Service information is invalid
+    /// - State update fails
     pub async fn balance_services(
         &self,
         services: Vec<ServiceInfo>,
@@ -154,20 +170,16 @@ impl LoadBalancer {
             LoadBalancingAlgorithm::RoundRobin => {
                 self.round_robin_balance(healthy_services).await?
             }
-            LoadBalancingAlgorithm::LeastConnections => {
-                self.least_connections_balance(&services)?
-            }
+            LoadBalancingAlgorithm::LeastConnections => Self::least_connections_balance(&services),
             LoadBalancingAlgorithm::WeightedRoundRobin => {
-                self.weighted_round_robin_balance(services.clone())?
+                Self::weighted_round_robin_balance(services.clone())
             }
-            LoadBalancingAlgorithm::Random => self.random_balance(services.clone())?,
-            LoadBalancingAlgorithm::IpHash => self.ip_hash_balance(services.clone())?,
+            LoadBalancingAlgorithm::Random => Self::random_balance(services.clone()),
+            LoadBalancingAlgorithm::IpHash => Self::ip_hash_balance(services.clone()),
             LoadBalancingAlgorithm::LeastResponseTime => {
-                self.least_response_time_balance(services.clone())?
+                Self::least_response_time_balance(services.clone())
             }
-            LoadBalancingAlgorithm::ResourceBased => {
-                self.resource_based_balance(services.clone())?
-            }
+            LoadBalancingAlgorithm::ResourceBased => Self::resource_based_balance(services.clone()),
         };
 
         // Handle sticky sessions if enabled
@@ -180,6 +192,13 @@ impl LoadBalancer {
     }
 
     /// Select the best service from available options using the configured algorithm
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Load balancing algorithm fails
+    /// - Service selection fails
+    /// - State update fails
     pub async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -227,9 +246,12 @@ impl LoadBalancer {
             return Ok(services.into_iter().cloned().collect());
         }
 
-        let mut state = self.state.write().await;
-        let index = state.current_index % services.len();
-        state.current_index = (state.current_index + 1) % services.len();
+        let index = {
+            let mut state = self.state.write().await;
+            let index = state.current_index % services.len();
+            state.current_index = (state.current_index + 1) % services.len();
+            index
+        }; // Drop lock early
 
         // Move selected service to front
         let mut result = services;
@@ -239,16 +261,15 @@ impl LoadBalancer {
         Ok(result.into_iter().cloned().collect())
     }
 
-    fn least_connections_balance(
-        &self,
-        services: &[ServiceInfo],
-    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+    #[must_use]
+    fn least_connections_balance(services: &[ServiceInfo]) -> Vec<ServiceInfo> {
         // In a real implementation, this would track active connections per service
         // For now, simulate by using service_id hash as connection count
         let mut services_with_connections: Vec<(ServiceInfo, u32)> = services
             .iter()
             .map(|service| {
-                let connection_count = service.name.len() as u32 % 10; // Simulated connection count
+                #[allow(clippy::cast_possible_truncation)]
+                let connection_count = (service.name.len() % 10) as u32; // Simulated connection count
                 (service.clone(), connection_count)
             })
             .collect();
@@ -256,21 +277,20 @@ impl LoadBalancer {
         // Sort by connection count (ascending - least connections first)
         services_with_connections.sort_by(|a, b| a.1.cmp(&b.1));
 
-        Ok(services_with_connections
+        services_with_connections
             .into_iter()
             .map(|(service, _)| service)
-            .collect())
+            .collect()
     }
 
-    fn weighted_round_robin_balance(
-        &self,
-        services: Vec<ServiceInfo>,
-    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+    #[must_use]
+    fn weighted_round_robin_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
         // In a real implementation, services would have weight metadata
         // For now, assign weights based on service name length
         let mut weighted_services: Vec<(ServiceInfo, u32)> = services
             .into_iter()
             .map(|service| {
+                #[allow(clippy::cast_possible_truncation)]
                 let weight = (service.name.len() % 5 + 1) as u32; // Weight 1-5 based on name length
                 (service, weight)
             })
@@ -279,16 +299,14 @@ impl LoadBalancer {
         // Sort by weight (descending - highest weight first)
         weighted_services.sort_by(|a, b| b.1.cmp(&a.1));
 
-        Ok(weighted_services
+        weighted_services
             .into_iter()
             .map(|(service, _)| service)
-            .collect())
+            .collect()
     }
 
-    fn random_balance(
-        &self,
-        mut services: Vec<ServiceInfo>,
-    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+    #[must_use]
+    fn random_balance(mut services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -299,6 +317,8 @@ impl LoadBalancer {
             .unwrap_or_default()
             .as_nanos()
             .hash(&mut hasher);
+
+        #[allow(clippy::cast_possible_truncation)]
         let seed = hasher.finish() as usize;
 
         // Simple shuffle algorithm
@@ -307,13 +327,11 @@ impl LoadBalancer {
             services.swap(i, j);
         }
 
-        Ok(services)
+        services
     }
 
-    fn ip_hash_balance(
-        &self,
-        services: Vec<ServiceInfo>,
-    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+    #[must_use]
+    fn ip_hash_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
         // In a real implementation, this would hash the client IP
         // For now, sort by service endpoint hash for consistency
         let mut services = services;
@@ -332,18 +350,17 @@ impl LoadBalancer {
             hash_a.cmp(&hash_b)
         });
 
-        Ok(services)
+        services
     }
 
-    fn least_response_time_balance(
-        &self,
-        services: Vec<ServiceInfo>,
-    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+    #[must_use]
+    fn least_response_time_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
         // In a real implementation, this would track response times
         // For now, simulate response time based on endpoint length
         let mut services_with_response_time: Vec<(ServiceInfo, u64)> = services
             .into_iter()
             .map(|service| {
+                #[allow(clippy::cast_possible_truncation)]
                 let response_time_ms = (service.address.len() % 100 + 10) as u64; // 10-109ms simulated
                 (service, response_time_ms)
             })
@@ -352,21 +369,20 @@ impl LoadBalancer {
         // Sort by response time (ascending - fastest first)
         services_with_response_time.sort_by(|a, b| a.1.cmp(&b.1));
 
-        Ok(services_with_response_time
+        services_with_response_time
             .into_iter()
             .map(|(service, _)| service)
-            .collect())
+            .collect()
     }
 
-    fn resource_based_balance(
-        &self,
-        services: Vec<ServiceInfo>,
-    ) -> Result<Vec<ServiceInfo>, BearDogError> {
+    #[must_use]
+    fn resource_based_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
         // In a real implementation, this would check CPU/memory usage
         // For now, simulate resource usage based on capabilities count
         let mut services_with_resources: Vec<(ServiceInfo, f64)> = services
             .into_iter()
             .map(|service| {
+                #[allow(clippy::cast_precision_loss)]
                 let resource_usage = (service.metadata.len() as f64 * 0.1).min(1.0); // 0.0-1.0 usage
                 (service, resource_usage)
             })
@@ -376,14 +392,17 @@ impl LoadBalancer {
         services_with_resources
             .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        Ok(services_with_resources
+        services_with_resources
             .into_iter()
             .map(|(service, _)| service)
-            .collect())
+            .collect()
     }
 
-    /// Updates `service_weight`
-    /// Updates `service_weight`
+    /// Updates service weight for weighted load balancing
+    ///
+    /// # Errors
+    ///
+    /// Returns error if state update fails
     pub async fn update_service_weight(
         &self,
         service_id: &str,
@@ -391,9 +410,15 @@ impl LoadBalancer {
     ) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         state.service_weights.insert(service_id.to_string(), weight);
+        drop(state); // Drop lock early
         Ok(())
     }
 
+    /// Increment connection count for a service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if state update fails
     pub async fn increment_connections(&self, service_id: &str) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         let current_count = state
@@ -404,9 +429,15 @@ impl LoadBalancer {
         state
             .service_connections
             .insert(service_id.to_string(), current_count + 1);
+        drop(state); // Drop lock early
         Ok(())
     }
 
+    /// Decrement connection count for a service
+    ///
+    /// # Errors
+    ///
+    /// Returns error if state update fails
     pub async fn decrement_connections(&self, service_id: &str) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         if let Some(count) = state.service_connections.get_mut(service_id) {
@@ -414,6 +445,7 @@ impl LoadBalancer {
                 *count -= 1;
             }
         }
+        drop(state); // Drop lock early
         Ok(())
     }
 }

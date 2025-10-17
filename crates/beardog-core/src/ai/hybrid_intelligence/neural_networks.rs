@@ -19,87 +19,143 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// TODO(canonical-migration): These types need to be exported from canonical ai_config
-// Temporary local definitions until ai_config_original.rs (1756 lines) is properly split
-// This enables compilation while we work on the proper modular canonical structure
+// Note: These types are temporary local definitions pending canonical ai_config modularization.
+// Once ai_config is properly split and refactored, these will be imported from canonical types.
+// This enables compilation during the ongoing canonical structure modernization.
 
 /// Activation function types
+///
+/// Supported activation functions for neural network layers.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ActivationFunction {
+    /// Sigmoid activation (0 to 1 range)
     Sigmoid,
+    /// Hyperbolic tangent (-1 to 1 range)
     Tanh,
+    /// Rectified Linear Unit (`ReLU`)
     Relu,
+    /// Leaky `ReLU` with small negative slope
     LeakyRelu,
+    /// Exponential Linear Unit
     Elu,
+    /// Scaled Exponential Linear Unit
     Selu,
+    /// Softmax for multi-class classification
     Softmax,
+    /// Linear activation (no transformation)
     Linear,
 }
 
 /// Data type for neural network computations
+///
+/// Supported numerical precisions for neural network operations.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum DataType {
+    /// 16-bit floating point (half precision)
     Float16,
+    /// 32-bit floating point (single precision)
     Float32,
+    /// 64-bit floating point (double precision)
     Float64,
+    /// 8-bit signed integer
     Int8,
+    /// 16-bit signed integer
     Int16,
+    /// 32-bit signed integer
     Int32,
 }
 
-/// Architecture types
+/// Neural network architecture types
+///
+/// Defines the overall structure and dataflow pattern of the network.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ArchitectureType {
+    /// Traditional feedforward network
     Feedforward,
+    /// Convolutional network for spatial data
     Convolutional,
+    /// Recurrent network for sequential data
     Recurrent,
+    /// Transformer architecture with attention mechanisms
     Transformer,
+    /// Hybrid architecture combining multiple types
     Hybrid,
 }
 
 /// Loss function types
+///
+/// Supported loss/objective functions for neural network training.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum LossFunction {
+    /// Mean squared error (regression)
     MeanSquaredError,
+    /// Mean absolute error (robust regression)
     MeanAbsoluteError,
+    /// General cross-entropy loss
     CrossEntropy,
+    /// Binary cross-entropy (binary classification)
     BinaryCrossEntropy,
-    BinaryCrossentropy, // Alternative spelling for compatibility
+    /// Alternative spelling for binary cross-entropy
+    BinaryCrossentropy,
+    /// Categorical cross-entropy (multi-class classification)
     CategoricalCrossEntropy,
+    /// Huber loss (robust to outliers)
     Huber,
 }
 
 /// Input layer configuration
+///
+/// Defines the shape, data type, and preprocessing for network input.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputLayerConfig {
+    /// Input tensor shape
     pub shape: Vec<usize>,
-    pub input_shape: Vec<usize>, // Alias for compatibility
+    /// Alias for shape (compatibility)
+    pub input_shape: Vec<usize>,
+    /// Data type for input values
     pub data_type: DataType,
+    /// Optional normalization strategy
     pub normalization: Option<String>,
 }
 
 /// Output layer configuration
+///
+/// Defines the final layer structure, activation, and loss function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputLayerConfig {
+    /// Number of output units
     pub units: usize,
+    /// Activation function for output
     pub activation: ActivationFunction,
+    /// Loss function for training
     pub loss_function: LossFunction,
 }
 
 /// Network architecture configuration
+///
+/// Complete specification of a neural network's structure from input to output.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkArchitecture {
+    /// Type of neural network architecture
     pub architecture_type: ArchitectureType,
+    /// Input layer configuration
     pub input_layer: InputLayerConfig,
+    /// Configuration for hidden layers
     pub hidden_layers: Vec<LayerParameters>,
+    /// Output layer configuration
     pub output_layer: OutputLayerConfig,
+    /// Skip/residual connections between layers
     pub skip_connections: Vec<String>,
 }
 
-/// Layer configuration (combining type and parameters)
+/// Layer configuration combining type and parameters
+///
+/// Complete specification for a single layer in the network.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LayerConfig {
+    /// Type of layer (Dense, Conv, etc.)
     pub layer_type: LayerType,
+    /// Layer-specific parameters
     pub parameters: LayerParameters,
 }
 
@@ -139,109 +195,99 @@ pub enum LayerType {
 }
 
 /// Layer parameters
+///
+/// Union of all possible layer-specific parameter configurations.
+/// Only one field should be populated based on the layer type.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LayerParameters {
-    /// Dense layer parameters
-    /// Optional dense
+    /// Dense layer parameters (for fully connected layers)
     pub dense: Option<DenseLayerConfig>,
     /// Convolutional layer parameters
-    /// Optional conv
     pub conv: Option<ConvLayerConfig>,
     /// Pooling layer parameters
-    /// Optional pooling
     pub pooling: Option<PoolingLayerConfig>,
-    /// RNN layer parameters
-    /// Optional rnn
+    /// RNN layer parameters (LSTM, GRU)
     pub rnn: Option<RnnLayerConfig>,
     /// Attention layer parameters
-    /// Optional attention
     pub attention: Option<AttentionLayerConfig>,
     /// Embedding layer parameters
-    /// Optional embedding
     pub embedding: Option<EmbeddingLayerConfig>,
 }
 
-/// Dense layer configuration
+/// Dense (fully connected) layer configuration
+///
+/// Configuration for a traditional fully connected neural network layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DenseLayerConfig {
-    /// Number of units
-    /// Number of units
+    /// Number of neurons/units in this layer
     pub units: u32,
-    /// Use bias
-    /// Whether `use_bias` is enabled
+    /// Whether to include bias terms
     pub use_bias: bool,
-    /// Weight initialization
-    /// The weight init value
+    /// Weight initialization strategy
     pub weight_init: WeightInitialization,
-    /// Bias initialization
-    /// The bias init value
+    /// Bias initialization strategy
     pub bias_init: WeightInitialization,
 }
 
 /// Convolutional layer configuration
+///
+/// Configuration for convolutional layers used in CNNs for spatial data processing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConvLayerConfig {
-    /// Number of filters
-    /// Number of filters
+    /// Number of convolutional filters (output channels)
     pub filters: u32,
-    /// Kernel size
-    /// Collection of kernel size
+    /// Size of the convolution kernel
     pub kernel_size: Vec<u32>,
-    /// Stride
+    /// Stride length for convolution
     pub strides: Vec<u32>,
-    /// Padding
-    /// The padding value
+    /// Padding strategy (same, valid, etc.)
     pub padding: PaddingType,
-    /// Dilation rate
-    /// Collection of dilation rate
+    /// Dilation rate for dilated/atrous convolution
     pub dilation_rate: Vec<u32>,
-    /// Use bias
-    /// Whether `use_bias` is enabled
+    /// Whether to include bias terms
     pub use_bias: bool,
 }
 
 /// Pooling layer configuration
+///
+/// Configuration for pooling layers that downsample spatial dimensions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolingLayerConfig {
-    /// Pool size
-    /// Collection of pool size
+    /// Size of pooling window
     pub pool_size: Vec<u32>,
-    /// Stride
+    /// Stride length for pooling operation
     pub strides: Vec<u32>,
-    /// Padding
-    /// The padding value
+    /// Padding strategy
     pub padding: PaddingType,
 }
 
 /// RNN layer configuration
+///
+/// Configuration for recurrent neural network layers (LSTM, GRU, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RnnLayerConfig {
-    /// Number of units
-    /// Number of units
+    /// Number of RNN units/cells
     pub units: u32,
-    /// RNN cell type
-    /// The cell type value
+    /// Type of RNN cell (LSTM, GRU, `SimpleRNN`)
     pub cell_type: RnnCellType,
-    /// Return sequences
-    /// Whether `return_sequences` is enabled
+    /// Whether to return full sequence or just final output
     pub return_sequences: bool,
-    /// Dropout rate
-    /// The dropout rate value
+    /// Dropout rate for regularization (0.0 to 1.0)
     pub dropout_rate: f64,
 }
 
+/// Attention layer configuration
+///
+/// Configuration for attention mechanisms used in transformers and attention networks.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AttentionLayerConfig {
-    /// Number of attention heads
-    /// Number of `num_heads`
+    /// Number of attention heads for multi-head attention
     pub num_heads: u32,
-    /// Key dimension
-    /// Number of `key_dim`
+    /// Dimension of key vectors
     pub key_dim: u32,
-    /// Value dimension
-    /// Optional value dim
+    /// Dimension of value vectors (defaults to `key_dim` if not specified)
     pub value_dim: Option<u32>,
-    /// Dropout rate
+    /// Dropout rate for attention weights
     /// The dropout rate value
     pub dropout_rate: f64,
 }

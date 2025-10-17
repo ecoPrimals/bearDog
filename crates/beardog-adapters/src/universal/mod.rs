@@ -41,3 +41,6 @@ pub struct ErrorInfo {
     /// Optional details
     pub details: Option<serde_json::Value>,
 }
+
+#[cfg(test)]
+mod tests;

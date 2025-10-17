@@ -26,7 +26,7 @@ pub struct SpawnedBearDog {
     pub performance_metrics: HashMap<String, f64>,
     /// Mapping of trust relationships
     pub trust_relationships: HashMap<String, f64>,
-    /// Whether consensus_participation is enabled
+    /// Whether `consensus_participation` is enabled
     pub consensus_participation: bool,
     /// Collection of ecosystem connections
     pub ecosystem_connections: Vec<String>,
@@ -34,15 +34,15 @@ pub struct SpawnedBearDog {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceLimits {
-    /// Number of memory_mb
+    /// Number of `memory_mb`
     pub memory_mb: u64,
-    /// Number of cpu_percent
+    /// Number of `cpu_percent`
     pub cpu_percent: u8,
-    /// Number of disk_mb
+    /// Number of `disk_mb`
     pub disk_mb: u64,
-    /// Number of network_mbps
+    /// Number of `network_mbps`
     pub network_mbps: u32,
-    /// Number of concurrent_connections
+    /// Number of `concurrent_connections`
     pub concurrent_connections: u32,
 }
 

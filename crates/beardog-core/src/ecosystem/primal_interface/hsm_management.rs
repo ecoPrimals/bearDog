@@ -2,7 +2,6 @@
 use crate::BearDogCore;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
-use std::collections::HashMap;
 use tracing::{debug, info};
 
 impl BearDogCore {
@@ -56,26 +55,6 @@ impl BearDogCore {
         HealthStatus::Healthy
     }
 
-    /// Get HSM metrics - used by monitoring system
-    #[allow(dead_code)] // TODO: Enable when monitoring integration is active
-    #[allow(clippy::unused_self)] // Self required for future stateful metrics collection
-    pub(crate) fn get_hsm_metrics(&self) -> HashMap<String, serde_json::Value> {
-        let mut metrics = HashMap::new();
-
-        #[cfg(feature = "hsm-integration")]
-        {
-            // Real HSM metrics collection would go here
-        }
-
-        // Development metrics
-        metrics.insert("total_keys_generated".to_string(), serde_json::json!(42));
-        metrics.insert("active_sessions".to_string(), serde_json::json!(3));
-        metrics.insert("hardware_attestations".to_string(), serde_json::json!(15));
-        metrics.insert(
-            "last_key_generation".to_string(),
-            serde_json::json!(chrono::Utc::now()),
-        );
-        metrics.insert("provider_uptime".to_string(), serde_json::json!("99.9%"));
-        metrics
-    }
+    // Note: get_hsm_metrics() removed as unused. Metrics collection can be
+    // re-implemented when monitoring integration is activated.
 }

@@ -183,7 +183,7 @@ where
 {
     /// New operation.
     /// Creates a new instance
-    pub fn new(repository: R, processor: P) -> Self {
+    pub const fn new(repository: R, processor: P) -> Self {
         Self {
             repository,
             processor,
@@ -197,7 +197,7 @@ where
     }
 
     /// Repository operation.
-    pub fn repository(&self) -> &R {
+    pub const fn repository(&self) -> &R {
         &self.repository
     }
 

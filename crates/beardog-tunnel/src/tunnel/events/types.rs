@@ -10,7 +10,7 @@ use std::time::SystemTime;
 pub struct SecurityLevel {
     /// Number of level
     pub level: u32,
-    /// Number of authentication_strength
+    /// Number of `authentication_strength`
     pub authentication_strength: u32,
     /// The threat detection accuracy value
     pub threat_detection_accuracy: f64,
@@ -24,7 +24,7 @@ pub struct NetworkEvidence {
     pub source_ip: String,
     /// The destination ip value
     pub destination_ip: String,
-    /// Number of packet_size
+    /// Number of `packet_size`
     pub packet_size: u32,
     /// The protocol value
     pub protocol: String,

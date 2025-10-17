@@ -120,13 +120,13 @@ mod tests {
         let _bootstrap = BootstrapNodeConfig::default();
         let _service_ad = ServiceAdvertisement::new("test".to_string(), "test".to_string(), "test".to_string());
         let _federation_status = FederationStatus::Federated;
-        let _stats = RegistryStatistics::new();
+        let mut stats = RegistryStatistics::new();
 
-        assert!(true);
-    fn test_time_conversions() {
+        // Test time conversions
         stats.average_node_age_seconds = 3600; // 1 hour
         stats.registry_uptime_seconds = 7200; // 2 hours
         assert_eq!(stats.average_node_age_minutes(), 60);
         assert_eq!(stats.registry_uptime_minutes(), 120);
         assert_eq!(stats.registry_uptime_hours(), 2);
+    }
 } 

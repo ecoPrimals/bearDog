@@ -37,33 +37,49 @@ use std::time::Duration;
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
-impl Default for BootstrapNodeConfig {}
 
+impl Default for BootstrapNodeConfig {
     fn default() -> Self {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let default_address = format!("{}:{}", network_config.default_host, network_config.service_ports.api_port);
+        let default_network_address = std::env::var("BEARDOG_BOOTSTRAP_NETWORK_ADDRESS")
+            .unwrap_or_else(|_| format!("{}:{}", network_config.default_host, network_config.service_ports.api_port));
         
         Self {
-            network_address: std::env::var("BEARDOG_REGISTRY_ADDRESS")
-                .unwrap_or_else(|_| default_address),
-            node_id: "default_node".to_string(),
-            address: network_config.default_host,
-            port: network_config.service_ports.api_port,
+            node_id: std::env::var("BEARDOG_BOOTSTRAP_NODE_ID")
+                .unwrap_or_else(|_| "default_node".to_string()),
+            address: std::env::var("BEARDOG_BOOTSTRAP_ADDRESS")
+                .unwrap_or_else(|_| network_config.default_host.clone()),
+            port: std::env::var("BEARDOG_BOOTSTRAP_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(network_config.service_ports.api_port),
             public_key: Vec::new(),
             public_key_hex: String::with_capacity(64),
-            network_address: std::env::var("BEARDOG_NETWORK_ADDRESS")
-            .unwrap_or_else(|_| "localhost:8080".to_string()),
-            capabilities: Vec::new(crate::node_registry::types::trust::TrustLevel::Unknown,
+            network_address: default_network_address,
+            capabilities: Vec::new(),
+            trust_level: crate::node_registry::types::trust::TrustLevel::Unknown,
             connection_timeout_seconds: 30,
             retry_attempts: 3,
             retry_delay_seconds: 5,
-            metadata: HashMap::with_capacity(&str, address: &str, port: u16) -> Self {
+            metadata: HashMap::with_capacity(16),
+        }
+    }
+}
+
+impl BootstrapNodeConfig {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(node_id: String, address: String, port: u16) -> Self {
         let network_address = format!("{}:{}", address, port);
+        Self {
             node_id,
             address,
             port,
             network_address,
             ..Default::default()
+        }
+    }
 
 /// With Public Key operation.
     /// Creates instance with public key

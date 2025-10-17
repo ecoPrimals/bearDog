@@ -48,14 +48,14 @@ pub enum EntropyClass {
 impl PartialOrd for EntropyClass {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let self_precedence = match self {
-            EntropyClass::HumanLivedExperience { .. } => 3,
-            EntropyClass::HumanSupervisedMachine { .. } => 2,
-            EntropyClass::StoreBoughtMachine { .. } => 1,
+            Self::HumanLivedExperience { .. } => 3,
+            Self::HumanSupervisedMachine { .. } => 2,
+            Self::StoreBoughtMachine { .. } => 1,
         };
         let other_precedence = match other {
-            EntropyClass::HumanLivedExperience { .. } => 3,
-            EntropyClass::HumanSupervisedMachine { .. } => 2,
-            EntropyClass::StoreBoughtMachine { .. } => 1,
+            Self::HumanLivedExperience { .. } => 3,
+            Self::HumanSupervisedMachine { .. } => 2,
+            Self::StoreBoughtMachine { .. } => 1,
         };
         self_precedence.partial_cmp(&other_precedence)
     }
@@ -74,7 +74,8 @@ pub struct BiometricHash {
 impl BiometricHash {
     /// Create new biometric hash
     /// Creates a new instance
-    pub fn new(hash: Vec<u8>, ownership_proof: Vec<u8>) -> Self {
+    #[must_use]
+    pub const fn new(hash: Vec<u8>, ownership_proof: Vec<u8>) -> Self {
         Self {
             hash,
             ownership_proof,
@@ -97,6 +98,7 @@ pub struct OwnershipProof {
 impl OwnershipProof {
     /// Create new ownership proof
     /// Creates a new instance
+    #[must_use]
     pub fn new(proof_data: Vec<u8>, signature: Vec<u8>) -> Self {
         Self {
             proof_data,
@@ -263,13 +265,13 @@ pub struct EntropyHierarchyConfig {
     pub min_human_quality: f64,
     /// The min machine quality value
     pub min_machine_quality: f64,
-    /// Number of max_entropy_age_hours
+    /// Number of `max_entropy_age_hours`
     pub max_entropy_age_hours: u64,
     /// Enable biometric verification
-    /// Whether require_biometric_verification is enabled
+    /// Whether `require_biometric_verification` is enabled
     pub require_biometric_verification: bool,
     /// Enable ownership proofs
-    /// Whether require_ownership_proof is enabled
+    /// Whether `require_ownership_proof` is enabled
     pub require_ownership_proof: bool,
 }
 

@@ -61,13 +61,13 @@ impl RuleCondition {
     /// Checks if complex
     /// Checks if complex
     #[must_use]
-    pub fn is_complex(&self) -> bool {
+    pub const fn is_complex(&self) -> bool {
         matches!(
             self,
-            RuleCondition::LogicalAnd { .. }
-                | RuleCondition::LogicalOr { .. }
-                | RuleCondition::LogicalNot { .. }
-                | RuleCondition::Custom { .. }
+            Self::LogicalAnd { .. }
+                | Self::LogicalOr { .. }
+                | Self::LogicalNot { .. }
+                | Self::Custom { .. }
         )
     }
 
@@ -75,15 +75,12 @@ impl RuleCondition {
     #[must_use]
     pub fn complexity_score(&self) -> u32 {
         match self {
-            RuleCondition::LogicalAnd { conditions } | RuleCondition::LogicalOr { conditions } => {
-                1 + conditions
-                    .iter()
-                    .map(RuleCondition::complexity_score)
-                    .sum::<u32>()
+            Self::LogicalAnd { conditions } | Self::LogicalOr { conditions } => {
+                1 + conditions.iter().map(Self::complexity_score).sum::<u32>()
             }
-            RuleCondition::LogicalNot { condition } => 1 + condition.complexity_score(),
-            RuleCondition::Custom { .. } => 3,
-            RuleCondition::FrequencyThreshold { .. } => 2,
+            Self::LogicalNot { condition } => 1 + condition.complexity_score(),
+            Self::Custom { .. } => 3,
+            Self::FrequencyThreshold { .. } => 2,
             _ => 1,
         }
     }
@@ -92,23 +89,21 @@ impl RuleCondition {
     #[must_use]
     pub fn referenced_fields(&self) -> Vec<String> {
         match self {
-            RuleCondition::FieldEquals { field, .. }
-            | RuleCondition::FieldContains { field, .. }
-            | RuleCondition::FieldMatches { field, .. }
-            | RuleCondition::FieldGreaterThan { field, .. }
-            | RuleCondition::FieldLessThan { field, .. }
-            | RuleCondition::FieldBetween { field, .. }
-            | RuleCondition::FieldExists { field }
-            | RuleCondition::FieldIn { field, .. } => vec![field.clone()],
+            Self::FieldEquals { field, .. }
+            | Self::FieldContains { field, .. }
+            | Self::FieldMatches { field, .. }
+            | Self::FieldGreaterThan { field, .. }
+            | Self::FieldLessThan { field, .. }
+            | Self::FieldBetween { field, .. }
+            | Self::FieldExists { field }
+            | Self::FieldIn { field, .. } => vec![field.clone()],
 
-            RuleCondition::LogicalAnd { conditions } | RuleCondition::LogicalOr { conditions } => {
-                conditions
-                    .iter()
-                    .flat_map(RuleCondition::referenced_fields)
-                    .collect()
-            }
+            Self::LogicalAnd { conditions } | Self::LogicalOr { conditions } => conditions
+                .iter()
+                .flat_map(Self::referenced_fields)
+                .collect(),
 
-            RuleCondition::LogicalNot { condition } => condition.referenced_fields(),
+            Self::LogicalNot { condition } => condition.referenced_fields(),
 
             _ => vec![],
         }
@@ -118,58 +113,54 @@ impl RuleCondition {
     #[must_use]
     pub fn evaluate(&self, event_data: &HashMap<String, String>) -> bool {
         match self {
-            RuleCondition::FieldEquals { field, value } => event_data.get(field) == Some(value),
+            Self::FieldEquals { field, value } => event_data.get(field) == Some(value),
 
-            RuleCondition::FieldContains { field, value } => {
+            Self::FieldContains { field, value } => {
                 event_data.get(field).is_some_and(|v| v.contains(value))
             }
 
-            RuleCondition::FieldExists { field } => event_data.contains_key(field),
+            Self::FieldExists { field } => event_data.contains_key(field),
 
-            RuleCondition::FieldIn { field, values } => {
+            Self::FieldIn { field, values } => {
                 event_data.get(field).is_some_and(|v| values.contains(v))
             }
 
-            RuleCondition::FieldGreaterThan { field, value } => event_data
+            Self::FieldGreaterThan { field, value } => event_data
                 .get(field)
                 .and_then(|v| v.parse::<f64>().ok())
                 .is_some_and(|v| v > *value),
 
-            RuleCondition::FieldLessThan { field, value } => event_data
+            Self::FieldLessThan { field, value } => event_data
                 .get(field)
                 .and_then(|v| v.parse::<f64>().ok())
                 .is_some_and(|v| v < *value),
 
-            RuleCondition::FieldBetween { field, min, max } => event_data
+            Self::FieldBetween { field, min, max } => event_data
                 .get(field)
                 .and_then(|v| v.parse::<f64>().ok())
                 .is_some_and(|v| v >= *min && v <= *max),
 
-            RuleCondition::LogicalAnd { conditions } => {
-                conditions.iter().all(|c| c.evaluate(event_data))
-            }
+            Self::LogicalAnd { conditions } => conditions.iter().all(|c| c.evaluate(event_data)),
 
-            RuleCondition::LogicalOr { conditions } => {
-                conditions.iter().any(|c| c.evaluate(event_data))
-            }
+            Self::LogicalOr { conditions } => conditions.iter().any(|c| c.evaluate(event_data)),
 
-            RuleCondition::LogicalNot { condition } => !condition.evaluate(event_data),
+            Self::LogicalNot { condition } => !condition.evaluate(event_data),
 
             // Always condition always matches
-            RuleCondition::Always => true,
+            Self::Always => true,
 
             // Complex conditions require additional context
-            RuleCondition::FieldMatches { .. }
-            | RuleCondition::FrequencyThreshold { .. }
-            | RuleCondition::TimeWindow { .. }
-            | RuleCondition::Custom { .. } => false, // Simplified for now
+            Self::FieldMatches { .. }
+            | Self::FrequencyThreshold { .. }
+            | Self::TimeWindow { .. }
+            | Self::Custom { .. } => false, // Simplified for now
         }
     }
 
     /// Create a simple field equals condition
     #[must_use]
     pub fn field_equals(field: &str, value: &str) -> Self {
-        RuleCondition::FieldEquals {
+        Self::FieldEquals {
             field: field.to_string(),
             value: value.to_string(),
         }
@@ -178,7 +169,7 @@ impl RuleCondition {
     /// Create a field contains condition
     #[must_use]
     pub fn field_contains(field: &str, value: &str) -> Self {
-        RuleCondition::FieldContains {
+        Self::FieldContains {
             field: field.to_string(),
             value: value.to_string(),
         }
@@ -187,27 +178,27 @@ impl RuleCondition {
     /// Create a field exists condition
     #[must_use]
     pub fn field_exists(field: &str) -> Self {
-        RuleCondition::FieldExists {
+        Self::FieldExists {
             field: field.to_string(),
         }
     }
 
     /// Create a logical AND condition
     #[must_use]
-    pub fn and(conditions: Vec<RuleCondition>) -> Self {
-        RuleCondition::LogicalAnd { conditions }
+    pub const fn and(conditions: Vec<Self>) -> Self {
+        Self::LogicalAnd { conditions }
     }
 
     /// Create a logical OR condition
     #[must_use]
-    pub fn or(conditions: Vec<RuleCondition>) -> Self {
-        RuleCondition::LogicalOr { conditions }
+    pub const fn or(conditions: Vec<Self>) -> Self {
+        Self::LogicalOr { conditions }
     }
 
     /// Create a logical NOT condition
     #[must_use]
-    pub fn logical_not(condition: RuleCondition) -> Self {
-        RuleCondition::LogicalNot {
+    pub fn logical_not(condition: Self) -> Self {
+        Self::LogicalNot {
             condition: Box::new(condition),
         }
     }
@@ -260,12 +251,10 @@ impl ConditionBuilder {
     /// Builds and
     /// Builds and
     #[must_use]
-    pub fn build_and(self) -> RuleCondition {
+    pub fn build_and(mut self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            self.conditions
-                .into_iter()
-                .next()
-                .expect("Invariant violated: conditions.len() == 1 but iterator empty")
+            // SAFETY: We just checked len() == 1, so pop() will return Some
+            self.conditions.pop().unwrap() // Safe: Guaranteed by len() == 1 check above
         } else {
             RuleCondition::and(self.conditions)
         }
@@ -275,12 +264,10 @@ impl ConditionBuilder {
     /// Builds or
     /// Builds or
     #[must_use]
-    pub fn build_or(self) -> RuleCondition {
+    pub fn build_or(mut self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            self.conditions
-                .into_iter()
-                .next()
-                .expect("Invariant violated: conditions.len() == 1 but iterator empty")
+            // SAFETY: We just checked len() == 1, so pop() will return Some
+            self.conditions.pop().unwrap() // Safe: Guaranteed by len() == 1 check above
         } else {
             RuleCondition::or(self.conditions)
         }

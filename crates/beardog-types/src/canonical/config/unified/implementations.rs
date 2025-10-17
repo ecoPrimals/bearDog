@@ -59,8 +59,8 @@ impl UnifiedBearDogConfig {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn load() -> Result<UnifiedBearDogConfig, BearDogError> {
-        let mut config = UnifiedBearDogConfig::default();
+    pub fn load() -> Result<Self, BearDogError> {
+        let mut config = Self::default();
 
         // Load from environment variables
         if let Ok(env) = std::env::var("BEARDOG_ENVIRONMENT") {
@@ -75,6 +75,64 @@ impl UnifiedBearDogConfig {
         // Validate the loaded configuration
         config.validate()?;
         Ok(config)
+    }
+
+    /// Creates a development configuration with sensible defaults
+    ///
+    /// This provides a pre-configured setup suitable for local development,
+    /// with relaxed security settings and verbose logging enabled.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    ///
+    /// let config = UnifiedBearDogConfig::development();
+    /// assert_eq!(config.metadata.environment, beardog_types::canonical::config::unified::metadata::Environment::Development);
+    /// ```
+    pub fn development() -> Self {
+        let mut config = Self::default();
+        config.metadata.environment = Environment::Development;
+        config
+    }
+
+    /// Creates a production configuration with hardened security
+    ///
+    /// This provides a pre-configured setup suitable for production deployment,
+    /// with strict security settings and optimized performance.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    ///
+    /// let config = UnifiedBearDogConfig::production();
+    /// assert_eq!(config.metadata.environment, beardog_types::canonical::config::unified::metadata::Environment::Production);
+    /// ```
+    pub fn production() -> Self {
+        let mut config = Self::default();
+        config.metadata.environment = Environment::Production;
+        config
+    }
+
+    /// Alias for `load()` to match common API patterns
+    ///
+    /// This method is identical to `load()` but provides a more intuitive
+    /// name that matches common Rust configuration patterns.
+    ///
+    /// ## Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+    /// # use beardog_errors::BearDogError;
+    ///
+    /// # fn main() -> Result<(), BearDogError> {
+    /// let config = UnifiedBearDogConfig::from_env()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn from_env() -> Result<Self, BearDogError> {
+        Self::load()
     }
 
     /// Validates the complete configuration across all domains
@@ -190,8 +248,8 @@ impl UnifiedBearDogConfig {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn migrate_from_legacy() -> Result<UnifiedBearDogConfig, BearDogError> {
-        let mut config = UnifiedBearDogConfig::default();
+    pub fn migrate_from_legacy() -> Result<Self, BearDogError> {
+        let mut config = Self::default();
 
         // Set up basic migration defaults
         config.metadata.version.beardog_version = env!("CARGO_PKG_VERSION").to_string();

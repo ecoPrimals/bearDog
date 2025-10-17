@@ -356,7 +356,7 @@ mod tests {
             hardware_backed: true,
             auth_required: false,
             attributes: HashMap::with_capacity(16),
-        let result = provider.import_key(b"dummy key data", metadata);
+        let result = provider.import_key(b"test key data", metadata);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("import not supported"));
 } 

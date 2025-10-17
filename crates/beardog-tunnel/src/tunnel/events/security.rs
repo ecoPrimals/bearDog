@@ -1,6 +1,6 @@
-use super::compliance::*;
+use super::compliance::{ComplianceType, GeographicRegion, RoutingRestriction};
 use super::threat::ThreatMitigationAction;
-use super::types::*;
+use super::types::{PerformanceImpact, SecurityLevel, ThreatLevel};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

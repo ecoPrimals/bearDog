@@ -156,7 +156,7 @@ async fn test_e2e_framework_initialization() {
 #[test]
 fn test_e2e_scenario_types() {
     // Verify scenario enum variants
-    let scenarios = vec![
+    let scenarios = [
         E2EScenario::ProductionDeployment,
         E2EScenario::FullStackIntegration,
         E2EScenario::SecurityFlow,

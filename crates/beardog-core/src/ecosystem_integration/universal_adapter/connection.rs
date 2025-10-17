@@ -19,6 +19,7 @@ pub struct ConnectionPool {
 impl ConnectionPool {
     /// Create a new connection pool
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: ConnectionPoolConfig) -> Self {
         Self {
             config,

@@ -232,3 +232,137 @@ pub struct IdentityProviderConfig {
     /// Whether feature is enabled
     pub enabled: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_authentication_config_default() {
+        let config = CanonicalAuthenticationConfig::default();
+        assert_eq!(config.jwt_expiration_seconds, 3600);
+        assert_eq!(config.api_key_header, "X-API-Key");
+        assert_eq!(config.password_min_length, 8);
+        assert_eq!(config.max_auth_attempts, 3);
+    }
+
+    #[test]
+    fn test_authentication_config_production() {
+        let config = CanonicalAuthenticationConfig::production();
+        assert_eq!(config.jwt_expiration_seconds, 1800); // 30 min for prod
+        assert_eq!(config.api_key_min_length, 64); // Longer keys
+        assert_eq!(config.password_min_length, 12); // Stronger passwords
+        assert!(config.password_require_symbols);
+    }
+
+    #[test]
+    fn test_validation_fails_with_default_jwt_secret() {
+        let config = CanonicalAuthenticationConfig::default();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_fails_with_short_jwt_secret() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "too_short".to_string();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_succeeds_with_valid_jwt_secret() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32); // 32+ characters
+        let result = config.validate();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validation_fails_with_zero_expiration() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32);
+        config.jwt_expiration_seconds = 0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_fails_oauth_missing_client_id() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32);
+        config.enable_oauth = true;
+        config.oauth_client_id = String::new();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_fails_oauth_missing_client_secret() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32);
+        config.enable_oauth = true;
+        config.oauth_client_id = "valid-id".to_string();
+        config.oauth_client_secret = String::new();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_succeeds_oauth_disabled() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32);
+        config.enable_oauth = false;
+        // Empty OAuth fields should be fine when disabled
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validation_fails_short_api_key() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32);
+        config.api_key_min_length = 8; // Too short
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_fails_short_password() {
+        let mut config = CanonicalAuthenticationConfig::default();
+        config.jwt_secret = "a".repeat(32);
+        config.password_min_length = 4; // Too short
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_identity_provider_config_default() {
+        let idp = IdentityProviderConfig::default();
+        assert!(idp.provider_type.is_empty());
+        assert!(!idp.enabled);
+        assert!(idp.scopes.is_empty());
+    }
+
+    #[test]
+    fn test_password_complexity_flags() {
+        let config = CanonicalAuthenticationConfig::default();
+        assert!(config.password_require_uppercase);
+        assert!(config.password_require_lowercase);
+        assert!(config.password_require_numbers);
+        assert!(!config.password_require_symbols); // Default is false
+    }
+
+    #[test]
+    fn test_lockout_configuration() {
+        let config = CanonicalAuthenticationConfig::default();
+        assert_eq!(config.max_auth_attempts, 3);
+        assert_eq!(config.lockout_duration_seconds, 900); // 15 minutes
+
+        let prod_config = CanonicalAuthenticationConfig::production();
+        assert_eq!(prod_config.max_auth_attempts, 5);
+        assert_eq!(prod_config.lockout_duration_seconds, 1800); // 30 minutes
+    }
+
+    #[test]
+    fn test_jwt_refresh_configuration() {
+        let config = CanonicalAuthenticationConfig::default();
+        assert!(config.enable_jwt_refresh);
+        assert_eq!(config.jwt_refresh_expiration_seconds, 86400); // 24 hours
+
+        let prod_config = CanonicalAuthenticationConfig::production();
+        assert_eq!(prod_config.jwt_refresh_expiration_seconds, 604_800); // 7 days
+    }
+}

@@ -85,6 +85,33 @@ pub fn crypto_error(operation: &str, details: &str) -> BearDogError {
     }
 }
 
+/// Create an unsupported operation error
+#[must_use]
+pub fn unsupported_operation(operation: &str) -> BearDogError {
+    BearDogError::Business {
+        message: format!("Unsupported operation: {operation}"),
+        category: BusinessErrorCategory::Validation,
+    }
+}
+
+/// Create a not implemented error
+#[must_use]
+pub fn not_implemented(feature: &str) -> BearDogError {
+    BearDogError::Business {
+        message: format!("Not yet implemented: {feature}"),
+        category: BusinessErrorCategory::Validation,
+    }
+}
+
+/// Create an I/O error
+#[must_use]
+pub fn io_error(operation: &str, details: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!("I/O operation '{operation}' failed: {details}"),
+        category: SystemErrorCategory::FileSystem,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

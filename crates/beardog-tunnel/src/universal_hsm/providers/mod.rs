@@ -1,27 +1,20 @@
 
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! Universal HSM providers module
 
 pub mod factory;
 pub mod software;
+pub mod pkcs11;
+pub mod tpm;
 
-mod android;
-mod ios;
-mod pkcs11;
-mod tpm;
+// Re-exports from software module
+pub use software::core::SoftwareHsmProvider;
+pub use software::config::SoftwareHsmConfig;
 
-pub use software::{
-    AttestationEngine, CryptoEngine, EntropyCollector, KeyStore, SecureMemory, SoftwareHsmConfig,
-    SoftwareHsmProvider,
-};
+// Re-exports from other providers
 pub use factory::ProviderFactory;
+pub use pkcs11::Pkcs11HsmProvider;
+pub use tpm::TpmHsmProvider;
 
-pub use android::MobileHardwareProvider;
-pub use ios::DesktopHardwareProvider;
-pub use pkcs11::Pkcs11Provider;
-pub use tpm::TpmProvider;
-
+// Type aliases for compatibility
 pub type UniversalHsmFactory = ProviderFactory;

@@ -1,13 +1,15 @@
-//! # BearDog Universal Adapters
+//! # `BearDog` Universal Adapters
 //!
 //! Provides capability-based adapters for ecosystem integration, enabling
-//! BearDog to work with multiple security providers, cloud vendors, and HSM hardware
+//! `BearDog` to work with multiple security providers, cloud vendors, and HSM hardware
 //! without vendor lock-in.
 //!
 //! ## Features
 //!
 //! - **Universal Adapter Pattern**: Works with any security provider
 //! - **Capability-Based Discovery**: Services discovered by capability, not name
+
+#![deny(unsafe_code)]
 //! - **Zero Vendor Lock-in**: Pluggable providers (AWS, Azure, GCP, Vault)
 //! - **Automatic Failover**: Graceful degradation when providers unavailable
 //! - **Response Caching**: Efficient request deduplication
@@ -44,9 +46,9 @@ pub struct UniversalAdapter {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterConfig {
     pub timeout_seconds: u64,
-    /// Number of retry_attempts
+    /// Number of `retry_attempts`
     pub retry_attempts: u32,
-    /// Whether enable_caching is enabled
+    /// Whether `enable_caching` is enabled
     pub enable_caching: bool,
 }
 
@@ -148,6 +150,7 @@ impl Default for VendorDiscoveryContext {
 impl UniversalAdapter {
     /// Create new universal adapter
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: AdapterConfig) -> Self {
         Self {
             capabilities: Vec::new(),
@@ -229,7 +232,7 @@ impl UniversalAdapter {
     }
 
     /// Internal capability execution with timeout
-    /// Executes capability_internal
+    /// Executes `capability_internal`
     async fn execute_capability_internal(
         &self,
         request: &CapabilityRequest,
@@ -288,6 +291,7 @@ impl UniversalAdapter {
     /// Get available capabilities
     /// Gets capabilities
     /// Gets capabilities
+    #[must_use]
     pub fn get_capabilities(&self) -> &[String] {
         &self.capabilities
     }

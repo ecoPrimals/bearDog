@@ -21,6 +21,7 @@ pub struct ComponentManager {
 impl ComponentManager {
     /// New operation.
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             components: Arc::new(RwLock::new(HashMap::with_capacity(20))),

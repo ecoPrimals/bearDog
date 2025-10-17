@@ -104,8 +104,7 @@ fn test_capability_type_serialization() {
     let json = serde_json::to_string(&cap).expect("Should serialize");
     assert!(!json.is_empty());
 
-    let deserialized: CapabilityType =
-        serde_json::from_str(&json).expect("Should deserialize");
+    let deserialized: CapabilityType = serde_json::from_str(&json).expect("Should deserialize");
     assert_eq!(cap, deserialized);
 }
 
@@ -126,9 +125,13 @@ fn test_capability_type_all_major_variants() {
     ];
 
     // All should have unique names
-    let names: Vec<String> = capabilities.iter().map(|c| c.name()).collect();
+    let names: Vec<String> = capabilities.iter().map(CapabilityType::name).collect();
     let unique_names: HashSet<_> = names.iter().collect();
-    assert_eq!(names.len(), unique_names.len(), "All capability names should be unique");
+    assert_eq!(
+        names.len(),
+        unique_names.len(),
+        "All capability names should be unique"
+    );
 }
 
 #[test]
@@ -139,7 +142,10 @@ fn test_capability_discovery_pattern() {
     // Discover multiple capabilities
     discovered_capabilities.insert(
         "kms-provider".to_string(),
-        vec![CapabilityType::KeyManagement, CapabilityType::SecretsManagement],
+        vec![
+            CapabilityType::KeyManagement,
+            CapabilityType::SecretsManagement,
+        ],
     );
 
     discovered_capabilities.insert(
@@ -150,15 +156,18 @@ fn test_capability_discovery_pattern() {
     // Verify discovery
     assert_eq!(discovered_capabilities.len(), 2);
     assert!(discovered_capabilities.contains_key("kms-provider"));
-    assert_eq!(discovered_capabilities.get("kms-provider").unwrap().len(), 2);
+    assert_eq!(
+        discovered_capabilities.get("kms-provider").unwrap().len(),
+        2
+    );
 }
 
 #[test]
 fn test_capability_filtering() {
-    let capabilities = vec![
-        CapabilityType::KeyManagement,       // Vendor
-        CapabilityType::ServiceMesh,         // Primal
-        CapabilityType::Monitoring,          // Cross-cutting
+    let capabilities = [
+        CapabilityType::KeyManagement,          // Vendor
+        CapabilityType::ServiceMesh,            // Primal
+        CapabilityType::Monitoring,             // Cross-cutting
         CapabilityType::HardwareSecurityModule, // Vendor
     ];
 
@@ -195,28 +204,32 @@ fn test_capability_type_in_hashmap() {
     cap_map.insert(CapabilityType::KeyManagement, "KMS Provider");
     cap_map.insert(CapabilityType::ServiceMesh, "Mesh Provider");
 
-    assert_eq!(cap_map.get(&CapabilityType::KeyManagement), Some(&"KMS Provider"));
-    assert_eq!(cap_map.get(&CapabilityType::ServiceMesh), Some(&"Mesh Provider"));
+    assert_eq!(
+        cap_map.get(&CapabilityType::KeyManagement),
+        Some(&"KMS Provider")
+    );
+    assert_eq!(
+        cap_map.get(&CapabilityType::ServiceMesh),
+        Some(&"Mesh Provider")
+    );
     assert_eq!(cap_map.len(), 2);
 }
 
 #[test]
 fn test_capability_type_multiple_instances() {
     // Test that we can create many instances without issues
-    let _capabilities: Vec<CapabilityType> = (0..100)
-        .map(|i| {
-            match i % 5 {
-                0 => CapabilityType::KeyManagement,
-                1 => CapabilityType::ServiceMesh,
-                2 => CapabilityType::HardwareSecurityModule,
-                3 => CapabilityType::Monitoring,
-                _ => CapabilityType::Logging,
-            }
+    let capabilities: Vec<CapabilityType> = (0..100)
+        .map(|i| match i % 5 {
+            0 => CapabilityType::KeyManagement,
+            1 => CapabilityType::ServiceMesh,
+            2 => CapabilityType::HardwareSecurityModule,
+            3 => CapabilityType::Monitoring,
+            _ => CapabilityType::Logging,
         })
         .collect();
 
     // Should not panic or have memory issues
-    assert_eq!(_capabilities.len(), 100);
+    assert_eq!(capabilities.len(), 100);
 }
 
 #[test]
@@ -244,14 +257,30 @@ fn test_vendor_vs_primal_separation() {
 
     // All vendor caps should be vendor
     for cap in &vendor_caps {
-        assert!(cap.is_vendor_capability(), "{} should be vendor", cap.name());
-        assert!(!cap.is_primal_capability(), "{} should not be primal", cap.name());
+        assert!(
+            cap.is_vendor_capability(),
+            "{} should be vendor",
+            cap.name()
+        );
+        assert!(
+            !cap.is_primal_capability(),
+            "{} should not be primal",
+            cap.name()
+        );
     }
 
     // All primal caps should be primal
     for cap in &primal_caps {
-        assert!(cap.is_primal_capability(), "{} should be primal", cap.name());
-        assert!(!cap.is_vendor_capability(), "{} should not be vendor", cap.name());
+        assert!(
+            cap.is_primal_capability(),
+            "{} should be primal",
+            cap.name()
+        );
+        assert!(
+            !cap.is_vendor_capability(),
+            "{} should not be vendor",
+            cap.name()
+        );
     }
 }
 

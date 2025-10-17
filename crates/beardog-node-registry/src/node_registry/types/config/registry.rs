@@ -48,27 +48,49 @@ use super::{FederationConfig, PhonebookConfig, P2PConfig};
     /// The p2p value
     pub p2p: P2PConfig,
 }
-impl Default for RegistryConfig {}
 
+impl Default for RegistryConfig {
     fn default() -> Self {
         Self {
-            registry_id: "beardog-registry".to_string(),
-            registry_name: "BearDog Node Registry".to_string(),
-            version: "1.0.0".to_string(),
+            registry_id: std::env::var("BEARDOG_REGISTRY_ID")
+                .unwrap_or_else(|_| "beardog-registry".to_string()),
+            registry_name: std::env::var("BEARDOG_REGISTRY_NAME")
+                .unwrap_or_else(|_| "BearDog Node Registry".to_string()),
+            version: std::env::var("BEARDOG_REGISTRY_VERSION")
+                .unwrap_or_else(|_| "1.0.0".to_string()),
             bind_address: std::env::var("BEARDOG_REGISTRY_BIND_ADDRESS")
                 .unwrap_or_else(|_| "0.0.0.0".to_string()),
-            port: std::env::var(10000,
+            port: std::env::var("BEARDOG_REGISTRY_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8080),
+            max_nodes: std::env::var("BEARDOG_REGISTRY_MAX_NODES")
+                .ok()
+                .and_then(|m| m.parse().ok())
+                .unwrap_or(10000),
             node_timeout_seconds: 300, // 5 minutes
             health_check_interval_seconds: 60, // 1 minute
             trust_propagation: TrustPropagationConfig::default(),
-            metadata: HashMap::with_capacity(crate::node_registry::types::trust::TrustLevel::Basic,
+            metadata: HashMap::with_capacity(16),
+            min_registration_trust: crate::node_registry::types::trust::TrustLevel::Basic,
             enable_federation: true,
             federation: FederationConfig::default(),
             phonebook: PhonebookConfig::default(),
-            p2p: P2PConfig::default(&str, registry_name: &str) -> Self {
+            p2p: P2PConfig::default(),
+        }
+    }
+}
+
+impl RegistryConfig {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(registry_id: String, registry_name: String) -> Self {
+        Self {
             registry_id,
-            registry_name: name.to_string(),
+            registry_name,
             ..Default::default()
+        }
+    }
 
 /// With Bind Address operation.
     /// Creates instance with bind address

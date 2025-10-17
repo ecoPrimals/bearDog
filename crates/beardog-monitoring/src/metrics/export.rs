@@ -14,7 +14,7 @@ pub struct ExportEngine {
 
 impl ExportEngine {
     /// Creates a new instance
-    pub fn new(config: ExportConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: ExportConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 
@@ -25,7 +25,10 @@ impl ExportEngine {
         Ok(())
     }
 
-    pub fn export_metrics(&self, _metrics: &super::SystemMetrics) -> Result<(), BearDogError> {
+    pub const fn export_metrics(
+        &self,
+        _metrics: &super::SystemMetrics,
+    ) -> Result<(), BearDogError> {
         // Export logic for external systems
         Ok(())
     }
@@ -33,13 +36,13 @@ impl ExportEngine {
 
 #[derive(Debug, Clone)]
 pub struct ExportConfig {
-    /// Whether enable_prometheus is enabled
+    /// Whether `enable_prometheus` is enabled
     pub enable_prometheus: bool,
-    /// Whether enable_grafana is enabled
+    /// Whether `enable_grafana` is enabled
     pub enable_grafana: bool,
-    /// Number of export_interval_secs
+    /// Number of `export_interval_secs`
     pub export_interval_secs: u64,
-    /// Number of batch_size
+    /// Number of `batch_size`
     pub batch_size: usize,
 }
 

@@ -20,7 +20,8 @@ impl Default for DefaultProofVerifier {
 
 impl DefaultProofVerifier {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 }

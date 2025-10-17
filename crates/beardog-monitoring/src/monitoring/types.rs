@@ -24,7 +24,7 @@ pub struct ComponentHealth {
     /// The last check value
     pub last_check: DateTime<Utc>,
     /// Duration of the health check in milliseconds
-    /// Number of check_duration_ms
+    /// Number of `check_duration_ms`
     pub check_duration_ms: u64,
     /// Additional metadata about the component
     /// Mapping of metadata
@@ -52,25 +52,25 @@ pub struct PerformanceSnapshot {
     /// The memory usage value
     pub memory_usage: f64,
     /// Total available memory in bytes
-    /// Number of memory_total
+    /// Number of `memory_total`
     pub memory_total: u64,
     /// Used memory in bytes
-    /// Number of memory_used
+    /// Number of `memory_used`
     pub memory_used: u64,
     /// Disk usage percentage (0.0 to 100.0)
     /// The disk usage value
     pub disk_usage: f64,
     /// Total disk space in bytes
-    /// Number of disk_total
+    /// Number of `disk_total`
     pub disk_total: u64,
     /// Used disk space in bytes
-    /// Number of disk_used
+    /// Number of `disk_used`
     pub disk_used: u64,
     /// Network bytes received
-    /// Number of network_rx
+    /// Number of `network_rx`
     pub network_rx: u64,
     /// Network bytes transmitted
-    /// Number of network_tx
+    /// Number of `network_tx`
     pub network_tx: u64,
     /// System load average (1 minute)
     /// The load average 1m value
@@ -82,7 +82,7 @@ pub struct PerformanceSnapshot {
     /// The load average 15m value
     pub load_average_15m: f64,
     /// Number of active network connections
-    /// Number of active_connections
+    /// Number of `active_connections`
     pub active_connections: u32,
     /// System uptime in seconds
     pub uptime_seconds: u64,
@@ -119,22 +119,22 @@ pub struct ResourceUsage {
     /// The cpu percent value
     pub cpu_percent: f64,
     /// Current memory usage in bytes
-    /// Number of memory_bytes
+    /// Number of `memory_bytes`
     pub memory_bytes: u64,
     /// Current disk usage in bytes
-    /// Number of disk_bytes
+    /// Number of `disk_bytes`
     pub disk_bytes: u64,
     /// Network bytes received since last measurement
-    /// Number of network_in_bytes
+    /// Number of `network_in_bytes`
     pub network_in_bytes: u64,
     /// Network bytes sent since last measurement
-    /// Number of network_out_bytes
+    /// Number of `network_out_bytes`
     pub network_out_bytes: u64,
     /// Number of open file descriptors
-    /// Number of open_file_descriptors
+    /// Number of `open_file_descriptors`
     pub open_file_descriptors: u32,
     /// Number of active threads
-    /// Number of active_threads
+    /// Number of `active_threads`
     pub active_threads: u32,
     /// Timestamp of this resource measurement
     pub timestamp: DateTime<Utc>,
@@ -183,7 +183,7 @@ pub struct AlertThresholds {
     /// The disk threshold value
     pub disk_threshold: f64,
     /// Network latency threshold in milliseconds
-    /// Number of network_latency_ms
+    /// Number of `network_latency_ms`
     pub network_latency_ms: u64,
     /// Error rate threshold percentage
     /// The error rate threshold value
@@ -277,7 +277,7 @@ pub type AlertLevel = AlertSeverity;
 
 /// Monitoring configuration
 ///
-/// ⚠️  CONSOLIDATED: This local MonitoringConfig has been replaced.
+/// ⚠️  CONSOLIDATED: This local `MonitoringConfig` has been replaced.
 /// Use `beardog_types::canonical::monitoring::MonitoringConfig` instead.
 #[deprecated(
     since = "3.1.0",

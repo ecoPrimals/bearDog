@@ -399,7 +399,7 @@ impl DetectionRule {
     /// Checks if high priority
     /// Checks if high priority
     #[must_use]
-    pub fn is_high_priority(&self) -> bool {
+    pub const fn is_high_priority(&self) -> bool {
         self.priority >= 80
     }
 
@@ -407,7 +407,7 @@ impl DetectionRule {
     /// Checks if complex
     /// Checks if complex
     #[must_use]
-    pub fn is_complex(&self) -> bool {
+    pub const fn is_complex(&self) -> bool {
         self.condition.is_complex()
     }
 
@@ -452,9 +452,9 @@ impl RulePerformanceMetrics {
         // Update execution time average with proper precision handling
         #[allow(clippy::cast_precision_loss)]
         {
-            self.avg_execution_time_ms = (self.avg_execution_time_ms
-                * (self.total_executions - 1) as f64
-                + execution_time_ms as f64)
+            self.avg_execution_time_ms = self
+                .avg_execution_time_ms
+                .mul_add((self.total_executions - 1) as f64, execution_time_ms as f64)
                 / self.total_executions as f64;
         }
 
@@ -504,14 +504,14 @@ impl RulePerformanceMetrics {
 impl std::fmt::Display for ThreatRuleType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ThreatRuleType::Signature => write!(f, "Signature"),
-            ThreatRuleType::Behavioral => write!(f, "Behavioral"),
-            ThreatRuleType::Anomaly => write!(f, "Anomaly"),
-            ThreatRuleType::Heuristic => write!(f, "Heuristic"),
-            ThreatRuleType::MachineLearning => write!(f, "Machine Learning"),
-            ThreatRuleType::Correlation => write!(f, "Correlation"),
-            ThreatRuleType::Threshold => write!(f, "Threshold"),
-            ThreatRuleType::Custom(name) => write!(f, "Custom: {name}"),
+            Self::Signature => write!(f, "Signature"),
+            Self::Behavioral => write!(f, "Behavioral"),
+            Self::Anomaly => write!(f, "Anomaly"),
+            Self::Heuristic => write!(f, "Heuristic"),
+            Self::MachineLearning => write!(f, "Machine Learning"),
+            Self::Correlation => write!(f, "Correlation"),
+            Self::Threshold => write!(f, "Threshold"),
+            Self::Custom(name) => write!(f, "Custom: {name}"),
         }
     }
 }

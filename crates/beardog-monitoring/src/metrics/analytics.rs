@@ -14,7 +14,7 @@ pub struct AnalyticsEngine {
 
 impl AnalyticsEngine {
     /// Creates a new instance
-    pub fn new(config: AnalyticsConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: AnalyticsConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 
@@ -27,7 +27,7 @@ impl AnalyticsEngine {
 
     /// Gets summary
     /// Gets summary
-    pub fn get_summary(&self) -> Result<AnalyticsSummary, BearDogError> {
+    pub const fn get_summary(&self) -> Result<AnalyticsSummary, BearDogError> {
         Ok(AnalyticsSummary {
             total_events_processed: 50000,
             trends_detected: 5,
@@ -40,11 +40,11 @@ impl AnalyticsEngine {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalyticsSummary {
-    /// Number of total_events_processed
+    /// Number of `total_events_processed`
     pub total_events_processed: u64,
-    /// Number of trends_detected
+    /// Number of `trends_detected`
     pub trends_detected: u32,
-    /// Number of anomalies_found
+    /// Number of `anomalies_found`
     pub anomalies_found: u32,
     /// The prediction accuracy value
     pub prediction_accuracy: f64,
@@ -53,11 +53,11 @@ pub struct AnalyticsSummary {
 
 #[derive(Debug, Clone)]
 pub struct AnalyticsConfig {
-    /// Whether enable_trend_detection is enabled
+    /// Whether `enable_trend_detection` is enabled
     pub enable_trend_detection: bool,
     /// The anomaly threshold value
     pub anomaly_threshold: f64,
-    /// Number of prediction_window_hours
+    /// Number of `prediction_window_hours`
     pub prediction_window_hours: u32,
 }
 

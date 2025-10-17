@@ -1,67 +1,57 @@
-
-
-// MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
-// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
-// Target: Replace with capability-based discovery for vendor/primal agnosticism
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! Canonical HSM Types
+//!
+//! Universal type definitions for HSM operations across all platforms.
+//!
+//! MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
+//! to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
+//! Target: Replace with capability-based discovery for vendor/primal agnosticism
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 
+/// Memory protection levels for key storage
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MemoryProtectionLevel {
-
-
-    /// No none specified
+    /// No memory protection
     None,
-
-
-    /// Represents low variant
+    /// Low security memory protection
     Low,
-
-
-    /// Represents medium variant
+    /// Medium security memory protection
     Medium,
-
-
-    /// Represents high variant
+    /// High security memory protection
     High,
-
-
-    /// Represents maximum variant
+    /// Maximum security memory protection
     Maximum,
 }
-impl Default for MemoryProtectionLevel {}
 
+impl Default for MemoryProtectionLevel {
     fn default() -> Self {
         Self::Medium
     }
+}
 
+/// Performance metrics for HSM operations
 #[derive(Debug, Clone)]
-    /// The average latency ms value
+pub struct PerformanceMetrics {
+    /// Operations per second
+    pub operations_per_second: f64,
+    /// Average latency in milliseconds
     pub average_latency_ms: f64,
-
-    /// The success rate value
+    /// Success rate percentage
     pub success_rate: f64,
-
-    /// The memory usage mb value
+    /// Memory usage in MB
     pub memory_usage_mb: f64,
-
-    /// The cpu usage percent value
+    /// CPU usage percentage
     pub cpu_usage_percent: f64,
-
-    /// Number of error
+    /// Number of errors
     pub error_count: u64,
-
-
-    pub uptime_seconds: u64,}
+    /// Uptime in seconds
+    pub uptime_seconds: u64,
+}
 
 impl Default for PerformanceMetrics {
+    fn default() -> Self {
         Self {
             operations_per_second: 0.0,
             average_latency_ms: 0.0,
@@ -71,272 +61,281 @@ impl Default for PerformanceMetrics {
             error_count: 0,
             uptime_seconds: 0,
         }
+    }
+}
 
+/// Attestation security levels
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AttestationLevel {
-
-
-    /// Represents software variant
+    /// Software-only attestation
     Software,
-
-
-    /// Represents hardware variant
+    /// Hardware-backed attestation
     Hardware,
-
-
-    /// Represents verified boot variant
+    /// Verified boot attestation
     VerifiedBoot,
-
-
-    /// Represents strong box variant
+    /// StrongBox-level attestation
     StrongBox,
-/// Types of hsm
+}
+
+/// HSM connection types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HsmType {
-
-
-    /// Represents network variant
+    /// Network-connected HSM
     Network,
-
-
-    /// Represents usb variant
+    /// USB-connected HSM
     Usb,
-
-
-    /// Represents pcie variant
+    /// PCIe-connected HSM
     Pcie,
-
-
-    /// Represents cloud variant
+    /// Cloud-based HSM
     Cloud,
-
-
-    /// Represents mobile variant
+    /// Mobile device HSM
     Mobile,
-
-
-    /// Represents tpm variant
+    /// Trusted Platform Module
     Tpm,
-/// Types of smartphone
+}
+
+/// Smartphone platform types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SmartphoneType {
-
-
-    /// Represents android variant
+    /// Android device
     Android,
-
-
-    /// Represents ios variant
+    /// iOS device
     Ios,
-
-    /// Represents other variant
+    /// Other smartphone platform
     Other(String),
-/// Types of secure enclave
+}
+
+/// Secure enclave implementations
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SecureEnclaveType {
-
-
-    /// Represents apple secure enclave variant
+    /// Apple Secure Enclave
     AppleSecureEnclave,
-
-
-    /// Represents android strong box variant
+    /// Android StrongBox
     AndroidStrongBox,
-
-
-    /// Represents samsung knox variant
+    /// Samsung Knox
     SamsungKnox,
-
-
-    /// Represents qualcomm spu variant
+    /// Qualcomm SPU
     QualcommSpu,
-
-
-    /// Represents trusted execution environment variant
+    /// Trusted Execution Environment
     TrustedExecutionEnvironment,
-/// Types of software hsm
+}
+
+/// Software HSM implementations
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SoftwareHsmType {
-
-
-    /// Represents soft hsm variant
+    /// SoftHSM implementation
     SoftHsm,
-
-
-    /// Represents open ssl variant
+    /// OpenSSL-based implementation
     OpenSsl,
-
-
-    /// Represents bear dog native variant
+    /// BearDog native implementation
     BearDogNative,
-
-    /// Represents custom variant
+    /// Custom implementation
     Custom(String),
+}
 
+/// Entropy quality ratings
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EntropyQualityRating {
-
-
-    /// Represents insufficient variant
+    /// Insufficient entropy
     Insufficient,
-
-
-    /// Represents basic variant
+    /// Basic entropy quality
     Basic,
-
-
-    /// Represents good variant
+    /// Good entropy quality
     Good,
-
-
-    /// Represents excellent variant
+    /// Excellent entropy quality
     Excellent,
+}
 
+/// Entropy source types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum EntropySource {
+    /// Hardware RNG
+    HardwareRng,
+    /// Operating system RNG
+    OsRng,
+    /// Combined sources
+    Mixed,
+    /// Custom entropy source
+    Custom(String),
+}
 
-    Premium,}
-    Premium,}
-    Premium,}
+/// Key storage types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum KeyStorageType {
+    /// Hardware-backed storage
+    Hardware,
+    /// Software-encrypted storage
+    Encrypted,
+    /// In-memory storage
+    Memory,
+    /// File-based storage
+    File,
+    /// Database storage
+    Database,
+}
 
-impl Default for EntropyQualityRating {
-        Self::Basic
+/// Android key algorithms
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum AndroidKeyAlgorithm {
+    /// RSA encryption
+    Rsa,
+    /// Elliptic Curve Cryptography
+    Ec,
+    /// AES encryption
+    Aes,
+    /// HMAC
+    Hmac,
+}
 
-pub enum EntropyCollectionMethod {
+/// StrongBox implementation types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum StrongBoxImplementation {
+    /// Qualcomm implementation
+    Qualcomm,
+    /// MediaTek implementation
+    MediaTek,
+    /// Samsung implementation
+    Samsung,
+    /// Generic implementation
+    Generic,
+}
 
-    TouchPatterns { pressure_sensitive: bool },
-    TouchPatterns { pressure_sensitive: bool },
-    TouchPatterns { pressure_sensitive: bool },
+/// HSM health status
+#[derive(Debug, Clone)]
+pub struct HsmHealthStatus {
+    /// Whether the HSM is healthy
+    pub is_healthy: bool,
+    /// Last health check timestamp
+    pub last_check: DateTime<Utc>,
+    /// Optional error message
+    pub error_message: Option<String>,
+    /// Performance metrics
+    pub performance_metrics: PerformanceMetrics,
+}
 
-    TouchPatternsAdvanced {
-        pressure_sensitive: bool,
-        multi_touch: bool,
-        gesture_recognition: bool,
-    },
-
-
-    DeviceMotion,
-
-    EnvironmentalSensors { sensor_types: Vec<String> },
-
-
-    Biometric,
-
-
-    Behavioral,
-/// Types of hsm interface
-pub enum HsmInterfaceType {
-
-    Pkcs11 { library_path: String },
-    Pkcs11 { library_path: String },
-    Pkcs11 { library_path: String },
-
-    NetworkHsm { endpoint: String, protocol: String },
-
-    UsbHsm { device_path: String },
-
-    SmartCard { reader_name: String },
-
-    Tpm { version: String },
-
-    AwsKms { region: String },
-
-    universal_clouduniversal_secrets { vault_url: String },
-
-    GcpKms {
-        project_id: String,
-        location: String,
-
-    AndroidStrongBox { security_level: u8 },
-
-    IosSecureEnclave { enclave_version: String },
-
-    SoftHsm { config_path: String },
-
-    OpenSsl { engine_path: String },
-
-    BearDogNative { instance_id: String },
-
-    WindowsCng { provider_name: String },
-
-    MacOsKeychain { keychain_path: String },
-
-    CustomApi {
-        api_endpoint: String,
-        auth_method: String,
-
-    ProprietaryDriver { driver_path: String, config: String },
-
-pub struct HsmConnectionInfo {
-
-
-    pub timeout: u64,
-
-    /// Number of max_retries
-    pub max_retries: u32,
-
-    /// Number of pool_size
-    pub pool_size: u32,
-
-    /// Mapping of parameters
-    pub parameters: HashMap<String, String>,}
-
-impl Default for HsmConnectionInfo {
-            timeout: 30,
-            max_retries: 3,
-            pool_size: 10,
-            parameters: HashMap::with_capacity(String,
-
-    /// The hsm type value
+/// HSM configuration
+#[derive(Debug, Clone)]
+pub struct HsmConfig {
+    /// HSM type
     pub hsm_type: HsmType,
+    /// Connection info
+    pub connection_info: Option<String>,
+    /// Security level
+    pub security_level: u8,
+    /// Enable attestation
+    pub attestation_enabled: bool,
+}
 
-    /// The endpoint value
-    pub endpoint: String,
+/// Key metadata
+#[derive(Debug, Clone)]
+pub struct KeyMetadata {
+    /// Key ID
+    pub key_id: String,
+    /// Creation timestamp
+    pub created_at: DateTime<Utc>,
+    /// Last access timestamp
+    pub last_accessed: Option<DateTime<Utc>>,
+    /// Access count
+    pub access_count: u64,
+    /// Custom metadata
+    pub custom_data: HashMap<String, String>,
+}
 
-    /// Whether supports_human_entropy is enabled
-    pub supports_human_entropy: bool,
+impl KeyMetadata {
+    /// Create new key metadata
+    pub fn new(key_id: String) -> Self {
+        Self {
+            key_id,
+            created_at: Utc::now(),
+            last_accessed: None,
+            access_count: 0,
+            custom_data: HashMap::new(),
+        }
+    }
 
-    /// The discovered at value
-    pub discovered_at: DateTime<Utc>,
+    /// Record key access
+    pub fn record_access(&mut self) {
+        self.last_accessed = Some(Utc::now());
+        self.access_count += 1;
+    }
+}
 
-    /// Optional vendor
-    pub vendor: Option<String>,
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    /// Optional model
-    pub model: Option<String>,
+    #[test]
+    fn test_memory_protection_level_default() {
+        assert_eq!(
+            MemoryProtectionLevel::default(),
+            MemoryProtectionLevel::Medium
+        );
+    }
 
-    /// Optional version
-    pub version: Option<String>,
+    #[test]
+    fn test_performance_metrics_default() {
+        let metrics = PerformanceMetrics::default();
+        assert_eq!(metrics.operations_per_second, 0.0);
+        assert_eq!(metrics.success_rate, 100.0);
+        assert_eq!(metrics.error_count, 0);
+    }
 
-    /// Optional interface type
-    pub interface_type: Option<HsmInterfaceType>,
+    #[test]
+    fn test_key_metadata_creation() {
+        let metadata = KeyMetadata::new("test-key".to_string());
+        assert_eq!(metadata.key_id, "test-key");
+        assert_eq!(metadata.access_count, 0);
+        assert!(metadata.last_accessed.is_none());
+    }
 
-    /// Optional connection info
-    pub connection_info: Option<HsmConnectionInfo>,
+    #[test]
+    fn test_key_metadata_record_access() {
+        let mut metadata = KeyMetadata::new("test-key".to_string());
+        metadata.record_access();
 
-impl Default for DiscoveryConfig {
-            enable_cloud_discovery: true,
-            enable_pkcs11_discovery: true,
-            enable_smartphone_discovery: true,
-            discovery_timeout_seconds: 300,
-            enable_capability_detection: true,
-            auto_discovery_enabled: true,
-            timeout: Some(300),
+        assert_eq!(metadata.access_count, 1);
+        assert!(metadata.last_accessed.is_some());
 
-impl Default for KeyMetadata {
-            key_id: String::with_capacity(None,
-            key_type: None,
-            algorithm: None,
-            key_size: None,
-            created_at: Some(Utc::now()),
-            creation_time: Some(Utc::now(None,
-            last_used: None,
-            usage_count: Some(0),
-            is_exportable: Some(false),
-            is_hardware_backed: Some(false),
-            tags: HashMap::with_capacity(16),
+        metadata.record_access();
+        assert_eq!(metadata.access_count, 2);
+    }
 
-pub use self::{
-    AttestationLevel as CanonicalAttestationLevel, DiscoveredHsm as CanonicalDiscoveredHsm,
-    DiscoveryConfig as CanonicalDiscoveryConfig,
-    EntropyCollectionMethod as CanonicalEntropyCollectionMethod,
-    EntropyQualityRating as CanonicalEntropyQualityRating,
-    HsmConnectionInfo as CanonicalHsmConnectionInfo, HsmInterfaceType as CanonicalHsmInterfaceType,
-    HsmType as CanonicalHsmType, KeyMetadata as CanonicalKeyMetadata,
-    MemoryProtectionLevel as CanonicalMemoryProtectionLevel,
-    PerformanceMetrics as CanonicalPerformanceMetrics,
-    SecureEnclaveType as CanonicalSecureEnclaveType, SmartphoneType as CanonicalSmartphoneType,
-    SoftwareHsmType as CanonicalSoftwareHsmType,
-};
+    #[test]
+    fn test_attestation_level_serialization() {
+        let level = AttestationLevel::Hardware;
+        let serialized = serde_json::to_string(&level).unwrap();
+        let deserialized: AttestationLevel = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(level, deserialized);
+    }
+
+    #[test]
+    fn test_hsm_type_variants() {
+        let types = vec![
+            HsmType::Network,
+            HsmType::Usb,
+            HsmType::Pcie,
+            HsmType::Cloud,
+            HsmType::Mobile,
+            HsmType::Tpm,
+        ];
+        assert_eq!(types.len(), 6);
+    }
+
+    #[test]
+    fn test_smartphone_type_custom() {
+        let custom = SmartphoneType::Other("CustomOS".to_string());
+        match custom {
+            SmartphoneType::Other(name) => assert_eq!(name, "CustomOS"),
+            _ => panic!("Expected Other variant"),
+        }
+    }
+
+    #[test]
+    fn test_software_hsm_type_custom() {
+        let custom = SoftwareHsmType::Custom("MyHSM".to_string());
+        match custom {
+            SoftwareHsmType::Custom(name) => assert_eq!(name, "MyHSM"),
+            _ => panic!("Expected Custom variant"),
+        }
+    }
+}

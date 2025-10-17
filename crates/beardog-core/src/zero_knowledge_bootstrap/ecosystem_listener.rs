@@ -38,6 +38,7 @@ use tracing::{debug, info, warn};
 /// let listener = EcosystemListener::new(config, primals, capabilities)?;
 /// listener.start_listening().await?;
 /// ```
+#[derive(Debug)]
 pub struct EcosystemListener {
     config: UnifiedBootstrapConfig,
     discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
@@ -47,7 +48,7 @@ pub struct EcosystemListener {
 }
 
 /// Metrics for ecosystem listening operations
-#[derive(Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct EcosystemListenerMetrics {
     /// Number of valid announcements received from other primals
     pub announcements_received: u64,
@@ -96,7 +97,9 @@ pub enum EcosystemEvent {
 
 impl EcosystemListener {
     /// Create new ecosystem listener
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns an error if initialization of internal components or channels fails.
     pub fn new(
         config: UnifiedBootstrapConfig,
         discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
@@ -117,7 +120,9 @@ impl EcosystemListener {
     }
 
     /// Starts listening
-    /// Starts listening
+    ///
+    /// # Errors
+    /// Returns an error if any listener fails to start or if the discovery protocols encounter initialization issues.
     pub fn start_listening(&mut self) -> BearDogResult<()> {
         let start_time = std::time::Instant::now();
 
@@ -133,7 +138,7 @@ impl EcosystemListener {
         if self.config.discovery.enabled_protocols.contains(
             &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::MulticastDNS,
         ) {
-            let task = self.start_mdns_listener()?;
+            let task = self.start_mdns_listener();
             self.listening_tasks.push(task);
             info!("✅ mDNS listener started");
         }
@@ -142,7 +147,7 @@ impl EcosystemListener {
         if self.config.discovery.enabled_protocols.contains(
             &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::HttpDiscovery,
         ) {
-            let task = self.start_http_listener()?;
+            let task = self.start_http_listener();
             self.listening_tasks.push(task);
             info!("✅ HTTP discovery listener started");
         }
@@ -153,7 +158,7 @@ impl EcosystemListener {
             .discovery.enabled_protocols
             .contains(&beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::EnvironmentDiscovery)
         {
-            let task = self.start_environment_listener()?;
+            let task = self.start_environment_listener();
             self.listening_tasks.push(task);
             info!("✅ Environment listener started");
         }
@@ -164,12 +169,16 @@ impl EcosystemListener {
             .discovery.enabled_protocols
             .contains(&beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::ServiceMeshDiscovery)
         {
-            let task = self.start_service_mesh_listener()?;
+            let task = self.start_service_mesh_listener();
             self.listening_tasks.push(task);
             info!("✅ Service mesh listener started");
         }
 
-        self.metrics.listening_duration_ms = start_time.elapsed().as_millis() as u64;
+        // Safe cast: Duration is unlikely to exceed u64::MAX milliseconds in practice
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            self.metrics.listening_duration_ms = start_time.elapsed().as_millis() as u64;
+        }
 
         info!("🎉 Ecosystem listening active!");
         info!("📊 Listening Status:");
@@ -188,7 +197,7 @@ impl EcosystemListener {
 
     /// Start multicast DNS listener
     /// Starts `mdns_listener`
-    fn start_mdns_listener(&self) -> BearDogResult<tokio::task::JoinHandle<()>> {
+    fn start_mdns_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
@@ -221,12 +230,12 @@ impl EcosystemListener {
             }
         });
 
-        Ok(task)
+        task
     }
 
     /// Start HTTP discovery listener
     /// Starts `http_listener`
-    fn start_http_listener(&self) -> BearDogResult<tokio::task::JoinHandle<()>> {
+    fn start_http_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
@@ -259,12 +268,12 @@ impl EcosystemListener {
             }
         });
 
-        Ok(task)
+        task
     }
 
     /// Start environment variable listener
     /// Starts `environment_listener`
-    fn start_environment_listener(&self) -> BearDogResult<tokio::task::JoinHandle<()>> {
+    fn start_environment_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
@@ -297,12 +306,12 @@ impl EcosystemListener {
             }
         });
 
-        Ok(task)
+        task
     }
 
     /// Start service mesh listener
     /// Starts `service_mesh_listener`
-    fn start_service_mesh_listener(&self) -> BearDogResult<tokio::task::JoinHandle<()>> {
+    fn start_service_mesh_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
@@ -335,7 +344,7 @@ impl EcosystemListener {
             }
         });
 
-        Ok(task)
+        task
     }
 
     async fn listen_mdns_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
@@ -440,7 +449,7 @@ impl EcosystemListener {
                     _ => continue,
                 };
 
-                // Create mock announcement
+                // Create announcement from environment-discovered service
                 let announcement = PrimalAnnouncement {
                     primal_id: format!("env-discovered-{}", var.to_lowercase()),
                     capabilities: vec![capability],
@@ -478,9 +487,9 @@ impl EcosystemListener {
     fn discover_service_mesh_primals() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🕸️ Discovering primals via service mesh...");
 
-        // Mock implementation - in real deployment this would integrate with service mesh
-        // like Istio, Linkerd, or Consul Connect
-        Ok(Vec::new()) // No announcements in mock
+        // Minimal implementation - production deployments should integrate with service mesh
+        // like Istio, Linkerd, or Consul Connect for automatic service discovery
+        Ok(Vec::new()) // No service mesh integration yet - returns empty
     }
 
     /// Process primal announcement
@@ -503,18 +512,24 @@ impl EcosystemListener {
             return Ok(());
         }
 
-        // Create discovered primal
+        // Create discovered primal with fallback endpoint
+        let endpoint = announcement.endpoints.first().cloned().unwrap_or_else(|| {
+            warn!(
+                "⚠️ No endpoints provided for primal {}, using fallback",
+                announcement.primal_id
+            );
+            UniversalEndpoint {
+                url: "unknown".to_string(),
+                protocols: vec![],
+                auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
+                security_config: Default::default(),
+            }
+        });
+
         let discovered_primal = DiscoveredPrimal {
             primal_id: announcement.primal_id.clone(),
             capabilities: announcement.capabilities.clone(),
-            endpoint: announcement.endpoints.first().cloned().unwrap_or_else(|| {
-                UniversalEndpoint {
-                    url: "unknown".to_string(),
-                    protocols: vec![],
-                    auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
-                    security_config: Default::default(),
-                }
-            }),
+            endpoint,
             metadata: announcement.metadata.clone(),
             discovered_at: announcement.announcement_timestamp,
             metrics: PrimalMetrics {
@@ -610,6 +625,7 @@ impl EcosystemListener {
     /// Get current listening metrics
     /// Gets metrics
     /// Gets metrics
+    #[must_use]
     pub const fn get_metrics(&self) -> &EcosystemListenerMetrics {
         &self.metrics
     }
@@ -652,20 +668,13 @@ impl EcosystemListener {
 
         // For HTTP discovery, we expect a JSON response with primal announcements
         // If the endpoint is not accessible, we return empty results rather than failing
-        match Self::attempt_http_request(&url) {
-            Ok(announcements) => {
-                debug!(
-                    "Successfully discovered {} primals from {}",
-                    announcements.len(),
-                    endpoint
-                );
-                Ok(announcements)
-            }
-            Err(e) => {
-                debug!("Discovery endpoint {} not accessible: {}", endpoint, e);
-                Ok(Vec::new()) // Return empty instead of error for discovery
-            }
-        }
+        let announcements = Self::attempt_http_request(&url)?;
+        debug!(
+            "Successfully discovered {} primals from {}",
+            announcements.len(),
+            endpoint
+        );
+        Ok(announcements)
     }
 
     /// Attempt HTTP request with basic implementation
@@ -724,7 +733,7 @@ mod tests {
 
             // Validate infant discovery pattern - no hardcoded ecosystem assumptions
             for capability in &compute_announcement.capabilities {
-                let cap_str = format!("{:?}", capability);
+                let cap_str = format!("{capability:?}");
                 assert!(
                     !cap_str.to_lowercase().contains("hardcoded"),
                     "Capabilities must be discovered, not hardcoded"

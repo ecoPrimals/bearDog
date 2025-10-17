@@ -2,7 +2,7 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-use super::types::*;
+use super::types::{DisconnectReason, ThreatLevel};
 use beardog_threat::threat::ThreatSeverity;
 use serde::{Deserialize, Serialize};
 
@@ -75,6 +75,6 @@ pub struct PeerCapabilities {
     /// Collection of supported protocols
     pub supported_protocols: Vec<String>,
     pub max_bandwidth: u64,
-    /// Number of security_level
+    /// Number of `security_level`
     pub security_level: u8,
 }

@@ -7,41 +7,43 @@ use beardog_genetics::EntropyClass;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+/// Genetic algorithm configuration
+///
+/// Configuration for genetic algorithm-based optimization including
+/// population parameters, mutation/crossover rates, and selection methods.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticAlgorithmConfig {
-    /// Number of `population_size`
+    /// Size of the population in each generation
     pub population_size: usize,
-    /// The mutation rate value
+    /// Probability of mutation occurring (0.0 to 1.0)
     pub mutation_rate: f64,
-    /// The crossover rate value
+    /// Probability of crossover occurring (0.0 to 1.0)
     pub crossover_rate: f64,
     /// Maximum number of generations to evolve
-    /// Number of `max_generations`
     pub max_generations: usize,
-    /// The fitness threshold value
+    /// Fitness threshold for early termination
     pub fitness_threshold: f64,
-    /// Enable elitism to preserve best individuals
-    /// Whether elitism is enabled
+    /// Whether to preserve best individuals across generations
     pub elitism: bool,
-    /// The selection method value
+    /// Selection method (e.g., "tournament", "roulette")
     pub selection_method: String,
-    /// Genetic diversity maintenance parameters
-    /// The diversity parameters value
+    /// Parameters for maintaining genetic diversity
     pub diversity_parameters: DiversityConfig,
 }
 
+/// Partnership configuration
+///
+/// Configuration for partnerships between entities including
+/// trust requirements, partner limits, and discovery settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartnershipConfig {
-    /// Maximum number of partners in key sharing
-    /// Number of `max_partners`
+    /// Maximum number of partners allowed in key sharing
     pub max_partners: usize,
-    /// The min trust score value
+    /// Minimum trust score required for partnerships (0.0 to 1.0)
     pub min_trust_score: f64,
-    /// Partnership duration in seconds
-    /// Number of `partnership_duration_secs`
+    /// Duration of partnerships in seconds
     pub partnership_duration_secs: u64,
-    /// Enable automatic partner discovery
-    /// Whether `auto_discovery` is enabled
+    /// Whether to enable automatic partner discovery
     pub auto_discovery: bool,
 }
 
@@ -61,21 +63,21 @@ pub struct CorporateAccessControl {
     pub sovereignty_level: SovereigntyLevel,
 }
 
+/// Privacy protection settings
+///
+/// Advanced privacy protection mechanisms including zero-knowledge proofs,
+/// homomorphic encryption, and secure multi-party computation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyProtectionSettings {
-    /// Enable zero-knowledge proof systems
-    /// Whether `zero_knowledge_proofs` is enabled
+    /// Enable zero-knowledge proof systems for privacy-preserving authentication
     pub zero_knowledge_proofs: bool,
-    /// Whether `homomorphic_encryption` is enabled
+    /// Enable homomorphic encryption for computation on encrypted data
     pub homomorphic_encryption: bool,
-    /// Enable secure multi-party computation
-    /// Whether `secure_multiparty_computation` is enabled
+    /// Enable secure multi-party computation protocols
     pub secure_multiparty_computation: bool,
-    /// Data minimization and retention policies
-    /// Whether `data_minimization` is enabled
+    /// Enable data minimization and retention policies
     pub data_minimization: bool,
-    /// Anonymous credential systems
-    /// Whether `anonymous_credentials` is enabled
+    /// Enable anonymous credential systems
     pub anonymous_credentials: bool,
 }
 
@@ -96,40 +98,43 @@ pub struct DiversityConfig {
 }
 
 /// Human identity verification and authentication settings
+///
+/// Configuration for human identity verification including biometric
+/// authentication, multi-factor requirements, and continuous auth.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanIdentityConfig {
-    /// Biometric authentication methods enabled
-    /// Collection of biometric auth
+    /// Biometric authentication methods enabled (e.g., "fingerprint", "face")
     pub biometric_auth: Vec<String>,
-    /// Multi-factor authentication requirements
-    /// Whether `mfa_required` is enabled
+    /// Whether multi-factor authentication is required
     pub mfa_required: bool,
-    /// Identity verification threshold
-    /// The verification threshold value
+    /// Identity verification confidence threshold (0.0 to 1.0)
     pub verification_threshold: f64,
-    /// Enable continuous authentication
-    /// Whether `continuous_auth` is enabled
+    /// Enable continuous authentication monitoring
     pub continuous_auth: bool,
 }
 
 /// Genetic key evolution and adaptation parameters
+///
+/// Configuration for how cryptographic keys evolve and adapt over time
+/// based on environmental conditions and security requirements.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticEvolutionConfig {
-    /// Evolution speed multiplier
-    /// The evolution speed value
+    /// Speed multiplier for evolutionary changes (1.0 = normal speed)
     pub evolution_speed: f64,
-    /// Adaptation to environmental changes
-    /// Whether `environmental_adaptation` is enabled
+    /// Whether keys adapt to environmental changes
     pub environmental_adaptation: bool,
-    /// Key strength evolution parameters
-    /// Whether `strength_evolution` is enabled
+    /// Whether key strength evolves over time
     pub strength_evolution: bool,
 }
 
+/// Sovereignty protection level
+///
+/// Defines the level of sovereignty protection applied to operations.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SovereigntyLevel {
     /// Minimal sovereignty protection
     Minimal,
+    /// Standard sovereignty protection (default)
     Standard,
     /// Enhanced sovereignty with strict controls
     Enhanced,
@@ -137,49 +142,59 @@ pub enum SovereigntyLevel {
     Maximum,
 }
 
+/// Primal genesis seed
+///
+/// The foundational seed for a primal's identity, containing its genesis
+/// entropy, genetic lineage, device attestation, and autonomous rules.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalGenesisSeed {
+    /// Unique identifier for this primal
     pub primal_id: String,
-    /// The genesis entropy value
+    /// Genesis entropy class for randomness generation
     pub genesis_entropy: EntropyClass,
-    /// The genetic lineage value
+    /// Genetic lineage information
     pub genetic_lineage: BearDogGenetics,
     /// Timestamp when the genesis seed was created
     pub genesis_timestamp: DateTime<Utc>,
     /// Device attestation proving hardware security
-    /// The device attestation value
     pub device_attestation: DeviceAttestation,
-    /// Collection of sovereign public key
+    /// Sovereign public key for this primal
     pub sovereign_public_key: Vec<u8>,
     /// Cryptographic proof of autonomous birth/creation
-    /// Collection of autonomous birth proof
     pub autonomous_birth_proof: Vec<u8>,
-    /// The self defined rules value
+    /// Self-defined autonomous rules for this biome
     pub self_defined_rules: BiomeAutonomousRules,
 }
 
+/// Device attestation
+///
+/// Cryptographic proof that the device meets security requirements
+/// including trusted execution environment and hardware verification.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceAttestation {
+    /// Unique device identifier
     pub device_id: String,
     /// Certificate chain proving trusted execution environment
-    /// Collection of tee certificate chain
     pub tee_certificate_chain: Vec<Vec<u8>>,
     /// Hardware-generated cryptographic signature
-    /// Collection of hardware signature
     pub hardware_signature: Vec<u8>,
+    /// Platform verification information
     pub platform_verification: PlatformVerification,
 }
 
+/// Platform verification information
+///
+/// Information about the platform's security state including boot
+/// verification, hardware security level, and bootloader status.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlatformVerification {
+    /// Name of the platform (e.g., "Android", "iOS")
     pub platform_name: String,
     /// Verified boot state confirmation
-    /// The verified boot state value
     pub verified_boot_state: String,
     /// Hardware security level assessment
-    /// The hardware security level value
     pub hardware_security_level: String,
-    /// Whether `bootloader_locked` is enabled
+    /// Whether the bootloader is locked
     pub bootloader_locked: bool,
 }
 

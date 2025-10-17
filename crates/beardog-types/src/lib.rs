@@ -21,7 +21,7 @@
 // ## 🏗️ **Unified Architecture Overview**
 //
 // ### **Canonical Configuration System** 🔧
-// ```rust
+// ```rust,ignore
 // use beardog_types::canonical::config::{
 //     UnifiedBearDogConfig,           // Single source of truth
 //     CanonicalSecurityConfig,        // Modular security config
@@ -34,7 +34,7 @@
 // ```
 //
 // ### **Unified Provider Traits** 🔌
-// ```rust
+// ```rust,ignore
 // use beardog_types::canonical::providers_unified::traits::{
 //     UnifiedProvider,                // Root provider trait
 //     UnifiedSecurityProvider,        // Security operations
@@ -84,7 +84,7 @@
 // ```
 //
 // ### **Modular Metrics System** 📊
-// ```rust
+// ```rust,ignore
 // use beardog_types::canonical::monitoring::metrics::{
 //     UnifiedMetricsSystem,          // Main metrics engine
 //     UnifiedMetricsConfig,          // Configuration
@@ -172,7 +172,7 @@
 // ### **From Fragmented to Unified**
 //
 // #### **OLD (Fragmented):**
-// ```rust
+// ```rust,ignore
 // // Multiple imports from different locations
 // Removed: use beardog_traits::canonical::HsmProvider; - now use unified::
 // use beardog_traits::unified::SecurityProvider;
@@ -180,7 +180,7 @@
 // ```
 //
 // #### **NEW (Unified):**
-// ```rust
+// ```rust,ignore
 // // Single import location for all provider traits
 // use beardog_types::canonical::providers_unified::traits::{
 //     UnifiedHsmProvider,
@@ -189,7 +189,7 @@
 // ```
 //
 // ### **Configuration Migration**
-// ```rust
+// ```rust,ignore
 // // OLD: Fragmented configs
 // use beardog_types::configuration::{SecurityConfig, MonitoringConfig};
 //
@@ -255,7 +255,7 @@
 // ```
 //
 // ### **Basic Usage**
-// ```rust
+// ```rust,ignore
 // use beardog_types::canonical::config::UnifiedBearDogConfig;
 //
 // fn main() -> Result<(), beardog_errors::BearDogError> {
@@ -272,7 +272,7 @@
 // ```
 //
 // ### **Advanced Usage**
-// ```rust
+// ```rust,ignore
 // use beardog_types::canonical::monitoring::metrics::UnifiedMetricsSystem;
 // use beardog_types::canonical::providers_unified::traits::{
 //     UnifiedHsmProvider,
@@ -367,12 +367,12 @@
 //! - Human dignity preservation
 
 #![doc(html_root_url = "https://docs.rs/beardog-types/3.0.0")]
-#![allow(missing_docs)] // TODO(P1): Add comprehensive documentation after stabilization
+#![allow(missing_docs)] // Comprehensive documentation pending stabilization
 #![deny(unsafe_code)]
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
 #![warn(clippy::cargo)]
-// Pedantic lints to address after stabilization (TODO P2)
+// Pedantic lints allowed during active development
 #![allow(clippy::struct_excessive_bools)]
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::multiple_crate_versions)]
@@ -416,6 +416,10 @@ pub use beardog_errors::BearDogError;
 /// - [`canonical::network`] - Network communication types
 /// - [`canonical::crypto`] - Cryptographic operations
 pub mod canonical;
+
+/// HSM (Hardware Security Module) types and configurations  
+/// Production-ready types for database, key store, and crypto provider configuration
+pub mod hsm;
 
 /// 📊 **CONSTANTS** - Domain-organized constant definitions
 ///

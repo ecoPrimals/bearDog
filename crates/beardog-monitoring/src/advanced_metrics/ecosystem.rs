@@ -1,6 +1,6 @@
 // Ecosystem Health Monitoring Module
 
-use super::types::*;
+use super::types::{EcosystemHealthStatus, HealthStatus};
 
 /// Ecosystem health monitor
 #[derive(Debug)]
@@ -17,11 +17,13 @@ impl Default for EcosystemHealthMonitor {
 impl EcosystemHealthMonitor {
     /// Create new ecosystem health monitor
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 
     /// Check ecosystem health
+    #[must_use]
     pub fn check_health(&self) -> EcosystemHealthStatus {
         EcosystemHealthStatus {
             overall_status: HealthStatus::Healthy,

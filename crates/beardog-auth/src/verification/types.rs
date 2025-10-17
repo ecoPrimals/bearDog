@@ -48,15 +48,15 @@ pub struct VerificationContext {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationMetrics {
-    /// Number of total_verifications
+    /// Number of `total_verifications`
     pub total_verifications: u64,
-    /// Number of successful_verifications
+    /// Number of `successful_verifications`
     pub successful_verifications: u64,
-    /// Number of failed_verifications
+    /// Number of `failed_verifications`
     pub failed_verifications: u64,
-    /// Number of cache_hits
+    /// Number of `cache_hits`
     pub cache_hits: u64,
-    /// Number of cache_misses
+    /// Number of `cache_misses`
     pub cache_misses: u64,
     pub avg_verification_time_ms: f64,
 }

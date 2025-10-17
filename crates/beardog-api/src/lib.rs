@@ -1,11 +1,11 @@
-//! # BearDog API - RESTful API Server
+//! # `BearDog` API - `RESTful` API Server
 //!
-//! RESTful API endpoints for the BearDog security platform, providing HTTP/HTTPS access
+//! `RESTful` API endpoints for the `BearDog` security platform, providing HTTP/HTTPS access
 //! to security operations, health monitoring, and system management.
 //!
 //! ## Features
 //!
-//! - **RESTful Endpoints**: Standard HTTP API for BearDog operations
+//! - **`RESTful` Endpoints**: Standard HTTP API for `BearDog` operations
 //! - **Health Monitoring**: System health and readiness endpoints
 //! - **Security Operations**: Cryptographic operations via API
 //! - **Metrics & Monitoring**: Real-time system metrics endpoints
@@ -56,7 +56,7 @@ use tracing::info;
 /// Get current memory usage (simplified implementation)
 fn get_memory_usage() -> u64 {
     // Use a simple approach - in production, use proper memory monitoring
-    std::process::id() as u64 * 1024 // Simplified calculation
+    u64::from(std::process::id()) * 1024 // Simplified calculation
 }
 
 /// Generic API response wrapper
@@ -80,6 +80,7 @@ impl<T> ApiResponse<T> {
     }
 
     /// Create error response
+    #[must_use]
     pub fn error(message: String) -> Self {
         Self {
             success: false,
@@ -149,20 +150,20 @@ pub fn create_router(core: Arc<BearDogCore>) -> Router {
 }
 
 /// Start API server
-/// Starts api_server
+/// Starts `api_server`
 pub async fn start_api_server(core: Arc<BearDogCore>, bind_addr: &str) -> Result<(), BearDogError> {
     info!("🚀 Starting BearDog API server on {}", bind_addr);
 
     let app = create_router(core);
     let listener = tokio::net::TcpListener::bind(bind_addr)
         .await
-        .map_err(|e| BearDogError::system(format!("Failed to bind to {}: {}", bind_addr, e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to bind to {bind_addr}: {e}")))?;
 
     info!("✅ API server listening on {}", bind_addr);
 
     axum::serve(listener, app)
         .await
-        .map_err(|e| BearDogError::system(format!("Server error: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Server error: {e}")))?;
 
     Ok(())
 }

@@ -1,91 +1,140 @@
+//! HSM Performance Tracking
+//!
+//! This module provides performance monitoring and metrics for HSM operations.
 
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
-use super::types::{HsmCapabilities, HsmHealthStatus, HsmTier, SystemMetrics};
-use super::HsmProvider;
-use crate::tunnel::hsm::config::PerformanceConfig;
-use beardog_errors::BearDogError;
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
+use tracing::{debug, info};
 
+/// HSM performance tracker
 pub struct HsmPerformanceTracker {
     operation_metrics: Arc<RwLock<HashMap<String, OperationMetrics>>>,
-    performance_config: PerformanceConfig,
 }
 
+/// Metrics for a single operation
 #[derive(Debug, Clone)]
-    /// Number of successful_operations
-    pub successful_operations: u64,
-    /// Number of failed_operations
-    pub failed_operations: u64,
-    /// The average latency ms value
-    pub average_latency_ms: f64,
-    /// The min latency ms value
-    pub min_latency_ms: f64,
-    /// The max latency ms value
-    pub max_latency_ms: f64,
-    pub last_operation_time: chrono::DateTime<chrono::Utc>,
+pub struct OperationMetrics {
+    pub total_count: u64,
+    pub success_count: u64,
+    pub failure_count: u64,
+    pub total_duration_ms: u64,
+    pub avg_duration_ms: f64,
+    pub min_duration_ms: u64,
+    pub max_duration_ms: u64,
+}
 
-pub struct HsmProviderSelection {
-    pub provider: impl HsmProvider + Send + Sync + 'static,
-    pub provider_id: String,
-    /// The tier value
-    pub tier: HsmTier,
-    pub confidence: f64,
-    /// The estimated latency ms value
-    pub estimated_latency_ms: f64,}
+impl Default for OperationMetrics {
+    fn default() -> Self {
+        Self {
+            total_count: 0,
+            success_count: 0,
+            failure_count: 0,
+            total_duration_ms: 0,
+            avg_duration_ms: 0.0,
+            min_duration_ms: u64::MAX,
+            max_duration_ms: 0,
+        }
+    }
+}
 
 impl HsmPerformanceTracker {
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
-    pub fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
-        Ok(Self {
-            operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(config,
-        })
+    /// Creates a new performance tracker
+    pub fn new() -> Self {
+        info!("📊 Initializing HSM performance tracker");
+        Self {
+            operation_metrics: Arc::new(RwLock::new(HashMap::new())),
+        }
     }
-/// Record Success operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    pub fn record_success(&str, latency_ms: f64) -> Result<(), BearDogError> {
+
+    /// Records operation metrics
+    pub fn record_operation(&self, operation_name: &str, duration_ms: u64, success: bool) {
         let mut metrics_map = self.operation_metrics.write();
         let metrics = metrics_map
-            .entry(provider_id.to_string())
-            .or_insert_with(|| OperationMetrics::new(&str, latency_ms: f64) -> Result<(), BearDogError> {
-        metrics.record_failure(&str,
-    ) -> Result<Option<OperationMetrics>, BearDogError>> {
-        let metrics_map = self.operation_metrics.read(0,
-            successful_operations: 0,
-            failed_operations: 0,
-            average_latency_ms: 0.0,
-            min_latency_ms: f64::MAX,
-            max_latency_ms: 0.0,
-            last_operation_time: chrono::Utc::now(),
+            .entry(operation_name.to_string())
+            .or_insert_with(OperationMetrics::default);
+
+        metrics.total_count += 1;
+        if success {
+            metrics.success_count += 1;
+        } else {
+            metrics.failure_count += 1;
         }
-/// Record Success operation.
-    pub fn record_success(&mut self, latency_ms: f64) {
-        self.total_operations += 1;
-        self.successful_operations += 1;
-        self.update_latency(latency_ms);}
 
-/// Record Failure operation.
-    pub fn record_failure(&mut self, latency_ms: f64) {
-        self.failed_operations += 1;
-    /// Updates latency
-    fn update_latency(&mut self, latency_ms: f64) {
-        self.min_latency_ms = self.min_latency_ms.min(latency_ms);
-        self.max_latency_ms = self.max_latency_ms.max(latency_ms);
+        metrics.total_duration_ms += duration_ms;
+        metrics.avg_duration_ms = metrics.total_duration_ms as f64 / metrics.total_count as f64;
+        metrics.min_duration_ms = metrics.min_duration_ms.min(duration_ms);
+        metrics.max_duration_ms = metrics.max_duration_ms.max(duration_ms);
 
-        self.average_latency_ms = ((self.average_latency_ms * (self.total_operations - 1) as f64)
-            + latency_ms)
-            / self.total_operations as f64;
-        self.last_operation_time = chrono::Utc::now();
+        debug!(
+            "📈 Recorded operation '{}': {}ms (success={})",
+            operation_name, duration_ms, success
+        );
+    }
+
+    /// Gets metrics for a specific operation
+    pub fn get_metrics(&self, operation_name: &str) -> Option<OperationMetrics> {
+        let metrics_map = self.operation_metrics.read();
+        metrics_map.get(operation_name).cloned()
+    }
+
+    /// Gets all metrics
+    pub fn get_all_metrics(&self) -> HashMap<String, OperationMetrics> {
+        self.operation_metrics.read().clone()
+    }
+
+    /// Resets all metrics
+    pub fn reset(&self) {
+        let mut metrics_map = self.operation_metrics.write();
+        metrics_map.clear();
+        info!("🔄 Reset all HSM performance metrics");
+    }
+}
+
+impl Default for HsmPerformanceTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tracker_creation() {
+        let tracker = HsmPerformanceTracker::new();
+        assert!(tracker.get_all_metrics().is_empty());
+    }
+
+    #[test]
+    fn test_record_operation() {
+        let tracker = HsmPerformanceTracker::new();
+        tracker.record_operation("test_op", 100, true);
+
+        let metrics = tracker.get_metrics("test_op").unwrap();
+        assert_eq!(metrics.total_count, 1);
+        assert_eq!(metrics.success_count, 1);
+    }
+
+    #[test]
+    fn test_metrics_calculation() {
+        let tracker = HsmPerformanceTracker::new();
+        tracker.record_operation("test", 100, true);
+        tracker.record_operation("test", 200, true);
+
+        let metrics = tracker.get_metrics("test").unwrap();
+        assert_eq!(metrics.avg_duration_ms, 150.0);
+        assert_eq!(metrics.min_duration_ms, 100);
+        assert_eq!(metrics.max_duration_ms, 200);
+    }
+
+    #[test]
+    fn test_reset() {
+        let tracker = HsmPerformanceTracker::new();
+        tracker.record_operation("test", 100, true);
+        tracker.reset();
+
+        assert!(tracker.get_all_metrics().is_empty());
+    }
+}

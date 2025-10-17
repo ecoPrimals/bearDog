@@ -1,6 +1,6 @@
 // Configuration property testing implementations
 
-use super::*;
+use super::{info, BearDogError, PropertyBasedTestFramework, TestCase};
 
 impl PropertyBasedTestFramework {
     /// Test configuration properties

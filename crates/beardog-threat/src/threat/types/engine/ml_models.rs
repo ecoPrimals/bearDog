@@ -459,15 +459,15 @@ impl ModelPrediction {
 impl std::fmt::Display for MlModelType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MlModelType::Classification => write!(f, "Classification"),
-            MlModelType::Regression => write!(f, "Regression"),
-            MlModelType::Clustering => write!(f, "Clustering"),
-            MlModelType::AnomalyDetection => write!(f, "Anomaly Detection"),
-            MlModelType::NaturalLanguageProcessing => write!(f, "Natural Language Processing"),
-            MlModelType::TimeSeries => write!(f, "Time Series"),
-            MlModelType::DeepLearning => write!(f, "Deep Learning"),
-            MlModelType::Ensemble => write!(f, "Ensemble"),
-            MlModelType::Custom(name) => write!(f, "Custom: {name}"),
+            Self::Classification => write!(f, "Classification"),
+            Self::Regression => write!(f, "Regression"),
+            Self::Clustering => write!(f, "Clustering"),
+            Self::AnomalyDetection => write!(f, "Anomaly Detection"),
+            Self::NaturalLanguageProcessing => write!(f, "Natural Language Processing"),
+            Self::TimeSeries => write!(f, "Time Series"),
+            Self::DeepLearning => write!(f, "Deep Learning"),
+            Self::Ensemble => write!(f, "Ensemble"),
+            Self::Custom(name) => write!(f, "Custom: {name}"),
         }
     }
 }

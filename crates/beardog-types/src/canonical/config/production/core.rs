@@ -315,3 +315,158 @@ impl ProductionFeatureFlags {
             || self.enable_compression
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_production_core_config_default() {
+        let config = ProductionCoreConfig::default();
+        assert_eq!(config.environment_level, EnvironmentLevel::Development);
+        assert_eq!(config.service_name, "beardog ");
+        assert!(!config.deployment_id.is_empty());
+        assert!(!config.node_id.is_empty());
+    }
+
+    #[test]
+    fn test_production_core_config_new() {
+        let config = ProductionCoreConfig::new("test-service", "1.0.0");
+        assert_eq!(config.service_name, "test-service");
+        assert_eq!(config.service_version, "1.0.0");
+    }
+
+    #[test]
+    fn test_production_core_config_builder() {
+        let config = ProductionCoreConfig::new("test", "1.0")
+            .with_environment_level(EnvironmentLevel::Production)
+            .with_region("us-west-2")
+            .with_availability_zone(Some("us-west-2a"))
+            .with_cluster_id("prod-cluster");
+
+        assert_eq!(config.environment_level, EnvironmentLevel::Production);
+        assert_eq!(config.region, "us-west-2");
+        assert_eq!(config.availability_zone, Some("us-west-2a".to_string()));
+        assert_eq!(config.cluster_id, "prod-cluster");
+    }
+
+    #[test]
+    fn test_validation_success() {
+        let config = ProductionCoreConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validation_empty_service_name() {
+        let mut config = ProductionCoreConfig::default();
+        config.service_name = String::new();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_empty_region() {
+        let mut config = ProductionCoreConfig::default();
+        config.region = String::new();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_is_production() {
+        let mut config = ProductionCoreConfig::default();
+
+        config.environment_level = EnvironmentLevel::Development;
+        assert!(!config.is_production());
+
+        config.environment_level = EnvironmentLevel::Production;
+        assert!(config.is_production());
+
+        config.environment_level = EnvironmentLevel::Critical;
+        assert!(config.is_production());
+    }
+
+    #[test]
+    fn test_service_identifier() {
+        let config = ProductionCoreConfig::new("beardog", "1.0.0");
+        let id = config.service_identifier();
+        assert!(id.contains("beardog"));
+        assert!(id.contains("1.0.0"));
+    }
+
+    #[test]
+    fn test_location_with_az() {
+        let config = ProductionCoreConfig::default()
+            .with_region("us-east-1")
+            .with_availability_zone(Some("us-east-1a"));
+
+        assert_eq!(config.location(), "us-east-1:us-east-1a");
+    }
+
+    #[test]
+    fn test_location_without_az() {
+        let config = ProductionCoreConfig::default().with_region("us-east-1");
+        assert_eq!(config.location(), "us-east-1");
+    }
+
+    #[test]
+    fn test_environment_level_is_production_grade() {
+        assert!(!EnvironmentLevel::Development.is_production_grade());
+        assert!(!EnvironmentLevel::Testing.is_production_grade());
+        assert!(!EnvironmentLevel::Staging.is_production_grade());
+        assert!(EnvironmentLevel::PreProduction.is_production_grade());
+        assert!(EnvironmentLevel::Production.is_production_grade());
+        assert!(EnvironmentLevel::Critical.is_production_grade());
+    }
+
+    #[test]
+    fn test_environment_level_uptime_requirements() {
+        assert_eq!(EnvironmentLevel::Development.required_uptime(), 0.95);
+        assert_eq!(EnvironmentLevel::Production.required_uptime(), 0.999);
+        assert_eq!(EnvironmentLevel::Critical.required_uptime(), 0.9999);
+    }
+
+    #[test]
+    fn test_environment_level_downtime_calculation() {
+        let critical_downtime = EnvironmentLevel::Critical.max_downtime_minutes_per_month();
+        assert!(critical_downtime < 5.0); // Less than 5 minutes/month
+
+        let dev_downtime = EnvironmentLevel::Development.max_downtime_minutes_per_month();
+        assert!(dev_downtime > 2000.0); // More than 2000 minutes/month
+    }
+
+    #[test]
+    fn test_production_feature_flags_default() {
+        let flags = ProductionFeatureFlags::default();
+        assert!(flags.enable_circuit_breakers);
+        assert!(flags.enable_rate_limiting);
+        assert!(!flags.enable_auto_scaling); // Should be false by default
+    }
+
+    #[test]
+    fn test_production_feature_flags_production() {
+        let flags = ProductionFeatureFlags::production();
+        assert!(flags.enable_auto_scaling);
+        assert!(flags.enable_performance_profiling);
+        assert!(flags.enable_encryption_at_rest);
+    }
+
+    #[test]
+    fn test_production_feature_flags_development() {
+        let flags = ProductionFeatureFlags::development();
+        assert!(!flags.enable_advanced_monitoring);
+        assert!(!flags.enable_security_auditing);
+        assert!(flags.enable_performance_profiling); // Enabled in dev for profiling
+    }
+
+    #[test]
+    fn test_feature_flags_performance_impact() {
+        let mut flags = ProductionFeatureFlags::default();
+        flags.enable_distributed_tracing = false;
+        flags.enable_performance_profiling = false;
+        flags.enable_security_auditing = false;
+        flags.enable_compression = false;
+        assert!(!flags.has_performance_impact());
+
+        flags.enable_distributed_tracing = true;
+        assert!(flags.has_performance_impact());
+    }
+}

@@ -8,6 +8,8 @@
 //! This crate provides the foundational components for:
 //! - AI-human hybrid decision making systems
 //! - Sovereign cryptographic key management
+
+#![deny(unsafe_code)]
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration
 //! - Zero-copy memory optimization
@@ -101,8 +103,11 @@ pub mod primal_sovereignty;
 /// without hardcoded assumptions, using the infant learning pattern.
 pub mod universal_discovery;
 
-// TODO: Fix syntax errors in universal_optimization module
-// pub mod universal_optimization;
+/// Universal optimization service for ecosystem-wide performance
+///
+/// Provides genetic algorithms, performance acceleration, and cryptographic
+/// optimization through universal capability discovery.
+pub mod universal_optimization;
 
 /// Zero-cost architecture patterns and optimizations
 ///
@@ -121,3 +126,6 @@ pub mod zero_knowledge_bootstrap;
 // Re-export key components
 pub use core::*;
 pub use types::BearDogConfig;
+
+#[cfg(test)]
+mod tests;

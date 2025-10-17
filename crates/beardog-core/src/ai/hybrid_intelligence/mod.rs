@@ -6,6 +6,10 @@
 pub mod config;
 /// Core hybrid intelligence functionality
 pub mod core;
+/// Core builder pattern for hybrid intelligence
+pub mod core_builder;
+/// Core enumeration types
+pub mod core_enums;
 /// Core type definitions for hybrid intelligence
 pub mod core_types;
 /// AI-powered decision engine with human oversight

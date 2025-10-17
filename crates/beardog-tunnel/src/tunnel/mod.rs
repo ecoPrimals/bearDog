@@ -4,6 +4,7 @@
 
 pub mod config;
 pub mod events;
+pub mod hsm;
 pub mod session;
 
 pub use config::*;
@@ -29,7 +30,7 @@ pub struct BStpConfig {
     /// The security level value
     pub security_level: SecurityLevel,
     pub session_timeout_seconds: u64,
-    /// Number of max_concurrent_sessions
+    /// Number of `max_concurrent_sessions`
     pub max_concurrent_sessions: u32,
     /// The key management value
     pub key_management: config::UnifiedProcessorConfig,
@@ -48,7 +49,8 @@ impl Default for BStpConfig {
 
 impl BStpConfig {
     /// Create a configuration with maximum security settings
-    pub fn maximum_security() -> Self {
+    #[must_use]
+    pub const fn maximum_security() -> Self {
         Self {
             security_level: SecurityLevel::Critical,
             session_timeout_seconds: 1800, // 30 minutes
@@ -62,7 +64,8 @@ impl BStpConfig {
         }
     }
 
-    pub fn competitive_gaming() -> Self {
+    #[must_use]
+    pub const fn competitive_gaming() -> Self {
         Self {
             security_level: SecurityLevel::High,
             session_timeout_seconds: 7200,  // 2 hours

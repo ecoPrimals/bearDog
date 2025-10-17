@@ -36,7 +36,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use tracing::{debug, info};
 
-/// Main BearDog framework providing access to all ecosystem capabilities
+/// Main `BearDog` framework providing access to all ecosystem capabilities
 pub struct BearDogFramework {
     /// Configuration for the framework
     pub config: FrameworkConfig,
@@ -44,7 +44,7 @@ pub struct BearDogFramework {
     pub stats: FrameworkStats,
 }
 
-/// Configuration for the BearDog framework
+/// Configuration for the `BearDog` framework
 #[derive(Debug, Clone)]
 pub struct FrameworkConfig {
     /// Confidence level for operations (0.0 to 1.0)
@@ -81,7 +81,7 @@ pub struct ServiceInfo {
     pub metadata: HashMap<String, String>,
 }
 
-/// Error types for the BearDog framework
+/// Error types for the `BearDog` framework
 #[derive(Debug, thiserror::Error)]
 pub enum BearDogError {
     /// Configuration error
@@ -109,7 +109,7 @@ impl Default for FrameworkConfig {
 }
 
 impl BearDogFramework {
-    /// Create a new BearDog framework instance
+    /// Create a new `BearDog` framework instance
     pub async fn new() -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog Sovereign Computing Platform");
 
@@ -176,13 +176,13 @@ impl BearDogFramework {
             ServiceInfo {
                 name: "compute-service".to_string(),
                 capabilities: vec!["ai-processing".to_string(), "data-analysis".to_string()],
-                endpoint: compute_service.endpoint.clone(),
+                endpoint: compute_service.endpoint,
                 metadata: [("type".to_string(), "compute".to_string())].into(),
             },
             ServiceInfo {
                 name: "storage-service".to_string(),
                 capabilities: vec!["high-throughput".to_string(), "persistent".to_string()],
-                endpoint: storage_service.endpoint.clone(),
+                endpoint: storage_service.endpoint,
                 metadata: [("type".to_string(), "storage".to_string())].into(),
             },
         ];
@@ -216,7 +216,8 @@ impl BearDogFramework {
     }
 
     /// Get current performance statistics
-    pub fn get_stats(&self) -> &FrameworkStats {
+    #[must_use]
+    pub const fn get_stats(&self) -> &FrameworkStats {
         &self.stats
     }
 
@@ -227,7 +228,7 @@ impl BearDogFramework {
     }
 }
 
-/// Result type for BearDog operations
+/// Result type for `BearDog` operations
 pub type BearDogResult<T> = Result<T, BearDogError>;
 
 // Re-exports would go here when the root crate includes ecosystem dependencies

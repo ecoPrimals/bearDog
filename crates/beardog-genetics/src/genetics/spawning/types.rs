@@ -45,6 +45,7 @@ pub struct SpawnResult {
 
 impl SpawnResult {
     /// Success operation.
+    #[must_use]
     pub fn success(genetics: BearDogGenetics, metrics: HashMap<String, f64>) -> Self {
         Self {
             genetics,
@@ -55,6 +56,7 @@ impl SpawnResult {
     }
 
     /// Failure operation.
+    #[must_use]
     pub fn failure(error_message: &str) -> Self {
         Self {
             genetics: BearDogGenetics::default(),

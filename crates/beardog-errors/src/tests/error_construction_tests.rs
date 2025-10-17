@@ -7,7 +7,7 @@ use crate::{BearDogError, BearDogResult};
 #[test]
 fn test_security_error_construction() {
     let error = BearDogError::security("Authentication failed".to_string());
-    
+
     match error {
         BearDogError::Security { message, .. } => {
             assert_eq!(message, "Authentication failed");
@@ -19,7 +19,7 @@ fn test_security_error_construction() {
 #[test]
 fn test_system_error_construction() {
     let error = BearDogError::system("Database connection lost".to_string());
-    
+
     match error {
         BearDogError::System { message, .. } => {
             assert_eq!(message, "Database connection lost");
@@ -31,7 +31,7 @@ fn test_system_error_construction() {
 #[test]
 fn test_business_error_construction() {
     let error = BearDogError::business("Invalid email format".to_string());
-    
+
     match error {
         BearDogError::Business { message, .. } => {
             assert_eq!(message, "Invalid email format");
@@ -43,7 +43,7 @@ fn test_business_error_construction() {
 #[test]
 fn test_network_error_construction() {
     let error = BearDogError::network("Connection timeout".to_string());
-    
+
     // network() returns System variant
     match error {
         BearDogError::System { message, .. } => {
@@ -56,7 +56,7 @@ fn test_network_error_construction() {
 #[test]
 fn test_configuration_error_construction() {
     let error = BearDogError::configuration("Invalid port number");
-    
+
     // configuration() returns System variant
     match error {
         BearDogError::System { message, .. } => {
@@ -69,7 +69,7 @@ fn test_configuration_error_construction() {
 #[test]
 fn test_api_error_construction() {
     let error = BearDogError::api("Rate limit exceeded".to_string());
-    
+
     match error {
         BearDogError::Api { message, .. } => {
             assert_eq!(message, "Rate limit exceeded");
@@ -81,7 +81,7 @@ fn test_api_error_construction() {
 #[test]
 fn test_hsm_error_construction() {
     let error = BearDogError::hsm("HSM not available".to_string());
-    
+
     match error {
         BearDogError::Cryptographic { message, .. } => {
             assert_eq!(message, "HSM not available");
@@ -93,7 +93,7 @@ fn test_hsm_error_construction() {
 #[test]
 fn test_workflow_error_construction() {
     let error = BearDogError::workflow("Step execution failed".to_string());
-    
+
     match error {
         BearDogError::Workflow { message, .. } => {
             assert_eq!(message, "Step execution failed");
@@ -105,7 +105,7 @@ fn test_workflow_error_construction() {
 #[test]
 fn test_genetics_error_construction() {
     let error = BearDogError::genetics("Entropy generation failed".to_string());
-    
+
     match error {
         BearDogError::Genetics { message } => {
             assert_eq!(message, "Entropy generation failed");
@@ -117,7 +117,7 @@ fn test_genetics_error_construction() {
 #[test]
 fn test_initialization_error_construction() {
     let error = BearDogError::initialization("Core initialization failed".to_string());
-    
+
     // initialization() returns System variant
     match error {
         BearDogError::System { message, .. } => {
@@ -131,7 +131,7 @@ fn test_initialization_error_construction() {
 fn test_error_clone() {
     let error = BearDogError::security("Test error".to_string());
     let cloned = error.clone();
-    
+
     assert_eq!(error, cloned);
 }
 
@@ -139,7 +139,7 @@ fn test_error_clone() {
 fn test_error_debug() {
     let error = BearDogError::security("Test error".to_string());
     let debug_str = format!("{:?}", error);
-    
+
     assert!(debug_str.contains("Security"));
     assert!(debug_str.contains("Test error"));
 }
@@ -148,7 +148,7 @@ fn test_error_debug() {
 fn test_error_display() {
     let error = BearDogError::security("Authentication failed".to_string());
     let display_str = format!("{}", error);
-    
+
     assert!(display_str.contains("Authentication failed"));
 }
 
@@ -156,12 +156,11 @@ fn test_error_display() {
 fn test_error_serialization() {
     let error = BearDogError::security("Test error".to_string());
     let json = serde_json::to_string(&error).expect("Should serialize");
-    
+
     assert!(!json.is_empty());
-    
-    let deserialized: BearDogError = 
-        serde_json::from_str(&json).expect("Should deserialize");
-    
+
+    let deserialized: BearDogError = serde_json::from_str(&json).expect("Should deserialize");
+
     assert_eq!(error, deserialized);
 }
 
@@ -170,7 +169,7 @@ fn test_result_type_ok() {
     fn returns_ok() -> BearDogResult<String> {
         Ok("success".to_string())
     }
-    
+
     let result = returns_ok();
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "success");
@@ -181,7 +180,7 @@ fn test_result_type_err() {
     fn returns_err() -> BearDogResult<String> {
         Err(BearDogError::security("Failed".to_string()))
     }
-    
+
     let result = returns_err();
     assert!(result.is_err());
 }
@@ -191,12 +190,12 @@ fn test_error_propagation() {
     fn inner_function() -> BearDogResult<i32> {
         Err(BearDogError::security("Inner error".to_string()))
     }
-    
+
     fn outer_function() -> BearDogResult<String> {
         let _value = inner_function()?;
         Ok("success".to_string())
     }
-    
+
     let result = outer_function();
     assert!(result.is_err());
 }
@@ -206,19 +205,19 @@ fn test_multiple_error_types() {
     let errors = vec![
         BearDogError::security("Security issue".to_string()),
         BearDogError::system("System issue".to_string()),
-        BearDogError::network("Network issue".to_string()),  // Returns System
+        BearDogError::network("Network issue".to_string()), // Returns System
         BearDogError::business("Business issue".to_string()),
     ];
-    
+
     assert_eq!(errors.len(), 4);
-    
+
     // Verify error types (note: network() returns System variant)
     for (i, error) in errors.iter().enumerate() {
         match (i, error) {
-            (0, BearDogError::Security { .. }) => {},
-            (1, BearDogError::System { .. }) => {},
-            (2, BearDogError::System { .. }) => {},  // network() returns System
-            (3, BearDogError::Business { .. }) => {},
+            (0, BearDogError::Security { .. }) => {}
+            (1, BearDogError::System { .. }) => {}
+            (2, BearDogError::System { .. }) => {} // network() returns System
+            (3, BearDogError::Business { .. }) => {}
             _ => panic!("Unexpected error variant at index {}", i),
         }
     }
@@ -229,7 +228,7 @@ fn test_error_equality() {
     let error1 = BearDogError::security("Same error".to_string());
     let error2 = BearDogError::security("Same error".to_string());
     let error3 = BearDogError::security("Different error".to_string());
-    
+
     assert_eq!(error1, error2);
     assert_ne!(error1, error3);
 }
@@ -237,7 +236,7 @@ fn test_error_equality() {
 #[test]
 fn test_error_with_empty_message() {
     let error = BearDogError::security(String::new());
-    
+
     match error {
         BearDogError::Security { message, .. } => {
             assert_eq!(message, "");
@@ -250,7 +249,7 @@ fn test_error_with_empty_message() {
 fn test_error_with_long_message() {
     let long_message = "a".repeat(1000);
     let error = BearDogError::security(long_message.clone());
-    
+
     match error {
         BearDogError::Security { message, .. } => {
             assert_eq!(message.len(), 1000);
@@ -264,7 +263,7 @@ fn test_error_with_long_message() {
 fn test_error_with_unicode() {
     let unicode_message = "🔒 Authentication failed 认证失败 المصادقة فشلت";
     let error = BearDogError::security(unicode_message.to_string());
-    
+
     match error {
         BearDogError::Security { message, .. } => {
             assert_eq!(message, unicode_message);
@@ -281,7 +280,7 @@ fn test_error_in_option_chain() {
         }
         Ok(Some("value".to_string()))
     }
-    
+
     assert!(may_fail(true).is_err());
     assert!(may_fail(false).is_ok());
 }
@@ -291,7 +290,7 @@ fn test_error_categories_distinct() {
     let security = BearDogError::security("test".to_string());
     let system = BearDogError::system("test".to_string());
     let business = BearDogError::business("test".to_string());
-    
+
     // Even with same message, different variants should not be equal
     assert_ne!(security, system);
     assert_ne!(system, business);
@@ -318,7 +317,7 @@ fn test_error_from_result_chain() {
     fn step1() -> BearDogResult<i32> {
         Ok(42)
     }
-    
+
     fn step2(value: i32) -> BearDogResult<String> {
         if value == 42 {
             Ok("success".to_string())
@@ -326,12 +325,12 @@ fn test_error_from_result_chain() {
             Err(BearDogError::business("Invalid value".to_string()))
         }
     }
-    
+
     fn pipeline() -> BearDogResult<String> {
         let value = step1()?;
         step2(value)
     }
-    
+
     let result = pipeline();
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "success");
@@ -341,7 +340,7 @@ fn test_error_from_result_chain() {
 fn test_error_message_content_preservation() {
     let original_message = "Critical: Database connection lost at 127.0.0.1:5432";
     let error = BearDogError::system(original_message.to_string());
-    
+
     match error {
         BearDogError::System { message, .. } => {
             assert_eq!(message, original_message);

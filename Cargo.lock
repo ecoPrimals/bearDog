@@ -348,6 +348,7 @@ version = "3.0.0"
 dependencies = [
  "anyhow",
  "beardog-adapters",
+ "beardog-auth",
  "beardog-core",
  "beardog-errors",
  "beardog-monitoring",
@@ -666,6 +667,7 @@ dependencies = [
  "aes-gcm",
  "argon2",
  "arrayref",
+ "async-trait",
  "beardog-auth",
  "beardog-core",
  "beardog-errors",
@@ -673,6 +675,7 @@ dependencies = [
  "beardog-monitoring",
  "beardog-security",
  "beardog-threat",
+ "beardog-traits",
  "beardog-types",
  "beardog-utils",
  "bincode",
@@ -690,6 +693,7 @@ dependencies = [
  "ndk",
  "ndk-sys",
  "openssl",
+ "parking_lot",
  "rand",
  "reqwest 0.11.27",
  "ring",
@@ -706,6 +710,7 @@ dependencies = [
  "tokio-tungstenite",
  "tracing",
  "uuid",
+ "zeroize",
 ]
 
 [[package]]

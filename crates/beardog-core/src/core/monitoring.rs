@@ -349,7 +349,7 @@ impl SystemMonitor {
             .read()
             .await
             .iter()
-            .map(|(k, v)| (k.clone(), v.status.clone()))
+            .map(|(k, v)| (k.clone(), v.status))
             .collect();
         let handlers = alert_handlers.read().await;
 

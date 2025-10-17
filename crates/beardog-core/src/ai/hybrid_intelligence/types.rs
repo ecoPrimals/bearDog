@@ -17,27 +17,25 @@ use crate::ai::hybrid_intelligence::neural_networks::{
     NetworkArchitecture, NetworkOptimization, NetworkRegularization, TrainingParams,
 };
 
-/// Training configuration
+/// Training configuration for hybrid intelligence models
+///
+/// Specifies hyperparameters and settings for training machine learning models,
+/// including batch size, learning rate, regularization, and early stopping criteria.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrainingConfig {
-    /// Number of `batch_size`
+    /// Number of samples processed in each training iteration before model weights are updated
     pub batch_size: u32,
-    /// Number of training epochs
-    /// Number of epochs
+    /// Total number of complete passes through the entire training dataset during training
     pub epochs: u32,
-    /// Learning rate
-    /// The learning rate value
+    /// Step size at each iteration while moving toward a minimum of the loss function
     pub learning_rate: f64,
-    /// Validation split ratio
+    /// Proportion of training data (0.0-1.0) reserved for validation during training to prevent overfitting
     pub validation_split: f64,
-    /// Early stopping configuration
-    /// Optional early stopping
+    /// Configuration for automatically stopping training when validation metrics stop improving
     pub early_stopping: Option<EarlyStoppingConfig>,
-    /// Regularization configuration
-    /// Optional regularization
+    /// Configuration for techniques to prevent model overfitting (L1/L2, dropout, batch normalization)
     pub regularization: Option<RegularizationConfig>,
-    /// Optimizer configuration
-    /// The optimizer value
+    /// Algorithm and parameters used to update model weights based on computed gradients
     pub optimizer: OptimizerConfig,
 }
 
@@ -55,17 +53,19 @@ impl Default for TrainingConfig {
     }
 }
 
-/// Inference configuration
+/// Inference configuration for model predictions in production
+///
+/// Defines settings for running trained models in production environments,
+/// including batch processing, timeout limits, serving parameters, and caching strategies.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InferenceConfig {
-    /// Number of `batch_size`
+    /// Number of prediction requests processed together in a single batch for efficiency
     pub batch_size: u32,
-    /// Maximum inference time in milliseconds
+    /// Maximum time (in milliseconds) allowed for a single inference request before timing out
     pub max_inference_time_ms: u64,
-    /// Model serving configuration
+    /// Configuration for model serving infrastructure, load balancing, and request handling
     pub serving_config: ServingConfig,
-    /// Caching configuration
-    /// Optional caching
+    /// Optional caching configuration to store and reuse recent predictions for identical inputs
     pub caching: Option<CachingConfig>,
 }
 
@@ -80,17 +80,19 @@ impl Default for InferenceConfig {
     }
 }
 
-/// Model management configuration
+/// Model management configuration for `MLOps` lifecycle
+///
+/// Comprehensive configuration for managing AI models throughout their lifecycle,
+/// including versioning, registry storage, deployment strategies, and performance monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelManagementConfig {
-    /// Model versioning strategy
-    /// The versioning strategy value
+    /// Strategy for assigning version identifiers to models (semantic, timestamp, hash, or incremental)
     pub versioning_strategy: VersioningStrategy,
-    /// Model registry configuration
+    /// Configuration for the model registry where trained models are stored and cataloged
     pub registry_config: AIRegistryConfig,
-    /// Model deployment configuration
+    /// Configuration for deploying models to production environments (blue-green, canary, rolling, etc.)
     pub deployment_config: DeploymentConfig,
-    /// Model monitoring configuration
+    /// Configuration for monitoring model performance, resource usage, and operational metrics in production
     pub monitoring_config: AIMonitoringConfig,
 }
 
@@ -105,20 +107,19 @@ impl Default for ModelManagementConfig {
     }
 }
 
-/// Data preprocessing configuration
+/// Data preprocessing configuration for input transformation
+///
+/// Defines transformations applied to raw data before training or inference,
+/// including normalization, feature selection, data augmentation, and missing value handling.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreprocessingConfig {
-    /// Normalization strategy
-    /// The normalization value
+    /// Strategy for scaling numerical features to a common range (min-max, z-score, robust, etc.)
     pub normalization: NormalizationStrategy,
-    /// Feature selection configuration
-    /// Optional feature selection
+    /// Optional configuration for selecting the most relevant features from the input dataset
     pub feature_selection: Option<FeatureSelectionConfig>,
-    /// Data augmentation configuration
-    /// Optional data augmentation
+    /// Optional configuration for artificially expanding the training dataset with transformed variations
     pub data_augmentation: Option<DataAugmentationConfig>,
-    /// Missing value handling
-    /// The missing value handling value
+    /// Strategy for handling missing values in the input data (drop, fill mean/median/mode, interpolate)
     pub missing_value_handling: MissingValueStrategy,
 }
 
@@ -133,20 +134,19 @@ impl Default for PreprocessingConfig {
     }
 }
 
-/// Neural network configuration
+/// Neural network configuration for deep learning models
+///
+/// Complete configuration for constructing, training, and optimizing neural network models,
+/// including architecture definition, training parameters, optimization techniques, and regularization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NeuralNetworkConfig {
-    /// Network architecture
-    /// The architecture value
+    /// Network structure definition including layers, activations, and connections
     pub architecture: NetworkArchitecture,
-    /// Training hyperparameters
-    /// The training params value
+    /// Hyperparameters controlling the training process (batch size, epochs, learning rate, optimizer)
     pub training_params: TrainingParams,
-    /// Network optimization settings
-    /// The optimization value
+    /// Performance optimization settings (mixed precision, gradient clipping, memory optimization)
     pub optimization: NetworkOptimization,
-    /// Regularization techniques
-    /// The regularization value
+    /// Techniques to prevent overfitting (dropout, batch normalization, weight decay, early stopping)
     pub regularization: NetworkRegularization,
 }
 
@@ -208,18 +208,19 @@ impl Default for NeuralNetworkConfig {
     }
 }
 
-/// Decision engine configuration
+/// Decision engine configuration for hybrid AI decision-making
+///
+/// Configures the decision engine that combines multiple AI strategies and human input
+/// to make intelligent, consensus-based decisions within specified time constraints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecisionEngineConfig {
-    /// Decision strategies to use
-    /// Collection of strategies
+    /// Collection of decision-making strategies to employ (rule-based, ML, heuristic, human-in-loop)
     pub strategies: Vec<DecisionStrategy>,
-    /// Decision criteria
-    /// The criteria value
+    /// Criteria and weights used to evaluate and compare decision options
     pub criteria: DecisionCriteria,
-    /// The consensus mechanism value
+    /// Mechanism for reaching consensus when multiple strategies produce different recommendations
     pub consensus_mechanism: ConsensusStrategy,
-    /// Decision timeout
+    /// Maximum time allowed for the decision-making process before returning the best available decision
     pub timeout: Duration,
 }
 
@@ -242,107 +243,103 @@ impl Default for DecisionEngineConfig {
     }
 }
 
-/// Learning configuration
+/// Learning configuration for adaptive AI systems
+///
+/// Configures how the hybrid intelligence system learns and adapts over time,
+/// including online learning, transfer learning from other domains, and meta-learning strategies.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LearningConfig {
-    /// Learning algorithms to use
-    /// Collection of algorithms
+    /// Collection of learning algorithm types to employ (supervised, unsupervised, reinforcement, etc.)
     pub algorithms: Vec<LearningAlgorithmType>,
-    /// Online learning configuration
-    /// The online learning value
+    /// Configuration for continuous learning from new data as it arrives in production
     pub online_learning: OnlineLearningConfig,
-    /// Transfer learning configuration
-    /// Optional transfer learning
+    /// Optional configuration for transferring knowledge from pre-trained models in related domains
     pub transfer_learning: Option<TransferLearningConfig>,
-    /// Meta-learning configuration
-    /// Optional meta learning
+    /// Optional configuration for learning how to learn, adapting learning strategies themselves
     pub meta_learning: Option<MetaLearningConfig>,
 }
 
 // Types moved to avoid duplication - using existing definitions
 
-/// Prediction configuration
+/// Prediction configuration for forecasting and inference
+///
+/// Configures how the system generates predictions, including which models to use,
+/// ensemble methods, uncertainty estimation, and prediction time horizons.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PredictionConfig {
-    /// Prediction models to use
-    /// Collection of models
+    /// Collection of prediction model types to employ for generating forecasts
     pub models: Vec<PredictionModel>,
-    /// Ensemble configuration
-    /// Optional ensemble
+    /// Optional configuration for combining multiple models into an ensemble for improved accuracy
     pub ensemble: Option<EnsembleConfig>,
-    /// Uncertainty quantification
-    /// Whether `uncertainty_quantification` is enabled
+    /// Whether to calculate and report confidence intervals and uncertainty estimates for predictions
     pub uncertainty_quantification: bool,
-    /// Prediction horizons
-    /// Collection of horizons
+    /// Time horizons for which to generate predictions (short-term, medium-term, long-term)
     pub horizons: Vec<PredictionHorizon>,
 }
 
-/// Optimization configuration
+/// Optimization configuration for model and hyperparameter tuning
+///
+/// Configures optimization algorithms for finding optimal model parameters, hyperparameters,
+/// and solutions to complex problems with multiple objectives and constraints.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OptimizationConfig {
-    /// Optimization algorithms
-    /// Collection of algorithms
+    /// Collection of optimization algorithms to employ (gradient descent, genetic algorithms, Bayesian optimization, etc.)
     pub algorithms: Vec<OptimizationAlgorithm>,
-    /// Multi-objective optimization
-    /// Whether `multi_objective` is enabled
+    /// Whether to optimize for multiple competing objectives simultaneously (e.g., accuracy vs. latency)
     pub multi_objective: bool,
-    /// Constraint handling
-    /// Optional constraints
+    /// Optional constraints on the optimization search space (bounds, equality/inequality constraints)
     pub constraints: Option<ConstraintConfig>,
-    /// Hyperparameter optimization
-    /// Optional hyperparameter optimization
+    /// Optional configuration for automated hyperparameter tuning (grid search, random search, Bayesian)
     pub hyperparameter_optimization: Option<HyperparameterOptimization>,
 }
 
 // Optimization types moved to avoid duplication - using existing definitions
 
-/// Early stopping configuration
+/// Early stopping configuration to prevent overfitting
+///
+/// Automatically halts training when a monitored metric stops improving,
+/// preventing overfitting and saving computational resources.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EarlyStoppingConfig {
-    /// Metric to monitor
-    /// The monitor value
+    /// Name of the metric to monitor for improvement (e.g., "`val_loss`", "`val_accuracy`")
     pub monitor: String,
-    /// Minimum change threshold
-    /// The min delta value
+    /// Minimum change in monitored metric required to qualify as an improvement
     pub min_delta: f64,
-    /// Patience (epochs to wait)
-    /// Number of patience
+    /// Number of epochs to wait for improvement before stopping training
     pub patience: u32,
-    /// Restore best weights
-    /// Whether `restore_best_weights` is enabled
+    /// Whether to restore model weights from the epoch with the best monitored metric value
     pub restore_best_weights: bool,
 }
 
+/// Regularization configuration to prevent overfitting
+///
+/// Configures various regularization techniques that constrain model complexity
+/// and improve generalization to unseen data.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RegularizationConfig {
-    /// L1 regularization strength
-    /// The l1 value
+    /// L1 regularization strength (lasso), promotes sparsity by driving some weights to zero
     pub l1: f64,
-    /// L2 regularization strength
-    /// The l2 value
+    /// L2 regularization strength (ridge), penalizes large weights to prevent overfitting
     pub l2: f64,
-    /// Dropout rate
-    /// The dropout value
+    /// Dropout rate (0.0-1.0), probability of randomly dropping neurons during training
     pub dropout: f64,
-    /// Batch normalization
-    /// Whether `batch_normalization` is enabled
+    /// Whether to apply batch normalization to stabilize and accelerate training
     pub batch_normalization: bool,
 }
 
+/// Optimizer configuration for gradient-based training
+///
+/// Configures the optimization algorithm used to update model weights,
+/// including learning rate, scheduling, and weight decay parameters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizerConfig {
-    /// Optimizer type
-    /// The optimizer type value
+    /// Type of optimization algorithm to use (SGD, Adam, `AdamW`, `RMSprop`, Adagrad)
     pub optimizer_type: OptimizerType,
-    /// Learning rate
-    /// The learning rate value
+    /// Initial step size for weight updates during training
     pub learning_rate: f64,
-    /// Learning rate schedule
-    /// Optional learning rate schedule
+    /// Optional schedule for adjusting learning rate over time (exponential decay, step decay, cosine annealing)
     pub learning_rate_schedule: Option<LearningRateSchedule>,
-    /// Weight decay
-    /// The weight decay value
+    /// L2 regularization penalty applied to weights during optimization
     pub weight_decay: f64,
 }
 
@@ -361,82 +358,96 @@ impl Default for OptimizerConfig {
     }
 }
 
-/// Optimizer types with configuration parameters
+/// Optimizer types with algorithm-specific hyperparameters
+///
+/// Different optimization algorithms suitable for various training scenarios,
+/// each with their own convergence properties and parameter requirements.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Types of optimizer
 pub enum OptimizerType {
-    /// Stochastic Gradient Descent
+    /// Stochastic Gradient Descent with optional momentum
     Sgd {
-        /// Momentum parameter
+        /// Momentum coefficient (0.0-1.0) to accelerate convergence and dampen oscillations
         momentum: f64,
     },
-    /// Adam optimizer with adaptive learning rates
+    /// Adaptive Moment Estimation optimizer with adaptive learning rates per parameter
     Adam {
+        /// Exponential decay rate for first moment estimates (typically 0.9)
         beta1: f64,
+        /// Exponential decay rate for second moment estimates (typically 0.999)
         beta2: f64,
-        /// Small epsilon value to prevent division by zero
+        /// Small constant to prevent division by zero (typically 1e-8)
         epsilon: f64,
     },
-    /// `AdamW` optimizer with weight decay
+    /// Adam with decoupled weight decay regularization (improved generalization)
     AdamW {
+        /// Exponential decay rate for first moment estimates (typically 0.9)
         beta1: f64,
+        /// Exponential decay rate for second moment estimates (typically 0.999)
         beta2: f64,
-        /// Small epsilon value to prevent division by zero
+        /// Small constant to prevent division by zero (typically 1e-8)
         epsilon: f64,
     },
-    /// `RMSprop` optimizer with moving average of squared gradients
+    /// `RMSprop` optimizer using moving average of squared gradients for adaptive learning rates
     RmsProp {
+        /// Decay rate for moving average of squared gradients (typically 0.9)
         alpha: f64,
-        /// Small epsilon value to prevent division by zero
+        /// Small constant to prevent division by zero (typically 1e-8)
         epsilon: f64,
     },
-    /// Adagrad optimizer with accumulated squared gradients
+    /// Adaptive Gradient optimizer with individual learning rates based on historical gradients
     Adagrad {
-        /// Small epsilon value to prevent division by zero
+        /// Small constant to prevent division by zero (typically 1e-8)
         epsilon: f64,
     },
 }
 
+/// Learning rate schedules for dynamic adjustment during training
+///
+/// Different strategies for modifying the learning rate over time to improve
+/// convergence and final model performance.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum LearningRateSchedule {
-    /// Exponential decay schedule
+    /// Exponentially decay learning rate over time
     ExponentialDecay {
-        /// Rate at which learning rate decays
+        /// Multiplicative factor by which learning rate decays each period (0.0-1.0)
         decay_rate: f64,
-        /// Number of steps between decay applications
+        /// Number of training steps between each decay application
         decay_steps: u32,
     },
-    /// Step decay schedule with periodic drops
+    /// Reduce learning rate by a fixed factor at regular intervals
     StepDecay {
-        /// Factor by which to multiply learning rate at each drop
+        /// Multiplicative factor applied to learning rate at each drop (0.0-1.0)
         drop_rate: f64,
-        /// Number of epochs between each learning rate drop
+        /// Number of epochs between successive learning rate reductions
         epochs_drop: u32,
     },
-    /// Cosine annealing schedule
+    /// Gradually reduce learning rate using a cosine function
     CosineAnnealing {
+        /// Maximum number of iterations before restart (if using restart variant)
         t_max: u32,
-        /// Minimum learning rate value
+        /// Minimum learning rate floor after annealing
         eta_min: f64,
     },
-    /// Reduce learning rate when metric plateaus
+    /// Adaptively reduce learning rate when a monitored metric stops improving
     ReduceOnPlateau {
-        /// Factor by which to reduce learning rate
+        /// Multiplicative factor for learning rate reduction (0.0-1.0)
         factor: f64,
+        /// Number of epochs with no improvement before reducing learning rate
         patience: u32,
     },
 }
 
-/// Serving configuration
+/// Serving configuration for production model deployment
+///
+/// Configures how models handle inference requests in production,
+/// including concurrency limits, timeouts, and load distribution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServingConfig {
-    /// Maximum concurrent requests
-    /// Number of `max_concurrent_requests`
+    /// Maximum number of inference requests processed simultaneously
     pub max_concurrent_requests: u32,
-    /// Request timeout
+    /// Maximum time allowed for processing a single inference request
     pub request_timeout: Duration,
-    /// Load balancing strategy
-    /// The load balancing value
+    /// Strategy for distributing requests across multiple model instances
     pub load_balancing: LoadBalancingStrategy,
 }
 
@@ -450,44 +461,47 @@ impl Default for ServingConfig {
     }
 }
 
-/// Caching configuration
+/// Caching configuration for inference result storage
+///
+/// Configures caching of model predictions to improve response time
+/// and reduce computational load for repeated identical requests.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachingConfig {
-    /// Cache size limit
-    /// Number of `max_cache_size`
+    /// Maximum number of cached prediction results to store in memory
     pub max_cache_size: u64,
-    /// Cache TTL
-    /// The ttl value
+    /// Time-to-live duration after which cached results expire and are removed
     pub ttl: Duration,
-    /// Cache eviction policy
-    /// The eviction policy value
+    /// Policy for removing entries when cache reaches capacity (LRU, LFU, FIFO, TTL)
     pub eviction_policy: EvictionPolicy,
 }
 
+/// Model versioning strategies for tracking model evolution
+///
+/// Different approaches to assigning version identifiers to trained models
+/// for tracking, comparison, and rollback purposes.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum VersioningStrategy {
-    /// Semantic versioning
+    /// Semantic versioning following MAJOR.MINOR.PATCH format (e.g., 1.2.3)
     Semantic,
-    /// Timestamp-based versioning
+    /// Timestamp-based versioning using creation time (e.g., `20251011_143022`)
     Timestamp,
-    /// Hash-based versioning
+    /// Content-based hash versioning using model weights (e.g., SHA-256)
     Hash,
-    /// Incremental versioning
+    /// Simple incremental integer versioning (e.g., v1, v2, v3)
     Incremental,
 }
 
-/// Registry configuration for AI systems
-/// Renamed from `RegistryConfig` to `AIRegistryConfig` for clarity
+/// Registry configuration for AI model storage and catalog
+///
+/// Configures where and how trained models are stored, versioned, and retrieved.
+/// Renamed from `RegistryConfig` to `AIRegistryConfig` for clarity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIRegistryConfig {
-    /// Registry type
-    /// The registry type value
+    /// Type of registry storage backend (local filesystem, remote HTTP, database, or cloud storage)
     pub registry_type: RegistryType,
-    /// Registry endpoint
-    /// The endpoint value
+    /// Network address or path where the registry is accessible
     pub endpoint: String,
-    /// Authentication configuration
-    /// Optional auth
+    /// Optional authentication credentials required to access the registry
     pub auth: Option<AuthConfig>,
 }
 
@@ -518,17 +532,17 @@ pub enum RegistryType {
     CloudStorage,
 }
 
-/// Deployment configuration
+/// Deployment configuration for model rollout strategies
+///
+/// Defines how models are deployed to production environments,
+/// including deployment strategy, resource allocation, and health monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
-    /// Deployment strategy
-    /// The strategy value
+    /// Strategy for rolling out model updates (blue-green, canary, rolling, or recreate)
     pub strategy: DeploymentStrategy,
-    /// Resource requirements
-    /// The resources value
+    /// Required computational resources (CPU, memory, GPU, storage)
     pub resources: ResourceRequirements,
-    /// Health check configuration
-    /// The health check value
+    /// Configuration for monitoring deployment health and readiness
     pub health_check:
         beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration,
 }
@@ -543,16 +557,19 @@ impl Default for DeploymentConfig {
     }
 }
 
-/// AI-specific monitoring configuration
+/// AI-specific monitoring configuration for model observability
+///
+/// Configures collection of metrics and telemetry specific to AI model training,
+/// inference, performance, and resource utilization in production.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIMonitoringConfig {
-    /// Training metrics collection
+    /// Whether to collect and report training metrics (loss, accuracy, learning rate, etc.)
     pub collect_training_metrics: bool,
-    /// Inference metrics collection
+    /// Whether to collect and report inference metrics (latency, throughput, batch size, etc.)
     pub collect_inference_metrics: bool,
-    /// Model performance tracking
+    /// Whether to track and monitor model prediction quality and accuracy over time
     pub track_model_performance: bool,
-    /// Resource usage monitoring
+    /// Whether to monitor computational resource usage (CPU, memory, GPU utilization)
     pub monitor_resource_usage: bool,
 }
 
@@ -571,32 +588,35 @@ impl Default for AIMonitoringConfig {
 #[deprecated(since = "3.1.0", note = "Use AIMonitoringConfig instead")]
 pub type MonitoringConfig = AIMonitoringConfig;
 
-/// Normalization strategies
+/// Normalization strategies for feature scaling
+///
+/// Different methods for transforming numerical features to a common scale,
+/// improving model training stability and convergence.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NormalizationStrategy {
-    /// Min-max normalization
+    /// Min-max scaling to range [0, 1]: (x - min) / (max - min)
     MinMax,
-    /// Z-score normalization
+    /// Z-score standardization to mean 0, std 1: (x - mean) / std
     ZScore,
-    /// Robust scaling
+    /// Robust scaling using median and IQR, less sensitive to outliers
     Robust,
-    /// Unit vector scaling
+    /// Unit vector normalization, scales to unit length
     UnitVector,
-    /// No normalization
+    /// No normalization applied, use raw feature values
     None,
 }
 
-/// Feature selection configuration
+/// Feature selection configuration for dimensionality reduction
+///
+/// Configures automatic selection of the most relevant features from the input dataset,
+/// reducing dimensionality and improving model performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureSelectionConfig {
-    /// Selection method
-    /// The method value
+    /// Algorithm used to identify and select important features
     pub method: FeatureSelectionMethod,
-    /// Number of features to select
-    /// Optional n features
+    /// Optional target number of features to select from the input dataset
     pub n_features: Option<u32>,
-    /// Selection threshold
-    /// Optional threshold
+    /// Optional importance threshold for feature selection (features below threshold are removed)
     pub threshold: Option<f64>,
 }
 
@@ -613,17 +633,17 @@ pub enum FeatureSelectionMethod {
     TreeBased,
 }
 
-/// Data augmentation configuration
+/// Data augmentation configuration for training dataset expansion
+///
+/// Configures techniques for artificially expanding the training dataset
+/// with transformed variations to improve model generalization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataAugmentationConfig {
-    /// Augmentation techniques
-    /// Collection of techniques
+    /// Collection of transformation techniques to apply (rotation, translation, scaling, noise, etc.)
     pub techniques: Vec<AugmentationTechnique>,
-    /// Augmentation probability
-    /// The probability value
+    /// Probability (0.0-1.0) that augmentation is applied to each training sample
     pub probability: f64,
-    /// Augmentation parameters
-    /// Mapping of parameters
+    /// Technique-specific parameters controlling transformation intensity and behavior
     pub parameters: HashMap<String, f64>,
 }
 
@@ -691,14 +711,15 @@ pub enum EvictionPolicy {
     Ttl,
 }
 
-/// Authentication configuration
+/// Authentication configuration for secure registry access
+///
+/// Configures authentication credentials and method for accessing
+/// protected model registries and services.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
-    /// Authentication type
-    /// The auth type value
+    /// Type of authentication mechanism to use (API key, bearer token, basic auth, `OAuth2`, or none)
     pub auth_type: AuthType,
-    /// Credentials
-    /// Mapping of credentials
+    /// Authentication credentials as key-value pairs (e.g., "`api_key"`: "...", "username": "...", "password": "...")
     pub credentials: HashMap<String, String>,
 }
 
@@ -731,20 +752,19 @@ pub enum DeploymentStrategy {
     Recreate,
 }
 
-/// Resource requirements
+/// Resource requirements for model deployment
+///
+/// Specifies the computational resources required to run a model
+/// in production, used for scheduling and capacity planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequirements {
-    /// CPU requirements
-    /// The cpu value
+    /// Number of CPU cores required (fractional values allowed, e.g., 0.5 for half a core)
     pub cpu: f64,
-    /// Memory requirements in MB
-    /// Number of memory
+    /// Memory requirement in megabytes (MB)
     pub memory: u64,
-    /// GPU requirements
-    /// Optional gpu
+    /// Optional number of GPU devices required for acceleration
     pub gpu: Option<u32>,
-    /// Storage requirements in GB
-    /// Number of storage
+    /// Persistent storage requirement in gigabytes (GB) for model artifacts and logs
     pub storage: u64,
 }
 
@@ -787,34 +807,33 @@ pub enum MetricType {
     PredictionConfidence,
 }
 
-/// Alerting configuration
+/// Alerting configuration for model monitoring notifications
+///
+/// Configures rules and channels for alerting operators when models
+/// exhibit anomalous behavior or performance degradation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertingConfig {
-    /// Alert rules
-    /// Collection of rules
+    /// Collection of alert rules defining conditions that trigger notifications
     pub rules: Vec<AlertRule>,
-    /// Notification channels
-    /// Collection of channels
+    /// Collection of notification channels for delivering alerts (email, Slack, SMS, webhook)
     pub channels: Vec<NotificationChannel>,
 }
 
-/// Alert rule
+/// Alert rule definition for monitoring thresholds
+///
+/// Defines a monitoring rule that triggers an alert when a metric
+/// crosses a threshold within a specified time window.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertRule {
-    /// Rule name
-    /// Name of the item
+    /// Human-readable name identifying this alert rule
     pub name: String,
-    /// Metric to monitor
-    /// The metric value
+    /// Type of metric to monitor (latency, throughput, error rate, accuracy, etc.)
     pub metric: MetricType,
-    /// Threshold value
-    /// The threshold value
+    /// Numeric threshold value that triggers the alert when crossed
     pub threshold: f64,
-    /// Comparison operator
-    /// The operator value
+    /// Comparison operator for threshold evaluation (>, <, ==, >=, <=)
     pub operator: ComparisonOperator,
-    /// Evaluation window
-    /// The window value
+    /// Time window over which to evaluate the metric before triggering
     pub window: Duration,
 }
 

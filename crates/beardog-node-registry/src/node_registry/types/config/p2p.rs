@@ -25,16 +25,27 @@ use std::time::Duration;
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
-impl Default for P2PConfig {}
-
-    fn default(true,
-            listen_address: "0.0.0.0".to_string(),
-            bootstrap_peers: Vec::new(50,
+impl Default for P2PConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            listen_address: std::env::var("BEARDOG_P2P_LISTEN_ADDRESS")
+                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+            listen_port: std::env::var("BEARDOG_P2P_LISTEN_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8081),
+            bootstrap_peers: Vec::new(),
+            max_peers: std::env::var("BEARDOG_P2P_MAX_PEERS")
+                .ok()
+                .and_then(|m| m.parse().ok())
+                .unwrap_or(50),
             connection_timeout_seconds: 30,
             peer_discovery_interval_seconds: 60,
             metadata: HashMap::with_capacity(16),
         }
     }
+}
 impl P2PConfig {
 
 /// New operation.

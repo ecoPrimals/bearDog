@@ -201,19 +201,10 @@ impl UltimatePerformanceProcessor {
     /// 
     /// Removed functions:
     /// - unsafe fn process_with_avx2_simd() - Replaced with safe auto-vectorization
-    /// - unsafe fn process_with_sse42_simd()
-            
-            // Store result
-            let mut output = [0u8; 16];
-            _mm_storeu_si128(output.as_mut_ptr() as *mut __m128i, processed);
-            result.extend_from_slice(&output);
-        }
-
-        result.extend_from_slice(remainder);
-        self.stats.simd_operations.fetch_add(1, Ordering::Relaxed);
-        
-        result
-    }
+    /// - unsafe fn process_with_sse42_simd() - Replaced with safe auto-vectorization
+    ///
+    /// The compiler's auto-vectorization provides equivalent or better performance
+    /// without the maintenance burden and safety concerns of manual unsafe SIMD.
 
     /// Scalar optimization for maximum compatibility
     #[inline(always)]

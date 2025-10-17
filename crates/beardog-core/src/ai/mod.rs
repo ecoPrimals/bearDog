@@ -38,3 +38,7 @@ pub use hybrid_intelligence::{
 // Note: These types don't exist in the current implementation:
 // ActiveHybridWorkflow, CapabilityRequest, CapabilityResponse, ExternalAIResult,
 // HybridIntelligenceManager, SecurityMLResult, UniversalAdapter
+
+// Day 2: AI Comprehensive Tests - October 17, 2025
+#[cfg(test)]
+pub mod tests;

@@ -1,16 +1,36 @@
-// Mock implementations for property-based testing
+//! Mock implementations for property-based testing
+//!
+//! This module provides test-only mock implementations of cryptographic
+//! and security operations for use in property-based testing scenarios.
+//!
+//! # Warning
+//!
+//! **These implementations are NOT cryptographically secure and should ONLY be used for testing!**
+//!
+//! All "cryptographic" operations here are simple deterministic transformations
+//! designed to enable fast, reproducible property-based tests without requiring
+//! real cryptographic libraries or operations.
 
-use super::*;
+use super::{BearDogError, Debug, HashMap, PropertyBasedTestFramework};
 
+/// Mock cryptographic key pair for testing purposes only
+///
+/// **NOT CRYPTOGRAPHICALLY SECURE** - Use only in tests!
 #[derive(Debug, Clone)]
 pub struct MockKeyPair {
-    /// Collection of private key
+    /// Mock private key bytes (not real cryptography)
     pub private_key: Vec<u8>,
-    /// Collection of public key
+    /// Mock public key bytes (not real cryptography)
     pub public_key: Vec<u8>,
 }
 
 impl PropertyBasedTestFramework {
+    /// Generate a mock hash for testing purposes
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Uses simple hashing for deterministic tests.
+    ///
+    /// # Errors
+    /// Returns error if hashing operation fails (unlikely in this mock implementation)
     pub fn mock_hash(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
@@ -31,6 +51,12 @@ impl PropertyBasedTestFramework {
         Ok(hash_bytes)
     }
 
+    /// Mock encryption using simple XOR pattern (testing only)
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Uses XOR with position for deterministic testing.
+    ///
+    /// # Errors
+    /// Returns error if encryption operation fails
     pub fn mock_encrypt(&self, _key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         // Simple XOR "encryption" for testing
         let mut encrypted = data.to_vec();
@@ -40,6 +66,12 @@ impl PropertyBasedTestFramework {
         Ok(encrypted)
     }
 
+    /// Mock decryption reversing the XOR pattern (testing only)
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Reverses XOR encryption for deterministic testing.
+    ///
+    /// # Errors
+    /// Returns error if decryption operation fails
     pub fn mock_decrypt(&self, _key: &[u8], encrypted: &[u8]) -> Result<Vec<u8>, BearDogError> {
         // Reverse the XOR "encryption"
         let mut decrypted = encrypted.to_vec();
@@ -49,6 +81,12 @@ impl PropertyBasedTestFramework {
         Ok(decrypted)
     }
 
+    /// Generate a mock cryptographic key pair for testing
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Uses simple random bytes for deterministic testing.
+    ///
+    /// # Errors
+    /// Returns error if key generation fails
     pub fn mock_generate_keypair(&self) -> Result<MockKeyPair, BearDogError> {
         Ok(MockKeyPair {
             private_key: self.generate_random_bytes(32)?,
@@ -56,12 +94,24 @@ impl PropertyBasedTestFramework {
         })
     }
 
+    /// Generate a mock digital signature for testing
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Uses simple hash truncation for deterministic testing.
+    ///
+    /// # Errors
+    /// Returns error if signature generation fails
     pub fn mock_sign(&self, _private_key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         // Simple mock signature
         let hash = self.mock_hash(data)?;
         Ok(hash[..16].to_vec()) // 16-byte "signature"
     }
 
+    /// Verify a mock digital signature for testing
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Uses simple comparison for deterministic testing.
+    ///
+    /// # Errors
+    /// Returns error if verification operation fails
     pub fn mock_verify(
         &self,
         _public_key: &[u8],
@@ -72,6 +122,12 @@ impl PropertyBasedTestFramework {
         Ok(expected_signature == signature)
     }
 
+    /// Derive a mock key from input material for testing
+    ///
+    /// **NOT CRYPTOGRAPHICALLY SECURE** - Uses simple hash extension for deterministic testing.
+    ///
+    /// # Errors
+    /// Returns error if key derivation fails
     pub fn mock_derive_key(
         &self,
         input_key: &[u8],
@@ -94,6 +150,12 @@ impl PropertyBasedTestFramework {
         Ok(derived_key)
     }
 
+    /// Sanitize input data by removing control characters (for testing)
+    ///
+    /// Removes null bytes and control characters to simulate input validation.
+    ///
+    /// # Errors
+    /// Returns error if sanitization fails
     pub fn mock_sanitize_input(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         // Remove null bytes and control characters
         let sanitized: Vec<u8> = data

@@ -28,6 +28,7 @@ impl CoreSecurityProvider {
     /// # Returns
     /// A new `CoreSecurityProvider` instance
     /// Creates a new instance
+    #[must_use]
     pub const fn new(config: BearDogConfig) -> Self {
         Self { config }
     }

@@ -394,6 +394,7 @@ impl SovereignRng {
     /// Get entropy usage statistics
     /// Gets `entropy_stats`
     /// Gets `entropy_stats`
+    #[must_use]
     pub fn get_entropy_stats(&self) -> SovereignRngStats {
         SovereignRngStats {
             cached_seeds: self.entropy_cache.len(),
@@ -418,6 +419,7 @@ impl NeuralNetworkEntropyIntegration {
     /// Convert `WeightInitialization` enum to human entropy initializer
     /// Creates `human_entropy_initializer`
     /// Creates `human_entropy_initializer`
+    #[must_use]
     pub fn create_human_entropy_initializer(
         weight_init: &WeightInitialization,
         layer_shape: (usize, usize),
@@ -439,6 +441,7 @@ impl NeuralNetworkEntropyIntegration {
     }
 
     /// Check if a weight initialization uses human entropy
+    #[must_use]
     pub const fn uses_human_entropy(weight_init: &WeightInitialization) -> bool {
         matches!(
             weight_init,
@@ -461,7 +464,7 @@ mod tests {
 
     #[test]
     fn test_entropy_distribution_variants() {
-        let distributions = vec![
+        let distributions = [
             EntropyDistribution::Normal {
                 mean: 0.0,
                 stddev: 1.0,

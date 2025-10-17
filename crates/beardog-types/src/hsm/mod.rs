@@ -1,8 +1,31 @@
-// Temporarily commented out missing import:
-// pub use crate::canonical::hsm::status::HsmTier;
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! HSM (Hardware Security Module) type definitions
+//!
+//! This module provides comprehensive type definitions for HSM operations,
+//! configurations, and integrations across multiple platforms.
 
+pub mod attestation;
+pub mod audit;
+pub mod config;
+pub mod crypto;
+pub mod crypto_providers;
+pub mod entropy;
+pub mod health;
+pub mod implementations;
+pub mod managers;
+pub mod mobile;
+pub mod mobile_hsm;
+pub mod providers;
 
-pub use crate::canonical::hsm::{HsmCapabilities, HsmConfig, HsmHealth, HsmKey, KeyMetadata};
+// Re-export commonly used types
+pub use attestation::{AttestationData, AuditStatistics};
+pub use audit::AuditEvent;
+pub use config::{DatabaseConfig, HsmConfig, KeyStoreConfig};
+pub use crypto::CryptoProvider;
+pub use crypto_providers::{OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider};
+pub use entropy::{EphemeralSeed, HumanEntropyCapabilities, HumanEntropyMethod};
+pub use health::{ProviderHealth, ProviderInfo};
+pub use implementations::{InMemoryStorageBackend, RustSoftwareHsm};
+pub use managers::{DefaultHsmFailoverManager, DefaultHsmHealthMonitor};
+pub use mobile::{AndroidDeviceInfo, SecurityLevel};
+pub use mobile_hsm::{AndroidStrongBoxHsm, IosSecureEnclaveHsm};
+pub use providers::{CryptoProviderConfig, ProviderCapabilities};

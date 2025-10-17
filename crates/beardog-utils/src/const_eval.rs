@@ -248,7 +248,7 @@ impl ConstTables {
     }
 
     #[must_use]
-    pub fn fast_sin(degrees: u16) -> f32 {
+    pub const fn fast_sin(degrees: u16) -> f32 {
         let index = (degrees % 360) as usize;
         Self::SINE_TABLE[index]
     }

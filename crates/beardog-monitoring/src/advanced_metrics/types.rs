@@ -66,7 +66,7 @@ pub struct EcosystemMetric {
     /// Average response time
     pub avg_response_time: Duration,
     /// Request volume
-    /// Number of request_volume
+    /// Number of `request_volume`
     pub request_volume: u64,
     /// Error distribution
     /// Mapping of error distribution
@@ -266,7 +266,7 @@ pub struct EcosystemHealthStatus {
     /// Mapping of system metrics
     pub system_metrics: HashMap<String, f64>,
     /// Active alerts count
-    /// Number of active_alerts
+    /// Number of `active_alerts`
     pub active_alerts: u32,
 }
 
@@ -280,7 +280,7 @@ pub struct MetricsMetadata {
     /// Optional last update
     pub last_update: Option<SystemTime>,
     /// Total metrics collected
-    /// Number of total_metrics
+    /// Number of `total_metrics`
     pub total_metrics: u64,
     /// Collection version
     /// The version value
@@ -293,10 +293,10 @@ pub struct MetricsSummary {
     pub timestamp: SystemTime,
     pub performance_metrics_count: usize,
     /// Security events count
-    /// Number of security_events
+    /// Number of `security_events`
     pub security_events_count: usize,
     /// Ecosystem metrics count
-    /// Number of ecosystem_metrics
+    /// Number of `ecosystem_metrics`
     pub ecosystem_metrics_count: usize,
     /// Overall health score
     /// The overall health score value

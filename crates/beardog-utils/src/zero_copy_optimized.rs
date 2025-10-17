@@ -256,8 +256,8 @@ impl OptimizedString {
     #[must_use]
     pub fn as_str(&self) -> &str {
         match self {
-            OptimizedString::Shared(s) => s,
-            OptimizedString::Owned(s) => s,
+            Self::Shared(s) => s,
+            Self::Owned(s) => s,
         }
     }
 
@@ -265,8 +265,8 @@ impl OptimizedString {
     #[must_use]
     pub fn into_string(self) -> String {
         match self {
-            OptimizedString::Shared(s) => s.to_string(),
-            OptimizedString::Owned(s) => s,
+            Self::Shared(s) => s.to_string(),
+            Self::Owned(s) => s,
         }
     }
 
@@ -274,16 +274,16 @@ impl OptimizedString {
     /// Checks if optimized
     /// Checks if optimized
     #[must_use]
-    pub fn is_optimized(&self) -> bool {
-        matches!(self, OptimizedString::Shared(_))
+    pub const fn is_optimized(&self) -> bool {
+        matches!(self, Self::Shared(_))
     }
 }
 
 impl fmt::Display for OptimizedString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            OptimizedString::Shared(s) => write!(f, "{s}"),
-            OptimizedString::Owned(s) => write!(f, "{s}"),
+            Self::Shared(s) => write!(f, "{s}"),
+            Self::Owned(s) => write!(f, "{s}"),
         }
     }
 }
@@ -301,8 +301,8 @@ impl OptimizedBytes {
     #[must_use]
     pub fn as_slice(&self) -> &[u8] {
         match self {
-            OptimizedBytes::Shared(bytes) => bytes,
-            OptimizedBytes::Owned(bytes) => bytes,
+            Self::Shared(bytes) => bytes,
+            Self::Owned(bytes) => bytes,
         }
     }
 
@@ -311,8 +311,8 @@ impl OptimizedBytes {
     #[must_use]
     pub fn to_vec(&self) -> Vec<u8> {
         match self {
-            OptimizedBytes::Shared(bytes) => bytes.to_vec(),
-            OptimizedBytes::Owned(bytes) => bytes.clone(),
+            Self::Shared(bytes) => bytes.to_vec(),
+            Self::Owned(bytes) => bytes.clone(),
         }
     }
 
@@ -320,8 +320,8 @@ impl OptimizedBytes {
     /// Checks if optimized
     /// Checks if optimized
     #[must_use]
-    pub fn is_optimized(&self) -> bool {
-        matches!(self, OptimizedBytes::Shared(_))
+    pub const fn is_optimized(&self) -> bool {
+        matches!(self, Self::Shared(_))
     }
 }
 
@@ -402,7 +402,7 @@ pub struct ZeroCopyBuilder<T> {
 impl<T> ZeroCopyBuilder<T> {
     /// Create a new builder
     /// Creates a new instance
-    pub fn new(inner: T) -> Self {
+    pub const fn new(inner: T) -> Self {
         Self {
             inner,
             optimized: false,
@@ -436,7 +436,7 @@ impl<T> ZeroCopyBuilder<T> {
     /// Check if optimizations were applied
     /// Checks if optimized
     /// Checks if optimized
-    pub fn is_optimized(&self) -> bool {
+    pub const fn is_optimized(&self) -> bool {
         self.optimized
     }
 }
