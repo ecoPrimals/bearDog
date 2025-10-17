@@ -14,10 +14,10 @@ pub struct MetricsConfig {
     /// The collection interval value
     pub collection_interval: Duration,
     /// Maximum history size per metric
-    /// Number of max_history_size
+    /// Number of `max_history_size`
     pub max_history_size: usize,
     /// Enable real-time broadcasting
-    /// Whether enable_broadcasting is enabled
+    /// Whether `enable_broadcasting` is enabled
     pub enable_broadcasting: bool,
     /// Analysis configuration
     /// The analysis value
@@ -31,10 +31,10 @@ pub struct MetricsConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisConfig {
     /// Enable anomaly detection
-    /// Whether enable_anomaly_detection is enabled
+    /// Whether `enable_anomaly_detection` is enabled
     pub enable_anomaly_detection: bool,
     /// Enable trend analysis
-    /// Whether enable_trend_analysis is enabled
+    /// Whether `enable_trend_analysis` is enabled
     pub enable_trend_analysis: bool,
     /// Analysis window size
     /// The analysis window value
@@ -64,7 +64,7 @@ pub struct MetricsHealthCheckConfig {
     /// The health threshold value
     pub health_threshold: f64,
     /// Alert on degraded health
-    /// Whether alert_on_degraded is enabled
+    /// Whether `alert_on_degraded` is enabled
     pub alert_on_degraded: bool,
 }
 
@@ -85,7 +85,7 @@ pub struct AnomalyConfig {
     /// The sensitivity value
     pub sensitivity: f64,
     /// Minimum data points required
-    /// Number of min_data_points
+    /// Number of `min_data_points`
     pub min_data_points: usize,
 }
 

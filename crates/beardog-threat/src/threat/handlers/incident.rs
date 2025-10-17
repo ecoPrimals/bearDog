@@ -85,7 +85,7 @@ impl ThreatDetectionEngine {
     /// Get active incidents
     /// Gets `active_incidents`
     /// Gets `active_incidents`
-    pub fn get_active_incidents(&self) -> Result<Vec<IncidentResponse>, BearDogError> {
+    pub const fn get_active_incidents(&self) -> Result<Vec<IncidentResponse>, BearDogError> {
         // Simplified implementation for compilation
         Ok(Vec::new())
     }

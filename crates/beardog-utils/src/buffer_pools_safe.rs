@@ -80,7 +80,7 @@ impl SafeBufferPool {
     /// Gets stats
     /// Gets stats
     #[must_use]
-    pub fn get_stats(&self) -> &PoolStats {
+    pub const fn get_stats(&self) -> &PoolStats {
         &self.stats
     }
 
@@ -91,7 +91,7 @@ impl SafeBufferPool {
     }
 
     /// Gets `size_class`
-    fn get_size_class(&self, size: usize) -> usize {
+    const fn get_size_class(&self, size: usize) -> usize {
         match size {
             0..=64 => 64,
             65..=256 => 256,

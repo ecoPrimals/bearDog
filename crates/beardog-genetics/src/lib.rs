@@ -1,13 +1,15 @@
-//! # BearDog Genetics - Advanced Genetic Algorithms and Entropy Management
+//! # `BearDog` Genetics - Advanced Genetic Algorithms and Entropy Management
 //!
 //! Comprehensive genetic algorithms, entropy hierarchy management, and ecosystem evolution
-//! capabilities for the BearDog security system with human-centric entropy generation.
+//! capabilities for the `BearDog` security system with human-centric entropy generation.
 //!
 //! ## Features
 //!
 //! - **Genetic Algorithms**: Advanced evolution and optimization algorithms
 //! - **Entropy Hierarchy**: Human and machine entropy source management
 //! - **Genetic Spawning**: Dynamic primal generation and evolution
+
+#![deny(unsafe_code)]
 //! - **Ecosystem Evolution**: Binary pattern elimination and relationship evolution
 //! - **Biometric Entropy**: Human-owned entropy without corporate control
 //!
@@ -58,6 +60,9 @@ pub use ecosystem_evolution::{
     EcosystemMembership, HierarchicalPattern, RelationshipHistory, SymbiosisType, TrustEvolution,
 };
 
+#[cfg(test)]
+mod tests;
+
 /// Main genetics manager that coordinates all genetic operations
 #[derive(Debug, Clone)]
 pub struct GeneticsManager {
@@ -66,14 +71,14 @@ pub struct GeneticsManager {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsConfig {
-    /// Whether entropy_collection is enabled
+    /// Whether `entropy_collection` is enabled
     pub entropy_collection_enabled: bool,
-    /// Whether genetic_spawning is enabled
+    /// Whether `genetic_spawning` is enabled
     pub genetic_spawning_enabled: bool,
-    /// Whether ecosystem_evolution is enabled
+    /// Whether `ecosystem_evolution` is enabled
     pub ecosystem_evolution_enabled: bool,
     pub human_entropy_validation: bool,
-    /// Whether authorization_genetics is enabled
+    /// Whether `authorization_genetics` is enabled
     pub authorization_genetics_enabled: bool,
 }
 
@@ -92,6 +97,7 @@ impl Default for GeneticsConfig {
 impl GeneticsManager {
     /// Create a new genetics manager with default configuration
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: GeneticsConfig::default(),
@@ -100,12 +106,14 @@ impl GeneticsManager {
 
     /// Create a new genetics manager with custom configuration
     /// Creates instance with config
-    pub fn with_config(config: GeneticsConfig) -> Self {
+    #[must_use]
+    pub const fn with_config(config: GeneticsConfig) -> Self {
         Self { config }
     }
 
     /// Get the current configuration
-    pub fn config(&self) -> &GeneticsConfig {
+    #[must_use]
+    pub const fn config(&self) -> &GeneticsConfig {
         &self.config
     }
 
@@ -123,6 +131,7 @@ impl Default for GeneticsManager {
     }
 }
 
+#[must_use]
 pub fn assess_genetics_health() -> String {
     // In a full implementation, this would check the health of all genetic systems
     "Healthy".to_string()

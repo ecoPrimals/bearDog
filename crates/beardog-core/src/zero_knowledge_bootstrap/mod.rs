@@ -120,8 +120,9 @@ pub struct ZeroKnowledgeBootstrap {
     /// Self-discovery engine
     #[allow(dead_code)]
     self_discovery: self_discovery::SelfDiscoveryEngine,
-    // TODO: Add capability registry when module is implemented
-    // capability_registry: capability_registry::DynamicCapabilityRegistry,
+
+    /// Dynamic capability registry for discovered services
+    capability_registry: capability_registry::CapabilityRegistry,
 }
 
 /// Self-identity - the only thing we know at bootstrap
@@ -183,16 +184,23 @@ pub struct BootstrapConfig {
     pub enable_passive_listening: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Network protocol used for service discovery in zero-knowledge bootstrap
+///
+/// Different discovery protocols are used based on network environment:
+/// - Container environments use DNS-based discovery
+/// - Cloud environments use HTTP endpoints
+/// - Local networks use multicast DNS
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DiscoveryProtocol {
+    /// Multicast DNS service discovery for local networks
     MulticastDNS,
-    /// HTTP-based discovery endpoints
+    /// HTTP-based discovery endpoints for cloud environments
     HttpDiscovery,
-    /// Environment variable discovery
+    /// Environment variable-based discovery for configured deployments
     EnvironmentDiscovery,
-    /// Service mesh integration
+    /// Service mesh integration (e.g., Istio, Linkerd) for auto-discovery
     ServiceMeshDiscovery,
-    /// Container orchestration discovery
+    /// Container orchestration discovery (e.g., Kubernetes, Docker Swarm)
     ContainerDiscovery,
 }
 
@@ -269,7 +277,10 @@ impl ZeroKnowledgeBootstrap {
     /// Create new zero-knowledge bootstrap engine
     ///
     /// Starts with absolutely no ecosystem knowledge except self-identity
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails, if self-discovery encounters issues,
+    /// or if internal component creation fails.
     pub async fn new() -> BearDogResult<Self> {
         info!("🌱 Initializing Zero-Knowledge Bootstrap - starting with zero ecosystem knowledge");
 
@@ -289,10 +300,7 @@ impl ZeroKnowledgeBootstrap {
         let discovered_primals = Arc::new(RwLock::new(HashMap::new()));
 
         // Step 3: Initialize capability registry
-        // TODO: Implement capability registry when module is available
-        // let capability_registry = capability_registry::DynamicCapabilityRegistry::new(
-        //     self_identity.clone()
-        // )?;
+        let capability_registry = capability_registry::CapabilityRegistry::new();
 
         Ok(Self {
             self_identity,
@@ -302,13 +310,17 @@ impl ZeroKnowledgeBootstrap {
             metrics: BootstrapMetrics::default(),
             ecosystem_listener: None,
             self_discovery,
-            // TODO: Add capability_registry when module is implemented
+            capability_registry,
         })
     }
 
     /// Bootstrap the ecosystem with zero prior knowledge
     ///
     /// to full ecosystem participant through dynamic discovery
+    ///
+    /// # Errors
+    /// Returns an error if bootstrapping fails at any phase, if ecosystem announcement encounters issues,
+    /// or if capability discovery or registry operations fail.
     pub async fn bootstrap(&mut self) -> BearDogResult<()> {
         let start_time = std::time::Instant::now();
 
@@ -335,7 +347,7 @@ impl ZeroKnowledgeBootstrap {
         self.build_capability_registry().await?;
 
         // Phase 5: Enable network effects (primal-to-primal communication)
-        self.enable_network_effects()?;
+        Self::enable_network_effects();
 
         // Update metrics
         self.metrics.bootstrap_duration_ms = start_time.elapsed().as_millis() as u64;
@@ -366,15 +378,9 @@ impl ZeroKnowledgeBootstrap {
 
         // Use all available discovery protocols to announce ourselves
         for protocol in &self.config.discovery.enabled_protocols {
-            match self.announce_via_protocol(protocol) {
-                Ok(()) => {
-                    debug!("✅ Successfully announced via {:?}", protocol);
-                    self.metrics.protocols_used.push(format!("{protocol:?}"));
-                }
-                Err(e) => {
-                    warn!("⚠️ Failed to announce via {:?}: {}", protocol, e);
-                }
-            }
+            self.announce_via_protocol(protocol);
+            debug!("✅ Announced via {:?}", protocol);
+            self.metrics.protocols_used.push(format!("{protocol:?}"));
         }
 
         Ok(())
@@ -384,32 +390,32 @@ impl ZeroKnowledgeBootstrap {
     const fn announce_via_protocol(
         &self,
         protocol: &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
-    ) -> BearDogResult<()> {
+    ) {
         use beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol as DP;
         match protocol {
             DP::MulticastDNS => {
                 // Broadcast via mDNS
-                self.announce_via_mdns()
+                Self::announce_via_mdns();
             }
             DP::HttpDiscovery => {
                 // Register with HTTP discovery endpoints
-                self.announce_via_http()
+                Self::announce_via_http();
             }
             DP::EnvironmentDiscovery => {
                 // Set environment variables for others to discover
-                self.announce_via_environment()
+                Self::announce_via_environment();
             }
             DP::ServiceMeshDiscovery => {
                 // Register with service mesh
-                self.announce_via_service_mesh()
+                Self::announce_via_service_mesh();
             }
             DP::ContainerDiscovery => {
                 // Register with container orchestration
-                self.announce_via_container_orchestration()
+                Self::announce_via_container_orchestration();
             }
             DP::CloudMetadataDiscovery => {
                 // Announce via cloud metadata
-                self.announce_via_cloud_metadata()
+                Self::announce_via_cloud_metadata();
             }
         }
     }
@@ -444,10 +450,10 @@ impl ZeroKnowledgeBootstrap {
 
             // Try each discovery protocol
             for protocol in &self.config.discovery.enabled_protocols {
-                match self.discover_capabilities_via_protocol(protocol) {
+                match Self::discover_capabilities_via_protocol(protocol) {
                     Ok(new_capabilities) => {
                         capabilities_found += new_capabilities.len();
-                        self.add_discovered_capabilities(new_capabilities);
+                        Self::add_discovered_capabilities(new_capabilities);
                     }
                     Err(e) => {
                         debug!(
@@ -491,32 +497,32 @@ impl ZeroKnowledgeBootstrap {
         let capabilities = self.discovered_capabilities.read().await;
         let _primals = self.discovered_primals.read().await;
 
-        // TODO: Uncomment when capability_registry module is implemented
-        // for (capability_type, providers) in capabilities.iter() {
-        //     for provider in providers {
-        //         self.capability_registry.register_capability(
-        //             capability_type.clone(),
-        //             provider.clone(),
-        //         )?;
-        //     }
-        // }
+        // Register all discovered capabilities in the registry
+        for (_capability_type, providers) in capabilities.iter() {
+            for provider in providers {
+                // Register each discovered capability
+                // Note: provider is already a UniversalCapability
+                if let Err(e) = self.capability_registry.register(provider.clone()).await {
+                    warn!("Failed to register capability: {}", e);
+                }
+            }
+        }
 
         info!(
-            "✅ Capability registry stub - {} capability types discovered",
+            "✅ Capability registry built - {} capability types registered",
             capabilities.len()
         );
         Ok(())
     }
 
     /// Enable network effects (primal-to-primal communication)
-    fn enable_network_effects(&mut self) -> BearDogResult<()> {
+    fn enable_network_effects() {
         info!("🌐 Enabling network effects...");
 
         // This would enable the universal adapter to route requests
         // between discovered primals based on capabilities
 
         info!("✅ Network effects enabled - ecosystem ready for primal cooperation");
-        Ok(())
     }
 
     /// Get current ecosystem state
@@ -526,61 +532,117 @@ impl ZeroKnowledgeBootstrap {
         let capabilities = self.discovered_capabilities.read().await;
         let primals = self.discovered_primals.read().await;
 
+        // Calculate ecosystem health based on actual metrics
+        let ecosystem_health = self.calculate_ecosystem_health(primals.len(), capabilities.len());
+
         EcosystemState {
             self_identity: self.self_identity.clone(),
             discovered_primals: primals.clone(),
             available_capabilities: capabilities.keys().cloned().collect(),
             bootstrap_metrics: self.metrics.clone(),
-            ecosystem_health: self.calculate_ecosystem_health(),
+            ecosystem_health,
         }
     }
 
     // Helper methods (implementations would be in respective modules)
-    const fn announce_via_mdns(&self) -> BearDogResult<()> {
+    const fn announce_via_mdns() {
         // Implementation in self_discovery module
-        Ok(())
     }
 
-    const fn announce_via_http(&self) -> BearDogResult<()> {
+    const fn announce_via_http() {
         // Implementation in self_discovery module
-        Ok(())
     }
 
-    const fn announce_via_environment(&self) -> BearDogResult<()> {
+    const fn announce_via_environment() {
         // Implementation in self_discovery module
-        Ok(())
     }
 
-    const fn announce_via_service_mesh(&self) -> BearDogResult<()> {
+    const fn announce_via_service_mesh() {
         // Implementation in self_discovery module
-        Ok(())
     }
 
-    const fn announce_via_container_orchestration(&self) -> BearDogResult<()> {
+    const fn announce_via_container_orchestration() {
         // Implementation in self_discovery module
-        Ok(())
     }
 
-    const fn announce_via_cloud_metadata(&self) -> BearDogResult<()> {
+    const fn announce_via_cloud_metadata() {
         // Implementation in self_discovery module
-        Ok(())
     }
 
     const fn discover_capabilities_via_protocol(
-        &self,
         _protocol: &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
     ) -> BearDogResult<Vec<UniversalCapability>> {
         // Implementation in capability_registry module
         Ok(Vec::new())
     }
 
-    fn add_discovered_capabilities(&self, _capabilities: Vec<UniversalCapability>) {
+    fn add_discovered_capabilities(_capabilities: Vec<UniversalCapability>) {
         // Implementation in capability_registry module
     }
 
-    const fn calculate_ecosystem_health(&self) -> f64 {
-        // Implementation in infant_patterns module
-        0.85 // Placeholder
+    /// Calculate ecosystem health score based on discovery metrics
+    ///
+    /// Health score is calculated from multiple factors:
+    /// - Discovery success rate (primary factor)
+    /// - Number of primals discovered (connectivity)
+    /// - Number of capabilities discovered (richness)
+    /// - Bootstrap duration (efficiency)
+    ///
+    /// Returns a score from 0.0 (unhealthy) to 1.0 (perfect health)
+    fn calculate_ecosystem_health(&self, primals_count: usize, capabilities_count: usize) -> f64 {
+        let metrics = &self.metrics;
+
+        // Factor 1: Discovery success rate (weighted 40%)
+        let success_factor = metrics.discovery_success_rate * 0.4;
+
+        // Factor 2: Connectivity score based on discovered primals (weighted 30%)
+        // Scale: 0 primals = 0.0, 1 primal = 0.5, 5+ primals = 1.0
+        let connectivity_score = match primals_count {
+            0 => 0.0,
+            1 => 0.5,
+            2 => 0.7,
+            3 => 0.85,
+            4 => 0.95,
+            _ => 1.0, // 5 or more
+        };
+        let connectivity_factor = connectivity_score * 0.3;
+
+        // Factor 3: Capability richness (weighted 20%)
+        // Scale: 0 capabilities = 0.0, 1 capability = 0.6, 5+ capabilities = 1.0
+        let richness_score = match capabilities_count {
+            0 => 0.0,
+            1 => 0.6,
+            2 => 0.75,
+            3 => 0.85,
+            4 => 0.95,
+            _ => 1.0, // 5 or more
+        };
+        let richness_factor = richness_score * 0.2;
+
+        // Factor 4: Bootstrap efficiency (weighted 10%)
+        // Faster bootstrap = healthier ecosystem
+        // Target: <100ms = perfect, <500ms = good, <1000ms = acceptable, >1000ms = degraded
+        let efficiency_score = if metrics.bootstrap_duration_ms == 0 {
+            1.0 // Not yet measured
+        } else if metrics.bootstrap_duration_ms < 100 {
+            1.0 // Perfect
+        } else if metrics.bootstrap_duration_ms < 500 {
+            0.9 // Good
+        } else if metrics.bootstrap_duration_ms < 1000 {
+            0.7 // Acceptable
+        } else if metrics.bootstrap_duration_ms < 2000 {
+            0.5 // Degraded
+        } else {
+            0.3 // Poor
+        };
+        let efficiency_factor = efficiency_score * 0.1;
+
+        // Calculate total health score
+        let total_health =
+            success_factor + connectivity_factor + richness_factor + efficiency_factor;
+
+        // Clamp to valid range
+        total_health.clamp(0.0, 1.0)
     }
 }
 
@@ -658,3 +720,5 @@ mod tests {
         );
     }
 }
+
+// Note: Day 2 discovery tests added to existing tests module above (line 668)

@@ -1,7 +1,7 @@
-//! # BearDog Monitoring and Metrics
+//! # `BearDog` Monitoring and Metrics
 //!
 //! Comprehensive monitoring, metrics collection, and security sentinel capabilities
-//! for BearDog applications with real-time observability and threat detection.
+//! for `BearDog` applications with real-time observability and threat detection.
 //!
 //! ## Features
 //!
@@ -59,3 +59,6 @@ pub mod security_sentinel_example;
 
 pub use monitoring::*;
 pub use security_sentinel::SecuritySentinel;
+
+#[cfg(test)]
+mod tests;

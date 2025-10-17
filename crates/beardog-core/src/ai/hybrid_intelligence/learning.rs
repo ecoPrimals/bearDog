@@ -23,28 +23,31 @@ use std::collections::HashMap;
 use std::time::Duration;
 // Removed unused Uuid import
 
+/// Types of learning algorithms
+///
+/// Classification of different machine learning paradigms and approaches.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of learning algorithm
 pub enum LearningAlgorithmType {
-    /// Supervised learning
+    /// Supervised learning from labeled data
     Supervised,
-    /// Unsupervised learning
+    /// Unsupervised learning from unlabeled data
     Unsupervised,
+    /// Reinforcement learning through rewards
     Reinforcement,
-    /// Semi-supervised learning
+    /// Semi-supervised learning from mixed labeled/unlabeled data
     SemiSupervised,
-    /// Transfer learning
+    /// Transfer learning from pre-trained models
     Transfer,
-    /// Meta learning
+    /// Meta-learning (learning to learn)
     Meta,
-    /// Online learning
+    /// Online learning with continuous updates
     Online,
-    /// Federated learning
+    /// Federated learning across distributed data sources
     Federated,
 }
 
-// TODO(canonical-migration): OnlineLearningConfig needs to be exported from canonical
-// Temporary local definition until ai_config_original.rs is properly split and modularized
+// Note: OnlineLearningConfig is a temporary local definition pending canonical ai_config export.
+// This will be replaced with a canonical import once ai_config is properly modularized.
 /// Online learning configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OnlineLearningConfig {
@@ -70,33 +73,41 @@ impl Default for OnlineLearningConfig {
 }
 
 /// Learning rate adaptation strategies
+///
+/// Strategies for adjusting the learning rate during training.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LearningRateAdaptation {
-    /// Fixed learning rate
+    /// Fixed learning rate throughout training
     Fixed,
-    /// Adaptive learning rate
+    /// Adaptive learning rate based on gradient statistics
     Adaptive,
-    /// Decay-based adaptation
+    /// Decay-based adaptation (exponential or linear)
     Decay,
+    /// Performance-based adaptation using validation metrics
     PerformanceBased,
 }
 
+/// Update frequency for model parameters
+///
+/// Determines when model parameters should be updated during training.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum UpdateFrequency {
-    /// Update after each sample
+    /// Update after each individual sample
     PerSample,
-    /// Update after each batch
+    /// Update after each batch of samples
     PerBatch,
     /// Update based on time interval
     TimeInterval(Duration),
+    /// Update when performance crosses threshold
     PerformanceThreshold(f64),
 }
 
 /// Transfer learning configuration
+///
+/// Configuration for transfer learning from a pre-trained model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransferLearningConfig {
-    /// Source domain configuration
-    /// The source domain value
+    /// Source domain configuration where model was pre-trained
     pub source_domain: DomainConfig,
     /// Target domain configuration
     /// The target domain value
@@ -109,32 +120,31 @@ pub struct TransferLearningConfig {
     pub fine_tuning: Option<FineTuningConfig>,
 }
 
+/// Domain configuration
+///
+/// Configuration for a learning domain (source or target) in transfer learning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DomainConfig {
-    /// Domain identifier
+    /// Unique domain identifier
     pub domain_id: String,
-    /// Domain description
-    /// The description value
+    /// Human-readable domain description
     pub description: String,
-    /// Feature space configuration
-    /// The feature space value
+    /// Feature space configuration for this domain
     pub feature_space: FeatureSpaceConfig,
-    /// Label space configuration
-    /// The label space value
+    /// Label space configuration for this domain
     pub label_space: LabelSpaceConfig,
 }
 
 /// Feature space configuration
+///
+/// Defines the structure and types of input features.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureSpaceConfig {
-    /// Number of features
-    /// Number of `num_features`
+    /// Number of features in this space
     pub num_features: u32,
-    /// Feature types
-    /// Collection of feature types
+    /// Types of each feature
     pub feature_types: Vec<FeatureType>,
-    /// Feature normalization
-    /// The normalization value
+    /// Normalization strategy for features
     pub normalization: NormalizationStrategy,
 }
 
@@ -156,16 +166,16 @@ pub enum FeatureType {
     Image,
 }
 
+/// Label space configuration
+///
+/// Defines the structure and encoding of output labels.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LabelSpaceConfig {
-    /// Number of labels
-    /// Number of `num_labels`
+    /// Number of labels in this space
     pub num_labels: u32,
-    /// Label type
-    /// The label type value
+    /// Type of classification/regression task
     pub label_type: LabelType,
-    /// Label encoding
-    /// The encoding value
+    /// Encoding strategy for labels
     pub encoding: LabelEncoding,
 }
 

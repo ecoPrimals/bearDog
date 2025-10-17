@@ -1,63 +1,70 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! Safe Android StrongBox HSM Implementation
+//!
+//! This module provides a memory-safe interface to Android StrongBox hardware security.
+//! All operations are designed to avoid unsafe code while maintaining security guarantees.
 
 use beardog_errors::BearDogError;
 use tracing::info;
 
-pub mod types;
-
 pub mod safe_device_detection;
-
-pub mod safe_keystore_replacement;
-
-pub mod safe_native_wrapper;
-
+pub mod types;
+// TODO: Fix corruption in safe_keystore_replacement.rs before re-enabling
+// pub mod safe_keystore_replacement;
+pub mod core;
 pub mod safe_android_provider;
-
-pub use types::*;
+pub mod safe_native_wrapper;
 
 pub use safe_android_provider::*;
 pub use safe_device_detection::*;
-pub use safe_keystore_replacement::SafeAndroidKeystoreOps;
+pub use types::*;
+// pub use safe_keystore_replacement::SafeAndroidKeystoreOps;
 pub use safe_native_wrapper::SafeAndroidKeystore;
- /// Core functionality
- /// Core functionality
-pub mod core; // Make core module available
 
 pub use beardog_types::constants::domains::security::hsm::{
-    VERSION, SUPPORTED_ANDROID_VERSION, MAX_KEY_COUNT, MAX_CHALLENGE_SIZE
+    MAX_CHALLENGE_SIZE, MAX_KEY_COUNT, SUPPORTED_ANDROID_VERSION, VERSION,
 };
 
+/// Safe Android StrongBox Manager
+///
+/// Provides high-level interface to Android StrongBox hardware security module
+/// without using unsafe code.
 pub struct SafeAndroidStrongBoxManager {
-    keystore_ops: SafeAndroidKeystoreOps,
+    keystore: SafeAndroidKeystore,
     device_info: AndroidDeviceInfo,
 }
-impl SafeAndroidStrongBoxManager {
 
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
+impl SafeAndroidStrongBoxManager {
+    /// Creates a new SafeAndroidStrongBoxManager instance
+    ///
+    /// # Errors
+    /// Returns an error if device detection or keystore initialization fails.
     pub async fn new() -> Result<Self, BearDogError> {
         info!("🤖 Initializing SafeAndroidStrongBoxManager - ZERO UNSAFE CODE");
-        let keystore_ops = SafeAndroidKeystoreOps::new(String,
-    pub android_version: String,
-    /// Whether strongbox_available is enabled
-    pub strongbox_available: bool,
-    /// Whether tee_available is enabled
-    pub tee_available: bool,
-    /// Whether hardware_attestation_supported is enabled
-    pub hardware_attestation_supported: bool,
 
-/// Safe Get Android Device Info operation.
+        let device_info = safe_get_android_device_info().await?;
+        let keystore = SafeAndroidKeystore::new()?;
+
+        Ok(Self {
+            keystore,
+            device_info,
+        })
+    }
+
+    /// Returns device information
+    pub fn device_info(&self) -> &AndroidDeviceInfo {
+        &self.device_info
+    }
+
+    /// Returns keystore operations interface
+    pub fn keystore(&self) -> &SafeAndroidKeystore {
+        &self.keystore
+    }
+}
+
+/// Safe Android device information retrieval
 ///
 /// # Errors
-/// Returns an error if the operation fails.
+/// Returns an error if device information cannot be retrieved.
 pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
     info!("📱 Safe Android device detection starting");
 
@@ -66,54 +73,51 @@ pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDog
             .unwrap_or_else(|_| "Android Device".to_string()),
         android_version: std::env::var("ANDROID_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
         strongbox_available: std::env::var("ANDROID_STRONGBOX_AVAILABLE")
-            .map(|v| v == "true".to_string())
+            .map(|v| v == "true")
             .unwrap_or(false),
         tee_available: std::env::var("ANDROID_TEE_AVAILABLE")
+            .map(|v| v == "true")
             .unwrap_or(true), // TEE is generally available on modern Android
         hardware_attestation_supported: std::env::var("ANDROID_HARDWARE_ATTESTATION")
+            .map(|v| v == "true")
+            .unwrap_or(false),
     };
+
     info!("✅ Safe Android device detection completed");
     Ok(device_info)
+}
 
-/// Create Safe Android Strongbox operation.
+/// Factory function to create SafeAndroidStrongBoxManager
 ///
 /// # Errors
-/// Returns an error if the operation fails.
-/// Creates safe_android_strongbox
+/// Returns an error if manager creation fails.
 pub async fn create_safe_android_strongbox() -> Result<SafeAndroidStrongBoxManager, BearDogError> {
-    SafeAndroidStrongBoxManager::new()
+    SafeAndroidStrongBoxManager::new().await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[tokio::test]}
 
-
-    fn test_safe_android_manager_creation() -> Result<(), BearDogError> {
-        let manager = SafeAndroidStrongBoxManager::new();
-        assert!(manager.is_ok());
-        let manager = manager.map_err(|e| {
-            tracing::error!(
-                "Operation failed ({}): {:?}",
-                "Failed to create SafeAndroidStrongBoxManager",
-                e
-            );
-            beardog_errors::BearDogError::internal(format!(
-                "Failed to create SafeAndroidStrongBoxManager", e
-            ))
-        })?;
-
+    #[tokio::test]
+    async fn test_safe_android_manager_creation() -> Result<(), BearDogError> {
+        let manager = SafeAndroidStrongBoxManager::new().await?;
         assert!(!manager.device_info().device_model.is_empty());
         Ok(())
-    fn test_safe_device_info_detection() -> Result<(), BearDogError> {
-        let device_info = safe_get_android_device_info();
-        assert!(device_info.is_ok());
-        let device_info = device_info.map_err(|e| {
-                "Failed to get Android device info",
-                "Failed to get Android device info", e
+    }
+
+    #[tokio::test]
+    async fn test_safe_device_info_detection() -> Result<(), BearDogError> {
+        let device_info = safe_get_android_device_info().await?;
         assert!(!device_info.device_model.is_empty());
-        assert!(!device_info.android_version.is_empty());}
+        assert!(!device_info.android_version.is_empty());
+        Ok(())
+    }
 
-
-    fn test_safe_strongbox_factory() -> Result<(), BearDogError> {
-        let strongbox = create_safe_android_strongbox();
-        assert!(strongbox.is_ok());
+    #[tokio::test]
+    async fn test_safe_strongbox_factory() -> Result<(), BearDogError> {
+        let strongbox = create_safe_android_strongbox().await?;
+        assert!(!strongbox.device_info().device_model.is_empty());
+        Ok(())
+    }
+}

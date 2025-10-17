@@ -95,16 +95,16 @@ impl MetricsCollector {
     ///
     /// # Errors
     /// Returns an error if the metrics storage cannot be accessed
-    /// Gets all_metrics
-    /// Gets all_metrics
+    /// Gets `all_metrics`
+    /// Gets `all_metrics`
     pub async fn get_all_metrics(&self) -> Result<HashMap<String, MetricValue>, BearDogError> {
         Ok(self.metrics.read().await.clone())
     }
 
     /// Gets the total number of recorded metrics
     #[must_use]
-    /// Gets metric_count
-    /// Gets metric_count
+    /// Gets `metric_count`
+    /// Gets `metric_count`
     pub fn get_metric_count(&self) -> usize {
         self.counter.load(Ordering::Relaxed)
     }

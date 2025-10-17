@@ -35,6 +35,7 @@ impl Default for UniversalHsmManager {
 
 impl UniversalHsmManager {
     /// Creates a new instance
+    #[must_use]
     pub const fn new() -> Self {
         Self {}
     }
@@ -98,6 +99,7 @@ impl Default for EcosystemGeneticSpawner {
 impl EcosystemGeneticSpawner {
     /// New operation.
     /// Creates a new instance
+    #[must_use]
     pub fn new(
         universal_hsm: Arc<UniversalHsmManager>,
         // Universal service mesh_discovery parameter - using universal adapter

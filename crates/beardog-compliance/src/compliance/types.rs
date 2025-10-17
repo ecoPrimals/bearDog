@@ -1,6 +1,6 @@
 //! # Compliance Types Module
 //!
-//! This module provides compliance-related types for the BearDog ecosystem.
+//! This module provides compliance-related types for the `BearDog` ecosystem.
 //!
 //! **Configuration types** are imported from the canonical location in beardog-types.
 //! **Runtime/operational types** (events, reports, metrics) are defined here.

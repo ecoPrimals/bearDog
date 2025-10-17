@@ -1,6 +1,6 @@
-//! # BearDog Authentication and Authorization
+//! # `BearDog` Authentication and Authorization
 //!
-//! Secure authentication and authorization capabilities for BearDog applications,
+//! Secure authentication and authorization capabilities for `BearDog` applications,
 //! featuring decentralized identity management, proof verification, and human-centric auth.
 //!
 //! ## Features

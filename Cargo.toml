@@ -64,6 +64,8 @@ metrics = "0.21"
 tokio-test = "0.4"
 criterion = { version = "0.5", features = ["html_reports"] }
 serde_json = { workspace = true }
+beardog-auth = { path = "crates/beardog-auth" }
+beardog-errors = { path = "crates/beardog-errors" }
 
 [workspace]
 # 🏆 PEDANTIC PERFECTION WORKSPACE - A+ (98.5%) Excellence Achieved

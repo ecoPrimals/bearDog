@@ -1,19 +1,129 @@
-// Canonical Types for BearDog
-//
-// This module provides the single source of truth for all canonical types across
-// the BearDog ecosystem. It consolidates and unifies types that were previously
-// scattered across multiple modules and crates.
-//
-// ## Modernization Status
-//
-// ✅ **Security Configuration**: Fully unified in `security_unified.rs`
-// ✅ **Re-export Cleanup**: Eliminated ambiguous glob re-exports
-// 🔄 **Other Types**: Being consolidated into canonical patterns
-//
-// ## Migration Strategy
-//
-// This module is the target for all type unification efforts. Legacy types
-// are being migrated here to create a single source of truth.
+//! Canonical Types for BearDog
+//!
+//! This module provides the **single source of truth** for all canonical types across
+//! the BearDog ecosystem. It consolidates and unifies types that were previously
+//! scattered across multiple modules and crates.
+//!
+//! # Overview
+//!
+//! The canonical module is the central hub for all BearDog type definitions, providing:
+//! - **Unified Configuration System** - Single configuration type for all settings
+//! - **Security Types** - Cryptography, HSM, and authentication types
+//! - **Monitoring & Health** - Observability and health tracking types
+//! - **Network & Discovery** - Service discovery and communication types
+//! - **Capabilities** - Declarative capability-based architecture
+//!
+//! # Quick Start
+//!
+//! ```rust
+//! use beardog_types::canonical::{
+//!     UnifiedBearDogConfig,  // Main configuration type
+//!     HealthStatus,          // System health tracking
+//!     SecurityContext,       // Authentication and authorization
+//!     ProviderConfig,        // Provider configuration
+//! };
+//!
+//! // Create a development configuration
+//! let config = UnifiedBearDogConfig::development();
+//!
+//! // Check system health
+//! let health = HealthStatus::Healthy;
+//! assert_eq!(health, HealthStatus::Healthy);
+//! ```
+//!
+//! # Core Modules
+//!
+//! - [`config`] - Unified configuration system for all BearDog settings
+//! - [`capabilities`] - Capability-based architecture and discovery
+//! - [`security_unified`] - Security configuration and cryptographic types
+//! - [`providers_unified`] - Universal provider system for adapters
+//! - [`monitoring`] - Observability, metrics, and health monitoring
+//! - [`hsm`] - Hardware Security Module integration types
+//! - [`network`] - Network communication and service discovery types
+//! - [`crypto`] - Cryptographic algorithms and key management
+//!
+//! # Configuration System
+//!
+//! The unified configuration system consolidates 50+ fragmented config types:
+//!
+//! ```rust
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // Load from environment
+//! let config = UnifiedBearDogConfig::from_env().unwrap();
+//!
+//! // Access domain-specific configs
+//! let app = &config.app;
+//! let security = &config.security;
+//! let network = &config.network;
+//! ```
+//!
+//! # Security Types
+//!
+//! Security-first design with comprehensive authentication and authorization:
+//!
+//! ```rust
+//! use beardog_types::canonical::{SecurityContext, SecurityLevel};
+//!
+//! let context = SecurityContext {
+//!     user_id: Some("user123".to_string()),
+//!     security_level: SecurityLevel::High,
+//!     authentication_method: "oauth2".to_string(),
+//!     ..Default::default()
+//! };
+//!
+//! // Security context is created
+//! assert!(!context.authentication_method.is_empty());
+//! ```
+//!
+//! # Health Monitoring
+//!
+//! Built-in health tracking for all components:
+//!
+//! ```rust
+//! use beardog_types::canonical::HealthStatus;
+//!
+//! let health = HealthStatus::Healthy;
+//! // Use in monitoring, reporting, and alerting
+//! ```
+//!
+//! # Modernization Status
+//!
+//! - ✅ **Security Configuration**: Fully unified in `security_unified.rs`
+//! - ✅ **Re-export Cleanup**: Eliminated ambiguous glob re-exports
+//! - ✅ **Provider System**: Modern capability-based providers
+//! - ✅ **Type Safety**: Strong typing with compile-time guarantees
+//! - 🔄 **Other Types**: Being consolidated into canonical patterns
+//!
+//! # Migration Guide
+//!
+//! This module is the target for all type unification efforts. Legacy types
+//! are being migrated here to create a single source of truth.
+//!
+//! ## Migrating from Legacy Types
+//!
+//! ```rust,ignore
+//! use beardog_types::canonical::migration::migrate_to_canonical;
+//!
+//! // Migrate legacy types automatically
+//! let canonical = migrate_to_canonical(legacy_type)?;
+//! ```
+//!
+//! # Design Principles
+//!
+//! 1. **Single Source of Truth** - One canonical location for each type
+//! 2. **Zero Fragmentation** - No duplicate type definitions
+//! 3. **Type Safety** - Strong typing with validation
+//! 4. **Performance** - Zero-cost abstractions
+//! 5. **Compatibility** - Smooth migration path from legacy types
+//!
+//! # Performance
+//!
+//! All canonical types use zero-cost abstractions:
+//! - No runtime overhead for type safety
+//! - Efficient serialization with serde
+//! - Copy/Clone only where beneficial
+//! - Minimal memory footprint
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -54,7 +164,10 @@ pub mod providers_unified; // ✅ MODERNIZED: Split into modular structure
 /// Rate limiting configuration - canonical implementation
 pub mod rate_limiting; // ✅ MODERNIZED: Split into modular structure
 /// Security Unified module
-pub mod security_unified; // ✅ MODERNIZED: Split into modular structure // ✅ MODERNIZED: Split into modular structure
+pub mod security_unified; // ✅ MODERNIZED: Split into modular structure
+
+/// Utility functions for canonical types
+pub mod utils;
 
 // Legacy modules - REMOVED as part of modernization cleanup
 
@@ -107,7 +220,7 @@ pub use config::{
     CanonicalDatabaseConfig,
     CanonicalGeneticsConfig,
     CanonicalPerformanceConfig,
-    CanonicalProductionConfig,
+    // CanonicalProductionConfig removed - use UnifiedProductionConfig directly
     CanonicalWorkflowConfig,
     // REMOVED: GlobalConfig, deprecated config types - use UnifiedBearDogConfig directly
     // Compatibility aliases
@@ -191,8 +304,48 @@ pub trait CanonicalType: Send + Sync + Clone + Serialize + for<'de> Deserialize<
     }
 }
 
-/// Core health status - canonical across all `BearDog` systems
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Core health status - canonical across all BearDog systems
+///
+/// Represents the operational health of any BearDog component, service, or system.
+/// This type is used throughout the ecosystem for consistent health tracking and reporting.
+///
+/// # Health States
+///
+/// - [`Healthy`](Self::Healthy) - System is fully operational with no issues
+/// - [`Degraded`](Self::Degraded) - System is operational but with reduced performance
+/// - [`Unhealthy`](Self::Unhealthy) - System is not operational or has critical issues
+/// - [`Unknown`](Self::Unknown) - System status cannot be determined
+///
+/// # Usage
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::HealthStatus;
+///
+/// // Check if system is operational
+/// let status = HealthStatus::Healthy;
+/// assert!(matches!(status, HealthStatus::Healthy | HealthStatus::Degraded));
+///
+/// // Use in monitoring
+/// fn should_alert(status: &HealthStatus) -> bool {
+///     matches!(status, HealthStatus::Unhealthy)
+/// }
+///
+/// assert!(!should_alert(&HealthStatus::Healthy));
+/// assert!(should_alert(&HealthStatus::Unhealthy));
+/// ```
+///
+/// # Integration
+///
+/// This type integrates with:
+/// - System monitoring and alerting
+/// - Load balancers for routing decisions
+/// - Health check endpoints
+/// - Service discovery for availability
+///
+/// # Thread Safety
+///
+/// `HealthStatus` is `Send + Sync` and can be safely shared across threads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HealthStatus {
     /// System is fully operational
     Healthy,
@@ -264,6 +417,78 @@ impl CanonicalType for SessionConfig {
 }
 
 /// Security context containing authentication and authorization information
+///
+/// Represents the complete security state for a user, session, or operation. This type
+/// is used throughout BearDog to make authorization decisions and audit security events.
+///
+/// # Overview
+///
+/// `SecurityContext` provides:
+/// - **Authentication State** - Who is making the request
+/// - **Authorization Data** - What they're allowed to do
+/// - **Security Level** - How much trust to grant
+/// - **Audit Trail** - When and how they authenticated
+///
+/// # Usage
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::{SecurityContext, SecurityLevel, CanonicalType};
+///
+/// // Create a security context
+/// let context = SecurityContext {
+///     user_id: Some("user123".to_string()),
+///     session_id: Some("session_abc".to_string()),
+///     permissions: vec!["read".to_string(), "write".to_string()],
+///     security_level: SecurityLevel::High,
+///     authentication_method: "oauth2".to_string(),
+///     timestamp: chrono::Utc::now(),
+/// };
+///
+/// // Check permissions
+/// fn can_write(ctx: &SecurityContext) -> bool {
+///     ctx.permissions.contains(&"write".to_string())
+/// }
+///
+/// assert!(can_write(&context));
+///
+/// // Validate the context
+/// assert!(context.validate().is_ok());
+/// ```
+///
+/// # Security Levels
+///
+/// Different operations require different security levels:
+/// - **Low** - Public or read-only operations
+/// - **Standard** - Normal authenticated operations
+/// - **High** - Sensitive data access
+/// - **Critical** - System administration or key operations
+///
+/// # Authentication Methods
+///
+/// Common authentication methods:
+/// - `"password"` - Username/password authentication
+/// - `"oauth2"` - OAuth 2.0 token
+/// - `"jwt"` - JSON Web Token
+/// - `"api_key"` - API key authentication
+/// - `"certificate"` - Client certificate
+/// - `"hsm"` - Hardware security module
+///
+/// # Validation
+///
+/// Always validate security contexts before use:
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::{SecurityContext, CanonicalType};
+///
+/// let context = SecurityContext::default();
+/// // Validation will fail if authentication_method is empty
+/// assert!(context.validate().is_err());
+/// ```
+///
+/// # Thread Safety
+///
+/// `SecurityContext` is `Send + Sync` and can be safely shared across threads
+/// for concurrent authorization checks.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityContext {
     /// User identifier (if authenticated)
@@ -311,6 +536,86 @@ impl CanonicalType for SecurityContext {
 }
 
 /// Canonical security audit event
+///
+/// Records security-relevant actions for compliance, forensics, and monitoring.
+/// All security-sensitive operations in BearDog generate audit events for
+/// accountability and incident response.
+///
+/// # Overview
+///
+/// Audit events provide:
+/// - **Complete Audit Trail** - Who did what, when, and why
+/// - **Compliance Support** - GDPR, HIPAA, SOC 2 requirements
+/// - **Security Monitoring** - Detect suspicious activity
+/// - **Forensic Analysis** - Investigate security incidents
+///
+/// # Usage
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::{SecurityAuditEvent, AuditOutcome};
+/// use std::collections::HashMap;
+///
+/// // Record a successful login
+/// let event = SecurityAuditEvent {
+///     event_id: uuid::Uuid::new_v4().to_string(),
+///     event_type: "authentication".to_string(),
+///     user_id: Some("user123".to_string()),
+///     resource: "/api/login".to_string(),
+///     action: "login".to_string(),
+///     outcome: AuditOutcome::Success,
+///     timestamp: chrono::Utc::now(),
+///     metadata: HashMap::from([
+///         ("ip_address".to_string(), serde_json::json!("192.168.1.1")),
+///         ("user_agent".to_string(), serde_json::json!("Mozilla/5.0")),
+///     ]),
+/// };
+///
+/// // Event is ready to log
+/// assert!(!event.event_id.is_empty());
+/// ```
+///
+/// # Event Types
+///
+/// Common event types:
+/// - `"authentication"` - Login, logout, token refresh
+/// - `"authorization"` - Permission checks, access denials
+/// - `"data_access"` - Read operations on sensitive data
+/// - `"data_modification"` - Create, update, delete operations
+/// - `"configuration"` - System configuration changes
+/// - `"key_operation"` - Cryptographic key usage
+///
+/// # Audit Outcomes
+///
+/// - [`Success`](AuditOutcome::Success) - Operation completed successfully
+/// - [`Failure`](AuditOutcome::Failure) - Operation failed (error)
+/// - [`Denied`](AuditOutcome::Denied) - Operation denied (authorization)
+/// - [`Error`](AuditOutcome::Error) - System error occurred
+///
+/// # Metadata
+///
+/// Include relevant context in metadata:
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::SecurityAuditEvent;
+/// use std::collections::HashMap;
+///
+/// let mut metadata = HashMap::new();
+/// metadata.insert("ip_address".to_string(), serde_json::json!("192.168.1.1"));
+/// metadata.insert("session_id".to_string(), serde_json::json!("abc123"));
+/// metadata.insert("risk_score".to_string(), serde_json::json!(0.2));
+/// ```
+///
+/// # Compliance
+///
+/// Audit events support regulatory requirements:
+/// - **GDPR** - Right to access, data processing logs
+/// - **HIPAA** - Access to PHI, audit controls
+/// - **SOC 2** - Logging and monitoring controls
+/// - **PCI DSS** - Payment card data access logs
+///
+/// # Thread Safety
+///
+/// `SecurityAuditEvent` is `Send + Sync` for concurrent audit logging.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAuditEvent {
     /// Unique identifier for the audit event
@@ -385,13 +690,67 @@ impl CanonicalType for SecurityAuditEvent {
 }
 
 /// Canonical policy decision
+///
+/// Result of an access control or authorization policy evaluation.
+///
+/// # Variants
+///
+/// * `Allow` - Permission granted unconditionally
+/// * `Deny` - Permission explicitly denied (default for security)
+/// * `Conditional(String)` - Permission granted with conditions
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::PolicyDecision;
+///
+/// // Unconditional allow
+/// let decision = PolicyDecision::Allow;
+/// assert!(matches!(decision, PolicyDecision::Allow));
+///
+/// // Explicit deny (most secure default)
+/// let decision = PolicyDecision::default();
+/// assert!(matches!(decision, PolicyDecision::Deny));
+///
+/// // Conditional access
+/// let decision = PolicyDecision::Conditional("MFA_required".to_string());
+/// match decision {
+///     PolicyDecision::Conditional(condition) => {
+///         println!("Access granted with condition: {}", condition);
+///     }
+///     _ => {}
+/// }
+/// ```
+///
+/// # Use Cases
+///
+/// - **API Access Control**: Determine if a user can call an endpoint
+/// - **Resource Permissions**: Check if an operation is allowed on a resource
+/// - **Policy Engines**: Result of complex policy evaluation
+/// - **Conditional Access**: Grant access with additional requirements (MFA, time-based, etc.)
+///
+/// # Security Best Practices
+///
+/// - Default to `Deny` for security (fail-closed)
+/// - Use `Conditional` for step-up authentication scenarios
+/// - Always validate conditions before granting access
+/// - Log all `Deny` decisions for security auditing
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PolicyDecision {
     /// Allow the requested action
+    ///
+    /// Permission is granted unconditionally. Use when all policy checks pass.
     Allow,
+
     /// Deny the requested action
+    ///
+    /// Permission is explicitly denied. This is the default for security (fail-closed).
     Deny,
+
     /// Allow with conditions (condition details in string)
+    ///
+    /// Permission granted but additional requirements must be met.
+    /// Examples: "MFA_required", "time_restricted:9-17", "approval_needed:manager"
     Conditional(String),
 }
 
@@ -418,17 +777,84 @@ impl CanonicalType for PolicyDecision {
 }
 
 /// Canonical key status
+///
+/// Lifecycle status of cryptographic keys in the BearDog system.
+///
+/// # Key Lifecycle
+///
+/// ```text
+/// Pending → Active → Inactive → Revoked
+///     ↓         ↓         ↓
+///    (can be activated) (can be reactivated)
+///     ↓
+/// Expired (time-based)
+/// ```
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use beardog_types::canonical::KeyStatus;
+///
+/// // New key starts as pending
+/// let status = KeyStatus::default();
+/// assert!(matches!(status, KeyStatus::Pending));
+///
+/// // Activate key for use
+/// let status = KeyStatus::Active;
+///
+/// // Check if key can be used
+/// let can_use = matches!(status, KeyStatus::Active);
+/// assert!(can_use);
+///
+/// // Revoked keys cannot be reactivated
+/// let status = KeyStatus::Revoked;
+/// assert!(!matches!(status, KeyStatus::Active | KeyStatus::Inactive));
+/// ```
+///
+/// # Status Meanings
+///
+/// * **Pending**: Key created but not yet approved/activated
+/// * **Active**: Key is valid and can be used for operations
+/// * **Inactive**: Key temporarily disabled, can be reactivated
+/// * **Expired**: Key exceeded its validity period
+/// * **Revoked**: Key permanently disabled (security breach, compromise, etc.)
+///
+/// # Security Implications
+///
+/// - **Active**: Only status where key operations are allowed
+/// - **Inactive**: Temporary disablement, can be restored
+/// - **Revoked**: Permanent disablement, cannot be restored
+/// - **Expired**: Time-based disablement, may need rotation
+/// - **Pending**: Awaiting approval, not yet trusted
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KeyStatus {
     /// Key is currently active and valid for use
+    ///
+    /// This is the only status where cryptographic operations are permitted.
     Active,
+
     /// Key is inactive but not revoked
+    ///
+    /// Temporarily disabled; can be reactivated if needed.
+    /// Use for maintenance or temporary suspension.
     Inactive,
+
     /// Key has been revoked and cannot be used
+    ///
+    /// **Permanent disablement**. Use when key is compromised or no longer trusted.
+    /// Revoked keys cannot be reactivated.
     Revoked,
+
     /// Key has expired and is no longer valid
+    ///
+    /// Time-based expiration. Key exceeded its validity period.
+    /// May need to rotate to a new key.
     Expired,
+
     /// Key is pending activation or approval
+    ///
+    /// Initial status for newly created keys. Awaiting approval or activation.
+    /// Default status for security (keys are not trusted until explicitly activated).
     Pending,
 }
 
@@ -482,73 +908,9 @@ impl CanonicalType for WorkflowStatus {
     }
 }
 
-/// Validate canonical usage across the system
-/// Validates `canonical_usage`
-pub fn validate_canonical_usage() -> Result<(), Vec<String>> {
-    let errors = Vec::new();
-
-    // Add validation logic here as needed
-    // For now, we assume canonical usage is correct
-
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        Err(errors)
-    }
-}
-
-#[must_use]
-pub fn canonical_type_info() -> Vec<(&'static str, &'static str)> {
-    vec![
-        ("HealthStatus", "Canonical health status for all systems"),
-        ("SessionConfig", "Canonical session configuration"),
-        (
-            "SecurityContext",
-            "Canonical security context for all operations",
-        ),
-        ("SecurityAuditEvent", "Canonical audit event structure"),
-        ("PolicyDecision", "Canonical policy decision enum"),
-        ("KeyStatus", "Canonical key status enum"),
-        ("WorkflowStatus", "Canonical workflow status enum"),
-        (
-            "CanonicalSecurityConfig",
-            "Unified security configuration system",
-        ),
-    ]
-}
-
-pub mod migration {
-    use super::{BearDogError, CanonicalType};
-
-    /// Migrate legacy types to canonical equivalents
-    pub fn migrate_to_canonical<T, C>(_legacy: T) -> Result<C, BearDogError>
-    where
-        T: Send + Sync,
-        C: CanonicalType + Default,
-    {
-        // Generic migration logic - specific implementations would be provided
-        // for each type pair
-        let canonical = C::default();
-        canonical.validate()?;
-        Ok(canonical)
-    }
-
-    /// Batch migrate multiple legacy types
-    pub fn batch_migrate_to_canonical<T, C>(legacy_items: Vec<T>) -> Result<Vec<C>, BearDogError>
-    where
-        T: Send + Sync,
-        C: CanonicalType + Default,
-    {
-        let mut canonical_items = Vec::with_capacity(legacy_items.len());
-
-        for legacy_item in legacy_items {
-            let canonical_item = migrate_to_canonical(legacy_item)?;
-            canonical_items.push(canonical_item);
-        }
-
-        Ok(canonical_items)
-    }
-}
+// Re-export utility functions for backwards compatibility
+pub use utils::migration;
+pub use utils::{canonical_type_info, validate_canonical_usage};
 
 #[cfg(test)]
 mod tests {
@@ -575,18 +937,5 @@ mod tests {
         assert!(decision.validate().is_ok());
     }
 
-    #[test]
-    fn test_canonical_usage_validation() {
-        let result = validate_canonical_usage();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_canonical_type_info() {
-        let info = canonical_type_info();
-        assert!(!info.is_empty());
-        assert!(info
-            .iter()
-            .any(|(name, _)| *name == "CanonicalSecurityConfig"));
-    }
+    // Utility function tests moved to utils.rs
 }

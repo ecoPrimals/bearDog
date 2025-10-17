@@ -12,32 +12,32 @@ pub struct PerformanceConfig {
     /// The max decryption latency value
     pub max_decryption_latency: Duration,
     pub max_session_setup_time: Duration,
-    /// Number of min_gaming_throughput
+    /// Number of `min_gaming_throughput`
     pub min_gaming_throughput: u64,
-    /// Whether enable_monitoring is enabled
+    /// Whether `enable_monitoring` is enabled
     pub enable_monitoring: bool,
     /// The metrics interval value
     pub metrics_interval: Duration,
-    /// Whether enable_prediction is enabled
+    /// Whether `enable_prediction` is enabled
     pub enable_prediction: bool,
-    /// Number of memory_limit_mb
+    /// Number of `memory_limit_mb`
     pub memory_limit_mb: u64,
-    /// Number of max_concurrent_sessions
+    /// Number of `max_concurrent_sessions`
     pub max_concurrent_sessions: u32,
-    /// Whether enable_auto_scaling is enabled
+    /// Whether `enable_auto_scaling` is enabled
     pub enable_auto_scaling: bool,
     /// The cpu threshold value
     pub cpu_threshold: f64,
     /// The memory threshold value
     pub memory_threshold: f64,
     pub bandwidth_limit_mbps: u64,
-    /// Whether enable_compression is enabled
+    /// Whether `enable_compression` is enabled
     pub enable_compression: bool,
-    /// Number of compression_level
+    /// Number of `compression_level`
     pub compression_level: u32,
-    /// Whether enable_caching is enabled
+    /// Whether `enable_caching` is enabled
     pub enable_caching: bool,
-    /// Number of cache_size_mb
+    /// Number of `cache_size_mb`
     pub cache_size_mb: u64,
     /// The cache ttl value
     pub cache_ttl: Duration,
@@ -71,7 +71,7 @@ impl Default for PerformanceConfig {
 pub struct SecurityConfig {
     /// The key storage path value
     pub key_storage_path: String,
-    /// Number of key_escrow_threshold
+    /// Number of `key_escrow_threshold`
     pub key_escrow_threshold: u32,
 }
 
@@ -87,7 +87,7 @@ impl Default for SecurityConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GamingConfig {
     pub anti_cheat_provider: String,
-    /// Number of max_latency_ms
+    /// Number of `max_latency_ms`
     pub max_latency_ms: u32,
 }
 
@@ -102,37 +102,37 @@ impl Default for GamingConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResilienceConfig {
-    /// Whether enable_circuit_breaker is enabled
+    /// Whether `enable_circuit_breaker` is enabled
     pub enable_circuit_breaker: bool,
-    /// Number of failure_threshold
+    /// Number of `failure_threshold`
     pub failure_threshold: u32,
     pub recovery_timeout: Duration,
-    /// Number of max_retries
+    /// Number of `max_retries`
     pub max_retries: u32,
     /// The retry delay value
     pub retry_delay: Duration,
-    /// Whether enable_health_checks is enabled
+    /// Whether `enable_health_checks` is enabled
     pub enable_health_checks: bool,
     /// The health check interval value
     pub health_check_interval: Duration,
     pub health_check_timeout: Duration,
-    /// Whether enable_graceful_shutdown is enabled
+    /// Whether `enable_graceful_shutdown` is enabled
     pub enable_graceful_shutdown: bool,
     pub shutdown_timeout: Duration,
-    /// Whether enable_auto_recovery is enabled
+    /// Whether `enable_auto_recovery` is enabled
     pub enable_auto_recovery: bool,
     /// The recovery delay value
     pub recovery_delay: Duration,
-    /// Number of max_recovery_attempts
+    /// Number of `max_recovery_attempts`
     pub max_recovery_attempts: u32,
-    /// Whether enable_backup_systems is enabled
+    /// Whether `enable_backup_systems` is enabled
     pub enable_backup_systems: bool,
     /// The backup sync interval value
     pub backup_sync_interval: Duration,
-    /// Whether enable_disaster_recovery is enabled
+    /// Whether `enable_disaster_recovery` is enabled
     pub enable_disaster_recovery: bool,
     pub disaster_recovery_timeout: Duration,
-    /// Whether enable_self_healing is enabled
+    /// Whether `enable_self_healing` is enabled
     pub enable_self_healing: bool,
     pub healing_timeout: Duration,
 }
@@ -227,13 +227,13 @@ impl Default for TunnelMonitoringConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedProcessorConfig {
-    /// Number of session_key_length
+    /// Number of `session_key_length`
     pub session_key_length: usize,
-    /// Number of key_derivation_rounds
+    /// Number of `key_derivation_rounds`
     pub key_derivation_rounds: u32,
     /// The key rotation interval value
     pub key_rotation_interval: Duration,
-    /// Whether use_hardware_keys is enabled
+    /// Whether `use_hardware_keys` is enabled
     pub use_hardware_keys: bool,
 }
 

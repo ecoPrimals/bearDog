@@ -280,7 +280,7 @@ impl BenchmarkSuite {
     /// Gets `all_results`
     /// Gets `all_results`
     #[must_use]
-    pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
+    pub const fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
         &self.benchmarks
     }
 

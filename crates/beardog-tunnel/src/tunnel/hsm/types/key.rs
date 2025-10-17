@@ -1,311 +1,360 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! HSM Key Types
+//!
+//! Type definitions for cryptographic keys managed by the HSM.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+/// Key type enumeration
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum KeyType {
+    /// AES encryption key
+    Aes { key_size: u32 },
+    /// RSA key pair
+    Rsa { key_size: u32 },
+    /// HMAC key
     Hmac { key_size: u32 },
-
+    /// Key derivation key
     KeyDerivation { key_size: u32 },
-
-
+    /// Elliptic curve P-256
     EccP256,
-
-
+    /// Elliptic curve P-384
     EccP384,
-
-
+    /// Elliptic curve P-521
     EccP521,
-
-
+    /// Ed25519 signing key
     Ed25519,
-
-
+    /// X25519 key exchange
     X25519,
+    /// Custom key type
+    Custom(String),
+}
 
-    Custom(String,
-
-    /// The hsm type value
+/// Universal key structure
+#[derive(Debug, Clone)]
+pub struct UniversalKey {
+    /// Key ID
+    pub id: String,
+    /// HSM type
     pub hsm_type: String,
-
-    /// The key type value
+    /// Key type
     pub key_type: KeyType,
-
-    /// The metadata value
+    /// Key metadata
     pub metadata: KeyMetadata,
-
-    /// The key material value
+    /// Key material (encrypted or reference)
     pub key_material: KeyMaterial,
-
-    /// The hsm tier value
+    /// HSM tier
     pub hsm_tier: String,
-
-    /// Current status of the health
+    /// Health status
     pub health_status: KeyHealthStatus,
-
     /// Optional attestation
     pub attestation: Option<KeyAttestation>,
-
-    /// The created at value
+    /// Creation timestamp
     pub created_at: DateTime<Utc>,
+}
 
+/// Type alias for compatibility
+pub type HsmKey = UniversalKey;
+
+/// Type alias for HSM key metadata (compatibility)
+pub type HsmKeyMetadata = KeyMetadata;
+
+/// Key material variants
+#[derive(Debug, Clone)]
 pub enum KeyMaterial {
-
-    /// State indicating encrypted
+    /// Encrypted key data
     Encrypted {
-
+        /// Encrypted key bytes
         encrypted_data: Vec<u8>,
-
+        /// Encryption algorithm used
         encryption_algorithm: String,
-
+        /// Optional KDF parameters
         kdf_params: Option<HashMap<String, String>>,
     },
-
+    /// Reference to HSM-stored key
     Reference {
-
+        /// Key reference identifier
         key_reference: String,
-
+        /// HSM instance identifier
         hsm_instance: String,
-
+    },
+    /// Hardware-backed key reference
     HardwareReference {
-
+        /// Hardware reference
         reference: String,
-
+        /// HSM location/identifier
         hsm_location: String,
-
+    },
+    /// Key handle for indirect access
     Handle {
-
+        /// Key handle identifier
         key_handle: String,
-
+        /// Handle type
         handle_type: String,
+    },
+}
 
+/// HSM key information
+#[derive(Debug, Clone)]
 pub struct HsmKeyInfo {
-
-
-    pub performance_metrics: KeyPerformanceMetrics,
-
-    /// Optional last accessed
-    pub last_accessed: Option<DateTime<Utc>>,
-
-    /// Number of access
-    pub access_count: u64,
-
-
+    /// Key identifier
     pub key_id: String,
-
-    /// The usage policy value
+    /// Performance metrics
+    pub performance_metrics: KeyPerformanceMetrics,
+    /// Last access timestamp
+    pub last_accessed: Option<DateTime<Utc>>,
+    /// Access count
+    pub access_count: u64,
+    /// Usage policy
     pub usage_policy: KeyUsagePolicy,
+}
 
+/// Key performance metrics
+#[derive(Debug, Clone)]
 pub struct KeyPerformanceMetrics {
-
-    /// The avg latency ms value
+    /// Average latency in milliseconds
     pub avg_latency_ms: f64,
-
-    /// The ops per second value
+    /// Operations per second
     pub ops_per_second: f64,
-
-    /// The error rate value
+    /// Error rate (0.0-1.0)
     pub error_rate: f64,
-
-    /// Number of total_operations
+    /// Total operations performed
     pub total_operations: u64,
+}
 
-pub struct KeyAttestation {
-
-    /// Collection of certificate chain
-    pub certificate_chain: Vec<Vec<u8>>,
-
-    /// Collection of attestation statement
-    pub attestation_statement: Vec<u8>,
-
-
-    pub format: String,
-
-    /// The generated at value
-    pub generated_at: DateTime<Utc>,
-
-
-    pub valid_until: DateTime<Utc>,
-
-    /// The attestation type value
-    pub attestation_type: String,
-
-    /// Collection of attestation data
-    pub attestation_data: Vec<u8>,
-
-    /// Collection of attestation signature
-    pub attestation_signature: Vec<u8>,
-
-    /// Whether verified is enabled
-    pub verified: bool,
-
-pub enum KeyHealthStatus {
-
-
-    /// Represents healthy variant
-    Healthy,
-
-    /// Currently warning
-    Warning {
-
-        message: String,
-
-        severity: WarningSeverity,
-
-    /// Represents unhealthy variant
-    Unhealthy {
-
-        error: String,
-
-        error_time: DateTime<Utc>,
-
-
-    /// Unknown or undefined state
-    Unknown,
-
-pub enum WarningSeverity {
-
-
-    /// Represents low variant
-    Low,
-
-
-    /// Represents medium variant
-    Medium,
-
-
-    /// Represents high variant
-    High,
-
-pub struct GenerateKeyRequest {
-
-    /// The target hsm tier value
-    pub target_hsm_tier: String,
-
-    /// Whether generate_attestation is enabled
-    pub generate_attestation: bool,
-
-    /// Optional attestation challenge
-    pub attestation_challenge: Option<Vec<u8>>,
-
-    /// Whether require_user_presence is enabled
-    pub require_user_presence: bool,}
-    pub require_user_presence: bool,}
-    pub require_user_presence: bool,}
-
-impl Default for KeyUsagePolicy {}
-
-    fn default(true,
-            can_decrypt: true,
-            can_sign: true,
-            can_verify: true,
-            can_wrap: false,
-            can_unwrap: false,
-            can_derive: false,
-            exportable: false,
-            extractable: false,
-            min_security_level: 1,
-            max_operations: None,
-            allowed_applications: Vec::new(0.0,
+impl Default for KeyPerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            avg_latency_ms: 0.0,
             ops_per_second: 0.0,
             error_rate: 0.0,
             total_operations: 0,
+        }
+    }
+}
 
-pub enum HsmOperation {
+/// Key attestation information
+#[derive(Debug, Clone)]
+pub struct KeyAttestation {
+    /// Certificate chain
+    pub certificate_chain: Vec<Vec<u8>>,
+    /// Attestation statement
+    pub attestation_statement: Vec<u8>,
+    /// Attestation format
+    pub format: String,
+    /// Attestation timestamp
+    pub timestamp: DateTime<Utc>,
+}
 
-    /// Represents generate key variant
-    GenerateKey {
+/// Key metadata
+#[derive(Debug, Clone)]
+pub struct KeyMetadata {
+    /// Key identifier
+    pub key_id: String,
+    /// Key type
+    pub key_type: KeyType,
+    /// Key alias/name
+    pub alias: Option<String>,
+    /// Creation timestamp
+    pub created_at: DateTime<Utc>,
+    /// Expiration timestamp
+    pub expires_at: Option<DateTime<Utc>>,
+    /// Custom metadata tags
+    pub tags: HashMap<String, String>,
+}
 
-        key_type: KeyType,
+impl KeyMetadata {
+    /// Create new key metadata
+    pub fn new(key_id: String, key_type: KeyType) -> Self {
+        Self {
+            key_id,
+            key_type,
+            alias: None,
+            created_at: Utc::now(),
+            expires_at: None,
+            tags: HashMap::new(),
+        }
+    }
+}
 
-        usage_policy: KeyUsagePolicy,
+/// Key health status
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum KeyHealthStatus {
+    /// Key is healthy
+    Healthy,
+    /// Key is degraded
+    Degraded,
+    /// Key is compromised
+    Compromised,
+    /// Key is expired
+    Expired,
+    /// Key is revoked
+    Revoked,
+}
 
-    /// Represents import key variant
-    ImportKey {
+/// Key usage policy
+#[derive(Debug, Clone)]
+pub struct KeyUsagePolicy {
+    /// Allowed operations
+    pub allowed_operations: Vec<KeyOperation>,
+    /// Maximum uses (None = unlimited)
+    pub max_uses: Option<u64>,
+    /// Usage rate limit (operations per second)
+    pub rate_limit: Option<f64>,
+    /// Require user authentication
+    pub require_auth: bool,
+}
 
-        key_material: Vec<u8>,
+impl Default for KeyUsagePolicy {
+    fn default() -> Self {
+        Self {
+            allowed_operations: vec![
+                KeyOperation::Encrypt,
+                KeyOperation::Decrypt,
+                KeyOperation::Sign,
+                KeyOperation::Verify,
+            ],
+            max_uses: None,
+            rate_limit: None,
+            require_auth: false,
+        }
+    }
+}
 
-    /// Represents export key variant
-    ExportKey {
+/// Key operations
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum KeyOperation {
+    /// Encryption
+    Encrypt,
+    /// Decryption
+    Decrypt,
+    /// Signing
+    Sign,
+    /// Signature verification
+    Verify,
+    /// Key wrapping
+    Wrap,
+    /// Key unwrapping
+    Unwrap,
+    /// Key derivation
+    Derive,
+    /// Key export
+    Export,
+}
 
-        key_id: String,
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        format: String,
+    #[test]
+    fn test_key_type_variants() {
+        let aes = KeyType::Aes { key_size: 256 };
+        let rsa = KeyType::Rsa { key_size: 2048 };
+        let ed25519 = KeyType::Ed25519;
 
-    /// Represents delete key variant
-    DeleteKey {
+        match aes {
+            KeyType::Aes { key_size } => assert_eq!(key_size, 256),
+            _ => panic!("Expected AES variant"),
+        }
 
-    /// Represents encrypt variant
-    Encrypt {
+        match rsa {
+            KeyType::Rsa { key_size } => assert_eq!(key_size, 2048),
+            _ => panic!("Expected RSA variant"),
+        }
 
-        data: Vec<u8>,
+        assert_eq!(ed25519, KeyType::Ed25519);
+    }
 
-        algorithm: String,
+    #[test]
+    fn test_key_metadata_creation() {
+        let metadata = KeyMetadata::new("test-key".to_string(), KeyType::Ed25519);
+        assert_eq!(metadata.key_id, "test-key");
+        assert!(metadata.alias.is_none());
+        assert!(metadata.expires_at.is_none());
+        assert!(metadata.tags.is_empty());
+    }
 
-    /// Represents decrypt variant
-    Decrypt {
+    #[test]
+    fn test_key_health_status() {
+        let healthy = KeyHealthStatus::Healthy;
+        let expired = KeyHealthStatus::Expired;
 
-    /// Represents sign variant
-    Sign {
+        assert_eq!(healthy, KeyHealthStatus::Healthy);
+        assert_eq!(expired, KeyHealthStatus::Expired);
+        assert_ne!(healthy, expired);
+    }
 
-    /// Represents verify variant
-    Verify {
+    #[test]
+    fn test_key_usage_policy_default() {
+        let policy = KeyUsagePolicy::default();
+        assert_eq!(policy.allowed_operations.len(), 4);
+        assert!(policy.allowed_operations.contains(&KeyOperation::Encrypt));
+        assert!(policy.allowed_operations.contains(&KeyOperation::Decrypt));
+        assert!(policy.max_uses.is_none());
+        assert!(!policy.require_auth);
+    }
 
-        signature: Vec<u8>,
+    #[test]
+    fn test_key_operations() {
+        let ops = [
+            KeyOperation::Encrypt,
+            KeyOperation::Decrypt,
+            KeyOperation::Sign,
+            KeyOperation::Verify,
+            KeyOperation::Wrap,
+            KeyOperation::Unwrap,
+            KeyOperation::Derive,
+            KeyOperation::Export,
+        ];
+        assert_eq!(ops.len(), 8);
+    }
 
-    /// Represents wrap key variant
-    WrapKey {
+    #[test]
+    fn test_key_material_encrypted() {
+        let material = KeyMaterial::Encrypted {
+            encrypted_data: vec![1, 2, 3, 4, 5],
+            encryption_algorithm: "AES-256-GCM".to_string(),
+            kdf_params: None,
+        };
 
-        wrapping_key_id: String,
+        match material {
+            KeyMaterial::Encrypted { encrypted_data, .. } => {
+                assert_eq!(encrypted_data.len(), 5);
+            }
+            _ => panic!("Expected Encrypted variant"),
+        }
+    }
 
-    /// Represents unwrap key variant
-    UnwrapKey {
+    #[test]
+    fn test_key_material_reference() {
+        let material = KeyMaterial::Reference {
+            key_reference: "key-ref-123".to_string(),
+            hsm_instance: "hsm-01".to_string(),
+        };
 
-        wrapped_key: Vec<u8>,
+        match material {
+            KeyMaterial::Reference {
+                key_reference,
+                hsm_instance,
+            } => {
+                assert_eq!(key_reference, "key-ref-123");
+                assert_eq!(hsm_instance, "hsm-01");
+            }
+            _ => panic!("Expected Reference variant"),
+        }
+    }
 
-        unwrapping_key_id: String,
+    #[test]
+    fn test_key_attestation() {
+        let attestation = KeyAttestation {
+            certificate_chain: vec![vec![1, 2, 3]],
+            attestation_statement: vec![4, 5, 6],
+            format: "android-safetynet".to_string(),
+            timestamp: Utc::now(),
+        };
 
-    /// Represents derive key variant
-    DeriveKey {
-
-        base_key_id: String,
-
-        derivation_params: std::collections::HashMap<String, String>,
-
-        derived_key_type: KeyType,
-
-    /// Represents generate random variant
-    GenerateRandom {
-
-        byte_count: u32,
-
-    /// Represents hash variant
-    Hash {
-
-    /// Represents attest key variant
-    AttestKey {
-
-        challenge: Vec<u8>,
-
-    /// Represents genetic evolution variant
-    GeneticEvolution {
-
-        parameters: std::collections::HashMap<String, String>,
-
-    /// Represents lineage proof variant
-    LineageProof {
-
-    /// Represents genetic witness variant
-    GeneticWitness {
-
-    /// Represents custom variant
-    Custom {
-
-        operation: String,
-
+        assert_eq!(attestation.certificate_chain.len(), 1);
+        assert_eq!(attestation.format, "android-safetynet");
+    }
+}

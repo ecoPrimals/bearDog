@@ -1,7 +1,7 @@
 // Analysis Module - Anomaly Detection and Trend Analysis
 
 use super::config::{AnomalyConfig, TrendConfig};
-use super::types::*;
+use super::types::MetricDataPoint;
 
 /// Anomaly detector
 #[derive(Debug)]
@@ -12,11 +12,13 @@ pub struct AnomalyDetector {
 impl AnomalyDetector {
     /// Create new anomaly detector
     /// Creates a new instance
-    pub fn new(config: AnomalyConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: AnomalyConfig) -> Self {
         Self { config }
     }
 
     /// Detect anomalies in metric data
+    #[must_use]
     pub fn detect_anomalies(&self, metrics: &[MetricDataPoint]) -> Vec<AnomalyDetection> {
         let mut anomalies = Vec::new();
 
@@ -55,11 +57,13 @@ pub struct TrendAnalyzer {
 impl TrendAnalyzer {
     /// Create new trend analyzer
     /// Creates a new instance
-    pub fn new(config: TrendConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: TrendConfig) -> Self {
         Self { config }
     }
 
     /// Analyze trends in metric data
+    #[must_use]
     pub fn analyze_trends(&self, metrics: &[MetricDataPoint]) -> TrendAnalysis {
         if metrics.len() < 3 {
             return TrendAnalysis {

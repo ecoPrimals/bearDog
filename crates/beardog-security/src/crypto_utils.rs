@@ -2,7 +2,6 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-
 use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
@@ -15,7 +14,7 @@ use beardog_errors::BearDogError;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hex;
 use hmac::{Hmac, Mac};
-use rand::{distributions::Alphanumeric, thread_rng, Rng, RngCore};
+use rand::{thread_rng, Rng, RngCore};
 use ring::pbkdf2;
 use sha2::{Digest, Sha256};
 use std::num::NonZeroU32;
@@ -228,7 +227,7 @@ impl BearDogCrypto {
     /// # Returns
     /// The HMAC tag as a byte vector
     pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        let mut mac = HmacSha256::new_from_slice(key)
+        let mut mac = <HmacSha256 as hmac::Mac>::new_from_slice(key)
             .map_err(|e| BearDogError::security(format!("HMAC key initialization failed: {e}")))?;
         mac.update(data);
         Ok(mac.finalize().into_bytes().to_vec())
@@ -245,7 +244,11 @@ impl BearDogCrypto {
     ///
     /// # Returns
     /// `true` if the HMAC matches, `false` otherwise
-    pub fn verify_hmac_sha256(key: &[u8], data: &[u8], expected_tag: &[u8]) -> Result<bool, BearDogError> {
+    pub fn verify_hmac_sha256(
+        key: &[u8],
+        data: &[u8],
+        expected_tag: &[u8],
+    ) -> Result<bool, BearDogError> {
         let computed_tag = Self::hmac_sha256(key, data)?;
         Ok(Self::constant_time_compare(&computed_tag, expected_tag))
     }
@@ -309,8 +312,11 @@ impl BearDogCrypto {
     /// A secure API key string in the format "prefix_base64(random_bytes)"
     pub fn generate_api_key(prefix: &str) -> Result<String, BearDogError> {
         let random_bytes = Self::generate_secure_random(32);
-        let base64_key = base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, &random_bytes);
-        
+        let base64_key = base64::Engine::encode(
+            &base64::engine::general_purpose::URL_SAFE_NO_PAD,
+            &random_bytes,
+        );
+
         if prefix.is_empty() {
             Ok(base64_key)
         } else {
@@ -333,199 +339,12 @@ impl BearDogCrypto {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
-    #[tokio::test]
-    fn test_ed25519_signature_verification() -> Result<(), BearDogError> {
-        let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair();
-        let message = b"test message for signing";
+    // Tests moved to crates/beardog-security/src/tests/crypto_primitives_tests.rs
+    // for better organization and comprehensive coverage
 
-        let signature = BearDogCrypto::sign_ed25519(&private_key, message)?;
-        let is_valid = BearDogCrypto::verify_ed25519(&public_key, message, &signature)?;
-
-        assert!(is_valid, "Valid signature should verify");
-
-        let wrong_message = b"wrong message";
-        let is_invalid = BearDogCrypto::verify_ed25519(&public_key, wrong_message, &signature)?;
-        assert!(!is_invalid, "Invalid signature should not verify");
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_secure_nonce_generation() -> Result<(), BearDogError> {
-        let nonce1 = BearDogCrypto::generate_secure_nonce(32);
-        let nonce2 = BearDogCrypto::generate_secure_nonce(32);
-
-        assert_eq!(nonce1.len(), 32);
-        assert_eq!(nonce2.len(), 32);
-        assert_ne!(nonce1, nonce2, "Nonces should be different");
-        assert_ne!(nonce1, vec![0u8; 32], "Nonce should not be all zeros");
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_aes_gcm_encryption() -> Result<(), BearDogError> {
-        let key = BearDogCrypto::generate_secure_random(32);
-        let plaintext = b"test data for encryption";
-
-        let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&key, plaintext, None)?;
-        assert_ne!(ciphertext, plaintext.to_vec());
-        assert_eq!(nonce.len(), 12);
-
-        let decrypted = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &nonce)?;
-        assert_eq!(decrypted, plaintext.to_vec());
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_hmac_sha256() -> Result<(), BearDogError> {
-        let key = b"secret_key_for_hmac_testing";
-        let data = b"message to authenticate";
-
-        let tag1 = BearDogCrypto::hmac_sha256(key, data)?;
-        let tag2 = BearDogCrypto::hmac_sha256(key, data)?;
-
-        // Same key and data should produce same tag
-        assert_eq!(tag1, tag2, "HMAC should be deterministic");
-        assert_eq!(tag1.len(), 32, "HMAC-SHA256 should produce 32 bytes");
-
-        // Different data should produce different tag
-        let different_data = b"different message";
-        let tag3 = BearDogCrypto::hmac_sha256(key, different_data)?;
-        assert_ne!(tag1, tag3, "Different data should produce different HMAC");
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_verify_hmac_sha256() -> Result<(), BearDogError> {
-        let key = b"secret_key_for_verification";
-        let data = b"data to verify";
-
-        let tag = BearDogCrypto::hmac_sha256(key, data)?;
-        
-        // Correct tag should verify
-        assert!(
-            BearDogCrypto::verify_hmac_sha256(key, data, &tag)?,
-            "Valid HMAC should verify"
-        );
-
-        // Wrong tag should not verify
-        let wrong_tag = vec![0u8; 32];
-        assert!(
-            !BearDogCrypto::verify_hmac_sha256(key, data, &wrong_tag)?,
-            "Invalid HMAC should not verify"
-        );
-
-        // Wrong key should not verify
-        let wrong_key = b"wrong_key";
-        assert!(
-            !BearDogCrypto::verify_hmac_sha256(wrong_key, data, &tag)?,
-            "Wrong key should not verify"
-        );
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_constant_time_compare() -> Result<(), BearDogError> {
-        let data1 = b"sensitive_data_12345";
-        let data2 = b"sensitive_data_12345";
-        let data3 = b"different_data_67890";
-        let data4 = b"short";
-
-        // Equal data should match
-        assert!(
-            BearDogCrypto::constant_time_compare(data1, data2),
-            "Equal data should compare as equal"
-        );
-
-        // Different data should not match
-        assert!(
-            !BearDogCrypto::constant_time_compare(data1, data3),
-            "Different data should not compare as equal"
-        );
-
-        // Different lengths should not match
-        assert!(
-            !BearDogCrypto::constant_time_compare(data1, data4),
-            "Different length data should not compare as equal"
-        );
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_generate_password() -> Result<(), BearDogError> {
-        // Test valid password generation
-        let password1 = BearDogCrypto::generate_password(16)?;
-        let password2 = BearDogCrypto::generate_password(16)?;
-
-        assert_eq!(password1.len(), 16, "Password should be correct length");
-        assert_eq!(password2.len(), 16, "Password should be correct length");
-        assert_ne!(password1, password2, "Passwords should be unique");
-
-        // Test minimum length validation
-        let result = BearDogCrypto::generate_password(7);
-        assert!(
-            result.is_err(),
-            "Password generation should fail for length < 8"
-        );
-
-        // Test longer password
-        let long_password = BearDogCrypto::generate_password(64)?;
-        assert_eq!(long_password.len(), 64, "Long password should be correct length");
-
-        // Verify password contains various character types
-        assert!(
-            password1.chars().any(|c| c.is_ascii_uppercase()),
-            "Password should contain uppercase letters"
-        );
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_generate_api_key() -> Result<(), BearDogError> {
-        // Test API key with prefix
-        let api_key1 = BearDogCrypto::generate_api_key("sk")?;
-        assert!(api_key1.starts_with("sk_"), "API key should have prefix");
-
-        // Test API key without prefix
-        let api_key2 = BearDogCrypto::generate_api_key("")?;
-        assert!(!api_key2.contains('_'), "API key without prefix should not have underscore");
-
-        // Test uniqueness
-        let api_key3 = BearDogCrypto::generate_api_key("pk")?;
-        assert_ne!(api_key1, api_key3, "API keys should be unique");
-
-        // Test different prefixes
-        let api_key4 = BearDogCrypto::generate_api_key("test")?;
-        assert!(api_key4.starts_with("test_"), "API key should have custom prefix");
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    fn test_zero_memory() -> Result<(), BearDogError> {
-        let mut sensitive_data = b"super_secret_password_12345".to_vec();
-        
-        // Verify data exists
-        assert_ne!(sensitive_data, vec![0u8; sensitive_data.len()]);
-
-        // Zero the memory
-        BearDogCrypto::zero_memory(&mut sensitive_data);
-
-        // Verify data is zeroed
-        assert_eq!(
-            sensitive_data,
-            vec![0u8; 27],
-            "Memory should be completely zeroed"
-        );
-
-        Ok(())
+    #[test]
+    fn placeholder_test() {
+        // Tests now in crypto_primitives_tests.rs
     }
 }

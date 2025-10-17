@@ -17,7 +17,7 @@ pub struct MetricsCoreConfig {
     /// Whether feature is enabled
     pub enabled: bool,
     /// Metrics collection interval in seconds
-    /// Number of collection_interval_seconds
+    /// Number of `collection_interval_seconds`
     pub collection_interval_seconds: u64,
 }
 
@@ -36,7 +36,7 @@ impl MetricsCore {
     /// # Errors
     /// Returns an error if the metrics core cannot be initialized
     /// Creates a new instance
-    pub fn new(config: MetricsCoreConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: MetricsCoreConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 

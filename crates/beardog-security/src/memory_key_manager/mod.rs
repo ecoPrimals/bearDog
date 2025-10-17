@@ -122,7 +122,7 @@ impl MemoryKeyManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn list_keys(&self) -> Result<Vec<KeyMetadata>, BearDogError> {
+    pub const fn list_keys(&self) -> Result<Vec<KeyMetadata>, BearDogError> {
         Ok(vec![]) // Simplified implementation
     }
 

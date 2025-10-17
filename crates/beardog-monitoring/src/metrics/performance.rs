@@ -14,7 +14,7 @@ pub struct PerformanceEngine {
 
 impl PerformanceEngine {
     /// Creates a new instance
-    pub fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 
@@ -25,14 +25,14 @@ impl PerformanceEngine {
         Ok(())
     }
 
-    pub fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
+    pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Performance event processing logic
         Ok(())
     }
 
     /// Gets metrics
     /// Gets metrics
-    pub fn get_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
+    pub const fn get_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
         Ok(PerformanceMetrics {
             cpu_usage: 0.5,
             memory_usage: 0.3,
@@ -61,7 +61,7 @@ pub struct PerformanceMetrics {
 pub struct PerformanceConfig {
     /// The sample rate value
     pub sample_rate: f64,
-    /// Number of retention_hours
+    /// Number of `retention_hours`
     pub retention_hours: u32,
 }
 

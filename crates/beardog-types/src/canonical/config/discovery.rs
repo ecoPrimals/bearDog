@@ -365,7 +365,7 @@ pub struct AuthenticationConfig {
     pub certificate: Option<CertAuthConfig>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum AuthMethod {
     None,
     Token,

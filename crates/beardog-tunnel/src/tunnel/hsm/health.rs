@@ -1,87 +1,136 @@
+//! HSM Health Monitoring
+//!
+//! This module provides health checking and monitoring for HSMs.
 
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
-use super::{
-    HsmHealthMonitor, HsmProvider, HsmHealthStatus, HsmInfo, HsmTier, SoftwareHsmType,
-    KeyStorageType, MemoryProtectionLevel, TamperResistanceLevel, PerformanceMetrics,
-};
 use beardog_errors::BearDogError;
-use crate::tunnel::hsm::config::HealthConfig;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::time::{interval, timeout};
-use tracing::info;
+use serde::{Deserialize, Serialize};
+use tracing::{debug, info, warn};
 
-pub struct DefaultHsmHealthMonitor {
-    provider_health: Arc<RwLock<HashMap<String, HsmHealthStatus>>>,
-    health_config: HealthConfig,
-    monitoring_active: Arc<RwLock<bool>>,
+/// HSM health status
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum HsmHealthStatus {
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Unknown,
 }
-impl DefaultHsmHealthMonitor {
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
-    pub async fn new(config: HealthConfig) -> Result<Self, BearDogError> {
-        Ok(Self {
-            provider_health: Arc::new(RwLock::new(HashMap::with_capacity(config,
-            monitoring_active: Arc::new(RwLock::new(&str,
-    ) -> Result<Option<HsmHealthStatus>, BearDogError>> {
-        let health_map = self.provider_health.read();
-        Ok(health_map.get(provider_id).cloned())
 
-impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
+/// HSM health check result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HsmHealthCheck {
+    pub status: HsmHealthStatus,
+    pub message: String,
+    pub last_check: chrono::DateTime<chrono::Utc>,
+    pub error_count: u32,
+}
 
-    /// Starts monitoring
-    fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> Result<(), BearDogError> {
-        info!(
-            "🏥 Starting health monitoring for {} providers",
-            providers.len()
-        );
-        let mut monitoring_active = self.monitoring_active.write();
-        *monitoring_active = true;
+impl Default for HsmHealthCheck {
+    fn default() -> Self {
+        Self {
+            status: HsmHealthStatus::Unknown,
+            message: "Not checked yet".to_string(),
+            last_check: chrono::Utc::now(),
+            error_count: 0,
+        }
+    }
+}
 
-        for provider in providers {
-            let provider_clone = provider.clone();
-            let health_map = &self.provider_health;
-            let config = &self.health_config;
-            let monitoring_active = &self.monitoring_active;
-            tokio::spawn(false,
-                            last_check: chrono::Utc::now(),
-                            error_message: Some(error.to_string()),
-                            performance_metrics: PerformanceMetrics::default(),
-                        },
-                        Err(_) => HsmHealthStatus {
-                            error_message: Some(HsmTier::SoftwareHsm {
-                                    implementation: SoftwareHsmType::RustSoftwareHsm,
-                                    key_storage: KeyStorageType::Memory,
-                                    encryption_at_rest: false,
-                                    memory_protection: MemoryProtectionLevel::None,
-                                },
-                                vendor: "unknown".to_string(),
-                                model: "unknown".to_string(),
-                                version: "unknown".to_string(),
-                            });
-                        let provider_id =
-                            format!("{}_{}", provider_info.vendor, provider_info.model);
-                        let mut health_map = health_map.write(Vec<impl HsmProvider + Send + Sync + 'static>,
-    ) -> Result<Vec<impl HsmProvider + Send + Sync + 'static>, BearDogError>> {
-        let mut healthy_providers = Vec::new();
-            let provider_info = provider.get_info()?;
-            let provider_id = format!("{}_{}", provider_info.vendor, provider_info.model);
-            let health_map = self.provider_health.read();
-            if let Some(health_status) = health_map.get(&provider_id) {
-                if health_status.healthy {
-                    healthy_providers.push(provider);
-            } else {
+/// HSM health monitor
+pub struct HsmHealthMonitor {
+    last_check: Option<HsmHealthCheck>,
+}
 
-                healthy_providers.push(provider);
+impl HsmHealthMonitor {
+    /// Creates a new health monitor
+    pub fn new() -> Self {
+        info!("🏥 Initializing HSM health monitor");
+        Self { last_check: None }
+    }
+
+    /// Performs a health check
+    pub fn check_health(&mut self, hsm_available: bool) -> Result<HsmHealthCheck, BearDogError> {
+        debug!("🔍 Performing HSM health check");
+
+        let status = if hsm_available {
+            HsmHealthStatus::Healthy
+        } else {
+            HsmHealthStatus::Unhealthy
+        };
+
+        let check = HsmHealthCheck {
+            status: status.clone(),
+            message: format!(
+                "HSM is {}",
+                if hsm_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            ),
+            last_check: chrono::Utc::now(),
+            error_count: if hsm_available { 0 } else { 1 },
+        };
+
+        self.last_check = Some(check.clone());
+
+        match status {
+            HsmHealthStatus::Healthy => {
+                info!("✅ HSM health check: Healthy");
             }
-        Ok(healthy_providers)
-} 
+            HsmHealthStatus::Unhealthy => {
+                warn!("❌ HSM health check: Unhealthy");
+            }
+            _ => {}
+        }
+
+        Ok(check)
+    }
+
+    /// Gets the last health check result
+    pub fn get_last_check(&self) -> Option<HsmHealthCheck> {
+        self.last_check.clone()
+    }
+}
+
+impl Default for HsmHealthMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_monitor_creation() {
+        let monitor = HsmHealthMonitor::new();
+        assert!(monitor.get_last_check().is_none());
+    }
+
+    #[test]
+    fn test_health_check_healthy() {
+        let mut monitor = HsmHealthMonitor::new();
+        let check = monitor.check_health(true).unwrap();
+        assert_eq!(check.status, HsmHealthStatus::Healthy);
+        assert_eq!(check.error_count, 0);
+    }
+
+    #[test]
+    fn test_health_check_unhealthy() {
+        let mut monitor = HsmHealthMonitor::new();
+        let check = monitor.check_health(false).unwrap();
+        assert_eq!(check.status, HsmHealthStatus::Unhealthy);
+        assert_eq!(check.error_count, 1);
+    }
+
+    #[test]
+    fn test_last_check() {
+        let mut monitor = HsmHealthMonitor::new();
+        monitor.check_health(true).unwrap();
+
+        let last_check = monitor.get_last_check();
+        assert!(last_check.is_some());
+        assert_eq!(last_check.unwrap().status, HsmHealthStatus::Healthy);
+    }
+}

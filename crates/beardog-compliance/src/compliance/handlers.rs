@@ -220,7 +220,7 @@ impl ComplianceHandler {
     }
 
     /// Check Sovereignty Compliance operation.
-    pub fn check_sovereignty_compliance(
+    pub const fn check_sovereignty_compliance(
         &self,
         _event: &ComplianceEvent,
     ) -> Result<Vec<ComplianceViolation>, BearDogError> {
@@ -228,7 +228,7 @@ impl ComplianceHandler {
     }
 
     /// Check Privacy Compliance operation.
-    pub fn check_privacy_compliance(
+    pub const fn check_privacy_compliance(
         &self,
         _event: &ComplianceEvent,
     ) -> Result<Vec<ComplianceViolation>, BearDogError> {
@@ -236,19 +236,19 @@ impl ComplianceHandler {
     }
 
     /// Checks if consent required missing
-    fn is_consent_required_missing(&self, _event: &ComplianceEvent) -> bool {
+    const fn is_consent_required_missing(&self, _event: &ComplianceEvent) -> bool {
         false
     }
 
-    fn check_data_minimization(&self, _event: &ComplianceEvent) -> Vec<ComplianceViolation> {
+    const fn check_data_minimization(&self, _event: &ComplianceEvent) -> Vec<ComplianceViolation> {
         Vec::new()
     }
 
-    fn involves_payment_data(&self, _event: &ComplianceEvent) -> bool {
+    const fn involves_payment_data(&self, _event: &ComplianceEvent) -> bool {
         false
     }
 
-    fn violates_minimum_necessary(&self, _event: &ComplianceEvent) -> bool {
+    const fn violates_minimum_necessary(&self, _event: &ComplianceEvent) -> bool {
         false
     }
 

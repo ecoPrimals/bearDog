@@ -81,11 +81,7 @@ impl SafeAndroidStrongBoxWrapper {
     }
 
     /// Generate hardware-backed key safely
-    pub fn safe_generate_key(
-        &mut self,
-        key_type: &KeyType,
-        key_id: &str,
-    ) -> BearDogResult<String> {
+    pub fn safe_generate_key(&mut self, key_type: &KeyType, key_id: &str) -> BearDogResult<String> {
         info!(
             "🔐 Safe key generation for: {} (type: {:?})",
             key_id, key_type

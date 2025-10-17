@@ -2,6 +2,7 @@
 //
 // Provides secure encryption and decryption capabilities using modern cryptographic algorithms.
 
+use crate::crypto_utils::BearDogCrypto;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -61,7 +62,7 @@ impl EncryptionService {
     /// Checks if initialized
     /// Checks if initialized
     #[must_use]
-    pub fn is_initialized(&self) -> bool {
+    pub const fn is_initialized(&self) -> bool {
         true // Always initialized after construction
     }
 
@@ -86,14 +87,20 @@ impl EncryptionService {
             )));
         }
 
-        // Simple XOR encryption for demonstration (replace with real crypto)
-        let mut encrypted = Vec::with_capacity(input_bytes.len());
-        for (i, &byte) in input_bytes.iter().enumerate() {
-            encrypted.push(byte ^ key[i % key.len()]);
-        }
+        // Use AES-256-GCM for authenticated encryption
+        let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(key, input_bytes, None)?;
 
-        debug!("✅ Successfully encrypted {} bytes", encrypted.len());
-        Ok(encrypted)
+        // Format: nonce (12 bytes) + ciphertext (includes 16-byte auth tag)
+        let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
+        result.extend_from_slice(&nonce);
+        result.extend_from_slice(&ciphertext);
+
+        debug!(
+            "✅ Successfully encrypted {} bytes to {} bytes",
+            input_bytes.len(),
+            result.len()
+        );
+        Ok(result)
     }
 
     /// Decrypt Data operation.
@@ -109,13 +116,24 @@ impl EncryptionService {
             )));
         }
 
-        // Simple XOR decryption (same as encryption for XOR)
-        let mut decrypted = Vec::with_capacity(encrypted_data.len());
-        for (i, &byte) in encrypted_data.iter().enumerate() {
-            decrypted.push(byte ^ key[i % key.len()]);
+        // Minimum size check: nonce (12 bytes) + auth tag (16 bytes)
+        if encrypted_data.len() < 28 {
+            return Err(BearDogError::security(
+                "Encrypted data too short (minimum 28 bytes required)".to_string(),
+            ));
         }
 
-        debug!("✅ Successfully decrypted {} bytes", decrypted.len());
-        Ok(decrypted)
+        // Extract nonce (first 12 bytes) and ciphertext (remaining bytes)
+        let (nonce, ciphertext) = encrypted_data.split_at(12);
+
+        // Decrypt using AES-256-GCM with authentication
+        let plaintext = BearDogCrypto::decrypt_aes_gcm(key, ciphertext, nonce)?;
+
+        debug!(
+            "✅ Successfully decrypted {} bytes to {} bytes",
+            encrypted_data.len(),
+            plaintext.len()
+        );
+        Ok(plaintext)
     }
 }

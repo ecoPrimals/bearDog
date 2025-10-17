@@ -67,7 +67,12 @@ pub struct SovereigntyManager {
 
 impl SovereigntyManager {
     /// Create a new sovereignty manager
-    /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Genetic spawning engine initialization fails
+    /// - Entropy hierarchy manager creation fails
     pub fn new(config: PrimalSovereigntyConfig) -> Result<Self, BearDogError> {
         info!("🏛️ Initializing Primal Sovereignty Manager");
 
@@ -86,8 +91,14 @@ impl SovereigntyManager {
     }
 
     /// Validate sovereignty status
-    /// Validates sovereignty
-    /// Validates sovereignty
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Sovereignty validation fails
+    /// - Configuration is invalid
+    /// - Required dependencies are not met
+    #[allow(clippy::cognitive_complexity)]
     pub fn validate_sovereignty(&mut self) -> Result<bool, BearDogError> {
         info!("🔍 Validating primal sovereignty status");
 
@@ -110,6 +121,7 @@ impl SovereigntyManager {
     /// Get current sovereignty status
     /// Gets `sovereignty_status`
     /// Gets `sovereignty_status`
+    #[must_use]
     pub fn get_sovereignty_status(&self) -> SovereigntyStatus {
         SovereigntyStatus {
             primal_id: self.sovereignty_state.primal_id.clone(),
@@ -120,6 +132,14 @@ impl SovereigntyManager {
         }
     }
 
+    /// Spawn genetic offspring for primal evolution
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Spawning engine is not initialized
+    /// - Spawn request validation fails
+    /// - Genetic material is invalid
     pub fn spawn_genetic_offspring(
         &self,
         _genetics: &GeneticSpawningEngine,

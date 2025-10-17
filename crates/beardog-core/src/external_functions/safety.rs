@@ -49,6 +49,7 @@ pub struct SafetyChecker {
 impl SafetyChecker {
     /// Create new safety checker
     /// Creates a new instance
+    #[must_use]
     pub fn new(security_clearance: SecurityClearance) -> Self {
         Self {
             security_clearance,
@@ -57,6 +58,12 @@ impl SafetyChecker {
     }
 
     /// Check if function call is safe
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Insufficient security clearance
+    /// - Parameter validation fails
     pub fn check_function_call(
         &self,
         function: &ExternalFunction,
@@ -73,7 +80,7 @@ impl SafetyChecker {
 
         // Validate parameters
         for param_value in parameters {
-            self.validate_parameter(param_value)?;
+            Self::validate_parameter(param_value)?;
         }
 
         Ok(())
@@ -81,17 +88,12 @@ impl SafetyChecker {
 
     /// Validate a single parameter
     /// Validates parameter
-    fn validate_parameter(&self, param_value: &ParameterValue) -> Result<(), BearDogError> {
+    fn validate_parameter(param_value: &ParameterValue) -> Result<(), BearDogError> {
         // For now, just basic validation - can be extended
-        match &param_value.value {
-            FunctionValue::Null => {
-                if param_value.parameter.required {
-                    return Err(BearDogError::validation(
-                        "Required parameter cannot be null",
-                    ));
-                }
-            }
-            _ => {} // Other validations can be added here
+        if matches!(&param_value.value, FunctionValue::Null) && param_value.parameter.required {
+            return Err(BearDogError::validation(
+                "Required parameter cannot be null",
+            ));
         }
 
         Ok(())

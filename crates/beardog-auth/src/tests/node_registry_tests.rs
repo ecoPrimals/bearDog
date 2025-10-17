@@ -15,3 +15,5 @@ fn test_node_registration() -> Result<(), BearDogError> {
 
     let registration_result = true; // Placeholder for actual node registration
     assert!(registration_result, "Node registration should succeed");
+    Ok(())
+}

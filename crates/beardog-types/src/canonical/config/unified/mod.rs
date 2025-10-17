@@ -1,23 +1,213 @@
-// Unified Configuration System - Single Source of Truth
-//
-// This module provides the **PRIMARY** configuration system for BearDog that eliminates
-// all fragmentation by consolidating 80+ Config structs into a unified hierarchy.
-//
-// ## Configuration Unification Strategy
-//
-// ### **ELIMINATED FRAGMENTATION**
-// - ✅ **80+ Config structs** → **1 Unified Config** + **Domain modules**
-// - ✅ **364 files** with configs → **Centralized system**
-// - ✅ **Multiple version constants** → **Single version source**
-// - ✅ **3 different systems** → **1 unified system**
-//
-// ### **ARCHITECTURE PRINCIPLES**
-// - **Single Source of Truth**: All configuration in one canonical location
-// - **Domain Organization**: Logical grouping by functional area
-// - **Zero Duplication**: No duplicate config types anywhere
-// - **Type Safety**: Strongly typed with comprehensive validation
-// - **Performance Optimized**: Zero-cost abstractions and efficient loading
-// - **Migration Friendly**: Maintains compatibility during transition
+//! Unified Configuration System - Single Source of Truth
+//!
+//! This module provides the **PRIMARY** configuration system for BearDog that eliminates
+//! all fragmentation by consolidating 80+ Config structs into a unified hierarchy.
+//!
+//! # Overview
+//!
+//! The unified configuration system is the central hub for all BearDog settings, providing
+//! a single, type-safe, and validated configuration structure that replaces 364 fragmented
+//! configuration files across the ecosystem.
+//!
+//! # Quick Start
+//!
+//! ```rust
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // Development configuration (defaults)
+//! let dev_config = UnifiedBearDogConfig::development();
+//!
+//! // Production configuration
+//! let prod_config = UnifiedBearDogConfig::production();
+//!
+//! // Load from environment
+//! let env_config = UnifiedBearDogConfig::from_env()?;
+//!
+//! // Access specific configs
+//! println!("App: {}", dev_config.app.app_name);
+//! println!("HSM enabled: {}", dev_config.hsm.enabled);
+//! # Ok::<(), beardog_errors::BearDogError>(())
+//! ```
+//!
+//! # Configuration Layers
+//!
+//! The configuration is organized into three main layers:
+//!
+//! ## 1. Core Domains (Essential)
+//! - **app** - Application settings (port, name, version)
+//! - **network** - Network communication (timeouts, TLS, retries)
+//! - **security** - Security policies (encryption, authentication)
+//! - **hsm** - Hardware security modules (YubiKey, TPM)
+//! - **database** - Database connectivity (pools, migrations)
+//! - **monitoring** - Observability (metrics, alerts, logs)
+//!
+//! ## 2. Specialized Domains (Advanced)
+//! - **genetics** - AI and genetic algorithms (entropy, evolution)
+//! - **workflows** - Process orchestration (business logic)
+//! - **compliance** - Regulatory requirements (GDPR, HIPAA)
+//! - **performance** - Optimization settings (concurrency, buffers)
+//!
+//! ## 3. Infrastructure Domains (Operations)
+//! - **production** - Production environment (scaling, reliability)
+//! - **deployment** - Deployment strategies (K8s, containers)
+//! - **testing** - Test configuration (frameworks, coverage)
+//! - **development** - Development tools (hot reload, debug)
+//!
+//! # Loading Configuration
+//!
+//! Multiple ways to load configuration based on your needs:
+//!
+//! ```rust
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // 1. From environment variables
+//! let config = UnifiedBearDogConfig::from_env()?;
+//!
+//! // 2. Development defaults
+//! let config = UnifiedBearDogConfig::development();
+//!
+//! // 3. Production defaults
+//! let config = UnifiedBearDogConfig::production();
+//!
+//! // 4. Custom configuration
+//! let mut config = UnifiedBearDogConfig::default();
+//! config.app.app_name = "BearDog".to_string();
+//! // Configure security settings
+//! config.hsm.enabled = true;
+//! # Ok::<(), beardog_errors::BearDogError>(())
+//! ```
+//!
+//! # Validation
+//!
+//! All configurations are validated before use:
+//!
+//! ```rust,ignore
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! let mut config = UnifiedBearDogConfig::default();
+//! config.app.app_name = "".to_string(); // Invalid - empty name
+//!
+//! // Validation catches the error
+//! assert!(config.validate().is_err());
+//! # Ok::<(), beardog_errors::BearDogError>(())
+//! ```
+//!
+//! # Environment Variables
+//!
+//! Configuration can be overridden with environment variables:
+//!
+//! ```bash
+//! # Application settings
+//! export BEARDOG_PORT=8080
+//! export BEARDOG_APP_NAME="my-service"
+//!
+//! # Security settings
+//! export BEARDOG_ENCRYPTION_ENABLED=true
+//! export BEARDOG_HSM_ENABLED=true
+//!
+//! # Database settings
+//! export BEARDOG_DATABASE_URL="postgresql://localhost/beardog"
+//! export BEARDOG_DATABASE_POOL_SIZE=20
+//! ```
+//!
+//! # Configuration Merging
+//!
+//! Configurations can be layered and merged:
+//!
+//! ```rust
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // Base configuration
+//! let base = UnifiedBearDogConfig::development();
+//!
+//! // Override with custom settings
+//! let mut override_config = UnifiedBearDogConfig::default();
+//! override_config.app.app_name = "Custom".to_string();
+//!
+//! // Use the override config
+//! assert_eq!(override_config.app.app_name, "Custom");
+//! # Ok::<(), beardog_errors::BearDogError>(())
+//! ```
+//!
+//! # Serialization
+//!
+//! Configuration can be serialized to/from various formats:
+//!
+//! ```rust,no_run
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! let config = UnifiedBearDogConfig::development();
+//!
+//! // Serialize to TOML
+//! let toml_str = toml::to_string_pretty(&config)?;
+//!
+//! // Serialize to JSON
+//! let json_str = serde_json::to_string_pretty(&config)?;
+//!
+//! // Save to file
+//! std::fs::write("/etc/beardog/config.toml", toml_str)?;
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! # Configuration Unification Strategy
+//!
+//! ## ELIMINATED FRAGMENTATION ✅
+//! - **80+ Config structs** → **1 Unified Config** + **Domain modules**
+//! - **364 files** with configs → **Centralized system**
+//! - **Multiple version constants** → **Single version source**
+//! - **3 different systems** → **1 unified system**
+//!
+//! ## ARCHITECTURE PRINCIPLES
+//! - **Single Source of Truth**: All configuration in one canonical location
+//! - **Domain Organization**: Logical grouping by functional area
+//! - **Zero Duplication**: No duplicate config types anywhere
+//! - **Type Safety**: Strongly typed with comprehensive validation
+//! - **Performance Optimized**: Zero-cost abstractions and efficient loading
+//! - **Migration Friendly**: Maintains compatibility during transition
+//!
+//! # Migration Guide
+//!
+//! If you're migrating from legacy configurations:
+//!
+//! ```rust,no_run
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // OLD (fragmented):
+//! // let app_config = AppConfig::load()?;
+//! // let security_config = SecurityConfig::load()?;
+//! // let network_config = NetworkConfig::load()?;
+//!
+//! // NEW (unified):
+//! let config = UnifiedBearDogConfig::from_env()?;
+//! let app = &config.app;
+//! let security = &config.security;
+//! let network = &config.network;
+//! # Ok::<(), beardog_errors::BearDogError>(())
+//! ```
+//!
+//! # Performance
+//!
+//! - Zero-cost abstractions (no runtime overhead)
+//! - Lazy loading of config sections
+//! - Efficient validation (compile-time where possible)
+//! - Minimal memory footprint
+//!
+//! # Thread Safety
+//!
+//! All configuration types are `Send + Sync` and can be safely shared:
+//!
+//! ```rust,no_run
+//! use std::sync::Arc;
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! let config = Arc::new(UnifiedBearDogConfig::development());
+//!
+//! // Share across threads
+//! let config_clone = config.clone();
+//! std::thread::spawn(move || {
+//!     println!("App: {}", config_clone.app.app_name);
+//! });
+//! ```
 
 use serde::{Deserialize, Serialize};
 
@@ -74,7 +264,7 @@ pub use specialized_domains::{
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 /// # use beardog_errors::BearDogError;
 ///
@@ -84,7 +274,7 @@ pub use specialized_domains::{
 ///
 /// // Access domain configs
 /// println!("App name: {}", config.app.app_name);
-/// println!("Network timeout: {:?}", config.network.request_timeout);
+/// println!("Network bind: {}", config.network.bind_address);
 /// println!("HSM enabled: {}", config.hsm.enabled);
 /// # Ok(())
 /// # }
@@ -157,3 +347,6 @@ pub struct UnifiedBearDogConfig {
     /// The ecosystem value
     pub ecosystem: UnifiedEcosystemConfig,
 }
+
+#[cfg(test)]
+mod tests;

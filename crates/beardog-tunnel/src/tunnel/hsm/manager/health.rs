@@ -1,102 +1,254 @@
+//! HSM Health Monitoring
+//!
+//! Health monitoring and status management for HSM providers.
 
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
-use super::config::HealthConfig;
-use super::{HsmHealthMonitor, HsmProvider};
-use crate::tunnel::hsm::types::PerformanceMetrics;
-use beardog_core::HsmHealthStatus; // Use core type instead of local type
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
-use tokio::time::{interval, timeout};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
-pub struct DefaultHsmHealthMonitor {
-    pub(Arc<RwLock<HashMap<String, HsmHealthStatus>>>,
-    pub(HealthConfig,
-    pub(Arc<RwLock<bool>>,
+/// HSM health status
+#[derive(Debug, Clone)]
+pub struct HsmHealthStatus {
+    /// Whether the HSM is healthy
+    pub is_healthy: bool,
+    /// Last check timestamp
+    pub last_check: chrono::DateTime<chrono::Utc>,
+    /// Error message if unhealthy
+    pub error_message: Option<String>,
 }
-impl DefaultHsmHealthMonitor {
 
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
-    pub async fn new(config: HealthConfig) -> Result<Self, BearDogError> {
-        Ok(Self {
-            provider_health: Arc::new(RwLock::new(HashMap::with_capacity(config,
-            monitoring_active: Arc::new(RwLock::new(&str,
-    ) -> Result<Option<HsmHealthStatus>, BearDogError>> {
-        let health = self.provider_health.read();
-        Ok(health.get(provider_id).cloned())
+impl HsmHealthStatus {
+    /// Create a healthy status
+    pub fn healthy() -> Self {
+        Self {
+            is_healthy: true,
+            last_check: chrono::Utc::now(),
+            error_message: None,
+        }
+    }
 
-impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
+    /// Create an unhealthy status with error
+    pub fn unhealthy(error: String) -> Self {
+        Self {
+            is_healthy: false,
+            last_check: chrono::Utc::now(),
+            error_message: Some(error),
+        }
+    }
+}
 
-    /// Starts monitoring
-    fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> Result<(), BearDogError> {
-        let mut is_active = self.monitoring_active.write(true,
-                        last_check: chrono::Utc::now(None,
-                    },
-                );
+/// Health monitor for HSM providers
+pub struct HealthMonitor {
+    /// Health status cache
+    health_cache: Arc<RwLock<HashMap<String, HsmHealthStatus>>>,
+    /// Health check interval
+    check_interval: Duration,
+    /// Running flag
+    running: Arc<RwLock<bool>>,
+}
+
+impl HealthMonitor {
+    /// Create a new health monitor
+    pub fn new(check_interval: Duration) -> Self {
+        Self {
+            health_cache: Arc::new(RwLock::new(HashMap::new())),
+            check_interval,
+            running: Arc::new(RwLock::new(false)),
+        }
+    }
+
+    /// Start health monitoring
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
+        let mut running = self.running.write().await;
+        if *running {
+            return Err(BearDogError::configuration(
+                "Health monitoring already running",
+            ));
+        }
+        *running = true;
+        drop(running);
+
+        let health_cache = self.health_cache.clone();
+        let check_interval = self.check_interval;
+        let running_flag = self.running.clone();
+
+        tokio::spawn(async move {
+            info!("🏥 HSM health monitoring started");
+
+            while *running_flag.read().await {
+                tokio::time::sleep(check_interval).await;
+
+                // In production, this would check actual provider health
+                debug!("📊 Performing health check");
+
+                // Placeholder: update health cache
+                let mut health_map = health_cache.write().await;
+                for (provider_id, status) in health_map.iter_mut() {
+                    debug!("Checking health for provider: {}", provider_id);
+                    // Update timestamp
+                    status.last_check = chrono::Utc::now();
+                }
             }
 
-        let provider_health = &self.provider_health;
-        let monitoring_active = &self.monitoring_active;
-        let health_config = &self.health_config;
-        tokio::spawn(HashMap<String, u32> = HashMap::with_capacity(16), e);
-                            continue;
-                        }
-                    };
-                    let provider_id = provider_info.vendor;
-
-                    let health_result = timeout(&
-                        health_config.timeout,
-                        Self::perform_health_check(provider),
-                    )
-                    ;
-                    let health_status = match health_result {
-                        Ok(Ok(status)) => {
-
-                            failure_counts.remove(&provider_id);
-                            status
-                        Ok(Err(e)) => {
-
-                            let count = failure_counts.entry(provider_id).or_insert(0);
-                            *count += 1;
-                            let healthy = *count < health_config.failure_threshold;
-                            HsmHealthStatus {
-                                is_healthy,
-                                last_check: chrono::Utc::now(),
-                                error_message: Some(format!("Health check failed: {e:?}")),
-                            }
-                        Err(_) => {
-
-                                error_message: Some(true,
-                                    last_check: chrono::Utc::now(None,
-                                }
-                            });
-                        health_map.insert({} -> {}",
-                                provider_id, previous_status.is_healthy, health_status.is_healthy
-                            );
             info!("🏥 HSM health monitoring stopped");
         });
-        Ok(Vec<impl HsmProvider + Send + Sync + 'static>,
-    ) -> Result<Vec<impl HsmProvider + Send + Sync + 'static>, BearDogError>> {
-        let mut healthy_providers = Vec::new({}", provider_id);
-        Ok(impl HsmProvider + Send + Sync + 'static,
-    ) -> Result<HsmHealthStatus, BearDogError> {
 
-        match provider.get_info() {
-            Ok(_) => Ok(HsmHealthStatus { is_healthy: true }),
-            Err({:?}", e);
-                Ok(false,
-                    last_check: chrono::Utc::now(),
-                    error_message: Some(format!("Health check failed: {e:?}")),
-                    error_message: None,
-                })
+        Ok(())
+    }
+
+    /// Stop health monitoring
+    pub async fn stop_monitoring(&self) {
+        let mut running = self.running.write().await;
+        *running = false;
+        info!("🛑 Stopping HSM health monitoring");
+    }
+
+    /// Get health status for a provider
+    pub async fn get_health_status(&self, provider_id: &str) -> Option<HsmHealthStatus> {
+        let cache = self.health_cache.read().await;
+        cache.get(provider_id).cloned()
+    }
+
+    /// Update health status for a provider
+    pub async fn update_health_status(&self, provider_id: String, status: HsmHealthStatus) {
+        let mut cache = self.health_cache.write().await;
+
+        if let Some(previous_status) = cache.get(&provider_id) {
+            if previous_status.is_healthy != status.is_healthy {
+                if status.is_healthy {
+                    info!("✅ Provider {} recovered", provider_id);
+                } else {
+                    warn!("❌ Provider {} became unhealthy", provider_id);
+                }
+            }
+        }
+
+        cache.insert(provider_id, status);
+    }
+
+    /// Get all health statuses
+    pub async fn get_all_health_statuses(&self) -> HashMap<String, HsmHealthStatus> {
+        self.health_cache.read().await.clone()
+    }
+
+    /// Check if provider is healthy
+    pub async fn is_healthy(&self, provider_id: &str) -> bool {
+        self.get_health_status(provider_id)
+            .await
+            .map(|s| s.is_healthy)
+            .unwrap_or(false)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_health_status_healthy() {
+        let status = HsmHealthStatus::healthy();
+        assert!(status.is_healthy);
+        assert!(status.error_message.is_none());
+    }
+
+    #[test]
+    fn test_health_status_unhealthy() {
+        let status = HsmHealthStatus::unhealthy("Test error".to_string());
+        assert!(!status.is_healthy);
+        assert_eq!(status.error_message, Some("Test error".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_health_monitor_creation() {
+        let monitor = HealthMonitor::new(Duration::from_secs(30));
+        let statuses = monitor.get_all_health_statuses().await;
+        assert!(statuses.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_update_health_status() {
+        let monitor = HealthMonitor::new(Duration::from_secs(30));
+
+        monitor
+            .update_health_status("test-provider".to_string(), HsmHealthStatus::healthy())
+            .await;
+
+        let status = monitor.get_health_status("test-provider").await;
+        assert!(status.is_some());
+        assert!(status.unwrap().is_healthy);
+    }
+
+    #[tokio::test]
+    async fn test_is_healthy() {
+        let monitor = HealthMonitor::new(Duration::from_secs(30));
+
+        monitor
+            .update_health_status("provider-1".to_string(), HsmHealthStatus::healthy())
+            .await;
+
+        assert!(monitor.is_healthy("provider-1").await);
+        assert!(!monitor.is_healthy("nonexistent").await);
+    }
+
+    #[tokio::test]
+    async fn test_health_status_transition() {
+        let monitor = HealthMonitor::new(Duration::from_secs(30));
+
+        // Start healthy
+        monitor
+            .update_health_status("provider-1".to_string(), HsmHealthStatus::healthy())
+            .await;
+
+        assert!(monitor.is_healthy("provider-1").await);
+
+        // Become unhealthy
+        monitor
+            .update_health_status(
+                "provider-1".to_string(),
+                HsmHealthStatus::unhealthy("Connection lost".to_string()),
+            )
+            .await;
+
+        assert!(!monitor.is_healthy("provider-1").await);
+
+        let status = monitor.get_health_status("provider-1").await.unwrap();
+        assert_eq!(status.error_message, Some("Connection lost".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_get_all_health_statuses() {
+        let monitor = HealthMonitor::new(Duration::from_secs(30));
+
+        monitor
+            .update_health_status("p1".to_string(), HsmHealthStatus::healthy())
+            .await;
+        monitor
+            .update_health_status(
+                "p2".to_string(),
+                HsmHealthStatus::unhealthy("Error".to_string()),
+            )
+            .await;
+
+        let all_statuses = monitor.get_all_health_statuses().await;
+        assert_eq!(all_statuses.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_start_stop_monitoring() {
+        let monitor = HealthMonitor::new(Duration::from_millis(100));
+
+        let result = monitor.start_monitoring().await;
+        assert!(result.is_ok());
+
+        // Give it time to run
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        monitor.stop_monitoring().await;
+
+        // Wait for monitoring to actually stop
+        tokio::time::sleep(Duration::from_millis(150)).await;
+    }
+}

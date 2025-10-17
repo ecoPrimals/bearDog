@@ -6,7 +6,7 @@ async fn test_complete_system_initialization() -> Result<(), BearDogError> {
     // Simple system initialization test
     let service_name = "beardog-core".to_string();
     let endpoint = "http://localhost:8080".to_string();
-    let capabilities = vec!["hsm".to_string(), "security".to_string()];
+    let capabilities = ["hsm".to_string(), "security".to_string()];
 
     assert!(!service_name.is_empty());
     assert!(!endpoint.is_empty());

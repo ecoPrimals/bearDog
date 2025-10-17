@@ -11,7 +11,7 @@ use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, info};
+use tracing::debug;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseInfo {
@@ -49,66 +49,10 @@ pub struct LicenseValidation {
 }
 
 impl BearDogCore {
-    #[allow(dead_code)] // TODO: Enable when licensing module is activated
-    pub(crate) async fn initialize_licensing(&self) -> Result<(), BearDogError> {
-        info!("📜 Initializing context-aware licensing system");
-
-        let license_info = self.load_license_configuration()?;
-        self.validate_license_integrity(&license_info)?;
-        self.register_license_with_ecosystem(&license_info)?;
-
-        info!("✅ Licensing system initialized successfully");
-        Ok(())
-    }
-
-    /// Loads `license_configuration`
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)] // TODO: Enable when licensing module is activated
-    fn load_license_configuration(&self) -> Result<LicenseInfo, BearDogError> {
-        debug!("📄 Loading license configuration");
-
-        // In a real implementation, this would load from secure storage
-        Ok(LicenseInfo {
-            license_id: "beardog-enterprise-001".to_string(),
-            license_type: "enterprise".to_string(),
-            issued_at: Utc::now(),
-            expires_at: None, // Perpetual license
-            capabilities: vec![
-                "security".to_string(),
-                "hsm".to_string(),
-                "crypto".to_string(),
-                "monitoring".to_string(),
-                "workflows".to_string(),
-                "ai".to_string(),
-            ],
-            restrictions: HashMap::new(),
-        })
-    }
-
-    /// Validates `license_integrity`
-    #[allow(dead_code, clippy::unused_self, clippy::cognitive_complexity)] // TODO: Enable when licensing module is activated
-    fn validate_license_integrity(&self, license: &LicenseInfo) -> Result<(), BearDogError> {
-        debug!("🔍 Validating license integrity");
-
-        // Verify license signature, expiration, etc.
-        if let Some(expires_at) = license.expires_at {
-            if expires_at < Utc::now() {
-                return Err(BearDogError::business("License has expired".to_string()));
-            }
-        }
-
-        info!("✅ License validation successful");
-        Ok(())
-    }
-
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)] // TODO: Enable when licensing module is activated
-    fn register_license_with_ecosystem(&self, _license: &LicenseInfo) -> Result<(), BearDogError> {
-        debug!("🌐 Registering license with ecosystem");
-
-        // Register with ecosystem using capability discovery
-        // Uses universal adapter to find and register with available services
-        info!("📋 License registered with ecosystem services");
-        Ok(())
-    }
+    // Note: Licensing initialization functions removed as they were unused dead code.
+    // Enterprise licensing features can be re-implemented when needed with proper
+    // integration points. The public licensing API (get_license_status, check_capability_license)
+    // remains available for current use cases.
 
     /// Get the current license validation status
     ///
@@ -118,6 +62,7 @@ impl BearDogCore {
     /// # Returns
     /// Gets `license_status`
     /// Gets `license_status`
+    #[must_use]
     pub fn get_license_status(&self) -> LicenseValidation {
         LicenseValidation {
             is_valid: true,
@@ -157,13 +102,8 @@ impl BearDogCore {
             .contains(&capability.to_string()))
     }
 
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)] // TODO: Enable when licensing module is activated
-    pub(crate) fn refresh_license(&self) -> Result<(), BearDogError> {
-        info!("🔄 Refreshing license information");
-
-        // Implementation would contact licensing server
-        Ok(())
-    }
+    // refresh_license() removed as unused dead code.
+    // Can be re-implemented when enterprise licensing features are needed.
 }
 
 #[cfg(test)]

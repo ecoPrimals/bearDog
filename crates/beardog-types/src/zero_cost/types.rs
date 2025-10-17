@@ -283,3 +283,183 @@ pub struct SimdCapabilities {
     /// Number of `optimal_chunk_size`
     pub optimal_chunk_size: usize,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_performance_metrics_default() {
+        let metrics = PerformanceMetrics::default();
+        assert!(!metrics.async_trait_eliminated);
+        assert!(!metrics.boxing_overhead_removed);
+        assert!(!metrics.compile_time_dispatch);
+        assert_eq!(metrics.memory_allocations_reduced, 0);
+    }
+
+    #[test]
+    fn test_service_info_creation() {
+        let mut metadata = std::collections::HashMap::new();
+        metadata.insert("version".to_string(), "1.0".to_string());
+
+        let service = ServiceInfo::new(
+            "test-service",
+            "127.0.0.1",
+            8080,
+            metadata,
+            Some("/health".to_string()),
+            vec!["read".to_string(), "write".to_string()],
+        );
+
+        assert_eq!(service.name.as_ref(), "test-service");
+        assert_eq!(service.endpoint.as_ref(), "127.0.0.1");
+        assert_eq!(service.port, 8080);
+        assert_eq!(service.capabilities.len(), 2);
+    }
+
+    #[test]
+    fn test_optimization_patterns() {
+        let pattern = OptimizationPattern::EnumDispatch;
+        assert!(matches!(pattern, OptimizationPattern::EnumDispatch));
+
+        let pattern2 = OptimizationPattern::ZeroCopy;
+        assert!(matches!(pattern2, OptimizationPattern::ZeroCopy));
+    }
+
+    #[test]
+    fn test_key_type_variants() {
+        let rsa = KeyType::Rsa2048;
+        let ecdsa = KeyType::EcdsaP256;
+        let aes = KeyType::Aes256;
+
+        assert!(matches!(rsa, KeyType::Rsa2048));
+        assert!(matches!(ecdsa, KeyType::EcdsaP256));
+        assert!(matches!(aes, KeyType::Aes256));
+    }
+
+    #[test]
+    fn test_security_level_ordering() {
+        let standard = SecurityLevel::Standard;
+        let high = SecurityLevel::High;
+        let critical = SecurityLevel::Critical;
+
+        assert!(matches!(standard, SecurityLevel::Standard));
+        assert!(matches!(high, SecurityLevel::High));
+        assert!(matches!(critical, SecurityLevel::Critical));
+    }
+
+    #[test]
+    fn test_hsm_key_creation() {
+        let metadata = std::collections::HashMap::new();
+        let key = HsmKey {
+            key_id: "test-key-123".to_string(),
+            key_type: KeyType::EcdsaP256,
+            created_at: chrono::Utc::now(),
+            metadata,
+        };
+
+        assert_eq!(key.key_id, "test-key-123");
+        assert!(matches!(key.key_type, KeyType::EcdsaP256));
+    }
+
+    #[test]
+    fn test_health_status_creation() {
+        let mut details = std::collections::HashMap::new();
+        details.insert("cpu".to_string(), "50%".to_string());
+
+        let health = HealthStatus {
+            status: "healthy".to_string(),
+            timestamp: chrono::Utc::now(),
+            details,
+        };
+
+        assert_eq!(health.status, "healthy");
+        assert_eq!(health.details.get("cpu").map(String::as_str), Some("50%"));
+    }
+
+    #[test]
+    fn test_workflow_creation() {
+        let workflow = Workflow {
+            id: "workflow-1".to_string(),
+            workflow_type: "deployment".to_string(),
+            steps: vec![],
+            metadata: std::collections::HashMap::new(),
+        };
+
+        assert_eq!(workflow.id, "workflow-1");
+        assert_eq!(workflow.workflow_type, "deployment");
+        assert_eq!(workflow.steps.len(), 0);
+    }
+
+    #[test]
+    fn test_workflow_step_creation() {
+        let mut params = std::collections::HashMap::new();
+        params.insert("timeout".to_string(), "30s".to_string());
+
+        let step = WorkflowStep {
+            id: "step-1".to_string(),
+            action: "validate".to_string(),
+            parameters: params,
+        };
+
+        assert_eq!(step.id, "step-1");
+        assert_eq!(step.action, "validate");
+        assert_eq!(
+            step.parameters.get("timeout").map(String::as_str),
+            Some("30s")
+        );
+    }
+
+    #[test]
+    fn test_compilation_strategy_variants() {
+        assert!(matches!(
+            CompilationStrategy::Conservative,
+            CompilationStrategy::Conservative
+        ));
+        assert!(matches!(
+            CompilationStrategy::Balanced,
+            CompilationStrategy::Balanced
+        ));
+        assert!(matches!(
+            CompilationStrategy::Aggressive,
+            CompilationStrategy::Aggressive
+        ));
+        assert!(matches!(
+            CompilationStrategy::Maximum,
+            CompilationStrategy::Maximum
+        ));
+    }
+
+    #[test]
+    fn test_implementation_status_lifecycle() {
+        assert!(matches!(
+            ImplementationStatus::Planned,
+            ImplementationStatus::Planned
+        ));
+        assert!(matches!(
+            ImplementationStatus::InProgress,
+            ImplementationStatus::InProgress
+        ));
+        assert!(matches!(
+            ImplementationStatus::Complete,
+            ImplementationStatus::Complete
+        ));
+        assert!(matches!(
+            ImplementationStatus::Deprecated,
+            ImplementationStatus::Deprecated
+        ));
+    }
+
+    #[test]
+    fn test_migration_complexity_levels() {
+        assert!(matches!(MigrationComplexity::Low, MigrationComplexity::Low));
+        assert!(matches!(
+            MigrationComplexity::Medium,
+            MigrationComplexity::Medium
+        ));
+        assert!(matches!(
+            MigrationComplexity::High,
+            MigrationComplexity::High
+        ));
+    }
+}

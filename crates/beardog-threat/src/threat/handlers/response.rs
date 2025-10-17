@@ -42,7 +42,10 @@ impl AutomatedThreatResponseHandler {
     /// Handle threat event - SIMPLIFIED
     /// Handles `threat_event`
     /// Handles `threat_event`
-    pub fn handle_threat_event(&self, threat_event: &ThreatEvent) -> Result<(), BearDogError> {
+    pub const fn handle_threat_event(
+        &self,
+        threat_event: &ThreatEvent,
+    ) -> Result<(), BearDogError> {
         if !self.config.enabled {
             return Ok(());
         }
@@ -62,7 +65,7 @@ impl AutomatedThreatResponseHandler {
     /// Update threat intelligence - SIMPLIFIED
     /// Updates `threat_intelligence`
     /// Updates `threat_intelligence`
-    pub fn update_threat_intelligence(
+    pub const fn update_threat_intelligence(
         &self,
         threat_event: &ThreatEvent,
     ) -> Result<(), BearDogError> {
@@ -71,14 +74,14 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Enable monitoring - SIMPLIFIED
-    pub fn enable_enhanced_monitoring(
+    pub const fn enable_enhanced_monitoring(
         &self,
         _threat_event: &ThreatEvent,
     ) -> Result<(), BearDogError> {
         Ok(())
     }
 
-    pub fn collect_forensics(
+    pub const fn collect_forensics(
         &self,
         threat_event: &ThreatEvent,
     ) -> Result<Vec<String>, BearDogError> {
@@ -89,42 +92,45 @@ impl AutomatedThreatResponseHandler {
     /// Execute mitigation - SIMPLIFIED
     #[allow(dead_code)]
     /// Executes `mitigation_step`
-    fn execute_mitigation_step(&self, mitigation: &MitigationStep) -> Result<(), BearDogError> {
+    const fn execute_mitigation_step(
+        &self,
+        mitigation: &MitigationStep,
+    ) -> Result<(), BearDogError> {
         let _ = mitigation; // Acknowledge parameter
         Ok(())
     }
 
     /// Isolate system - SIMPLIFIED
     #[allow(dead_code)]
-    fn isolate_system(&self, target: &str) -> Result<(), BearDogError> {
+    const fn isolate_system(&self, target: &str) -> Result<(), BearDogError> {
         let _ = target; // Acknowledge parameter
         Ok(())
     }
 
     /// Block IP address - SIMPLIFIED
     #[allow(dead_code)]
-    fn block_ip_address(&self, ip: &str) -> Result<(), BearDogError> {
+    const fn block_ip_address(&self, ip: &str) -> Result<(), BearDogError> {
         let _ = ip; // Acknowledge parameter
         Ok(())
     }
 
     /// Quarantine file - SIMPLIFIED
     #[allow(dead_code)]
-    fn quarantine_file(&self, file_path: &str) -> Result<(), BearDogError> {
+    const fn quarantine_file(&self, file_path: &str) -> Result<(), BearDogError> {
         let _ = file_path; // Acknowledge parameter
         Ok(())
     }
 
     /// Disable user account - SIMPLIFIED
     #[allow(dead_code)]
-    fn disable_user_account(&self, username: &str) -> Result<(), BearDogError> {
+    const fn disable_user_account(&self, username: &str) -> Result<(), BearDogError> {
         let _ = username; // Acknowledge parameter
         Ok(())
     }
 
     /// Send alert - SIMPLIFIED
     #[allow(dead_code)]
-    fn send_alert(&self, _message: &str) -> Result<(), BearDogError> {
+    const fn send_alert(&self, _message: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }

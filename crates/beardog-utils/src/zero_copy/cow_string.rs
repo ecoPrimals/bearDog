@@ -15,7 +15,7 @@ impl ZeroCopyString {
     /// Create from shared string
     /// Creates instance from shared
     #[must_use]
-    pub fn from_shared(s: Arc<str>) -> Self {
+    pub const fn from_shared(s: Arc<str>) -> Self {
         Self { inner: s }
     }
 
@@ -135,7 +135,7 @@ impl CommonString {
     /// Get as static string
     /// Returns as str
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Get => "GET",
             Self::Post => "POST",

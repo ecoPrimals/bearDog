@@ -18,3 +18,5 @@ fn test_authorization_verification() -> Result<(), BearDogError> {
         verification_result,
         "Authorization verification should succeed"
     );
+    Ok(())
+}

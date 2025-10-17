@@ -1,10 +1,3 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
-
 pub mod logger;
 pub mod storage;
 pub mod types;

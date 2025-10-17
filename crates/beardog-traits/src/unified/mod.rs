@@ -236,27 +236,27 @@ pub enum UnifiedTraitError {
 impl From<UnifiedTraitError> for BearDogError {
     fn from(error: UnifiedTraitError) -> Self {
         match error {
-            UnifiedTraitError::Configuration { message } => BearDogError::System {
+            UnifiedTraitError::Configuration { message } => Self::System {
                 message,
                 category: beardog_errors::SystemErrorCategory::General,
             },
-            UnifiedTraitError::Validation { field, message } => BearDogError::Business {
+            UnifiedTraitError::Validation { field, message } => Self::Business {
                 message: format!("Validation failed for {field}: {message}"),
                 category: beardog_errors::BusinessErrorCategory::Validation,
             },
-            UnifiedTraitError::NotSupported { operation } => BearDogError::System {
+            UnifiedTraitError::NotSupported { operation } => Self::System {
                 message: format!("Operation not supported: {operation}"),
                 category: beardog_errors::SystemErrorCategory::General,
             },
-            UnifiedTraitError::NotFound { resource } => BearDogError::System {
+            UnifiedTraitError::NotFound { resource } => Self::System {
                 message: format!("Resource not found: {resource}"),
                 category: beardog_errors::SystemErrorCategory::General,
             },
-            UnifiedTraitError::PermissionDenied { action, resource } => BearDogError::Security {
+            UnifiedTraitError::PermissionDenied { action, resource } => Self::Security {
                 message: format!("Permission denied: {action} on {resource}"),
                 category: beardog_errors::SecurityErrorCategory::Authorization,
             },
-            UnifiedTraitError::Internal { message } => BearDogError::System {
+            UnifiedTraitError::Internal { message } => Self::System {
                 message,
                 category: beardog_errors::SystemErrorCategory::General,
             },

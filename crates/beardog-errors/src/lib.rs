@@ -102,6 +102,10 @@ pub mod idiomatic;
 mod tests;
 
 pub use categories::*;
+pub use constructors_unified::{
+    authentication_error, authorization_error, configuration_error, crypto_error, io_error,
+    not_implemented, security_error, system_error, unsupported_operation, validation_error,
+};
 pub use core::BearDogError;
 
 /// Convenient type alias for `Result<T, BearDogError>`

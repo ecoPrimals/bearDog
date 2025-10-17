@@ -72,7 +72,9 @@ pub struct ServiceRegistry {
 
 impl ServiceRegistry {
     /// Create a new service registry with the specified configuration
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns an error if the configuration is invalid or if initialization of internal structures fails.
     pub fn new(config: &ServiceRegistryConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             config: *config,
@@ -81,6 +83,9 @@ impl ServiceRegistry {
     }
 
     /// Register a new service in the registry
+    ///
+    /// # Errors
+    /// Returns an error if the maximum number of services is reached or if the service information is invalid.
     pub fn register_service(&mut self, service: ExtendedServiceInfo) -> Result<(), BearDogError> {
         if self.services.len() >= self.config.max_services {
             return Err(BearDogError::Network {
@@ -95,6 +100,9 @@ impl ServiceRegistry {
     }
 
     /// Remove a service from the registry
+    ///
+    /// # Errors
+    /// Returns an error if the registry operation fails or if internal state becomes inconsistent.
     pub fn deregister_service(
         &mut self,
         service_id: &str,
@@ -103,6 +111,9 @@ impl ServiceRegistry {
     }
 
     /// Find all services with the specified name
+    ///
+    /// # Errors
+    /// Returns an error if the search operation fails or if the service name is invalid.
     pub fn find_services_by_name(
         &self,
         name: &str,
@@ -117,14 +128,17 @@ impl ServiceRegistry {
     }
 
     /// Get the total number of registered services
-    /// Gets `service_count`
-    /// Gets `service_count`
+    ///
+    /// # Errors
+    /// Returns an error if counting services fails or if internal state is corrupted.
     pub fn get_service_count(&self) -> Result<usize, BearDogError> {
         Ok(self.services.len())
     }
 
-    /// Gets service
-    /// Gets service
+    /// Get a service by its ID
+    ///
+    /// # Errors
+    /// Returns an error if the lookup operation fails or if the service ID format is invalid.
     pub fn get_service(
         &self,
         service_id: &str,
@@ -133,8 +147,9 @@ impl ServiceRegistry {
     }
 
     /// Update the health status of a registered service
-    /// Updates `service_health`
-    /// Updates `service_health`
+    ///
+    /// # Errors
+    /// Returns an error if the service is not found, if the health status is invalid, or if the update operation fails.
     pub fn update_service_health(
         &mut self,
         service_id: &str,
@@ -148,10 +163,13 @@ impl ServiceRegistry {
     }
 
     /// Remove services that have exceeded their timeout
-    /// Cleans up `expired_services`
-    /// Cleans up `expired_services`
+    ///
+    /// # Errors
+    /// Returns an error if the cleanup operation fails or if time calculations overflow.
     pub fn cleanup_expired_services(&mut self) -> Result<Vec<String>, BearDogError> {
-        let timeout_duration = chrono::Duration::seconds(self.config.service_timeout_secs as i64);
+        let timeout_duration = chrono::Duration::seconds(
+            i64::try_from(self.config.service_timeout_secs).unwrap_or(i64::MAX),
+        );
         let cutoff_time = Utc::now() - timeout_duration;
 
         let expired_services: Vec<String> = self

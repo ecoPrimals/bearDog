@@ -29,129 +29,126 @@ pub struct EcosystemGeneticContribution {
     pub primal_metadata: HashMap<String, serde_json::Value>,
 }
 
+/// Genetic trait that can be inherited and combined
 ///
 /// Represents a specific trait that can be inherited and combined
+/// in the ecosystem genetic optimization process.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticTrait {
+    /// Unique identifier for this trait
     pub trait_id: String,
     /// Human-readable name of the trait
-    /// Name of the trait
     pub trait_name: String,
     /// Category classification of the trait
-    /// The category value
     pub category: TraitCategory,
     /// Strength of the trait (0.0 to 1.0)
-    /// The strength value
     pub strength: f64,
     /// Dominance level when combining with other traits (0.0 to 1.0)
-    /// The dominance value
     pub dominance: f64,
-    /// Collection of required capabilities
+    /// Capabilities required for this trait to function
     pub required_capabilities: Vec<EcosystemCapability>,
+    /// Additional trait-specific configuration
     pub trait_config: HashMap<String, serde_json::Value>,
 }
 
 /// Hybrid node in the ecosystem genetic network
 ///
 /// Represents a node that combines multiple genetic contributions
-/// to create optimized ecosystem behavior. Manages trait combination,
+/// to create optimized ecosystem behavior through trait combination.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemHybridNode {
+    /// Unique identifier for this hybrid node
     pub node_id: String,
-    /// List of genetic contributions that make up this node
-    /// Collection of genetic contributions
+    /// Genetic contributions that make up this node
     pub genetic_contributions: Vec<EcosystemGeneticContribution>,
     /// Combined traits resulting from genetic contributions
-    /// Collection of combined traits
     pub combined_traits: Vec<GeneticTrait>,
-    /// The resource allocation value
+    /// Resource allocation strategy for this node
     pub resource_allocation: EcosystemResourceAllocation,
-    /// Current status of the health
+    /// Current health status of the node
     pub health_status: NodeHealthStatus,
+    /// Performance metrics for this node
     pub performance_metrics: NodePerformanceMetrics,
-    /// The created at value
+    /// Timestamp when this node was created
     pub created_at: chrono::DateTime<chrono::Utc>,
-    /// Optional last heartbeat
+    /// Timestamp of last heartbeat (if any)
     pub last_heartbeat: Option<chrono::DateTime<chrono::Utc>>,
-    /// The security level value
+    /// Security level classification for this node
     pub security_level: SecurityLevel,
-    /// Collection of active capabilities
+    /// Currently active capabilities on this node
     pub active_capabilities: Vec<EcosystemCapability>,
 }
 
+/// Ecosystem genetic blueprint
+///
+/// Template for creating optimized ecosystem hybrid nodes with
+/// predefined genetic contributions and resource allocations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemGeneticBlueprint {
+    /// Unique identifier for this blueprint
     pub blueprint_id: String,
-    /// Name of the item
+    /// Human-readable name for this blueprint
     pub name: String,
-    /// Collection of primary contributions
+    /// Primary genetic contributions that define this blueprint
     pub primary_contributions: Vec<EcosystemGeneticContribution>,
+    /// Expected performance characteristics
     pub expected_performance: NodePerformanceMetrics,
-    /// The resource requirements value
+    /// Resource requirements for nodes created from this blueprint
     pub resource_requirements: EcosystemResourceAllocation,
-    /// The security level value
+    /// Required security level
     pub security_level: SecurityLevel,
-    /// Number of `heartbeat_interval_seconds`
+    /// Heartbeat interval in seconds
     pub heartbeat_interval_seconds: u64,
-    /// The compatibility score value
+    /// Compatibility score with existing ecosystem
     pub compatibility_score: f64,
-    /// Number of `expected_services`
+    /// Expected number of services
     pub expected_services: usize,
 }
 
+/// Ecosystem resource allocation
 ///
 /// Defines the complete resource allocation strategy across all
 /// system domains including security, compute, networking, storage, and AI.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemResourceAllocation {
     /// Security-related resource allocations
-    /// The security value
     pub security: SecurityResourceAllocation,
     /// Compute resource allocations
-    /// The compute value
     pub compute: ComputeResourceAllocation,
     /// Networking resource allocations
-    /// The networking value
     pub networking: NetworkingResourceAllocation,
     /// Storage resource allocations
-    /// The storage value
     pub storage: StorageResourceAllocation,
     /// AI processing resource allocations
-    /// The ai value
     pub ai: AiResourceAllocation,
 }
 
 /// Security resource allocation configuration
 ///
+/// Defines security resource allocations including
 /// HSM usage, cryptographic operations, and audit retention.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityResourceAllocation {
     /// Number of HSM slots allocated
-    /// Number of `hsm_slots`
     pub hsm_slots: u32,
     /// Key storage capacity in megabytes
-    /// Number of `key_storage_mb`
     pub key_storage_mb: u32,
     /// Cryptographic operations per second capacity
-    /// Number of `crypto_ops_per_second`
     pub crypto_ops_per_second: u32,
     /// Audit log retention period in days
-    /// Number of `audit_retention_days`
     pub audit_retention_days: u32,
 }
 
 /// Compute resource allocation configuration
 ///
+/// Defines CPU, memory, and compute capacity allocations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeResourceAllocation {
     /// Number of CPU cores allocated
-    /// Number of `cpu_cores`
     pub cpu_cores: u32,
     /// Memory allocation in gigabytes
-    /// Number of `memory_gb`
     pub memory_gb: u32,
     /// Compute units per second capacity
-    /// Number of `compute_units_per_second`
     pub compute_units_per_second: u64,
 }
 
@@ -163,20 +160,18 @@ pub struct NetworkingResourceAllocation {
     /// Bandwidth allocation in megabits per second
     pub bandwidth_mbps: u32,
     /// Maximum connections per second
-    /// Number of `connections_per_second`
     pub connections_per_second: u32,
 }
 
 /// Storage resource allocation configuration
 ///
-/// and retrieval operations within the ecosystem.
+/// Defines storage capacity and I/O performance allocations
+/// for data storage and retrieval operations within the ecosystem.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResourceAllocation {
     /// Storage capacity allocation in gigabytes
-    /// Number of `capacity_gb`
     pub capacity_gb: u32,
     /// Input/output operations per second capacity
-    /// Number of iops
     pub iops: u32,
 }
 

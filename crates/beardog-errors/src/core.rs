@@ -487,6 +487,50 @@ impl BearDogError {
             category,
         }
     }
+
+    /// Create an unsupported operation error
+    #[must_use]
+    pub fn unsupported_operation(operation: String) -> Self {
+        Self::Business {
+            message: format!("Unsupported operation: {operation}"),
+            category: BusinessErrorCategory::Validation,
+        }
+    }
+
+    /// Create a not implemented error
+    #[must_use]
+    pub fn not_implemented(feature: String) -> Self {
+        Self::Business {
+            message: format!("Not yet implemented: {feature}"),
+            category: BusinessErrorCategory::Validation,
+        }
+    }
+
+    /// Create an I/O error
+    #[must_use]
+    pub fn io_error(details: String) -> Self {
+        Self::System {
+            message: format!("I/O operation failed: {details}"),
+            category: SystemErrorCategory::FileSystem,
+        }
+    }
+
+    /// Create a cryptographic error
+    #[must_use]
+    pub fn crypto_error(details: String) -> Self {
+        Self::Cryptographic {
+            message: format!("Cryptographic operation failed: {details}"),
+        }
+    }
+
+    /// Create a serialization error
+    #[must_use]
+    pub fn serialization(details: String) -> Self {
+        Self::System {
+            message: format!("Serialization failed: {details}"),
+            category: SystemErrorCategory::General,
+        }
+    }
 }
 
 // ============================================================================

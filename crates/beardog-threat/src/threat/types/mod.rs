@@ -324,22 +324,22 @@ impl ThreatSeverity {
     /// Convert severity to string representation
     /// Returns as str
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            ThreatSeverity::Low => "low",
-            ThreatSeverity::Medium => "medium",
-            ThreatSeverity::High => "high",
-            ThreatSeverity::Critical => "critical",
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+            Self::Critical => "critical",
         }
     }
 
     #[must_use]
-    pub fn score(&self) -> u8 {
+    pub const fn score(&self) -> u8 {
         match self {
-            ThreatSeverity::Low => 1,
-            ThreatSeverity::Medium => 2,
-            ThreatSeverity::High => 3,
-            ThreatSeverity::Critical => 4,
+            Self::Low => 1,
+            Self::Medium => 2,
+            Self::High => 3,
+            Self::Critical => 4,
         }
     }
 }
@@ -480,14 +480,14 @@ pub enum IndicatorType {
 impl std::fmt::Display for IndicatorType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
-            IndicatorType::IpAddress => "IP Address",
-            IndicatorType::DomainName => "Domain Name",
-            IndicatorType::Url => "URL",
-            IndicatorType::FileHash => "File Hash",
-            IndicatorType::EmailAddress => "Email Address",
-            IndicatorType::UserAgent => "User Agent",
-            IndicatorType::RegistryKey => "Registry Key",
-            IndicatorType::ProcessName => "Process Name",
+            Self::IpAddress => "IP Address",
+            Self::DomainName => "Domain Name",
+            Self::Url => "URL",
+            Self::FileHash => "File Hash",
+            Self::EmailAddress => "Email Address",
+            Self::UserAgent => "User Agent",
+            Self::RegistryKey => "Registry Key",
+            Self::ProcessName => "Process Name",
         };
         write!(f, "{s}")
     }
@@ -799,7 +799,7 @@ impl ThreatEvent {
     /// Checks if active
     /// Checks if active
     #[must_use]
-    pub fn is_active(&self) -> bool {
+    pub const fn is_active(&self) -> bool {
         matches!(
             self.status,
             ThreatStatus::Detected | ThreatStatus::Analyzing | ThreatStatus::Mitigating
@@ -864,7 +864,7 @@ impl DetectionRule {
     /// Create a new detection rule
     /// Creates a new instance
     #[must_use]
-    pub fn new(
+    pub const fn new(
         id: String,
         name: String,
         description: String,

@@ -715,14 +715,22 @@ impl UnifiedAdapterConfig {
     /// Create adapter configuration for development environment
     pub fn development() -> Self {
         let mut config = Self::default();
-        config.apply_environment_overrides("development").unwrap();
+        // SAFETY: Development environment overrides should always be valid.
+        // If this fails, it indicates a programming error in apply_environment_overrides.
+        config
+            .apply_environment_overrides("development")
+            .expect("Development environment configuration must be valid");
         config
     }
 
     /// Create adapter configuration for production environment
     pub fn production() -> Self {
         let mut config = Self::default();
-        config.apply_environment_overrides("production").unwrap();
+        // SAFETY: Production environment overrides should always be valid.
+        // If this fails, it indicates a programming error in apply_environment_overrides.
+        config
+            .apply_environment_overrides("production")
+            .expect("Production environment configuration must be valid");
         config
     }
 }

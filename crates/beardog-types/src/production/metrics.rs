@@ -215,3 +215,115 @@ impl ProductionMetricsCollector {
         self.metrics_history.clear();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_metrics_config_default() {
+        let config = MetricsConfig::default();
+        assert_eq!(config.collection_interval_seconds, 30);
+        assert_eq!(config.retention_count, 1000);
+        assert!(config.enable_streaming);
+        assert_eq!(config.batch_size, 100);
+        assert!(config.labels.is_empty());
+    }
+
+    #[test]
+    fn test_metrics_config_custom() {
+        let mut labels = HashMap::new();
+        labels.insert("env".to_string(), "prod".to_string());
+
+        let config = MetricsConfig {
+            collection_interval_seconds: 60,
+            retention_count: 5000,
+            enable_streaming: false,
+            batch_size: 200,
+            labels,
+        };
+
+        assert_eq!(config.collection_interval_seconds, 60);
+        assert_eq!(config.retention_count, 5000);
+        assert!(!config.enable_streaming);
+        assert_eq!(config.labels.len(), 1);
+    }
+
+    #[test]
+    fn test_current_metrics_creation() {
+        let mut custom = HashMap::new();
+        custom.insert("queue_depth".to_string(), 100.0);
+
+        let metrics = CurrentMetrics {
+            timestamp: Utc::now(),
+            cpu_usage_percent: 45.0,
+            memory_usage_percent: 60.0,
+            disk_usage_percent: 70.0,
+            network_throughput_bps: 1_000_000,
+            active_connections: 50,
+            latency_ms: 25.5,
+            error_rate_percent: 0.1,
+            custom_metrics: custom,
+        };
+
+        assert_eq!(metrics.cpu_usage_percent, 45.0);
+        assert_eq!(metrics.active_connections, 50);
+        assert_eq!(metrics.custom_metrics.len(), 1);
+    }
+
+    #[test]
+    fn test_production_metrics_collector_new() {
+        let config = MetricsConfig::default();
+        let collector = ProductionMetricsCollector::new(config);
+        assert_eq!(collector.metrics_history.len(), 0);
+        assert!(!collector.is_collecting);
+    }
+
+    #[test]
+    fn test_collector_start_stop() {
+        let config = MetricsConfig::default();
+        let mut collector = ProductionMetricsCollector::new(config);
+
+        // Start collection
+        let result = collector.start_collection();
+        assert!(result.is_ok());
+        assert!(collector.is_collecting);
+
+        // Try to start again (should fail)
+        let result = collector.start_collection();
+        assert!(result.is_err());
+
+        // Stop collection
+        let result = collector.stop_collection();
+        assert!(result.is_ok());
+        assert!(!collector.is_collecting);
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = MetricsConfig::default();
+        let json = serde_json::to_string(&config);
+        assert!(json.is_ok());
+
+        let deserialized: Result<MetricsConfig, _> = serde_json::from_str(&json.unwrap());
+        assert!(deserialized.is_ok());
+    }
+
+    #[test]
+    fn test_current_metrics_serialization() {
+        let metrics = CurrentMetrics {
+            timestamp: Utc::now(),
+            cpu_usage_percent: 50.0,
+            memory_usage_percent: 60.0,
+            disk_usage_percent: 70.0,
+            network_throughput_bps: 1_000_000,
+            active_connections: 25,
+            latency_ms: 10.0,
+            error_rate_percent: 0.05,
+            custom_metrics: HashMap::new(),
+        };
+
+        let json = serde_json::to_string(&metrics);
+        assert!(json.is_ok());
+    }
+}

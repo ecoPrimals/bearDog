@@ -51,12 +51,12 @@ impl Default for BearDogGenetics {
 pub struct CryptoChromosome {
     /// The algorithm family value
     pub algorithm_family: AlgorithmFamily,
-    /// Number of strength_bits
+    /// Number of `strength_bits`
     pub strength_bits: u32,
     /// The compatibility score value
     pub compatibility_score: f64,
     pub performance_factor: f64,
-    /// Number of security_level
+    /// Number of `security_level`
     pub security_level: u8,
 }
 
@@ -148,13 +148,13 @@ pub enum NodeCapability {
 pub struct SecurityTraits {
     /// The trust threshold value
     pub trust_threshold: f64,
-    /// Number of paranoia_level
+    /// Number of `paranoia_level`
     pub paranoia_level: u8,
-    /// Whether consensus_requirement is enabled
+    /// Whether `consensus_requirement` is enabled
     pub consensus_requirement: bool,
     /// The isolation preference value
     pub isolation_preference: f64,
-    /// Number of audit_frequency
+    /// Number of `audit_frequency`
     pub audit_frequency: u32,
 }
 

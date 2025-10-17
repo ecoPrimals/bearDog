@@ -5,7 +5,10 @@ use super::ecosystem::EcosystemHealthMonitor;
 use super::performance::PerformanceAnalyzer;
 use super::security::SecurityMetrics;
 use super::storage::MetricsStore;
-use super::types::*;
+use super::types::{
+    MetricEvent, MetricEventType, MetricStatistics, MetricType, MetricsSummary, PerformanceMetric,
+    SecurityEvent,
+};
 // Removed unused imports: use super::analysis::{AnomalyDetector, TrendAnalyzer};
 
 use beardog_errors::BearDogError;
@@ -33,6 +36,7 @@ pub struct AdvancedMetricsSystem {
 impl AdvancedMetricsSystem {
     /// Create a new advanced metrics system
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: MetricsConfig) -> Self {
         let (broadcaster, _) = broadcast::channel(1000);
 
@@ -106,8 +110,8 @@ impl AdvancedMetricsSystem {
     }
 
     /// Get metrics summary
-    /// Gets metrics_summary
-    /// Gets metrics_summary
+    /// Gets `metrics_summary`
+    /// Gets `metrics_summary`
     pub async fn get_metrics_summary(&self) -> MetricsSummary {
         let store = self.metrics_store.read().await;
 
@@ -121,12 +125,14 @@ impl AdvancedMetricsSystem {
     }
 
     /// Subscribe to metric events
+    #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<MetricEvent> {
         self.broadcaster.subscribe()
     }
 
     /// Get configuration
-    pub fn config(&self) -> &MetricsConfig {
+    #[must_use]
+    pub const fn config(&self) -> &MetricsConfig {
         &self.config
     }
 }

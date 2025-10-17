@@ -2,7 +2,6 @@
 //
 // High-value tests to boost coverage with minimal effort
 
-use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
 #[test]

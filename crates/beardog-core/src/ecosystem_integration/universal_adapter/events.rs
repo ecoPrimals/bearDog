@@ -17,6 +17,7 @@ pub struct EventSubscriber {
 
 impl EventSubscriber {
     /// Creates a new instance
+    #[must_use]
     pub fn new(name: String, event_types: Vec<String>) -> Self {
         Self {
             id: Uuid::new_v4(),

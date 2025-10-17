@@ -14,7 +14,7 @@ pub struct EcosystemMonitor {
 
 impl EcosystemMonitor {
     /// Creates a new instance
-    pub fn new(config: EcosystemConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: EcosystemConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 
@@ -25,7 +25,7 @@ impl EcosystemMonitor {
         Ok(())
     }
 
-    pub fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
+    pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Ecosystem event processing logic
         Ok(())
     }
@@ -45,7 +45,7 @@ impl EcosystemMonitor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemMetrics {
-    /// Number of active_connections
+    /// Number of `active_connections`
     pub active_connections: u64,
     /// The message throughput value
     pub message_throughput: f64,
@@ -59,7 +59,7 @@ pub struct EcosystemMetrics {
 
 #[derive(Debug, Clone)]
 pub struct EcosystemConfig {
-    /// Number of monitor_interval_secs
+    /// Number of `monitor_interval_secs`
     pub monitor_interval_secs: u64,
     pub health_check_timeout_secs: u64,
 }

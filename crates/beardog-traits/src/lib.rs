@@ -1,6 +1,6 @@
-//! # BearDog Traits - Unified Trait System
+//! # `BearDog` Traits - Unified Trait System
 //!
-//! Unified trait system for the BearDog ecosystem, providing consistent interfaces
+//! Unified trait system for the `BearDog` ecosystem, providing consistent interfaces
 //! across all components with zero unsafe code and strong type safety.
 //!
 //! ## Features
@@ -47,7 +47,7 @@
 
 /// Modern unified trait system (primary)
 ///
-/// The unified trait system provides consistent interfaces across all BearDog components.
+/// The unified trait system provides consistent interfaces across all `BearDog` components.
 pub mod unified;
 
 /// Legacy canonical traits - maintained for compatibility
@@ -74,7 +74,7 @@ pub mod utilities {
     /// Gets `unified_version`
     /// Gets `unified_version`
     #[must_use]
-    pub fn get_unified_version() -> &'static str {
+    pub const fn get_unified_version() -> &'static str {
         "3.0.0"
     }
 
@@ -82,7 +82,7 @@ pub mod utilities {
     /// Validates `unified_usage`
     /// Validates `unified_usage`
     #[must_use]
-    pub fn validate_unified_usage() -> bool {
+    pub const fn validate_unified_usage() -> bool {
         // Unified trait system validation
         true
     }

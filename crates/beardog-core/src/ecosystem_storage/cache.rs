@@ -62,6 +62,7 @@ pub struct CacheMetrics {
 impl CacheManager {
     /// Create new cache manager
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: CacheConfig) -> Self {
         Self {
             entries: HashMap::new(),
@@ -155,6 +156,7 @@ impl CacheManager {
     }
 
     /// Get cache metrics
+    #[must_use]
     pub const fn metrics(&self) -> &CacheMetrics {
         &self.metrics
     }

@@ -211,6 +211,7 @@ pub struct EcosystemStorageRequest {
 }
 
 impl EcosystemStorageRequest {
+    #[must_use]
     pub const fn new(operation: EcosystemStorageOperation, data: Vec<u8>) -> Self {
         Self { operation, data }
     }

@@ -1,6 +1,6 @@
-//! # BearDog Workflows - Process Orchestration
+//! # `BearDog` Workflows - Process Orchestration
 //!
-//! Comprehensive workflow orchestration and process management for BearDog applications,
+//! Comprehensive workflow orchestration and process management for `BearDog` applications,
 //! providing stateful workflow execution with audit logging and error recovery.
 //!
 //! ## Features
@@ -46,6 +46,9 @@
 
 /// Core workflow functionality and types
 pub mod workflows;
+
+#[cfg(test)]
+mod tests;
 
 // Canonical workflow configuration - modernized
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

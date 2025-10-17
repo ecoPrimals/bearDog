@@ -252,6 +252,7 @@ impl SelfDiscoveryManager {
     }
 
     /// Get this primal's identity (read-only)
+    #[must_use]
     pub const fn identity(&self) -> &SelfIdentity {
         &self.identity
     }
@@ -312,6 +313,7 @@ impl Default for DiscoveredService {
 
 impl SelfIdentity {
     /// Create `BearDog` self-identity
+    #[must_use]
     pub fn beardog() -> Self {
         Self {
             id: Uuid::new_v4().to_string(),

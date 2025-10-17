@@ -58,7 +58,7 @@ pub struct ProductionManager {
     pub monitoring: Arc<MonitoringService>,
 }
 
-/// Dummy types for compilation
+/// Placeholder types for compilation
 pub struct BearDogCore;
 pub struct MonitoringService;
 

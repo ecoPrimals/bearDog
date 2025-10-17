@@ -142,6 +142,7 @@ impl Default for EcosystemNode {
 impl EcosystemEvent {
     /// Creates a new ecosystem event
     /// Creates a new instance
+    #[must_use]
     pub fn new(event_type: String, source: String) -> Self {
         Self {
             event_type,
@@ -176,6 +177,7 @@ impl EcosystemEvent {
 impl EcosystemNode {
     /// Creates a new ecosystem node
     /// Creates a new instance
+    #[must_use]
     pub fn new(name: String, node_type: NodeType, endpoint: String) -> Self {
         Self {
             name,

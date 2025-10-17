@@ -28,7 +28,7 @@ fn test_capability_types() {
     use beardog_types::canonical::capabilities::ServiceCapabilityType;
 
     // Test capability variants
-    let capabilities = vec![
+    let capabilities = [
         ServiceCapabilityType::Compute,
         ServiceCapabilityType::Storage,
     ];
@@ -89,7 +89,7 @@ fn test_crypto_algorithm_types() {
 fn test_encryption_modes() {
     use beardog_types::canonical::crypto::EncryptionMode;
 
-    let modes = vec![
+    let modes = [
         EncryptionMode::Gcm,
         EncryptionMode::Cbc,
         EncryptionMode::Ctr,
@@ -145,7 +145,7 @@ fn test_error_conversion_patterns() {
     use std::io;
 
     // Test that we can create errors from various sources
-    let io_error = io::Error::new(io::ErrorKind::Other, "Test IO error");
+    let io_error = io::Error::other("Test IO error");
     let beardog_error: BearDogError = io_error.into();
 
     assert!(format!("{:?}", beardog_error).contains("Test IO error"));

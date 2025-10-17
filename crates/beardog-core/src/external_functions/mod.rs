@@ -54,18 +54,21 @@ pub use types::{
 
 pub use safety::{ParameterValue, SafetyChecker};
 
+#[must_use]
 pub fn default_config() -> ExternalFunctionsRegistryConfig {
     ExternalFunctionsRegistryConfig::default()
 }
 
 /// Creates a new external function registry with default configuration
 /// Creates registry
+#[must_use]
 pub fn create_registry() -> ExternalFunctionRegistry {
     ExternalFunctionRegistry::default()
 }
 
 /// Creates a new external function registry with custom configuration
 /// Creates `registry_with_config`
+#[must_use]
 pub fn create_registry_with_config(
     config: ExternalFunctionsRegistryConfig,
 ) -> ExternalFunctionRegistry {

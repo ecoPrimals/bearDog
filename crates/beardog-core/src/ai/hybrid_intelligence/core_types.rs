@@ -25,6 +25,7 @@ pub enum IntelligenceCapability {
     NaturalLanguageProcessing,
     /// Computer vision
     ComputerVision,
+    /// Reinforcement learning through trial and error
     ReinforcementLearning,
     /// Decision trees
     DecisionTrees,

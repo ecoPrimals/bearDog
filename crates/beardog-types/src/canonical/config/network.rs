@@ -1,9 +1,80 @@
-// Network configuration types for BearDog ecosystem
-// Centralizes all network-related configuration to eliminate hardcoded values
+//! Network Configuration
+//!
+//! Centralized network configuration for the BearDog ecosystem eliminating hardcoded values.
+//!
+//! # Overview
+//!
+//! This module provides comprehensive network configuration including:
+//! - Service host and port configuration
+//! - Timeout management for connections and requests
+//! - Service endpoint URL construction
+//! - TLS/SSL configuration
+//! - Load balancing and circuit breaker settings
+//!
+//! # Quick Start
+//!
+//! ```rust
+//! use beardog_types::canonical::config::network::NetworkConfig;
+//!
+//! // Create network configuration with defaults
+//! let config = NetworkConfig::default();
+//!
+//! // Access service ports
+//! assert_eq!(config.service_ports.api_port, 8080);
+//! assert_eq!(config.service_ports.admin_port, 8081);
+//!
+//! // Build service URLs
+//! let health_url = config.get_service_url("health", "/status");
+//! ```
+//!
+//! # Custom Configuration
+//!
+//! ```rust
+//! use beardog_types::canonical::config::network::NetworkConfig;
+//!
+//! // Configure for specific host
+//! let config = NetworkConfig::with_host("api.example.com");
+//!
+//! // Get service-specific URLs
+//! let api_url = config.get_service_url("api", "/v1/users");
+//! let ws_url = config.get_service_url("websocket", "/stream");
+//! ```
+//!
+//! # Environment Variables
+//!
+//! Configuration can be controlled via environment variables:
+//! - `BEARDOG_SERVICE_HOST` / `BEARDOG_HOST` - Default host
+//! - `BEARDOG_API_PORT` - API service port (default: 8080)
+//! - `BEARDOG_ADMIN_PORT` - Admin interface port (default: 8081)
+//! - `BEARDOG_METRICS_PORT` - Metrics port (default: 9090)
+//! - `BEARDOG_WS_PORT` - WebSocket port (default: 8082)
+//! - `BEARDOG_HEALTH_PORT` - Health check port (default: 8083)
+//! - `BEARDOG_REQUEST_TIMEOUT_MS` - Request timeout (default: 30000)
+//! - `BEARDOG_CONNECTION_TIMEOUT_MS` - Connection timeout (default: 5000)
+//! - `BEARDOG_KEEPALIVE_TIMEOUT_S` - Keep-alive timeout (default: 60)
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+/// Network configuration for BearDog services
+///
+/// Comprehensive network settings including hosts, ports, timeouts, and endpoints.
+///
+/// # Fields
+///
+/// * `default_host` - Default service host (configurable via `BEARDOG_SERVICE_HOST`)
+/// * `service_ports` - Port configuration for all services
+/// * `timeouts` - Network timeout settings
+/// * `endpoints` - Pre-configured service endpoint URLs
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::network::NetworkConfig;
+///
+/// let config = NetworkConfig::default();
+/// println!("API running on port {}", config.service_ports.api_port);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// Default service host (replaces hardcoded "localhost")
@@ -38,6 +109,35 @@ pub fn default_service_host() -> String {
 }
 
 /// Service port configuration
+///
+/// Port assignments for all BearDog services. Ports can be customized via
+/// environment variables for flexible deployment.
+///
+/// # Default Ports
+///
+/// * `api_port` - 8080 (main API)
+/// * `admin_port` - 8081 (admin interface)
+/// * `metrics_port` - 9090 (Prometheus metrics)
+/// * `websocket_port` - 8082 (WebSocket connections)
+/// * `health_port` - 8083 (health checks)
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::network::ServicePorts;
+///
+/// let ports = ServicePorts::default();
+/// assert_eq!(ports.api_port, 8080);
+/// assert_eq!(ports.metrics_port, 9090);
+/// ```
+///
+/// # Environment Configuration
+///
+/// Override defaults with environment variables:
+/// ```bash
+/// export BEARDOG_API_PORT=9000
+/// export BEARDOG_ADMIN_PORT=9001
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServicePorts {
     /// Main API port
@@ -85,6 +185,31 @@ impl Default for ServicePorts {
 }
 
 /// Network timeout configuration
+///
+/// Configurable timeouts for network operations to prevent hung connections
+/// and ensure responsive behavior.
+///
+/// # Fields
+///
+/// * `request_timeout_ms` - Maximum time for a request to complete (default: 30000ms / 30s)
+/// * `connection_timeout_ms` - Maximum time to establish a connection (default: 5000ms / 5s)
+/// * `keepalive_timeout_s` - How long to keep idle connections alive (default: 60s)
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::network::NetworkTimeouts;
+///
+/// let timeouts = NetworkTimeouts::default();
+/// assert_eq!(timeouts.request_timeout_ms, 30000);  // 30 seconds
+/// assert_eq!(timeouts.connection_timeout_ms, 5000);  // 5 seconds
+/// ```
+///
+/// # Performance Tuning
+///
+/// - Short `connection_timeout_ms` (< 5s): Fail fast on connection issues
+/// - Long `request_timeout_ms` (> 30s): For slow operations (large uploads, etc.)
+/// - `keepalive_timeout_s`: Balance between connection reuse and resource usage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkTimeouts {
     /// Request timeout in milliseconds

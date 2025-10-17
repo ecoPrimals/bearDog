@@ -95,7 +95,7 @@ beardog-types/
 │   │   ├── security/            # Security config modules (6 files)
 │   │   ├── monitoring/          # Monitoring config modules (5 files)
 │   │   ├── type_aliases.rs      # Comprehensive type definitions
-│   │   └── unified.rs           # Master unified configuration
+│   │   └── unified.rs           # Primary unified configuration
 │   ├── providers_unified/       # Unified provider system
 │   │   ├── traits.rs           # 🔥 NEW: Unified provider traits
 │   │   ├── core.rs             # Core provider functionality

@@ -1,6 +1,6 @@
 // Security Metrics Module
 
-use super::types::*;
+use super::types::SecurityEvent;
 
 /// Security metrics collector
 #[derive(Debug)]
@@ -17,7 +17,8 @@ impl Default for SecurityMetrics {
 impl SecurityMetrics {
     /// Create new security metrics collector
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 

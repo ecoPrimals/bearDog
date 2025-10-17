@@ -27,15 +27,15 @@ pub struct NodeInfo {
 }
 
 pub trait NodeRegistry: Send + Sync {
-    /// Gets node_info
+    /// Gets `node_info`
     fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError>;
 
     fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError>;
 
-    /// Gets trust_level
+    /// Gets `trust_level`
     fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError>;
 
-    /// Updates trust_level
+    /// Updates `trust_level`
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError>;
 }
 
@@ -55,7 +55,7 @@ pub trait WorkflowEngine: Send + Sync {
         request: CrossNodeWorkflowRequest,
     ) -> Result<String, BearDogError>;
 
-    /// Gets workflow_status
+    /// Gets `workflow_status`
     fn get_workflow_status(&self, workflow_id: &str) -> Result<WorkflowStatus, BearDogError>;
 }
 

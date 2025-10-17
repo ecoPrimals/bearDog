@@ -24,122 +24,159 @@ use uuid::Uuid;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ServiceDependency {
     /// State indicating required
+    /// Required service capability dependency
     Required {
+        /// The capability type required
         capability: ServiceCapabilityType,
+        /// Minimum version requirement
         min_version: String,
+        /// Reason for the requirement
         reason: String,
     },
+    /// Optional service capability dependency
     Optional {
+        /// The capability type
         capability: ServiceCapabilityType,
+        /// Minimum version if present
         min_version: String,
+        /// Reason for the optional dependency
         reason: String,
     },
 }
 
-/// `ServiceMetadata` describes service capabilities without hardcoded references
+/// Service metadata describing capabilities without hardcoded references
+///
+/// Contains all information about a service's capabilities, dependencies,
+/// and endpoints for dynamic discovery and integration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetadata {
+    /// Unique service identifier
     pub service_id: Uuid,
-    /// Collection of capabilities
+    /// Collection of capabilities this service provides
     pub capabilities: Vec<ServiceCapabilityType>,
-    /// Collection of dependencies
+    /// Collection of dependencies this service requires
     pub dependencies: Vec<ServiceDependency>,
-    /// The version value
+    /// Service version string
     pub version: String,
-    /// The endpoints value
+    /// Service endpoint configuration
     pub endpoints: ServiceEndpoints,
 }
 
+/// Service endpoint configuration
+///
+/// Defines all endpoints exposed by a service for health checks,
+/// metrics, primary operations, and optional admin/websocket interfaces.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpoints {
-    /// The health value
+    /// Health check endpoint URL
     pub health: String,
-    /// The metrics value
+    /// Metrics/telemetry endpoint URL
     pub metrics: String,
-    /// The primary value
+    /// Primary service endpoint URL
     pub primary: String,
-    /// Optional admin
+    /// Optional admin interface endpoint
     pub admin: Option<String>,
-    /// Optional websocket
+    /// Optional websocket endpoint for real-time communication
     pub websocket: Option<String>,
 }
 
-/// `CapabilityIntegrationConfig` uses capability-based configuration
-/// instead of hardcoded primal flags
+/// Capability integration configuration
+///
+/// Uses capability-based configuration instead of hardcoded primal flags,
+/// enabling dynamic service integration based on discovered capabilities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityIntegrationConfig {
     /// Enable security capability integration
-    /// Whether `enable_security_capability` is enabled
     pub enable_security_capability: bool,
-    /// Enable storage capability integration\
-    /// Whether `enable_storage_capability` is enabled
+    /// Enable storage capability integration
     pub enable_storage_capability: bool,
     /// Enable compute capability integration
-    /// Whether `enable_compute_capability` is enabled
     pub enable_compute_capability: bool,
     /// Enable networking capability integration
-    /// Whether `enable_networking_capability` is enabled
     pub enable_networking_capability: bool,
     /// Enable AI capability integration
-    /// Whether `enable_ai_capability` is enabled
     pub enable_ai_capability: bool,
-    /// Custom capability configurations
-    /// Mapping of custom capabilities
+    /// Custom capability configurations mapping capability names to their config values
     pub custom_capabilities: HashMap<String, serde_json::Value>,
 }
 
+/// Attestation verification result
+///
+/// Contains the result of verifying a service's attestation, including
+/// whether verification succeeded, confidence level, and method used.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationVerificationResult {
-    /// Whether verified is enabled
+    /// Whether the attestation was successfully verified
     pub verified: bool,
+    /// Confidence level in the verification (0.0 to 1.0)
     pub confidence: f64,
-    /// The method value
+    /// Method used for verification
     pub method: String,
+    /// Timestamp when verification was performed
     pub timestamp: DateTime<Utc>,
 }
 
+/// Attestation verification chain
+///
+/// Represents a chain of attestations for verifying service authenticity
+/// across multiple verification points with an overall trust level.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationVerificationChain {
-    /// Whether verified is enabled
+    /// Whether the entire chain was successfully verified
     pub verified: bool,
-    /// Collection of chain
+    /// Chain of attestation identifiers forming the trust path
     pub chain: Vec<String>,
-    /// The trust level value
+    /// Overall trust level for this verification chain
     pub trust_level: String,
 }
 
+/// Capability health status
+///
+/// Tracks health status for multiple capabilities, providing both
+/// an overall status and individual status for each capability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityHealthStatus {
-    /// Current status of the overall
+    /// Overall health status across all capabilities
     pub overall_status: String,
+    /// Health status for each individual capability
     pub individual_status: HashMap<String, String>,
 }
 
 pub use beardog_types::canonical::HealthStatus;
 
+/// Authentication result
+///
+/// Contains the outcome of an authentication attempt, including
+/// user identity, access token, expiration, and granted permissions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationResult {
-    /// Whether success is enabled
+    /// Whether authentication succeeded
     pub success: bool,
+    /// Authenticated user ID if successful
     pub user_id: Option<String>,
-    /// Optional token
+    /// Access token for authenticated sessions
     pub token: Option<String>,
-    /// Optional expires at
+    /// Token expiration timestamp
     pub expires_at: Option<DateTime<Utc>>,
-    /// Collection of permissions
+    /// List of permissions granted to this user
     pub permissions: Vec<String>,
 }
 
+/// Primal health status
+///
+/// Comprehensive health information for a primal service, including
+/// overall status, detailed health check results, and timing information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalHealth {
-    /// Current status of the component
+    /// Current health status
     pub status: HealthStatus,
-    /// The last check value
+    /// Timestamp of last health check
     pub last_check: DateTime<Utc>,
-    /// Mapping of details
+    /// Detailed health information for debugging
     pub details: HashMap<String, serde_json::Value>,
-    /// Mapping of checks
+    /// Results of individual health checks
     pub checks: HashMap<String, bool>,
+    /// Timestamp when this health report was generated
     pub timestamp: DateTime<Utc>,
 }
 
@@ -155,30 +192,42 @@ impl Default for PrimalHealth {
     }
 }
 
+/// Key operation status
+///
+/// Status information for cryptographic key operations, tracking
+/// health, tested operations, and performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyOperationStatus {
-    /// Whether healthy is enabled
+    /// Whether key operations are healthy
     pub healthy: bool,
-    /// Collection of operations tested
+    /// List of operations that were tested
     pub operations_tested: Vec<String>,
+    /// Response time metrics for operations
     pub response_times: serde_json::Value,
 }
 
+/// Endpoint health status
+///
+/// Health information for a specific service endpoint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointHealth {
-    /// Name of the item
+    /// Name of the endpoint
     pub name: String,
-    /// Current status of the component
+    /// Current health status of the endpoint
     pub status: String,
 }
 
+/// Response time metrics
+///
+/// Statistical metrics for measuring response time performance,
+/// including average and percentile measurements.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ResponseTimeMetrics {
-    /// The average value
+    /// Average response time in milliseconds
     pub average: f64,
-    /// The p95 value
+    /// 95th percentile response time
     pub p95: f64,
-    /// The p99 value
+    /// 99th percentile response time
     pub p99: f64,
 }
 
@@ -314,6 +363,7 @@ pub enum PrimalDependency {
 impl PrimalDependency {
     /// Convert to capability-based dependency
     /// Converts to service dependency
+    #[must_use]
     pub fn to_service_dependency(&self) -> ServiceDependency {
         match self {
             Self::Required {
@@ -366,6 +416,7 @@ pub struct PrimalIntegrationConfig {
 impl PrimalIntegrationConfig {
     /// Convert to modern universal integration config
     /// Converts to universal config
+    #[must_use]
     pub fn to_universal_config(&self) -> UniversalIntegrationConfig {
         let mut required_capabilities = vec![ServiceCapabilityType::Security];
         let optional_capabilities = vec![];
@@ -610,6 +661,7 @@ pub struct PrimalTypeMigrationHelper;
 impl PrimalTypeMigrationHelper {
     /// Gets `migration_guidance`
     /// Gets `migration_guidance`
+    #[must_use]
     pub const fn get_migration_guidance() -> &'static str {
         r#"
 🔄 PRIMAL SOVEREIGNTY MIGRATION GUIDE

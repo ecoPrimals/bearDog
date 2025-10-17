@@ -1,2 +1,2 @@
+mod comprehensive_error_tests;
 mod error_construction_tests;
-

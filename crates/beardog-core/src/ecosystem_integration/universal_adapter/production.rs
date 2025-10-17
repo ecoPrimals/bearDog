@@ -43,11 +43,13 @@ impl ProductionUniversalAdapter {
     }
 
     /// Get production configuration
+    #[must_use]
     pub const fn production_config(&self) -> &ProductionConfig {
         &self.production_config
     }
 
     /// Get underlying core adapter
+    #[must_use]
     pub const fn core_adapter(&self) -> &UniversalAdapter {
         &self.core_adapter
     }

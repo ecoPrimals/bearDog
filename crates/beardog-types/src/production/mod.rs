@@ -17,6 +17,12 @@ pub mod optimization;
 /// Telemetry module
 pub mod telemetry;
 
+// Comprehensive test modules
+#[cfg(test)]
+mod health_comprehensive_tests;
+#[cfg(test)]
+mod metrics_comprehensive_tests;
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};

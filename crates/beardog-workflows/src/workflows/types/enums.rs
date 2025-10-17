@@ -143,10 +143,10 @@ pub enum ApprovalDecision {
 impl std::fmt::Display for ApprovalDecision {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApprovalDecision::Granted => write!(f, "Granted"),
-            ApprovalDecision::Rejected(reason) => write!(f, "Rejected: {reason}"),
-            ApprovalDecision::Abstained => write!(f, "Abstained"),
-            ApprovalDecision::Pending => write!(f, "Pending"),
+            Self::Granted => write!(f, "Granted"),
+            Self::Rejected(reason) => write!(f, "Rejected: {reason}"),
+            Self::Abstained => write!(f, "Abstained"),
+            Self::Pending => write!(f, "Pending"),
         }
     }
 }
@@ -210,14 +210,14 @@ pub enum NotificationStatus {
 impl std::fmt::Display for WorkflowType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WorkflowType::KeyRotation => write!(f, "Key Rotation"),
-            WorkflowType::KeyDeletion => write!(f, "Key Deletion"),
-            WorkflowType::PolicyChange => write!(f, "Policy Change"),
-            WorkflowType::ConfigurationChange => write!(f, "Configuration Change"),
-            WorkflowType::UserProvisioning => write!(f, "User Provisioning"),
-            WorkflowType::EmergencyAccess => write!(f, "Emergency Access"),
-            WorkflowType::SystemMaintenance => write!(f, "System Maintenance"),
-            WorkflowType::ComplianceAudit => write!(f, "Compliance Audit"),
+            Self::KeyRotation => write!(f, "Key Rotation"),
+            Self::KeyDeletion => write!(f, "Key Deletion"),
+            Self::PolicyChange => write!(f, "Policy Change"),
+            Self::ConfigurationChange => write!(f, "Configuration Change"),
+            Self::UserProvisioning => write!(f, "User Provisioning"),
+            Self::EmergencyAccess => write!(f, "Emergency Access"),
+            Self::SystemMaintenance => write!(f, "System Maintenance"),
+            Self::ComplianceAudit => write!(f, "Compliance Audit"),
         }
     }
 }

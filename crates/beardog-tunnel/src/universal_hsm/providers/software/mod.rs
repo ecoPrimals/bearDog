@@ -1,26 +1,20 @@
 
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! Software HSM provider implementation
 
 pub mod attestation;
-/// Configuration management
-/// Configuration management
 pub mod config;
-/// Core functionality
-/// Core functionality
 pub mod core;
 pub mod crypto;
 pub mod entropy;
 pub mod keystore;
 pub mod memory;
 
-pub use attestation::AttestationEngine;
+// Re-exports
+pub use attestation::SoftwareAttestation;
 pub use config::SoftwareHsmConfig;
 pub use core::SoftwareHsmProvider;
-pub use crypto::CryptoEngine;
-pub use entropy::EntropyCollector;
-pub use keystore::KeyStore;
-pub use memory::SecureMemory;
+pub use crypto::SoftwareCryptoProvider;
+pub use entropy::SoftwareEntropyCollector;
+pub use keystore::SoftwareKeyStore;
+pub use memory::SoftwareMemoryManager;

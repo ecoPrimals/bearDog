@@ -60,6 +60,7 @@ pub struct StorageResponse {
 impl StorageRequest {
     /// Create a new storage request
     /// Creates a new instance
+    #[must_use]
     pub fn new(operation: StorageOperation, key: String) -> Self {
         Self {
             request_id: Uuid::new_v4(),
@@ -75,6 +76,7 @@ impl StorageRequest {
     }
 
     /// Create a store request
+    #[must_use]
     pub fn store(key: String, data: Vec<u8>) -> Self {
         Self {
             request_id: Uuid::new_v4(),
@@ -90,6 +92,7 @@ impl StorageRequest {
     }
 
     /// Create a retrieve request
+    #[must_use]
     pub fn retrieve(key: String) -> Self {
         Self::new(StorageOperation::Retrieve, key)
     }
@@ -97,11 +100,13 @@ impl StorageRequest {
     /// Create a delete request
     /// Removes
     /// Removes
+    #[must_use]
     pub fn delete(key: String) -> Self {
         Self::new(StorageOperation::Delete, key)
     }
 
     /// Create a list request
+    #[must_use]
     pub fn list(prefix: String) -> Self {
         Self::new(StorageOperation::List, prefix)
     }
@@ -109,6 +114,7 @@ impl StorageRequest {
 
 impl StorageResponse {
     /// Create a success response
+    #[must_use]
     pub fn success(request_id: Uuid, data: Option<Vec<u8>>) -> Self {
         Self {
             request_id,
@@ -123,6 +129,7 @@ impl StorageResponse {
     }
 
     /// Create a failure response
+    #[must_use]
     pub fn failure(request_id: Uuid, error_message: String) -> Self {
         Self {
             request_id,

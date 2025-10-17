@@ -1,6 +1,6 @@
-//! # BearDog Threat Detection and Analysis
+//! # `BearDog` Threat Detection and Analysis
 //!
-//! Advanced threat detection and security analysis for the BearDog ecosystem,
+//! Advanced threat detection and security analysis for the `BearDog` ecosystem,
 //! providing real-time threat identification, ML-powered analysis, and automated response.
 //!
 //! ## Features

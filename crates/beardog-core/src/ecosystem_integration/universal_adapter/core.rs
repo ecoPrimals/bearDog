@@ -183,6 +183,7 @@ impl UniversalAdapter {
     }
 
     /// Get adapter configuration
+    #[must_use]
     pub const fn config(&self) -> &UniversalAdapterConfig {
         &self.config
     }

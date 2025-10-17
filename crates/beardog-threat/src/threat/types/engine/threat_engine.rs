@@ -171,7 +171,7 @@ impl ThreatDetectionEngine {
     /// Gets stats
     /// Gets stats
     #[must_use]
-    pub fn get_stats(&self) -> &ThreatDetectionStats {
+    pub const fn get_stats(&self) -> &ThreatDetectionStats {
         &self.stats
     }
 }

@@ -8,7 +8,6 @@ use crate::ecosystem::primal_types::{PrimalMetadata, UniversalEndpoint};
 use crate::zero_knowledge_bootstrap::SelfIdentity;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
-use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
@@ -35,12 +34,11 @@ use uuid::Uuid;
 /// let identity = engine.discover_self_identity()?;
 /// println!("Discovered primal ID: {}", identity.primal_id);
 /// ```
+#[derive(Debug)]
 pub struct SelfDiscoveryEngine {
-    #[allow(dead_code)] // TODO: Use for configuration-based discovery behavior
-    config: UnifiedBootstrapConfig,
     discovered_capabilities: Vec<ServiceCapabilityType>,
-    #[allow(dead_code)] // TODO: Cache metadata for reuse in subsequent operations
-    self_metadata: Option<PrimalMetadata>,
+    // Note: Config-based discovery and metadata caching removed as unused.
+    // These can be re-added when dynamic configuration and caching are needed.
 }
 
 /// Self-capability detection result
@@ -73,21 +71,23 @@ pub struct SelfIdentityDiscovery {
 
 impl SelfDiscoveryEngine {
     /// Create new self-discovery engine
-    /// Creates a new instance
+    ///
+    /// # Errors
+    /// Returns an error if initialization of internal components or configuration fails.
     pub fn new() -> BearDogResult<Self> {
-        let config = UnifiedBootstrapConfig::default();
-
         info!("🌱 Initializing Self-Discovery Engine");
         info!("🎯 Mission: Discover own capabilities without hardcoded knowledge");
 
         Ok(Self {
-            config,
             discovered_capabilities: Vec::new(),
-            self_metadata: None,
         })
     }
 
     /// Discover self-identity - the foundation of zero-knowledge bootstrap
+    ///
+    /// # Errors
+    /// Returns an error if self-identity discovery fails, if capability detection encounters issues,
+    /// or if validation of self-knowledge fails.
     pub fn discover_self_identity(&mut self) -> BearDogResult<SelfIdentity> {
         let start_time = std::time::Instant::now();
 
@@ -100,11 +100,11 @@ impl SelfDiscoveryEngine {
         info!("   5. Validate self-knowledge");
 
         // Phase 1: Generate unique primal identity
-        let primal_id = self.generate_primal_id()?;
+        let primal_id = Self::generate_primal_id();
         info!("✅ Generated primal ID: {}", primal_id);
 
         // Phase 2: Auto-detect capabilities
-        let capabilities = self.auto_detect_capabilities()?;
+        let capabilities = self.auto_detect_capabilities();
         info!("✅ Detected {} capabilities", capabilities.len());
 
         // Phase 3: Discover endpoints
@@ -112,11 +112,11 @@ impl SelfDiscoveryEngine {
         info!("✅ Discovered {} endpoints", endpoints.len());
 
         // Phase 4: Build metadata
-        let metadata = self.build_self_metadata(&primal_id, &capabilities)?;
+        let metadata = Self::build_self_metadata(&primal_id, &capabilities)?;
         info!("✅ Built self-metadata");
 
         // Phase 5: Validate self-knowledge
-        self.validate_self_knowledge(&capabilities)?;
+        Self::validate_self_knowledge(&capabilities)?;
         info!("✅ Self-knowledge validated");
 
         let discovery_duration = start_time.elapsed().as_millis() as u64;
@@ -146,7 +146,7 @@ impl SelfDiscoveryEngine {
     }
 
     /// Generate unique primal ID (no hardcoded names)
-    fn generate_primal_id(&self) -> BearDogResult<String> {
+    fn generate_primal_id() -> String {
         // Generate truly unique ID without hardcoded primal names
         let uuid = Uuid::new_v4();
         let hostname = std::env::var("HOSTNAME")
@@ -161,11 +161,11 @@ impl SelfDiscoveryEngine {
         );
 
         debug!("🆔 Generated primal ID: {} (no hardcoded names)", primal_id);
-        Ok(primal_id)
+        primal_id
     }
 
     /// Auto-detect available capabilities by examining the runtime environment
-    fn auto_detect_capabilities(&mut self) -> BearDogResult<Vec<SelfCapabilityDetection>> {
+    fn auto_detect_capabilities(&mut self) -> Vec<SelfCapabilityDetection> {
         info!("🔍 Auto-detecting capabilities...");
         let mut capabilities = Vec::new();
 
@@ -182,7 +182,7 @@ impl SelfDiscoveryEngine {
         });
 
         // Key management detection
-        if self.detect_key_management_capability()? {
+        if Self::detect_key_management_capability() {
             capabilities.push(SelfCapabilityDetection {
                 capability_type: ServiceCapabilityType::KeyManagement,
                 confidence_score: 0.95,
@@ -195,7 +195,7 @@ impl SelfDiscoveryEngine {
         }
 
         // Hardware security module detection
-        if self.detect_hsm_capability()? {
+        if Self::detect_hsm_capability() {
             capabilities.push(SelfCapabilityDetection {
                 capability_type: ServiceCapabilityType::HardwareSecurityModule,
                 confidence_score: 0.9,
@@ -208,7 +208,7 @@ impl SelfDiscoveryEngine {
         }
 
         // Authentication capability detection
-        if self.detect_authentication_capability()? {
+        if Self::detect_authentication_capability() {
             capabilities.push(SelfCapabilityDetection {
                 capability_type: ServiceCapabilityType::Authentication,
                 confidence_score: 0.85,
@@ -221,7 +221,7 @@ impl SelfDiscoveryEngine {
         }
 
         // Compliance auditing detection
-        if self.detect_compliance_capability()? {
+        if Self::detect_compliance_capability() {
             capabilities.push(SelfCapabilityDetection {
                 capability_type: ServiceCapabilityType::ComplianceAudit,
                 confidence_score: 0.8,
@@ -234,7 +234,7 @@ impl SelfDiscoveryEngine {
         }
 
         // Threat detection capability
-        if self.detect_threat_detection_capability()? {
+        if Self::detect_threat_detection_capability() {
             capabilities.push(SelfCapabilityDetection {
                 capability_type: ServiceCapabilityType::ThreatDetection,
                 confidence_score: 0.75,
@@ -260,44 +260,39 @@ impl SelfDiscoveryEngine {
             );
         }
 
-        Ok(capabilities)
+        capabilities
     }
 
     /// Detect key management capability
-    fn detect_key_management_capability(&self) -> BearDogResult<bool> {
+    fn detect_key_management_capability() -> bool {
         // Check if key management modules are available
         let has_hsm = std::path::Path::new("crates/beardog-tunnel").exists();
         let has_crypto = std::path::Path::new("crates/beardog-security").exists();
-
-        Ok(has_hsm && has_crypto)
+        has_hsm && has_crypto
     }
 
     /// Detect HSM capability
-    fn detect_hsm_capability(&self) -> BearDogResult<bool> {
+    fn detect_hsm_capability() -> bool {
         // Check if HSM modules are available
-        let has_tunnel = std::path::Path::new("crates/beardog-tunnel").exists();
-        Ok(has_tunnel)
+        std::path::Path::new("crates/beardog-tunnel").exists()
     }
 
     /// Detect authentication capability
-    fn detect_authentication_capability(&self) -> BearDogResult<bool> {
+    fn detect_authentication_capability() -> bool {
         // Check if auth modules are available
-        let has_auth = std::path::Path::new("crates/beardog-auth").exists();
-        Ok(has_auth)
+        std::path::Path::new("crates/beardog-auth").exists()
     }
 
     /// Detect compliance capability
-    fn detect_compliance_capability(&self) -> BearDogResult<bool> {
+    fn detect_compliance_capability() -> bool {
         // Check if compliance modules are available
-        let has_compliance = std::path::Path::new("crates/beardog-compliance").exists();
-        Ok(has_compliance)
+        std::path::Path::new("crates/beardog-compliance").exists()
     }
 
     /// Detect threat detection capability
-    fn detect_threat_detection_capability(&self) -> BearDogResult<bool> {
+    fn detect_threat_detection_capability() -> bool {
         // Check if threat detection modules are available
-        let has_threat = std::path::Path::new("crates/beardog-threat").exists();
-        Ok(has_threat)
+        std::path::Path::new("crates/beardog-threat").exists()
     }
 
     /// Discover communication endpoints
@@ -306,58 +301,56 @@ impl SelfDiscoveryEngine {
         let mut endpoints = Vec::new();
 
         // Discover local endpoints
-        let local_endpoint = self.discover_local_endpoint()?;
+        let local_endpoint = Self::discover_local_endpoint();
         endpoints.push(local_endpoint);
 
         // Discover network endpoints
-        if let Ok(network_endpoint) = self.discover_network_endpoint() {
-            endpoints.push(network_endpoint);
-        }
+        let network_endpoint = Self::discover_network_endpoint();
+        endpoints.push(network_endpoint);
 
         // Discover service mesh endpoints
-        if let Ok(mesh_endpoint) = self.discover_mesh_endpoint() {
-            endpoints.push(mesh_endpoint);
-        }
+        let mesh_endpoint = Self::discover_mesh_endpoint();
+        endpoints.push(mesh_endpoint);
 
         debug!("📡 Discovered {} endpoints", endpoints.len());
         Ok(endpoints)
     }
 
     /// Discover local endpoint
-    fn discover_local_endpoint(&self) -> BearDogResult<UniversalEndpoint> {
+    fn discover_local_endpoint() -> UniversalEndpoint {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let port = network_config.service_ports.api_port;
 
-        Ok(UniversalEndpoint {
+        UniversalEndpoint {
             url: format!("http://127.0.0.1:{port}"),
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string()],
             auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
-            security_config: Default::default(),
-        })
+            security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
+        }
     }
 
     /// Discover network endpoint
-    fn discover_network_endpoint(&self) -> BearDogResult<UniversalEndpoint> {
+    fn discover_network_endpoint() -> UniversalEndpoint {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
         let port = network_config.service_ports.api_port;
 
-        Ok(UniversalEndpoint {
+        UniversalEndpoint {
             url: format!("http://{host}:{port}"),
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string(), "gRPC".to_string()],
             auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
-            security_config: Default::default(),
-        })
+            security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
+        }
     }
 
     /// Discover service mesh endpoint
-    fn discover_mesh_endpoint(&self) -> BearDogResult<UniversalEndpoint> {
+    fn discover_mesh_endpoint() -> UniversalEndpoint {
         let mesh_port = std::env::var("BEARDOG_MESH_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(8443);
 
-        Ok(UniversalEndpoint {
+        UniversalEndpoint {
             url: format!("https://0.0.0.0:{mesh_port}"),
             protocols: vec![
                 "HTTPS".to_string(),
@@ -365,14 +358,13 @@ impl SelfDiscoveryEngine {
                 "WebSocket".to_string(),
             ],
             auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
-            security_config: Default::default(),
-        })
+            security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
+        }
     }
 
     /// Build self-metadata
     /// Builds `self_metadata`
     fn build_self_metadata(
-        &self,
         primal_id: &str,
         capabilities: &[SelfCapabilityDetection],
     ) -> BearDogResult<PrimalMetadata> {
@@ -408,10 +400,7 @@ impl SelfDiscoveryEngine {
 
     /// Validate self-knowledge
     /// Validates `self_knowledge`
-    fn validate_self_knowledge(
-        &self,
-        capabilities: &[SelfCapabilityDetection],
-    ) -> BearDogResult<()> {
+    fn validate_self_knowledge(capabilities: &[SelfCapabilityDetection]) -> BearDogResult<()> {
         info!("✅ Validating self-knowledge...");
 
         // Ensure we have at least one capability
@@ -497,7 +486,7 @@ mod tests {
 
         // Validate infant discovery - no hardcoded ecosystem knowledge
         for capability in &identity.capabilities {
-            let cap_str = format!("{:?}", capability);
+            let cap_str = format!("{capability:?}");
             assert!(
                 !cap_str.to_lowercase().contains("hardcoded"),
                 "Capabilities should be discovered dynamically"
@@ -529,7 +518,7 @@ mod tests {
     #[tokio::test]
     async fn test_capability_auto_detection() {
         let mut engine = SelfDiscoveryEngine::new().unwrap();
-        let capabilities = engine.auto_detect_capabilities().unwrap();
+        let capabilities = engine.auto_detect_capabilities();
 
         // Should detect at least security capability
         assert!(capabilities

@@ -32,7 +32,7 @@ impl SafePinnedBuffer {
     }
 
     #[must_use]
-    pub fn size(&self) -> usize {
+    pub const fn size(&self) -> usize {
         self.size
     }
 
@@ -73,7 +73,7 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
     }
 
     #[must_use]
-    pub fn buffer(&self) -> &SafePinnedBuffer {
+    pub const fn buffer(&self) -> &SafePinnedBuffer {
         &self.buffer
     }
 
@@ -83,7 +83,7 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
     }
 
     #[must_use]
-    pub fn size(&self) -> usize {
+    pub const fn size(&self) -> usize {
         SIZE
     }
 }
@@ -107,7 +107,7 @@ impl Default for BufferPoolMetrics {
 impl BufferPoolMetrics {
     /// Creates a new instance
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             total_requests: 0,
             cache_hits: 0,

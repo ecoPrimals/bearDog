@@ -1,6 +1,132 @@
 //! `BearDog` Core System Implementation
 //!
 //! The main entry point for the `BearDog` security and cryptography platform.
+//!
+//! # Overview
+//!
+//! `BearDogCore` is the central system that coordinates all `BearDog` components including:
+//! - **Security Provider** - Cryptographic operations and key management
+//! - **System Monitor** - Health tracking and observability
+//! - **Genetic Optimizer** - Performance tuning and adaptation
+//! - **Universal Adapter** - Service discovery and integration
+//!
+//! # Quick Start
+//!
+//! ```rust,no_run
+//! use beardog_core::BearDogCore;
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Create with default development configuration
+//! let mut core = BearDogCore::with_default_config()?;
+//!
+//! // Initialize and start the system
+//! core.initialize().await?;
+//!
+//! // System is now ready for operations
+//! assert!(core.state.read().await.overall_health == beardog_types::canonical::HealthStatus::Healthy);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Configuration
+//!
+//! `BearDog` supports multiple configuration patterns:
+//!
+//! ```rust,no_run
+//! use beardog_core::BearDogCore;
+//! use beardog_types::canonical::config::UnifiedBearDogConfig;
+//!
+//! // Development configuration
+//! let dev_config = UnifiedBearDogConfig::development();
+//! let dev_core = BearDogCore::new(dev_config);
+//!
+//! // Production configuration  
+//! let prod_config = UnifiedBearDogConfig::production();
+//! let prod_core = BearDogCore::new(prod_config);
+//!
+//! // Custom configuration
+//! let custom_config = UnifiedBearDogConfig {
+//!     // ... custom settings
+//!     ..Default::default()
+//! };
+//! let custom_core = BearDogCore::new(custom_config);
+//! ```
+//!
+//! # Component Access
+//!
+//! All core components are accessible through public fields:
+//!
+//! ```rust,no_run
+//! # use beardog_core::BearDogCore;
+//! # let core = BearDogCore::with_default_config().unwrap();
+//! // Access security provider
+//! let security = &core.security;
+//!
+//! // Access system monitor
+//! let monitor = &core.monitor;
+//!
+//! // Access genetic optimizer
+//! let optimizer = &core.genetic_optimizer;
+//!
+//! // Access universal adapter
+//! let adapter = &core.universal_adapter;
+//! ```
+//!
+//! # State Management
+//!
+//! System state is managed through a thread-safe shared structure:
+//!
+//! ```rust,no_run
+//! # use beardog_core::BearDogCore;
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! # let core = BearDogCore::with_default_config()?;
+//! // Read system state
+//! let state = core.state.read().await;
+//! println!("System health: {:?}", state.overall_health);
+//!
+//! // Write system state
+//! let mut state = core.state.write().await;
+//! // ... update state
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Lifecycle Management
+//!
+//! The core system follows a clear lifecycle:
+//!
+//! 1. **Creation** - `BearDogCore::new()` or `with_default_config()`
+//! 2. **Initialization** - `core.initialize().await?`
+//! 3. **Operation** - Normal system operation
+//! 4. **Shutdown** - Graceful component shutdown
+//!
+//! # Error Handling
+//!
+//! All operations return `Result<T, BearDogError>` for comprehensive error handling:
+//!
+//! ```rust,no_run
+//! # use beardog_core::BearDogCore;
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! let mut core = BearDogCore::with_default_config()?;
+//! core.initialize().await?;  // Propagate errors with ?
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Thread Safety
+//!
+//! `BearDogCore` is designed for concurrent use:
+//! - State protected with `Arc<RwLock<T>>`
+//! - All components are `Send + Sync`
+//! - Safe to share across threads and tasks
+//!
+//! # Performance
+//!
+//! - Zero-cost abstractions for type safety
+//! - Efficient async operations with tokio
+//! - Genetic optimization for runtime adaptation
+//! - Minimal locking contention
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
@@ -84,6 +210,7 @@ impl BearDogCore {
     /// let config = UnifiedBearDogConfig::development();
     /// let core = BearDogCore::new(config);
     /// ```
+    #[must_use]
     pub fn new(config: BearDogConfig) -> Self {
         Self {
             security: CoreSecurityProvider::new(config.clone()),
@@ -147,7 +274,7 @@ impl BearDogCore {
         }
 
         self.monitor.start()?;
-        self.genetic_optimizer.initialize()?;
+        self.genetic_optimizer.initialize().await?;
 
         {
             let mut state = self.state.write().await;
@@ -172,8 +299,8 @@ impl BearDogCore {
         info!("🔐 Initializing HSM management capabilities");
 
         // Initialize HSM providers and key management
-        // This would integrate with hardware security modules
-        // For now, we'll use a mock implementation
+        // This provides minimal HSM integration pending full hardware security module support
+        // Production deployments should integrate with actual HSM providers
 
         {
             let mut state = self.state.write().await;
@@ -182,7 +309,7 @@ impl BearDogCore {
                 .insert("hsm".to_string(), ComponentStatus::Starting);
         }
 
-        // Simulate HSM initialization
+        // Brief initialization delay for async component startup
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
         {

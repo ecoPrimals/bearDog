@@ -42,7 +42,7 @@ pub struct EcosystemGeneticEngine {
     pub contextual_decision_making: ContextualDecisionGenetics,
 }
 
-/// EcosystemMembership spectrum - replaces binary allowlist/blocklist patterns
+/// `EcosystemMembership` spectrum - replaces binary allowlist/blocklist patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EcosystemMembership {
     /// Trusted ecosystem maintainer with stewardship responsibilities
@@ -344,13 +344,13 @@ pub enum ContributionType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteractionSummary {
-    /// Number of total_interactions
+    /// Number of `total_interactions`
     pub total_interactions: u64,
-    /// Number of positive_interactions
+    /// Number of `positive_interactions`
     pub positive_interactions: u64,
-    /// Number of neutral_interactions
+    /// Number of `neutral_interactions`
     pub neutral_interactions: u64,
-    /// Number of concerning_interactions
+    /// Number of `concerning_interactions`
     pub concerning_interactions: u64,
     /// The last interaction value
     pub last_interaction: DateTime<Utc>,
@@ -451,7 +451,7 @@ impl EcosystemGeneticEngine {
         match current_hierarchy {
             HierarchicalPattern::PrimaryReplica { primary, replicas } => {
                 Ok(CoordinationModel::Collaborative {
-                    decision_protocol: format!("collaborative_with_facilitator_{}", primary),
+                    decision_protocol: format!("collaborative_with_facilitator_{primary}"),
                     collaboration_frameworks: replicas,
                     mutual_accountability: "shared_responsibility".to_string(),
                     active_sessions: vec![],
@@ -474,7 +474,7 @@ impl EcosystemGeneticEngine {
                 secondaries,
             } => Ok(CoordinationModel::Rotational {
                 rotation_criteria: "expertise_and_load_based".to_string(),
-                expertise_mapping: format!("primary:{},secondaries:{:?}", primary, secondaries),
+                expertise_mapping: format!("primary:{primary},secondaries:{secondaries:?}"),
                 rotation_schedule: "hourly_evaluation".to_string(),
                 current_leader: Some(primary),
             }),
@@ -703,7 +703,7 @@ pub enum HierarchicalPattern {
 pub struct EcosystemContext {
     /// The current health value
     pub current_health: HealthStatus,
-    /// Number of active_relationships
+    /// Number of `active_relationships`
     pub active_relationships: u64,
     /// The ecosystem load value
     pub ecosystem_load: f64,

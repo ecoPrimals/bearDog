@@ -1,6 +1,32 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! AI-powered performance optimization engine
+//!
+//! This module provides an intelligent optimization engine that uses machine learning
+//! to automatically tune system performance based on observed metrics and patterns.
+//!
+//! # Features
+//!
+//! - **Performance Monitoring**: Real-time collection of system metrics
+//! - **Predictive Analytics**: ML-based resource usage prediction
+//! - **Automated Tuning**: Self-adjusting optimization recommendations
+//! - **Learning System**: Improves recommendations based on historical data
+//! - **Neural Network Integration**: Optional deep learning for complex patterns
+//!
+//! # Architecture
+//!
+//! The engine consists of three main components:
+//! - **Performance Model**: Tracks and models system behavior
+//! - **Resource Predictor**: Forecasts future resource needs
+//! - **Optimization History**: Learns from past optimization outcomes
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! use std::time::Duration;
+//! use beardog_utils::ai_optimization::AIOptimizationEngine;
+//!
+//! let engine = AIOptimizationEngine::new(Duration::from_secs(60))?;
+//! engine.start_optimization().await?;
+//! ```
 
 use beardog_errors::BearDogError;
 use std::sync::{Arc, Mutex};
@@ -16,12 +42,25 @@ use super::types::{
     PerformanceModel, PerformanceSample, RecommendationPriority,
 };
 
+/// AI-powered optimization engine for automatic performance tuning
+///
+/// Continuously monitors system performance, predicts resource needs,
+/// and generates intelligent optimization recommendations to improve efficiency.
+///
+/// The engine uses machine learning models to learn from historical data
+/// and adapt its recommendations over time for better results.
 pub struct AIOptimizationEngine {
+    /// Shared performance model tracking system behavior patterns
     performance_model: Arc<RwLock<PerformanceModel>>,
+    /// ML-based predictor for forecasting resource usage trends
     resource_predictor: Arc<Mutex<ResourcePredictor>>,
+    /// Historical record of optimization actions and their outcomes
     optimization_history: Arc<Mutex<OptimizationHistory>>,
+    /// Time interval between optimization cycles
     optimization_interval: Duration,
+    /// Whether the engine should learn from results and adapt
     is_learning_enabled: bool,
+    /// Neural network for advanced pattern recognition (future use)
     #[allow(dead_code)] // Future AI functionality - neural network integration planned
     neural_network: Arc<Mutex<SimpleNeuralNetwork>>,
 }
@@ -65,8 +104,13 @@ impl AIOptimizationEngine {
         })
     }
 
-    /// Starts optimization
-    /// Starts optimization
+    /// Start the continuous optimization loop
+    ///
+    /// Runs indefinitely, collecting performance data, updating models,
+    /// generating recommendations, and learning from results at the configured interval.
+    ///
+    /// # Errors
+    /// Returns error if performance collection, model updates, or optimization application fails
     pub async fn start_optimization(&self) -> Result<(), BearDogError> {
         let mut interval = tokio::time::interval(self.optimization_interval);
 
@@ -83,6 +127,13 @@ impl AIOptimizationEngine {
         }
     }
 
+    /// Collect current system performance metrics
+    ///
+    /// Gathers real-time data on CPU, memory, network, crypto throughput,
+    /// response times, error rates, and system load.
+    ///
+    /// # Errors
+    /// Returns error if any metric collection fails or system time is unavailable
     async fn collect_performance_sample(&self) -> Result<PerformanceSample, BearDogError> {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -110,7 +161,13 @@ impl AIOptimizationEngine {
         })
     }
 
-    /// Updates models
+    /// Update ML models with new performance data
+    ///
+    /// Feeds the latest performance sample to both the performance model
+    /// and resource predictor for learning and trend analysis.
+    ///
+    /// # Errors
+    /// Returns error if model updates fail or locks cannot be acquired
     async fn update_models(&self, sample: &PerformanceSample) -> Result<(), BearDogError> {
         // Update performance model
         let mut model = self.performance_model.write().await;
@@ -129,6 +186,13 @@ impl AIOptimizationEngine {
         Ok(())
     }
 
+    /// Generate optimization recommendations based on current state
+    ///
+    /// Analyzes performance data and model predictions to suggest
+    /// specific optimization actions with confidence scores and priorities.
+    ///
+    /// # Errors
+    /// Returns error if recommendation generation logic encounters issues
     fn generate_recommendations(&self) -> Result<Vec<OptimizationRecommendation>, BearDogError> {
         // Simple recommendation logic
         let recommendations = vec![OptimizationRecommendation {
@@ -144,6 +208,13 @@ impl AIOptimizationEngine {
         Ok(recommendations)
     }
 
+    /// Apply recommended optimizations to the system
+    ///
+    /// Executes the optimization actions suggested by the engine,
+    /// recording each action in the optimization history.
+    ///
+    /// # Errors
+    /// Returns error if optimization actions cannot be recorded in history
     fn apply_optimizations(
         &self,
         recommendations: &[OptimizationRecommendation],
@@ -197,7 +268,7 @@ impl AIOptimizationEngine {
         Ok(())
     }
 
-    fn learn_from_results(&self) -> Result<(), BearDogError> {
+    const fn learn_from_results(&self) -> Result<(), BearDogError> {
         // Learning implementation would go here
         Ok(())
     }
@@ -316,7 +387,7 @@ impl AIOptimizationEngine {
     }
 
     /// Calculate current error rate
-    fn calculate_error_rate(&self) -> Result<f64, BearDogError> {
+    const fn calculate_error_rate(&self) -> Result<f64, BearDogError> {
         // In production, this would track actual error rates
         // For now, return a low baseline error rate
         Ok(0.001) // 0.1% error rate

@@ -29,7 +29,7 @@
 //! let config = UnifiedBearDogConfig::default();
 //!
 //! // Access domain-specific configs
-//! let app_config = &config.app;
+//! let network_config = &config.network;
 //! let security_config = &config.security;
 //! ```
 
@@ -107,6 +107,12 @@ pub mod performance;
 /// and operational excellence.
 pub mod production;
 
+/// Runtime configuration
+///
+/// Runtime settings with environment variable overrides for network endpoints,
+/// ports, and other deployment-specific values.
+pub mod runtime_config;
+
 /// Security configuration
 ///
 /// Core security settings including encryption, key management,
@@ -134,6 +140,10 @@ pub mod r#trait;
 pub mod type_aliases;
 /// Unified module
 pub mod unified;
+
+// Comprehensive test modules
+#[cfg(test)]
+mod validation_comprehensive_tests;
 // unified_simple module REMOVED in Phase 2 (October 2025)
 // Functionality merged into unified.rs - use SimplifiedBearDogConfig
 /// Unified trait module (DEPRECATED - use r#trait)
@@ -168,6 +178,7 @@ pub use network::{CanonicalNetworkConfig as ConfigNetworkConfig, NetworkConfig a
 pub use performance::*;
 pub use production::*;
 pub use production::{EnvironmentLevel, EnvironmentType}; // Explicit re-export for compatibility
+pub use runtime_config::{RuntimeConfig, RuntimeHsmConfig, RuntimeNetworkConfig};
 pub use security::CanonicalSecurityConfig as ConfigSecurityConfig;
 pub use workflow::*;
 

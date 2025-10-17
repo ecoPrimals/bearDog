@@ -1,21 +1,44 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Safe SIMD optimizations using compiler auto-vectorization
+//!
+//! This module provides high-performance data processing using only safe Rust,
+//! leveraging compiler auto-vectorization, iterator chains, and parallel processing
+//! without any unsafe SIMD intrinsics.
+//!
+//! # Features
+//!
+//! - **Zero Unsafe Code**: All optimizations use safe Rust constructs
+//! - **Auto-Vectorization**: Compiler automatically vectorizes hot loops
+//! - **Parallel Processing**: Optional Rayon-based parallelism
+//! - **Iterator Chains**: Efficient functional-style data transformation
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! use beardog_utils::simd_optimizations::{SafeSimdOptimizer, SafeSimdConfig};
+//!
+//! let mut optimizer = SafeSimdOptimizer::new(SafeSimdConfig::default());
+//! let data = vec![1u8, 2, 3, 4, 5];
+//! let result = optimizer.safe_parallel_process(&data, |x| x * 2)?;
+//! ```
 
 use beardog_errors::BearDogError;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use tracing::{debug, info};
 
+/// Configuration for safe SIMD optimization strategies
+///
+/// Controls which optimization techniques are enabled for data processing,
+/// allowing fine-tuning of performance vs. compatibility trade-offs.
 #[derive(Debug, Clone)]
 pub struct SafeSimdConfig {
-    /// Whether `enable_auto_vectorization` is enabled
+    /// Enable compiler auto-vectorization hints for hot loops
     pub enable_auto_vectorization: bool,
-    /// Whether `enable_vectorization_hints` is enabled
+    /// Provide explicit vectorization hints to the compiler via iterator patterns
     pub enable_vectorization_hints: bool,
-    /// Whether `prefer_iterator_chains` is enabled
+    /// Use chained iterators for better compiler optimization opportunities
     pub prefer_iterator_chains: bool,
-    /// Whether `use_rayon_parallel` is enabled
+    /// Enable Rayon-based parallel processing for large datasets
     pub use_rayon_parallel: bool,
 }
 
@@ -30,19 +53,28 @@ impl Default for SafeSimdConfig {
     }
 }
 
+/// Statistics for safe SIMD operations
+///
+/// Tracks performance metrics for monitoring and tuning of SIMD-optimized operations.
 #[derive(Debug, Clone, Default)]
 pub struct SafeSimdStats {
-    /// Number of `operations_completed`
+    /// Total number of processing operations completed successfully
     pub operations_completed: u64,
-    /// Number of `bytes_processed`
+    /// Total number of bytes processed across all operations
     pub bytes_processed: u64,
-    /// Number of `parallel_operations`
+    /// Number of operations that used parallel processing (Rayon)
     pub parallel_operations: u64,
-    /// Number of `vectorized_operations`
+    /// Number of operations that benefited from compiler vectorization
     pub vectorized_operations: u64,
 }
 
 /// Safe SIMD optimizer using only safe Rust constructs
+///
+/// Provides high-performance data processing by leveraging compiler auto-vectorization,
+/// iterator optimizations, and optional parallel processing, all without unsafe code.
+///
+/// This optimizer is suitable for processing large datasets where performance matters
+/// but memory safety cannot be compromised.
 pub struct SafeSimdOptimizer {
     _config: SafeSimdConfig,
     stats: SafeSimdStats,
@@ -236,7 +268,7 @@ impl SafeSimdOptimizer {
     /// Gets stats
     /// Gets stats
     #[must_use]
-    pub fn get_stats(&self) -> &SafeSimdStats {
+    pub const fn get_stats(&self) -> &SafeSimdStats {
         &self.stats
     }
 
@@ -487,7 +519,8 @@ impl AdvancedSIMDOptimizer {
         // If fast pool is full, let buffer drop naturally
     }
 
-    /// ⚡ PERFORMANCE: Vectorized memory operations (mock SIMD)
+    /// ⚡ PERFORMANCE: Vectorized memory operations (basic implementation)
+    /// Note: Uses standard Rust copy. Full SIMD vectorization pending platform-specific optimization.
     pub fn simd_memory_copy(&mut self, src: &[u8], dst: &mut [u8]) -> Result<(), String> {
         if src.len() != dst.len() {
             return Err("Source and destination must be same length".to_string());
@@ -590,14 +623,17 @@ impl AdvancedSIMDOptimizer {
 
         // Update rolling average
         let total_ops = self.metrics.operations_count as f64;
-        self.metrics.avg_operation_time_ns =
-            (self.metrics.avg_operation_time_ns * (total_ops - 1.0) + elapsed_ns) / total_ops;
+        self.metrics.avg_operation_time_ns = self
+            .metrics
+            .avg_operation_time_ns
+            .mul_add(total_ops - 1.0, elapsed_ns)
+            / total_ops;
     }
 
     /// Gets metrics
     /// Gets metrics
     #[must_use]
-    pub fn get_metrics(&self) -> &SIMDMetrics {
+    pub const fn get_metrics(&self) -> &SIMDMetrics {
         &self.metrics
     }
 

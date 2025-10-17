@@ -1,196 +1,109 @@
+//! HSM (Hardware Security Module) integration for BearDog
+//!
+//! Provides multi-platform HSM support with zero-cost abstractions.
 
+// Core HSM implementations
+pub mod software_hsm;
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+#[cfg(target_os = "android")]
+pub mod android_strongbox;
 
+// TEMPORARILY DISABLED: iOS Secure Enclave module has syntax errors
+// TODO: Re-enable after fixing types.rs and related files
+// #[cfg(target_os = "ios")]
+// pub mod ios_secure_enclave;
 
+// HSM infrastructure
+// NOTE: capabilities.rs was corrupted and removed - HsmCapabilityDetector is in manager/capability.rs
+// pub mod capabilities;
+pub mod config;
+pub mod manager;
+pub mod providers;
+pub mod types;
+
+// Platform abstractions
+pub mod safe_ffi;
+pub mod universal_discovery;
+
+// Crypto and dispatch
+pub mod crypto_dispatch;
+// NOTE: provider_dispatch depends on universal_hsm which is disabled
+// TODO: Re-enable after universal_hsm module rebuild
+// pub mod provider_dispatch;
 pub mod zero_cost_provider;
 
-pub use zero_cost_provider::{
-    ZeroCostHsmProvider, ZeroCostHsmManager,
-    HsmProviderTrait, migrate_to_zero_cost,
+// Mobile platform support
+pub mod mobile_ephemeral_integration;
+pub mod mobile_setup;
+pub mod native_device_detection;
+
+// Key management
+pub mod human_entropy_unified;
+pub mod key_manager;
+
+// Performance and health
+pub mod failover;
+pub mod health;
+pub mod performance;
+pub mod unified_provider;
+
+// Stub types (temporary)
+pub mod stub_types;
+
+// Re-exports for convenience
+pub use config::HsmConfig;
+pub use failover::HsmFailoverManager;
+pub use health::{HsmHealthMonitor, HsmHealthStatus};
+pub use manager::capability::HsmCapabilityDetector;
+pub use manager::{HsmManager, HsmProvider};
+pub use mobile_ephemeral_integration::HumanEntropyData;
+pub use performance::HsmPerformanceTracker;
+pub use software_hsm::core::RustSoftwareHsm as SoftwareHsm;
+// Use proper types from beardog-types
+pub use beardog_types::hsm::{
+    AndroidDeviceInfo, AndroidStrongBoxHsm, AttestationData, AuditEvent, AuditStatistics,
+    DatabaseConfig, DefaultHsmFailoverManager, DefaultHsmHealthMonitor, EphemeralSeed,
+    HumanEntropyCapabilities, HumanEntropyMethod, InMemoryStorageBackend, IosSecureEnclaveHsm,
+    KeyStoreConfig, ProviderHealth, ProviderInfo, RustSoftwareHsm,
 };
 
-use beardog_errors::BearDogError;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
-
-pub use beardog_types::canonical::hsm::{
-    HsmCapabilities, HsmConfig, HsmKey, HsmProviderType as HsmType, 
-    KeyMetadata, HsmTier, HsmHealth, HsmHealthStatus
+// Use crypto provider implementations from stub_types (until KeyType alignment is complete)
+pub use stub_types::{
+    CryptoProvider, OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
 };
-pub use beardog_types::canonical::crypto::{KeyType, KeyUsage};
-pub use beardog_types::canonical::configuration::{
-    ConnectionConfig, PerformanceConfig
+pub use types::{
+    AuthenticationMethod, HsmCapability, HsmKey, HsmKeyInfo, HsmKeyMetadata, HsmOperation, HsmTier,
+    KeyType, SecurityLevel,
 };
 
-pub use types::*;
+// Re-export key types
+pub use types::config::SoftwareHsmConfig;
+pub use types::key::{KeyHealthStatus, KeyMaterial, KeyMetadata, UniversalKey};
+pub use types::status::HsmHealthStatus as HealthStatus;
 
-pub use beardog_traits::unified::HsmProvider;
+#[cfg(target_os = "android")]
+pub use android_strongbox::AndroidStrongBox;
 
+#[cfg(target_os = "ios")]
+pub use ios_secure_enclave::IosSecureEnclave;
+
+// Request/Response types for compatibility
 #[derive(Debug, Clone)]
-    /// The usage policy value
-    pub usage_policy: KeyUsagePolicy,
-    /// The key type value
+pub struct GenerateKeyRequest {
+    pub key_id: String,
     pub key_type: KeyType,
 }
 
 #[derive(Debug, Clone)]
-    /// Whether can_decrypt is enabled
-    pub can_decrypt: bool,
-    /// Whether can_sign is enabled
-    pub can_sign: bool,
-    /// Whether can_verify is enabled
-    pub can_verify: bool,
-    /// Whether exportable is enabled
-    pub exportable: bool,
+pub struct HsmInfo {
+    pub hsm_id: String,
+    pub hsm_type: String,
+    pub is_available: bool,
 }
 
-impl Default for KeyUsagePolicy {
-    fn default(true,
-            can_decrypt: true,
-            can_sign: true,
-            can_verify: true,
-            exportable: false,
-        }
-    }
-}
-
-pub trait HsmCapabilityDetector: Send + Sync {
-    fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> + Send;
-    /// Checks if hsm available
-    fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError>;
-    fn recommend_hsm_tier(&SecurityRequirements,
-    ) -> Result<HsmTier, BearDogError>;
-}
-
-pub trait HsmHealthMonitor: Send + Sync {
-    /// Starts monitoring
-    fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> Result<(), BearDogError>;
-    /// Gets health_status
-    fn get_health_status(Vec<impl HsmProvider + Send + Sync + 'static>,
-    ) -> Result<Vec<impl HsmProvider + Send + Sync + 'static>, BearDogError>> + Send;
-}
-
-pub trait HsmFailoverManager: Send + Sync {
-    /// Handles provider_failure
-    fn handle_provider_failure(
-        provider: &(impl HsmProvider + Send + Sync + 'static),
-        error: &BearDogError,
-    ) -> Result<(), BearDogError>;
-    
-    /// Gets failover_provider
-    
-    fn get_failover_provider(
-        failed_provider: &(impl HsmProvider + Send + Sync + 'static),
-    ) -> Result<impl HsmProvider + Send + Sync + 'static, BearDogError>;
-    
-    
-    fn perform_with_failover<T, F>(
-        operation: F,
-    ) -> Result<T, BearDogError>
-    where
-        F: Fn(Send + 'static;
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-
-pub struct SecurityRequirements {
-    /// The security level value
-    pub security_level: SecurityLevel,
-    /// Whether user_interaction_required is enabled
-    pub user_interaction_required: bool,
-    /// Whether attestation_required is enabled
-    pub attestation_required: bool,
-    /// Whether hardware_backed_required is enabled
-    pub hardware_backed_required: bool,
-    /// Collection of compliance requirements
-    pub compliance_requirements: Vec<ComplianceStandard>,
-    pub performance_requirements: PerformanceRequirements,
-}
-
-pub struct PerformanceRequirements {
-    /// Optional max latency ms
-    pub max_latency_ms: Option<u64>,
-    /// Optional min throughput ops per sec
-    pub min_throughput_ops_per_sec: Option<u64>,
-    /// Whether cost_optimization is enabled
-    pub cost_optimization: bool,
-}
-
+// Security requirements
 #[derive(Debug, Clone)]
-    pub session_id: Option<String>,
-    /// The operation type value
-    pub operation_type: OperationType,
-    pub timestamp: DateTime<Utc>,
+pub struct SecurityRequirements {
+    pub min_security_level: SecurityLevel,
+    pub require_hardware: bool,
 }
-/// Types of operation
-pub enum OperationType {
-    /// Represents key generation variant
-    KeyGeneration,
-    /// Represents key import variant
-    KeyImport,
-    /// Represents encryption variant
-    Encryption,
-    /// Represents decryption variant
-    Decryption,
-    /// Currently signing
-    Signing,
-    /// Represents verification variant
-    Verification,
-    /// Represents key derivation variant
-    KeyDerivation,
-    /// Represents key backup variant
-    KeyBackup,
-    /// Represents key restoration variant
-    KeyRestoration,
-}
-
-impl SecurityRequirements {
-
-/// New operation.
-    /// Creates a new instance
-    pub fn new(security_level: SecurityLevel) -> Self {
-        Self {
-            security_level,
-            user_interaction_required: false,
-            attestation_required: false,
-            hardware_backed_required: matches!(
-                security_level,
-                SecurityLevel::High | SecurityLevel::Maximum
-            ),
-            compliance_requirements: vec![],
-            performance_requirements: PerformanceRequirements::default(SecurityLevel::Medium,
-            user_interaction_required: false,
-            attestation_required: false,
-            hardware_backed_required: false,
-            compliance_requirements: vec![],
-            performance_requirements: PerformanceRequirements::default(),
-        }
-    }
-}
-
-impl Default for PerformanceRequirements {
-    fn default() -> Self {
-        Self {
-            max_latency_ms: Some(1000),           // 1 second default
-            min_throughput_ops_per_sec: Some(false,
-        }
-    }
-}
-
-impl Default for OperationContext {
-    fn default(None,
-            session_id: None,
-            operation_type: OperationType::KeyGeneration,
-            timestamp: Utc::now(),
-        }
-    }
-}
-
-pub use android_strongbox::AndroidStrongBoxHsm;
-pub use manager::HsmManager;
-pub use software_hsm::RustSoftwareHsm;

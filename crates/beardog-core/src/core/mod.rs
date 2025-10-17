@@ -3,10 +3,13 @@
 /// Provides component registration, health checking, and lifecycle management
 /// for `BearDog` system components.
 pub mod components;
+
 /// Genetic algorithm optimization components
 pub mod genetic_optimizer;
 /// Service lifecycle management and state transitions
 pub mod lifecycle;
+#[cfg(test)]
+mod tests;
 
 // Core submodules
 pub mod adapter;

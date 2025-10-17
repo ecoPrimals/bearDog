@@ -8,47 +8,56 @@ use std::collections::HashMap;
 // Removed unused import: tracing::debug
 use uuid::Uuid;
 
+/// AI response metadata
+///
+/// Metadata about an AI-generated response including model version,
+/// confidence scores, and processing time information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIResponseMetadata {
-    /// The model version value
+    /// Version of the AI model that generated this response
     pub model_version: String,
     /// Confidence score of the AI response (0.0 to 1.0)
     pub confidence_score: f64,
+    /// Processing time in milliseconds
     pub processing_time_ms: u64,
 }
 
+/// AI-first error information
+///
+/// Structured error information from AI processing operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIFirstError {
     /// Type classification of the error
-    /// The error type value
     pub error_type: String,
     /// Human-readable error message
-    /// The message value
     pub message: String,
     /// Additional error details and context
-    /// Mapping of details
     pub details: HashMap<String, String>,
 }
 
+/// Human interaction context
+///
+/// Context information about the human user interacting with the AI system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanInteractionContext {
+    /// Unique identifier for the user
     pub user_id: String,
+    /// Session identifier for this interaction
     pub session_id: String,
     /// User preferences and configuration settings
-    /// Mapping of preferences
     pub preferences: HashMap<String, String>,
 }
 
+/// Suggested action for the user
+///
+/// An action suggested by the AI system for the user to consider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SuggestedAction {
     /// Type classification of the suggested action
-    /// The action type value
     pub action_type: String,
     /// Human-readable description of the action
-    /// The description value
     pub description: String,
     /// Priority level of the action (0-255, higher is more urgent)
-    /// Number of priority
     pub priority: u8,
 }
 
@@ -62,60 +71,80 @@ impl std::fmt::Display for SuggestedAction {
     }
 }
 
+/// AI-first response wrapper
+///
+/// Wrapper for AI-generated responses with metadata, error handling,
+/// and suggested actions. Generic over the response data type.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIFirstResponse<T> {
-    /// Whether success is enabled
+    /// Whether the operation succeeded
     pub success: bool,
-    /// The data value
+    /// Response data payload
     pub data: T,
-    /// Optional error
+    /// Error information if operation failed
     pub error: Option<AIFirstError>,
+    /// Unique identifier for this request
     pub request_id: Uuid,
+    /// Total processing time in milliseconds
     pub processing_time_ms: u64,
-    /// The ai metadata value
+    /// AI model metadata for this response
     pub ai_metadata: AIResponseMetadata,
-    /// Optional human context
+    /// Optional context about the human user
     pub human_context: Option<HumanInteractionContext>,
+    /// Overall confidence score (0.0 to 1.0)
     pub confidence_score: f64,
-    /// Collection of suggested actions
+    /// Actions suggested by the AI for the user
     pub suggested_actions: Vec<SuggestedAction>,
 }
 
+/// Remediation action
+///
+/// Action to remediate an issue or error condition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RemediationAction {
-    /// The action value
+    /// Description of the remediation action
     pub action: String,
-    /// Whether automated is enabled
+    /// Whether this action can be automated
     pub automated: bool,
-    /// Mapping of parameters
+    /// Parameters for executing the action
     pub parameters: HashMap<String, serde_json::Value>,
 }
 
+/// Resource usage information
+///
+/// Tracks resource consumption for an AI operation including
+/// CPU, memory, network, and disk I/O usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsageInfo {
+    /// CPU time consumed in milliseconds
     pub cpu_time_ms: u64,
-    /// Number of `memory_usage_bytes`
+    /// Memory usage in bytes
     pub memory_usage_bytes: u64,
-    /// Number of `network_requests`
+    /// Number of network requests made
     pub network_requests: u32,
-    /// Number of `disk_io_operations`
+    /// Number of disk I/O operations performed
     pub disk_io_operations: u32,
 }
 
+/// Quality metrics
+///
+/// Metrics measuring various quality aspects of an AI response
+/// including accuracy, completeness, reliability, and security.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QualityMetrics {
-    /// The accuracy value
+    /// Accuracy score (0.0 to 1.0)
     pub accuracy: f64,
-    /// The completeness value
+    /// Completeness score (0.0 to 1.0)
     pub completeness: f64,
-    /// The reliability value
+    /// Reliability score (0.0 to 1.0)
     pub reliability: f64,
-    /// The security value
+    /// Security score (0.0 to 1.0)
     pub security: f64,
 }
 
 impl QualityMetrics {
     /// High Security operation.
+    #[must_use]
     pub const fn high_security() -> Self {
         Self {
             accuracy: 0.98,
@@ -126,6 +155,7 @@ impl QualityMetrics {
     }
 
     /// Standard operation.
+    #[must_use]
     pub const fn standard() -> Self {
         Self {
             accuracy: 0.90,
@@ -150,6 +180,7 @@ pub struct CacheInfo {
 
 impl CacheInfo {
     /// No Cache operation.
+    #[must_use]
     pub const fn no_cache() -> Self {
         Self {
             cache_hit: false,
@@ -160,6 +191,7 @@ impl CacheInfo {
     }
 
     /// Cache Hit operation.
+    #[must_use]
     pub fn cache_hit(key: &str, ttl: u64, freshness: f64) -> Self {
         Self {
             cache_hit: true,

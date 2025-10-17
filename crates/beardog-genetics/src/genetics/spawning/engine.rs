@@ -24,6 +24,7 @@ impl Default for GeneticSpawningEngine {
 impl GeneticSpawningEngine {
     /// New operation.
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: GeneticsConfig::default(),
@@ -32,7 +33,8 @@ impl GeneticSpawningEngine {
 
     /// With Config operation.
     /// Creates instance with config
-    pub fn with_config(config: GeneticsConfig) -> Self {
+    #[must_use]
+    pub const fn with_config(config: GeneticsConfig) -> Self {
         Self { config }
     }
 
@@ -47,7 +49,7 @@ impl GeneticSpawningEngine {
         let genetics_id = Uuid::new_v4().to_string();
 
         let mut genetics = BearDogGenetics {
-            id: genetics_id.clone(),
+            id: genetics_id,
             capabilities: request.required_capabilities.clone(),
             security_clearance: request.security_clearance.clone(),
             fitness_score: 0.8,
@@ -122,7 +124,8 @@ impl GeneticSpawningEngine {
     /// Get Config operation.
     /// Gets config
     /// Gets config
-    pub fn get_config(&self) -> &GeneticsConfig {
+    #[must_use]
+    pub const fn get_config(&self) -> &GeneticsConfig {
         &self.config
     }
 }

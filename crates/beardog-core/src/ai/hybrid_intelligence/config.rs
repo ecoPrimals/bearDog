@@ -45,38 +45,47 @@ pub enum LearningAlgorithm {
     UnsupervisedLearning,
 }
 
+/// Machine learning training configuration
+///
+/// Configures hyperparameters for training machine learning models
+/// in the hybrid intelligence system.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MLConfig {
-    /// The learning rate value
+    /// Learning rate for gradient descent optimization
     pub learning_rate: f64,
-    /// Number of `batch_size`
+    /// Number of samples per training batch
     pub batch_size: usize,
     /// Maximum number of training epochs
-    /// Number of `max_epochs`
     pub max_epochs: u32,
     /// Enable early stopping to prevent overfitting
-    /// Whether `early_stopping` is enabled
     pub early_stopping: bool,
 }
 
 /// Neural network architecture configuration
+///
+/// Defines the structure and hyperparameters for neural network models
+/// used in the hybrid intelligence system.
 #[derive(Debug, Clone)]
 pub struct NeuralConfig {
+    /// Number of neurons in each hidden layer
     pub hidden_layers: Vec<usize>,
     /// Activation function type (relu, sigmoid, tanh)
-    /// The activation value
     pub activation: String,
-    /// The dropout rate value
+    /// Dropout rate for regularization (0.0 to 1.0)
     pub dropout_rate: f64,
-    /// Whether `batch_norm` is enabled
+    /// Enable batch normalization between layers
     pub batch_norm: bool,
 }
 
+/// Decision engine configuration
+///
+/// Controls how the hybrid intelligence system makes decisions,
+/// including confidence thresholds and human feedback integration.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DecisionConfig {
+    /// Minimum confidence threshold for automated decisions (0.0 to 1.0)
     pub confidence_threshold: f64,
-    /// Enable human feedback integration
-    /// Whether `enable_human_feedback` is enabled
+    /// Enable human feedback integration for decision validation
     pub enable_human_feedback: bool,
     /// Maximum decision processing time in milliseconds
     pub max_processing_time_ms: u64,
@@ -132,28 +141,37 @@ pub struct OptimizationConfig {
     pub parallel: bool,
 }
 
+/// Optimization algorithm selection
+///
+/// Specifies which optimization algorithm to use for training
+/// and parameter updates.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum OptimizationAlgorithm {
     /// Stochastic gradient descent
     SGD,
     /// Adam optimizer with adaptive learning rates
     Adam,
+    /// `RMSprop` optimizer with adaptive learning rate per parameter
     RMSprop,
 }
 
+/// Complete hybrid intelligence system configuration
+///
+/// Comprehensive configuration for the AI-human hybrid intelligence system,
+/// including learning algorithms, neural networks, decision making, and optimization.
 #[derive(Debug, Clone)]
 pub struct HybridIntelligenceConfig {
     /// Current intelligence processing mode
-    /// The mode value
     pub mode: IntelligenceMode,
-    /// The learning algorithm value
+    /// Selected learning algorithm type
     pub learning_algorithm: LearningAlgorithm,
-    /// Human feedback integration settings
-    /// The human feedback weight value
+    /// Weight assigned to human feedback (0.0 to 1.0)
     pub human_feedback_weight: f64,
+    /// Minimum confidence threshold for AI decisions (0.0 to 1.0)
     pub ai_confidence_threshold: f64,
+    /// Unique system identifier for this hybrid intelligence instance
     pub system_id: String,
-    /// Whether `feature_capabilities` is enabled
+    /// List of enabled intelligence capabilities
     pub enabled_capabilities: Vec<IntelligenceCapability>,
     /// Machine learning configuration settings
     pub ml_config: MachineLearningConfig,

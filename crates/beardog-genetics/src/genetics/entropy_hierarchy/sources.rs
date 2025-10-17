@@ -3,7 +3,10 @@
 // This module provides entropy source management and mixing capabilities
 // for the entropy hierarchy system.
 
-use super::types::*;
+use super::types::{
+    EntropyClass, EntropyHierarchyConfig, EntropySeed, FusionAlgorithm, HumanEntropySource,
+    HumanEntropyType, MixingStrategy, SeedMetadata,
+};
 use beardog_errors::BearDogError;
 // Note: rand utilities available for future entropy mixing enhancements
 use sha3::{Digest, Sha3_256};
@@ -17,6 +20,7 @@ pub struct EntropyMixingEngine {
 impl EntropyMixingEngine {
     /// Create new entropy mixing engine
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: &EntropyHierarchyConfig) -> Self {
         Self {
             config: config.clone(),
@@ -41,8 +45,8 @@ impl EntropyMixingEngine {
     }
 
     /// Create entropy seed from mixed sources
-    /// Creates entropy_seed
-    /// Creates entropy_seed
+    /// Creates `entropy_seed`
+    /// Creates `entropy_seed`
     pub fn create_entropy_seed(
         &self,
         entropy_data: Vec<u8>,
@@ -69,7 +73,7 @@ impl EntropyMixingEngine {
             return Err(BearDogError::invalid_input("No sources to mix"));
         }
 
-        let max_len = sources.iter().map(|s| s.len()).max().unwrap_or(0);
+        let max_len = sources.iter().map(std::vec::Vec::len).max().unwrap_or(0);
         let mut result = vec![0u8; max_len];
 
         for source in sources {
@@ -110,8 +114,8 @@ impl EntropyMixingEngine {
     }
 
     /// Validate entropy source quality
-    /// Validates source_quality
-    /// Validates source_quality
+    /// Validates `source_quality`
+    /// Validates `source_quality`
     pub fn validate_source_quality(
         &self,
         source: &HumanEntropySource,
@@ -127,8 +131,9 @@ impl EntropyMixingEngine {
         }
     }
 
-    /// Creates fusion_algorithm
-    /// Creates fusion_algorithm
+    /// Creates `fusion_algorithm`
+    /// Creates `fusion_algorithm`
+    #[must_use]
     pub fn create_fusion_algorithm(&self, strategy: MixingStrategy) -> FusionAlgorithm {
         let mut parameters = HashMap::new();
         parameters.insert(
@@ -156,6 +161,7 @@ pub struct EntropySourceManager {
 impl EntropySourceManager {
     /// Create new entropy source manager
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: &EntropyHierarchyConfig) -> Self {
         Self {
             mixing_engine: EntropyMixingEngine::new(config),
@@ -171,11 +177,13 @@ impl EntropySourceManager {
     /// Get registered source
     /// Gets source
     /// Gets source
+    #[must_use]
     pub fn get_source(&self, id: &str) -> Option<&HumanEntropySource> {
         self.source_registry.get(id)
     }
 
     /// List all registered sources
+    #[must_use]
     pub fn list_sources(&self) -> Vec<&String> {
         self.source_registry.keys().collect()
     }

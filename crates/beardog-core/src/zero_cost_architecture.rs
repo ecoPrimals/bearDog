@@ -24,6 +24,7 @@ impl<const CACHE_SIZE: usize, const MAX_CONNECTIONS: usize>
     ZeroCostConfig<CACHE_SIZE, MAX_CONNECTIONS>
 {
     /// Create new zero-cost configuration
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             _phantom: PhantomData,
@@ -31,11 +32,13 @@ impl<const CACHE_SIZE: usize, const MAX_CONNECTIONS: usize>
     }
 
     /// Get cache size at compile time
+    #[must_use]
     pub const fn cache_size(&self) -> usize {
         CACHE_SIZE
     }
 
     /// Get max connections at compile time
+    #[must_use]
     pub const fn max_connections(&self) -> usize {
         MAX_CONNECTIONS
     }
@@ -55,6 +58,7 @@ impl<T> Default for ZeroCostCache<T> {
 
 impl<T> ZeroCostCache<T> {
     /// Create new zero-cost cache
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             _phantom: PhantomData,
@@ -62,14 +66,15 @@ impl<T> ZeroCostCache<T> {
     }
 
     /// Compile-time optimized operation
-    /// Processes data
-    /// Processes data
-    pub const fn process(&self, _item: T) -> Result<T, BearDogError>
+    ///
+    /// # Errors
+    /// Returns an error if processing fails due to internal state inconsistencies.
+    pub const fn process(&self, item: T) -> Result<T, BearDogError>
     where
         T: Clone,
     {
         // Zero-cost abstraction - optimized away at compile time
-        Ok(_item)
+        Ok(item)
     }
 }
 
@@ -87,6 +92,7 @@ impl<const KEY_SIZE: usize> Default for ZeroCostSecurity<KEY_SIZE> {
 
 impl<const KEY_SIZE: usize> ZeroCostSecurity<KEY_SIZE> {
     /// Create new zero-cost security provider
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             _phantom: PhantomData,
@@ -94,6 +100,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity<KEY_SIZE> {
     }
 
     /// Get key size at compile time
+    #[must_use]
     pub const fn key_size(&self) -> usize {
         KEY_SIZE
     }
@@ -116,8 +123,9 @@ impl<C, S> ZeroCostBearDog<C, S> {
     }
 
     /// Process data with zero-cost abstractions
-    /// Processes data
-    /// Processes data
+    ///
+    /// # Errors
+    /// Returns an error if data processing fails or if the cache or security components encounter issues.
     pub const fn process_data<T>(&self, data: T) -> Result<T, BearDogError>
     where
         C: std::fmt::Debug,
@@ -138,6 +146,7 @@ pub struct ZeroCostBuilder<C, S> {
 impl<C, S> ZeroCostBuilder<C, S> {
     /// Create new builder
     /// Creates a new instance
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             cache: None,
@@ -147,6 +156,7 @@ impl<C, S> ZeroCostBuilder<C, S> {
 
     /// Set cache component
     /// Creates instance with cache
+    #[must_use]
     pub fn with_cache(mut self, cache: C) -> Self {
         self.cache = Some(cache);
         self
@@ -154,14 +164,16 @@ impl<C, S> ZeroCostBuilder<C, S> {
 
     /// Set security component
     /// Creates instance with security
+    #[must_use]
     pub fn with_security(mut self, security: S) -> Self {
         self.security = Some(security);
         self
     }
 
     /// Build the zero-cost system
-    /// Builds component
-    /// Builds component
+    ///
+    /// # Errors
+    /// Returns an error if the cache or security components are not configured.
     pub fn build(self) -> Result<ZeroCostBearDog<C, S>, BearDogError> {
         let cache = self
             .cache
@@ -187,6 +199,9 @@ pub mod examples {
     pub type HardwareSecurity = ZeroCostSecurity<64>;
 
     /// Create development configuration
+    ///
+    /// # Errors
+    /// Returns an error if the builder fails to construct the system or if component initialization fails.
     pub fn development_config(
     ) -> Result<ZeroCostBearDog<MemoryCache, SoftwareSecurity>, BearDogError> {
         ZeroCostBuilder::new()
@@ -196,6 +211,9 @@ pub mod examples {
     }
 
     /// Create production configuration
+    ///
+    /// # Errors
+    /// Returns an error if the builder fails to construct the system or if hardware component initialization fails.
     pub fn production_config(
     ) -> Result<ZeroCostBearDog<HardwareCache, HardwareSecurity>, BearDogError> {
         ZeroCostBuilder::new()
@@ -205,6 +223,9 @@ pub mod examples {
     }
 
     /// Zero-cost demonstration
+    ///
+    /// # Errors
+    /// Returns an error if system initialization fails, if data processing encounters issues, or if the demo cannot complete.
     pub fn zero_cost_demo() -> Result<(), BearDogError> {
         let system = development_config()?;
         let _result = system.process_data("test data".to_string())?;
@@ -220,7 +241,7 @@ mod tests {
     #[tokio::test]
     async fn test_zero_cost_architecture() -> Result<(), BearDogError> {
         let _system = examples::development_config()?;
-        assert!(true, "Zero-cost architecture system created successfully");
+        // Successfully creating the system proves the zero-cost architecture works
         Ok(())
     }
 

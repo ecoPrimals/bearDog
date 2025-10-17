@@ -25,6 +25,7 @@ impl UniversalAdapter {
     ///
     /// Initializes an empty adapter with no registered capabilities.
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             capabilities: Arc::new(RwLock::new(HashMap::new())),

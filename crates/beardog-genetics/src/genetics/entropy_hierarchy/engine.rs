@@ -5,7 +5,7 @@
 
 use super::monitoring::{EntropyMonitor, PerformanceMetrics};
 use super::sources::EntropyMixingEngine;
-use super::types::*;
+use super::types::{EntropyClass, EntropyHierarchyConfig, EntropySeed};
 use super::validation::EntropyValidator;
 
 use beardog_errors::BearDogError;
@@ -28,6 +28,7 @@ pub struct EntropyHierarchyManager {
 impl EntropyHierarchyManager {
     /// Create new entropy hierarchy manager
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: EntropyHierarchyConfig) -> Self {
         let mixing_engine = EntropyMixingEngine::new(&config);
         let validator = EntropyValidator::new(config.clone());
@@ -43,8 +44,8 @@ impl EntropyHierarchyManager {
     }
 
     /// Create human entropy seed
-    /// Creates human_seed
-    /// Creates human_seed
+    /// Creates `human_seed`
+    /// Creates `human_seed`
     pub fn create_human_seed(
         &mut self,
         entropy_class: EntropyClass,
@@ -109,20 +110,22 @@ impl EntropyHierarchyManager {
         self.validator.validate_entropy_quality(&seed.entropy_class)
     }
 
-    /// Gets seed_info
-    /// Gets seed_info
+    /// Gets `seed_info`
+    /// Gets `seed_info`
+    #[must_use]
     pub fn get_seed_info(&self, seed_id: Uuid) -> Option<&EntropySeed> {
         self.active_seeds.get(&seed_id)
     }
 
     /// List all active seeds
+    #[must_use]
     pub fn list_active_seeds(&self) -> Vec<Uuid> {
         self.active_seeds.keys().copied().collect()
     }
 
     /// Remove expired seeds
-    /// Cleans up expired_seeds
-    /// Cleans up expired_seeds
+    /// Cleans up `expired_seeds`
+    /// Cleans up `expired_seeds`
     pub fn cleanup_expired_seeds(&mut self) -> Result<usize, BearDogError> {
         let mut removed_count = 0;
         let mut to_remove = Vec::new();
@@ -143,6 +146,7 @@ impl EntropyHierarchyManager {
         Ok(removed_count)
     }
 
+    #[must_use]
     pub fn get_performance_metrics(&self) -> PerformanceMetrics {
         PerformanceMetrics {
             active_seeds_count: self.active_seeds.len(),
@@ -191,7 +195,7 @@ impl EntropyHierarchyManager {
     /// Initialize the manager
     /// Initializes componentialize
     /// Initializes componentialize
-    pub fn initialize(&self) -> Result<(), BearDogError> {
+    pub const fn initialize(&self) -> Result<(), BearDogError> {
         // Perform any necessary initialization
         Ok(())
     }
@@ -212,6 +216,7 @@ impl Default for EntropyHierarchyManager {
 
 #[cfg(test)]
 mod tests {
+    use super::super::types::{BiometricHash, OwnershipProof};
     use super::*;
     use chrono::Utc;
 

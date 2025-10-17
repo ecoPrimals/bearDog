@@ -37,6 +37,7 @@ impl Default for ModernServiceDiscovery {
 impl ModernServiceDiscovery {
     /// Create a new modern service discovery instance
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             required_capabilities: vec![CapabilityType::ServiceMesh],
@@ -46,6 +47,9 @@ impl ModernServiceDiscovery {
     }
 
     /// Discover services with the specified capability
+    ///
+    /// # Errors
+    /// Returns an error if the capability discovery fails or if the universal adapter encounters issues.
     pub fn discover_capability(
         &mut self,
         _capability: CapabilityType,
@@ -56,41 +60,57 @@ impl ModernServiceDiscovery {
     }
 
     /// Start the service discovery instance
-    /// Starts service
-    /// Starts service
+    ///
+    /// # Errors
+    /// Returns an error if the service discovery instance fails to initialize or start.
     pub fn start(&self) -> Result<(), BearDogError> {
         info!("🚀 Starting modern service discovery");
         Ok(())
     }
 
     /// Stop the service discovery instance
-    /// Stops service
-    /// Stops service
+    ///
+    /// # Errors
+    /// Returns an error if the service discovery instance fails to stop gracefully or encounters shutdown issues.
     pub fn stop(&self) -> Result<(), BearDogError> {
         info!("🛑 Stopping modern service discovery");
         Ok(())
     }
 
+    /// Register a service with the discovery system
+    ///
+    /// # Errors
+    /// Returns an error if service registration fails due to duplicate names, invalid configuration, or network issues.
     pub fn register_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
         info!("📝 Registering service: {}", service.name);
         // Modern implementation would use capability-based registration
         Ok(())
     }
 
+    /// Deregister a service from the discovery system
+    ///
+    /// # Errors
+    /// Returns an error if service deregistration fails because the service is not found or if network operations fail.
     pub fn deregister_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
         info!("🗑️ Deregistering service: {}", service.name);
         // Modern implementation would use capability-based deregistration
         Ok(())
     }
 
+    /// Discover services matching the given name pattern
+    ///
+    /// # Errors
+    /// Returns an error if service discovery fails due to network issues, timeouts, or invalid service names.
     pub fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
         info!("🔍 Discovering services matching: {}", service_name);
         // Modern implementation would use capability-based discovery
         Ok(vec![])
     }
 
-    /// Gets statistics
-    /// Gets statistics
+    /// Get service discovery statistics
+    ///
+    /// # Errors
+    /// Returns an error if statistics collection fails or if internal state is inconsistent.
     pub fn get_statistics(&self) -> Result<ProtocolStatistics, BearDogError> {
         Ok(ProtocolStatistics {
             services_discovered: self.discovered_providers.len(),

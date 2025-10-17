@@ -490,7 +490,7 @@ impl BearDogConfig for UnifiedSecurityConfig {
 
     fn to_toml(&self) -> Result<String, beardog_errors::BearDogError> {
         serde_json::to_string_pretty(self).map_err(|e| beardog_errors::BearDogError::System {
-            message: format!("Failed to serialize security config: {}", e),
+            message: format!("Failed to serialize security config: {e}"),
             category: beardog_errors::SystemErrorCategory::General,
         })
     }

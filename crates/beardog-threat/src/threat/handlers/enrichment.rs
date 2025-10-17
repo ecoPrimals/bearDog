@@ -15,7 +15,7 @@ impl ThreatEnrichmentHandler {
     /// Create a new enrichment handler
     /// Creates a new instance
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { enabled: true }
     }
 

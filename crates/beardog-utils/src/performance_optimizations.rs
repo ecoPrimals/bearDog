@@ -93,16 +93,16 @@ impl CloneOptimizer {
     /// Gets stats
     /// Gets stats
     #[must_use]
-    pub fn get_stats(&self) -> &OptimizationStats {
+    pub const fn get_stats(&self) -> &OptimizationStats {
         &self.stats
     }
 
-    fn should_intern_string(&self, s: &str) -> bool {
+    const fn should_intern_string(&self, s: &str) -> bool {
         s.len() > 10 && s.len() < 1000
     }
 
     /// Gets `size_class`
-    fn get_size_class(&self, size: usize) -> usize {
+    const fn get_size_class(&self, size: usize) -> usize {
         match size {
             0..=64 => 64,
             65..=256 => 256,
@@ -212,7 +212,7 @@ impl ZeroCopyProcessor {
     /// Gets stats
     /// Gets stats
     #[must_use]
-    pub fn get_stats(&self) -> (usize, usize, usize) {
+    pub const fn get_stats(&self) -> (usize, usize, usize) {
         (
             self.processed_count,
             self.shared_references,
@@ -349,7 +349,7 @@ impl DataView<'_> {
 
     /// Get the effective length of the view
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.length
     }
 
@@ -357,7 +357,7 @@ impl DataView<'_> {
     /// Checks if empty
     /// Checks if empty
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.length == 0
     }
 }
@@ -384,7 +384,7 @@ impl SimdAccelerator {
     /// New operation.
     /// Creates a new instance
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             features: CpuFeatures {
                 sse4_1: false, // Will be detected at runtime
@@ -413,7 +413,7 @@ impl SimdAccelerator {
     /// Gets features
     /// Gets features
     #[must_use]
-    pub fn get_features(&self) -> &CpuFeatures {
+    pub const fn get_features(&self) -> &CpuFeatures {
         &self.features
     }
 }

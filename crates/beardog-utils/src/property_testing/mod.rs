@@ -2,7 +2,7 @@
 //!
 //! **Unified property-based testing framework** - consolidated from scattered implementations.
 //!
-//! This module provides comprehensive property-based testing capabilities for BearDog,
+//! This module provides comprehensive property-based testing capabilities for `BearDog`,
 //! with all implementations consolidated into a single, maintainable location.
 //!
 //! ## Migration Note

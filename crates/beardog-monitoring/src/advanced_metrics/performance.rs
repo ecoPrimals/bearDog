@@ -1,6 +1,6 @@
 // Performance Analysis Module
 
-use super::types::*;
+use super::types::PerformanceMetric;
 
 #[derive(Debug)]
 pub struct PerformanceAnalyzer {
@@ -15,11 +15,12 @@ impl Default for PerformanceAnalyzer {
 
 impl PerformanceAnalyzer {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 
-    pub fn analyze_metric(
+    pub const fn analyze_metric(
         &self,
         _metric: &PerformanceMetric,
     ) -> Result<(), beardog_errors::BearDogError> {

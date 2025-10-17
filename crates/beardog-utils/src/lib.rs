@@ -1,6 +1,6 @@
-//! # BearDog Utilities Crate
+//! # `BearDog` Utilities Crate
 //!
-//! Essential utilities and optimizations for the BearDog platform, providing
+//! Essential utilities and optimizations for the `BearDog` platform, providing
 //! zero-copy operations, SIMD acceleration, memory pooling, and AI-powered
 //! optimizations.
 //!
@@ -8,6 +8,8 @@
 //!
 //! - **Zero-Copy Operations**: Minimize memory allocations and copies
 //! - **SIMD Acceleration**: Hardware-accelerated operations for performance
+
+#![deny(unsafe_code)]
 //! - **Memory Pooling**: Efficient buffer and memory management
 //! - **Property Testing**: QuickCheck-based property testing framework
 //! - **AI Optimization**: Intelligent performance optimization

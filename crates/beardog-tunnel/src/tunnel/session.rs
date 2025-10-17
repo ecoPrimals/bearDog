@@ -19,7 +19,8 @@ pub struct GamingSecurityProfile {
 
 impl GamingSecurityProfile {
     /// Competitive Gaming operation.
-    pub fn competitive_gaming() -> Self {
+    #[must_use]
+    pub const fn competitive_gaming() -> Self {
         Self {
             latency_priority: 0.9,
             security_level: SecurityLevel {
@@ -69,6 +70,7 @@ impl SecureSession {
 
     /// Checks if expired
     /// Checks if expired
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
@@ -105,6 +107,7 @@ pub struct SessionManager {
 
 impl SessionManager {
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
@@ -146,8 +149,8 @@ impl SessionManager {
         sessions.remove(session_id)
     }
 
-    /// Cleans up expired_sessions
-    /// Cleans up expired_sessions
+    /// Cleans up `expired_sessions`
+    /// Cleans up `expired_sessions`
     pub async fn cleanup_expired_sessions(&self) -> Result<usize, BearDogError> {
         let mut sessions = self.sessions.write().await;
         let initial_count = sessions.len();

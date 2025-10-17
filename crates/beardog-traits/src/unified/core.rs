@@ -220,7 +220,7 @@ impl ValidationUtils {
         }
 
         // Ultra-pedantic: Check for control characters
-        if entity_id.chars().any(|c| c.is_control()) {
+        if entity_id.chars().any(char::is_control) {
             return Err(BearDogError::Security {
                 message: "Entity ID contains control characters - potential security risk"
                     .to_string(),

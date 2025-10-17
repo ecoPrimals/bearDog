@@ -1,6 +1,17 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Capability detector module
+//!
+//! NOTE: This module depends on universal_hsm_discovery which is currently
+//! commented out pending systematic rebuild.
 
+// pub use crate::universal_hsm_discovery::capability_detection::*;
 
-pub use crate::universal_hsm_discovery::capability_detection::*;
+/// Stub capability detector for compatibility
+#[derive(Debug, Clone, Default)]
+pub struct CapabilityDetector;
+
+impl CapabilityDetector {
+    /// Create new capability detector
+    pub fn new() -> Self {
+        Self
+    }
+}
