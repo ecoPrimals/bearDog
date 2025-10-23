@@ -118,7 +118,7 @@ use std::time::Duration;
 /// - Set `session_timeout` based on security requirements (shorter = more secure)
 /// - Lower `max_login_attempts` in production to prevent brute force
 /// - Use OAuth2/SAML for production; Local for development only
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalAuthConfig {
     /// Whether authentication is enabled
     /// Whether feature is enabled
@@ -129,6 +129,17 @@ pub struct CanonicalAuthConfig {
     pub session_timeout: Duration,
     /// Number of `max_login_attempts`
     pub max_login_attempts: u32,
+}
+
+impl Default for CanonicalAuthConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            providers: vec![AuthProvider::Local],
+            session_timeout: Duration::from_secs(3600), // 1 hour default
+            max_login_attempts: 5,                      // Reasonable default to prevent brute force
+        }
+    }
 }
 
 /// Authentication provider types

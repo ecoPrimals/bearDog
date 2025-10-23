@@ -230,7 +230,7 @@ impl SoftwareHealthMonitor {
             metrics.success_rate = metrics.success_rate * 0.99 + 1.0 * 0.01;
         } else {
             metrics.error_count += 1;
-            metrics.success_rate = metrics.success_rate * 0.99;
+            metrics.success_rate *= 0.99;
         }
 
         Ok(())

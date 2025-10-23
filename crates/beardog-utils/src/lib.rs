@@ -9,11 +9,12 @@
 //! - **Zero-Copy Operations**: Minimize memory allocations and copies
 //! - **SIMD Acceleration**: Hardware-accelerated operations for performance
 
-#![deny(unsafe_code)]
 //! - **Memory Pooling**: Efficient buffer and memory management
 //! - **Property Testing**: QuickCheck-based property testing framework
 //! - **AI Optimization**: Intelligent performance optimization
 //! - **100% Safe**: Zero unsafe code in all utilities
+
+#![deny(unsafe_code)]
 //!
 //! ## Core Modules
 //!
@@ -59,12 +60,15 @@
 pub mod ai_optimization;
 pub mod benchmarks;
 pub mod const_eval;
+pub mod env_config;
 
 // Safe implementations - production ready
 pub mod buffer_pools_safe;
 pub mod concurrent_safe;
 pub mod memory_pools_safe;
 pub mod simd_safe;
+pub mod ultimate_performance;
+pub mod ultimate_safety;
 pub mod zero_copy_safe;
 
 // Performance and utility modules
@@ -91,3 +95,7 @@ pub use memory_pools_safe::{PoolStats as MemoryPoolStats, SafeMemoryPool};
 pub use simd_safe::*;
 pub use utils::*;
 pub use zero_copy_safe::*;
+
+// Test modules
+#[cfg(test)]
+mod tests;

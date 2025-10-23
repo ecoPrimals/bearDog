@@ -513,7 +513,8 @@ impl Default for AIRegistryConfig {
     fn default() -> Self {
         Self {
             registry_type: RegistryType::Local,
-            endpoint: "localhost:8080".to_string(),
+            endpoint: std::env::var("BEARDOG_AI_REGISTRY_ENDPOINT")
+                .unwrap_or_else(|_| "localhost:8080".to_string()),
             auth: None,
         }
     }

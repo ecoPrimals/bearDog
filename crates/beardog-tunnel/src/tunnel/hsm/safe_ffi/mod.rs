@@ -166,7 +166,7 @@ impl SafePlatformSecurity {
 
 impl Default for SafePlatformSecurity {
     fn default() -> Self {
-        Self::new().unwrap_or_else(|_| Self {
+        Self::new().unwrap_or(Self {
             android_provider: None,
             ios_provider: None,
         })
@@ -203,7 +203,7 @@ mod tests {
 
         // For now, just verify the methods don't panic
         // Full integration testing requires proper key storage
-        assert!(true, "Sign operation completed without panic");
+        // TODO: Sign operation completed without panic
         Ok(())
     }
 }

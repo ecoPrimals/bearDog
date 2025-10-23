@@ -141,10 +141,18 @@ impl VendorAdapter {
 impl Default for VendorConfig {
     fn default() -> Self {
         Self {
-            vendor_name: "default".to_string(),
-            api_endpoint: "http://localhost:8080".to_string(),
-            timeout_seconds: 30,
-            enable_monitoring: true,
+            vendor_name: std::env::var("BEARDOG_VENDOR_NAME")
+                .unwrap_or_else(|_| "default".to_string()),
+            api_endpoint: std::env::var("BEARDOG_VENDOR_API_ENDPOINT")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+            timeout_seconds: std::env::var("BEARDOG_VENDOR_TIMEOUT_SECONDS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30),
+            enable_monitoring: std::env::var("BEARDOG_VENDOR_ENABLE_MONITORING")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
         }
     }
 }

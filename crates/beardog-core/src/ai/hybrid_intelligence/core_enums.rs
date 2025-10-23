@@ -105,7 +105,7 @@ pub enum Optimizer {
     GradientDescent,
     /// Adam optimizer
     Adam,
-    /// RMSprop optimizer
+    /// `RMSprop` optimizer
     RMSprop,
     /// Adagrad optimizer
     Adagrad,

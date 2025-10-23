@@ -126,6 +126,16 @@ impl EcosystemListener {
     pub fn start_listening(&mut self) -> BearDogResult<()> {
         let start_time = std::time::Instant::now();
 
+        Self::log_listening_plan();
+        self.start_enabled_listeners();
+        self.record_startup_metrics(start_time);
+        self.log_listening_status();
+
+        Ok(())
+    }
+
+    /// Logs the listening plan to inform about upcoming operations
+    fn log_listening_plan() {
         info!("🎧 Starting ecosystem listening...");
         info!("📋 Listening Plan:");
         info!("   1. Start multicast DNS listening");
@@ -133,53 +143,64 @@ impl EcosystemListener {
         info!("   3. Start environment variable monitoring");
         info!("   4. Start service mesh discovery");
         info!("   5. Process announcements as they arrive");
+    }
 
-        // Start multicast DNS listener
-        if self.config.discovery.enabled_protocols.contains(
-            &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::MulticastDNS,
-        ) {
-            let task = self.start_mdns_listener();
-            self.listening_tasks.push(task);
-            info!("✅ mDNS listener started");
+    /// Starts all enabled protocol listeners
+    fn start_enabled_listeners(&mut self) {
+        use beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol;
+
+        self.start_listener_if_enabled(DiscoveryProtocol::MulticastDNS, "mDNS");
+        self.start_listener_if_enabled(DiscoveryProtocol::HttpDiscovery, "HTTP discovery");
+        self.start_listener_if_enabled(DiscoveryProtocol::EnvironmentDiscovery, "Environment");
+        self.start_listener_if_enabled(DiscoveryProtocol::ServiceMeshDiscovery, "Service mesh");
+    }
+
+    /// Starts a specific listener if the protocol is enabled
+    fn start_listener_if_enabled(
+        &mut self,
+        protocol: beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
+        name: &str,
+    ) {
+        if !self.config.discovery.enabled_protocols.contains(&protocol) {
+            return;
         }
 
-        // Start HTTP discovery listener
-        if self.config.discovery.enabled_protocols.contains(
-            &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::HttpDiscovery,
-        ) {
-            let task = self.start_http_listener();
-            self.listening_tasks.push(task);
-            info!("✅ HTTP discovery listener started");
-        }
+        let task = match protocol {
+            beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::MulticastDNS => {
+                self.start_mdns_listener()
+            }
+            beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::HttpDiscovery => {
+                self.start_http_listener()
+            }
+            beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::EnvironmentDiscovery => {
+                self.start_environment_listener()
+            }
+            beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::ServiceMeshDiscovery => {
+                self.start_service_mesh_listener()
+            }
+            beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::ContainerDiscovery |
+            beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::CloudMetadataDiscovery => {
+                // These protocols don't have dedicated listeners yet
+                warn!("Protocol {:?} is enabled but listener not implemented yet", protocol);
+                return;
+            }
+        };
 
-        // Start environment monitoring
-        if self
-            .config
-            .discovery.enabled_protocols
-            .contains(&beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::EnvironmentDiscovery)
-        {
-            let task = self.start_environment_listener();
-            self.listening_tasks.push(task);
-            info!("✅ Environment listener started");
-        }
+        self.listening_tasks.push(task);
+        info!("✅ {} listener started", name);
+    }
 
-        // Start service mesh listener
-        if self
-            .config
-            .discovery.enabled_protocols
-            .contains(&beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol::ServiceMeshDiscovery)
-        {
-            let task = self.start_service_mesh_listener();
-            self.listening_tasks.push(task);
-            info!("✅ Service mesh listener started");
-        }
-
+    /// Records startup metrics
+    fn record_startup_metrics(&mut self, start_time: std::time::Instant) {
         // Safe cast: Duration is unlikely to exceed u64::MAX milliseconds in practice
         #[allow(clippy::cast_possible_truncation)]
         {
             self.metrics.listening_duration_ms = start_time.elapsed().as_millis() as u64;
         }
+    }
 
+    /// Logs the final listening status
+    fn log_listening_status(&self) {
         info!("🎉 Ecosystem listening active!");
         info!("📊 Listening Status:");
         info!("   🎧 Active Listeners: {}", self.listening_tasks.len());
@@ -191,8 +212,6 @@ impl EcosystemListener {
             "   ⏱️  Startup Duration: {}ms",
             self.metrics.listening_duration_ms
         );
-
-        Ok(())
     }
 
     /// Start multicast DNS listener
@@ -320,22 +339,16 @@ impl EcosystemListener {
 
             loop {
                 // Check service mesh for primal announcements
-                match Self::discover_service_mesh_primals() {
-                    Ok(announcements) => {
-                        for announcement in announcements {
-                            if let Err(e) = Self::process_primal_announcement(
-                                announcement,
-                                &discovered_primals,
-                                &discovered_capabilities,
-                            )
-                            .await
-                            {
-                                warn!("Failed to process service mesh announcement: {}", e);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        debug!("Service mesh discovery error (expected): {}", e);
+                let announcements = Self::discover_service_mesh_primals();
+                for announcement in announcements {
+                    if let Err(e) = Self::process_primal_announcement(
+                        announcement,
+                        &discovered_primals,
+                        &discovered_capabilities,
+                    )
+                    .await
+                    {
+                        warn!("Failed to process service mesh announcement: {}", e);
                     }
                 }
 
@@ -484,12 +497,12 @@ impl EcosystemListener {
     }
 
     /// Discover primals via service mesh
-    fn discover_service_mesh_primals() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    fn discover_service_mesh_primals() -> Vec<PrimalAnnouncement> {
         debug!("🕸️ Discovering primals via service mesh...");
 
         // Minimal implementation - production deployments should integrate with service mesh
         // like Istio, Linkerd, or Consul Connect for automatic service discovery
-        Ok(Vec::new()) // No service mesh integration yet - returns empty
+        Vec::new() // No service mesh integration yet - returns empty
     }
 
     /// Process primal announcement
@@ -781,5 +794,6 @@ mod tests {
         // Should have stored the primal with capability-based key
         let primals_guard = primals.read().await;
         assert!(primals_guard.contains_key("compute-service-001"));
+        drop(primals_guard);
     }
 }

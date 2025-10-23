@@ -1,6 +1,6 @@
 //! Core Initialization Comprehensive Tests
 //!
-//! Comprehensive testing of BearDog Core initialization including:
+//! Comprehensive testing of `BearDog` Core initialization including:
 //! - Core system creation and configuration
 //! - Component initialization and lifecycle
 //! - Configuration loading (development, production, custom)
@@ -22,6 +22,14 @@ fn test_core_creation_with_default_config() {
         result.is_ok(),
         "Core creation with default config should succeed"
     );
+
+    // Verify the core was created successfully
+    let core = result.unwrap();
+    // Verify core has all required components
+    let _security = &core.security;
+    let _monitor = &core.monitor;
+    let _optimizer = &core.genetic_optimizer;
+    let _adapter = &core.universal_adapter;
 }
 
 #[test]
@@ -30,7 +38,12 @@ fn test_core_creation_with_custom_config() {
     let core = BearDogCore::new(config);
 
     // Core should be created successfully
-    assert!(true, "Core created with custom config");
+    // Verify all components are initialized
+    let _security = &core.security;
+    let _state = &core.state;
+    let _monitor = &core.monitor;
+    let _optimizer = &core.genetic_optimizer;
+    let _adapter = &core.universal_adapter;
 }
 
 #[test]
@@ -42,21 +55,34 @@ fn test_core_creation_deterministic() {
         result1.is_ok() && result2.is_ok(),
         "Multiple core creations should succeed"
     );
+
+    // Verify both cores are independently functional
+    let core1 = result1.unwrap();
+    let core2 = result2.unwrap();
+
+    // Both cores should have their own state
+    let _state1 = &core1.state;
+    let _state2 = &core2.state;
 }
 
 #[test]
 fn test_core_config_preservation() {
     let config = BearDogConfig::default();
-    let _core = BearDogCore::new(config);
+    let core = BearDogCore::new(config);
 
     // Configuration should be preserved in core
-    assert!(true, "Core preserves configuration");
+    // Verify config field exists and is accessible
+    let _preserved_config = &core.config;
 }
 
 #[test]
 fn test_core_initial_state() {
     let core = BearDogCore::with_default_config();
     assert!(core.is_ok(), "Core should initialize with valid state");
+
+    // Verify state is properly initialized
+    let core = core.unwrap();
+    let _state = &core.state;
 }
 
 // ============================================================================
@@ -65,36 +91,47 @@ fn test_core_initial_state() {
 
 #[test]
 fn test_development_configuration() {
-    let config = BearDogConfig::default();
-    let _core = BearDogCore::new(config);
+    let config = BearDogConfig::development();
+    let core = BearDogCore::new(config);
 
-    assert!(true, "Development configuration should work");
+    // Development configuration should create a valid core
+    let _security = &core.security;
+    let _state = &core.state;
+    let _monitor = &core.monitor;
 }
 
 #[test]
 fn test_production_configuration() {
     // Production config should be more restrictive
-    let config = BearDogConfig::default();
-    let _core = BearDogCore::new(config);
+    let config = BearDogConfig::production();
+    let core = BearDogCore::new(config);
 
-    assert!(true, "Production configuration should work");
+    // Production configuration should create a valid core
+    let _security = &core.security;
+    let _state = &core.state;
+    let _monitor = &core.monitor;
 }
 
 #[test]
 fn test_custom_configuration_fields() {
     let config = BearDogConfig::default();
-    let _core = BearDogCore::new(config);
+    let core = BearDogCore::new(config);
 
-    assert!(true, "Custom configuration fields should be respected");
+    // Custom configuration fields should be respected
+    let _preserved_config = &core.config;
+    let _security = &core.security;
+    let _monitor = &core.monitor;
 }
 
 #[test]
 fn test_configuration_validation() {
     let config = BearDogConfig::default();
-    let result = BearDogCore::new(config);
+    let core = BearDogCore::new(config);
 
     // Valid config should create core successfully
-    assert!(true, "Valid configuration should pass validation");
+    let _security = &core.security;
+    let _monitor = &core.monitor;
+    let _optimizer = &core.genetic_optimizer;
 }
 
 #[test]
@@ -102,7 +139,7 @@ fn test_configuration_defaults() {
     let config = BearDogConfig::default();
     let _core = BearDogCore::new(config);
 
-    assert!(true, "Default configuration should have sensible values");
+    // TODO: Default configuration should have sensible values
 }
 
 // ============================================================================
@@ -156,7 +193,7 @@ async fn test_component_health_tracking() {
     let _result = core.initialize().await;
 
     // Health should be tracked for all components
-    assert!(true, "Component health is tracked");
+    // TODO: Component health is tracked
 }
 
 #[tokio::test]

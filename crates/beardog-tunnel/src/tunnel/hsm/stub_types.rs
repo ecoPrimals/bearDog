@@ -29,7 +29,6 @@
 //! trait implementation compatibility until KeyType is aligned across crates.
 
 use beardog_errors::BearDogError;
-use serde::{Deserialize, Serialize};
 
 /// OpenSSL crypto provider stub
 /// TODO: Implement proper OpenSSL provider

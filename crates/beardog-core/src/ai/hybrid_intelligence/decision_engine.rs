@@ -176,6 +176,7 @@ pub struct RuleCondition {
     pub value: ConditionValue,
 }
 
+/// Comparison operators for decision criteria
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ComparisonOperator {
     /// Equal to
@@ -418,6 +419,7 @@ pub struct MultiCriteriaConfig {
 pub enum McdaMethod {
     /// Weighted Sum Model
     WeightedSum,
+    /// Technique for Order of Preference by Similarity to Ideal Solution
     Topsis,
     /// Analytic Hierarchy Process
     Ahp,
@@ -483,6 +485,7 @@ pub struct Alternative {
     pub metadata: HashMap<String, String>,
 }
 
+/// Preference information for multi-criteria decision analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreferenceInformation {
     /// Preference thresholds
@@ -588,6 +591,7 @@ pub struct PayoffMatrix {
     pub player_mapping: HashMap<String, u32>,
 }
 
+/// Solution concepts for game-theoretic analysis
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SolutionConcept {
     /// Nash equilibrium
@@ -618,6 +622,7 @@ pub struct EnsembleConfig {
     pub weights: Option<HashMap<String, f64>>,
 }
 
+/// Decision-making method configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecisionMethod {
     /// Method identifier
@@ -645,6 +650,7 @@ pub enum DecisionMethodType {
     ExpertSystem,
 }
 
+/// Methods for combining multiple decision results
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CombinationMethod {
     /// Simple voting
@@ -661,6 +667,7 @@ pub enum CombinationMethod {
     Averaging,
 }
 
+/// Statistics for decision engine operations
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DecisionEngineStats {
     /// Total number of decisions processed
@@ -668,6 +675,7 @@ pub struct DecisionEngineStats {
     pub decisions_made: u64,
     /// Average decision processing time in milliseconds
     pub avg_decision_time: f64,
+    /// Average confidence score of decisions
     pub confidence_score: f64,
     /// Number of decisions that required human intervention
     /// Number of `human_interventions`
@@ -681,12 +689,12 @@ pub struct DecisionEngineStats {
     /// Success rate of implemented decisions
     /// The success rate value
     pub success_rate: f64,
-    /// Current processing load as a percentage
-    /// The current load value
+    /// Current processing load as a percentage (0.0-100.0)
     pub current_load: f64,
     /// Maximum processing capacity reached
     /// The peak load value
     pub peak_load: f64,
+    /// Average time waiting for human feedback in milliseconds
     pub feedback_wait_time: f64,
     /// Number of decisions currently pending
     /// Number of `pending_decisions`

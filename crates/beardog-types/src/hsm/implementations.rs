@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_in_memory_storage_backend_default() {
-        let backend = InMemoryStorageBackend::default();
+        let backend = InMemoryStorageBackend;
         let _ = backend;
     }
 }

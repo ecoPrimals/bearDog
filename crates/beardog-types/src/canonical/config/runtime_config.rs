@@ -33,38 +33,49 @@ pub struct RuntimeNetworkConfig {
 
 impl Default for RuntimeNetworkConfig {
     fn default() -> Self {
+        // Default values - all configurable via environment variables
+        const DEFAULT_API_HOST: &str = "127.0.0.1";
+        const DEFAULT_API_PORT: u16 = 8080;
+        const DEFAULT_METRICS_PORT: u16 = 9090;
+        const DEFAULT_HEALTH_PORT: u16 = 8081;
+        const DEFAULT_WS_PORT: u16 = 3000;
+        const DEFAULT_GRPC_PORT: u16 = 50051;
+        const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
+        const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+
         Self {
-            discovery_endpoint: env::var("BEARDOG_DISCOVERY_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8080/discover".to_string()),
-            api_host: env::var("BEARDOG_API_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
+            discovery_endpoint: env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
+                format!("http://{}:{}/discover", DEFAULT_API_HOST, DEFAULT_API_PORT)
+            }),
+            api_host: env::var("BEARDOG_API_HOST").unwrap_or_else(|_| DEFAULT_API_HOST.to_string()),
             api_port: env::var("BEARDOG_API_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(DEFAULT_API_PORT),
             metrics_port: env::var("BEARDOG_METRICS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(9090),
+                .unwrap_or(DEFAULT_METRICS_PORT),
             health_port: env::var("BEARDOG_HEALTH_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8081),
+                .unwrap_or(DEFAULT_HEALTH_PORT),
             ws_port: env::var("BEARDOG_WS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(3000),
+                .unwrap_or(DEFAULT_WS_PORT),
             grpc_port: env::var("BEARDOG_GRPC_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(50051),
+                .unwrap_or(DEFAULT_GRPC_PORT),
             timeout_seconds: env::var("BEARDOG_TIMEOUT_SECONDS")
                 .ok()
                 .and_then(|t| t.parse().ok())
-                .unwrap_or(30),
+                .unwrap_or(DEFAULT_TIMEOUT_SECONDS),
             max_connections: env::var("BEARDOG_MAX_CONNECTIONS")
                 .ok()
                 .and_then(|m| m.parse().ok())
-                .unwrap_or(1000),
+                .unwrap_or(DEFAULT_MAX_CONNECTIONS),
             enable_tls: env::var("BEARDOG_ENABLE_TLS")
                 .ok()
                 .and_then(|e| e.parse().ok())

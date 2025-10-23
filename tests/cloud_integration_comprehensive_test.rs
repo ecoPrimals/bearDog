@@ -9,5 +9,5 @@ async fn test_cloud_integration_basic() -> Result<(), BearDogError> {
 #[test]
 fn test_cloud_config() {
     // Basic cloud config test
-    assert!(true, "Cloud config test passed ");
+    // TODO: Implement test
 }

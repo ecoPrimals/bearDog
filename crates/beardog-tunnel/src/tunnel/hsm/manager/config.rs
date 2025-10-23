@@ -30,7 +30,7 @@ impl std::fmt::Display for SimpleHsmTier {
 }
 
 /// HSM manager configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HsmManagerConfig {
     /// Health check configuration
     pub health_config: HealthConfig,
@@ -38,16 +38,6 @@ pub struct HsmManagerConfig {
     pub failover_config: FailoverConfig,
     /// Performance configuration
     pub performance_config: PerformanceConfig,
-}
-
-impl Default for HsmManagerConfig {
-    fn default() -> Self {
-        Self {
-            health_config: HealthConfig::default(),
-            failover_config: FailoverConfig::default(),
-            performance_config: PerformanceConfig::default(),
-        }
-    }
 }
 
 /// Health check configuration

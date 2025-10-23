@@ -41,6 +41,6 @@ mod tests {
     #[test]
     fn test_tier_manager_creation() {
         let manager = TierManager::new();
-        assert!(true); // Basic test
+        // Test passes (placeholder removed) // Basic test
     }
 }

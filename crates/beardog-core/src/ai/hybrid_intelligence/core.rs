@@ -1,7 +1,6 @@
 // Main implementation and system orchestration for hybrid intelligence
 
 use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
-use super::core_enums::*;
 use super::core_types::{IntelligenceCapability, MachineLearningConfig};
 use super::learning::PredictionHorizon;
 use super::types::{
@@ -645,6 +644,10 @@ impl HybridIntelligenceSystem {
     }
 }
 
+/// Builder for configuring and creating a HybridIntelligence system
+///
+/// This builder allows flexible configuration of the hybrid intelligence system,
+/// including ML models, neural networks, decision engines, and learning configurations.
 #[derive(Debug)]
 pub struct HybridIntelligenceBuilder {
     system_id: Option<String>,

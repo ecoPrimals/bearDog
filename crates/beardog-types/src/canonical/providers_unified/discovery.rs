@@ -40,14 +40,35 @@ pub struct DiscoveryConfig {
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
+        let default_endpoints = std::env::var("BEARDOG_DISCOVERY_ENDPOINTS").map_or_else(
+            |_| vec!["localhost:8500".to_string()],
+            |s| s.split(',').map(|e| e.trim().to_string()).collect(),
+        );
+
         Self {
-            enabled: true,
+            enabled: std::env::var("BEARDOG_DISCOVERY_ENABLED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
             discovery_type: DiscoveryType::KeyValueRegistry,
-            registry_endpoints: vec!["localhost:8500".to_string()],
-            registration_enabled: true,
-            health_check_interval: Duration::from_secs(30),
+            registry_endpoints: default_endpoints,
+            registration_enabled: std::env::var("BEARDOG_DISCOVERY_REGISTRATION_ENABLED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_HEALTH_CHECK_INTERVAL")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(30),
+            ),
             service_metadata: HashMap::new(),
-            refresh_interval: Duration::from_secs(60),
+            refresh_interval: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_REFRESH_INTERVAL")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(60),
+            ),
         }
     }
 }

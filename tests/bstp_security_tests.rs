@@ -10,5 +10,5 @@ async fn test_bstp_security_basic() -> Result<(), BearDogError> {
 #[test]
 fn test_security_context() {
     // Basic security context test
-    assert!(true, "Security context test passed");
+    // TODO: Implement test
 }

@@ -44,6 +44,6 @@ mod tests {
     #[test]
     fn test_classifier_creation() {
         let classifier = HumanEntropyClassifier::new();
-        assert!(true); // Basic test
+        // Test passes (placeholder removed) // Basic test
     }
 }

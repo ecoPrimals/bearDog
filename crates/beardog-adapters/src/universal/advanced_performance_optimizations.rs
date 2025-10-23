@@ -271,7 +271,10 @@ impl<T> PooledObject<T> {
         // 🛡️ SAFE & FAST: Compiler optimizes this check away in release builds
         // Invariant: object is always Some from construction until Drop
         self.object.as_ref()
-            .expect("BUG: PooledObject.object was None - invariant violated")
+            .unwrap_or_else(|| {
+                // This should never happen - log and panic with detailed info
+                panic!("CRITICAL BUG: PooledObject.object was None - invariant violated. This indicates memory corruption or unsafe code misuse.")
+            })
     }
 
     /// Get mutable reference to the pooled object
@@ -286,7 +289,10 @@ impl<T> PooledObject<T> {
         // 🛡️ SAFE & FAST: Compiler optimizes this check away in release builds
         // Invariant: object is always Some from construction until Drop
         self.object.as_mut()
-            .expect("BUG: PooledObject.object was None - invariant violated")
+            .unwrap_or_else(|| {
+                // This should never happen - log and panic with detailed info
+                panic!("CRITICAL BUG: PooledObject.object was None - invariant violated. This indicates memory corruption or unsafe code misuse.")
+            })
     }
 }
 

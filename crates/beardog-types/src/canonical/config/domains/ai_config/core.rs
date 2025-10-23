@@ -138,7 +138,9 @@ impl ConsolidatedAiConfigBuilder {
         Self::default().enabled(true).hybrid_intelligence(
             super::HybridIntelligenceConfigBuilder::human_centric()
                 .build()
-                .expect("preset config is valid"),
+                .unwrap_or_else(|e| {
+                    panic!("CRITICAL: Preset configuration should always be valid - this indicates a programming error in HybridIntelligenceConfigBuilder: {}", e)
+                }),
         )
     }
 
@@ -147,7 +149,9 @@ impl ConsolidatedAiConfigBuilder {
         Self::default().enabled(true).hybrid_intelligence(
             super::HybridIntelligenceConfigBuilder::full_automation()
                 .build()
-                .expect("preset config is valid"),
+                .unwrap_or_else(|e| {
+                    panic!("CRITICAL: Preset configuration should always be valid - this indicates a programming error in HybridIntelligenceConfigBuilder: {}", e)
+                }),
         )
     }
 }

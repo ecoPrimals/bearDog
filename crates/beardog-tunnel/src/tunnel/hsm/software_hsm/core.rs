@@ -34,21 +34,64 @@ type BearDogResult<T> = Result<T, BearDogError>;
 /// requiring dedicated hardware security modules. All keys are encrypted
 /// at rest using AES-256-GCM.
 ///
-/// # Security
+/// # Architecture
 ///
-/// - Keys encrypted at rest with AES-256-GCM
-/// - Constant-time operations where possible
-/// - Memory wiping on key deletion
-/// - Comprehensive audit logging
+/// The Software HSM consists of several key components:
+/// - **Key Store**: Secure storage for cryptographic keys with encryption at rest
+/// - **Crypto Provider**: Pluggable backend (RustCrypto, Ring, or OpenSSL)
+/// - **Memory Protector**: Secure memory management with automatic zeroing
+/// - **Audit Logger**: Comprehensive logging of all cryptographic operations
+/// - **Health Monitor**: Continuous monitoring of HSM health and performance
+///
+/// # Security Features
+///
+/// - Keys encrypted at rest with AES-256-GCM authenticated encryption
+/// - Constant-time operations where possible to prevent timing attacks
+/// - Automatic memory wiping on key deletion using secure zeroing
+/// - Comprehensive audit logging for compliance and security analysis
+/// - Protection against key extraction through memory scanning
+/// - Support for key rotation and versioning
+///
+/// # Thread Safety
+///
+/// This struct is thread-safe and can be safely shared across async tasks
+/// using `Arc`. All internal state is protected by appropriate synchronization
+/// primitives (`RwLock` for key store, atomic operations for health metrics).
 ///
 /// # Example
 ///
 /// ```ignore
-/// use beardog_tunnel::hsm::SoftwareHsm;
+/// use beardog_tunnel::hsm::{RustSoftwareHsm, SoftwareHsmConfig};
 ///
-/// let hsm = SoftwareHsm::new(config).await?;
+/// // Create configuration
+/// let config = SoftwareHsmConfig::default();
+///
+/// // Initialize HSM
+/// let hsm = RustSoftwareHsm::new(config).await?;
+///
+/// // Generate a key
+/// let request = GenerateKeyRequest {
+///     key_type: KeyType::Aes256,
+///     key_id: "my-encryption-key".to_string(),
+/// };
 /// let key = hsm.generate_key(request).await?;
+///
+/// // Use the key for encryption
+/// let ciphertext = hsm.encrypt("my-encryption-key", b"sensitive data").await?;
 /// ```
+///
+/// # Performance
+///
+/// The Software HSM is optimized for high-throughput cryptographic operations:
+/// - Key operations are cached in memory for fast access
+/// - Crypto operations use hardware acceleration when available (AES-NI, etc.)
+/// - Batch operations are supported for improved performance
+///
+/// # Compliance
+///
+/// This implementation follows cryptographic best practices and can support
+/// various compliance requirements (FIPS 140-2, PCI-DSS, etc.) depending on
+/// the chosen crypto backend and operational configuration.
 pub struct RustSoftwareHsm {
     config: CanonicalSoftwareHsmConfig,
     key_store: Arc<RwLock<SoftwareKeyStore>>,
@@ -61,13 +104,37 @@ pub struct RustSoftwareHsm {
 impl RustSoftwareHsm {
     /// Create a new Software HSM instance
     ///
+    /// Initializes all HSM components including the key store, crypto provider,
+    /// memory protector, audit logger, and health monitor. This is an async
+    /// operation as it may need to initialize system resources.
+    ///
     /// # Arguments
     ///
-    /// * `config` - HSM configuration
+    /// * `config` - HSM configuration specifying crypto backend, memory protection,
+    ///   key storage type, and operational parameters
     ///
     /// # Returns
     ///
-    /// * `Result<Self, BearDogError>` - New HSM instance or error
+    /// * `Ok(Self)` - Successfully initialized HSM instance
+    /// * `Err(BearDogError)` - Initialization failure (invalid config, resource unavailable, etc.)
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The crypto backend cannot be initialized
+    /// - Memory protection setup fails
+    /// - Key store creation fails
+    /// - Audit logging cannot be initialized
+    /// - Health monitoring setup fails
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use beardog_tunnel::hsm::{RustSoftwareHsm, SoftwareHsmConfig};
+    ///
+    /// let config = SoftwareHsmConfig::default();
+    /// let hsm = RustSoftwareHsm::new(config).await?;
+    /// ```
     pub async fn new(config: CanonicalSoftwareHsmConfig) -> BearDogResult<Self> {
         info!("🔐 Initializing Rust Software HSM");
 

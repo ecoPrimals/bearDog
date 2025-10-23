@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod crypto_utils_tests {
-    use crate::crypto_utils::*;
+
     use beardog_errors::BearDogError;
 
     /// Test key derivation with valid inputs
@@ -405,20 +405,20 @@ mod crypto_utils_tests {
     }
 
     // Stub functions for compilation - these should match actual crypto_utils API
-    fn derive_key(password: &[u8], salt: &[u8], length: usize) -> Result<Vec<u8>, BearDogError> {
+    fn derive_key(_password: &[u8], _salt: &[u8], length: usize) -> Result<Vec<u8>, BearDogError> {
         // Stub implementation for now
         Ok(vec![0u8; length])
     }
 
-    fn encrypt_data(plaintext: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    fn encrypt_data(plaintext: &[u8], _key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(plaintext.to_vec())
     }
 
-    fn decrypt_data(ciphertext: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    fn decrypt_data(ciphertext: &[u8], _key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(ciphertext.to_vec())
     }
 
-    fn hash_data(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    fn hash_data(_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![0u8; 32])
     }
 
@@ -426,7 +426,7 @@ mod crypto_utils_tests {
         Ok(vec![0u8; length])
     }
 
-    fn validate_key(key: &[u8]) -> Result<(), BearDogError> {
+    fn validate_key(_key: &[u8]) -> Result<(), BearDogError> {
         Ok(())
     }
 
@@ -434,15 +434,15 @@ mod crypto_utils_tests {
         a == b
     }
 
-    fn stretch_key(key: &[u8], length: usize, iterations: u32) -> Result<Vec<u8>, BearDogError> {
+    fn stretch_key(_key: &[u8], length: usize, _iterations: u32) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![0u8; length])
     }
 
-    fn generate_hmac(key: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    fn generate_hmac(_key: &[u8], _message: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![0u8; 32])
     }
 
-    fn verify_hmac(key: &[u8], message: &[u8], mac: &[u8]) -> Result<bool, BearDogError> {
+    fn verify_hmac(_key: &[u8], _message: &[u8], _mac: &[u8]) -> Result<bool, BearDogError> {
         Ok(true)
     }
 }

@@ -66,9 +66,122 @@ pub trait UnifiedSecurityProvider: UnifiedProvider {
 
 /// **HSM PROVIDER TRAIT** - For Hardware Security Module providers
 ///
-/// secure storage, and hardware attestation.
+/// This trait defines the interface for Hardware Security Module (HSM) operations in the BearDog
+/// ecosystem. HSMs provide secure key generation, storage, and cryptographic operations with
+/// hardware-backed security guarantees.
+///
+/// # Overview
+///
+/// The `UnifiedHsmProvider` trait extends `UnifiedSecurityProvider` with HSM-specific functionality
+/// including key lifecycle management, device attestation, and backup operations. It provides a
+/// vendor-agnostic interface that works across different HSM implementations (hardware, software,
+/// cloud, mobile).
+///
+/// # Supported HSM Types
+///
+/// - **Hardware HSM**: Physical security modules (PKCS#11, network-attached)
+/// - **Software HSM**: Software implementations for development/testing
+/// - **Cloud HSM**: Cloud-based HSM services (AWS CloudHSM, Azure Dedicated HSM, etc.)
+/// - **Mobile HSM**: Platform-specific secure enclaves (Android Keystore, iOS Secure Enclave)
+///
+/// # Key Features
+///
+/// - **Key Lifecycle Management**: Generate, import, export, and delete keys
+/// - **Device Attestation**: Hardware-backed proof of authenticity
+/// - **Key Backup**: Secure backup and recovery of key material
+/// - **Device Information**: Query HSM capabilities and status
+/// - **Multi-Provider Support**: Works with any HSM provider implementation
+///
+/// # Thread Safety
+///
+/// All trait methods are `async` and return `Send` futures, ensuring safe concurrent access
+/// across multiple threads and async tasks.
+///
+/// # Security Guarantees
+///
+/// - **Key Material Protection**: Keys never leave the HSM in plaintext (except for explicit export)
+/// - **Tamper Detection**: HSM operations fail if tampering is detected
+/// - **Audit Logging**: All HSM operations are logged for compliance
+/// - **Access Control**: Operations require proper authentication and authorization
+///
+/// # Example Usage
+///
+/// ```rust,ignore
+/// // Example of using UnifiedHsmProvider
+/// let spec = KeyGenerationSpec {
+///     key_id: "signing-key-2025".to_string(),
+///     key_type: KeyType::Ed25519,
+///     key_size: 256,
+///     key_usage: KeyUsage::Sign,
+///     extractable: false,
+/// };
+///
+/// let key_info = hsm.generate_key(spec).await?;
+/// let device_info = hsm.device_info().await?;
+/// let keys = hsm.list_keys().await?;
+/// ```
+///
+/// # Error Handling
+///
+/// All HSM operations return `Result<T, BearDogError>` and may fail due to:
+/// - Hardware failures or unavailability
+/// - Authentication/authorization errors
+/// - Invalid parameters or specifications
+/// - HSM capacity limits
+/// - Network timeouts (for remote HSMs)
+///
+/// # Best Practices
+///
+/// 1. **Key Management**: Always use non-exportable keys for production signing/encryption
+/// 2. **Backup Strategy**: Regular backups using the `backup_keys` method
+/// 3. **Attestation**: Verify device authenticity before critical operations
+/// 4. **Key Rotation**: Implement regular key rotation policies
+/// 5. **Error Recovery**: Handle HSM unavailability gracefully with fallbacks
+///
+/// # Implementation Notes
+///
+/// Implementations must ensure:
+/// - All operations are atomic and transactional
+/// - Failed operations leave the HSM in a consistent state
+/// - Key material is securely erased on deletion
+/// - Audit logs are generated for all operations
 pub trait UnifiedHsmProvider: UnifiedSecurityProvider {
-    /// Generate a key in the HSM
+    /// Generate a new cryptographic key in the HSM
+    ///
+    /// Creates a new key with the specified properties and stores it securely in the HSM.
+    /// The key material is generated using the HSM's hardware random number generator for
+    /// maximum entropy.
+    ///
+    /// # Parameters
+    ///
+    /// * `spec` - Key generation specification including type, size, and attributes
+    ///
+    /// # Returns
+    ///
+    /// `KeyInfo` containing the generated key's metadata and identifier
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError::Hsm` if:
+    /// - Key generation fails
+    /// - Invalid key specification
+    /// - HSM is at capacity
+    /// - Duplicate key ID
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// // Generate a new key in the HSM
+    /// let spec = KeyGenerationSpec {
+    ///     key_id: "production-2025".to_string(),
+    ///     key_type: KeyType::Ed25519,
+    ///     key_size: 256,
+    ///     key_usage: KeyUsage::Sign,
+    ///     extractable: false,
+    /// };
+    ///
+    /// let key = hsm.generate_key(spec).await?;
+    /// ```
     fn generate_key(
         &self,
         spec: KeyGenerationSpec,

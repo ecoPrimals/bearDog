@@ -50,9 +50,7 @@ impl HsmPerformanceTracker {
     /// Records operation metrics
     pub fn record_operation(&self, operation_name: &str, duration_ms: u64, success: bool) {
         let mut metrics_map = self.operation_metrics.write();
-        let metrics = metrics_map
-            .entry(operation_name.to_string())
-            .or_insert_with(OperationMetrics::default);
+        let metrics = metrics_map.entry(operation_name.to_string()).or_default();
 
         metrics.total_count += 1;
         if success {
