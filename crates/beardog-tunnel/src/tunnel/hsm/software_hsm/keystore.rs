@@ -1,5 +1,5 @@
 use super::types::*;
-use crate::tunnel::hsm::types::*;
+use crate::tunnel::hsm::types::key::KeyMetadata;
 use beardog_errors::BearDogError;
 use beardog_types::hsm::KeyStoreConfig;
 use std::collections::HashMap;
@@ -162,11 +162,12 @@ mod tests {
 
     fn create_test_key(id: &str) -> SoftwareKey {
         use crate::tunnel::hsm::software_hsm::types::ProtectedMemory;
+        let key_type = KeyType::Aes { key_size: 256 };
         SoftwareKey {
             id: id.to_string(),
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: key_type.clone(),
             key_material: ProtectedMemory::new(vec![0u8; 32], true),
-            metadata: KeyMetadata::new(id.to_string(), KeyType::Aes { key_size: 256 }),
+            metadata: KeyMetadata::new(id.to_string(), key_type),
             created_at: chrono::Utc::now(),
         }
     }

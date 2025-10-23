@@ -9,5 +9,5 @@ async fn test_canonical_validation_basic() -> Result<(), BearDogError> {
 #[test]
 fn test_validation_rules() {
     // Basic validation rules test
-    assert!(true, "Validation rules test passed ");
+    // TODO: Implement test
 }

@@ -53,7 +53,7 @@ impl Default for OperationRouterConfig {
 }
 
 /// Operation routing statistics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct OperationStats {
     /// Success rate per provider
     pub success_rate: HashMap<String, f64>,
@@ -63,17 +63,6 @@ pub struct OperationStats {
     pub operations_processed: HashMap<String, u64>,
     /// Error counts per provider
     pub error_counts: HashMap<String, u64>,
-}
-
-impl Default for OperationStats {
-    fn default() -> Self {
-        Self {
-            success_rate: HashMap::new(),
-            average_latency_ms: HashMap::new(),
-            operations_processed: HashMap::new(),
-            error_counts: HashMap::new(),
-        }
-    }
 }
 
 /// Routing decision information
@@ -93,18 +82,10 @@ pub struct RoutingDecision {
 pub type HsmSelectionResult = Result<String, BearDogError>;
 
 /// Operation routing rules
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct OperationRoutingRules {
     /// Rules for operation types
     pub rules: HashMap<OperationType, Vec<String>>,
-}
-
-impl Default for OperationRoutingRules {
-    fn default() -> Self {
-        Self {
-            rules: HashMap::new(),
-        }
-    }
 }
 
 /// HSM operation router
@@ -159,7 +140,9 @@ impl HsmOperationRouter {
                 })
                 .or_else(|| available_providers.first())
                 // Safe: available_providers is guaranteed non-empty by check on line 141
-                .expect("BUG: available_providers should not be empty after non-empty check")
+                .ok_or_else(|| BearDogError::system(
+                    "No available providers found despite non-empty check - invariant violated".to_string()
+                ))?
                 .clone()
         } else {
             // Prefer software
@@ -168,7 +151,9 @@ impl HsmOperationRouter {
                 .find(|p| p.contains("software"))
                 .or_else(|| available_providers.first())
                 // Safe: available_providers is guaranteed non-empty by check on line 141
-                .expect("BUG: available_providers should not be empty after non-empty check")
+                .ok_or_else(|| BearDogError::system(
+                    "No available providers found despite non-empty check - invariant violated".to_string()
+                ))?
                 .clone()
         };
 

@@ -43,6 +43,7 @@ request_timeout = "${BEARDOG_REQUEST_TIMEOUT:-30}"
 connect_timeout = "${BEARDOG_CONNECT_TIMEOUT:-10}"
 read_timeout = "${BEARDOG_READ_TIMEOUT:-30}"
 write_timeout = "${BEARDOG_WRITE_TIMEOUT:-30}"
+discovery_timeout = "${BEARDOG_DISCOVERY_TIMEOUT:-5}"
 
 [security]
 level = "${BEARDOG_SECURITY_LEVEL:-Standard}"
@@ -147,6 +148,21 @@ crossover_rate = "${BEARDOG_GENETIC_CROSSOVER_RATE:-0.8}"
 population_size = "${BEARDOG_GENETIC_POPULATION_SIZE:-100}"
 max_generations = "${BEARDOG_GENETIC_MAX_GENERATIONS:-1000}"
 fitness_threshold = "${BEARDOG_GENETIC_FITNESS_THRESHOLD:-0.95}"
+
+[ai]
+# Hybrid Intelligence Configuration
+[ai.hybrid_intelligence]
+update_interval_secs = "${BEARDOG_AI_UPDATE_INTERVAL:-60}"
+timeout_secs = "${BEARDOG_AI_TIMEOUT:-30}"
+request_timeout_secs = "${BEARDOG_AI_REQUEST_TIMEOUT:-30}"
+batch_timeout_ms = "${BEARDOG_AI_BATCH_TIMEOUT:-10}"
+max_inference_time_secs = "${BEARDOG_AI_MAX_INFERENCE:-30}"
+
+[ai.service_mesh]
+connection_timeout_secs = "${BEARDOG_AI_MESH_CONNECTION_TIMEOUT:-10}"
+request_timeout_secs = "${BEARDOG_AI_MESH_REQUEST_TIMEOUT:-30}"
+health_check_interval_secs = "${BEARDOG_AI_MESH_HEALTH_INTERVAL:-30}"
+health_check_timeout_secs = "${BEARDOG_AI_MESH_HEALTH_TIMEOUT:-5}"
 
 [performance.threat_detection]
 threat_threshold = "${BEARDOG_THREAT_THRESHOLD:-0.8}"

@@ -253,8 +253,8 @@ impl ConditionBuilder {
     #[must_use]
     pub fn build_and(mut self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            // SAFETY: We just checked len() == 1, so pop() will return Some
-            self.conditions.pop().unwrap() // Safe: Guaranteed by len() == 1 check above
+            // Length check guarantees pop() returns Some
+            self.conditions.pop().expect("Condition exists (len == 1)")
         } else {
             RuleCondition::and(self.conditions)
         }
@@ -266,8 +266,8 @@ impl ConditionBuilder {
     #[must_use]
     pub fn build_or(mut self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            // SAFETY: We just checked len() == 1, so pop() will return Some
-            self.conditions.pop().unwrap() // Safe: Guaranteed by len() == 1 check above
+            // Length check guarantees pop() returns Some
+            self.conditions.pop().expect("Condition exists (len == 1)")
         } else {
             RuleCondition::or(self.conditions)
         }

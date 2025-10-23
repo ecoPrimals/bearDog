@@ -216,7 +216,9 @@ fn test_auth_method_none() {
     let auth = AuthMethod::None;
 
     match auth {
-        AuthMethod::None => assert!(true, "Should be None variant"),
+        AuthMethod::None => {
+            // Successfully matched None variant
+        }
         _ => panic!("Expected None variant"),
     }
 }

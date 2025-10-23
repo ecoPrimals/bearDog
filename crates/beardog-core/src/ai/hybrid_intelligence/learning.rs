@@ -277,6 +277,7 @@ pub enum MetaLearningAlgorithm {
     RelationNet,
 }
 
+/// Configuration for inner loop of meta-learning
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct InnerLoopConfig {
     /// Inner learning rate
@@ -290,6 +291,7 @@ pub struct InnerLoopConfig {
     pub optimizer: OptimizerType,
 }
 
+/// Configuration for outer loop of meta-learning
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct OuterLoopConfig {
     /// Outer learning rate

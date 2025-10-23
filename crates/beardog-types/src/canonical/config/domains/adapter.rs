@@ -408,13 +408,17 @@ impl Default for CoreAdapterConfig {
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
+        const DEFAULT_DISCOVERY_PORT: u16 = 8080;
+        let default_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .unwrap_or_else(|_| format!("http://localhost:{}/discovery", DEFAULT_DISCOVERY_PORT));
+
         Self {
             timeout: Duration::from_secs(10),
             max_attempts: 3,
             discovery_interval: Duration::from_secs(60),
             cache_enabled: true,
             cache_ttl: Duration::from_secs(300),
-            endpoints: vec!["http://localhost:8080/discovery".to_string()],
+            endpoints: vec![default_endpoint],
             predictive_enabled: false,
         }
     }
@@ -713,25 +717,27 @@ impl UnifiedAdapterConfig {
     }
 
     /// Create adapter configuration for development environment
-    pub fn development() -> Self {
+    ///
+    /// # Returns
+    ///
+    /// `BearDogResult<Self>` with development-specific configuration,
+    /// or an error if environment overrides fail to apply
+    pub fn development() -> BearDogResult<Self> {
         let mut config = Self::default();
-        // SAFETY: Development environment overrides should always be valid.
-        // If this fails, it indicates a programming error in apply_environment_overrides.
-        config
-            .apply_environment_overrides("development")
-            .expect("Development environment configuration must be valid");
-        config
+        config.apply_environment_overrides("development")?;
+        Ok(config)
     }
 
     /// Create adapter configuration for production environment
-    pub fn production() -> Self {
+    ///
+    /// # Returns
+    ///
+    /// `BearDogResult<Self>` with production-specific configuration,
+    /// or an error if environment overrides fail to apply
+    pub fn production() -> BearDogResult<Self> {
         let mut config = Self::default();
-        // SAFETY: Production environment overrides should always be valid.
-        // If this fails, it indicates a programming error in apply_environment_overrides.
-        config
-            .apply_environment_overrides("production")
-            .expect("Production environment configuration must be valid");
-        config
+        config.apply_environment_overrides("production")?;
+        Ok(config)
     }
 }
 
@@ -806,7 +812,8 @@ mod tests {
 
     #[test]
     fn test_development_config() {
-        let config = UnifiedAdapterConfig::development();
+        let config =
+            UnifiedAdapterConfig::development().expect("Development config should be valid");
         assert!(!config.security.auth_required);
         assert!(!config.security.encryption_in_transit);
         assert!(!config.monitoring.enabled);
@@ -815,7 +822,7 @@ mod tests {
 
     #[test]
     fn test_production_config() {
-        let config = UnifiedAdapterConfig::production();
+        let config = UnifiedAdapterConfig::production().expect("Production config should be valid");
         assert_eq!(config.security.auth_level, AuthLevel::MultiFactor);
         assert!(config.security.encryption_at_rest);
         assert_eq!(config.optimization.level, 5);

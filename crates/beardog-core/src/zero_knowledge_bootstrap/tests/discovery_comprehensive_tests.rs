@@ -15,31 +15,31 @@
 #[test]
 fn test_self_discovery_engine_creation() {
     // Self-discovery engine should be created
-    assert!(true, "Self-discovery engine created");
+    // TODO: Self-discovery engine created
 }
 
 #[test]
 fn test_primal_id_generation() {
     // Should generate unique primal IDs
-    assert!(true, "Primal ID generation works");
+    // TODO: Primal ID generation works
 }
 
 #[test]
 fn test_capability_auto_detection() {
     // Should auto-detect available capabilities
-    assert!(true, "Capability auto-detection works");
+    // TODO: Capability auto-detection works
 }
 
 #[test]
 fn test_endpoint_discovery() {
     // Should discover communication endpoints
-    assert!(true, "Endpoint discovery works");
+    // TODO: Endpoint discovery works
 }
 
 #[test]
 fn test_self_metadata_building() {
     // Should build comprehensive self-metadata
-    assert!(true, "Self-metadata building works");
+    // TODO: Self-metadata building works
 }
 
 // ============================================================================
@@ -49,31 +49,31 @@ fn test_self_metadata_building() {
 #[test]
 fn test_ecosystem_listener_creation() {
     // Ecosystem listener should be created
-    assert!(true, "Ecosystem listener created");
+    // TODO: Ecosystem listener created
 }
 
 #[test]
 fn test_passive_discovery_initialization() {
     // Passive listening should initialize
-    assert!(true, "Passive discovery initializes");
+    // TODO: Passive discovery initializes
 }
 
 #[test]
 fn test_announcement_detection() {
     // Should detect announcements from other primals
-    assert!(true, "Announcement detection works");
+    // TODO: Announcement detection works
 }
 
 #[test]
 fn test_primal_registration() {
     // Should register discovered primals
-    assert!(true, "Primal registration works");
+    // TODO: Primal registration works
 }
 
 #[test]
 fn test_duplicate_primal_handling() {
     // Should handle duplicate primal announcements
-    assert!(true, "Duplicate primal handling works");
+    // TODO: Duplicate primal handling works
 }
 
 // ============================================================================
@@ -83,31 +83,31 @@ fn test_duplicate_primal_handling() {
 #[test]
 fn test_capability_registry_creation() {
     // Capability registry should be created
-    assert!(true, "Capability registry created");
+    // TODO: Capability registry created
 }
 
 #[test]
 fn test_capability_registration() {
     // Should register capabilities
-    assert!(true, "Capability registration works");
+    // TODO: Capability registration works
 }
 
 #[test]
 fn test_capability_lookup() {
     // Should find capabilities by type
-    assert!(true, "Capability lookup works");
+    // TODO: Capability lookup works
 }
 
 #[test]
 fn test_multi_provider_capabilities() {
     // Should handle multiple providers for same capability
-    assert!(true, "Multi-provider capabilities handled");
+    // TODO: Multi-provider capabilities handled
 }
 
 #[test]
 fn test_capability_deregistration() {
     // Should remove capabilities when primals leave
-    assert!(true, "Capability deregistration works");
+    // TODO: Capability deregistration works
 }
 
 // ============================================================================

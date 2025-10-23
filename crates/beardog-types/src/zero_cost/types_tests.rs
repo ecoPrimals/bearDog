@@ -48,7 +48,7 @@ mod zero_cost_types_tests {
         let _number_wrapper = TypedWrapper(42u64);
         
         // If this compiles, type safety is maintained
-        assert!(true);
+        // Test passes (placeholder removed)
     }
 
     #[test]
@@ -177,7 +177,7 @@ mod performance_characteristics_tests {
     fn test_stack_allocation_is_fast() {
         // Stack allocation should be extremely fast (just moving stack pointer)
         let _value: [u8; 1024] = [0; 1024];
-        assert!(true);
+        // Test passes (placeholder removed)
     }
 
     #[test]

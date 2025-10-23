@@ -238,7 +238,7 @@ impl Default for PerformanceRequirements {
 }
 
 /// Feature requirements
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FeatureRequirements {
     /// Require hardware backing
     pub hardware_backed: bool,
@@ -248,17 +248,6 @@ pub struct FeatureRequirements {
     pub secure_boot: bool,
     /// Require tamper detection
     pub tamper_detection: bool,
-}
-
-impl Default for FeatureRequirements {
-    fn default() -> Self {
-        Self {
-            hardware_backed: false,
-            attestation_required: false,
-            secure_boot: false,
-            tamper_detection: false,
-        }
-    }
 }
 
 #[cfg(test)]

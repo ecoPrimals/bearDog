@@ -60,7 +60,7 @@ pub enum SelectionStrategy {
 }
 
 /// Registry statistics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RegistryStats {
     /// Total registered providers
     pub total_providers: usize,
@@ -72,18 +72,6 @@ pub struct RegistryStats {
     pub vendor_distribution: HashMap<String, usize>,
     /// Total capabilities
     pub total_capabilities: usize,
-}
-
-impl Default for RegistryStats {
-    fn default() -> Self {
-        Self {
-            total_providers: 0,
-            healthy_providers: 0,
-            security_levels: HashMap::new(),
-            vendor_distribution: HashMap::new(),
-            total_capabilities: 0,
-        }
-    }
 }
 
 impl UniversalProviderRegistry {

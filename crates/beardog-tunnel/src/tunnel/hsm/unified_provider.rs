@@ -62,7 +62,7 @@ impl UnifiedHsmProvider {
         let mut providers = self.providers.write();
         providers.remove(id);
 
-        if self.default_provider.as_ref().map(|s| s.as_str()) == Some(id) {
+        if self.default_provider.as_deref() == Some(id) {
             self.default_provider = providers.keys().next().cloned();
         }
 

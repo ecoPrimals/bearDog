@@ -82,11 +82,9 @@ impl HsmFailoverManager {
         F: FnOnce() -> Result<T, BearDogError>,
     {
         match self.circuit_breaker.state {
-            CircuitBreakerState::Open => {
-                return Err(BearDogError::unavailable(
-                    "Circuit breaker is open - HSM unavailable".to_string(),
-                ));
-            }
+            CircuitBreakerState::Open => Err(BearDogError::unavailable(
+                "Circuit breaker is open - HSM unavailable".to_string(),
+            )),
             CircuitBreakerState::Closed | CircuitBreakerState::HalfOpen => match operation() {
                 Ok(result) => {
                     self.failure_count = 0;

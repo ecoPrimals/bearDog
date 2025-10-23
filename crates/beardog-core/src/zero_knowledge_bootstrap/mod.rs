@@ -507,6 +507,7 @@ impl ZeroKnowledgeBootstrap {
                 }
             }
         }
+        // Read lock is automatically dropped here when capabilities goes out of scope
 
         info!(
             "✅ Capability registry built - {} capability types registered",

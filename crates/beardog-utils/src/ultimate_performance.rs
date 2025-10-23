@@ -19,7 +19,6 @@
 //! - **+40% cache efficiency** through optimized memory layout
 //! - **+25% concurrency** improvement via lock-free structures
 
-use std::arch::x86_64::*;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
 /// Ultimate performance-optimized data processor
@@ -50,6 +49,7 @@ struct CacheAlignedStats {
 }
 
 /// SIMD-optimized buffer pool for vectorized operations
+#[allow(dead_code)]
 pub struct SIMDOptimizedBufferPool {
     /// Aligned buffers for SIMD operations (32-byte alignment for AVX2)
     aligned_buffers: Vec<AlignedBuffer>,
@@ -68,6 +68,7 @@ struct AlignedBuffer {
 }
 
 /// Lock-free queue implementation for maximum concurrency
+#[allow(dead_code)]
 pub struct LockFreeQueue<T> {
     head: AtomicUsize,
     tail: AtomicUsize,
@@ -77,6 +78,7 @@ pub struct LockFreeQueue<T> {
 
 /// Processing operation for the ultimate performance system
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ProcessingOperation {
     /// Operation type for dispatch optimization
     op_type: OperationType,
@@ -102,6 +104,7 @@ pub enum OperationType {
 }
 
 /// Memory prefetch controller for reduced latency
+#[allow(dead_code)]
 pub struct MemoryPrefetchController {
     /// Prefetch patterns learned from access history
     access_patterns: Vec<MemoryAccessPattern>,
@@ -111,6 +114,7 @@ pub struct MemoryPrefetchController {
 
 /// Memory access pattern for intelligent prefetching
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MemoryAccessPattern {
     base_address: usize,
     stride: usize,
@@ -119,6 +123,7 @@ struct MemoryAccessPattern {
 }
 
 /// SIMD capability detection and optimization
+#[allow(dead_code)]
 pub struct SIMDCapabilities {
     has_avx2: bool,
     has_avx512: bool,
@@ -144,7 +149,8 @@ impl UltimatePerformanceProcessor {
     #[inline(always)]
     pub fn process_with_ultimate_optimization(&self, data: &[u8]) -> Vec<u8> {
         // Prefetch next cache lines for reduced latency
-        self.prefetch_controller.prefetch_sequential(data.as_ptr(), data.len());
+        self.prefetch_controller
+            .prefetch_sequential(data.as_ptr(), data.len());
 
         // 🛡️ 100% SAFE: LLVM auto-vectorizes this to AVX2/SSE/NEON!
         // No unsafe code needed - modern LLVM is smarter than manual SIMD.
@@ -153,38 +159,36 @@ impl UltimatePerformanceProcessor {
     }
 
     /// 🛡️ Safe auto-vectorized processing - ZERO UNSAFE CODE!
-    /// 
+    ///
     /// LLVM automatically generates optimal SIMD instructions (AVX2, SSE4.2, NEON, etc.)
     /// based on the target CPU. This is often FASTER than manual unsafe SIMD because:
-    /// 
+    ///
     /// 1. LLVM has more optimization freedom with safe code
     /// 2. No runtime CPU detection overhead
     /// 3. Portable across ALL architectures (x86, ARM, RISC-V)
     /// 4. Future-proof (improves as LLVM improves)
     /// 5. Miri-compatible for testing
-    /// 
+    ///
     /// Performance: Within 1-5% of manual SIMD, often faster!
     fn safe_process_auto_vectorized(&self, data: &[u8]) -> Vec<u8> {
         // Update statistics
         self.stats.simd_operations.fetch_add(1, Ordering::Relaxed);
-        
+
         // LLVM auto-vectorizes this to optimal SIMD for the target CPU!
         // On x86_64: Compiles to AVX2 or SSE4.2 instructions
         // On ARM: Compiles to NEON instructions
         // On RISC-V: Compiles to V-extension instructions
-        data.iter()
-            .map(|&byte| byte.wrapping_add(1))
-            .collect()
+        data.iter().map(|&byte| byte.wrapping_add(1)).collect()
     }
 
     /// Safe chunked processing with explicit hints for LLVM
-    /// 
+    ///
     /// For operations more complex than simple map, use this pattern.
     /// LLVM still auto-vectorizes, but with better instruction selection.
     #[allow(dead_code)]
     fn safe_process_chunked(&self, data: &[u8]) -> Vec<u8> {
         let mut result = Vec::with_capacity(data.len());
-        
+
         // Process in 32-byte chunks - LLVM vectorizes this!
         for chunk in data.chunks(32) {
             // This loop gets vectorized to SIMD automatically
@@ -192,28 +196,28 @@ impl UltimatePerformanceProcessor {
                 result.push(byte.wrapping_add(1));
             }
         }
-        
+
         self.stats.simd_operations.fetch_add(1, Ordering::Relaxed);
         result
     }
 
     /// 🛡️ DEPRECATED: Old unsafe SIMD functions removed!
-    /// 
+    ///
     /// Removed functions:
     /// - unsafe fn process_with_avx2_simd() - Replaced with safe auto-vectorization
     /// - unsafe fn process_with_sse42_simd() - Replaced with safe auto-vectorization
     ///
     /// The compiler's auto-vectorization provides equivalent or better performance
     /// without the maintenance burden and safety concerns of manual unsafe SIMD.
-
     /// Scalar optimization for maximum compatibility
     #[inline(always)]
+    #[allow(dead_code)]
     fn process_with_scalar_optimization(&self, data: &[u8]) -> Vec<u8> {
         // Use optimized scalar processing with manual loop unrolling
         let mut result = Vec::with_capacity(data.len());
         let chunks = data.chunks_exact(8); // Process 8 bytes at a time
         let remainder = chunks.remainder();
-        
+
         for chunk in chunks {
             // Manual loop unrolling for better performance
             let mut output = [0u8; 8];
@@ -225,15 +229,15 @@ impl UltimatePerformanceProcessor {
             output[5] = chunk[5].wrapping_add(1);
             output[6] = chunk[6].wrapping_add(1);
             output[7] = chunk[7].wrapping_add(1);
-            
+
             result.extend_from_slice(&output);
         }
-        
+
         // Handle remaining bytes
         for &byte in remainder {
             result.push(byte.wrapping_add(1));
         }
-        
+
         result
     }
 
@@ -320,7 +324,7 @@ impl<T> LockFreeQueue<T> {
         for _ in 0..capacity {
             buffer.push(std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()));
         }
-        
+
         Self {
             head: AtomicUsize::new(0),
             tail: AtomicUsize::new(0),
@@ -344,7 +348,7 @@ impl MemoryPrefetchController {
         let cache_line_size = 64; // Common cache line size
         let mut current = ptr as usize;
         let end = current + len;
-        
+
         while current < end {
             // 🛡️ 100% SAFE: Modern CPUs have excellent hardware prefetchers!
             // Manual prefetch hints are often unnecessary and can actually hurt performance
@@ -364,7 +368,11 @@ impl SIMDCapabilities {
             has_avx2: is_x86_feature_detected!("avx2"),
             has_avx512: is_x86_feature_detected!("avx512f"),
             has_sse42: is_x86_feature_detected!("sse4.2"),
-            vector_width: if is_x86_feature_detected!("avx2") { 256 } else { 128 },
+            vector_width: if is_x86_feature_detected!("avx2") {
+                256
+            } else {
+                128
+            },
         }
     }
 }
@@ -383,30 +391,32 @@ mod tests {
     fn test_ultimate_performance_processor() {
         let processor = UltimatePerformanceProcessor::new();
         let test_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
-        
+
         let result = processor.process_with_ultimate_optimization(&test_data);
-        
+
         // Verify processing worked correctly
         assert_eq!(result.len(), test_data.len());
         for (i, &byte) in result.iter().enumerate() {
             assert_eq!(byte, test_data[i].wrapping_add(1));
         }
-        
+
         // Verify statistics are being tracked
         let stats = processor.get_performance_stats();
-        assert!(stats.operations_processed >= 0);
+        // Note: operations_processed is unsigned, so >= 0 is always true (enforced by type system)
+        // Just verify we can access the stats
+        let _ = stats.operations_processed;
     }
 
     #[test]
     fn test_simd_capabilities() {
         let capabilities = SIMDCapabilities::detect();
-        
+
         // Test that we can detect SIMD capabilities
         println!("AVX2: {}", capabilities.has_avx2);
         println!("AVX512: {}", capabilities.has_avx512);
         println!("SSE4.2: {}", capabilities.has_sse42);
         println!("Vector width: {}", capabilities.vector_width);
-        
+
         assert!(capabilities.vector_width == 128 || capabilities.vector_width == 256);
     }
-} 
+}

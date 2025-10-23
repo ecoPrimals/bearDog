@@ -436,7 +436,9 @@ mod tests {
         let strategy = MixingStrategy::XorMix;
 
         match strategy {
-            MixingStrategy::XorMix => assert!(true),
+            MixingStrategy::XorMix => {
+                // XorMix strategy correctly identified
+            }
             _ => panic!("Expected XorMix variant"),
         }
     }

@@ -2,20 +2,24 @@ use crate::encryption::{EncryptionConfig, EncryptionService};
 use beardog_errors::BearDogError;
 
 #[cfg(test)]
-mod encryption_comprehensive_tests {
+mod tests {
     use super::*;
 
     // Helper functions to match old API
     fn encrypt_data(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        let mut config = EncryptionConfig::default();
-        config.key_size = key.len(); // Use provided key length
+        let config = EncryptionConfig {
+            key_size: key.len(), // Use provided key length
+            ..Default::default()
+        };
         let service = EncryptionService::new(config);
         service.encrypt_data(data, key)
     }
 
     fn decrypt_data(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        let mut config = EncryptionConfig::default();
-        config.key_size = key.len(); // Use provided key length
+        let config = EncryptionConfig {
+            key_size: key.len(), // Use provided key length
+            ..Default::default()
+        };
         let service = EncryptionService::new(config);
         service.decrypt_data(data, key)
     }

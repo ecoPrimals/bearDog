@@ -35,6 +35,33 @@ use tracing::{debug, info, warn};
 pub use types::*;
 
 /// Ecosystem membership access control manager
+///
+/// Manages access control based on ecosystem membership and trust relationships
+/// rather than binary allowlists/blocklists. Implements spectrum-based access
+/// control that adapts to relationship dynamics over time.
+///
+/// # Architecture
+///
+/// The manager consists of four main components:
+/// - **Membership Database**: Tracks all ecosystem participants and their status
+/// - **Trust Evolution Tracker**: Monitors trust levels and relationship changes
+/// - **Access Policy Engine**: Evaluates access requests based on membership
+/// - **Audit System**: Logs all access decisions for compliance
+///
+/// # Trust Spectrum
+///
+/// Access levels are based on a continuous trust spectrum (0.0-1.0):
+/// - **CoreSteward** (0.8-1.0): Full access, trusted maintainer
+/// - **ActiveContributor** (0.6-0.9): Most operations, regular participant
+/// - **LearningParticipant** (0.4-0.7): Growing access, learning phase
+/// - **VisitingCollaborator** (0.5-0.8): Temporary partnership access
+/// - **CautiousInteraction** (0.2-0.5): Limited access, monitoring active
+/// - **EcosystemProtection** (0.0-0.3): Restricted, protection mode
+///
+/// # Thread Safety
+///
+/// This struct is `Clone` and can be safely shared across threads. Internal
+/// state modifications use appropriate synchronization.
 #[derive(Debug, Clone)]
 pub struct EcosystemMembershipManager {
     config: MembershipConfig,
@@ -205,7 +232,9 @@ impl Default for EcosystemMembershipManager {
         // If this fails, it indicates a programming error in MembershipConfig::default()
         // or TrustEvolutionTracker/GeneticsIntegration initialization.
         Self::new(MembershipConfig::default())
-            .expect("Default EcosystemMembershipManager configuration must be valid")
+            .unwrap_or_else(|e| {
+                panic!("CRITICAL: Failed to create default EcosystemMembershipManager - this indicates a programming error: {}", e)
+            })
     }
 }
 

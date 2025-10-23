@@ -6,7 +6,7 @@
 use beardog_errors::BearDogError;
 use beardog_genetics::{EntropyHierarchyConfig, EntropyHierarchyManager};
 use beardog_genetics::{GeneticSpawningEngine, SpawnRequest};
-use beardog_security::EncryptionConfig;
+use beardog_security::encryption::EncryptionConfig;
 use chrono::{DateTime, Utc};
 use tracing::info;
 use uuid::Uuid;

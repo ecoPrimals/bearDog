@@ -9,5 +9,5 @@ async fn test_core_module_coverage_basic() -> Result<(), BearDogError> {
 #[test]
 fn test_system_metrics() {
     // Basic system metrics test
-    assert!(true, "System metrics test passed");
+    // TODO: Implement test
 }

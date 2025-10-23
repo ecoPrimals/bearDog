@@ -17,10 +17,10 @@
 //! This module proves that ultimate safety can be achieved without sacrificing
 //! performance through advanced Rust safety patterns and zero-cost abstractions.
 
+use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
-use std::collections::VecDeque;
 
 /// Ultimate safe buffer that provides bounds-checked access with zero unsafe code
 ///
@@ -44,19 +44,20 @@ pub struct UltimateSafeBuffer {
 #[derive(Debug, Clone, Default)]
 pub struct SafetyStatistics {
     /// Number of bounds checks performed
-    bounds_checks_performed: u64,
+    pub bounds_checks_performed: u64,
     /// Number of bounds violations prevented
-    bounds_violations_prevented: u64,
+    pub bounds_violations_prevented: u64,
     /// Number of safe operations completed
-    safe_operations_completed: u64,
+    pub safe_operations_completed: u64,
     /// Number of memory allocations tracked
-    allocations_tracked: u64,
+    pub allocations_tracked: u64,
 }
 
 /// Ultimate safe memory pool that eliminates all unsafe memory management
 ///
 /// Provides high-performance memory pooling with complete safety guarantees
 /// and automatic cleanup to prevent memory leaks.
+#[allow(dead_code)]
 pub struct UltimateSafeMemoryPool<T> {
     /// Pool of available objects
     pool: Arc<Mutex<VecDeque<T>>>,
@@ -91,6 +92,7 @@ pub struct PoolStatistics {
 ///
 /// This wrapper provides compile-time guarantees that references remain valid
 /// for their entire lifetime, eliminating common memory safety issues.
+#[allow(dead_code)]
 pub struct SafeReference<T> {
     /// The referenced data with lifetime tracking
     data: Arc<RwLock<T>>,
@@ -104,6 +106,7 @@ pub struct SafeReference<T> {
 
 /// Safety token for compile-time verification of safe operations
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct SafetyToken {
     /// Unique identifier for this safety context
     context_id: u64,
@@ -128,6 +131,7 @@ pub enum SafetyLevel {
 ///
 /// Provides safe atomic operations with additional verification and
 /// protection against common concurrency issues.
+#[allow(dead_code)]
 pub struct SafeAtomic<T> {
     /// The atomic value with additional safety wrapping
     value: Arc<RwLock<T>>,
@@ -180,10 +184,10 @@ impl UltimateSafeBuffer {
         // Safe write operation (guaranteed to be within bounds)
         self.data[self.write_pos..self.write_pos + data.len()].copy_from_slice(data);
         self.write_pos += data.len();
-        
+
         self.safety_stats.bounds_checks_performed += 1;
         self.safety_stats.safe_operations_completed += 1;
-        
+
         Ok(data.len())
     }
 
@@ -204,10 +208,10 @@ impl UltimateSafeBuffer {
         // Safe read operation (guaranteed to be within bounds)
         let result = self.data[self.read_pos..self.read_pos + len].to_vec();
         self.read_pos += len;
-        
+
         self.safety_stats.bounds_checks_performed += 1;
         self.safety_stats.safe_operations_completed += 1;
-        
+
         Ok(result)
     }
 
@@ -223,19 +227,19 @@ impl UltimateSafeBuffer {
                 description: "Read position exceeds write position".to_string(),
             });
         }
-        
+
         if self.write_pos > self.capacity {
             return Err(SafetyError::IntegrityViolation {
                 description: "Write position exceeds capacity".to_string(),
             });
         }
-        
+
         if self.data.len() > self.capacity {
             return Err(SafetyError::IntegrityViolation {
                 description: "Data length exceeds capacity".to_string(),
             });
         }
-        
+
         Ok(())
     }
 }
@@ -248,8 +252,8 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
     /// - Bounded memory usage (max_size limit)
     /// - Thread-safe operations
     /// - Automatic object lifecycle management
-    pub fn new<F>(factory: F, max_size: usize) -> Self 
-    where 
+    pub fn new<F>(factory: F, max_size: usize) -> Self
+    where
         F: Fn() -> T + Send + Sync + 'static,
     {
         Self {
@@ -267,7 +271,7 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
     /// pool when dropped, preventing memory leaks.
     pub fn safe_borrow(&self) -> Result<SafePooledObject<T>, SafetyError> {
         let mut pool = self.pool.lock().map_err(|_| SafetyError::LockPoisoned)?;
-        
+
         let object = if let Some(obj) = pool.pop_front() {
             self.stats.pool_hits.fetch_add(1, Ordering::Relaxed);
             self.stats.objects_in_pool.fetch_sub(1, Ordering::Relaxed);
@@ -302,6 +306,7 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
 }
 
 /// Safe pooled object wrapper that prevents memory leaks
+#[allow(dead_code)]
 pub struct SafePooledObject<T> {
     object: Option<T>,
     pool: Arc<Mutex<VecDeque<T>>>,
@@ -384,7 +389,7 @@ impl SafetyToken {
     pub fn new(level: SafetyLevel) -> Self {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
-        
+
         Self {
             context_id: COUNTER.fetch_add(1, Ordering::Relaxed),
             safety_level: level,
@@ -423,9 +428,7 @@ pub enum SafetyError {
         available_data: usize,
     },
     /// Integrity violation detected
-    IntegrityViolation {
-        description: String,
-    },
+    IntegrityViolation { description: String },
     /// Invalid reference access prevented
     InvalidReference,
     /// Lock poisoning detected
@@ -437,13 +440,25 @@ pub enum SafetyError {
 impl std::fmt::Display for SafetyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SafetyError::BufferOverflow { attempted_size, available_space } => {
-                write!(f, "Buffer overflow prevented: attempted {} bytes, only {} available", 
-                       attempted_size, available_space)
+            SafetyError::BufferOverflow {
+                attempted_size,
+                available_space,
+            } => {
+                write!(
+                    f,
+                    "Buffer overflow prevented: attempted {} bytes, only {} available",
+                    attempted_size, available_space
+                )
             }
-            SafetyError::ReadBeyondBounds { attempted_read, available_data } => {
-                write!(f, "Read beyond bounds prevented: attempted {} bytes, only {} available", 
-                       attempted_read, available_data)
+            SafetyError::ReadBeyondBounds {
+                attempted_read,
+                available_data,
+            } => {
+                write!(
+                    f,
+                    "Read beyond bounds prevented: attempted {} bytes, only {} available",
+                    attempted_read, available_data
+                )
             }
             SafetyError::IntegrityViolation { description } => {
                 write!(f, "Integrity violation: {}", description)
@@ -470,20 +485,20 @@ mod tests {
     #[test]
     fn test_ultimate_safe_buffer() {
         let mut buffer = UltimateSafeBuffer::new(1024);
-        
+
         // Test safe write
         let data = b"Hello, World!";
         let written = buffer.safe_write(data).unwrap();
         assert_eq!(written, data.len());
-        
+
         // Test safe read
         let read_data = buffer.safe_read(data.len()).unwrap();
         assert_eq!(read_data, data);
-        
+
         // Test bounds checking
         let large_data = vec![0u8; 2048];
         assert!(buffer.safe_write(&large_data).is_err());
-        
+
         // Verify integrity
         assert!(buffer.verify_integrity().is_ok());
     }
@@ -491,14 +506,14 @@ mod tests {
     #[test]
     fn test_ultimate_safe_memory_pool() {
         let pool = UltimateSafeMemoryPool::new(|| String::from("test"), 10);
-        
+
         // Test borrowing
         let obj1 = pool.safe_borrow().unwrap();
         let obj2 = pool.safe_borrow().unwrap();
-        
+
         assert!(obj1.as_ref().is_some());
         assert!(obj2.as_ref().is_some());
-        
+
         // Test statistics
         let stats = pool.get_stats();
         assert_eq!(stats.objects_borrowed, 2);
@@ -508,18 +523,18 @@ mod tests {
     #[test]
     fn test_safe_reference() {
         let safe_ref = SafeReference::new(42i32);
-        
+
         // Test safe read
         let value = safe_ref.safe_read(|x| *x).unwrap();
         assert_eq!(value, 42);
-        
+
         // Test safe write
         safe_ref.safe_write(|x| *x = 100).unwrap();
         let new_value = safe_ref.safe_read(|x| *x).unwrap();
         assert_eq!(new_value, 100);
-        
+
         // Test invalidation
         safe_ref.invalidate();
         assert!(safe_ref.safe_read(|x| *x).is_err());
     }
-} 
+}

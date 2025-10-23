@@ -7,7 +7,7 @@ use super::config::HybridIntelligenceConfig;
 use super::core::HybridIntelligenceSystem;
 use beardog_errors::BearDogError;
 
-/// Builder for constructing HybridIntelligenceSystem with custom configuration
+/// Builder for constructing `HybridIntelligenceSystem` with custom configuration
 ///
 /// Uses the builder pattern to provide a fluent interface for system construction.
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ pub struct HybridIntelligenceBuilder {
 impl HybridIntelligenceBuilder {
     /// Creates a new builder with default configuration
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { config: None }
     }
 
@@ -29,7 +29,7 @@ impl HybridIntelligenceBuilder {
         self
     }
 
-    /// Builds the HybridIntelligenceSystem
+    /// Builds the `HybridIntelligenceSystem`
     ///
     /// # Errors
     /// Returns an error if system initialization fails

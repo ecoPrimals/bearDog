@@ -91,6 +91,16 @@ impl SelfDiscoveryEngine {
     pub fn discover_self_identity(&mut self) -> BearDogResult<SelfIdentity> {
         let start_time = std::time::Instant::now();
 
+        self.log_discovery_plan();
+        let (primal_id, capabilities, endpoints, metadata) = self.execute_discovery_phases()?;
+        let self_identity = self.build_self_identity(primal_id, capabilities, endpoints, metadata);
+        self.log_discovery_results(&self_identity, start_time);
+
+        Ok(self_identity)
+    }
+
+    /// Logs the discovery plan
+    fn log_discovery_plan(&self) {
         info!("🔍 Starting self-identity discovery...");
         info!("📋 Discovery Plan:");
         info!("   1. Generate unique primal ID");
@@ -98,7 +108,20 @@ impl SelfDiscoveryEngine {
         info!("   3. Discover communication endpoints");
         info!("   4. Build self-metadata");
         info!("   5. Validate self-knowledge");
+    }
 
+    /// Executes all discovery phases
+    ///
+    /// # Errors
+    /// Returns an error if any discovery phase fails
+    fn execute_discovery_phases(
+        &mut self,
+    ) -> BearDogResult<(
+        String,
+        Vec<SelfCapabilityDetection>,
+        Vec<UniversalEndpoint>,
+        PrimalMetadata,
+    )> {
         // Phase 1: Generate unique primal identity
         let primal_id = Self::generate_primal_id();
         info!("✅ Generated primal ID: {}", primal_id);
@@ -119,9 +142,18 @@ impl SelfDiscoveryEngine {
         Self::validate_self_knowledge(&capabilities)?;
         info!("✅ Self-knowledge validated");
 
-        let discovery_duration = start_time.elapsed().as_millis() as u64;
+        Ok((primal_id, capabilities, endpoints, metadata))
+    }
 
-        let self_identity = SelfIdentity {
+    /// Builds the final `SelfIdentity` object from discovered components
+    fn build_self_identity(
+        &self,
+        primal_id: String,
+        capabilities: Vec<SelfCapabilityDetection>,
+        endpoints: Vec<UniversalEndpoint>,
+        metadata: PrimalMetadata,
+    ) -> SelfIdentity {
+        SelfIdentity {
             primal_id,
             capabilities: capabilities
                 .iter()
@@ -130,7 +162,12 @@ impl SelfDiscoveryEngine {
             endpoints,
             metadata,
             bootstrap_time: std::time::SystemTime::now(),
-        };
+        }
+    }
+
+    /// Logs the final discovery results
+    fn log_discovery_results(&self, self_identity: &SelfIdentity, start_time: std::time::Instant) {
+        let discovery_duration = start_time.elapsed().as_millis() as u64;
 
         info!("🎉 Self-identity discovery complete!");
         info!("📊 Discovery Results:");
@@ -141,8 +178,6 @@ impl SelfDiscoveryEngine {
             self_identity.endpoints.len()
         );
         info!("   ⏱️  Duration: {}ms", discovery_duration);
-
-        Ok(self_identity)
     }
 
     /// Generate unique primal ID (no hardcoded names)

@@ -144,49 +144,49 @@ async fn test_critical_hsm_security_levels() {
     // This tests that we correctly identify hardware security capabilities
 
     // All tests pass - demonstrating security level detection
-    assert!(true, "Security level detection implemented");
+    // TODO: Implement test
 }
 
 /// Test critical path: Key access control and authorization
 #[tokio::test]
 async fn test_critical_key_access_control() {
     // This tests that keys can only be used with proper authorization
-    assert!(true, "Key access control framework implemented");
+    // TODO: Implement test
 }
 
 /// Test critical path: Memory protection for sensitive data
 #[tokio::test]
 async fn test_critical_memory_protection() {
     // This tests that sensitive data is properly protected in memory
-    assert!(true, "Memory protection framework implemented");
+    // TODO: Implement test
 }
 
 /// Test critical path: Entropy validation for key generation
 #[tokio::test]
 async fn test_critical_entropy_validation() {
     // This tests that we have sufficient entropy for cryptographic operations
-    assert!(true, "Entropy validation framework implemented");
+    // TODO: Implement test
 }
 
 /// Test critical path: Cryptographic algorithm validation
 #[tokio::test]
 async fn test_critical_algorithm_validation() {
     // This tests that weak algorithms are rejected
-    assert!(true, "Algorithm validation framework implemented");
+    // TODO: Implement test
 }
 
 /// Test critical path: Secure channel establishment
 #[tokio::test]
 async fn test_critical_secure_channel() {
     // This tests secure communication channel establishment
-    assert!(true, "Secure channel framework implemented");
+    // TODO: Implement test
 }
 
 /// Test critical path: Attestation and device integrity
 #[tokio::test]
 async fn test_critical_attestation() {
     // This tests device attestation for hardware-backed security
-    assert!(true, "Attestation framework implemented");
+    // TODO: Implement test
 }
 
 #[cfg(test)]
@@ -197,6 +197,6 @@ mod integration {
         // This tests the complete lifecycle of an HSM key with all security checks
 
         // Framework implemented - full integration pending
-        assert!(true, "E2E HSM lifecycle framework implemented");
+        // TODO: Implement test
     }
 }

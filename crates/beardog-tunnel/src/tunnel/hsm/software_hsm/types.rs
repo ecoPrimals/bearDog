@@ -244,9 +244,8 @@ impl SoftwareKeyStore {
     pub async fn new(
         config: &crate::tunnel::hsm::software_hsm::KeyStoreConfig,
     ) -> Result<Self, BearDogError> {
-        use crate::tunnel::hsm::stub_types::*;
         Ok(Self {
-            storage_backend: Arc::new(InMemoryStorageBackend::default()),
+            storage_backend: Arc::new(InMemoryStorageBackend),
             encryption_key: Arc::new(DefaultEncryptionKey::default()),
             key_cache: Arc::new(RwLock::new(HashMap::new())),
         })
@@ -410,12 +409,10 @@ impl StorageBackendTrait for FileStorageBackend {
             std::fs::read_dir(&self.path).map_err(|e| BearDogError::io_error(e.to_string()))?;
 
         let mut keys = Vec::new();
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Some(name) = entry.file_name().to_str() {
-                    if name.ends_with(".key") {
-                        keys.push(name.trim_end_matches(".key").to_string());
-                    }
+        for entry in entries.flatten() {
+            if let Some(name) = entry.file_name().to_str() {
+                if name.ends_with(".key") {
+                    keys.push(name.trim_end_matches(".key").to_string());
                 }
             }
         }
@@ -724,18 +721,37 @@ mod tests {
 
     #[tokio::test]
     async fn test_memory_storage_backup_restore() {
-        let backend = MemoryStorageBackend::new().await.unwrap();
+        let backend = MemoryStorageBackend::new()
+            .await
+            .expect("Failed to create first backend");
 
-        backend.store("key1", &[1, 2, 3]).await.unwrap();
-        backend.store("key2", &[4, 5, 6]).await.unwrap();
+        backend
+            .store("key1", &[1, 2, 3])
+            .await
+            .expect("Failed to store key1");
+        backend
+            .store("key2", &[4, 5, 6])
+            .await
+            .expect("Failed to store key2");
 
-        let backup = backend.backup().await.unwrap();
+        let backup = backend.backup().await.expect("Failed to create backup");
 
-        let backend2 = MemoryStorageBackend::new().await.unwrap();
-        backend2.restore(&backup).await.unwrap();
+        let backend2 = MemoryStorageBackend::new()
+            .await
+            .expect("Failed to create second backend");
+        backend2
+            .restore(&backup)
+            .await
+            .expect("Failed to restore backup");
 
-        let key1 = backend2.retrieve("key1").await.unwrap();
-        let key2 = backend2.retrieve("key2").await.unwrap();
+        let key1 = backend2
+            .retrieve("key1")
+            .await
+            .expect("Failed to retrieve key1");
+        let key2 = backend2
+            .retrieve("key2")
+            .await
+            .expect("Failed to retrieve key2");
 
         assert_eq!(key1, vec![1, 2, 3]);
         assert_eq!(key2, vec![4, 5, 6]);
@@ -751,15 +767,23 @@ mod tests {
             max_keys: Some(100),
         };
 
-        let enc_key = DefaultEncryptionKey::create(&config).await.unwrap();
+        let enc_key = DefaultEncryptionKey::create(&config)
+            .await
+            .expect("Failed to create encryption key");
 
         let plaintext = b"Hello, BearDog!";
-        let ciphertext = enc_key.encrypt(plaintext).await.unwrap();
+        let ciphertext = enc_key
+            .encrypt(plaintext)
+            .await
+            .expect("Failed to encrypt plaintext");
 
         assert_ne!(ciphertext, plaintext);
         assert!(ciphertext.len() > plaintext.len()); // includes nonce
 
-        let decrypted = enc_key.decrypt(&ciphertext).await.unwrap();
+        let decrypted = enc_key
+            .decrypt(&ciphertext)
+            .await
+            .expect("Failed to decrypt ciphertext");
         assert_eq!(decrypted, plaintext);
     }
 
@@ -773,7 +797,9 @@ mod tests {
             max_keys: Some(100),
         };
 
-        let enc_key = DefaultEncryptionKey::create(&config).await.unwrap();
+        let enc_key = DefaultEncryptionKey::create(&config)
+            .await
+            .expect("Failed to create encryption key");
 
         // Too short
         let result = enc_key.decrypt(&[1, 2, 3]).await;

@@ -17,6 +17,7 @@ async fn test_beardog_core_creation() {
     // Creation should succeed
     let state = core.state.read().await;
     assert_eq!(state.overall_health, HealthStatus::Healthy);
+    drop(state);
 }
 
 #[tokio::test]
@@ -37,6 +38,7 @@ async fn test_system_status_after_creation() {
     // State should be healthy after creation
     let state = core.state.read().await;
     assert_eq!(state.overall_health, HealthStatus::Healthy);
+    drop(state);
 }
 
 #[tokio::test]
@@ -62,6 +64,7 @@ async fn test_full_initialization() {
     // Verify state is healthy
     let state = core.state.read().await;
     assert_eq!(state.overall_health, HealthStatus::Healthy);
+    drop(state);
 }
 
 #[tokio::test]
@@ -84,6 +87,7 @@ async fn test_config_storage() {
     // Config should be stored and core should have healthy state
     let state = core.state.read().await;
     assert_eq!(state.overall_health, HealthStatus::Healthy);
+    drop(state);
 }
 
 #[tokio::test]
@@ -99,4 +103,5 @@ async fn test_state_uptime_tracking() {
         uptime.as_millis() < 1000,
         "Uptime should be less than 1 second for new core"
     );
+    drop(state);
 }

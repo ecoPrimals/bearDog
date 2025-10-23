@@ -95,7 +95,7 @@ impl Default for KeyManagementCapabilities {
 }
 
 /// Advanced feature capabilities
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AdvancedFeatureCapabilities {
     /// Secure enclave support
     pub secure_enclave: bool,
@@ -105,17 +105,6 @@ pub struct AdvancedFeatureCapabilities {
     pub biometric_auth: bool,
     /// Key attestation
     pub attestation: bool,
-}
-
-impl Default for AdvancedFeatureCapabilities {
-    fn default() -> Self {
-        Self {
-            secure_enclave: false,
-            hardware_keystore: false,
-            biometric_auth: false,
-            attestation: false,
-        }
-    }
 }
 
 /// Performance capabilities

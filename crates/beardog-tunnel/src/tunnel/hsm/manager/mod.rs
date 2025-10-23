@@ -71,9 +71,10 @@ impl HsmManager {
             config: HsmManagerConfig::default(),
             health_monitor: Arc::new(DefaultHsmHealthMonitor::default()),
             failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
-            capability_detector: Arc::new(DefaultHsmCapabilityDetector::new().expect(
-                "DefaultHsmCapabilityDetector::new() cannot fail - it only creates a HashMap",
-            )),
+            capability_detector: Arc::new(DefaultHsmCapabilityDetector::new()
+                .unwrap_or_else(|e| {
+                    panic!("CRITICAL: DefaultHsmCapabilityDetector::new() failed - this should never happen as it only creates a HashMap: {}", e)
+                })),
             performance_tracker: Arc::new(HsmPerformanceTracker::default()),
             operation_router: Arc::new(RwLock::new(HsmOperationRouter::default())),
         }
