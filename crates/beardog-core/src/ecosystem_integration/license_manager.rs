@@ -111,7 +111,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_license_info_serialization() {
+    fn test_license_info_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let license = LicenseInfo {
             license_id: "test-001".to_string(),
             license_type: "test".to_string(),
@@ -124,6 +124,8 @@ mod tests {
         let json = serde_json::to_string(&license)?;
         let deserialized: LicenseInfo = serde_json::from_str(&json)?;
         assert_eq!(license.license_id, deserialized.license_id);
+        
+        Ok(())
     }
 
     #[test]

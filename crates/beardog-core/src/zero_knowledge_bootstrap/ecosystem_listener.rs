@@ -704,7 +704,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_ecosystem_listener_creation() {
+    async fn test_ecosystem_listener_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedBootstrapConfig::default();
         let primals = Arc::new(RwLock::new(HashMap::new()));
         let capabilities = Arc::new(RwLock::new(HashMap::new()));
@@ -713,10 +713,12 @@ mod tests {
 
         assert_eq!(listener.listening_tasks.len(), 0);
         assert_eq!(listener.metrics.announcements_received, 0);
+        
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_environment_discovery() {
+    async fn test_environment_discovery() -> Result<(), Box<dyn std::error::Error>> {
         // Simulate an environment-based announcement discovery
         std::env::set_var("COMPUTE_ENDPOINT", "http://discovered-compute-service:8081");
 
@@ -756,6 +758,8 @@ mod tests {
 
         // Clean up
         std::env::remove_var("COMPUTE_ENDPOINT");
+        
+        Ok(())
     }
 
     #[tokio::test]

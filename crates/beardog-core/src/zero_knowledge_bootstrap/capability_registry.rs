@@ -558,16 +558,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_register_capability() {
+    async fn test_register_capability() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
         let id = registry.register(capability).await?;
         assert!(!id.as_str().is_empty());
+        
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_discover_by_type() {
+    async fn test_discover_by_type() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
 
         // Register compute capability
@@ -589,10 +591,12 @@ mod tests {
             compute_caps[0].capability.capability_type,
             ServiceCapabilityType::Compute
         );
+        
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_health_status_update() {
+    async fn test_health_status_update() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
@@ -605,12 +609,14 @@ mod tests {
             ?;
 
         // Verify update
-        let cap = registry.get(&id).await??;
+        let cap = registry.get(&id).await?.unwrap();
         assert_eq!(cap.consecutive_failures, 0);
+        
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_remove_capability() {
+    async fn test_remove_capability() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
@@ -622,10 +628,12 @@ mod tests {
         // Verify removal
         let result = registry.get(&id).await?;
         assert!(result.is_none());
+        
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_statistics() {
+    async fn test_statistics() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
 
         // Register multiple capabilities
@@ -646,12 +654,14 @@ mod tests {
 
         assert_eq!(stats.total_capabilities, 3);
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Compute)?,
+            *stats.by_type.get(&ServiceCapabilityType::Compute).unwrap(),
             2
         );
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Storage)?,
+            *stats.by_type.get(&ServiceCapabilityType::Storage).unwrap(),
             1
         );
+        
+        Ok(())
     }
 }
