@@ -340,7 +340,7 @@ fn test_concurrent_key_generation() -> Result<(), BearDogError> {
         .collect();
 
     for handle in handles {
-        handle.join().expect("Thread should complete successfully");
+        handle.join()?;
     }
 
     Ok(())

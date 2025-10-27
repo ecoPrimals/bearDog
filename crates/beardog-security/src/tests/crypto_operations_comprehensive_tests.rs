@@ -515,7 +515,7 @@ mod key_rotation_tests {
 
         assert!(decrypted.is_some(), "Should find correct key");
         assert_eq!(
-            decrypted.unwrap().as_slice(),
+            decrypted?.as_slice(),
             plaintext,
             "Decryption should work"
         );
