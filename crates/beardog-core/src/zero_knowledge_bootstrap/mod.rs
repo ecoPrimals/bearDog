@@ -94,10 +94,10 @@ pub mod self_discovery;
 ///
 /// # async fn example() -> beardog_errors::BearDogResult<()> {
 /// // Create bootstrap engine with zero ecosystem knowledge
-/// let mut bootstrap = ZeroKnowledgeBootstrap::new().await?;
+/// let mut bootstrap = ZeroKnowledgeBootstrap::new().await.expect("Test: create bootstrap should succeed");
 ///
 /// // Start zero-knowledge bootstrap process
-/// bootstrap.bootstrap().await?;
+/// bootstrap.bootstrap().await.expect("Test: bootstrap should succeed");
 ///
 /// // Query discovered ecosystem state
 /// let ecosystem = bootstrap.get_ecosystem_state().await;
@@ -287,7 +287,7 @@ impl ZeroKnowledgeBootstrap {
         let config = UnifiedBootstrapConfig::default();
 
         // Step 1: Discover our own identity and capabilities (only thing we can know)
-        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new()?;
+        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new().expect("Test: create discovery engine should succeed");
         let self_identity = self_discovery.discover_self_identity()?;
 
         info!(
@@ -687,6 +687,8 @@ mod tests {
         // Should have discovered some ecosystem state
         let state = bootstrap.get_ecosystem_state().await;
         assert!(state.ecosystem_health > 0.0);
+        
+        Ok(())
     }
 
     #[tokio::test]
@@ -719,6 +721,8 @@ mod tests {
             state.available_capabilities.is_empty() || !state.available_capabilities.is_empty(),
             "Capability discovery system initialized"
         );
+        
+        Ok(())
     }
 }
 

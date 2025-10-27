@@ -196,35 +196,106 @@ impl RefinedBearDogMigrator {
         let content = fs::read_to_string(path).await?;
         let original_content = content.clone();
         
-        // Only migrate if function returns Result
-        if !self.has_result_return(&content) {
-            return Ok(0);
-        }
-
-        let mut modified_content = content;
-        let mut migration_count = 0;
-
-        // Simple migration: .unwrap() -> ?
-        // This is safe for functions that return Result
-        let new_content = self.unwrap_pattern.replace_all(&modified_content, "?");
-        if new_content != modified_content {
-            migration_count += self.unwrap_pattern.find_iter(&modified_content).count();
-            modified_content = new_content.into_owned();
-        }
-
-        // Simple migration: .expect("msg") -> ?
-        let new_content = self.expect_pattern.replace_all(&modified_content, "?");
-        if new_content != modified_content {
-            migration_count += self.expect_pattern.find_iter(&modified_content).count();
-            modified_content = new_content.into_owned();
-        }
+        // Parse file into functions and migrate each function individually
+        let modified_content = self.migrate_file_intelligently(&content)?;
+        
+        let migration_count = if modified_content != content {
+            // Count how many patterns we changed
+            let original_unwraps = self.unwrap_pattern.find_iter(&content).count();
+            let original_expects = self.expect_pattern.find_iter(&content).count();
+            let new_unwraps = self.unwrap_pattern.find_iter(&modified_content).count();
+            let new_expects = self.expect_pattern.find_iter(&modified_content).count();
+            
+            (original_unwraps - new_unwraps) + (original_expects - new_expects)
+        } else {
+            0
+        };
 
         // Only write if changes were made and not dry run
-        if migration_count > 0 && !dry_run && modified_content != original_content {
+        if migration_count > 0 && !dry_run {
             fs::write(path, modified_content).await?;
         }
 
         Ok(migration_count)
+    }
+    
+    /// Intelligently migrate unwraps/expects only in functions that return Result
+    fn migrate_file_intelligently(&self, content: &str) -> RefinedResult<String> {
+        let lines: Vec<&str> = content.lines().collect();
+        let mut result = Vec::new();
+        let mut in_result_function = false;
+        let mut brace_depth = 0;
+        let mut function_start_depth = 0;
+        
+        for line in lines {
+            // Detect function signature with Result return type
+            if self.is_function_signature_with_result(line) {
+                in_result_function = true;
+                function_start_depth = brace_depth;
+                result.push(line.to_string());
+                // Count braces on this line
+                brace_depth += line.matches('{').count();
+                brace_depth = brace_depth.saturating_sub(line.matches('}').count());
+                continue;
+            }
+            
+            // Track brace depth
+            let open_braces = line.matches('{').count();
+            let close_braces = line.matches('}').count();
+            brace_depth += open_braces;
+            brace_depth = brace_depth.saturating_sub(close_braces);
+            
+            // Check if we've exited the function
+            if in_result_function && brace_depth <= function_start_depth && close_braces > 0 {
+                in_result_function = false;
+            }
+            
+            // Only migrate unwraps/expects if we're in a Result-returning function
+            let modified_line = if in_result_function {
+                let mut line_str = line.to_string();
+                
+                // Replace .unwrap() with ?
+                // But be careful not to replace in comments or strings
+                if line.contains(".unwrap()") && !line.trim().starts_with("//") {
+                    line_str = line_str.replace(".unwrap()", "?");
+                }
+                
+                // Replace .expect("...") with ?
+                // Using regex to handle any message
+                if line.contains(".expect(") && !line.trim().starts_with("//") {
+                    line_str = self.expect_pattern.replace_all(&line_str, "?").into_owned();
+                }
+                
+                line_str
+            } else {
+                line.to_string()
+            };
+            
+            result.push(modified_line);
+        }
+        
+        Ok(result.join("\n"))
+    }
+    
+    /// Check if a line is a function signature that returns Result
+    fn is_function_signature_with_result(&self, line: &str) -> bool {
+        let trimmed = line.trim();
+        
+        // Must be a function
+        if !trimmed.contains("fn ") {
+            return false;
+        }
+        
+        // Must have Result or BearDogResult in the return type
+        // Look for -> Result< or -> BearDogResult
+        if trimmed.contains("-> Result<") || 
+           trimmed.contains("-> BearDogResult") ||
+           trimmed.contains("->Result<") ||
+           trimmed.contains("->BearDogResult") {
+            return true;
+        }
+        
+        false
     }
 
     fn has_result_return(&self, content: &str) -> bool {

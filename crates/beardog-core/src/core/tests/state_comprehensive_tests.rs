@@ -60,13 +60,13 @@ fn test_core_state_add_single_component() {
     
     state.components.insert(
         "security".to_string(),
-        ComponentStatus::Healthy
+        ComponentStatus::Running
     );
     
     assert_eq!(state.components.len(), 1);
     assert_eq!(
         state.components.get("security"),
-        Some(&ComponentStatus::Healthy)
+        Some(&ComponentStatus::Running)
     );
 }
 
@@ -74,9 +74,9 @@ fn test_core_state_add_single_component() {
 fn test_core_state_add_multiple_components() {
     let mut state = CoreState::default();
     
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
-    state.components.insert("monitor".to_string(), ComponentStatus::Healthy);
-    state.components.insert("optimizer".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
+    state.components.insert("monitor".to_string(), ComponentStatus::Running);
+    state.components.insert("optimizer".to_string(), ComponentStatus::Running);
     
     assert_eq!(state.components.len(), 3);
 }
@@ -85,17 +85,17 @@ fn test_core_state_add_multiple_components() {
 fn test_core_state_update_component_status() {
     let mut state = CoreState::default();
     
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
     assert_eq!(
         state.components.get("security"),
-        Some(&ComponentStatus::Healthy)
+        Some(&ComponentStatus::Running)
     );
     
     // Update status
-    state.components.insert("security".to_string(), ComponentStatus::Degraded);
+    state.components.insert("security".to_string(), ComponentStatus::Stopping);
     assert_eq!(
         state.components.get("security"),
-        Some(&ComponentStatus::Degraded)
+        Some(&ComponentStatus::Stopping)
     );
 }
 
@@ -103,7 +103,7 @@ fn test_core_state_update_component_status() {
 fn test_core_state_remove_component() {
     let mut state = CoreState::default();
     
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
     assert_eq!(state.components.len(), 1);
     
     state.components.remove("security");
@@ -120,21 +120,21 @@ fn test_core_state_component_not_found() {
 fn test_core_state_multiple_component_statuses() {
     let mut state = CoreState::default();
     
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
-    state.components.insert("monitor".to_string(), ComponentStatus::Degraded);
-    state.components.insert("optimizer".to_string(), ComponentStatus::Unhealthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
+    state.components.insert("monitor".to_string(), ComponentStatus::Stopping);
+    state.components.insert("optimizer".to_string(), ComponentStatus::Inactive);
     
     assert_eq!(
         state.components.get("security"),
-        Some(&ComponentStatus::Healthy)
+        Some(&ComponentStatus::Running)
     );
     assert_eq!(
         state.components.get("monitor"),
-        Some(&ComponentStatus::Degraded)
+        Some(&ComponentStatus::Stopping)
     );
     assert_eq!(
         state.components.get("optimizer"),
-        Some(&ComponentStatus::Unhealthy)
+        Some(&ComponentStatus::Inactive)
     );
 }
 
@@ -227,7 +227,7 @@ fn test_core_state_uptime_monotonic() {
 #[test]
 fn test_core_state_clone() {
     let mut state = CoreState::default();
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
     state.overall_health = HealthStatus::Degraded;
     
     let cloned = state.clone();
@@ -236,19 +236,19 @@ fn test_core_state_clone() {
     assert_eq!(cloned.overall_health, HealthStatus::Degraded);
     assert_eq!(
         cloned.components.get("security"),
-        Some(&ComponentStatus::Healthy)
+        Some(&ComponentStatus::Running)
     );
 }
 
 #[test]
 fn test_core_state_clone_independence() {
     let mut state = CoreState::default();
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
     
     let mut cloned = state.clone();
     
     // Modify clone
-    cloned.components.insert("monitor".to_string(), ComponentStatus::Healthy);
+    cloned.components.insert("monitor".to_string(), ComponentStatus::Running);
     cloned.overall_health = HealthStatus::Unhealthy;
     
     // Original should be unchanged
@@ -295,7 +295,7 @@ fn test_core_state_debug_format() {
 #[test]
 fn test_core_state_debug_with_components() {
     let mut state = CoreState::default();
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
     
     let debug_str = format!("{:?}", state);
     assert!(debug_str.contains("security"));
@@ -322,7 +322,7 @@ fn test_core_state_components_grow_beyond_capacity() {
     for i in 0..20 {
         state.components.insert(
             format!("component_{}", i),
-            ComponentStatus::Healthy
+            ComponentStatus::Running
         );
     }
     
@@ -343,25 +343,25 @@ fn test_core_state_realistic_scenario() {
     assert_eq!(state.overall_health, HealthStatus::Healthy);
     
     // Register components
-    state.components.insert("security".to_string(), ComponentStatus::Healthy);
-    state.components.insert("monitor".to_string(), ComponentStatus::Healthy);
-    state.components.insert("optimizer".to_string(), ComponentStatus::Healthy);
-    state.components.insert("adapter".to_string(), ComponentStatus::Healthy);
+    state.components.insert("security".to_string(), ComponentStatus::Running);
+    state.components.insert("monitor".to_string(), ComponentStatus::Running);
+    state.components.insert("optimizer".to_string(), ComponentStatus::Running);
+    state.components.insert("adapter".to_string(), ComponentStatus::Running);
     
     assert_eq!(state.components.len(), 4);
     
     // Simulate a component degradation
-    state.components.insert("monitor".to_string(), ComponentStatus::Degraded);
+    state.components.insert("monitor".to_string(), ComponentStatus::Stopping);
     state.overall_health = HealthStatus::Degraded;
     
     assert_eq!(state.overall_health, HealthStatus::Degraded);
     assert_eq!(
         state.components.get("monitor"),
-        Some(&ComponentStatus::Degraded)
+        Some(&ComponentStatus::Stopping)
     );
     
     // Simulate recovery
-    state.components.insert("monitor".to_string(), ComponentStatus::Healthy);
+    state.components.insert("monitor".to_string(), ComponentStatus::Running);
     state.overall_health = HealthStatus::Healthy;
     
     assert_eq!(state.overall_health, HealthStatus::Healthy);
@@ -399,10 +399,10 @@ fn test_core_state_empty_component_name() {
     let mut state = CoreState::default();
     
     // Empty string as component name (edge case)
-    state.components.insert("".to_string(), ComponentStatus::Healthy);
+    state.components.insert("".to_string(), ComponentStatus::Running);
     
     assert_eq!(state.components.len(), 1);
-    assert_eq!(state.components.get(""), Some(&ComponentStatus::Healthy));
+    assert_eq!(state.components.get(""), Some(&ComponentStatus::Running));
 }
 
 #[test]
@@ -410,12 +410,12 @@ fn test_core_state_very_long_component_name() {
     let mut state = CoreState::default();
     
     let long_name = "a".repeat(1000);
-    state.components.insert(long_name.clone(), ComponentStatus::Healthy);
+    state.components.insert(long_name.clone(), ComponentStatus::Running);
     
     assert_eq!(state.components.len(), 1);
     assert_eq!(
         state.components.get(&long_name),
-        Some(&ComponentStatus::Healthy)
+        Some(&ComponentStatus::Running)
     );
 }
 
@@ -424,12 +424,12 @@ fn test_core_state_unicode_component_name() {
     let mut state = CoreState::default();
     
     let unicode_name = "安全_セキュリティ_🔐";
-    state.components.insert(unicode_name.to_string(), ComponentStatus::Healthy);
+    state.components.insert(unicode_name.to_string(), ComponentStatus::Running);
     
     assert_eq!(state.components.len(), 1);
     assert_eq!(
         state.components.get(unicode_name),
-        Some(&ComponentStatus::Healthy)
+        Some(&ComponentStatus::Running)
     );
 }
 
@@ -442,11 +442,11 @@ fn test_core_state_many_components() {
         state.components.insert(
             format!("component_{}", i),
             if i % 3 == 0 {
-                ComponentStatus::Healthy
+                ComponentStatus::Running
             } else if i % 3 == 1 {
-                ComponentStatus::Degraded
+                ComponentStatus::Active
             } else {
-                ComponentStatus::Unhealthy
+                ComponentStatus::Inactive
             }
         );
     }
