@@ -32,6 +32,10 @@
 //!
 //! All production utilities maintain memory safety with zero unsafe code.
 
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod production_comprehensive_tests;
+
 /// Production configuration and utilities
 ///
 //! Provides production-ready configuration and deployment utilities.
