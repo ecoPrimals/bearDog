@@ -88,6 +88,10 @@ pub mod utilities {
     }
 }
 
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod traits_comprehensive_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
