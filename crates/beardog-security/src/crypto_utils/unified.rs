@@ -477,10 +477,10 @@ mod tests {
         assert_eq!(public_key.len(), 32);
 
         let message = b"test message";
-        let signature = UnifiedBearDogCrypto::sign_ed25519(&private_key, message).unwrap();
+        let signature = UnifiedBearDogCrypto::sign_ed25519(&private_key, message)?;
         assert_eq!(signature.len(), 64);
 
-        let is_valid = UnifiedBearDogCrypto::verify_ed25519_signature(&public_key, message, &signature).unwrap();
+        let is_valid = UnifiedBearDogCrypto::verify_ed25519_signature(&public_key, message, &signature)?;
         assert!(is_valid);
     }
 
@@ -490,11 +490,11 @@ mod tests {
         assert_eq!(key.len(), 32);
 
         let plaintext = b"Hello, BearDog!";
-        let (ciphertext, nonce) = UnifiedBearDogCrypto::encrypt_aes256_gcm(&key, plaintext).unwrap();
+        let (ciphertext, nonce) = UnifiedBearDogCrypto::encrypt_aes256_gcm(&key, plaintext)?;
         assert_ne!(ciphertext, plaintext);
         assert_eq!(nonce.len(), 12);
 
-        let decrypted = UnifiedBearDogCrypto::decrypt_aes256_gcm(&key, &ciphertext, &nonce).unwrap();
+        let decrypted = UnifiedBearDogCrypto::decrypt_aes256_gcm(&key, &ciphertext, &nonce)?;
         assert_eq!(decrypted, plaintext);
     }
 
@@ -505,10 +505,10 @@ mod tests {
         assert_eq!(hash.len(), 64); // SHA-256 produces 32 bytes = 64 hex chars
 
         let key = b"secret key";
-        let hmac = UnifiedBearDogCrypto::hmac_sha256(key, data).unwrap();
+        let hmac = UnifiedBearDogCrypto::hmac_sha256(key, data)?;
         assert_eq!(hmac.len(), 64); // HMAC-SHA256 produces 32 bytes = 64 hex chars
 
-        let is_valid = UnifiedBearDogCrypto::verify_hmac_sha256(key, data, &hmac).unwrap();
+        let is_valid = UnifiedBearDogCrypto::verify_hmac_sha256(key, data, &hmac)?;
         assert!(is_valid);
     }
 
@@ -531,23 +531,23 @@ mod tests {
     fn test_unified_crypto_key_derivation() {
         let password = b"test password";
         let salt = UnifiedBearDogCrypto::generate_salt();
-        let key = UnifiedBearDogCrypto::derive_key_pbkdf2(password, &salt, 10000, 32).unwrap();
+        let key = UnifiedBearDogCrypto::derive_key_pbkdf2(password, &salt, 10000, 32)?;
         assert_eq!(key.len(), 32);
 
         // Same inputs should produce same key
-        let key2 = UnifiedBearDogCrypto::derive_key_pbkdf2(password, &salt, 10000, 32).unwrap();
+        let key2 = UnifiedBearDogCrypto::derive_key_pbkdf2(password, &salt, 10000, 32)?;
         assert_eq!(key, key2);
     }
 
     #[test]
     fn test_unified_crypto_sovereign_entropy() {
-        let entropy1 = UnifiedBearDogCrypto::generate_sovereign_entropy(32, Some("test_user")).unwrap();
-        let entropy2 = UnifiedBearDogCrypto::generate_sovereign_entropy(32, None).unwrap();
+        let entropy1 = UnifiedBearDogCrypto::generate_sovereign_entropy(32, Some("test_user"))?;
+        let entropy2 = UnifiedBearDogCrypto::generate_sovereign_entropy(32, None)?;
         assert_eq!(entropy1.len(), 32);
         assert_eq!(entropy2.len(), 32);
         assert_ne!(entropy1, entropy2);
 
-        let sovereign_salt = UnifiedBearDogCrypto::generate_sovereign_salt(Some("test_user")).unwrap();
+        let sovereign_salt = UnifiedBearDogCrypto::generate_sovereign_salt(Some("test_user"))?;
         assert_eq!(sovereign_salt.len(), 32);
     }
 

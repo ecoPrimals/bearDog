@@ -104,15 +104,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_android_provider_creation() {
+    fn test_android_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = SafeAndroidProvider::new();
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_strongbox_check() {
-        let provider = SafeAndroidProvider::new().unwrap();
+    fn test_strongbox_check() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SafeAndroidProvider::new()?;
         // Should be false in test environment
         assert!(!provider.is_hardware_backed() || provider.is_hardware_backed());
+        Ok(())
     }
 }

@@ -22,6 +22,35 @@ pub mod telemetry;
 mod health_comprehensive_tests;
 #[cfg(test)]
 mod metrics_comprehensive_tests;
+#[cfg(test)]
+mod tests_advanced;
+// Test modules removed - migrated to production test suite
+
+// New test modules - October 24, 2025
+#[cfg(test)]
+mod ecosystem_tests;
+#[cfg(test)]
+mod monitoring_advanced_tests;
+#[cfg(test)]
+mod observability_tests;
+#[cfg(test)]
+mod optimization_tests;
+#[cfg(test)]
+mod telemetry_tests;
+
+// October 25, 2025: Week 2 Test Expansion
+#[cfg(test)]
+mod production_types_validation_tests;
+
+// October 26, 2025: Week 2 Day 3 - Lifecycle Tests
+#[cfg(test)]
+mod ecosystem_lifecycle_tests;
+#[cfg(test)]
+mod production_integration_tests;
+
+// October 27, 2025: Week 1 Test Expansion - Production Core Tests
+#[cfg(test)]
+mod production_core_tests;
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -260,8 +289,36 @@ impl Default for PerformanceMetrics {
 }
 
 impl ProductionEcosystem {
-    /// Create a new production ecosystem
-    /// Creates a new instance
+    /// Creates a new production ecosystem with the given configuration
+    ///
+    /// This initializes all production subsystems including:
+    /// - Metrics collection
+    /// - Health monitoring
+    /// - Performance optimization
+    /// - Observability engine
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Production configuration defining monitoring, health, and optimization settings
+    ///
+    /// # Returns
+    ///
+    /// Returns a `ProductionEcosystem` instance ready for initialization
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any subsystem fails to initialize
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beardog_types::production::{ProductionEcosystem, ProductionConfig};
+    ///
+    /// let config = ProductionConfig::default();
+    /// let mut ecosystem = ProductionEcosystem::new(config)?;
+    /// ecosystem.initialize()?;
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn new(config: ProductionConfig) -> Result<Self, BearDogError> {
         let metrics_collector = metrics::ProductionMetricsCollector::new(config.metrics.clone());
         let health_checker = health::HealthChecker::new(&config.health)?;
@@ -279,9 +336,35 @@ impl ProductionEcosystem {
         })
     }
 
-    /// Initialize the production ecosystem
-    /// Initializes componentialize
-    /// Initializes componentialize
+    /// Initializes all production subsystems and transitions to healthy state
+    ///
+    /// This method starts all production services in the correct order:
+    /// 1. Observability and monitoring
+    /// 2. Health checks
+    /// 3. Performance optimization
+    /// 4. Metrics collection
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if all subsystems start successfully
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any subsystem fails to start. The ecosystem
+    /// will remain in `Initializing` state on failure.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beardog_types::production::{ProductionEcosystem, ProductionConfig};
+    ///
+    /// let config = ProductionConfig::default();
+    /// let mut ecosystem = ProductionEcosystem::new(config)?;
+    /// ecosystem.initialize()?;
+    /// assert_eq!(ecosystem.get_status().status,
+    ///            beardog_types::production::OperationalStatus::Healthy);
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn initialize(&mut self) -> Result<(), BearDogError> {
         self.state.status = OperationalStatus::Initializing;
 
@@ -333,6 +416,33 @@ impl ProductionEcosystem {
         Ok(())
     }
 
+    /// Performs a comprehensive health check of all production subsystems
+    ///
+    /// Evaluates the health of all components and updates the operational
+    /// status accordingly. This should be called periodically to ensure
+    /// the system is operating correctly.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `HealthReport` with detailed status of all subsystems
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the health check itself fails (not if subsystems are unhealthy)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beardog_types::production::{ProductionEcosystem, ProductionConfig};
+    ///
+    /// let config = ProductionConfig::default();
+    /// let mut ecosystem = ProductionEcosystem::new(config)?;
+    /// ecosystem.initialize()?;
+    ///
+    /// let health = ecosystem.health_check()?;
+    /// println!("System health: {:?}", health.overall_status);
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn health_check(&mut self) -> Result<health::HealthReport, BearDogError> {
         let report = self.health_checker.comprehensive_health_check()?;
 
@@ -347,7 +457,37 @@ impl ProductionEcosystem {
         Ok(report)
     }
 
-    /// Shutdown the production ecosystem gracefully
+    /// Gracefully shuts down all production subsystems
+    ///
+    /// Stops all services in the reverse order of initialization:
+    /// 1. Observability
+    /// 2. Health monitoring  
+    /// 3. Metrics collection
+    ///
+    /// This ensures clean resource cleanup and proper shutdown.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if all subsystems shut down cleanly
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any subsystem fails to shut down gracefully
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beardog_types::production::{ProductionEcosystem, ProductionConfig};
+    ///
+    /// let config = ProductionConfig::default();
+    /// let mut ecosystem = ProductionEcosystem::new(config)?;
+    /// ecosystem.initialize()?;
+    ///
+    /// // Do work...
+    ///
+    /// ecosystem.shutdown()?; // Clean shutdown
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn shutdown(&mut self) -> Result<(), BearDogError> {
         self.state.status = OperationalStatus::Shutdown;
 

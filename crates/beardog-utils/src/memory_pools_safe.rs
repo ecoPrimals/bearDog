@@ -157,29 +157,31 @@ mod tests {
     }
 
     #[test]
-    fn test_memory_pool_basic() {
+    fn test_memory_pool_basic() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SafeMemoryPool::<TestStruct>::new(10);
 
-        let item = pool.acquire().unwrap();
+        let item = pool.acquire()?;
         assert_eq!(item.value, 0);
 
-        pool.release(item).unwrap();
+        pool.release(item)?;
 
-        let stats = pool.get_stats().unwrap();
+        let stats = pool.get_stats()?;
         assert_eq!(stats.total_allocations, 1);
         assert_eq!(stats.total_deallocations, 1);
+        Ok(())
     }
 
     #[test]
-    fn test_pool_reuse() {
+    fn test_pool_reuse() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SafeMemoryPool::<TestStruct>::new(10);
 
-        let item1 = pool.acquire().unwrap();
-        pool.release(item1).unwrap();
+        let item1 = pool.acquire()?;
+        pool.release(item1)?;
 
-        let _item2 = pool.acquire().unwrap();
+        let _item2 = pool.acquire()?;
 
-        let stats = pool.get_stats().unwrap();
+        let stats = pool.get_stats()?;
         assert_eq!(stats.pool_hits, 1);
+        Ok(())
     }
 }

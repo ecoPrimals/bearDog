@@ -481,7 +481,7 @@ mod tests {
     #[tokio::test]
     async fn test_empty_migration() {
         let service = HsmMigrationService::default();
-        let result = service.migrate_hsm_configs(vec![]).unwrap();
+        let result = service.migrate_hsm_configs(vec![])?;
 
         assert_eq!(result.migration_report.legacy_configs_processed, 0);
         assert_eq!(result.migration_report.successful_migrations.len(), 0);

@@ -8,14 +8,15 @@ mod hsm_selection_tests {
     use beardog_errors::BearDogError;
 
     #[test]
-    fn test_software_hsm_always_available() {
+    fn test_software_hsm_always_available() -> Result<(), Box<dyn std::error::Error>> {
         // Software HSM should always be available as fallback
         // This is a critical guarantee for the system
         // TODO: Software HSM availability is guaranteed
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_tier_ordering() {
+    fn test_hsm_tier_ordering() -> Result<(), Box<dyn std::error::Error>> {
         // Verify tier ordering: Hardware > Cloud > Software
         let hardware_tier = 0;
         let cloud_tier = 1;
@@ -29,10 +30,11 @@ mod hsm_selection_tests {
             cloud_tier < software_tier,
             "Cloud tier should be higher priority than software"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_selection_with_no_hardware() {
+    fn test_hsm_selection_with_no_hardware() -> Result<(), Box<dyn std::error::Error>> {
         // When no hardware HSM is available, should fall back to software
         let hardware_available = false;
         let software_available = true;
@@ -49,10 +51,11 @@ mod hsm_selection_tests {
             selected_tier, "software",
             "Should select software when hardware unavailable"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_selection_prefers_hardware() {
+    fn test_hsm_selection_prefers_hardware() -> Result<(), Box<dyn std::error::Error>> {
         // When hardware HSM is available, should prefer it
         let hardware_available = true;
         let software_available = true;
@@ -69,10 +72,11 @@ mod hsm_selection_tests {
             selected_tier, "hardware",
             "Should prefer hardware when available"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_failover_to_software() {
+    fn test_hsm_failover_to_software() -> Result<(), Box<dyn std::error::Error>> {
         // Simulate hardware HSM failure and failover
         let mut hardware_working = true;
         let software_working = true;
@@ -97,10 +101,11 @@ mod hsm_selection_tests {
             "none"
         };
         assert_eq!(second_provider, "software", "Should fail over to software");
+        Ok(())
     }
 
     #[test]
-    fn test_multiple_hsm_providers_available() {
+    fn test_multiple_hsm_providers_available() -> Result<(), Box<dyn std::error::Error>> {
         // Test when multiple providers are available
         let providers = vec!["hardware", "cloud", "software"];
 
@@ -110,10 +115,11 @@ mod hsm_selection_tests {
             providers[0], "hardware",
             "First provider should be hardware (highest tier)"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_provider_health_check() {
+    fn test_hsm_provider_health_check() -> Result<(), Box<dyn std::error::Error>> {
         // Test health check logic
         let health_statuses = vec![("hardware", true), ("cloud", false), ("software", true)];
 
@@ -140,10 +146,11 @@ mod hsm_selection_tests {
             !healthy_providers.contains(&"cloud"),
             "Cloud should not be healthy"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_capabilities_filtering() {
+    fn test_hsm_capabilities_filtering() -> Result<(), Box<dyn std::error::Error>> {
         // Test filtering providers by capability
         let providers = vec![
             ("hardware", vec!["sign", "encrypt", "decrypt"]),
@@ -164,10 +171,11 @@ mod hsm_selection_tests {
         );
         assert!(encryption_capable.contains(&"hardware"));
         assert!(encryption_capable.contains(&"software"));
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_selection_with_capability_requirement() {
+    fn test_hsm_selection_with_capability_requirement() -> Result<(), Box<dyn std::error::Error>> {
         // Test selection based on required capability
         let required_capability = "derive";
 
@@ -186,10 +194,11 @@ mod hsm_selection_tests {
             Some("software"),
             "Should select provider with required capability"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_no_providers_available_error() {
+    fn test_no_providers_available_error() -> Result<(), Box<dyn std::error::Error>> {
         // Test error case when no providers are available
         let providers: Vec<&str> = vec![];
 
@@ -204,5 +213,6 @@ mod hsm_selection_tests {
             "Should return error when no providers available"
         );
         assert_eq!(result.unwrap_err(), "No HSM providers available");
+        Ok(())
     }
 }

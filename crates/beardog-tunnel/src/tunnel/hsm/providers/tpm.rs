@@ -79,20 +79,23 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_tpm_provider_creation() {
+    async fn test_tpm_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = TpmUniversalProvider::new().await;
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_security_levels() {
+    fn test_security_levels() -> Result<(), Box<dyn std::error::Error>> {
         // TPM 2.0 should be level 3
         assert_eq!(3, 3); // Placeholder assertion
+        Ok(())
     }
 
     #[test]
-    fn test_tpm_versions() {
+    fn test_tpm_versions() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(TpmVersion::V2_0, TpmVersion::V2_0);
         assert_ne!(TpmVersion::V1_2, TpmVersion::V2_0);
+        Ok(())
     }
 }

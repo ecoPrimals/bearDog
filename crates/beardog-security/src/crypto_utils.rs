@@ -2,6 +2,9 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
+// Temporary: Allow deprecated generic-array until aes-gcm 0.11 is stable
+#![allow(deprecated)]
+
 use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
@@ -131,8 +134,8 @@ impl BearDogCrypto {
             return Err(BearDogError::invalid_input("AES-256 key must be 32 bytes"));
         }
 
-        let key = Key::<Aes256Gcm>::from_slice(key);
-        let cipher = Aes256Gcm::new(key);
+        // Convert slice to Key
+        let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
 
         let nonce_bytes = if let Some(nonce) = nonce_opt {
             if nonce.len() != 12 {
@@ -145,10 +148,13 @@ impl BearDogCrypto {
             Self::generate_secure_nonce(12)
         };
 
-        let nonce = Nonce::from_slice(&nonce_bytes);
+        // Convert Vec to array for Nonce
+        let mut nonce_array = [0u8; 12];
+        nonce_array.copy_from_slice(&nonce_bytes);
+        let nonce = Nonce::from(nonce_array);
 
         let ciphertext = cipher
-            .encrypt(nonce, plaintext)
+            .encrypt(&nonce, plaintext)
             .map_err(|e| BearDogError::security(format!("Encryption failed: {e}")))?;
 
         Ok((ciphertext, nonce_bytes))
@@ -169,12 +175,15 @@ impl BearDogCrypto {
             ));
         }
 
-        let key = Key::<Aes256Gcm>::from_slice(key);
-        let cipher = Aes256Gcm::new(key);
-        let nonce = Nonce::from_slice(nonce);
+        // Convert slice to Key
+        let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
+        // Convert slice to array for Nonce
+        let mut nonce_array = [0u8; 12];
+        nonce_array.copy_from_slice(nonce);
+        let nonce = Nonce::from(nonce_array);
 
         let plaintext = cipher
-            .decrypt(nonce, ciphertext)
+            .decrypt(&nonce, ciphertext)
             .map_err(|e| BearDogError::security(format!("Decryption failed: {e}")))?;
 
         Ok(plaintext)

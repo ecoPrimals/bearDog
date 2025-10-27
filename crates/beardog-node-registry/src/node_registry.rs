@@ -85,7 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_test_registry() {
-        let registry = create_federation_test_registry().unwrap();
+        let registry = create_federation_test_registry()?;
         let stats = registry.get_statistics();
         assert_eq!(stats.total_nodes, 0);
 
@@ -101,11 +101,11 @@ mod tests {
             registration_timestamp: chrono::Utc::now(),
         };
 
-        registry.add_node(node_info).unwrap();
+        registry.add_node(node_info)?;
         let stats = registry.get_statistics();
         assert_eq!(stats.total_nodes, 1);
 
-        let retrieved_node = registry.get_node("test_node").unwrap();
+        let retrieved_node = registry.get_node("test_node")?;
         assert!(retrieved_node.is_some());
         if let Some(node) = retrieved_node {
             assert_eq!(node.node_id, "test_node");
@@ -114,14 +114,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_federation_registry_creation() {
-        let registry = create_federation_test_registry().unwrap();
+        let registry = create_federation_test_registry()?;
         let federation_status = registry.get_federation_status();
         assert!(federation_status.is_some());
     }
 
     #[tokio::test]
     async fn test_phonebook_service_creation() {
-        let phonebook = create_phonebook_test_registry().unwrap();
+        let phonebook = create_phonebook_test_registry()?;
         let stats = phonebook.get_statistics();
         assert_eq!(stats.registered_nodes, 0);
         assert!(stats.active);
@@ -129,14 +129,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_phonebook_registry_creation() {
-        let registry = create_phonebook_test_registry().unwrap();
+        let registry = create_phonebook_test_registry()?;
         let phonebook_status = registry.get_phonebook_status();
         assert!(phonebook_status.is_some());
     }
 
     #[tokio::test]
     async fn test_node_trust_management() {
-        let registry = create_federation_test_registry().unwrap();
+        let registry = create_federation_test_registry()?;
         // Test trust management functionality - pending full implementation
         // Verify registry was created successfully
         assert!(registry.health_check().is_ok());
@@ -144,8 +144,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_registry_health_check() {
-        let registry = create_federation_test_registry().unwrap();
-        let health_status = registry.health_check().unwrap();
+        let registry = create_federation_test_registry()?;
+        let health_status = registry.health_check()?;
         assert_eq!(health_status.overall_status, HealthStatus::Healthy);
         assert_eq!(health_status.local_nodes, 0);
         assert!(health_status.federation_status.is_none());

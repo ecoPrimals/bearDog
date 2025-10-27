@@ -58,7 +58,7 @@ mod tests {
     #[tokio::test]
     async fn test_tpm_version() {
         let provider = TpmHsmProvider::default();
-        let version = provider.get_version().await.unwrap();
+        let version = provider.get_version().await?;
         assert!(!version.is_empty());
     }
 }

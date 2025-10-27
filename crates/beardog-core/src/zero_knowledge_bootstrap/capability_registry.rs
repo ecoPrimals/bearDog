@@ -562,7 +562,7 @@ mod tests {
         let registry = CapabilityRegistry::new();
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
-        let id = registry.register(capability).await.unwrap();
+        let id = registry.register(capability).await?;
         assert!(!id.as_str().is_empty());
     }
 
@@ -572,17 +572,17 @@ mod tests {
 
         // Register compute capability
         let compute_cap = create_test_capability(ServiceCapabilityType::Compute);
-        registry.register(compute_cap).await.unwrap();
+        registry.register(compute_cap).await?;
 
         // Register storage capability
         let storage_cap = create_test_capability(ServiceCapabilityType::Storage);
-        registry.register(storage_cap).await.unwrap();
+        registry.register(storage_cap).await?;
 
         // Discover compute capabilities
         let compute_caps = registry
             .discover_by_type(ServiceCapabilityType::Compute)
             .await
-            .unwrap();
+            ?;
 
         assert_eq!(compute_caps.len(), 1);
         assert_eq!(
@@ -596,16 +596,16 @@ mod tests {
         let registry = CapabilityRegistry::new();
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
-        let id = registry.register(capability).await.unwrap();
+        let id = registry.register(capability).await?;
 
         // Update health status
         registry
             .update_health_status(&id, HealthStatus::Healthy)
             .await
-            .unwrap();
+            ?;
 
         // Verify update
-        let cap = registry.get(&id).await.unwrap().unwrap();
+        let cap = registry.get(&id).await??;
         assert_eq!(cap.consecutive_failures, 0);
     }
 
@@ -614,13 +614,13 @@ mod tests {
         let registry = CapabilityRegistry::new();
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
-        let id = registry.register(capability).await.unwrap();
+        let id = registry.register(capability).await?;
 
         // Remove capability
-        registry.remove(&id).await.unwrap();
+        registry.remove(&id).await?;
 
         // Verify removal
-        let result = registry.get(&id).await.unwrap();
+        let result = registry.get(&id).await?;
         assert!(result.is_none());
     }
 
@@ -632,25 +632,25 @@ mod tests {
         registry
             .register(create_test_capability(ServiceCapabilityType::Compute))
             .await
-            .unwrap();
+            ?;
         registry
             .register(create_test_capability(ServiceCapabilityType::Compute))
             .await
-            .unwrap();
+            ?;
         registry
             .register(create_test_capability(ServiceCapabilityType::Storage))
             .await
-            .unwrap();
+            ?;
 
-        let stats = registry.statistics().await.unwrap();
+        let stats = registry.statistics().await?;
 
         assert_eq!(stats.total_capabilities, 3);
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Compute).unwrap(),
+            *stats.by_type.get(&ServiceCapabilityType::Compute)?,
             2
         );
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Storage).unwrap(),
+            *stats.by_type.get(&ServiceCapabilityType::Storage)?,
             1
         );
     }

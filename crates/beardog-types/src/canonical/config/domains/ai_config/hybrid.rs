@@ -215,7 +215,7 @@ mod tests {
             .enabled(true)
             .oversight_level(OversightLevel::balanced())
             .build()
-            .unwrap();
+            ?;
 
         assert!(config.is_enabled());
         assert_eq!(config.oversight_level().value(), 0.5);
@@ -225,12 +225,12 @@ mod tests {
     fn test_builder_presets() {
         let auto = HybridIntelligenceConfigBuilder::full_automation()
             .build()
-            .unwrap();
+            ?;
         assert_eq!(auto.oversight_level().value(), 0.0);
 
         let human = HybridIntelligenceConfigBuilder::human_centric()
             .build()
-            .unwrap();
+            ?;
         assert_eq!(human.oversight_level().value(), 1.0);
     }
 
@@ -248,7 +248,7 @@ mod tests {
         let config = HybridIntelligenceConfig::builder()
             .auto_decision_threshold(ConfidenceThreshold::high())
             .build()
-            .unwrap();
+            ?;
 
         assert!(config.can_auto_decide(0.95));
         assert!(!config.can_auto_decide(0.85));

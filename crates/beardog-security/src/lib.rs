@@ -83,9 +83,12 @@ use sha2::{Digest, Sha256, Sha512};
 /// ```rust
 /// use beardog_security::compute_sha256_hash;
 ///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let data = b"Hello, World!";
-/// let hash = compute_sha256_hash(data).expect("Failed to compute hash");
+/// let hash = compute_sha256_hash(data)?;
 /// assert_eq!(hash.len(), 32); // SHA-256 produces 32 bytes
+/// # Ok(())
+/// # }
 /// ```
 pub fn compute_sha256_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let mut hasher = Sha256::new();
@@ -111,9 +114,12 @@ pub fn compute_sha256_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// ```rust
 /// use beardog_security::compute_sha512_hash;
 ///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let data = b"Hello, World!";
-/// let hash = compute_sha512_hash(data).expect("Failed to compute hash");
+/// let hash = compute_sha512_hash(data)?;
 /// assert_eq!(hash.len(), 64); // SHA-512 produces 64 bytes
+/// # Ok(())
+/// # }
 /// ```
 pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let mut hasher = Sha512::new();

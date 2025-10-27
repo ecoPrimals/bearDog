@@ -209,7 +209,7 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
 }
 
 // NOTE: Default implementation removed - use Type::new() instead since it returns Result
-// Previous unsafe implementation used .expect() which could panic
+// Previous unsafe implementation used ? which could panic
 // Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
 
 #[cfg(test)]
@@ -217,33 +217,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_detector_creation() {
+    fn test_detector_creation() -> Result<(), Box<dyn std::error::Error>> {
         let detector = DefaultHsmCapabilityDetector::new();
         assert!(detector.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_detect_capabilities() {
-        let detector = DefaultHsmCapabilityDetector::new().unwrap();
+    fn test_detect_capabilities() -> Result<(), Box<dyn std::error::Error>> {
+        let detector = DefaultHsmCapabilityDetector::new()?;
         let caps = detector.detect_capabilities();
         assert!(caps.is_ok());
 
-        let caps = caps.unwrap();
+        let caps = caps?;
         assert!(!caps.is_empty());
         assert!(caps.contains(&HsmCapability::KeyGeneration));
+        Ok(())
     }
 
     #[test]
-    fn test_is_hsm_available() {
-        let detector = DefaultHsmCapabilityDetector::new().unwrap();
+    fn test_is_hsm_available() -> Result<(), Box<dyn std::error::Error>> {
+        let detector = DefaultHsmCapabilityDetector::new()?;
 
         // Software HSM should always be available
-        assert!(detector.is_hsm_available(&HsmTier::Software).unwrap());
+        assert!(detector.is_hsm_available(&HsmTier::Software)?);
+        Ok(())
     }
 
     #[test]
-    fn test_select_hsm_tier_basic() {
-        let detector = DefaultHsmCapabilityDetector::new().unwrap();
+    fn test_select_hsm_tier_basic() -> Result<(), Box<dyn std::error::Error>> {
+        let detector = DefaultHsmCapabilityDetector::new()?;
         let requirements = SecurityRequirements {
             security_level: SecurityLevel::Basic,
             required_capabilities: vec![HsmCapability::KeyGeneration],
@@ -252,12 +255,13 @@ mod tests {
 
         let tier = detector.select_hsm_tier(&requirements);
         assert!(tier.is_ok());
-        assert_eq!(tier.unwrap(), HsmTier::Software);
+        assert_eq!(tier?, HsmTier::Software);
+        Ok(())
     }
 
     #[test]
-    fn test_select_hsm_tier_medium() {
-        let detector = DefaultHsmCapabilityDetector::new().unwrap();
+    fn test_select_hsm_tier_medium() -> Result<(), Box<dyn std::error::Error>> {
+        let detector = DefaultHsmCapabilityDetector::new()?;
         let requirements = SecurityRequirements {
             security_level: SecurityLevel::Medium,
             required_capabilities: vec![HsmCapability::Signing],
@@ -266,10 +270,11 @@ mod tests {
 
         let tier = detector.select_hsm_tier(&requirements);
         assert!(tier.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_capability_variants() {
+    fn test_hsm_capability_variants() -> Result<(), Box<dyn std::error::Error>> {
         let caps = [
             HsmCapability::KeyGeneration,
             HsmCapability::Signing,
@@ -280,38 +285,38 @@ mod tests {
             HsmCapability::HardwareRng,
         ];
         assert_eq!(caps.len(), 7);
+        Ok(())
     }
 
     #[test]
-    fn test_security_levels() {
+    fn test_security_levels() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(SecurityLevel::Basic, SecurityLevel::Basic);
         assert_ne!(SecurityLevel::Basic, SecurityLevel::Critical);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_provider_capabilities() {
-        let detector = DefaultHsmCapabilityDetector::new().unwrap();
+    async fn test_provider_capabilities() -> Result<(), Box<dyn std::error::Error>> {
+        let detector = DefaultHsmCapabilityDetector::new()?;
 
         let caps = vec![HsmCapability::Signing, HsmCapability::Encryption];
         detector
             .register_provider_capabilities("test-provider".to_string(), caps.clone())
-            .await
-            .unwrap();
+            .await?;
 
-        let retrieved = detector
-            .get_provider_capabilities("test-provider")
-            .await
-            .unwrap();
+        let retrieved = detector.get_provider_capabilities("test-provider").await?;
 
         assert_eq!(retrieved.len(), 2);
         assert!(retrieved.contains(&HsmCapability::Signing));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_provider_not_found() {
-        let detector = DefaultHsmCapabilityDetector::new().unwrap();
+    async fn test_provider_not_found() -> Result<(), Box<dyn std::error::Error>> {
+        let detector = DefaultHsmCapabilityDetector::new()?;
 
         let result = detector.get_provider_capabilities("nonexistent").await;
         assert!(result.is_err());
+        Ok(())
     }
 }

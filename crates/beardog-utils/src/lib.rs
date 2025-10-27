@@ -99,3 +99,15 @@ pub use zero_copy_safe::*;
 // Test modules
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "tests/ultimate_safety_comprehensive.rs"]
+mod ultimate_safety_comprehensive_tests;
+
+#[cfg(test)]
+#[path = "tests/ultimate_performance_comprehensive.rs"]
+mod ultimate_performance_comprehensive_tests;
+#[cfg(test)]
+mod ultimate_performance_tests;
+#[cfg(test)]
+mod ultimate_safety_tests;

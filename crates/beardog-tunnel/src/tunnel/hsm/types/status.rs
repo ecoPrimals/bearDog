@@ -287,22 +287,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_performance_metrics_default() {
+    fn test_performance_metrics_default() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = PerformanceMetrics::default();
         assert_eq!(metrics.operations_per_second, 0.0);
         assert_eq!(metrics.success_rate, 100.0);
         assert_eq!(metrics.uptime_seconds, 0);
+        Ok(())
     }
 
     #[test]
-    fn test_status_level_ordering() {
+    fn test_status_level_ordering() -> Result<(), Box<dyn std::error::Error>> {
         assert!(StatusLevel::Normal < StatusLevel::Warning);
         assert!(StatusLevel::Warning < StatusLevel::Error);
         assert!(StatusLevel::Error < StatusLevel::Critical);
+        Ok(())
     }
 
     #[test]
-    fn test_connection_status_variants() {
+    fn test_connection_status_variants() -> Result<(), Box<dyn std::error::Error>> {
         let connected = ConnectionStatus::Connected;
         let disconnected = ConnectionStatus::Disconnected;
         let error = ConnectionStatus::Error("timeout".to_string());
@@ -314,29 +316,32 @@ mod tests {
             ConnectionStatus::Error(msg) => assert_eq!(msg, "timeout"),
             _ => panic!("Expected Error variant"),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_comprehensive_status_creation() {
+    fn test_comprehensive_status_creation() -> Result<(), Box<dyn std::error::Error>> {
         let status = ComprehensiveHsmStatus::new();
 
         assert!(status.is_healthy());
         assert_eq!(status.get_status_level(), StatusLevel::Normal);
         assert!(status.operational.is_online);
         assert!(status.security.is_secure);
+        Ok(())
     }
 
     #[test]
-    fn test_comprehensive_status_unhealthy() {
+    fn test_comprehensive_status_unhealthy() -> Result<(), Box<dyn std::error::Error>> {
         let mut status = ComprehensiveHsmStatus::new();
         status.health.is_healthy = false;
 
         assert!(!status.is_healthy());
         assert_eq!(status.get_status_level(), StatusLevel::Critical);
+        Ok(())
     }
 
     #[test]
-    fn test_status_entry_creation() {
+    fn test_status_entry_creation() -> Result<(), Box<dyn std::error::Error>> {
         let entry = StatusEntry {
             category: StatusCategory::Performance,
             level: StatusLevel::Warning,
@@ -347,10 +352,11 @@ mod tests {
 
         assert_eq!(entry.category, StatusCategory::Performance);
         assert_eq!(entry.level, StatusLevel::Warning);
+        Ok(())
     }
 
     #[test]
-    fn test_add_status_entry() {
+    fn test_add_status_entry() -> Result<(), Box<dyn std::error::Error>> {
         let mut status = ComprehensiveHsmStatus::new();
 
         let entry = StatusEntry {
@@ -363,10 +369,11 @@ mod tests {
 
         status.add_status_entry(entry);
         assert_eq!(status.status_entries.len(), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_resource_metrics() {
+    fn test_resource_metrics() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = ResourceMetrics {
             cpu_percent: 45.5,
             memory_bytes: 1024 * 1024 * 512, // 512 MB
@@ -376,10 +383,11 @@ mod tests {
 
         assert_eq!(metrics.cpu_percent, 45.5);
         assert_eq!(metrics.memory_bytes, 536_870_912);
+        Ok(())
     }
 
     #[test]
-    fn test_error_statistics() {
+    fn test_error_statistics() -> Result<(), Box<dyn std::error::Error>> {
         let mut errors = ErrorStatistics {
             total_errors: 100,
             errors_last_hour: 5,
@@ -392,10 +400,11 @@ mod tests {
         assert_eq!(errors.total_errors, 100);
         assert_eq!(errors.error_rate, 0.01);
         assert!(errors.last_error.is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_availability_metrics() {
+    fn test_availability_metrics() -> Result<(), Box<dyn std::error::Error>> {
         let availability = AvailabilityMetrics {
             uptime_percent: 99.9,
             uptime_seconds: 86400, // 1 day
@@ -405,5 +414,6 @@ mod tests {
 
         assert_eq!(availability.uptime_percent, 99.9);
         assert_eq!(availability.uptime_seconds, 86400);
+        Ok(())
     }
 }

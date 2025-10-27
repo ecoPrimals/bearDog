@@ -115,5 +115,5 @@ fn test_genetics_config_present() {
     let config = UnifiedBearDogConfig::default();
     // Genetics config should be accessible
     let _ = &config.genetics;
-    assert!(true); // If we get here, config is accessible
+    // No panic means all config fields are accessible
 }

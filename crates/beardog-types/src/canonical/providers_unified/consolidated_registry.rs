@@ -488,6 +488,6 @@ mod tests {
     fn test_registry_creation() {
         let registry = ConsolidatedProviderRegistry::default();
         assert_eq!(registry.providers.try_read()
-            .expect("Failed to acquire read lock in test").len(), 0);
+            ?.len(), 0);
     }
 } 

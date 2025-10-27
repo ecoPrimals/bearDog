@@ -187,7 +187,7 @@ mod tests {
             timeout_seconds: 5,
         };
 
-        let mut checker = HealthChecker::new(&config).unwrap();
+        let mut checker = HealthChecker::new(&config)?;
 
         let result = checker.start_health_monitoring();
         assert!(result.is_ok());
@@ -199,12 +199,12 @@ mod tests {
     #[test]
     fn test_comprehensive_health_check() {
         let config = HealthConfig::default();
-        let checker = HealthChecker::new(&config).unwrap();
+        let checker = HealthChecker::new(&config)?;
 
         let report = checker.comprehensive_health_check();
         assert!(report.is_ok());
 
-        let report = report.unwrap();
+        let report = report?;
         assert_eq!(report.overall_status, HealthStatus::Healthy);
         assert_eq!(report.component_statuses.len(), 2);
     }

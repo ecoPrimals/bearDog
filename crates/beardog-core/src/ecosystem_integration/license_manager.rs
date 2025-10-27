@@ -121,8 +121,8 @@ mod tests {
             restrictions: HashMap::new(),
         };
 
-        let json = serde_json::to_string(&license).unwrap();
-        let deserialized: LicenseInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&license)?;
+        let deserialized: LicenseInfo = serde_json::from_str(&json)?;
         assert_eq!(license.license_id, deserialized.license_id);
     }
 

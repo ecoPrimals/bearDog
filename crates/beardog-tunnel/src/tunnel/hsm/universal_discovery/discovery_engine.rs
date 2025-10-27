@@ -492,21 +492,24 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_discovery_engine_creation() {
+    async fn test_discovery_engine_creation() -> Result<(), Box<dyn std::error::Error>> {
         let engine = DiscoveryEngine::new().await;
         assert!(engine.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_pkcs11_discoverer() {
+    fn test_pkcs11_discoverer() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = Pkcs11Discoverer::new();
         assert!(discoverer.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_software_hsm_discovery() {
-        let discoverer = SoftwareHsmDiscoverer::new().unwrap();
+    fn test_software_hsm_discovery() -> Result<(), Box<dyn std::error::Error>> {
+        let discoverer = SoftwareHsmDiscoverer::new()?;
         let result = discoverer.discover();
         assert!(result.is_ok());
+        Ok(())
     }
 }

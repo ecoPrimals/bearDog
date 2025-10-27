@@ -251,12 +251,12 @@ mod tests {
             .endpoint("http://localhost:8080")
             .build();
         assert!(fast.is_ok());
-        assert!(fast.unwrap().is_gpu_enabled());
+        assert!(fast?.is_gpu_enabled());
 
         let cpu = InferenceConfigBuilder::cpu_only()
             .endpoint("http://localhost:8080")
             .build();
         assert!(cpu.is_ok());
-        assert!(!cpu.unwrap().is_gpu_enabled());
+        assert!(!cpu?.is_gpu_enabled());
     }
 }

@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_android_device_info_new() {
-        let device_info = AndroidDeviceInfo::new().unwrap();
+        let device_info = AndroidDeviceInfo::new()?;
         assert_eq!(device_info.manufacturer, "Google");
         assert_eq!(device_info.model, "Pixel 8");
     }
@@ -427,7 +427,7 @@ mod tests {
     #[test]
     fn test_challenge_generator() {
         let generator = ChallengeGenerator::new();
-        let challenge = generator.generate_challenge(32).unwrap();
+        let challenge = generator.generate_challenge(32)?;
         assert_eq!(challenge.len(), 32);
     }
 

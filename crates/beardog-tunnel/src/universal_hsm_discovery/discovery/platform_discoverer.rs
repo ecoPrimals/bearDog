@@ -384,26 +384,26 @@ mod tests {
         let discoverer = PlatformDiscoverer::new();
         assert!(discoverer.is_ok());
         
-        let disc = discoverer.unwrap();
+        let disc = discoverer?;
         assert!(disc.enable_tpm_probe);
         assert!(disc.enable_tee_probe);
     }
 
     #[tokio::test]
     async fn test_platform_discovery() {
-        let discoverer = PlatformDiscoverer::new().unwrap();
+        let discoverer = PlatformDiscoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
         
         // Discovery should succeed even if no HSMs are found
-        let hsms = result.unwrap();
+        let hsms = result?;
         // The number of HSMs found depends on the platform
         assert!(hsms.len() <= 4); // At most TPM, TEE, and platform-specific
     }
 
     #[tokio::test]
     async fn test_tpm_capabilities() {
-        let discoverer = PlatformDiscoverer::new().unwrap();
+        let discoverer = PlatformDiscoverer::new()?;
         let caps = discoverer.create_tpm_capabilities();
         
         // Verify TPM capabilities
@@ -416,7 +416,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_tee_capabilities() {
-        let discoverer = PlatformDiscoverer::new().unwrap();
+        let discoverer = PlatformDiscoverer::new()?;
         let caps = discoverer.create_tee_capabilities();
         
         // Verify TEE capabilities
@@ -430,28 +430,28 @@ mod tests {
 
     #[tokio::test]
     async fn test_tpm_discovery_with_disabled_probe() {
-        let mut discoverer = PlatformDiscoverer::new().unwrap();
+        let mut discoverer = PlatformDiscoverer::new()?;
         discoverer.enable_tpm_probe = false;
         
-        let hsms = discoverer.discover().await.unwrap();
+        let hsms = discoverer.discover().await?;
         let tpm_count = hsms.iter().filter(|h| h.name.contains("TPM")).count();
         assert_eq!(tpm_count, 0, "Should not discover TPM when probe disabled");
     }
 
     #[tokio::test]
     async fn test_tee_discovery_with_disabled_probe() {
-        let mut discoverer = PlatformDiscoverer::new().unwrap();
+        let mut discoverer = PlatformDiscoverer::new()?;
         discoverer.enable_tee_probe = false;
         
-        let hsms = discoverer.discover().await.unwrap();
+        let hsms = discoverer.discover().await?;
         let tee_count = hsms.iter().filter(|h| h.name.contains("TEE")).count();
         assert_eq!(tee_count, 0, "Should not discover TEE when probe disabled");
     }
 
     #[tokio::test]
     async fn test_all_hsms_have_valid_timestamps() {
-        let discoverer = PlatformDiscoverer::new().unwrap();
-        let hsms = discoverer.discover().await.unwrap();
+        let discoverer = PlatformDiscoverer::new()?;
+        let hsms = discoverer.discover().await?;
         
         for hsm in &hsms {
             assert!(hsm.discovered_at <= Utc::now());
@@ -463,7 +463,7 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_discoveries() {
         use std::sync::Arc;
-        let discoverer = Arc::new(PlatformDiscoverer::new().unwrap());
+        let discoverer = Arc::new(PlatformDiscoverer::new()?);
         
         let mut handles = vec![];
         for _ in 0..3 {
@@ -474,17 +474,17 @@ mod tests {
         }
         
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
     }
 
     #[tokio::test]
     async fn test_discovery_deterministic() {
-        let discoverer = PlatformDiscoverer::new().unwrap();
+        let discoverer = PlatformDiscoverer::new()?;
         
-        let hsms1 = discoverer.discover().await.unwrap();
-        let hsms2 = discoverer.discover().await.unwrap();
+        let hsms1 = discoverer.discover().await?;
+        let hsms2 = discoverer.discover().await?;
         
         assert_eq!(hsms1.len(), hsms2.len(), "Discovery should be deterministic");
     }
@@ -498,7 +498,7 @@ mod tests {
 
     #[test]
     fn test_clone_implementation() {
-        let discoverer1 = PlatformDiscoverer::new().unwrap();
+        let discoverer1 = PlatformDiscoverer::new()?;
         let discoverer2 = discoverer1.clone();
         
         assert_eq!(discoverer1.enable_tpm_probe, discoverer2.enable_tpm_probe);

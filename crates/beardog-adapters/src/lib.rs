@@ -29,6 +29,12 @@
 //! This crate implements sovereign computing principles - no hardcoded
 //! provider dependencies, all services discovered dynamically.
 
+// October 26, 2025: Week 2 Day 4 - Integration Tests
+#[cfg(test)]
+mod adapter_integration_tests;
+#[cfg(test)]
+mod adapter_resilience_tests;
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -309,7 +315,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_capability_execution() {
+    async fn test_capability_execution() -> Result<(), Box<dyn std::error::Error>> {
         let mut adapter = UniversalAdapter::new(AdapterConfig::default());
         adapter.register_capability("test".to_string(), "http://test.com".to_string());
 
@@ -319,10 +325,8 @@ mod tests {
             parameters: HashMap::new(),
         };
 
-        let response = adapter
-            .execute_capability(request)
-            .await
-            .expect("Adapter capability execution should succeed in test");
+        let response = adapter.execute_capability(request).await?;
         assert!(response.success);
+        Ok(())
     }
 }

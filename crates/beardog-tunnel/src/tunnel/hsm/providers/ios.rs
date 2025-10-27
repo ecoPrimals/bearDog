@@ -241,20 +241,22 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_ios_provider_creation() {
+    async fn test_ios_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = IosUniversalProvider::new().await;
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_capabilities_detection() {
-        let provider = IosUniversalProvider::new().await.unwrap();
+    async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = IosUniversalProvider::new().await?;
         let caps = provider.capabilities();
         assert!(caps.is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_security_levels() {
+    fn test_security_levels() -> Result<(), Box<dyn std::error::Error>> {
         let provider_with_enclave = IosUniversalProvider {
             capabilities: None,
             secure_enclave_available: true,
@@ -270,22 +272,25 @@ mod tests {
             device_metadata: HashMap::new(),
         };
         assert_eq!(provider_without.get_security_level(), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_secure_enclave_level() {
+    fn test_secure_enclave_level() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(SecureEnclaveLevel::Full, SecureEnclaveLevel::Full);
         assert_ne!(SecureEnclaveLevel::Full, SecureEnclaveLevel::Basic);
+        Ok(())
     }
 
     #[test]
-    fn test_biometric_type() {
+    fn test_biometric_type() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(BiometricType::FaceId, BiometricType::FaceId);
         assert_ne!(BiometricType::FaceId, BiometricType::TouchId);
+        Ok(())
     }
 
     #[test]
-    fn test_vendor_info() {
+    fn test_vendor_info() -> Result<(), Box<dyn std::error::Error>> {
         let mut provider = IosUniversalProvider {
             capabilities: None,
             secure_enclave_available: true,
@@ -300,10 +305,11 @@ mod tests {
         let info = provider.get_vendor_info();
         assert_eq!(info.name, "Apple");
         assert_eq!(info.model, "iPhone 15 Pro");
+        Ok(())
     }
 
     #[test]
-    fn test_has_capabilities() {
+    fn test_has_capabilities() -> Result<(), Box<dyn std::error::Error>> {
         let provider_with_all = IosUniversalProvider {
             capabilities: None,
             secure_enclave_available: true,
@@ -323,11 +329,12 @@ mod tests {
 
         assert!(!provider_without.has_secure_enclave());
         assert!(!provider_without.has_biometric_auth());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ios_capabilities() {
-        let provider = IosUniversalProvider::new().await.unwrap();
+    async fn test_ios_capabilities() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = IosUniversalProvider::new().await?;
 
         if let Some(caps) = provider.capabilities() {
             // On actual iOS devices, we'd have hardware backing
@@ -347,10 +354,11 @@ mod tests {
                 let _ = caps.secure_enclave_level;
             }
         }
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_chip_detection() {
+    async fn test_chip_detection() -> Result<(), Box<dyn std::error::Error>> {
         let mut provider = IosUniversalProvider {
             capabilities: None,
             secure_enclave_available: false,
@@ -365,5 +373,6 @@ mod tests {
             provider.device_metadata.get("chip_type"),
             Some(&"M-series".to_string())
         );
+        Ok(())
     }
 }

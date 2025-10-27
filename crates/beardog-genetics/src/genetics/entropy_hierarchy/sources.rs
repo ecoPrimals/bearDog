@@ -207,14 +207,15 @@ mod tests {
     }
 
     #[test]
-    fn test_xor_mixing() {
+    fn test_xor_mixing() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();
         let engine = EntropyMixingEngine::new(&config);
 
         let sources = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8]];
 
-        let result = engine.xor_mix(&sources).unwrap();
+        let result = engine.xor_mix(&sources)?;
         assert_eq!(result, vec![4, 4, 4, 12]); // 1^5, 2^6, 3^7, 4^8
+        Ok(())
     }
 
     #[test]

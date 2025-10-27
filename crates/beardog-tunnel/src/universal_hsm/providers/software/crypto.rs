@@ -56,8 +56,8 @@ mod tests {
         let provider = SoftwareCryptoProvider::new();
         
         // Generate random bytes
-        let random1 = provider.generate_random(32).unwrap();
-        let random2 = provider.generate_random(32).unwrap();
+        let random1 = provider.generate_random(32)?;
+        let random2 = provider.generate_random(32)?;
         
         // Should be correct length
         assert_eq!(random1.len(), 32);
@@ -76,31 +76,31 @@ mod tests {
         
         // Test known vector
         let data = b"hello world";
-        let hash = provider.hash_sha256(data).unwrap();
+        let hash = provider.hash_sha256(data)?;
         
         // SHA-256 should produce 32 bytes
         assert_eq!(hash.len(), 32);
         
         // Same input should produce same hash
-        let hash2 = provider.hash_sha256(data).unwrap();
+        let hash2 = provider.hash_sha256(data)?;
         assert_eq!(hash, hash2);
         
         // Different input should produce different hash
-        let different_hash = provider.hash_sha256(b"goodbye world").unwrap();
+        let different_hash = provider.hash_sha256(b"goodbye world")?;
         assert_ne!(hash, different_hash);
     }
     
     #[test]
     fn test_empty_random_generation() {
         let provider = SoftwareCryptoProvider::new();
-        let empty = provider.generate_random(0).unwrap();
+        let empty = provider.generate_random(0)?;
         assert_eq!(empty.len(), 0);
     }
     
     #[test]
     fn test_empty_data_hash() {
         let provider = SoftwareCryptoProvider::new();
-        let hash = provider.hash_sha256(b"").unwrap();
+        let hash = provider.hash_sha256(b"")?;
         assert_eq!(hash.len(), 32);
         
         // SHA-256 of empty string is a known value

@@ -252,21 +252,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_config_default() {
+    fn test_config_default() -> Result<(), Box<dyn std::error::Error>> {
         let config = MobileEphemeralConfig::default();
         assert_eq!(config.max_lifetime_minutes, 60);
         assert!(config.prefer_hardware_backing);
+        Ok(())
     }
 
     #[test]
-    fn test_manager_creation() {
+    fn test_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = MobileEphemeralConfig::default();
         let manager = MobileEphemeralKeyManager::new(config);
         assert!(manager.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_entropy_data_creation() {
+    fn test_entropy_data_creation() -> Result<(), Box<dyn std::error::Error>> {
         let mut sensor_data = HashMap::new();
         sensor_data.insert("test".to_string(), 1.0);
 
@@ -279,22 +281,25 @@ mod tests {
         };
 
         assert_eq!(entropy.user_id, "test_user");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_entropy_collection() {
+    async fn test_entropy_collection() -> Result<(), Box<dyn std::error::Error>> {
         let result = collect_mobile_entropy("test_user").await;
         assert!(result.is_ok());
 
-        let entropy = result.unwrap();
+        let entropy = result?;
         assert_eq!(entropy.user_id, "test_user");
         assert!(!entropy.sensor_data.is_empty());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_lifecycle_demo() {
+    async fn test_lifecycle_demo() -> Result<(), Box<dyn std::error::Error>> {
         let result = demo_ephemeral_key_lifecycle().await;
         // May fail without proper HSM setup, but should not panic
         let _ = result;
+        Ok(())
     }
 }

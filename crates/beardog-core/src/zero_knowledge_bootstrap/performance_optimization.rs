@@ -569,7 +569,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_performance_optimizer_creation() {
-        let optimizer = PerformanceOptimizer::new().unwrap();
+        let optimizer = PerformanceOptimizer::new()?;
 
         assert_eq!(optimizer.config.target_discovery_time_ms, 100);
         assert!(optimizer.config.enable_aggressive_caching);
@@ -578,7 +578,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_performance_metrics() {
-        let mut optimizer = PerformanceOptimizer::new().unwrap();
+        let mut optimizer = PerformanceOptimizer::new()?;
 
         // Simulate some discovery operations
         optimizer.update_discovery_metrics(50);
@@ -593,7 +593,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_performance_grading() {
-        let mut optimizer = PerformanceOptimizer::new().unwrap();
+        let mut optimizer = PerformanceOptimizer::new()?;
 
         // Test excellent performance
         optimizer.update_discovery_metrics(25); // 25ms < 50% of 100ms target
@@ -613,7 +613,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_effectiveness() {
-        let mut optimizer = PerformanceOptimizer::new().unwrap();
+        let mut optimizer = PerformanceOptimizer::new()?;
 
         // Simulate cache hits and misses
         optimizer.metrics.cache_hits = 8;

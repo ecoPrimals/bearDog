@@ -78,7 +78,7 @@ impl MockConnection {
 // ============================================================================
 
 #[test]
-fn test_connection_establish_and_disconnect() {
+fn test_connection_establish_and_disconnect() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     // Initial state
@@ -94,10 +94,11 @@ fn test_connection_establish_and_disconnect() {
     conn.disconnect().expect("Disconnection should succeed");
     assert_eq!(conn.state, ConnectionState::Disconnected);
     assert!(!conn.is_connected());
+    Ok(())
 }
 
 #[test]
-fn test_connection_state_transitions() {
+fn test_connection_state_transitions() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     // Valid state progression
@@ -108,10 +109,11 @@ fn test_connection_state_transitions() {
 
     conn.disconnect().expect("Should disconnect");
     assert_eq!(conn.state, ConnectionState::Disconnected);
+    Ok(())
 }
 
 #[test]
-fn test_connection_authentication_flow() {
+fn test_connection_authentication_flow() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     // Cannot authenticate when disconnected
@@ -123,10 +125,11 @@ fn test_connection_authentication_flow() {
     // Now authentication should work
     assert!(conn.authenticate().is_ok());
     assert!(conn.is_authenticated);
+    Ok(())
 }
 
 #[test]
-fn test_connection_resource_management() {
+fn test_connection_resource_management() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     // No resources initially
@@ -139,10 +142,11 @@ fn test_connection_resource_management() {
     // Disconnect releases resources
     conn.disconnect().expect("Should disconnect");
     assert_eq!(conn.resource_count, 0);
+    Ok(())
 }
 
 #[test]
-fn test_connection_prevents_double_connect() {
+fn test_connection_prevents_double_connect() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     conn.connect().expect("First connection should succeed");
@@ -150,10 +154,11 @@ fn test_connection_prevents_double_connect() {
     // Second connection should fail
     let result = conn.connect();
     assert!(result.is_err());
+    Ok(())
 }
 
 #[test]
-fn test_connection_prevents_double_disconnect() {
+fn test_connection_prevents_double_disconnect() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     conn.connect().expect("Should connect");
@@ -162,10 +167,11 @@ fn test_connection_prevents_double_disconnect() {
     // Second disconnect should fail
     let result = conn.disconnect();
     assert!(result.is_err());
+    Ok(())
 }
 
 #[test]
-fn test_connection_cleanup_on_disconnect() {
+fn test_connection_cleanup_on_disconnect() -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     conn.connect().expect("Should connect");
@@ -177,6 +183,7 @@ fn test_connection_cleanup_on_disconnect() {
     // Disconnect cleans up authentication
     conn.disconnect().expect("Should disconnect");
     assert!(!conn.is_authenticated);
+    Ok(())
 }
 
 // ============================================================================

@@ -243,7 +243,7 @@ mod tests {
         let result = detect_strongbox_implementation();
         assert!(result.is_ok());
 
-        let impl_type = result.unwrap();
+        let impl_type = result?;
         match impl_type {
             StrongBoxImplementation::Generic { vendor, .. } => {
                 assert_eq!(vendor, "non-android");
@@ -274,14 +274,14 @@ mod tests {
     fn test_device_model_query() {
         let result = get_device_model();
         assert!(result.is_ok());
-        assert!(!result.unwrap().is_empty());
+        assert!(!result?.is_empty());
     }
 
     #[test]
     fn test_device_manufacturer_query() {
         let result = get_device_manufacturer();
         assert!(result.is_ok());
-        assert!(!result.unwrap().is_empty());
+        assert!(!result?.is_empty());
     }
 
     #[test]
@@ -289,7 +289,7 @@ mod tests {
         let result = detect_device_info();
         assert!(result.is_ok());
 
-        let info = result.unwrap();
+        let info = result?;
         assert!(!info.manufacturer.is_empty());
         assert!(!info.model.is_empty());
     }
@@ -309,7 +309,7 @@ mod tests {
         let result = detect_google_strongbox(&device_info);
         assert!(result.is_ok());
 
-        match result.unwrap() {
+        match result? {
             StrongBoxImplementation::TitanM { .. } => {
                 // Expected for Pixel with Titan M
             }
@@ -332,7 +332,7 @@ mod tests {
         let result = detect_qualcomm_strongbox(&device_info);
         assert!(result.is_ok());
 
-        match result.unwrap() {
+        match result? {
             StrongBoxImplementation::QualcommSpu {
                 attestation_support,
             } => {

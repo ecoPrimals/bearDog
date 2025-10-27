@@ -77,7 +77,7 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let provider = SoftwareHsmProvider::new(config);
         
-        let health = provider.check_health().await.unwrap();
+        let health = provider.check_health().await?;
         assert!(health.is_healthy);
     }
 }

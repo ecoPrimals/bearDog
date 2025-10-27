@@ -148,28 +148,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_health_status_healthy() {
+    fn test_health_status_healthy() -> Result<(), Box<dyn std::error::Error>> {
         let status = HsmHealthStatus::healthy();
         assert!(status.is_healthy);
         assert!(status.error_message.is_none());
+        Ok(())
     }
 
     #[test]
-    fn test_health_status_unhealthy() {
+    fn test_health_status_unhealthy() -> Result<(), Box<dyn std::error::Error>> {
         let status = HsmHealthStatus::unhealthy("Test error".to_string());
         assert!(!status.is_healthy);
         assert_eq!(status.error_message, Some("Test error".to_string()));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_health_monitor_creation() {
+    async fn test_health_monitor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HealthMonitor::new(Duration::from_secs(30));
         let statuses = monitor.get_all_health_statuses().await;
         assert!(statuses.is_empty());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_update_health_status() {
+    async fn test_update_health_status() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HealthMonitor::new(Duration::from_secs(30));
 
         monitor
@@ -178,11 +181,12 @@ mod tests {
 
         let status = monitor.get_health_status("test-provider").await;
         assert!(status.is_some());
-        assert!(status.unwrap().is_healthy);
+        assert!(status.ok_or("status not found")?.is_healthy);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_is_healthy() {
+    async fn test_is_healthy() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HealthMonitor::new(Duration::from_secs(30));
 
         monitor
@@ -191,10 +195,11 @@ mod tests {
 
         assert!(monitor.is_healthy("provider-1").await);
         assert!(!monitor.is_healthy("nonexistent").await);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_health_status_transition() {
+    async fn test_health_status_transition() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HealthMonitor::new(Duration::from_secs(30));
 
         // Start healthy
@@ -214,12 +219,16 @@ mod tests {
 
         assert!(!monitor.is_healthy("provider-1").await);
 
-        let status = monitor.get_health_status("provider-1").await.unwrap();
+        let status = monitor
+            .get_health_status("provider-1")
+            .await
+            .ok_or("status not found")?;
         assert_eq!(status.error_message, Some("Connection lost".to_string()));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_get_all_health_statuses() {
+    async fn test_get_all_health_statuses() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HealthMonitor::new(Duration::from_secs(30));
 
         monitor
@@ -234,10 +243,11 @@ mod tests {
 
         let all_statuses = monitor.get_all_health_statuses().await;
         assert_eq!(all_statuses.len(), 2);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_start_stop_monitoring() {
+    async fn test_start_stop_monitoring() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HealthMonitor::new(Duration::from_millis(100));
 
         let result = monitor.start_monitoring().await;
@@ -250,5 +260,6 @@ mod tests {
 
         // Wait for monitoring to actually stop
         tokio::time::sleep(Duration::from_millis(150)).await;
+        Ok(())
     }
 }

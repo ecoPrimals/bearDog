@@ -275,7 +275,7 @@ mod tests {
 
         let buffer = pool.get_pool("test-pool");
         assert!(buffer.is_some());
-        assert_eq!(buffer.unwrap().len(), 1024);
+        assert_eq!(buffer?.len(), 1024);
 
         assert!(pool.deallocate("test-pool"));
         assert_eq!(pool.pool_count(), 0);
@@ -295,9 +295,9 @@ mod tests {
 
         assert_eq!(tracker.lineage_count(), 4);
 
-        assert_eq!(tracker.get_lineage("genesis").unwrap().generation, 0);
-        assert_eq!(tracker.get_lineage("child1").unwrap().generation, 1);
-        assert_eq!(tracker.get_lineage("grandchild").unwrap().generation, 2);
+        assert_eq!(tracker.get_lineage("genesis")?.generation, 0);
+        assert_eq!(tracker.get_lineage("child1")?.generation, 1);
+        assert_eq!(tracker.get_lineage("grandchild")?.generation, 2);
 
         let descendants = tracker.get_descendants("genesis");
         assert!(descendants.contains(&"child1".to_string()));

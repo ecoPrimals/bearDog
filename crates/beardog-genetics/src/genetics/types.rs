@@ -174,7 +174,7 @@ mod tests {
 
         let retrieved = store.get("test-genetics");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().id, "test-genetics");
+        assert_eq!(retrieved?.id, "test-genetics");
 
         let removed = store.remove("test-genetics");
         assert!(removed.is_some());

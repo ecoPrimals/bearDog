@@ -59,7 +59,7 @@ mod unified_config_comprehensive_tests {
     #[test]
     fn test_config_deserialization() {
         let config = UnifiedBearDogConfig::development();
-        let json = serde_json::to_string(&config).unwrap();
+        let json = serde_json::to_string(&config)?;
         let deserialized: Result<UnifiedBearDogConfig, _> = serde_json::from_str(&json);
         assert!(deserialized.is_ok());
     }
@@ -67,8 +67,8 @@ mod unified_config_comprehensive_tests {
     #[test]
     fn test_config_round_trip() {
         let original = UnifiedBearDogConfig::development();
-        let json = serde_json::to_string(&original).unwrap();
-        let restored: UnifiedBearDogConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&original)?;
+        let restored: UnifiedBearDogConfig = serde_json::from_str(&json)?;
         assert_eq!(original.app.environment, restored.app.environment);
     }
 
@@ -157,7 +157,7 @@ mod unified_config_comprehensive_tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join()?;
         }
     }
 }
@@ -372,7 +372,7 @@ mod edge_cases {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join()?;
         }
     }
 }

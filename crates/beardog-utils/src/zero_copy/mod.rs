@@ -19,6 +19,9 @@ use std::sync::{Arc, RwLock, Weak};
 use std::time::{Duration, Instant};
 use tracing::{debug, trace};
 
+#[cfg(test)]
+mod tests_comprehensive;
+
 /// Simple capability validation
 /// Checks if valid service capability
 #[must_use]
@@ -264,5 +267,361 @@ impl<T> ZeroCopyBuilder<T> {
     /// Checks if optimized
     pub const fn is_optimized(&self) -> bool {
         self.optimized
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_zero_copy_manager_creation() {
+        let manager = ZeroCopyManager::new();
+        let stats = manager.get_stats();
+
+        assert_eq!(
+            stats
+                .string_cache_hits
+                .load(std::sync::atomic::Ordering::Relaxed),
+            0
+        );
+        assert_eq!(
+            stats
+                .string_cache_misses
+                .load(std::sync::atomic::Ordering::Relaxed),
+            0
+        );
+    }
+
+    #[test]
+    fn test_zero_copy_manager_default() {
+        let manager = ZeroCopyManager::default();
+        let stats = manager.get_stats();
+
+        assert_eq!(
+            stats
+                .string_cache_hits
+                .load(std::sync::atomic::Ordering::Relaxed),
+            0
+        );
+    }
+
+    #[test]
+    fn test_shared_string_cache_miss() {
+        let manager = ZeroCopyManager::new();
+        let str1 = manager.get_shared_string("test_string");
+
+        assert_eq!(str1.as_ref(), "test_string");
+
+        let stats = manager.get_stats();
+        assert_eq!(
+            stats
+                .string_cache_misses
+                .load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+    }
+
+    #[test]
+    fn test_shared_string_cache_hit() {
+        let manager = ZeroCopyManager::new();
+
+        // First call - cache miss
+        let str1 = manager.get_shared_string("test_string");
+        // Second call - cache hit
+        let str2 = manager.get_shared_string("test_string");
+
+        assert_eq!(str1.as_ref(), str2.as_ref());
+        assert!(Arc::ptr_eq(&str1, &str2));
+
+        let stats = manager.get_stats();
+        assert_eq!(
+            stats
+                .string_cache_hits
+                .load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+        assert_eq!(
+            stats
+                .string_cache_misses
+                .load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+    }
+
+    #[test]
+    fn test_multiple_different_strings() {
+        let manager = ZeroCopyManager::new();
+
+        let str1 = manager.get_shared_string("string1");
+        let str2 = manager.get_shared_string("string2");
+        let str3 = manager.get_shared_string("string3");
+
+        assert_eq!(str1.as_ref(), "string1");
+        assert_eq!(str2.as_ref(), "string2");
+        assert_eq!(str3.as_ref(), "string3");
+
+        let stats = manager.get_stats();
+        assert_eq!(
+            stats
+                .string_cache_misses
+                .load(std::sync::atomic::Ordering::Relaxed),
+            3
+        );
+    }
+
+    #[test]
+    fn test_shared_config_cache() {
+        let manager = ZeroCopyManager::new();
+
+        #[derive(Debug, Clone, PartialEq)]
+        struct TestConfig {
+            value: u32,
+        }
+
+        // First call - cache miss
+        let config1 = manager.get_shared_config("test_config", || TestConfig { value: 42 });
+
+        // Second call - cache hit
+        let config2 =
+            manager.get_shared_config::<TestConfig, _>("test_config", || TestConfig { value: 99 });
+
+        assert_eq!(config1.value, 42);
+        assert_eq!(config2.value, 42); // Should get cached value, not 99
+        assert!(Arc::ptr_eq(&config1, &config2));
+
+        let stats = manager.get_stats();
+        assert_eq!(
+            stats
+                .config_cache_hits
+                .load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+        assert_eq!(
+            stats
+                .config_cache_misses
+                .load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+    }
+
+    #[test]
+    fn test_cleanup_expired() {
+        let manager = ZeroCopyManager::new();
+
+        // Add some strings
+        {
+            let _str1 = manager.get_shared_string("temp1");
+            let _str2 = manager.get_shared_string("temp2");
+        }
+        // Strings are now dropped, should be cleaned up
+
+        manager.cleanup_expired();
+
+        // Should run without errors
+    }
+
+    #[test]
+    fn test_cleanup_rate_limiting() {
+        let manager = ZeroCopyManager::new();
+
+        // First cleanup
+        manager.cleanup_expired();
+
+        // Immediate second cleanup should be rate-limited
+        manager.cleanup_expired();
+
+        // Should complete successfully
+    }
+
+    #[test]
+    fn test_global_zero_copy_manager() {
+        let manager1 = global_zero_copy_manager();
+        let manager2 = global_zero_copy_manager();
+
+        // Should be the same instance
+        assert!(std::ptr::eq(manager1, manager2));
+    }
+
+    #[test]
+    fn test_global_shared_string() {
+        let str1 = shared_string("global_test");
+        let str2 = shared_string("global_test");
+
+        assert!(Arc::ptr_eq(&str1, &str2));
+    }
+
+    #[test]
+    fn test_global_shared_config() {
+        #[derive(Debug, Clone)]
+        struct Config {
+            val: i32,
+        }
+
+        let cfg1 = shared_config("test_cfg", || Config { val: 123 });
+        let cfg2 = shared_config::<Config, _>("test_cfg", || Config { val: 456 });
+
+        assert_eq!(cfg1.val, 123);
+        assert_eq!(cfg2.val, 123);
+    }
+
+    #[test]
+    fn test_is_valid_service_capability() {
+        assert!(is_valid_service_capability("communication_mesh"));
+        assert!(is_valid_service_capability("storage_services"));
+        assert!(is_valid_service_capability("compute_orchestration"));
+        assert!(is_valid_service_capability("ai_intelligence"));
+        assert!(is_valid_service_capability("security_provider"));
+        assert!(is_valid_service_capability("system_integration"));
+        assert!(is_valid_service_capability("hsm"));
+        assert!(is_valid_service_capability("key_management"));
+        assert!(is_valid_service_capability("secure_enclave"));
+
+        assert!(!is_valid_service_capability("invalid_capability"));
+        assert!(!is_valid_service_capability(""));
+    }
+
+    #[test]
+    fn test_get_all_standard_capabilities() {
+        let capabilities = get_all_standard_capabilities();
+
+        assert_eq!(capabilities.len(), 9);
+        assert!(capabilities.contains(&"communication_mesh"));
+        assert!(capabilities.contains(&"hsm"));
+        assert!(capabilities.contains(&"secure_enclave"));
+    }
+
+    #[test]
+    fn test_zero_copy_builder_new() {
+        let builder = ZeroCopyBuilder::new(42);
+
+        assert_eq!(builder.inner, 42);
+        assert!(!builder.is_optimized());
+    }
+
+    #[test]
+    fn test_zero_copy_builder_optimize() {
+        let builder = ZeroCopyBuilder::new(42);
+        let builder = builder.optimize();
+
+        assert!(builder.is_optimized());
+    }
+
+    #[test]
+    fn test_zero_copy_builder_build() {
+        let builder = ZeroCopyBuilder::new(42);
+        let value = builder.build();
+
+        assert_eq!(value, 42);
+    }
+
+    #[test]
+    fn test_zero_copy_builder_chain() {
+        let value = ZeroCopyBuilder::new(100).optimize().build();
+
+        assert_eq!(value, 100);
+    }
+
+    #[test]
+    fn test_builder_with_string() {
+        let builder = ZeroCopyBuilder::new("test".to_string());
+        let result = builder.optimize().build();
+
+        assert_eq!(result, "test");
+    }
+
+    #[test]
+    fn test_concurrent_string_caching() {
+        use std::sync::Arc;
+        use std::thread;
+
+        let manager = Arc::new(ZeroCopyManager::new());
+        let mut handles = vec![];
+
+        for i in 0..4 {
+            let mgr = Arc::clone(&manager);
+            let handle = thread::spawn(move || {
+                for _ in 0..100 {
+                    let _ = mgr.get_shared_string(format!("test_{}", i));
+                }
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let stats = manager.get_stats();
+        // Verify that concurrent operations completed successfully
+        // Each thread called get_shared_string 100 times with the same string
+        // So we should have hits (99 per thread) + misses (1 per thread) = 400 total operations
+        let total_ops = stats
+            .string_cache_hits
+            .load(std::sync::atomic::Ordering::Relaxed)
+            + stats
+                .string_cache_misses
+                .load(std::sync::atomic::Ordering::Relaxed);
+        assert!(total_ops >= 300); // At least most operations should be tracked
+    }
+
+    #[test]
+    fn test_empty_string() {
+        let manager = ZeroCopyManager::new();
+        let str1 = manager.get_shared_string("");
+
+        assert_eq!(str1.as_ref(), "");
+    }
+
+    #[test]
+    fn test_long_string() {
+        let manager = ZeroCopyManager::new();
+        let long_str = "a".repeat(10000);
+        let str1 = manager.get_shared_string(&long_str);
+        let str2 = manager.get_shared_string(&long_str);
+
+        assert!(Arc::ptr_eq(&str1, &str2));
+    }
+
+    #[test]
+    fn test_stats_structure() {
+        let stats = ZeroCopyStats::default();
+
+        assert_eq!(
+            stats
+                .string_cache_hits
+                .load(std::sync::atomic::Ordering::Relaxed),
+            0
+        );
+        assert_eq!(
+            stats
+                .config_cache_hits
+                .load(std::sync::atomic::Ordering::Relaxed),
+            0
+        );
+    }
+
+    #[test]
+    fn test_multiple_config_types() {
+        let manager = ZeroCopyManager::new();
+
+        #[derive(Debug)]
+        struct ConfigA {
+            a: i32,
+        }
+
+        #[derive(Debug)]
+        struct ConfigB {
+            b: String,
+        }
+
+        let cfg_a = manager.get_shared_config("test", || ConfigA { a: 1 });
+        let cfg_b = manager.get_shared_config("test", || ConfigB {
+            b: "hello".to_string(),
+        });
+
+        // Different types should have different cache entries
+        assert_eq!(cfg_a.a, 1);
+        assert_eq!(cfg_b.b, "hello");
     }
 }

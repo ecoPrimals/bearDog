@@ -103,15 +103,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_device_detection() {
+    fn test_device_detection() -> Result<(), Box<dyn std::error::Error>> {
         let device_info = detect_device_info();
         assert!(device_info.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_security_capabilities_default() {
+    fn test_security_capabilities_default() -> Result<(), Box<dyn std::error::Error>> {
         let caps = SecurityCapabilities::default();
         assert!(!caps.has_strongbox);
         assert!(!caps.has_secure_enclave);
+        Ok(())
     }
 }

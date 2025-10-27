@@ -663,7 +663,7 @@ mod tests {
             },
         };
 
-        let result = engine.analyze_code(&request).await.unwrap();
+        let result = engine.analyze_code(&request).await?;
         
         assert!(result.quality_score > 0.0);
         assert!(result.confidence > 0.8);

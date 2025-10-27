@@ -242,13 +242,14 @@ mod tests {
     }
 
     #[test]
-    fn test_registry_creation() {
+    fn test_registry_creation() -> Result<(), Box<dyn std::error::Error>> {
         let registry = UniversalProviderRegistry::new();
         assert_eq!(registry.stats().total_providers, 0);
+        Ok(())
     }
 
     #[test]
-    fn test_register_provider() {
+    fn test_register_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
         let provider = create_test_provider("software-1", ProviderType::Software, 1);
 
@@ -256,122 +257,109 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(registry.stats().total_providers, 1);
         assert_eq!(registry.stats().healthy_providers, 1);
+        Ok(())
     }
 
     #[test]
-    fn test_unregister_provider() {
+    fn test_unregister_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
         let provider = create_test_provider("software-1", ProviderType::Software, 1);
 
-        registry.register_provider(provider).unwrap();
+        registry.register_provider(provider)?;
         let removed = registry.unregister_provider("software-1");
 
         assert!(removed.is_some());
         assert_eq!(registry.stats().total_providers, 0);
+        Ok(())
     }
 
     #[test]
-    fn test_select_highest_security() {
+    fn test_select_highest_security() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
 
-        registry
-            .register_provider(create_test_provider("software", ProviderType::Software, 1))
-            .unwrap();
-        registry
-            .register_provider(create_test_provider("android", ProviderType::Android, 2))
-            .unwrap();
-        registry
-            .register_provider(create_test_provider("ios", ProviderType::Ios, 3))
-            .unwrap();
+        registry.register_provider(create_test_provider("software", ProviderType::Software, 1))?;
+        registry.register_provider(create_test_provider("android", ProviderType::Android, 2))?;
+        registry.register_provider(create_test_provider("ios", ProviderType::Ios, 3))?;
 
         registry.set_strategy(SelectionStrategy::HighestSecurity);
         let selected = registry.select_provider();
 
         assert!(selected.is_some());
-        assert_eq!(selected.unwrap().id, "ios");
-        assert_eq!(selected.unwrap().security_level, 3);
+        let sel = selected.ok_or("provider not found")?;
+        assert_eq!(sel.id, "ios");
+        assert_eq!(sel.security_level, 3);
+        Ok(())
     }
 
     #[test]
-    fn test_select_best_performance() {
+    fn test_select_best_performance() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
 
-        registry
-            .register_provider(create_test_provider("ios", ProviderType::Ios, 3))
-            .unwrap();
-        registry
-            .register_provider(create_test_provider("software", ProviderType::Software, 1))
-            .unwrap();
+        registry.register_provider(create_test_provider("ios", ProviderType::Ios, 3))?;
+        registry.register_provider(create_test_provider("software", ProviderType::Software, 1))?;
 
         registry.set_strategy(SelectionStrategy::BestPerformance);
         let selected = registry.select_provider();
 
         assert!(selected.is_some());
-        assert_eq!(selected.unwrap().id, "software");
+        assert_eq!(selected.ok_or("provider not found")?.id, "software");
+        Ok(())
     }
 
     #[test]
-    fn test_list_providers() {
+    fn test_list_providers() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
 
-        registry
-            .register_provider(create_test_provider(
-                "provider-1",
-                ProviderType::Software,
-                1,
-            ))
-            .unwrap();
-        registry
-            .register_provider(create_test_provider("provider-2", ProviderType::Android, 2))
-            .unwrap();
+        registry.register_provider(create_test_provider(
+            "provider-1",
+            ProviderType::Software,
+            1,
+        ))?;
+        registry.register_provider(create_test_provider("provider-2", ProviderType::Android, 2))?;
 
         let providers = registry.list_providers();
         assert_eq!(providers.len(), 2);
+        Ok(())
     }
 
     #[test]
-    fn test_get_providers_by_type() {
+    fn test_get_providers_by_type() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
 
-        registry
-            .register_provider(create_test_provider("soft-1", ProviderType::Software, 1))
-            .unwrap();
-        registry
-            .register_provider(create_test_provider("soft-2", ProviderType::Software, 1))
-            .unwrap();
-        registry
-            .register_provider(create_test_provider("android-1", ProviderType::Android, 2))
-            .unwrap();
+        registry.register_provider(create_test_provider("soft-1", ProviderType::Software, 1))?;
+        registry.register_provider(create_test_provider("soft-2", ProviderType::Software, 1))?;
+        registry.register_provider(create_test_provider("android-1", ProviderType::Android, 2))?;
 
         let software_providers = registry.get_providers_by_type(&ProviderType::Software);
         assert_eq!(software_providers.len(), 2);
+        Ok(())
     }
 
     #[test]
-    fn test_get_available_providers() {
+    fn test_get_available_providers() -> Result<(), Box<dyn std::error::Error>> {
         let mut registry = UniversalProviderRegistry::new();
 
         let mut provider1 = create_test_provider("provider-1", ProviderType::Software, 1);
         provider1.available = false;
 
-        registry.register_provider(provider1).unwrap();
-        registry
-            .register_provider(create_test_provider("provider-2", ProviderType::Android, 2))
-            .unwrap();
+        registry.register_provider(provider1)?;
+        registry.register_provider(create_test_provider("provider-2", ProviderType::Android, 2))?;
 
         let available = registry.get_available_providers();
         assert_eq!(available.len(), 1);
         assert_eq!(available[0].id, "provider-2");
+        Ok(())
     }
 
     #[test]
-    fn test_provider_types() {
+    fn test_provider_types() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(ProviderType::Software, ProviderType::Software);
         assert_ne!(ProviderType::Software, ProviderType::Android);
+        Ok(())
     }
 
     #[test]
-    fn test_selection_strategies() {
+    fn test_selection_strategies() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
             SelectionStrategy::HighestSecurity,
             SelectionStrategy::HighestSecurity
@@ -380,5 +368,6 @@ mod tests {
             SelectionStrategy::HighestSecurity,
             SelectionStrategy::BestPerformance
         );
+        Ok(())
     }
 }

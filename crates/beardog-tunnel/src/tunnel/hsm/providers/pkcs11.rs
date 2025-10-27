@@ -67,15 +67,17 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_pkcs11_provider_creation() {
+    async fn test_pkcs11_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider =
             Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), 0).await;
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_security_level() {
+    fn test_security_level() -> Result<(), Box<dyn std::error::Error>> {
         // PKCS#11 HSMs are hardware level
         assert_eq!(3, 3); // Placeholder assertion
+        Ok(())
     }
 }

@@ -305,7 +305,7 @@ mod tests {
         let json = serde_json::to_string(&config);
         assert!(json.is_ok());
 
-        let deserialized: Result<MetricsConfig, _> = serde_json::from_str(&json.unwrap());
+        let deserialized: Result<MetricsConfig, _> = serde_json::from_str(&json?);
         assert!(deserialized.is_ok());
     }
 

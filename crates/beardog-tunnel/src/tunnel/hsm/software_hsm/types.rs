@@ -671,16 +671,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_protected_memory_creation() {
+    fn test_protected_memory_creation() -> Result<(), Box<dyn std::error::Error>> {
         let data = vec![1, 2, 3, 4, 5];
         let protected = ProtectedMemory::new(data.clone(), true);
 
         assert!(protected.is_protected());
         assert_eq!(protected.data(), &data);
+        Ok(())
     }
 
     #[test]
-    fn test_software_key_creation() {
+    fn test_software_key_creation() -> Result<(), Box<dyn std::error::Error>> {
         let key_material = ProtectedMemory::new(vec![0u8; 32], true);
         let metadata = KeyMetadata::new("test-key".to_string(), KeyType::Ed25519);
 
@@ -693,72 +694,56 @@ mod tests {
 
         assert_eq!(key.id(), "test-key");
         assert_eq!(key.key_type(), &KeyType::Aes { key_size: 256 });
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_memory_storage_backend() {
-        let backend = MemoryStorageBackend::new().await.unwrap();
+    async fn test_memory_storage_backend() -> Result<(), Box<dyn std::error::Error>> {
+        let backend = MemoryStorageBackend::new().await?;
 
-        backend.initialize().await.unwrap();
+        backend.initialize().await?;
 
         let key_id = "test-key";
         let key_data = vec![1, 2, 3, 4, 5];
 
-        backend.store(key_id, &key_data).await.unwrap();
+        backend.store(key_id, &key_data).await?;
 
-        let retrieved = backend.retrieve(key_id).await.unwrap();
+        let retrieved = backend.retrieve(key_id).await?;
         assert_eq!(retrieved, key_data);
 
-        let keys = backend.list_keys().await.unwrap();
+        let keys = backend.list_keys().await?;
         assert_eq!(keys.len(), 1);
         assert!(keys.contains(&key_id.to_string()));
 
-        backend.delete(key_id).await.unwrap();
+        backend.delete(key_id).await?;
 
         let result = backend.retrieve(key_id).await;
         assert!(result.is_err());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_memory_storage_backup_restore() {
-        let backend = MemoryStorageBackend::new()
-            .await
-            .expect("Failed to create first backend");
+    async fn test_memory_storage_backup_restore() -> Result<(), Box<dyn std::error::Error>> {
+        let backend = MemoryStorageBackend::new().await?;
 
-        backend
-            .store("key1", &[1, 2, 3])
-            .await
-            .expect("Failed to store key1");
-        backend
-            .store("key2", &[4, 5, 6])
-            .await
-            .expect("Failed to store key2");
+        backend.store("key1", &[1, 2, 3]).await?;
+        backend.store("key2", &[4, 5, 6]).await?;
 
-        let backup = backend.backup().await.expect("Failed to create backup");
+        let backup = backend.backup().await?;
 
-        let backend2 = MemoryStorageBackend::new()
-            .await
-            .expect("Failed to create second backend");
-        backend2
-            .restore(&backup)
-            .await
-            .expect("Failed to restore backup");
+        let backend2 = MemoryStorageBackend::new().await?;
+        backend2.restore(&backup).await?;
 
-        let key1 = backend2
-            .retrieve("key1")
-            .await
-            .expect("Failed to retrieve key1");
-        let key2 = backend2
-            .retrieve("key2")
-            .await
-            .expect("Failed to retrieve key2");
+        let key1 = backend2.retrieve("key1").await?;
+        let key2 = backend2.retrieve("key2").await?;
 
         assert_eq!(key1, vec![1, 2, 3]);
         assert_eq!(key2, vec![4, 5, 6]);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_default_encryption_key() {
+    async fn test_default_encryption_key() -> Result<(), Box<dyn std::error::Error>> {
         let config = SoftwareHsmConfig {
             storage: StorageBackend::InMemory,
             memory_protection: MemoryProtectionLevel::Medium,
@@ -767,28 +752,22 @@ mod tests {
             max_keys: Some(100),
         };
 
-        let enc_key = DefaultEncryptionKey::create(&config)
-            .await
-            .expect("Failed to create encryption key");
+        let enc_key = DefaultEncryptionKey::create(&config).await?;
 
         let plaintext = b"Hello, BearDog!";
-        let ciphertext = enc_key
-            .encrypt(plaintext)
-            .await
-            .expect("Failed to encrypt plaintext");
+        let ciphertext = enc_key.encrypt(plaintext).await?;
 
         assert_ne!(ciphertext, plaintext);
         assert!(ciphertext.len() > plaintext.len()); // includes nonce
 
-        let decrypted = enc_key
-            .decrypt(&ciphertext)
-            .await
-            .expect("Failed to decrypt ciphertext");
+        let decrypted = enc_key.decrypt(&ciphertext).await?;
         assert_eq!(decrypted, plaintext);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_default_encryption_key_invalid_ciphertext() {
+    async fn test_default_encryption_key_invalid_ciphertext(
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let config = SoftwareHsmConfig {
             storage: StorageBackend::InMemory,
             memory_protection: MemoryProtectionLevel::Medium,
@@ -797,9 +776,7 @@ mod tests {
             max_keys: Some(100),
         };
 
-        let enc_key = DefaultEncryptionKey::create(&config)
-            .await
-            .expect("Failed to create encryption key");
+        let enc_key = DefaultEncryptionKey::create(&config).await?;
 
         // Too short
         let result = enc_key.decrypt(&[1, 2, 3]).await;
@@ -808,17 +785,19 @@ mod tests {
         // Invalid ciphertext
         let result = enc_key.decrypt(&[0u8; 50]).await;
         assert!(result.is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_audit_log_filter_default() {
+    fn test_audit_log_filter_default() -> Result<(), Box<dyn std::error::Error>> {
         let filter = AuditLogFilter::default();
         // AuditLogFilter::default() creates a default filter
         assert!(filter.from_time.is_none());
+        Ok(())
     }
 
     #[test]
-    fn test_storage_backend_clone() {
+    fn test_storage_backend_clone() -> Result<(), Box<dyn std::error::Error>> {
         let backend1 = StorageBackend::InMemory;
         let backend2 = backend1.clone();
 
@@ -836,5 +815,6 @@ mod tests {
             StorageBackend::File { path } => assert_eq!(path, "/tmp/keys"),
             _ => panic!("Expected File variant"),
         }
+        Ok(())
     }
 }

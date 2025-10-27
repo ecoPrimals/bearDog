@@ -266,7 +266,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_config_serialization() {
+    fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let config = TunnelConfig::default();
         let serialized = serde_json::to_string(&config).map_err(|e| {
             tracing::error!("JSON serialization failed ({}): {}", "Should serialize", e);
@@ -274,12 +274,13 @@ mod tests {
         });
         assert!(serialized.is_ok());
 
-        let deserialized: Result<TunnelConfig, _> = serde_json::from_str(&serialized.unwrap())
-            .map_err(|e| {
+        let deserialized: Result<TunnelConfig, _> =
+            serde_json::from_str(&serialized?).map_err(|e| {
                 tracing::error!("JSON parsing failed ({}): {}", "Should deserialize", e);
                 e
             });
         assert!(deserialized.is_ok());
+        Ok(())
     }
 
     #[test]

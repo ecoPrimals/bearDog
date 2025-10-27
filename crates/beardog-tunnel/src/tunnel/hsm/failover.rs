@@ -128,35 +128,39 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_manager_creation() {
+    fn test_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
         let manager = HsmFailoverManager::new();
         assert!(manager.is_primary_available());
+        Ok(())
     }
 
     #[test]
-    fn test_circuit_breaker() {
+    fn test_circuit_breaker() -> Result<(), Box<dyn std::error::Error>> {
         let mut breaker = CircuitBreaker::new(3, Duration::from_secs(60));
         assert_eq!(breaker.state, CircuitBreakerState::Closed);
 
         breaker.record_failure(3);
         assert_eq!(breaker.state, CircuitBreakerState::Open);
+        Ok(())
     }
 
     #[test]
-    fn test_failover_execution() {
+    fn test_failover_execution() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = HsmFailoverManager::new();
 
         let result = manager.execute_with_failover(|| Ok(42));
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result?, 42);
+        Ok(())
     }
 
     #[test]
-    fn test_primary_availability() {
+    fn test_primary_availability() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = HsmFailoverManager::new();
         assert!(manager.is_primary_available());
 
         manager.set_primary_available(false);
         assert!(!manager.is_primary_available());
+        Ok(())
     }
 }

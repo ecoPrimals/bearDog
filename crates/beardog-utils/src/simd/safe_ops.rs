@@ -256,11 +256,11 @@ mod tests {
         let processor = SafeSimdProcessor::new();
         let test_data = b"test_data_for_safe_simd_hashing_operations";
 
-        let hash = processor.safe_simd_hash(test_data).unwrap();
+        let hash = processor.safe_simd_hash(test_data)?;
         assert_eq!(hash.len(), 32);
 
         // Hash should be deterministic
-        let hash2 = processor.safe_simd_hash(test_data).unwrap();
+        let hash2 = processor.safe_simd_hash(test_data)?;
         assert_eq!(hash, hash2);
     }
 

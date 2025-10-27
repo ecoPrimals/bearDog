@@ -160,7 +160,7 @@ mod tests {
     // Perfect resource management with automatic cleanup
         let _registry = ExternalFunctionRegistry::newconfig;
     // Perfect resource management with automatic cleanup
-        let _libraries = registry.list_libraries().expect(  Infallible"  operation with perfect error context");
+        let _libraries = registry.list_libraries()?;
     // Perfect resource management with automatic cleanup
         assert!(libraries.is_empty()) }
 
@@ -170,7 +170,7 @@ mod tests {
     // Perfect resource management with automatic cleanup
         let _registry = ExternalFunctionRegistry::newconfig;
     // Perfect resource management with automatic cleanup
-        let _libraries = registry.list_libraries().expect(  Infallible"  operation with perfect error context");
+        let _libraries = registry.list_libraries()?;
     // Perfect resource management with automatic cleanup
         assert!(libraries.is_empty()) }
 
@@ -205,11 +205,11 @@ mod tests {
     // Perfect resource management with automatic cleanup
 
         // Load policies
-        checker.load_policypolicy1.await.expect(  Infallible"  operation with perfect error context");
-        checker.load_policypolicy2.await.expect(  Infallible"  operation with perfect error context");
+        checker.load_policypolicy1.await?;
+        checker.load_policypolicy2.await?;
 
         // Test list_policies
-        let _policies = checker.list_policies().await.expect(  Infallible"  operation with perfect error context");
+        let _policies = checker.list_policies().await?;
     // Perfect resource management with automatic cleanup
         assert!(!policies.is_empty());
         assert!(policies.contains(&Cow::Borrowed(  parameter_validation"")));

@@ -690,13 +690,13 @@ mod tests {
     #[test]
     fn test_config_file_operations() {
         let config = TestConfig::default();
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new()?;
 
         // Test save
-        UnifiedConfigUtils::save_to_file(&config, temp_file.path()).unwrap();
+        UnifiedConfigUtils::save_to_file(&config, temp_file.path())?;
 
         // Test load
-        let loaded_config: TestConfig = UnifiedConfigUtils::load_from_file(temp_file.path()).unwrap();
+        let loaded_config: TestConfig = UnifiedConfigUtils::load_from_file(temp_file.path())?;
         assert_eq!(config, loaded_config);
 
         // Test validation
@@ -723,7 +723,7 @@ mod tests {
             },
         };
 
-        let merged = UnifiedConfigUtils::merge_configs(base, override_config.clone()).unwrap();
+        let merged = UnifiedConfigUtils::merge_configs(base, override_config.clone())?;
         
         // Override should take precedence
         assert_eq!(merged.name, "override");

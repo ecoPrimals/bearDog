@@ -618,11 +618,10 @@ fn generate_aes_nonce() -> BearDogResult<Vec<u8>> {
 
 #[allow(dead_code)]
 fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
-    use aes_gcm::aead::generic_array::GenericArray;
-    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit};
+    use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
 
-    let cipher = Aes256Gcm::new(GenericArray::from_slice(key));
-    let nonce = GenericArray::from_slice(nonce);
+    let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
+    let nonce = Nonce::from_slice(nonce);
 
     cipher
         .encrypt(nonce, plaintext)
@@ -631,11 +630,10 @@ fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> BearDogRes
 
 #[allow(dead_code)]
 fn decrypt_aes_256_gcm(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
-    use aes_gcm::aead::generic_array::GenericArray;
-    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit};
+    use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
 
-    let cipher = Aes256Gcm::new(GenericArray::from_slice(key));
-    let nonce = GenericArray::from_slice(nonce);
+    let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
+    let nonce = Nonce::from_slice(nonce);
 
     cipher
         .decrypt(nonce, ciphertext)
@@ -660,11 +658,10 @@ fn generate_chacha20_nonce() -> BearDogResult<Vec<u8>> {
 
 #[allow(dead_code)]
 fn encrypt_chacha20_poly1305(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
-    use chacha20poly1305::aead::generic_array::GenericArray;
-    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, KeyInit};
+    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
-    let cipher = ChaCha20Poly1305::new(GenericArray::from_slice(key));
-    let nonce = GenericArray::from_slice(nonce);
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(nonce);
 
     cipher
         .encrypt(nonce, plaintext)
@@ -677,11 +674,10 @@ fn decrypt_chacha20_poly1305(
     nonce: &[u8],
     ciphertext: &[u8],
 ) -> BearDogResult<Vec<u8>> {
-    use chacha20poly1305::aead::generic_array::GenericArray;
-    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, KeyInit};
+    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
-    let cipher = ChaCha20Poly1305::new(GenericArray::from_slice(key));
-    let nonce = GenericArray::from_slice(nonce);
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(nonce);
 
     cipher
         .decrypt(nonce, ciphertext)
@@ -695,11 +691,10 @@ fn encrypt_chacha20_poly1305_with_aad(
     plaintext: &[u8],
     aad: &[u8],
 ) -> BearDogResult<Vec<u8>> {
-    use chacha20poly1305::aead::generic_array::GenericArray;
-    use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, KeyInit};
+    use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
-    let cipher = ChaCha20Poly1305::new(GenericArray::from_slice(key));
-    let nonce = GenericArray::from_slice(nonce);
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(nonce);
     let payload = Payload {
         msg: plaintext,
         aad,
@@ -717,11 +712,10 @@ fn decrypt_chacha20_poly1305_with_aad(
     ciphertext: &[u8],
     aad: &[u8],
 ) -> BearDogResult<Vec<u8>> {
-    use chacha20poly1305::aead::generic_array::GenericArray;
-    use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, KeyInit};
+    use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
-    let cipher = ChaCha20Poly1305::new(GenericArray::from_slice(key));
-    let nonce = GenericArray::from_slice(nonce);
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(nonce);
     let payload = Payload {
         msg: ciphertext,
         aad,

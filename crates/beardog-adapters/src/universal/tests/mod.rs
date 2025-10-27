@@ -6,3 +6,7 @@ mod capability_types_tests;
 mod capability_discovery_tests;
 mod zero_cost_dispatch_tests;
 
+// October 25, 2025: Week 2 Test Expansion
+#[cfg(test)]
+mod adapter_comprehensive_tests;
+

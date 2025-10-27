@@ -329,16 +329,18 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_discovery_creation() {
+    async fn test_discovery_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = DiscoveryConfig::default();
         let discovery = UniversalHsmDiscovery::new(config).await;
         assert!(discovery.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_discovery_config_default() {
+    fn test_discovery_config_default() -> Result<(), Box<dyn std::error::Error>> {
         let config = DiscoveryConfig::default();
         assert!(config.enable_human_entropy_elevation);
         assert_eq!(config.minimum_entropy_quality, 0.8);
+        Ok(())
     }
 }

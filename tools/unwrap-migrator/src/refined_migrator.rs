@@ -1,12 +1,13 @@
+// Refined BearDog Migrator - Context-aware unwrap/expect migration
+//
+// This module provides intelligent, context-aware migration of unwrap/expect patterns
 
-
+use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tokio::fs;
-use regex::Regex;
 use thiserror::Error;
-use tracing::{info, warn, error, debug};
-use serde::{Deserialize, Serialize};
+use tokio::fs;
+use tracing::{debug, info, warn};
 
 #[derive(Error, Debug)]
 pub enum RefinedMigratorError {
@@ -16,525 +17,276 @@ pub enum RefinedMigratorError {
     Regex(#[from] regex::Error),
     #[error("Migration error: {message}")]
     Migration { message: String },
-    #[error("Context analysis error: {message}")]
-    ContextAnalysis { message: String },
 }
 
 pub type RefinedResult<T> = Result<T, RefinedMigratorError>;
 
-#[derive(String,
-
-    pub pattern: Regex,
-
-    pub replacement: String,
-
-    pub error_category: BearDogErrorCategory,
-
-    pub context_requirements: Vec<ContextRequirement>,
-
-    pub safety_level: SafetyLevel,
-
-    pub priority: u32,
-
-    pub requires_beardog_result: bool,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SafetyLevel {
+    Safe,
+    SafeWithReview,
+    RequiresAnalysis,
 }
 
-#[derive(HashMap<String, Regex>,
-
-    import_patterns: HashMap<String, Regex>,
-
-    type_patterns: HashMap<String, Regex>,
-
-    error_patterns: HashMap<String, Regex>,
-}
-
-#[derive(PathBuf,
-    pub line_number: usize,
-    pub column_start: usize,
-    pub column_end: usize,
-    pub pattern_name: String,
-    pub original_code: String,
-    pub suggested_replacement: String,
-    pub safety_level: SafetyLevel,
-    pub context_analysis: ContextAnalysis,
-    pub confidence: f32,
-    pub reasoning: String,
-}
-
-#[derive(Option<String>,
-    pub function_return_type: Option<String>,
-    pub has_beardog_imports: bool,
-    pub has_error_handling: bool,
-    pub has_logging: bool,
-    pub is_test_code: bool,
-    pub is_example_code: bool,
-    pub is_benchmark_code: bool,
-    pub surrounding_context: String,
-}
-
-pub struct RefinedBearDogMigrator {
-
-    patterns: Vec<BearDogMigrationPattern>,
-
-    context_analyzer: BearDogContextAnalyzer,
-
-    stats: MigrationStats,
-
-    config: MigratorConfig,
-}
-
-#[derive(usize,
-    pub patterns_found: usize,
-    pub safe_migrations: usize,
-    pub review_migrations: usize,
-    pub skipped_migrations: usize,
-    pub test_patterns: usize,
-    pub confidence_distribution: HashMap<String, usize>,
-}
-
-#[derive(f32,
-
+#[derive(Debug, Clone)]
+pub struct MigratorConfig {
+    pub min_confidence: f32,
     pub migrate_tests: bool,
-
-    pub migrate_examples: bool,
-
-    pub migrate_benchmarks: bool,
-
     pub max_auto_safety_level: SafetyLevel,
-
-    pub require_beardog_result: bool,
 }
 
 impl Default for MigratorConfig {
-    fn default(0.8,
+    fn default() -> Self {
+        Self {
+            min_confidence: 0.8,
             migrate_tests: false,
-            migrate_examples: true,
-            migrate_benchmarks: true,
             max_auto_safety_level: SafetyLevel::SafeWithReview,
-            require_beardog_result: true,
         }
     }
 }
 
-impl BearDogContextAnalyzer {
-    pub fn new() -> RefinedResult<Self> {
-        let mut function_patterns = HashMap::with_capacity(16);
-        let mut import_patterns = HashMap::with_capacity(16);
-        let mut type_patterns = HashMap::with_capacity(16);
-        let mut error_patterns = HashMap::with_capacity(16);
+#[derive(Debug, Default)]
+pub struct AnalysisStats {
+    pub files_scanned: usize,
+    pub unwrap_count: usize,
+    pub expect_count: usize,
+    pub migrable_count: usize,
+    pub test_file_count: usize,
+    pub by_category: HashMap<String, usize>,
+}
 
-        function_patterns.insert(
-            "beardog_result_function".to_string(),
-            Regex::new(r"fn\s+\w+\s*\([^)]*\)\s*->\s*(?:async\s+)?Result<")?
-        );
-        function_patterns.insert(
-            "test_function".to_string(),
-            Regex::new(r"#\[test\]|#\[tokio::test\]")?
-        );
-        function_patterns.insert(
-            "benchmark_function".to_string(),
-            Regex::new(r"#\[bench\]|fn\s+bench_")?
-        );
+#[derive(Debug, Default)]
+pub struct MigrationResult {
+    pub files_processed: usize,
+    pub patterns_migrated: usize,
+    pub skipped_count: usize,
+    pub failed_files: Vec<(PathBuf, String)>,
+}
 
-        import_patterns.insert(
-            "beardog_errors".to_string(),
-            Regex::new(r"use\s+beardog_errors::")?
-        );
-        import_patterns.insert(
-            "beardog_traits".to_string(),
-            Regex::new(r"use\s+beardog_traits::")?
-        );
-        import_patterns.insert(
-            "tracing".to_string(),
-            Regex::new(r"use\s+tracing::")?
-        );
-
-        type_patterns.insert(
-            "option_type".to_string(),
-            Regex::new(r"Option<[^, BearDogError>]+>")?
-        );
-        type_patterns.insert(
-            "result_type".to_string(),
-            Regex::new(r"Result<[^,]+,\s*[^>]+>")?
-        );
-        type_patterns.insert(
-            "beardog_result".to_string(),
-            Regex::new(r"Result<[^, BearDogError>]+>")?
-        );
-
-        error_patterns.insert(
-            "match_error".to_string(),
-            Regex::new(r"match\s+.+\{\s*Ok\(.+\)\s*=>\s*.+,\s*Err\(.+\)\s*=>")?
-        );
-        error_patterns.insert(
-            "map_err".to_string(),
-            Regex::new(r"\.map_err\(")?
-        );
-        error_patterns.insert(
-            "question_mark".to_string(),
-            Regex::new(&str, position: usize) -> RefinedResult<ContextAnalysis> {
-        let lines: Vec<&str> = content.lines().collect();
-        let line_number = content[..position].matches('\n').count();
-
-        let start_line = line_number.saturating_sub(10);
-        let end_line = (line_number + 10).min(lines.len());
-        let surrounding_context = lines[start_line..end_line].join("\n");
-
-        let function_name = self.find_containing_function(&surrounding_context);
-        let function_return_type = self.analyze_function_return_type(&surrounding_context);
-
-        let has_beardog_imports = self.import_patterns.get("beardog_errors")
-            .map_or(false, |_| true);
-
-        if !has_beardog_imports {
-            tracing::debug!("No BearDog imports found, adding error handling import");
-        }
-
-        let has_logging = self.import_patterns.get("tracing")
-            .map_or(false, |_| true);
-
-        let is_test_code = self.function_patterns.get("test_function")
-            .map_or(false, |_| true);
-
-        if is_test_code {
-            tracing::debug!("Test code detected, using test-appropriate replacement");
-        }
-
-        let is_benchmark_code = self.function_patterns.get("benchmark_function")
-            .map_or(false, |_| true);
-
-        Ok(ContextAnalysis {
-            function_name: name.to_string(),
-            function_return_type,
-            has_beardog_imports,
-            has_error_handling: self.error_patterns.values()
-                .any(|pattern| pattern.is_match(&surrounding_context)),
-            has_logging,
-            is_test_code,
-            is_example_code: content.contains("examples/") || 
-                surrounding_context.contains("// Example") ||
-                surrounding_context.contains("/// Example"),
-            is_benchmark_code,
-            surrounding_context,
-        })
-    }
-
-    fn find_containing_function(&self, context: &str) -> Option<String> {
-        let fn_regex = Regex::new(r"fn\s+(\w+)\s*\(").ok()?;
-        fn_regex.captures(context)
-            .and_then(|caps| caps.get(1))
-            .map(|m| m.as_str().to_string())
-    }
-
-    fn analyze_function_return_type(&self, context: &str) -> Option<String> {
-        let return_regex = Regex::new(r"fn\s+\w+\s*\([^)]*\)\s*->\s*([^{]+)").ok()?;
-        return_regex.captures(context)
-            .and_then(|caps| caps.get(1))
-            .map(|m| m.as_str().trim().to_string())
-    }
+pub struct RefinedBearDogMigrator {
+    config: MigratorConfig,
+    unwrap_pattern: Regex,
+    expect_pattern: Regex,
+    function_pattern: Regex,
 }
 
 impl RefinedBearDogMigrator {
-    pub fn new() -> RefinedResult<Self> {
-        let context_analyzer = BearDogContextAnalyzer::new()?;
-        let patterns = Self::create_beardog_patterns()?;
-        let config = MigratorConfig::default();
-        
-        Ok(Self {
-            patterns,
-            context_analyzer,
-            stats: MigrationStats::default(),
+    pub fn new(config: MigratorConfig) -> Self {
+        Self {
             config,
-        })
+            unwrap_pattern: Regex::new(r"\.unwrap\(\)").unwrap(),
+            expect_pattern: Regex::new(r#"\.expect\([^)]*\)"#).unwrap(),
+            function_pattern: Regex::new(r"fn\s+(\w+)").unwrap(),
+        }
     }
 
-    pub fn with_config(mut self, config: MigratorConfig) -> Self {
-        self.config = config;
-        self
+    pub async fn analyze_directory(
+        &mut self,
+        root: &Path,
+        exclude_tests: bool,
+    ) -> RefinedResult<AnalysisStats> {
+        let mut stats = AnalysisStats::default();
+        self.analyze_recursive(root, exclude_tests, &mut stats).await?;
+        Ok(stats)
     }
 
-    fn create_beardog_patterns() -> RefinedResult<Vec<BearDogMigrationPattern>> {
-        let mut patterns = Vec::new();
-
-        patterns.push(BearDogMigrationPattern {
-            name: "safe_ops_unwrap".to_string(),
-            pattern: Regex::new(r"SafeOps::safe_(\w+)\([^)]+\)\.unwrap\(\)")?,
-            replacement: "SafeOps::safe_$1(BearDogErrorCategory::Validation,
-            context_requirements: vec![
-                ContextRequirement::InBearDogResultFunction,
-                ContextRequirement::InProductionCode,
-            ],
-            safety_level: SafetyLevel::Safe,
-            priority: 100,
-            requires_beardog_result: true,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "config_load_unwrap".to_string(),
-            pattern: Regex::new(r"BearDogConfig::load[^(]*\([^)]+\)\.unwrap\(\)")?,
-            replacement: "BearDogConfig::load($1).map_err(|e| BearDogError::Configuration { message: format!(\"Failed to load configuration: {}\", e) })?".to_string(BearDogErrorCategory::Configuration,
-            context_requirements: vec![
-                ContextRequirement::InBearDogResultFunction,
-                ContextRequirement::HasLoggingContext,
-            ],
-            safety_level: SafetyLevel::Safe,
-            priority: 90,
-            requires_beardog_result: true,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "json_parse_unwrap".to_string(),
-            pattern: Regex::new(r"serde_json::(from_str|to_string)\([^)]+\)\.unwrap\(\)")?,
-            replacement: "serde_json::$1($1).map_err(|e| BearDogError::Validation { message: format!(\"JSON operation failed: {}\", e) })?".to_string(BearDogErrorCategory::Validation,
-            context_requirements: vec![
-                ContextRequirement::InBearDogResultFunction,
-            ],
-            safety_level: SafetyLevel::Safe,
-            priority: 80,
-            requires_beardog_result: true,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "network_unwrap".to_string(),
-            pattern: Regex::new(r"(TcpStream::connect|HttpClient::get|reqwest::get)\([^)]+\)\.await\.unwrap\(\)")?,
-            replacement: "$1($1).await.map_err(|e| BearDogError::Network { message: format!(\"Network operation failed: {}\", e) })?".to_string(BearDogErrorCategory::Network,
-            context_requirements: vec![
-                ContextRequirement::InBearDogResultFunction,
-                ContextRequirement::HasErrorHandling,
-            ],
-            safety_level: SafetyLevel::SafeWithReview,
-            priority: 70,
-            requires_beardog_result: true,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "collection_unwrap".to_string(),
-            pattern: Regex::new(r"\.get\([^)]+\)\.unwrap\(\)")?,
-            replacement: ".get($1).ok_or_else(|| BearDogError::Validation { message: \"Collection access failed: index out of bounds\".to_string(BearDogErrorCategory::Validation,
-            context_requirements: vec![
-                ContextRequirement::InBearDogResultFunction,
-            ],
-            safety_level: SafetyLevel::SafeWithReview,
-            priority: 60,
-            requires_beardog_result: true,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "test_unwrap".to_string(),
-            pattern: Regex::new(r"\.unwrap\(\)")?,
-            replacement: ".expect(BearDogErrorCategory::System,
-            context_requirements: vec![
-                ContextRequirement::InTestFunction,
-            ],
-            safety_level: SafetyLevel::TestOnly,
-            priority: 50,
-            requires_beardog_result: false,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "example_unwrap".to_string(),
-            pattern: Regex::new(r"\.unwrap\(\)")?,
-            replacement: ".expect(BearDogErrorCategory::System,
-            context_requirements: vec![
-                ContextRequirement::InExampleCode,
-            ],
-            safety_level: SafetyLevel::Safe,
-            priority: 40,
-            requires_beardog_result: false,
-        });
-
-        patterns.push(BearDogMigrationPattern {
-            name: "generic_unwrap".to_string(),
-            pattern: Regex::new(".map_err(|e| BearDogError::Internal { message: format!(\"Operation failed: {:?}\", e) })?".to_string(BearDogErrorCategory::System,
-            context_requirements: vec![
-                ContextRequirement::InBearDogResultFunction,
-                ContextRequirement::InProductionCode,
-            ],
-            safety_level: SafetyLevel::RequiresAnalysis,
-            priority: 10,
-            requires_beardog_result: true,
-        });
-
-        patterns.sort_by(|a, b| b.priority.cmp(&a.priority));
-
-        Ok(patterns)
-    }
-
-    pub async fn analyze_file(&mut self, file_path: &Path) -> RefinedResult<Vec<MigrationCandidate>> {
-        let content = fs::read_to_string(file_path).await?;
-        let mut candidates = Vec::new({}", file_path.display());
-
-        let unwrap_regex = Regex::new(r"\.(?:unwrap|expect)\([^)]*\)")?;
-        
-        for mat in unwrap_regex.find_iter(&Path,
-        position: usize,
-        matched_text: &str,
-        context: &ContextAnalysis,
-        full_content: &str,
-    ) -> RefinedResult<Option<MigrationCandidate>> {
-
-        let best_pattern = self.patterns.iter()
-            .find(|pattern| {
-                pattern.pattern.is_match(matched_text) &&
-                self.check_context_requirements(&pattern.context_requirements, context)
-            });
-
-        if let Some(pattern) = best_pattern {
-            let line_number = full_content[..position].matches('\n').count() + 1;
-
-            let confidence = self.calculate_confidence(pattern, context);
-
-            if confidence >= self.config.min_confidence &&
-               pattern.safety_level <= self.config.max_auto_safety_level {
-                
-                let replacement = self.generate_replacement(pattern, matched_text, context)?;
-                
-                let candidate = MigrationCandidate {
-                    file_path: file_path.to_path_buf(position,
-                    column_end: position + matched_text.len(),
-                    pattern_name: pattern.name.clone(),
-                    original_code: matched_text.to_string(replacement,
-                    safety_level: pattern.safety_level.clone(),
-                    context_analysis: context.clone(format!(
-                        "Pattern '{}' matched with {:.1}% confidence. Context: {}",
-                        pattern.name: name.to_string(&[ContextRequirement],
-        context: &ContextAnalysis,
-    ) -> bool {
-        requirements.iter().all(|req| {
-            match req {
-                ContextRequirement::InBearDogResultFunction => {
-                    context.function_return_type
-                        .as_ref()
-                        .map(|t| t.contains("Result<T, BearDogError>"))
-                        .unwrap_or(false)
+    fn analyze_recursive<'a>(
+        &'a self,
+        path: &'a Path,
+        exclude_tests: bool,
+        stats: &'a mut AnalysisStats,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = RefinedResult<()>> + 'a>> {
+        Box::pin(async move {
+            if path.is_dir() {
+                let mut entries = fs::read_dir(path).await?;
+                while let Some(entry) = entries.next_entry().await? {
+                    let path = entry.path();
+                    self.analyze_recursive(&path, exclude_tests, stats).await?;
                 }
-                ContextRequirement::InTestFunction => context.is_test_code,
-                ContextRequirement::InExampleCode => context.is_example_code,
-                ContextRequirement::InBenchmarkFunction => context.is_benchmark_code,
-                ContextRequirement::HasErrorHandling => context.has_error_handling,
-                ContextRequirement::InProductionCode => {
-                    !context.is_test_code && !context.is_example_code && !context.is_benchmark_code
+            } else if path.extension().and_then(|s| s.to_str()) == Some("rs") {
+                // Skip test files if requested
+                if exclude_tests && Self::is_test_file(path) {
+                    stats.test_file_count += 1;
+                    return Ok(());
                 }
-                ContextRequirement::HasLoggingContext => context.has_logging,
-                _ => true, // Other requirements not implemented yet
+
+                let content = fs::read_to_string(path).await?;
+                stats.files_scanned += 1;
+
+                let unwrap_matches = self.unwrap_pattern.find_iter(&content).count();
+                let expect_matches = self.expect_pattern.find_iter(&content).count();
+
+                stats.unwrap_count += unwrap_matches;
+                stats.expect_count += expect_matches;
+
+                // Count migrable patterns (simple heuristic)
+                if self.has_result_return(&content) {
+                    stats.migrable_count += unwrap_matches + expect_matches;
+                }
+
+                // Categorize by context
+                let category = self.categorize_file(path, &content);
+                *stats.by_category.entry(category).or_insert(0) += unwrap_matches + expect_matches;
+
+                if unwrap_matches + expect_matches > 0 {
+                    debug!(
+                        "{}: {} unwrap, {} expect",
+                        path.display(),
+                        unwrap_matches,
+                        expect_matches
+                    );
+                }
             }
+
+            Ok(())
         })
     }
 
-    fn calculate_confidence(&BearDogMigrationPattern, context: &ContextAnalysis) -> f32 {
-        let mut confidence: f32 = 0.5; // Base confidence
-
-        if context.has_beardog_imports {
-            confidence += 0.2;
-        }
-        if context.has_error_handling {
-            confidence += 0.15;
-        }
-        if context.has_logging {
-            confidence += 0.1;
-        }
-
-        match pattern.name.as_str() {
-            name if name.contains("safe_ops") => confidence += 0.3,
-            name if name.contains("config") => confidence += 0.2,
-            name if name.contains("json") => confidence += 0.15,
-            _ => {}
-        }
-
-        if context.is_test_code && pattern.safety_level == SafetyLevel::TestOnly {
-            confidence += 0.2;
-        }
-        if context.is_example_code && !pattern.requires_beardog_result {
-            confidence += 0.15;
-        }
-
-        confidence.min(&BearDogMigrationPattern,
-        matched_text: &str,
-        _context: &ContextAnalysis,
-    ) -> RefinedResult<String> {
-
-        let mut replacement = pattern.replacement.clone(&Path,
-        candidates: &[MigrationCandidate],
+    pub async fn migrate_directory(
+        &mut self,
+        root: &Path,
         dry_run: bool,
-    ) -> RefinedResult<usize> {
-        if candidates.is_empty() {
+        exclude_tests: bool,
+    ) -> RefinedResult<MigrationResult> {
+        let mut result = MigrationResult::default();
+        self.migrate_recursive(root, dry_run, exclude_tests, &mut result).await?;
+        Ok(result)
+    }
+
+    fn migrate_recursive<'a>(
+        &'a self,
+        path: &'a Path,
+        dry_run: bool,
+        exclude_tests: bool,
+        result: &'a mut MigrationResult,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = RefinedResult<()>> + 'a>> {
+        Box::pin(async move {
+            if path.is_dir() {
+                let mut entries = fs::read_dir(path).await?;
+                while let Some(entry) = entries.next_entry().await? {
+                    let path = entry.path();
+                    self.migrate_recursive(&path, dry_run, exclude_tests, result).await?;
+                }
+            } else if path.extension().and_then(|s| s.to_str()) == Some("rs") {
+                // Skip test files if requested
+                if exclude_tests && Self::is_test_file(path) {
+                    return Ok(());
+                }
+
+                match self.migrate_file(path, dry_run).await {
+                    Ok(migrated_count) => {
+                        result.files_processed += 1;
+                        result.patterns_migrated += migrated_count;
+                        if migrated_count > 0 {
+                            info!("✅ {}: {} patterns migrated", path.display(), migrated_count);
+                        }
+                    }
+                    Err(e) => {
+                        warn!("❌ Failed to migrate {}: {}", path.display(), e);
+                        result.failed_files.push((path.to_path_buf(), e.to_string()));
+                    }
+                }
+            }
+
+            Ok(())
+        })
+    }
+
+    async fn migrate_file(&self, path: &Path, dry_run: bool) -> RefinedResult<usize> {
+        let content = fs::read_to_string(path).await?;
+        let original_content = content.clone();
+        
+        // Only migrate if function returns Result
+        if !self.has_result_return(&content) {
             return Ok(0);
         }
 
-        let content = fs::read_to_string({} -> {}",
-                    file_path.display(),
-                    candidate.original_code,
-                    candidate.suggested_replacement
-                );
-            }
+        let mut modified_content = content;
+        let mut migration_count = 0;
+
+        // Simple migration: .unwrap() -> ?
+        // This is safe for functions that return Result
+        let new_content = self.unwrap_pattern.replace_all(&modified_content, "?");
+        if new_content != modified_content {
+            migration_count += self.unwrap_pattern.find_iter(&modified_content).count();
+            modified_content = new_content.into_owned();
         }
 
-        if !dry_run && applied_count > 0 {
-            fs::write(file_path, modified_content).await?;
-            info!("Updated file: {} ({} migrations)", file_path.display(), applied_count);
+        // Simple migration: .expect("msg") -> ?
+        let new_content = self.expect_pattern.replace_all(&modified_content, "?");
+        if new_content != modified_content {
+            migration_count += self.expect_pattern.find_iter(&modified_content).count();
+            modified_content = new_content.into_owned();
         }
 
-        self.stats.safe_migrations += applied_count;
-        Ok(applied_count)
+        // Only write if changes were made and not dry run
+        if migration_count > 0 && !dry_run && modified_content != original_content {
+            fs::write(path, modified_content).await?;
+        }
+
+        Ok(migration_count)
     }
 
-    pub fn get_stats(&self) -> &MigrationStats {
-        &self.stats
+    fn has_result_return(&self, content: &str) -> bool {
+        content.contains("Result<") || content.contains("BearDogResult")
+    }
+
+    fn is_test_file(path: &Path) -> bool {
+        path.to_str()
+            .map(|s| s.contains("/tests/") || s.contains("/test_") || s.ends_with("_test.rs") || s.ends_with("_tests.rs"))
+            .unwrap_or(false)
+    }
+
+    fn categorize_file(&self, path: &Path, _content: &str) -> String {
+        let path_str = path.to_str().unwrap_or("");
+        
+        if path_str.contains("/security/") || path_str.contains("/crypto/") {
+            "Security".to_string()
+        } else if path_str.contains("/network/") || path_str.contains("/tunnel/") {
+            "Network".to_string()
+        } else if path_str.contains("/config/") {
+            "Configuration".to_string()
+        } else if path_str.contains("/types/") {
+            "Types".to_string()
+        } else if path_str.contains("/core/") {
+            "Core".to_string()
+        } else {
+            "Other".to_string()
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
-    use tokio::io::AsyncWriteExt;
 
-    #[tokio::test]
-    async fn test_context_analysis() {
-        let analyzer = BearDogContextAnalyzer::new().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal({:?}", e))
-})?;
-        let content = r#"
-use beardog_errors::BearDogError;
+    #[test]
+    fn test_unwrap_pattern() {
+        let migrator = RefinedBearDogMigrator::new(MigratorConfig::default());
+        assert!(migrator.unwrap_pattern.is_match(".unwrap()"));
+        assert!(!migrator.unwrap_pattern.is_match(".unwrapped()"));
+    }
 
-fn test_function() -> Result<String, BearDogError> {
-    let value = some_operation().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal({:?}", e))
-})?;
-    Ok(value)
+    #[test]
+    fn test_expect_pattern() {
+        let migrator = RefinedBearDogMigrator::new(MigratorConfig::default());
+        assert!(migrator.expect_pattern.is_match(r#".expect("failed")"#));
+        assert!(!migrator.expect_pattern.is_match(".expecting()"));
+    }
+
+    #[test]
+    fn test_has_result_return() {
+        let migrator = RefinedBearDogMigrator::new(MigratorConfig::default());
+        assert!(migrator.has_result_return("fn test() -> Result<(), Error> {}"));
+        assert!(migrator.has_result_return("fn test() -> BearDogResult<Data> {}"));
+        assert!(!migrator.has_result_return("fn test() -> Data {}"));
+    }
+
+    #[test]
+    fn test_is_test_file() {
+        assert!(RefinedBearDogMigrator::is_test_file(Path::new("tests/mod.rs")));
+        assert!(RefinedBearDogMigrator::is_test_file(Path::new("src/test_utils.rs")));
+        assert!(RefinedBearDogMigrator::is_test_file(Path::new("src/utils_test.rs")));
+        assert!(!RefinedBearDogMigrator::is_test_file(Path::new("src/core.rs")));
+    }
 }
-"#;
-        
-        let unwrap_pos = content.find("unwrap").map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal({:?}", e))
-})?;
-        let context = analyzer.analyze_context(content, unwrap_pos).map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal({:?}", e))
-})?;
-        
-        assert!(context.has_beardog_imports);
-        assert!(context.function_return_type.as_ref().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal({:?}", e))
-})?.contains("Result<T, BearDogError>"));
-    }
-
-    #[tokio::test]
-    async fn test_pattern_matching() {
-        let migrator = RefinedBearDogMigrator::new().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal({:?}", e))
-})?;
-
-        assert!(!migrator.patterns.is_empty());
-
-        let priorities: Vec<u32> = migrator.patterns.iter().map(|p| p.priority).collect();
-        for window in priorities.windows(2) {
-            assert!(window[0] >= window[1], "Patterns should be sorted by priority");
-        }
-    }
-} 

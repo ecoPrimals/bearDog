@@ -311,11 +311,11 @@ mod tests {
         let config = AiPerformanceConfig::builder()
             .enabled(true)
             .cpu_threads(8)
-            .unwrap()
+            ?
             .memory_limit_mb(8192)
-            .unwrap()
+            ?
             .build()
-            .unwrap();
+            ?;
 
         assert!(config.is_enabled());
         assert_eq!(config.cpu_threads(), 8);
@@ -334,7 +334,7 @@ mod tests {
             .enabled(true)
             .enable_adversarial_protection(true)
             .build()
-            .unwrap();
+            ?;
 
         assert!(config.is_enabled());
         assert!(config.is_adversarial_protection_enabled());
@@ -342,10 +342,10 @@ mod tests {
 
     #[test]
     fn test_security_presets() {
-        let max_sec = AiSecurityConfigBuilder::maximum_security().build().unwrap();
+        let max_sec = AiSecurityConfigBuilder::maximum_security().build()?;
         assert!(max_sec.is_differential_privacy_enabled());
 
-        let prod = AiSecurityConfigBuilder::production().build().unwrap();
+        let prod = AiSecurityConfigBuilder::production().build()?;
         assert!(!prod.is_differential_privacy_enabled());
     }
 }

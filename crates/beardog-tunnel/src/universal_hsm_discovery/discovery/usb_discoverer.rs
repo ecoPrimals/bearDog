@@ -556,24 +556,24 @@ mod tests {
         let discoverer = UsbDiscoverer::new();
         assert!(discoverer.is_ok());
         
-        let disc = discoverer.unwrap();
+        let disc = discoverer?;
         assert!(disc.known_vendors.contains_key(&YUBICO_VENDOR_ID));
         assert!(disc.known_vendors.contains_key(&NITROKEY_VENDOR_ID));
     }
 
     #[tokio::test]
     async fn test_usb_discovery() {
-        let discoverer = UsbDiscoverer::new().unwrap();
+        let discoverer = UsbDiscoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
         
         // Discovery should succeed even if no devices found
-        let _hsms = result.unwrap();
+        let _hsms = result?;
     }
 
     #[tokio::test]
     async fn test_yubikey_identification() {
-        let discoverer = UsbDiscoverer::new().unwrap();
+        let discoverer = UsbDiscoverer::new()?;
         let device_info = UsbDeviceInfo {
             vendor_id: YUBICO_VENDOR_ID,
             product_id: 0x0407,
@@ -584,10 +584,10 @@ mod tests {
         let result = discoverer.identify_hsm_device(&device_info).await;
         assert!(result.is_ok());
         
-        let hsm = result.unwrap();
+        let hsm = result?;
         assert!(hsm.is_some());
         
-        let hsm = hsm.unwrap();
+        let hsm = hsm?;
         assert!(hsm.name.contains("yubikey"));
         assert_eq!(hsm.hsm_type, HsmType::Hardware);
         assert_eq!(hsm.assigned_tier, HsmTier::Tier2);
@@ -595,7 +595,7 @@ mod tests {
 
     #[test]
     fn test_yubikey_capabilities() {
-        let discoverer = UsbDiscoverer::new().unwrap();
+        let discoverer = UsbDiscoverer::new()?;
         let caps = discoverer.create_yubikey_capabilities();
         
         // Verify YubiKey capabilities
@@ -608,7 +608,7 @@ mod tests {
 
     #[test]
     fn test_nitrokey_capabilities() {
-        let discoverer = UsbDiscoverer::new().unwrap();
+        let discoverer = UsbDiscoverer::new()?;
         let caps = discoverer.create_nitrokey_capabilities();
         
         // Verify Nitrokey capabilities
@@ -619,7 +619,7 @@ mod tests {
 
     #[test]
     fn test_vendor_detection() {
-        let discoverer = UsbDiscoverer::new().unwrap();
+        let discoverer = UsbDiscoverer::new()?;
         
         assert_eq!(discoverer.known_vendors.get(&YUBICO_VENDOR_ID), Some(&"Yubico".to_string()));
         assert_eq!(discoverer.known_vendors.get(&NITROKEY_VENDOR_ID), Some(&"Nitrokey".to_string()));

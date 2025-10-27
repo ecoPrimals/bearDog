@@ -55,6 +55,9 @@ pub mod neural_network;
 pub mod predictor;
 pub mod types;
 
+#[cfg(test)]
+mod tests_comprehensive;
+
 pub use engine::AIOptimizationEngine;
 pub use history::OptimizationHistory;
 pub use neural_network::SimpleNeuralNetwork;

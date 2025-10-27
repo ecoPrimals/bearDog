@@ -39,15 +39,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_adapter_creation() {
+    fn test_adapter_creation() -> Result<(), Box<dyn std::error::Error>> {
         let adapter = UniversalAdapter::new();
         assert!(adapter.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_adapter_adapt() {
-        let adapter = UniversalAdapter::new().unwrap();
+    fn test_adapter_adapt() -> Result<(), Box<dyn std::error::Error>> {
+        let adapter = UniversalAdapter::new()?;
         let result = adapter.adapt();
         assert!(result.is_ok());
+        Ok(())
     }
 }

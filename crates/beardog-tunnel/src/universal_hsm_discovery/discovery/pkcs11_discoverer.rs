@@ -832,21 +832,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_pkcs11_discovery() {
-        let discoverer = Pkcs11Discoverer::new().unwrap();
+        let discoverer = Pkcs11Discoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_library_discovery() {
-        let discoverer = Pkcs11Discoverer::new().unwrap();
+        let discoverer = Pkcs11Discoverer::new()?;
         let libraries = discoverer.find_pkcs11_libraries().await;
         assert!(libraries.is_ok());
     }
 
     #[test]
     fn test_token_classification() {
-        let discoverer = Pkcs11Discoverer::new().unwrap();
+        let discoverer = Pkcs11Discoverer::new()?;
 
         // Test Thales classification
         let thales_token = Pkcs11TokenInfo {
@@ -877,7 +877,7 @@ mod tests {
 
     #[test]
     fn test_enterprise_hsm_capabilities() {
-        let discoverer = Pkcs11Discoverer::new().unwrap();
+        let discoverer = Pkcs11Discoverer::new()?;
         let caps = discoverer.create_enterprise_hsm_capabilities();
         
         assert!(caps.security.fips_140_2_level == Some(3));
@@ -889,7 +889,7 @@ mod tests {
 
     #[test]
     fn test_custom_library_paths() {
-        let mut discoverer = Pkcs11Discoverer::new().unwrap();
+        let mut discoverer = Pkcs11Discoverer::new()?;
         discoverer.add_library_path(PathBuf::from("/custom/path/lib.so"));
         assert_eq!(discoverer.custom_library_paths.len(), 1);
     }

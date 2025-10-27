@@ -462,8 +462,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_aligned_buffer_creation() {
-        let buffer = AlignedBuffer::new(1024).unwrap();
+    fn test_aligned_buffer_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let buffer = AlignedBuffer::new(1024)?;
         assert_eq!(buffer.capacity(), 1024);
         assert_eq!(buffer.length, 0);
 
@@ -472,18 +472,20 @@ mod tests {
         let ptr = buffer.data.as_ptr() as usize;
         // Just verify the buffer is properly initialized
         assert!(ptr != 0, "Buffer pointer should not be null");
+        Ok(())
     }
 
     #[test]
-    fn test_memory_pool_reuse() {
+    fn test_memory_pool_reuse() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SIMDAlignedPool::new();
 
-        let buffer1 = pool.get_buffer(256).unwrap();
+        let buffer1 = pool.get_buffer(256)?;
         let capacity = buffer1.capacity();
         pool.return_buffer(buffer1);
 
-        let buffer2 = pool.get_buffer(256).unwrap();
+        let buffer2 = pool.get_buffer(256)?;
         assert_eq!(buffer2.capacity(), capacity, "Buffer not reused from pool");
+        Ok(())
     }
 
     #[test]
@@ -497,17 +499,16 @@ mod tests {
     }
 
     #[test]
-    fn test_zero_copy_operation() {
+    fn test_zero_copy_operation() -> Result<(), Box<dyn std::error::Error>> {
         let manager = HyperZeroCopyManager::new();
 
-        let result = manager
-            .zero_copy_operation(1024, |buffer| {
-                buffer[0] = 42;
-                buffer[1023] = 24;
-                buffer[0] + buffer[1023]
-            })
-            .unwrap();
+        let result = manager.zero_copy_operation(1024, |buffer| {
+            buffer[0] = 42;
+            buffer[1023] = 24;
+            buffer[0] + buffer[1023]
+        })?;
 
         assert_eq!(result, 66);
+        Ok(())
     }
 }

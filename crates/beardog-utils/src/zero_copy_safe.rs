@@ -177,35 +177,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_safe_zero_copy_buffer() {
-        let buffer = SafeZeroCopyBuffer::with_capacity(1024).unwrap(); // Test assertion
+    fn test_safe_zero_copy_buffer() -> Result<(), Box<dyn std::error::Error>> {
+        let buffer = SafeZeroCopyBuffer::with_capacity(1024)?; // Test assertion
         assert_eq!(buffer.capacity(), 1024);
         assert_eq!(buffer.len(), 0);
         assert!(buffer.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_zero_copy_slice() {
+    fn test_zero_copy_slice() -> Result<(), Box<dyn std::error::Error>> {
         let buffer_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let buffer = SafeZeroCopyBuffer::from_vec(buffer_data);
 
-        let slice = buffer.as_slice(2, 4).unwrap();
+        let slice = buffer.as_slice(2, 4)?;
         // Test that we can access the slice data correctly
         assert_eq!(slice.len(), 4);
         assert!(buffer.shares_data_with(&slice));
+        Ok(())
     }
 
     #[test]
-    fn test_buffer_pool() {
+    fn test_buffer_pool() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SafeBufferPool::new(1024, 10);
 
-        let buffer1 = pool.acquire().unwrap(); // Test assertion
+        let buffer1 = pool.acquire()?; // Test assertion
         assert_eq!(buffer1.capacity(), 1024);
 
-        pool.release(buffer1).unwrap(); // Test assertion
+        pool.release(buffer1)?; // Test assertion
 
-        let (available, max) = pool.stats().unwrap(); // Test assertion
+        let (available, max) = pool.stats()?; // Test assertion
         assert_eq!(max, 10);
         assert!(available <= max);
+        Ok(())
     }
 }

@@ -160,4 +160,139 @@ mod tests {
         assert_eq!(criteria.availability_weight, 0.3);
         assert_eq!(criteria.security_weight, 0.2);
     }
+
+    // ========================================================================
+    // Week 2 Test Expansion - October 25, 2025
+    // Comprehensive Adapter Tests
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_adapter_config_defaults() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let config = adapter.config();
+        
+        assert!(config.max_providers_per_capability > 0, "Should have positive max providers");
+        assert!(config.health_check_interval_secs > 0, "Should have positive health check interval");
+        assert!(config.connection_timeout_ms > 0, "Should have positive timeout");
+    }
+
+    #[tokio::test]
+    async fn test_get_capabilities_empty_initial() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let capabilities = adapter.get_available_capabilities().await;
+        
+        assert!(capabilities.is_ok(), "Should list capabilities");
+        assert!(capabilities?.is_empty(), "Should start with empty capabilities");
+    }
+
+    #[tokio::test]
+    async fn test_get_primals_empty_initial() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let primals = adapter.get_discovered_primals().await;
+        
+        assert!(primals.is_ok(), "Should get primals list");
+        assert!(primals?.is_empty(), "Should start with no primals");
+    }
+
+    #[tokio::test]
+    async fn test_adapter_metrics_access() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let metrics = adapter.get_metrics();
+        
+        assert!(format!("{:?}", metrics).len() > 0, "Should have metrics");
+    }
+
+    #[tokio::test]
+    async fn test_health_check_empty_connections() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let health = adapter.health_check_all_connections().await;
+        
+        assert!(health.is_ok(), "Should check health");
+        assert!(health?.is_empty(), "Should have no connections initially");
+    }
+
+    #[tokio::test]
+    async fn test_adapter_shutdown_graceful() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let result = adapter.shutdown().await;
+        
+        assert!(result.is_ok(), "Should shutdown gracefully");
+    }
+
+    #[tokio::test]
+    async fn test_adapter_config_access() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        let config = adapter.config();
+        
+        assert!(config.max_providers_per_capability > 0);
+    }
+
+    #[tokio::test]
+    async fn test_adapter_full_lifecycle() {
+        let adapter = UniversalCapabilityAdapter::new().await?;
+        
+        let capabilities = adapter.get_available_capabilities().await?;
+        assert!(capabilities.is_empty());
+        
+        let shutdown = adapter.shutdown().await;
+        assert!(shutdown.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_multiple_adapters_coexist() {
+        let adapter1 = UniversalCapabilityAdapter::new().await;
+        let adapter2 = UniversalCapabilityAdapter::new().await;
+        
+        assert!(adapter1.is_ok() && adapter2.is_ok(), "Should create multiple adapters");
+    }
+
+    #[tokio::test]
+    async fn test_adapter_with_custom_max_providers() {
+        let config = AdapterConfig {
+            max_providers_per_capability: 10,
+            ..Default::default()
+        };
+        
+        let adapter = UniversalCapabilityAdapter::with_config(config).await?;
+        assert_eq!(adapter.config().max_providers_per_capability, 10);
+    }
+
+    #[tokio::test]
+    async fn test_adapter_with_custom_health_interval() {
+        let config = AdapterConfig {
+            health_check_interval_secs: 60,
+            ..Default::default()
+        };
+        
+        let adapter = UniversalCapabilityAdapter::with_config(config).await?;
+        assert_eq!(adapter.config().health_check_interval_secs, 60);
+    }
+
+    #[tokio::test]
+    async fn test_adapter_with_custom_timeout() {
+        let config = AdapterConfig {
+            connection_timeout_ms: 5000,
+            ..Default::default()
+        };
+        
+        let adapter = UniversalCapabilityAdapter::with_config(config).await?;
+        assert_eq!(adapter.config().connection_timeout_ms, 5000);
+    }
+
+    #[tokio::test]
+    async fn test_adapter_config_persistence() {
+        let config = AdapterConfig {
+            max_providers_per_capability: 42,
+            health_check_interval_secs: 99,
+            connection_timeout_ms: 1234,
+            ..Default::default()
+        };
+        
+        let adapter = UniversalCapabilityAdapter::with_config(config).await?;
+        let stored = adapter.config();
+        
+        assert_eq!(stored.max_providers_per_capability, 42);
+        assert_eq!(stored.health_check_interval_secs, 99);
+        assert_eq!(stored.connection_timeout_ms, 1234);
+    }
 } 

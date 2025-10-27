@@ -537,7 +537,7 @@ mod tests {
         let result = handler.execute_kms_operation(request);
         assert!(result.is_ok());
         
-        let response = result.unwrap();
+        let response = result?;
         assert!(response.success);
         assert!(response.data.is_some());
     }
@@ -554,6 +554,6 @@ mod tests {
         
         assert!(selected.is_some());
         // Should prefer vendor over custom
-        assert_eq!(selected.unwrap().provider.provider_id, "high_perf");
+        assert_eq!(selected?.provider.provider_id, "high_perf");
     }
 }

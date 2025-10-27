@@ -167,64 +167,64 @@ mod tests {
 
     #[test]
     fn test_attest() {
-        let attestation = SoftwareAttestation::new().unwrap();
+        let attestation = SoftwareAttestation::new()?;
         let result = attestation.attest();
         assert!(result.is_ok());
         
-        let report = result.unwrap();
+        let report = result?;
         // Should have content (report + signature)
         assert!(report.len() > 32);
     }
 
     #[test]
     fn test_attestation_is_unique() {
-        let att1 = SoftwareAttestation::new().unwrap();
-        let att2 = SoftwareAttestation::new().unwrap();
+        let att1 = SoftwareAttestation::new()?;
+        let att2 = SoftwareAttestation::new()?;
         
         // Different instances should have different IDs
         assert_ne!(att1.instance_id(), att2.instance_id());
         
         // And different attestation reports
-        let report1 = att1.attest().unwrap();
-        let report2 = att2.attest().unwrap();
+        let report1 = att1.attest()?;
+        let report2 = att2.attest()?;
         assert_ne!(report1, report2);
     }
 
     #[test]
     fn test_attestation_verification() {
-        let attestation = SoftwareAttestation::new().unwrap();
-        let report = attestation.attest().unwrap();
+        let attestation = SoftwareAttestation::new()?;
+        let report = attestation.attest()?;
         
         // Should verify successfully
-        assert!(attestation.verify(&report).unwrap());
+        assert!(attestation.verify(&report)?);
     }
 
     #[test]
     fn test_attestation_verification_fails_for_tampered() {
-        let attestation = SoftwareAttestation::new().unwrap();
-        let mut report = attestation.attest().unwrap();
+        let attestation = SoftwareAttestation::new()?;
+        let mut report = attestation.attest()?;
         
         // Tamper with the report
         report[0] ^= 0xFF;
         
         // Verification should fail
-        assert!(!attestation.verify(&report).unwrap());
+        assert!(!attestation.verify(&report)?);
     }
 
     #[test]
     fn test_attestation_verification_fails_for_wrong_instance() {
-        let att1 = SoftwareAttestation::new().unwrap();
-        let att2 = SoftwareAttestation::new().unwrap();
+        let att1 = SoftwareAttestation::new()?;
+        let att2 = SoftwareAttestation::new()?;
         
-        let report = att1.attest().unwrap();
+        let report = att1.attest()?;
         
         // att2 should not verify att1's report
-        assert!(!att2.verify(&report).unwrap());
+        assert!(!att2.verify(&report)?);
     }
 
     #[test]
     fn test_instance_id_format() {
-        let attestation = SoftwareAttestation::new().unwrap();
+        let attestation = SoftwareAttestation::new()?;
         let id = attestation.instance_id();
         
         // Should be 32 hex characters (16 bytes)
@@ -234,15 +234,15 @@ mod tests {
 
     #[test]
     fn test_multiple_attestations_same_instance() {
-        let attestation = SoftwareAttestation::new().unwrap();
+        let attestation = SoftwareAttestation::new()?;
         
         // Multiple attestations from same instance
-        let report1 = attestation.attest().unwrap();
-        let report2 = attestation.attest().unwrap();
+        let report1 = attestation.attest()?;
+        let report2 = attestation.attest()?;
         
         // Should both verify
-        assert!(attestation.verify(&report1).unwrap());
-        assert!(attestation.verify(&report2).unwrap());
+        assert!(attestation.verify(&report1)?);
+        assert!(attestation.verify(&report2)?);
         
         // But timestamps differ, so reports differ
         assert_ne!(report1, report2);

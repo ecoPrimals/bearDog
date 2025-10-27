@@ -521,7 +521,7 @@ mod tests {
         let discoverer = SoftwareDiscoverer::new();
         assert!(discoverer.is_ok());
         
-        let disc = discoverer.unwrap();
+        let disc = discoverer?;
         assert!(disc.enable_beardog_hsm);
         assert!(disc.enable_softhsm);
         assert!(disc.enable_system_keystores);
@@ -529,11 +529,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_software_discovery() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
         
-        let hsms = result.unwrap();
+        let hsms = result?;
         // Should at least find BearDog software HSM
         assert!(hsms.len() >= 1);
         
@@ -544,11 +544,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_beardog_hsm_discovery() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
-        let beardog_hsm = discoverer.discover_beardog_software_hsm().await.unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
+        let beardog_hsm = discoverer.discover_beardog_software_hsm().await?;
         
         assert!(beardog_hsm.is_some());
-        let hsm = beardog_hsm.unwrap();
+        let hsm = beardog_hsm?;
         assert_eq!(hsm.name, "beardog-software-hsm");
         assert_eq!(hsm.hsm_type, HsmType::Software);
         assert!(hsm.supports_human_entropy);
@@ -557,7 +557,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_beardog_hsm_capabilities() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         let caps = discoverer.create_software_hsm_capabilities();
         
         // Verify BearDog HSM capabilities
@@ -570,7 +570,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_softhsm_capabilities() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         let caps = discoverer.create_softhsm_capabilities();
         
         // Verify SoftHSM capabilities
@@ -583,8 +583,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_beardog_hsm_always_discovered() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
-        let hsms = discoverer.discover().await.unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
+        let hsms = discoverer.discover().await?;
         
         // BearDog HSM should always be available
         let beardog_hsms: Vec<_> = hsms.iter()
@@ -596,10 +596,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_beardog_hsm_disabled_probe() {
-        let mut discoverer = SoftwareDiscoverer::new().unwrap();
+        let mut discoverer = SoftwareDiscoverer::new()?;
         discoverer.enable_beardog_hsm = false;
         
-        let hsms = discoverer.discover().await.unwrap();
+        let hsms = discoverer.discover().await?;
         let beardog_count = hsms.iter().filter(|h| h.name.contains("BearDog")).count();
         
         assert_eq!(beardog_count, 0, "Should not discover BearDog when disabled");
@@ -607,10 +607,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_softhsm_disabled_probe() {
-        let mut discoverer = SoftwareDiscoverer::new().unwrap();
+        let mut discoverer = SoftwareDiscoverer::new()?;
         discoverer.enable_softhsm = false;
         
-        let hsms = discoverer.discover().await.unwrap();
+        let hsms = discoverer.discover().await?;
         let softhsm_count = hsms.iter().filter(|h| h.name.contains("SoftHSM")).count();
         
         assert_eq!(softhsm_count, 0, "Should not discover SoftHSM when disabled");
@@ -618,10 +618,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_system_keystores_disabled_probe() {
-        let mut discoverer = SoftwareDiscoverer::new().unwrap();
+        let mut discoverer = SoftwareDiscoverer::new()?;
         discoverer.enable_system_keystores = false;
         
-        let hsms = discoverer.discover().await.unwrap();
+        let hsms = discoverer.discover().await?;
         let keystore_count = hsms.iter()
             .filter(|h| h.name.contains("Keyring") || h.name.contains("Keychain") || h.name.contains("Credential Manager"))
             .count();
@@ -631,19 +631,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_probes_disabled() {
-        let mut discoverer = SoftwareDiscoverer::new().unwrap();
+        let mut discoverer = SoftwareDiscoverer::new()?;
         discoverer.enable_beardog_hsm = false;
         discoverer.enable_softhsm = false;
         discoverer.enable_system_keystores = false;
         
-        let hsms = discoverer.discover().await.unwrap();
+        let hsms = discoverer.discover().await?;
         assert!(hsms.is_empty(), "Should discover nothing when all probes disabled");
     }
 
     #[tokio::test]
     async fn test_discovered_hsms_have_valid_fields() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
-        let hsms = discoverer.discover().await.unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
+        let hsms = discoverer.discover().await?;
         
         for hsm in &hsms {
             assert!(!hsm.id.is_empty(), "ID should not be empty");
@@ -655,8 +655,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_software_hsm_types() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
-        let hsms = discoverer.discover().await.unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
+        let hsms = discoverer.discover().await?;
         
         for hsm in &hsms {
             // All discovered HSMs should be Software type
@@ -668,7 +668,7 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_software_discovery() {
         use std::sync::Arc;
-        let discoverer = Arc::new(SoftwareDiscoverer::new().unwrap());
+        let discoverer = Arc::new(SoftwareDiscoverer::new()?);
         
         let mut handles = vec![];
         for _ in 0..5 {
@@ -679,24 +679,24 @@ mod tests {
         }
         
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
     }
 
     #[tokio::test]
     async fn test_discovery_is_deterministic() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         
-        let hsms1 = discoverer.discover().await.unwrap();
-        let hsms2 = discoverer.discover().await.unwrap();
+        let hsms1 = discoverer.discover().await?;
+        let hsms2 = discoverer.discover().await?;
         
         assert_eq!(hsms1.len(), hsms2.len(), "Discovery should return same count");
     }
 
     #[tokio::test]
     async fn test_beardog_hsm_human_entropy_support() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         let caps = discoverer.create_software_hsm_capabilities();
         
         assert!(caps.human_entropy.supported, "BearDog HSM should support human entropy");
@@ -705,7 +705,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_system_keystore_capabilities() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         let caps = discoverer.create_system_keystore_capabilities();
         
         // System keystores should have basic capabilities
@@ -723,7 +723,7 @@ mod tests {
 
     #[test]
     fn test_clone_implementation() {
-        let discoverer1 = SoftwareDiscoverer::new().unwrap();
+        let discoverer1 = SoftwareDiscoverer::new()?;
         let discoverer2 = discoverer1.clone();
         
         assert_eq!(discoverer1.enable_beardog_hsm, discoverer2.enable_beardog_hsm);
@@ -732,8 +732,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_hsm_unique_ids() {
-        let discoverer = SoftwareDiscoverer::new().unwrap();
-        let hsms = discoverer.discover().await.unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
+        let hsms = discoverer.discover().await?;
         
         let mut ids = std::collections::HashSet::new();
         for hsm in &hsms {
@@ -745,10 +745,10 @@ mod tests {
     async fn test_performance_metrics() {
         use std::time::Instant;
         
-        let discoverer = SoftwareDiscoverer::new().unwrap();
+        let discoverer = SoftwareDiscoverer::new()?;
         let start = Instant::now();
         
-        let _hsms = discoverer.discover().await.unwrap();
+        let _hsms = discoverer.discover().await?;
         
         let duration = start.elapsed();
         assert!(duration.as_secs() < 3, "Software discovery should be fast: {:?}", duration);
