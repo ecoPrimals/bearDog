@@ -300,13 +300,14 @@ mod tests {
     }
 
     #[test]
-    fn test_config_serialization() {
+    fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let config = MetricsConfig::default();
-        let json = serde_json::to_string(&config);
-        assert!(json.is_ok());
+        let json = serde_json::to_string(&config)?;
+        assert!(!json.is_empty());
 
-        let deserialized: Result<MetricsConfig, _> = serde_json::from_str(&json?);
+        let deserialized: Result<MetricsConfig, _> = serde_json::from_str(&json);
         assert!(deserialized.is_ok());
+        Ok(())
     }
 
     #[test]

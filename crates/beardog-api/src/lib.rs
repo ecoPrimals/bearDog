@@ -168,6 +168,10 @@ pub async fn start_api_server(core: Arc<BearDogCore>, bind_addr: &str) -> Result
     Ok(())
 }
 
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod api_comprehensive_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;

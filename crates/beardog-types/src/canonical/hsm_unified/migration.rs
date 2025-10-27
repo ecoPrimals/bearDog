@@ -479,12 +479,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_empty_migration() {
+    async fn test_empty_migration() -> Result<(), Box<dyn std::error::Error>> {
         let service = HsmMigrationService::default();
         let result = service.migrate_hsm_configs(vec![])?;
 
         assert_eq!(result.migration_report.legacy_configs_processed, 0);
         assert_eq!(result.migration_report.successful_migrations.len(), 0);
+        Ok(())
     }
 
     #[tokio::test]

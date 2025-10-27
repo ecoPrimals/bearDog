@@ -135,6 +135,7 @@ impl EcosystemListener {
     }
 
     /// Logs the listening plan to inform about upcoming operations
+    #[allow(clippy::cognitive_complexity)] // Simple logging function - clippy false positive
     fn log_listening_plan() {
         info!("🎧 Starting ecosystem listening...");
         info!("📋 Listening Plan:");
@@ -156,6 +157,7 @@ impl EcosystemListener {
     }
 
     /// Starts a specific listener if the protocol is enabled
+    #[allow(clippy::cognitive_complexity)] // Protocol selection inherently requires branching on protocol type
     fn start_listener_if_enabled(
         &mut self,
         protocol: beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
@@ -713,7 +715,7 @@ mod tests {
 
         assert_eq!(listener.listening_tasks.len(), 0);
         assert_eq!(listener.metrics.announcements_received, 0);
-        
+
         Ok(())
     }
 
@@ -722,9 +724,7 @@ mod tests {
         // Simulate an environment-based announcement discovery
         std::env::set_var("COMPUTE_ENDPOINT", "http://discovered-compute-service:8081");
 
-        let announcements = EcosystemListener::check_environment_announcements()
-            .await
-            ?;
+        let announcements = EcosystemListener::check_environment_announcements().await?;
 
         // Note: In unit test environment without actual environment variables set,
         // announcements may be empty. This is expected behavior for unit tests.
@@ -758,7 +758,7 @@ mod tests {
 
         // Clean up
         std::env::remove_var("COMPUTE_ENDPOINT");
-        
+
         Ok(())
     }
 

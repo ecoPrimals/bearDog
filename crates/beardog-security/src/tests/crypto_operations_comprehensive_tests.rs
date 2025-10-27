@@ -514,11 +514,7 @@ mod key_rotation_tests {
         }
 
         assert!(decrypted.is_some(), "Should find correct key");
-        assert_eq!(
-            decrypted?.as_slice(),
-            plaintext,
-            "Decryption should work"
-        );
+        assert_eq!(decrypted?.as_slice(), plaintext, "Decryption should work");
 
         Ok(())
     }

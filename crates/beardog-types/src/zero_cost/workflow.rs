@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_workflow_processing() {
+    async fn test_workflow_processing() -> Result<(), Box<dyn std::error::Error>> {
         let processor = MockWorkflowProcessor;
         let config = WorkflowEngineConfig::default();
         let engine = ZeroCostWorkflowEngine::new(processor, config);
@@ -208,5 +208,6 @@ mod tests {
         let result = engine.process(workflow).await?;
         assert_eq!(result.status, "completed ");
         assert_eq!(result.workflow_id, "test-workflow");
+        Ok(())
     }
 }

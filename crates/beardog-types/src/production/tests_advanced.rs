@@ -4,7 +4,7 @@
 use super::*;
 
 #[test]
-fn test_production_ecosystem_builder_complete() {
+fn test_production_ecosystem_builder_complete() -> Result<(), Box<dyn std::error::Error>> {
     let ecosystem = ProductionEcosystemBuilder::new()
         .environment_level(EnvironmentLevel::Production)
         .service("test-service".to_string(), "1.0.0".to_string())
@@ -14,71 +14,64 @@ fn test_production_ecosystem_builder_complete() {
             "prod-cluster-1".to_string(),
         )
         .enable_advanced_features()
-        .build();
+        .build()?;
 
-    assert!(ecosystem.is_ok());
-    let ecosystem = ecosystem?;
     assert_eq!(
         ecosystem.config.core.environment_level,
         EnvironmentLevel::Production
     );
     assert_eq!(ecosystem.config.core.service_name, "test-service");
     assert_eq!(ecosystem.config.core.service_version, "1.0.0");
+    Ok(())
 }
 
 #[test]
-fn test_production_ecosystem_builder_defaults() {
-    let ecosystem = ProductionEcosystemBuilder::default().build();
-    assert!(ecosystem.is_ok());
+fn test_production_ecosystem_builder_defaults() -> Result<(), Box<dyn std::error::Error>> {
+    let ecosystem = ProductionEcosystemBuilder::default().build()?;
 
-    let ecosystem = ecosystem?;
     assert_eq!(
         ecosystem.config.core.environment_level,
         EnvironmentLevel::Development
     );
     assert!(ecosystem.config.core.flags.enable_advanced_monitoring);
     assert!(ecosystem.config.core.flags.enable_distributed_tracing);
+    Ok(())
 }
 
 #[test]
-fn test_production_ecosystem_initialization() {
+fn test_production_ecosystem_initialization() -> Result<(), Box<dyn std::error::Error>> {
     let config = ProductionConfig::default();
-    let ecosystem = ProductionEcosystem::new(config);
-
-    assert!(ecosystem.is_ok());
-    let mut ecosystem = ecosystem?;
+    let mut ecosystem = ProductionEcosystem::new(config)?;
 
     // Test initialization
-    let result = ecosystem.initialize();
-    assert!(result.is_ok());
+    ecosystem.initialize()?;
 
     let status = ecosystem.get_status();
     assert_eq!(status.status, OperationalStatus::Healthy);
+    Ok(())
 }
 
 #[test]
-fn test_production_ecosystem_shutdown() {
+fn test_production_ecosystem_shutdown() -> Result<(), Box<dyn std::error::Error>> {
     let config = ProductionConfig::default();
-    let ecosystem = ProductionEcosystem::new(config);
-    assert!(ecosystem.is_ok());
-
-    let mut ecosystem = ecosystem?;
+    let mut ecosystem = ProductionEcosystem::new(config)?;
     let _ = ecosystem.initialize();
 
-    let result = ecosystem.shutdown();
-    assert!(result.is_ok());
+    ecosystem.shutdown()?;
 
     let status = ecosystem.get_status();
     assert_eq!(status.status, OperationalStatus::Shutdown);
+    Ok(())
 }
 
 #[test]
-fn test_production_ecosystem_uptime() {
+fn test_production_ecosystem_uptime() -> Result<(), Box<dyn std::error::Error>> {
     let config = ProductionConfig::default();
     let ecosystem = ProductionEcosystem::new(config)?;
 
     let uptime = ecosystem.uptime();
-    assert!(uptime.as_millis() > 0 || uptime.as_millis() == 0); // Check uptime is valid
+    assert!(uptime.as_millis() >= 0); // Check uptime is valid
+    Ok(())
 }
 
 #[test]
@@ -100,13 +93,14 @@ fn test_operational_status_equality() {
 }
 
 #[test]
-fn test_production_flags_serialization() {
+fn test_production_flags_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let flags = ProductionFlags::default();
-    let serialized = serde_json::to_string(&flags);
-    assert!(serialized.is_ok());
+    let serialized = serde_json::to_string(&flags)?;
+    assert!(!serialized.is_empty());
 
-    let deserialized: Result<ProductionFlags, _> = serde_json::from_str(&serialized?);
+    let deserialized: Result<ProductionFlags, _> = serde_json::from_str(&serialized);
     assert!(deserialized.is_ok());
+    Ok(())
 }
 
 #[test]
@@ -199,48 +193,50 @@ fn test_production_flags_individual_features() {
 }
 
 #[test]
-fn test_builder_service_method() {
+fn test_builder_service_method() -> Result<(), Box<dyn std::error::Error>> {
     let ecosystem = ProductionEcosystemBuilder::new()
         .service("custom-service".to_string(), "2.0.0".to_string())
-        .build()
-        ?;
+        .build()?;
 
     assert_eq!(ecosystem.config.core.service_name, "custom-service");
     assert_eq!(ecosystem.config.core.service_version, "2.0.0");
+    Ok(())
 }
 
 #[test]
-fn test_builder_deployment_method() {
+fn test_builder_deployment_method() -> Result<(), Box<dyn std::error::Error>> {
     let ecosystem = ProductionEcosystemBuilder::new()
         .deployment(
             "deploy-456".to_string(),
             "eu-west-1".to_string(),
             "test-cluster".to_string(),
         )
-        .build()
-        ?;
+        .build()?;
 
     assert_eq!(ecosystem.config.core.deployment_id, "deploy-456");
     assert_eq!(ecosystem.config.core.region, "eu-west-1");
     assert_eq!(ecosystem.config.core.cluster_id, "test-cluster");
+    Ok(())
 }
 
 #[test]
-fn test_production_state_serialization() {
+fn test_production_state_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let state = ProductionState::default();
-    let serialized = serde_json::to_string(&state);
-    assert!(serialized.is_ok());
+    let serialized = serde_json::to_string(&state)?;
+    assert!(!serialized.is_empty());
 
-    let deserialized: Result<ProductionState, _> = serde_json::from_str(&serialized?);
+    let deserialized: Result<ProductionState, _> = serde_json::from_str(&serialized);
     assert!(deserialized.is_ok());
+    Ok(())
 }
 
 #[test]
-fn test_performance_metrics_serialization() {
+fn test_performance_metrics_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let metrics = PerformanceMetrics::default();
-    let serialized = serde_json::to_string(&metrics);
-    assert!(serialized.is_ok());
+    let serialized = serde_json::to_string(&metrics)?;
+    assert!(!serialized.is_empty());
 
-    let deserialized: Result<PerformanceMetrics, _> = serde_json::from_str(&serialized?);
+    let deserialized: Result<PerformanceMetrics, _> = serde_json::from_str(&serialized);
     assert!(deserialized.is_ok());
+    Ok(())
 }

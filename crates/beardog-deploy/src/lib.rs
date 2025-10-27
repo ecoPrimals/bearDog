@@ -38,6 +38,10 @@ pub use builder::*;
 pub use device::*;
 pub use error::*;
 
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod deploy_comprehensive_tests;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
     /// Target deployment environment (dev, staging, prod)

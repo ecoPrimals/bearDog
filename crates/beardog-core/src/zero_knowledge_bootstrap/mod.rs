@@ -287,7 +287,8 @@ impl ZeroKnowledgeBootstrap {
         let config = UnifiedBootstrapConfig::default();
 
         // Step 1: Discover our own identity and capabilities (only thing we can know)
-        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new().expect("Test: create discovery engine should succeed");
+        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new()
+            .expect("Test: create discovery engine should succeed");
         let self_identity = self_discovery.discover_self_identity()?;
 
         info!(
@@ -687,7 +688,7 @@ mod tests {
         // Should have discovered some ecosystem state
         let state = bootstrap.get_ecosystem_state().await;
         assert!(state.ecosystem_health > 0.0);
-        
+
         Ok(())
     }
 
@@ -721,7 +722,7 @@ mod tests {
             state.available_capabilities.is_empty() || !state.available_capabilities.is_empty(),
             "Capability discovery system initialized"
         );
-        
+
         Ok(())
     }
 }

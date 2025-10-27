@@ -644,7 +644,7 @@ impl HybridIntelligenceSystem {
     }
 }
 
-/// Builder for configuring and creating a HybridIntelligence system
+/// Builder for configuring and creating a `HybridIntelligence` system
 ///
 /// This builder allows flexible configuration of the hybrid intelligence system,
 /// including ML models, neural networks, decision engines, and learning configurations.
