@@ -670,7 +670,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_zero_knowledge_bootstrap() {
+    async fn test_zero_knowledge_bootstrap() -> Result<(), Box<dyn std::error::Error>> {
         let mut bootstrap = ZeroKnowledgeBootstrap::new().await?;
 
         // Should start with zero ecosystem knowledge
@@ -690,7 +690,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_infant_learning_pattern() {
+    async fn test_infant_learning_pattern() -> Result<(), Box<dyn std::error::Error>> {
         let bootstrap = ZeroKnowledgeBootstrap::new().await?;
 
         // Test that we truly start with zero hardcoded knowledge
