@@ -7,6 +7,9 @@
 //
 // **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
 //
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 // ## 🎯 **PEDANTIC PERFECTION ACHIEVED** ✅
 //
 // This crate represents **ABSOLUTE SOFTWARE ENGINEERING EXCELLENCE** with:

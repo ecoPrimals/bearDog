@@ -10,6 +10,10 @@
 //! - **Session Management**: Secure session lifecycle management
 //! - **Key Management**: Hardware-backed cryptographic key operations
 //! - **Mobile HSM**: iOS Secure Enclave and Android `StrongBox` support
+
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 //!
 //! ## Example
 //!

@@ -10,6 +10,8 @@
 //! - **Zero Unsafe Code**: All operations are memory-safe
 
 #![deny(unsafe_code)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
 //! - **SIMD Acceleration**: Hardware-accelerated cryptographic operations
 //! - **Secure Key Management**: Safe key storage and lifecycle management
 //!
