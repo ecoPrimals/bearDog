@@ -477,7 +477,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_self_discovery_engine() {
+    async fn test_self_discovery_engine() -> Result<(), Box<dyn std::error::Error>> {
         let mut engine = SelfDiscoveryEngine::new()?;
 
         // Should create engine successfully
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_zero_hardcoded_knowledge() {
+    async fn test_zero_hardcoded_knowledge() -> Result<(), Box<dyn std::error::Error>> {
         let mut engine = SelfDiscoveryEngine::new()?;
         let identity = engine.discover_self_identity()?;
 
@@ -548,10 +548,11 @@ mod tests {
                 "Endpoint should be proper URL"
             );
         }
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_capability_auto_detection() {
+    async fn test_capability_auto_detection() -> Result<(), Box<dyn std::error::Error>> {
         let mut engine = SelfDiscoveryEngine::new()?;
         let capabilities = engine.auto_detect_capabilities();
 
