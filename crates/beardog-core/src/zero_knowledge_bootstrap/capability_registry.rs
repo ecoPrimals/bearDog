@@ -221,6 +221,7 @@ impl CapabilityRegistry {
     /// # Ok(())
     /// # }
     /// ```
+    #[allow(clippy::cognitive_complexity)] // Capability registration requires validation, storage, and index updates
     pub async fn register(&self, capability: UniversalCapability) -> BearDogResult<CapabilityId> {
         let id = CapabilityId::new();
 
@@ -280,6 +281,7 @@ impl CapabilityRegistry {
     /// # Ok(())
     /// # }
     /// ```
+    #[allow(clippy::cognitive_complexity)] // Discovery by type requires index lookup, filtering, and health checks
     pub async fn discover_by_type(
         &self,
         capability_type: ServiceCapabilityType,
@@ -382,6 +384,7 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if the capability is not found or if the removal operation fails.
+    #[allow(clippy::cognitive_complexity)] // Capability removal requires index cleanup and validation across multiple data structures
     pub async fn remove(&self, id: &CapabilityId) -> BearDogResult<()> {
         debug!("Removing capability: {}", id);
 
@@ -470,6 +473,7 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if the cleanup operation fails or if capability removal encounters issues.
+    #[allow(clippy::cognitive_complexity)] // Health-based cleanup requires iterating, filtering, and coordinated removal
     pub async fn cleanup_unhealthy(&self) -> BearDogResult<usize> {
         let mut removed_count = 0;
         let capabilities = self.capabilities.read().await;
@@ -564,7 +568,7 @@ mod tests {
 
         let id = registry.register(capability).await?;
         assert!(!id.as_str().is_empty());
-        
+
         Ok(())
     }
 
@@ -583,15 +587,14 @@ mod tests {
         // Discover compute capabilities
         let compute_caps = registry
             .discover_by_type(ServiceCapabilityType::Compute)
-            .await
-            ?;
+            .await?;
 
         assert_eq!(compute_caps.len(), 1);
         assert_eq!(
             compute_caps[0].capability.capability_type,
             ServiceCapabilityType::Compute
         );
-        
+
         Ok(())
     }
 
@@ -605,13 +608,12 @@ mod tests {
         // Update health status
         registry
             .update_health_status(&id, HealthStatus::Healthy)
-            .await
-            ?;
+            .await?;
 
         // Verify update
         let cap = registry.get(&id).await?.unwrap();
         assert_eq!(cap.consecutive_failures, 0);
-        
+
         Ok(())
     }
 
@@ -628,7 +630,7 @@ mod tests {
         // Verify removal
         let result = registry.get(&id).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -639,16 +641,13 @@ mod tests {
         // Register multiple capabilities
         registry
             .register(create_test_capability(ServiceCapabilityType::Compute))
-            .await
-            ?;
+            .await?;
         registry
             .register(create_test_capability(ServiceCapabilityType::Compute))
-            .await
-            ?;
+            .await?;
         registry
             .register(create_test_capability(ServiceCapabilityType::Storage))
-            .await
-            ?;
+            .await?;
 
         let stats = registry.statistics().await?;
 
@@ -661,7 +660,7 @@ mod tests {
             *stats.by_type.get(&ServiceCapabilityType::Storage).unwrap(),
             1
         );
-        
+
         Ok(())
     }
 }

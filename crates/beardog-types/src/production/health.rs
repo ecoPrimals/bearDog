@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn test_health_checker_lifecycle() {
+    fn test_health_checker_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
         let config = HealthConfig {
             enabled: true,
             check_interval_seconds: 30,
@@ -194,19 +194,18 @@ mod tests {
 
         let result = checker.stop_monitoring();
         assert!(result.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_comprehensive_health_check() {
+    fn test_comprehensive_health_check() -> Result<(), Box<dyn std::error::Error>> {
         let config = HealthConfig::default();
         let checker = HealthChecker::new(&config)?;
 
-        let report = checker.comprehensive_health_check();
-        assert!(report.is_ok());
-
-        let report = report?;
+        let report = checker.comprehensive_health_check()?;
         assert_eq!(report.overall_status, HealthStatus::Healthy);
         assert_eq!(report.component_statuses.len(), 2);
+        Ok(())
     }
 
     #[test]

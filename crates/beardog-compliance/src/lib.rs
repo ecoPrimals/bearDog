@@ -51,3 +51,7 @@ pub mod compliance;
 
 pub use audit::{AuditEngine, AuditEvent, AuditEventType, AuditSeverity};
 pub use compliance::*;
+
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod audit_comprehensive_tests;

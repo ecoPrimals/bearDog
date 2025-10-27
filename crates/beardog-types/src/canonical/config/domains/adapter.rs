@@ -811,30 +811,33 @@ mod tests {
     }
 
     #[test]
-    fn test_development_config() {
+    fn test_development_config() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedAdapterConfig::development()?;
         assert!(!config.security.auth_required);
         assert!(!config.security.encryption_in_transit);
         assert!(!config.monitoring.enabled);
         assert_eq!(config.optimization.level, 1);
+        Ok(())
     }
 
     #[test]
-    fn test_production_config() {
+    fn test_production_config() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedAdapterConfig::production()?;
         assert_eq!(config.security.auth_level, AuthLevel::MultiFactor);
         assert!(config.security.encryption_at_rest);
         assert_eq!(config.optimization.level, 5);
         assert!(config.service_mesh.enabled);
+        Ok(())
     }
 
     #[test]
-    fn test_config_serialization() {
+    fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedAdapterConfig::default();
         let toml_str = config.to_toml()?;
         assert!(toml_str.contains("[core]"));
         assert!(toml_str.contains("[discovery]"));
         assert!(toml_str.contains("[security]"));
+        Ok(())
     }
 
     #[test]

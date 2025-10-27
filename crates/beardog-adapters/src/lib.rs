@@ -35,6 +35,10 @@ mod adapter_integration_tests;
 #[cfg(test)]
 mod adapter_resilience_tests;
 
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod lib_comprehensive_tests;
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

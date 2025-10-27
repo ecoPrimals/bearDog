@@ -124,7 +124,7 @@ mod tests {
         let json = serde_json::to_string(&license)?;
         let deserialized: LicenseInfo = serde_json::from_str(&json)?;
         assert_eq!(license.license_id, deserialized.license_id);
-        
+
         Ok(())
     }
 

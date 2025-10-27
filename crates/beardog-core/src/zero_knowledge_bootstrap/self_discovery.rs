@@ -499,7 +499,7 @@ mod tests {
         // Should have metadata
         assert!(identity.metadata.display_name.is_some());
         assert!(!identity.metadata.version.is_empty());
-        
+
         Ok(())
     }
 
@@ -550,7 +550,7 @@ mod tests {
                 "Endpoint should be proper URL"
             );
         }
-        
+
         Ok(())
     }
 
@@ -570,7 +570,7 @@ mod tests {
             assert!(cap.confidence_score <= 1.0);
             assert!(!cap.evidence.is_empty());
         }
-        
+
         Ok(())
     }
 }
