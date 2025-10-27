@@ -747,7 +747,7 @@ mod tests {
 
     #[tokio::test]
     async async fn test_optimized_router_creation() {
-        let router = OptimizedCapabilityRouter::new().await.unwrap();
+        let router = OptimizedCapabilityRouter::new().await?;
         assert_eq!(router.handler_count(), 0);
         
         let stats = router.get_optimization_stats();
@@ -767,7 +767,7 @@ mod tests {
 
     #[tokio::test]
     async async fn test_batch_processing() {
-        let mut router = OptimizedCapabilityRouter::new().await.unwrap();
+        let mut router = OptimizedCapabilityRouter::new().await?;
         
         // Create test requests
         let requests = vec![

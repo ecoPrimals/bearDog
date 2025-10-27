@@ -351,7 +351,7 @@ mod tests {
         let result = resolver.resolve_endpoint("compute");
         assert!(result.is_ok());
         
-        let endpoint = result.unwrap();
+        let endpoint = result?;
         assert!(!endpoint.is_empty());
     }
 } 

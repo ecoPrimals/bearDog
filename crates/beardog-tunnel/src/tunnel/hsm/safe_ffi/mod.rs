@@ -178,9 +178,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_platform_security_creation() {
+    fn test_platform_security_creation() -> Result<(), Box<dyn std::error::Error>> {
         let security = SafePlatformSecurity::new();
         assert!(security.is_ok());
+        Ok(())
     }
 
     #[test]

@@ -521,9 +521,9 @@ mod tests {
             metadata: std::collections::HashMap::new(),
         };
         
-        registry.register_security_provider("test-security".to_string(), security_provider, info.clone()).await.unwrap();
-        registry.register_hsm_provider("test-hsm".to_string(), hsm_provider, info.clone()).await.unwrap();
-        registry.register_monitoring_provider("test-monitoring".to_string(), monitoring_provider, info).await.unwrap();
+        registry.register_security_provider("test-security".to_string(), security_provider, info.clone()).await?;
+        registry.register_hsm_provider("test-hsm".to_string(), hsm_provider, info.clone()).await?;
+        registry.register_monitoring_provider("test-monitoring".to_string(), monitoring_provider, info).await?;
         
         let stats = registry.get_statistics().await;
         assert_eq!(stats.total_providers, 3);
@@ -546,9 +546,9 @@ mod tests {
             metadata: std::collections::HashMap::new(),
         };
         
-        registry.register_security_provider("test-security".to_string(), security_provider, info).await.unwrap();
+        registry.register_security_provider("test-security".to_string(), security_provider, info).await?;
         
-        let retrieved = registry.get_security_provider("test-security").await.unwrap();
+        let retrieved = registry.get_security_provider("test-security").await?;
         assert_eq!(retrieved.provider_id, "test-security");
     }
     
@@ -568,9 +568,9 @@ mod tests {
             metadata: std::collections::HashMap::new(),
         };
         
-        registry.register_security_provider("test-security".to_string(), security_provider, info).await.unwrap();
+        registry.register_security_provider("test-security".to_string(), security_provider, info).await?;
         
-        let health_results = registry.health_check_all().await.unwrap();
+        let health_results = registry.health_check_all().await?;
         assert_eq!(health_results.len(), 1);
         assert!(health_results.contains_key("test-security"));
     }

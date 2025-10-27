@@ -241,7 +241,7 @@ mod tests {
         let provider = RustCryptoProvider::new().await?;
         let key_material = provider.generate_key_material(&KeyType::Ed25519).await?;
         
-        let signing_key = SigningKey::from_bytes(&key_material.clone().try_into().unwrap());
+        let signing_key = SigningKey::from_bytes(&key_material.clone().try_into()?);
         let verifying_key = signing_key.verifying_key();
         
         let data = b"Data to sign";

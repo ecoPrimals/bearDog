@@ -59,7 +59,7 @@
 //!
 //! ```rust,no_run
 //! # use beardog_core::BearDogCore;
-//! # let core = BearDogCore::with_default_config().unwrap();
+//! # let core = BearDogCore::with_default_config()?;
 //! // Access security provider
 //! let security = &core.security;
 //!

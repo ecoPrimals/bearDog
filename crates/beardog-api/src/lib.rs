@@ -178,7 +178,7 @@ mod tests {
     use tower::ServiceExt;
 
     #[tokio::test]
-    async fn test_health_endpoint() {
+    async fn test_health_endpoint() -> Result<(), Box<dyn std::error::Error>> {
         let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
         let core = Arc::new(BearDogCore::new(config));
         let app = create_router(core);
@@ -186,18 +186,15 @@ mod tests {
         let request = Request::builder()
             .method(Method::GET)
             .uri("/health")
-            .body(Body::empty())
-            .expect("Health endpoint request should build successfully");
+            .body(Body::empty())?;
 
-        let response = app
-            .oneshot(request)
-            .await
-            .expect("Health endpoint should respond successfully");
+        let response = app.oneshot(request).await?;
         assert_eq!(response.status(), StatusCode::OK);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_status_endpoint() {
+    async fn test_status_endpoint() -> Result<(), Box<dyn std::error::Error>> {
         let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
         let core = Arc::new(BearDogCore::new(config));
         let app = create_router(core);
@@ -205,13 +202,10 @@ mod tests {
         let request = Request::builder()
             .method(Method::GET)
             .uri("/status")
-            .body(Body::empty())
-            .expect("Status endpoint request should build successfully");
+            .body(Body::empty())?;
 
-        let response = app
-            .oneshot(request)
-            .await
-            .expect("Status endpoint should respond successfully");
+        let response = app.oneshot(request).await?;
         assert_eq!(response.status(), StatusCode::OK);
+        Ok(())
     }
 }

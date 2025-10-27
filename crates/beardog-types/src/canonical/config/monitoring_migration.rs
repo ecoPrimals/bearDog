@@ -512,7 +512,7 @@ mod tests {
     #[tokio::test]
     async fn test_empty_monitoring_migration() {
         let service = MonitoringMigrationService::with_defaults();
-        let result = service.migrate_monitoring_configs(vec![]).unwrap();
+        let result = service.migrate_monitoring_configs(vec![])?;
 
         assert_eq!(result.report.legacy_configs_processed, 0);
         assert_eq!(result.report.successful_migrations.len(), 0);

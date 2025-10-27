@@ -33,7 +33,7 @@ impl Pkcs11CapabilityProber {
 }
 
 // NOTE: Default implementation removed - use Type::new() instead since it returns Result
-// Previous unsafe implementation used .expect() which could panic
+// Previous unsafe implementation used ? which could panic
 // Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
 
 #[cfg(test)]

@@ -162,7 +162,7 @@ impl UnifiedHumanEntropyClassifier {
 }
 
 // NOTE: Default implementation removed - use Type::new() instead since it returns Result
-// Previous unsafe implementation used .expect() which could panic
+// Previous unsafe implementation used ? which could panic
 // Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
 
 /// Human entropy classification result
@@ -195,7 +195,7 @@ impl Default for HsmCapabilities {
 }
 
 // NOTE: Default implementation removed - use Type::new() instead since it returns Result
-// Previous unsafe implementation used .expect() which could panic
+// Previous unsafe implementation used ? which could panic
 // Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
 
 /// Entropy source types
@@ -212,68 +212,75 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_classifier_creation() {
+    fn test_classifier_creation() -> Result<(), Box<dyn std::error::Error>> {
         let classifier = UnifiedHumanEntropyClassifier::new();
         assert!(classifier.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_criteria_default() {
+    fn test_criteria_default() -> Result<(), Box<dyn std::error::Error>> {
         let criteria = TierElevationCriteria::default();
         assert_eq!(criteria.min_quality_score, 0.7);
         assert!(criteria.require_biometric);
+        Ok(())
     }
 
     #[test]
-    fn test_quality_score_empty() {
-        let classifier = UnifiedHumanEntropyClassifier::new().unwrap();
+    fn test_quality_score_empty() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = UnifiedHumanEntropyClassifier::new()?;
         let sensor_data = HashMap::new();
-        let score = classifier.calculate_quality_score(&sensor_data).unwrap();
+        let score = classifier.calculate_quality_score(&sensor_data)?;
         assert_eq!(score, 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_quality_score_with_data() {
-        let classifier = UnifiedHumanEntropyClassifier::new().unwrap();
+    fn test_quality_score_with_data() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = UnifiedHumanEntropyClassifier::new()?;
         let mut sensor_data = HashMap::new();
         sensor_data.insert("fingerprint".to_string(), 0.9);
         sensor_data.insert("touch_pressure".to_string(), 0.8);
 
-        let score = classifier.calculate_quality_score(&sensor_data).unwrap();
+        let score = classifier.calculate_quality_score(&sensor_data)?;
         assert!(score > 0.0 && score <= 1.0);
+        Ok(())
     }
 
     #[test]
-    fn test_sensor_weights() {
-        let classifier = UnifiedHumanEntropyClassifier::new().unwrap();
+    fn test_sensor_weights() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = UnifiedHumanEntropyClassifier::new()?;
         assert_eq!(classifier.get_sensor_weight("fingerprint"), 1.0);
         assert_eq!(classifier.get_sensor_weight("touch_pressure"), 0.8);
         assert_eq!(classifier.get_sensor_weight("accelerometer"), 0.6);
+        Ok(())
     }
 
     #[test]
-    fn test_classification() {
-        let classifier = UnifiedHumanEntropyClassifier::new().unwrap();
+    fn test_classification() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = UnifiedHumanEntropyClassifier::new()?;
         let mut sensor_data = HashMap::new();
         sensor_data.insert("fingerprint".to_string(), 0.9);
 
         let result = classifier.classify_mobile_entropy(&sensor_data);
         assert!(result.is_ok());
 
-        let classification = result.unwrap();
+        let classification = result?;
         assert!(classification.has_biometric);
         assert!(classification.quality_score > 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_capabilities() {
+    fn test_capabilities() -> Result<(), Box<dyn std::error::Error>> {
         let caps = HsmCapabilities::default();
         assert!(caps.supports_ephemeral_seeds);
         assert!(caps.supports_biometric);
+        Ok(())
     }
 
     #[test]
-    fn test_criteria_with_custom() {
+    fn test_criteria_with_custom() -> Result<(), Box<dyn std::error::Error>> {
         let criteria = TierElevationCriteria {
             min_quality_score: 0.9,
             require_biometric: false,
@@ -283,15 +290,17 @@ mod tests {
 
         let classifier = UnifiedHumanEntropyClassifier::with_criteria(criteria);
         assert!(classifier.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_tier_sources() {
-        let classifier = UnifiedHumanEntropyClassifier::new().unwrap();
+    fn test_tier_sources() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = UnifiedHumanEntropyClassifier::new()?;
         // NOTE: Simplified to unit variant - device info managed separately
         let tier = HsmTier::Mobile;
 
-        let sources = classifier.get_sources_for_tier(&tier).unwrap();
+        let sources = classifier.get_sources_for_tier(&tier)?;
         assert!(!sources.is_empty());
+        Ok(())
     }
 }

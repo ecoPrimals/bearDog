@@ -165,7 +165,7 @@ mod tests {
         let config = ConsolidatedAiConfig::builder()
             .enabled(true)
             .build()
-            .unwrap();
+            ?;
 
         assert!(config.is_enabled());
     }
@@ -174,10 +174,10 @@ mod tests {
     fn test_presets() {
         let prod = ConsolidatedAiConfigBuilder::production_safe()
             .build()
-            .unwrap();
+            ?;
         assert!(prod.is_enabled());
 
-        let dev = ConsolidatedAiConfigBuilder::development().build().unwrap();
+        let dev = ConsolidatedAiConfigBuilder::development().build()?;
         assert!(dev.is_enabled());
     }
 }

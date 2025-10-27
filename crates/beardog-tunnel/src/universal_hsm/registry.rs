@@ -68,19 +68,19 @@ mod tests {
         registry
             .register_provider("test-provider".to_string(), "software".to_string())
             .await
-            .unwrap();
+            ?;
         
         // List providers
-        let providers = registry.list_providers().await.unwrap();
+        let providers = registry.list_providers().await?;
         assert_eq!(providers.len(), 1);
         
         // Get provider type
-        let provider_type = registry.get_provider_type("test-provider").await.unwrap();
+        let provider_type = registry.get_provider_type("test-provider").await?;
         assert_eq!(provider_type, Some("software".to_string()));
         
         // Unregister provider
-        registry.unregister_provider("test-provider").await.unwrap();
-        let providers = registry.list_providers().await.unwrap();
+        registry.unregister_provider("test-provider").await?;
+        let providers = registry.list_providers().await?;
         assert_eq!(providers.len(), 0);
     }
 }

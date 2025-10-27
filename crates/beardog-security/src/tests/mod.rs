@@ -15,9 +15,6 @@ mod security_integration_tests;
 mod key_management_tests;
 
 #[cfg(test)]
-mod hsm_integration_tests;
-
-#[cfg(test)]
 mod encryption_edge_cases_tests;
 
 #[cfg(test)]
@@ -40,8 +37,15 @@ mod crypto_utils_comprehensive_tests;
 mod access_control_expanded_tests;
 
 // Day 2: HSM Operations Comprehensive Tests - October 17, 2025
+// Split into 3 modules on October 24, 2025 (file size compliance: 1291→~400 lines each)
 #[cfg(test)]
-mod hsm_operations_comprehensive_tests;
+mod hsm_basic_tests;
+
+#[cfg(test)]
+mod hsm_advanced_tests;
+
+#[cfg(test)]
+mod hsm_integration_tests;
 
 // Day 3: Error Handling Comprehensive Tests - October 17, 2025
 #[cfg(test)]

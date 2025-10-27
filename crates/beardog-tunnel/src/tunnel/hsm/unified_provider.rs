@@ -232,132 +232,123 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_provider_creation() {
+    fn test_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = UnifiedHsmProvider::new();
         assert!(provider.list_providers().is_empty());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_register_provider() {
+    async fn test_register_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
 
         let result = unified.register_provider("software".to_string(), Arc::new(software_hsm));
 
         assert!(result.is_ok());
         assert_eq!(unified.list_providers().len(), 1);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_default_provider() {
+    async fn test_default_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified
-            .register_provider("software".to_string(), Arc::new(software_hsm))
-            .unwrap();
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
 
         let provider = unified.get_default_provider();
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_get_provider() {
+    async fn test_get_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified
-            .register_provider("software".to_string(), Arc::new(software_hsm))
-            .unwrap();
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
 
         let provider = unified.get_provider("software");
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_unregister_provider() {
+    async fn test_unregister_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified
-            .register_provider("software".to_string(), Arc::new(software_hsm))
-            .unwrap();
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
 
         assert_eq!(unified.list_providers().len(), 1);
 
-        unified.unregister_provider("software").unwrap();
+        unified.unregister_provider("software")?;
         assert_eq!(unified.list_providers().len(), 0);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_set_default_provider() {
+    async fn test_set_default_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm1 = RustSoftwareHsm::new(config.clone()).await.unwrap();
-        let software_hsm2 = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm1 = RustSoftwareHsm::new(config.clone()).await?;
+        let software_hsm2 = RustSoftwareHsm::new(config).await?;
 
-        unified
-            .register_provider("provider1".to_string(), Arc::new(software_hsm1))
-            .unwrap();
-        unified
-            .register_provider("provider2".to_string(), Arc::new(software_hsm2))
-            .unwrap();
+        unified.register_provider("provider1".to_string(), Arc::new(software_hsm1))?;
+        unified.register_provider("provider2".to_string(), Arc::new(software_hsm2))?;
 
         let result = unified.set_default_provider("provider2".to_string());
         assert!(result.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_generate_key() {
+    async fn test_generate_key() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified
-            .register_provider("software".to_string(), Arc::new(software_hsm))
-            .unwrap();
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
 
         let result = unified.generate_key("test_key", &KeyType::Ed25519).await;
         assert!(result.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_key_operations() {
+    async fn test_key_operations() -> Result<(), Box<dyn std::error::Error>> {
         let mut unified = UnifiedHsmProvider::new();
 
         let config = SoftwareHsmConfig::default();
-        let software_hsm = RustSoftwareHsm::new(config).await.unwrap();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified
-            .register_provider("software".to_string(), Arc::new(software_hsm))
-            .unwrap();
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
 
         // Generate key
-        let key = unified
-            .generate_key("test_key", &KeyType::Ed25519)
-            .await
-            .unwrap();
+        let key = unified.generate_key("test_key", &KeyType::Ed25519).await?;
 
         // Sign data
         let data = b"test data";
-        let signature = unified.sign(&key.id, data).await.unwrap();
+        let signature = unified.sign(&key.id, data).await?;
 
         // Verify signature
-        let verified = unified.verify(&key.id, data, &signature).await.unwrap();
+        let verified = unified.verify(&key.id, data, &signature).await?;
         assert!(verified);
 
         // Delete key
         let deleted = unified.delete_key(&key.id).await;
         assert!(deleted.is_ok());
+        Ok(())
     }
 }

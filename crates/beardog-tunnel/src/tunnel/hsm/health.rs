@@ -103,34 +103,41 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_monitor_creation() {
+    fn test_monitor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = HsmHealthMonitor::new();
         assert!(monitor.get_last_check().is_none());
+        Ok(())
     }
 
     #[test]
-    fn test_health_check_healthy() {
+    fn test_health_check_healthy() -> Result<(), Box<dyn std::error::Error>> {
         let mut monitor = HsmHealthMonitor::new();
-        let check = monitor.check_health(true).unwrap();
+        let check = monitor.check_health(true)?;
         assert_eq!(check.status, HsmHealthStatus::Healthy);
         assert_eq!(check.error_count, 0);
+        Ok(())
     }
 
     #[test]
-    fn test_health_check_unhealthy() {
+    fn test_health_check_unhealthy() -> Result<(), Box<dyn std::error::Error>> {
         let mut monitor = HsmHealthMonitor::new();
-        let check = monitor.check_health(false).unwrap();
+        let check = monitor.check_health(false)?;
         assert_eq!(check.status, HsmHealthStatus::Unhealthy);
         assert_eq!(check.error_count, 1);
+        Ok(())
     }
 
     #[test]
-    fn test_last_check() {
+    fn test_last_check() -> Result<(), Box<dyn std::error::Error>> {
         let mut monitor = HsmHealthMonitor::new();
-        monitor.check_health(true).unwrap();
+        monitor.check_health(true)?;
 
         let last_check = monitor.get_last_check();
         assert!(last_check.is_some());
-        assert_eq!(last_check.unwrap().status, HsmHealthStatus::Healthy);
+        assert_eq!(
+            last_check.ok_or("last_check not found")?.status,
+            HsmHealthStatus::Healthy
+        );
+        Ok(())
     }
 }

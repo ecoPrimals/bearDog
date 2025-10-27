@@ -242,13 +242,14 @@ mod tests {
     }
 
     #[test]
-    fn test_manager_creation() {
+    fn test_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
         let manager = DefaultHsmManager::new();
         assert!(manager.hsm_providers.is_empty());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_register_provider() {
+    async fn test_register_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = DefaultHsmManager::new();
         let provider = Box::new(MockProvider {
             id: "mock-1".to_string(),
@@ -257,32 +258,33 @@ mod tests {
         let result = manager.register_provider("mock-1".to_string(), provider);
         assert!(result.is_ok());
         assert_eq!(manager.list_providers().len(), 1);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_get_provider() {
+    async fn test_get_provider() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = DefaultHsmManager::new();
         let provider = Box::new(MockProvider {
             id: "mock-1".to_string(),
         });
 
-        manager
-            .register_provider("mock-1".to_string(), provider)
-            .unwrap();
+        manager.register_provider("mock-1".to_string(), provider)?;
 
         let retrieved = manager.get_provider("mock-1");
         assert!(retrieved.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_provider_info() {
+    async fn test_provider_info() -> Result<(), Box<dyn std::error::Error>> {
         let provider = MockProvider {
             id: "mock-1".to_string(),
         };
-        let info = provider.get_info().await.unwrap();
+        let info = provider.get_info().await?;
 
         assert_eq!(info.id, "mock-1");
         assert_eq!(info.name, "Mock Provider");
         assert_eq!(info.security_level, 1);
+        Ok(())
     }
 }

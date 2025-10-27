@@ -227,7 +227,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_human_seed() {
+    async fn test_create_human_seed() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();
         let mut manager = EntropyHierarchyManager::new(config);
 
@@ -245,14 +245,13 @@ mod tests {
             },
         };
 
-        let seed_id = manager
-            .create_human_seed(entropy_class, vec![1, 2, 3, 4])
-            .unwrap();
+        let seed_id = manager.create_human_seed(entropy_class, vec![1, 2, 3, 4])?;
         assert!(manager.get_seed_info(seed_id).is_some());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_seed_usage() {
+    async fn test_seed_usage() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();
         let mut manager = EntropyHierarchyManager::new(config);
 
@@ -270,15 +269,18 @@ mod tests {
             },
         };
 
-        let seed_id = manager
-            .create_human_seed(entropy_class, vec![1, 2, 3, 4])
-            .unwrap();
-        let result = manager.use_seed(seed_id, "test_operation").unwrap();
+        let seed_id = manager.create_human_seed(entropy_class, vec![1, 2, 3, 4])?;
+        let result = manager.use_seed(seed_id, "test_operation")?;
 
         assert!(!result.is_empty());
         assert_eq!(
-            manager.get_seed_info(seed_id).unwrap().metadata.usage_count,
+            manager
+                .get_seed_info(seed_id)
+                .ok_or("seed not found")?
+                .metadata
+                .usage_count,
             1
         );
+        Ok(())
     }
 }

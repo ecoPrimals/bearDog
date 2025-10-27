@@ -191,16 +191,15 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_software_provider_creation() {
+    async fn test_software_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await;
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_capabilities_detection() {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .unwrap();
+    async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
         let caps = provider.capabilities();
         assert!(caps.is_some());
 
@@ -209,31 +208,30 @@ mod tests {
             assert!(caps.signing_supported);
             assert_eq!(caps.max_key_size, 4096);
         }
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_security_level() {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .unwrap();
+    async fn test_security_level() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
         assert_eq!(provider.get_security_level(), 1);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_vendor_info() {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .unwrap();
+    async fn test_vendor_info() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
 
         let info = provider.get_vendor_info();
         assert_eq!(info.name, "BearDog");
         assert_eq!(info.product, "Software Universal HSM");
         assert_eq!(info.version, "1.0.0");
         assert!(!info.metadata.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_crypto_provider_types() {
+    fn test_crypto_provider_types() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
             CryptoProviderType::RustCrypto,
             CryptoProviderType::RustCrypto
@@ -245,53 +243,49 @@ mod tests {
             CryptoProviderType::Custom(name) => assert_eq!(name, "MyProvider"),
             _ => panic!("Expected Custom variant"),
         }
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_key_generation() {
-        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .expect("Software provider creation should succeed");
+    async fn test_key_generation() -> Result<(), Box<dyn std::error::Error>> {
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
 
         let result = provider.generate_key("test-key", "AES-256").await;
         assert!(result.is_ok(), "Key generation should succeed for AES-256");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_encryption_decryption() {
-        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .unwrap();
+    async fn test_encryption_decryption() -> Result<(), Box<dyn std::error::Error>> {
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
 
-        provider.generate_key("test-key", "AES-256").await.unwrap();
+        provider.generate_key("test-key", "AES-256").await?;
 
         let plaintext = b"Hello, BearDog!";
-        let ciphertext = provider.encrypt("test-key", plaintext).await.unwrap();
-        let decrypted = provider.decrypt("test-key", &ciphertext).await.unwrap();
+        let ciphertext = provider.encrypt("test-key", plaintext).await?;
+        let decrypted = provider.decrypt("test-key", &ciphertext).await?;
 
         assert_eq!(plaintext, &decrypted[..]);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_signing_verification() {
-        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .unwrap();
+    async fn test_signing_verification() -> Result<(), Box<dyn std::error::Error>> {
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
 
-        provider.generate_key("test-key", "Ed25519").await.unwrap();
+        provider.generate_key("test-key", "Ed25519").await?;
 
         let data = b"Message to sign";
-        let signature = provider.sign("test-key", data).await.unwrap();
-        let valid = provider.verify("test-key", data, &signature).await.unwrap();
+        let signature = provider.sign("test-key", data).await?;
+        let valid = provider.verify("test-key", data, &signature).await?;
 
         assert!(valid);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_supported_algorithms() {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto)
-            .await
-            .unwrap();
+    async fn test_supported_algorithms() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
 
         if let Some(caps) = provider.capabilities() {
             assert!(caps
@@ -300,5 +294,6 @@ mod tests {
             assert!(caps.supported_algorithms.contains(&"Ed25519".to_string()));
             assert!(caps.supported_algorithms.len() >= 5);
         }
+        Ok(())
     }
 }

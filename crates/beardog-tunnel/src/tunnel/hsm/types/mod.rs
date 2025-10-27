@@ -565,15 +565,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_android_key_params_default() {
+    fn test_android_key_params_default() -> Result<(), Box<dyn std::error::Error>> {
         let params = AndroidKeyParams::default();
         assert_eq!(params.algorithm, "Ed25519");
         assert_eq!(params.key_size, 256);
         assert!(!params.strongbox_required);
+        Ok(())
     }
 
     #[test]
-    fn test_android_key_params_builder() {
+    fn test_android_key_params_builder() -> Result<(), Box<dyn std::error::Error>> {
         let mut params = AndroidKeyParams::new().set_algorithm("AES256");
 
         params.set_key_size(256);
@@ -582,44 +583,50 @@ mod tests {
         assert_eq!(params.algorithm, "AES256");
         assert_eq!(params.key_size, 256);
         assert!(params.strongbox_required);
+        Ok(())
     }
 
     #[test]
-    fn test_android_hsm_config_default() {
+    fn test_android_hsm_config_default() -> Result<(), Box<dyn std::error::Error>> {
         let config = AndroidHsmConfig::default();
         assert!(config.strongbox_enabled);
         assert_eq!(config.security_level, 2);
+        Ok(())
     }
 
     #[test]
-    fn test_android_keystore_creation() {
+    fn test_android_keystore_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = AndroidHsmConfig::default();
-        let keystore = AndroidKeystore::new(config).unwrap();
+        let keystore = AndroidKeystore::new(config)?;
 
         assert!(keystore.capabilities.strongbox_available);
         assert!(keystore.capabilities.hardware_backed_keystore);
+        Ok(())
     }
 
     #[test]
-    fn test_android_attestation_service() {
+    fn test_android_attestation_service() -> Result<(), Box<dyn std::error::Error>> {
         let service = AndroidAttestationService::new(AttestationLevel::Hardware);
         assert!(service.enabled);
         assert!(service.initialize().is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_hsm_cache_creation() {
+    fn test_hsm_cache_creation() -> Result<(), Box<dyn std::error::Error>> {
         let cache = HsmCache::new();
         // Just ensure it creates without panic
         assert!(Arc::strong_count(&cache.key_metadata) >= 1);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_android_health_monitor() {
+    async fn test_android_health_monitor() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = AndroidHealthMonitor::new();
         assert_eq!(monitor.check_interval_seconds, 60);
 
-        let status = monitor.get_health_status().unwrap();
+        let status = monitor.get_health_status()?;
         assert!(status.is_healthy);
+        Ok(())
     }
 }

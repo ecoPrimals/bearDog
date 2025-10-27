@@ -762,21 +762,18 @@ mod tests {
     }
 
     #[test]
-    fn test_simd_operations() {
+    fn test_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
         let mut optimizer = AdvancedSIMDOptimizer::new();
         let mut data = vec![0xFF, 0x00, 0xAA, 0x55];
 
         // Test XOR operation
-        optimizer
-            .simd_process_data(&mut data, SIMDOperation::XorWithPattern(0xFF))
-            .unwrap();
+        optimizer.simd_process_data(&mut data, SIMDOperation::XorWithPattern(0xFF))?;
         assert_eq!(data, vec![0x00, 0xFF, 0x55, 0xAA]);
 
         // Test AND operation
-        optimizer
-            .simd_process_data(&mut data, SIMDOperation::BitwiseAnd(0x0F))
-            .unwrap();
+        optimizer.simd_process_data(&mut data, SIMDOperation::BitwiseAnd(0x0F))?;
         assert_eq!(data, vec![0x00, 0x0F, 0x05, 0x0A]);
+        Ok(())
     }
 
     #[test]
@@ -798,21 +795,18 @@ mod tests {
     }
 
     #[test]
-    fn test_performance_metrics() {
+    fn test_performance_metrics() -> Result<(), Box<dyn std::error::Error>> {
         let mut optimizer = AdvancedSIMDOptimizer::new();
         let mut data = vec![0u8; 1024];
 
         // Perform operations to generate metrics
-        optimizer
-            .simd_process_data(&mut data, SIMDOperation::XorWithPattern(0xAA))
-            .unwrap();
-        optimizer
-            .simd_process_data(&mut data, SIMDOperation::BitwiseAnd(0xFF))
-            .unwrap();
+        optimizer.simd_process_data(&mut data, SIMDOperation::XorWithPattern(0xAA))?;
+        optimizer.simd_process_data(&mut data, SIMDOperation::BitwiseAnd(0xFF))?;
 
         let metrics = optimizer.get_metrics();
         assert_eq!(metrics.operations_count, 2);
         assert_eq!(metrics.total_bytes_processed, 2048);
         assert!(metrics.avg_operation_time_ns > 0.0);
+        Ok(())
     }
 }

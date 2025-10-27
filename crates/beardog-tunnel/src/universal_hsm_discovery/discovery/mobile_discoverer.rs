@@ -724,7 +724,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_mobile_discovery() {
-        let discoverer = MobileDiscoverer::new().unwrap();
+        let discoverer = MobileDiscoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
     }
@@ -738,7 +738,7 @@ mod tests {
 
     #[test]
     fn test_ios_secure_enclave_capabilities() {
-        let discoverer = MobileDiscoverer::new().unwrap();
+        let discoverer = MobileDiscoverer::new()?;
         let caps = discoverer.create_ios_secure_enclave_capabilities();
         
         assert_eq!(caps.security.fips_140_2_level, Some(2));
@@ -749,7 +749,7 @@ mod tests {
 
     #[test]
     fn test_android_strongbox_capabilities() {
-        let discoverer = MobileDiscoverer::new().unwrap();
+        let discoverer = MobileDiscoverer::new()?;
         let caps = discoverer.create_android_strongbox_capabilities();
         
         assert!(caps.security.tamper_resistance == TamperResistance::Tier1);
@@ -759,7 +759,7 @@ mod tests {
 
     #[test]
     fn test_samsung_knox_capabilities() {
-        let discoverer = MobileDiscoverer::new().unwrap();
+        let discoverer = MobileDiscoverer::new()?;
         let caps = discoverer.create_samsung_knox_capabilities();
         
         assert_eq!(caps.security.common_criteria_eal, Some(5));

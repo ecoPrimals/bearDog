@@ -212,20 +212,22 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_android_provider_creation() {
+    async fn test_android_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = AndroidUniversalProvider::new().await;
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_capabilities_detection() {
-        let provider = AndroidUniversalProvider::new().await.unwrap();
+    async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = AndroidUniversalProvider::new().await?;
         let caps = provider.capabilities();
         assert!(caps.is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_security_levels() {
+    fn test_security_levels() -> Result<(), Box<dyn std::error::Error>> {
         let mut provider_strongbox = AndroidUniversalProvider {
             capabilities: None,
             strongbox_available: true,
@@ -249,16 +251,18 @@ mod tests {
             device_metadata: HashMap::new(),
         };
         assert_eq!(provider_software.get_security_level(), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_strongbox_level() {
+    fn test_strongbox_level() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(StrongBoxLevel::Full, StrongBoxLevel::Full);
         assert_ne!(StrongBoxLevel::Full, StrongBoxLevel::Basic);
+        Ok(())
     }
 
     #[test]
-    fn test_vendor_info() {
+    fn test_vendor_info() -> Result<(), Box<dyn std::error::Error>> {
         let mut provider = AndroidUniversalProvider {
             capabilities: None,
             strongbox_available: true,
@@ -273,10 +277,11 @@ mod tests {
         let info = provider.get_vendor_info();
         assert_eq!(info.name, "Android");
         assert_eq!(info.model, "Pixel 8 Pro");
+        Ok(())
     }
 
     #[test]
-    fn test_has_capabilities() {
+    fn test_has_capabilities() -> Result<(), Box<dyn std::error::Error>> {
         let provider_with_strongbox = AndroidUniversalProvider {
             capabilities: None,
             strongbox_available: true,
@@ -296,15 +301,17 @@ mod tests {
 
         assert!(!provider_without.has_strongbox());
         assert!(!provider_without.has_tee());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_android_capabilities() {
-        let provider = AndroidUniversalProvider::new().await.unwrap();
+    async fn test_android_capabilities() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = AndroidUniversalProvider::new().await?;
 
         if let Some(caps) = provider.capabilities() {
             // TEE should be available in most environments
             assert!(caps.hardware_backed || caps.strongbox_level != StrongBoxLevel::None);
         }
+        Ok(())
     }
 }

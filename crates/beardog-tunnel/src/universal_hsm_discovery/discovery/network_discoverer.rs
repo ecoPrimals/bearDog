@@ -375,18 +375,18 @@ mod tests {
         let discoverer = NetworkDiscoverer::with_config(config);
         assert!(discoverer.is_ok());
         
-        let disc = discoverer.unwrap();
+        let disc = discoverer?;
         assert_eq!(disc.config.known_endpoints.len(), 1);
         assert!(!disc.config.enable_mdns);
     }
 
     #[tokio::test]
     async fn test_network_discovery_empty() {
-        let discoverer = NetworkDiscoverer::new().unwrap();
+        let discoverer = NetworkDiscoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
         
-        let hsms = result.unwrap();
+        let hsms = result?;
         // With no configured endpoints, should find nothing
         assert_eq!(hsms.len(), 0);
     }
@@ -403,38 +403,38 @@ mod tests {
             ..Default::default()
         };
         
-        let discoverer = NetworkDiscoverer::with_config(config).unwrap();
+        let discoverer = NetworkDiscoverer::with_config(config)?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
         
-        let hsms = result.unwrap();
+        let hsms = result?;
         assert_eq!(hsms.len(), 2);
     }
 
     #[test]
     fn test_endpoint_parsing() {
-        let discoverer = NetworkDiscoverer::new().unwrap();
+        let discoverer = NetworkDiscoverer::new()?;
         
         // Test HTTPS URL
-        let (host, port, protocol) = discoverer.parse_endpoint("https://hsm.example.com").unwrap();
+        let (host, port, protocol) = discoverer.parse_endpoint("https://hsm.example.com")?;
         assert_eq!(host, "hsm.example.com");
         assert_eq!(port, 443);
         assert_eq!(protocol, "https");
         
         // Test HTTPS with port
-        let (host, port, protocol) = discoverer.parse_endpoint("https://hsm.example.com:8443").unwrap();
+        let (host, port, protocol) = discoverer.parse_endpoint("https://hsm.example.com:8443")?;
         assert_eq!(host, "hsm.example.com");
         assert_eq!(port, 8443);
         assert_eq!(protocol, "https");
         
         // Test hostname only
-        let (host, port, protocol) = discoverer.parse_endpoint("hsm.example.com").unwrap();
+        let (host, port, protocol) = discoverer.parse_endpoint("hsm.example.com")?;
         assert_eq!(host, "hsm.example.com");
         assert_eq!(port, 443);
         assert_eq!(protocol, "https");
         
         // Test hostname with port
-        let (host, port, protocol) = discoverer.parse_endpoint("hsm.example.com:9443").unwrap();
+        let (host, port, protocol) = discoverer.parse_endpoint("hsm.example.com:9443")?;
         assert_eq!(host, "hsm.example.com");
         assert_eq!(port, 9443);
         assert_eq!(protocol, "https");
@@ -442,7 +442,7 @@ mod tests {
 
     #[test]
     fn test_network_hsm_capabilities() {
-        let discoverer = NetworkDiscoverer::new().unwrap();
+        let discoverer = NetworkDiscoverer::new()?;
         let caps = discoverer.create_network_hsm_capabilities();
         
         // Verify network HSM capabilities
@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn test_add_known_endpoint() {
-        let mut discoverer = NetworkDiscoverer::new().unwrap();
+        let mut discoverer = NetworkDiscoverer::new()?;
         assert_eq!(discoverer.config().known_endpoints.len(), 0);
         
         discoverer.add_known_endpoint("https://hsm1.example.com".to_string());

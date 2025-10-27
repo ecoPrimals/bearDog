@@ -18,6 +18,9 @@ use tracing::info;
 /// Full-stack integration test implementation
 pub struct FullStackIntegrationTest;
 
+/// TEST_CATEGORY: e2e
+/// TEST_DOMAIN: core
+/// TEST_PRIORITY: critical
 /// Run full-stack integration E2E test
 pub async fn run_full_stack_integration_test(
     config: &E2ETestConfig,

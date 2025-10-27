@@ -151,18 +151,18 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_provider_type_strings() {
+    async fn test_provider_type_strings() -> Result<(), Box<dyn std::error::Error>> {
         // Test that provider type strings are correct
-        let rust_crypto =
-            CryptoProviderDispatch::RustCrypto(RustCryptoProvider::new().await.unwrap());
+        let rust_crypto = CryptoProviderDispatch::RustCrypto(RustCryptoProvider::new().await?);
         assert_eq!(rust_crypto.provider_type(), "rust_crypto");
 
-        let ring = CryptoProviderDispatch::Ring(RingCryptoProvider::new().unwrap());
+        let ring = CryptoProviderDispatch::Ring(RingCryptoProvider::new()?);
         assert_eq!(ring.provider_type(), "ring");
+        Ok(())
     }
 
     #[test]
-    fn test_enum_size() {
+    fn test_enum_size() -> Result<(), Box<dyn std::error::Error>> {
         // Verify enum is stack-allocated and reasonably sized
         use std::mem::size_of;
 
@@ -176,5 +176,6 @@ mod tests {
             size < 512,
             "Enum should be reasonably sized for stack allocation"
         );
+        Ok(())
     }
 }

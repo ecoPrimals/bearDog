@@ -430,13 +430,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_classifier_creation() {
+    fn test_classifier_creation() -> Result<(), Box<dyn std::error::Error>> {
         let classifier = HumanEntropyClassifier::new();
         assert!(classifier.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_policy_presets() {
+    fn test_policy_presets() -> Result<(), Box<dyn std::error::Error>> {
         let high = policies::high_security_policy();
         assert_eq!(high.min_quality_score, 0.85);
         assert!(high.require_biometric);
@@ -444,5 +445,6 @@ mod tests {
         let balanced = policies::balanced_policy();
         assert_eq!(balanced.min_quality_score, 0.65);
         assert!(!balanced.require_biometric);
+        Ok(())
     }
 }

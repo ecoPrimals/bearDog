@@ -1,6 +1,9 @@
 // Critical Security Path Tests
 // Tests for the most security-sensitive operations in BearDog
 
+/// TEST_CATEGORY: security
+/// TEST_DOMAIN: hsm
+/// TEST_PRIORITY: critical
 /// Test critical path: HSM key generation with security validation
 #[tokio::test]
 async fn test_critical_hsm_key_generation_security() {
@@ -49,6 +52,9 @@ async fn test_key_memory_protection() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+/// TEST_CATEGORY: security
+/// TEST_DOMAIN: crypto
+/// TEST_PRIORITY: critical
 /// Test critical path: Digital signature generation and verification
 #[tokio::test]
 async fn test_critical_signature_operations() {

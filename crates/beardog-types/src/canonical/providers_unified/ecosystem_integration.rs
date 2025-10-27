@@ -657,7 +657,7 @@ mod tests {
 
     // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
     async fn test_ecosystem_integrator_creation() {
-        let integrator = EcosystemIntegrator::new().await.unwrap();
+        let integrator = EcosystemIntegrator::new().await?;
         let state = integrator.get_migration_state().await;
         assert_eq!(state.phase, MigrationPhase::Discovery);
     }
@@ -665,7 +665,7 @@ mod tests {
     // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
     async fn test_hsm_provider_discovery() {
         let adapter = HsmMigrationAdapter::new();
-        let discovered = adapter.discover_providers().unwrap();
+        let discovered = adapter.discover_providers()?;
         
         assert!(!discovered.is_empty());
         assert!(discovered.iter().any(|p| p.name == "AndroidUniversalProvider"));
@@ -674,7 +674,7 @@ mod tests {
 
     // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
     async fn test_migration_plan_creation() {
-        let integrator = EcosystemIntegrator::new().await.unwrap();
+        let integrator = EcosystemIntegrator::new().await?;
         let discovered = vec![
             DiscoveredProvider {
                 name: "TestProvider".to_string(),
@@ -691,7 +691,7 @@ mod tests {
             },
         ];
 
-        let plan = integrator.create_migration_plan(discovered).await.unwrap();
+        let plan = integrator.create_migration_plan(discovered).await?;
         assert_eq!(plan.providers.len(), 1);
         assert_eq!(plan.risk_level, RiskLevel::Low);
     }

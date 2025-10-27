@@ -483,16 +483,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultimate_safe_buffer() {
+    fn test_ultimate_safe_buffer() -> Result<(), Box<dyn std::error::Error>> {
         let mut buffer = UltimateSafeBuffer::new(1024);
 
         // Test safe write
         let data = b"Hello, World!";
-        let written = buffer.safe_write(data).unwrap();
+        let written = buffer.safe_write(data)?;
         assert_eq!(written, data.len());
 
         // Test safe read
-        let read_data = buffer.safe_read(data.len()).unwrap();
+        let read_data = buffer.safe_read(data.len())?;
         assert_eq!(read_data, data);
 
         // Test bounds checking
@@ -501,15 +501,16 @@ mod tests {
 
         // Verify integrity
         assert!(buffer.verify_integrity().is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_ultimate_safe_memory_pool() {
+    fn test_ultimate_safe_memory_pool() -> Result<(), Box<dyn std::error::Error>> {
         let pool = UltimateSafeMemoryPool::new(|| String::from("test"), 10);
 
         // Test borrowing
-        let obj1 = pool.safe_borrow().unwrap();
-        let obj2 = pool.safe_borrow().unwrap();
+        let obj1 = pool.safe_borrow()?;
+        let obj2 = pool.safe_borrow()?;
 
         assert!(obj1.as_ref().is_some());
         assert!(obj2.as_ref().is_some());
@@ -518,23 +519,25 @@ mod tests {
         let stats = pool.get_stats();
         assert_eq!(stats.objects_borrowed, 2);
         assert_eq!(stats.total_created, 2);
+        Ok(())
     }
 
     #[test]
-    fn test_safe_reference() {
+    fn test_safe_reference() -> Result<(), Box<dyn std::error::Error>> {
         let safe_ref = SafeReference::new(42i32);
 
         // Test safe read
-        let value = safe_ref.safe_read(|x| *x).unwrap();
+        let value = safe_ref.safe_read(|x| *x)?;
         assert_eq!(value, 42);
 
         // Test safe write
-        safe_ref.safe_write(|x| *x = 100).unwrap();
-        let new_value = safe_ref.safe_read(|x| *x).unwrap();
+        safe_ref.safe_write(|x| *x = 100)?;
+        let new_value = safe_ref.safe_read(|x| *x)?;
         assert_eq!(new_value, 100);
 
         // Test invalidation
         safe_ref.invalidate();
         assert!(safe_ref.safe_read(|x| *x).is_err());
+        Ok(())
     }
 }

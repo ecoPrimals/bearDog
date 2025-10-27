@@ -108,12 +108,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_safe_crypto_engine() {
+    fn test_safe_crypto_engine() -> Result<(), Box<dyn std::error::Error>> {
         let config = SafeCryptoConfig::default();
         let mut engine = SafeCryptoEngine::new(config);
 
         let data = b"test data";
-        let result = engine.safe_hash(data).unwrap();
+        let result = engine.safe_hash(data)?;
         assert_eq!(result.len(), 32); // SHA-256 output length
+        Ok(())
     }
 }

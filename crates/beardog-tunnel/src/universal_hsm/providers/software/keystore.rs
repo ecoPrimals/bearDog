@@ -61,19 +61,19 @@ mod tests {
         let store = SoftwareKeyStore::new();
         
         // Store a key
-        store.store_key("test-key".to_string(), vec![1, 2, 3, 4]).await.unwrap();
+        store.store_key("test-key".to_string(), vec![1, 2, 3, 4]).await?;
         
         // Retrieve the key
-        let key = store.get_key("test-key").await.unwrap();
+        let key = store.get_key("test-key").await?;
         assert_eq!(key, Some(vec![1, 2, 3, 4]));
         
         // List keys
-        let keys = store.list_keys().await.unwrap();
+        let keys = store.list_keys().await?;
         assert_eq!(keys.len(), 1);
         
         // Delete the key
-        store.delete_key("test-key").await.unwrap();
-        let key = store.get_key("test-key").await.unwrap();
+        store.delete_key("test-key").await?;
+        let key = store.get_key("test-key").await?;
         assert_eq!(key, None);
     }
 }

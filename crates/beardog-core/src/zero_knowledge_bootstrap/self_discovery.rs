@@ -478,13 +478,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_self_discovery_engine() {
-        let mut engine = SelfDiscoveryEngine::new().unwrap();
+        let mut engine = SelfDiscoveryEngine::new()?;
 
         // Should create engine successfully
         assert!(engine.discovered_capabilities.is_empty());
 
         // Should discover self-identity
-        let identity = engine.discover_self_identity().unwrap();
+        let identity = engine.discover_self_identity()?;
 
         // Should have unique primal ID
         assert!(!identity.primal_id.is_empty());
@@ -503,8 +503,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_hardcoded_knowledge() {
-        let mut engine = SelfDiscoveryEngine::new().unwrap();
-        let identity = engine.discover_self_identity().unwrap();
+        let mut engine = SelfDiscoveryEngine::new()?;
+        let identity = engine.discover_self_identity()?;
 
         // Should not contain hardcoded primal names
         // Validate primal sovereignty - each primal only knows itself
@@ -552,7 +552,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_capability_auto_detection() {
-        let mut engine = SelfDiscoveryEngine::new().unwrap();
+        let mut engine = SelfDiscoveryEngine::new()?;
         let capabilities = engine.auto_detect_capabilities();
 
         // Should detect at least security capability

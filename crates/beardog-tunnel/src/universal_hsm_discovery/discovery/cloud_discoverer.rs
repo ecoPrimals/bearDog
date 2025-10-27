@@ -811,14 +811,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_cloud_discovery() {
-        let discoverer = CloudDiscoverer::new().unwrap();
+        let discoverer = CloudDiscoverer::new()?;
         let result = discoverer.discover().await;
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_aws_kms_capabilities() {
-        let discoverer = CloudDiscoverer::new().unwrap();
+        let discoverer = CloudDiscoverer::new()?;
         let caps = discoverer.create_aws_kms_capabilities();
         
         assert_eq!(caps.security.fips_140_2_level, Some(3));
@@ -831,7 +831,7 @@ mod tests {
 
     #[test]
     fn test_azure_capabilities() {
-        let discoverer = CloudDiscoverer::new().unwrap();
+        let discoverer = CloudDiscoverer::new()?;
         let caps = discoverer.create_azure_key_vault_capabilities();
         
         assert_eq!(caps.security.fips_140_2_level, Some(2));
@@ -840,7 +840,7 @@ mod tests {
 
     #[test]
     fn test_gcp_capabilities() {
-        let discoverer = CloudDiscoverer::new().unwrap();
+        let discoverer = CloudDiscoverer::new()?;
         let caps = discoverer.create_gcp_kms_capabilities();
         
         assert_eq!(caps.security.fips_140_2_level, Some(3));
@@ -849,7 +849,7 @@ mod tests {
 
     #[test]
     fn test_custom_config() {
-        let mut discoverer = CloudDiscoverer::new().unwrap();
+        let mut discoverer = CloudDiscoverer::new()?;
         
         let config = CloudHsmConfig {
             provider: CloudProvider::Aws,

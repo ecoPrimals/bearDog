@@ -116,21 +116,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ios_provider_creation() {
+    fn test_ios_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
         let provider = SafeIosProvider::new();
         assert!(provider.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_secure_enclave_check() {
-        let provider = SafeIosProvider::new().unwrap();
+    fn test_secure_enclave_check() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SafeIosProvider::new()?;
         // Should be false in test environment
         assert!(!provider.is_hardware_backed() || provider.is_hardware_backed());
+        Ok(())
     }
 
     #[test]
-    fn test_capabilities() {
-        let provider = SafeIosProvider::new().unwrap();
+    fn test_capabilities() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SafeIosProvider::new()?;
         assert!(provider.capabilities().contains_key("keychain"));
+        Ok(())
     }
 }

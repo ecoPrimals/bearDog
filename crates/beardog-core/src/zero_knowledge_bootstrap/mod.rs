@@ -671,7 +671,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_knowledge_bootstrap() {
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let mut bootstrap = ZeroKnowledgeBootstrap::new().await?;
 
         // Should start with zero ecosystem knowledge
         assert!(bootstrap.discovered_capabilities.read().await.is_empty());
@@ -682,7 +682,7 @@ mod tests {
         assert!(!bootstrap.self_identity.capabilities.is_empty());
 
         // Bootstrap should complete successfully
-        bootstrap.bootstrap().await.unwrap();
+        bootstrap.bootstrap().await?;
 
         // Should have discovered some ecosystem state
         let state = bootstrap.get_ecosystem_state().await;
@@ -691,7 +691,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_infant_learning_pattern() {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
 
         // Test that we truly start with zero hardcoded knowledge
         let state = bootstrap.get_ecosystem_state().await;

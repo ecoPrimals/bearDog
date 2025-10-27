@@ -733,13 +733,13 @@ mod tests {
         // Test XOR operation
         optimizer
             .simd_process_data(&mut data, SIMDOperation::XorWithPattern(0xFF))
-            .unwrap();
+            ?;
         assert_eq!(data, vec![0x00, 0xFF, 0x55, 0xAA]);
 
         // Test AND operation
         optimizer
             .simd_process_data(&mut data, SIMDOperation::BitwiseAnd(0x0F))
-            .unwrap();
+            ?;
         assert_eq!(data, vec![0x00, 0x0F, 0x05, 0x0A]);
     }
 
@@ -769,10 +769,10 @@ mod tests {
         // Perform operations to generate metrics
         optimizer
             .simd_process_data(&mut data, SIMDOperation::XorWithPattern(0xAA))
-            .unwrap();
+            ?;
         optimizer
             .simd_process_data(&mut data, SIMDOperation::BitwiseAnd(0xFF))
-            .unwrap();
+            ?;
 
         let metrics = optimizer.get_metrics();
         assert_eq!(metrics.operations_count, 2);

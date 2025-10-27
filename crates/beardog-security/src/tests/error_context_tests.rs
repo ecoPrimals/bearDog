@@ -144,10 +144,10 @@ mod tests {
     #[test]
     #[allow(clippy::unwrap_or_default)]
     #[allow(clippy::manual_unwrap_or_default)]
+    #[allow(clippy::unnecessary_literal_unwrap)]
     fn test_result_unwrap_or() {
         // Test Result::unwrap_or with default
-        let result: Result<i32, beardog_errors::BearDogError> =
-            Ok(42);
+        let result: Result<i32, beardog_errors::BearDogError> = Ok(42);
         let value = result.unwrap_or(0);
 
         assert_eq!(value, 42);
@@ -157,10 +157,10 @@ mod tests {
     #[allow(clippy::unnecessary_lazy_evaluations)]
     #[allow(clippy::unwrap_or_default)]
     #[allow(clippy::manual_unwrap_or_default)]
+    #[allow(clippy::unnecessary_literal_unwrap)]
     fn test_result_unwrap_or_else() {
         // Test Result::unwrap_or_else with closure
-        let result: Result<i32, beardog_errors::BearDogError> =
-            Ok(42);
+        let result: Result<i32, beardog_errors::BearDogError> = Ok(42);
         let value = result.unwrap_or_else(|_| 0);
 
         assert_eq!(value, 42);

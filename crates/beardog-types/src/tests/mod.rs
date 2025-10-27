@@ -6,4 +6,6 @@ mod validation_tests;
 mod capabilities_comprehensive_tests;
 
 // October 22, 2025: Production monitoring comprehensive tests
-mod production_monitoring_comprehensive_tests;
+// Split into 2 modules on October 24, 2025 (file size compliance: 1031→~515 lines each)
+mod production_monitoring_advanced_tests;
+mod production_monitoring_basic_tests;

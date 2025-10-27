@@ -709,7 +709,7 @@ mod tests {
         let primals = Arc::new(RwLock::new(HashMap::new()));
         let capabilities = Arc::new(RwLock::new(HashMap::new()));
 
-        let listener = EcosystemListener::new(config, primals, capabilities).unwrap();
+        let listener = EcosystemListener::new(config, primals, capabilities)?;
 
         assert_eq!(listener.listening_tasks.len(), 0);
         assert_eq!(listener.metrics.announcements_received, 0);
@@ -722,7 +722,7 @@ mod tests {
 
         let announcements = EcosystemListener::check_environment_announcements()
             .await
-            .unwrap();
+            ?;
 
         // Note: In unit test environment without actual environment variables set,
         // announcements may be empty. This is expected behavior for unit tests.

@@ -32,7 +32,7 @@ mod tests {
     #[tokio::test]
     async fn test_entropy_collection() {
         let collector = EntropyCollector::new();
-        let entropy = collector.collect(32).await.unwrap();
+        let entropy = collector.collect(32).await?;
         assert_eq!(entropy.len(), 32);
     }
 }

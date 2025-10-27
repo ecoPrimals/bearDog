@@ -88,12 +88,12 @@ mod tests {
             ;
 
         assert!(result.is_ok());
-        let proposal_id = result.unwrap();
+        let proposal_id = result?;
         assert!(!proposal_id.is_empty());
 
         let proposal = engine.get_proposal(&proposal_id);
         assert!(proposal.is_ok());
-        let proposal = proposal.unwrap();
+        let proposal = proposal?;
         assert_eq!(proposal.title, "Test Proposal");
         assert_eq!(proposal.description, "Test Description");
         assert_eq!(proposal.proposer_biome, "test_biome");
@@ -119,15 +119,15 @@ mod tests {
 
         let has_voted = voting_manager.has_voted("proposal_1", "biome_1");
         assert!(has_voted.is_ok());
-        assert!(has_voted.unwrap());
+        assert!(has_voted?);
 
         let count = voting_manager.get_vote_count("proposal_1");
         assert!(count.is_ok());
-        assert_eq!(count.unwrap(), 1);
+        assert_eq!(count?, 1);
 
         let votes = voting_manager.get_votes_for_proposal("proposal_1");
         assert!(votes.is_ok());
-        let votes = votes.unwrap();
+        let votes = votes?;
         assert_eq!(votes.len(), 1);
         assert_eq!(votes[0].voter_biome, "biome_1");
         assert_eq!(votes[0].selected_option, "approve");
@@ -248,9 +248,9 @@ mod tests {
                 voting_options,
                 vec!["test_biome".to_string()],
             )
-            .unwrap();
+            ?;
 
-        let proposal = engine.get_proposal(&proposal_id).unwrap();
+        let proposal = engine.get_proposal(&proposal_id)?;
         assert_eq!(proposal.status, ProposalStatus::Open);
 
         let history = engine.get_consensus_history();

@@ -131,7 +131,7 @@ mod tests {
         let manager = SoftwareMemoryManager::new();
         
         // Allocate secure memory
-        let memory = manager.allocate_secure(1024).unwrap();
+        let memory = manager.allocate_secure(1024)?;
         
         // Should be correct size
         assert_eq!(memory.len(), 1024);
@@ -150,7 +150,7 @@ mod tests {
         let manager = SoftwareMemoryManager::new();
         
         // Allocate and free
-        let memory = manager.allocate_secure(512).unwrap();
+        let memory = manager.allocate_secure(512)?;
         assert!(manager.free_secure(memory).is_ok());
         
         // Stats should be back to zero
@@ -164,9 +164,9 @@ mod tests {
         let manager = SoftwareMemoryManager::new();
         
         // Allocate multiple regions
-        let mem1 = manager.allocate_secure(256).unwrap();
-        let mem2 = manager.allocate_secure(512).unwrap();
-        let mem3 = manager.allocate_secure(1024).unwrap();
+        let mem1 = manager.allocate_secure(256)?;
+        let mem2 = manager.allocate_secure(512)?;
+        let mem3 = manager.allocate_secure(1024)?;
         
         // Stats should reflect all allocations
         let stats = manager.get_stats();
@@ -174,14 +174,14 @@ mod tests {
         assert_eq!(stats.secure_regions, 3);
         
         // Free one region
-        manager.free_secure(mem2).unwrap();
+        manager.free_secure(mem2)?;
         let stats = manager.get_stats();
         assert_eq!(stats.allocated_bytes, 256 + 1024);
         assert_eq!(stats.secure_regions, 2);
         
         // Free remaining
-        manager.free_secure(mem1).unwrap();
-        manager.free_secure(mem3).unwrap();
+        manager.free_secure(mem1)?;
+        manager.free_secure(mem3)?;
         let stats = manager.get_stats();
         assert_eq!(stats.allocated_bytes, 0);
         assert_eq!(stats.secure_regions, 0);
@@ -192,7 +192,7 @@ mod tests {
         let manager = SoftwareMemoryManager::new();
         
         // Allocate memory
-        let mut memory = manager.allocate_secure(128).unwrap();
+        let mut memory = manager.allocate_secure(128)?;
         
         // Write sensitive data
         memory[0] = 0xFF;
@@ -203,7 +203,7 @@ mod tests {
         assert_eq!(memory[127], 0xAA);
         
         // Free the memory (should zero it)
-        manager.free_secure(memory).unwrap();
+        manager.free_secure(memory)?;
         
         // Note: We can't verify the memory was zeroed after freeing
         // because it's been dropped. This test verifies the API works correctly.
@@ -213,14 +213,14 @@ mod tests {
     fn test_zero_size_allocation() {
         let manager = SoftwareMemoryManager::new();
         
-        let memory = manager.allocate_secure(0).unwrap();
+        let memory = manager.allocate_secure(0)?;
         assert_eq!(memory.len(), 0);
         
         let stats = manager.get_stats();
         assert_eq!(stats.allocated_bytes, 0);
         assert_eq!(stats.secure_regions, 1); // Region still counts
         
-        manager.free_secure(memory).unwrap();
+        manager.free_secure(memory)?;
         let stats = manager.get_stats();
         assert_eq!(stats.secure_regions, 0);
     }
@@ -230,12 +230,12 @@ mod tests {
         let manager = SoftwareMemoryManager::new();
         
         // Allocate 1MB
-        let memory = manager.allocate_secure(1024 * 1024).unwrap();
+        let memory = manager.allocate_secure(1024 * 1024)?;
         assert_eq!(memory.len(), 1024 * 1024);
         
         let stats = manager.get_stats();
         assert_eq!(stats.allocated_bytes, 1024 * 1024);
         
-        manager.free_secure(memory).unwrap();
+        manager.free_secure(memory)?;
     }
 }

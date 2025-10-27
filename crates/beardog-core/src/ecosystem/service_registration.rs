@@ -201,8 +201,8 @@ mod tests {
             health_status: HealthStatus::Healthy,
         };
 
-        let json = serde_json::to_string(&registration).unwrap();
-        let deserialized: EcosystemRegistration = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&registration)?;
+        let deserialized: EcosystemRegistration = serde_json::from_str(&json)?;
         assert_eq!(registration.service_id, deserialized.service_id);
     }
 }

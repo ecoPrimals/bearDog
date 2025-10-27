@@ -885,7 +885,7 @@ mod tests {
     #[tokio::test]
     fn test_universal_adapter_creation() {
         let adapter = UniversalCapabilityAdapter::new()
-            .expect("Failed to create adapter in test");
+            ?;
 
         assert_eq!(adapter.metrics.capabilities_discovered, 0);
         assert_eq!(adapter.metrics.primals_discovered, 0);
@@ -894,7 +894,7 @@ mod tests {
     #[tokio::test]
     fn test_capability_registration() {
         let mut adapter = UniversalCapabilityAdapter::new()
-            .expect("Failed to create adapter in test");
+            ?;
 
         let capability = UniversalCapability {
             capability_type: ServiceCapabilityType::Security,
@@ -912,16 +912,16 @@ mod tests {
 
         adapter
             .register_capability_provider(capability)
-            .unwrap();
+            ?;
 
-        let capabilities = adapter.get_available_capabilities().unwrap();
+        let capabilities = adapter.get_available_capabilities()?;
         assert!(capabilities.contains_key(&ServiceCapabilityType::Security));
         assert_eq!(capabilities[&ServiceCapabilityType::Security].len(), 1);
     }
 
     #[tokio::test]
     fn test_capability_discovery() {
-        let mut adapter = UniversalCapabilityAdapter::new().unwrap();
+        let mut adapter = UniversalCapabilityAdapter::new()?;
 
         // Register a test capability
         let capability = UniversalCapability {
@@ -940,11 +940,11 @@ mod tests {
 
         adapter
             .register_capability_provider(capability)
-            .unwrap();
+            ?;
 
         // Discover compute intelligence capability
         let request = CapabilityDiscoveryRequest::compute_intelligence();
-        let result = adapter.discover_capability(request).unwrap();
+        let result = adapter.discover_capability(request)?;
 
         assert!(!result.discovered_providers.is_empty());
         assert_eq!(
@@ -968,7 +968,7 @@ mod tests {
 
     #[tokio::test]
     fn test_connection_management() {
-        let mut adapter = UniversalCapabilityAdapter::new().unwrap();
+        let mut adapter = UniversalCapabilityAdapter::new()?;
 
         // Register and connect to a capability
         let capability = UniversalCapability {
@@ -985,11 +985,11 @@ mod tests {
             performance_metrics: PerformanceMetrics::default(),
         };
 
-        let connection_id = adapter.connect_to_capability(&capability).unwrap();
+        let connection_id = adapter.connect_to_capability(&capability)?;
         assert!(!connection_id.is_empty());
 
         // Test health check
-        let health_statuses = adapter.health_check_all_connections().unwrap();
+        let health_statuses = adapter.health_check_all_connections()?;
         assert!(health_statuses.contains_key(&connection_id));
     }
 }

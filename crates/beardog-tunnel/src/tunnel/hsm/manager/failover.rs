@@ -173,13 +173,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_circuit_breaker_creation() {
+    fn test_circuit_breaker_creation() -> Result<(), Box<dyn std::error::Error>> {
         let breaker = CircuitBreaker::new(3);
         assert_eq!(breaker.state(), &CircuitBreakerState::Closed);
+        Ok(())
     }
 
     #[test]
-    fn test_circuit_breaker_failure() {
+    fn test_circuit_breaker_failure() -> Result<(), Box<dyn std::error::Error>> {
         let mut breaker = CircuitBreaker::new(3);
 
         breaker.record_failure();
@@ -190,10 +191,11 @@ mod tests {
 
         breaker.record_failure();
         assert_eq!(breaker.state(), &CircuitBreakerState::Open);
+        Ok(())
     }
 
     #[test]
-    fn test_circuit_breaker_success() {
+    fn test_circuit_breaker_success() -> Result<(), Box<dyn std::error::Error>> {
         let mut breaker = CircuitBreaker::new(3);
 
         breaker.record_failure();
@@ -202,10 +204,11 @@ mod tests {
 
         assert_eq!(breaker.state(), &CircuitBreakerState::Closed);
         assert_eq!(breaker.failure_count, 0);
+        Ok(())
     }
 
     #[test]
-    fn test_circuit_breaker_allows_request() {
+    fn test_circuit_breaker_allows_request() -> Result<(), Box<dyn std::error::Error>> {
         let mut breaker = CircuitBreaker::new(2);
 
         assert!(breaker.allows_request());
@@ -214,17 +217,19 @@ mod tests {
         breaker.record_failure();
 
         assert!(!breaker.allows_request());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_failover_manager_creation() {
+    async fn test_failover_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
         let manager = FailoverManager::new(3, 3);
         let state = manager.circuit_state().await;
         assert_eq!(state, CircuitBreakerState::Closed);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_failover_manager_success() {
+    async fn test_failover_manager_success() -> Result<(), Box<dyn std::error::Error>> {
         let manager = FailoverManager::new(3, 3);
 
         let result = manager
@@ -232,11 +237,12 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result?, 42);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_failover_manager_retry() {
+    async fn test_failover_manager_retry() -> Result<(), Box<dyn std::error::Error>> {
         let manager = FailoverManager::new(5, 3);
         let counter = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
 
@@ -256,11 +262,12 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result?, 42);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_failover_manager_exhaust_retries() {
+    async fn test_failover_manager_exhaust_retries() -> Result<(), Box<dyn std::error::Error>> {
         let manager = FailoverManager::new(10, 3);
 
         let result = manager
@@ -270,5 +277,6 @@ mod tests {
             .await;
 
         assert!(result.is_err());
+        Ok(())
     }
 }

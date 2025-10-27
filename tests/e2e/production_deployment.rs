@@ -20,6 +20,9 @@ use tracing::info;
 /// Production deployment test implementation
 pub struct ProductionDeploymentTest;
 
+/// TEST_CATEGORY: e2e
+/// TEST_DOMAIN: core
+/// TEST_PRIORITY: critical
 /// Run production deployment E2E test
 pub async fn run_production_deployment_test(
     config: &E2ETestConfig,

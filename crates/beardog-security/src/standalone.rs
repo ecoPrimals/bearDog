@@ -496,7 +496,7 @@ mod tests {
             user_agent: "test-client/1.0".to_string(),
         };
         
-        let decision = standalone.evaluate_security_request(&normal_request).await.unwrap();
+        let decision = standalone.evaluate_security_request(&normal_request).await?;
         assert!(matches!(decision, SecurityDecision::Allow { confidence, .. } if confidence < 0.7));
     }
     
@@ -514,7 +514,7 @@ mod tests {
             user_agent: "test-client/1.0".to_string(),
         };
         
-        let decision = standalone.evaluate_security_request(&suspicious_request).await.unwrap();
+        let decision = standalone.evaluate_security_request(&suspicious_request).await?;
         assert!(matches!(decision, SecurityDecision::Deny { .. }));
     }
     
@@ -532,7 +532,7 @@ mod tests {
             user_agent: "test-client/1.0".to_string(),
         };
         
-        let decision = standalone.evaluate_security_request(&admin_request).await.unwrap();
+        let decision = standalone.evaluate_security_request(&admin_request).await?;
         assert!(matches!(decision, SecurityDecision::Deny { .. }));
     }
     
@@ -551,12 +551,12 @@ mod tests {
         
         // First 10 should succeed
         for _ in 0..10 {
-            let decision = standalone.evaluate_security_request(&request).await.unwrap();
+            let decision = standalone.evaluate_security_request(&request).await?;
             assert!(matches!(decision, SecurityDecision::Allow { .. }));
         }
         
         // 11th should be rate limited
-        let decision = standalone.evaluate_security_request(&request).await.unwrap();
+        let decision = standalone.evaluate_security_request(&request).await?;
         assert!(matches!(decision, SecurityDecision::Deny { reason, .. } if reason.contains("Rate limit")));
     }
 }

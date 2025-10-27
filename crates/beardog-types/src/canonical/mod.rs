@@ -49,13 +49,16 @@
 //! ```rust
 //! use beardog_types::canonical::config::UnifiedBearDogConfig;
 //!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Load from environment
-//! let config = UnifiedBearDogConfig::from_env().unwrap();
+//! let config = UnifiedBearDogConfig::from_env()?;
 //!
 //! // Access domain-specific configs
 //! let app = &config.app;
 //! let security = &config.security;
 //! let network = &config.network;
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # Security Types

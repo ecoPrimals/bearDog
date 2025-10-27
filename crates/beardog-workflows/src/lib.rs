@@ -50,6 +50,12 @@ pub mod workflows;
 #[cfg(test)]
 mod tests;
 
+// October 26, 2025: Week 2 Day 5 - Execution Tests (FINAL!)
+#[cfg(test)]
+mod workflow_execution_tests;
+#[cfg(test)]
+mod workflow_orchestration_tests;
+
 // Canonical workflow configuration - modernized
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct WorkflowConfig {

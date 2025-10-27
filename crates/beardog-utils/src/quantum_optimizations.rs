@@ -614,7 +614,7 @@ mod tests {
             goal: OptimizationGoal::Minimize,
         };
 
-        let result = engine.quantum_optimize(&problem).await.unwrap();
+        let result = engine.quantum_optimize(&problem).await?;
         
         assert!(result.confidence > 0.8);
         assert!(result.speedup_factor > 1.0);

@@ -94,8 +94,8 @@ mod tests {
         let collector = SoftwareEntropyCollector::new();
         
         // Collect entropy
-        let entropy1 = collector.collect_entropy(32).unwrap();
-        let entropy2 = collector.collect_entropy(32).unwrap();
+        let entropy1 = collector.collect_entropy(32)?;
+        let entropy2 = collector.collect_entropy(32)?;
         
         // Should be correct length
         assert_eq!(entropy1.len(), 32);
@@ -124,7 +124,7 @@ mod tests {
         let collector = SoftwareEntropyCollector::new();
         
         // Test with actual random data
-        let entropy = collector.collect_entropy(1024).unwrap();
+        let entropy = collector.collect_entropy(1024)?;
         let quality = collector.assess_entropy_quality(&entropy);
         
         // Should assess as high quality (near 1.0)
@@ -148,7 +148,7 @@ mod tests {
         
         // Test various sizes
         for size in [0, 1, 16, 32, 64, 128, 256, 1024] {
-            let entropy = collector.collect_entropy(size).unwrap();
+            let entropy = collector.collect_entropy(size)?;
             assert_eq!(entropy.len(), size);
             
             if size > 0 {

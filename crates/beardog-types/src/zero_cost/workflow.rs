@@ -205,7 +205,7 @@ mod tests {
             metadata: std::collections::HashMap::new(),
         };
 
-        let result = engine.process(workflow).await.unwrap();
+        let result = engine.process(workflow).await?;
         assert_eq!(result.status, "completed ");
         assert_eq!(result.workflow_id, "test-workflow");
     }

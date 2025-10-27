@@ -232,34 +232,37 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_router_creation() {
+    fn test_router_creation() -> Result<(), Box<dyn std::error::Error>> {
         let router = HsmOperationRouter::new();
         assert!(router.stats().success_rate.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_route_operation() {
+    fn test_route_operation() -> Result<(), Box<dyn std::error::Error>> {
         let router = HsmOperationRouter::new();
         let providers = vec!["software-hsm".to_string(), "hardware-hsm".to_string()];
 
         let decision = router.route_operation(&OperationType::KeyGeneration, &providers);
         assert!(decision.is_ok());
 
-        let decision = decision.unwrap();
+        let decision = decision?;
         assert!(decision.provider_id.contains("hardware"));
+        Ok(())
     }
 
     #[test]
-    fn test_route_operation_no_providers() {
+    fn test_route_operation_no_providers() -> Result<(), Box<dyn std::error::Error>> {
         let router = HsmOperationRouter::new();
         let providers = vec![];
 
         let decision = router.route_operation(&OperationType::Encryption, &providers);
         assert!(decision.is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_update_stats() {
+    fn test_update_stats() -> Result<(), Box<dyn std::error::Error>> {
         let mut router = HsmOperationRouter::new();
 
         router.update_stats("test-provider".to_string(), true, 15.0);
@@ -268,10 +271,11 @@ mod tests {
 
         assert_eq!(router.stats().operations_processed["test-provider"], 3);
         assert_eq!(router.stats().error_counts.get("test-provider"), Some(&1));
+        Ok(())
     }
 
     #[test]
-    fn test_success_rate_calculation() {
+    fn test_success_rate_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let mut router = HsmOperationRouter::new();
 
         router.update_stats("provider-1".to_string(), true, 10.0);
@@ -280,10 +284,11 @@ mod tests {
 
         let success_rate = router.stats().success_rate["provider-1"];
         assert!((success_rate - 0.666).abs() < 0.01);
+        Ok(())
     }
 
     #[test]
-    fn test_average_latency() {
+    fn test_average_latency() -> Result<(), Box<dyn std::error::Error>> {
         let mut router = HsmOperationRouter::new();
 
         router.update_stats("provider-1".to_string(), true, 10.0);
@@ -292,19 +297,22 @@ mod tests {
         let avg_latency = router.stats().average_latency_ms["provider-1"];
         assert!(avg_latency > 0.0);
         assert!(avg_latency <= 20.0);
+        Ok(())
     }
 
     #[test]
-    fn test_operation_type_equality() {
+    fn test_operation_type_equality() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(OperationType::Signing, OperationType::Signing);
         assert_ne!(OperationType::Signing, OperationType::Encryption);
+        Ok(())
     }
 
     #[test]
-    fn test_routing_config_default() {
+    fn test_routing_config_default() -> Result<(), Box<dyn std::error::Error>> {
         let config = OperationRouterConfig::default();
         assert!(!config.hardware_preferred_operations.is_empty());
         assert!(!config.software_preferred_operations.is_empty());
         assert_eq!(config.max_retries, 3);
+        Ok(())
     }
 }

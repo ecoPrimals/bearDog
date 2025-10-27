@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn test_entropy_quality_validation() {
+    fn test_entropy_quality_validation() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();
         let validator = EntropyValidator::new(config);
 
@@ -205,8 +205,7 @@ mod tests {
             },
         };
 
-        assert!(validator
-            .validate_entropy_quality(&high_quality_entropy)
-            .unwrap());
+        assert!(validator.validate_entropy_quality(&high_quality_entropy)?);
+        Ok(())
     }
 }

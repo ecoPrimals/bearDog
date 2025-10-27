@@ -327,10 +327,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_provider_status_serialization() {
+    async fn test_provider_status_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let status = ServiceStatus::Running;
-        let serialized = serde_json::to_string(&status).unwrap();
-        let deserialized: ServiceStatus = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&status)?;
+        let deserialized: ServiceStatus = serde_json::from_str(&serialized)?;
         assert_eq!(status, deserialized);
+        Ok(())
     }
 }

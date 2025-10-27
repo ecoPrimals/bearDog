@@ -87,7 +87,7 @@ impl DiscoveryEngine {
 //
 // impl Default for DiscoveryEngine {
 //     fn default() -> Self {
-//         Self::new().expect("Failed to create default discovery engine")
+//         Self::new()?
 //     }
 // }
 
