@@ -40,6 +40,10 @@
 //!
 //! All threat detection operations maintain memory safety with zero unsafe code.
 
+// October 27, 2025: Comprehensive test expansion
+#[cfg(test)]
+mod threat_comprehensive_tests;
+
 /// Core threat detection engine and analysis
 ///
 /// Provides the main threat detection engine and related security analysis operations.
