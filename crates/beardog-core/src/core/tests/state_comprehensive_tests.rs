@@ -1,0 +1,456 @@
+//! Comprehensive Tests for Core State Management
+//!
+//! Tests for `CoreState` including:
+//! - Default state creation
+//! - Component registration and tracking
+//! - Health status management
+//! - Uptime calculation
+//! - State cloning and serialization
+//! - Concurrent access patterns
+//!
+//! Created: October 27, 2025 - Test Coverage Expansion
+
+use crate::core::state::CoreState;
+use beardog_types::canonical::{ComponentStatus, HealthStatus};
+use std::thread;
+use std::time::Duration;
+
+// ============================================================================
+// Default State Creation Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_default_creation() {
+    let state = CoreState::default();
+    
+    assert_eq!(state.components.len(), 0);
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+    // Start time should be recent
+    assert!(state.start_time.elapsed().as_secs() < 1);
+}
+
+#[test]
+fn test_core_state_default_is_healthy() {
+    let state = CoreState::default();
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+}
+
+#[test]
+fn test_core_state_default_has_empty_components() {
+    let state = CoreState::default();
+    assert!(state.components.is_empty());
+}
+
+#[test]
+fn test_core_state_default_start_time_is_now() {
+    let state = CoreState::default();
+    let elapsed = state.start_time.elapsed();
+    
+    // Should be created just now (within 100ms)
+    assert!(elapsed < Duration::from_millis(100));
+}
+
+// ============================================================================
+// Component Management Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_add_single_component() {
+    let mut state = CoreState::default();
+    
+    state.components.insert(
+        "security".to_string(),
+        ComponentStatus::Healthy
+    );
+    
+    assert_eq!(state.components.len(), 1);
+    assert_eq!(
+        state.components.get("security"),
+        Some(&ComponentStatus::Healthy)
+    );
+}
+
+#[test]
+fn test_core_state_add_multiple_components() {
+    let mut state = CoreState::default();
+    
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("monitor".to_string(), ComponentStatus::Healthy);
+    state.components.insert("optimizer".to_string(), ComponentStatus::Healthy);
+    
+    assert_eq!(state.components.len(), 3);
+}
+
+#[test]
+fn test_core_state_update_component_status() {
+    let mut state = CoreState::default();
+    
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    assert_eq!(
+        state.components.get("security"),
+        Some(&ComponentStatus::Healthy)
+    );
+    
+    // Update status
+    state.components.insert("security".to_string(), ComponentStatus::Degraded);
+    assert_eq!(
+        state.components.get("security"),
+        Some(&ComponentStatus::Degraded)
+    );
+}
+
+#[test]
+fn test_core_state_remove_component() {
+    let mut state = CoreState::default();
+    
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    assert_eq!(state.components.len(), 1);
+    
+    state.components.remove("security");
+    assert_eq!(state.components.len(), 0);
+}
+
+#[test]
+fn test_core_state_component_not_found() {
+    let state = CoreState::default();
+    assert_eq!(state.components.get("nonexistent"), None);
+}
+
+#[test]
+fn test_core_state_multiple_component_statuses() {
+    let mut state = CoreState::default();
+    
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("monitor".to_string(), ComponentStatus::Degraded);
+    state.components.insert("optimizer".to_string(), ComponentStatus::Unhealthy);
+    
+    assert_eq!(
+        state.components.get("security"),
+        Some(&ComponentStatus::Healthy)
+    );
+    assert_eq!(
+        state.components.get("monitor"),
+        Some(&ComponentStatus::Degraded)
+    );
+    assert_eq!(
+        state.components.get("optimizer"),
+        Some(&ComponentStatus::Unhealthy)
+    );
+}
+
+// ============================================================================
+// Health Status Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_health_status_healthy() {
+    let mut state = CoreState::default();
+    state.overall_health = HealthStatus::Healthy;
+    
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+}
+
+#[test]
+fn test_core_state_health_status_degraded() {
+    let mut state = CoreState::default();
+    state.overall_health = HealthStatus::Degraded;
+    
+    assert_eq!(state.overall_health, HealthStatus::Degraded);
+}
+
+#[test]
+fn test_core_state_health_status_unhealthy() {
+    let mut state = CoreState::default();
+    state.overall_health = HealthStatus::Unhealthy;
+    
+    assert_eq!(state.overall_health, HealthStatus::Unhealthy);
+}
+
+#[test]
+fn test_core_state_health_status_transition() {
+    let mut state = CoreState::default();
+    
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+    
+    state.overall_health = HealthStatus::Degraded;
+    assert_eq!(state.overall_health, HealthStatus::Degraded);
+    
+    state.overall_health = HealthStatus::Unhealthy;
+    assert_eq!(state.overall_health, HealthStatus::Unhealthy);
+    
+    state.overall_health = HealthStatus::Healthy;
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+}
+
+// ============================================================================
+// Uptime Calculation Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_uptime_just_created() {
+    let state = CoreState::default();
+    let uptime = state.start_time.elapsed();
+    
+    // Should be very close to 0 (within 100ms)
+    assert!(uptime < Duration::from_millis(100));
+}
+
+#[test]
+fn test_core_state_uptime_increases() {
+    let state = CoreState::default();
+    
+    let uptime1 = state.start_time.elapsed();
+    thread::sleep(Duration::from_millis(10));
+    let uptime2 = state.start_time.elapsed();
+    
+    assert!(uptime2 > uptime1);
+}
+
+#[test]
+fn test_core_state_uptime_monotonic() {
+    let state = CoreState::default();
+    
+    let mut previous_uptime = state.start_time.elapsed();
+    
+    for _ in 0..5 {
+        thread::sleep(Duration::from_millis(2));
+        let current_uptime = state.start_time.elapsed();
+        assert!(current_uptime > previous_uptime);
+        previous_uptime = current_uptime;
+    }
+}
+
+// ============================================================================
+// Clone Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_clone() {
+    let mut state = CoreState::default();
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.overall_health = HealthStatus::Degraded;
+    
+    let cloned = state.clone();
+    
+    assert_eq!(cloned.components.len(), 1);
+    assert_eq!(cloned.overall_health, HealthStatus::Degraded);
+    assert_eq!(
+        cloned.components.get("security"),
+        Some(&ComponentStatus::Healthy)
+    );
+}
+
+#[test]
+fn test_core_state_clone_independence() {
+    let mut state = CoreState::default();
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    
+    let mut cloned = state.clone();
+    
+    // Modify clone
+    cloned.components.insert("monitor".to_string(), ComponentStatus::Healthy);
+    cloned.overall_health = HealthStatus::Unhealthy;
+    
+    // Original should be unchanged
+    assert_eq!(state.components.len(), 1);
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+    
+    // Clone should be modified
+    assert_eq!(cloned.components.len(), 2);
+    assert_eq!(cloned.overall_health, HealthStatus::Unhealthy);
+}
+
+#[test]
+fn test_core_state_clone_start_time_same() {
+    let state = CoreState::default();
+    thread::sleep(Duration::from_millis(10));
+    
+    let cloned = state.clone();
+    
+    // Start time should be the same instant
+    // (though elapsed time will be slightly different due to cloning time)
+    let diff = state.start_time.elapsed().as_millis()
+        .abs_diff(cloned.start_time.elapsed().as_millis());
+    
+    // Should be very close (within 10ms)
+    assert!(diff < 10);
+}
+
+// ============================================================================
+// Debug Formatting Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_debug_format() {
+    let state = CoreState::default();
+    let debug_str = format!("{:?}", state);
+    
+    // Should contain struct name and key fields
+    assert!(debug_str.contains("CoreState"));
+    assert!(debug_str.contains("components"));
+    assert!(debug_str.contains("overall_health"));
+    assert!(debug_str.contains("start_time"));
+}
+
+#[test]
+fn test_core_state_debug_with_components() {
+    let mut state = CoreState::default();
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    
+    let debug_str = format!("{:?}", state);
+    assert!(debug_str.contains("security"));
+    assert!(debug_str.contains("Healthy"));
+}
+
+// ============================================================================
+// Capacity Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_components_initial_capacity() {
+    let state = CoreState::default();
+    
+    // Default creates HashMap with capacity 10
+    assert!(state.components.capacity() >= 10);
+}
+
+#[test]
+fn test_core_state_components_grow_beyond_capacity() {
+    let mut state = CoreState::default();
+    
+    // Add more than initial capacity
+    for i in 0..20 {
+        state.components.insert(
+            format!("component_{}", i),
+            ComponentStatus::Healthy
+        );
+    }
+    
+    assert_eq!(state.components.len(), 20);
+    // Capacity should have grown
+    assert!(state.components.capacity() >= 20);
+}
+
+// ============================================================================
+// Integration Tests
+// ============================================================================
+
+#[test]
+fn test_core_state_realistic_scenario() {
+    let mut state = CoreState::default();
+    
+    // Simulate system startup
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+    
+    // Register components
+    state.components.insert("security".to_string(), ComponentStatus::Healthy);
+    state.components.insert("monitor".to_string(), ComponentStatus::Healthy);
+    state.components.insert("optimizer".to_string(), ComponentStatus::Healthy);
+    state.components.insert("adapter".to_string(), ComponentStatus::Healthy);
+    
+    assert_eq!(state.components.len(), 4);
+    
+    // Simulate a component degradation
+    state.components.insert("monitor".to_string(), ComponentStatus::Degraded);
+    state.overall_health = HealthStatus::Degraded;
+    
+    assert_eq!(state.overall_health, HealthStatus::Degraded);
+    assert_eq!(
+        state.components.get("monitor"),
+        Some(&ComponentStatus::Degraded)
+    );
+    
+    // Simulate recovery
+    state.components.insert("monitor".to_string(), ComponentStatus::Healthy);
+    state.overall_health = HealthStatus::Healthy;
+    
+    assert_eq!(state.overall_health, HealthStatus::Healthy);
+    
+    // Check uptime
+    assert!(state.start_time.elapsed() > Duration::from_nanos(0));
+}
+
+#[test]
+fn test_core_state_concurrent_cloning() {
+    let state = CoreState::default();
+    
+    // Simulate concurrent reads via cloning
+    let handles: Vec<_> = (0..10)
+        .map(|_| {
+            let state_clone = state.clone();
+            thread::spawn(move || {
+                assert_eq!(state_clone.overall_health, HealthStatus::Healthy);
+                assert!(state_clone.components.is_empty());
+            })
+        })
+        .collect();
+    
+    for handle in handles {
+        handle.join().expect("Thread should complete successfully");
+    }
+}
+
+// ============================================================================
+// Edge Cases
+// ============================================================================
+
+#[test]
+fn test_core_state_empty_component_name() {
+    let mut state = CoreState::default();
+    
+    // Empty string as component name (edge case)
+    state.components.insert("".to_string(), ComponentStatus::Healthy);
+    
+    assert_eq!(state.components.len(), 1);
+    assert_eq!(state.components.get(""), Some(&ComponentStatus::Healthy));
+}
+
+#[test]
+fn test_core_state_very_long_component_name() {
+    let mut state = CoreState::default();
+    
+    let long_name = "a".repeat(1000);
+    state.components.insert(long_name.clone(), ComponentStatus::Healthy);
+    
+    assert_eq!(state.components.len(), 1);
+    assert_eq!(
+        state.components.get(&long_name),
+        Some(&ComponentStatus::Healthy)
+    );
+}
+
+#[test]
+fn test_core_state_unicode_component_name() {
+    let mut state = CoreState::default();
+    
+    let unicode_name = "安全_セキュリティ_🔐";
+    state.components.insert(unicode_name.to_string(), ComponentStatus::Healthy);
+    
+    assert_eq!(state.components.len(), 1);
+    assert_eq!(
+        state.components.get(unicode_name),
+        Some(&ComponentStatus::Healthy)
+    );
+}
+
+#[test]
+fn test_core_state_many_components() {
+    let mut state = CoreState::default();
+    
+    // Add many components
+    for i in 0..1000 {
+        state.components.insert(
+            format!("component_{}", i),
+            if i % 3 == 0 {
+                ComponentStatus::Healthy
+            } else if i % 3 == 1 {
+                ComponentStatus::Degraded
+            } else {
+                ComponentStatus::Unhealthy
+            }
+        );
+    }
+    
+    assert_eq!(state.components.len(), 1000);
+}
+
