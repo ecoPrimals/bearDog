@@ -10,6 +10,8 @@
 //! - Sovereign cryptographic key management
 
 #![deny(unsafe_code)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration
 //! - Zero-copy memory optimization
