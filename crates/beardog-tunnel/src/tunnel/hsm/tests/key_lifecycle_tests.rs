@@ -27,7 +27,7 @@ async fn test_key_generation_lifecycle() -> Result<()> {
     let config = create_test_config();
     let hsm = RustSoftwareHsm::new(config.into())
         .await
-        .expect("Failed to create HSM");
+        ?;
 
     // Verify HSM is operational
     assert!(hsm.is_initialized(), "HSM should be initialized");
@@ -40,7 +40,7 @@ async fn test_multiple_key_generation() -> Result<()> {
     let config = create_test_config();
     let hsm = RustSoftwareHsm::new(config.into())
         .await
-        .expect("Failed to create HSM");
+        ?;
 
     // Generate multiple keys
     let key_ids = vec!["key1", "key2", "key3"];
@@ -73,7 +73,7 @@ async fn test_hsm_health_check() -> Result<()> {
     let config = create_test_config();
     let hsm = RustSoftwareHsm::new(config.into())
         .await
-        .expect("Failed to create HSM");
+        ?;
 
     // Verify HSM health
     assert!(hsm.is_initialized(), "HSM should be healthy after creation");
@@ -86,7 +86,7 @@ async fn test_concurrent_hsm_operations() -> Result<()> {
     let config = create_test_config();
     let hsm = RustSoftwareHsm::new(config.into())
         .await
-        .expect("Failed to create HSM");
+        ?;
 
     // Simulate concurrent operations
     let handles: Vec<_> = (0..5)
@@ -102,11 +102,10 @@ async fn test_concurrent_hsm_operations() -> Result<()> {
 
     // Wait for all tasks
     for handle in handles {
-        handle.await.expect("Task should complete").expect("Operation should succeed");
+        handle.await??;
     }
 
     assert!(hsm.is_initialized(), "HSM should remain operational");
 
     Ok(())
 }
-
