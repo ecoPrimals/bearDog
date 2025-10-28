@@ -61,6 +61,7 @@ pub mod ai_optimization;
 pub mod benchmarks;
 pub mod const_eval;
 pub mod env_config;
+pub mod optimization;
 
 // Safe implementations - production ready
 pub mod buffer_pools_safe;

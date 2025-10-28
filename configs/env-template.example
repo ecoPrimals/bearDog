@@ -1,0 +1,142 @@
+# BearDog Environment Configuration Template
+# Copy this file to .env in project root and customize for your environment
+#
+# Created: October 28, 2025
+# Purpose: Environment-driven configuration (eliminating hardcoding)
+
+# =============================================================================
+# CORE CONFIGURATION
+# =============================================================================
+
+# Environment level: development, staging, preproduction, production, critical
+BEARDOG_ENVIRONMENT=development
+
+# Service identification
+BEARDOG_SERVICE_NAME=beardog
+BEARDOG_SERVICE_VERSION=3.0.0
+BEARDOG_DEPLOYMENT_ID=local-dev
+BEARDOG_REGION=local
+BEARDOG_CLUSTER_ID=default
+BEARDOG_NODE_ID=node-1
+
+# Core settings
+BEARDOG_HOST=localhost
+BEARDOG_API_PORT=8080
+BEARDOG_METRICS_PORT=9090
+BEARDOG_LOG_LEVEL=info
+
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+
+# PostgreSQL connection
+BEARDOG_DATABASE_URL=postgres://beardog:password@localhost:5432/beardog
+
+# =============================================================================
+# REDIS CONFIGURATION
+# =============================================================================
+
+BEARDOG_REDIS_URL=redis://localhost:6379
+
+# =============================================================================
+# SERVICE DISCOVERY
+# =============================================================================
+
+BEARDOG_DISCOVERY_ENABLED=true
+BEARDOG_DISCOVERY_TIMEOUT_MS=5000
+BEARDOG_DISCOVERY_METHODS=mdns,http,env
+
+# =============================================================================
+# PRIMAL SERVICES (ecoPrimals ecosystem)
+# =============================================================================
+
+# ToadStool (Compute Orchestration)
+TOADSTOOL_HOST=localhost
+TOADSTOOL_PORT=8081
+
+# Songbird (Network Services)
+SONGBIRD_HOST=localhost
+SONGBIRD_PORT=8082
+
+# Squirrel (AI/ML Services)
+SQUIRREL_HOST=localhost
+SQUIRREL_PORT=8083
+
+# NestGate (Storage Services)
+NESTGATE_HOST=localhost
+NESTGATE_PORT=8084
+
+# BiomeOS (Container/OS Services)
+BIOMEOS_HOST=localhost
+BIOMEOS_PORT=8085
+
+# =============================================================================
+# HSM (Hardware Security Module) CONFIGURATION
+# =============================================================================
+
+# HSM Provider: software, pkcs11, tpm, aws_kms, azure_keyvault, gcp_kms
+BEARDOG_HSM_PROVIDER=software
+
+# Software HSM (for development)
+BEARDOG_HSM_SOFTWARE_KEY_PATH=/var/lib/beardog/keys
+
+# =============================================================================
+# SECURITY & CRYPTOGRAPHY
+# =============================================================================
+
+# Encryption keys (generate secure keys for production!)
+BEARDOG_JWT_SECRET_KEY=<generate-a-secure-256-bit-key>
+BEARDOG_ENCRYPTION_KEY=<generate-a-secure-256-bit-key>
+BEARDOG_SIGNING_KEY=<generate-a-secure-key>
+
+# Security settings
+BEARDOG_ENABLE_ENCRYPTION_AT_REST=true
+BEARDOG_ENABLE_TLS=true
+
+# =============================================================================
+# MONITORING & OBSERVABILITY
+# =============================================================================
+
+# Prometheus
+BEARDOG_PROMETHEUS_ENABLED=true
+BEARDOG_PROMETHEUS_PORT=9090
+BEARDOG_PROMETHEUS_PATH=/metrics
+
+# Grafana
+BEARDOG_GRAFANA_URL=http://localhost:3000
+
+# Logging
+BEARDOG_LOG_FORMAT=json
+BEARDOG_LOG_OUTPUT=stdout
+
+# =============================================================================
+# PERFORMANCE & RESOURCE LIMITS
+# =============================================================================
+
+BEARDOG_MAX_MEMORY_MB=4096
+BEARDOG_MAX_CPU_CORES=8
+BEARDOG_MAX_CONNECTIONS=1000
+BEARDOG_MAX_CONCURRENT_REQUESTS=500
+BEARDOG_MAX_REQUESTS_PER_SECOND=1000
+BEARDOG_DEFAULT_TIMEOUT_SECONDS=30
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+
+BEARDOG_ENABLE_ADVANCED_MONITORING=true
+BEARDOG_ENABLE_DISTRIBUTED_TRACING=false
+BEARDOG_ENABLE_SECURITY_AUDITING=true
+BEARDOG_ENABLE_CIRCUIT_BREAKERS=true
+BEARDOG_ENABLE_RATE_LIMITING=true
+BEARDOG_ENABLE_CACHING=true
+
+# =============================================================================
+# SOVEREIGNTY PRINCIPLES
+# =============================================================================
+
+BEARDOG_SOVEREIGNTY_ENABLED=true
+BEARDOG_PRIVACY_FIRST=true
+BEARDOG_USER_CONSENT_REQUIRED=true
+BEARDOG_DATA_MINIMIZATION=true
+

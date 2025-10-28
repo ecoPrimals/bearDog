@@ -70,7 +70,8 @@ fn test_production_ecosystem_uptime() -> Result<(), Box<dyn std::error::Error>> 
     let ecosystem = ProductionEcosystem::new(config)?;
 
     let uptime = ecosystem.uptime();
-    assert!(uptime.as_millis() >= 0); // Check uptime is valid
+    // Uptime should be a valid duration (no assertion needed - Duration is always valid)
+    assert!(uptime.as_secs() < 3600); // Should be less than 1 hour in tests
     Ok(())
 }
 

@@ -4,7 +4,10 @@
 //!
 //! NOTE: Tests implemented October 27, 2025 - Workflow functionality verified!
 
-use crate::{WorkflowConfig, workflows::types::enums::{WorkflowStatus, WorkflowPriority}};
+use crate::{
+    workflows::types::enums::{WorkflowPriority, WorkflowStatus},
+    WorkflowConfig,
+};
 
 #[cfg(test)]
 mod workflow_creation_tests {
@@ -75,10 +78,10 @@ mod workflow_execution_tests {
     fn test_workflow_start() {
         // Test workflow initialization state
         let status = ExecutionStatus::Queued;
-        
+
         // Verify workflow starts in queued state
         assert!(matches!(status, ExecutionStatus::Queued));
-        
+
         // Verify it can transition to running
         let running_status = ExecutionStatus::Running;
         assert!(matches!(running_status, ExecutionStatus::Running));
@@ -90,12 +93,12 @@ mod workflow_execution_tests {
         let queued = ExecutionStatus::Queued;
         let running = ExecutionStatus::Running;
         let completed = ExecutionStatus::Completed;
-        
+
         // Verify distinct states
         assert!(matches!(queued, ExecutionStatus::Queued));
         assert!(matches!(running, ExecutionStatus::Running));
         assert!(matches!(completed, ExecutionStatus::Completed));
-        
+
         // Verify states are serializable
         let json = serde_json::to_string(&running).unwrap();
         assert!(!json.is_empty());
@@ -105,9 +108,9 @@ mod workflow_execution_tests {
     fn test_workflow_completion() {
         // Test successful workflow completion
         let completed = ExecutionStatus::Completed;
-        
+
         assert!(matches!(completed, ExecutionStatus::Completed));
-        
+
         // Verify completion is terminal state
         let json = serde_json::to_string(&completed).unwrap();
         assert!(json.contains("Completed"));
@@ -117,15 +120,12 @@ mod workflow_execution_tests {
     fn test_workflow_cancellation() {
         // Test workflow cancellation
         let cancelled = ExecutionStatus::Cancelled;
-        
+
         assert!(matches!(cancelled, ExecutionStatus::Cancelled));
-        
+
         // Verify cancellation is distinct from failure
         let failed = ExecutionStatus::Failed;
-        assert_ne!(
-            format!("{:?}", cancelled),
-            format!("{:?}", failed)
-        );
+        assert_ne!(format!("{:?}", cancelled), format!("{:?}", failed));
     }
 }
 
@@ -142,7 +142,7 @@ mod workflow_state_tests {
         let completed = WorkflowExecutionState::Completed;
         let failed = WorkflowExecutionState::Failed;
         let cancelled = WorkflowExecutionState::Cancelled;
-        
+
         // Verify all states are distinct
         assert!(matches!(initialized, WorkflowExecutionState::Initialized));
         assert!(matches!(executing, WorkflowExecutionState::Executing));
@@ -155,12 +155,12 @@ mod workflow_state_tests {
     fn test_workflow_state_persistence() {
         // Test state serialization (persistence simulation)
         let state = WorkflowExecutionState::Executing;
-        
+
         // Serialize to JSON
         let json = serde_json::to_string(&state).unwrap();
         assert!(!json.is_empty());
         assert!(json.contains("Executing"));
-        
+
         // Deserialize back
         let deserialized: WorkflowExecutionState = serde_json::from_str(&json).unwrap();
         assert!(matches!(deserialized, WorkflowExecutionState::Executing));
@@ -170,19 +170,16 @@ mod workflow_state_tests {
     fn test_workflow_state_recovery() {
         // Test recovery from failed state
         let failed = WorkflowExecutionState::Failed;
-        
+
         // Verify failed state is terminal
         assert!(matches!(failed, WorkflowExecutionState::Failed));
-        
+
         // Verify we can represent recovery by creating new workflow
         let recovered = WorkflowExecutionState::Initialized;
         assert!(matches!(recovered, WorkflowExecutionState::Initialized));
-        
+
         // Verify states are different
-        assert_ne!(
-            format!("{:?}", failed),
-            format!("{:?}", recovered)
-        );
+        assert_ne!(format!("{:?}", failed), format!("{:?}", recovered));
     }
 }
 

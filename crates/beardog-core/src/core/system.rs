@@ -59,6 +59,7 @@
 //!
 //! ```rust,no_run
 //! # use beardog_core::BearDogCore;
+//! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! # let core = BearDogCore::with_default_config()?;
 //! // Access security provider
 //! let security = &core.security;
@@ -71,6 +72,8 @@
 //!
 //! // Access universal adapter
 //! let adapter = &core.universal_adapter;
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # State Management

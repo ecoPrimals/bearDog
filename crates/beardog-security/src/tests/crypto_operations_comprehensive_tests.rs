@@ -514,7 +514,13 @@ mod key_rotation_tests {
         }
 
         assert!(decrypted.is_some(), "Should find correct key");
-        assert_eq!(decrypted?.as_slice(), plaintext, "Decryption should work");
+        let decrypted_data = decrypted
+            .ok_or_else(|| BearDogError::security("Failed to decrypt with any key".to_string()))?;
+        assert_eq!(
+            decrypted_data.as_slice(),
+            plaintext,
+            "Decryption should work"
+        );
 
         Ok(())
     }

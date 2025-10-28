@@ -52,6 +52,10 @@ mod production_integration_tests;
 #[cfg(test)]
 mod production_core_tests;
 
+// October 28, 2025: Evening Test Expansion - Comprehensive Mod Tests
+#[cfg(test)]
+mod mod_comprehensive_tests;
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
