@@ -19,7 +19,7 @@ use super::*;
 #[test]
 fn test_deployment_config_default() {
     let config = DeploymentConfig::default();
-    
+
     assert_eq!(config.environment, "development");
     assert_eq!(config.region, "local");
     assert_eq!(config.instance_count, 1);
@@ -34,7 +34,7 @@ fn test_deployment_config_custom() {
         instance_count: 10,
         monitoring_enabled: false,
     };
-    
+
     assert_eq!(config.environment, "production");
     assert_eq!(config.region, "us-east-1");
     assert_eq!(config.instance_count, 10);
@@ -49,7 +49,7 @@ fn test_deployment_config_staging() {
         instance_count: 3,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.environment, "staging");
     assert_eq!(config.instance_count, 3);
 }
@@ -58,7 +58,7 @@ fn test_deployment_config_staging() {
 fn test_deployment_config_clone() {
     let config1 = DeploymentConfig::default();
     let config2 = config1.clone();
-    
+
     assert_eq!(config1.environment, config2.environment);
     assert_eq!(config1.region, config2.region);
     assert_eq!(config1.instance_count, config2.instance_count);
@@ -69,7 +69,7 @@ fn test_deployment_config_clone() {
 fn test_deployment_config_debug_format() {
     let config = DeploymentConfig::default();
     let debug_str = format!("{:?}", config);
-    
+
     assert!(debug_str.contains("DeploymentConfig"));
     assert!(debug_str.contains("development"));
     assert!(debug_str.contains("local"));
@@ -83,11 +83,11 @@ fn test_deployment_config_serialization() {
         instance_count: 5,
         monitoring_enabled: true,
     };
-    
+
     let serialized = serde_json::to_string(&config).expect("Serialization should succeed");
-    let deserialized: DeploymentConfig = 
+    let deserialized: DeploymentConfig =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
-    
+
     assert_eq!(config.environment, deserialized.environment);
     assert_eq!(config.region, deserialized.region);
     assert_eq!(config.instance_count, deserialized.instance_count);
@@ -102,7 +102,7 @@ fn test_deployment_config_empty_environment() {
         instance_count: 1,
         monitoring_enabled: true,
     };
-    
+
     assert!(config.environment.is_empty());
 }
 
@@ -114,7 +114,7 @@ fn test_deployment_config_zero_instances() {
         instance_count: 0,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.instance_count, 0);
 }
 
@@ -126,14 +126,14 @@ fn test_deployment_config_large_instance_count() {
         instance_count: 1000,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.instance_count, 1000);
 }
 
 #[test]
 fn test_deployment_config_various_environments() {
     let environments = vec!["dev", "test", "staging", "preprod", "production"];
-    
+
     for env in environments {
         let config = DeploymentConfig {
             environment: env.to_string(),
@@ -148,7 +148,7 @@ fn test_deployment_config_various_environments() {
 #[test]
 fn test_deployment_config_various_regions() {
     let regions = vec!["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"];
-    
+
     for region in regions {
         let config = DeploymentConfig {
             environment: "production".to_string(),
@@ -168,7 +168,7 @@ fn test_deployment_config_monitoring_disabled() {
         instance_count: 1,
         monitoring_enabled: false,
     };
-    
+
     assert!(!config.monitoring_enabled);
 }
 
@@ -180,7 +180,7 @@ fn test_deployment_config_monitoring_disabled() {
 fn test_deployment_manager_new() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config.clone());
-    
+
     // Manager created successfully
     assert_eq!(manager.config.environment, config.environment);
 }
@@ -193,7 +193,7 @@ fn test_deployment_manager_with_custom_config() {
         instance_count: 5,
         monitoring_enabled: true,
     };
-    
+
     let manager = DeploymentManager::new(config.clone());
     assert_eq!(manager.config.environment, "production");
     assert_eq!(manager.config.instance_count, 5);
@@ -204,7 +204,7 @@ fn test_deployment_manager_clone() {
     let config = DeploymentConfig::default();
     let manager1 = DeploymentManager::new(config);
     let manager2 = manager1.clone();
-    
+
     assert_eq!(manager1.config.environment, manager2.config.environment);
     assert_eq!(manager1.config.region, manager2.config.region);
 }
@@ -214,7 +214,7 @@ fn test_deployment_manager_debug_format() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config);
     let debug_str = format!("{:?}", manager);
-    
+
     assert!(debug_str.contains("DeploymentManager"));
 }
 
@@ -226,7 +226,7 @@ fn test_deployment_manager_debug_format() {
 fn test_deployment_manager_initialize_success() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config);
-    
+
     let result = manager.initialize();
     assert!(result.is_ok());
 }
@@ -240,7 +240,7 @@ fn test_deployment_manager_initialize_with_production_config() {
         monitoring_enabled: true,
     };
     let manager = DeploymentManager::new(config);
-    
+
     let result = manager.initialize();
     assert!(result.is_ok());
 }
@@ -254,10 +254,10 @@ fn test_deployment_manager_initialize_empty_environment_fails() {
         monitoring_enabled: true,
     };
     let manager = DeploymentManager::new(config);
-    
+
     let result = manager.initialize();
     assert!(result.is_err());
-    
+
     let error = result.unwrap_err();
     let error_msg = format!("{:?}", error);
     assert!(error_msg.contains("Environment") || error_msg.contains("empty"));
@@ -267,7 +267,7 @@ fn test_deployment_manager_initialize_empty_environment_fails() {
 fn test_deployment_manager_initialize_multiple_times() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config);
-    
+
     // Initialize multiple times should work
     assert!(manager.initialize().is_ok());
     assert!(manager.initialize().is_ok());
@@ -283,7 +283,7 @@ fn test_deployment_manager_initialize_with_monitoring_disabled() {
         monitoring_enabled: false,
     };
     let manager = DeploymentManager::new(config);
-    
+
     let result = manager.initialize();
     assert!(result.is_ok());
 }
@@ -297,7 +297,7 @@ fn test_deployment_manager_initialize_with_zero_instances() {
         monitoring_enabled: true,
     };
     let manager = DeploymentManager::new(config);
-    
+
     // Should still initialize (instance_count validation not implemented)
     let result = manager.initialize();
     assert!(result.is_ok());
@@ -311,7 +311,7 @@ fn test_deployment_manager_initialize_with_zero_instances() {
 fn test_full_deployment_lifecycle_development() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config);
-    
+
     // Should initialize successfully
     assert!(manager.initialize().is_ok());
 }
@@ -325,7 +325,7 @@ fn test_full_deployment_lifecycle_production() {
         monitoring_enabled: true,
     };
     let manager = DeploymentManager::new(config);
-    
+
     assert!(manager.initialize().is_ok());
 }
 
@@ -351,7 +351,7 @@ fn test_deployment_manager_with_different_configurations() {
             monitoring_enabled: true,
         },
     ];
-    
+
     for config in configs {
         let manager = DeploymentManager::new(config);
         assert!(manager.initialize().is_ok());
@@ -370,7 +370,7 @@ fn test_deployment_config_special_characters_in_environment() {
         instance_count: 1,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.environment, "test-env_123");
 }
 
@@ -383,7 +383,7 @@ fn test_deployment_config_long_environment_name() {
         instance_count: 1,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.environment, long_name);
 }
 
@@ -396,7 +396,7 @@ fn test_deployment_config_long_region_name() {
         instance_count: 1,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.region, long_region);
 }
 
@@ -408,7 +408,7 @@ fn test_deployment_config_max_instance_count() {
         instance_count: u32::MAX,
         monitoring_enabled: true,
     };
-    
+
     assert_eq!(config.instance_count, u32::MAX);
 }
 
@@ -420,10 +420,11 @@ fn test_deployment_config_json_roundtrip() {
         instance_count: 7,
         monitoring_enabled: false,
     };
-    
+
     let json = serde_json::to_string(&config).expect("Serialization should succeed");
-    let parsed: DeploymentConfig = serde_json::from_str(&json).expect("Deserialization should succeed");
-    
+    let parsed: DeploymentConfig =
+        serde_json::from_str(&json).expect("Deserialization should succeed");
+
     assert_eq!(config.environment, parsed.environment);
     assert_eq!(config.region, parsed.region);
     assert_eq!(config.instance_count, parsed.instance_count);
@@ -433,7 +434,7 @@ fn test_deployment_config_json_roundtrip() {
 #[test]
 fn test_deployment_config_json_pretty() {
     let config = DeploymentConfig::default();
-    
+
     let json = serde_json::to_string_pretty(&config).expect("Pretty serialization should succeed");
     assert!(json.contains("development"));
     assert!(json.contains("local"));
@@ -452,8 +453,7 @@ fn test_deployment_manager_const_new() {
         };
         DeploymentManager::new(config)
     }
-    
+
     let _manager = create_manager();
     // Successfully created in const context
 }
-

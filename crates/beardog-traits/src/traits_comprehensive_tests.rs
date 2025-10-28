@@ -54,7 +54,7 @@ fn test_utilities_const_functions() {
     // Verify const functions work in const context
     const VERSION: &str = crate::utilities::get_unified_version();
     const VALID: bool = crate::utilities::validate_unified_usage();
-    
+
     assert_eq!(VERSION, "3.0.0");
     assert!(VALID);
 }
@@ -109,7 +109,7 @@ fn test_const_version_evaluation() {
     const fn const_check() -> bool {
         utilities::get_unified_version().len() == 5
     }
-    
+
     assert!(const_check());
 }
 
@@ -118,7 +118,7 @@ fn test_const_validation_evaluation() {
     const fn const_validate() -> bool {
         utilities::validate_unified_usage()
     }
-    
+
     assert!(const_validate());
 }
 
@@ -129,9 +129,9 @@ fn test_const_validation_evaluation() {
 #[test]
 fn test_utilities_thread_safe() {
     use std::thread;
-    
+
     let mut handles = vec![];
-    
+
     for _ in 0..10 {
         let handle = thread::spawn(|| {
             (
@@ -141,7 +141,7 @@ fn test_utilities_thread_safe() {
         });
         handles.push(handle);
     }
-    
+
     for handle in handles {
         let (version, valid) = handle.join().expect("Thread should complete");
         assert_eq!(version, "3.0.0");
@@ -158,7 +158,7 @@ fn test_trait_system_initialization() {
     // Simulating initialization checks
     let version = utilities::get_unified_version();
     let valid = utilities::validate_unified_usage();
-    
+
     assert_eq!(version, "3.0.0");
     assert!(valid);
 }
@@ -202,7 +202,7 @@ fn test_version_parsing() {
     let version = utilities::get_unified_version();
     let parts: Vec<&str> = version.split('.').collect();
     assert_eq!(parts.len(), 3, "Version should have 3 parts");
-    
+
     for part in parts {
         assert!(part.parse::<u32>().is_ok(), "Each part should be numeric");
     }
@@ -218,7 +218,7 @@ fn test_version_check_pattern() {
         let version = utilities::get_unified_version();
         version.starts_with('3') || version.starts_with('4')
     }
-    
+
     assert!(is_version_3_or_higher());
 }
 
@@ -230,7 +230,7 @@ fn test_validation_guard_pattern() {
         }
         Ok(())
     }
-    
+
     assert!(safe_operation().is_ok());
 }
 
@@ -252,27 +252,33 @@ fn test_doc_example_prelude() {
 #[test]
 fn test_version_call_performance() {
     use std::time::Instant;
-    
+
     let start = Instant::now();
     for _ in 0..10000 {
         let _ = utilities::get_unified_version();
     }
     let duration = start.elapsed();
-    
-    assert!(duration.as_millis() < 10, "10k calls should be nearly instant");
+
+    assert!(
+        duration.as_millis() < 10,
+        "10k calls should be nearly instant"
+    );
 }
 
 #[test]
 fn test_validation_call_performance() {
     use std::time::Instant;
-    
+
     let start = Instant::now();
     for _ in 0..10000 {
         let _ = utilities::validate_unified_usage();
     }
     let duration = start.elapsed();
-    
-    assert!(duration.as_millis() < 10, "10k calls should be nearly instant");
+
+    assert!(
+        duration.as_millis() < 10,
+        "10k calls should be nearly instant"
+    );
 }
 
 // ============================================================================
@@ -307,7 +313,7 @@ fn test_version_concatenation() {
 #[test]
 fn test_validation_boolean_ops() {
     let valid = utilities::validate_unified_usage();
-    
+
     assert!(valid && true);
     assert!(true && valid);
     assert!(valid || false);
@@ -332,7 +338,7 @@ fn test_functions_never_panic() {
         let _ = utilities::get_unified_version();
         let _ = utilities::validate_unified_usage();
     });
-    
+
     assert!(result.is_ok(), "Utilities should never panic");
 }
 
@@ -343,11 +349,11 @@ fn test_functions_never_panic() {
 #[test]
 fn test_version_lifetime_validity() {
     let version = utilities::get_unified_version();
-    
+
     // Can use version after function scope
     let _owned = version.to_owned();
     let _len = version.len();
-    
+
     assert_eq!(version, "3.0.0");
 }
 
@@ -358,7 +364,7 @@ fn test_no_memory_leaks() {
         let _v = utilities::get_unified_version();
         let _valid = utilities::validate_unified_usage();
     }
-    
+
     // If we got here without OOM, test passes
     assert!(true);
 }
@@ -389,25 +395,24 @@ fn test_functions_are_must_use() {
 #[test]
 fn test_complete_trait_system_check() {
     // Comprehensive system validation
-    
+
     // 1. Version check
     let version = utilities::get_unified_version();
     assert_eq!(version, "3.0.0");
     assert!(!version.is_empty());
     assert!(version.is_ascii());
-    
+
     // 2. Validation check
     let valid = utilities::validate_unified_usage();
     assert!(valid);
-    
+
     // 3. Consistency check
     let v2 = utilities::get_unified_version();
     let valid2 = utilities::validate_unified_usage();
     assert_eq!(version, v2);
     assert_eq!(valid, valid2);
-    
+
     // 4. Prelude check
     let v3 = crate::utilities::get_unified_version();
     assert_eq!(version, v3);
 }
-

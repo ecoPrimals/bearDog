@@ -26,7 +26,7 @@ fn test_audit_severity_variants() {
     let medium = AuditSeverity::Medium;
     let high = AuditSeverity::High;
     let critical = AuditSeverity::Critical;
-    
+
     assert!(matches!(low, AuditSeverity::Low));
     assert!(matches!(medium, AuditSeverity::Medium));
     assert!(matches!(high, AuditSeverity::High));
@@ -37,7 +37,7 @@ fn test_audit_severity_variants() {
 fn test_audit_severity_clone() {
     let severity1 = AuditSeverity::High;
     let severity2 = severity1.clone();
-    
+
     assert_eq!(severity1, severity2);
 }
 
@@ -46,7 +46,7 @@ fn test_audit_severity_equality() {
     let high1 = AuditSeverity::High;
     let high2 = AuditSeverity::High;
     let medium = AuditSeverity::Medium;
-    
+
     assert_eq!(high1, high2);
     assert_ne!(high1, medium);
 }
@@ -54,11 +54,11 @@ fn test_audit_severity_equality() {
 #[test]
 fn test_audit_severity_hash() {
     use std::collections::HashMap;
-    
+
     let mut map = HashMap::new();
     map.insert(AuditSeverity::High, "high_events");
     map.insert(AuditSeverity::Low, "low_events");
-    
+
     assert_eq!(map.get(&AuditSeverity::High), Some(&"high_events"));
     assert_eq!(map.get(&AuditSeverity::Low), Some(&"low_events"));
 }
@@ -67,9 +67,9 @@ fn test_audit_severity_hash() {
 fn test_audit_severity_serialization() {
     let severity = AuditSeverity::Critical;
     let serialized = serde_json::to_string(&severity).expect("Serialization should succeed");
-    let deserialized: AuditSeverity = 
+    let deserialized: AuditSeverity =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
-    
+
     assert_eq!(severity, deserialized);
 }
 
@@ -77,7 +77,7 @@ fn test_audit_severity_serialization() {
 fn test_audit_severity_debug_format() {
     let severity = AuditSeverity::High;
     let debug_str = format!("{:?}", severity);
-    
+
     assert!(debug_str.contains("High"));
 }
 
@@ -95,7 +95,7 @@ fn test_audit_event_type_variants() {
         AuditEventType::SecurityEvent,
         AuditEventType::ComplianceCheck,
     ];
-    
+
     assert_eq!(types.len(), 6);
 }
 
@@ -103,7 +103,7 @@ fn test_audit_event_type_variants() {
 fn test_audit_event_type_clone() {
     let type1 = AuditEventType::Authentication;
     let type2 = type1.clone();
-    
+
     assert!(matches!(type2, AuditEventType::Authentication));
 }
 
@@ -111,9 +111,9 @@ fn test_audit_event_type_clone() {
 fn test_audit_event_type_serialization() {
     let event_type = AuditEventType::SecurityEvent;
     let serialized = serde_json::to_string(&event_type).expect("Serialization should succeed");
-    let deserialized: AuditEventType = 
+    let deserialized: AuditEventType =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
-    
+
     assert!(matches!(deserialized, AuditEventType::SecurityEvent));
 }
 
@@ -121,7 +121,7 @@ fn test_audit_event_type_serialization() {
 fn test_audit_event_type_debug_format() {
     let event_type = AuditEventType::ComplianceCheck;
     let debug_str = format!("{:?}", event_type);
-    
+
     assert!(debug_str.contains("ComplianceCheck"));
 }
 
@@ -137,7 +137,7 @@ fn test_audit_event_new() {
         "login".to_string(),
         "success".to_string(),
     );
-    
+
     assert!(matches!(event.event_type, AuditEventType::Authentication));
     assert_eq!(event.resource, "login_endpoint");
     assert_eq!(event.action, "login");
@@ -163,7 +163,7 @@ fn test_audit_event_unique_ids() {
         "read".to_string(),
         "success".to_string(),
     );
-    
+
     assert_ne!(event1.id, event2.id);
 }
 
@@ -177,7 +177,7 @@ fn test_audit_event_timestamp() {
         "success".to_string(),
     );
     let after = Utc::now();
-    
+
     assert!(event.timestamp >= before);
     assert!(event.timestamp <= after);
 }
@@ -195,7 +195,7 @@ fn test_audit_event_with_user() {
         "success".to_string(),
     )
     .with_user("user123".to_string());
-    
+
     assert_eq!(event.user_id, Some("user123".to_string()));
 }
 
@@ -208,7 +208,7 @@ fn test_audit_event_with_source_ip() {
         "success".to_string(),
     )
     .with_source_ip("192.168.1.1");
-    
+
     assert_eq!(event.source_ip, Some("192.168.1.1".to_string()));
 }
 
@@ -222,7 +222,7 @@ fn test_audit_event_with_compliance_tags() {
         "success".to_string(),
     )
     .with_compliance_tags(tags);
-    
+
     assert_eq!(event.compliance_tags.len(), 2);
     assert!(event.compliance_tags.contains(&"GDPR".to_string()));
     assert!(event.compliance_tags.contains(&"HIPAA".to_string()));
@@ -238,9 +238,12 @@ fn test_audit_event_with_metadata() {
     )
     .with_metadata("reason".to_string(), "suspicious_activity".to_string())
     .with_metadata("severity".to_string(), "high".to_string());
-    
+
     assert_eq!(event.metadata.len(), 2);
-    assert_eq!(event.metadata.get("reason"), Some(&"suspicious_activity".to_string()));
+    assert_eq!(
+        event.metadata.get("reason"),
+        Some(&"suspicious_activity".to_string())
+    );
     assert_eq!(event.metadata.get("severity"), Some(&"high".to_string()));
 }
 
@@ -256,7 +259,7 @@ fn test_audit_event_builder_chain() {
     .with_source_ip("10.0.0.1")
     .with_compliance_tags(vec!["SOC2".to_string()])
     .with_metadata("role".to_string(), "user".to_string());
-    
+
     assert_eq!(event.user_id, Some("user456".to_string()));
     assert_eq!(event.source_ip, Some("10.0.0.1".to_string()));
     assert_eq!(event.compliance_tags.len(), 1);
@@ -272,7 +275,7 @@ fn test_audit_event_empty_compliance_tags() {
         "success".to_string(),
     )
     .with_compliance_tags(vec![]);
-    
+
     assert!(event.compliance_tags.is_empty());
 }
 
@@ -290,7 +293,7 @@ fn test_audit_event_serialization() {
     )
     .with_user("system".to_string())
     .with_compliance_tags(vec!["PCI-DSS".to_string()]);
-    
+
     let serialized = serde_json::to_string(&event).expect("Serialization should succeed");
     assert!(serialized.contains("ComplianceCheck"));
     assert!(serialized.contains("policy_engine"));
@@ -306,11 +309,11 @@ fn test_audit_event_deserialization() {
         "update".to_string(),
         "success".to_string(),
     );
-    
+
     let serialized = serde_json::to_string(&event).expect("Serialization should succeed");
-    let deserialized: AuditEvent = 
+    let deserialized: AuditEvent =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
-    
+
     assert_eq!(event.resource, deserialized.resource);
     assert_eq!(event.action, deserialized.action);
     assert_eq!(event.result, deserialized.result);
@@ -325,7 +328,7 @@ fn test_audit_event_clone() {
         "success".to_string(),
     );
     let event2 = event1.clone();
-    
+
     assert_eq!(event1.id, event2.id);
     assert_eq!(event1.resource, event2.resource);
 }
@@ -339,7 +342,7 @@ fn test_audit_event_debug_format() {
         "test".to_string(),
     );
     let debug_str = format!("{:?}", event);
-    
+
     assert!(debug_str.contains("AuditEvent"));
     assert!(debug_str.contains("SecurityEvent"));
 }
@@ -351,7 +354,7 @@ fn test_audit_event_debug_format() {
 #[test]
 fn test_audit_engine_new() {
     let engine = AuditEngine::new(1000);
-    
+
     assert_eq!(engine.event_count(), 0);
     // max_events is private, verified by constructor behavior
 }
@@ -359,7 +362,7 @@ fn test_audit_engine_new() {
 #[test]
 fn test_audit_engine_default() {
     let engine = AuditEngine::default();
-    
+
     assert_eq!(engine.event_count(), 0);
     // Default capacity is 10000, verified by rotation behavior
 }
@@ -367,7 +370,7 @@ fn test_audit_engine_default() {
 #[test]
 fn test_audit_engine_zero_capacity() {
     let engine = AuditEngine::new(0);
-    
+
     // Zero capacity engine created successfully
     assert_eq!(engine.event_count(), 0);
 }
@@ -379,14 +382,14 @@ fn test_audit_engine_zero_capacity() {
 #[test]
 fn test_audit_engine_add_event() {
     let mut engine = AuditEngine::new(100);
-    
+
     let event = AuditEvent::new(
         AuditEventType::Authentication,
         "login".to_string(),
         "attempt".to_string(),
         "success".to_string(),
     );
-    
+
     engine.add_event(event);
     assert_eq!(engine.event_count(), 1);
 }
@@ -394,7 +397,7 @@ fn test_audit_engine_add_event() {
 #[test]
 fn test_audit_engine_add_multiple_events() {
     let mut engine = AuditEngine::new(100);
-    
+
     for i in 0..10 {
         let event = AuditEvent::new(
             AuditEventType::DataAccess,
@@ -404,14 +407,14 @@ fn test_audit_engine_add_multiple_events() {
         );
         engine.add_event(event);
     }
-    
+
     assert_eq!(engine.event_count(), 10);
 }
 
 #[test]
 fn test_audit_engine_event_rotation() {
     let mut engine = AuditEngine::new(5);
-    
+
     // Add 10 events, only last 5 should remain
     for i in 0..10 {
         let event = AuditEvent::new(
@@ -422,14 +425,14 @@ fn test_audit_engine_event_rotation() {
         );
         engine.add_event(event);
     }
-    
+
     assert_eq!(engine.event_count(), 5);
 }
 
 #[test]
 fn test_audit_engine_event_rotation_order() {
     let mut engine = AuditEngine::new(3);
-    
+
     let event1 = AuditEvent::new(
         AuditEventType::DataAccess,
         "first".to_string(),
@@ -454,12 +457,12 @@ fn test_audit_engine_event_rotation_order() {
         "read".to_string(),
         "success".to_string(),
     );
-    
+
     engine.add_event(event1);
     engine.add_event(event2);
     engine.add_event(event3);
     engine.add_event(event4);
-    
+
     // Should keep last 3: second, third, fourth
     assert_eq!(engine.event_count(), 3);
 }
@@ -471,7 +474,7 @@ fn test_audit_engine_event_rotation_order() {
 #[test]
 fn test_audit_engine_get_events_by_type() {
     let mut engine = AuditEngine::new(100);
-    
+
     engine.add_event(AuditEvent::new(
         AuditEventType::Authentication,
         "login".to_string(),
@@ -490,10 +493,10 @@ fn test_audit_engine_get_events_by_type() {
         "attempt".to_string(),
         "success".to_string(),
     ));
-    
+
     let auth_events = engine.get_events_by_type(&AuditEventType::Authentication);
     assert_eq!(auth_events.len(), 2);
-    
+
     let data_events = engine.get_events_by_type(&AuditEventType::DataAccess);
     assert_eq!(data_events.len(), 1);
 }
@@ -501,7 +504,7 @@ fn test_audit_engine_get_events_by_type() {
 #[test]
 fn test_audit_engine_get_events_by_type_empty() {
     let engine = AuditEngine::new(100);
-    
+
     let events = engine.get_events_by_type(&AuditEventType::SecurityEvent);
     assert!(events.is_empty());
 }
@@ -509,7 +512,7 @@ fn test_audit_engine_get_events_by_type_empty() {
 #[test]
 fn test_audit_engine_get_events_by_user() {
     let mut engine = AuditEngine::new(100);
-    
+
     engine.add_event(
         AuditEvent::new(
             AuditEventType::DataAccess,
@@ -517,7 +520,7 @@ fn test_audit_engine_get_events_by_user() {
             "read".to_string(),
             "success".to_string(),
         )
-        .with_user("alice".to_string())
+        .with_user("alice".to_string()),
     );
     engine.add_event(
         AuditEvent::new(
@@ -526,7 +529,7 @@ fn test_audit_engine_get_events_by_user() {
             "write".to_string(),
             "success".to_string(),
         )
-        .with_user("bob".to_string())
+        .with_user("bob".to_string()),
     );
     engine.add_event(
         AuditEvent::new(
@@ -535,12 +538,12 @@ fn test_audit_engine_get_events_by_user() {
             "delete".to_string(),
             "success".to_string(),
         )
-        .with_user("alice".to_string())
+        .with_user("alice".to_string()),
     );
-    
+
     let alice_events = engine.get_events_by_user("alice");
     assert_eq!(alice_events.len(), 2);
-    
+
     let bob_events = engine.get_events_by_user("bob");
     assert_eq!(bob_events.len(), 1);
 }
@@ -548,7 +551,7 @@ fn test_audit_engine_get_events_by_user() {
 #[test]
 fn test_audit_engine_get_events_by_user_nonexistent() {
     let mut engine = AuditEngine::new(100);
-    
+
     engine.add_event(
         AuditEvent::new(
             AuditEventType::DataAccess,
@@ -556,9 +559,9 @@ fn test_audit_engine_get_events_by_user_nonexistent() {
             "read".to_string(),
             "success".to_string(),
         )
-        .with_user("alice".to_string())
+        .with_user("alice".to_string()),
     );
-    
+
     let events = engine.get_events_by_user("bob");
     assert!(events.is_empty());
 }
@@ -566,9 +569,9 @@ fn test_audit_engine_get_events_by_user_nonexistent() {
 #[test]
 fn test_audit_engine_get_events_in_range() {
     let mut engine = AuditEngine::new(100);
-    
+
     let now = Utc::now();
-    
+
     // Add events with different timestamps
     std::thread::sleep(std::time::Duration::from_millis(10));
     engine.add_event(AuditEvent::new(
@@ -577,10 +580,10 @@ fn test_audit_engine_get_events_in_range() {
         "read".to_string(),
         "success".to_string(),
     ));
-    
+
     std::thread::sleep(std::time::Duration::from_millis(10));
     let middle = Utc::now();
-    
+
     std::thread::sleep(std::time::Duration::from_millis(10));
     engine.add_event(AuditEvent::new(
         AuditEventType::DataAccess,
@@ -588,12 +591,12 @@ fn test_audit_engine_get_events_in_range() {
         "read".to_string(),
         "success".to_string(),
     ));
-    
+
     let future = Utc::now() + Duration::seconds(10);
-    
+
     let events = engine.get_events_in_range(now, future);
     assert_eq!(events.len(), 2);
-    
+
     let events = engine.get_events_in_range(middle, future);
     assert_eq!(events.len(), 1);
 }
@@ -601,10 +604,10 @@ fn test_audit_engine_get_events_in_range() {
 #[test]
 fn test_audit_engine_get_events_in_range_empty() {
     let engine = AuditEngine::new(100);
-    
+
     let start = Utc::now();
     let end = start + Duration::hours(1);
-    
+
     let events = engine.get_events_in_range(start, end);
     assert!(events.is_empty());
 }
@@ -616,7 +619,7 @@ fn test_audit_engine_get_events_in_range_empty() {
 #[test]
 fn test_audit_engine_generate_compliance_report() {
     let mut engine = AuditEngine::new(100);
-    
+
     engine.add_event(
         AuditEvent::new(
             AuditEventType::DataAccess,
@@ -624,7 +627,7 @@ fn test_audit_engine_generate_compliance_report() {
             "read".to_string(),
             "success".to_string(),
         )
-        .with_compliance_tags(vec!["GDPR".to_string(), "HIPAA".to_string()])
+        .with_compliance_tags(vec!["GDPR".to_string(), "HIPAA".to_string()]),
     );
     engine.add_event(
         AuditEvent::new(
@@ -633,7 +636,7 @@ fn test_audit_engine_generate_compliance_report() {
             "read".to_string(),
             "success".to_string(),
         )
-        .with_compliance_tags(vec!["GDPR".to_string()])
+        .with_compliance_tags(vec!["GDPR".to_string()]),
     );
     engine.add_event(
         AuditEvent::new(
@@ -642,11 +645,11 @@ fn test_audit_engine_generate_compliance_report() {
             "block".to_string(),
             "success".to_string(),
         )
-        .with_compliance_tags(vec!["PCI-DSS".to_string()])
+        .with_compliance_tags(vec!["PCI-DSS".to_string()]),
     );
-    
+
     let report = engine.generate_compliance_report();
-    
+
     assert_eq!(report.get("GDPR"), Some(&2));
     assert_eq!(report.get("HIPAA"), Some(&1));
     assert_eq!(report.get("PCI-DSS"), Some(&1));
@@ -655,7 +658,7 @@ fn test_audit_engine_generate_compliance_report() {
 #[test]
 fn test_audit_engine_generate_compliance_report_empty() {
     let engine = AuditEngine::new(100);
-    
+
     let report = engine.generate_compliance_report();
     assert!(report.is_empty());
 }
@@ -667,7 +670,7 @@ fn test_audit_engine_generate_compliance_report_empty() {
 #[test]
 fn test_audit_engine_cleanup_old_events() {
     let mut engine = AuditEngine::new(100);
-    
+
     // Add old events
     engine.add_event(AuditEvent::new(
         AuditEventType::DataAccess,
@@ -675,11 +678,11 @@ fn test_audit_engine_cleanup_old_events() {
         "read".to_string(),
         "success".to_string(),
     ));
-    
+
     std::thread::sleep(std::time::Duration::from_millis(100));
     let cutoff = Utc::now();
     std::thread::sleep(std::time::Duration::from_millis(100));
-    
+
     // Add new events
     engine.add_event(AuditEvent::new(
         AuditEventType::DataAccess,
@@ -687,9 +690,9 @@ fn test_audit_engine_cleanup_old_events() {
         "read".to_string(),
         "success".to_string(),
     ));
-    
+
     engine.cleanup_old_events(cutoff);
-    
+
     // Should only have 1 event (the new one)
     assert_eq!(engine.event_count(), 1);
 }
@@ -697,17 +700,17 @@ fn test_audit_engine_cleanup_old_events() {
 #[test]
 fn test_audit_engine_cleanup_all_events() {
     let mut engine = AuditEngine::new(100);
-    
+
     engine.add_event(AuditEvent::new(
         AuditEventType::DataAccess,
         "resource".to_string(),
         "read".to_string(),
         "success".to_string(),
     ));
-    
+
     let cutoff = Utc::now() + Duration::hours(1);
     engine.cleanup_old_events(cutoff);
-    
+
     assert_eq!(engine.event_count(), 0);
 }
 
@@ -718,14 +721,14 @@ fn test_audit_engine_cleanup_all_events() {
 #[test]
 fn test_audit_engine_export_events() {
     let mut engine = AuditEngine::new(100);
-    
+
     engine.add_event(AuditEvent::new(
         AuditEventType::Authentication,
         "login".to_string(),
         "attempt".to_string(),
         "success".to_string(),
     ));
-    
+
     let exported = engine.export_events().expect("Export should succeed");
     assert!(exported.contains("Authentication"));
     assert!(exported.contains("login"));
@@ -734,8 +737,7 @@ fn test_audit_engine_export_events() {
 #[test]
 fn test_audit_engine_export_empty() {
     let engine = AuditEngine::new(100);
-    
+
     let exported = engine.export_events().expect("Export should succeed");
     assert_eq!(exported, "[]");
 }
-

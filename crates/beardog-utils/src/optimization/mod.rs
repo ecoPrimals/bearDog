@@ -2,8 +2,8 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-
 pub mod clone_optimizer;
+pub mod clone_patterns;
 pub mod string_interner;
 
 pub use clone_optimizer::{CloneOptimizationStrategy, CloneOptimizer};

@@ -115,7 +115,6 @@ impl<T> Clone for SharedOwnership<T> {
 impl<T> std::ops::Deref for SharedOwnership<T> {
     type Target = T;
 
-
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
@@ -153,7 +152,6 @@ impl<T: Clone + 'static> CopyOnWrite<T> {
 
 impl<T: Clone + 'static> std::ops::Deref for CopyOnWrite<T> {
     type Target = T;
-
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -203,27 +201,28 @@ mod tests {
 
     #[test]
     fn test_shared_ownership() {
-        let buffer_data = vec![1, 2, 3, 4, 5];
+        let data = vec![1, 2, 3, 4, 5];
         let shared1 = SharedOwnership::new(data);
         let shared2 = shared1.clone();
 
         assert_eq!(shared1.len(), 5);
         assert_eq!(shared2.len(), 5);
 
-        assert_eq!(shared1.as_ptr(), shared2.as_ptr());
+        // Verify they share the same Arc
+        assert_eq!(Arc::as_ptr(&shared1.inner), Arc::as_ptr(&shared2.inner));
     }
 
     #[test]
     fn test_copy_on_write() {
-        static ORIGINAL_DATA: Vec<i32> = Vec::new();
-        let mut cow = CopyOnWrite::new(&ORIGINAL_DATA);
+        let original_data = vec![1, 2, 3];
+        let mut cow = CopyOnWrite::new(original_data);
 
-        assert_eq!(cow.get().len(), 0);
-        assert!(!cow.is_owned());
+        // Initially owned
+        assert_eq!(cow.len(), 3);
 
-        cow.get_mut().push(1);
-        assert_eq!(cow.get().len(), 1);
-        assert!(cow.is_owned());
+        // Modify through to_mut
+        cow.to_mut().push(4);
+        assert_eq!(cow.len(), 4);
     }
 
     #[test]

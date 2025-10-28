@@ -3,21 +3,29 @@
 //! Created: October 27, 2025
 //! Purpose: Expand test coverage for beardog-threat core functionality
 
-use crate::threat::types::{ThreatSeverity, ThreatType, ThreatStatus, DetectionMethod};
 use crate::threat::types::incidents::{IncidentStatus, SecurityIncident};
+use crate::threat::types::{DetectionMethod, ThreatSeverity, ThreatStatus, ThreatType};
 
 // Threat Severity Tests
 #[test]
-fn test_threat_severity_low() { assert!(matches!(ThreatSeverity::Low, ThreatSeverity::Low)); }
+fn test_threat_severity_low() {
+    assert!(matches!(ThreatSeverity::Low, ThreatSeverity::Low));
+}
 
 #[test]
-fn test_threat_severity_medium() { assert!(matches!(ThreatSeverity::Medium, ThreatSeverity::Medium)); }
+fn test_threat_severity_medium() {
+    assert!(matches!(ThreatSeverity::Medium, ThreatSeverity::Medium));
+}
 
 #[test]
-fn test_threat_severity_high() { assert!(matches!(ThreatSeverity::High, ThreatSeverity::High)); }
+fn test_threat_severity_high() {
+    assert!(matches!(ThreatSeverity::High, ThreatSeverity::High));
+}
 
 #[test]
-fn test_threat_severity_critical() { assert!(matches!(ThreatSeverity::Critical, ThreatSeverity::Critical)); }
+fn test_threat_severity_critical() {
+    assert!(matches!(ThreatSeverity::Critical, ThreatSeverity::Critical));
+}
 
 #[test]
 fn test_threat_severity_clone() {
@@ -28,55 +36,117 @@ fn test_threat_severity_clone() {
 
 // Threat Type Tests
 #[test]
-fn test_threat_type_malware() { assert!(matches!(ThreatType::Malware, ThreatType::Malware)); }
+fn test_threat_type_malware() {
+    assert!(matches!(ThreatType::Malware, ThreatType::Malware));
+}
 
 #[test]
-fn test_threat_type_intrusion() { assert!(matches!(ThreatType::Intrusion, ThreatType::Intrusion)); }
+fn test_threat_type_intrusion() {
+    assert!(matches!(ThreatType::Intrusion, ThreatType::Intrusion));
+}
 
 #[test]
-fn test_threat_type_exfiltration() { assert!(matches!(ThreatType::DataExfiltration, ThreatType::DataExfiltration)); }
+fn test_threat_type_exfiltration() {
+    assert!(matches!(
+        ThreatType::DataExfiltration,
+        ThreatType::DataExfiltration
+    ));
+}
 
 #[test]
-fn test_threat_type_dos() { assert!(matches!(ThreatType::DenialOfService, ThreatType::DenialOfService)); }
+fn test_threat_type_dos() {
+    assert!(matches!(
+        ThreatType::DenialOfService,
+        ThreatType::DenialOfService
+    ));
+}
 
 #[test]
-fn test_threat_type_priv_esc() { assert!(matches!(ThreatType::PrivilegeEscalation, ThreatType::PrivilegeEscalation)); }
+fn test_threat_type_priv_esc() {
+    assert!(matches!(
+        ThreatType::PrivilegeEscalation,
+        ThreatType::PrivilegeEscalation
+    ));
+}
 
 // Threat Status Tests
 #[test]
-fn test_threat_status_active() { assert!(matches!(ThreatStatus::Active, ThreatStatus::Active)); }
+fn test_threat_status_active() {
+    assert!(matches!(ThreatStatus::Active, ThreatStatus::Active));
+}
 
 #[test]
-fn test_threat_status_resolved() { assert!(matches!(ThreatStatus::Resolved, ThreatStatus::Resolved)); }
+fn test_threat_status_resolved() {
+    assert!(matches!(ThreatStatus::Resolved, ThreatStatus::Resolved));
+}
 
 // Detection Method Tests
 #[test]
-fn test_detection_method_rule_based() { assert!(matches!(DetectionMethod::RuleBased, DetectionMethod::RuleBased)); }
+fn test_detection_method_rule_based() {
+    assert!(matches!(
+        DetectionMethod::RuleBased,
+        DetectionMethod::RuleBased
+    ));
+}
 
 #[test]
-fn test_detection_method_ml() { assert!(matches!(DetectionMethod::MachineLearning, DetectionMethod::MachineLearning)); }
+fn test_detection_method_ml() {
+    assert!(matches!(
+        DetectionMethod::MachineLearning,
+        DetectionMethod::MachineLearning
+    ));
+}
 
 #[test]
-fn test_detection_method_threat_intel() { assert!(matches!(DetectionMethod::ThreatIntelligence, DetectionMethod::ThreatIntelligence)); }
+fn test_detection_method_threat_intel() {
+    assert!(matches!(
+        DetectionMethod::ThreatIntelligence,
+        DetectionMethod::ThreatIntelligence
+    ));
+}
 
 #[test]
-fn test_detection_method_behavioral() { assert!(matches!(DetectionMethod::BehavioralAnalysis, DetectionMethod::BehavioralAnalysis)); }
+fn test_detection_method_behavioral() {
+    assert!(matches!(
+        DetectionMethod::BehavioralAnalysis,
+        DetectionMethod::BehavioralAnalysis
+    ));
+}
 
 // Incident Status Tests
 #[test]
-fn test_incident_status_reported() { assert!(matches!(IncidentStatus::Reported, IncidentStatus::Reported)); }
+fn test_incident_status_reported() {
+    assert!(matches!(IncidentStatus::Reported, IncidentStatus::Reported));
+}
 
 #[test]
-fn test_incident_status_investigating() { assert!(matches!(IncidentStatus::Investigating, IncidentStatus::Investigating)); }
+fn test_incident_status_investigating() {
+    assert!(matches!(
+        IncidentStatus::Investigating,
+        IncidentStatus::Investigating
+    ));
+}
 
 #[test]
-fn test_incident_status_confirmed() { assert!(matches!(IncidentStatus::Confirmed, IncidentStatus::Confirmed)); }
+fn test_incident_status_confirmed() {
+    assert!(matches!(
+        IncidentStatus::Confirmed,
+        IncidentStatus::Confirmed
+    ));
+}
 
 #[test]
-fn test_incident_status_resolved() { assert!(matches!(IncidentStatus::Resolved, IncidentStatus::Resolved)); }
+fn test_incident_status_resolved() {
+    assert!(matches!(IncidentStatus::Resolved, IncidentStatus::Resolved));
+}
 
 #[test]
-fn test_incident_status_false_positive() { assert!(matches!(IncidentStatus::FalsePositive, IncidentStatus::FalsePositive)); }
+fn test_incident_status_false_positive() {
+    assert!(matches!(
+        IncidentStatus::FalsePositive,
+        IncidentStatus::FalsePositive
+    ));
+}
 
 // Security Incident Tests
 #[test]

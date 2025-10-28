@@ -226,17 +226,49 @@ impl RefinedBearDogMigrator {
         let mut in_result_function = false;
         let mut brace_depth = 0;
         let mut function_start_depth = 0;
+        let mut accumulating_signature = String::new();
+        let mut in_multiline_signature = false;
         
-        for line in lines {
-            // Detect function signature with Result return type
-            if self.is_function_signature_with_result(line) {
-                in_result_function = true;
-                function_start_depth = brace_depth;
-                result.push(line.to_string());
-                // Count braces on this line
-                brace_depth += line.matches('{').count();
-                brace_depth = brace_depth.saturating_sub(line.matches('}').count());
-                continue;
+        for (line_idx, line) in lines.iter().enumerate() {
+            // Handle multi-line function signatures
+            if line.trim().starts_with("fn ") || line.trim().starts_with("pub fn ") || 
+               line.trim().starts_with("async fn ") || line.trim().starts_with("pub async fn ") {
+                accumulating_signature = line.to_string();
+                
+                // Check if signature completes on this line (has opening brace)
+                if line.contains('{') {
+                    // Single-line signature
+                    if self.is_function_signature_with_result(&accumulating_signature) {
+                        in_result_function = true;
+                        function_start_depth = brace_depth;
+                        debug!("Found Result-returning function at line {}", line_idx + 1);
+                    }
+                    accumulating_signature.clear();
+                } else {
+                    // Multi-line signature
+                    in_multiline_signature = true;
+                    result.push(line.to_string());
+                    continue;
+                }
+            } else if in_multiline_signature {
+                // Continue accumulating signature
+                accumulating_signature.push(' ');
+                accumulating_signature.push_str(line);
+                
+                if line.contains('{') {
+                    // Signature complete
+                    if self.is_function_signature_with_result(&accumulating_signature) {
+                        in_result_function = true;
+                        function_start_depth = brace_depth;
+                        debug!("Found Result-returning function (multiline) at line {}", line_idx + 1);
+                    }
+                    accumulating_signature.clear();
+                    in_multiline_signature = false;
+                } else if !in_multiline_signature {
+                    // Still building signature
+                    result.push(line.to_string());
+                    continue;
+                }
             }
             
             // Track brace depth
@@ -246,27 +278,14 @@ impl RefinedBearDogMigrator {
             brace_depth = brace_depth.saturating_sub(close_braces);
             
             // Check if we've exited the function
-            if in_result_function && brace_depth <= function_start_depth && close_braces > 0 {
+            if in_result_function && brace_depth <= function_start_depth {
                 in_result_function = false;
+                debug!("Exited Result-returning function at line {}", line_idx + 1);
             }
             
             // Only migrate unwraps/expects if we're in a Result-returning function
             let modified_line = if in_result_function {
-                let mut line_str = line.to_string();
-                
-                // Replace .unwrap() with ?
-                // But be careful not to replace in comments or strings
-                if line.contains(".unwrap()") && !line.trim().starts_with("//") {
-                    line_str = line_str.replace(".unwrap()", "?");
-                }
-                
-                // Replace .expect("...") with ?
-                // Using regex to handle any message
-                if line.contains(".expect(") && !line.trim().starts_with("//") {
-                    line_str = self.expect_pattern.replace_all(&line_str, "?").into_owned();
-                }
-                
-                line_str
+                self.migrate_line_unwraps(line)
             } else {
                 line.to_string()
             };
@@ -277,21 +296,138 @@ impl RefinedBearDogMigrator {
         Ok(result.join("\n"))
     }
     
-    /// Check if a line is a function signature that returns Result
-    fn is_function_signature_with_result(&self, line: &str) -> bool {
+    /// Migrate unwraps/expects in a single line (called only for Result-returning functions)
+    fn migrate_line_unwraps(&self, line: &str) -> String {
         let trimmed = line.trim();
+        
+        // Skip comments and strings
+        if trimmed.starts_with("//") || trimmed.starts_with("/*") {
+            return line.to_string();
+        }
+        
+        let mut line_str = line.to_string();
+        
+        // Check if this is likely an Option.unwrap() vs Result.unwrap()
+        let is_option_unwrap = self.is_likely_option_unwrap(line);
+        
+        // Replace .unwrap() appropriately
+        if line.contains(".unwrap()") {
+            if is_option_unwrap {
+                // Option.unwrap() needs .ok_or_else() before ?
+                line_str = self.migrate_option_unwrap(&line_str);
+            } else {
+                // Result.unwrap() can use ? directly
+                line_str = line_str.replace(".unwrap()", "?");
+            }
+        }
+        
+        // Replace .expect("...") appropriately  
+        if line.contains(".expect(") {
+            if is_option_unwrap {
+                // Keep .expect() for Options with descriptive message
+                // OR convert to .ok_or_else() for production code
+                // For now, keep it (safer)
+                line_str = line_str; // No change - expect is clearer for Options
+            } else {
+                // Result.expect() can become ?
+                line_str = self.expect_pattern.replace_all(&line_str, "?").into_owned();
+            }
+        }
+        
+        line_str
+    }
+    
+    /// Detect if an unwrap is likely on an Option type
+    fn is_likely_option_unwrap(&self, line: &str) -> bool {
+        // Common methods that return Option
+        let option_indicators = [
+            ".get(",           // HashMap, Vec, etc.
+            ".get_mut(",       // HashMap, Vec mutable access
+            ".pop(",           // Vec, VecDeque
+            ".next(",          // Iterator
+            ".first(",         // Slice/Vec
+            ".last(",          // Slice/Vec
+            ".take(",          // Option take
+            ".find(",          // Iterator find
+            ".find_map(",      // Iterator find_map
+            ".position(",      // Iterator position
+            ".max(",           // Iterator max
+            ".min(",           // Iterator min
+            ".max_by(",        // Iterator max_by
+            ".min_by(",        // Iterator min_by
+            ".strip_prefix(",  // str strip
+            ".strip_suffix(",  // str strip
+            ".to_str(",        // OsStr to_str
+            ".as_ref(",        // Some Option conversions
+        ];
+        
+        // Check if line contains any Option-returning patterns before unwrap
+        option_indicators.iter().any(|pattern| {
+            if let Some(pos) = line.find(pattern) {
+                // Check if there's an unwrap after this pattern
+                line[pos..].contains(".unwrap()")
+            } else {
+                false
+            }
+        })
+    }
+    
+    /// Migrate Option.unwrap() to .ok_or_else()? pattern
+    fn migrate_option_unwrap(&self, line: &str) -> String {
+        // For Option unwraps, we need to provide an error
+        // Strategy: Replace .unwrap() with .ok_or_else(|| Error)?
+        
+        // Find the context to generate appropriate error message
+        let error_msg = if line.contains(".get(") || line.contains(".get_mut(") {
+            "BearDogError::internal(\"Value not found in collection\".to_string())"
+        } else if line.contains(".next(") {
+            "BearDogError::internal(\"Iterator exhausted\".to_string())"
+        } else if line.contains(".first(") || line.contains(".last(") {
+            "BearDogError::internal(\"Collection is empty\".to_string())"
+        } else if line.contains(".find(") {
+            "BearDogError::internal(\"Item not found\".to_string())"
+        } else {
+            "BearDogError::internal(\"Value not available\".to_string())"
+        };
+        
+        // Replace .unwrap() with .ok_or_else(|| error)?
+        line.replace(
+            ".unwrap()",
+            &format!(".ok_or_else(|| {})?", error_msg)
+        )
+    }
+    
+    /// Check if a line is a function signature that returns Result
+    fn is_function_signature_with_result(&self, signature: &str) -> bool {
+        let cleaned = signature.replace('\n', " ").replace("  ", " ");
+        let trimmed = cleaned.trim();
         
         // Must be a function
         if !trimmed.contains("fn ") {
             return false;
         }
         
+        // Check for test functions - they can be migrated to return Result
+        if trimmed.contains("#[test]") || trimmed.contains("#[tokio::test]") {
+            // Test functions can return Result<(), Box<dyn Error>>
+            // We'll migrate them if config allows
+            if self.config.migrate_tests {
+                return true;
+            }
+        }
+        
         // Must have Result or BearDogResult in the return type
-        // Look for -> Result< or -> BearDogResult
+        // Look for -> Result< or -> BearDogResult or -> impl ... Result
         if trimmed.contains("-> Result<") || 
            trimmed.contains("-> BearDogResult") ||
            trimmed.contains("->Result<") ||
-           trimmed.contains("->BearDogResult") {
+           trimmed.contains("->BearDogResult") ||
+           (trimmed.contains("-> impl") && trimmed.contains("Result")) {
+            return true;
+        }
+        
+        // Also check for generic return types that include Result
+        if trimmed.contains("-> ") && trimmed.contains("Result") {
             return true;
         }
         

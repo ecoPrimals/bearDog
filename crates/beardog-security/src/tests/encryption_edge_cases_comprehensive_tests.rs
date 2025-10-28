@@ -340,7 +340,9 @@ fn test_concurrent_key_generation() -> Result<(), BearDogError> {
         .collect();
 
     for handle in handles {
-        handle.join()?;
+        handle.join().map_err(|_| {
+            BearDogError::internal("Thread panicked during concurrent key generation".to_string())
+        })?;
     }
 
     Ok(())

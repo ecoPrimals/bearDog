@@ -2,7 +2,6 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
