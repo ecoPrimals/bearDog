@@ -38,7 +38,7 @@
 
 ### Historical Documents
 
-**[docs/archive/nov-2025-sessions/](./docs/archive/nov-2025-sessions/)** - Historical session reports and status documents
+**[../archive/beardog-sessions-nov-2025/](../archive/beardog-sessions-nov-2025/)** - Historical session reports and status documents (archived to parent directory)
 
 ---
 
