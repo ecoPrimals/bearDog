@@ -126,7 +126,7 @@ beardog/
 
 ### Archived Sessions
 
-- **[docs/archive/nov-2025-sessions/](./docs/archive/nov-2025-sessions/)** - Historical session reports
+- **[../archive/beardog-sessions-nov-2025/](../archive/beardog-sessions-nov-2025/)** - Historical session reports (moved to parent archive)
 
 ---
 
