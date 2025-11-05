@@ -60,10 +60,30 @@ impl WorkflowProcessor for SystemMaintenanceProcessor {
     fn estimate_processing_time(&self, workflow: &Workflow) -> Result<Duration, BearDogError> {
             .unwrap_or("general");
         let duration = match maintenance_type {
-            "security_update" => Duration::from_secs(1800), // 30 minutes
-            "backup" => Duration::from_secs(3600),          // 1 hour
-            "cleanup" => Duration::from_secs(900),          // 15 minutes
-            _ => Duration::from_secs(600),                  // 10 minutes
+            "security_update" => Duration::from_secs(
+                std::env::var("BEARDOG_MAINTENANCE_SECURITY_UPDATE_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1800)
+            ),
+            "backup" => Duration::from_secs(
+                std::env::var("BEARDOG_MAINTENANCE_BACKUP_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600)
+            ),
+            "cleanup" => Duration::from_secs(
+                std::env::var("BEARDOG_MAINTENANCE_CLEANUP_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(900)
+            ),
+            _ => Duration::from_secs(
+                std::env::var("BEARDOG_MAINTENANCE_GENERAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(600)
+            ),
         };
         Ok(duration)
 }
@@ -85,7 +105,27 @@ impl WorkflowProcessor for ComplianceAuditProcessor {
         matches!(workflow.workflow_type, WorkflowType::ComplianceAudit)
 
         let duration = match audit_type {
-            "security" => Duration::from_secs(7200),    // 2 hours
-            "privacy" => Duration::from_secs(5400),     // 1.5 hours
-            "operational" => Duration::from_secs(3600), // 1 hour
-            _ => Duration::from_secs(1800),             // 30 minutes
+            "security" => Duration::from_secs(
+                std::env::var("BEARDOG_AUDIT_SECURITY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(7200)
+            ),
+            "privacy" => Duration::from_secs(
+                std::env::var("BEARDOG_AUDIT_PRIVACY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5400)
+            ),
+            "operational" => Duration::from_secs(
+                std::env::var("BEARDOG_AUDIT_OPERATIONAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600)
+            ),
+            _ => Duration::from_secs(
+                std::env::var("BEARDOG_AUDIT_GENERAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1800)
+            ),

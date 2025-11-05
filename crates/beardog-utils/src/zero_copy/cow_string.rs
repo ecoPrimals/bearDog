@@ -81,7 +81,7 @@ impl From<Arc<str>> for ZeroCopyString {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CommonString {
     /// Represents get variant
     Get,
@@ -167,4 +167,173 @@ pub fn is_likely_id(s: &str) -> bool {
 #[must_use]
 pub fn is_common_value(s: &str) -> bool {
     CommonString::parse_common_string(s).is_some()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_zero_copy_string_from_owned() {
+        let s = ZeroCopyString::from_owned("test string");
+        assert_eq!(s.as_str(), "test string");
+        assert_eq!(s.len(), 11);
+        assert!(!s.is_empty());
+    }
+
+    #[test]
+    fn test_zero_copy_string_from_string() {
+        let s = ZeroCopyString::from_string("hello world");
+        assert_eq!(s.as_str(), "hello world");
+        assert_eq!(s.len(), 11);
+    }
+
+    #[test]
+    fn test_zero_copy_string_from_shared() {
+        let arc_str: Arc<str> = Arc::from("shared");
+        let s = ZeroCopyString::from_shared(arc_str);
+        assert_eq!(s.as_str(), "shared");
+        assert_eq!(s.len(), 6);
+    }
+
+    #[test]
+    fn test_zero_copy_string_empty() {
+        let s = ZeroCopyString::from_owned("");
+        assert!(s.is_empty());
+        assert_eq!(s.len(), 0);
+    }
+
+    #[test]
+    fn test_zero_copy_string_from_string_impl() {
+        let s: ZeroCopyString = String::from("test").into();
+        assert_eq!(s.as_str(), "test");
+    }
+
+    #[test]
+    fn test_zero_copy_string_from_str_impl() {
+        let s: ZeroCopyString = "test".into();
+        assert_eq!(s.as_str(), "test");
+    }
+
+    #[test]
+    fn test_zero_copy_string_from_arc_impl() {
+        let arc: Arc<str> = Arc::from("test");
+        let s: ZeroCopyString = arc.into();
+        assert_eq!(s.as_str(), "test");
+    }
+
+    #[test]
+    fn test_zero_copy_string_as_ref() {
+        let s = ZeroCopyString::from_owned("reference");
+        let as_ref: &str = s.as_ref();
+        assert_eq!(as_ref, "reference");
+    }
+
+    #[test]
+    fn test_zero_copy_string_clone() {
+        let s1 = ZeroCopyString::from_owned("original");
+        let s2 = s1.clone();
+        assert_eq!(s1.as_str(), s2.as_str());
+    }
+
+    #[test]
+    fn test_common_string_http_methods() {
+        assert_eq!(CommonString::Get.as_str(), "GET");
+        assert_eq!(CommonString::Post.as_str(), "POST");
+        assert_eq!(CommonString::Put.as_str(), "PUT");
+        assert_eq!(CommonString::Delete.as_str(), "DELETE");
+        assert_eq!(CommonString::Patch.as_str(), "PATCH");
+    }
+
+    #[test]
+    fn test_common_string_content_types() {
+        assert_eq!(CommonString::ApplicationJson.as_str(), "application/json");
+        assert_eq!(CommonString::TextPlain.as_str(), "text/plain");
+    }
+
+    #[test]
+    fn test_common_string_auth() {
+        assert_eq!(CommonString::Bearer.as_str(), "Bearer");
+    }
+
+    #[test]
+    fn test_common_string_paths() {
+        assert_eq!(CommonString::Api.as_str(), "api");
+        assert_eq!(CommonString::Metrics.as_str(), "metrics");
+        assert_eq!(CommonString::Health.as_str(), "health");
+        assert_eq!(CommonString::Admin.as_str(), "admin");
+    }
+
+    #[test]
+    fn test_parse_common_string_http_methods() {
+        assert!(matches!(
+            CommonString::parse_common_string("get"),
+            Some(CommonString::Get)
+        ));
+        assert!(matches!(
+            CommonString::parse_common_string("POST"),
+            Some(CommonString::Post)
+        ));
+        assert!(matches!(
+            CommonString::parse_common_string("Put"),
+            Some(CommonString::Put)
+        ));
+    }
+
+    #[test]
+    fn test_parse_common_string_content_types() {
+        assert!(matches!(
+            CommonString::parse_common_string("application/json"),
+            Some(CommonString::ApplicationJson)
+        ));
+        assert!(matches!(
+            CommonString::parse_common_string("text/plain"),
+            Some(CommonString::TextPlain)
+        ));
+    }
+
+    #[test]
+    fn test_parse_common_string_invalid() {
+        assert_eq!(CommonString::parse_common_string("invalid"), None);
+        assert_eq!(CommonString::parse_common_string(""), None);
+        assert_eq!(CommonString::parse_common_string("xyz"), None);
+    }
+
+    #[test]
+    fn test_is_likely_id_with_prefix() {
+        assert!(is_likely_id("id_12345"));
+        assert!(is_likely_id("id_user"));
+        assert!(is_likely_id("id_"));
+    }
+
+    #[test]
+    fn test_is_likely_id_with_suffix() {
+        assert!(is_likely_id("user_id"));
+        assert!(is_likely_id("account_id"));
+        assert!(is_likely_id("_id"));
+    }
+
+    #[test]
+    fn test_is_likely_id_with_long_alphanumeric() {
+        assert!(is_likely_id("abc123def456ghi"));
+        assert!(is_likely_id("12345678901"));
+        assert!(is_likely_id("uuid-1234-5678"));
+    }
+
+    #[test]
+    fn test_is_likely_id_negative() {
+        assert!(!is_likely_id("short"));
+        assert!(!is_likely_id("name"));
+        assert!(!is_likely_id("test@example.com"));
+    }
+
+    #[test]
+    fn test_is_common_value() {
+        assert!(is_common_value("get"));
+        assert!(is_common_value("POST"));
+        assert!(is_common_value("application/json"));
+        assert!(is_common_value("bearer"));
+        assert!(!is_common_value("invalid"));
+        assert!(!is_common_value("xyz"));
+    }
 }

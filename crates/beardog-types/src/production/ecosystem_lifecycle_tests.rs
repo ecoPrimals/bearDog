@@ -41,6 +41,9 @@ fn test_ecosystem_builder_full_configuration() {
 // Test 2: State Transitions During Lifecycle
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_ecosystem_state_transitions() {
     let config = ProductionConfig::default();
@@ -71,6 +74,9 @@ fn test_ecosystem_multiple_initializations() {
     let mut ecosystem = ProductionEcosystem::new(config).expect("Should create ecosystem");
 
     // First initialization
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     ecosystem.initialize().expect("First init should succeed");
     assert_eq!(ecosystem.get_status().status, OperationalStatus::Healthy);
 
@@ -92,6 +98,9 @@ fn test_ecosystem_uptime_tracking() {
     let ecosystem = ProductionEcosystem::new(config).expect("Should create ecosystem");
 
     let uptime1 = ecosystem.uptime();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     std::thread::sleep(std::time::Duration::from_millis(10));
     let uptime2 = ecosystem.uptime();
 
@@ -110,6 +119,9 @@ fn test_health_check_updates_state() {
 
     ecosystem.initialize().expect("Should initialize");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let _initial_status = ecosystem.get_status().status.clone();
     let health_report = ecosystem.health_check().expect("Health check should work");
 
@@ -124,6 +136,9 @@ fn test_health_check_updates_state() {
     assert_eq!(ecosystem.get_status().status, expected_status);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ============================================================================
 // Test 6: Metrics Update Without Auto-Scaling
 // ============================================================================
@@ -146,6 +161,9 @@ fn test_metrics_update_without_auto_scaling() {
 
 #[test]
 fn test_metrics_update_with_auto_scaling() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut config = ProductionConfig::default();
     config.core.flags.enable_auto_scaling = true;
 
@@ -159,6 +177,9 @@ fn test_metrics_update_with_auto_scaling() {
     );
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ============================================================================
 // Test 8: Performance Metrics Default Values
 // ============================================================================
@@ -175,6 +196,9 @@ fn test_performance_metrics_defaults() {
     assert_eq!(metrics.throughput_bytes_per_sec, 0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ============================================================================
 // Test 9: Production State Counters
 // ============================================================================
@@ -188,6 +212,9 @@ fn test_production_state_counters() {
     assert_eq!(state.error_count_hourly, 0);
 
     // Simulate activity
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     state.active_connections = 100;
     state.total_requests = 50000;
     state.error_count_hourly = 5;
@@ -207,6 +234,9 @@ fn test_builder_default_creates_valid_ecosystem() {
         .build()
         .expect("Default builder should work");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(
         ecosystem.config.core.environment_level,
         EnvironmentLevel::Development
@@ -221,6 +251,9 @@ fn test_builder_default_creates_valid_ecosystem() {
 #[test]
 fn test_shutdown_before_initialize() {
     let config = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut ecosystem = ProductionEcosystem::new(config).expect("Should create ecosystem");
 
     // Shutdown without initializing - may fail or handle gracefully
@@ -240,6 +273,9 @@ fn test_shutdown_before_initialize() {
 // Test 12: Environment Level Serialization Roundtrip
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_all_environment_levels_serialization() {
     let levels = vec![

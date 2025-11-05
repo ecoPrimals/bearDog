@@ -1,13 +1,21 @@
-// **ULTRA-PEDANTIC**: External Functions Interface for BearDog Ecosystem
-//
-// This module provides comprehensive Foreign Function Interface (FFI) capabilities
-// for BearDog, enabling seamless integration with external libraries, native code,
-// and system-level operations with enterprise-grade safety and performance.
-//
-// ## Architecture
-//
-// The external functions system is organized into focused modules:
-// - **types**: Core type definitions and data structures
+//! # External Functions Interface
+//!
+//! Provides comprehensive Foreign Function Interface (FFI) capabilities for BearDog,
+//! enabling seamless integration with external libraries, native code, and system-level
+//! operations with enterprise-grade safety and performance.
+//!
+//! ## Overview
+//!
+//! This module bridges Rust with external code through safe FFI wrappers:
+//! - C library integration
+//! - System-level operations
+//! - Hardware abstraction
+//! - Native performance optimization
+//!
+//! ## Architecture
+//!
+//! The external functions system is organized into focused modules:
+//! - **types**: Core type definitions and data structures
 // - **registry**: Function registry and library management
 // - **safety**: Safety checking and validation policies
 //
@@ -39,8 +47,11 @@
 // ```
 
 // Module declarations
+/// Function registry and library management
 pub mod registry;
+/// Safety checking and validation policies
 pub mod safety;
+/// FFI type definitions
 pub mod types;
 
 // Re-export main types and functions
@@ -54,6 +65,7 @@ pub use types::{
 
 pub use safety::{ParameterValue, SafetyChecker};
 
+/// Returns the default configuration for external function registry
 #[must_use]
 pub fn default_config() -> ExternalFunctionsRegistryConfig {
     ExternalFunctionsRegistryConfig::default()

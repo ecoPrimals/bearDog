@@ -106,8 +106,16 @@ impl Default for MetricsConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            collection_interval: Duration::from_secs(60),
-            max_history_size: 1000,
+            collection_interval: Duration::from_secs(
+                std::env::var("BEARDOG_METRICS_COLLECTION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
+            max_history_size: std::env::var("BEARDOG_METRICS_HISTORY_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000), // 1000 samples default
             enable_broadcasting: true,
             analysis: AnalysisConfig::default(),
             health_checks: MetricsHealthCheckConfig::default(),
@@ -120,7 +128,12 @@ impl Default for AnalysisConfig {
         Self {
             enable_anomaly_detection: true,
             enable_trend_analysis: true,
-            analysis_window: Duration::from_secs(24 * 60 * 60), // 24 hours using stable API
+            analysis_window: Duration::from_secs(
+                std::env::var("BEARDOG_ANALYSIS_WINDOW_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(24 * 60 * 60), // 24 hours default
+            ),
             anomaly: AnomalyConfig::default(),
             trend: TrendConfig::default(),
         }
@@ -131,7 +144,12 @@ impl Default for MetricsHealthCheckConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            check_interval: Duration::from_secs(300),
+            check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
             health_threshold: 0.8,
             alert_on_degraded: true,
         }

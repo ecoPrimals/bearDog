@@ -32,6 +32,9 @@ fn test_health_status_ordering() {
     assert!(HealthStatus::Healthy != HealthStatus::Degraded);
     assert!(HealthStatus::Degraded != HealthStatus::Unhealthy);
     assert!(HealthStatus::Unhealthy != HealthStatus::Critical);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -40,6 +43,9 @@ fn test_component_health_creation() {
     metadata.insert("location".to_string(), "us-west-2".to_string());
 
     let component = ComponentHealth {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         name: "database".to_string(),
         status: HealthStatus::Healthy,
         response_time_ms: 15.5,
@@ -48,10 +54,16 @@ fn test_component_health_creation() {
 
     assert_eq!(component.name, "database");
     assert_eq!(component.response_time_ms, 15.5);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(component.metadata.len(), 1);
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_health_report_timestamp() {
     let report = HealthReport {
         overall_status: HealthStatus::Healthy,
@@ -66,6 +78,9 @@ fn test_health_report_timestamp() {
 #[test]
 fn test_health_checker_start_stop() {
     let config = HealthConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enabled: true,
         check_interval_seconds: 30,
         timeout_seconds: 5,
@@ -75,6 +90,9 @@ fn test_health_checker_start_stop() {
     assert!(checker.start_health_monitoring().is_ok());
     assert!(checker.stop_monitoring().is_ok());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_health_report_with_multiple_components() {
@@ -85,6 +103,9 @@ fn test_health_report_with_multiple_components() {
             response_time_ms: 10.0,
             metadata: HashMap::new(),
         },
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         ComponentHealth {
             name: "database".to_string(),
             status: HealthStatus::Degraded,
@@ -109,6 +130,9 @@ fn test_health_config_serialization_roundtrip() {
         enabled: true,
         check_interval_seconds: 45,
         timeout_seconds: 8,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     let json = serde_json::to_string(&config).unwrap();
@@ -124,10 +148,16 @@ fn test_health_config_serialization_roundtrip() {
 #[test]
 fn test_health_status_serialization() {
     let status = HealthStatus::Healthy;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let json = serde_json::to_string(&status).unwrap();
     assert!(json.contains("Healthy"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_component_health_metadata_manipulation() {
     let mut component = ComponentHealth {

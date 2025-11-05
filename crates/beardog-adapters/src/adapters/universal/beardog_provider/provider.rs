@@ -52,20 +52,32 @@ impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
 
 
     fn endpoints(&self) -> ServiceEndpoints {
+        use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+        let config = RuntimeNetworkConfig::from_env();
+        
+        // Use HTTPS port for production endpoints (default 8443)
+        let https_port = std::env::var("BEARDOG_HTTPS_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(8443);
+        
+        let base_host = std::env::var("BEARDOG_API_HOST")
+            .unwrap_or_else(|_| config.api_host.clone());
+        
         ServiceEndpoints {
-
             primary: std::env::var("BEARDOG_API_URL")
-                .unwrap_or_else(|_| "https://api.beardog.local:8443".to_string()),
+                .unwrap_or_else(|_| format!("https://{}:{}", base_host, https_port)),
             health: std::env::var("BEARDOG_HEALTH_URL")
-                .unwrap_or_else(|_| "https://api.beardog.local:8443/health".to_string()),
+                .unwrap_or_else(|_| format!("https://{}:{}/health", base_host, config.health_port)),
             metrics: Some(std::env::var("BEARDOG_METRICS_URL")
-                .unwrap_or_else(|_| "https://api.beardog.local:8443/metrics".to_string())),
+                .unwrap_or_else(|_| format!("https://{}:{}/metrics", base_host, config.metrics_port))),
             admin: Some(std::env::var("BEARDOG_ADMIN_URL")
-                .unwrap_or_else(|_| "https://api.beardog.local:8443/admin".to_string())),
+                .unwrap_or_else(|_| format!("https://{}:{}/admin", base_host, config.api_port))),
             events: Some(std::env::var("BEARDOG_EVENTS_URL")
-                .unwrap_or_else(|_| "https://api.beardog.local:8443/events".to_string())),
+                .unwrap_or_else(|_| format!("https://{}:{}/events", base_host, config.api_port))),
             custom: HashMap::with_capacity(16),
         }
+    }
     fn health_check(&self) -> HealthStatus {
         match self.health_monitor.perform_health_check() {
             Ok(result) => result.status,

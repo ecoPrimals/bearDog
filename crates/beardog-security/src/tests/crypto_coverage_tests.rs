@@ -126,6 +126,9 @@ mod sha512_tests {
 
     #[test]
     fn test_sha512_consistency() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let input = b"consistent input";
         let hash1 = compute_sha512_hash(input)?;
         let hash2 = compute_sha512_hash(input)?;
@@ -133,11 +136,17 @@ mod sha512_tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_sha512_different_from_sha256() -> BearDogResult<()> {
         let input = b"same input";
         let sha256 = compute_sha256_hash(input)?;
         let sha512 = compute_sha512_hash(input)?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Lengths should differ
         assert_ne!(sha256.len(), sha512.len());
@@ -145,26 +154,41 @@ mod sha512_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_sha512_large_input() -> BearDogResult<()> {
         let large = vec![0xFF; 10 * 1024 * 1024]; // 10 MB
         let hash = compute_sha512_hash(&large)?;
         assert_eq!(hash.len(), 64);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_sha512_all_byte_values() -> BearDogResult<()> {
         let all_bytes: Vec<u8> = (0..=255).collect();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let hash = compute_sha512_hash(&all_bytes)?;
         assert_eq!(hash.len(), 64);
         assert_ne!(hash, vec![0u8; 64]);
         Ok(())
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[cfg(test)]
 mod random_generation_tests {
     use super::*;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_generate_random_bytes_length() -> BearDogResult<()> {
@@ -172,6 +196,9 @@ mod random_generation_tests {
         assert_eq!(bytes.len(), 32);
         Ok(())
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_generate_random_bytes_different() -> BearDogResult<()> {
@@ -188,6 +215,9 @@ mod random_generation_tests {
         // Should not be all zeros
         assert_ne!(bytes, vec![0u8; 100]);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -204,16 +234,25 @@ mod random_generation_tests {
         let bytes = generate_secure_random_bytes(1000)?;
         let zero_count = bytes.iter().filter(|&&b| b == 0).count();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // With truly random data, expect roughly 1000/256 ≈ 4 zeros
         // Allow range of 0-20 for statistical variation
         assert!(zero_count < 50); // Not mostly zeros
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_random_generation_rapid() -> BearDogResult<()> {
         // Generate many random values rapidly
         for _ in 0..100 {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             let _ = generate_secure_random_bytes(32)?;
         }
         Ok(())
@@ -222,11 +261,17 @@ mod random_generation_tests {
     #[test]
     fn test_random_bytes_uniqueness() -> BearDogResult<()> {
         let mut seen = std::collections::HashSet::new();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         for _ in 0..100 {
             let bytes = generate_secure_random_bytes(16)?;
             let hex = hex::encode(&bytes);
             assert!(!seen.contains(&hex), "Generated duplicate random value!");
             seen.insert(hex);
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
         }
         Ok(())
     }
@@ -238,27 +283,42 @@ mod key_derivation_tests {
 
     #[test]
     fn test_derive_key_basic() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let password = b"password";
         let salt = b"salt";
         let iterations = 1000;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let key = derive_key_from_password(password, salt, iterations)?;
         assert!(!key.is_empty());
         assert_eq!(key.len(), 32); // SHA-256 output
         Ok(())
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_derive_key_consistency() -> BearDogResult<()> {
         let password = b"password";
         let salt = b"salt";
         let iterations = 1000;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let key1 = derive_key_from_password(password, salt, iterations)?;
         let key2 = derive_key_from_password(password, salt, iterations)?;
 
         assert_eq!(key1, key2);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -267,12 +327,18 @@ mod key_derivation_tests {
         let salt1 = b"salt1";
         let salt2 = b"salt2";
         let iterations = 1000;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let key1 = derive_key_from_password(password, salt1, iterations)?;
         let key2 = derive_key_from_password(password, salt2, iterations)?;
 
         assert_ne!(key1, key2);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -287,6 +353,9 @@ mod key_derivation_tests {
 
         assert_ne!(key1, key2);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -296,6 +365,9 @@ mod key_derivation_tests {
 
         let key1 = derive_key_from_password(password, salt, 1000)?;
         let key2 = derive_key_from_password(password, salt, 2000)?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Different iteration counts should produce different keys
         assert_ne!(key1, key2);
@@ -306,6 +378,9 @@ mod key_derivation_tests {
     fn test_derive_key_empty_password() -> BearDogResult<()> {
         let password = b"";
         let salt = b"salt";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let iterations = 1000;
 
         let key = derive_key_from_password(password, salt, iterations)?;
@@ -317,6 +392,9 @@ mod key_derivation_tests {
     fn test_derive_key_empty_salt() -> BearDogResult<()> {
         let password = b"password";
         let salt = b"";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let iterations = 1000;
 
         let key = derive_key_from_password(password, salt, iterations)?;
@@ -328,6 +406,9 @@ mod key_derivation_tests {
     fn test_derive_key_zero_iterations() -> BearDogResult<()> {
         let password = b"password";
         let salt = b"salt";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let iterations = 0;
 
         let key = derive_key_from_password(password, salt, iterations)?;
@@ -338,6 +419,9 @@ mod key_derivation_tests {
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 mod constant_time_comparison_tests {
     use super::*;
 
@@ -346,6 +430,9 @@ mod constant_time_comparison_tests {
         let a = b"secret_value";
         let b = b"secret_value";
         assert!(constant_time_compare(a, b));
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -354,6 +441,9 @@ mod constant_time_comparison_tests {
         let b = b"secret2";
         assert!(!constant_time_compare(a, b));
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_constant_time_different_lengths() {
@@ -368,30 +458,51 @@ mod constant_time_comparison_tests {
         let b = b"";
         assert!(constant_time_compare(a, b));
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_constant_time_one_empty() {
         let a = b"nonempty";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let b = b"";
         assert!(!constant_time_compare(a, b));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_constant_time_binary_data() {
         let a = vec![0x00, 0xFF, 0xAA, 0x55];
         let b = vec![0x00, 0xFF, 0xAA, 0x55];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(constant_time_compare(&a, &b));
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_constant_time_one_bit_difference() {
         let a = vec![0b10101010];
         let b = vec![0b10101011]; // Last bit different
         assert!(!constant_time_compare(&a, &b));
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 mod integration_tests {
     use super::*;
 
@@ -401,6 +512,9 @@ mod integration_tests {
         let password = b"user_password_123";
         let salt = generate_secure_random_bytes(32)?;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Derive a key from password
         let stored_key = derive_key_from_password(password, &salt, 10000)?;
 
@@ -414,6 +528,9 @@ mod integration_tests {
     #[test]
     fn test_multiple_crypto_operations() -> BearDogResult<()> {
         // Perform multiple operations in sequence
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let data = b"test data";
 
         // Hash with SHA-256
@@ -435,6 +552,9 @@ mod integration_tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_deterministic_pipeline() -> BearDogResult<()> {
         let password = b"password";

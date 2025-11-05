@@ -17,10 +17,22 @@ use beardog_errors::BearDogError;
             )));
         }
 
+        // Use environment-configurable Prometheus endpoint with sensible defaults
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        let default_prometheus_endpoint = format!(
+            "http://{}:{}",
+            std::env::var("BEARDOG_PROMETHEUS_HOST").unwrap_or_else(|_| network_config.default_host.clone()),
+            std::env::var("BEARDOG_PROMETHEUS_PORT")
+                .ok()
+                .and_then(|p| p.parse::<u16>().ok())
+                .unwrap_or(9090)
+        );
+        
         let endpoint = payload
             .get("endpoint")
             .and_then(|v| v.as_str())
-            .unwrap_or("http://localhost:9090");
+            .unwrap_or(&default_prometheus_endpoint);
 
         tracing::info!(
             "📊 Prometheus {} operation to endpoint {}",

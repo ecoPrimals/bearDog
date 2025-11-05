@@ -90,6 +90,9 @@ mod ed25519_signature_tests {
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 mod aes_gcm_encryption_tests {
     use super::*;
 
@@ -98,6 +101,9 @@ mod aes_gcm_encryption_tests {
         // Test basic AES-256-GCM encryption and decryption
         let plaintext = b"Sensitive data to encrypt with AES-256-GCM";
         let key = generate_aes_256_key()?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let nonce = generate_aes_nonce()?;
 
         let ciphertext = encrypt_aes_256_gcm(&key, &nonce, plaintext)?;
@@ -109,6 +115,9 @@ mod aes_gcm_encryption_tests {
 
         let decrypted = decrypt_aes_256_gcm(&key, &nonce, &ciphertext)?;
         assert_eq!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: important
             decrypted.as_slice(),
             plaintext,
             "Decrypted data should match original"
@@ -124,6 +133,9 @@ mod aes_gcm_encryption_tests {
         let key = generate_aes_256_key()?;
         let wrong_key = generate_aes_256_key()?;
         let nonce = generate_aes_nonce()?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
 
         let ciphertext = encrypt_aes_256_gcm(&key, &nonce, plaintext)?;
         let result = decrypt_aes_256_gcm(&wrong_key, &nonce, &ciphertext);
@@ -138,6 +150,9 @@ mod aes_gcm_encryption_tests {
         // Test that decryption fails with wrong nonce
         let plaintext = b"Secret data";
         let key = generate_aes_256_key()?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let nonce = generate_aes_nonce()?;
         let wrong_nonce = generate_aes_nonce()?;
 
@@ -159,6 +174,9 @@ mod aes_gcm_encryption_tests {
         let mut ciphertext = encrypt_aes_256_gcm(&key, &nonce, plaintext)?;
         // Tamper with ciphertext
         if !ciphertext.is_empty() {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             ciphertext[0] ^= 0xFF;
         }
 
@@ -180,6 +198,9 @@ mod aes_gcm_encryption_tests {
         let nonce = generate_aes_nonce()?;
 
         let ciphertext = encrypt_aes_256_gcm(&key, &nonce, plaintext)?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let decrypted = decrypt_aes_256_gcm(&key, &nonce, &ciphertext)?;
 
         assert_eq!(
@@ -193,6 +214,9 @@ mod aes_gcm_encryption_tests {
 
     #[test]
     fn test_aes_256_gcm_large_plaintext() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Test encryption/decryption of large data (1MB)
         let plaintext = vec![0x42u8; 1024 * 1024]; // 1MB
         let key = generate_aes_256_key()?;
@@ -206,6 +230,9 @@ mod aes_gcm_encryption_tests {
             "Large plaintext should round-trip correctly"
         );
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         Ok(())
     }
 }
@@ -226,6 +253,9 @@ mod chacha20_poly1305_tests {
 
         let decrypted = decrypt_chacha20_poly1305(&key, &nonce, &ciphertext)?;
         assert_eq!(decrypted.as_slice(), plaintext, "Decryption should match");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         Ok(())
     }
@@ -242,6 +272,9 @@ mod chacha20_poly1305_tests {
         if !ciphertext.is_empty() {
             ciphertext[0] ^= 0xFF;
         }
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let result = decrypt_chacha20_poly1305(&key, &nonce, &ciphertext);
 
@@ -262,6 +295,9 @@ mod chacha20_poly1305_tests {
         let decrypted = decrypt_chacha20_poly1305_with_aad(&key, &nonce, &ciphertext, aad)?;
 
         assert_eq!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             decrypted.as_slice(),
             plaintext,
             "AAD should not affect decryption"
@@ -275,6 +311,9 @@ mod chacha20_poly1305_tests {
         // Test that wrong AAD causes authentication failure
         let plaintext = b"Secret data";
         let aad = b"Correct AAD";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let wrong_aad = b"Wrong AAD!!";
         let key = generate_chacha20_key()?;
         let nonce = generate_chacha20_nonce()?;
@@ -292,6 +331,9 @@ mod chacha20_poly1305_tests {
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 mod blake3_hashing_tests {
     use super::*;
 
@@ -309,6 +351,9 @@ mod blake3_hashing_tests {
 
     #[test]
     fn test_blake3_hash_deterministic() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Test that same input produces same hash
         let data = b"Deterministic input";
 
@@ -331,6 +376,9 @@ mod blake3_hashing_tests {
 
         assert_ne!(
             hash1, hash2,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             "Different inputs should produce different hashes"
         );
 
@@ -340,6 +388,9 @@ mod blake3_hashing_tests {
     #[test]
     fn test_blake3_hash_empty_input() -> BearDogResult<()> {
         // Test hashing empty data
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let data = b"";
 
         let hash = blake3_hash(data)?;
@@ -350,6 +401,9 @@ mod blake3_hashing_tests {
             "Empty input should still produce 32-byte hash"
         );
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         Ok(())
     }
 
@@ -364,6 +418,9 @@ mod blake3_hashing_tests {
 
         Ok(())
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_blake3_keyed_hash() -> BearDogResult<()> {
@@ -377,6 +434,9 @@ mod blake3_hashing_tests {
 
         Ok(())
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_blake3_keyed_hash_different_keys() -> BearDogResult<()> {
@@ -386,6 +446,9 @@ mod blake3_hashing_tests {
         let key2 = b"Key-2-for-BLAKE3-authentication!"; // Exactly 32 bytes
 
         let mac1 = blake3_keyed_hash(key1, data)?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let mac2 = blake3_keyed_hash(key2, data)?;
 
         assert_ne!(mac1, mac2, "Different keys should produce different MACs");
@@ -396,6 +459,9 @@ mod blake3_hashing_tests {
 
 #[cfg(test)]
 mod key_derivation_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     use super::*;
 
     #[test]
@@ -413,6 +479,9 @@ mod key_derivation_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_pbkdf2_deterministic() -> BearDogResult<()> {
         // Test that same inputs produce same key
         let password = b"password123";
@@ -424,6 +493,9 @@ mod key_derivation_tests {
 
         assert_eq!(key1, key2, "PBKDF2 should be deterministic");
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         Ok(())
     }
 
@@ -436,6 +508,9 @@ mod key_derivation_tests {
         let iterations = 10_000;
 
         let key1 = derive_key_pbkdf2(password, salt1, iterations)?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let key2 = derive_key_pbkdf2(password, salt2, iterations)?;
 
         assert_ne!(key1, key2, "Different salts should produce different keys");
@@ -449,6 +524,9 @@ mod key_derivation_tests {
         let password = b"User password for Argon2";
         let salt = b"Random salt for Argon2!!";
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let derived_key = derive_key_argon2(password, salt)?;
 
         assert_eq!(derived_key.len(), 32, "Argon2 key should be 32 bytes");
@@ -464,6 +542,9 @@ mod key_rotation_tests {
     #[test]
     fn test_key_rotation_workflow() -> BearDogResult<()> {
         // Test complete key rotation workflow
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let old_key = generate_aes_256_key()?;
         let new_key = generate_aes_256_key()?;
         let nonce = generate_aes_nonce()?;
@@ -490,6 +571,9 @@ mod key_rotation_tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     #[test]
     fn test_multi_key_decryption_capability() -> BearDogResult<()> {
         // Test that we can try multiple keys until one works

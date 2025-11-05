@@ -2,14 +2,15 @@ use crate::auth::node_registry::InMemoryNodeRegistry;
 use crate::auth::proof_verifier::DefaultProofVerifier;
 use crate::auth::types::*;
 use beardog_errors::BearDogError;
-use beardog_security::handlers::threat_analysis::{
-    Action, ActionType, Resource, ResourceClassification, Subject, SubjectType,
-};
+// use beardog_security::{
+//     Action, ActionType, Resource, ResourceClassification, Subject, SubjectType,
+// };
 use chrono::Utc;
 use std::collections::HashMap;
 
 #[tokio::test]
-fn test_cross_node_auth_engine_creation() -> Result<(), BearDogError> {
+
+async fn test_cross_node_auth_engine_creation() -> Result<(), BearDogError> {
     let node_registry = Box::new(InMemoryNodeRegistry::new());
     let proof_verifier = Box::new(DefaultProofVerifier::new());
     let config = CrossNodeAuthConfig {
@@ -20,41 +21,51 @@ fn test_cross_node_auth_engine_creation() -> Result<(), BearDogError> {
             required: true,
             threshold: 0.8,
         },
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         max_spawns_per_node: 50,
         approval_mode: ApprovalMode::Automated,
     };
 
-    let engine = CrossNodeAuthEngine::new(node_registry, proof_verifier, config)?;
+    let engine = CrossNodeAuthEngine::new(node_registry, proof_verifier, config);
     assert!(engine.is_initialized());
     Ok(())
 }
 
 #[tokio::test]
-fn test_node_registration() -> Result<(), BearDogError> {
+async fn test_node_registration() -> Result<(), BearDogError> {
     let mut node_registry = InMemoryNodeRegistry::new();
 
     let node_info = NodeInfo {
-        id: "test-node".to_string(),
+        node_id: "test-node".to_string(),
         address: "127.0.0.1:8080".to_string(),
         capabilities: vec![NodeCapability::StorageProvider],
         trust_level: 0.8,
-        last_seen: Some(Utc::now()),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        last_seen: Utc::now(),
+        genetics: None,
     };
 
     node_registry.register_node(node_info.clone())?;
     let retrieved = node_registry.get_node_info("test-node")?;
-    assert_eq!(retrieved.id, "test-node");
+    assert_eq!(retrieved.node_id, "test-node");
     assert_eq!(retrieved.trust_level, 0.8);
 
     Ok(())
 }
 
 #[tokio::test]
-fn test_authorization_creation() -> Result<(), BearDogError> {
+async fn test_authorization_creation() -> Result<(), BearDogError> {
     let authorization = CrossNodeAuthorization {
         request_id: "test-req-123".to_string(),
         requester_node_id: "requester-node".to_string(),
         resource_owner_node_id: "owner-node".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         resource_id: "test-resource".to_string(),
         permissions: vec![ResourcePermission::Read],
         conditions: vec![],
@@ -71,8 +82,11 @@ fn test_authorization_creation() -> Result<(), BearDogError> {
 }
 
 #[tokio::test]
-fn test_proof_verification() -> Result<(), BearDogError> {
+async fn test_proof_verification() -> Result<(), BearDogError> {
     let verifier = DefaultProofVerifier::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let operation = CrossNodeOperation {
         operation_type: OperationType::Read,
@@ -81,8 +95,8 @@ fn test_proof_verification() -> Result<(), BearDogError> {
         requester_signature: "test-signature".to_string(),
     };
 
-    let proof = AuthProof {
-        proof_id: "test-proof-123".to_string(),
+    let proof = AuthorizationProof {
+        authorization_id: "test-proof-123".to_string(),
         operation,
         timestamp: Utc::now(),
         proof_signature: "proof-signature".to_string(),
@@ -96,8 +110,11 @@ fn test_proof_verification() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
-fn test_consensus_calculation() -> Result<(), BearDogError> {
+async fn test_consensus_calculation() -> Result<(), BearDogError> {
     let mut votes = HashMap::new();
     votes.insert("node1".to_string(), true);
     votes.insert("node2".to_string(), true);

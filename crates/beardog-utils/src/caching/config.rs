@@ -60,7 +60,12 @@ impl Default for CacheConfig {
             l1_max_entries: 10_000,
             l2_max_size_mb: 100,
             l3_max_size_gb: 1,
-            default_ttl: Duration::from_secs(3600), // 1 hour
+            default_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_CACHE_DEFAULT_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600)
+            ),
             enable_compression: true,
             eviction_strategy: EvictionStrategy::LRU,
             warming_strategy: WarmingStrategy::Lazy,
@@ -211,6 +216,9 @@ mod tests {
         let config = CacheConfig::high_performance();
         assert_eq!(config.l1_max_entries, 50_000);
         assert!(!config.enable_compression);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.eviction_strategy, EvictionStrategy::LFU);
     }
 
@@ -218,16 +226,25 @@ mod tests {
     fn test_memory_optimized_config() {
         let config = CacheConfig::memory_optimized();
         assert_eq!(config.l1_max_entries, 5_000);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(config.enable_compression);
         assert!(!config.enable_statistics);
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_config_validation() {
         let config = CacheConfig::default();
         assert!(config.validate().is_ok());
 
         let invalid_config = CacheConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             l1_max_entries: 0,
             ..Default::default()
         };
@@ -237,10 +254,16 @@ mod tests {
     #[test]
     fn test_memory_usage_estimation() {
         let config = CacheConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let estimated = config.estimated_memory_usage_mb();
         assert!(estimated > 0);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_builder_pattern() {
         let config = CacheConfig::default()

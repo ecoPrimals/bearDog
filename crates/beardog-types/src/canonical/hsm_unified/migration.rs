@@ -477,10 +477,16 @@ mod tests {
         assert!(service.options.validate_after_migration);
         assert!(service.options.preserve_legacy_metadata);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_empty_migration() -> Result<(), Box<dyn std::error::Error>> {
         let service = HsmMigrationService::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let result = service.migrate_hsm_configs(vec![])?;
 
         assert_eq!(result.migration_report.legacy_configs_processed, 0);
@@ -488,6 +494,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_tunnel_legacy_config_creation() {
         let legacy_config = create_tunnel_legacy_config(

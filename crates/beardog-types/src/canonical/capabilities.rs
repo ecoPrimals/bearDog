@@ -351,9 +351,18 @@ pub struct CircuitBreakerConfig {
 impl Default for CircuitBreakerConfig {
     fn default() -> Self {
         Self {
-            failure_threshold: 5,
-            timeout_ms: 60000, // 60 seconds
-            success_threshold: 3,
+            failure_threshold: std::env::var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5),
+            timeout_ms: std::env::var("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60000), // 60 seconds
+            success_threshold: std::env::var("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
         }
     }
 }
@@ -605,7 +614,10 @@ impl Default for NetworkCapabilities {
                 "HTTPS".to_string(),
                 "WebSocket".to_string(),
             ],
-            max_bandwidth: 1000.0,
+            max_bandwidth: std::env::var("BEARDOG_MAX_BANDWIDTH_MBPS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000.0),
             encryption_support: true,
             vpn_support: true,
         }
@@ -633,7 +645,10 @@ impl Default for StorageCapabilities {
     fn default() -> Self {
         Self {
             storage_types: vec!["SSD".to_string(), "NVMe".to_string(), "Cloud".to_string()],
-            max_capacity: 10000.0,
+            max_capacity: std::env::var("BEARDOG_STORAGE_MAX_CAPACITY")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10000.0),
             encryption_at_rest: true,
             backup_support: true,
         }
@@ -661,8 +676,14 @@ impl Default for ComputeCapabilities {
     fn default() -> Self {
         Self {
             cpu_architectures: vec!["x86_64".to_string(), "ARM64".to_string()],
-            core_count: 8,
-            memory_gb: 32.0,
+            core_count: std::env::var("BEARDOG_DEFAULT_CORE_COUNT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(8),
+            memory_gb: std::env::var("BEARDOG_DEFAULT_MEMORY_GB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(32.0),
             gpu_acceleration: false,
         }
     }
@@ -686,8 +707,14 @@ pub struct PerformanceCapabilities {
 impl Default for PerformanceCapabilities {
     fn default() -> Self {
         Self {
-            max_ops_per_second: 10000.0,
-            avg_response_time_ms: 50.0,
+            max_ops_per_second: std::env::var("BEARDOG_PERF_MAX_OPS_PER_SECOND")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10000.0),
+            avg_response_time_ms: std::env::var("BEARDOG_PERF_AVG_RESPONSE_TIME_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(50.0),
             throughput_optimization: true,
             load_balancing: true,
         }
@@ -714,7 +741,10 @@ pub struct EnvironmentalCapabilities {
 impl Default for EnvironmentalCapabilities {
     fn default() -> Self {
         Self {
-            power_consumption_watts: 500.0,
+            power_consumption_watts: std::env::var("BEARDOG_POWER_CONSUMPTION_WATTS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(500.0),
             carbon_optimization: true,
             renewable_energy: true,
             certifications: vec!["Energy Star".to_string(), "Green Computing".to_string()],
@@ -863,8 +893,14 @@ impl Default for HumanEntropyCapabilities {
                 "keyboard".to_string(),
                 "touch".to_string(),
             ],
-            min_interaction_time_ms: 100,
-            max_interaction_time_ms: 30000,
+            min_interaction_time_ms: std::env::var("BEARDOG_MIN_INTERACTION_TIME_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
+            max_interaction_time_ms: std::env::var("BEARDOG_MAX_INTERACTION_TIME_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30000),
             quality_scoring: true,
             biometric_integration: false,
             mouse_tracking: true,

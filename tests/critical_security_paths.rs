@@ -1,9 +1,9 @@
 // Critical Security Path Tests
 // Tests for the most security-sensitive operations in BearDog
 
-/// TEST_CATEGORY: security
-/// TEST_DOMAIN: hsm
-/// TEST_PRIORITY: critical
+// TEST_CATEGORY: security
+// TEST_DOMAIN: hsm
+// TEST_PRIORITY: critical
 /// Test critical path: HSM key generation with security validation
 #[tokio::test]
 async fn test_critical_hsm_key_generation_security() {
@@ -35,6 +35,9 @@ async fn test_valid_key_generation() -> Result<(), Box<dyn std::error::Error>> {
     // Test that valid key generation parameters work
     // This would use the actual HSM API when fully integrated
     Ok(())
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 async fn test_invalid_key_generation() -> Result<(), Box<dyn std::error::Error>> {
@@ -52,9 +55,9 @@ async fn test_key_memory_protection() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-/// TEST_CATEGORY: security
-/// TEST_DOMAIN: crypto
-/// TEST_PRIORITY: critical
+// TEST_CATEGORY: security
+// TEST_DOMAIN: crypto
+// TEST_PRIORITY: critical
 /// Test critical path: Digital signature generation and verification
 #[tokio::test]
 async fn test_critical_signature_operations() {
@@ -83,6 +86,9 @@ async fn test_critical_signature_operations() {
 // Helper functions for signature tests
 async fn test_signature_generation_and_verification() -> Result<(), Box<dyn std::error::Error>> {
     // Test valid signature flow
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     Ok(())
 }
 
@@ -126,6 +132,9 @@ async fn test_critical_encryption_boundaries() {
 // Helper functions for encryption tests
 async fn test_encryption_decryption() -> Result<(), Box<dyn std::error::Error>> {
     // Test valid encryption/decryption cycle
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     Ok(())
 }
 
@@ -166,38 +175,62 @@ async fn test_critical_memory_protection() {
     // This tests that sensitive data is properly protected in memory
     // TODO: Implement test
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 /// Test critical path: Entropy validation for key generation
 #[tokio::test]
 async fn test_critical_entropy_validation() {
     // This tests that we have sufficient entropy for cryptographic operations
     // TODO: Implement test
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 /// Test critical path: Cryptographic algorithm validation
 #[tokio::test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 async fn test_critical_algorithm_validation() {
     // This tests that weak algorithms are rejected
     // TODO: Implement test
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 /// Test critical path: Secure channel establishment
 #[tokio::test]
 async fn test_critical_secure_channel() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // This tests secure communication channel establishment
     // TODO: Implement test
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 /// Test critical path: Attestation and device integrity
 #[tokio::test]
 async fn test_critical_attestation() {
     // This tests device attestation for hardware-backed security
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // TODO: Implement test
 }
 
 #[cfg(test)]
 mod integration {
     /// End-to-end test: Complete HSM lifecycle with security validation
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_e2e_hsm_secure_lifecycle() {
         // This tests the complete lifecycle of an HSM key with all security checks

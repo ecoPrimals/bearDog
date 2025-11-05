@@ -245,90 +245,110 @@ pub struct HumanPermissions {
     pub requestable_permissions: Vec<String>,
 }
 
+/// Criteria for establishing partnerships between biomes
+///
+/// Defines the minimum requirements and standards that must be met
+/// before two biomes can form a partnership relationship.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartnershipCriteria {
     /// Minimum trust level required (0.0-1.0)
-    /// The minimum trust level value
     pub minimum_trust_level: f64,
-    /// The required verification level value
+    /// Required verification level (e.g., "basic", "enhanced", "sovereign")
     pub required_verification_level: String,
-    /// Collection of compatibility requirements
+    /// Technical and operational compatibility requirements
     pub compatibility_requirements: Vec<String>,
-    /// Collection of mutual benefit requirements
+    /// Mutual benefit and value exchange requirements
     pub mutual_benefit_requirements: Vec<String>,
 }
 
+/// Time limits and renewal policies for partnerships
+///
+/// Controls how long partnerships can last and under what conditions
+/// they can be renewed or extended.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartnershipDurationLimits {
-    /// Maximum partnership duration in seconds
-    /// Number of `max_partnership_duration_seconds`
+    /// Maximum allowed partnership duration in seconds
     pub max_partnership_duration_seconds: u64,
-    /// Default partnership duration in seconds
-    /// Number of `default_partnership_duration_seconds`
+    /// Default partnership duration when not otherwise specified
     pub default_partnership_duration_seconds: u64,
-    /// Collection of renewal requirements
+    /// Requirements that must be met to renew an expiring partnership
     pub renewal_requirements: Vec<String>,
 }
 
+/// Trust requirements for biome interactions
+///
+/// Defines the trust level and verification standards required
+/// for various types of interactions and operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrustRequirements {
     /// Minimum trust score required (0.0-1.0)
-    /// The minimum trust score value
     pub minimum_trust_score: f64,
-    /// Collection of enhanced trust requirements
+    /// Additional requirements for enhanced trust relationships
     pub enhanced_trust_requirements: Vec<String>,
-    /// Collection of trust verification methods
+    /// Methods used to verify and establish trust
     pub trust_verification_methods: Vec<String>,
 }
 
+/// Preferences for genetic evolution and adaptation
+///
+/// Controls how biomes can evolve and adapt over time through
+/// genetic algorithms, crossover, and mutation operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticEvolutionPreferences {
-    /// Whether genetic evolution is allowed
-    /// Whether `allow_evolution` is enabled
+    /// Whether genetic evolution operations are permitted
     pub allow_evolution: bool,
-    /// The crossover preferences value
+    /// Preferences for genetic crossover operations
     pub crossover_preferences: CrossoverPreferences,
-    /// Collection of fitness criteria
+    /// Criteria used to evaluate fitness for natural selection
     pub fitness_criteria: Vec<FitnessCriterion>,
-    /// Collection of mutation rate preferences
+    /// Preferred mutation rates for genetic variation
     pub mutation_rate_preferences: Vec<String>,
 }
 
+/// Preferences for genetic crossover operations
+///
+/// Controls how genetic traits are combined when creating offspring
+/// or mixing genetic material between biomes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossoverPreferences {
     /// Whether crossover operations are enabled
-    /// Whether feature is enabled
     pub enabled: bool,
-    /// Collection of crossover rates
+    /// Rates at which crossover occurs (probability 0.0-1.0)
     pub crossover_rates: Vec<f64>,
-    /// Heritage preservation settings
+    /// Settings for preserving heritage and lineage information
     /// Collection of heritage preservation
     pub heritage_preservation: Vec<String>,
 }
 
+/// Single criterion for evaluating genetic fitness
+///
+/// Defines a metric used to evaluate how well a biome or genetic
+/// configuration performs, guiding natural selection in evolution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FitnessCriterion {
-    /// Name of the fitness criterion
-    /// Name of the item
+    /// Name identifying this fitness criterion
     pub name: String,
-    /// Weight of this criterion in overall fitness (0.0-1.0)
-    /// The weight value
+    /// Relative importance of this criterion (0.0-1.0)
     pub weight: f64,
     /// Method used to measure this fitness criterion
     /// The measurement method value
     pub measurement_method: String,
 }
 
+/// Levels of corporate access to biome resources
+///
+/// Defines the policy for how corporate entities may interact with
+/// the biome, from complete exclusion to various paid access models.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CorporateAccessLevel {
-    /// No corporate access allowed
+    /// No corporate access permitted (fully sovereign)
     None,
-    /// Corporate access requires payment
+    /// Corporate access permitted with direct payment
     PaymentRequired,
-    /// Corporate access through established partnerships
+    /// Corporate access through pre-established partnerships
     PartnershipBased,
-    /// Restricted corporate access with limitations
+    /// Limited corporate access with specific restrictions
     RestrictedAccess,
-    /// Paid compute access only
+    /// Corporate entities can only purchase compute resources
     PaidComputeOnly,
 }

@@ -26,12 +26,16 @@
 //!     let result = framework.run_scenario(E2EScenario::ProductionDeployment).await;
 //!     assert!(result.is_ok());
 //! }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 //! ```
 
 pub mod disaster_recovery;
 pub mod full_stack_integration;
 pub mod helpers;
 pub mod production_deployment;
+pub mod real_scenarios;
 pub mod security_flow;
 
 // Re-export key types
@@ -284,9 +288,15 @@ mod tests {
     #[tokio::test]
     async fn test_framework_creation() {
         let framework = E2ETestFramework::new().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(framework.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_scenario_enum() {
         let scenario = E2EScenario::ProductionDeployment;

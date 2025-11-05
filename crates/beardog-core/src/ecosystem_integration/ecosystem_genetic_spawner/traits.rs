@@ -8,9 +8,13 @@ use super::types::{
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
+/// Client interface for interacting with ecosystem primals
+///
+/// Provides methods for querying primal capabilities, resource availability,
+/// and requesting primal spawning operations.
 #[allow(async_fn_in_trait)]
 pub trait EcosystemPrimalClient: Send + Sync {
-    /// Gets `primal_id`
+    /// Checks if a primal with given capabilities exists
     ///
     /// # Errors
     /// Returns an error if the operation fails.
@@ -53,40 +57,52 @@ pub trait EcosystemPrimalClient: Send + Sync {
     fn get_resource_utilization(&self) -> Result<HashMap<String, f64>, BearDogError>;
 }
 
+/// A genetic trait for ecosystem primal evolution
+///
+/// Represents an inheritable characteristic used in genetic spawning algorithms
+/// to create new primal instances with evolved capabilities.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EcosystemGeneticTrait {
+    /// Unique trait identifier
     pub trait_id: String,
-    /// Name of the trait
+    /// Human-readable trait name
     pub trait_name: String,
-    /// The category value
+    /// Trait category classification
     pub category: TraitCategory,
-    /// The strength value
+    /// Trait strength (0.0-1.0)
     pub strength: f64,
-    /// The dominance value
+    /// Dominance in genetic combination (0.0-1.0)
     pub dominance: f64,
-    /// Collection of required capabilities
+    /// Capabilities required for this trait
     pub required_capabilities: Vec<EcosystemCapability>,
+    /// Trait-specific configuration
     pub trait_config: HashMap<String, serde_json::Value>,
-    /// The source primal value
+    /// Source primal that contributed this trait
     pub source_primal: String,
-    /// Mapping of compatibility scores
+    /// Compatibility scores with other traits
     pub compatibility_scores: HashMap<String, f64>,
 }
 
+/// Available resources for ecosystem operations
+///
+/// Tracks current resource availability across compute, memory, storage,
+/// network, and GPU resources with associated costs.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EcosystemResourceAvailability {
-    /// Number of `available_cpu_cores`
+    /// Available CPU cores
     pub available_cpu_cores: u32,
-    /// Number of `available_memory_gb`
+    /// Available memory in GB
     pub available_memory_gb: u32,
-    /// Number of `available_storage_gb`
+    /// Available storage in GB
     pub available_storage_gb: u32,
+    /// Available network bandwidth in Mbps
     pub available_bandwidth_mbps: u32,
-    /// Number of `available_gpu_units`
+    /// Available GPU units
     pub available_gpu_units: u32,
-    /// The cost per hour value
+    /// Cost per hour for these resources
     pub cost_per_hour: f64,
-    /// Collection of available locations
+    /// Geographic locations where resources are available
     pub available_locations: Vec<String>,
+    /// When this availability snapshot was taken
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }

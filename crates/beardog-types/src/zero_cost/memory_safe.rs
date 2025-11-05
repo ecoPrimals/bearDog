@@ -342,6 +342,9 @@ mod tests {
 
         let buffer2 = pool.allocate(128);
         assert_eq!(buffer2.len(), 128);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         // Return buffers to pool
         pool.deallocate(buffer1);
@@ -361,6 +364,9 @@ mod tests {
 
         // Test push
         assert!(buffer.try_push("item1".to_string()).is_ok());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(buffer.try_push("item2".to_string()).is_ok());
         assert!(buffer.try_push("item3".to_string()).is_ok());
 
@@ -377,6 +383,9 @@ mod tests {
     #[test]
     fn test_simd_capabilities() {
         let caps = SafeSimdCapabilities::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         assert!(caps.vector_width >= 16);
         assert!(caps.optimal_chunk_size() >= 16);
@@ -385,6 +394,9 @@ mod tests {
         println!("SIMD capabilities: {caps:?}");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_memory_pool_alignment() {
         let pool = SafeZeroCopyMemoryPool::new(&[64], 16);

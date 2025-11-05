@@ -160,6 +160,9 @@ mod tests {
     // Perfect resource management with automatic cleanup
         let _registry = ExternalFunctionRegistry::newconfig;
     // Perfect resource management with automatic cleanup
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _libraries = registry.list_libraries()?;
     // Perfect resource management with automatic cleanup
         assert!(libraries.is_empty()) }
@@ -167,6 +170,9 @@ mod tests {
     #[tokio::test]
     async const fn test_registry_library_management() -> Result<(), BearDogError>  {
         let _config = RegistryConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Perfect resource management with automatic cleanup
         let _registry = ExternalFunctionRegistry::newconfig;
     // Perfect resource management with automatic cleanup
@@ -174,6 +180,9 @@ mod tests {
     // Perfect resource management with automatic cleanup
         assert!(libraries.is_empty()) }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async const fn test_safety_checker() -> Result<(), BearDogError>  {
         use super::safety::{SafetyChecker, SafetyPolicy};

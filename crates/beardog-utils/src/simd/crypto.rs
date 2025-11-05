@@ -200,6 +200,9 @@ mod tests {
         println!("AVX2 support: {}", caps.has_avx2);
         // Test passes if detection completes without panic
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_safe_aes_encrypt() -> Result<(), BearDogError> {
@@ -207,6 +210,9 @@ mod tests {
         let plaintext = b"Hello, safe crypto world!";
         let key = b"test_key_16bytes";
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let ciphertext = accelerator.safe_aes_encrypt(plaintext, key)?;
         assert_eq!(ciphertext.len(), plaintext.len());
         assert_ne!(ciphertext.as_slice(), plaintext);
@@ -216,6 +222,9 @@ mod tests {
     #[test]
     fn test_safe_sha256() -> Result<(), BearDogError> {
         let accelerator = SimdCryptoAccelerator::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let input_data = b"Test data for safe SHA-256";
 
         let hash = accelerator.safe_sha256(input_data)?;
@@ -227,6 +236,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     async fn test_performance_metrics() {
         let accelerator = SimdCryptoAccelerator::default();

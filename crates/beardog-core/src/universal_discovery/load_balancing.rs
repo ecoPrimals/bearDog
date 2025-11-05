@@ -47,6 +47,7 @@ pub enum LoadBalancingAlgorithm {
     LeastConnections,
     /// Weighted round-robin based on service capacity
     WeightedRoundRobin,
+    /// Random selection across available services
     Random,
     /// Hash-based routing using client IP
     IpHash,

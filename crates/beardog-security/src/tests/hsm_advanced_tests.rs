@@ -70,6 +70,9 @@ fn test_hsm_signature_verification() {
 fn test_hsm_signing_large_data() {
     // HSM should handle large data signing
     // Tests data size limits
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // Large data handling:
     // - Support signing multi-MB payloads
@@ -96,6 +99,9 @@ fn test_hsm_signing_multiple_algorithms() {
     // HSM should support multiple signing algorithms
     // Tests algorithm flexibility
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let signing_algorithms = ["ed25519", "ecdsa-p256", "rsa-pss"];
 
     // Verify algorithm support
@@ -119,7 +125,9 @@ fn test_hsm_signing_multiple_algorithms() {
     let algorithms_available = true;
     assert!(
         algorithms_available,
-        "Signing algorithms should be available"
+        "Signing algorithms should be available" // TEST_CATEGORY: integration
+                                                 // TEST_DOMAIN: security
+                                                 // TEST_PRIORITY: normal
     );
 }
 
@@ -142,6 +150,9 @@ fn test_hsm_signature_invalid_key() {
     let key_exists = false;
     assert!(!key_exists, "Invalid key should not exist");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Should reject operation
     let operation_rejected = true;
     assert!(operation_rejected, "Should reject signing with invalid key");
@@ -171,6 +182,9 @@ fn test_registry_provider_registration() {
     assert!(registration_success, "Provider registration should succeed");
 
     // Verify provider is registered
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let is_registered = true;
     assert!(is_registered, "Provider should be registered");
 }
@@ -196,6 +210,9 @@ fn test_registry_provider_unregistration() {
         !is_still_registered,
         "Provider should be removed after unregistration"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -217,6 +234,9 @@ fn test_registry_provider_listing() {
         "Should include provider-2"
     );
     assert!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         _provider_ids.contains(&"provider-3"),
         "Should include provider-3"
     );
@@ -237,6 +257,9 @@ fn test_registry_provider_lookup() {
     let registered_providers = ["provider-1", "lookup-test-provider", "provider-3"];
 
     // Test lookup
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let found = registered_providers.contains(&_provider_id);
     assert!(found, "Should find provider by ID");
 
@@ -264,6 +287,9 @@ fn test_registry_duplicate_registration() {
     // Should either reject or update
     let handles_duplicate = true;
     assert!(handles_duplicate, "Should handle duplicate appropriately");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -279,6 +305,9 @@ fn test_registry_concurrent_access() {
         operations.len(),
         concurrent_operations,
         "Should handle {} concurrent operations",
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         concurrent_operations
     );
 
@@ -296,6 +325,9 @@ fn test_registry_concurrent_access() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_multi_provider_key_generation() {
     // Multiple providers should generate keys independently
     // Tests provider isolation
@@ -321,7 +353,9 @@ fn test_multi_provider_key_generation() {
     let balanced = true;
     assert!(
         balanced,
-        "Key generation should be balanced across providers"
+        "Key generation should be balanced across providers" // TEST_CATEGORY: integration
+                                                             // TEST_DOMAIN: security
+                                                             // TEST_PRIORITY: normal
     );
 }
 
@@ -349,6 +383,9 @@ fn test_provider_selection_strategy() {
     );
     assert_eq!(
         selected.1, 0.95,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Selected provider should have 0.95 health"
     );
 }
@@ -374,6 +411,9 @@ fn test_provider_load_balancing() {
 
     let balanced = true;
     assert!(balanced, "Load balancing should be effective");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -394,6 +434,9 @@ fn test_provider_failover() {
 
     // Backup takes over
     let active_provider = if !primary_healthy {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         backup_provider
     } else {
         primary_provider
@@ -416,6 +459,9 @@ fn test_provider_priority_ordering() {
     let mut sorted = providers_with_priority.clone();
     sorted.sort_by_key(|p| p.1);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Verify ordering
     assert_eq!(
         sorted[0].0, "hsm-2",
@@ -440,7 +486,9 @@ fn test_provider_capabilities_query() {
     // Verify capabilities query
     assert!(
         !capabilities.is_empty(),
-        "Provider should have capabilities"
+        "Provider should have capabilities" // TEST_CATEGORY: integration
+                                            // TEST_DOMAIN: security
+                                            // TEST_PRIORITY: normal
     );
     assert!(
         capabilities.contains(&"key_generation"),
@@ -463,6 +511,9 @@ fn test_provider_capabilities_validation() {
     let provider_capabilities = ["key_generation", "signing", "encryption"];
 
     // Verify all required capabilities are present
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let has_all_required = required_capabilities
         .iter()
         .all(|req| provider_capabilities.contains(req));
@@ -483,6 +534,9 @@ fn test_provider_feature_detection() {
     // Tests feature discovery
 
     let available_features = [
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "hardware_backed",
         "fips_compliant",
         "multi_threading",
@@ -501,6 +555,9 @@ fn test_provider_feature_detection() {
 #[test]
 fn test_provider_algorithm_support() {
     // Should check algorithm support
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Tests algorithm compatibility
 
     let supported_algorithms = ["ed25519", "aes256", "x25519", "chacha20poly1305"];
@@ -522,6 +579,9 @@ fn test_provider_algorithm_support() {
     assert!(is_unsupported, "RSA2048 should not be in supported list");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_provider_performance_metrics() {
     // Should collect provider performance metrics

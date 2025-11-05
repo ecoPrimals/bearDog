@@ -476,6 +476,9 @@ mod tests {
         assert!(config.logging_enabled());
         assert_eq!(config.hash_rounds(), 12);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_const_math() {
@@ -489,6 +492,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_const_tables() {
         let data = b"Hello, World!";
         let crc = ConstTables::crc32(data);
@@ -497,6 +503,9 @@ mod tests {
         let sin_0 = ConstTables::fast_sin(0);
         let sin_90 = ConstTables::fast_sin(90);
         assert!((sin_0 - 0.0).abs() < 0.1);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!((sin_90 - 1.0).abs() < 0.1);
 
         assert!(ConstTables::is_small_prime(17));
@@ -509,6 +518,9 @@ mod tests {
             tracing::error!("Operation failed ({}): {:?}", "Valid buffer", e);
             beardog_errors::BearDogError::internal(
                 format_args!("Operation failed ({}): {:?}", "Valid buffer", e).to_string(),
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
             )
         })?;
 
@@ -539,6 +551,9 @@ mod tests {
     #[test]
     fn test_const_str() {
         assert_eq!(ConstStr::len("hello"), 5);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(ConstStr::is_empty(""));
         assert!(!ConstStr::is_empty("hello"));
         assert!(ConstStr::eq("hello", "hello"));
@@ -551,6 +566,9 @@ mod tests {
         assert_ne!(hash1, hash3);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_const_metrics() {
         let throughput = ConstMetrics::theoretical_throughput(8192, 1000, 4);

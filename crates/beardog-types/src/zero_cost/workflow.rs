@@ -142,6 +142,9 @@ mod tests {
     #[tokio::test]
     async fn test_workflow_engine_config_default() {
         let config = WorkflowEngineConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.max_concurrent, 100);
         assert_eq!(config.timeout_ms, 30000);
         assert_eq!(config.retry_attempts, 3);
@@ -188,6 +191,9 @@ mod tests {
         }
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_workflow_processing() -> Result<(), Box<dyn std::error::Error>> {
         let processor = MockWorkflowProcessor;

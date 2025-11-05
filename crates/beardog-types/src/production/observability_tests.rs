@@ -77,6 +77,9 @@ fn test_observability_config_log_levels() {
     for level in levels {
         let config = ObservabilityConfig {
             enable_tracing: true,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enable_logging: true,
             trace_sampling_rate: 0.1,
             log_level: level.to_string(),
@@ -84,6 +87,9 @@ fn test_observability_config_log_levels() {
 
         assert_eq!(config.log_level, level);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
@@ -96,6 +102,9 @@ fn test_observability_engine_new_default() {
     let result = ObservabilityEngine::new(&config);
 
     assert!(result.is_ok());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let engine = result.unwrap();
     assert_eq!(engine.get_config().enable_tracing, false);
     assert_eq!(engine.get_config().enable_logging, false);
@@ -112,6 +121,9 @@ fn test_observability_engine_new_with_tracing() {
 
     let result = ObservabilityEngine::new(&config);
     assert!(result.is_ok());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let engine = result.unwrap();
     assert!(engine.get_config().enable_tracing);
@@ -127,6 +139,9 @@ fn test_observability_engine_new_with_logging() {
         log_level: "debug".to_string(),
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = ObservabilityEngine::new(&config);
     assert!(result.is_ok());
 
@@ -144,6 +159,9 @@ fn test_observability_engine_new_fully_enabled() {
         log_level: "trace".to_string(),
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = ObservabilityEngine::new(&config);
     assert!(result.is_ok());
 
@@ -152,6 +170,9 @@ fn test_observability_engine_new_fully_enabled() {
     assert!(engine.get_config().enable_logging);
     assert_eq!(engine.get_config().trace_sampling_rate, 1.0);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Monitoring Lifecycle Tests
@@ -166,6 +187,9 @@ fn test_observability_engine_start_monitoring() {
     assert!(result.is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_observability_engine_stop_monitoring() {
     let config = ObservabilityConfig::default();
@@ -180,6 +204,9 @@ fn test_observability_engine_start_stop_cycle() {
     let config = ObservabilityConfig::default();
     let mut engine = ObservabilityEngine::new(&config).expect("Should create engine");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Start monitoring
     let result = engine.start_monitoring();
     assert!(result.is_ok());
@@ -199,18 +226,27 @@ fn test_observability_engine_multiple_start_stop() {
         assert!(engine.start_monitoring().is_ok());
         assert!(engine.stop_monitoring().is_ok());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
 // Configuration Access Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_observability_engine_get_config() {
     let config = ObservabilityConfig {
         enable_tracing: true,
         enable_logging: true,
         trace_sampling_rate: 0.5,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         log_level: "info".to_string(),
     };
 
@@ -222,6 +258,9 @@ fn test_observability_engine_get_config() {
     assert_eq!(retrieved_config.trace_sampling_rate, 0.5);
     assert_eq!(retrieved_config.log_level, "info");
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_observability_engine_config_immutability() {
@@ -235,6 +274,9 @@ fn test_observability_engine_config_immutability() {
     let engine = ObservabilityEngine::new(&config).expect("Should create engine");
     let config1 = engine.get_config();
     let config2 = engine.get_config();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Config should be consistent across multiple gets
     assert_eq!(config1.enable_tracing, config2.enable_tracing);
@@ -250,6 +292,9 @@ fn test_observability_config_debug() {
     let config = ObservabilityConfig::default();
     let debug_str = format!("{:?}", config);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("ObservabilityConfig"));
 }
@@ -269,12 +314,18 @@ fn test_observability_engine_debug() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_observability_config_extreme_sampling_rate() {
     let config = ObservabilityConfig {
         enable_tracing: true,
         enable_logging: true,
         trace_sampling_rate: 999.9, // Extreme value
         log_level: "info".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     let engine = ObservabilityEngine::new(&config);
@@ -286,6 +337,9 @@ fn test_observability_config_negative_sampling_rate() {
     let config = ObservabilityConfig {
         enable_tracing: true,
         enable_logging: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         trace_sampling_rate: -1.0, // Negative value
         log_level: "info".to_string(),
     };
@@ -296,6 +350,9 @@ fn test_observability_config_negative_sampling_rate() {
 
 #[test]
 fn test_observability_config_empty_log_level() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = ObservabilityConfig {
         enable_tracing: true,
         enable_logging: true,
@@ -306,6 +363,9 @@ fn test_observability_config_empty_log_level() {
     let engine = ObservabilityEngine::new(&config);
     assert!(engine.is_ok());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_observability_config_very_long_log_level() {
@@ -316,6 +376,9 @@ fn test_observability_config_very_long_log_level() {
         log_level: "a".repeat(1000), // Very long log level
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let engine = ObservabilityEngine::new(&config);
     assert!(engine.is_ok());
 }
@@ -330,6 +393,9 @@ fn test_observability_engine_full_lifecycle() {
     let config = ObservabilityConfig {
         enable_tracing: true,
         enable_logging: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         trace_sampling_rate: 0.1,
         log_level: "info".to_string(),
     };
@@ -342,6 +408,9 @@ fn test_observability_engine_full_lifecycle() {
 #[test]
 fn test_observability_engine_without_starting() {
     // Create engine but never start monitoring
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = ObservabilityConfig::default();
     let mut engine = ObservabilityEngine::new(&config).expect("Should create");
 
@@ -349,6 +418,9 @@ fn test_observability_engine_without_starting() {
     assert!(engine.stop_monitoring().is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_observability_multiple_engines() {
     // Multiple engines should work independently

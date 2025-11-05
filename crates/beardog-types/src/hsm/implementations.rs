@@ -64,16 +64,28 @@ mod tests {
     #[test]
     fn test_rust_software_hsm_default() {
         let hsm = RustSoftwareHsm::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(hsm.id, "rust-software-hsm");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_in_memory_storage_backend_creation() {
         let backend = InMemoryStorageBackend::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         // Just ensure it compiles and creates
         let _ = backend;
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_in_memory_storage_backend_default() {
         let backend = InMemoryStorageBackend;

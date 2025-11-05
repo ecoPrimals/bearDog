@@ -82,6 +82,9 @@ mod tests {
 
         assert_eq!(data, decrypted, "Binary data round trip failed");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 
     #[test]
     fn test_encrypt_decrypt_round_trip_unicode() {
@@ -90,6 +93,9 @@ mod tests {
 
         let encrypted = encrypt_data(data, key).expect("Encryption failed");
         let decrypted = decrypt_data(&encrypted, key).expect("Decryption failed");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
 
         assert_eq!(data.to_vec(), decrypted, "Unicode data round trip failed");
     }
@@ -98,6 +104,9 @@ mod tests {
     // Encryption Properties Tests
     // ============================================================================
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     #[test]
     fn test_encryption_produces_different_output() {
         let key = b"test_key_32bytes_long_1234567890";
@@ -106,6 +115,9 @@ mod tests {
         let encrypted1 = encrypt_data(data, key).expect("First encryption failed");
         let encrypted2 = encrypt_data(data, key).expect("Second encryption failed");
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         // With IV, same plaintext should produce different ciphertext
         assert_ne!(
             encrypted1, encrypted2,
@@ -114,6 +126,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     fn test_encrypted_data_different_from_plaintext() {
         let key = b"test_key_32bytes_long_1234567890";
         let data = b"Test data for encryption";
@@ -122,6 +137,9 @@ mod tests {
 
         assert_ne!(
             data.to_vec(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             encrypted,
             "Encrypted data should differ from plaintext"
         );
@@ -134,6 +152,9 @@ mod tests {
     #[test]
     fn test_different_keys_produce_different_ciphertext() {
         let key1 = b"key_one_32bytes_long_12345678901"; // Exactly 32 bytes
+                                                        // TEST_CATEGORY: integration
+                                                        // TEST_DOMAIN: security
+                                                        // TEST_PRIORITY: critical
         let key2 = b"key_two_32bytes_long_09876543210"; // Exactly 32 bytes
         let data = b"Test data";
 
@@ -146,6 +167,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     // ============================================================================
     // Decryption Error Cases
     // ============================================================================
@@ -161,6 +185,9 @@ mod tests {
 
         assert!(result.is_err(), "Decryption with wrong key should fail");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_decrypt_corrupted_data_fails() {
@@ -177,6 +204,9 @@ mod tests {
         let result = decrypt_data(&encrypted, key);
         assert!(result.is_err(), "Decryption of corrupted data should fail");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 
     #[test]
     fn test_decrypt_truncated_data_fails() {
@@ -186,6 +216,9 @@ mod tests {
         let encrypted = encrypt_data(data, key).expect("Encryption failed");
 
         // Truncate the ciphertext
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let truncated = &encrypted[..encrypted.len() / 2];
 
         let result = decrypt_data(truncated, key);
@@ -199,6 +232,9 @@ mod tests {
     #[test]
     fn test_various_valid_key_sizes() {
         let data = b"Test data";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
 
         // Test AES-256-GCM (currently only 32-byte keys supported)
         let keys = vec![
@@ -214,6 +250,9 @@ mod tests {
     }
 
     // ============================================================================
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Edge Cases
     // ============================================================================
 
@@ -232,6 +271,9 @@ mod tests {
     fn test_encrypt_decrypt_multiple_blocks() {
         let key = b"test_key_32bytes_long_1234567890";
         let data = vec![0u8; 48]; // Exactly 3 AES blocks
+                                  // TEST_CATEGORY: integration
+                                  // TEST_DOMAIN: security
+                                  // TEST_PRIORITY: critical
 
         let encrypted = encrypt_data(&data, key).expect("Encryption failed");
         let decrypted = decrypt_data(&encrypted, key).expect("Decryption failed");
@@ -240,6 +282,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     fn test_encrypt_decrypt_off_block_boundary() {
         let key = b"test_key_32bytes_long_1234567890";
 
@@ -248,6 +293,9 @@ mod tests {
             let data = vec![0u8; size];
             let encrypted = encrypt_data(&data, key).expect("Encryption failed");
             let decrypted = decrypt_data(&encrypted, key).expect("Decryption failed");
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             assert_eq!(data, decrypted, "Failed at size {}", size);
         }
     }
@@ -262,6 +310,9 @@ mod tests {
 
         let key = b"test_key_32bytes_long_1234567890";
         let data = vec![0u8; 1_000_000]; // 1MB
+                                         // TEST_CATEGORY: integration
+                                         // TEST_DOMAIN: security
+                                         // TEST_PRIORITY: critical
 
         let start = Instant::now();
         let encrypted = encrypt_data(&data, key).expect("Encryption failed");
@@ -291,6 +342,9 @@ mod tests {
     #[test]
     fn test_multiple_encryption_rounds() {
         let key = b"test_key_32bytes_long_1234567890";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let mut data = b"Original data".to_vec();
 
         // Encrypt and decrypt multiple times
@@ -305,6 +359,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     #[test]
     fn test_encrypt_already_encrypted_data() {
         let key = b"test_key_32bytes_long_1234567890";

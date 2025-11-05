@@ -5,43 +5,48 @@ use crate::canonical::capabilities::CapabilityType;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Unified Cloud HSM Configuration
 ///
-/// allowing `BearDog` to integrate with multiple cloud security services.
+/// Vendor-agnostic cloud HSM configuration using capability-based discovery.
+/// This configuration works with ANY cloud provider (AWS, Azure, GCP, etc.)
+/// without hardcoding vendor-specific flags.
+///
+/// # Migration from Deprecated Flags
+///
+/// Previously deprecated flags (`universal_kms`, `universal_secrets`, `universal_cloud_kms`)
+/// have been REMOVED as of v3.1.0. Use `required_capabilities` instead.
+///
+/// ## Before (Deprecated):
+/// ```ignore
+/// UnifiedCloudHsmConfig {
+///     universal_kms: true,  // ❌ Removed - violated sovereignty
+/// }
+/// ```
+///
+/// ## After (Vendor-Agnostic):
+/// ```ignore
+/// UnifiedCloudHsmConfig {
+///     required_capabilities: Some(vec![CapabilityType::KeyManagement]),  // ✅
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedCloudHsmConfig {
     /// Whether cloud HSM integration is enabled
-    /// Whether feature is enabled
     pub enabled: bool,
 
     /// Modern capability-based discovery configuration
-    /// Optional required capabilities
+    ///
+    /// Specify required capabilities instead of hardcoded vendor flags.
+    /// System will auto-discover providers with these capabilities.
+    ///
+    /// # Example
+    /// ```ignore
+    /// required_capabilities: Some(vec![
+    ///     CapabilityType::KeyManagement,
+    ///     CapabilityType::HardwareSecurityModule,
+    /// ])
+    /// ```
     pub required_capabilities: Option<Vec<CapabilityType>>,
-
-    /// Enable `universal_cloud` Key Management Service integration
-    #[deprecated(
-        since = "3.0.0",
-        note = "Use capability_discovery with CapabilityType::KeyManagement. This hardcoded vendor flag violates primal sovereignty - primals should only know themselves and discover others dynamically."
-    )]
-    /// Universal Kms
-    /// Whether `universal_kms` is enabled
-    pub universal_kms: bool,
-
-    /// Enable `universal_cloud` Key Vault integration
-    #[deprecated(
-        since = "3.0.0",
-        note = "Use capability_discovery with CapabilityType::KeyManagement. This hardcoded vendor flag violates primal sovereignty - primals should only know themselves and discover others dynamically."
-    )]
-    /// Universal Secrets
-    /// Whether `universal_secrets` is enabled
-    pub universal_secrets: bool,
-
-    #[deprecated(
-        since = "3.0.0",
-        note = "Use capability_discovery with CapabilityType::KeyManagement. This hardcoded vendor flag violates primal sovereignty - primals should only know themselves and discover others dynamically."
-    )]
-    /// Universal Cloud Kms
-    /// Whether `universal_cloud_kms` is enabled
-    pub universal_cloud_kms: bool,
 }
 
 impl Default for UnifiedCloudHsmConfig {
@@ -52,88 +57,66 @@ impl Default for UnifiedCloudHsmConfig {
                 CapabilityType::KeyManagement,
                 CapabilityType::HardwareSecurityModule,
             ]),
-            #[allow(deprecated)]
-            universal_kms: false,
-            #[allow(deprecated)]
-            universal_secrets: false,
-            #[allow(deprecated)]
-            universal_cloud_kms: false,
         }
     }
 }
 
 impl HsmConfigValidation for UnifiedCloudHsmConfig {
-    /// Validates input
+    /// Validates vendor-agnostic cloud HSM configuration
     fn validate(&self) -> Result<(), BearDogError> {
-        // Warn about deprecated usage
-        #[allow(deprecated)]
-        if self.universal_kms || self.universal_secrets || self.universal_cloud_kms {
-            tracing::warn!(
-                "🚨 DEPRECATED: Using hardcoded vendor flags (universal_kms, universal_secrets, universal_kms). \
-                 Migrate to capability_discovery for true primal sovereignty. \
-                 See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md"
-            );
-        }
-
+        // Enforce capability-based configuration
         if self.enabled && self.required_capabilities.is_none() {
-            #[allow(deprecated)]
-            if !self.universal_kms && !self.universal_secrets && !self.universal_cloud_kms {
-                return Err(BearDogError::validation(
-                    "Cloud HSM enabled but no discovery configuration or legacy flags provided",
-                ));
-            }
+            return Err(BearDogError::validation(
+                "Cloud HSM enabled but no required_capabilities specified. \
+                 Use capability-based discovery (e.g., CapabilityType::KeyManagement) \
+                 for vendor-agnostic configuration.",
+            ));
         }
 
         Ok(())
     }
 
-    /// Checks if compatible with
+    /// Checks if compatible with other configuration version
     fn is_compatible_with(&self, _other_version: u32) -> bool {
         true
     }
 }
 
 impl UnifiedCloudHsmConfig {
-    /// Create modern capability-based configuration
+    /// Create vendor-agnostic capability-based configuration
+    ///
+    /// # Example
+    /// ```ignore
+    /// let config = UnifiedCloudHsmConfig::with_required_capabilities(vec![
+    ///     CapabilityType::KeyManagement,
+    ///     CapabilityType::HardwareSecurityModule,
+    /// ]);
+    /// // Works with AWS, Azure, GCP, or any provider with these capabilities!
+    /// ```
     #[must_use]
-    /// Creates instance with required capabilities
     pub fn with_required_capabilities(capabilities: Vec<CapabilityType>) -> Self {
         Self {
             enabled: true,
             required_capabilities: Some(capabilities),
-            #[allow(deprecated)]
-            universal_kms: false,
-            #[allow(deprecated)]
-            universal_secrets: false,
-            #[allow(deprecated)]
-            universal_cloud_kms: false,
         }
     }
 
-    /// Check if using deprecated vendor-specific flags
+    /// Get required capabilities for cloud HSM discovery
+    ///
+    /// Returns the configured capabilities or sensible defaults.
     #[must_use]
-    /// Checks if using deprecated flags
-    /// Checks if using deprecated flags
-    pub fn is_using_deprecated_flags(&self) -> bool {
-        #[allow(deprecated)]
-        {
-            self.universal_kms || self.universal_secrets || self.universal_cloud_kms
-        }
-    }
-
-    /// Get required capabilities based on configuration
-    #[must_use]
-    /// Gets `required_capabilities`
-    /// Gets `required_capabilities`
     pub fn get_required_capabilities(&self) -> Vec<CapabilityType> {
-        if let Some(capabilities) = &self.required_capabilities {
-            capabilities.clone()
-        } else {
-            // Fallback for deprecated configuration
+        self.required_capabilities.clone().unwrap_or_else(|| {
             vec![
                 CapabilityType::KeyManagement,
                 CapabilityType::HardwareSecurityModule,
             ]
-        }
+        })
+    }
+
+    /// Check if cloud HSM is enabled
+    #[must_use]
+    pub const fn is_enabled(&self) -> bool {
+        self.enabled
     }
 }

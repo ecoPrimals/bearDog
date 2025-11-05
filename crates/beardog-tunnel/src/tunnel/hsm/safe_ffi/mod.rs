@@ -103,7 +103,7 @@ impl SafePlatformSecurity {
                     created_at: chrono::Utc::now(),
                 })
             }
-            _ => Err(BearDogError::unsupported_operation(format!(
+            _ => Err(BearDogError::unsupported_operation(&format!(
                 "Key type {:?} not supported in safe fallback",
                 key_type
             ))),

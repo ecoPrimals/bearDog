@@ -341,6 +341,9 @@ mod tests {
             "test_hsm".to_string(),
             CapabilityType::HardwareSecurityModule,
             // No specific endpoint
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             None,
         );
 
@@ -355,6 +358,9 @@ mod tests {
     #[test]
     fn test_modern_provider_patterns() {
         // All providers are now modern - no deprecated patterns remain
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let universal_provider = HsmProviderType::Universal {
             provider_id: "test_provider".to_string(),
             capability_type: CapabilityType::HardwareSecurityModule,
@@ -364,6 +370,9 @@ mod tests {
         assert!(universal_provider.get_migration_guidance().is_none());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_migration_helper() {
         let guidance = HsmProviderMigrationHelper::get_migration_guidance();

@@ -236,11 +236,17 @@ mod tests {
         let _buffer1 = pool.get_buffer().await;
         let _buffer2 = pool.get_buffer().await;
         assert!(pool.metrics().await.total_requests >= 2);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
     async fn test_enhanced_memory_pools() {
         let pools = EnhancedMemoryPools::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let small = pools.get_small().await;
         let medium = pools.get_medium().await;
         let large = pools.get_large().await;
@@ -251,6 +257,9 @@ mod tests {
         assert!(metrics.total_requests >= 3);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_safe_pinned_buffer_operations() {
         let mut buffer = SafePinnedBuffer::new(1024);

@@ -115,17 +115,29 @@ fn test_production_ready_returns_bool() {
 fn test_production_ready_thread_safe() {
     use std::thread;
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut handles = vec![];
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for _ in 0..10 {
         let handle = thread::spawn(|| {
             config::production_ready()
         });
         handles.push(handle);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
     
     for handle in handles {
         let result = handle.join().expect("Thread should not panic");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result);
     }
 }
@@ -134,10 +146,16 @@ fn test_production_ready_thread_safe() {
 fn test_production_ready_concurrent_calls() {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     use std::thread;
     
     let counter = Arc::new(AtomicUsize::new(0));
     let mut handles = vec![];
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     for _ in 0..5 {
         let counter_clone = Arc::clone(&counter);
@@ -146,6 +164,9 @@ fn test_production_ready_concurrent_calls() {
                 counter_clone.fetch_add(1, Ordering::SeqCst);
             }
         });
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         handles.push(handle);
     }
     
@@ -155,6 +176,9 @@ fn test_production_ready_concurrent_calls() {
     
     assert_eq!(counter.load(Ordering::SeqCst), 5);
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 // ============================================================================
 // Edge Cases
@@ -167,12 +191,18 @@ fn test_production_ready_assignment() {
     assert_eq!(ready, also_ready);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_in_conditional() {
     if config::production_ready() {
         // Expected path
         assert!(true);
     } else {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         panic!("Should be production ready");
     }
 }
@@ -180,6 +210,9 @@ fn test_production_ready_in_conditional() {
 #[test]
 fn test_production_ready_as_expression() {
     let message = if config::production_ready() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "Ready"
     } else {
         "Not ready"
@@ -196,6 +229,9 @@ fn test_production_ready_boolean_ops() {
     assert!(true && ready);
     assert!(ready || false);
     assert!(!(!ready));
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -223,10 +259,16 @@ fn test_doc_example_in_application() {
     fn startup_check() -> Result<(), String> {
         if !config::production_ready() {
             return Err("System not ready".to_string());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         }
         Ok(())
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(startup_check().is_ok());
 }
 
@@ -234,6 +276,9 @@ fn test_doc_example_in_application() {
 // Performance Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_performance() {
     use std::time::Instant;
@@ -242,6 +287,9 @@ fn test_production_ready_performance() {
     
     for _ in 0..10000 {
         let _ = config::production_ready();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
     
     let duration = start.elapsed();
@@ -249,6 +297,9 @@ fn test_production_ready_performance() {
     // Should complete 10k calls in under 100ms
     assert!(duration.as_millis() < 100, "Performance regression detected");
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_production_ready_no_side_effects() {
@@ -258,10 +309,16 @@ fn test_production_ready_no_side_effects() {
     let result3 = config::production_ready();
     
     assert_eq!(result1, result2);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(result2, result3);
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // Integration with System State
 // ============================================================================
 
@@ -276,6 +333,9 @@ fn test_production_readiness_system_check() {
     
     let state = SystemState {
         database_ready: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         cache_ready: true,
         network_ready: true,
     };
@@ -289,6 +349,9 @@ fn test_production_readiness_system_check() {
     assert!(system_ready);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_with_logging() {
     // Test that production_ready works with logging context
@@ -301,6 +364,9 @@ fn test_production_ready_with_logging() {
     
     assert!(ready);
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 // ============================================================================
 // Error Scenarios (if applicable in future)
@@ -322,6 +388,9 @@ fn test_production_ready_deterministic() {
     let results: Vec<bool> = (0..50)
         .map(|_| config::production_ready())
         .collect();
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     // All results should be identical
     let first = results[0];
@@ -336,6 +405,9 @@ fn test_production_ready_deterministic() {
 fn test_production_ready_return_type() {
     // Verify return type is exactly bool
     fn check_bool(_b: bool) {}
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     check_bool(config::production_ready());
 }
 
@@ -343,6 +415,9 @@ fn test_production_ready_return_type() {
 fn test_production_ready_must_use() {
     // The function is marked #[must_use]
     // This test verifies it compiles (would warn if result ignored)
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let _result = config::production_ready();
 }
 
@@ -356,10 +431,16 @@ fn test_production_guard_pattern() {
         if !config::production_ready() {
             return Err("Not production ready");
         }
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Perform operation
         Ok(())
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(protected_operation().is_ok());
 }
 
@@ -368,6 +449,9 @@ fn test_production_assertion_pattern() {
     // Common assertion pattern at startup
     assert!(
         config::production_ready(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "FATAL: Production environment not ready"
     );
 }
@@ -378,12 +462,18 @@ fn test_production_validation_chain() {
         let checks = vec![
             config::production_ready(),
             true, // config valid
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             true, // resources available
             true, // network accessible
         ];
         
         checks.iter().all(|&check| check)
     }
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     assert!(validate_deployment());
 }
@@ -397,6 +487,9 @@ fn test_production_ready_with_feature_flags() {
     let should_proceed = production_mode && feature_enabled;
     assert!(should_proceed);
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_production_ready_early_return() {
@@ -404,6 +497,9 @@ fn test_production_ready_early_return() {
         if !config::production_ready() {
             return None;
         }
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         Some(())
     }
     
@@ -417,11 +513,17 @@ fn test_production_ready_early_return() {
 #[test]
 fn test_production_ready_rapid_fire() {
     // Rapid consecutive calls
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for _ in 0..1000 {
         assert!(config::production_ready());
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_memory_stable() {
     // Verify no memory leaks from repeated calls

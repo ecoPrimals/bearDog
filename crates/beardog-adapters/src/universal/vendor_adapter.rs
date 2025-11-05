@@ -140,11 +140,16 @@ impl VendorAdapter {
 
 impl Default for VendorConfig {
     fn default() -> Self {
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         Self {
             vendor_name: std::env::var("BEARDOG_VENDOR_NAME")
                 .unwrap_or_else(|_| "default".to_string()),
             api_endpoint: std::env::var("BEARDOG_VENDOR_API_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+                .unwrap_or_else(|_| format!("http://{}:{}", 
+                    network_config.default_host, 
+                    network_config.service_ports.api_port)),
             timeout_seconds: std::env::var("BEARDOG_VENDOR_TIMEOUT_SECONDS")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -218,12 +223,24 @@ pub struct UniversalAdapterConfig {
 impl Default for UniversalAdapterConfig {
     fn default() -> Self {
         Self {
-            discovery_interval_seconds: 300, // 5 minutes
-            max_concurrent_operations: 100,
-            default_timeout_seconds: 30,
+            discovery_interval_seconds: std::env::var("BEARDOG_ADAPTER_DISCOVERY_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(300), // 5 minutes default
+            max_concurrent_operations: std::env::var("BEARDOG_ADAPTER_MAX_CONCURRENT_OPS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            default_timeout_seconds: std::env::var("BEARDOG_ADAPTER_DEFAULT_TIMEOUT_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30),
             enable_monitoring: true,
             enable_health_checks: true,
-            health_check_interval_seconds: 60, // 1 minute
+            health_check_interval_seconds: std::env::var("BEARDOG_ADAPTER_HEALTH_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(60), // 1 minute default
         }
     }
 }

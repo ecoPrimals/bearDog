@@ -134,12 +134,18 @@ mod tests {
         assert!(info.tee_available);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_android_device_info_with_strongbox() {
         let info = AndroidDeviceInfo::new("Pixel 8 Pro", "14")
             .with_strongbox(true)
             .with_hardware_attestation(true);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(info.strongbox_available);
         assert!(info.hardware_attestation_supported);
         assert!(info.has_hardware_security());
@@ -148,6 +154,9 @@ mod tests {
     #[test]
     fn test_android_device_info_security_level() {
         let info_software = AndroidDeviceInfo::new("Emulator", "13").with_tee(false);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(info_software.security_level(), SecurityLevel::Software);
 
         let info_tee = AndroidDeviceInfo::new("Generic", "13");
@@ -160,6 +169,9 @@ mod tests {
         assert_eq!(info_strongbox.security_level(), SecurityLevel::StrongBox);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_security_level_properties() {
         assert_eq!(SecurityLevel::Software.name(), "Software");

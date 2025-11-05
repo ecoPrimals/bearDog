@@ -114,3 +114,191 @@ impl PropertyBasedTestFramework {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::property_testing::{PropertyBasedTestFramework, PropertyTestConfig};
+
+    #[test]
+    fn test_configuration_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 10,
+            ..Default::default()
+        });
+
+        let result = framework.test_configuration_properties();
+        assert!(result.is_ok(), "Configuration properties should pass");
+        assert_eq!(
+            framework.statistics.properties_tested, 3,
+            "Should test 3 properties"
+        );
+    }
+
+    #[test]
+    fn test_generate_config_test_cases() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        let result = framework.generate_config_test_cases();
+        assert!(result.is_ok(), "Should generate config test cases");
+        assert_eq!(
+            framework.test_cases.len(),
+            5,
+            "Should generate 5 test cases"
+        );
+
+        // Verify test case structure
+        for test_case in &framework.test_cases {
+            assert!(test_case.id >= 2000, "Test case ID should be offset");
+            assert_eq!(test_case.test_type, "configuration");
+            assert_eq!(test_case.expected_properties.len(), 3);
+        }
+    }
+
+    #[test]
+    fn test_config_parsing_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_config_test_cases().unwrap();
+        let result = framework.test_config_parsing_properties();
+        assert!(result.is_ok(), "Config parsing should pass");
+        assert!(
+            framework.statistics.total_tests > 0,
+            "Should record test results"
+        );
+    }
+
+    #[test]
+    fn test_config_validation_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_config_test_cases().unwrap();
+        let result = framework.test_config_validation_properties();
+        assert!(result.is_ok(), "Config validation should pass");
+    }
+
+    #[test]
+    fn test_default_value_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_config_test_cases().unwrap();
+        let result = framework.test_default_value_properties();
+        assert!(result.is_ok(), "Default value properties should pass");
+    }
+
+    #[test]
+    fn test_toml_parsing() {
+        let framework = PropertyBasedTestFramework::default();
+
+        // Test valid TOML
+        let valid = TestCase {
+            id: 1,
+            input_data: b"key = \"value\"\nport = 8080".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_toml_parsing(&valid);
+        assert!(result.is_ok() && result.unwrap(), "Valid TOML should parse");
+
+        // Test invalid TOML
+        let invalid = TestCase {
+            id: 2,
+            input_data: b"invalid = [unclosed".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_toml_parsing(&invalid);
+        assert!(
+            result.is_ok(),
+            "Invalid TOML should return false gracefully"
+        );
+    }
+
+    #[test]
+    fn test_required_fields() {
+        let framework = PropertyBasedTestFramework::default();
+
+        // Test with fields
+        let with_fields = TestCase {
+            id: 1,
+            input_data: b"key = \"value\"".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_required_fields(&with_fields);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Config with fields should pass"
+        );
+
+        // Test empty config
+        let empty = TestCase {
+            id: 2,
+            input_data: b"".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_required_fields(&empty);
+        assert!(result.is_ok(), "Empty config should be handled");
+    }
+
+    #[test]
+    fn test_type_validation() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"port = 8080\nhost = \"localhost\"".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_type_validation(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Type validation should pass"
+        );
+    }
+
+    #[test]
+    fn test_default_value_application() {
+        let framework = PropertyBasedTestFramework::default();
+
+        // Test with valid config
+        let valid = TestCase {
+            id: 1,
+            input_data: b"some_key = \"some_value\"".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_default_value_application(&valid);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Defaults should be applied"
+        );
+
+        // Test with empty config
+        let empty = TestCase {
+            id: 2,
+            input_data: b"".to_vec(),
+            test_type: "configuration".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_default_value_application(&empty);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Defaults should be applied to empty config"
+        );
+    }
+}

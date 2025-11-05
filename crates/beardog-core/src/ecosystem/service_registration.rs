@@ -13,22 +13,23 @@ use tracing::info;
 ///
 /// Contains all the metadata and connection details needed to register
 /// a service with the `BearDog` ecosystem, including identity, capabilities,
+/// Registration information for an ecosystem service
+///
+/// Contains service metadata for registering with the ecosystem, including
+/// identity, endpoints, capabilities, and health status.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemRegistration {
+    /// Unique service identifier
     pub service_id: String,
     /// Human-readable name of the service
-    /// Name of the service
     pub service_name: String,
     /// Version string of the service (e.g., "1.0.0", "2.1.3")
-    /// The version value
     pub version: String,
-    /// Mapping of endpoints
+    /// Service endpoints mapped by protocol (e.g., "http", "grpc")
     pub endpoints: HashMap<String, String>,
     /// List of capabilities this service provides to the ecosystem
-    /// Collection of capabilities
     pub capabilities: Vec<String>,
     /// Current health status of the service
-    /// Current status of the health
     pub health_status: HealthStatus,
 }
 
@@ -190,6 +191,9 @@ impl BearDogCore {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_ecosystem_registration_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let registration = EcosystemRegistration {

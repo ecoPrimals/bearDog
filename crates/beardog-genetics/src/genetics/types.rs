@@ -142,10 +142,19 @@ pub struct GeneticsSystemConfig {
 impl Default for GeneticsSystemConfig {
     fn default() -> Self {
         Self {
-            max_genetics_stored: 1000,
-            cleanup_interval_seconds: 3600, // 1 hour
+            max_genetics_stored: std::env::var("BEARDOG_MAX_GENETICS_STORED")
+                .ok()
+                .and_then(|g| g.parse().ok())
+                .unwrap_or(1000), // 1000 genetics default
+            cleanup_interval_seconds: std::env::var("BEARDOG_GENETICS_CLEANUP_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3600), // 1 hour default
             enable_metrics_collection: true,
-            fitness_threshold: 0.5,
+            fitness_threshold: std::env::var("BEARDOG_GENETICS_TYPES_FITNESS_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.5),
         }
     }
 }
@@ -158,6 +167,9 @@ mod tests {
     #[test]
     fn test_in_memory_store() {
         let mut store = InMemoryGeneticsStore::new();
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: genetics
+ // TEST_PRIORITY: normal
 
         let genetics = BearDogGenetics {
             id: "test-genetics".to_string(),
@@ -181,6 +193,9 @@ mod tests {
         assert!(store.is_empty());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_genetics_metadata() {
         let metadata = GeneticsMetadata::default();

@@ -6,6 +6,7 @@
 // universal adapter."
 
 use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetrics, UniversalEndpoint};
+use crate::universal::adapter_types::*;
 use crate::universal::capability_helpers::*;
 use crate::universal::capability_types::*;
 use crate::universal::types::*;
@@ -38,89 +39,6 @@ pub struct UniversalCapabilityAdapter {
     metrics: AdapterMetrics,
     /// Active connections to discovered capabilities
     connections: Arc<RwLock<HashMap<String, CapabilityConnection>>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SecurityRequirements {
-    /// Whether require_tls is enabled
-    pub require_tls: bool,
-    /// The min tls version value
-    pub min_tls_version: String,
-    /// Whether require_mutual_auth is enabled
-    pub require_mutual_auth: bool,
-    /// Whether require_attestation is enabled
-    pub require_attestation: bool,
-    /// Collection of allowed cipher suites
-    pub allowed_cipher_suites: Vec<String>,
-}
-
-/// Availability requirements
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AvailabilityRequirements {
-    pub min_uptime_percentage: f64,
-    pub max_response_time_ms: u64,
-    /// Whether require_redundancy is enabled
-    pub require_redundancy: bool,
-    /// Whether maintenance_window_tolerance is enabled
-    pub maintenance_window_tolerance: bool,
-}
-
-/// Geographic constraints
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GeographicConstraints {
-    /// Collection of allowed regions
-    pub allowed_regions: Vec<String>,
-    /// Collection of prohibited regions
-    pub prohibited_regions: Vec<String>,
-    pub data_residency_requirements: Vec<String>,
-}
-
-/// Capability discovery result
-#[derive(Debug, Clone)]
-pub struct CapabilityDiscoveryResult {
-    pub request_id: String,
-    pub discovered_providers: Vec<RankedCapabilityProvider>,
-    /// Number of discovery_duration_ms
-    pub discovery_duration_ms: u64,
-    pub total_providers_found: usize,
-    /// The selection criteria value
-    pub selection_criteria: SelectionCriteria,
-}
-
-/// Ranked capability provider
-#[derive(Debug, Clone)]
-pub struct RankedCapabilityProvider {
-    pub provider: UniversalCapability,
-    /// The ranking score value
-    pub ranking_score: f64,
-    /// Collection of ranking reasons
-    pub ranking_reasons: Vec<String>,
-    pub estimated_performance: PerformanceEstimate,
-}
-
-#[derive(Debug, Clone)]
-pub struct PerformanceEstimate {
-    /// Number of expected_latency_ms
-    pub expected_latency_ms: u64,
-    /// The expected throughput value
-    pub expected_throughput: f64,
-    /// The reliability score value
-    pub reliability_score: f64,
-    /// Optional cost estimate
-    pub cost_estimate: Option<f64>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SelectionCriteria {
-    pub performance_weight: f64,
-    /// The availability weight value
-    pub availability_weight: f64,
-    /// The security weight value
-    pub security_weight: f64,
-    /// The cost weight value
-    pub cost_weight: f64,
-    /// The locality weight value
-    pub locality_weight: f64,
 }
 
 impl UniversalCapabilityAdapter {
@@ -209,11 +127,26 @@ impl UniversalCapabilityAdapter {
             discovery_duration_ms: discovery_duration,
             total_providers_found: providers.len(),
             selection_criteria: SelectionCriteria {
-                performance_weight: 0.3,
-                availability_weight: 0.25,
-                security_weight: 0.25,
-                cost_weight: 0.1,
-                locality_weight: 0.1,
+                performance_weight: std::env::var("BEARDOG_PROVIDER_PERFORMANCE_WEIGHT")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.3),
+                availability_weight: std::env::var("BEARDOG_PROVIDER_AVAILABILITY_WEIGHT")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.25),
+                security_weight: std::env::var("BEARDOG_PROVIDER_SECURITY_WEIGHT")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.25),
+                cost_weight: std::env::var("BEARDOG_PROVIDER_COST_WEIGHT")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.1),
+                locality_weight: std::env::var("BEARDOG_PROVIDER_LOCALITY_WEIGHT")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.1),
             },
         };
 
@@ -416,7 +349,6 @@ impl UniversalCapabilityAdapter {
 
     // Private helper methods
 
-
     fn find_capability_providers(
         &self,
         capability_type: &ServiceCapabilityType,
@@ -428,7 +360,6 @@ impl UniversalCapabilityAdapter {
             .map(|providers| providers.clone())
             .unwrap_or_default())
     }
-
 
     fn filter_providers(
         &self,
@@ -445,7 +376,6 @@ impl UniversalCapabilityAdapter {
 
         Ok(filtered)
     }
-
 
     fn meets_requirements(
         &self,
@@ -468,7 +398,6 @@ impl UniversalCapabilityAdapter {
         // Additional requirement checks would go here
         Ok(true)
     }
-
 
     fn rank_providers(
         &self,
@@ -510,13 +439,11 @@ impl UniversalCapabilityAdapter {
         Ok(providers.to_vec())
     }
 
-
     fn calculate_performance_score(&self, provider: &UniversalCapability) -> BearDogResult<f64> {
         // Calculate performance score based on metrics
         // This would use real performance data in production
         Ok(0.85) // Mock score
     }
-
 
     fn calculate_ranking_score(
         &self,
@@ -554,7 +481,6 @@ impl UniversalCapabilityAdapter {
         Ok(score.min(1.0)) // Cap at 1.0
     }
 
-
     fn generate_ranking_reasons(
         &self,
         provider: &UniversalCapability,
@@ -574,7 +500,6 @@ impl UniversalCapabilityAdapter {
 
         Ok(reasons)
     }
-
 
     fn estimate_performance(
         &self,
@@ -678,7 +603,6 @@ impl UniversalCapabilityAdapter {
         Ok(())
     }
 
-
     fn check_connection_health(
         &self,
         connection: &CapabilityConnection,
@@ -778,7 +702,6 @@ impl UniversalCapabilityAdapter {
         metadata
     }
 }
-
 
 impl CapabilityDiscoveryRequest {
     pub fn compute_intelligence() -> Self {
@@ -894,12 +817,18 @@ mod tests {
     #[tokio::test]
     fn test_capability_registration() {
         let mut adapter = UniversalCapabilityAdapter::new()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             ?;
 
         let capability = UniversalCapability {
             capability_type: ServiceCapabilityType::Security,
             provider_id: "test-provider".to_string(),
             endpoint: UniversalEndpoint {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: adapters
+                // TEST_PRIORITY: normal
                 url: "http://test:8080".to_string(),
                 protocols: vec!["HTTP".to_string()],
                 auth_requirements: AuthRequirements::default(),
@@ -925,6 +854,9 @@ mod tests {
 
         // Register a test capability
         let capability = UniversalCapability {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             capability_type: ServiceCapabilityType::ComputeIntelligence,
             provider_id: "compute-provider".to_string(),
             endpoint: UniversalEndpoint {
@@ -956,6 +888,9 @@ mod tests {
     #[tokio::test]
     fn test_no_hardcoded_vendor_preferences() {
         // Test that capability requests don't contain hardcoded vendor preferences
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         let compute_request = CapabilityDiscoveryRequest::compute_intelligence();
         let key_mgmt_request = CapabilityDiscoveryRequest::key_management();
         let mesh_request = CapabilityDiscoveryRequest::service_mesh();
@@ -966,6 +901,9 @@ mod tests {
         assert!(mesh_request.preferences.vendor_preferences.is_empty());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_connection_management() {
         let mut adapter = UniversalCapabilityAdapter::new()?;

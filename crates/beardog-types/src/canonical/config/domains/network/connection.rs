@@ -234,16 +234,39 @@ impl Default for ConnectionPoolConfig {
     fn default() -> Self {
         Self {
             min_size: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            max_size: 100,
-            idle_timeout: Duration::from_secs(600), // 10 minutes
-            max_lifetime: Some(Duration::from_secs(1800)), // 30 minutes
-            acquire_timeout: Duration::from_secs(30),
+            max_size: std::env::var("BEARDOG_CONNECTION_POOL_MAX_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
+            idle_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_IDLE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(600),
+            ),
+            max_lifetime: Some(Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_MAX_LIFETIME_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1800),
+            )),
+            acquire_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_ACQUIRE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
             enable_validation: true,
             test_on_borrow: true,
             test_on_return: true,
             test_while_idle: true,
             validation_query: Some("SELECT 1".to_string()),
-            maintenance_interval: Duration::from_secs(60),
+            maintenance_interval: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_MAINTENANCE_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
         }
     }
 }
@@ -255,13 +278,28 @@ impl Default for TimeoutConfiguration {
                 crate::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_secs(),
             request_timeout_seconds: crate::constants::domains::network::timeouts::REQUEST_TIMEOUT
                 .as_secs(),
-            keepalive_timeout_seconds: 60,
+            keepalive_timeout_seconds: std::env::var("BEARDOG_KEEPALIVE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60),
             dns_timeout_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
                 as u64,
-            tls_handshake_timeout_seconds: 30,
-            read_timeout_seconds: 30,
-            write_timeout_seconds: 30,
-            shutdown_timeout_seconds: 30,
+            tls_handshake_timeout_seconds: std::env::var("BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+            read_timeout_seconds: std::env::var("BEARDOG_READ_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+            write_timeout_seconds: std::env::var("BEARDOG_WRITE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+            shutdown_timeout_seconds: std::env::var("BEARDOG_SHUTDOWN_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
         }
     }
 }
@@ -281,10 +319,19 @@ impl Default for LoadBalancerConfiguration {
 impl Default for LoadBalancerHealthCheckConfiguration {
     fn default() -> Self {
         Self {
-            interval_seconds: 30,
+            interval_seconds: std::env::var("BEARDOG_LB_HEALTH_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
             timeout_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64,
-            unhealthy_threshold: 3,
-            healthy_threshold: 2,
+            unhealthy_threshold: std::env::var("BEARDOG_LB_UNHEALTHY_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            healthy_threshold: std::env::var("BEARDOG_LB_HEALTHY_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(2),
             path: "/health".to_string(),
             expected_codes: vec![200, 201, 202],
         }
@@ -297,10 +344,18 @@ impl Default for CircuitBreakerConfiguration {
             enabled: true,
             failure_threshold: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
                 as u32,
-            recovery_timeout_seconds: 60,
+            recovery_timeout_seconds: std::env::var(
+                "BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS",
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(60),
             half_open_max_calls: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
                 as u32,
-            minimum_throughput: 20,
+            minimum_throughput: std::env::var("BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(20),
         }
     }
 }
@@ -309,8 +364,14 @@ impl Default for FailoverConfiguration {
     fn default() -> Self {
         Self {
             enabled: true,
-            detection_timeout_seconds: 30,
-            max_attempts: 3,
+            detection_timeout_seconds: std::env::var("BEARDOG_FAILOVER_DETECTION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+            max_attempts: std::env::var("BEARDOG_FAILOVER_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
             backoff_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64,
         }
     }
@@ -362,6 +423,9 @@ mod tests {
         assert!(config.validate().is_ok());
 
         let mut invalid_config = config.clone();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         invalid_config.max_size = 5;
         invalid_config.min_size = 10;
         assert!(invalid_config.validate().is_err());
@@ -370,6 +434,9 @@ mod tests {
     #[test]
     fn test_timeout_validation() {
         let config = TimeoutConfiguration::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.validate().is_ok());
 
         let mut invalid_config = config.clone();
@@ -377,6 +444,9 @@ mod tests {
         assert!(invalid_config.validate().is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_load_balancer_defaults() {
         let config = LoadBalancerConfiguration::default();

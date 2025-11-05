@@ -30,6 +30,9 @@ async fn test_capability_registry_basic_operations() -> Result<(), Box<dyn std::
     let config = beardog_core::Config::default();
     let bootstrap = ZeroKnowledgeBootstrap::new(config)?;
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let capability = ServiceCapability {
         service_type: ServiceCapabilityType::Storage,
         endpoint: "http://localhost:8080".to_string(),
@@ -42,6 +45,9 @@ async fn test_capability_registry_basic_operations() -> Result<(), Box<dyn std::
     let discovered = bootstrap.discover_capabilities(ServiceCapabilityType::Storage).await?;
     
     // Assert
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!discovered.is_empty(), "Should discover registered capability");
     assert_eq!(discovered[0].service_type, ServiceCapabilityType::Storage);
     
@@ -64,6 +70,9 @@ async fn test_capability_registry_unknown_service_type() -> Result<(), Box<dyn s
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 /// Test self-discovery timeout handling
 #[tokio::test]
 async fn test_self_discovery_with_timeout() -> Result<(), Box<dyn std::error::Error>> {
@@ -77,6 +86,9 @@ async fn test_self_discovery_with_timeout() -> Result<(), Box<dyn std::error::Er
     let result = tokio::time::timeout(
         Duration::from_secs(1),
         bootstrap.discover_ecosystem_services()
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     ).await;
     
     // Assert
@@ -95,6 +107,9 @@ async fn test_capability_deregistration() -> Result<(), Box<dyn std::error::Erro
     let capability = ServiceCapability {
         service_type: ServiceCapabilityType::Compute,
         endpoint: "http://localhost:8081".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         capabilities: vec![Capability::Compute],
         metadata: Default::default(),
     };
@@ -120,6 +135,9 @@ async fn test_multiple_capabilities_same_type() -> Result<(), Box<dyn std::error
     let config = beardog_core::Config::default();
     let bootstrap = ZeroKnowledgeBootstrap::new(config)?;
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let cap1 = ServiceCapability {
         service_type: ServiceCapabilityType::Storage,
         endpoint: "http://localhost:8080".to_string(),
@@ -149,6 +167,9 @@ async fn test_multiple_capabilities_same_type() -> Result<(), Box<dyn std::error
 #[tokio::test]
 async fn test_ecosystem_listener_starts() -> Result<(), Box<dyn std::error::Error>> {
     // Arrange
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = beardog_core::Config::default();
     let bootstrap = ZeroKnowledgeBootstrap::new(config)?;
     
@@ -162,6 +183,9 @@ async fn test_ecosystem_listener_starts() -> Result<(), Box<dyn std::error::Erro
 }
 
 /// Test capability health checks
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_capability_health_check() -> Result<(), Box<dyn std::error::Error>> {
     // Arrange

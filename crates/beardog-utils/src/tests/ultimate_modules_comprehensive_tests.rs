@@ -118,6 +118,9 @@ fn test_safe_buffer_statistics_tracking() {
 #[test]
 fn test_memory_pool_basic_operations() {
     let pool = UltimateSafeMemoryPool::new(|| vec![1, 2, 3], 10);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Borrow an object
     let obj1 = pool.safe_borrow().unwrap();
@@ -134,6 +137,9 @@ fn test_memory_pool_basic_operations() {
 fn test_memory_pool_multiple_borrows() {
     let pool = UltimateSafeMemoryPool::new(|| String::from("test"), 10);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Borrow multiple objects
     let _obj1 = pool.safe_borrow().unwrap();
     let _obj2 = pool.safe_borrow().unwrap();
@@ -145,6 +151,9 @@ fn test_memory_pool_multiple_borrows() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_memory_pool_reuse() {
     let pool = UltimateSafeMemoryPool::new(|| String::from("reusable"), 10);
 
@@ -165,6 +174,9 @@ fn test_memory_pool_reuse() {
 #[test]
 fn test_memory_pool_statistics() {
     let pool = UltimateSafeMemoryPool::new(|| 42i32, 5);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Create some objects
     let obj1 = pool.safe_borrow().unwrap();
@@ -175,6 +187,9 @@ fn test_memory_pool_statistics() {
     assert_eq!(stats.total_created, 2);
     assert_eq!(stats.pool_misses, 2); // First two are misses
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     drop(obj1);
     drop(obj2);
 
@@ -188,6 +203,9 @@ fn test_safe_reference_read_operations() {
     let safe_ref = SafeReference::new(vec![1, 2, 3, 4, 5]);
 
     // Test safe read
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let sum = safe_ref.safe_read(|v| v.iter().sum::<i32>()).unwrap();
     assert_eq!(sum, 15);
 
@@ -202,6 +220,9 @@ fn test_safe_reference_write_operations() {
     // Modify via safe_write
     safe_ref.safe_write(|v| v.push(4)).unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let len = safe_ref.safe_read(|v| v.len()).unwrap();
     assert_eq!(len, 4);
 
@@ -214,6 +235,9 @@ fn test_safe_reference_write_operations() {
 fn test_safe_reference_invalidation() {
     let safe_ref = SafeReference::new(100);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Should work before invalidation
     assert!(safe_ref.safe_read(|x| *x).is_ok());
 
@@ -225,6 +249,9 @@ fn test_safe_reference_invalidation() {
     assert!(safe_ref.safe_write(|x| *x = 200).is_err());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_safe_reference_concurrent_reads() {
     use std::sync::Arc;
@@ -240,6 +267,9 @@ fn test_safe_reference_concurrent_reads() {
         handles.push(handle);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // All threads should read successfully
     for handle in handles {
         let value = handle.join().unwrap();
@@ -258,6 +288,9 @@ fn test_safety_token_creation() {
     assert!(token2.verify_safety_level(SafetyLevel::Enhanced));
     assert!(token3.verify_safety_level(SafetyLevel::Ultimate));
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_safety_token_level_verification() {
@@ -267,6 +300,9 @@ fn test_safety_token_level_verification() {
     // Basic token should only satisfy Basic level
     assert!(basic_token.verify_safety_level(SafetyLevel::Basic));
     assert!(!basic_token.verify_safety_level(SafetyLevel::Enhanced));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!basic_token.verify_safety_level(SafetyLevel::Ultimate));
 
     // Ultimate token should satisfy all levels
@@ -279,6 +315,9 @@ fn test_safety_token_level_verification() {
 fn test_safety_error_display() {
     let err1 = SafetyError::BufferOverflow {
         attempted_size: 100,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         available_space: 50,
     };
     let msg1 = format!("{}", err1);
@@ -291,6 +330,9 @@ fn test_safety_error_display() {
         available_data: 10,
     };
     let msg2 = format!("{}", err2);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(msg2.contains("Read beyond bounds"));
 
     let err3 = SafetyError::InvalidReference;
@@ -310,6 +352,9 @@ fn test_performance_processor_creation() {
     // New processor should have zero stats
     assert_eq!(stats.operations_processed, 0);
     assert_eq!(stats.simd_operations, 0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -319,6 +364,9 @@ fn test_performance_processor_basic_processing() {
 
     let result = processor.process_with_ultimate_optimization(&test_data);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Verify processing worked
     assert_eq!(result.len(), test_data.len());
     for (i, &byte) in result.iter().enumerate() {
@@ -332,6 +380,9 @@ fn test_performance_processor_empty_data() {
     let empty_data: Vec<u8> = vec![];
 
     let result = processor.process_with_ultimate_optimization(&empty_data);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     assert_eq!(result.len(), 0);
 }
@@ -356,6 +407,9 @@ fn test_performance_processor_various_sizes() {
         let data = vec![42u8; size];
         let result = processor.process_with_ultimate_optimization(&data);
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(result.len(), size);
         assert!(result.iter().all(|&b| b == 43));
     }
@@ -363,6 +417,9 @@ fn test_performance_processor_various_sizes() {
 
 #[test]
 fn test_performance_processor_wrapping_arithmetic() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let processor = UltimatePerformanceProcessor::new();
     let data = vec![255u8; 10]; // Max value
 
@@ -374,6 +431,9 @@ fn test_performance_processor_wrapping_arithmetic() {
 
 #[test]
 fn test_performance_processor_statistics() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let processor = UltimatePerformanceProcessor::new();
 
     // Process some data
@@ -381,6 +441,9 @@ fn test_performance_processor_statistics() {
     processor.process_with_ultimate_optimization(&data1);
 
     let data2 = vec![4, 5, 6, 7, 8];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     processor.process_with_ultimate_optimization(&data2);
 
     // Check statistics
@@ -389,6 +452,9 @@ fn test_performance_processor_statistics() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_performance_stats_structure() {
     let processor = UltimatePerformanceProcessor::new();
     let stats = processor.get_performance_stats();
@@ -400,6 +466,9 @@ fn test_performance_stats_structure() {
     assert!(stats.cache_hit_ratio <= 1.0);
     assert!(stats.prefetch_effectiveness >= 0.0);
     assert!(stats.prefetch_effectiveness <= 1.0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(stats.average_latency_ns >= 0.0);
 }
 
@@ -408,6 +477,9 @@ fn test_performance_processor_default() {
     let processor1 = UltimatePerformanceProcessor::default();
     let processor2 = UltimatePerformanceProcessor::new();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let data = vec![1, 2, 3];
 
     let result1 = processor1.process_with_ultimate_optimization(&data);
@@ -421,6 +493,9 @@ fn test_performance_processor_default() {
 fn test_performance_processor_sequential_processing() {
     let processor = UltimatePerformanceProcessor::new();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Process multiple batches sequentially
     for i in 0..10 {
         let data = vec![i; 16];
@@ -433,6 +508,9 @@ fn test_performance_processor_sequential_processing() {
     // Verify statistics tracked all operations
     let stats = processor.get_performance_stats();
     assert!(stats.simd_operations >= 10);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -444,6 +522,9 @@ fn test_performance_stats_cache_hit_ratio() {
 
     let stats = processor.get_performance_stats();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Cache hit ratio should be in valid range
     assert!(stats.cache_hit_ratio >= 0.0);
     assert!(stats.cache_hit_ratio <= 1.0);
@@ -459,6 +540,9 @@ fn test_safety_and_performance_integration() {
     let mut buffer = UltimateSafeBuffer::new(1024);
     let processor = UltimatePerformanceProcessor::new();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Write data to safe buffer
     let data = b"Performance test data";
     buffer.safe_write(data).unwrap();
@@ -474,6 +558,9 @@ fn test_safety_and_performance_integration() {
     let buffer_stats = buffer.get_safety_stats();
     let proc_stats = processor.get_performance_stats();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(buffer_stats.safe_operations_completed >= 2);
     assert!(proc_stats.simd_operations >= 1);
 }
@@ -496,6 +583,9 @@ fn test_memory_pool_with_performance_data() {
         assert!(result.iter().all(|&b| b == 43));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let pool_stats = pool.get_stats();
     assert_eq!(pool_stats.objects_borrowed, 1);
 }
@@ -515,6 +605,9 @@ fn test_safe_reference_with_performance_operations() {
 }
 
 // ================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // EDGE CASE TESTS
 // ================================
 
@@ -530,6 +623,9 @@ fn test_safe_buffer_edge_case_zero_capacity() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 fn test_safe_buffer_edge_case_exact_capacity() {
     let mut buffer = UltimateSafeBuffer::new(5);
 
@@ -538,6 +634,9 @@ fn test_safe_buffer_edge_case_exact_capacity() {
 
     // One more byte should fail
     assert!(buffer.safe_write(b"6").is_err());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 }
 
 #[test]
@@ -546,6 +645,9 @@ fn test_memory_pool_edge_case_factory() {
     let call_count_clone = call_count.clone();
 
     let pool = UltimateSafeMemoryPool::new(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         move || {
             call_count_clone.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             String::from("test")
@@ -564,12 +666,18 @@ fn test_memory_pool_edge_case_factory() {
 #[test]
 fn test_performance_processor_edge_case_single_byte() {
     let processor = UltimatePerformanceProcessor::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     let result = processor.process_with_ultimate_optimization(&[255]);
 
     assert_eq!(result, vec![0]); // Wrapping
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_safety_token_uniqueness() {
     let token1 = SafetyToken::new(SafetyLevel::Ultimate);

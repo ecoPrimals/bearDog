@@ -87,7 +87,7 @@ fn test_audit_severity_debug_format() {
 
 #[test]
 fn test_audit_event_type_variants() {
-    let types = vec![
+    let types = [
         AuditEventType::Authentication,
         AuditEventType::Authorization,
         AuditEventType::DataAccess,
@@ -143,6 +143,9 @@ fn test_audit_event_new() {
     assert_eq!(event.action, "login");
     assert_eq!(event.result, "success");
     assert!(event.user_id.is_none());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(event.source_ip.is_none());
     assert!(event.user_agent.is_none());
     assert!(event.compliance_tags.is_empty());
@@ -153,11 +156,17 @@ fn test_audit_event_new() {
 fn test_audit_event_unique_ids() {
     let event1 = AuditEvent::new(
         AuditEventType::DataAccess,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "resource".to_string(),
         "read".to_string(),
         "success".to_string(),
     );
     let event2 = AuditEvent::new(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         AuditEventType::DataAccess,
         "resource".to_string(),
         "read".to_string(),
@@ -165,6 +174,9 @@ fn test_audit_event_unique_ids() {
     );
 
     assert_ne!(event1.id, event2.id);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -174,6 +186,9 @@ fn test_audit_event_timestamp() {
         AuditEventType::SystemChange,
         "config".to_string(),
         "update".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "success".to_string(),
     );
     let after = Utc::now();
@@ -181,6 +196,9 @@ fn test_audit_event_timestamp() {
     assert!(event.timestamp >= before);
     assert!(event.timestamp <= after);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // AuditEvent Builder Pattern Tests
@@ -190,6 +208,9 @@ fn test_audit_event_timestamp() {
 fn test_audit_event_with_user() {
     let event = AuditEvent::new(
         AuditEventType::Authentication,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "api".to_string(),
         "login".to_string(),
         "success".to_string(),
@@ -201,11 +222,17 @@ fn test_audit_event_with_user() {
 
 #[test]
 fn test_audit_event_with_source_ip() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let event = AuditEvent::new(
         AuditEventType::Authentication,
         "api".to_string(),
         "login".to_string(),
         "success".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     )
     .with_source_ip("192.168.1.1");
 
@@ -213,6 +240,9 @@ fn test_audit_event_with_source_ip() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_audit_event_with_compliance_tags() {
     let tags = vec!["GDPR".to_string(), "HIPAA".to_string()];
     let event = AuditEvent::new(
@@ -222,6 +252,9 @@ fn test_audit_event_with_compliance_tags() {
         "success".to_string(),
     )
     .with_compliance_tags(tags);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(event.compliance_tags.len(), 2);
     assert!(event.compliance_tags.contains(&"GDPR".to_string()));
@@ -239,6 +272,9 @@ fn test_audit_event_with_metadata() {
     .with_metadata("reason".to_string(), "suspicious_activity".to_string())
     .with_metadata("severity".to_string(), "high".to_string());
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(event.metadata.len(), 2);
     assert_eq!(
         event.metadata.get("reason"),
@@ -254,6 +290,9 @@ fn test_audit_event_builder_chain() {
         "/api/admin".to_string(),
         "access".to_string(),
         "denied".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     )
     .with_user("user456".to_string())
     .with_source_ip("10.0.0.1")
@@ -270,6 +309,9 @@ fn test_audit_event_builder_chain() {
 fn test_audit_event_empty_compliance_tags() {
     let event = AuditEvent::new(
         AuditEventType::DataAccess,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "resource".to_string(),
         "read".to_string(),
         "success".to_string(),
@@ -280,6 +322,9 @@ fn test_audit_event_empty_compliance_tags() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // AuditEvent Serialization Tests
 // ============================================================================
 
@@ -290,6 +335,9 @@ fn test_audit_event_serialization() {
         "policy_engine".to_string(),
         "validate".to_string(),
         "pass".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     )
     .with_user("system".to_string())
     .with_compliance_tags(vec!["PCI-DSS".to_string()]);
@@ -303,6 +351,9 @@ fn test_audit_event_serialization() {
 
 #[test]
 fn test_audit_event_deserialization() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let event = AuditEvent::new(
         AuditEventType::SystemChange,
         "config".to_string(),
@@ -319,6 +370,9 @@ fn test_audit_event_deserialization() {
     assert_eq!(event.result, deserialized.result);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_audit_event_clone() {
     let event1 = AuditEvent::new(
@@ -335,6 +389,9 @@ fn test_audit_event_clone() {
 
 #[test]
 fn test_audit_event_debug_format() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let event = AuditEvent::new(
         AuditEventType::SecurityEvent,
         "test".to_string(),
@@ -349,6 +406,9 @@ fn test_audit_event_debug_format() {
 
 // ============================================================================
 // AuditEngine Creation Tests
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -364,6 +424,9 @@ fn test_audit_engine_default() {
     let engine = AuditEngine::default();
 
     assert_eq!(engine.event_count(), 0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Default capacity is 10000, verified by rotation behavior
 }
 
@@ -379,6 +442,9 @@ fn test_audit_engine_zero_capacity() {
 // AuditEngine Event Management Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_audit_engine_add_event() {
     let mut engine = AuditEngine::new(100);
@@ -390,6 +456,9 @@ fn test_audit_engine_add_event() {
         "success".to_string(),
     );
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     engine.add_event(event);
     assert_eq!(engine.event_count(), 1);
 }
@@ -405,16 +474,25 @@ fn test_audit_engine_add_multiple_events() {
             "read".to_string(),
             "success".to_string(),
         );
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         engine.add_event(event);
     }
 
     assert_eq!(engine.event_count(), 10);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_audit_engine_event_rotation() {
     let mut engine = AuditEngine::new(5);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Add 10 events, only last 5 should remain
     for i in 0..10 {
         let event = AuditEvent::new(
@@ -424,6 +502,9 @@ fn test_audit_engine_event_rotation() {
             "success".to_string(),
         );
         engine.add_event(event);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     assert_eq!(engine.event_count(), 5);
@@ -436,6 +517,9 @@ fn test_audit_engine_event_rotation_order() {
     let event1 = AuditEvent::new(
         AuditEventType::DataAccess,
         "first".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "read".to_string(),
         "success".to_string(),
     );
@@ -450,6 +534,9 @@ fn test_audit_engine_event_rotation_order() {
         "third".to_string(),
         "read".to_string(),
         "success".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     );
     let event4 = AuditEvent::new(
         AuditEventType::DataAccess,
@@ -465,6 +552,9 @@ fn test_audit_engine_event_rotation_order() {
 
     // Should keep last 3: second, third, fourth
     assert_eq!(engine.event_count(), 3);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
@@ -504,6 +594,9 @@ fn test_audit_engine_get_events_by_type() {
 #[test]
 fn test_audit_engine_get_events_by_type_empty() {
     let engine = AuditEngine::new(100);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let events = engine.get_events_by_type(&AuditEventType::SecurityEvent);
     assert!(events.is_empty());
@@ -531,11 +624,17 @@ fn test_audit_engine_get_events_by_user() {
         )
         .with_user("bob".to_string()),
     );
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     engine.add_event(
         AuditEvent::new(
             AuditEventType::DataAccess,
             "file3".to_string(),
             "delete".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             "success".to_string(),
         )
         .with_user("alice".to_string()),
@@ -572,6 +671,9 @@ fn test_audit_engine_get_events_in_range() {
 
     let now = Utc::now();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Add events with different timestamps
     std::thread::sleep(std::time::Duration::from_millis(10));
     engine.add_event(AuditEvent::new(
@@ -587,6 +689,9 @@ fn test_audit_engine_get_events_in_range() {
     std::thread::sleep(std::time::Duration::from_millis(10));
     engine.add_event(AuditEvent::new(
         AuditEventType::DataAccess,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "resource2".to_string(),
         "read".to_string(),
         "success".to_string(),
@@ -619,6 +724,9 @@ fn test_audit_engine_get_events_in_range_empty() {
 #[test]
 fn test_audit_engine_generate_compliance_report() {
     let mut engine = AuditEngine::new(100);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     engine.add_event(
         AuditEvent::new(
@@ -631,6 +739,9 @@ fn test_audit_engine_generate_compliance_report() {
     );
     engine.add_event(
         AuditEvent::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             AuditEventType::DataAccess,
             "data2".to_string(),
             "read".to_string(),
@@ -667,6 +778,9 @@ fn test_audit_engine_generate_compliance_report_empty() {
 // AuditEngine Cleanup Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_audit_engine_cleanup_old_events() {
     let mut engine = AuditEngine::new(100);
@@ -676,6 +790,9 @@ fn test_audit_engine_cleanup_old_events() {
         AuditEventType::DataAccess,
         "old".to_string(),
         "read".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "success".to_string(),
     ));
 
@@ -703,6 +820,9 @@ fn test_audit_engine_cleanup_all_events() {
 
     engine.add_event(AuditEvent::new(
         AuditEventType::DataAccess,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "resource".to_string(),
         "read".to_string(),
         "success".to_string(),
@@ -721,6 +841,9 @@ fn test_audit_engine_cleanup_all_events() {
 #[test]
 fn test_audit_engine_export_events() {
     let mut engine = AuditEngine::new(100);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     engine.add_event(AuditEvent::new(
         AuditEventType::Authentication,
@@ -734,6 +857,9 @@ fn test_audit_engine_export_events() {
     assert!(exported.contains("login"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_audit_engine_export_empty() {
     let engine = AuditEngine::new(100);

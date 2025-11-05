@@ -66,6 +66,9 @@ async fn test_health_endpoint_returns_valid_json() {
     let json = parse_json_body(body).await;
 
     assert!(json.get("success").is_some());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(json.get("data").is_some());
     assert!(json.get("timestamp").is_some());
 }
@@ -82,6 +85,9 @@ async fn test_health_endpoint_success_true() {
         .expect("Failed to build health request");
 
     let response = app
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .oneshot(request)
         .await
         .expect("Failed to get health response");
@@ -103,6 +109,9 @@ async fn test_health_endpoint_contains_version() {
         .body(Body::empty())
         .expect("Failed to build health request");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let response = app
         .oneshot(request)
         .await
@@ -122,6 +131,9 @@ async fn test_health_endpoint_status_healthy() {
     let request = Request::builder()
         .method(Method::GET)
         .uri("/health")
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .body(Body::empty())
         .expect("Failed to build health request");
 
@@ -141,6 +153,9 @@ async fn test_status_endpoint_returns_200() {
     let core = create_test_core();
     let app = create_router(core);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let request = Request::builder()
         .method(Method::GET)
         .uri("/status")
@@ -160,6 +175,9 @@ async fn test_status_endpoint_returns_valid_json() {
     let core = create_test_core();
     let app = create_router(core);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let request = Request::builder()
         .method(Method::GET)
         .uri("/status")
@@ -176,6 +194,9 @@ async fn test_status_endpoint_returns_valid_json() {
 
     assert!(json.get("success").is_some());
     assert!(json.get("data").is_some());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(json.get("timestamp").is_some());
 }
 
@@ -197,6 +218,9 @@ async fn test_status_endpoint_contains_connections() {
 
     let body = response.into_body();
     let json = parse_json_body(body).await;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert!(json["data"]["connections"].is_number());
 }
@@ -216,6 +240,9 @@ async fn test_status_endpoint_contains_memory_usage() {
         .oneshot(request)
         .await
         .expect("Failed to get status response");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let body = response.into_body();
     let json = parse_json_body(body).await;
@@ -235,6 +262,9 @@ async fn test_status_endpoint_status_operational() {
         .expect("Failed to build status request");
 
     let response = app
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .oneshot(request)
         .await
         .expect("Failed to get status response");
@@ -254,6 +284,9 @@ async fn test_unknown_endpoint_returns_404() {
         .method(Method::GET)
         .uri("/nonexistent")
         .body(Body::empty())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .expect("Failed to build request");
 
     let response = app.oneshot(request).await.expect("Failed to get response");
@@ -267,10 +300,16 @@ async fn test_router_creation_succeeds() {
     let _router = create_router(core);
     // If we got here, router creation succeeded
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_multiple_health_requests() {
     let core = create_test_core();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     for _ in 0..5 {
         let app = create_router(core.clone());
@@ -286,6 +325,9 @@ async fn test_multiple_health_requests() {
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_health_and_status_endpoints_together() {
     let core = create_test_core();

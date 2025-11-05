@@ -42,6 +42,18 @@ pub use error::*;
 #[cfg(test)]
 mod deploy_comprehensive_tests;
 
+#[cfg(test)]
+#[path = "tests/device_comprehensive_tests.rs"]
+mod device_comprehensive_tests;
+
+#[cfg(test)]
+#[path = "tests/android_comprehensive_tests.rs"]
+mod android_comprehensive_tests;
+
+#[cfg(test)]
+#[path = "tests/build_comprehensive_tests.rs"]
+mod build_comprehensive_tests;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
     /// Target deployment environment (dev, staging, prod)

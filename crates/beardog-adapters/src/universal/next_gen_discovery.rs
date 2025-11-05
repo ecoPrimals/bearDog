@@ -54,6 +54,9 @@ mod tests {
             confidence > 0.0 && confidence <= 1.0,
             "Confidence should be between 0 and 1"
         );
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
         Ok(())
     }
@@ -76,6 +79,9 @@ mod tests {
         assert_eq!(
             optimized.len(),
             endpoints.len(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             "Should preserve endpoint count"
         );
 
@@ -107,6 +113,9 @@ mod tests {
         }];
 
         let compatible = translator.ensure_compatibility(endpoints)?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         assert!(!compatible.is_empty(), "Should ensure compatibility");
 
         Ok(())
@@ -124,6 +133,9 @@ mod tests {
             constraints: std::collections::HashMap::with_capacity(RequestPriority::High,
             timeout: Duration::from_secs(60),
         };
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
         let services = vec![ServiceEndpoint {
             id: Uuid::new_v4(),
@@ -162,6 +174,9 @@ mod tests {
             id: Uuid::new_v4(),
             name: "secure-service".to_string(),
             capability_type: "security".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             endpoint_url: "https://secure.example.com".to_string(),
             protocol: "https".to_string(),
             metadata: std::collections::HashMap::with_capacity(16),
@@ -188,6 +203,9 @@ mod tests {
 
         let request = CapabilityRequest {
             id: Uuid::new_v4(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             capability_type: "test".to_string(),
             timeout: Duration::from_secs(30),
         };
@@ -211,6 +229,9 @@ mod tests {
     #[tokio::test]
     fn test_discovery_engine_workflow() -> Result<(), BearDogError> {
         let config = NextGenDiscoveryConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         let engine = NextGenDiscoveryEngine::new(config)?;
 
         let request = CapabilityRequest {
@@ -240,6 +261,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_ecosystem_integration() -> Result<(), BearDogError> {
         let config = NextGenDiscoveryConfig::default();

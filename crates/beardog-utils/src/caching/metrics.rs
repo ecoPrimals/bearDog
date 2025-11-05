@@ -176,6 +176,9 @@ mod tests {
 
         assert_eq!(metrics.total_requests, 2);
         assert_eq!(metrics.l1_hits, 1);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(metrics.total_misses, 1);
         assert!((metrics.hit_ratio() - 0.5).abs() < f64::EPSILON);
     }
@@ -189,6 +192,9 @@ mod tests {
         metrics.record_hit("L1");
         metrics.record_hit("L1");
         metrics.record_hit("L2");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         metrics.record_hit("L2");
         metrics.record_miss();
 
@@ -204,6 +210,9 @@ mod tests {
 
         metrics.update_response_time(10.0);
         assert_eq!(metrics.average_response_time_ms, 10.0);
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         metrics.update_response_time(20.0);
         // Should be exponential moving average
@@ -214,6 +223,9 @@ mod tests {
     #[test]
     fn test_performance_report() {
         let mut metrics = CacheMetrics::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         metrics.record_hit("L1");
         metrics.record_miss();
 
@@ -224,6 +236,9 @@ mod tests {
         assert!(recommendations.iter().any(|r| r.contains("hit ratio")));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_efficiency_score() {
         let mut metrics = CacheMetrics::new();

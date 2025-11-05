@@ -491,6 +491,9 @@ mod tests {
 
         let plaintext = b"Hello, BearDog!";
         let (ciphertext, nonce) = UnifiedBearDogCrypto::encrypt_aes256_gcm(&key, plaintext)?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert_ne!(ciphertext, plaintext);
         assert_eq!(nonce.len(), 12);
 
@@ -502,6 +505,9 @@ mod tests {
     fn test_unified_crypto_hashing() {
         let data = b"test data";
         let hash = UnifiedBearDogCrypto::sha256_hash(data);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert_eq!(hash.len(), 64); // SHA-256 produces 32 bytes = 64 hex chars
 
         let key = b"secret key";
@@ -513,6 +519,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     fn test_unified_crypto_random() {
         let bytes1 = UnifiedBearDogCrypto::secure_random_bytes(32);
         let bytes2 = UnifiedBearDogCrypto::secure_random_bytes(32);
@@ -524,6 +533,9 @@ mod tests {
         assert_eq!(salt.len(), 32);
 
         let password = UnifiedBearDogCrypto::generate_password(16);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert_eq!(password.len(), 16);
     }
 
@@ -536,6 +548,9 @@ mod tests {
 
         // Same inputs should produce same key
         let key2 = UnifiedBearDogCrypto::derive_key_pbkdf2(password, &salt, 10000, 32)?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert_eq!(key, key2);
     }
 
@@ -545,6 +560,9 @@ mod tests {
         let entropy2 = UnifiedBearDogCrypto::generate_sovereign_entropy(32, None)?;
         assert_eq!(entropy1.len(), 32);
         assert_eq!(entropy2.len(), 32);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert_ne!(entropy1, entropy2);
 
         let sovereign_salt = UnifiedBearDogCrypto::generate_sovereign_salt(Some("test_user"))?;
@@ -554,11 +572,17 @@ mod tests {
     #[test]
     fn test_unified_crypto_performance_metrics() {
         let metrics = UnifiedBearDogCrypto::get_performance_metrics();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert!(metrics.consolidation_benefit > 0.0);
         assert!(metrics.memory_reduction_mb > 0.0);
         assert!(metrics.crypto_operations_per_second > 0.0);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_legacy_compatibility() {
         // Test that legacy functions still work

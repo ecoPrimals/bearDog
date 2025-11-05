@@ -63,6 +63,9 @@ mod tests {
             timestamp: Utc::now(),
             cpu_usage_percent: 45.7,
             memory_usage_bytes: 2_147_483_648, // 2GB
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             disk_usage_bytes: 107_374_182_400, // 100GB
             network_rx_bytes: 1_073_741_824, // 1GB
             network_tx_bytes: 536_870_912, // 512MB
@@ -71,6 +74,9 @@ mod tests {
             error_count: 42,
             avg_response_time_ms: 125.5,
             custom_metrics: HashMap::new(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         };
 
         assert_eq!(metrics.cpu_usage_percent, 45.7);
@@ -90,6 +96,9 @@ mod tests {
             timestamp: Utc::now(),
             cpu_usage_percent: 20.0,
             memory_usage_bytes: 1_000_000_000,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             disk_usage_bytes: 50_000_000_000,
             network_rx_bytes: 1_000_000,
             network_tx_bytes: 500_000,
@@ -102,6 +111,9 @@ mod tests {
 
         assert_eq!(metrics.custom_metrics.len(), 3);
         assert_eq!(metrics.custom_metrics.get("queue_depth"), Some(&1500.0));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(metrics.custom_metrics.get("cache_hit_rate"), Some(&0.95));
     }
 
@@ -121,6 +133,9 @@ mod tests {
             labels: labels.clone(),
         };
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(point.name, name);
         assert_eq!(point.value, value);
         assert_eq!(point.labels.len(), 1);
@@ -144,6 +159,9 @@ mod tests {
     #[test]
     fn test_metrics_collector_collect() {
         let config = MetricsConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let mut collector = MetricsCollector::new(config).unwrap();
 
         let metrics = SystemMetrics {
@@ -163,6 +181,9 @@ mod tests {
         let result = collector.collect(metrics.clone());
         assert!(result.is_ok());
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         // Verify metrics were stored
         let recent = collector.get_recent_metrics();
         assert_eq!(recent.len(), 1);
@@ -174,6 +195,9 @@ mod tests {
         let config = MetricsConfig {
             collection_interval_seconds: 1,
             retention_count: 5, // Only keep 5 metrics
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enable_streaming: false,
             batch_size: 10,
             labels: HashMap::new(),
@@ -199,6 +223,9 @@ mod tests {
             let _ = collector.collect(metrics);
         }
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         // Should only retain 5 most recent
         let recent = collector.get_recent_metrics();
         assert_eq!(recent.len(), 5);
@@ -234,6 +261,9 @@ mod tests {
         let collector = MetricsCollector::new(config);
         assert!(collector.is_ok());
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_metrics_validation_valid() {
@@ -245,6 +275,9 @@ mod tests {
             network_rx_bytes: 100_000,
             network_tx_bytes: 50_000,
             active_connections: 25,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             request_count: 1000,
             error_count: 2,
             avg_response_time_ms: 75.0,
@@ -256,6 +289,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_metrics_validation_invalid_cpu() {
         let metrics = SystemMetrics {
             timestamp: Utc::now(),
@@ -273,6 +309,9 @@ mod tests {
 
         let result = metrics.validate();
         assert!(result.is_err());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
     }
 
     #[test]
@@ -290,6 +329,9 @@ mod tests {
             avg_response_time_ms: 75.0,
             custom_metrics: HashMap::new(),
         };
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         let result = metrics.validate();
         assert!(result.is_err());
@@ -307,6 +349,9 @@ mod tests {
             active_connections: 30,
             request_count: 5000,
             error_count: 3,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             avg_response_time_ms: 80.0,
             custom_metrics: HashMap::new(),
         };
@@ -333,6 +378,9 @@ mod tests {
             collection_interval_seconds: 15,
             retention_count: 2000,
             enable_streaming: true,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             batch_size: 50,
             labels,
         };
@@ -356,6 +404,9 @@ mod tests {
         labels.insert("instance".to_string(), "prod-01".to_string());
 
         let point = MetricPoint {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             name: "memory_usage".to_string(),
             value: 85.5,
             timestamp: Utc::now(),
@@ -374,6 +425,9 @@ mod tests {
     #[test]
     fn test_metrics_edge_cases_zero_values() {
         let metrics = SystemMetrics {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: important
             timestamp: Utc::now(),
             cpu_usage_percent: 0.0,
             memory_usage_bytes: 0,
@@ -391,6 +445,9 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
     #[test]
     fn test_metrics_edge_cases_max_values() {
         let metrics = SystemMetrics {

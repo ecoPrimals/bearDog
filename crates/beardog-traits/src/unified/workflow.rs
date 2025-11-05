@@ -201,14 +201,23 @@ mod tests {
         assert!(!context.execution_id.is_empty());
         assert_eq!(context.status, WorkflowStatus::Pending);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_workflow_status_display() {
         assert_eq!(WorkflowStatus::Running.to_string(), "Running");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(WorkflowStatus::Completed.to_string(), "Completed");
         assert_eq!(WorkflowStatus::Failed.to_string(), "Failed");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_workflow_status_equality() {
         assert_eq!(WorkflowStatus::Pending, WorkflowStatus::Pending);

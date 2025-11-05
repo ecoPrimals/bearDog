@@ -46,6 +46,7 @@ pub struct PoolStats {
     pub total_connections: u32,
     /// Number of `active_connections`
     pub active_connections: u32,
+    /// Number of idle connections in the pool
     pub idle_connections: u32,
     /// Number of `max_connections`
     pub max_connections: u32,

@@ -225,6 +225,7 @@ pub struct EcosystemSpawningRequirements {
     /// Security requirements and policies
     /// The security requirements value
     pub security_requirements: EcosystemSecurityRequirements,
+    /// Performance requirements for ecosystem operations
     pub performance_requirements: EcosystemPerformanceRequirements,
     /// Whether `high_availability` is enabled
     pub high_availability: bool,
@@ -232,96 +233,119 @@ pub struct EcosystemSpawningRequirements {
     pub geographic_preferences: Vec<String>,
 }
 
+/// Resource constraints for ecosystem operations
+///
+/// Defines maximum resource limits for CPU, memory, storage, and cost.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemResourceConstraints {
-    /// Optional max cpu cores
+    /// Maximum CPU cores allowed
     pub max_cpu_cores: Option<u32>,
-    /// Optional max memory gb
+    /// Maximum memory in GB allowed
     pub max_memory_gb: Option<u32>,
-    /// Optional max storage gb
+    /// Maximum storage in GB allowed
     pub max_storage_gb: Option<u32>,
-    /// Optional max cost per hour
+    /// Maximum cost per hour in dollars
     pub max_cost_per_hour: Option<f64>,
 }
 
+/// Security requirements for ecosystem operations
+///
+/// Specifies minimum security levels, compliance standards, encryption, and auditing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemSecurityRequirements {
-    /// The min security level value
+    /// Minimum required security level
     pub min_security_level: SecurityLevel,
-    /// Collection of required compliance
+    /// Required compliance standards (GDPR, HIPAA, etc.)
     pub required_compliance: Vec<ComplianceStandard>,
-    /// The encryption requirements value
+    /// Encryption requirements for data protection
     pub encryption_requirements: EncryptionRequirements,
-    /// The audit requirements value
+    /// Auditing and logging requirements
     pub audit_requirements: AuditRequirements,
 }
 
+/// Encryption requirements for data protection
+///
+/// Specifies encryption needs for data at rest, in transit, and key rotation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionRequirements {
-    /// Whether `data_at_rest` is enabled
+    /// Whether to encrypt data at rest
     pub data_at_rest: bool,
-    /// Whether `data_in_transit` is enabled
+    /// Whether to encrypt data in transit
     pub data_in_transit: bool,
-    /// Number of `key_rotation_days`
+    /// How often to rotate encryption keys (in days)
     pub key_rotation_days: u32,
 }
 
+/// Auditing and logging requirements
+///
+/// Defines audit level, log retention, and real-time alerting needs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditRequirements {
-    /// The audit level value
+    /// Required audit level (basic, detailed, comprehensive)
     pub audit_level: AuditLevel,
-    /// Number of `log_retention_days`
+    /// How long to retain audit logs (in days)
     pub log_retention_days: u32,
+    /// Whether to enable real-time alerting
     pub real_time_alerting: bool,
 }
 
+/// Performance requirements for ecosystem operations
+///
+/// Defines minimum throughput, maximum latency, and uptime requirements.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemPerformanceRequirements {
-    /// Number of `min_throughput_rps`
+    /// Minimum requests per second required
     pub min_throughput_rps: u32,
-    /// Number of `max_latency_ms`
+    /// Maximum acceptable latency in milliseconds
     pub max_latency_ms: u32,
+    /// Minimum uptime percentage required (0.0-100.0)
     pub min_uptime_percentage: f64,
 }
 
+/// Represents an active primal spawning operation
+///
+/// Tracks the progress of spawning a new primal instance, including blueprints,
+/// resources, and current execution status.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemSpawningOperation {
+    /// Unique identifier for this spawning operation
     pub operation_id: String,
-    /// The requirements value
+    /// Requirements for the primal being spawned
     pub requirements: EcosystemSpawningRequirements,
-    /// Current status of the component
+    /// Current status of the spawning operation
     pub status: SpawningStatus,
-    /// The current stage value
+    /// Current execution stage
     pub current_stage: SpawningStage,
-    /// The progress percentage value
+    /// Progress percentage (0.0-100.0)
     pub progress_percentage: f64,
-    /// Collection of genetic blueprints
+    /// Generated genetic blueprints for selection
     pub genetic_blueprints: Vec<EcosystemGeneticBlueprint>,
-    /// Optional selected blueprint
+    /// Blueprint selected for spawning
     pub selected_blueprint: Option<EcosystemGeneticBlueprint>,
-    /// Mapping of resource reservations
+    /// Reserved resources for this operation
     pub resource_reservations: HashMap<String, serde_json::Value>,
-    /// Collection of error messages
+    /// Errors encountered during spawning
     pub error_messages: Vec<String>,
-    /// The started at value
+    /// When the operation started
     pub started_at: chrono::DateTime<chrono::Utc>,
-    /// Optional completed at
+    /// When the operation completed (if finished)
     pub completed_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+/// Statistics for ecosystem spawning operations
+///
+/// Tracks success rates, performance metrics, and hybrid node creation.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EcosystemSpawningStatistics {
     /// Total number of spawn operations attempted
-    /// Number of `total_spawns`
     pub total_spawns: u64,
     /// Number of successful spawn operations
-    /// Number of `successful_spawns`
     pub successful_spawns: u64,
-    /// Number of failed spawn operations\
-    /// Number of `failed_spawns`
+    /// Number of failed spawn operations
     pub failed_spawns: u64,
     /// Total number of hybrid nodes created
     pub total_hybrid_nodes: u64,
+    /// Average time to complete spawning in seconds
     pub avg_spawn_time_seconds: f64,
     /// Timestamp of last statistics update
     /// The last updated value
@@ -362,11 +386,17 @@ impl Default for EcosystemSpawningStatistics {
 /// the ecosystem genetic algorithm.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum TraitCategory {
+    /// Security-related traits (encryption, authentication, etc.)
     Security,
+    /// Computation and processing traits
     Compute,
+    /// Data storage and persistence traits
     Storage,
+    /// Networking and communication traits
     Network,
+    /// AI and machine learning traits
     AI,
+    /// Monitoring and observability traits
     Monitoring,
     /// Custom trait category with user-defined classification
     Custom(String),
@@ -376,11 +406,17 @@ pub enum TraitCategory {
 /// Defines the specific capabilities that can be required by genetic traits
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EcosystemCapability {
+    /// High-performance computing capability for intensive workloads
     HighPerformanceCompute,
+    /// Secure key management and cryptographic operations
     SecureKeyManagement,
+    /// Distributed storage across ecosystem nodes
     DistributedStorage,
+    /// Network routing and optimization capabilities
     NetworkOptimization,
+    /// AI inference and machine learning capabilities
     AIInference,
+    /// Real-time monitoring and observability
     RealTimeMonitoring,
     /// Custom ecosystem capability with user-defined functionality
     Custom(String),
@@ -430,6 +466,7 @@ pub enum SecurityLevel {
 pub enum ComplianceStandard {
     /// SOC 2 (Service Organization Control 2) compliance
     SOC2,
+    /// ISO 27001 (Information Security Management) compliance
     ISO27001,
     /// HIPAA (Health Insurance Portability and Accountability Act) compliance
     HIPAA,
@@ -446,9 +483,11 @@ pub enum ComplianceStandard {
 /// event logging to real-time comprehensive monitoring.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AuditLevel {
+    /// Basic audit logging of critical events only
     Basic,
     /// Enhanced audit logging with additional detail
     Enhanced,
+    /// Comprehensive audit logging of all events and state changes
     Comprehensive,
     /// Real-time audit logging with immediate event processing
     RealTime,

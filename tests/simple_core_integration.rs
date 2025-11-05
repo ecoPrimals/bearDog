@@ -48,6 +48,9 @@ fn test_core_config_clone() {
     );
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_variants() {
     // Test all health status variants exist and can be created
@@ -55,6 +58,9 @@ fn test_health_status_variants() {
     let degraded = HealthStatus::Degraded;
     let unhealthy = HealthStatus::Unhealthy;
     let unknown = HealthStatus::Unknown;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(healthy, HealthStatus::Healthy);
     assert_eq!(degraded, HealthStatus::Degraded);
@@ -64,6 +70,9 @@ fn test_health_status_variants() {
 
 #[test]
 fn test_health_status_equality() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test health status equality comparison
     let status1 = HealthStatus::Healthy;
     let status2 = HealthStatus::Healthy;
@@ -81,6 +90,9 @@ fn test_config_environment_values() {
     // Test different environment configurations
     let mut config = BearDogConfig::default();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     config.environment = "development".to_string();
     assert_eq!(config.environment, "development");
 
@@ -92,6 +104,9 @@ fn test_config_environment_values() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_config_version_format() {
     // Test version string format
     let config = BearDogConfig::default();
@@ -103,6 +118,9 @@ fn test_config_version_format() {
         "Version should contain numbers"
     );
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_error_creation() {
@@ -115,6 +133,9 @@ fn test_error_creation() {
 
 #[test]
 fn test_error_system_creation() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test system error creation
     let error = BearDogError::system("System error".to_string());
 
@@ -125,30 +146,45 @@ fn test_error_system_creation() {
 #[test]
 fn test_config_serialization_support() {
     // Test that config supports clone (prerequisite for serialization)
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     let config1 = BearDogConfig::default();
     let config2 = config1.clone();
 
     assert_eq!(config1.node_id, config2.node_id);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 #[test]
 fn test_health_status_clone() {
     // Test health status can be cloned
     let status1 = HealthStatus::Healthy;
     let status2 = status1;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(status1, status2);
 }
 
 #[test]
 fn test_config_custom_values() {
     // Test setting custom config values
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut config = BearDogConfig::default();
 
     let custom_node_id = "custom-node-123".to_string();
     config.node_id = custom_node_id.clone();
 
     assert_eq!(config.node_id, custom_node_id);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -157,6 +193,9 @@ fn test_multiple_configs_independence() {
     let mut config1 = BearDogConfig::default();
     let mut config2 = BearDogConfig::default();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     config1.environment = "dev".to_string();
     config2.environment = "prod".to_string();
 
@@ -167,12 +206,18 @@ fn test_multiple_configs_independence() {
 #[test]
 fn test_health_status_debug() {
     // Test health status debug formatting
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let status = HealthStatus::Healthy;
     let debug_str = format!("{:?}", status);
 
     assert!(debug_str.contains("Healthy"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 #[test]
 fn test_error_context_preservation() {
     // Test that errors preserve context

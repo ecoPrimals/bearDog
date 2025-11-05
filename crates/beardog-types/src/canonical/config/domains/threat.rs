@@ -82,13 +82,25 @@ impl Default for CanonicalThreatDetectionConfig {
 
             // Capacity
             max_active_threats: DEFAULT_QUEUE_SIZE,
-            max_concurrent_analyses: 10,
+            max_concurrent_analyses: std::env::var("BEARDOG_THREAT_MAX_CONCURRENT_ANALYSES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
 
             // Sensitivity
-            sensitivity: 0.7,
+            sensitivity: std::env::var("BEARDOG_THREAT_SENSITIVITY")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.7),
             sensitivity_level: SensitivityLevel::Normal,
-            quarantine_threshold: 0.8,
-            block_threshold: 0.9,
+            quarantine_threshold: std::env::var("BEARDOG_THREAT_QUARANTINE_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.8),
+            block_threshold: std::env::var("BEARDOG_THREAT_BLOCK_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.9),
 
             // Rules & Patterns
             detection_rules: Vec::new(),
@@ -170,8 +182,14 @@ impl Default for ThreatResponseConfig {
             auto_block: false,
             auto_quarantine: true,
             enable_alerts: true,
-            alert_threshold: 0.7,
-            max_actions_per_minute: 100,
+            alert_threshold: std::env::var("BEARDOG_THREAT_ALERT_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.7),
+            max_actions_per_minute: std::env::var("BEARDOG_THREAT_MAX_ACTIONS_PER_MINUTE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
         }
     }
 }

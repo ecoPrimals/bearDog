@@ -22,6 +22,9 @@ mod startup_error_handling {
         let state = core.state.read().await;
 
         // Verify components are in Running state
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         if let Some(status) = state.components.get("security") {
             assert_eq!(
                 *status,
@@ -48,6 +51,9 @@ mod startup_error_handling {
         // Start first
         core.startup().await.expect("Startup should succeed");
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Then shutdown
         let result = core.shutdown().await;
         assert!(result.is_ok(), "Shutdown should succeed");
@@ -78,6 +84,9 @@ mod startup_error_handling {
         let config = UnifiedBearDogConfig::development();
         let core = BearDogCore::new(config);
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let health = core.health_check().await;
         assert!(health.is_ok(), "Health check should succeed");
 
@@ -93,6 +102,9 @@ mod startup_error_handling {
     #[tokio::test]
     async fn test_state_consistency_across_operations() {
         // Verify state remains consistent through lifecycle
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = UnifiedBearDogConfig::development();
         let core = BearDogCore::new(config);
 
@@ -122,6 +134,9 @@ mod startup_error_handling {
         drop(state);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_concurrent_state_access() {
         // Verify multiple concurrent reads work correctly

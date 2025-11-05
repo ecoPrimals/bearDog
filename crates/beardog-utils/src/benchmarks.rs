@@ -435,9 +435,15 @@ mod tests {
         assert_eq!(suite.benchmarks.len(), 0);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_simple_benchmark() -> Result<(), Box<dyn std::error::Error>> {
         let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             warmup_iterations: 10,
             measurement_iterations: 100,
             ..BenchmarkConfig::default()
@@ -466,6 +472,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_performance_grading() -> Result<(), Box<dyn std::error::Error>> {
         let mut suite = BenchmarkSuite::new(BenchmarkConfig {

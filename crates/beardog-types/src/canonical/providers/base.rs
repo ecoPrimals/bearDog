@@ -618,7 +618,10 @@ impl Default for AuthenticationConfiguration {
         Self {
             method: AuthenticationMethod::ApiKey,
             parameters: HashMap::new(),
-            session_timeout: 3600, // 1 hour
+            session_timeout: std::env::var("BEARDOG_PROVIDER_SESSION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3600), // 1 hour
             enable_mfa: false,
         }
     }
@@ -669,7 +672,10 @@ impl Default for KeyManagementConfiguration {
     fn default() -> Self {
         Self {
             provider: KeyProvider::Local,
-            rotation_interval: 86400, // 24 hours
+            rotation_interval: std::env::var("BEARDOG_PROVIDER_KEY_ROTATION_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(86400), // 24 hours
             derivation: KeyDerivationConfiguration::default(),
         }
     }
@@ -679,8 +685,14 @@ impl Default for KeyDerivationConfiguration {
     fn default() -> Self {
         Self {
             algorithm: KeyDerivationAlgorithm::Pbkdf2,
-            iterations: 100000,
-            salt_length: 32,
+            iterations: std::env::var("BEARDOG_KEY_DERIVATION_ITERATIONS")
+                .ok()
+                .and_then(|i| i.parse().ok())
+                .unwrap_or(100000), // PBKDF2 recommended iterations
+            salt_length: std::env::var("BEARDOG_KEY_DERIVATION_SALT_LENGTH")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(32),
         }
     }
 }
@@ -699,10 +711,19 @@ impl Default for PerformanceConfiguration {
 impl Default for ConnectionPoolConfiguration {
     fn default() -> Self {
         Self {
-            min_size: 1,
-            max_size: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SI as u64Z as u64E as u32,
-            connection_timeout: 30,
-            idle_timeout: 300,
+            min_size: std::env::var("BEARDOG_CONNECTION_POOL_MIN_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1),
+            max_size: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32,
+            connection_timeout: std::env::var("BEARDOG_POOL_CONNECTION_TIMEOUT")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30), // 30 seconds default
+            idle_timeout: std::env::var("BEARDOG_POOL_IDLE_TIMEOUT")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(300), // 5 minutes default
         }
     }
 }
@@ -712,7 +733,10 @@ impl Default for CachingConfiguration {
         Self {
             enabled: true,
             max_size: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64,
-            ttl: 3600, // 1 hour
+            ttl: std::env::var("BEARDOG_CACHE_TTL_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(3600), // 1 hour default
             eviction_policy: EvictionPolicy::Lru,
         }
     }
@@ -721,10 +745,19 @@ impl Default for CachingConfiguration {
 impl Default for TimeoutConfiguration {
     fn default() -> Self {
         Self {
-            request_timeout: 30,
+            request_timeout: std::env::var("BEARDOG_REQUEST_TIMEOUT_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30), // 30 seconds default
             connection_timeout: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            read_timeout: 30,
-            write_timeout: 30,
+            read_timeout: std::env::var("BEARDOG_READ_TIMEOUT_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30), // 30 seconds default
+            write_timeout: std::env::var("BEARDOG_WRITE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30), // 30 seconds default
         }
     }
 }
@@ -732,9 +765,15 @@ impl Default for TimeoutConfiguration {
 impl Default for RetryConfiguration {
     fn default() -> Self {
         Self {
-            max_retries: 3,
+            max_retries: std::env::var("BEARDOG_MAX_RETRIES")
+                .ok()
+                .and_then(|r| r.parse().ok())
+                .unwrap_or(3), // 3 retries default
             base_delay_ms: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64,
-            max_delay_ms: 10000,
+            max_delay_ms: std::env::var("BEARDOG_MAX_RETRY_DELAY_MS")
+                .ok()
+                .and_then(|d| d.parse().ok())
+                .unwrap_or(10000), // 10 seconds default
             backoff_strategy: BackoffStrategy::Exponential,
         }
     }

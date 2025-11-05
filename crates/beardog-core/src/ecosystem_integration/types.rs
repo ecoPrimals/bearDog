@@ -11,65 +11,67 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Represents an event in the ecosystem integration system
+/// An event in the ecosystem event stream
+///
+/// Represents messages and notifications flowing between ecosystem services,
+/// including metadata, payload, priority, and routing information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemEvent {
+    /// Unique event identifier
     pub id: Uuid,
-    /// Type of the event
-    /// The event type value
+    /// Type of the event (e.g., "service.started", "task.completed")
     pub event_type: String,
     /// Source service that generated the event
-    /// The source value
     pub source: String,
-    /// Optional target
+    /// Optional target service for directed events
     pub target: Option<String>,
-    /// Event payload data
-    /// Mapping of data
+    /// Event payload data as key-value pairs
     pub data: HashMap<String, serde_json::Value>,
-    /// Timestamp when the event was created
+    /// When the event was created
     pub timestamp: DateTime<Utc>,
-    /// Priority level of the event
-    /// The priority value
+    /// Priority level for event processing
     pub priority: EventPriority,
-    /// Current status of the event
-    /// Current status of the component
+    /// Current processing status of the event
     pub status: EventStatus,
 }
 
-/// Represents a node in the ecosystem
+/// A node in the ecosystem
+///
+/// Represents a service, compute resource, or other participant in the ecosystem,
+/// including its identity, capabilities, health, and connection information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemNode {
+    /// Unique node identifier
     pub id: Uuid,
     /// Human-readable name of the node
-    /// Name of the item
     pub name: String,
-    /// Type of the node (service, compute, hsm, etc.)
-    /// The node type value
+    /// Type of the node (service, compute, HSM, etc.)
     pub node_type: NodeType,
-    /// The endpoint value
+    /// Connection endpoint URL or address
     pub endpoint: String,
     /// Current health status
-    /// Current status of the health
     pub health_status: HealthStatus,
-    /// Node capabilities
-    /// Collection of capabilities
+    /// Capabilities provided by this node
     pub capabilities: Vec<String>,
-    /// Node metadata
-    /// Mapping of metadata
+    /// Additional node metadata
     pub metadata: HashMap<String, String>,
-    /// Last seen timestamp
-    /// The last seen value
+    /// Last time the node was seen alive
     pub last_seen: DateTime<Utc>,
 }
 
+/// Priority level for ecosystem events
+///
+/// Determines the urgency and importance of events for routing,
+/// handling, and alerting purposes.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EventPriority {
-    /// Low priority event
+    /// Low priority event that can be handled asynchronously
     Low,
-    /// Medium priority event
+    /// Medium priority event requiring timely handling
     Medium,
-    /// High priority event
+    /// High priority event requiring immediate attention
     High,
-    /// Critical priority event
+    /// Critical priority event requiring urgent action
     Critical,
 }
 

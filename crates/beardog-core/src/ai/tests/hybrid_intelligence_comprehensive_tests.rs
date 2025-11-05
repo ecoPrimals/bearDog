@@ -31,10 +31,10 @@ fn test_hybrid_intelligence_config_creation() {
     );
 
     // Verify mode can be accessed (HybridAssisted is default)
-    let _mode = config.mode;
+    let _ = config.mode;
 
     // Verify learning algorithm can be accessed (ReinforcementLearning is default)
-    let _algorithm = config.learning_algorithm;
+    let _ = config.learning_algorithm;
 }
 
 #[test]
@@ -62,6 +62,9 @@ fn test_hybrid_intelligence_config_defaults() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_hybrid_intelligence_config_validation() {
     let config = HybridIntelligenceConfig::default();
@@ -76,6 +79,9 @@ fn test_hybrid_intelligence_config_validation() {
         "AI confidence threshold should be between 0.0 and 1.0"
     );
     assert!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         !config.system_id.is_empty(),
         "System ID should not be empty"
     );
@@ -98,6 +104,9 @@ fn test_learning_algorithm_variants() {
     // Test that we can create all learning algorithm variants
     let alg1 = LearningAlgorithm::SupervisedLearning;
     let alg2 = LearningAlgorithm::UnsupervisedLearning;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let alg3 = LearningAlgorithm::ReinforcementLearning;
 
     // Verify algorithms can be assigned to config
@@ -114,6 +123,9 @@ fn test_learning_algorithm_variants() {
 #[test]
 fn test_config_with_hybrid_assisted_mode() {
     let mut config = HybridIntelligenceConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     config.mode = IntelligenceMode::HybridAssisted;
 
     // Verify other config values remain unchanged after setting mode
@@ -123,6 +135,9 @@ fn test_config_with_hybrid_assisted_mode() {
     );
     assert_eq!(
         config.ai_confidence_threshold, 0.8,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "AI confidence threshold should remain at default"
     );
     assert!(
@@ -138,6 +153,9 @@ fn test_config_with_human_mode() {
 
     config.mode = IntelligenceMode::Human;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // In Human mode, AI features should still be configurable
     assert_eq!(
         config.human_feedback_weight, original_weight,
@@ -155,6 +173,9 @@ fn test_config_with_supervised_learning() {
     let original_weight = config.human_feedback_weight;
 
     config.learning_algorithm = LearningAlgorithm::SupervisedLearning;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Verify other config values remain unchanged
     assert_eq!(
@@ -170,6 +191,9 @@ fn test_config_with_supervised_learning() {
 #[test]
 fn test_config_with_reinforcement_learning() {
     let mut config = HybridIntelligenceConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     config.learning_algorithm = LearningAlgorithm::ReinforcementLearning;
 
     // Test switching between algorithms
@@ -184,7 +208,9 @@ fn test_config_with_reinforcement_learning() {
     );
     assert_eq!(
         config.ai_confidence_threshold, 0.8,
-        "AI confidence threshold should remain at default"
+        "AI confidence threshold should remain at default" // TEST_CATEGORY: integration
+                                                           // TEST_DOMAIN: core
+                                                           // TEST_PRIORITY: normal
     );
 }
 
@@ -199,13 +225,15 @@ fn test_config_human_feedback_weight() {
         config.human_feedback_weight = weight;
         assert!(
             config.human_feedback_weight >= 0.0 && config.human_feedback_weight <= 1.0,
-            "Human feedback weight {} should be in valid range",
-            weight
+            "Human feedback weight {weight} should be in valid range"
         );
         assert_eq!(
-            config.human_feedback_weight, weight,
-            "Weight should be set to {}",
-            weight
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
+            config.human_feedback_weight,
+            weight,
+            "Weight should be set to {weight}"
         );
     }
 }
@@ -226,19 +254,34 @@ fn test_decision_with_high_confidence() {
     // High confidence decisions should be automated
     // TODO: Add real high confidence decision test
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_decision_with_low_confidence() {
     // Low confidence should request human input
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // TODO: Add real low confidence decision test
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_decision_timeout_handling() {
     // Decisions should handle timeouts gracefully
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // TODO: Add real timeout handling test
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_decision_fallback_strategy() {
     // Should have fallback when AI unavailable

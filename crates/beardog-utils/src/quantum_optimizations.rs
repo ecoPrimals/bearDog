@@ -586,6 +586,9 @@ impl TunnelingCalculator {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_quantum_optimization() {
         let mut engine = QuantumOptimizationEngine::new(4);

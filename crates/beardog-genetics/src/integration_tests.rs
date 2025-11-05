@@ -8,6 +8,9 @@ mod tests {
     use beardog_traits::prelude::*;
     use std::collections::HashMap;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_unified_genetic_traits() -> Result<(), Box<dyn std::error::Error>> {
 

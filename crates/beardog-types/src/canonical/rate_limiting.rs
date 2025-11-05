@@ -40,6 +40,9 @@ mod tests {
     use crate::canonical::config::domains::network::RateLimitStrategy;
     use std::time::Duration;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_default_rate_limit_config() {
         let config = RateLimitConfig::default();

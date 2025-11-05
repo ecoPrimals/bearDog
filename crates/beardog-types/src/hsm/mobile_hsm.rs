@@ -138,24 +138,39 @@ mod tests {
     fn test_android_strongbox_default() {
         let hsm = AndroidStrongBoxHsm::default();
         assert_eq!(hsm.id, "android-strongbox");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_ios_secure_enclave_creation() {
         let hsm = IosSecureEnclaveHsm::new("test-hsm");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(hsm.id, "test-hsm");
         assert!(hsm.os_version.is_none());
         assert!(hsm.chip_generation.is_none());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_ios_secure_enclave_with_info() {
         let hsm = IosSecureEnclaveHsm::with_info("test-hsm", "iOS 17.0", "A17 Pro");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(hsm.id, "test-hsm");
         assert_eq!(hsm.os_version, Some("iOS 17.0".to_string()));
         assert_eq!(hsm.chip_generation, Some("A17 Pro".to_string()));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_ios_secure_enclave_default() {
         let hsm = IosSecureEnclaveHsm::default();

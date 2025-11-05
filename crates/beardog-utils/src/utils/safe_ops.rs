@@ -265,6 +265,9 @@ mod tests {
         let write_guard = SafeLock::safe_write_lock(&data, timeout_duration).await;
         assert!(write_guard.is_ok());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_safe_collection_operations() {
@@ -275,6 +278,9 @@ mod tests {
 
         assert!(SafeCollection::safe_first(&vec).is_ok());
         assert!(SafeCollection::safe_last(&vec).is_ok());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let empty: Vec<i32> = vec![];
         assert!(SafeCollection::safe_first(&empty).is_err());
@@ -287,6 +293,9 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(
             result.map_err(|e| {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 tracing::error!("Operation failed: {:?}", e);
                 beardog_errors::BearDogError::internal(
                     format_args!("Operation failed: {e:?}").to_string(),
@@ -306,6 +315,9 @@ mod tests {
     #[test]
     fn test_safe_string_operations() {
         assert!(SafeString::safe_parse::<i32>("42").is_ok());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(SafeString::safe_parse::<i32>("not_a_number").is_err());
 
         let text = "hello world";
@@ -313,6 +325,9 @@ mod tests {
         assert!(SafeString::safe_substring(text, 20, 5).is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_safe_ops() {
         assert!(SafeOps::safe_unwrap_option(Some(42), "test").is_ok());

@@ -159,6 +159,9 @@ mod tests {
     #[test]
     fn test_memory_pool_basic() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SafeMemoryPool::<TestStruct>::new(10);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let item = pool.acquire()?;
         assert_eq!(item.value, 0);
@@ -171,6 +174,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_pool_reuse() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SafeMemoryPool::<TestStruct>::new(10);
@@ -182,6 +188,221 @@ mod tests {
 
         let stats = pool.get_stats()?;
         assert_eq!(stats.pool_hits, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_max_size() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(2);
+
+        // Fill the pool
+        let item1 = pool.acquire()?;
+        let item2 = pool.acquire()?;
+        let item3 = pool.acquire()?;
+
+        pool.release(item1)?;
+        pool.release(item2)?;
+        pool.release(item3)?; // This should be discarded as pool is full
+
+        let size = pool.pool_size()?;
+        assert_eq!(size, 2, "Pool should not exceed max_size");
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_stats_tracking() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(5);
+
+        // Acquire 3 items
+        let item1 = pool.acquire()?;
+        let item2 = pool.acquire()?;
+        let item3 = pool.acquire()?;
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.total_allocations, 3);
+        assert_eq!(stats.pool_misses, 3);
+        assert_eq!(stats.pool_hits, 0);
+        assert_eq!(stats.current_usage, 3);
+        assert_eq!(stats.peak_usage, 3);
+
+        // Release 2 items
+        pool.release(item1)?;
+        pool.release(item2)?;
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.total_deallocations, 2);
+        assert_eq!(stats.current_usage, 1);
+        assert_eq!(stats.peak_usage, 3);
+
+        // Acquire again (should hit pool)
+        let _item4 = pool.acquire()?;
+        let _item5 = pool.acquire()?;
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.pool_hits, 2);
+        assert_eq!(stats.current_usage, 3);
+
+        pool.release(item3)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_clear() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(10);
+
+        // Add items to pool
+        let item1 = pool.acquire()?;
+        let item2 = pool.acquire()?;
+        pool.release(item1)?;
+        pool.release(item2)?;
+
+        assert_eq!(pool.pool_size()?, 2);
+
+        // Clear the pool
+        pool.clear()?;
+        assert_eq!(pool.pool_size()?, 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_clone() -> Result<(), Box<dyn std::error::Error>> {
+        let pool1 = SafeMemoryPool::<TestStruct>::new(10);
+
+        let item = pool1.acquire()?;
+        pool1.release(item)?;
+
+        // Clone shares the same underlying pool
+        let pool2 = pool1.clone();
+
+        let item2 = pool2.acquire()?;
+        assert!(item2.value == 0);
+
+        // Both pools share stats
+        let stats1 = pool1.get_stats()?;
+        let stats2 = pool2.get_stats()?;
+        assert_eq!(stats1.pool_hits, stats2.pool_hits);
+
+        pool2.release(item2)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_default() {
+        let pool = SafeMemoryPool::<TestStruct>::default();
+        assert_eq!(pool.max_size, 100);
+    }
+
+    #[test]
+    fn test_pool_peak_usage() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(10);
+
+        let item1 = pool.acquire()?;
+        let item2 = pool.acquire()?;
+        let item3 = pool.acquire()?;
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.peak_usage, 3);
+
+        pool.release(item1)?;
+        pool.release(item2)?;
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.peak_usage, 3, "Peak usage should remain at maximum");
+        assert_eq!(stats.current_usage, 1);
+
+        pool.release(item3)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_multiple_acquire_release_cycles() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(5);
+
+        // Multiple cycles
+        for _ in 0..3 {
+            let items: Vec<_> = (0..5).map(|_| pool.acquire().unwrap()).collect();
+            for item in items {
+                pool.release(item).unwrap();
+            }
+        }
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.total_allocations, 5); // Only allocated once
+        assert_eq!(stats.total_deallocations, 15); // Released 3 times each
+        assert_eq!(stats.pool_hits, 10); // 2nd and 3rd cycles hit pool
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_size_tracking() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(3);
+
+        assert_eq!(pool.pool_size()?, 0);
+
+        let item1 = pool.acquire()?;
+        assert_eq!(pool.pool_size()?, 0);
+
+        pool.release(item1)?;
+        assert_eq!(pool.pool_size()?, 1);
+
+        let item2 = pool.acquire()?;
+        let item3 = pool.acquire()?;
+        pool.release(item2)?;
+        pool.release(item3)?;
+        assert_eq!(pool.pool_size()?, 2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_stats_clone() -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(5);
+
+        let item = pool.acquire()?;
+        pool.release(item)?;
+
+        let stats1 = pool.get_stats()?;
+        let stats2 = stats1.clone();
+
+        assert_eq!(stats1.total_allocations, stats2.total_allocations);
+        assert_eq!(stats1.pool_hits, stats2.pool_hits);
+        assert_eq!(stats1.pool_misses, stats2.pool_misses);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_pool_concurrent_access() -> Result<(), Box<dyn std::error::Error>> {
+        use std::sync::Arc;
+        use std::thread;
+
+        let pool = Arc::new(SafeMemoryPool::<TestStruct>::new(10));
+        let mut handles = vec![];
+
+        // Spawn threads that acquire and release
+        for _ in 0..5 {
+            let pool_clone = Arc::clone(&pool);
+            handles.push(thread::spawn(move || {
+                for _ in 0..10 {
+                    let item = pool_clone.acquire().unwrap();
+                    // Do some "work"
+                    std::thread::sleep(std::time::Duration::from_micros(1));
+                    pool_clone.release(item).unwrap();
+                }
+            }));
+        }
+
+        // Wait for all threads
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let stats = pool.get_stats()?;
+        assert_eq!(stats.total_deallocations, 50);
+        assert_eq!(stats.current_usage, 0);
+
         Ok(())
     }
 }

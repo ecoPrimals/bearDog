@@ -156,11 +156,17 @@ mod tests {
         assert_eq!(statuses[0], HealthStatus::Healthy);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_component_health_creation() {
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), "1.0".to_string());
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let component = ComponentHealth {
             name: "api".to_string(),
             status: HealthStatus::Healthy,
@@ -171,6 +177,9 @@ mod tests {
         assert_eq!(component.name, "api");
         assert_eq!(component.response_time_ms, 25.5);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_health_checker_new() {
@@ -184,10 +193,16 @@ mod tests {
         let config = HealthConfig {
             enabled: true,
             check_interval_seconds: 30,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             timeout_seconds: 5,
         };
 
         let mut checker = HealthChecker::new(&config)?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         let result = checker.start_health_monitoring();
         assert!(result.is_ok());
@@ -203,6 +218,9 @@ mod tests {
         let checker = HealthChecker::new(&config)?;
 
         let report = checker.comprehensive_health_check()?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(report.overall_status, HealthStatus::Healthy);
         assert_eq!(report.component_statuses.len(), 2);
         Ok(())
@@ -211,6 +229,9 @@ mod tests {
     #[test]
     fn test_health_report_serialization() {
         let report = HealthReport {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             overall_status: HealthStatus::Healthy,
             component_statuses: vec![],
             timestamp: 1_234_567_890,
@@ -220,6 +241,9 @@ mod tests {
         assert!(json.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_health_status_serialization() {
         for status in &[

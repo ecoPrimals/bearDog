@@ -87,12 +87,18 @@ fn test_optimization_config_all_features_enabled() {
         optimization_interval_seconds: 300,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(config.enable_auto_scaling);
     assert!(config.enable_profiling);
     assert!(config.optimization_interval_seconds > 0);
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // Optimizer Creation Tests
 // ============================================================================
 
@@ -103,6 +109,9 @@ fn test_performance_optimizer_new_default() {
 
     assert!(result.is_ok());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_performance_optimizer_new_with_auto_scaling() {
@@ -120,6 +129,9 @@ fn test_performance_optimizer_new_with_auto_scaling() {
 fn test_performance_optimizer_new_with_profiling() {
     let config = OptimizationConfig {
         enable_auto_scaling: false,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_profiling: true,
         optimization_interval_seconds: 600,
     };
@@ -132,6 +144,9 @@ fn test_performance_optimizer_new_with_profiling() {
 fn test_performance_optimizer_new_fully_enabled() {
     let config = OptimizationConfig {
         enable_auto_scaling: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_profiling: true,
         optimization_interval_seconds: 300,
     };
@@ -142,6 +157,9 @@ fn test_performance_optimizer_new_fully_enabled() {
 
 // ============================================================================
 // Initialization Tests
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -156,11 +174,17 @@ fn test_performance_optimizer_initialize_optimizations() {
 #[test]
 fn test_performance_optimizer_initialize_with_auto_scaling() {
     let config = OptimizationConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_auto_scaling: true,
         enable_profiling: false,
         optimization_interval_seconds: 300,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut optimizer = PerformanceOptimizer::new(&config).expect("Should create optimizer");
     let result = optimizer.initialize_optimizations();
     assert!(result.is_ok());
@@ -170,6 +194,9 @@ fn test_performance_optimizer_initialize_with_auto_scaling() {
 fn test_performance_optimizer_initialize_with_profiling() {
     let config = OptimizationConfig {
         enable_auto_scaling: false,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_profiling: true,
         optimization_interval_seconds: 600,
     };
@@ -179,6 +206,9 @@ fn test_performance_optimizer_initialize_with_profiling() {
     assert!(result.is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_performance_optimizer_multiple_initializations() {
     let config = OptimizationConfig::default();
@@ -192,12 +222,18 @@ fn test_performance_optimizer_multiple_initializations() {
 
 // ============================================================================
 // Scaling Evaluation Tests
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
 fn test_performance_optimizer_evaluate_scaling_needs() {
     let config = OptimizationConfig::default();
     let optimizer = PerformanceOptimizer::new(&config).expect("Should create optimizer");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let state = ProductionState::default();
     let result = optimizer.evaluate_scaling_needs(&state);
@@ -208,6 +244,9 @@ fn test_performance_optimizer_evaluate_scaling_needs() {
 fn test_performance_optimizer_evaluate_scaling_healthy_state() {
     let config = OptimizationConfig {
         enable_auto_scaling: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_profiling: false,
         optimization_interval_seconds: 300,
     };
@@ -218,6 +257,9 @@ fn test_performance_optimizer_evaluate_scaling_healthy_state() {
         status: super::OperationalStatus::Healthy,
         active_connections: 100,
         total_requests: 1000,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         memory_usage_bytes: 1_000_000,
         cpu_usage_percent: 50.0,
         error_count_hourly: 0,
@@ -230,6 +272,9 @@ fn test_performance_optimizer_evaluate_scaling_healthy_state() {
 
 #[test]
 fn test_performance_optimizer_evaluate_scaling_high_load() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = OptimizationConfig {
         enable_auto_scaling: true,
         enable_profiling: true,
@@ -237,6 +282,9 @@ fn test_performance_optimizer_evaluate_scaling_high_load() {
     };
 
     let optimizer = PerformanceOptimizer::new(&config).expect("Should create optimizer");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let state = ProductionState {
         status: super::OperationalStatus::Degraded,
@@ -258,6 +306,9 @@ fn test_performance_optimizer_evaluate_scaling_various_states() {
     let optimizer = PerformanceOptimizer::new(&config).expect("Should create optimizer");
 
     let states = [
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         super::OperationalStatus::Initializing,
         super::OperationalStatus::Healthy,
         super::OperationalStatus::Degraded,
@@ -279,6 +330,9 @@ fn test_performance_optimizer_evaluate_scaling_various_states() {
 
         let result = optimizer.evaluate_scaling_needs(&state);
         assert!(result.is_ok());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -310,12 +364,18 @@ fn test_performance_optimizer_debug() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_optimization_config_extreme_interval() {
     let config = OptimizationConfig {
         enable_auto_scaling: true,
         enable_profiling: true,
         optimization_interval_seconds: u64::MAX, // Extreme value
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let optimizer = PerformanceOptimizer::new(&config);
     assert!(optimizer.is_ok());
@@ -327,6 +387,9 @@ fn test_optimization_config_zero_interval() {
         enable_auto_scaling: true,
         enable_profiling: true,
         optimization_interval_seconds: 0, // Zero interval
+                                          // TEST_CATEGORY: unit
+                                          // TEST_DOMAIN: types
+                                          // TEST_PRIORITY: normal
     };
 
     let optimizer = PerformanceOptimizer::new(&config);
@@ -336,6 +399,9 @@ fn test_optimization_config_zero_interval() {
 #[test]
 fn test_performance_optimizer_with_extreme_state() {
     let config = OptimizationConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let optimizer = PerformanceOptimizer::new(&config).expect("Should create optimizer");
 
     let state = ProductionState {
@@ -345,6 +411,9 @@ fn test_performance_optimizer_with_extreme_state() {
         memory_usage_bytes: u64::MAX,
         cpu_usage_percent: 999.9,
         error_count_hourly: u64::MAX,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         performance: super::PerformanceMetrics::default(),
     };
 
@@ -365,6 +434,9 @@ fn test_performance_optimizer_full_lifecycle() {
         optimization_interval_seconds: 300,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut optimizer = PerformanceOptimizer::new(&config).expect("Should create");
     assert!(optimizer.initialize_optimizations().is_ok());
 
@@ -378,6 +450,9 @@ fn test_performance_optimizer_without_initialization() {
     let config = OptimizationConfig::default();
     let optimizer = PerformanceOptimizer::new(&config).expect("Should create");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let state = ProductionState::default();
     let result = optimizer.evaluate_scaling_needs(&state);
     assert!(result.is_ok());
@@ -386,6 +461,9 @@ fn test_performance_optimizer_without_initialization() {
 #[test]
 fn test_performance_optimizer_multiple_evaluations() {
     let config = OptimizationConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_auto_scaling: true,
         enable_profiling: false,
         optimization_interval_seconds: 300,
@@ -400,6 +478,9 @@ fn test_performance_optimizer_multiple_evaluations() {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_multiple_optimizers_independent() {
     // Multiple optimizers should work independently

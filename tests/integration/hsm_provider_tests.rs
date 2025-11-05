@@ -106,6 +106,9 @@ async fn test_hsm_provider_initialization_timeout() {
         elapsed
     );
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // May succeed or fail depending on system speed, but should not hang
     assert!(
         result.is_ok(),
@@ -123,6 +126,9 @@ async fn test_hsm_provider_initialization_concurrent() {
         HsmManager::new(config1),
         HsmManager::new(config2)
     );
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: important
     
     assert!(
         result1.is_ok() && result2.is_ok(),
@@ -141,6 +147,9 @@ async fn test_hsm_provider_initialization_retry_logic() {
     let result = HsmManager::new(config).await;
     let elapsed = start.elapsed();
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     if result.is_ok() {
         // Should complete quickly if successful on first try
         assert!(
@@ -161,6 +170,9 @@ async fn test_hsm_provider_initialization_with_missing_deps() {
     // Should handle missing dependencies gracefully
     if result.is_err() {
         // Expected - no PKCS#11 library in test environment
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(true);
     } else {
         // If somehow succeeded, verify it's functional
@@ -175,6 +187,9 @@ async fn test_hsm_provider_initialization_health_check() {
     
     let manager = HsmManager::new(config)
         .await
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .expect("Should initialize successfully");
     
     // Wait a moment for health check to run
@@ -192,6 +207,9 @@ async fn test_hsm_provider_initialization_capability_detection() {
     let manager = HsmManager::new(config)
         .await
         .expect("Should initialize successfully");
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     let capabilities = manager.get_capabilities().await;
     
@@ -207,6 +225,9 @@ async fn test_hsm_provider_initialization_capability_detection() {
 }
 
 #[tokio::test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 async fn test_hsm_provider_initialization_multiple_providers() {
     // Test initializing multiple providers with different configs
     let config_software = create_test_hsm_config();
@@ -220,6 +241,9 @@ async fn test_hsm_provider_initialization_multiple_providers() {
     assert!(
         result1.is_ok(),
         "Software HSM should always be available"
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     );
     
     // Cloud KMS may not be available in test environment
@@ -239,6 +263,9 @@ async fn test_hsm_provider_initialization_cleanup_on_failure() {
         // Verify no resource leaks by attempting another initialization
         let valid_config = create_test_hsm_config();
         let second_result = HsmManager::new(valid_config).await;
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         assert!(
             second_result.is_ok(),
@@ -258,6 +285,9 @@ async fn test_hsm_provider_health_check_success() {
     let manager = HsmManager::new(config)
         .await
         .expect("Should initialize successfully");
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: important
     
     let is_healthy = manager.is_healthy().await;
     
@@ -278,6 +308,9 @@ async fn test_hsm_provider_health_check_after_operation() {
     
     // Health check should still pass
     let is_healthy = manager.is_healthy().await;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(is_healthy, "Should remain healthy after operations");
 }
 
@@ -288,6 +321,9 @@ async fn test_hsm_provider_health_check_timeout() {
     config.timeout = Duration::from_millis(1);
     
     if let Ok(manager) = HsmManager::new(config).await {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let start = std::time::Instant::now();
         let _ = manager.is_healthy().await;
         let elapsed = start.elapsed();
@@ -302,6 +338,9 @@ async fn test_hsm_provider_health_check_timeout() {
 #[tokio::test]
 async fn test_hsm_provider_health_check_concurrent() {
     // Test concurrent health checks
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = create_test_hsm_config();
     let manager = HsmManager::new(config)
         .await
@@ -317,6 +356,9 @@ async fn test_hsm_provider_health_check_concurrent() {
         health1 && health2 && health3,
         "Concurrent health checks should all succeed"
     );
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[tokio::test]
@@ -334,6 +376,9 @@ async fn test_hsm_provider_health_check_degraded_detection() {
     // For now, just verify health check mechanism works
     let health_status = manager.get_health_status().await;
     assert!(health_status.is_ok());
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[tokio::test]
@@ -348,6 +393,9 @@ async fn test_hsm_provider_health_check_recovery() {
     for _ in 0..5 {
         let is_healthy = manager.is_healthy().await;
         assert!(is_healthy, "Should remain healthy during checks");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
 }
@@ -361,6 +409,9 @@ async fn test_hsm_provider_health_check_multiple_providers() {
     let manager1 = HsmManager::new(config1).await.expect("Init 1 should succeed");
     let manager2 = HsmManager::new(config2).await.expect("Init 2 should succeed");
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let (health1, health2) = tokio::join!(
         manager1.is_healthy(),
         manager2.is_healthy()
@@ -375,6 +426,9 @@ async fn test_hsm_provider_health_check_notification() {
     let config = create_test_hsm_config();
     let manager = HsmManager::new(config)
         .await
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .expect("Should initialize successfully");
     
     // Get initial health status
@@ -390,6 +444,9 @@ async fn test_hsm_provider_health_check_notification() {
 #[tokio::test]
 async fn test_hsm_provider_health_check_metrics() {
     // Test that health checks update metrics
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = create_test_hsm_config();
     let manager = HsmManager::new(config)
         .await
@@ -405,6 +462,9 @@ async fn test_hsm_provider_health_check_metrics() {
     assert!(metrics.is_ok(), "Should provide health check metrics");
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_hsm_provider_health_check_periodic() {
     // Test periodic health check execution

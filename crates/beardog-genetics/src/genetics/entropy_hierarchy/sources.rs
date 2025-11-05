@@ -206,9 +206,15 @@ mod tests {
         let _engine = EntropyMixingEngine::new(&config);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_xor_mixing() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let engine = EntropyMixingEngine::new(&config);
 
         let sources = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8]];
@@ -218,6 +224,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_entropy_source_manager() {
         let config = EntropyHierarchyConfig::default();

@@ -1,6 +1,9 @@
 use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_complete_system_initialization() -> Result<(), BearDogError> {
     // Simple system initialization test

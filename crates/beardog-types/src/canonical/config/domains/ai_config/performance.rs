@@ -63,8 +63,14 @@ impl Default for AiPerformanceConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            cpu_threads: 4, // Default to 4 threads
-            memory_limit_mb: 4096,
+            cpu_threads: std::env::var("BEARDOG_AI_CPU_THREADS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(4), // Default to 4 threads
+            memory_limit_mb: std::env::var("BEARDOG_AI_MEMORY_LIMIT_MB")
+                .ok()
+                .and_then(|m| m.parse().ok())
+                .unwrap_or(4096), // 4GB default
             mixed_precision: false,
             quantization: false,
         }
@@ -141,7 +147,12 @@ impl AiPerformanceConfigBuilder {
         Ok(AiPerformanceConfig {
             enabled: self.enabled,
             cpu_threads: self.cpu_threads.unwrap_or(4),
-            memory_limit_mb: self.memory_limit_mb.unwrap_or(4096),
+            memory_limit_mb: self.memory_limit_mb.unwrap_or(
+                std::env::var("BEARDOG_AI_MEMORY_LIMIT_MB")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(4096)
+            ),
             mixed_precision: self.mixed_precision,
             quantization: self.quantization,
         })
@@ -315,6 +326,9 @@ mod tests {
             .memory_limit_mb(8192)
             ?
             .build()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             ?;
 
         assert!(config.is_enabled());
@@ -328,9 +342,15 @@ mod tests {
         assert!(AiPerformanceConfig::builder().cpu_threads(1).is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_security_builder() {
         let config = AiSecurityConfig::builder()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .enabled(true)
             .enable_adversarial_protection(true)
             .build()
@@ -340,6 +360,9 @@ mod tests {
         assert!(config.is_adversarial_protection_enabled());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_security_presets() {
         let max_sec = AiSecurityConfigBuilder::maximum_security().build()?;

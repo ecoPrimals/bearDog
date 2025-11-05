@@ -270,66 +270,133 @@ impl Default for ConsolidatedMonitoringConfig {
     }
 }
 
-impl Default for MetricsCollectionConfig {
-    fn default() -> Self {
+impl MetricsCollectionConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+        use std::time::Duration;
+
         Self {
-            interval: Duration::from_secs(60),
+            interval: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_METRICS_COLLECTION_INTERVAL_SECS",
+                60,
+            )),
             metrics: vec!["cpu".to_string(), "memory".to_string()],
-            strategy: "push".to_string(),
-            buffer_size: 1000,
-            retention_period: Duration::from_secs(86400 * 7), // 7 days
+            strategy: source.get_or("BEARDOG_METRICS_STRATEGY", "push"),
+            buffer_size: get_parsed(source, "BEARDOG_METRICS_BUFFER_SIZE", 1000),
+            retention_period: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_METRICS_RETENTION_PERIOD_SECS",
+                86400 * 7,
+            )),
         }
     }
 }
 
-impl Default for AnalysisProcessingConfig {
+impl Default for MetricsCollectionConfig {
     fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
+impl AnalysisProcessingConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_bool, get_parsed};
+        use std::time::Duration;
+
         Self {
-            real_time: true,
+            real_time: get_bool(source, "BEARDOG_ANALYSIS_REAL_TIME", true),
             algorithms: vec![
                 "moving_average".to_string(),
                 "exponential_smoothing".to_string(),
             ],
-            window_size: Duration::from_secs(300), // 5 minutes
+            window_size: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_ANALYSIS_WINDOW_SIZE_SECS",
+                300,
+            )),
             statistical_methods: vec!["mean".to_string(), "stddev".to_string()],
             ml_models: vec!["linear_regression".to_string()],
         }
     }
 }
 
-impl Default for HealthMonitoringConfig {
+impl Default for AnalysisProcessingConfig {
     fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
+impl HealthMonitoringConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_bool, get_parsed};
+        use std::collections::HashMap;
+        use std::time::Duration;
+
+        let mut thresholds = HashMap::new();
+        thresholds.insert(
+            "response_time_ms".to_string(),
+            get_parsed(source, "BEARDOG_RESPONSE_TIME_THRESHOLD_MS", 1000.0),
+        );
+        thresholds.insert("error_rate".to_string(), 0.05);
+
         Self {
-            enabled: true,
-            check_interval: Duration::from_secs(30),
+            enabled: get_bool(source, "BEARDOG_HEALTH_MONITORING_ENABLED", true),
+            check_interval: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_HEALTH_CHECK_INTERVAL_SECS",
+                30,
+            )),
             endpoints: vec!["/health".to_string(), "/ready".to_string()],
-            thresholds: {
-                let mut thresholds = HashMap::new();
-                thresholds.insert("response_time_ms".to_string(), 1000.0);
-                thresholds.insert("error_rate".to_string(), 0.05);
-                thresholds
-            },
+            thresholds,
             recovery_actions: HashMap::new(),
         }
     }
 }
 
-impl Default for AnomalyDetectionConfig {
+impl Default for HealthMonitoringConfig {
     fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
+impl AnomalyDetectionConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+        use std::collections::HashMap;
+        use std::time::Duration;
+
+        let mut alert_thresholds = HashMap::new();
+        alert_thresholds.insert("anomaly_score".to_string(), 0.9);
+
         Self {
             enabled: true,
             algorithms: vec![
                 "isolation_forest".to_string(),
                 "statistical_outlier".to_string(),
             ],
-            sensitivity: 0.8,
-            training_window: Duration::from_secs(86400), // 1 day
-            alert_thresholds: {
-                let mut thresholds = HashMap::new();
-                thresholds.insert("anomaly_score".to_string(), 0.9);
-                thresholds
-            },
+            sensitivity: get_parsed(source, "BEARDOG_ANOMALY_DETECTION_SENSITIVITY", 0.8),
+            training_window: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_ANOMALY_TRAINING_WINDOW_SECS",
+                86400,
+            )),
+            alert_thresholds,
         }
+    }
+}
+
+impl Default for AnomalyDetectionConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -337,10 +404,20 @@ impl Default for TrendAnalysisConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            analysis_period: Duration::from_secs(86400), // 1 day
+            analysis_period: Duration::from_secs(
+                std::env::var("BEARDOG_TREND_ANALYSIS_PERIOD_SECS")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(86400), // 1 day default
+            ),
             indicators: vec!["cpu_trend".to_string(), "memory_trend".to_string()],
             forecasting_models: vec!["arima".to_string(), "linear_trend".to_string()],
-            prediction_horizon: Duration::from_secs(3600), // 1 hour
+            prediction_horizon: Duration::from_secs(
+                std::env::var("BEARDOG_PREDICTION_HORIZON_SECS")
+                    .ok()
+                    .and_then(|h| h.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ),
         }
     }
 }
@@ -372,35 +449,71 @@ impl Default for SecurityMonitoringConfig {
     }
 }
 
-impl Default for ExportIntegrationConfig {
-    fn default() -> Self {
+impl ExportIntegrationConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+        use std::time::Duration;
+
         Self {
             destinations: vec![],
-            format: "json".to_string(),
-            interval: Duration::from_secs(300), // 5 minutes
+            format: source.get_or("BEARDOG_EXPORT_FORMAT", "json"),
+            interval: Duration::from_secs(get_parsed(source, "BEARDOG_EXPORT_INTERVAL_SECS", 300)),
             compression: CompressionConfig::default(),
+        }
+    }
+}
+
+impl Default for ExportIntegrationConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
+impl CompressionConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_bool, get_parsed};
+
+        Self {
+            enabled: get_bool(source, "BEARDOG_COMPRESSION_ENABLED", true),
+            algorithm: source.get_or("BEARDOG_COMPRESSION_ALGORITHM", "gzip"),
+            level: get_parsed(source, "BEARDOG_COMPRESSION_LEVEL", 6),
         }
     }
 }
 
 impl Default for CompressionConfig {
     fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
+impl MonitoringConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_bool, get_parsed};
+        use std::time::Duration;
+
         Self {
-            enabled: true,
-            algorithm: "gzip".to_string(),
-            level: 6,
+            enabled: get_bool(source, "BEARDOG_MONITORING_ENABLED", true),
+            metrics_interval: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_MONITORING_METRICS_INTERVAL_SECS",
+                60,
+            )),
+            alerts: vec![],
+            dashboard: DashboardConfig::default(),
         }
     }
 }
 
 impl Default for MonitoringConfig {
     fn default() -> Self {
-        Self {
-            enabled: true,
-            metrics_interval: Duration::from_secs(60),
-            alerts: vec![],
-            dashboard: DashboardConfig::default(),
-        }
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -409,21 +522,39 @@ impl Default for AlertConfig {
         Self {
             name: "default_alert".to_string(),
             condition: "cpu > 80%".to_string(),
-            threshold: 80.0,
+            threshold: std::env::var("BEARDOG_ALERT_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(80.0),
             severity: "warning".to_string(),
             channels: vec!["email".to_string()],
         }
     }
 }
 
+impl DashboardConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_bool, get_parsed};
+        use std::time::Duration;
+
+        Self {
+            enabled: get_bool(source, "BEARDOG_DASHBOARD_ENABLED", true),
+            refresh_interval: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_DASHBOARD_REFRESH_INTERVAL_SECS",
+                30,
+            )),
+            metrics: vec!["cpu".to_string(), "memory".to_string()],
+            layout: source.get_or("BEARDOG_DASHBOARD_LAYOUT", "grid"),
+        }
+    }
+}
+
 impl Default for DashboardConfig {
     fn default() -> Self {
-        Self {
-            enabled: true,
-            refresh_interval: Duration::from_secs(30),
-            metrics: vec!["cpu".to_string(), "memory".to_string()],
-            layout: "grid".to_string(),
-        }
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 

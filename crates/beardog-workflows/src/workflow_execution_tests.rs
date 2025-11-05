@@ -48,6 +48,9 @@ fn test_execution_status_lifecycle() {
     let queued = ExecutionStatus::Queued;
     let running = ExecutionStatus::Running;
     let completed = ExecutionStatus::Completed;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 
     assert_eq!(queued, ExecutionStatus::Queued);
     assert_eq!(running, ExecutionStatus::Running);
@@ -72,6 +75,9 @@ fn test_workflow_priority_levels() {
         WorkflowPriority::Emergency,
     ];
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     for (i, priority) in priorities.iter().enumerate() {
         let cloned = priority.clone();
         assert_eq!(priority, &cloned);
@@ -89,6 +95,9 @@ fn test_workflow_priority_levels() {
 // Test 4: WorkflowType Variants
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_type_variants() {
     let types = vec![
@@ -113,6 +122,9 @@ fn test_workflow_type_variants() {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 // ============================================================================
 // Test 5: ApprovalDecision Handling
 // ============================================================================
@@ -138,6 +150,9 @@ fn test_approval_decision_states() {
         ApprovalDecision::Rejected("Invalid request".to_string())
     );
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Test 6: WorkflowIdentifier Variants
@@ -161,6 +176,9 @@ fn test_workflow_identifier_types() {
     // Test Clone and PartialEq
     assert_eq!(named.clone(), named);
     assert_ne!(named, generated);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
@@ -182,6 +200,9 @@ fn test_notification_status_lifecycle() {
         assert_eq!(status, cloned);
 
         // Test serialization
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         let json = serde_json::to_string(&status).expect("Should serialize");
         let restored: NotificationStatus = serde_json::from_str(&json).expect("Should deserialize");
         assert_eq!(status, restored);
@@ -204,6 +225,9 @@ fn test_workflow_config_creation() {
 
     assert_eq!(config.max_concurrent_workflows, 10);
     assert_eq!(config.default_timeout_seconds, 300);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert_eq!(config.retry_attempts, 3);
     assert!(config.enable_audit_logging);
     assert_eq!(config.workflow_storage_path, "/var/lib/beardog/workflows");
@@ -222,6 +246,9 @@ fn test_workflow_config_serialization() {
         enable_audit_logging: false,
         workflow_storage_path: "/tmp/workflows".to_string(),
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 
     let json = serde_json::to_string(&config).expect("Should serialize");
     let restored: WorkflowConfig = serde_json::from_str(&json).expect("Should deserialize");
@@ -249,6 +276,9 @@ fn test_default_workflow_status_terminal() {
     let running = DefaultWorkflowStatus::Running;
     let completed = DefaultWorkflowStatus::Completed;
     let failed = DefaultWorkflowStatus::Failed;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     let cancelled = DefaultWorkflowStatus::Cancelled;
 
     // Test is_terminal
@@ -266,6 +296,9 @@ fn test_default_workflow_status_terminal() {
 #[test]
 fn test_default_workflow_status_active() {
     let pending = DefaultWorkflowStatus::Pending;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     let running = DefaultWorkflowStatus::Running;
     let completed = DefaultWorkflowStatus::Completed;
     let failed = DefaultWorkflowStatus::Failed;
@@ -283,6 +316,9 @@ fn test_default_workflow_status_active() {
 // Test 12: WorkflowTarget Variants
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_target_types() {
     let targets = vec![

@@ -110,6 +110,9 @@ mod tests {
     use super::*;
     use crate::workflows::canonical::WorkflowStatus;
     use std::collections::HashMap;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_key_rotation_processor() -> Result<(), BearDogError> {
         let processor = KeyManagementProcessor::new_default();

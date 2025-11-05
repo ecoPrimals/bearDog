@@ -86,6 +86,9 @@ mod crypto_edge_cases {
         
         assert!(result.is_err());
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: important
 
     // ============================================================================
     // AES-GCM Edge Cases
@@ -98,6 +101,9 @@ mod crypto_edge_cases {
         
         let result = BearDogCrypto::aes_gcm_encrypt(&key, empty_data);
         
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Should succeed - encrypting empty data is valid
         assert!(result.is_ok());
     }
@@ -108,6 +114,9 @@ mod crypto_edge_cases {
         let data = b"test data";
         
         let result = BearDogCrypto::aes_gcm_encrypt(&invalid_key, data);
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: normal
         
         assert!(result.is_err());
     }
@@ -115,6 +124,9 @@ mod crypto_edge_cases {
     #[test]
     fn test_aes_decrypt_with_wrong_key() {
         let key1 = vec![1u8; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let key2 = vec![2u8; 32];
         let data = b"test data";
         
@@ -124,6 +136,9 @@ mod crypto_edge_cases {
         assert!(result.is_err());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_aes_decrypt_with_corrupted_ciphertext() {
         let key = vec![0u8; 32];
@@ -133,6 +148,9 @@ mod crypto_edge_cases {
         // Corrupt the ciphertext
         if !encrypted.is_empty() {
             encrypted[0] ^= 0xFF;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         }
         
         let result = BearDogCrypto::aes_gcm_decrypt(&key, &encrypted);
@@ -145,6 +163,9 @@ mod crypto_edge_cases {
         let key = vec![0u8; 32];
         let data = b"test data";
         
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let encrypted = BearDogCrypto::aes_gcm_encrypt(&key, data).unwrap();
         let truncated = &encrypted[..encrypted.len().saturating_sub(5)];
         
@@ -153,6 +174,9 @@ mod crypto_edge_cases {
         assert!(result.is_err());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     // ============================================================================
     // Hashing Edge Cases
     // ============================================================================
@@ -160,6 +184,9 @@ mod crypto_edge_cases {
     #[test]
     fn test_hash_empty_data() {
         let empty_data = b"";
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: critical
         
         let result = BearDogCrypto::compute_sha256(empty_data);
         
@@ -169,6 +196,9 @@ mod crypto_edge_cases {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     fn test_hash_large_data() {
         let large_data = vec![0xAA; 10 * 1024 * 1024]; // 10MB
         
@@ -182,6 +212,9 @@ mod crypto_edge_cases {
     #[test]
     fn test_hash_consistency() {
         let data = b"test data";
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: critical
         
         let hash1 = BearDogCrypto::compute_sha256(data).unwrap();
         let hash2 = BearDogCrypto::compute_sha256(data).unwrap();
@@ -196,6 +229,9 @@ mod crypto_edge_cases {
     #[test]
     fn test_hmac_with_empty_key() {
         let empty_key = b"";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let data = b"test data";
         
         let result = BearDogCrypto::compute_hmac_sha256(empty_key, data);
@@ -204,6 +240,9 @@ mod crypto_edge_cases {
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hmac_with_empty_data() {
         let key = b"secret key";
@@ -212,6 +251,9 @@ mod crypto_edge_cases {
         let result = BearDogCrypto::compute_hmac_sha256(key, empty_data);
         
         assert!(result.is_ok());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -223,6 +265,9 @@ mod crypto_edge_cases {
         let hmac = BearDogCrypto::compute_hmac_sha256(key1, data).unwrap();
         let result = BearDogCrypto::verify_hmac_sha256(key2, data, &hmac);
         
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(result.is_err());
     }
 
@@ -231,6 +276,9 @@ mod crypto_edge_cases {
         let key = b"secret key";
         let original_data = b"original data";
         let modified_data = b"modified data";
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: normal
         
         let hmac = BearDogCrypto::compute_hmac_sha256(key, original_data).unwrap();
         let result = BearDogCrypto::verify_hmac_sha256(key, modified_data, &hmac);
@@ -238,6 +286,9 @@ mod crypto_edge_cases {
         assert!(result.is_err());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // ============================================================================
     // Password Hashing Edge Cases
     // ============================================================================
@@ -247,6 +298,9 @@ mod crypto_edge_cases {
         let empty_password = "";
         
         let result = BearDogCrypto::hash_password(empty_password);
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: normal
         
         // Should succeed - empty passwords are technically valid
         assert!(result.is_ok());
@@ -260,6 +314,9 @@ mod crypto_edge_cases {
         
         assert!(result.is_ok());
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_password_verify_wrong_password() {
@@ -267,12 +324,18 @@ mod crypto_edge_cases {
         let wrong_password = "wrong_password";
         
         let hash = BearDogCrypto::hash_password(correct_password).unwrap();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let result = BearDogCrypto::verify_password(wrong_password, &hash);
         
         assert!(result.is_err());
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_password_verify_corrupted_hash() {
         let password = "test_password";
         let corrupted_hash = "invalid_hash_format";
@@ -281,6 +344,9 @@ mod crypto_edge_cases {
         
         assert!(result.is_err());
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: normal
 
     // ============================================================================
     // Random Generation Edge Cases
@@ -292,16 +358,25 @@ mod crypto_edge_cases {
         
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_generate_random_bytes_large_amount() {
         let result = BearDogCrypto::generate_random_bytes(1024 * 1024); // 1MB
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: normal
         
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 1024 * 1024);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_generate_random_bytes_uniqueness() {
         let bytes1 = BearDogCrypto::generate_random_bytes(32).unwrap();

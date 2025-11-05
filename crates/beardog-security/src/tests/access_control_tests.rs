@@ -11,6 +11,9 @@ use crate::*;
 // All tests in this module are temporarily disabled pending API migration
 // The access_control module has been reorganized and these tests need updating
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn placeholder_test() {
     // Placeholder to keep module compiling

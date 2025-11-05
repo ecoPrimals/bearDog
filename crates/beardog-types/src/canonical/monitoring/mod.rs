@@ -207,8 +207,13 @@ impl Default for PrometheusExporterConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            endpoint: "0.0.0.0".to_string(),
-            port: 9090,
+            endpoint: std::env::var("BEARDOG_PROMETHEUS_ENDPOINT")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
+            port: std::env::var("BEARDOG_PROMETHEUS_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(9090),
             metrics_path: "/metrics".to_string(),
             push_gateway: None,
         }
@@ -233,9 +238,14 @@ pub struct GrafanaExporterConfig {
 
 impl Default for GrafanaExporterConfig {
     fn default() -> Self {
+        use crate::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+
         Self {
             enabled: false,
-            url: "http://localhost:3000".to_string(),
+            url: std::env::var("BEARDOG_GRAFANA_URL")
+                .or_else(|_| std::env::var("GRAFANA_URL"))
+                .unwrap_or_else(|_| format!("http://{}:3000", network_config.default_host)),
             api_key: None,
             dashboard_config: HashMap::new(),
         }
@@ -261,9 +271,16 @@ pub struct JaegerExporterConfig {
 
 impl Default for JaegerExporterConfig {
     fn default() -> Self {
+        use crate::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+
         Self {
             enabled: false,
-            endpoint: "http://localhost:14268/api/traces".to_string(),
+            endpoint: std::env::var("BEARDOG_JAEGER_ENDPOINT")
+                .or_else(|_| std::env::var("JAEGER_ENDPOINT"))
+                .unwrap_or_else(|_| {
+                    format!("http://{}:14268/api/traces", network_config.default_host)
+                }),
             service_name: "beardog ".to_string(),
             sampling_rate: 0.1,
         }

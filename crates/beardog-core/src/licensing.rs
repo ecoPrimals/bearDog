@@ -267,11 +267,8 @@ impl ExternalFunctions {
             "kubernetes_integration" | "prometheus_export" | "grafana_dashboards" => {
                 Some("monitoring")
             }
-            // DEPRECATED: universal_kms - use universal_kms instead
-            "universal_kms" => {
-                tracing::warn!(
-                    "🚨 DEPRECATED: universal_kms license check - migrate to universal_kms"
-                );
+            // Cloud cryptography features use capability-based discovery
+            "cloud_crypto" | "key_management" => {
                 Some("cloud_crypto")
             }
             "capability_discovery" => Some("cloud_crypto"),

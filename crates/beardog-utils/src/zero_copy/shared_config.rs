@@ -171,16 +171,25 @@ mod tests {
         let removed = manager.remove("test");
         assert!(removed);
         assert!(manager.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_remove_nonexistent() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let manager = SharedConfigManager::new();
 
         let removed = manager.remove("nonexistent");
         assert!(!removed);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_clear() {
         let manager = SharedConfigManager::new();
@@ -191,6 +200,9 @@ mod tests {
 
         manager.clear();
         assert!(manager.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(manager.len(), 0);
     }
 
@@ -200,11 +212,17 @@ mod tests {
 
         let config1 = manager.get_or_create("int", || 42i32);
         let config2 = manager.get_or_create("string", || "test".to_string());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         assert_eq!(*config1, 42);
         assert_eq!(*config2, "test");
         assert_eq!(manager.len(), 2);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_default() {
@@ -215,6 +233,9 @@ mod tests {
     #[test]
     fn test_global_shared_config() {
         let manager1 = global_shared_config();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let manager2 = global_shared_config();
 
         // Should be the same instance
@@ -224,18 +245,30 @@ mod tests {
     #[test]
     fn test_get_shared_config_convenience() {
         let config = get_shared_config("test_convenience", || TestConfig { value: 99 });
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.value, 99);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_concurrent_get_or_create() {
         let manager = Arc::new(SharedConfigManager::new());
         let mut handles = vec![];
 
         // Spawn multiple threads trying to get the same config
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         for _ in 0..10 {
             let manager_clone = Arc::clone(&manager);
             let handle = std::thread::spawn(move || {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 manager_clone.get_or_create("shared", || TestConfig { value: 42 })
             });
             handles.push(handle);
@@ -260,6 +293,9 @@ mod tests {
 
         assert_eq!(manager.len(), 0);
         assert!(manager.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let _config = manager.get_or_create("test", || TestConfig { value: 1 });
 
@@ -270,6 +306,9 @@ mod tests {
     #[test]
     fn test_different_keys_different_configs() {
         let manager = SharedConfigManager::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let config1 = manager.get_or_create("key1", || TestConfig { value: 1 });
         let config2 = manager.get_or_create("key2", || TestConfig { value: 2 });
@@ -279,6 +318,9 @@ mod tests {
         assert!(!Arc::ptr_eq(&config1, &config2));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_factory_only_called_once() {
         let manager = SharedConfigManager::new();

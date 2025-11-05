@@ -106,6 +106,9 @@ impl Default for ServiceRegistryConfig {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_service_registration() -> Result<(), BearDogError> {
         let registry = ServiceRegistry::new(RegistryConfig::default());

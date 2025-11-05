@@ -32,6 +32,10 @@ pub struct EcosystemPerformanceOptimizer {
     config: EcosystemOptimizerConfig,
 }
 
+/// Connection pool for capability-based service access
+///
+/// Manages pooled connections to different ecosystem capabilities,
+/// including health monitoring and connection lifecycle.
 #[derive(Debug)]
 pub struct CapabilityConnectionPool {
     /// Active connections to service mesh capabilities
@@ -47,56 +51,54 @@ pub struct CapabilityConnectionPool {
     config: PoolConfig,
 }
 
+/// A pooled connection to an ecosystem service
+///
+/// Tracks connection metadata, metrics, and state for connection pool management.
 #[derive(Debug, Clone)]
 pub struct PooledConnection {
     /// Unique connection identifier
     pub id: String,
-    /// Connection endpoint
-    /// The endpoint value
+    /// Connection endpoint URL
     pub endpoint: String,
-    /// Connection established timestamp
-    /// The created at value
+    /// When the connection was established
     pub created_at: Instant,
     /// Last activity timestamp
-    /// The last used value
     pub last_used: Instant,
-    /// The metrics value
+    /// Connection performance metrics
     pub metrics: ConnectionMetrics,
-    /// Connection state
-    /// The state value
+    /// Current connection state
     pub state: ConnectionState,
 }
 
+/// Health metrics for a connection
+///
+/// Tracks response times, success rates, and request counts for health monitoring.
 #[derive(Debug, Clone)]
 pub struct ConnectionHealth {
     /// Average response time
     pub avg_response_time: Duration,
     /// Success rate (0.0 - 1.0)
-    /// The success rate value
     pub success_rate: f64,
     /// Total requests processed
-    /// Number of `total_requests`
     pub total_requests: u64,
     /// Failed requests count
-    /// Number of `failed_requests`
     pub failed_requests: u64,
-    /// Last health check
-    /// The last check value
+    /// Last health check timestamp
     pub last_check: Instant,
 }
 
+/// Metrics for connection performance tracking
+///
+/// Measures data transfer, request counts, and timing statistics.
 #[derive(Debug, Clone, Default)]
 pub struct ConnectionMetrics {
-    /// Total bytes sent
-    /// Number of `bytes_sent`
+    /// Total bytes sent over this connection
     pub bytes_sent: u64,
-    /// Total bytes received
-    /// Number of `bytes_received`
+    /// Total bytes received over this connection
     pub bytes_received: u64,
-    /// Request count
-    /// Number of request
+    /// Total number of requests made
     pub request_count: u64,
-    /// Average request time
+    /// Average request completion time
     pub avg_request_time: Duration,
 }
 
@@ -140,77 +142,78 @@ pub struct CachedResult {
     pub access_count: u64,
 }
 
+/// Statistics for cache performance
+///
+/// Tracks cache hits, misses, and memory usage for optimization analysis.
 #[derive(Debug, Default)]
 pub struct CacheStats {
-    /// Cache hits
-    /// Number of hits
+    /// Number of cache hits
     pub hits: u64,
-    /// Cache misses
-    /// Number of misses
+    /// Number of cache misses
     pub misses: u64,
-    /// Total cached items
-    /// Number of `total_items`
+    /// Total number of cached items
     pub total_items: u64,
-    /// Cache size in bytes
-    /// Number of `size_bytes`
+    /// Total cache memory usage in bytes
     pub size_bytes: u64,
 }
 
+/// Overall performance metrics for the ecosystem
+///
+/// Aggregates metrics across service mesh, compute, and ecosystem-wide operations.
 #[derive(Debug, Default, Clone)]
 pub struct PerformanceMetrics {
     /// Service mesh capability metrics
-    /// The service mesh value
     pub service_mesh: ServiceMetrics,
     /// Compute capability metrics
-    /// The compute value
     pub compute: ServiceMetrics,
-    /// Overall ecosystem metrics
-    /// The ecosystem value
+    /// Overall ecosystem-wide metrics
     pub ecosystem: EcosystemMetrics,
 }
 
+/// Performance metrics for a specific service
+///
+/// Tracks request counts, response times, and throughput for service monitoring.
 #[derive(Debug, Default, Clone)]
 pub struct ServiceMetrics {
-    /// Total requests
-    /// Number of `total_requests`
+    /// Total number of requests made
     pub total_requests: u64,
-    /// Successful requests
-    /// Number of `successful_requests`
+    /// Number of successful requests
     pub successful_requests: u64,
-    /// Average response time
+    /// Average response time across all requests
     pub avg_response_time: Duration,
-    /// Peak response time
+    /// Peak (worst) response time observed
     pub peak_response_time: Duration,
-    /// Throughput (requests per second)
-    /// The throughput value
+    /// Current throughput in requests per second
     pub throughput: f64,
 }
 
+/// Ecosystem-wide performance metrics
+///
+/// Measures cross-primal efficiency, resource usage, and overall performance.
 #[derive(Debug, Default, Clone)]
 pub struct EcosystemMetrics {
-    /// Cross-primal communication efficiency
-    /// The communication efficiency value
+    /// Cross-primal communication efficiency (0.0-1.0)
     pub communication_efficiency: f64,
-    /// Resource utilization
-    /// The resource utilization value
+    /// Resource utilization percentage (0.0-1.0)
     pub resource_utilization: f64,
-    /// Cache hit rate
-    /// The cache hit rate value
+    /// Cache hit rate (0.0-1.0)
     pub cache_hit_rate: f64,
+    /// Overall performance score (0.0-100.0)
     pub performance_score: f64,
 }
 
+/// Configuration for the ecosystem performance optimizer
+///
+/// Defines connection limits, timeouts, caching, and rate limiting policies.
 #[derive(Debug, Clone)]
 pub struct EcosystemOptimizerConfig {
-    /// Maximum concurrent connections
-    /// Number of `max_connections`
+    /// Maximum concurrent connections allowed
     pub max_connections: usize,
-    /// Connection timeout
+    /// Connection timeout duration
     pub connection_timeout: Duration,
-    /// Cache TTL
-    /// The cache ttl value
+    /// Cache time-to-live duration
     pub cache_ttl: Duration,
-    /// Rate limit (requests per second)
+    /// Rate limit in requests per second
     /// Number of `rate_limit`
     pub rate_limit: u32,
     /// Health check interval
@@ -218,18 +221,18 @@ pub struct EcosystemOptimizerConfig {
     pub health_check_interval: Duration,
 }
 
+/// Connection pool configuration
+///
+/// Defines connection pool sizing, timeouts, and lifecycle policies.
 #[derive(Debug, Clone)]
 pub struct PoolConfig {
-    /// Maximum pool size
-    /// Number of `max_pool_size`
+    /// Maximum number of connections in the pool
     pub max_pool_size: usize,
-    /// Minimum pool size
-    /// Number of `min_pool_size`
+    /// Minimum number of connections to maintain
     pub min_pool_size: usize,
-    /// Connection idle timeout
+    /// Duration before idle connections are closed
     pub idle_timeout: Duration,
-    /// Maximum connection age
-    /// The max connection age value
+    /// Maximum lifetime for connections before replacement
     pub max_connection_age: Duration,
 }
 
@@ -240,8 +243,18 @@ impl EcosystemPerformanceOptimizer {
         let pool_config = PoolConfig {
             max_pool_size: config.max_connections,
             min_pool_size: 5,
-            idle_timeout: Duration::from_secs(300),
-            max_connection_age: Duration::from_secs(3600),
+            idle_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
+            max_connection_age: Duration::from_secs(
+                std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS")
+                    .ok()
+                    .and_then(|a| a.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ),
         };
 
         Self {
@@ -429,11 +442,32 @@ pub enum ConnectionHealthStatus {
 impl Default for EcosystemOptimizerConfig {
     fn default() -> Self {
         Self {
-            max_connections: 100,
-            connection_timeout: Duration::from_secs(30),
-            cache_ttl: Duration::from_secs(300),
-            rate_limit: 1000,
-            health_check_interval: Duration::from_secs(60),
+            max_connections: std::env::var("BEARDOG_OPTIMIZER_MAX_CONNECTIONS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            connection_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_OPTIMIZER_CONNECTION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            cache_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_OPTIMIZER_CACHE_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
+            rate_limit: std::env::var("BEARDOG_OPTIMIZER_RATE_LIMIT")
+                .ok()
+                .and_then(|r| r.parse().ok())
+                .unwrap_or(1000), // 1000 requests default
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
         }
     }
 }

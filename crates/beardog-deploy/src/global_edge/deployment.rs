@@ -99,8 +99,14 @@ impl DeploymentManager {
                         node_type: NodeType::Standard,
                         endpoint_url: format!("https://{}-1.edge.beardog.com", region_id),
                         capacity: NodeCapacity {
-                            max_connections: 1000,
-                            max_throughput_mbps: 1000.0,
+                            max_connections: std::env::var("BEARDOG_EDGE_MAX_CONNECTIONS")
+                                .ok()
+                                .and_then(|c| c.parse().ok())
+                                .unwrap_or(1000), // 1000 connections default
+                            max_throughput_mbps: std::env::var("BEARDOG_EDGE_MAX_THROUGHPUT_MBPS")
+                                .ok()
+                                .and_then(|t| t.parse().ok())
+                                .unwrap_or(1000.0), // 1 Gbps default
                             cpu_cores: 8,
                             memory_gb: 32,
                             storage_gb: 500,

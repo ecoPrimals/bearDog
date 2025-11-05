@@ -237,6 +237,9 @@ impl Default for TrustMetrics {
 mod tests {
     use super::*;
     use tokio;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]}
 
 

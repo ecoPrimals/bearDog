@@ -390,6 +390,9 @@ mod tests {
         
         metadata
             .add_tag("production".to_string())
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .add_tag("api".to_string())
             .add_label("version".to_string(), "1.0.0".to_string())
             .add_annotation("description".to_string(), "Main API service".to_string());
@@ -404,6 +407,9 @@ mod tests {
     #[test]
     fn test_service_owner() {
         let owner = ServiceOwner {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             name: "Platform Team".to_string(),
             email: Some("platform@example.com".to_string()),
             team: Some("Engineering".to_string()),
@@ -413,11 +419,14 @@ mod tests {
         let metadata = ServiceMetadata::new().with_owner(owner);
         
         assert!(metadata.owner.is_some());
-        let owner = metadata.owner.unwrap();
+        let owner = metadata.owner.expect("Owner should be set after with_owner call");
         assert_eq!(owner.name, "Platform Team");
         assert_eq!(owner.email, Some("platform@example.com".to_string()));
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_sla_configuration() {
         let sla = ServiceSla {
@@ -432,7 +441,7 @@ mod tests {
         let metadata = ServiceMetadata::new().with_sla(sla);
         
         assert!(metadata.sla.is_some());
-        let sla = metadata.sla.unwrap();
+        let sla = metadata.sla.expect("SLA should be set after with_sla call");
         assert_eq!(sla.availability_target, 99.9);
         assert_eq!(sla.measurement_period, SlaMeasurementPeriod::Monthly);
     }

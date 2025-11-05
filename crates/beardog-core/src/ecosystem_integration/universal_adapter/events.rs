@@ -6,12 +6,16 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Event subscriber
+/// Event subscriber for adapter events
+///
+/// Subscribes to specific event types from the universal adapter event system.
 #[derive(Debug, Clone)]
 pub struct EventSubscriber {
+    /// Unique subscriber identifier
     pub id: Uuid,
-    /// Name of the item
+    /// Subscriber name
     pub name: String,
-    /// Collection of event types
+    /// Event types to subscribe to
     pub event_types: Vec<String>,
 }
 

@@ -67,6 +67,9 @@ fn test_zero_copy_string_view_partial_eq() {
 #[test]
 fn test_fast_hash_map_new() {
     let map: FastHashMap<String, i32> = FastHashMap::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(map.is_empty());
     assert_eq!(map.len(), 0);
 }
@@ -74,11 +77,17 @@ fn test_fast_hash_map_new() {
 #[test]
 fn test_fast_hash_map_insert_and_get() {
     let mut map = FastHashMap::new();
+     // TEST_CATEGORY: integration
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     map.insert("key1".to_string(), 100);
     map.insert("key2".to_string(), 200);
     
     assert_eq!(map.get("key1"), Some(&100));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(map.get("key2"), Some(&200));
     assert_eq!(map.get("key3"), None);
 }
@@ -86,11 +95,17 @@ fn test_fast_hash_map_insert_and_get() {
 #[test]
 fn test_fast_hash_map_len() {
     let mut map = FastHashMap::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(map.len(), 0);
     
     map.insert("a".to_string(), 1);
     assert_eq!(map.len(), 1);
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     map.insert("b".to_string(), 2);
     assert_eq!(map.len(), 2);
 }
@@ -98,6 +113,9 @@ fn test_fast_hash_map_len() {
 #[test]
 fn test_fast_hash_map_is_empty() {
     let mut map = FastHashMap::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(map.is_empty());
     
     map.insert("key".to_string(), 42);
@@ -109,10 +127,16 @@ fn test_fast_hash_map_contains_key() {
     let mut map = FastHashMap::new();
     map.insert("exists".to_string(), 1);
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(map.contains_key("exists"));
     assert!(!map.contains_key("not_exists"));
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_fast_hash_map_remove() {
     let mut map = FastHashMap::new();
@@ -122,6 +146,9 @@ fn test_fast_hash_map_remove() {
     let removed = map.remove("remove_me");
     assert_eq!(removed, Some(999));
     assert_eq!(map.len(), 0);
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -131,18 +158,27 @@ fn test_fast_hash_map_clear() {
     map.insert("b".to_string(), 2);
     map.insert("c".to_string(), 3);
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(map.len(), 3);
     map.clear();
     assert_eq!(map.len(), 0);
     assert!(map.is_empty());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_fast_hash_map_with_capacity() {
     let map: FastHashMap<String, i32> = FastHashMap::with_capacity(100);
     assert!(map.is_empty());
     // Capacity should be at least what we requested
     assert!(map.capacity() >= 100);
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -151,6 +187,9 @@ fn test_fast_hash_map_iter() {
     map.insert("one".to_string(), 1);
     map.insert("two".to_string(), 2);
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut count = 0;
     for (_key, _value) in map.iter() {
         count += 1;
@@ -161,11 +200,17 @@ fn test_fast_hash_map_iter() {
 #[test]
 fn test_fast_hash_map_values() {
     let mut map = FastHashMap::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     map.insert("a".to_string(), 10);
     map.insert("b".to_string(), 20);
     
     let values: Vec<i32> = map.values().copied().collect();
     assert_eq!(values.len(), 2);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(values.contains(&10));
     assert!(values.contains(&20));
 }
@@ -176,6 +221,9 @@ fn test_fast_hash_map_keys() {
     map.insert("alpha".to_string(), 1);
     map.insert("beta".to_string(), 2);
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let keys: Vec<String> = map.keys().cloned().collect();
     assert_eq!(keys.len(), 2);
     assert!(keys.contains(&"alpha".to_string()));
@@ -185,6 +233,9 @@ fn test_fast_hash_map_keys() {
 #[test]
 fn test_fast_hash_map_multiple_operations() {
     let mut map = FastHashMap::new();
+     // TEST_CATEGORY: integration
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     // Insert
     map.insert("first".to_string(), 1);
@@ -194,6 +245,9 @@ fn test_fast_hash_map_multiple_operations() {
     map.insert("first".to_string(), 2);
     assert_eq!(map.len(), 1);
     assert_eq!(map.get("first"), Some(&2));
+     // TEST_CATEGORY: integration
+     // TEST_DOMAIN: core
+     // TEST_PRIORITY: normal
     
     // Insert more
     map.insert("second".to_string(), 3);
@@ -215,20 +269,32 @@ fn test_zero_copy_string_view_debug() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_fast_hash_map_default() {
     let map: FastHashMap<String, i32> = FastHashMap::default();
     assert!(map.is_empty());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_zero_copy_string_view_unicode() {
     let data = String::from("Hello 世界 🌍");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let view = ZeroCopyStringView::new(&data);
     
     assert_eq!(view.as_str(), "Hello 世界 🌍");
     assert!(!view.is_empty());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_fast_hash_map_get_mut() {
     let mut map = FastHashMap::new();

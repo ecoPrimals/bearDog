@@ -116,27 +116,24 @@ pub enum ResponseStatus {
     Unknown,
 }
 
+/// Connection information for universal adapter connections
+///
+/// Tracks connection state, protocol, timing, and metadata for active service connections.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionInfo {
-    /// Connection identifier
+    /// Unique connection identifier
     pub connection_id: Uuid,
-    /// Target endpoint
-    /// The endpoint value
+    /// Target endpoint URL or address
     pub endpoint: String,
-    /// Protocol type
-    /// The protocol value
+    /// Protocol used for this connection
     pub protocol: ProtocolType,
-    /// Connection status
-    /// Current status of the component
+    /// Current connection status
     pub status: ConnectionStatus,
-    /// Connection established timestamp
-    /// The established at value
+    /// When the connection was established
     pub established_at: DateTime<Utc>,
     /// Last activity timestamp
-    /// The last activity value
     pub last_activity: DateTime<Utc>,
-    /// Connection metadata
-    /// Mapping of metadata
+    /// Additional connection metadata
     pub metadata: HashMap<String, String>,
 }
 

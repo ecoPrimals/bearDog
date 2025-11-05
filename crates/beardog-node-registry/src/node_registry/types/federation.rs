@@ -204,6 +204,9 @@ impl std::fmt::Display for ServiceHealthStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_service_advertisement_creation() {
         let ad = ServiceAdvertisement::new(

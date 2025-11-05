@@ -47,6 +47,9 @@ mod tests {
 
         let snapshot = collector.get_snapshot();
         assert!(snapshot.is_ok());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -55,6 +58,9 @@ mod tests {
 
         let result = alert_manager.start_monitoring();
         assert!(result.is_ok());
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: monitoring
+ // TEST_PRIORITY: normal
 
         let alerts = alert_manager.get_active_alerts();
         assert!(alerts.is_ok());
@@ -63,11 +69,17 @@ mod tests {
         let result = alert_manager.stop_monitoring();
         assert!(result.is_ok());
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: monitoring
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     fn test_health_checker() {
         let health_checker = HealthChecker::new();
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let result = health_checker.start_health_checks();
         assert!(result.is_ok());
 
@@ -79,6 +91,9 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_performance_analyzer() {
         let analyzer = PerformanceAnalyzer::new();
@@ -91,6 +106,9 @@ mod tests {
         assert!(suggestions.unwrap().is_empty());
 
         let result = analyzer.stop_analysis();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
@@ -103,6 +121,9 @@ mod tests {
 
         let events = monitor.get_recent_events();
         assert!(events.is_ok());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         assert!(events.unwrap().is_empty());
 
         let result = monitor.stop_monitoring();
@@ -115,6 +136,9 @@ mod tests {
 
         let result = tracker.start_tracking();
         assert!(result.is_ok());
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: monitoring
+ // TEST_PRIORITY: normal
 
         let biomes = tracker.get_all_biomes();
         assert!(biomes.is_ok());
@@ -127,6 +151,9 @@ mod tests {
     #[tokio::test]
     fn test_full_monitoring_lifecycle() {
         let config = MonitoringConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let monitor = ProductionMonitor::new(config);
 
         let result = monitor.start_monitoring();
@@ -139,6 +166,9 @@ mod tests {
         assert!(snapshot.is_ok());
 
         let alerts = monitor.get_active_alerts();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         assert!(alerts.is_ok());
 
         let analysis = monitor.get_performance_analysis();
@@ -166,6 +196,9 @@ mod tests {
         );
         assert_eq!(
             metrics
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: monitoring
+                // TEST_PRIORITY: normal
                 .active_biomes
                 .load(std::sync::atomic::Ordering::Relaxed),
             0
@@ -187,6 +220,9 @@ mod tests {
                 .genetic_operations
                 .load(std::sync::atomic::Ordering::Relaxed),
             0
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         );
         assert_eq!(
             metrics
@@ -208,6 +244,9 @@ mod tests {
 
         assert_eq!(
             metrics
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: monitoring
+                // TEST_PRIORITY: normal
                 .total_authorization_requests
                 .load(std::sync::atomic::Ordering::Relaxed),
             0
@@ -232,6 +271,9 @@ mod tests {
     #[test]
     fn test_performance_metrics_creation() {
         let metrics = PerformanceMetrics::new();
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: monitoring
+ // TEST_PRIORITY: normal
 
         assert_eq!(
             metrics
@@ -253,6 +295,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_enum_variants() {
         let security_levels = vec![

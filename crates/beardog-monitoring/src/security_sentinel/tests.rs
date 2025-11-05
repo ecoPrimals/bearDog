@@ -4,6 +4,9 @@ use super::*;
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: monitoring
+// TEST_PRIORITY: normal
 #[tokio::test]
 fn test_performance_sentinel_initialization(1000,
         max_error_rate: 0.05,

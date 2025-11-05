@@ -82,7 +82,12 @@ impl StandaloneSecurityMode {
                     "Operation '{}' requires federation consensus (standalone mode)",
                     request.operation
                 ),
-                retry_after: Some(Duration::from_secs(60)),
+                retry_after: Some(Duration::from_secs(
+                    std::env::var("BEARDOG_FEDERATION_RETRY_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(60)
+                )),
                 security_level: SecurityLevel::Critical,
             });
         }
@@ -93,7 +98,12 @@ impl StandaloneSecurityMode {
             
             return Ok(SecurityDecision::Deny {
                 reason: "Rate limit exceeded (standalone conservative policy)".to_string(),
-                retry_after: Some(Duration::from_secs(300)), // 5 minutes
+                retry_after: Some(Duration::from_secs(
+                    std::env::var("BEARDOG_RATE_LIMIT_RETRY_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(300)
+                )),
                 security_level: SecurityLevel::Moderate,
             });
         }
@@ -116,7 +126,12 @@ impl StandaloneSecurityMode {
                     threat_score,
                     self.policy.threat_threshold
                 ),
-                retry_after: Some(Duration::from_secs(60)),
+                retry_after: Some(Duration::from_secs(
+                    std::env::var("BEARDOG_SECURITY_THREAT_RETRY_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(60)
+                )),
                 security_level: SecurityLevel::High,
             });
         }
@@ -455,8 +470,16 @@ impl Default for StandaloneRateLimiter {
     fn default() -> Self {
         Self {
             requests: HashMap::new(),
-            window: Duration::from_secs(60), // 1 minute window
-            max_requests: 10, // Conservative limit
+            window: Duration::from_secs(
+                std::env::var("BEARDOG_STANDALONE_RATE_LIMIT_WINDOW_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
+            max_requests: std::env::var("BEARDOG_STANDALONE_RATE_LIMIT_MAX_REQUESTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
         }
     }
 }
@@ -491,6 +514,9 @@ mod tests {
             operation_id: "test_001".to_string(),
             user_id: "test_user".to_string(),
             operation: "read".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             source_ip: "192.168.1.100".to_string(),
             request_path: "/api/data".to_string(),
             user_agent: "test-client/1.0".to_string(),
@@ -506,6 +532,9 @@ mod tests {
         
         // Suspicious request should be denied
         let suspicious_request = SecurityRequest {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             operation_id: "test_002".to_string(),
             user_id: "admin'; DROP TABLE users; --".to_string(),
             operation: "admin_operation".to_string(),
@@ -521,6 +550,9 @@ mod tests {
     #[tokio::test]
     async fn test_federation_required_operations() {
         let standalone = StandaloneSecurityMode::new();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: security
+         // TEST_PRIORITY: normal
         
         // Operation requiring federation
         let admin_request = SecurityRequest {
@@ -536,6 +568,9 @@ mod tests {
         assert!(matches!(decision, SecurityDecision::Deny { .. }));
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rate_limiting() {
         let standalone = StandaloneSecurityMode::new();

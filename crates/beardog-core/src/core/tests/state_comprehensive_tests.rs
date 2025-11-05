@@ -106,6 +106,9 @@ fn test_core_state_update_component_status() {
         state.components.get("security"),
         Some(&ComponentStatus::Stopping)
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -113,12 +116,21 @@ fn test_core_state_remove_component() {
     let mut state = CoreState::default();
 
     state
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .components
         .insert("security".to_string(), ComponentStatus::Running);
     assert_eq!(state.components.len(), 1);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     state.components.remove("security");
     assert_eq!(state.components.len(), 0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -129,6 +141,9 @@ fn test_core_state_component_not_found() {
 
 #[test]
 fn test_core_state_multiple_component_statuses() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut state = CoreState::default();
 
     state
@@ -141,6 +156,9 @@ fn test_core_state_multiple_component_statuses() {
         .components
         .insert("optimizer".to_string(), ComponentStatus::Inactive);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(
         state.components.get("security"),
         Some(&ComponentStatus::Running)
@@ -155,38 +173,56 @@ fn test_core_state_multiple_component_statuses() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 // Health Status Tests
 // ============================================================================
 
 #[test]
 fn test_core_state_health_status_healthy() {
-    let mut state = CoreState::default();
-    state.overall_health = HealthStatus::Healthy;
+    let state = CoreState {
+        overall_health: HealthStatus::Healthy,
+        ..Default::default()
+    };
 
     assert_eq!(state.overall_health, HealthStatus::Healthy);
 }
 
 #[test]
 fn test_core_state_health_status_degraded() {
-    let mut state = CoreState::default();
-    state.overall_health = HealthStatus::Degraded;
+    let state = CoreState {
+        overall_health: HealthStatus::Degraded,
+        ..Default::default()
+    };
 
     assert_eq!(state.overall_health, HealthStatus::Degraded);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_core_state_health_status_unhealthy() {
-    let mut state = CoreState::default();
-    state.overall_health = HealthStatus::Unhealthy;
+    let state = CoreState {
+        overall_health: HealthStatus::Unhealthy,
+        ..Default::default()
+    };
 
     assert_eq!(state.overall_health, HealthStatus::Unhealthy);
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_core_state_health_status_transition() {
     let mut state = CoreState::default();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(state.overall_health, HealthStatus::Healthy);
 
     state.overall_health = HealthStatus::Degraded;
@@ -216,21 +252,33 @@ fn test_core_state_uptime_just_created() {
 fn test_core_state_uptime_increases() {
     let state = CoreState::default();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let uptime1 = state.start_time.elapsed();
     thread::sleep(Duration::from_millis(10));
     let uptime2 = state.start_time.elapsed();
 
     assert!(uptime2 > uptime1);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_core_state_uptime_monotonic() {
     let state = CoreState::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let mut previous_uptime = state.start_time.elapsed();
 
     for _ in 0..5 {
         thread::sleep(Duration::from_millis(2));
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let current_uptime = state.start_time.elapsed();
         assert!(current_uptime > previous_uptime);
         previous_uptime = current_uptime;
@@ -248,12 +296,18 @@ fn test_core_state_clone() {
         .components
         .insert("security".to_string(), ComponentStatus::Running);
     state.overall_health = HealthStatus::Degraded;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let cloned = state.clone();
 
     assert_eq!(cloned.components.len(), 1);
     assert_eq!(cloned.overall_health, HealthStatus::Degraded);
     assert_eq!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         cloned.components.get("security"),
         Some(&ComponentStatus::Running)
     );
@@ -262,6 +316,9 @@ fn test_core_state_clone() {
 #[test]
 fn test_core_state_clone_independence() {
     let mut state = CoreState::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     state
         .components
         .insert("security".to_string(), ComponentStatus::Running);
@@ -277,6 +334,9 @@ fn test_core_state_clone_independence() {
     // Original should be unchanged
     assert_eq!(state.components.len(), 1);
     assert_eq!(state.overall_health, HealthStatus::Healthy);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Clone should be modified
     assert_eq!(cloned.components.len(), 2);
@@ -292,6 +352,9 @@ fn test_core_state_clone_start_time_same() {
 
     // Start time should be the same instant
     // (though elapsed time will be slightly different due to cloning time)
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let diff = state
         .start_time
         .elapsed()
@@ -309,10 +372,13 @@ fn test_core_state_clone_start_time_same() {
 #[test]
 fn test_core_state_debug_format() {
     let state = CoreState::default();
-    let debug_str = format!("{:?}", state);
+    let debug_str = format!("{state:?}");
 
     // Should contain struct name and key fields
     assert!(debug_str.contains("CoreState"));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(debug_str.contains("components"));
     assert!(debug_str.contains("overall_health"));
     assert!(debug_str.contains("start_time"));
@@ -325,7 +391,7 @@ fn test_core_state_debug_with_components() {
         .components
         .insert("security".to_string(), ComponentStatus::Running);
 
-    let debug_str = format!("{:?}", state);
+    let debug_str = format!("{state:?}");
     assert!(debug_str.contains("security"));
     assert!(debug_str.contains("Healthy"));
 }
@@ -333,6 +399,9 @@ fn test_core_state_debug_with_components() {
 // ============================================================================
 // Capacity Tests
 // ============================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_core_state_components_initial_capacity() {
@@ -342,6 +411,9 @@ fn test_core_state_components_initial_capacity() {
     assert!(state.components.capacity() >= 10);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_core_state_components_grow_beyond_capacity() {
     let mut state = CoreState::default();
@@ -350,16 +422,22 @@ fn test_core_state_components_grow_beyond_capacity() {
     for i in 0..20 {
         state
             .components
-            .insert(format!("component_{}", i), ComponentStatus::Running);
+            .insert(format!("component_{i}"), ComponentStatus::Running);
     }
 
     assert_eq!(state.components.len(), 20);
     // Capacity should have grown
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(state.components.capacity() >= 20);
 }
 
 // ============================================================================
 // Integration Tests
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -377,6 +455,9 @@ fn test_core_state_realistic_scenario() {
         .components
         .insert("monitor".to_string(), ComponentStatus::Running);
     state
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .components
         .insert("optimizer".to_string(), ComponentStatus::Running);
     state
@@ -421,6 +502,9 @@ fn test_core_state_concurrent_cloning() {
                 assert_eq!(state_clone.overall_health, HealthStatus::Healthy);
                 assert!(state_clone.components.is_empty());
             })
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
         })
         .collect();
 
@@ -440,8 +524,11 @@ fn test_core_state_empty_component_name() {
     // Empty string as component name (edge case)
     state
         .components
-        .insert("".to_string(), ComponentStatus::Running);
+        .insert(String::new(), ComponentStatus::Running);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(state.components.len(), 1);
     assert_eq!(state.components.get(""), Some(&ComponentStatus::Running));
 }
@@ -452,6 +539,9 @@ fn test_core_state_very_long_component_name() {
 
     let long_name = "a".repeat(1000);
     state
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .components
         .insert(long_name.clone(), ComponentStatus::Running);
 
@@ -465,6 +555,9 @@ fn test_core_state_very_long_component_name() {
 #[test]
 fn test_core_state_unicode_component_name() {
     let mut state = CoreState::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let unicode_name = "安全_セキュリティ_🔐";
     state
@@ -478,6 +571,9 @@ fn test_core_state_unicode_component_name() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_core_state_many_components() {
     let mut state = CoreState::default();
@@ -485,7 +581,7 @@ fn test_core_state_many_components() {
     // Add many components
     for i in 0..1000 {
         state.components.insert(
-            format!("component_{}", i),
+            format!("component_{i}"),
             if i % 3 == 0 {
                 ComponentStatus::Running
             } else if i % 3 == 1 {

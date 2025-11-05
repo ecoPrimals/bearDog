@@ -98,6 +98,9 @@ mod tests {
             display_name: "Test Node".to_string(),
             node_type: "test_node".to_string(),
             network_address: "192.168.1.100".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             registration_timestamp: chrono::Utc::now(),
         };
 
@@ -124,24 +127,39 @@ mod tests {
         let phonebook = create_phonebook_test_registry()?;
         let stats = phonebook.get_statistics();
         assert_eq!(stats.registered_nodes, 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(stats.active);
     }
 
     #[tokio::test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     async fn test_phonebook_registry_creation() {
         let registry = create_phonebook_test_registry()?;
         let phonebook_status = registry.get_phonebook_status();
         assert!(phonebook_status.is_some());
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_node_trust_management() {
         let registry = create_federation_test_registry()?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Test trust management functionality - pending full implementation
         // Verify registry was created successfully
         assert!(registry.health_check().is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_registry_health_check() {
         let registry = create_federation_test_registry()?;

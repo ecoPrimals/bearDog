@@ -32,11 +32,17 @@ fn test_core_state_update_health() {
     let mut state = CoreState::default();
 
     state.overall_health = HealthStatus::Degraded;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(state.overall_health, HealthStatus::Degraded);
 
     state.overall_health = HealthStatus::Unhealthy;
     assert_eq!(state.overall_health, HealthStatus::Unhealthy);
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_core_state_multiple_components() {
@@ -48,6 +54,9 @@ fn test_core_state_multiple_components() {
     state
         .components
         .insert("component1".to_string(), component1);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     state
         .components
         .insert("component2".to_string(), component2);
@@ -56,6 +65,9 @@ fn test_core_state_multiple_components() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_core_state_uptime_tracking() {
     let state = CoreState::default();
 
@@ -70,6 +82,9 @@ fn test_core_state_uptime_tracking() {
 #[test]
 fn test_core_state_remove_component() {
     let mut state = CoreState::default();
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     let component = ComponentStatus::Running;
 
@@ -79,6 +94,9 @@ fn test_core_state_remove_component() {
     assert_eq!(state.components.len(), 1);
 
     state.components.remove("temp-component");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(state.components.len(), 0);
 }
 
@@ -91,6 +109,9 @@ fn test_core_state_clone() {
 
     assert_eq!(state.overall_health, cloned.overall_health);
     assert_eq!(state.components.len(), cloned.components.len());
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -99,6 +120,9 @@ fn test_core_state_component_statuses() {
 
     state
         .components
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .insert("starting".to_string(), ComponentStatus::Starting);
     state
         .components
@@ -117,11 +141,17 @@ fn test_core_state_component_statuses() {
 #[test]
 fn test_core_state_initial_capacity() {
     let state = CoreState::default();
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     // Default capacity should be 10 (as per implementation)
     assert!(state.components.capacity() >= 10);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_core_state_component_variants() {
     let mut state = CoreState::default();

@@ -230,10 +230,16 @@ mod tests {
 
     #[test]
     fn test_high_security_config() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = UniversalHsmConfig::high_security();
         assert_eq!(
             config
                 .capability_config
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
                 .security_requirements
                 .min_security_level,
             "critical"
@@ -256,6 +262,9 @@ mod tests {
     #[test]
     fn test_development_config() {
         let config = UniversalHsmConfig::development();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(
             config
                 .capability_config
@@ -278,6 +287,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_compatibility() {
         let config = UniversalHsmConfig::default();

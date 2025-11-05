@@ -20,7 +20,10 @@ pub struct MemoryKeyConfig {
 impl Default for MemoryKeyConfig {
     fn default() -> Self {
         Self {
-            max_keys: 1000,
+            max_keys: std::env::var("BEARDOG_MAX_KEYS")
+                .ok()
+                .and_then(|k| k.parse().ok())
+                .unwrap_or(1000), // 1000 keys default
             key_expiration_seconds: 0,
             enable_rotation: false,
         }
@@ -47,7 +50,10 @@ impl Default for KeyStorageConfig {
     fn default() -> Self {
         Self {
             backend: "memory".to_string(),
-            max_capacity: 10000,
+            max_capacity: std::env::var("BEARDOG_KEY_STORAGE_CAPACITY")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(10000), // 10000 keys default
             encrypt_at_rest: true,
         }
     }

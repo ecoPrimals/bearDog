@@ -127,9 +127,15 @@ mod tests {
     #[test]
     fn test_canonical_usage_validation() {
         let result = validate_canonical_usage();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_canonical_type_info() {
         let info = canonical_type_info();

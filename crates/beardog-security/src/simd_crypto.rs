@@ -107,6 +107,9 @@ impl SafeCryptoEngine {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     #[test]
     fn test_safe_crypto_engine() -> Result<(), Box<dyn std::error::Error>> {
         let config = SafeCryptoConfig::default();

@@ -292,19 +292,19 @@ pub struct AttentionLayerConfig {
     pub dropout_rate: f64,
 }
 
+/// Configuration for embedding layers in neural networks
+///
+/// Embedding layers map discrete input tokens (like words) to dense vector
+/// representations, enabling neural networks to process categorical data.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EmbeddingLayerConfig {
-    /// Input dimension (vocabulary size)
-    /// Number of `input_dim`
+    /// Input dimension (vocabulary size or number of unique tokens)
     pub input_dim: u32,
-    /// Output dimension (embedding size)
-    /// Number of `output_dim`
+    /// Output dimension (size of the embedding vectors)
     pub output_dim: u32,
-    /// Mask zero values
-    /// Whether `mask_zero` is enabled
+    /// Whether to mask zero values in the input
     pub mask_zero: bool,
-    /// Input length
-    /// Optional input length
+    /// Optional fixed length for input sequences
     pub input_length: Option<u32>,
 }
 
@@ -347,15 +347,18 @@ pub enum WeightInitialization {
         /// Standard deviation
         stddev: f64,
     },
+    /// Random uniform initialization
     RandomUniform {
-        /// Minimum value
+        /// Minimum value of the uniform distribution
         minval: f64,
-        /// Maximum value
+        /// Maximum value of the uniform distribution
         maxval: f64,
     },
+    /// Glorot/Xavier uniform initialization (recommended for tanh/sigmoid)
     GlorotUniform,
     /// Xavier/Glorot normal initialization
     GlorotNormal,
+    /// He uniform initialization (recommended for `ReLU` networks)
     HeUniform,
     /// He normal initialization
     HeNormal,
@@ -363,82 +366,92 @@ pub enum WeightInitialization {
     HumanEntropyInitialization {
         /// Entropy tier requirement (1=Machine, 2=HumanSupervised, 3=HumanLived)
         required_entropy_tier: u8,
+        /// Human identity providing the entropy source
         human_identity_id: String,
         /// Initialization distribution type
         distribution: EntropyDistribution,
+        /// Whether to fall back to machine entropy if human entropy unavailable
         fallback_to_machine: bool,
     },
 }
 
+/// Probability distributions for weight initialization using sovereign entropy
+///
+/// Defines statistical distributions that can be seeded with human-owned entropy
+/// for initializing neural network weights, preserving sovereignty over AI training.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum EntropyDistribution {
-    /// Normal distribution using human entropy as seed
+    /// Normal (Gaussian) distribution using human entropy as seed
     Normal {
-        /// Mean value of the normal distribution
+        /// Mean (center) of the distribution
         mean: f64,
-        /// Standard deviation of the normal distribution
+        /// Standard deviation (spread) of the distribution
         stddev: f64,
     },
+    /// Uniform distribution over a range
     Uniform {
+        /// Minimum value (inclusive)
         min: f64,
+        /// Maximum value (exclusive)
         max: f64,
     },
-    /// Xavier/Glorot initialization using human entropy
+    /// Xavier/Glorot initialization (variance scaled by fan-in/fan-out)
     Xavier,
-    /// He initialization using human entropy
+    /// He initialization (variance scaled by fan-in only, for `ReLU` networks)
     He,
 }
 
+/// Layer-specific regularization configuration
+///
+/// Defines regularization techniques applied to a neural network layer
+/// to prevent overfitting and improve generalization.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LayerRegularization {
-    /// L1 regularization strength coefficient
-    /// The l1 strength value
+    /// L1 regularization strength (encourages sparsity)
     pub l1_strength: f32,
-    /// L2 regularization strength coefficient
-    /// The l2 strength value
+    /// L2 regularization strength (prevents large weights)
     pub l2_strength: f32,
-    /// The dropout rate value
+    /// Dropout rate for randomly disabling neurons during training
     pub dropout_rate: f32,
-    /// Batch normalization momentum parameter
-    /// The batch norm momentum value
+    /// Batch normalization momentum for running statistics
     pub batch_norm_momentum: f32,
 }
 
 // LossFunction now imported from canonical location
 
+/// Neural network layer connection types
+///
+/// Defines how layers are connected in complex architectures
+/// like `ResNets`, `DenseNets`, and attention networks.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of connection
 pub enum ConnectionType {
-    /// Add connection (residual)
+    /// Add connection (residual/skip connection)
     Add,
-    /// Concatenate connection
+    /// Concatenate connection (along feature dimension)
     Concatenate,
-    /// Multiply connection
+    /// Element-wise multiply connection (gating mechanism)
     Multiply,
 }
 
+/// Neural network training parameters
+///
+/// Comprehensive configuration for training neural networks, including
+/// hyperparameters, optimization settings, and performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrainingParams {
-    /// Batch size
-    /// Number of `batch_size`
+    /// Number of samples per training batch
     pub batch_size: u32,
-    /// Number of epochs
-    /// Number of epochs
+    /// Number of complete passes through training data
     pub epochs: u32,
-    /// Learning rate
-    /// The learning rate value
+    /// Learning rate for gradient descent updates
     pub learning_rate: f64,
-    /// Learning rate scheduler
-    /// Optional lr scheduler
+    /// Optional learning rate schedule for adaptive learning
     pub lr_scheduler: Option<LrScheduler>,
-    /// Optimizer
-    /// The optimizer value
+    /// Optimization algorithm configuration
     pub optimizer: Optimizer,
-    /// Loss function
-    /// The loss function value
+    /// Loss function to minimize during training
     pub loss_function: LossFunction,
-    /// Metrics to track
-    /// Collection of metrics
+    /// Performance metrics to track during training
     pub metrics: Vec<Metric>,
 }
 
@@ -456,13 +469,15 @@ impl Default for TrainingParams {
     }
 }
 
+/// Optimizer configuration for neural network training
+///
+/// Specifies the optimization algorithm and its hyperparameters
+/// for updating model weights during training.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Optimizer {
-    /// Optimizer type
-    /// The optimizer type value
+    /// Type of optimization algorithm
     pub optimizer_type: OptimizerType,
-    /// Optimizer parameters
-    /// Mapping of parameters
+    /// Algorithm-specific hyperparameters (e.g., momentum, beta1, beta2)
     pub parameters: HashMap<String, f64>,
 }
 
@@ -475,29 +490,33 @@ impl Default for Optimizer {
     }
 }
 
-/// Learning rate scheduler
+/// Learning rate scheduler configuration
+///
+/// Dynamically adjusts the learning rate during training to improve
+/// convergence and final model performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LrScheduler {
-    /// Scheduler type
-    /// The scheduler type value
+    /// Type of learning rate schedule
     pub scheduler_type: LrSchedulerType,
-    /// Scheduler parameters
-    /// Mapping of parameters
+    /// Schedule-specific parameters (e.g., decay rate, step size, milestones)
     pub parameters: HashMap<String, f64>,
 }
 
+/// Learning rate scheduler types
+///
+/// Strategies for dynamically adjusting the learning rate during training
+/// to improve convergence and avoid local minima.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of lr scheduler
 pub enum LrSchedulerType {
-    /// Step decay
+    /// Step decay (reduce LR at fixed intervals)
     StepDecay,
-    /// Exponential decay
+    /// Exponential decay (exponential reduction over time)
     ExponentialDecay,
-    /// Cosine annealing
+    /// Cosine annealing (smooth cosine-shaped reduction)
     CosineAnnealing,
-    /// Reduce on plateau
+    /// Reduce on plateau (reduce when metrics stop improving)
     ReduceOnPlateau,
-    /// Cyclic learning rate
+    /// Cyclic learning rate (oscillate between min/max values)
     CyclicLr,
 }
 
@@ -518,87 +537,96 @@ pub enum OptimizerType {
     Adadelta,
 }
 
+/// Performance metrics for model evaluation
+///
+/// Standard metrics used to evaluate machine learning model performance
+/// during training and testing, with different metrics suited for different tasks.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Metric {
-    /// Accuracy
+    /// Accuracy (correct predictions / total predictions)
     Accuracy,
-    /// Precision
+    /// Precision (true positives / predicted positives)
     Precision,
-    /// Recall
+    /// Recall (true positives / actual positives)
     Recall,
-    /// F1 score
+    /// F1 score (harmonic mean of precision and recall)
     F1Score,
-    /// Area under ROC curve
+    /// Area under ROC curve (classification performance across thresholds)
     AucRoc,
     /// Area under precision-recall curve
     AucPr,
-    /// Mean absolute error
+    /// Mean absolute error (average absolute difference)
     Mae,
-    /// Mean squared error
+    /// Mean squared error (average squared difference)
     Mse,
-    /// Root mean squared error
+    /// Root mean squared error (square root of MSE)
     Rmse,
-    /// Custom metric
+    /// Custom metric with user-defined calculation
     Custom(String),
 }
 
-/// Network optimization settings
+/// Neural network training optimization settings
+///
+/// Advanced optimization techniques to improve training speed,
+/// memory efficiency, and numerical stability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkOptimization {
-    /// Use mixed precision training
-    /// Whether `mixed_precision` is enabled
+    /// Use mixed precision (FP16/FP32) for faster training
     pub mixed_precision: bool,
-    /// Gradient clipping
-    /// Optional gradient clipping
+    /// Gradient clipping to prevent exploding gradients
     pub gradient_clipping: Option<GradientClipping>,
-    /// Batch size optimization
-    /// Whether `batch_size_optimization` is enabled
+    /// Dynamically optimize batch size for hardware
     pub batch_size_optimization: bool,
-    /// Memory optimization
-    /// Whether `memory_optimization` is enabled
+    /// Enable memory-saving techniques (gradient checkpointing, etc.)
     pub memory_optimization: bool,
 }
 
 /// Gradient clipping configuration
+///
+/// Prevents exploding gradients by limiting their magnitude during
+/// backpropagation, improving training stability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GradientClipping {
-    /// Clipping type
-    /// The clip type value
+    /// Method used for clipping gradients
     pub clip_type: ClipType,
-    /// Clipping value
-    /// The clip value value
+    /// Maximum allowed gradient magnitude
     pub clip_value: f64,
 }
 
+/// Gradient clipping methods
+///
+/// Different strategies for constraining gradient magnitudes during
+/// neural network training to prevent instability.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of clip
 pub enum ClipType {
-    /// Clip by value
+    /// Clip individual gradient values to a range
     Value,
-    /// Clip by norm
+    /// Clip based on L2 norm of gradient tensor
     Norm,
-    /// Clip by global norm
+    /// Clip based on global norm across all parameters
     GlobalNorm,
 }
 
-/// Network regularization techniques
+/// Neural network regularization configuration
+///
+/// Comprehensive regularization techniques to prevent overfitting
+/// and improve model generalization to unseen data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkRegularization {
-    /// Dropout configuration
-    /// Optional dropout
+    /// Dropout for randomly disabling neurons
     pub dropout: Option<DropoutConfig>,
-    /// Batch normalization
-    /// Whether `batch_normalization` is enabled
+    /// Batch normalization for stable training
     pub batch_normalization: bool,
-    /// Weight decay
-    /// The weight decay value
+    /// Weight decay (L2 regularization) strength
     pub weight_decay: f64,
-    /// Early stopping
-    /// Optional early stopping
+    /// Early stopping to prevent overtraining
     pub early_stopping: Option<EarlyStoppingConfig>,
 }
 
-/// Dropout configuration
+/// Dropout layer configuration
+///
+/// Controls the dropout regularization technique, which randomly disables
+/// neurons during training to prevent co-adaptation and overfitting.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DropoutConfig {
     /// Dropout rate
@@ -612,39 +640,43 @@ pub struct DropoutConfig {
     pub schedule: Option<DropoutSchedule>,
 }
 
-/// Dropout schedule
+/// Dropout rate scheduling over training
+///
+/// Dynamically adjusts the dropout rate during training, typically
+/// starting high and reducing over time as the model converges.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DropoutSchedule {
-    /// Initial dropout rate
-    /// The initial rate value
+    /// Starting dropout rate at beginning of training
     pub initial_rate: f64,
-    /// Final dropout rate
-    /// The final rate value
+    /// Final dropout rate at end of training
     pub final_rate: f64,
-    /// Schedule type
-    /// The schedule type value
+    /// Strategy for transitioning between initial and final rates
     pub schedule_type: ScheduleType,
 }
 
+/// Scheduling strategy types
+///
+/// Methods for transitioning a parameter (like dropout rate or learning rate)
+/// from an initial value to a final value during training.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of schedule
 pub enum ScheduleType {
-    /// Linear schedule
+    /// Linear interpolation between initial and final values
     Linear,
-    /// Exponential schedule
+    /// Exponential decay from initial to final values
     Exponential,
-    /// Step schedule
+    /// Step-wise changes at fixed intervals
     Step,
 }
 
 /// Early stopping configuration
+///
+/// Automatically stops training when a monitored metric stops improving,
+/// preventing overfitting and saving computation time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EarlyStoppingConfig {
-    /// Metric to monitor
-    /// The monitor value
+    /// Name of the metric to monitor (e.g., "`validation_loss`")
     pub monitor: String,
-    /// Minimum change threshold
-    /// The min delta value
+    /// Minimum improvement required to consider it significant
     pub min_delta: f64,
     /// Patience (epochs to wait)
     /// Number of patience
@@ -657,10 +689,16 @@ pub struct EarlyStoppingConfig {
     pub mode: MonitoringMode,
 }
 
+/// Early stopping monitoring mode
+///
+/// Specifies whether to stop training when a metric reaches a minimum
+/// or maximum value, or automatically detect based on the metric name.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum MonitoringMode {
+    /// Stop when metric reaches minimum (e.g., for loss)
     Min,
+    /// Stop when metric reaches maximum (e.g., for accuracy)
     Max,
-    /// Auto-detect based on metric name
+    /// Auto-detect based on metric name (loss→min, accuracy→max)
     Auto,
 }

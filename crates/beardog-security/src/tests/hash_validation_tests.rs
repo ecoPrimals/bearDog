@@ -41,6 +41,9 @@ mod tests {
         let hash = Sha256::digest(data);
 
         assert_eq!(hash.len(), 32, "SHA-256 should produce 32-byte hash");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -49,6 +52,9 @@ mod tests {
         let data = b"";
         let hash = Sha256::digest(data);
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert_eq!(
             hash.len(),
             32,
@@ -61,12 +67,18 @@ mod tests {
         // Test that hashing large input works
         let data = vec![0u8; 1024 * 1024]; // 1 MB
         let hash = Sha256::digest(&data);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert_eq!(hash.len(), 32, "Hash of large input should be 32 bytes");
     }
 
     #[test]
     fn test_hash_avalanche_effect() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Test avalanche effect - small input change causes large hash change
         let data1 = b"test data";
         let data2 = b"test datb"; // Changed last character
@@ -77,12 +89,18 @@ mod tests {
         // Count different bits
         let mut diff_bits = 0;
         for i in 0..32 {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             diff_bits += (hash1[i] ^ hash2[i]).count_ones();
         }
 
         // Should have many different bits (avalanche effect)
         assert!(
             diff_bits > 50,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             "Should have significant bit differences: {}",
             diff_bits
         );
@@ -103,6 +121,9 @@ mod tests {
             );
         }
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_hash_one_way() {
@@ -116,6 +137,9 @@ mod tests {
 
         assert!(!hash_contains_data, "Hash should not contain original data");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_hash_consistency_across_calls() {
@@ -126,6 +150,9 @@ mod tests {
         for _ in 0..10 {
             let hash = Sha256::digest(data);
             hashes.push(hash.to_vec());
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
         }
 
         // All hashes should be identical
@@ -140,6 +167,9 @@ mod tests {
         use std::sync::Arc;
         use std::thread;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let data = Arc::new(b"test data".to_vec());
         let mut handles = vec![];
 
@@ -160,12 +190,18 @@ mod tests {
     #[test]
     fn test_hash_binary_data() {
         // Test hashing binary data
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let data: Vec<u8> = (0..=255).collect();
         let hash = Sha256::digest(&data);
 
         assert_eq!(hash.len(), 32);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hash_unicode_data() {
         // Test hashing Unicode data

@@ -295,47 +295,53 @@ pub struct PrimalMetadata {
     pub metrics_endpoint: String,
 }
 
+/// Universal endpoint configuration for primal services
+///
+/// Defines a dynamically discovered service endpoint with protocol support,
+/// authentication requirements, and security configuration.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UniversalEndpoint {
-    /// Base URL (discovered, not hardcoded)
-    /// The url value
+    /// Base URL (discovered dynamically, not hardcoded)
     pub url: String,
-    /// Supported protocols (HTTP, gRPC, WebSocket, etc.)
-    /// Collection of protocols
+    /// Supported communication protocols (HTTP, gRPC, WebSocket, etc.)
     pub protocols: Vec<String>,
-    /// Authentication requirements
-    /// The auth requirements value
+    /// Authentication requirements for accessing this endpoint
     pub auth_requirements: AuthRequirements,
-    /// TLS/security configuration
+    /// TLS and security configuration for secure communication
     pub security_config: EndpointSecurityConfig,
 }
 
+/// Performance and health metrics for primal services
+///
+/// Tracks key operational metrics including response times, availability,
+/// load/capacity, and error rates for monitoring and optimization.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PrimalMetrics {
-    /// Response time percentiles
+    /// Response time percentiles (p50, p95, p99)
     pub response_times: ResponseTimeMetrics,
-    /// Availability percentage
-    /// The availability value
+    /// Service availability percentage (0.0-100.0)
     pub availability: f64,
-    /// Current load/capacity
-    /// The load metrics value
+    /// Current load and capacity utilization
     pub load_metrics: LoadMetrics,
-    /// Error rates
-    /// The error rates value
+    /// Error rates across different categories
     pub error_rates: ErrorRateMetrics,
 }
 
+/// Core capabilities that primals can provide in the ecosystem
+///
+/// Defines the functional categories of services that primals offer,
+/// enabling capability-based service discovery and routing.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum PrimalCapability {
-    /// Represents security variant
+    /// Security services (encryption, authentication, HSM integration)
     Security,
-    /// Represents storage variant
+    /// Storage services (distributed storage, caching, persistence)
     Storage,
-    /// Represents compute variant
+    /// Compute services (processing, analysis, transformation)
     Compute,
-    /// Currently networking
+    /// Networking services (routing, discovery, tunneling)
     Networking,
-    /// Represents a i variant
+    /// AI/ML services (inference, training, optimization)
     AI,
     /// Represents custom variant
     Custom(String),
@@ -348,13 +354,20 @@ pub enum PrimalCapability {
 pub enum PrimalDependency {
     /// State indicating required
     Required {
-        capability: ServiceCapabilityType, // Migrated from PrimalType to capability-based
+        /// Service capability that is required
+        capability: ServiceCapabilityType,
+        /// Minimum version required for compatibility
         min_version: String,
+        /// Explanation of why this dependency is required
         reason: String,
     },
+    /// Optional dependency that enhances functionality but is not required
     Optional {
-        capability: ServiceCapabilityType, // Migrated from PrimalType to capability-based
+        /// Service capability that is optional
+        capability: ServiceCapabilityType,
+        /// Minimum version recommended for optimal operation
         min_version: String,
+        /// Explanation of the benefits this dependency provides
         reason: String,
     },
 }
@@ -410,6 +423,7 @@ pub struct PrimalIntegrationConfig {
     #[deprecated(note = "Use ServiceCapabilityType::DistributedIntelligence discovery")]
     /// Whether `enable_ai_api` is enabled
     pub enable_ai_api: bool,
+    /// Custom configuration key-value pairs for primal integration
     pub custom_config: HashMap<String, serde_json::Value>,
 }
 
@@ -528,16 +542,23 @@ impl From<beardog_errors::BearDogError> for PrimalError {
     }
 }
 
+/// Request to a primal service
+///
+/// Represents a standardized request format for primal-to-primal communication,
+/// including operation specification, parameters, and contextual metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalRequest {
+    /// Unique identifier for this primal instance
     pub id: String,
+    /// Unique identifier for this specific request
     pub request_id: String,
-    /// The operation type value
+    /// Type of operation being requested
     pub operation_type: String,
-    /// The params value
+    /// Operation parameters as JSON value
     pub params: serde_json::Value,
-    /// Mapping of metadata
+    /// Additional contextual metadata
     pub metadata: HashMap<String, serde_json::Value>,
+    /// Request creation timestamp
     pub timestamp: DateTime<Utc>,
 }
 
@@ -554,18 +575,25 @@ impl Default for PrimalRequest {
     }
 }
 
+/// Response from a primal service
+///
+/// Represents a standardized response format for primal-to-primal communication,
+/// including status, success indication, result data, and metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalResponse {
+    /// Unique identifier for the responding primal
     pub id: String,
+    /// Identifier matching the original request
     pub request_id: String,
-    /// Current status of the component
+    /// Status description of the operation
     pub status: String,
-    /// Whether success is enabled
+    /// Whether the operation succeeded
     pub success: bool,
-    /// The data value
+    /// Operation result data as JSON value
     pub data: serde_json::Value,
-    /// Mapping of metadata
+    /// Additional response metadata
     pub metadata: HashMap<String, serde_json::Value>,
+    /// Response timestamp
     pub timestamp: DateTime<Utc>,
 }
 
@@ -583,33 +611,42 @@ impl Default for PrimalResponse {
     }
 }
 
+/// Health status information for a primal service
+///
+/// Tracks overall health and component-level health for comprehensive monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalHealthStatus {
-    /// Current status of the component
+    /// Overall health status of the primal
     pub status: HealthStatus,
-    /// Mapping of components
+    /// Health status of individual components
     pub components: HashMap<String, HealthStatus>,
-    /// The last check value
+    /// Timestamp of last health check
     pub last_check: DateTime<Utc>,
-    /// The next check value
+    /// Scheduled timestamp for next health check
     pub next_check: DateTime<Utc>,
 }
 
+/// Resource usage information for monitoring
+///
+/// Tracks CPU, memory, network, and disk utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsageInfo {
-    /// The cpu percent value
+    /// CPU utilization as percentage (0.0-100.0)
     pub cpu_percent: f64,
-    /// Number of `memory_bytes`
+    /// Memory usage in bytes
     pub memory_bytes: u64,
-    /// Number of `network_bytes_per_sec`
+    /// Network throughput in bytes per second
     pub network_bytes_per_sec: u64,
-    /// Number of `disk_bytes_per_sec`
+    /// Disk I/O throughput in bytes per second
     pub disk_bytes_per_sec: u64,
 }
 
+/// Configuration data for a primal service
+///
+/// Flexible key-value configuration storage using JSON values.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalConfig {
-    /// Mapping of data
+    /// Configuration key-value pairs
     pub data: HashMap<String, serde_json::Value>,
 }
 
@@ -655,6 +692,9 @@ impl Default for UniversalIntegrationConfig {
     }
 }
 
+/// Helper for migrating from hardcoded primal types to capability-based discovery
+///
+/// Deprecated: Use `CapabilityBasedEcosystem` for capability-based service discovery.
 #[deprecated = "Use CapabilityBasedEcosystem instead"]
 pub struct PrimalTypeMigrationHelper;
 
@@ -709,42 +749,57 @@ STEP 3: Remove hardcoded endpoint assumptions
     }
 }
 
+/// Security attestation for service verification
+///
+/// Cryptographic proof of service identity, security posture, and compliance.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SecurityAttestation {
-    /// The attestation type value
+    /// Type of attestation (TPM, SGX, etc.)
     pub attestation_type: String,
-    /// The signature value
+    /// Cryptographic signature proving attestation
     pub signature: String,
+    /// Timestamp when attestation was created
     pub timestamp: DateTime<Utc>,
-    /// The issuer value
+    /// Entity that issued the attestation
     pub issuer: String,
 }
 
+/// Authentication requirements for service access
+///
+/// Specifies authentication method, required permissions, and token settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct AuthRequirements {
-    /// The auth type value
+    /// Authentication type required (JWT, `OAuth2`, etc.)
     #[serde(default)]
     pub auth_type: String,
-    /// Collection of required scopes
+    /// Required permission scopes for access
     #[serde(default)]
     pub required_scopes: Vec<String>,
+    /// Optional token lifetime in seconds
     pub token_lifetime: Option<u64>,
 }
 
+/// Security configuration for service endpoints
+///
+/// Defines TLS requirements, certificate validation, cipher suites, and authentication.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct EndpointSecurityConfig {
-    /// Whether `tls_required` is enabled
+    /// Whether TLS/HTTPS is required
     pub tls_required: bool,
+    /// Whether to validate server certificates
     pub cert_validation: bool,
-    /// Collection of allowed ciphers
+    /// Allowed TLS cipher suites
     pub allowed_ciphers: Vec<String>,
-    /// The auth requirements value
+    /// Authentication requirements
     pub auth_requirements: AuthRequirements,
 }
 
+/// Load and capacity metrics for services
+///
+/// Tracks resource utilization and capacity for load balancing decisions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct LoadMetrics {
-    /// The cpu usage value
+    /// Current CPU usage percentage
     pub cpu_usage: f64,
     /// The memory usage value
     pub memory_usage: f64,
@@ -754,12 +809,16 @@ pub struct LoadMetrics {
     pub requests_per_second: f64,
 }
 
+/// Error rate metrics for service monitoring
+///
+/// Tracks error rates, timeout rates, and categorizes failures for analysis.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ErrorRateMetrics {
-    /// The error rate value
+    /// Overall error rate as percentage (0.0-100.0)
     pub error_rate: f64,
+    /// Timeout rate as percentage (0.0-100.0)
     pub timeout_rate: f64,
-    /// Mapping of failure categories
+    /// Count of failures by category
     #[serde(default)]
     pub failure_categories: HashMap<String, u32>,
 }

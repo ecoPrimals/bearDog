@@ -182,12 +182,21 @@ mod cognitive_complexity_tests {
         assert!(result.is_ok(), "Optimized prerequisite validation should succeed");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_optimized_build_environment_setup() {
         let result = setup_build_environment_optimized();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok(), "Optimized build environment setup should succeed");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_cognitive_complexity_compliance() {
 

@@ -157,10 +157,28 @@ impl Default for GcTuningConfig {
 impl Default for NetworkResourceConfig {
     fn default() -> Self {
         Self {
-            max_connections: 1000,
-            connection_timeout: Duration::from_secs(30),
-            read_timeout: Duration::from_secs(30),
-            write_timeout: Duration::from_secs(30),
+            max_connections: std::env::var("BEARDOG_PROD_MAX_CONNECTIONS")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(1000), // 1000 connections default
+            connection_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PROD_CONNECTION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            read_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PROD_READ_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            write_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PROD_WRITE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
             keep_alive: true,
             tcp_nodelay: true,
         }
@@ -170,10 +188,24 @@ impl Default for NetworkResourceConfig {
 impl Default for StorageResourceConfig {
     fn default() -> Self {
         Self {
-            max_disk_usage_percent: 80.0,
-            temp_dir_cleanup_interval: Duration::from_secs(3600), // 1 hour
-            log_rotation_size_mb: 100,
-            log_retention_days: 30,
+            max_disk_usage_percent: std::env::var("BEARDOG_MAX_DISK_USAGE_PERCENT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(80.0),
+            temp_dir_cleanup_interval: Duration::from_secs(
+                std::env::var("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|i| i.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ),
+            log_rotation_size_mb: std::env::var("BEARDOG_LOG_ROTATION_SIZE_MB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
+            log_retention_days: std::env::var("BEARDOG_LOG_RETENTION_DAYS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
         }
     }
 }
@@ -181,10 +213,26 @@ impl Default for StorageResourceConfig {
 impl Default for ConnectionConfig {
     fn default() -> Self {
         Self {
-            pool_size: 10,
-            max_idle_connections: 5,
-            connection_lifetime: Duration::from_secs(1800), // 30 minutes
-            health_check_interval: Duration::from_secs(60), // 1 minute
+            pool_size: std::env::var("BEARDOG_CONNECTION_POOL_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
+            max_idle_connections: std::env::var("BEARDOG_MAX_IDLE_CONNECTIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5),
+            connection_lifetime: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_LIFETIME_SECS")
+                    .ok()
+                    .and_then(|l| l.parse().ok())
+                    .unwrap_or(1800), // 30 minutes default
+            ),
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60), // 1 minute default
+            ),
         }
     }
 }
@@ -214,21 +262,61 @@ impl ResourceManagementConfig {
                 ..Default::default()
             },
             network: NetworkResourceConfig {
-                max_connections: 10000,
-                connection_timeout: Duration::from_secs(10),
+                max_connections: std::env::var("BEARDOG_PROD_PRODUCTION_MAX_CONNECTIONS")
+                    .ok()
+                    .and_then(|c| c.parse().ok())
+                    .unwrap_or(10000),
+                connection_timeout: Duration::from_secs(
+                    std::env::var("BEARDOG_PROD_PRODUCTION_CONNECTION_TIMEOUT_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(10),
+                ),
                 ..Default::default()
             },
             storage: StorageResourceConfig {
-                max_disk_usage_percent: 70.0,
-                temp_dir_cleanup_interval: Duration::from_secs(1800), // 30 minutes
-                log_rotation_size_mb: 500,
-                log_retention_days: 90,
+                max_disk_usage_percent: std::env::var(
+                    "BEARDOG_PROD_PRODUCTION_MAX_DISK_USAGE_PERCENT",
+                )
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(70.0),
+                temp_dir_cleanup_interval: Duration::from_secs(
+                    std::env::var("BEARDOG_PROD_PRODUCTION_TEMP_CLEANUP_INTERVAL_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(1800), // 30 minutes
+                ),
+                log_rotation_size_mb: std::env::var("BEARDOG_PRODUCTION_LOG_ROTATION_SIZE_MB")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(500),
+                log_retention_days: std::env::var("BEARDOG_PROD_PRODUCTION_LOG_RETENTION_DAYS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(90),
             },
             connections: ConnectionConfig {
-                pool_size: 50,
-                max_idle_connections: 25,
-                connection_lifetime: Duration::from_secs(3600), // 1 hour
-                health_check_interval: Duration::from_secs(30), // 30 seconds
+                pool_size: std::env::var("BEARDOG_PROD_PRODUCTION_POOL_SIZE")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(50),
+                max_idle_connections: std::env::var("BEARDOG_PROD_PRODUCTION_MAX_IDLE_CONNECTIONS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(25),
+                connection_lifetime: Duration::from_secs(
+                    std::env::var("BEARDOG_PROD_PRODUCTION_CONNECTION_LIFETIME_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(3600), // 1 hour
+                ),
+                health_check_interval: Duration::from_secs(
+                    std::env::var("BEARDOG_PROD_PRODUCTION_HEALTH_CHECK_INTERVAL_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(30), // 30 seconds
+                ),
             },
         }
     }

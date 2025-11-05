@@ -87,6 +87,9 @@ fn test_aes_gcm_tampered_ciphertext_fails() -> Result<(), BearDogError> {
     let key = BearDogCrypto::generate_secure_random(32);
     let data = b"Authenticated message";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let (mut ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&key, data, None)?;
 
     // Tamper with the ciphertext
@@ -107,6 +110,9 @@ fn test_aes_gcm_tampered_ciphertext_fails() -> Result<(), BearDogError> {
 // ============================================================================
 // Key Derivation Edge Cases
 // ============================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_pbkdf2_empty_password() -> Result<(), BearDogError> {
@@ -116,6 +122,9 @@ fn test_pbkdf2_empty_password() -> Result<(), BearDogError> {
     let key = BearDogCrypto::derive_pbkdf2_key(empty_password, salt, 10000, 32)?;
 
     // Should produce a key even with empty password
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_eq!(key.len(), 32, "Derived key should be 32 bytes");
     assert_ne!(key, vec![0u8; 32], "Derived key should not be all zeros");
 
@@ -130,6 +139,9 @@ fn test_pbkdf2_empty_salt() -> Result<(), BearDogError> {
     let key = BearDogCrypto::derive_pbkdf2_key(password, empty_salt, 10000, 32)?;
 
     // Should produce a key even with empty salt (though not recommended in production)
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     assert_eq!(key.len(), 32);
 
     Ok(())
@@ -142,6 +154,9 @@ fn test_pbkdf2_deterministic() -> Result<(), BearDogError> {
     let iterations = 10000;
 
     let key1 = BearDogCrypto::derive_pbkdf2_key(password, salt, iterations, 32)?;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let key2 = BearDogCrypto::derive_pbkdf2_key(password, salt, iterations, 32)?;
 
     assert_eq!(key1, key2, "Same inputs should produce same key");
@@ -165,6 +180,9 @@ fn test_pbkdf2_different_iterations() -> Result<(), BearDogError> {
 
 // ============================================================================
 // Password Hashing Edge Cases
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -176,6 +194,9 @@ fn test_argon2_empty_password() -> Result<(), BearDogError> {
     // Should produce a hash even for empty password
     assert!(
         !hash.is_empty(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Hash should be generated for empty password"
     );
 
@@ -186,6 +207,9 @@ fn test_argon2_empty_password() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_argon2_very_long_password() -> Result<(), BearDogError> {
     // 1000 byte password
@@ -196,6 +220,9 @@ fn test_argon2_very_long_password() -> Result<(), BearDogError> {
 
     assert!(
         is_valid,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Very long password should hash and verify correctly"
     );
     Ok(())
@@ -212,6 +239,9 @@ fn test_argon2_special_characters() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_argon2_unicode_password() -> Result<(), BearDogError> {
     let password = "пароль密码🔐";
@@ -228,6 +258,9 @@ fn test_argon2_wrong_password_fails() -> Result<(), BearDogError> {
     let correct_password = "correct_password";
     let wrong_password = "wrong_password";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let hash = BearDogCrypto::hash_password_argon2(correct_password)?;
     let is_valid = BearDogCrypto::verify_password_argon2(wrong_password, &hash)?;
 
@@ -240,6 +273,9 @@ fn test_argon2_wrong_password_fails() -> Result<(), BearDogError> {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_hmac_empty_message() -> Result<(), BearDogError> {
     let key = b"secret_key";
     let empty_message = b"";
@@ -248,6 +284,9 @@ fn test_hmac_empty_message() -> Result<(), BearDogError> {
 
     assert_eq!(hmac.len(), 32, "HMAC should be 32 bytes");
     assert_ne!(hmac, vec![0u8; 32], "HMAC should not be all zeros");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     Ok(())
 }
@@ -256,6 +295,9 @@ fn test_hmac_empty_message() -> Result<(), BearDogError> {
 fn test_hmac_empty_key() -> Result<(), BearDogError> {
     let empty_key = b"";
     let message = b"message";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     let hmac = BearDogCrypto::hmac_sha256(empty_key, message)?;
 
@@ -269,6 +311,9 @@ fn test_hmac_empty_key() -> Result<(), BearDogError> {
 fn test_hmac_deterministic() -> Result<(), BearDogError> {
     let key = b"test_key";
     let message = b"test_message";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let hmac1 = BearDogCrypto::hmac_sha256(key, message)?;
     let hmac2 = BearDogCrypto::hmac_sha256(key, message)?;
@@ -279,6 +324,9 @@ fn test_hmac_deterministic() -> Result<(), BearDogError> {
 
 #[test]
 fn test_hmac_different_keys_different_hmac() -> Result<(), BearDogError> {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let key1 = b"key1";
     let key2 = b"key2";
     let message = b"message";
@@ -288,7 +336,9 @@ fn test_hmac_different_keys_different_hmac() -> Result<(), BearDogError> {
 
     assert_ne!(
         hmac1, hmac2,
-        "Different keys should produce different HMACs"
+        "Different keys should produce different HMACs" // TEST_CATEGORY: integration
+                                                        // TEST_DOMAIN: security
+                                                        // TEST_PRIORITY: normal
     );
     Ok(())
 }
@@ -298,6 +348,9 @@ fn test_hmac_different_keys_different_hmac() -> Result<(), BearDogError> {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_sha256_empty_input() {
     let empty = b"";
     let hash = compute_sha256_hash(empty).expect("Hash should succeed");
@@ -315,6 +368,9 @@ fn test_sha256_large_input() {
     let hash = compute_sha256_hash(&large_data).expect("Hash should succeed");
     assert_eq!(hash.len(), 32);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_sha256_deterministic() {
@@ -322,12 +378,18 @@ fn test_sha256_deterministic() {
 
     let hash1 = compute_sha256_hash(data).expect("Hash should succeed");
     let hash2 = compute_sha256_hash(data).expect("Hash should succeed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     assert_eq!(hash1, hash2, "SHA-256 should be deterministic");
 }
 
 // ============================================================================
 // Random Number Generation Edge Cases
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -339,20 +401,32 @@ fn test_random_bytes_zero_length() {
 
 #[test]
 fn test_random_bytes_large() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // 1MB of random data
     let result = generate_secure_random_bytes(1024 * 1024);
     assert!(result.is_ok());
     assert_eq!(result.unwrap().len(), 1024 * 1024);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_random_bytes_not_all_zeros() {
     let bytes = generate_secure_random_bytes(32).expect("Should generate random bytes");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // Statistically, 32 random bytes should not all be zero
     assert_ne!(bytes, vec![0u8; 32], "Random bytes should not all be zero");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_random_bytes_different_each_time() {
     let bytes1 = generate_secure_random_bytes(32).expect("Should generate random bytes");

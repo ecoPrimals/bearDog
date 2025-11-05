@@ -149,6 +149,9 @@ mod tests {
     #[tokio::test]
     fn test_trust_manager() -> Result<(), beardog_errors::BearDogError> {
         let manager = TrustManager::new(TrustManagementConfig::default());
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: normal
 
         use rand::RngCore;
         let mut proof = vec![0u8; 32]; // 256-bit proof
@@ -171,6 +174,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_trust_revocation() -> Result<(), beardog_errors::BearDogError> {
         let manager = TrustManager::new(TrustManagementConfig::default());

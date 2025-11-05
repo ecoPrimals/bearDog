@@ -205,8 +205,14 @@ impl Default for LogFormat {
 impl Default for LogRotationConfig {
     fn default() -> Self {
         Self {
-            max_size_mb: 100,
-            max_files: 10,
+            max_size_mb: std::env::var("BEARDOG_SYSTEM_LOG_MAX_SIZE_MB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
+            max_files: std::env::var("BEARDOG_SYSTEM_LOG_MAX_FILES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
             frequency: LogRotationFrequency::Daily,
         }
     }
@@ -348,9 +354,22 @@ impl Default for ResourceConfig {
     fn default() -> Self {
         Self {
             max_memory_bytes: None,
-            max_file_descriptors: Some(65536),
-            max_connections: 10000,
-            monitoring_interval: Duration::from_secs(60),
+            max_file_descriptors: Some(
+                std::env::var("BEARDOG_MAX_FILE_DESCRIPTORS")
+                    .ok()
+                    .and_then(|f| f.parse().ok())
+                    .unwrap_or(65536), // 64K default
+            ),
+            max_connections: std::env::var("BEARDOG_SYSTEM_MAX_CONNECTIONS")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(10000), // 10K connections default
+            monitoring_interval: Duration::from_secs(
+                std::env::var("BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
         }
     }
 }
@@ -441,5 +460,102 @@ impl SystemDomainConfig {
         self.logging.validate()?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_log_level_default() {
+        assert_eq!(LogLevel::default(), LogLevel::Info);
+    }
+
+    #[test]
+    fn test_log_level_ordering() {
+        assert!(LogLevel::Trace < LogLevel::Debug);
+        assert!(LogLevel::Debug < LogLevel::Info);
+        assert!(LogLevel::Info < LogLevel::Warn);
+        assert!(LogLevel::Warn < LogLevel::Error);
+    }
+
+    #[test]
+    fn test_logging_config_default() {
+        let config = LoggingConfig::default();
+        assert!(config.enabled);
+        assert_eq!(config.level, LogLevel::Info);
+        assert_eq!(config.format, LogFormat::Json);
+        assert_eq!(config.targets.len(), 1);
+        assert!(config.structured);
+    }
+
+    #[test]
+    fn test_logging_config_stdout_only() {
+        let config = LoggingConfig::stdout_only();
+        assert_eq!(config.targets.len(), 1);
+        assert_eq!(config.targets[0].target_type, LogTargetType::Stdout);
+    }
+
+    #[test]
+    fn test_logging_config_file_with_rotation() {
+        let config = LoggingConfig::file_with_rotation("/var/log/beardog.log");
+        assert_eq!(config.targets.len(), 1);
+        assert_eq!(config.targets[0].target_type, LogTargetType::File);
+        assert!(config.rotation.is_some());
+    }
+
+    #[test]
+    fn test_logging_config_validate_success() {
+        let config = LoggingConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_logging_config_validate_no_targets() {
+        let mut config = LoggingConfig::default();
+        config.targets.clear();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_system_domain_config_default() {
+        let config = SystemDomainConfig::default();
+        assert_eq!(config.application.name, "BearDog");
+        assert!(config.logging.enabled);
+        assert!(config.threading.worker_threads > 0);
+    }
+
+    #[test]
+    fn test_system_domain_config_from_env() {
+        let result = SystemDomainConfig::from_env();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_system_domain_config_validate_success() {
+        let config = SystemDomainConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_system_domain_config_validate_zero_worker_threads() {
+        let mut config = SystemDomainConfig::default();
+        config.threading.worker_threads = 0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_threading_config_default() {
+        let config = ThreadingConfig::default();
+        assert!(config.worker_threads > 0);
+        assert!(config.enable_tls_optimization);
+    }
+
+    #[test]
+    fn test_resource_config_default() {
+        let config = ResourceConfig::default();
+        assert!(config.max_connections > 0);
+        assert!(config.monitoring_interval > Duration::from_secs(0));
     }
 }

@@ -134,10 +134,19 @@ pub type RegistryConfig = ProviderRegistryConfig;
 impl Default for ProviderRegistryConfig {
     fn default() -> Self {
         Self {
-            max_providers: 100,
-            health_check_interval_secs: 30,
+            max_providers: std::env::var("BEARDOG_PROVIDER_REGISTRY_MAX_PROVIDERS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            health_check_interval_secs: std::env::var("BEARDOG_PROVIDER_HEALTH_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30),
             enable_auto_discovery: true,
-            provider_timeout_secs: 30,
+            provider_timeout_secs: std::env::var("BEARDOG_PROVIDER_TIMEOUT_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30),
         }
     }
 }
@@ -484,6 +493,9 @@ impl ProviderDiscovery {
 mod tests {
     use super::*;
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_registry_creation() {
         let registry = ConsolidatedProviderRegistry::default();

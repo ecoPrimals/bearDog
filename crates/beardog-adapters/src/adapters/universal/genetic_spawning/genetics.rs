@@ -317,6 +317,9 @@ impl std::fmt::Display for GeneticTraitType {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     fn test_genetic_blueprint_creation() {
         let blueprint = GeneticBlueprint::new(1);

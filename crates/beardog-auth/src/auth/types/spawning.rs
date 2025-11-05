@@ -49,11 +49,20 @@ pub struct ResourceLimits {
 impl Default for ResourceLimits {
     fn default() -> Self {
         Self {
-            memory_mb: 1024,
+            memory_mb: std::env::var("BEARDOG_RESOURCE_MEMORY_MB")
+                .ok()
+                .and_then(|m| m.parse().ok())
+                .unwrap_or(1024), // 1GB default
             cpu_percent: 50,
-            disk_mb: 5120,
+            disk_mb: std::env::var("BEARDOG_RESOURCE_DISK_MB")
+                .ok()
+                .and_then(|d| d.parse().ok())
+                .unwrap_or(5120), // 5GB default
             network_mbps: 100,
-            concurrent_connections: 1000,
+            concurrent_connections: std::env::var("BEARDOG_MAX_CONCURRENT_CONNECTIONS")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(1000), // 1000 connections default
         }
     }
 }

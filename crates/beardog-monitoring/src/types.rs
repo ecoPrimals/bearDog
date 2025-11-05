@@ -30,7 +30,11 @@ impl Default for MetricCollectionConfig {
         Self {
             config_id: "default_collection".to_string()]
 mod tests {
+    #[cfg(test)]
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_monitoring_config_default() {
         let config = MonitoringConfig::default();

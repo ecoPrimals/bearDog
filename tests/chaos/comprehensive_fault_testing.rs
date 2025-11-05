@@ -163,21 +163,36 @@ mod tests {
     #[tokio::test]
     async fn test_all_fault_types_scenario() {
         let result = test_all_fault_types().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_sequential_injection() {
         let result = test_sequential_faults().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_concurrent_injection() {
         let result = test_concurrent_faults().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_long_running() {
         let result = test_long_running_chaos().await;

@@ -542,6 +542,9 @@ mod tests {
     #[test]
     fn test_rule_execution() {
         let condition = RuleCondition::field_equals("event_type", "login");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let rule = DetectionRule::new(
             "rule-1",
             "Login Detection",
@@ -557,6 +560,9 @@ mod tests {
         let result = rule.execute(&event_data);
         assert!(result.matched);
         assert_eq!(result.rule_id, "rule-1");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!result.evidence.is_empty());
     }
 
@@ -575,6 +581,9 @@ mod tests {
         let validation = rule.validate();
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -589,6 +598,9 @@ mod tests {
             condition,
         );
         rule.priority = 150; // Invalid priority
+                             // TEST_CATEGORY: unit
+                             // TEST_DOMAIN: core
+                             // TEST_PRIORITY: important
 
         let validation = rule.validate();
         assert!(!validation.is_valid);
@@ -604,6 +616,9 @@ mod tests {
         metrics.update_with_result(15, true, false); // True negative
         metrics.update_with_result(12, false, true); // False positive
         metrics.update_with_result(8, false, false); // False negative
+                                                     // TEST_CATEGORY: unit
+                                                     // TEST_DOMAIN: core
+                                                     // TEST_PRIORITY: normal
 
         assert_eq!(metrics.total_executions, 4);
         assert_eq!(metrics.true_positives, 1);
@@ -617,6 +632,9 @@ mod tests {
         let mut rule = DetectionRule::new(
             "rule-1",
             "Login Detection",
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             "Detects login events",
             ThreatRuleType::Signature,
             ThreatSeverity::Medium,
@@ -639,6 +657,9 @@ mod tests {
     #[test]
     fn test_rule_priority() {
         let condition = RuleCondition::field_equals("event_type", "login");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut rule = DetectionRule::new(
             "rule-1",
             "Login Detection",
@@ -659,6 +680,9 @@ mod tests {
         assert_eq!(rule.priority, 100);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_rule_enable_disable() {
         let condition = RuleCondition::field_equals("event_type", "login");

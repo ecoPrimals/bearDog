@@ -51,6 +51,7 @@ use super::{FederationConfig, PhonebookConfig, P2PConfig};
 
 impl Default for RegistryConfig {
     fn default() -> Self {
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         Self {
             registry_id: std::env::var("BEARDOG_REGISTRY_ID")
                 .unwrap_or_else(|_| "beardog-registry".to_string()),
@@ -59,17 +60,24 @@ impl Default for RegistryConfig {
             version: std::env::var("BEARDOG_REGISTRY_VERSION")
                 .unwrap_or_else(|_| "1.0.0".to_string()),
             bind_address: std::env::var("BEARDOG_REGISTRY_BIND_ADDRESS")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
                 .unwrap_or_else(|_| "0.0.0.0".to_string()),
             port: std::env::var("BEARDOG_REGISTRY_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(network_config.service_ports.registry_port),
             max_nodes: std::env::var("BEARDOG_REGISTRY_MAX_NODES")
                 .ok()
                 .and_then(|m| m.parse().ok())
                 .unwrap_or(10000),
-            node_timeout_seconds: 300, // 5 minutes
-            health_check_interval_seconds: 60, // 1 minute
+            node_timeout_seconds: std::env::var("BEARDOG_REGISTRY_NODE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(300), // 5 minutes default
+            health_check_interval_seconds: std::env::var("BEARDOG_REGISTRY_HEALTH_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|i| i.parse().ok())
+                .unwrap_or(60), // 1 minute default
             trust_propagation: TrustPropagationConfig::default(),
             metadata: HashMap::with_capacity(16),
             min_registration_trust: crate::node_registry::types::trust::TrustLevel::Basic,
@@ -176,6 +184,9 @@ impl RegistryConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]}
 
 

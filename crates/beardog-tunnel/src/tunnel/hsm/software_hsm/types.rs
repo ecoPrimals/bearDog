@@ -285,12 +285,18 @@ impl SoftwareKeyStore {
     /// Delete a key from the store
     ///
     /// # Errors
-    /// Returns an error if deletion fails
+    /// Returns an error if deletion fails or key not found
     pub async fn delete_key(&mut self, key_id: &str) -> Result<(), BearDogError> {
         let mut cache = self.key_cache.write().await;
-        cache.remove(key_id);
-        debug!("Deleted key: {}", key_id);
-        Ok(())
+        if cache.remove(key_id).is_some() {
+            debug!("Deleted key: {}", key_id);
+            Ok(())
+        } else {
+            Err(BearDogError::not_found(format!(
+                "Key not found: {}",
+                key_id
+            )))
+        }
     }
 }
 
@@ -381,14 +387,14 @@ impl FileStorageBackend {
 impl StorageBackendTrait for FileStorageBackend {
     async fn initialize(&self) -> Result<(), BearDogError> {
         // Create directory if it doesn't exist
-        std::fs::create_dir_all(&self.path).map_err(|e| BearDogError::io_error(e.to_string()))?;
+        std::fs::create_dir_all(&self.path).map_err(|e| BearDogError::io_error(&e.to_string()))?;
         Ok(())
     }
 
     async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> Result<(), BearDogError> {
         let file_path = format!("{}/{}.key", self.path, key_id);
         std::fs::write(&file_path, encrypted_key)
-            .map_err(|e| BearDogError::io_error(e.to_string()))?;
+            .map_err(|e| BearDogError::io_error(&e.to_string()))?;
         Ok(())
     }
 
@@ -400,13 +406,13 @@ impl StorageBackendTrait for FileStorageBackend {
 
     async fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
         let file_path = format!("{}/{}.key", self.path, key_id);
-        std::fs::remove_file(&file_path).map_err(|e| BearDogError::io_error(e.to_string()))?;
+        std::fs::remove_file(&file_path).map_err(|e| BearDogError::io_error(&e.to_string()))?;
         Ok(())
     }
 
     async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         let entries =
-            std::fs::read_dir(&self.path).map_err(|e| BearDogError::io_error(e.to_string()))?;
+            std::fs::read_dir(&self.path).map_err(|e| BearDogError::io_error(&e.to_string()))?;
 
         let mut keys = Vec::new();
         for entry in entries.flatten() {
@@ -456,43 +462,43 @@ impl DatabaseStorageBackend {
 impl StorageBackendTrait for DatabaseStorageBackend {
     async fn initialize(&self) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn retrieve(&self, _key_id: &str) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
+            &"DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 }
@@ -633,7 +639,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {}", e))
+            BearDogError::crypto_error(&format!("AES-256-GCM encryption failed: {}", e))
         })?;
 
         // Prepend nonce to ciphertext
@@ -647,7 +653,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
 
         if ciphertext.len() < 12 {
             return Err(BearDogError::crypto_error(
-                "Ciphertext too short to contain nonce".to_string(),
+                "Ciphertext too short to contain nonce",
             ));
         }
 
@@ -658,7 +664,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let cipher = Aes256Gcm::new(key);
 
         cipher.decrypt(nonce, encrypted_data).map_err(|e| {
-            BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {}", e))
+            BearDogError::crypto_error(&format!("AES-256-GCM decryption failed: {}", e))
         })
     }
 }

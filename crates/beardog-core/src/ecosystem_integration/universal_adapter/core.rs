@@ -10,15 +10,19 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
+/// Universal adapter for ecosystem service integration
+///
+/// Provides a unified interface for connecting to any ecosystem service through
+/// capability-based discovery and protocol-agnostic communication.
 #[derive(Debug)]
 pub struct UniversalAdapter {
     /// Adapter configuration
     config: UniversalAdapterConfig,
-    /// Active connections
+    /// Active connections to services
     connections: Arc<RwLock<HashMap<String, ConnectionInfo>>>,
-    /// Service endpoints
+    /// Discovered service endpoints
     endpoints: Arc<RwLock<HashMap<String, ServiceEndpoint>>>,
-    /// Adapter metrics
+    /// Performance and usage metrics
     metrics: Arc<RwLock<AdapterMetrics>>,
 }
 

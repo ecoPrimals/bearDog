@@ -99,9 +99,15 @@ mod tests {
     #[test]
     fn test_unified_trait_version() {
         let version = utilities::get_unified_version();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(version, "3.0.0");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_unified_validation() {
         let result = utilities::validate_unified_usage();

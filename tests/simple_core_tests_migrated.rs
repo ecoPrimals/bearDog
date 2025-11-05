@@ -12,25 +12,40 @@ fn test_trust_levels() {
     // Test basic capabilities
     use beardog_types::canonical::capabilities::ServiceCapabilityType;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     let capability = ServiceCapabilityType::Compute;
     assert!(matches!(capability, ServiceCapabilityType::Compute));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_configuration_defaults() {
     // Test that we can create basic configuration structures
     use beardog_types::canonical::config::WorkingUnifiedConfig;
     let config = WorkingUnifiedConfig::default();
     assert!(config.version.is_empty() || !config.version.is_empty()); // Basic existence check
+                                                                      // TEST_CATEGORY: unit
+                                                                      // TEST_DOMAIN: core
+                                                                      // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_error_conversion() {
     let error = BearDogError::internal("Internal test error".to_string());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     let error_string = format!("{}", error);
     assert!(error_string.contains("Internal test error"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_basic_types() {
     // Test that basic types can be instantiated

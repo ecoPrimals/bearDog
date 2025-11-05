@@ -55,6 +55,9 @@ mod zero_cost_types_tests {
     fn test_zero_cost_conversion() {
         // Test that conversions between zero-cost types are truly zero-cost
         let value: u64 = 42;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let converted = value; // Should be a simple move, no allocation
         
         assert_eq!(value, converted);
@@ -62,6 +65,9 @@ mod zero_cost_types_tests {
 
     #[test]
     fn test_generic_zero_cost_function() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         fn identity<T>(value: T) -> T {
             value
         }
@@ -69,6 +75,9 @@ mod zero_cost_types_tests {
         let string_result = identity("test".to_string());
         let number_result = identity(42u64);
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(string_result, "test");
         assert_eq!(number_result, 42);
     }
@@ -76,6 +85,9 @@ mod zero_cost_types_tests {
     #[test]
     fn test_zero_cost_trait_object_size() {
         use std::mem::size_of;
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         // Trait objects have a known overhead (pointer + vtable)
         // This is NOT zero-cost, but it's predictable
@@ -87,12 +99,18 @@ mod zero_cost_types_tests {
         // Trait object should be 2 pointers (data + vtable)
         assert_eq!(boxed_size, ptr_size * 2);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_monomorphization_creates_specialized_code() {
         // Test that generic functions are monomorphized
         fn process<T: std::fmt::Display>(value: T) -> String {
             format!("{}", value)
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         }
         
         let string_result = process("test");
@@ -103,6 +121,9 @@ mod zero_cost_types_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_inline_optimization() {
         #[inline(always)]
         fn add_one(x: u64) -> u64 {
@@ -115,6 +136,9 @@ mod zero_cost_types_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_const_evaluation() {
         const VALUE: u64 = 42;
         const COMPUTED: u64 = VALUE * 2;
@@ -126,6 +150,9 @@ mod zero_cost_types_tests {
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 mod memory_layout_tests {
     use super::*;
 
@@ -135,6 +162,9 @@ mod memory_layout_tests {
         
         #[repr(C)]
         struct Packed {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             a: u8,
             b: u8,
             c: u8,
@@ -147,6 +177,9 @@ mod memory_layout_tests {
 
     #[test]
     fn test_enum_size_optimization() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         use std::mem::size_of;
         
         // Option<&T> should be the same size as &T due to null pointer optimization
@@ -160,12 +193,18 @@ mod memory_layout_tests {
         
         enum SmallEnum {
             A,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             B,
             C,
         }
         
         // Small enums should use minimal discriminant size
         assert!(size_of::<SmallEnum>() <= 1);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 }
 
@@ -182,10 +221,16 @@ mod performance_characteristics_tests {
 
     #[test]
     fn test_move_semantics() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let vec1 = vec![1, 2, 3, 4, 5];
         let vec2 = vec1; // Move, not copy
         
         // vec1 is now moved, vec2 owns the data
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(vec2.len(), 5);
         // Uncommenting the next line should fail to compile:
         // assert_eq!(vec1.len(), 5);
@@ -194,6 +239,9 @@ mod performance_characteristics_tests {
     #[test]
     fn test_copy_types_are_efficient() {
         let x: u64 = 42;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let y = x; // Copy, not move (u64 implements Copy)
         
         // Both x and y are valid
@@ -201,6 +249,9 @@ mod performance_characteristics_tests {
         assert_eq!(y, 42);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_reference_counting_overhead() {
         use std::sync::Arc;

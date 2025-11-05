@@ -269,6 +269,9 @@ mod tests {
 
         assert!(pool.allocate("test-pool", 1024).is_ok());
         assert_eq!(pool.pool_count(), 1);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         assert_eq!(pool.total_allocated_bytes(), 1024);
 
         assert!(pool.allocate("test-pool", 512).is_err());
@@ -285,6 +288,9 @@ mod tests {
     #[test]
     fn test_lineage_tracker() {
         let mut tracker = LineageTracker::new();
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: genetics
+ // TEST_PRIORITY: normal
 
         tracker.track_genetics("genesis", vec![]);
 
@@ -310,6 +316,9 @@ mod tests {
         assert!(ancestors.contains(&"genesis".to_string()));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_lineage_stats() {
         let mut tracker = LineageTracker::new();

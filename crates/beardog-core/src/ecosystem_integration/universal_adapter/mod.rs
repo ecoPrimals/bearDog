@@ -1,13 +1,22 @@
-// **UNIFIED UNIVERSAL ADAPTER SYSTEM** - Modularized Architecture
-//
-// This module provides a comprehensive universal adapter architecture that enables
-// seamless integration with diverse ecosystem services, protocols, and platforms
-// through a unified, extensible, and type-safe interface.
-//
-// ## Module Organization
-//
-// - `types` - Core types, enums, and data structures
-// - `config` - Configuration structures and defaults
+//! # Unified Universal Adapter System
+//!
+//! Provides a comprehensive universal adapter architecture enabling seamless
+//! integration with diverse ecosystem services, protocols, and platforms through
+//! a unified, extensible, and type-safe interface.
+//!
+//! ## Overview
+//!
+//! The universal adapter solves the "2^n hardcoding problem" by providing O(1)
+//! adapters that work with any service by discovering capabilities dynamically:
+//! - No hardcoded service names or endpoints
+//! - Capability-based service discovery
+//! - Protocol-agnostic communication
+//! - Zero-knowledge bootstrap support
+//!
+//! ## Module Organization
+//!
+//! - [`types`] - Core types, enums, and data structures
+//! - [`config`] - Configuration structures and defaults
 // - `core` - Core adapter implementation
 // - `production` - Production-ready adapter with enhanced features
 // - `connection` - Connection management and pooling
@@ -18,13 +27,17 @@
 /// Configuration management
 /// Configuration management
 pub mod config;
+/// Connection pooling and management
 pub mod connection;
 /// Core functionality
-/// Core functionality
 pub mod core;
+/// Event handling and subscriptions
 pub mod events;
+/// Metrics collection and reporting
 pub mod metrics;
+/// Production-ready adapter implementation
 pub mod production;
+/// Core type definitions
 pub mod types;
 
 // Re-export main types for backwards compatibility

@@ -8,6 +8,12 @@ pub use types::ConsensusResult as TypesConsensusResult;
 
 pub use types::{authorization::*, genetics::*, node_registry::*, spawning::*, workflow::*};
 
+mod consensus;
+mod core; // CrossNodeAuthEngine implementation
+mod ecosystem;
+mod genetics;
+mod verification;
+
 pub mod handlers;
 pub mod node_registry;
 pub mod proof_verifier;

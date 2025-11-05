@@ -168,6 +168,9 @@ mod tests {
     use chrono::Utc;
     use serde_json::json;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]}
 
 

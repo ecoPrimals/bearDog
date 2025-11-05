@@ -93,13 +93,15 @@ impl SelfDiscoveryEngine {
 
         self.log_discovery_plan();
         let (primal_id, capabilities, endpoints, metadata) = self.execute_discovery_phases()?;
-        let self_identity = self.build_self_identity(primal_id, capabilities, endpoints, metadata);
-        self.log_discovery_results(&self_identity, start_time);
+        let self_identity =
+            Self::build_self_identity(primal_id, &capabilities, endpoints, metadata);
+        Self::log_discovery_results(&self_identity, start_time);
 
         Ok(self_identity)
     }
 
     /// Logs the discovery plan
+    #[allow(clippy::unused_self, clippy::cognitive_complexity)] // Complex logging function
     fn log_discovery_plan(&self) {
         info!("🔍 Starting self-identity discovery...");
         info!("📋 Discovery Plan:");
@@ -114,6 +116,7 @@ impl SelfDiscoveryEngine {
     ///
     /// # Errors
     /// Returns an error if any discovery phase fails
+    #[allow(clippy::cognitive_complexity)] // Multi-phase discovery orchestration - complexity is necessary
     fn execute_discovery_phases(
         &mut self,
     ) -> BearDogResult<(
@@ -147,9 +150,8 @@ impl SelfDiscoveryEngine {
 
     /// Builds the final `SelfIdentity` object from discovered components
     fn build_self_identity(
-        &self,
         primal_id: String,
-        capabilities: Vec<SelfCapabilityDetection>,
+        capabilities: &[SelfCapabilityDetection],
         endpoints: Vec<UniversalEndpoint>,
         metadata: PrimalMetadata,
     ) -> SelfIdentity {
@@ -166,8 +168,9 @@ impl SelfDiscoveryEngine {
     }
 
     /// Logs the final discovery results
-    fn log_discovery_results(&self, self_identity: &SelfIdentity, start_time: std::time::Instant) {
-        let discovery_duration = start_time.elapsed().as_millis() as u64;
+    #[allow(clippy::cognitive_complexity)] // Comprehensive logging function - complexity is from detailed output
+    fn log_discovery_results(self_identity: &SelfIdentity, start_time: std::time::Instant) {
+        let discovery_duration = start_time.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
 
         info!("🎉 Self-identity discovery complete!");
         info!("📊 Discovery Results:");
@@ -200,6 +203,7 @@ impl SelfDiscoveryEngine {
     }
 
     /// Auto-detect available capabilities by examining the runtime environment
+    #[allow(clippy::cognitive_complexity)] // Comprehensive capability detection - complexity is from thorough checks
     fn auto_detect_capabilities(&mut self) -> Vec<SelfCapabilityDetection> {
         info!("🔍 Auto-detecting capabilities...");
         let mut capabilities = Vec::new();
@@ -356,8 +360,12 @@ impl SelfDiscoveryEngine {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let port = network_config.service_ports.api_port;
 
+        // Use localhost from config or environment
+        let localhost = std::env::var("BEARDOG_LOCALHOST")
+            .unwrap_or_else(|_| network_config.default_host.clone());
+
         UniversalEndpoint {
-            url: format!("http://127.0.0.1:{port}"),
+            url: format!("http://{localhost}:{port}"),
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string()],
             auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
             security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
@@ -367,7 +375,10 @@ impl SelfDiscoveryEngine {
     /// Discover network endpoint
     fn discover_network_endpoint() -> UniversalEndpoint {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
-        let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+        // Get bind address from config or environment (0.0.0.0 is standard for binding)
+        let host = std::env::var("BEARDOG_HOST")
+            .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+            .unwrap_or_else(|_| "0.0.0.0".to_string()); // Standard bind-to-all-interfaces
         let port = network_config.service_ports.api_port;
 
         UniversalEndpoint {
@@ -380,13 +391,25 @@ impl SelfDiscoveryEngine {
 
     /// Discover service mesh endpoint
     fn discover_mesh_endpoint() -> UniversalEndpoint {
+        let _network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        // Use mesh port from environment or default to 8443 (standard HTTPS alternate)
         let mesh_port = std::env::var("BEARDOG_MESH_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(8443);
+            .unwrap_or_else(|| {
+                // Try admin port, otherwise use 8443 as standard mesh port
+                std::env::var("BEARDOG_ADMIN_PORT")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8443)
+            });
+
+        // Get bind address from environment
+        let bind_address =
+            std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string()); // Standard bind-to-all-interfaces
 
         UniversalEndpoint {
-            url: format!("https://0.0.0.0:{mesh_port}"),
+            url: format!("https://{bind_address}:{mesh_port}"),
             protocols: vec![
                 "HTTPS".to_string(),
                 "gRPC".to_string(),
@@ -435,6 +458,7 @@ impl SelfDiscoveryEngine {
 
     /// Validate self-knowledge
     /// Validates `self_knowledge`
+    #[allow(clippy::cognitive_complexity)] // Thorough validation with multiple checks - complexity is necessary
     fn validate_self_knowledge(capabilities: &[SelfCapabilityDetection]) -> BearDogResult<()> {
         info!("✅ Validating self-knowledge...");
 
@@ -482,6 +506,9 @@ mod tests {
 
         // Should create engine successfully
         assert!(engine.discovered_capabilities.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Should discover self-identity
         let identity = engine.discover_self_identity()?;
@@ -506,6 +533,9 @@ mod tests {
     #[tokio::test]
     async fn test_zero_hardcoded_knowledge() -> Result<(), Box<dyn std::error::Error>> {
         let mut engine = SelfDiscoveryEngine::new()?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         let identity = engine.discover_self_identity()?;
 
         // Should not contain hardcoded primal names
@@ -554,6 +584,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_capability_auto_detection() -> Result<(), Box<dyn std::error::Error>> {
         let mut engine = SelfDiscoveryEngine::new()?;

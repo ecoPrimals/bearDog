@@ -368,16 +368,25 @@ mod tests {
         let mut config = ProductionCoreConfig::default();
         config.region = String::new();
         assert!(config.validate().is_err());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_is_production() {
         let mut config = ProductionCoreConfig::default();
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         config.environment_level = EnvironmentLevel::Development;
         assert!(!config.is_production());
 
         config.environment_level = EnvironmentLevel::Production;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.is_production());
 
         config.environment_level = EnvironmentLevel::Critical;
@@ -389,17 +398,29 @@ mod tests {
         let config = ProductionCoreConfig::new("beardog", "1.0.0");
         let id = config.service_identifier();
         assert!(id.contains("beardog"));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(id.contains("1.0.0"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_location_with_az() {
         let config = ProductionCoreConfig::default()
             .with_region("us-east-1")
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .with_availability_zone(Some("us-east-1a"));
 
         assert_eq!(config.location(), "us-east-1:us-east-1a");
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_location_without_az() {
@@ -411,20 +432,32 @@ mod tests {
     fn test_environment_level_is_production_grade() {
         assert!(!EnvironmentLevel::Development.is_production_grade());
         assert!(!EnvironmentLevel::Testing.is_production_grade());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(!EnvironmentLevel::Staging.is_production_grade());
         assert!(EnvironmentLevel::PreProduction.is_production_grade());
         assert!(EnvironmentLevel::Production.is_production_grade());
         assert!(EnvironmentLevel::Critical.is_production_grade());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_environment_level_uptime_requirements() {
         assert_eq!(EnvironmentLevel::Development.required_uptime(), 0.95);
         assert_eq!(EnvironmentLevel::Production.required_uptime(), 0.999);
         assert_eq!(EnvironmentLevel::Critical.required_uptime(), 0.9999);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_environment_level_downtime_calculation() {
         let critical_downtime = EnvironmentLevel::Critical.max_downtime_minutes_per_month();
         assert!(critical_downtime < 5.0); // Less than 5 minutes/month
@@ -432,31 +465,49 @@ mod tests {
         let dev_downtime = EnvironmentLevel::Development.max_downtime_minutes_per_month();
         assert!(dev_downtime > 2000.0); // More than 2000 minutes/month
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_production_feature_flags_default() {
         let flags = ProductionFeatureFlags::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(flags.enable_circuit_breakers);
         assert!(flags.enable_rate_limiting);
         assert!(!flags.enable_auto_scaling); // Should be false by default
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_production_feature_flags_production() {
         let flags = ProductionFeatureFlags::production();
         assert!(flags.enable_auto_scaling);
         assert!(flags.enable_performance_profiling);
         assert!(flags.enable_encryption_at_rest);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_production_feature_flags_development() {
         let flags = ProductionFeatureFlags::development();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(!flags.enable_advanced_monitoring);
         assert!(!flags.enable_security_auditing);
         assert!(flags.enable_performance_profiling); // Enabled in dev for profiling
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_feature_flags_performance_impact() {
         let mut flags = ProductionFeatureFlags::default();

@@ -89,8 +89,8 @@ pub mod audit;
 
 pub mod core;
 
-// NOTE: crypto_providers has severe type mismatches - temporarily disabled
-// TODO: Fix crypto_providers KeyType alignment and re-enable
+// NOTE: crypto_providers disabled - causes 90 compilation errors
+// Need to fix crypto provider integration separately
 // pub mod crypto_providers;
 
 pub mod health;
@@ -104,6 +104,9 @@ pub mod storage;
 pub mod types;
 
 pub use types::*;
+
+#[cfg(test)]
+mod tests;
 
 // Re-export core types
 pub use self::core::RustSoftwareHsm;
@@ -263,49 +266,4 @@ pub struct SoftwareHsmCapabilities {
     pub memory_protection_available: bool,
 
     pub hardware_backed: bool,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_create_default_software_hsm() -> Result<(), BearDogError> {
-        let hsm = create_default_software_hsm().await;
-        assert!(hsm.is_ok());
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_key_store_creation() -> Result<(), BearDogError> {
-        let config = KeyStoreConfig {
-            storage_type: KeyStorageType::Memory,
-            encryption_key_source: KeySource::Derived,
-            backup_enabled: false,
-            cache_size: 1024,
-            file_config: None,
-            db_config: None,
-        };
-        let key_store = SoftwareKeyStore::new(&config).await;
-        assert!(key_store.is_ok());
-        Ok(())
-    }
-
-    #[test]
-    fn test_get_capabilities_summary() -> Result<(), BearDogError> {
-        let capabilities = get_capabilities_summary();
-        assert!(!capabilities.hardware_backed);
-        assert!(capabilities.supports_key_generation);
-        assert!(capabilities.supports_audit_logging);
-        assert!(capabilities.memory_protection_available);
-        Ok(())
-    }
-
-    #[test]
-    #[allow(clippy::const_is_empty)]
-    fn test_version_info() -> Result<(), BearDogError> {
-        assert!(!VERSION.is_empty());
-        assert!(!BUILD_INFO.is_empty());
-        Ok(())
-    }
 }

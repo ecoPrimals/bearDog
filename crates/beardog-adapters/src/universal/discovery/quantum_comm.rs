@@ -32,10 +32,21 @@ pub struct QuantumCommunicationLayer {
 }
 
 impl Default for QuantumCommConfig {
-    fn default(true,
-            key_rotation_interval: 3600,   // 1 hour
-            max_message_size: 1024 * 1024, // 1MB
-            error_correction_level: 3,     // High error correction
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            key_rotation_interval: std::env::var("BEARDOG_QUANTUM_KEY_ROTATION_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3600),   // 1 hour
+            max_message_size: std::env::var("BEARDOG_QUANTUM_MAX_MESSAGE_SIZE_BYTES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1024 * 1024), // 1MB
+            error_correction_level: std::env::var("BEARDOG_QUANTUM_ERROR_CORRECTION_LEVEL")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),     // High error correction
         }
     }
 }

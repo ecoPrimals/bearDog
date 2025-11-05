@@ -176,8 +176,11 @@ impl Default for PrivacyAuditConfiguration {
     }
 }
 
-impl Default for ConsolidatedComplianceConfiguration {
-    fn default() -> Self {
+impl ConsolidatedComplianceConfiguration {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+
         Self {
             enabled: true,
             standards: vec![ComplianceStandard::Gdpr, ComplianceStandard::Sox],
@@ -188,12 +191,27 @@ impl Default for ConsolidatedComplianceConfiguration {
                 "CCPA".to_string(),
                 "HIPAA".to_string(),
             ],
-            audit_retention_days: 2555, // 7 years
-            audit_frequency_hours: 168, // Weekly (24 * 7)
+            audit_retention_days: get_parsed(
+                source,
+                "BEARDOG_COMPLIANCE_AUDIT_RETENTION_DAYS",
+                2555,
+            ), // 7 years
+            audit_frequency_hours: get_parsed(
+                source,
+                "BEARDOG_COMPLIANCE_AUDIT_FREQUENCY_HOURS",
+                168,
+            ), // Weekly
             reporting: ReportingConfiguration::default(),
             data_sovereignty: DataSovereigntyConfiguration::default(),
             privacy_audit: PrivacyAuditConfiguration::default(),
         }
+    }
+}
+
+impl Default for ConsolidatedComplianceConfiguration {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -224,8 +242,15 @@ impl ConsolidatedComplianceConfiguration {
     /// Create development configuration
     pub fn development() -> Self {
         let mut config = Self::default();
-        config.audit_retention_days = 30; // Shorter for development
-        config.audit_frequency_hours = 24; // Daily audits in dev
+        config.audit_retention_days = std::env::var("BEARDOG_COMPLIANCE_DEV_AUDIT_RETENTION_DAYS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30); // Shorter for development
+        config.audit_frequency_hours =
+            std::env::var("BEARDOG_COMPLIANCE_DEV_AUDIT_FREQUENCY_HOURS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(24); // Daily audits in dev
         config.reporting.frequency = ReportFrequency::Daily;
         config
     }

@@ -62,8 +62,16 @@ impl Default for CacheConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            size: 10000,
-            ttl: Duration::from_secs(3600),
+            size: std::env::var("BEARDOG_CACHE_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10000), // 10K entries default
+            ttl: Duration::from_secs(
+                std::env::var("BEARDOG_CACHE_TTL")
+                    .ok()
+                    .and_then(|t| t.parse().ok())
+                    .unwrap_or(3600) // 1 hour default
+            ),
         }
     }
 }
@@ -76,7 +84,12 @@ impl Default for ThreadPoolConfig {
         Self {
             core_threads: cores,
             max_threads: cores * 2,
-            keep_alive: Duration::from_secs(60),
+            keep_alive: Duration::from_secs(
+                std::env::var("BEARDOG_PERFORMANCE_KEEP_ALIVE_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
         }
     }
 }
@@ -86,7 +99,12 @@ impl Default for ResourceLimits {
         Self {
             max_memory_mb: None,
             max_cpu_percent: None,
-            request_timeout: Duration::from_secs(30),
+            request_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PERFORMANCE_REQUEST_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
         }
     }
 }

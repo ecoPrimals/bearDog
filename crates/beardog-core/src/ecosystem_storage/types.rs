@@ -76,27 +76,24 @@ pub enum StorageStatus {
     Timeout,
 }
 
+/// Information about a storage location
+///
+/// Describes storage location details including backend type, capacity, usage, and health.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageLocationInfo {
-    /// Location identifier
+    /// Unique location identifier
     pub location_id: String,
-    /// Storage backend type
-    /// The backend type value
+    /// Type of storage backend (memory, filesystem, distributed)
     pub backend_type: StorageType,
-    /// Location path or endpoint
-    /// The path value
+    /// Location path or connection endpoint
     pub path: String,
-    /// Available space in bytes
-    /// Number of `available_space_bytes`
+    /// Available storage space in bytes
     pub available_space_bytes: u64,
-    /// Used space in bytes
-    /// Number of `used_space_bytes`
+    /// Currently used storage space in bytes
     pub used_space_bytes: u64,
-    /// Location health status
-    /// Current status of the health
+    /// Current health status of this location
     pub health_status: HealthStatus,
     /// Last health check timestamp
-    /// The last health check value
     pub last_health_check: chrono::DateTime<Utc>,
 }
 
@@ -123,35 +120,30 @@ pub struct StorageOperationMetrics {
     pub total_bytes_processed: u64,
 }
 
+/// A stored item in the ecosystem storage system
+///
+/// Represents a single stored object with metadata, location info, and access tracking.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageItem {
-    /// Item identifier
+    /// Unique item identifier
     pub item_id: String,
-    /// Item key/path
-    /// The key value
+    /// Storage key/path for this item
     pub key: String,
     /// Item size in bytes
-    /// Number of `size_bytes`
     pub size_bytes: u64,
-    /// Content type/MIME type
-    /// Optional content type
+    /// Content type/MIME type (e.g., "application/json")
     pub content_type: Option<String>,
-    /// Creation timestamp
-    /// The created at value
+    /// When the item was created
     pub created_at: chrono::DateTime<Utc>,
-    /// Last modified timestamp
-    /// The modified at value
+    /// When the item was last modified
     pub modified_at: chrono::DateTime<Utc>,
-    /// Last accessed timestamp
-    /// Optional accessed at
+    /// When the item was last accessed
     pub accessed_at: Option<chrono::DateTime<Utc>>,
-    /// Item metadata
-    /// Mapping of metadata
+    /// Additional item metadata
     pub metadata: HashMap<String, String>,
-    /// Storage locations where item is stored
-    /// Collection of locations
+    /// Storage locations where this item is replicated
     pub locations: Vec<String>,
-    /// Optional checksum
+    /// Data integrity checksum (if available)
     pub checksum: Option<String>,
 }
 
@@ -168,36 +160,46 @@ pub enum ReplicationHealth {
     Offline,
 }
 
+/// A cache entry with zero-copy data sharing
+///
+/// Represents cached data with access tracking, TTL, and efficient memory sharing via `Arc`.
 #[derive(Debug, Clone)]
 pub struct CacheEntry {
-    /// Cache key
-    /// The key value
+    /// Cache key identifier
     pub key: String,
-    /// The data value
+    /// Cached data (zero-copy via Arc)
     pub data: std::sync::Arc<Vec<u8>>,
-    /// Entry creation time
-    /// The created at value
+    /// When the entry was created
     pub created_at: chrono::DateTime<Utc>,
-    /// Last access time
-    /// The last accessed value
+    /// Last time the entry was accessed
     pub last_accessed: chrono::DateTime<Utc>,
-    /// Access count
-    /// Number of access
+    /// Number of times this entry has been accessed
     pub access_count: u64,
     /// Entry size in bytes
-    /// Number of `size_bytes`
     pub size_bytes: u64,
-    /// Time-to-live (optional)
-    /// Optional ttl
+    /// Time-to-live expiration (if set)
     pub ttl: Option<chrono::DateTime<Utc>>,
 }
 
-/// Ecosystem storage operation
+/// Storage operations for ecosystem data management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EcosystemStorageOperation {
-    Store { key: String },
-    Retrieve { key: String },
-    Delete { key: String },
+    /// Store data with given key
+    Store {
+        /// Storage key identifier
+        key: String,
+    },
+    /// Retrieve data by key
+    Retrieve {
+        /// Storage key identifier
+        key: String,
+    },
+    /// Delete data by key
+    Delete {
+        /// Storage key identifier
+        key: String,
+    },
+    /// List all stored keys
     List,
 }
 
@@ -211,6 +213,7 @@ pub struct EcosystemStorageRequest {
 }
 
 impl EcosystemStorageRequest {
+    /// Creates a new storage request with the specified operation and data
     #[must_use]
     pub const fn new(operation: EcosystemStorageOperation, data: Vec<u8>) -> Self {
         Self { operation, data }
@@ -220,6 +223,9 @@ impl EcosystemStorageRequest {
 // MIGRATION NOTE: These constants are still in use in manager.rs
 // They will be migrated when manager.rs is updated to use canonical constants
 // Use: beardog_types::constants::domains::storage::*
+/// Deprecated: Error message for unavailable storage backend
+///
+/// Use `beardog_types::constants::domains::storage::messages::NO_BACKEND_AVAILABLE` instead.
 #[deprecated(
     since = "3.6.0",
     note = "Use beardog_types::constants::domains::storage::messages::NO_BACKEND_AVAILABLE"

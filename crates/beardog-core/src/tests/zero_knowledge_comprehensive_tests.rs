@@ -62,10 +62,16 @@ mod self_discovery_tests {
 
     #[test]
     fn test_identity_endpoints_present() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut engine = SelfDiscoveryEngine::new()?;
         let identity = engine.discover_self_identity()?;
 
         // Should have at least one endpoint
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(
             !identity.endpoints.is_empty(),
             "Should discover at least one endpoint"
@@ -77,6 +83,9 @@ mod self_discovery_tests {
     #[test]
     fn test_identity_metadata_present() -> BearDogResult<()> {
         let mut engine = SelfDiscoveryEngine::new()?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let identity = engine.discover_self_identity()?;
 
         // Metadata should be populated
@@ -88,6 +97,9 @@ mod self_discovery_tests {
 
     #[test]
     fn test_repeated_discovery_generates_unique_ids() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut engine = SelfDiscoveryEngine::new()?;
 
         let identity1 = engine.discover_self_identity()?;
@@ -99,6 +111,9 @@ mod self_discovery_tests {
         assert_eq!(identity1.capabilities.len(), identity2.capabilities.len());
 
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -110,6 +125,9 @@ mod bootstrap_initialization_tests {
     async fn test_bootstrap_creation() {
         let bootstrap = ZeroKnowledgeBootstrap::new().await;
         assert!(bootstrap.is_ok(), "Bootstrap creation should succeed");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -119,6 +137,9 @@ mod bootstrap_initialization_tests {
         // Should start with zero discovered capabilities
         let state = bootstrap.get_ecosystem_state().await;
         assert!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             state.available_capabilities.is_empty() || state.available_capabilities.is_empty(),
             "Should start with zero or minimal ecosystem knowledge"
         );
@@ -136,9 +157,15 @@ mod bootstrap_initialization_tests {
 
     #[tokio::test]
     async fn test_bootstrap_ecosystem_state_accessible() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
 
         // Should be able to get ecosystem state
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         let state = bootstrap.get_ecosystem_state().await;
         assert!(state.discovered_primals.is_empty());
     }
@@ -148,6 +175,9 @@ mod bootstrap_initialization_tests {
 mod bootstrap_execution_tests {
     use super::*;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_bootstrap_execution_succeeds() {
         let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
@@ -155,6 +185,9 @@ mod bootstrap_execution_tests {
         // Bootstrap should execute without error
         let result = bootstrap.bootstrap().await;
         assert!(result.is_ok(), "Bootstrap execution should succeed");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -166,12 +199,18 @@ mod bootstrap_execution_tests {
 
         // Should have attempted to listen for ecosystem announcements
         // (even if none were found in test environment)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let state = bootstrap.get_ecosystem_state().await;
         assert!(
             state.discovered_primals.is_empty() || !state.discovered_primals.is_empty(),
             "Should have attempted discovery"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_multiple_bootstrap_calls_safe() {
@@ -185,6 +224,9 @@ mod bootstrap_execution_tests {
         assert!(result2.is_ok());
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[cfg(test)]
 mod self_identity_tests {
@@ -199,6 +241,9 @@ mod self_identity_tests {
         assert_eq!(identity.primal_id, cloned.primal_id);
         assert_eq!(identity.capabilities.len(), cloned.capabilities.len());
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_self_identity_debug_output() {
@@ -206,6 +251,9 @@ mod self_identity_tests {
         let identity = engine.discover_self_identity().unwrap();
 
         let debug_str = format!("{identity:?}");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("SelfIdentity"));
     }
@@ -218,6 +266,9 @@ mod integration_tests {
     #[tokio::test]
     async fn test_full_zero_knowledge_flow() {
         // Test the complete zero-knowledge bootstrap flow
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
 
         // 1. Create bootstrap
         let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
@@ -243,6 +294,9 @@ mod integration_tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_discovery_engine_integration() {
         // Test discovery engine integration with bootstrap

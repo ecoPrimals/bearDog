@@ -15,13 +15,15 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use super::super::primal_registry::PrimalId;
 use super::super::traits::{HealthImpact, HealthStatus};
-use super::client::SongBirdDiscoveryClient;
+use super::client::UniversalDiscoveryClient;
 use super::types::*;
 use beardog_errors::BearDogError;
 
+/// Universal Health Monitor - discovers and monitors service mesh capabilities
+/// No hardcoded primal names - uses capability-based discovery
 pub struct UniversalHealthMonitor {
-
-    client: Arc<SongBirdDiscoveryClient>,
+    /// Client for discovering and communicating with mesh providers
+    client: Arc<UniversalDiscoveryClient>,
 
     health_status: Arc<RwLock<ServiceHealth>>,
 
@@ -92,12 +94,13 @@ impl Default for PerformanceMetrics {
 
 impl UniversalHealthMonitor {
 
-/// New operation.
-    /// Creates a new instance
-    pub fn new(Arc<SongBirdDiscoveryClient>,
+    /// Create new universal health monitor
+    /// Discovers and monitors service mesh capability providers (no hardcoded primal names)
+    pub fn new(
+        client: Arc<UniversalDiscoveryClient>,
         config: HealthMonitorConfig,
     ) -> Result<Self, BearDogError> {
-        info!("🏥 Initializing Universal Health Monitor");
+        info!("🏥 Initializing Universal Health Monitor with capability-based discovery");
         let health_status = Arc::new(RwLock::new(super::types::HealthStatus::Healthy,
             last_check: chrono::Utc::now(super::types::PerformanceMetrics {
                 cpu_percent: 0.0,
@@ -138,7 +141,11 @@ impl UniversalHealthMonitor {
             health_history: Arc::clone(&self.primal_id,
         };
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            let health_check_interval = std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60);
+            let mut interval = tokio::time::interval(Duration::from_secs(health_check_interval));
             loop {
                 interval.tick();
 

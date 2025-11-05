@@ -66,7 +66,11 @@ impl MetricsCollector {
         });
 
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
+            let interval_secs = std::env::var("BEARDOG_METRICS_COLLECTION_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60);
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(interval_secs));
             loop {
                 interval.tick();
                 if let Err(e) = Self::take_historical_snapshot(&historical_data) {

@@ -81,9 +81,7 @@ mod crypto_utils_tests {
     }
 
     /// Test key derivation uniqueness with different salts
-    /// TODO: Enable when real crypto implementation is available
     #[test]
-    #[ignore]
     fn test_derive_key_different_salts() {
         let password = b"same_password";
         let salt1 = b"salt1";
@@ -92,19 +90,23 @@ mod crypto_utils_tests {
         let key1 = derive_key(password, salt1, 32).expect("First derivation");
         let key2 = derive_key(password, salt2, 32).expect("Second derivation");
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert_ne!(key1, key2, "Different salts should produce different keys");
     }
 
     /// Test encryption with valid key
-    /// TODO: Enable when real crypto implementation is available
     #[test]
-    #[ignore]
     fn test_encrypt_data_valid() {
         let key = [0u8; 32]; // Simple test key
         let plaintext = b"Hello, secure world!";
 
         let result = encrypt_data(plaintext, &key);
         assert!(result.is_ok(), "Encryption should succeed");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let ciphertext = result.unwrap();
         assert!(!ciphertext.is_empty(), "Ciphertext should not be empty");
@@ -119,6 +121,9 @@ mod crypto_utils_tests {
     #[test]
     fn test_encrypt_empty_data() {
         let key = [0u8; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let plaintext = b"";
 
         let result = encrypt_data(plaintext, &key);
@@ -130,6 +135,9 @@ mod crypto_utils_tests {
     fn test_encrypt_large_data() {
         let key = [0u8; 32];
         let plaintext = vec![0u8; 1024 * 1024]; // 1MB
+                                                // TEST_CATEGORY: integration
+                                                // TEST_DOMAIN: security
+                                                // TEST_PRIORITY: normal
 
         let result = encrypt_data(&plaintext, &key);
         assert!(result.is_ok(), "Should encrypt large data");
@@ -141,6 +149,9 @@ mod crypto_utils_tests {
         let key = [0u8; 32];
         let plaintext = b"Test message for encryption";
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let ciphertext = encrypt_data(plaintext, &key).expect("Encryption");
         let result = decrypt_data(&ciphertext, &key);
 
@@ -151,6 +162,9 @@ mod crypto_utils_tests {
             "Decrypted should match original"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test round-trip encryption/decryption
     #[test]
@@ -163,15 +177,16 @@ mod crypto_utils_tests {
 
         assert_eq!(
             original.to_vec(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             decrypted,
             "Round trip should preserve data"
         );
     }
 
     /// Test decryption with wrong key
-    /// TODO: Enable when real crypto implementation is available
     #[test]
-    #[ignore]
     fn test_decrypt_wrong_key() {
         let key1 = [0u8; 32];
         let key2 = [1u8; 32];
@@ -179,6 +194,9 @@ mod crypto_utils_tests {
 
         let ciphertext = encrypt_data(plaintext, &key1).expect("Encryption");
         let result = decrypt_data(&ciphertext, &key2);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
 
         // Should fail or return garbage (depending on implementation)
         assert!(
@@ -186,13 +204,17 @@ mod crypto_utils_tests {
             "Wrong key should not decrypt correctly"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 
     /// Test decryption of corrupted ciphertext
-    /// TODO: Enable when real crypto implementation is available
     #[test]
-    #[ignore]
     fn test_decrypt_corrupted_data() {
         let key = [0u8; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let mut ciphertext = encrypt_data(b"test", &key).expect("Encryption");
 
         // Corrupt the ciphertext
@@ -207,6 +229,9 @@ mod crypto_utils_tests {
     /// Test hash generation
     #[test]
     fn test_hash_data() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let data = b"Data to hash";
 
         let result = hash_data(data);
@@ -221,6 +246,9 @@ mod crypto_utils_tests {
     #[test]
     fn test_hash_deterministic() {
         let data = b"Same data";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
 
         let hash1 = hash_data(data).expect("First hash");
         let hash2 = hash_data(data).expect("Second hash");
@@ -229,14 +257,15 @@ mod crypto_utils_tests {
     }
 
     /// Test hash uniqueness
-    /// TODO: Enable when real crypto implementation is available
     #[test]
-    #[ignore]
     fn test_hash_different_data() {
         let data1 = b"data1";
         let data2 = b"data2";
 
         let hash1 = hash_data(data1).expect("First hash");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let hash2 = hash_data(data2).expect("Second hash");
 
         assert_ne!(
@@ -250,6 +279,9 @@ mod crypto_utils_tests {
     fn test_generate_random_bytes() {
         let result = generate_random_bytes(32);
         assert!(result.is_ok(), "Random generation should succeed");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let random = result.unwrap();
         assert_eq!(
@@ -260,15 +292,19 @@ mod crypto_utils_tests {
     }
 
     /// Test random uniqueness
-    /// TODO: Enable when real crypto implementation is available
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
-    #[ignore]
     fn test_random_bytes_unique() {
         let random1 = generate_random_bytes(32).expect("First random");
         let random2 = generate_random_bytes(32).expect("Second random");
 
         assert_ne!(random1, random2, "Random bytes should be unique");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test random with different sizes
     #[test]
@@ -282,6 +318,9 @@ mod crypto_utils_tests {
 
     /// Test key validation
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_validate_key_valid() {
         let valid_key = [0u8; 32];
         let result = validate_key(&valid_key);
@@ -294,6 +333,9 @@ mod crypto_utils_tests {
         let short_key = [0u8; 16];
         let result = validate_key(&short_key);
         // Depending on implementation, might reject keys that are too short
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // This test documents the behavior
         assert!(
             result.is_ok() || result.is_err(),
@@ -301,6 +343,9 @@ mod crypto_utils_tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     /// Test constant-time comparison
     #[test]
     fn test_constant_time_compare_equal() {
@@ -308,11 +353,17 @@ mod crypto_utils_tests {
         let data2 = b"same_data";
 
         let result = constant_time_compare(data1, data2);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(result, "Equal data should compare as equal");
     }
 
     /// Test constant-time comparison with different data
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_constant_time_compare_different() {
         let data1 = b"data1";
         let data2 = b"data2";
@@ -323,6 +374,9 @@ mod crypto_utils_tests {
 
     /// Test constant-time comparison with different lengths
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_constant_time_compare_different_lengths() {
         let data1 = b"short";
         let data2 = b"much_longer_data";
@@ -330,6 +384,9 @@ mod crypto_utils_tests {
         let result = constant_time_compare(data1, data2);
         assert!(!result, "Different length data should not be equal");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test key stretching
     #[test]
@@ -337,6 +394,9 @@ mod crypto_utils_tests {
         let weak_key = b"weak";
         let result = stretch_key(weak_key, 32, 100_000);
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(result.is_ok(), "Key stretching should succeed");
         assert_eq!(
             result.unwrap().len(),
@@ -344,6 +404,9 @@ mod crypto_utils_tests {
             "Stretched key should be requested size"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test HMAC generation
     #[test]
@@ -355,6 +418,9 @@ mod crypto_utils_tests {
         assert!(result.is_ok(), "HMAC generation should succeed");
         assert!(!result.unwrap().is_empty(), "HMAC should not be empty");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test HMAC verification
     #[test]
@@ -363,6 +429,9 @@ mod crypto_utils_tests {
         let message = b"authenticated message";
 
         let mac = generate_hmac(key, message).expect("HMAC generation");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let result = verify_hmac(key, message, &mac);
 
         assert!(result.is_ok(), "HMAC verification should succeed");
@@ -370,10 +439,11 @@ mod crypto_utils_tests {
     }
 
     /// Test HMAC verification with wrong key
-    /// TODO: Enable when real crypto implementation is available
     #[test]
-    #[ignore]
     fn test_hmac_verify_wrong_key() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let key1 = b"key1";
         let key2 = b"key2";
         let message = b"message";
@@ -386,9 +456,10 @@ mod crypto_utils_tests {
     }
 
     /// Test HMAC verification with modified message
-    /// TODO: Enable when real crypto implementation is available
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
-    #[ignore]
     fn test_hmac_verify_modified_message() {
         let key = b"key";
         let message = b"original message";
@@ -404,29 +475,51 @@ mod crypto_utils_tests {
         );
     }
 
-    // Stub functions for compilation - these should match actual crypto_utils API
-    fn derive_key(_password: &[u8], _salt: &[u8], length: usize) -> Result<Vec<u8>, BearDogError> {
-        // Stub implementation for now
-        Ok(vec![0u8; length])
+    // Wired functions - connected to real crypto implementations
+    use crate::compute_sha256_hash;
+    use crate::crypto_utils::BearDogCrypto;
+
+    fn derive_key(password: &[u8], salt: &[u8], length: usize) -> Result<Vec<u8>, BearDogError> {
+        // Use PBKDF2 for key derivation
+        let iterations = 100_000u32;
+        BearDogCrypto::derive_pbkdf2_key(password, salt, iterations, length)
     }
 
-    fn encrypt_data(plaintext: &[u8], _key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(plaintext.to_vec())
+    fn encrypt_data(plaintext: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        // BearDogCrypto takes optional nonce, returns (ciphertext, nonce)
+        // For tests, use None to generate random nonce
+        let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(key, plaintext, None)?;
+        // Concatenate nonce || ciphertext for compatibility with old API
+        let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
+        result.extend_from_slice(&nonce);
+        result.extend_from_slice(&ciphertext);
+        Ok(result)
     }
 
-    fn decrypt_data(ciphertext: &[u8], _key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(ciphertext.to_vec())
+    fn decrypt_data(encrypted: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        // Split nonce || ciphertext
+        if encrypted.len() < 12 {
+            return Err(BearDogError::validation("Encrypted data too short"));
+        }
+        let (nonce, ciphertext) = encrypted.split_at(12);
+        BearDogCrypto::decrypt_aes_gcm(key, ciphertext, nonce)
     }
 
-    fn hash_data(_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0u8; 32])
+    fn hash_data(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        compute_sha256_hash(data)
     }
 
     fn generate_random_bytes(length: usize) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0u8; length])
+        Ok(BearDogCrypto::generate_secure_random(length))
     }
 
-    fn validate_key(_key: &[u8]) -> Result<(), BearDogError> {
+    fn validate_key(key: &[u8]) -> Result<(), BearDogError> {
+        if key.is_empty() {
+            return Err(BearDogError::validation("Key cannot be empty"));
+        }
+        if key.len() < 16 {
+            return Err(BearDogError::validation("Key must be at least 16 bytes"));
+        }
         Ok(())
     }
 
@@ -434,15 +527,17 @@ mod crypto_utils_tests {
         a == b
     }
 
-    fn stretch_key(_key: &[u8], length: usize, _iterations: u32) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0u8; length])
+    fn generate_hmac(key: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        BearDogCrypto::hmac_sha256(key, message)
     }
 
-    fn generate_hmac(_key: &[u8], _message: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0u8; 32])
+    fn verify_hmac(key: &[u8], message: &[u8], expected_mac: &[u8]) -> Result<bool, BearDogError> {
+        let computed_mac = BearDogCrypto::hmac_sha256(key, message)?;
+        Ok(computed_mac == expected_mac)
     }
 
-    fn verify_hmac(_key: &[u8], _message: &[u8], _mac: &[u8]) -> Result<bool, BearDogError> {
-        Ok(true)
+    fn stretch_key(key: &[u8], length: usize, iterations: u32) -> Result<Vec<u8>, BearDogError> {
+        // Use PBKDF2 for key stretching
+        BearDogCrypto::derive_pbkdf2_key(key, b"stretch_salt", iterations, length)
     }
 }

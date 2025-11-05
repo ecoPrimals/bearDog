@@ -242,8 +242,9 @@ impl Default for EndpointPerformanceMetrics {
     }
 }
 
-#[deprecated = "Use ServiceMeshHandoffConfig with capability-based discovery"]
-impl Default for SongBirdHandoffConfig {}
+// REMOVED: SongBirdHandoffConfig deprecated type
+// Use ServiceMeshHandoffConfig with capability-based discovery instead
+// Migration: Replace all SongBirdHandoffConfig usages with ServiceMeshHandoffConfig
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegistrationState {

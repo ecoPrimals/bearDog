@@ -226,9 +226,15 @@ mod tests {
         let _manager = EntropyHierarchyManager::new(config);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_create_human_seed() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let mut manager = EntropyHierarchyManager::new(config);
 
         let entropy_class = EntropyClass::HumanLivedExperience {
@@ -250,6 +256,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_seed_usage() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();

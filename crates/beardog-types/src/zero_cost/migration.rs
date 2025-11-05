@@ -129,11 +129,17 @@ mod tests {
     fn test_migration_plan_generation() {
         let patterns = vec![ArcDynPattern {
             trait_name: "TestTrait".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             file_path: "src/test.rs".to_string(),
             line_number: 42,
             usage_context: "struct field".to_string(),
             migration_difficulty: MigrationComplexity::Low,
         }];
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         let plan = ZeroCostMigrator::generate_migration_plan(patterns);
         assert!(!plan.migration_steps.is_empty());
@@ -147,6 +153,9 @@ mod tests {
             ArcDynPattern {
                 trait_name: "LowImpact".to_string(),
                 file_path: "src/low.rs".to_string(),
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
                 line_number: 10,
                 usage_context: "parameter".to_string(),
                 migration_difficulty: MigrationComplexity::Low,
@@ -168,6 +177,9 @@ mod tests {
     #[test]
     fn test_migration_effort_estimation() {
         let patterns = vec![
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             ArcDynPattern {
                 trait_name: "Simple".to_string(),
                 file_path: "src/simple.rs".to_string(),
@@ -188,6 +200,9 @@ mod tests {
         assert_eq!(effort, 26.0); // 2 + 24 hours
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_migration_prioritization() {
         let patterns = vec![

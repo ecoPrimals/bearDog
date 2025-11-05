@@ -237,6 +237,9 @@ mod tests {
     #[test]
     fn test_audit_event_creation() {
         let event = AuditEvent::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             AuditEventType::Authentication,
             "login_endpoint".to_string(),
             "login".to_string(),
@@ -248,6 +251,9 @@ mod tests {
         assert_eq!(event.result, "success ");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_audit_engine() {
         let mut engine = AuditEngine::new(100);

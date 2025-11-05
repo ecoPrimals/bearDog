@@ -104,16 +104,28 @@ fn test_window_size_limiting() {
 
     // Should only average the last 3 samples (30, 40, 50)
     let prediction = predictor.predict_cpu_usage().unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(prediction, 40.0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_cpu() {
     let mut predictor = ResourcePredictor::new(20).unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Add increasing trend with enough samples for proper comparison
     for i in 1..=20 {
         predictor.add_sample(i as f64 * 10.0, 50.0, 10.0).unwrap();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     let trend = predictor.get_trend("cpu").unwrap();
@@ -121,10 +133,16 @@ fn test_get_trend_cpu() {
     assert!(trend > 50.0); // Recent avg around 150-200, older avg around 10-100
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_memory() {
     let mut predictor = ResourcePredictor::new(20).unwrap();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for i in 1..=20 {
         predictor.add_sample(50.0, i as f64 * 5.0, 10.0).unwrap();
     }
@@ -133,10 +151,16 @@ fn test_get_trend_memory() {
     assert!(trend > 20.0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_network() {
     let mut predictor = ResourcePredictor::new(20).unwrap();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for i in 1..=20 {
         predictor.add_sample(50.0, 60.0, i as f64 * 2.0).unwrap();
     }
@@ -145,10 +169,16 @@ fn test_get_trend_network() {
     assert!(trend > 10.0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_unknown_type() {
     let predictor = ResourcePredictor::new(10).unwrap();
     let result = predictor.get_trend("unknown");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(result.is_err());
 }
 
@@ -157,6 +187,9 @@ fn test_get_trend_insufficient_data() {
     let mut predictor = ResourcePredictor::new(10).unwrap();
     predictor.add_sample(50.0, 60.0, 10.0).unwrap();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let trend = predictor.get_trend("cpu").unwrap();
     assert_eq!(trend, 0.0); // Not enough data for trend
 }
@@ -170,6 +203,9 @@ fn test_predictor_with_large_window() {
 // ========== OptimizationHistory Tests ==========
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_optimization_history_creation() {
     let history = OptimizationHistory::new(100);
     assert_eq!(history.get_total_actions(), 0);
@@ -181,6 +217,9 @@ fn test_add_optimization_action() {
 
     let action = OptimizationAction {
         timestamp: 1000,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         action_type: OptimizationType::ThreadPool,
         parameters: HashMap::new(),
         expected_improvement: 10.0,
@@ -190,6 +229,9 @@ fn test_add_optimization_action() {
 
     history.add_action(action);
     assert_eq!(history.get_total_actions(), 1);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -199,24 +241,39 @@ fn test_multiple_actions() {
     for i in 0..5 {
         let action = OptimizationAction {
             timestamp: 1000 + i,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             action_type: OptimizationType::ThreadPool,
             parameters: HashMap::new(),
             expected_improvement: 10.0,
             actual_improvement: Some(12.0),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             success: Some(true),
         };
         history.add_action(action);
     }
 
     assert_eq!(history.get_total_actions(), 5);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_history_size_limiting() {
     let mut history = OptimizationHistory::new(3);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Add more actions than max size
     for i in 0..5 {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let action = OptimizationAction {
             timestamp: 1000 + i,
             action_type: OptimizationType::ThreadPool,
@@ -231,6 +288,9 @@ fn test_history_size_limiting() {
     // Should only keep the last 3
     assert_eq!(history.get_total_actions(), 3);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_get_successful_actions() {
@@ -247,6 +307,9 @@ fn test_get_successful_actions() {
     };
     history.add_action(success_action);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Add failed action
     let failed_action = OptimizationAction {
         timestamp: 1001,
@@ -265,6 +328,9 @@ fn test_get_successful_actions() {
 #[test]
 fn test_get_average_improvement_no_data() {
     let history = OptimizationHistory::new(10);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(history.get_average_improvement(), 0.0);
 }
 
@@ -292,9 +358,15 @@ fn test_get_average_improvement_with_data() {
     };
     history.add_action(action2);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(history.get_average_improvement(), 15.0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_get_average_improvement_with_none_values() {
     let mut history = OptimizationHistory::new(10);
@@ -319,6 +391,9 @@ fn test_get_average_improvement_with_none_values() {
     };
     history.add_action(action2);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Should only count action1
     assert_eq!(history.get_average_improvement(), 10.0);
 }
@@ -344,6 +419,9 @@ fn test_get_recent_actions() {
 
     // Should be in reverse order (most recent first)
     assert_eq!(recent[0].timestamp, 1004);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(recent[1].timestamp, 1003);
     assert_eq!(recent[2].timestamp, 1002);
 }
@@ -366,6 +444,9 @@ fn test_get_recent_actions_more_than_available() {
 
     let recent = history.get_recent_actions(10);
     assert_eq!(recent.len(), 3); // Only 3 available
+                                 // TEST_CATEGORY: unit
+                                 // TEST_DOMAIN: core
+                                 // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -383,6 +464,9 @@ fn test_get_success_rate() {
             success: Some(true),
         };
         history.add_action(action);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     // Add 1 failed ThreadPool optimization
@@ -414,14 +498,23 @@ fn test_get_recent_actions_empty() {
     let history = OptimizationHistory::new(10);
     let recent = history.get_recent_actions(5);
     assert_eq!(recent.len(), 0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_mixed_optimization_types() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut history = OptimizationHistory::new(10);
 
     let types = [
         OptimizationType::ThreadPool,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         OptimizationType::Simd,
         OptimizationType::Memory,
         OptimizationType::Cache,
@@ -446,9 +539,15 @@ fn test_mixed_optimization_types() {
 #[test]
 fn test_optimization_history_with_large_capacity() {
     let history = OptimizationHistory::new(10000);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(history.get_total_actions(), 0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_predictor_accuracy_over_time() {
     let mut predictor = ResourcePredictor::new(10).unwrap();

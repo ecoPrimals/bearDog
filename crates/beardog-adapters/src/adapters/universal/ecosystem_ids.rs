@@ -54,6 +54,9 @@ mod tests {
     #[test]
     async fn test_capability_based_ids() {
         // Test modern capability-based approach
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         assert_eq!(
             CapabilityBasedEcosystemId::compute_capability(),"compute-intelligence"
         );
@@ -71,6 +74,9 @@ mod tests {
         );
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     async fn test_dynamic_id_generation() {
         let compute_id = CapabilityBasedEcosystemId::from_capability(

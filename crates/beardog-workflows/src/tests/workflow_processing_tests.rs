@@ -71,6 +71,9 @@ async fn test_key_rotation_missing_parameters() -> Result<(), BearDogError> {
         created_at: chrono::Utc::now(),
         completed_at: None,
         error: None,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
     };
 
     // Should be able to create workflow, validation happens during processing
@@ -98,6 +101,9 @@ async fn test_key_deletion_workflow() -> Result<(), BearDogError> {
     };
 
     assert_eq!(workflow.workflow_type, WorkflowType::KeyDeletion);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert!(workflow.parameters.contains_key("key_id"));
 
     Ok(())
@@ -115,6 +121,9 @@ async fn test_policy_change_workflow() -> Result<(), BearDogError> {
         serde_json::Value::String("policy-123".to_string()),
     );
     parameters.insert(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         "action".to_string(),
         serde_json::Value::String("update".to_string()),
     );
@@ -140,6 +149,9 @@ async fn test_policy_change_workflow() -> Result<(), BearDogError> {
 // Configuration Change Workflow Tests
 // ============================================================================
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_config_change_workflow() -> Result<(), BearDogError> {
     let mut parameters = HashMap::new();
@@ -170,6 +182,9 @@ async fn test_config_change_workflow() -> Result<(), BearDogError> {
 // ============================================================================
 // Security Scan Workflow Tests
 // ============================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_security_scan_workflow() -> Result<(), BearDogError> {
@@ -198,6 +213,9 @@ async fn test_security_scan_workflow() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 // ============================================================================
 // Workflow State Transition Tests
 // ============================================================================
@@ -226,6 +244,9 @@ async fn test_workflow_status_running_to_completed() -> Result<(), BearDogError>
     assert_eq!(workflow.status, WorkflowStatus::Completed);
     assert!(workflow.completed_at.is_some());
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     Ok(())
 }
 
@@ -237,6 +258,9 @@ async fn test_workflow_status_failed_with_error() -> Result<(), BearDogError> {
     workflow.error = Some("Simulated failure".to_string());
 
     assert_eq!(workflow.status, WorkflowStatus::Failed);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert!(workflow.error.is_some());
     assert_eq!(workflow.error.unwrap(), "Simulated failure");
 
@@ -247,6 +271,9 @@ async fn test_workflow_status_failed_with_error() -> Result<(), BearDogError> {
 // Workflow Error Handling Tests
 // ============================================================================
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: important
 #[tokio::test]
 async fn test_workflow_with_invalid_parameters() -> Result<(), BearDogError> {
     let mut parameters = HashMap::new();
@@ -262,6 +289,9 @@ async fn test_workflow_with_invalid_parameters() -> Result<(), BearDogError> {
         status: WorkflowStatus::Pending,
         parameters,
         created_at: chrono::Utc::now(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: important
         completed_at: None,
         error: None,
     };
@@ -284,6 +314,9 @@ async fn test_workflow_timeout_scenario() -> Result<(), BearDogError> {
     assert!(workflow.error.as_ref().unwrap().contains("timeout"));
 
     Ok(())
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
@@ -299,6 +332,9 @@ async fn test_workflow_complete_lifecycle() -> Result<(), BearDogError> {
     workflow.status = WorkflowStatus::InProgress;
 
     assert_eq!(workflow.status, WorkflowStatus::InProgress);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 
     // 2. InProgress → Completed
     workflow.status = WorkflowStatus::Completed;
@@ -316,6 +352,9 @@ async fn test_workflow_retry_scenario() -> Result<(), BearDogError> {
     workflow.error = Some("Temporary failure".to_string());
 
     // Retry: Failed → Pending
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     workflow.status = WorkflowStatus::Pending;
     workflow.error = None;
 
@@ -332,6 +371,9 @@ async fn test_workflow_retry_scenario() -> Result<(), BearDogError> {
 #[tokio::test]
 async fn test_multiple_workflows_different_types() -> Result<(), BearDogError> {
     let workflows = vec![
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         create_workflow_with_type(WorkflowType::KeyRotation),
         create_workflow_with_type(WorkflowType::PolicyChange),
         create_workflow_with_type(WorkflowType::ComplianceAudit),
@@ -345,6 +387,9 @@ async fn test_multiple_workflows_different_types() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_concurrent_workflows() -> Result<(), BearDogError> {
     let workflow1 = create_test_workflow(WorkflowStatus::InProgress);

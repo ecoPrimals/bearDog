@@ -67,18 +67,29 @@ pub struct UniversalServiceMeshClient {
     pub enable_failover: bool,
 
     /// The quality threshold value
-    pub quality_threshold: f64,}
+    pub quality_threshold: f64,
+}
 
-impl Default for UniversalMeshConfig {}
-
+impl Default for UniversalMeshConfig {
     fn default() -> Self {
         Self {
-            discovery_timeout: Duration::from_secs(30),
-            health_check_interval: Duration::from_secs(100,
+            discovery_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_MESH_DISCOVERY_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_MESH_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100)
+            ),
             enable_failover: true,
             quality_threshold: 0.8,
         }
     }
+}
 
 pub struct BearDogRegistration {
 
@@ -198,7 +209,9 @@ impl UniversalServiceMeshClient {
             } else if std::env::var("CONTAINER_ORCHESTRATION_HOST").is_ok() || std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
                 "beardog-discovery.default.svc.cluster.local".to_string()
             } else {
-                std::env::var("BEARDOG_LOCAL_HOST").unwrap_or_else(|_| "127.0.0.1".to_string())
+                use beardog_types::canonical::config::network::NetworkConfig;
+                let network_config = NetworkConfig::default();
+                std::env::var("BEARDOG_LOCAL_HOST").unwrap_or_else(|_| network_config.default_host.clone())
             }
         });
 

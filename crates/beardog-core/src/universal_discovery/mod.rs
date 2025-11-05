@@ -55,10 +55,18 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 // Re-export sub-modules
+/// Health checking for discovered services
 pub mod health;
+/// Load balancing strategies
 pub mod load_balancing;
+/// Network discovery mechanisms
 pub mod network;
+/// Protocol support and negotiation
 pub mod protocols;
+#[cfg(test)]
+#[path = "protocols_tests.rs"]
+mod protocols_tests;
+/// Service registry
 pub mod registry;
 
 // Re-export types for convenience
@@ -73,36 +81,48 @@ use network::{CacheConfig as CanonicalCacheConfig, SecurityConfig as CanonicalSe
 
 // Canonical config types are in submodules: network::CacheConfig, network::SecurityConfig, etc.
 
+/// Service discovery protocol types for universal service mesh
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DiscoveryProtocol {
     /// HTTP-based service discovery with REST endpoints
     Http {
+        /// HTTP endpoint URL for service discovery
         endpoint: String,
+        /// HTTP headers to include in discovery requests
         headers: HashMap<String, String>,
     },
     /// DNS-based service discovery using SRV records
     Dns {
+        /// Domain name to query for SRV records
         domain: String,
+        /// DNS server addresses to query
         servers: Vec<String>,
     },
+    /// Multicast DNS for local network discovery
     Mdns {
+        /// Service type identifier for mDNS queries
         service_type: String,
+        /// Network interface for mDNS broadcasting
         interface: String,
         /// Discovery timeout in milliseconds
         timeout_ms: u64,
+        /// Enable continuous monitoring mode
         continuous_monitoring: bool,
     },
     /// Consul-based service discovery and health checking
     Consul {
         /// Consul agent address and port
         address: String,
+        /// Consul datacenter name
         datacenter: String,
     },
     /// etcd-based distributed service discovery
     Etcd {
         /// etcd cluster endpoints
         endpoints: Vec<String>,
+        /// Key prefix for service discovery entries
         key_prefix: String,
+        /// Request timeout in milliseconds
         timeout_ms: u64,
     },
 }
@@ -205,6 +225,10 @@ pub struct UniversalServiceDiscovery {
     shutdown_tx: mpsc::Sender<()>,
 }
 
+/// Discovery events for service lifecycle monitoring
+///
+/// Notifies subscribers of service registration, deregistration, and health changes
+/// to enable dynamic service mesh management.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DiscoveryEvent {
     /// Service registration event notification
@@ -262,7 +286,19 @@ impl Default for UniversalDiscoveryConfig {
                     continuous_monitoring: true,
                 },
                 DiscoveryProtocol::Http {
-                    endpoint: "http://localhost:8500/v1/catalog/services".to_string(),
+                    endpoint: std::env::var("BEARDOG_CONSUL_ENDPOINT")
+                        .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
+                        .unwrap_or_else(|_| {
+                            // Use network config for consistent localhost handling
+                            let network_config = NetworkConfig::default();
+                            let consul_host = std::env::var("CONSUL_HOST")
+                                .unwrap_or_else(|_| network_config.default_host.clone());
+                            let consul_port = std::env::var("CONSUL_PORT")
+                                .ok()
+                                .and_then(|p| p.parse::<u16>().ok())
+                                .unwrap_or(8500);
+                            format!("http://{consul_host}:{consul_port}/v1/catalog/services")
+                        }),
                     headers: HashMap::new(),
                 },
             ],
@@ -613,6 +649,10 @@ pub struct ProtocolStatistics {
     pub last_activity: DateTime<Utc>,
 }
 
+/// Protocol handler for service discovery mechanisms
+///
+/// Defines the interface for discovery protocol implementations (mDNS, DNS-SD,
+/// Consul, etc.), enabling pluggable discovery strategies.
 #[async_trait::async_trait]
 pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
     /// Start the protocol handler and begin service discovery

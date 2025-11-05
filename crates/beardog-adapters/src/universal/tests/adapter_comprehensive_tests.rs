@@ -48,9 +48,15 @@ async fn test_adapter_default_config_values() {
     assert!(config.health_check_interval_secs > 0, "Should have positive health check interval");
     assert!(config.connection_timeout_ms > 0, "Should have positive timeout");
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_discover_capabilities_empty_initial_state() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     let capabilities = adapter.get_available_capabilities().await;
     
@@ -61,6 +67,9 @@ async fn test_discover_capabilities_empty_initial_state() {
 #[tokio::test]
 async fn test_get_capabilities_returns_hashmap() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let capabilities = adapter.get_available_capabilities().await;
     
     assert!(capabilities.is_ok(), "Should return capabilities HashMap");
@@ -71,6 +80,9 @@ async fn test_get_discovered_primals_empty_initial() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     let primals = adapter.get_discovered_primals().await;
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert!(primals.is_ok(), "Should get primals list");
     assert!(primals.unwrap().is_empty(), "Should start with no discovered primals");
 }
@@ -79,46 +91,70 @@ async fn test_get_discovered_primals_empty_initial() {
 async fn test_adapter_metrics_available() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     let metrics = adapter.get_metrics();
+     // TEST_CATEGORY: integration
+     // TEST_DOMAIN: adapters
+     // TEST_PRIORITY: normal
     
     // Metrics should be accessible
     assert!(format!("{:?}", metrics).len() > 0, "Should have metrics structure");
 }
 
 #[tokio::test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 async fn test_health_check_all_connections_empty() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     let health = adapter.health_check_all_connections().await;
     
     assert!(health.is_ok(), "Should check health even with no connections");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert!(health.unwrap().is_empty(), "Should have no connections initially");
 }
 
 #[tokio::test]
 async fn test_adapter_shutdown() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let result = adapter.shutdown().await;
     
     assert!(result.is_ok(), "Should shutdown gracefully");
 }
 
 #[tokio::test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 async fn test_adapter_config_access() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     let config = adapter.config();
     
     // Should be able to access configuration
     assert!(config.max_providers_per_capability > 0);
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 }
 
 #[tokio::test]
 async fn test_adapter_lifecycle() {
     // Test full lifecycle: create -> use -> shutdown
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     
     // Check initial state
     let capabilities = adapter.get_available_capabilities().await.unwrap();
     assert!(capabilities.is_empty());
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     // Shutdown
     let shutdown = adapter.shutdown().await;
     assert!(shutdown.is_ok());
@@ -130,11 +166,17 @@ async fn test_multiple_adapters_can_coexist() {
     let adapter2 = UniversalCapabilityAdapter::new().await;
     
     assert!(adapter1.is_ok() && adapter2.is_ok(), "Should create multiple adapters");
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 }
 
 #[tokio::test]
 async fn test_adapter_with_zero_max_providers() {
     let config = AdapterConfig {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         max_providers_per_capability: 0,
         ..Default::default()
     };
@@ -144,6 +186,9 @@ async fn test_adapter_with_zero_max_providers() {
     assert!(adapter.is_ok() || adapter.is_err(), "Should handle edge case config");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_adapter_config_persistence() {
     let config = AdapterConfig {

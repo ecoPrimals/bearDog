@@ -77,6 +77,9 @@ fn test_special_characters_in_ids() {
         assert!(
             id.contains(['/', ';', '<', '>']),
             "Should detect special characters in: {}",
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             id
         );
     }
@@ -85,6 +88,9 @@ fn test_special_characters_in_ids() {
 }
 
 /// Test whitespace-only input
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_whitespace_only_input() {
     let inputs = ["   ", "\t\t\t", "\n\n\n", " \t \n "];
@@ -92,7 +98,9 @@ fn test_whitespace_only_input() {
     for input in &inputs {
         assert!(
             input.trim().is_empty(),
-            "Should detect whitespace-only input"
+            "Should detect whitespace-only input" // TEST_CATEGORY: integration
+                                                  // TEST_DOMAIN: security
+                                                  // TEST_PRIORITY: normal
         );
     }
 
@@ -100,12 +108,18 @@ fn test_whitespace_only_input() {
 }
 
 /// Test extremely long strings
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_extremely_long_string() {
     let max_length = 1000;
     let long_string = "a".repeat(max_length + 1);
 
     assert!(long_string.len() > max_length, "String should exceed limit");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     // Verify: Should truncate or reject
 }
@@ -114,6 +128,9 @@ fn test_extremely_long_string() {
 #[test]
 fn test_array_bounds_validation() {
     let array = [1, 2, 3, 4, 5];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let invalid_index = 10;
 
     assert!(
@@ -122,6 +139,9 @@ fn test_array_bounds_validation() {
     );
 
     // Verify: Rust prevents this at runtime, but API should validate
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test key size validation
@@ -139,6 +159,9 @@ fn test_key_size_validation() {
 fn test_algorithm_name_validation() {
     let valid_algorithms = ["ed25519", "aes256", "chacha20poly1305"];
     let invalid_algorithm = "md5"; // Deprecated/weak
+                                   // TEST_CATEGORY: integration
+                                   // TEST_DOMAIN: security
+                                   // TEST_PRIORITY: normal
 
     let is_valid = valid_algorithms.contains(&invalid_algorithm);
     assert!(!is_valid, "Weak algorithm should be rejected");
@@ -151,6 +174,9 @@ fn test_timestamp_validation() {
     let future_time = current_time + (365 * 24 * 60 * 60 * 1000); // +1 year
     let past_time = 0; // Invalid
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(current_time > 0, "Current time should be valid");
     assert!(future_time > current_time, "Future time should be greater");
     assert_eq!(past_time, 0, "Zero timestamp should be invalid");
@@ -159,6 +185,9 @@ fn test_timestamp_validation() {
 /// Test version string validation
 #[test]
 fn test_version_string_validation() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let valid_versions = ["1.0.0", "2.1.3", "10.20.30"];
     let invalid_versions = ["1.0", "v1.0.0", "latest", ""];
 
@@ -169,7 +198,9 @@ fn test_version_string_validation() {
         for part in &parts {
             assert!(
                 part.parse::<u32>().is_ok(),
-                "Valid version parts should be numeric"
+                "Valid version parts should be numeric" // TEST_CATEGORY: integration
+                                                        // TEST_DOMAIN: security
+                                                        // TEST_PRIORITY: normal
             );
         }
     }
@@ -177,6 +208,9 @@ fn test_version_string_validation() {
     // Invalid versions: Either wrong number of parts OR non-numeric parts
     for version in &invalid_versions {
         let parts: Vec<&str> = version.split('.').collect();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let is_valid = parts.len() == 3 && parts.iter().all(|p| p.parse::<u32>().is_ok());
         assert!(
             !is_valid,
@@ -184,6 +218,9 @@ fn test_version_string_validation() {
             version
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test IP address validation
@@ -193,6 +230,9 @@ fn test_ip_address_validation() {
     let invalid_ips = ["256.0.0.1", "192.168.1", "not.an.ip"];
 
     for ip in &valid_ips {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let parts: Vec<&str> = ip.split('.').collect();
         assert_eq!(parts.len(), 4, "Valid IP should have 4 octets");
     }
@@ -220,6 +260,9 @@ fn test_port_number_validation() {
 
 /// Test hex string validation
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_hex_string_validation() {
     let valid_hex = ["00", "ff", "deadbeef", "ABCDEF"];
     let invalid_hex = ["gg", "0x00", "hello", ""];
@@ -234,6 +277,9 @@ fn test_hex_string_validation() {
 
     for hex in &invalid_hex {
         let is_valid = !hex.is_empty() && hex.chars().all(|c| c.is_ascii_hexdigit());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(!is_valid, "Should be invalid hex: {}", hex);
     }
 }
@@ -246,6 +292,9 @@ fn test_base64_validation() {
     for b64 in &valid_base64 {
         // Basic check: alphanumeric + / + = padding
         let valid_chars = b64
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=');
         assert!(valid_chars, "Should have valid base64 chars: {}", b64);
@@ -263,6 +312,9 @@ fn test_json_validation() {
 
     // In real code: serde_json::from_str() would validate
     assert!(!invalid_json.is_empty(), "Has content but invalid format");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test enum value validation
@@ -274,6 +326,9 @@ fn test_enum_value_validation() {
         Ed25519,
         Aes256,
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let valid_value = Algorithm::Ed25519;
     assert_eq!(valid_value, Algorithm::Ed25519, "Valid enum value");
@@ -284,6 +339,9 @@ fn test_enum_value_validation() {
 
 /// Test percentage validation
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_percentage_validation() {
     let valid_percentages = [0.0, 50.0, 100.0];
     let invalid_percentages = [-10.0, 150.0];
@@ -298,6 +356,9 @@ fn test_percentage_validation() {
 }
 
 /// Test concurrent modification detection
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_concurrent_modification_detection() {
     let initial_version = 1;
@@ -310,6 +371,9 @@ fn test_concurrent_modification_detection() {
         "Concurrent modification detected"
     );
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Verify: Should return ConcurrentModification error
 }
 
@@ -323,6 +387,9 @@ fn test_checksum_validation() {
     assert_eq!(expected_checksum, actual_checksum, "Checksum should match");
     assert!(!data.is_empty(), "Data should exist");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 /// Test signature format validation
 #[test]
@@ -331,6 +398,9 @@ fn test_signature_format_validation() {
     let test_signature = [0u8; 64];
 
     assert_eq!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         test_signature.len(),
         valid_signature_len,
         "Signature should be correct length"
@@ -341,6 +411,9 @@ fn test_signature_format_validation() {
 #[test]
 fn test_public_key_format_validation() {
     let valid_key_len = 32; // Ed25519 public key
+                            // TEST_CATEGORY: integration
+                            // TEST_DOMAIN: security
+                            // TEST_PRIORITY: normal
     let test_key = [0u8; 32];
 
     assert_eq!(
@@ -351,6 +424,9 @@ fn test_public_key_format_validation() {
 }
 
 /// Test configuration value ranges
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_config_value_ranges() {
     let config_values = [

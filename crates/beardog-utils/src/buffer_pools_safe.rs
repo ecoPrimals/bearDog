@@ -120,6 +120,9 @@ mod tests {
 
         let buffer = pool.get_buffer(1024);
         assert_eq!(buffer.len(), 1024);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         pool.return_buffer(buffer);
 
@@ -131,6 +134,9 @@ mod tests {
     #[test]
     fn test_buffer_reuse() {
         let mut pool = SafeBufferPool::new(5);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let mut buffers = Vec::new();
         for _ in 0..3 {
@@ -146,6 +152,9 @@ mod tests {
         assert_eq!(stats.buffers_reused, 1); // Only 1 reuse when getting the last buffer
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_buffer_manager() {
         let mut manager = SafeBufferPool::new(10);

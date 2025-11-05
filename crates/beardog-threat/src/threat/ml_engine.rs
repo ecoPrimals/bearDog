@@ -319,10 +319,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_risk_level_conversion() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let engine = MlEngine::new();
 
         assert_eq!(engine.score_to_risk_level(0.95), RiskLevel::Critical);
         assert_eq!(engine.score_to_risk_level(0.75), RiskLevel::High);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(engine.score_to_risk_level(0.55), RiskLevel::Medium);
         assert_eq!(engine.score_to_risk_level(0.35), RiskLevel::Low);
         assert_eq!(engine.score_to_risk_level(0.15), RiskLevel::Minimal);
@@ -331,6 +337,9 @@ mod tests {
     #[tokio::test]
     async fn test_threat_score_calculation() {
         let engine = MlEngine::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let event = SecurityEvent {
             id: "test-1".to_string(),
@@ -346,6 +355,9 @@ mod tests {
         assert!(score > 0.8); // Should be high for malware + critical
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_local_prediction() {
         let engine = MlEngine::new();

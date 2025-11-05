@@ -86,6 +86,9 @@ fn test_telemetry_config_various_flush_intervals() {
         assert_eq!(config.flush_interval_seconds, interval);
     }
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_telemetry_config_various_endpoints() {
@@ -93,6 +96,9 @@ fn test_telemetry_config_various_endpoints() {
         "http://localhost:8080",
         "https://telemetry.example.com",
         "https://metrics.beardog.io/v1/telemetry",
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         "grpc://telemetry.internal:9090",
     ];
 
@@ -105,6 +111,9 @@ fn test_telemetry_config_various_endpoints() {
         };
 
         assert_eq!(config.endpoint, endpoint);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -124,6 +133,9 @@ fn test_telemetry_collector_new_default() {
 fn test_telemetry_collector_new_enabled() {
     let config = TelemetryConfig {
         enabled: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         endpoint: "https://telemetry.example.com".to_string(),
         batch_size: 100,
         flush_interval_seconds: 60,
@@ -137,6 +149,9 @@ fn test_telemetry_collector_new_enabled() {
 fn test_telemetry_collector_new_disabled() {
     let config = TelemetryConfig {
         enabled: false,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         endpoint: String::new(),
         batch_size: 0,
         flush_interval_seconds: 0,
@@ -150,6 +165,9 @@ fn test_telemetry_collector_new_disabled() {
 fn test_telemetry_collector_new_with_large_batch() {
     let config = TelemetryConfig {
         enabled: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         endpoint: "https://telemetry.example.com".to_string(),
         batch_size: 10000,
         flush_interval_seconds: 60,
@@ -172,11 +190,17 @@ fn test_telemetry_collector_start_collection() {
     assert!(result.is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_telemetry_collector_stop_collection() {
     let config = TelemetryConfig::default();
     let mut collector = TelemetryCollector::new(&config).expect("Should create collector");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = collector.stop_collection();
     assert!(result.is_ok());
 }
@@ -187,6 +211,9 @@ fn test_telemetry_collector_start_stop_cycle() {
     let mut collector = TelemetryCollector::new(&config).expect("Should create collector");
 
     // Start collection
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = collector.start_collection();
     assert!(result.is_ok());
 
@@ -197,6 +224,9 @@ fn test_telemetry_collector_start_stop_cycle() {
 
 #[test]
 fn test_telemetry_collector_multiple_start_stop() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = TelemetryConfig::default();
     let mut collector = TelemetryCollector::new(&config).expect("Should create collector");
 
@@ -211,18 +241,27 @@ fn test_telemetry_collector_multiple_start_stop() {
 fn test_telemetry_collector_start_with_enabled() {
     let config = TelemetryConfig {
         enabled: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         endpoint: "https://telemetry.example.com".to_string(),
         batch_size: 100,
         flush_interval_seconds: 60,
     };
 
     let mut collector = TelemetryCollector::new(&config).expect("Should create collector");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = collector.start_collection();
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_telemetry_collector_start_with_disabled() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = TelemetryConfig {
         enabled: false,
         endpoint: String::new(),
@@ -234,6 +273,9 @@ fn test_telemetry_collector_start_with_disabled() {
     let result = collector.start_collection();
     assert!(result.is_ok());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Debug Implementation Tests
@@ -243,6 +285,9 @@ fn test_telemetry_collector_start_with_disabled() {
 fn test_telemetry_config_debug() {
     let config = TelemetryConfig::default();
     let debug_str = format!("{:?}", config);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("TelemetryConfig"));
@@ -254,6 +299,9 @@ fn test_telemetry_collector_debug() {
     let collector = TelemetryCollector::new(&config).expect("Should create collector");
     let debug_str = format!("{:?}", collector);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("TelemetryCollector"));
 }
@@ -269,12 +317,18 @@ fn test_telemetry_config_extreme_batch_size() {
         endpoint: "https://telemetry.example.com".to_string(),
         batch_size: usize::MAX, // Extreme value
         flush_interval_seconds: 60,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     let collector = TelemetryCollector::new(&config);
     assert!(collector.is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_telemetry_config_extreme_flush_interval() {
     let config = TelemetryConfig {
@@ -286,6 +340,9 @@ fn test_telemetry_config_extreme_flush_interval() {
 
     let collector = TelemetryCollector::new(&config);
     assert!(collector.is_ok());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -296,6 +353,9 @@ fn test_telemetry_config_empty_endpoint() {
         batch_size: 100,
         flush_interval_seconds: 60,
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let collector = TelemetryCollector::new(&config);
     assert!(collector.is_ok());
@@ -306,6 +366,9 @@ fn test_telemetry_config_very_long_endpoint() {
     let config = TelemetryConfig {
         enabled: true,
         endpoint: "https://".to_owned() + &"a".repeat(1000) + ".com", // Very long endpoint
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         batch_size: 100,
         flush_interval_seconds: 60,
     };
@@ -316,6 +379,9 @@ fn test_telemetry_config_very_long_endpoint() {
 
 #[test]
 fn test_telemetry_config_zero_values() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = TelemetryConfig {
         enabled: true,
         endpoint: "https://telemetry.example.com".to_string(),
@@ -326,6 +392,9 @@ fn test_telemetry_config_zero_values() {
     let collector = TelemetryCollector::new(&config);
     assert!(collector.is_ok());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Integration Tests
@@ -340,6 +409,9 @@ fn test_telemetry_collector_full_lifecycle() {
         batch_size: 100,
         flush_interval_seconds: 60,
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let mut collector = TelemetryCollector::new(&config).expect("Should create");
     assert!(collector.start_collection().is_ok());
@@ -352,6 +424,9 @@ fn test_telemetry_collector_without_starting() {
     let config = TelemetryConfig::default();
     let mut collector = TelemetryCollector::new(&config).expect("Should create");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Should be able to stop without starting
     assert!(collector.stop_collection().is_ok());
 }
@@ -359,6 +434,9 @@ fn test_telemetry_collector_without_starting() {
 #[test]
 fn test_multiple_telemetry_collectors() {
     // Multiple collectors should work independently
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config1 = TelemetryConfig {
         enabled: true,
         endpoint: "https://telemetry1.example.com".to_string(),
@@ -383,6 +461,9 @@ fn test_multiple_telemetry_collectors() {
     assert!(!debug2.is_empty());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_telemetry_collector_rapid_start_stop() {
     let config = TelemetryConfig {

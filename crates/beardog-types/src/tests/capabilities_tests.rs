@@ -62,16 +62,25 @@ fn test_capability_type_is_vendor() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_capability_type_is_primal() {
     // Test primal capabilities
     assert!(CapabilityType::ServiceMesh.is_primal_capability());
     assert!(CapabilityType::ComputeIntelligence.is_primal_capability());
 
     // Test vendor capabilities are not primal
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(!CapabilityType::KeyManagement.is_primal_capability());
     assert!(!CapabilityType::HardwareSecurityModule.is_primal_capability());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_type_as_id() {
     let kms_id = CapabilityType::KeyManagement.as_capability_id();
@@ -81,6 +90,9 @@ fn test_capability_type_as_id() {
     assert!(!hsm_id.is_empty());
 
     // IDs should be unique
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_ne!(kms_id, hsm_id);
 }
 
@@ -93,6 +105,9 @@ fn test_capability_type_display() {
 
 #[test]
 fn test_capability_type_from_string() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let cap = CapabilityType::ServiceMesh;
     let cap_string: String = cap.into();
     assert!(!cap_string.is_empty());
@@ -103,6 +118,9 @@ fn test_capability_type_serialization() {
     let cap = CapabilityType::KeyManagement;
     let json = serde_json::to_string(&cap).expect("Should serialize");
     assert!(!json.is_empty());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let deserialized: CapabilityType = serde_json::from_str(&json).expect("Should deserialize");
     assert_eq!(cap, deserialized);
@@ -111,6 +129,9 @@ fn test_capability_type_serialization() {
 #[test]
 fn test_capability_type_all_major_variants() {
     // Ensure all major capability types can be created and are distinct
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let capabilities = vec![
         CapabilityType::KeyManagement,
         CapabilityType::HardwareSecurityModule,
@@ -120,14 +141,23 @@ fn test_capability_type_all_major_variants() {
         CapabilityType::ServiceMesh,
         CapabilityType::ComputeIntelligence,
         CapabilityType::Monitoring,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         CapabilityType::Logging,
         CapabilityType::Metrics,
     ];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // All should have unique names
     let names: Vec<String> = capabilities.iter().map(CapabilityType::name).collect();
     let unique_names: HashSet<_> = names.iter().collect();
     assert_eq!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         names.len(),
         unique_names.len(),
         "All capability names should be unique"
@@ -135,6 +165,9 @@ fn test_capability_type_all_major_variants() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_capability_discovery_pattern() {
     // Simulate capability discovery pattern
     let mut discovered_capabilities = HashMap::new();
@@ -158,6 +191,9 @@ fn test_capability_discovery_pattern() {
     assert!(discovered_capabilities.contains_key("kms-provider"));
     assert_eq!(
         discovered_capabilities.get("kms-provider").unwrap().len(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         2
     );
 }
@@ -183,6 +219,9 @@ fn test_capability_filtering() {
     let primal_caps: Vec<_> = capabilities
         .iter()
         .filter(|c| c.is_primal_capability())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         .collect();
     assert!(!primal_caps.is_empty());
 }
@@ -205,6 +244,9 @@ fn test_capability_type_in_hashmap() {
     cap_map.insert(CapabilityType::ServiceMesh, "Mesh Provider");
 
     assert_eq!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         cap_map.get(&CapabilityType::KeyManagement),
         Some(&"KMS Provider")
     );
@@ -213,6 +255,9 @@ fn test_capability_type_in_hashmap() {
         Some(&"Mesh Provider")
     );
     assert_eq!(cap_map.len(), 2);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -227,6 +272,9 @@ fn test_capability_type_multiple_instances() {
             _ => CapabilityType::Logging,
         })
         .collect();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Should not panic or have memory issues
     assert_eq!(capabilities.len(), 100);
@@ -241,10 +289,16 @@ fn test_capability_type_debug() {
 
 #[test]
 fn test_vendor_vs_primal_separation() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let vendor_caps = vec![
         CapabilityType::KeyManagement,
         CapabilityType::HardwareSecurityModule,
         CapabilityType::SecretsManagement,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         CapabilityType::Authentication,
         CapabilityType::CloudStorage,
         CapabilityType::DatabaseService,
@@ -287,6 +341,9 @@ fn test_vendor_vs_primal_separation() {
 #[test]
 fn test_capability_id_format() {
     let cap = CapabilityType::KeyManagement;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let id = cap.as_capability_id();
 
     // ID should not be empty and should be a valid format
@@ -295,6 +352,9 @@ fn test_capability_id_format() {
     assert!(id.len() > 3, "Capability ID should be meaningful");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_type_collection_operations() {
     let mut capability_set = HashSet::new();

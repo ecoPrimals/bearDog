@@ -185,13 +185,22 @@ mod tests {
         assert!(capabilities?.is_empty(), "Should start with empty capabilities");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_get_primals_empty_initial() {
         let adapter = UniversalCapabilityAdapter::new().await?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         let primals = adapter.get_discovered_primals().await;
         
         assert!(primals.is_ok(), "Should get primals list");
         assert!(primals?.is_empty(), "Should start with no primals");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -202,6 +211,9 @@ mod tests {
         assert!(format!("{:?}", metrics).len() > 0, "Should have metrics");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_health_check_empty_connections() {
         let adapter = UniversalCapabilityAdapter::new().await?;
@@ -209,39 +221,60 @@ mod tests {
         
         assert!(health.is_ok(), "Should check health");
         assert!(health?.is_empty(), "Should have no connections initially");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
     async fn test_adapter_shutdown_graceful() {
         let adapter = UniversalCapabilityAdapter::new().await?;
         let result = adapter.shutdown().await;
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: adapters
+         // TEST_PRIORITY: normal
         
         assert!(result.is_ok(), "Should shutdown gracefully");
     }
 
     #[tokio::test]
     async fn test_adapter_config_access() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         let adapter = UniversalCapabilityAdapter::new().await?;
         let config = adapter.config();
         
         assert!(config.max_providers_per_capability > 0);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_adapter_full_lifecycle() {
         let adapter = UniversalCapabilityAdapter::new().await?;
         
         let capabilities = adapter.get_available_capabilities().await?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         assert!(capabilities.is_empty());
         
         let shutdown = adapter.shutdown().await;
         assert!(shutdown.is_ok());
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_multiple_adapters_coexist() {
         let adapter1 = UniversalCapabilityAdapter::new().await;
         let adapter2 = UniversalCapabilityAdapter::new().await;
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: adapters
+         // TEST_PRIORITY: normal
         
         assert!(adapter1.is_ok() && adapter2.is_ok(), "Should create multiple adapters");
     }
@@ -250,11 +283,17 @@ mod tests {
     async fn test_adapter_with_custom_max_providers() {
         let config = AdapterConfig {
             max_providers_per_capability: 10,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             ..Default::default()
         };
         
         let adapter = UniversalCapabilityAdapter::with_config(config).await?;
         assert_eq!(adapter.config().max_providers_per_capability, 10);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -263,6 +302,9 @@ mod tests {
             health_check_interval_secs: 60,
             ..Default::default()
         };
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: adapters
+         // TEST_PRIORITY: normal
         
         let adapter = UniversalCapabilityAdapter::with_config(config).await?;
         assert_eq!(adapter.config().health_check_interval_secs, 60);
@@ -271,6 +313,9 @@ mod tests {
     #[tokio::test]
     async fn test_adapter_with_custom_timeout() {
         let config = AdapterConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             connection_timeout_ms: 5000,
             ..Default::default()
         };
@@ -279,6 +324,9 @@ mod tests {
         assert_eq!(adapter.config().connection_timeout_ms, 5000);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_adapter_config_persistence() {
         let config = AdapterConfig {

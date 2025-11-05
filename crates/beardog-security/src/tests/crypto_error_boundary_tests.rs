@@ -87,6 +87,9 @@ mod tests {
         // Test handling of data with null bytes
         let data_with_nulls = vec![0u8, 1, 2, 0, 3, 4, 0];
         let result = process_data_with_nulls(&data_with_nulls);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         assert!(result.is_ok());
     }
 
@@ -97,6 +100,9 @@ mod tests {
         let result = process_large_data(&large_data);
         assert!(result.is_ok());
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_maximum_safe_data_size() {
@@ -106,6 +112,9 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_oversized_data_rejection() {
         // Test that oversized data is rejected
@@ -115,6 +124,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_concurrent_encryption_operations() {
         // Test that multiple encryptions can happen concurrently
         use std::sync::Arc;
@@ -122,6 +134,9 @@ mod tests {
 
         let data = Arc::new(vec![0xBB; 1024]);
         let mut handles = vec![];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         for _ in 0..10 {
             let data_clone = Arc::clone(&data);
@@ -129,6 +144,9 @@ mod tests {
             handles.push(handle);
         }
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         for handle in handles {
             assert!(handle.join().is_ok());
         }
@@ -142,26 +160,41 @@ mod tests {
 
         let hash1 = compute_test_hash(input1);
         let hash2 = compute_test_hash(input2);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert_ne!(
             hash1, hash2,
             "Different inputs should produce different hashes"
         );
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_hash_consistency() {
         // Test that same input always produces same hash
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let input = b"consistent input";
 
         let hash1 = compute_test_hash(input);
         let hash2 = compute_test_hash(input);
         let hash3 = compute_test_hash(input);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert_eq!(hash1, hash2);
         assert_eq!(hash2, hash3);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     #[test]
     fn test_key_derivation_error_paths() {
         // Test key derivation with invalid inputs
@@ -179,6 +212,9 @@ mod tests {
         // Test key derivation with valid inputs
         let password = "strong_password_123!";
         let result = derive_key_from_password(password);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
 
         let salt = vec![0x01; 32];
@@ -191,6 +227,9 @@ mod tests {
         // Test that crypto context initializes properly
         let result = initialize_crypto_context();
         assert!(result.is_ok());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -201,6 +240,9 @@ mod tests {
 
         if let Ok(ctx) = context {
             let cleanup_result = cleanup_crypto_context(ctx);
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: important
             assert!(cleanup_result.is_ok());
         }
     }
@@ -210,6 +252,9 @@ mod tests {
         // Test random data generation produces unique data
         let random1 = generate_random_bytes(32);
         let random2 = generate_random_bytes(32);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert_ne!(random1, random2, "Random data should be unique");
     }
@@ -219,10 +264,15 @@ mod tests {
         // Test that requested length is honored
         for length in [8, 16, 32, 64, 128, 256] {
             let random = generate_random_bytes(length);
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             assert_eq!(
                 random.len(),
                 length,
-                "Random data should match requested length"
+                "Random data should match requested length" // TEST_CATEGORY: integration
+                                                            // TEST_DOMAIN: security
+                                                            // TEST_PRIORITY: critical
             );
         }
     }
@@ -232,12 +282,18 @@ mod tests {
         // Test constant-time comparison
         let data1 = vec![0xAA; 32];
         let data2 = vec![0xAA; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let data3 = vec![0xBB; 32];
 
         assert!(constant_time_eq(&data1, &data2));
         assert!(!constant_time_eq(&data1, &data3));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_constant_time_with_different_lengths() {
         // Test constant-time comparison with different lengths
@@ -248,6 +304,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_secure_memory_zeroization() {
         // Test that sensitive data is zeroized
         let mut sensitive_data = vec![0xFF; 32];
@@ -255,13 +314,18 @@ mod tests {
 
         assert!(
             sensitive_data.iter().all(|&b| b == 0),
-            "Data should be zeroized"
+            "Data should be zeroized" // TEST_CATEGORY: integration
+                                      // TEST_DOMAIN: security
+                                      // TEST_PRIORITY: normal
         );
     }
 
     #[test]
     fn test_error_message_sanitization() {
         // Test that error messages don't leak sensitive info
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let error = create_crypto_error("sensitive_key_material_here");
         let error_msg = format!("{:?}", error);
 
@@ -271,6 +335,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     #[test]
     fn test_nonce_uniqueness() {
         // Test that nonces are unique
@@ -280,6 +347,9 @@ mod tests {
             let nonce = generate_nonce();
             assert!(nonces.insert(nonce), "Nonces should be unique");
         }
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -288,10 +358,16 @@ mod tests {
         let nonce = generate_nonce();
         assert_eq!(nonce.len(), 12, "Nonce should be 12 bytes for AES-GCM");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 
     #[test]
     fn test_authenticated_encryption_tamper_detection() {
         // Test that tampered ciphertext is detected
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let plaintext = b"secret message";
         let encrypted = encrypt_authenticated(plaintext).expect("Encryption should succeed");
 
@@ -305,6 +381,9 @@ mod tests {
         assert!(result.is_err(), "Tampered ciphertext should be rejected");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_key_rotation_safety() {
         // Test that key rotation doesn't lose data

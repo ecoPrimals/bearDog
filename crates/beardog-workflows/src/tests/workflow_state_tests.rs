@@ -112,16 +112,25 @@ fn test_workflow_pause_and_resume() {
     let mut workflow = MockWorkflow::new("test-3".to_string());
 
     workflow.start().unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert_eq!(workflow.state, WorkflowState::Running);
 
     workflow.pause().unwrap();
     assert_eq!(workflow.state, WorkflowState::Paused);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     workflow.start().unwrap();
     assert_eq!(workflow.state, WorkflowState::Running);
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 fn test_workflow_completion() {
     let mut workflow = MockWorkflow::new("test-4".to_string());
 
@@ -133,6 +142,9 @@ fn test_workflow_completion() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 fn test_workflow_progress_updates() {
     let mut workflow = MockWorkflow::new("test-5".to_string());
 
@@ -141,6 +153,9 @@ fn test_workflow_progress_updates() {
     assert!(workflow.update_progress(25).is_ok());
     assert_eq!(workflow.progress, 25);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert!(workflow.update_progress(75).is_ok());
     assert_eq!(workflow.progress, 75);
 }
@@ -151,6 +166,9 @@ fn test_workflow_progress_validation() {
 
     workflow.start().unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     // Cannot exceed 100%
     assert!(workflow.update_progress(101).is_err());
 }
@@ -158,6 +176,9 @@ fn test_workflow_progress_validation() {
 #[test]
 fn test_workflow_state_transitions_invalid() {
     let mut workflow = MockWorkflow::new("test-7".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: important
 
     // Cannot pause before starting
     assert!(workflow.pause().is_err());
@@ -166,6 +187,9 @@ fn test_workflow_state_transitions_invalid() {
     assert!(workflow.complete().is_err());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: important
 #[test]
 fn test_workflow_failure_state() {
     let mut workflow = MockWorkflow::new("test-8".to_string());

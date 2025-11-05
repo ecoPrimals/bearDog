@@ -28,7 +28,7 @@ pub async fn create_crypto_provider(
             let provider = OpenSslCryptoProvider::new().await?;
             Ok(Arc::new(provider))
         }
-        CryptoBackend::Hardware => Err(BearDogError::unsupported_operation(
+        CryptoBackend::Hardware => Err(BearDogError::unsupported_operation(&
             "Hardware crypto backend not supported in software HSM".to_string(),
         )),
         CryptoBackend::Custom(name) => Err(BearDogError::unsupported_operation(format!(

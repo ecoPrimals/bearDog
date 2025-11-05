@@ -159,25 +159,40 @@ mod tests {
     #[test]
     fn test_attestation_data_add_certificate() {
         let mut data = AttestationData::empty();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         data.add_certificate(vec![1, 2, 3]);
         data.add_certificate(vec![4, 5, 6]);
         assert_eq!(data.certificate_count(), 2);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_audit_statistics_creation() {
         let stats = AuditStatistics::new();
         assert_eq!(stats.total_operations, 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(stats.failed_operations, 0);
         assert_eq!(stats.success_rate(), 1.0);
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_audit_statistics_record_success() {
         let mut stats = AuditStatistics::new();
         stats.record_success();
         stats.record_success();
         stats.record_success();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         assert_eq!(stats.total_operations, 3);
         assert_eq!(stats.failed_operations, 0);
@@ -187,6 +202,9 @@ mod tests {
     #[test]
     fn test_audit_statistics_record_failure() {
         let mut stats = AuditStatistics::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: important
         stats.record_success();
         stats.record_failure();
         stats.record_success();
@@ -198,6 +216,9 @@ mod tests {
         assert_eq!(stats.failure_rate(), 0.5);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_audit_statistics_reset() {
         let mut stats = AuditStatistics::new();

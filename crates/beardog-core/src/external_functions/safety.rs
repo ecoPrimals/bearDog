@@ -8,41 +8,53 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::debug;
 
+/// A parameter with its associated value for safety validation
+///
+/// Pairs function parameter definitions with their runtime values for safety checks.
 #[derive(Debug, Clone)]
 pub struct ParameterValue {
-    /// Function parameter definition
-    /// The parameter value
+    /// Function parameter definition including type and constraints
     pub parameter: FunctionParameter,
-    /// The value value
+    /// Actual value provided for this parameter
     pub value: FunctionValue,
 }
 
+/// Safety policy for external function calls
+///
+/// Defines security requirements and validation rules for calling external functions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SafetyPolicy {
+    /// Unique policy identifier
     pub policy_id: String,
-    /// Patterns of function names this policy applies to
-    /// Collection of function patterns
+    /// Function name patterns this policy applies to (glob patterns)
     pub function_patterns: Vec<String>,
-    /// Minimum security clearance required
-    /// The required clearance value
+    /// Minimum security clearance required to call these functions
     pub required_clearance: SecurityClearance,
-    /// Whether parameter validation is required
+    /// Whether to validate parameters before calling
     pub parameter_validation: bool,
 }
 
+/// Result of a safety check for an external function call
+///
+/// Indicates whether a call is allowed and what actions must be taken.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SafetyDecision {
-    /// Whether allowed is enabled
+    /// Whether the function call is allowed
     pub allowed: bool,
-    /// The reason value
+    /// Reason for the decision
     pub reason: String,
-    /// Collection of required actions
+    /// Actions that must be taken before/after the call
     pub required_actions: Vec<String>,
 }
 
+/// Safety checker for external function calls
+///
+/// Validates external function calls against security policies and clearance levels.
 #[derive(Debug)]
 pub struct SafetyChecker {
+    /// Current security clearance level
     security_clearance: SecurityClearance,
+    /// Loaded safety policies by policy ID
     loaded_policies: HashMap<String, SafetyPolicy>,
 }
 

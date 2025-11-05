@@ -78,10 +78,21 @@ impl Default for InferenceConfig {
         Self {
             enabled: false,
             endpoints: Vec::new(),
-            max_batch_size: 32,
-            timeout: Duration::from_secs(30),
+            max_batch_size: std::env::var("BEARDOG_AI_MAX_BATCH_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(32),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_AI_INFERENCE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
             enable_caching: true,
-            cache_size_limit: 1024 * 1024 * 1024, // 1GB
+            cache_size_limit: std::env::var("BEARDOG_AI_CACHE_SIZE_BYTES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1024 * 1024 * 1024), // 1GB
             enable_gpu: false,
         }
     }
@@ -221,6 +232,9 @@ mod tests {
         // Should succeed with endpoint
         let result = InferenceConfig::builder()
             .enabled(true)
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .endpoint("http://localhost:8080")
             .build();
         assert!(result.is_ok());
@@ -232,12 +246,18 @@ mod tests {
         assert!(result.is_err());
 
         let result = InferenceConfig::builder().max_batch_size(32);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_timeout_validation() {
         let result = InferenceConfig::builder()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .endpoint("http://localhost:8080")
             .enabled(true)
             .timeout(Duration::from_secs(400))
@@ -245,6 +265,9 @@ mod tests {
         assert!(result.is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_presets() {
         let fast = InferenceConfigBuilder::fast()

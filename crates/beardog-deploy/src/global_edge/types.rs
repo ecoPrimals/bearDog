@@ -215,7 +215,12 @@ impl Default for GlobalDeploymentConfig {
 impl Default for MonitoringConfig {
     fn default() -> Self {
         Self {
-            check_interval: Duration::from_secs(60),
+            check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_EDGE_MONITORING_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
             alert_thresholds: AlertThresholds::default(),
             metrics_retention: Duration::from_secs(vec![CDNProvider::Cloudflare],
             cache_policies: HashMap::with_capacity(InvalidationStrategy::TagBased,
@@ -224,16 +229,47 @@ impl Default for MonitoringConfig {
 }
 
 impl Default for AutoScalingConfig {
-    fn default(true,
-            min_nodes_per_region: 2,
-            max_nodes_per_region: 10,
-            scale_up_threshold: 0.8,
-            scale_down_threshold: 0.3,
-            cooldown_period: Duration::from_secs(1000.0,
-            error_rate_percent: 5.0,
-            cpu_usage_percent: 80.0,
-            memory_usage_percent: 85.0,
-            disk_usage_percent: 90.0,
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            min_nodes_per_region: std::env::var("BEARDOG_DEPLOY_MIN_NODES_PER_REGION")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(2),
+            max_nodes_per_region: std::env::var("BEARDOG_DEPLOY_MAX_NODES_PER_REGION")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
+            scale_up_threshold: std::env::var("BEARDOG_DEPLOY_SCALE_UP_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.8),
+            scale_down_threshold: std::env::var("BEARDOG_DEPLOY_SCALE_DOWN_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.3),
+            cooldown_period: Duration::from_secs(
+                std::env::var("BEARDOG_DEPLOY_COOLDOWN_PERIOD_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(300)
+            ),
+            error_rate_percent: std::env::var("BEARDOG_DEPLOY_ERROR_RATE_THRESHOLD_PERCENT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(5.0),
+            cpu_usage_percent: std::env::var("BEARDOG_DEPLOY_CPU_USAGE_THRESHOLD_PERCENT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(80.0),
+            memory_usage_percent: std::env::var("BEARDOG_DEPLOY_MEMORY_USAGE_THRESHOLD_PERCENT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(85.0),
+            disk_usage_percent: std::env::var("BEARDOG_DEPLOY_DISK_USAGE_THRESHOLD_PERCENT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(90.0),
         }
     }
 } 

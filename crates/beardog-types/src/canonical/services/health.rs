@@ -366,6 +366,9 @@ mod tests {
         assert!(UnifiedHealthStatus::Unhealthy.is_unhealthy());
         assert!(!UnifiedHealthStatus::Unhealthy.is_healthy());
     }
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: types
+     // TEST_PRIORITY: normal
     
     #[test]
     fn test_health_status_severity() {
@@ -376,15 +379,24 @@ mod tests {
     
     #[test]
     fn test_health_check_result_creation() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let result = HealthCheckResult::healthy("All systems operational".to_string());
         assert_eq!(result.status, UnifiedHealthStatus::Healthy);
         assert_eq!(result.details.message, "All systems operational");
         assert!(result.details.error.is_none());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
     
     #[test]
     fn test_component_health_management() {
         let mut result = HealthCheckResult::default();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         result.add_component(
             "database".to_string(),
@@ -407,6 +419,9 @@ mod tests {
         assert_eq!(unhealthy[0].0, "cache");
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_overall_status_calculation() {
         let mut result = HealthCheckResult::default();

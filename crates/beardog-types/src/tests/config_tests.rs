@@ -99,15 +99,27 @@ mod network_config_tests {
     fn test_network_config_default() {
         let _config = UnifiedNetworkConfig::default();
         // Network config created successfully
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_network_config_port() {
         let mut config = UnifiedNetworkConfig::default();
         config.port = 9000;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.port, 9000);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_network_config_timeouts() {
         let mut config = UnifiedNetworkConfig::default();
@@ -116,10 +128,16 @@ mod network_config_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_network_config_tls() {
         let mut config = UnifiedNetworkConfig::default();
         config.enable_tls = true;
         assert!(config.enable_tls);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 }
 
@@ -129,17 +147,29 @@ mod security_config_tests {
 
     #[test]
     fn test_security_config_default() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let _config = UnifiedSecurityConfig::default();
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_security_config_cloning() {
         let config1 = UnifiedSecurityConfig::default();
         let _config2 = config1.clone();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 mod hsm_config_tests {
     use super::*;
 
@@ -149,17 +179,29 @@ mod hsm_config_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_hsm_config_enable() {
         let mut config = UnifiedHsmConfig::default();
         config.enabled = true;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.enabled);
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod database_config_tests {
     use super::*;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_database_config_default() {
         let _config = UnifiedDatabaseConfig::default();
@@ -169,8 +211,14 @@ mod database_config_tests {
     #[test]
     fn test_database_config_pool() {
         let mut config = UnifiedDatabaseConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         config.pool_size = 50;
         assert_eq!(config.pool_size, 50);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -179,8 +227,14 @@ mod database_config_tests {
         config.connection_timeout = Duration::from_secs(30);
         assert_eq!(config.connection_timeout, Duration::from_secs(30));
     }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod testing_config_tests {
     use super::*;
@@ -190,13 +244,22 @@ mod testing_config_tests {
         let config = CanonicalTestConfig::default();
         assert!(!config.environment.is_empty());
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_test_config_parallel() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let mut config = CanonicalTestConfig::default();
         config.parallel_execution = true;
         assert!(config.parallel_execution);
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_api_test_config() {
@@ -206,19 +269,34 @@ mod testing_config_tests {
 
     #[test]
     fn test_benchmark_config() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = CanonicalBenchmarkConfig::default();
         assert!(config.iterations > 0);
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_production_test_config() {
         let _config = CanonicalProductionTestConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod integration_tests {
     use super::*;
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_full_config_stack() {
@@ -226,6 +304,9 @@ mod integration_tests {
         config.app.app_name = "TestApp".to_string();
         config.network.port = 8081;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.app.app_name, "TestApp");
         assert_eq!(config.network.port, 8081);
     }
@@ -233,11 +314,17 @@ mod integration_tests {
     #[test]
     fn test_config_round_trip() {
         let original = UnifiedBearDogConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let json = serde_json::to_string(&original).unwrap();
         let restored: UnifiedBearDogConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(original.app.app_name, restored.app.app_name);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_valid_configs() {
         let configs = vec![

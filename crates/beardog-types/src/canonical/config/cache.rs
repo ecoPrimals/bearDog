@@ -249,11 +249,17 @@ mod tests {
             eviction_policy: EvictionPolicy::Lru,
         };
         assert_eq!(config.max_size_mb, 4096);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_eviction_policy_lru() {
         let policy = EvictionPolicy::Lru;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(matches!(policy, EvictionPolicy::Lru));
     }
 
@@ -264,6 +270,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_eviction_policy_fifo() {
         let policy = EvictionPolicy::Fifo;
         assert!(matches!(policy, EvictionPolicy::Fifo));
@@ -272,33 +281,57 @@ mod tests {
     #[test]
     fn test_eviction_policy_random() {
         let policy = EvictionPolicy::Random;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(matches!(policy, EvictionPolicy::Random));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_eviction_policy_default() {
         let policy = EvictionPolicy::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(matches!(policy, EvictionPolicy::Lru));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_cache_ttl_short() {
         let config = CanonicalCacheConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             ttl: Duration::from_secs(300), // 5 minutes
             ..Default::default()
         };
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.ttl, Duration::from_secs(300));
     }
 
     #[test]
     fn test_cache_ttl_long() {
         let config = CanonicalCacheConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             ttl: Duration::from_secs(7200), // 2 hours
             ..Default::default()
         };
         assert_eq!(config.ttl, Duration::from_secs(7200));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_type_alias() {
         let _config: CacheConfig = CanonicalCacheConfig::default();

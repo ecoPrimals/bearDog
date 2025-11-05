@@ -142,12 +142,18 @@ fn test_capability_response_success() {
         metadata: HashMap::new(),
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert!(response.success);
     assert!(response.data.is_some());
     assert!(response.error.is_none());
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 fn test_capability_response_error() {
     let response = CapabilityResponse {
         success: false,
@@ -158,6 +164,9 @@ fn test_capability_response_error() {
 
     assert!(!response.success);
     assert!(response.data.is_none());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(response.error, Some("Test error".to_string()));
 }
 
@@ -165,6 +174,9 @@ fn test_capability_response_error() {
 fn test_capability_response_with_metadata() {
     let mut metadata = HashMap::new();
     metadata.insert("execution_time".to_string(), "100ms".to_string());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     metadata.insert("cached".to_string(), "false".to_string());
 
     let response = CapabilityResponse {
@@ -183,6 +195,9 @@ fn test_capability_response_with_metadata() {
 
 #[test]
 fn test_capability_response_serialization() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let response = CapabilityResponse {
         success: true,
         data: Some(serde_json::json!({"key": "value"})),
@@ -197,6 +212,9 @@ fn test_capability_response_serialization() {
     assert_eq!(response.success, deserialized.success);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_response_clone() {
     let response1 = CapabilityResponse {
@@ -205,6 +223,9 @@ fn test_capability_response_clone() {
         error: None,
         metadata: HashMap::new(),
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
 
     let response2 = response1.clone();
     assert_eq!(response1.success, response2.success);
@@ -218,6 +239,9 @@ fn test_capability_response_clone() {
 fn test_ai_response_metadata_default() {
     let metadata = AIResponseMetadata::default();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(metadata.confidence_score, 1.0);
     assert_eq!(metadata.processing_time_ms, 0);
     assert_eq!(metadata.model_version, "v1.0.0");
@@ -232,6 +256,9 @@ fn test_ai_response_metadata_custom() {
     };
 
     assert_eq!(metadata.confidence_score, 0.95);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(metadata.processing_time_ms, 150);
     assert_eq!(metadata.model_version, "v2.0.0");
 }
@@ -243,6 +270,9 @@ fn test_ai_response_metadata_serialization() {
         processing_time_ms: 200,
         model_version: "v1.5.0".to_string(),
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: important
 
     let serialized = serde_json::to_string(&metadata).expect("Serialization should succeed");
     let deserialized: AIResponseMetadata =
@@ -254,6 +284,9 @@ fn test_ai_response_metadata_serialization() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 fn test_ai_response_metadata_clone() {
     let metadata1 = AIResponseMetadata::default();
     let metadata2 = metadata1.clone();
@@ -271,6 +304,9 @@ fn test_ai_integration_response_default() {
     let response = AIIntegrationResponse::default();
 
     assert_eq!(response.result, "success ");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(response.ai_metadata.confidence_score, 1.0);
     assert!(response.suggested_actions.is_empty());
 }
@@ -284,6 +320,9 @@ fn test_ai_integration_response_with_actions() {
             "action1".to_string(),
             "action2".to_string(),
             "action3".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
         ],
     };
 
@@ -298,12 +337,18 @@ fn test_ai_integration_response_serialization() {
         ai_metadata: AIResponseMetadata::default(),
         suggested_actions: vec!["action".to_string()],
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
 
     let serialized = serde_json::to_string(&response).expect("Serialization should succeed");
     let deserialized: AIIntegrationResponse =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
 
     assert_eq!(response.result, deserialized.result);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(
         response.suggested_actions.len(),
         deserialized.suggested_actions.len()
@@ -314,6 +359,9 @@ fn test_ai_integration_response_serialization() {
 fn test_ai_integration_response_clone() {
     let response1 = AIIntegrationResponse::default();
     let response2 = response1.clone();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
 
     assert_eq!(response1.result, response2.result);
 }
@@ -328,6 +376,9 @@ fn test_vendor_discovery_context_default() {
 
     assert_eq!(context.discovery_method, "capability_based");
     assert_eq!(context.priority, 1);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert!(context.context.capacity() >= 16); // HashMap reserves at least 16
 }
 
@@ -338,12 +389,18 @@ fn test_vendor_discovery_context_custom() {
 
     let context = VendorDiscoveryContext {
         discovery_method: "dns_based".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         priority: 10,
         context: ctx_map.clone(),
     };
 
     assert_eq!(context.discovery_method, "dns_based");
     assert_eq!(context.priority, 10);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(context.context.len(), 1);
 }
 
@@ -357,6 +414,9 @@ fn test_vendor_discovery_context_serialization() {
 
     let serialized = serde_json::to_string(&context).expect("Serialization should succeed");
     let deserialized: VendorDiscoveryContext =
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
 
     assert_eq!(context.discovery_method, deserialized.discovery_method);
@@ -373,6 +433,9 @@ fn test_vendor_discovery_context_clone() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 // UniversalAdapter Tests
 // ============================================================================
 
@@ -382,12 +445,18 @@ fn test_universal_adapter_new() {
     let adapter = UniversalAdapter::new(config);
 
     assert!(adapter.get_capabilities().is_empty());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_universal_adapter_register_capability() {
     let config = AdapterConfig::default();
     let mut adapter = UniversalAdapter::new(config);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
 
     adapter.register_capability(
         "encryption".to_string(),
@@ -401,6 +470,9 @@ fn test_universal_adapter_register_capability() {
         .contains(&"encryption".to_string()));
     assert!(adapter.get_capabilities().contains(&"signing".to_string()));
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_universal_adapter_multiple_registrations() {
@@ -414,6 +486,9 @@ fn test_universal_adapter_multiple_registrations() {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(adapter.get_capabilities().len(), 10);
 }
 
@@ -424,11 +499,17 @@ async fn test_universal_adapter_execute_unregistered_capability() {
     let request = CapabilityRequest {
         capability: "nonexistent".to_string(),
         operation: "test".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         parameters: HashMap::new(),
     };
 
     let response = adapter
         .execute_capability(request)
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         .await
         .expect("Should return error response");
 
@@ -444,6 +525,9 @@ async fn test_universal_adapter_execute_registered_capability() {
 
     let request = CapabilityRequest {
         capability: "test".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         operation: "execute".to_string(),
         parameters: HashMap::new(),
     };
@@ -456,6 +540,9 @@ async fn test_universal_adapter_execute_registered_capability() {
     assert!(response.success);
     assert!(response.data.is_some());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_universal_adapter_caching_enabled() {
@@ -473,6 +560,9 @@ async fn test_universal_adapter_caching_enabled() {
         parameters: HashMap::new(),
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     // First request - should not be cached
     let response1 = adapter
         .execute_capability(request.clone())
@@ -490,6 +580,9 @@ async fn test_universal_adapter_caching_enabled() {
 
 #[tokio::test]
 async fn test_universal_adapter_caching_disabled() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let config = AdapterConfig {
         timeout_seconds: 30,
         retry_attempts: 3,
@@ -518,6 +611,9 @@ async fn test_universal_adapter_caching_disabled() {
         .expect("Second request should succeed");
     assert_eq!(response2.metadata.get("cached"), Some(&"false".to_string()));
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_universal_adapter_request_with_parameters() {
@@ -546,6 +642,9 @@ async fn test_universal_adapter_request_with_parameters() {
     if let Some(data) = response.data {
         let params_in_response = data.get("parameters");
         assert!(params_in_response.is_some());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -573,6 +672,9 @@ async fn test_universal_adapter_retry_metadata() {
 #[test]
 fn test_universal_adapter_get_capabilities_immutable() {
     let mut adapter = UniversalAdapter::new(AdapterConfig::default());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     adapter.register_capability("cap1".to_string(), "http://cap1".to_string());
 
     let caps1 = adapter.get_capabilities();
@@ -591,6 +693,9 @@ fn test_universal_adapter_get_capabilities_immutable() {
 #[tokio::test]
 async fn test_universal_adapter_empty_capability_name() {
     let mut adapter = UniversalAdapter::new(AdapterConfig::default());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     adapter.register_capability("".to_string(), "http://test.com".to_string());
 
     let request = CapabilityRequest {
@@ -606,6 +711,9 @@ async fn test_universal_adapter_empty_capability_name() {
 
     assert!(response.success);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_universal_adapter_special_characters_in_capability() {
@@ -622,6 +730,9 @@ async fn test_universal_adapter_special_characters_in_capability() {
     let response = adapter
         .execute_capability(request)
         .await
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         .expect("Should handle special characters");
 
     assert!(response.success);
@@ -639,6 +750,9 @@ async fn test_universal_adapter_large_parameters() {
 
     let request = CapabilityRequest {
         capability: "test".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         operation: "large_params".to_string(),
         parameters: params,
     };
@@ -660,6 +774,9 @@ fn test_adapter_config_zero_timeout() {
     };
 
     // Should be able to create config with zero timeout (edge case)
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(config.timeout_seconds, 0);
 }
 
@@ -669,6 +786,9 @@ fn test_adapter_config_zero_retries() {
         timeout_seconds: 30,
         retry_attempts: 0,
         enable_caching: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
     };
 
     // Should be able to create config with zero retries
@@ -678,6 +798,9 @@ fn test_adapter_config_zero_retries() {
 #[test]
 fn test_capability_response_debug_format() {
     let response = CapabilityResponse {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         success: true,
         data: None,
         error: None,
@@ -689,6 +812,9 @@ fn test_capability_response_debug_format() {
     assert!(debug_str.contains("success"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_ai_response_metadata_debug_format() {
     let metadata = AIResponseMetadata::default();

@@ -55,19 +55,34 @@ mod capability_type_tests {
     fn test_capability_type_authentication() {
         let cap = CapabilityType::Authentication;
         let _ = format!("{:?}", cap);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_type_secrets_management() {
         let cap = CapabilityType::SecretsManagement;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let _ = format!("{:?}", cap);
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_capability_type_monitoring() {
         let cap = CapabilityType::Monitoring;
         let _ = format!("{:?}", cap);
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_capability_type_logging() {
@@ -77,34 +92,61 @@ mod capability_type_tests {
 
     #[test]
     fn test_capability_type_metrics() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let cap = CapabilityType::Metrics;
         let _ = format!("{:?}", cap);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_type_cloning() {
         let cap1 = CapabilityType::KeyManagement;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let cap2 = cap1.clone();
         let _ = format!("{:?}", cap1);
         let _ = format!("{:?}", cap2);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_capability_type_serialization() {
         let cap = CapabilityType::KeyManagement;
         let json = serde_json::to_string(&cap);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(json.is_ok());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_type_deserialization() {
         let cap = CapabilityType::Authentication;
         let json = serde_json::to_string(&cap).unwrap();
         let restored: Result<CapabilityType, _> = serde_json::from_str(&json);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(restored.is_ok());
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod integration_tests {
     use super::*;
@@ -115,12 +157,18 @@ mod integration_tests {
         let cap = CapabilityType::KeyManagement;
 
         let _ = format!("{:?}", status);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let _ = format!("{:?}", cap);
     }
 
     #[test]
     fn test_multiple_capabilities() {
         let caps = [
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             CapabilityType::KeyManagement,
             CapabilityType::Authentication,
             CapabilityType::SecretsManagement,
@@ -129,6 +177,9 @@ mod integration_tests {
         assert_eq!(caps.len(), 3);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_all_types_serializable() {
         let status = HealthStatus::default();

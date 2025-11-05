@@ -37,21 +37,21 @@ pub trait StorageBackend: Send + Sync {
     /// Returns an error if the health check fails
     fn health_check(&self) -> Result<bool, BearDogError>;
 
+    /// Returns information about this storage backend
     fn backend_info(&self) -> BackendInfo;
 }
 
+/// Information about a storage backend
+///
+/// Describes backend capabilities, version, supported operations, and limits.
 #[derive(Debug, Clone)]
 pub struct BackendInfo {
-    /// Backend name
-    /// Name of the item
+    /// Backend name (e.g., "memory", "filesystem", "distributed")
     pub name: String,
-    /// Backend version
-    /// The version value
+    /// Backend version string
     pub version: String,
-    /// Supported operations
-    /// Collection of supported operations
+    /// Operations supported by this backend
     pub supported_operations: Vec<super::types::StorageOperation>,
-    /// Maximum item size
-    /// Optional max item size bytes
+    /// Maximum item size in bytes (if limited)
     pub max_item_size_bytes: Option<u64>,
 }

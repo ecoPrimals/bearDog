@@ -501,6 +501,9 @@ mod tests {
         assert_eq!(stats.total_providers, 0);
         assert_eq!(stats.security_providers, 0);
         assert_eq!(stats.hsm_providers, 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(stats.monitoring_providers, 0);
     }
     
@@ -510,6 +513,9 @@ mod tests {
         
         // Register providers with zero-cost dispatch
         let security_provider = MockSecurityProvider::new("test-security".to_string());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let hsm_provider = MockHsmProvider::new("test-hsm".to_string());
         let monitoring_provider = MockMonitoringProvider::new("test-monitoring".to_string());
         
@@ -535,6 +541,9 @@ mod tests {
     #[tokio::test]
     async fn test_zero_cost_provider_retrieval() {
         let registry = StandardZeroCostRegistry::standard();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         // Register and retrieve with compile-time dispatch
         let security_provider = MockSecurityProvider::new("test-security".to_string());
@@ -552,6 +561,9 @@ mod tests {
         assert_eq!(retrieved.provider_id, "test-security");
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_zero_cost_health_checks() {
         let registry = StandardZeroCostRegistry::standard();

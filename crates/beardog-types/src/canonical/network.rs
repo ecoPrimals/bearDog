@@ -31,8 +31,13 @@ pub struct NetworkConfig {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            bind_address: "0.0.0.0".to_string(),
-            port: 8080,
+            bind_address: std::env::var("BEARDOG_NETWORK_BIND_ADDRESS")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
+            port: std::env::var("BEARDOG_NETWORK_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8080),
             tls_enabled: true,
             tls_cert_path: None,
             tls_key_path: None,

@@ -154,8 +154,12 @@ impl ZeroCopyManager {
         let mut last_cleanup = self.last_cleanup.write();
         let now = Instant::now();
 
-        if now.duration_since(*last_cleanup) < Duration::from_secs(300) {
-            return; // Cleanup at most once per 5 minutes
+        let cleanup_interval_secs = std::env::var("BEARDOG_CACHE_CLEANUP_INTERVAL_SECS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(300);
+        if now.duration_since(*last_cleanup) < Duration::from_secs(cleanup_interval_secs) {
+            return; // Cleanup at most once per interval
         }
 
         let mut removed_count = 0;
@@ -529,6 +533,9 @@ mod tests {
         let opt = manager.optimize_string("xyz");
         assert!(!opt.is_optimized()); // Should be owned
         assert_eq!(opt.as_str(), "xyz");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -542,11 +549,17 @@ mod tests {
         assert_eq!(opt.as_str().len(), 2000);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_optimize_bytes_small() {
         let manager = ZeroCopyManager::new();
 
         // Small byte array
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let data = vec![1, 2, 3, 4, 5];
         let opt = manager.optimize_bytes(&data);
         assert!(!opt.is_optimized()); // Should be owned
@@ -563,6 +576,9 @@ mod tests {
         assert!(opt.is_optimized()); // Should be shared
         assert_eq!(opt.as_slice().len(), 5000);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_optimized_string_display() {
@@ -579,6 +595,9 @@ mod tests {
         let s = opt.into_string();
 
         assert_eq!(s, "test");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -590,6 +609,9 @@ mod tests {
 
         assert_eq!(vec, vec![1, 2, 3]);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_cleanup_expired() {
@@ -597,6 +619,9 @@ mod tests {
 
         // Add some strings
         let _s1 = manager.get_shared_string("test1");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _s2 = manager.get_shared_string("test2");
 
         // Cleanup (should not remove anything as strings are still referenced)
@@ -605,6 +630,9 @@ mod tests {
         // Stats should remain
         let stats = manager.get_stats();
         assert!(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             stats
                 .cache_misses
                 .load(std::sync::atomic::Ordering::Relaxed)
@@ -613,6 +641,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_is_common_string() {
         let manager = ZeroCopyManager::new();
 
@@ -621,17 +652,26 @@ mod tests {
         assert!(manager.is_common_string("POST"));
 
         // Content types
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(manager.is_common_string("application/json"));
         assert!(manager.is_common_string("text/plain"));
 
         // Network
         assert!(manager.is_common_string("localhost"));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(manager.is_common_string("127.0.0.1"));
 
         // Not common
         assert!(!manager.is_common_string("random_string_12345"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_optimization_report() {
         let manager = ZeroCopyManager::new();
@@ -639,6 +679,9 @@ mod tests {
         // Generate some activity
         let _s1 = manager.get_shared_string("test");
         let _s2 = manager.get_shared_string("test");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Should not panic
         manager.print_optimization_report();
@@ -657,6 +700,9 @@ mod tests {
         let original = "ab".to_string(); // Very small, considered optimized
         let builder = ZeroCopyBuilder::new(original).optimize();
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Build returns the inner value
         let result = builder.build();
         assert_eq!(result, "ab");
@@ -674,6 +720,9 @@ mod tests {
     #[test]
     fn test_vec_zero_copy_optimized_trait() {
         let manager = ZeroCopyManager::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let original = vec![1u8, 2, 3];
 
         let optimized = original.optimize(&manager);
@@ -683,11 +732,17 @@ mod tests {
     #[test]
     fn test_global_zero_copy_manager() {
         let manager1 = global_zero_copy_manager();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let manager2 = global_zero_copy_manager();
 
         // Should be the same instance
         assert!(std::ptr::eq(manager1, manager2));
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_shared_string_convenience() {
@@ -695,33 +750,53 @@ mod tests {
         assert_eq!(s.as_ref(), "test");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_optimize_string_convenience() {
         let opt = optimize_string("test");
         assert_eq!(opt.as_str(), "test");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_optimize_bytes_convenience() {
         let opt = optimize_bytes(&[1, 2, 3]);
         assert_eq!(opt.as_slice(), &[1, 2, 3]);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_memory_saved_tracking() {
         let manager = ZeroCopyManager::new();
 
         // Get same string twice
         let s1 = manager.get_shared_string("test_string");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _s2 = manager.get_shared_string("test_string");
 
         // Should track memory saved
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let stats = manager.get_stats();
         assert!(
             stats
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 .memory_saved
                 .load(std::sync::atomic::Ordering::Relaxed)
-                >= s1.len() as u64
+                >= s1.len() as u64 // TEST_CATEGORY: unit
+                                   // TEST_DOMAIN: core
+                                   // TEST_PRIORITY: normal
         );
     }
 
@@ -737,6 +812,9 @@ mod tests {
 
     #[test]
     fn test_optimized_string_as_str_shared() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let manager = ZeroCopyManager::new();
         let opt = OptimizedString::Shared(manager.get_shared_string("shared"));
         assert_eq!(opt.as_str(), "shared");
@@ -744,17 +822,29 @@ mod tests {
 
     #[test]
     fn test_optimized_string_as_str_owned() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let opt = OptimizedString::Owned("owned".to_string());
         assert_eq!(opt.as_str(), "owned");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_optimized_bytes_as_slice_shared() {
         let bytes: Arc<[u8]> = Arc::from(&[1, 2, 3][..]);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let opt = OptimizedBytes::Shared(bytes);
         assert_eq!(opt.as_slice(), &[1, 2, 3]);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_optimized_bytes_as_slice_owned() {
         let opt = OptimizedBytes::Owned(vec![4, 5, 6]);

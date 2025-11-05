@@ -111,6 +111,9 @@ fn test_buffer_pool_reuse() {
     let stats_after = optimizer.get_stats();
 
     // Cache hits should increase when buffer is reused
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(stats_after.cache_hits >= stats_before.cache_hits);
 }
 
@@ -118,16 +121,25 @@ fn test_buffer_pool_reuse() {
 fn test_buffer_pool_size_classes() {
     let mut optimizer = CloneOptimizer::new();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test different size classes
     let sizes = vec![128, 1024, 4096, 8192, 16384, 65536];
 
     for size in sizes {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let buffer = optimizer.get_optimized_buffer(size);
         assert!(buffer.capacity() >= size);
     }
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_return_buffer_clears_data() {
     let mut optimizer = CloneOptimizer::new();
 
@@ -135,6 +147,9 @@ fn test_return_buffer_clears_data() {
     buffer.extend_from_slice(b"test data");
     assert_eq!(buffer.len(), 9);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     optimizer.return_buffer(buffer);
 
     // Get buffer back from pool
@@ -145,6 +160,9 @@ fn test_return_buffer_clears_data() {
 
 #[test]
 fn test_buffer_pool_max_size_limit() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut optimizer = CloneOptimizer::new();
 
     // Create and return more than 10 buffers (pool limit)
@@ -158,17 +176,26 @@ fn test_buffer_pool_max_size_limit() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_concurrent_buffer_allocation() {
     let mut optimizer = CloneOptimizer::new();
 
     // Simulate concurrent allocations
     let mut buffers = Vec::new();
     for i in 0..100 {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let size = 1024 * (i % 10 + 1);
         let buffer = optimizer.get_optimized_buffer(size);
         buffers.push(buffer);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(buffers.len(), 100);
 }
 
@@ -186,6 +213,9 @@ fn test_stats_tracking() {
 
     // Stats should be tracking operations
     assert!(stats.cache_hits + stats.cache_misses > 0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 // ====================
@@ -196,6 +226,9 @@ fn test_stats_tracking() {
 fn test_ultimate_safe_buffer_new() {
     let buffer = UltimateSafeBuffer::new(1024);
     // Just verify it was created successfully
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = buffer.get_safety_stats();
     assert_eq!(stats.safe_operations_completed, 0);
 }
@@ -209,6 +242,9 @@ fn test_safe_buffer_write() {
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), data.len());
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_safe_buffer_write_overflow() {
@@ -220,6 +256,9 @@ fn test_safe_buffer_write_overflow() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_safe_buffer_read() {
     let mut buffer = UltimateSafeBuffer::new(256);
     let data = b"Test data";
@@ -232,6 +271,9 @@ fn test_safe_buffer_read() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_safe_buffer_read_underflow() {
     let mut buffer = UltimateSafeBuffer::new(256);
 
@@ -249,11 +291,17 @@ fn test_safe_buffer_read_write_cycle() {
 
     // Read it back
     let read_data = buffer.safe_read(write_data.len()).unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(read_data, write_data);
 
     // Write more data
     let write_data2 = b"Second write";
     buffer.safe_write(write_data2).unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Read second data
     let read_data2 = buffer.safe_read(write_data2.len()).unwrap();
@@ -261,12 +309,18 @@ fn test_safe_buffer_read_write_cycle() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 fn test_safe_buffer_capacity_boundaries() {
     let mut buffer = UltimateSafeBuffer::new(100);
 
     // Fill exactly to capacity
     let data = vec![0u8; 100];
     let result = buffer.safe_write(&data);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(result.is_ok());
 
     // Try to write one more byte - should fail
@@ -276,11 +330,17 @@ fn test_safe_buffer_capacity_boundaries() {
 
 #[test]
 fn test_safe_buffer_clone() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut buffer = UltimateSafeBuffer::new(256);
     buffer.safe_write(b"Original data").unwrap();
 
     let cloned = buffer.clone();
     let stats1 = buffer.get_safety_stats();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats2 = cloned.get_safety_stats();
 
     assert_eq!(
@@ -299,6 +359,9 @@ fn test_safe_buffer_multiple_reads() {
     assert_eq!(data1, b"ABC");
 
     let data2 = buffer.safe_read(3).unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(data2, b"DEF");
 
     let data3 = buffer.safe_read(4).unwrap();
@@ -310,6 +373,9 @@ fn test_safety_statistics_default() {
     let stats = SafetyStatistics::default();
     assert_eq!(stats.bounds_checks_performed, 0);
     assert_eq!(stats.bounds_violations_prevented, 0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(stats.safe_operations_completed, 0);
 }
 
@@ -322,6 +388,9 @@ fn test_safe_buffer_statistics_tracking() {
     buffer.safe_read(4).unwrap();
 
     let stats = buffer.get_safety_stats();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(stats.safe_operations_completed > 0);
 }
 
@@ -335,11 +404,17 @@ fn test_safe_buffer_bounds_checking() {
 
     assert!(result.is_err());
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = buffer.get_safety_stats();
     assert!(stats.bounds_violations_prevented > 0);
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_safe_buffer_edge_cases() {
     // Zero-sized buffer
     let buffer = UltimateSafeBuffer::new(0);
@@ -349,6 +424,9 @@ fn test_safe_buffer_edge_cases() {
     // Very large buffer
     let large_buffer = UltimateSafeBuffer::new(1024 * 1024);
     let stats = large_buffer.get_safety_stats();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(stats.safe_operations_completed, 0);
 }
 
@@ -360,6 +438,9 @@ fn test_safe_buffer_empty_operations() {
     let result = buffer.safe_write(b"");
     assert!(result.is_ok());
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     // Read empty
     let result = buffer.safe_read(0);
     assert!(result.is_ok());
@@ -370,6 +451,9 @@ fn test_safe_buffer_empty_operations() {
 // ====================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_optimizer_with_multiple_string_types() {
     let mut optimizer = CloneOptimizer::new();
 
@@ -384,6 +468,9 @@ fn test_optimizer_with_multiple_string_types() {
         optimizer.optimize_string(s);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for s in long_strings {
         optimizer.optimize_string(s);
     }
@@ -404,6 +491,9 @@ fn test_buffer_lifecycle_management() {
     }
 
     // Return all buffers
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for buffer in buffers {
         optimizer.return_buffer(buffer);
     }
@@ -425,6 +515,9 @@ fn test_safe_buffer_stress_test() {
         let data = format!("Iteration {}", i);
         buffer.safe_write(data.as_bytes()).unwrap();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let read_data = buffer.safe_read(data.len()).unwrap();
         assert_eq!(read_data, data.as_bytes());
     }
@@ -439,6 +532,9 @@ fn test_performance_with_varying_sizes() {
 
     let sizes = vec![64, 128, 256, 512, 1024, 2048, 4096, 8192];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for size in sizes {
         let buffer = optimizer.get_optimized_buffer(size);
         assert!(buffer.capacity() >= size);
@@ -449,6 +545,9 @@ fn test_performance_with_varying_sizes() {
 #[test]
 fn test_safety_under_error_conditions() {
     let mut buffer = UltimateSafeBuffer::new(100);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     // Try various error-inducing operations
     let result1 = buffer.safe_write(&[0u8; 150]);
@@ -461,6 +560,9 @@ fn test_safety_under_error_conditions() {
     buffer.safe_write(b"Valid data").unwrap();
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_memory_efficiency() {
     let mut optimizer = CloneOptimizer::new();

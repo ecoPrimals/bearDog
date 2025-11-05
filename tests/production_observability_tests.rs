@@ -31,6 +31,9 @@ async fn test_metrics_collection_concept() -> BearDogResult<()> {
     metrics.insert("requests_total", 100_u64);
     metrics.insert("errors_total", 5_u64);
     metrics.insert("latency_ms", 150_u64);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Verify metrics storage
     assert_eq!(metrics.len(), 3);
@@ -43,6 +46,9 @@ async fn test_metrics_collection_concept() -> BearDogResult<()> {
     assert!(error_rate < 0.1, "Error rate should be under 10%");
 
     Ok(())
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[tokio::test]
@@ -66,6 +72,9 @@ async fn test_health_check_concepts() -> BearDogResult<()> {
 
     Ok(())
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_alert_threshold_concepts() -> BearDogResult<()> {
@@ -85,6 +94,9 @@ async fn test_alert_threshold_concepts() -> BearDogResult<()> {
     };
 
     // Test threshold validation
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let current_cpu = 70.0;
     let current_memory = 75.0;
     let current_error_rate = 0.02;
@@ -117,6 +129,9 @@ async fn test_sla_monitoring_concepts() -> BearDogResult<()> {
         uptime_percent: 99.9,
         response_time_p99: 500, // ms
         error_rate: 0.01,       // 1%
+                                // TEST_CATEGORY: unit
+                                // TEST_DOMAIN: core
+                                // TEST_PRIORITY: normal
     };
 
     let actual_metrics = SLAMetrics {
@@ -145,6 +160,9 @@ fn test_monitoring_data_structures() {
     let elapsed = start.elapsed();
 
     assert!(elapsed >= Duration::from_millis(10));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(elapsed < Duration::from_millis(100));
 }
 
@@ -157,6 +175,9 @@ async fn test_concurrent_metrics_access() -> BearDogResult<()> {
     use tokio::sync::RwLock;
 
     let metrics = Arc::new(RwLock::new(HashMap::new()));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Simulate concurrent metric updates
     let mut handles = vec![];
@@ -189,6 +210,9 @@ fn test_performance_tracking_calculations() {
 
     let response_times = [100, 150, 120, 200, 180];
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Calculate average
     let sum: u64 = response_times.iter().sum();
     let avg = sum / response_times.len() as u64;
@@ -206,6 +230,9 @@ fn test_performance_tracking_calculations() {
 #[tokio::test]
 async fn test_error_rate_monitoring() -> BearDogResult<()> {
     // Test error rate calculation and monitoring
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     let total_requests = 1000_u64;
     let failed_requests = 5_u64;
@@ -224,6 +251,9 @@ async fn test_error_rate_monitoring() -> BearDogResult<()> {
     Ok(())
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_time_series_data_concept() {
     // Test time series data storage concept

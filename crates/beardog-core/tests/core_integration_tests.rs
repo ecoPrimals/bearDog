@@ -1,6 +1,9 @@
 #![allow(unused_variables, dead_code)]
 
 /*
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 #[ignore = "Outdated test - needs API updates"]
 fn test_beardog_core_initialization() -> Result<(), BearDogError> {

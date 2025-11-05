@@ -241,25 +241,50 @@ impl Default for ConsolidatedWorkflowConfig {
     }
 }
 
-impl Default for WorkflowEngineConfig {
-    fn default() -> Self {
+impl WorkflowEngineConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+
         Self {
-            engine_type: "tokio".to_string(),
-            worker_pool_size: 10,
+            engine_type: source.get_or("BEARDOG_WORKFLOW_ENGINE_TYPE", "tokio"),
+            worker_pool_size: get_parsed(source, "BEARDOG_WORKFLOW_WORKER_POOL_SIZE", 10),
             queue: QueueConfig::default(),
             timeouts: TimeoutConfig::default(),
         }
     }
 }
 
-impl Default for WorkflowEscalationConfig {
+impl Default for WorkflowEngineConfig {
     fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
+impl WorkflowEscalationConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_bool, get_parsed};
+        use std::time::Duration;
+
         Self {
-            enabled: false,
+            enabled: get_bool(source, "BEARDOG_WORKFLOW_POLICY_ENABLED", false),
             rules: vec![],
-            default_timeout: Duration::from_secs(300), // 5 minutes
+            default_timeout: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_WORKFLOW_DEFAULT_TIMEOUT_SECS",
+                300,
+            )),
             notifications: NotificationConfig::default(),
         }
+    }
+}
+
+impl Default for WorkflowEscalationConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -275,14 +300,24 @@ impl Default for NotificationConfig {
 
 // RateLimitConfig Default implementation removed - using canonical version
 
+impl SchedulingConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+
+        Self {
+            scheduler_type: source.get_or("BEARDOG_WORKFLOW_SCHEDULER_TYPE", "cron"),
+            default_schedule: source.get_or("BEARDOG_WORKFLOW_DEFAULT_SCHEDULE", "0 0 * * *"),
+            timezone: source.get_or("BEARDOG_WORKFLOW_TIMEZONE", "UTC"),
+            max_concurrent: get_parsed(source, "BEARDOG_WORKFLOW_MAX_CONCURRENT", 5),
+        }
+    }
+}
+
 impl Default for SchedulingConfig {
     fn default() -> Self {
-        Self {
-            scheduler_type: "cron".to_string(),
-            default_schedule: "0 0 * * *".to_string(), // Daily at midnight
-            timezone: "UTC".to_string(),
-            max_concurrent: 5,
-        }
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -290,8 +325,16 @@ impl Default for QueueConfig {
     fn default() -> Self {
         Self {
             queue_type: "memory".to_string(),
-            capacity: 1000,
-            message_ttl: Duration::from_secs(3600), // 1 hour
+            capacity: std::env::var("BEARDOG_WORKFLOW_QUEUE_CAPACITY")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(1000), // 1000 messages default
+            message_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_MESSAGE_TTL_SECS")
+                    .ok()
+                    .and_then(|t| t.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ),
             dead_letter_queue: None,
         }
     }
@@ -300,10 +343,30 @@ impl Default for QueueConfig {
 impl Default for TimeoutConfig {
     fn default() -> Self {
         Self {
-            default: Duration::from_secs(30),
-            maximum: Duration::from_secs(300), // 5 minutes
-            connection: Duration::from_secs(10),
-            read: Duration::from_secs(30),
+            default: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_DEFAULT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            maximum: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_MAXIMUM_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300), // 5 minutes
+            ),
+            connection: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_CONNECTION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(10),
+            ),
+            read: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_READ_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
         }
     }
 }
@@ -323,9 +386,18 @@ impl Default for PersistenceConfig {
 impl Default for ConnectionConfig {
     fn default() -> Self {
         Self {
-            url: "sqlite://workflows.db".to_string(),
-            pool_size: 10,
-            timeout: Duration::from_secs(30),
+            url: std::env::var("BEARDOG_WORKFLOW_DB_URL")
+                .unwrap_or_else(|_| "sqlite://workflows.db".to_string()),
+            pool_size: std::env::var("BEARDOG_WORKFLOW_DB_POOL_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_DB_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(30),
+            ),
             retry: RetryConfig::default(),
         }
     }
@@ -334,8 +406,18 @@ impl Default for ConnectionConfig {
 impl Default for RetentionConfig {
     fn default() -> Self {
         Self {
-            period: Duration::from_secs(86400 * 30),     // 30 days
-            cleanup_interval: Duration::from_secs(3600), // 1 hour
+            period: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_RETENTION_PERIOD_SECS")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(86400 * 30), // 30 days default
+            ),
+            cleanup_interval: Duration::from_secs(
+                std::env::var("BEARDOG_WORKFLOW_CLEANUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|i| i.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ),
             archive_before_delete: true,
         }
     }
@@ -355,10 +437,26 @@ impl Default for ArchiveConfig {
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: 3,
-            initial_delay: Duration::from_millis(100),
-            backoff_multiplier: 2.0,
-            max_delay: Duration::from_secs(30),
+            max_attempts: std::env::var("BEARDOG_WORKFLOW_RETRY_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            initial_delay: Duration::from_millis(
+                std::env::var("BEARDOG_RETRY_INITIAL_DELAY_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+            ),
+            backoff_multiplier: std::env::var("BEARDOG_RETRY_BACKOFF_MULTIPLIER")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(2.0),
+            max_delay: Duration::from_secs(
+                std::env::var("BEARDOG_RETRY_MAX_DELAY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
         }
     }
 }

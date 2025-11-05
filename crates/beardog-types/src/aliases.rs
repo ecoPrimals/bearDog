@@ -33,6 +33,9 @@ impl<T> TypedValue<T> {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_typed_value() {
         let typed_val = TypedValue::new(42, "i32");

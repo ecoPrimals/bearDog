@@ -61,6 +61,9 @@ fn test_health_response_deserialization() {
     let json = r#"{"status":"healthy","version":"1.0.0"}"#;
     let health: HealthResponse = serde_json::from_str(json).expect("Failed to deserialize");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(health.status, "healthy");
     assert_eq!(health.version, "1.0.0");
 }
@@ -68,12 +71,18 @@ fn test_health_response_deserialization() {
 #[test]
 fn test_status_response_creation() {
     let status = StatusResponse {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         status: "operational".to_string(),
         connections: 42,
         memory_usage: 1024,
     };
 
     assert_eq!(status.status, "operational");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(status.connections, 42);
     assert_eq!(status.memory_usage, 1024);
 }
@@ -81,6 +90,9 @@ fn test_status_response_creation() {
 #[test]
 fn test_status_response_serialization() {
     let status = StatusResponse {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         status: "operational".to_string(),
         connections: 42,
         memory_usage: 1024,
@@ -89,6 +101,9 @@ fn test_status_response_serialization() {
     let json = serde_json::to_string(&status).expect("Failed to serialize");
     assert!(json.contains("operational"));
     assert!(json.contains("42"));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(json.contains("1024"));
 }
 
@@ -98,12 +113,18 @@ fn test_status_response_deserialization() {
     let status: StatusResponse = serde_json::from_str(json).expect("Failed to deserialize");
 
     assert_eq!(status.status, "operational");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(status.connections, 42);
     assert_eq!(status.memory_usage, 1024);
 }
 
 #[test]
 fn test_api_response_with_health_data() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let health = HealthResponse {
         status: "healthy".to_string(),
         version: "1.0.0".to_string(),
@@ -114,6 +135,9 @@ fn test_api_response_with_health_data() {
     assert!(response.data.is_some());
     let data = response.data.unwrap();
     assert_eq!(data.status, "healthy");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(data.version, "1.0.0");
 }
 
@@ -125,6 +149,9 @@ fn test_api_response_with_status_data() {
         memory_usage: 2048,
     };
     let response = ApiResponse::success(status);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert!(response.success);
     assert!(response.data.is_some());
@@ -132,6 +159,9 @@ fn test_api_response_with_status_data() {
     assert_eq!(data.status, "operational");
     assert_eq!(data.connections, 10);
     assert_eq!(data.memory_usage, 2048);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -144,6 +174,9 @@ fn test_api_response_full_serialization() {
 
     let json = serde_json::to_string(&response).expect("Failed to serialize");
     assert!(json.contains("success"));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(json.contains("healthy"));
     assert!(json.contains("1.0.0"));
     assert!(json.contains("timestamp"));
@@ -158,6 +191,9 @@ fn test_api_response_error_serialization() {
     assert!(json.contains("error"));
     assert!(json.contains("Test error message"));
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_multiple_api_responses() {
@@ -170,6 +206,9 @@ fn test_multiple_api_responses() {
     for response in responses {
         assert!(response.success);
         assert!(response.data.is_some());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
     }
 }
 
@@ -177,6 +216,9 @@ fn test_multiple_api_responses() {
 fn test_api_response_clone() {
     let response = ApiResponse::success("test data");
     let cloned = response.clone();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(response.success, cloned.success);
     assert_eq!(response.data, cloned.data);
@@ -188,6 +230,9 @@ fn test_api_response_clone() {
 fn test_health_response_clone() {
     let health = HealthResponse {
         status: "healthy".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         version: "1.0.0".to_string(),
     };
     let cloned = health.clone();
@@ -196,6 +241,9 @@ fn test_health_response_clone() {
     assert_eq!(health.version, cloned.version);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_status_response_clone() {
     let status = StatusResponse {
@@ -205,6 +253,9 @@ fn test_status_response_clone() {
     };
     let cloned = status.clone();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(status.status, cloned.status);
     assert_eq!(status.connections, cloned.connections);
     assert_eq!(status.memory_usage, cloned.memory_usage);
@@ -216,12 +267,18 @@ fn test_api_response_with_large_error_message() {
     let response: ApiResponse<()> = ApiResponse::error(large_error.clone());
 
     assert!(!response.success);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     assert_eq!(response.error, Some(large_error));
 }
 
 #[test]
 fn test_status_response_with_zero_connections() {
     let status = StatusResponse {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         status: "idle".to_string(),
         connections: 0,
         memory_usage: 512,
@@ -230,6 +287,9 @@ fn test_status_response_with_zero_connections() {
     assert_eq!(status.connections, 0);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_status_response_with_high_memory() {
     let status = StatusResponse {

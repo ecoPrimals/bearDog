@@ -47,6 +47,9 @@ fn test_production_ecosystem_builder_creates_valid_instance() {
 #[test]
 fn test_production_state_transitions_follow_lifecycle() {
     let config = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
 
     // Initial state should be Initializing
@@ -74,6 +77,9 @@ fn test_environment_levels_are_distinct_and_comparable() {
     assert_ne!(EnvironmentLevel::Staging, EnvironmentLevel::PreProduction);
     assert_eq!(EnvironmentLevel::Critical, EnvironmentLevel::Critical);
     assert_eq!(EnvironmentLevel::Production, EnvironmentLevel::Production);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Test serialization
     let level = EnvironmentLevel::Production;
@@ -95,6 +101,9 @@ fn test_production_flags_default_values_are_secure() {
         flags.enable_advanced_monitoring,
         "Advanced monitoring should be enabled by default"
     );
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(
         flags.enable_security_auditing,
         "Security auditing should be enabled by default"
@@ -110,6 +119,9 @@ fn test_production_flags_default_values_are_secure() {
 
     // Auto-scaling should be opt-in (disabled by default)
     assert!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         !flags.enable_auto_scaling,
         "Auto-scaling should be disabled by default (opt-in)"
     );
@@ -140,6 +152,9 @@ fn test_production_core_config_has_sensible_defaults() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_operational_status_covers_all_lifecycle_stages() {
     let statuses = vec![
         OperationalStatus::Initializing,
@@ -157,6 +172,9 @@ fn test_operational_status_covers_all_lifecycle_stages() {
         assert_eq!(*status, deserialized);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Statuses should be distinct
     assert_ne!(OperationalStatus::Healthy, OperationalStatus::Degraded);
     assert_ne!(OperationalStatus::Degraded, OperationalStatus::Unhealthy);
@@ -182,6 +200,9 @@ fn test_performance_metrics_initialize_to_zero() {
         metrics.error_rate_percent, 0.0,
         "Error rate should start at 0"
     );
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(
         metrics.throughput_bytes_per_sec, 0,
         "Throughput should start at 0"
@@ -203,7 +224,9 @@ fn test_production_state_initializes_correctly() {
     );
     assert_eq!(
         state.active_connections, 0,
-        "Should start with no active connections"
+        "Should start with no active connections" // TEST_CATEGORY: unit
+                                                  // TEST_DOMAIN: types
+                                                  // TEST_PRIORITY: normal
     );
     assert_eq!(
         state.total_requests, 0,
@@ -233,6 +256,9 @@ fn test_production_ecosystem_tracks_uptime() {
     let uptime = ecosystem.uptime();
     assert!(
         uptime.as_secs() < 5,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         "Uptime should be less than 5 seconds immediately after creation"
     );
 
@@ -252,6 +278,9 @@ fn test_production_config_serialization_roundtrip() {
 
     // Serialize to JSON
     let json = serde_json::to_string(&config).unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(!json.is_empty(), "Serialized config should not be empty");
 
     // Deserialize back
@@ -273,6 +302,9 @@ fn test_production_config_serialization_roundtrip() {
 #[test]
 fn test_multiple_production_ecosystems_can_coexist() {
     let config1 = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config2 = ProductionConfig::default();
     let config3 = ProductionConfig::default();
 
@@ -307,6 +339,9 @@ fn test_multiple_production_ecosystems_can_coexist() {
 // Test 12: Production Ecosystem Builder Chaining
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_ecosystem_builder_method_chaining() {
     // Test that all builder methods can be chained fluently

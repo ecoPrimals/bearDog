@@ -103,8 +103,18 @@ pub mod network {
     /// HTTPS protocol
     pub const HTTPS_PROTOCOL: &str = "https";
     
-    /// Default auth callback URI
-    pub const DEFAULT_AUTH_CALLBACK: &str = "http://localhost:8080/auth/callback";
+    /// Get default auth callback URI (environment-aware)
+    pub fn default_auth_callback() -> String {
+        std::env::var("BEARDOG_AUTH_CALLBACK")
+            .unwrap_or_else(|_| {
+                let network_config = crate::canonical::config::network::NetworkConfig::default();
+                format!(
+                    "http://{}:{}/auth/callback",
+                    network_config.default_host,
+                    network_config.service_ports.api_port
+                )
+            })
+    }
     
     /// Strict certificate validation
     pub const STRICT_CERT_VALIDATION: &str = "strict";
@@ -130,8 +140,19 @@ pub mod storage {
     /// Redis backend
     pub const REDIS_BACKEND: &str = "redis";
     
-    /// Default Redis URL
-    pub const DEFAULT_REDIS_URL: &str = "redis://localhost:6379/0";
+    /// Get default Redis URL (environment-aware)
+    pub fn default_redis_url() -> String {
+        std::env::var("REDIS_URL")
+            .or_else(|_| std::env::var("BEARDOG_REDIS_URL"))
+            .unwrap_or_else(|_| {
+                let network_config = crate::canonical::config::network::NetworkConfig::default();
+                let redis_port = std::env::var("REDIS_PORT")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(6379);
+                format!("redis://{}:{}/0", network_config.default_host, redis_port)
+            })
+    }
 }
 
 /// Workflow and scheduling constants

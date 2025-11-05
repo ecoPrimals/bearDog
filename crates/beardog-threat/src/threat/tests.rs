@@ -28,6 +28,9 @@ mod tests {
         let stats = engine.get_statistics();
         assert_eq!(stats.total_threats_detected, 0);
         assert_eq!(stats.false_positive_rate, 0.0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -39,6 +42,9 @@ mod tests {
         assert!(!config.auto_response);
         assert_eq!(config.sensitivity, 0.7);
         assert_eq!(config.block_threshold, 0.9);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.max_active_threats, 1000);
     }
 
@@ -48,6 +54,9 @@ mod tests {
         let threat_event = ThreatEvent {
             id: "test-threat-001".to_string(),
             threat_type: ThreatType::Malicious,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             severity: ThreatSeverity::High,
             status: ThreatStatus::Active,
             description: "Test threat event".to_string(),
@@ -79,10 +88,16 @@ mod tests {
     #[tokio::test]
     async fn test_threat_severity_ordering() {
         assert!(ThreatSeverity::Critical > ThreatSeverity::High);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(ThreatSeverity::High > ThreatSeverity::Medium);
         assert!(ThreatSeverity::Medium > ThreatSeverity::Low);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_mitigation_step_creation() {
         let step = MitigationStep {

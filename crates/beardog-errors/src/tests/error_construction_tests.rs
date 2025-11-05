@@ -82,6 +82,9 @@ fn test_api_error_construction() {
 fn test_hsm_error_construction() {
     let error = BearDogError::hsm("HSM not available".to_string());
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     match error {
         BearDogError::Cryptographic { message, .. } => {
             assert_eq!(message, "HSM not available");
@@ -91,6 +94,9 @@ fn test_hsm_error_construction() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 fn test_workflow_error_construction() {
     let error = BearDogError::workflow("Step execution failed".to_string());
 
@@ -100,6 +106,9 @@ fn test_workflow_error_construction() {
         }
         _ => panic!("Expected Workflow error variant"),
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 }
 
 #[test]
@@ -109,6 +118,9 @@ fn test_genetics_error_construction() {
     match error {
         BearDogError::Genetics { message } => {
             assert_eq!(message, "Entropy generation failed");
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: important
         }
         _ => panic!("Expected Genetics error variant"),
     }
@@ -119,6 +131,9 @@ fn test_initialization_error_construction() {
     let error = BearDogError::initialization("Core initialization failed".to_string());
 
     // initialization() returns System variant
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     match error {
         BearDogError::System { message, .. } => {
             assert_eq!(message, "Core initialization failed");
@@ -129,6 +144,9 @@ fn test_initialization_error_construction() {
 
 #[test]
 fn test_error_clone() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     let error = BearDogError::security("Test error".to_string());
     let cloned = error.clone();
 
@@ -138,6 +156,9 @@ fn test_error_clone() {
 #[test]
 fn test_error_debug() {
     let error = BearDogError::security("Test error".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     let debug_str = format!("{:?}", error);
 
     assert!(debug_str.contains("Security"));
@@ -147,6 +168,9 @@ fn test_error_debug() {
 #[test]
 fn test_error_display() {
     let error = BearDogError::security("Authentication failed".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     let display_str = format!("{}", error);
 
     assert!(display_str.contains("Authentication failed"));
@@ -156,6 +180,9 @@ fn test_error_display() {
 fn test_error_serialization() {
     let error = BearDogError::security("Test error".to_string());
     let json = serde_json::to_string(&error).expect("Should serialize");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 
     assert!(!json.is_empty());
 
@@ -165,6 +192,9 @@ fn test_error_serialization() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 fn test_result_type_ok() {
     fn returns_ok() -> BearDogResult<String> {
         Ok("success".to_string())
@@ -175,22 +205,34 @@ fn test_result_type_ok() {
     assert_eq!(result.unwrap(), "success");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 #[test]
 fn test_result_type_err() {
     fn returns_err() -> BearDogResult<String> {
         Err(BearDogError::security("Failed".to_string()))
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 
     let result = returns_err();
     assert!(result.is_err());
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 fn test_error_propagation() {
     fn inner_function() -> BearDogResult<i32> {
         Err(BearDogError::security("Inner error".to_string()))
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn outer_function() -> BearDogResult<String> {
         let _value = inner_function()?;
         Ok("success".to_string())
@@ -200,6 +242,9 @@ fn test_error_propagation() {
     assert!(result.is_err());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: normal
 #[test]
 fn test_multiple_error_types() {
     let errors = vec![
@@ -208,6 +253,9 @@ fn test_multiple_error_types() {
         BearDogError::network("Network issue".to_string()), // Returns System
         BearDogError::business("Business issue".to_string()),
     ];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
 
     assert_eq!(errors.len(), 4);
 
@@ -215,6 +263,9 @@ fn test_multiple_error_types() {
     for (i, error) in errors.iter().enumerate() {
         match (i, error) {
             (0, BearDogError::Security { .. }) => {}
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: important
             (1, BearDogError::System { .. }) => {}
             (2, BearDogError::System { .. }) => {} // network() returns System
             (3, BearDogError::Business { .. }) => {}
@@ -227,6 +278,9 @@ fn test_multiple_error_types() {
 fn test_error_equality() {
     let error1 = BearDogError::security("Same error".to_string());
     let error2 = BearDogError::security("Same error".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     let error3 = BearDogError::security("Different error".to_string());
 
     assert_eq!(error1, error2);
@@ -247,6 +301,9 @@ fn test_error_with_empty_message() {
 
 #[test]
 fn test_error_with_long_message() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     let long_message = "a".repeat(1000);
     let error = BearDogError::security(long_message.clone());
 
@@ -254,6 +311,9 @@ fn test_error_with_long_message() {
         BearDogError::Security { message, .. } => {
             assert_eq!(message.len(), 1000);
             assert_eq!(message, long_message);
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: important
         }
         _ => panic!("Expected Security error variant"),
     }
@@ -263,6 +323,9 @@ fn test_error_with_long_message() {
 fn test_error_with_unicode() {
     let unicode_message = "🔒 Authentication failed 认证失败 المصادقة فشلت";
     let error = BearDogError::security(unicode_message.to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 
     match error {
         BearDogError::Security { message, .. } => {
@@ -274,6 +337,9 @@ fn test_error_with_unicode() {
 
 #[test]
 fn test_error_in_option_chain() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn may_fail(should_fail: bool) -> BearDogResult<Option<String>> {
         if should_fail {
             return Err(BearDogError::security("Failed".to_string()));
@@ -284,6 +350,9 @@ fn test_error_in_option_chain() {
     assert!(may_fail(true).is_err());
     assert!(may_fail(false).is_ok());
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 
 #[test]
 fn test_error_categories_distinct() {
@@ -294,6 +363,9 @@ fn test_error_categories_distinct() {
     // Even with same message, different variants should not be equal
     assert_ne!(security, system);
     assert_ne!(system, business);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     assert_ne!(security, business);
 }
 
@@ -303,6 +375,9 @@ fn test_all_constructor_methods_exist() {
     let _security = BearDogError::security("test".to_string());
     let _system = BearDogError::system("test".to_string());
     let _business = BearDogError::business("test".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
     let _network = BearDogError::network("test".to_string());
     let _config = BearDogError::configuration("test");
     let _init = BearDogError::initialization("test".to_string());
@@ -315,6 +390,9 @@ fn test_all_constructor_methods_exist() {
 #[test]
 fn test_error_from_result_chain() {
     fn step1() -> BearDogResult<i32> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         Ok(42)
     }
 
@@ -336,6 +414,9 @@ fn test_error_from_result_chain() {
     assert_eq!(result.unwrap(), "success");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 #[test]
 fn test_error_message_content_preservation() {
     let original_message = "Critical: Database connection lost at 127.0.0.1:5432";

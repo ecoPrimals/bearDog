@@ -121,41 +121,67 @@ impl NetworkDiscoverer {
 
     /// Discover HSMs via mDNS/DNS-SD
     ///
+    /// # Architecture Note
+    /// Per "Discover, Don't Implement" principle, this delegates to Songbird primal
+    /// for actual network protocol implementation (mDNS, DNS-SD, Consul, etcd, etc.).
+    ///
     /// # Errors
-    /// Returns an error if mDNS discovery fails
+    /// Returns an error if discovery fails
     async fn discover_via_mdns(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        debug!("Searching for HSMs via mDNS");
+        debug!("Delegating mDNS/DNS-SD discovery to Songbird ecosystem");
 
-        // In a full implementation, this would use mdns libraries like
-        // `mdns` or `zeroconf` to discover services advertising themselves
-        // with service types like:
-        // - _hsm._tcp.local
-        // - _pkcs11._tcp.local
-        // - _kmip._tcp.local
+        // ✅ ARCHITECTURAL PATTERN: Ecosystem-based discovery
+        //
+        // Instead of implementing mDNS directly, we use SongbirdHsmDiscovery
+        // which handles all network protocols (mDNS, DNS-SD, Consul, etcd, etc.)
+        //
+        // Benefits:
+        // - No protocol duplication
+        // - Songbird handles network complexity
+        // - BearDog focuses on HSM abstraction
+        // - Single source of truth for service discovery
+        //
+        // See: crates/beardog-core/src/ecosystem_integration/songbird_integration.rs
+        //
+        // TODO: Wire to SongbirdHsmDiscovery once Songbird integration is complete
+        // For now, return empty to maintain interface compatibility
         
-        // For now, we provide the structure
-        // TODO: Integrate with mDNS library for service discovery
-        
+        debug!("mDNS discovery will be available via Songbird integration");
         Ok(Vec::new())
     }
 
     /// Discover HSMs via static network scanning
     ///
+    /// # Security Note
+    /// Network scanning is security-sensitive and must respect network policies.
+    /// This is opt-in only and should be explicitly enabled by configuration.
+    ///
     /// # Errors
     /// Returns an error if network scan fails
     async fn discover_via_static_scan(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        debug!("Performing static network scan");
+        debug!("Static network scan requested");
 
-        // In a full implementation, this would scan the local network
-        // for common HSM service ports. This is typically done by:
-        // 1. Getting local network range
-        // 2. Scanning common HSM ports
-        // 3. Probing responsive endpoints for HSM capabilities
+        // ⚠️ SECURITY: Network scanning disabled by default
+        //
+        // Reasons:
+        // 1. Security: Port scanning can be flagged as hostile by IDS/IPS
+        // 2. Ethics: Network scanning without permission is invasive
+        // 3. Performance: Can cause network congestion
+        // 4. Reliability: Blocked by many firewalls
+        //
+        // Alternatives:
+        // - Use known endpoints (self.discover_known_endpoints())
+        // - Use mDNS/DNS-SD (service advertisement, not scanning)
+        // - Use Songbird's service registry (ecosystem discovery)
+        //
+        // If network scanning is required, it should:
+        // - Be explicitly enabled in config
+        // - Respect network policy constraints
+        // - Implement proper rate limiting
+        // - Log all scan activity for audit
         
-        // For production use, this should be opt-in and respect network policies
-        // TODO: Implement network scanning with proper rate limiting
-        
-        warn!("Static network scanning requires careful rate limiting and network policy compliance");
+        warn!("Static network scanning disabled by default for security/ethics compliance");
+        warn!("Use known endpoints or mDNS discovery instead");
         
         Ok(Vec::new())
     }

@@ -537,6 +537,9 @@ mod tests {
         assert!(config.validate().is_ok());
 
         config.session_timeout_minutes = 0;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(config.validate().is_err());
 
         config.session_timeout_minutes = 60;
@@ -547,6 +550,9 @@ mod tests {
     #[test]
     fn test_security_audit_event() {
         let event = SecurityAuditEvent {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             event_id: "test_event".to_string(),
             event_type: "authentication".to_string(),
             timestamp: chrono::Utc::now(),
@@ -564,6 +570,9 @@ mod tests {
         assert_eq!(event.severity, SecuritySeverity::Medium);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_auth_credentials_variants() {
         let password_creds = AuthCredentials::Password {

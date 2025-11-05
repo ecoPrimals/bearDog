@@ -88,7 +88,12 @@ impl Default for HybridIntelligenceConfig {
             oversight_level: OversightLevel::balanced(),
             auto_decision_threshold: ConfidenceThreshold::high(),
             feedback_learning: true,
-            human_input_timeout: Duration::from_secs(30),
+            human_input_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_AI_HUMAN_INPUT_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
         }
     }
 }
@@ -112,7 +117,12 @@ impl Default for HybridIntelligenceConfigBuilder {
             oversight_level: OversightLevel::balanced(),
             auto_decision_threshold: ConfidenceThreshold::high(),
             feedback_learning: true,
-            human_input_timeout: Duration::from_secs(30),
+            human_input_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_AI_HUMAN_INPUT_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
         }
     }
 }
@@ -218,6 +228,9 @@ mod tests {
             ?;
 
         assert!(config.is_enabled());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.oversight_level().value(), 0.5);
     }
 
@@ -227,6 +240,9 @@ mod tests {
             .build()
             ?;
         assert_eq!(auto.oversight_level().value(), 0.0);
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         let human = HybridIntelligenceConfigBuilder::human_centric()
             .build()
@@ -237,12 +253,18 @@ mod tests {
     #[test]
     fn test_timeout_validation() {
         let result = HybridIntelligenceConfig::builder()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .human_input_timeout(Duration::from_secs(400))
             .build();
 
         assert!(result.is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_can_auto_decide() {
         let config = HybridIntelligenceConfig::builder()

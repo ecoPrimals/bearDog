@@ -37,9 +37,17 @@ use uuid::Uuid;
 }
 
 impl Default for EntropyConfig {
-    fn default(0.7,
-            max_seeds: 1000,
-            seed_expiry_hours: 24,
+    fn default() -> Self {
+        Self {
+            entropy_threshold: 0.7,
+            max_seeds: std::env::var("BEARDOG_ENTROPY_MAX_SEEDS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000),
+            seed_expiry_hours: std::env::var("BEARDOG_ENTROPY_SEED_EXPIRY_HOURS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(24),
         }
     }
 }
@@ -170,6 +178,9 @@ mod tests {
 
         let high_quality_data = vec![42u8; 1024]; // 1KB of data for high quality score
         let seed_id = manager
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: genetics
+            // TEST_PRIORITY: normal
             .create_seed(&EntropyClass::Human, high_quality_data)
             ?;
 
@@ -190,6 +201,9 @@ mod tests {
     #[tokio::test]
     fn test_biometric_hash() -> Result<(), BearDogError> {
         let manager = EntropyManager::new(EntropyConfig::default());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let hash = manager.create_biometric_hash(b"test_data")?;
 
         assert_eq!(hash.entropy_class, EntropyClass::Biometric);
@@ -198,6 +212,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_cleanup_expired_seeds(1, // 1 hour expiry
             ..Default::default()

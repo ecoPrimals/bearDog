@@ -456,6 +456,9 @@ mod tests {
         }
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_universal_kms_adapter() {
         let capabilities = vec![create_mock_kms_capability()];

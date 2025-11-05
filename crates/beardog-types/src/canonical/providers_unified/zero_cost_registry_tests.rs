@@ -66,16 +66,25 @@ fn test_registry_removal() {
     // Test removal operations
     assert!(registry.is_empty());
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // In a full implementation, we would test:
     // - Removing registered providers
     // - Handling removal of non-existent providers
     // - Cleanup after removal
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_registry_clear() {
     let mut registry = ZeroCostProviderRegistry::new();
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Clear empty registry should work
     registry.clear();
     assert!(registry.is_empty());
@@ -84,6 +93,9 @@ fn test_registry_clear() {
     // - Clearing registry with providers
     // - Ensuring all providers are removed
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_registry_iteration() {
@@ -94,6 +106,9 @@ fn test_registry_iteration() {
     assert_eq!(count, 0);
     
     // In a full implementation, we would test:
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // - Iterating over all providers
     // - Iterator correctness
     // - Concurrent iteration
@@ -104,6 +119,9 @@ fn test_registry_thread_safety() {
     let registry = Arc::new(ZeroCostProviderRegistry::new());
     
     // Test that registry can be shared across threads
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let registry_clone = Arc::clone(&registry);
     
     // Spawn a thread to access the registry
@@ -114,6 +132,9 @@ fn test_registry_thread_safety() {
     // Wait for thread to complete
     handle.join().unwrap();
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Original registry should still be accessible
     assert!(registry.is_empty());
 }
@@ -124,6 +145,9 @@ fn test_registry_concurrent_access() {
     use std::thread;
     
     let registry = Arc::new(ZeroCostProviderRegistry::new());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut handles = vec![];
     
     // Spawn multiple threads to access registry concurrently
@@ -135,6 +159,9 @@ fn test_registry_concurrent_access() {
             i // Return thread ID for verification
         });
         handles.push(handle);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
     
     // Wait for all threads and collect results
@@ -151,6 +178,9 @@ fn test_registry_provider_count_accuracy() {
     let registry = ZeroCostProviderRegistry::new();
     
     let initial_count = registry.provider_count();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(initial_count, 0);
     
     // In a full implementation, we would test:
@@ -176,6 +206,9 @@ fn test_registry_error_handling() {
     let registry = ZeroCostProviderRegistry::new();
     
     // Test error handling for invalid operations
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(registry.is_empty());
     
     // In a full implementation, we would test:
@@ -186,6 +219,9 @@ fn test_registry_error_handling() {
 
 #[test]
 fn test_registry_memory_efficiency() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let registry = ZeroCostProviderRegistry::with_capacity(100);
     
     // Registry should be efficient even with large capacity
@@ -195,6 +231,9 @@ fn test_registry_memory_efficiency() {
     // - Memory usage with many providers
     // - No memory leaks on clear/drop
     // - Efficient reallocation
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: important
 }
 
 #[test]
@@ -205,6 +244,9 @@ fn test_registry_performance() {
     let start = std::time::Instant::now();
     
     // Perform 1000 empty checks (should be fast)
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     for _ in 0..1000 {
         assert!(registry.is_empty());
     }
@@ -215,6 +257,9 @@ fn test_registry_performance() {
     assert!(duration.as_millis() < 100);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod capability_tests {
     use super::*;
@@ -234,6 +279,9 @@ mod capability_tests {
     
     #[test]
     fn test_capability_priority() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let registry = ZeroCostProviderRegistry::new();
         
         // Test provider selection based on capability priority
@@ -244,6 +292,9 @@ mod capability_tests {
         // - Priority ties handled correctly
         // - Dynamic priority updates
     }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 }
 
 #[cfg(test)]
@@ -259,11 +310,17 @@ mod edge_cases {
     }
     
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_registry_clone_semantics() {
         // Note: ZeroCostProviderRegistry may not implement Clone
         // This test documents the expected behavior
         
         let registry = Arc::new(ZeroCostProviderRegistry::new());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let registry_ref = Arc::clone(&registry);
         
         assert!(registry.is_empty());
@@ -273,11 +330,17 @@ mod edge_cases {
     #[test]
     fn test_registry_with_zero_capacity() {
         let registry = ZeroCostProviderRegistry::with_capacity(0);
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         // Should work even with zero capacity
         assert!(registry.is_empty());
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_registry_large_capacity() {
         let registry = ZeroCostProviderRegistry::with_capacity(10_000);

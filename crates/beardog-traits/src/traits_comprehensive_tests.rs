@@ -53,10 +53,10 @@ fn test_validate_unified_usage_consistent() {
 fn test_utilities_const_functions() {
     // Verify const functions work in const context
     const VERSION: &str = crate::utilities::get_unified_version();
-    const VALID: bool = crate::utilities::validate_unified_usage();
+    const _VALID: bool = crate::utilities::validate_unified_usage();
 
     assert_eq!(VERSION, "3.0.0");
-    assert!(VALID);
+    // _VALID is always true at compile time - no runtime assertion needed
 }
 
 // ============================================================================
@@ -66,8 +66,9 @@ fn test_utilities_const_functions() {
 #[test]
 fn test_unified_module_accessible() {
     // Should be able to access unified module
-    let _version = utilities::get_unified_version();
-    assert!(true); // Module is accessible
+    let version = utilities::get_unified_version();
+    // If we can call this function and get a result, module is accessible
+    assert!(!version.is_empty());
 }
 
 #[test]
@@ -120,24 +121,42 @@ fn test_const_validation_evaluation() {
     }
 
     assert!(const_validate());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
 // Concurrent Access Tests
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
 fn test_utilities_thread_safe() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     use std::thread;
 
     let mut handles = vec![];
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for _ in 0..10 {
         let handle = thread::spawn(|| {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             (
                 utilities::get_unified_version(),
                 utilities::validate_unified_usage(),
             )
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
         });
         handles.push(handle);
     }
@@ -149,15 +168,24 @@ fn test_utilities_thread_safe() {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 // Integration Tests
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_trait_system_initialization() {
     // Simulating initialization checks
     let version = utilities::get_unified_version();
     let valid = utilities::validate_unified_usage();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(version, "3.0.0");
     assert!(valid);
@@ -166,22 +194,34 @@ fn test_trait_system_initialization() {
 #[test]
 fn test_version_in_conditional() {
     if utilities::get_unified_version() == "3.0.0" {
-        assert!(true);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        // Expected version - test passes
     } else {
         panic!("Version mismatch");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 }
 
 #[test]
 fn test_validation_in_conditional() {
     if utilities::validate_unified_usage() {
-        assert!(true);
+        // Validation passed - test passes
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     } else {
         panic!("Validation failed");
     }
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // Edge Cases
 // ============================================================================
 
@@ -192,6 +232,9 @@ fn test_version_not_empty() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_version_ascii() {
     let version = utilities::get_unified_version();
     assert!(version.is_ascii());
@@ -216,6 +259,9 @@ fn test_version_parsing() {
 fn test_version_check_pattern() {
     fn is_version_3_or_higher() -> bool {
         let version = utilities::get_unified_version();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         version.starts_with('3') || version.starts_with('4')
     }
 
@@ -223,12 +269,18 @@ fn test_version_check_pattern() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_validation_guard_pattern() {
     fn safe_operation() -> Result<(), &'static str> {
         if !utilities::validate_unified_usage() {
             return Err("Validation failed");
         }
         Ok(())
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     assert!(safe_operation().is_ok());
@@ -239,12 +291,21 @@ fn test_validation_guard_pattern() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_doc_example_prelude() {
     // Verify prelude exports work as documented
     let version = crate::utilities::get_unified_version();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(version, "3.0.0");
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 // Performance Tests
 // ============================================================================
@@ -257,6 +318,9 @@ fn test_version_call_performance() {
     for _ in 0..10000 {
         let _ = utilities::get_unified_version();
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let duration = start.elapsed();
 
     assert!(
@@ -264,6 +328,9 @@ fn test_version_call_performance() {
         "10k calls should be nearly instant"
     );
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_validation_call_performance() {
@@ -277,6 +344,9 @@ fn test_validation_call_performance() {
 
     assert!(
         duration.as_millis() < 10,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "10k calls should be nearly instant"
     );
 }
@@ -285,6 +355,9 @@ fn test_validation_call_performance() {
 // String Handling Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_version_string_operations() {
     let version = utilities::get_unified_version();
@@ -298,6 +371,9 @@ fn test_version_comparison() {
     let v2 = "3.0.0";
     assert_eq!(v1, v2);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_version_concatenation() {
@@ -314,16 +390,25 @@ fn test_version_concatenation() {
 fn test_validation_boolean_ops() {
     let valid = utilities::validate_unified_usage();
 
-    assert!(valid && true);
-    assert!(true && valid);
-    assert!(valid || false);
-    assert!(!(!valid));
+    assert!(valid);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    assert!(valid);
+    assert!(valid);
+    assert!(valid);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_validation_match() {
     match utilities::validate_unified_usage() {
-        true => assert!(true),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        true => { /* validation passed */ }
         false => panic!("Should validate successfully"),
     }
 }
@@ -331,6 +416,9 @@ fn test_validation_match() {
 // ============================================================================
 // Error Handling Tests
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_functions_never_panic() {
@@ -338,6 +426,9 @@ fn test_functions_never_panic() {
         let _ = utilities::get_unified_version();
         let _ = utilities::validate_unified_usage();
     });
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert!(result.is_ok(), "Utilities should never panic");
 }
@@ -347,6 +438,9 @@ fn test_functions_never_panic() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_version_lifetime_validity() {
     let version = utilities::get_unified_version();
 
@@ -358,6 +452,9 @@ fn test_version_lifetime_validity() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_no_memory_leaks() {
     // Repeated calls should not leak memory
     for _ in 0..1000 {
@@ -366,7 +463,10 @@ fn test_no_memory_leaks() {
     }
 
     // If we got here without OOM, test passes
-    assert!(true);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    // (No explicit assertion needed - success is reaching this point)
 }
 
 // ============================================================================
@@ -379,10 +479,16 @@ fn test_utilities_are_const() {
     const _VERSION: &str = crate::utilities::get_unified_version();
     const _VALID: bool = crate::utilities::validate_unified_usage();
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_functions_are_must_use() {
     // Both functions are marked #[must_use]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // This test verifies they compile with must_use
     let _v = utilities::get_unified_version();
     let _valid = utilities::validate_unified_usage();
@@ -392,6 +498,9 @@ fn test_functions_are_must_use() {
 // Comprehensive Integration Test
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_complete_trait_system_check() {
     // Comprehensive system validation

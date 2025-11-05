@@ -312,6 +312,9 @@ mod existing_tests {
     ///
     /// # Panics
     /// Panics if the security constructor doesn't create a Security variant.
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn test_security_constructor() {
         let error = BearDogError::security("test security".to_string());
         assert!(matches!(error, BearDogError::Security { .. }));
@@ -362,6 +365,9 @@ mod existing_tests {
 
         if let BearDogError::Security { category, .. } = security_error {
             assert!(matches!(category, SecurityErrorCategory::Authentication));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         } else {
             panic!("Expected Security error, got: {security_error:?}");
         }
@@ -377,6 +383,9 @@ mod existing_tests {
             std::io::ErrorKind::NotFound,
             "file not found",
         ));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: normal
 
         let beardog_result = result.system_context("Failed to read file");
         assert!(beardog_result.is_err());
@@ -396,6 +405,9 @@ mod existing_tests {
     #[test]
     fn test_validation_system() {
         let result = validation::validate_error_usage();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: normal
         assert!(result.is_ok(), "Error usage validation should pass");
 
         let info = validation::error_system_info();
@@ -405,6 +417,9 @@ mod existing_tests {
         assert!(system_names.contains(&"error-system"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     #[test]
     fn test_canonical_error_creation() {
         let _security = BearDogError::security("test".to_string());

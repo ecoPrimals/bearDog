@@ -30,6 +30,9 @@ fn test_ecosystem_registration_creation() {
 fn test_ecosystem_registration_serialization() {
     let mut endpoints = HashMap::new();
     endpoints.insert("http".to_string(), "http://localhost:8080".to_string());
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     let registration = EcosystemRegistration {
         service_id: "test-123".to_string(),
@@ -47,6 +50,9 @@ fn test_ecosystem_registration_serialization() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_ecosystem_registration_deserialization() {
     let json = r#"{
         "service_id": "test-456",
@@ -64,6 +70,9 @@ fn test_ecosystem_registration_deserialization() {
     assert_eq!(registration.service_name, "Deserialized Service");
     assert_eq!(registration.version, "2.1.0");
     assert_eq!(registration.capabilities.len(), 2);
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -81,6 +90,9 @@ fn test_ecosystem_registration_multiple_endpoints() {
         capabilities: vec!["multi-protocol".to_string()],
         health_status: HealthStatus::Healthy,
     };
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     assert_eq!(registration.endpoints.len(), 3);
     assert!(registration.endpoints.contains_key("http"));
@@ -100,6 +112,9 @@ fn test_ecosystem_registration_no_capabilities() {
     };
 
     assert!(registration.capabilities.is_empty());
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -111,6 +126,9 @@ fn test_ecosystem_registration_health_statuses() {
         HealthStatus::Unknown,
     ];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for status in statuses {
         let registration = EcosystemRegistration {
             service_id: format!("service-{status:?}"),
@@ -131,6 +149,9 @@ fn test_ecosystem_registration_clone() {
     endpoints.insert("http".to_string(), "http://localhost:8080".to_string());
 
     let registration = EcosystemRegistration {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         service_id: "clone-test".to_string(),
         service_name: "Clone Test".to_string(),
         version: "1.0.0".to_string(),
@@ -150,6 +171,9 @@ fn test_ecosystem_registration_clone() {
 #[test]
 fn test_ecosystem_registration_version_formats() {
     let versions = vec!["1.0.0", "2.1.3", "0.0.1-alpha", "1.0.0-beta.1"];
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     for version in versions {
         let registration = EcosystemRegistration {
@@ -165,6 +189,9 @@ fn test_ecosystem_registration_version_formats() {
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_ecosystem_registration_capability_management() {
     let capabilities = vec![

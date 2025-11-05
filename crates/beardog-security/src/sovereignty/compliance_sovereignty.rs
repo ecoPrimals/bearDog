@@ -128,6 +128,9 @@ mod tests {
     #[tokio::test]
     fn test_compliance_sovereignty() -> Result<(), beardog_errors::BearDogError> {
         let compliance = ComplianceSovereignty::new(ComplianceSovereigntyConfig::default());
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: normal
 
         let record_id = compliance
             .establish_compliance_sovereignty("GDPR")
@@ -151,6 +154,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_compliance_finding() -> Result<(), beardog_errors::BearDogError> {
         let compliance = ComplianceSovereignty::new(ComplianceSovereigntyConfig::default());

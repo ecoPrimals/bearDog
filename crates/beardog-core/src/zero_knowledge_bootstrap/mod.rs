@@ -57,6 +57,9 @@ pub mod capability_registry;
 /// Listens for announcements from other primals in the ecosystem,
 /// implementing the "infant learning" pattern of observation and discovery.
 pub mod ecosystem_listener;
+#[cfg(test)]
+#[path = "ecosystem_listener_tests.rs"]
+mod ecosystem_listener_tests;
 
 /// Self-discovery engine for identifying own capabilities
 ///
@@ -231,10 +234,17 @@ pub struct BootstrapMetrics {
 impl Default for BootstrapConfig {
     fn default() -> Self {
         Self {
-            discovery_timeout_ms: 30000, // 30 seconds
-            max_discovery_attempts: 10,
+            discovery_timeout_ms: std::env::var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30000), // 30 seconds default
+            max_discovery_attempts: std::env::var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
             min_capabilities_threshold: 1, // At least discover one other capability
-            listen_interface: "0.0.0.0".to_string(),
+            listen_interface: std::env::var("BEARDOG_LISTEN_INTERFACE")
+                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
             discovery_protocols: vec![
                 DiscoveryProtocol::MulticastDNS,
                 DiscoveryProtocol::HttpDiscovery,
@@ -287,8 +297,11 @@ impl ZeroKnowledgeBootstrap {
         let config = UnifiedBootstrapConfig::default();
 
         // Step 1: Discover our own identity and capabilities (only thing we can know)
-        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new()
-            .expect("Test: create discovery engine should succeed");
+        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new().map_err(|e| {
+            beardog_errors::BearDogError::internal(format!(
+                "Failed to create discovery engine: {e}"
+            ))
+        })?;
         let self_identity = self_discovery.discover_self_identity()?;
 
         info!(
@@ -322,6 +335,7 @@ impl ZeroKnowledgeBootstrap {
     /// # Errors
     /// Returns an error if bootstrapping fails at any phase, if ecosystem announcement encounters issues,
     /// or if capability discovery or registry operations fail.
+    #[allow(clippy::cognitive_complexity)] // Orchestration function - complexity is from coordinating many phases
     pub async fn bootstrap(&mut self) -> BearDogResult<()> {
         let start_time = std::time::Instant::now();
 
@@ -351,7 +365,8 @@ impl ZeroKnowledgeBootstrap {
         Self::enable_network_effects();
 
         // Update metrics
-        self.metrics.bootstrap_duration_ms = start_time.elapsed().as_millis() as u64;
+        self.metrics.bootstrap_duration_ms =
+            start_time.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
 
         info!("✅ Zero-Knowledge Bootstrap Complete!");
         info!("📊 Bootstrap Results:");
@@ -374,6 +389,7 @@ impl ZeroKnowledgeBootstrap {
     }
 
     /// Announce self to ecosystem (broadcast our capabilities)
+    #[allow(clippy::cognitive_complexity)] // Multi-protocol announcement - inherently complex
     fn announce_self_to_ecosystem(&mut self) -> BearDogResult<()> {
         info!("📢 Announcing self to ecosystem...");
 
@@ -440,6 +456,7 @@ impl ZeroKnowledgeBootstrap {
     }
 
     /// Discover ecosystem capabilities through active probing
+    #[allow(clippy::cognitive_complexity)] // Multi-protocol discovery with retries - complexity is necessary
     async fn discover_ecosystem_capabilities(&mut self) -> BearDogResult<()> {
         info!("🔍 Discovering ecosystem capabilities...");
 
@@ -475,9 +492,10 @@ impl ZeroKnowledgeBootstrap {
         }
 
         self.metrics.discovery_attempts = discovery_attempts;
-        self.metrics.capabilities_discovered = capabilities_found as u32;
+        self.metrics.capabilities_discovered = capabilities_found.min(u32::MAX as usize) as u32;
         self.metrics.discovery_success_rate = if discovery_attempts > 0 {
-            capabilities_found as f64 / f64::from(discovery_attempts)
+            // Use integer ratio to avoid precision loss, then convert
+            (capabilities_found.min(u32::MAX as usize) as f64) / f64::from(discovery_attempts)
         } else {
             0.0
         };
@@ -492,6 +510,7 @@ impl ZeroKnowledgeBootstrap {
 
     /// Build dynamic capability registry from discoveries
     /// Builds `capability_registry`
+    #[allow(clippy::cognitive_complexity)] // Registry building with validation - complexity is inherent
     async fn build_capability_registry(&mut self) -> BearDogResult<()> {
         info!("🏗️ Building dynamic capability registry...");
 

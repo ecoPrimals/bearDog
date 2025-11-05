@@ -35,17 +35,40 @@ use beardog_errors::BearDogError;
     /// The fitness threshold value
     pub fitness_threshold: f64,
 }
-impl Default for GenesisConfig {}
-
-    fn default(10,
-            min_genetic_diversity: 0.3,
-            max_generations: 100,
-            mutation_rate: 0.1,
-            crossover_rate: 0.8,
-            elite_preservation: 0.2,
-            fitness_threshold: 0.7,
+impl Default for GenesisConfig {
+    fn default() -> Self {
+        Self {
+            population_size: std::env::var("BEARDOG_GENESIS_POPULATION_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
+            min_genetic_diversity: std::env::var("BEARDOG_GENESIS_MIN_GENETIC_DIVERSITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.3),
+            max_generations: std::env::var("BEARDOG_GENESIS_MAX_GENERATIONS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            mutation_rate: std::env::var("BEARDOG_GENESIS_MUTATION_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.1),
+            crossover_rate: std::env::var("BEARDOG_GENESIS_CROSSOVER_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.8),
+            elite_preservation: std::env::var("BEARDOG_GENESIS_ELITE_PRESERVATION")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.2),
+            fitness_threshold: std::env::var("BEARDOG_GENESIS_FITNESS_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.7),
         }
     }
+}
 
 pub struct GenesisSpawningEngine {
     config: GenesisConfig,

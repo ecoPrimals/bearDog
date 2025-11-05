@@ -59,10 +59,26 @@ impl Default for UnifiedHealthConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            global_timeout: Duration::from_secs(30),
-            check_interval: Duration::from_secs(30),
-            failure_threshold: 3,
-            success_threshold: 2,
+            global_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_GLOBAL_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            failure_threshold: std::env::var("BEARDOG_HEALTH_FAILURE_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            success_threshold: std::env::var("BEARDOG_HEALTH_SUCCESS_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(2),
             http_checks: HttpHealthCheckConfig::default(),
             tcp_checks: TcpHealthCheckConfig::default(),
             database_checks: DatabaseHealthCheckConfig::default(),
@@ -102,7 +118,12 @@ impl Default for HttpHealthCheckConfig {
         Self {
             enabled: true,
             endpoints: Vec::new(),
-            default_timeout: Duration::from_secs(10),
+            default_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HTTP_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(10),
+            ),
             follow_redirects: true,
             verify_ssl: true,
             user_agent: "BearDog-HealthChecker/4.0.0".to_string(),
@@ -170,7 +191,12 @@ impl Default for TcpHealthCheckConfig {
         Self {
             enabled: true,
             endpoints: Vec::new(),
-            default_timeout: Duration::from_secs(5),
+            default_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_TCP_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            ),
             connection_reuse: false,
         }
     }
@@ -213,7 +239,12 @@ impl Default for DatabaseHealthCheckConfig {
         Self {
             enabled: true,
             connections: Vec::new(),
-            default_timeout: Duration::from_secs(15),
+            default_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DB_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(15),
+            ),
             test_query: "SELECT 1".to_string(),
         }
     }
@@ -279,7 +310,12 @@ impl Default for ServiceHealthCheckConfig {
             enabled: true,
             services: Vec::new(),
             discovery_enabled: true,
-            auto_discovery_interval: Duration::from_secs(60),
+            auto_discovery_interval: Duration::from_secs(
+                std::env::var("BEARDOG_SERVICE_DISCOVERY_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
         }
     }
 }
@@ -476,10 +512,26 @@ impl Default for HealthRecoveryConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            auto_recovery_attempts: 3,
-            recovery_delay: Duration::from_secs(30),
-            recovery_backoff: 2.0,
-            max_recovery_delay: Duration::from_secs(300),
+            auto_recovery_attempts: std::env::var("BEARDOG_AUTO_RECOVERY_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            recovery_delay: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_RECOVERY_DELAY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            recovery_backoff: std::env::var("BEARDOG_HEALTH_RECOVERY_BACKOFF")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(2.0),
+            max_recovery_delay: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_MAX_RECOVERY_DELAY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
             recovery_actions: Vec::new(),
         }
     }

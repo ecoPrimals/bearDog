@@ -9,6 +9,9 @@ use beardog_errors::BearDogError;
     #[tokio::test]
     fn test_genetic_engine_creation() -> GeneticsResult<()> {
         let config = GeneticsConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let engine = GeneticsEngine::new(config)?;
         
         assert!(engine.is_enabled());
@@ -43,6 +46,9 @@ use beardog_errors::BearDogError;
             for j in i+1..evolved_keys.len() {
                 assert_ne!(evolved_keys[i], evolved_keys[j]);
             }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_genetics_config_defaults() {
         assert!(config.enabled);

@@ -83,7 +83,9 @@ fn test_shared_string_first_access() {
         stats
             .string_cache_misses
             .load(std::sync::atomic::Ordering::Relaxed),
-        1
+        1 // TEST_CATEGORY: unit
+          // TEST_DOMAIN: core
+          // TEST_PRIORITY: normal
     );
     assert_eq!(
         stats
@@ -100,17 +102,25 @@ fn test_shared_string_cache_hit() {
     // First access (miss)
     let s1 = manager.get_shared_string("cached_string");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     // Second access (should be hit)
     let s2 = manager.get_shared_string("cached_string");
 
     assert_eq!(&*s1, &*s2);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = manager.get_stats();
     assert_eq!(
         stats
             .string_cache_hits
             .load(std::sync::atomic::Ordering::Relaxed),
-        1
+        1 // TEST_CATEGORY: unit
+          // TEST_DOMAIN: core
+          // TEST_PRIORITY: normal
     );
     assert_eq!(
         stats
@@ -127,6 +137,9 @@ fn test_shared_string_multiple_strings() {
     let s1 = manager.get_shared_string("first");
     let s2 = manager.get_shared_string("second");
     let s3 = manager.get_shared_string("first"); // Cache hit
+                                                 // TEST_CATEGORY: unit
+                                                 // TEST_DOMAIN: core
+                                                 // TEST_PRIORITY: normal
 
     assert_eq!(&*s1, "first");
     assert_eq!(&*s2, "second");
@@ -137,6 +150,9 @@ fn test_shared_string_multiple_strings() {
         stats
             .string_cache_misses
             .load(std::sync::atomic::Ordering::Relaxed),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         2
     );
     assert_eq!(
@@ -156,6 +172,9 @@ fn test_shared_config_basic() {
     assert_eq!(*config, 42);
 
     let stats = manager.get_stats();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(
         stats
             .config_cache_misses
@@ -179,7 +198,9 @@ fn test_shared_config_cache_hit() {
         stats
             .config_cache_hits
             .load(std::sync::atomic::Ordering::Relaxed),
-        1
+        1 // TEST_CATEGORY: unit
+          // TEST_DOMAIN: core
+          // TEST_PRIORITY: normal
     );
     assert_eq!(
         stats
@@ -204,6 +225,9 @@ fn test_shared_config_different_types() {
 fn test_cleanup_expired() {
     let manager = ZeroCopyManager::new();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     {
         let _s = manager.get_shared_string("temporary");
     } // String dropped here
@@ -218,6 +242,9 @@ fn test_cleanup_expired() {
 fn test_cleanup_expired_rate_limiting() {
     let manager = ZeroCopyManager::new();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Call cleanup twice in quick succession
     manager.cleanup_expired();
     manager.cleanup_expired(); // Should return early due to rate limiting
@@ -240,6 +267,9 @@ fn test_global_shared_string() {
     let s2 = shared_string("global_test");
 
     assert_eq!(&*s1, &*s2);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -248,6 +278,9 @@ fn test_global_shared_config() {
     let config2 = shared_config("global_config", || vec![4, 5, 6]);
 
     // Should return cached value
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(*config1, vec![1, 2, 3]);
     assert_eq!(*config2, vec![1, 2, 3]);
 }
@@ -259,6 +292,9 @@ fn test_zero_copy_builder_new() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_zero_copy_builder_optimize() {
     let builder = ZeroCopyBuilder::new(100).optimize();
     assert!(builder.is_optimized());
@@ -267,17 +303,26 @@ fn test_zero_copy_builder_optimize() {
 
 #[test]
 fn test_zero_copy_builder_not_optimized() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let builder = ZeroCopyBuilder::new(50);
     assert!(!builder.is_optimized());
 }
 
 #[test]
 fn test_zero_copy_builder_with_string() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let builder = ZeroCopyBuilder::new(String::from("test")).optimize();
     assert!(builder.is_optimized());
     assert_eq!(builder.build(), "test");
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_zero_copy_stats_default() {
     let stats = ZeroCopyStats::default();
@@ -285,20 +330,34 @@ fn test_zero_copy_stats_default() {
     assert_eq!(
         stats
             .string_cache_hits
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             .load(std::sync::atomic::Ordering::Relaxed),
         0
     );
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(
         stats
             .string_cache_misses
             .load(std::sync::atomic::Ordering::Relaxed),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         0
     );
     assert_eq!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         stats
             .config_cache_hits
             .load(std::sync::atomic::Ordering::Relaxed),
-        0
+        0 // TEST_CATEGORY: unit
+          // TEST_DOMAIN: core
+          // TEST_PRIORITY: normal
     );
     assert_eq!(
         stats
@@ -326,11 +385,17 @@ fn test_shared_string_long_text() {
 
     assert_eq!(&*s1, &long_text);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = manager.get_stats();
     assert_eq!(
         stats
             .string_cache_hits
             .load(std::sync::atomic::Ordering::Relaxed),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         1
     );
 }
@@ -347,6 +412,9 @@ fn test_shared_config_complex_type() {
     let manager = ZeroCopyManager::new();
 
     let config = manager.get_shared_config("complex", || ComplexConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         value: 42,
         text: "test".to_string(),
         data: vec![1, 2, 3],
@@ -366,10 +434,16 @@ fn test_zero_copy_builder_chain() {
 
 #[test]
 fn test_multiple_managers_independent() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let manager1 = ZeroCopyManager::new();
     let manager2 = ZeroCopyManager::new();
 
     let _s1 = manager1.get_shared_string("test");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let _s2 = manager2.get_shared_string("test");
 
     let stats1 = manager1.get_stats();
@@ -392,10 +466,16 @@ fn test_multiple_managers_independent() {
 #[test]
 fn test_capability_validation_case_sensitive() {
     assert!(is_valid_service_capability("hsm"));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!is_valid_service_capability("HSM"));
     assert!(!is_valid_service_capability("Hsm"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_get_all_standard_capabilities_completeness() {
     let capabilities = get_all_standard_capabilities();

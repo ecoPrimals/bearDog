@@ -37,18 +37,29 @@ fn test_safety_statistics_default() {
 
 #[test]
 fn test_safety_statistics_clone() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats1 = SafetyStatistics {
         bounds_checks_performed: 100,
         bounds_violations_prevented: 5,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         safe_operations_completed: 95,
         allocations_tracked: 10,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats2 = stats1.clone();
 
     assert_eq!(
         stats1.bounds_checks_performed,
-        stats2.bounds_checks_performed
+        stats2.bounds_checks_performed // TEST_CATEGORY: unit
+                                       // TEST_DOMAIN: core
+                                       // TEST_PRIORITY: normal
     );
     assert_eq!(
         stats1.safe_operations_completed,
@@ -56,6 +67,9 @@ fn test_safety_statistics_clone() {
     );
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_safety_statistics_debug() {
     let stats = SafetyStatistics::default();
@@ -74,24 +88,39 @@ fn test_ultimate_safe_buffer_various_sizes() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_pool_statistics_default() {
     let stats = PoolStatistics::default();
     let _ = format!("{:?}", stats);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_multiple_buffers_creation() {
     let _buf1 = UltimateSafeBuffer::new(10);
     let _buf2 = UltimateSafeBuffer::new(20);
     let _buf3 = UltimateSafeBuffer::new(30);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_safety_statistics_with_values() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = SafetyStatistics {
         bounds_checks_performed: 1000,
         bounds_violations_prevented: 10,
         safe_operations_completed: 990,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         allocations_tracked: 50,
     };
 
@@ -104,8 +133,14 @@ fn test_safety_statistics_with_values() {
 #[test]
 fn test_ultimate_safe_buffer_zero_size() {
     let _buffer = UltimateSafeBuffer::new(0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_ultimate_safe_buffer_large_size() {
     let _buffer = UltimateSafeBuffer::new(1024 * 1024);

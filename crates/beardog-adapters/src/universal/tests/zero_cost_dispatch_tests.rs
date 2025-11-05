@@ -23,10 +23,16 @@ fn test_router_handler_registration() {
                 success: true,
                 result: serde_json::json!({"status": "handled"}),
                 metadata: std::collections::HashMap::new(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             })
         },
     };
     
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     router.add_handler(handler, 1.0);
     
     assert_eq!(router.handler_count(), 1);
@@ -44,6 +50,9 @@ fn test_router_multiple_handlers() {
                 result: serde_json::json!({}),
                 metadata: std::collections::HashMap::new(),
             })
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         },
     };
     
@@ -73,6 +82,9 @@ fn test_router_request_routing() {
         handler_fn: |req| {
             assert_eq!(req.required_capability, CapabilityType::Security);
             Ok(CapabilityResponse {
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: adapters
+                // TEST_PRIORITY: normal
                 success: true,
                 result: serde_json::json!({"handled": true}),
                 metadata: std::collections::HashMap::new(),
@@ -101,6 +113,9 @@ fn test_router_no_matching_handler() {
     
     let request = CapabilityRequest {
         required_capability: CapabilityType::Security,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         payload: serde_json::json!({}),
         metadata: std::collections::HashMap::new(),
     };
@@ -112,6 +127,9 @@ fn test_router_no_matching_handler() {
 #[test]
 fn test_capability_handler_confidence_score() {
     let mut router = ZeroCostCapabilityRouter::new();
+     // TEST_CATEGORY: integration
+     // TEST_DOMAIN: adapters
+     // TEST_PRIORITY: normal
     
     let high_confidence_handler = CapabilityHandlerDispatch {
         capability_type: CapabilityType::Compute,
@@ -128,6 +146,9 @@ fn test_capability_handler_confidence_score() {
     assert_eq!(router.handler_count(), 1);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_router_handler_replacement() {
     let mut router = ZeroCostCapabilityRouter::new();

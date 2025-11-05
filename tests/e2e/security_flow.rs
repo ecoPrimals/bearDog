@@ -18,9 +18,9 @@ use tracing::info;
 /// Security flow test implementation
 pub struct SecurityFlowTest;
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+// TEST_CATEGORY: e2e
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 /// Run security flow E2E test
 pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
     info!("🔒 Starting Security Flow E2E Test");
@@ -196,6 +196,9 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_security_flow() {
         let config = E2ETestConfig::default();

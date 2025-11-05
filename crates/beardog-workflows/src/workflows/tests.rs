@@ -49,12 +49,18 @@ fn test_workflow_step_creation() {
     
     let step = WorkflowStep {
         name: "test_step".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         action: "process".to_string(),
         parameters: std::collections::HashMap::new(),
         timeout_seconds: 60,
         retry_on_failure: true,
     };
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert_eq!(step.name, "test_step");
     assert_eq!(step.action, "process");
     assert!(step.retry_on_failure);
@@ -68,6 +74,9 @@ fn test_workflow_step_with_parameters() {
     parameters.insert("key1".to_string(), "value1".to_string());
     parameters.insert("key2".to_string(), "value2".to_string());
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     let step = WorkflowStep {
         name: "parameterized_step".to_string(),
         action: "transform".to_string(),
@@ -79,6 +88,9 @@ fn test_workflow_step_with_parameters() {
     assert_eq!(step.parameters.len(), 2);
     assert_eq!(step.parameters.get("key1"), Some(&"value1".to_string()));
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: workflows
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_workflow_definition_creation() {
@@ -93,6 +105,9 @@ fn test_workflow_definition_creation() {
             retry_on_failure: true,
         },
         WorkflowStep {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: workflows
+            // TEST_PRIORITY: normal
             name: "step2".to_string(),
             action: "process".to_string(),
             parameters: std::collections::HashMap::new(),
@@ -110,6 +125,9 @@ fn test_workflow_definition_creation() {
     };
     
     assert_eq!(definition.steps.len(), 2);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert_eq!(definition.version, "1.0.0");
 }
 
@@ -140,6 +158,9 @@ fn test_workflow_execution_progress() {
         id: "exec_002".to_string(),
         workflow_id: "workflow_002".to_string(),
         status: WorkflowStatus::Running,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         current_step: 2,
         started_at: Some(chrono::Utc::now()),
         completed_at: None,
@@ -156,6 +177,9 @@ fn test_workflow_execution_progress() {
     
     assert_eq!(execution.status, WorkflowStatus::Completed);
     assert!(execution.completed_at.is_some());
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 }
 
 #[test]
@@ -179,6 +203,9 @@ fn test_workflow_execution_error_handling() {
 
 #[test]
 fn test_workflow_config_validation() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: important
     let config = WorkflowConfig {
         max_concurrent_workflows: 10,
         default_timeout_seconds: 300,
@@ -195,6 +222,9 @@ fn test_workflow_config_validation() {
 
 #[test]
 fn test_workflow_step_timeout_validation() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     use types::WorkflowStep;
     
     let step = WorkflowStep {
@@ -208,6 +238,9 @@ fn test_workflow_step_timeout_validation() {
     assert!(step.timeout_seconds > 0);
     assert!(step.timeout_seconds <= 7200); // Max 2 hours
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: workflows
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_workflow_empty_steps() {
@@ -221,6 +254,9 @@ fn test_workflow_empty_steps() {
         version: "1.0.0".to_string(),
     };
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert!(definition.steps.is_empty());
 }
 
@@ -233,6 +269,9 @@ fn test_workflow_multiple_executions() {
             id: "exec_001".to_string(),
             workflow_id: "workflow_001".to_string(),
             status: WorkflowStatus::Completed,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: workflows
+            // TEST_PRIORITY: normal
             current_step: 3,
             started_at: Some(chrono::Utc::now()),
             completed_at: Some(chrono::Utc::now()),
@@ -260,6 +299,9 @@ fn test_workflow_status_serialization() {
     
     let statuses = vec![
         WorkflowStatus::Pending,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         WorkflowStatus::Running,
         WorkflowStatus::Completed,
         WorkflowStatus::Failed,
@@ -278,6 +320,9 @@ fn test_workflow_status_serialization() {
 #[test]
 fn test_workflow_step_serialization() {
     use types::WorkflowStep;
+     // TEST_CATEGORY: unit
+     // TEST_DOMAIN: workflows
+     // TEST_PRIORITY: normal
     
     let step = WorkflowStep {
         name: "serialize_test".to_string(),
@@ -295,6 +340,9 @@ fn test_workflow_step_serialization() {
     assert_eq!(step.action, deserialized.action);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_config_clone() {
     let config1 = WorkflowConfig {

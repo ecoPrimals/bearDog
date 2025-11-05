@@ -166,15 +166,19 @@ impl QualityMetrics {
     }
 }
 
+/// Cache metadata for AI response caching
+///
+/// Tracks whether a response came from cache, its freshness,
+/// and time-to-live information for cache management.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheInfo {
-    /// Whether `cache_hit` is enabled
+    /// Whether this response was served from cache
     pub cache_hit: bool,
-    /// Optional cache key
+    /// Cache key used to store/retrieve this response
     pub cache_key: Option<String>,
-    /// Optional ttl seconds
+    /// Time-to-live for cached response in seconds
     pub ttl_seconds: Option<u64>,
-    /// The freshness value
+    /// Freshness score (0.0-1.0, where 1.0 is completely fresh)
     pub freshness: f64,
 }
 
@@ -202,26 +206,35 @@ impl CacheInfo {
     }
 }
 
+/// Rate limiting information for AI requests
+///
+/// Tracks rate limit status to prevent abuse and ensure fair
+/// resource allocation across users.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitInfo {
-    /// Number of `remaining_requests`
+    /// Number of requests remaining in current window
     pub remaining_requests: u32,
+    /// Timestamp when the rate limit window resets
     pub reset_time: DateTime<Utc>,
-    /// Number of limit
+    /// Total request limit per window
     pub limit: u32,
-    /// Whether limited is enabled
+    /// Whether the requester is currently rate-limited
     pub limited: bool,
 }
 
+/// User preferences for AI interaction and behavior
+///
+/// Configures how the AI system interacts with this user,
+/// including interaction style, notifications, and security settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPreferences {
-    /// The interaction style value
+    /// Preferred interaction style with the AI
     pub interaction_style: InteractionStyle,
-    /// Mapping of auto approval thresholds
+    /// Thresholds for automatic approval of actions by category
     pub auto_approval_thresholds: HashMap<String, f64>,
-    /// The notifications value
+    /// Notification delivery preferences
     pub notifications: NotificationPreferences,
-    /// The security preferences value
+    /// Security and authentication preferences
     pub security_preferences: SecurityPreferences,
 }
 
@@ -240,23 +253,31 @@ pub enum InteractionStyle {
     Custom(HashMap<String, serde_json::Value>),
 }
 
+/// Notification delivery preferences
+///
+/// Controls which notification channels are enabled and the minimum
+/// urgency level required to trigger notifications.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationPreferences {
-    /// Whether email is enabled
+    /// Whether email notifications are enabled
     pub email_enabled: bool,
-    /// Whether push is enabled
+    /// Whether push notifications are enabled
     pub push_enabled: bool,
-    /// The urgency threshold value
+    /// Minimum urgency level for notifications
     pub urgency_threshold: UrgencyLevel,
 }
 
+/// Security and authentication preferences
+///
+/// Configures security features including two-factor authentication,
+/// biometric verification, and security notification levels.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPreferences {
-    /// Whether `require_2fa` is enabled
+    /// Whether two-factor authentication is required
     pub require_2fa: bool,
-    /// Whether biometric is enabled
+    /// Whether biometric authentication is enabled
     pub biometric_enabled: bool,
-    /// The security notifications value
+    /// Level of security notifications to receive
     pub security_notifications: SecurityNotificationLevel,
 }
 
@@ -276,16 +297,21 @@ pub enum SecurityNotificationLevel {
     None,
 }
 
+/// Context and metadata for a task or operation
+///
+/// Provides task identification, priority, deadlines, and relationships
+/// to other tasks for workflow management.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskContext {
+    /// Unique identifier for this task
     pub task_id: Option<String>,
-    /// The task type value
+    /// Type or category of task
     pub task_type: String,
-    /// The priority value
+    /// Priority level for task execution
     pub priority: TaskPriority,
-    /// Optional deadline
+    /// Optional deadline for task completion
     pub deadline: Option<DateTime<Utc>>,
-    /// Collection of related tasks
+    /// Related or dependent tasks
     pub related_tasks: Vec<String>,
 }
 
@@ -295,19 +321,25 @@ pub struct TaskContext {
 pub enum TaskPriority {
     /// Low priority task that can be deferred
     Low,
+    /// Normal priority task with standard processing
     Normal,
     /// High priority task requiring immediate attention
     High,
 }
 
+/// Record of an interaction event between user and AI
+///
+/// Captures significant events in the AI-human interaction flow,
+/// including user inputs, system responses, and approval workflows.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteractionEvent {
+    /// When the event occurred
     pub timestamp: DateTime<Utc>,
-    /// The event type value
+    /// Type of interaction event
     pub event_type: InteractionEventType,
-    /// The description value
+    /// Human-readable description of the event
     pub description: String,
-    /// Mapping of metadata
+    /// Additional contextual metadata about the event
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
@@ -321,9 +353,13 @@ pub enum InteractionEventType {
     UserInput,
     /// System generated a response
     SystemResponse,
+    /// System requested human approval for an action
     ApprovalRequested,
+    /// Human granted approval for the requested action
     ApprovalGranted,
+    /// Human denied approval for the requested action
     ApprovalDenied,
+    /// AI performed an automated action without human intervention
     AutomatedAction,
 }
 
@@ -336,34 +372,44 @@ pub enum OversightLevel {
     Optional,
     /// Human oversight is recommended but not required
     Recommended,
+    /// Human oversight is required for this operation
     Required,
     /// Continuous human monitoring and supervision required
     Continuous,
 }
 
+/// Risk assessment for operations and decisions
+///
+/// Evaluates potential risks, their factors, mitigation strategies,
+/// and comprehensive impact analysis across multiple dimensions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RiskAssessment {
-    /// The risk level value
+    /// Overall risk level classification
     pub risk_level: RiskLevel,
-    /// Collection of risk factors
+    /// Identified risk factors contributing to the assessment
     pub risk_factors: Vec<String>,
-    /// Collection of mitigation strategies
+    /// Recommended mitigation strategies to reduce risk
     pub mitigation_strategies: Vec<String>,
-    /// The impact assessment value
+    /// Detailed impact analysis across system dimensions
     pub impact_assessment: ImpactAssessment,
 }
 
 // RiskLevel is not defined in canonical module - using SecurityLevel instead
 pub use beardog_types::canonical::capabilities::SecurityLevel as RiskLevel;
 
+/// Multi-dimensional impact assessment
+///
+/// Evaluates the potential impact of operations or changes across
+/// security, performance, user experience, and system stability dimensions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImpactAssessment {
-    /// The security impact value
+    /// Impact on system security posture
     pub security_impact: ImpactLevel,
+    /// Impact on system and operation performance
     pub performance_impact: ImpactLevel,
-    /// The user experience impact value
+    /// Impact on user experience and satisfaction
     pub user_experience_impact: ImpactLevel,
-    /// The system stability impact value
+    /// Impact on overall system stability and reliability
     pub system_stability_impact: ImpactLevel,
 }
 
@@ -391,6 +437,10 @@ pub enum UrgencyLevel {
     High,
 }
 
+/// Builder for constructing AI-first responses with validation
+///
+/// Provides a fluent interface for building `AIFirstResponse` instances
+/// with proper validation, error handling, and context management.
 pub struct AIFirstResponseBuilder<T> {
     data: T,
     request_id: Uuid,
@@ -493,6 +543,9 @@ mod tests {
         let response = AIFirstResponseBuilder::new("test_data", request_id)
             .with_confidence(0.85)
             .build();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(response.success);
         assert_eq!(response.data, "test_data");
         assert_eq!(response.request_id, request_id);
@@ -503,12 +556,18 @@ mod tests {
     #[test]
     fn test_quality_metrics() {
         let high_security = QualityMetrics::high_security();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(high_security.security >= 0.9);
         assert!(high_security.reliability >= 0.9);
         let standard = QualityMetrics::standard();
         assert!(standard.accuracy >= 0.8);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_cache_info() {
         let no_cache = CacheInfo::no_cache();

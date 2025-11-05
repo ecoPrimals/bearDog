@@ -75,8 +75,11 @@ pub struct CanonicalTestConfig {
     pub random_seed: Option<u64>,
 }
 
-impl Default for CanonicalTestConfig {
-    fn default() -> Self {
+impl CanonicalTestConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+
         Self {
             environment: "test".to_string(),
             verbose: false,
@@ -84,14 +87,21 @@ impl Default for CanonicalTestConfig {
             max_threads: std::thread::available_parallelism()
                 .map(std::num::NonZeroUsize::get)
                 .unwrap_or(4),
-            timeout_seconds: 300,
+            timeout_seconds: get_parsed(source, "BEARDOG_TEST_TIMEOUT_SECS", 300),
             collect_coverage: false,
             test_data_dir: PathBuf::from("test-data"),
             property_testing_enabled: true,
-            property_test_iterations: 100,
+            property_test_iterations: get_parsed(source, "BEARDOG_TEST_PROPERTY_ITERATIONS", 100),
             fuzzing_enabled: false,
             random_seed: None,
         }
+    }
+}
+
+impl Default for CanonicalTestConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -109,8 +119,14 @@ impl CanonicalTestConfig {
         Self {
             parallel_execution: true,
             max_threads: default_threads * 2,
-            timeout_seconds: 30,
-            property_test_iterations: 10,
+            timeout_seconds: std::env::var("BEARDOG_TEST_FAST_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+            property_test_iterations: std::env::var("BEARDOG_TEST_FAST_PROPERTY_ITERATIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
             ..Default::default()
         }
     }
@@ -121,9 +137,15 @@ impl CanonicalTestConfig {
             parallel_execution: true,
             collect_coverage: true,
             property_testing_enabled: true,
-            property_test_iterations: 1000,
+            property_test_iterations: std::env::var("BEARDOG_TEST_THOROUGH_PROPERTY_ITERATIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000),
             fuzzing_enabled: true,
-            timeout_seconds: 600,
+            timeout_seconds: std::env::var("BEARDOG_TEST_THOROUGH_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(600),
             ..Default::default()
         }
     }
@@ -194,15 +216,27 @@ impl Default for CanonicalApiTestConfig {
     fn default() -> Self {
         Self {
             base_url: "http://localhost:8080".to_string(),
-            timeout_seconds: 30,
+            timeout_seconds: std::env::var("BEARDOG_API_TEST_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
             contract_validation: true,
             use_authentication: false,
             api_key: None,
             verify_tls: true,
-            max_concurrent_requests: 10,
+            max_concurrent_requests: std::env::var("BEARDOG_API_TEST_MAX_CONCURRENT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
             retry_failed_requests: false,
-            max_retries: 3,
-            retry_delay_ms: 1000,
+            max_retries: std::env::var("BEARDOG_API_TEST_MAX_RETRIES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            retry_delay_ms: std::env::var("BEARDOG_API_TEST_RETRY_DELAY_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000),
             cache_responses: false,
             test_credentials: None,
         }
@@ -231,7 +265,10 @@ impl CanonicalApiTestConfig {
     pub fn production() -> Self {
         Self {
             base_url: "https://api.production.example.com".to_string(),
-            timeout_seconds: 60,
+            timeout_seconds: std::env::var("BEARDOG_E2E_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60),
             verify_tls: true,
             use_authentication: true,
             retry_failed_requests: true,
@@ -297,15 +334,26 @@ pub struct CanonicalBenchmarkConfig {
     pub output_dir: PathBuf,
 }
 
-impl Default for CanonicalBenchmarkConfig {
-    fn default() -> Self {
+impl CanonicalBenchmarkConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+        use std::time::Duration;
+
         Self {
             name: "benchmark".to_string(),
-            iterations: 1000,
-            warmup_iterations: 100,
-            measurement_duration: Duration::from_secs(10),
+            iterations: get_parsed(source, "BEARDOG_BENCHMARK_ITERATIONS", 1000),
+            warmup_iterations: get_parsed(source, "BEARDOG_BENCHMARK_WARMUP_ITERATIONS", 100),
+            measurement_duration: Duration::from_secs(get_parsed(
+                source,
+                "BEARDOG_BENCHMARK_MEASUREMENT_DURATION_SECS",
+                10,
+            )),
             statistical_analysis: true,
-            confidence_level: 0.95,
+            confidence_level: std::env::var("BEARDOG_BENCHMARK_CONFIDENCE_LEVEL")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.95),
             compare_baseline: false,
             baseline_path: None,
             memory_profiling: false,
@@ -313,6 +361,13 @@ impl Default for CanonicalBenchmarkConfig {
             output_format: "json".to_string(),
             output_dir: PathBuf::from("benchmark-results"),
         }
+    }
+}
+
+impl Default for CanonicalBenchmarkConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -328,9 +383,20 @@ impl CanonicalBenchmarkConfig {
     /// Create configuration for quick benchmarks
     pub fn quick() -> Self {
         Self {
-            iterations: 100,
-            warmup_iterations: 10,
-            measurement_duration: Duration::from_secs(5),
+            iterations: std::env::var("BEARDOG_BENCHMARK_QUICK_ITERATIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
+            warmup_iterations: std::env::var("BEARDOG_BENCHMARK_QUICK_WARMUP_ITERATIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
+            measurement_duration: Duration::from_secs(
+                std::env::var("BEARDOG_BENCHMARK_QUICK_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            ),
             statistical_analysis: false,
             ..Default::default()
         }
@@ -339,8 +405,14 @@ impl CanonicalBenchmarkConfig {
     /// Create configuration for thorough benchmarks
     pub fn thorough() -> Self {
         Self {
-            iterations: 10000,
-            warmup_iterations: 1000,
+            iterations: std::env::var("BEARDOG_BENCHMARK_THOROUGH_ITERATIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10000),
+            warmup_iterations: std::env::var("BEARDOG_BENCHMARK_THOROUGH_WARMUP")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000),
             measurement_duration: Duration::from_secs(60),
             statistical_analysis: true,
             memory_profiling: true,
@@ -407,10 +479,16 @@ impl Default for CanonicalProductionTestConfig {
             performance_validation_enabled: true,
             compliance_checks_enabled: true,
             health_check_endpoint: "/health".to_string(),
-            health_check_timeout_seconds: 30,
+            health_check_timeout_seconds: std::env::var("BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
             required_services: Vec::new(),
             canary_testing_enabled: false,
-            canary_percentage: 5.0,
+            canary_percentage: std::env::var("BEARDOG_CANARY_PERCENTAGE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5.0),
             rollback_on_failure: true,
         }
     }

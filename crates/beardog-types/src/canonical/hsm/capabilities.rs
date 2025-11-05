@@ -126,7 +126,12 @@ pub struct KeyManagementCapabilities {
 impl Default for KeyManagementCapabilities {
     fn default() -> Self {
         Self {
-            max_keys: Some(10000),
+            max_keys: Some(
+                std::env::var("BEARDOG_HSM_MAX_KEYS")
+                    .ok()
+                    .and_then(|k| k.parse().ok())
+                    .unwrap_or(10000), // 10K keys default
+            ),
             backup_support: true,
             recovery_support: true,
             escrow_support: false,
@@ -257,7 +262,10 @@ pub struct PerformanceCapabilities {
 impl Default for PerformanceCapabilities {
     fn default() -> Self {
         Self {
-            max_operations_per_second: 10000,
+            max_operations_per_second: std::env::var("BEARDOG_HSM_MAX_OPS_PER_SEC")
+                .ok()
+                .and_then(|o| o.parse().ok())
+                .unwrap_or(10000), // 10K ops/sec default
             concurrent_operations: 100,
             average_latency_ms: 5.0,
             throughput_mbps: 100.0,

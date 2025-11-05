@@ -107,6 +107,9 @@ impl RegistryProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[tokio::test]}
 
 

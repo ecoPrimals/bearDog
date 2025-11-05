@@ -48,7 +48,7 @@ fn test_environment_level_variants() {
     ];
 
     for level in levels {
-        assert!(format!("{:?}", level).len() > 0);
+        assert!(!format!("{:?}", level).is_empty());
     }
 }
 
@@ -74,6 +74,9 @@ fn test_environment_level_serialization() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_operational_status_variants() {
     let statuses = vec![
         OperationalStatus::Initializing,
@@ -81,12 +84,18 @@ fn test_operational_status_variants() {
         OperationalStatus::Degraded,
         OperationalStatus::Unhealthy,
         OperationalStatus::Critical,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         OperationalStatus::Shutdown,
     ];
 
     for status in statuses {
-        assert!(format!("{:?}", status).len() > 0);
+        assert!(!format!("{:?}", status).is_empty());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -97,6 +106,9 @@ fn test_operational_status_equality() {
 
     assert_eq!(status1, status2);
     assert_ne!(status1, status3);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -109,6 +121,9 @@ fn test_operational_status_serialization() {
         serde_json::from_str(&json).expect("Deserialization should succeed");
     assert_eq!(status, deserialized);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_production_state_default() {
@@ -116,6 +131,9 @@ fn test_production_state_default() {
 
     assert_eq!(state.active_connections, 0);
     assert_eq!(state.total_requests, 0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(state.memory_usage_bytes, 0);
     assert_eq!(state.cpu_usage_percent, 0.0);
 }
@@ -124,6 +142,9 @@ fn test_production_state_default() {
 fn test_production_state_clone() {
     let state1 = ProductionState::default();
     let state2 = state1.clone();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert_eq!(state1.active_connections, state2.active_connections);
     assert_eq!(state1.total_requests, state2.total_requests);
@@ -137,6 +158,9 @@ fn test_production_state_with_metrics() {
     state.total_requests = 10000;
     state.memory_usage_bytes = 1024 * 1024 * 512; // 512 MB
     state.cpu_usage_percent = 45.5;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert_eq!(state.active_connections, 50);
     assert_eq!(state.total_requests, 10000);
@@ -144,6 +168,9 @@ fn test_production_state_with_metrics() {
     assert_eq!(state.cpu_usage_percent, 45.5);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_state_status_transitions() {
     let mut state = ProductionState::default();
@@ -152,6 +179,9 @@ fn test_production_state_status_transitions() {
     assert!(matches!(state.status, OperationalStatus::Initializing));
 
     // Transition to healthy
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     state.status = OperationalStatus::Healthy;
     assert_eq!(state.status, OperationalStatus::Healthy);
 
@@ -159,12 +189,18 @@ fn test_production_state_status_transitions() {
     state.status = OperationalStatus::Degraded;
     assert_eq!(state.status, OperationalStatus::Degraded);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Transition to critical
     state.status = OperationalStatus::Critical;
     assert_eq!(state.status, OperationalStatus::Critical);
 
     // Transition to shutdown
     state.status = OperationalStatus::Shutdown;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(state.status, OperationalStatus::Shutdown);
 }
 
@@ -177,6 +213,9 @@ fn test_performance_metrics_default() {
     assert_eq!(metrics.p99_response_time_ms, 0.0);
     assert_eq!(metrics.requests_per_second, 0.0);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_performance_metrics_clone() {
@@ -198,6 +237,9 @@ fn test_performance_metrics_with_values() {
 
     assert_eq!(metrics.avg_response_time_ms, 15.5);
     assert_eq!(metrics.p95_response_time_ms, 45.2);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(metrics.p99_response_time_ms, 125.8);
     assert_eq!(metrics.requests_per_second, 1500.0);
 }
@@ -205,12 +247,18 @@ fn test_performance_metrics_with_values() {
 #[test]
 fn test_production_flags_all_enabled() {
     let flags = ProductionFlags {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_advanced_monitoring: true,
         enable_distributed_tracing: true,
         enable_performance_profiling: true,
         enable_security_auditing: true,
         enable_auto_scaling: true,
         enable_circuit_breakers: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_rate_limiting: true,
         enable_caching: true,
     };
@@ -223,6 +271,9 @@ fn test_production_flags_all_enabled() {
     assert!(flags.enable_circuit_breakers);
     assert!(flags.enable_rate_limiting);
     assert!(flags.enable_caching);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -243,6 +294,9 @@ fn test_production_flags_all_disabled() {
     assert!(!flags.enable_performance_profiling);
     assert!(!flags.enable_security_auditing);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_production_flags_clone() {
@@ -259,6 +313,9 @@ fn test_production_flags_clone() {
 
     let flags2 = flags1.clone();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(
         flags1.enable_advanced_monitoring,
         flags2.enable_advanced_monitoring
@@ -281,6 +338,9 @@ fn test_production_core_config_with_values() {
         node_id: "node-1".to_string(),
         flags: ProductionFlags {
             enable_advanced_monitoring: true,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enable_distributed_tracing: true,
             enable_performance_profiling: false,
             enable_security_auditing: true,
@@ -306,6 +366,9 @@ fn test_production_state_serialization() {
 
     let deserialized: ProductionState =
         serde_json::from_str(&json).expect("Deserialization should succeed");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(state.active_connections, deserialized.active_connections);
 }
 
@@ -315,6 +378,9 @@ fn test_environment_level_ordering() {
     let dev = EnvironmentLevel::Development;
     let prod = EnvironmentLevel::Production;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(dev, EnvironmentLevel::Development);
     assert_ne!(dev, prod);
 }
@@ -322,6 +388,9 @@ fn test_environment_level_ordering() {
 #[test]
 fn test_operational_status_critical_detection() {
     let state = ProductionState {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         status: OperationalStatus::Critical,
         active_connections: 0,
         total_requests: 0,
@@ -335,6 +404,9 @@ fn test_operational_status_critical_detection() {
     assert!(state.error_count_hourly > 100);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_config_roundtrip() {
     let config = ProductionConfig::default();

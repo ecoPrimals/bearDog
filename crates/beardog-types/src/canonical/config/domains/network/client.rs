@@ -127,12 +127,18 @@ mod tests {
         assert!(config.validate().is_ok());
         assert_eq!(config.max_redirects, 5);
         assert!(config.enable_connection_pooling);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(!config.user_agent.is_empty());
     }
 
     #[test]
     fn test_retry_validation() {
         let config = RetryConfiguration {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             max_attempts: 0,
             base_delay_ms: 100,
             max_delay_ms: 1000,
@@ -143,6 +149,9 @@ mod tests {
         assert!(config.validate().is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_client_validation() {
         let mut config = ClientConfiguration::default();

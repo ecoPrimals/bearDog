@@ -46,12 +46,17 @@ pub struct NetworkConfig {
 impl NetworkConfig {
     /// Create from environment variables with prefix
     pub fn from_env(prefix: &str) -> Self {
+        use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+
+        // Use RuntimeNetworkConfig for defaults instead of hardcoded values
+        let runtime_config = RuntimeNetworkConfig::from_env();
+
         let host_key = format!("{}_HOST", prefix);
         let port_key = format!("{}_PORT", prefix);
 
         Self {
-            host: get_env_or_default(&host_key, "127.0.0.1"),
-            port: get_env_as(&port_key, 8080),
+            host: get_env_or_default(&host_key, &runtime_config.api_host),
+            port: get_env_as(&port_key, runtime_config.api_port),
         }
     }
 
@@ -101,9 +106,20 @@ pub struct DiscoveryConfig {
 impl DiscoveryConfig {
     /// Load from environment or use defaults
     pub fn from_env() -> Self {
+        use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+
+        // Use RuntimeNetworkConfig for environment-driven defaults
+        let runtime_config = RuntimeNetworkConfig::from_env();
+
         Self {
-            endpoint: get_env_or_default("BEARDOG_DISCOVERY_ENDPOINT", "http://127.0.0.1:8080"),
-            timeout_secs: get_env_as("BEARDOG_DISCOVERY_TIMEOUT_SECS", 30),
+            endpoint: get_env_or_default(
+                "BEARDOG_DISCOVERY_ENDPOINT",
+                &runtime_config.discovery_endpoint,
+            ),
+            timeout_secs: get_env_as(
+                "BEARDOG_DISCOVERY_TIMEOUT_SECS",
+                runtime_config.timeout_seconds,
+            ),
             retry_attempts: get_env_as("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", 3),
         }
     }
@@ -147,32 +163,255 @@ mod tests {
     #[test]
     fn test_network_config_defaults() {
         let config = NetworkConfig::from_env("TEST_SERVICE");
-        assert_eq!(config.host, "127.0.0.1");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        assert_eq!(config.host, "localhost"); // Updated to match actual default from NetworkConfig
         assert_eq!(config.port, 8080);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_network_config_to_url() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = NetworkConfig {
             host: "127.0.0.1".to_string(),
             port: 9000,
         };
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.to_url("http"), "http://127.0.0.1:9000");
     }
 
     #[test]
     fn test_discovery_config_defaults() {
+        // Clean up any lingering env vars from other tests
+        env::remove_var("BEARDOG_DISCOVERY_ENDPOINT");
+        env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
+        env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS");
+        // Also clear RuntimeNetworkConfig environment variables
+        env::remove_var("BEARDOG_DISCOVERY_URL");
+        env::remove_var("BEARDOG_API_HOST");
+        env::remove_var("BEARDOG_API_PORT");
+
         let config = DiscoveryConfig::from_env();
-        assert_eq!(config.endpoint, "http://127.0.0.1:8080");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        // Note: If test_discovery_config_from_env_custom runs before this,
+        // it may pollute the environment. Run tests with --test-threads=1 if needed.
+        assert_eq!(config.endpoint, "http://localhost:8080/discover"); // Updated to match actual default
         assert_eq!(config.timeout_secs, 30);
         assert_eq!(config.retry_attempts, 3);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hsm_config_defaults() {
+        // Clean up any lingering env vars from other tests
+        env::remove_var("BEARDOG_HSM_PROVIDER");
+        env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
+        env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
+
         let config = HsmConfig::from_env();
         assert_eq!(config.provider, "software");
         assert_eq!(config.timeout_ms, 5000);
         assert_eq!(config.retry_attempts, 3);
+    }
+
+    #[test]
+    fn test_get_env_or_default_with_env_var() {
+        env::set_var("TEST_VAR_EXISTS", "custom_value");
+        let result = get_env_or_default("TEST_VAR_EXISTS", "default_value");
+        assert_eq!(result, "custom_value");
+        env::remove_var("TEST_VAR_EXISTS");
+    }
+
+    #[test]
+    fn test_get_env_as_with_env_var() {
+        env::set_var("TEST_PORT_EXISTS", "9090");
+        let result: u16 = get_env_as("TEST_PORT_EXISTS", 8080);
+        assert_eq!(result, 9090);
+        env::remove_var("TEST_PORT_EXISTS");
+    }
+
+    #[test]
+    fn test_get_env_as_with_invalid_value() {
+        env::set_var("TEST_PORT_INVALID", "not_a_number");
+        let result: u16 = get_env_as("TEST_PORT_INVALID", 8080);
+        assert_eq!(result, 8080); // Should fall back to default
+        env::remove_var("TEST_PORT_INVALID");
+    }
+
+    #[test]
+    #[should_panic(expected = "Required environment variable")]
+    fn test_get_env_required_missing() {
+        env::remove_var("REQUIRED_VAR_MISSING");
+        let _ = get_env_required("REQUIRED_VAR_MISSING");
+    }
+
+    #[test]
+    fn test_get_env_required_present() {
+        env::set_var("REQUIRED_VAR_PRESENT", "required_value");
+        let result = get_env_required("REQUIRED_VAR_PRESENT");
+        assert_eq!(result, "required_value");
+        env::remove_var("REQUIRED_VAR_PRESENT");
+    }
+
+    #[test]
+    fn test_network_config_from_env_custom() {
+        env::set_var("CUSTOM_HOST", "192.168.1.1");
+        env::set_var("CUSTOM_PORT", "3000");
+
+        let config = NetworkConfig::from_env("CUSTOM");
+        assert_eq!(config.host, "192.168.1.1");
+        assert_eq!(config.port, 3000);
+
+        env::remove_var("CUSTOM_HOST");
+        env::remove_var("CUSTOM_PORT");
+    }
+
+    #[test]
+    fn test_network_config_to_socket_addr() {
+        let config = NetworkConfig {
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+        };
+
+        let addr = config.to_socket_addr().unwrap();
+        assert_eq!(addr.to_string(), "127.0.0.1:8080");
+    }
+
+    #[test]
+    fn test_network_config_to_socket_addr_invalid() {
+        let config = NetworkConfig {
+            host: "invalid-ip".to_string(),
+            port: 8080,
+        };
+
+        let result = config.to_socket_addr();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_network_config_to_url_https() {
+        let config = NetworkConfig {
+            host: "example.com".to_string(),
+            port: 443,
+        };
+        assert_eq!(config.to_url("https"), "https://example.com:443");
+    }
+
+    #[test]
+    fn test_timeout_config_from_env_defaults() {
+        let config = TimeoutConfig::from_env("DEFAULT");
+        assert_eq!(config.connect_timeout, Duration::from_millis(5000));
+        assert_eq!(config.request_timeout, Duration::from_millis(30000));
+        assert_eq!(config.idle_timeout, Duration::from_millis(60000));
+    }
+
+    #[test]
+    fn test_timeout_config_from_env_custom() {
+        env::set_var("CUSTOM_CONNECT_TIMEOUT_MS", "1000");
+        env::set_var("CUSTOM_REQUEST_TIMEOUT_MS", "10000");
+        env::set_var("CUSTOM_IDLE_TIMEOUT_MS", "30000");
+
+        let config = TimeoutConfig::from_env("CUSTOM");
+        assert_eq!(config.connect_timeout, Duration::from_millis(1000));
+        assert_eq!(config.request_timeout, Duration::from_millis(10000));
+        assert_eq!(config.idle_timeout, Duration::from_millis(30000));
+
+        env::remove_var("CUSTOM_CONNECT_TIMEOUT_MS");
+        env::remove_var("CUSTOM_REQUEST_TIMEOUT_MS");
+        env::remove_var("CUSTOM_IDLE_TIMEOUT_MS");
+    }
+
+    #[test]
+    fn test_discovery_config_from_env_custom() {
+        env::set_var("BEARDOG_DISCOVERY_ENDPOINT", "http://custom:9000/api");
+        env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "60");
+        env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", "5");
+
+        let config = DiscoveryConfig::from_env();
+        assert_eq!(config.endpoint, "http://custom:9000/api");
+        assert_eq!(config.timeout_secs, 60);
+        assert_eq!(config.retry_attempts, 5);
+
+        env::remove_var("BEARDOG_DISCOVERY_ENDPOINT");
+        env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
+        env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS");
+    }
+
+    #[test]
+    fn test_hsm_config_from_env_custom() {
+        env::set_var("BEARDOG_HSM_PROVIDER", "hardware");
+        env::set_var("BEARDOG_HSM_TIMEOUT_MS", "10000");
+        env::set_var("BEARDOG_HSM_RETRY_ATTEMPTS", "5");
+
+        let config = HsmConfig::from_env();
+        assert_eq!(config.provider, "hardware");
+        assert_eq!(config.timeout_ms, 10000);
+        assert_eq!(config.retry_attempts, 5);
+
+        env::remove_var("BEARDOG_HSM_PROVIDER");
+        env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
+        env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
+    }
+
+    #[test]
+    fn test_network_config_clone() {
+        let config1 = NetworkConfig {
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+        };
+        let config2 = config1.clone();
+        assert_eq!(config1.host, config2.host);
+        assert_eq!(config1.port, config2.port);
+    }
+
+    #[test]
+    fn test_timeout_config_clone() {
+        let config1 = TimeoutConfig {
+            connect_timeout: Duration::from_secs(5),
+            request_timeout: Duration::from_secs(30),
+            idle_timeout: Duration::from_secs(60),
+        };
+        let config2 = config1.clone();
+        assert_eq!(config1.connect_timeout, config2.connect_timeout);
+        assert_eq!(config1.request_timeout, config2.request_timeout);
+        assert_eq!(config1.idle_timeout, config2.idle_timeout);
+    }
+
+    #[test]
+    fn test_discovery_config_clone() {
+        let config1 = DiscoveryConfig {
+            endpoint: "http://test:8080".to_string(),
+            timeout_secs: 30,
+            retry_attempts: 3,
+        };
+        let config2 = config1.clone();
+        assert_eq!(config1.endpoint, config2.endpoint);
+        assert_eq!(config1.timeout_secs, config2.timeout_secs);
+        assert_eq!(config1.retry_attempts, config2.retry_attempts);
+    }
+
+    #[test]
+    fn test_hsm_config_clone() {
+        let config1 = HsmConfig {
+            provider: "software".to_string(),
+            timeout_ms: 5000,
+            retry_attempts: 3,
+        };
+        let config2 = config1.clone();
+        assert_eq!(config1.provider, config2.provider);
+        assert_eq!(config1.timeout_ms, config2.timeout_ms);
+        assert_eq!(config1.retry_attempts, config2.retry_attempts);
     }
 }

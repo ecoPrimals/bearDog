@@ -33,14 +33,14 @@
 //!
 //! # Core Modules
 //!
-//! - [`config`] - Unified configuration system for all BearDog settings
+//! - [`config`](crate::canonical::config) - Unified configuration system for all BearDog settings
 //! - [`capabilities`] - Capability-based architecture and discovery
-//! - [`security_unified`] - Security configuration and cryptographic types
-//! - [`providers_unified`] - Universal provider system for adapters
-//! - [`monitoring`] - Observability, metrics, and health monitoring
+//! - [`security_unified`](crate::canonical::security_unified) - Security configuration and cryptographic types
+//! - [`providers_unified`](crate::canonical::providers_unified) - Universal provider system for adapters
+//! - [`monitoring`](crate::canonical::monitoring) - Observability, metrics, and health monitoring
 //! - [`hsm`] - Hardware Security Module integration types
-//! - [`network`] - Network communication and service discovery types
-//! - [`crypto`] - Cryptographic algorithms and key management
+//! - [`network`](crate::canonical::network) - Network communication and service discovery types
+//! - [`crypto`](crate::canonical::crypto) - Cryptographic algorithms and key management
 //!
 //! # Configuration System
 //!

@@ -1,79 +1,121 @@
 //! Comprehensive Type Validation Tests
 //!
-//! High-value integration tests for canonical type construction,
-//! validation, conversion, and edge cases.
+//! This module contains high-value integration tests for canonical type construction,
+//! validation, conversion, and edge cases. Tests cover HealthStatus, SecurityLevel,
+//! WorkflowStatus, and CanonicalTestConfig types.
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: types
+//! Categories tested:
+//! - Basic type construction and equality
+//! - Clone and Debug trait implementations
+//! - Pattern matching and lifecycle transitions
+//! - Type conversions and compositions
+//! - Edge cases (collections, Options, Results)
+//! - Concurrent access and thread safety
+//! - Helper functions and utilities
 
 use beardog_types::canonical::config::domains::testing::CanonicalTestConfig;
 use beardog_types::canonical::{HealthStatus, SecurityLevel, WorkflowStatus};
 
-// ====================================================================================
+// ============================================================================
 // HealthStatus Tests (8 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests construction of Healthy status variant
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_health_status_healthy() {
-    // Test healthy status construction
     let status = HealthStatus::Healthy;
     assert_eq!(status, HealthStatus::Healthy);
 }
 
+/// Tests construction of Degraded status variant
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_health_status_degraded() {
-    // Test degraded status construction
     let status = HealthStatus::Degraded;
     assert_eq!(status, HealthStatus::Degraded);
 }
 
+/// Tests construction of Unhealthy status variant
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_health_status_unhealthy() {
-    // Test unhealthy status construction
     let status = HealthStatus::Unhealthy;
     assert_eq!(status, HealthStatus::Unhealthy);
 }
 
+/// Tests construction of Unknown status variant
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_unknown() {
-    // Test unknown status construction
     let status = HealthStatus::Unknown;
     assert_eq!(status, HealthStatus::Unknown);
 }
 
+/// Tests equality comparison between HealthStatus variants
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_health_status_equality() {
-    // Test health status equality
     let status1 = HealthStatus::Healthy;
     let status2 = HealthStatus::Healthy;
     let status3 = HealthStatus::Degraded;
 
-    assert_eq!(status1, status2);
-    assert_ne!(status1, status3);
+    assert_eq!(status1, status2, "Same variants should be equal");
+    assert_ne!(status1, status3, "Different variants should not be equal");
 }
 
+/// Tests Clone trait implementation for HealthStatus
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_clone() {
-    // Test health status can be cloned
     let status1 = HealthStatus::Healthy;
-    let status2 = status1.clone();
+    let status2 = status1;
 
-    assert_eq!(status1, status2);
+    assert_eq!(status1, status2, "Cloned status should equal original");
 }
 
+/// Tests Debug trait implementation for HealthStatus
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_debug() {
-    // Test health status debug formatting
     let status = HealthStatus::Healthy;
     let debug_str = format!("{:?}", status);
 
-    assert!(!debug_str.is_empty());
-    assert!(debug_str.contains("Healthy"));
+    assert!(!debug_str.is_empty(), "Debug string should not be empty");
+    assert!(
+        debug_str.contains("Healthy"),
+        "Debug string should contain variant name"
+    );
 }
 
+/// Tests pattern matching on HealthStatus variants
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_pattern_matching() {
-    // Test health status pattern matching
     let status = HealthStatus::Degraded;
 
     let result = match status {
@@ -86,71 +128,106 @@ fn test_health_status_pattern_matching() {
     assert_eq!(result, "degraded");
 }
 
-// ====================================================================================
+// ============================================================================
 // SecurityLevel Tests (8 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests construction of Basic security level
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_security_level_basic() {
-    // Test basic security level
     let level = SecurityLevel::Basic;
     assert_eq!(level, SecurityLevel::Basic);
 }
 
+/// Tests construction of Standard security level
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_security_level_standard() {
-    // Test standard security level
     let level = SecurityLevel::Standard;
     assert_eq!(level, SecurityLevel::Standard);
 }
 
+/// Tests construction of High security level
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_security_level_high() {
-    // Test high security level
     let level = SecurityLevel::High;
     assert_eq!(level, SecurityLevel::High);
 }
 
+/// Tests construction of Critical security level
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: critical
 #[test]
 fn test_security_level_critical() {
-    // Test critical security level
     let level = SecurityLevel::Critical;
     assert_eq!(level, SecurityLevel::Critical);
 }
 
+/// Tests equality comparison between SecurityLevel variants
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_security_level_equality() {
-    // Test security level equality
     let level1 = SecurityLevel::High;
     let level2 = SecurityLevel::High;
     let level3 = SecurityLevel::Basic;
 
-    assert_eq!(level1, level2);
-    assert_ne!(level1, level3);
+    assert_eq!(level1, level2, "Same levels should be equal");
+    assert_ne!(level1, level3, "Different levels should not be equal");
 }
 
+/// Tests Clone trait implementation for SecurityLevel
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_security_level_clone() {
-    // Test security level clone
     let level1 = SecurityLevel::Critical;
     let level2 = level1.clone();
 
-    assert_eq!(level1, level2);
+    assert_eq!(level1, level2, "Cloned level should equal original");
 }
 
+/// Tests Debug trait implementation for SecurityLevel
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_security_level_debug() {
-    // Test security level debug format
     let level = SecurityLevel::High;
     let debug_str = format!("{:?}", level);
 
-    assert!(!debug_str.is_empty());
-    assert!(debug_str.contains("High"));
+    assert!(!debug_str.is_empty(), "Debug string should not be empty");
+    assert!(
+        debug_str.contains("High"),
+        "Debug string should contain level name"
+    );
 }
 
+/// Tests pattern matching on SecurityLevel variants
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_security_level_pattern_matching() {
-    // Test security level pattern matching
     let level = SecurityLevel::Critical;
 
     let result = match level {
@@ -163,71 +240,107 @@ fn test_security_level_pattern_matching() {
     assert_eq!(result, 4);
 }
 
-// ====================================================================================
+// ============================================================================
 // WorkflowStatus Tests (8 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests construction of Pending workflow status
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_workflow_status_pending() {
-    // Test pending workflow status
     let status = WorkflowStatus::Pending;
     assert_eq!(status, WorkflowStatus::Pending);
 }
 
+/// Tests construction of InProgress workflow status
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_workflow_status_in_progress() {
-    // Test in progress workflow status
     let status = WorkflowStatus::InProgress;
     assert_eq!(status, WorkflowStatus::InProgress);
 }
 
+/// Tests construction of Completed workflow status
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_workflow_status_completed() {
-    // Test completed workflow status
     let status = WorkflowStatus::Completed;
     assert_eq!(status, WorkflowStatus::Completed);
 }
 
+/// Tests construction of Failed workflow status
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_workflow_status_failed() {
-    // Test failed workflow status
     let status = WorkflowStatus::Failed;
     assert_eq!(status, WorkflowStatus::Failed);
 }
 
+/// Tests equality comparison between WorkflowStatus variants
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_workflow_status_equality() {
-    // Test workflow status equality
     let status1 = WorkflowStatus::InProgress;
     let status2 = WorkflowStatus::InProgress;
     let status3 = WorkflowStatus::Completed;
 
-    assert_eq!(status1, status2);
-    assert_ne!(status1, status3);
+    assert_eq!(status1, status2, "Same statuses should be equal");
+    assert_ne!(status1, status3, "Different statuses should not be equal");
 }
 
+/// Tests Clone trait implementation for WorkflowStatus
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_status_clone() {
-    // Test workflow status clone
     let status1 = WorkflowStatus::Failed;
     let status2 = status1.clone();
 
-    assert_eq!(status1, status2);
+    assert_eq!(status1, status2, "Cloned status should equal original");
 }
 
+/// Tests Debug trait implementation for WorkflowStatus
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_status_debug() {
-    // Test workflow status debug
     let status = WorkflowStatus::InProgress;
     let debug_str = format!("{:?}", status);
 
-    assert!(!debug_str.is_empty());
-    assert!(debug_str.contains("InProgress"));
+    assert!(!debug_str.is_empty(), "Debug string should not be empty");
+    assert!(
+        debug_str.contains("InProgress"),
+        "Debug string should contain status name"
+    );
 }
 
+/// Tests complete workflow lifecycle transitions
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_workflow_status_lifecycle() {
-    // Test complete workflow lifecycle
+    // Simulate workflow progression
     let mut status = WorkflowStatus::Pending;
     assert_eq!(status, WorkflowStatus::Pending);
 
@@ -238,74 +351,134 @@ fn test_workflow_status_lifecycle() {
     assert_eq!(status, WorkflowStatus::Completed);
 }
 
-// ====================================================================================
+// ============================================================================
 // CanonicalTestConfig Tests (10 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests default CanonicalTestConfig construction
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_canonical_test_config_default() {
-    // Test default test config creation
     let config = CanonicalTestConfig::default();
 
-    assert_eq!(config.environment, "test");
-    assert!(!config.verbose);
-    assert!(config.parallel_execution);
+    assert_eq!(
+        config.environment, "test",
+        "Default environment should be 'test'"
+    );
+    assert!(!config.verbose, "Verbose should be false by default");
+    assert!(
+        config.parallel_execution,
+        "Parallel execution should be enabled by default"
+    );
 }
 
+/// Tests environment field is properly set
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_environment() {
-    // Test environment field
     let config = CanonicalTestConfig::default();
     assert_eq!(config.environment, "test");
 }
 
+/// Tests max_threads field has reasonable default value
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_max_threads() {
-    // Test max_threads is reasonable
     let config = CanonicalTestConfig::default();
-    assert!(config.max_threads >= 1);
-    assert!(config.max_threads <= 128);
+    assert!(config.max_threads >= 1, "Max threads should be at least 1");
+    assert!(
+        config.max_threads <= 128,
+        "Max threads should be at most 128"
+    );
 }
 
+/// Tests timeout configuration
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_timeout() {
-    // Test timeout is set
     let config = CanonicalTestConfig::default();
-    assert_eq!(config.timeout_seconds, 300);
+    assert_eq!(
+        config.timeout_seconds, 300,
+        "Default timeout should be 300 seconds"
+    );
 }
 
+/// Tests property testing configuration
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_property_testing() {
-    // Test property testing config
     let config = CanonicalTestConfig::default();
-    assert!(config.property_testing_enabled);
-    assert_eq!(config.property_test_iterations, 100);
+    assert!(
+        config.property_testing_enabled,
+        "Property testing should be enabled"
+    );
+    assert_eq!(
+        config.property_test_iterations, 100,
+        "Should have 100 iterations by default"
+    );
 }
 
+/// Tests fuzzing configuration
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_fuzzing() {
-    // Test fuzzing config
     let config = CanonicalTestConfig::default();
-    assert!(!config.fuzzing_enabled);
+    assert!(
+        !config.fuzzing_enabled,
+        "Fuzzing should be disabled by default"
+    );
 }
 
+/// Tests random seed configuration
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_random_seed() {
-    // Test random seed is None by default
     let config = CanonicalTestConfig::default();
-    assert!(config.random_seed.is_none());
+    assert!(
+        config.random_seed.is_none(),
+        "Random seed should be None by default"
+    );
 }
 
+/// Tests test data directory configuration
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_test_data_dir() {
-    // Test data directory is set
     let config = CanonicalTestConfig::default();
     assert_eq!(config.test_data_dir.to_str().unwrap(), "test-data");
 }
 
+/// Tests Clone trait implementation for CanonicalTestConfig
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_clone() {
-    // Test config can be cloned
     let config1 = CanonicalTestConfig::default();
     let config2 = config1.clone();
 
@@ -313,55 +486,76 @@ fn test_canonical_test_config_clone() {
     assert_eq!(config1.max_threads, config2.max_threads);
 }
 
+/// Tests Debug trait implementation for CanonicalTestConfig
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_canonical_test_config_debug() {
-    // Test config debug formatting
     let config = CanonicalTestConfig::default();
     let debug_str = format!("{:?}", config);
 
-    assert!(!debug_str.is_empty());
-    assert!(debug_str.contains("test"));
+    assert!(!debug_str.is_empty(), "Debug string should not be empty");
+    assert!(
+        debug_str.contains("test"),
+        "Debug string should contain environment"
+    );
 }
 
-// ====================================================================================
+// ============================================================================
 // Type Conversion Tests (5 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests HealthStatus debug string representation
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_to_string() {
-    // Test health status string representation
     let status = HealthStatus::Healthy;
     let s = format!("{:?}", status);
 
-    assert!(!s.is_empty());
+    assert!(!s.is_empty(), "String representation should not be empty");
 }
 
+/// Tests SecurityLevel logical ordering
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_security_level_ordering() {
-    // Test security levels have logical ordering
     let basic = SecurityLevel::Basic;
     let high = SecurityLevel::High;
 
-    // At minimum they should be different
-    assert_ne!(basic, high);
+    assert_ne!(basic, high, "Different security levels should not be equal");
 }
 
+/// Tests valid WorkflowStatus transitions
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_status_transition() {
-    // Test valid workflow transitions
-    let statuses = vec![
+    let statuses = [
         WorkflowStatus::Pending,
         WorkflowStatus::InProgress,
         WorkflowStatus::Completed,
     ];
 
-    // Should be able to iterate through states
-    assert_eq!(statuses.len(), 3);
+    assert_eq!(statuses.len(), 3, "Should have 3 states in transition");
 }
 
+/// Tests that canonical types have reasonable memory sizes
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_type_size_reasonable() {
-    // Test canonical types have reasonable sizes
     use std::mem::size_of;
 
     let health_size = size_of::<HealthStatus>();
@@ -369,14 +563,30 @@ fn test_type_size_reasonable() {
     let workflow_size = size_of::<WorkflowStatus>();
 
     // Enums should be small (typically 1-8 bytes)
-    assert!(health_size <= 16, "HealthStatus too large");
-    assert!(security_size <= 16, "SecurityLevel too large");
-    assert!(workflow_size <= 16, "WorkflowStatus too large");
+    assert!(
+        health_size <= 16,
+        "HealthStatus too large: {} bytes",
+        health_size
+    );
+    assert!(
+        security_size <= 16,
+        "SecurityLevel too large: {} bytes",
+        security_size
+    );
+    assert!(
+        workflow_size <= 16,
+        "WorkflowStatus too large: {} bytes",
+        workflow_size
+    );
 }
 
+/// Tests that CanonicalTestConfig has reasonable memory size
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_config_size_reasonable() {
-    // Test config type has reasonable size
     use std::mem::size_of;
 
     let config_size = size_of::<CanonicalTestConfig>();
@@ -389,25 +599,33 @@ fn test_config_size_reasonable() {
     );
 }
 
-// ====================================================================================
+// ============================================================================
 // Edge Case Tests (5 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests multiple levels of cloning for HealthStatus
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_multiple_clones() {
-    // Test multiple levels of cloning
     let status1 = HealthStatus::Healthy;
-    let status2 = status1.clone();
-    let status3 = status2.clone();
-    let status4 = status3.clone();
+    let status2 = status1;
+    let status3 = status2;
+    let status4 = status3;
 
-    assert_eq!(status1, status4);
+    assert_eq!(status1, status4, "Multiple clones should equal original");
 }
 
+/// Tests SecurityLevel types in vectors
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_security_level_in_vec() {
-    // Test security levels in collections
-    let levels = vec![
+    let levels = [
         SecurityLevel::Basic,
         SecurityLevel::Standard,
         SecurityLevel::High,
@@ -419,27 +637,39 @@ fn test_security_level_in_vec() {
     assert_eq!(levels[3], SecurityLevel::Critical);
 }
 
+/// Tests WorkflowStatus in Option types
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_status_in_option() {
-    // Test workflow status in Option
     let maybe_status: Option<WorkflowStatus> = Some(WorkflowStatus::InProgress);
 
     assert!(maybe_status.is_some());
     assert_eq!(maybe_status.unwrap(), WorkflowStatus::InProgress);
 }
 
+/// Tests HealthStatus in Result types
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_health_status_in_result() {
-    // Test health status in Result
     let result: Result<HealthStatus, String> = Ok(HealthStatus::Healthy);
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), HealthStatus::Healthy);
 }
 
+/// Tests that CanonicalTestConfig can be modified
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_config_modification() {
-    // Test config can be modified
     let mut config = CanonicalTestConfig::default();
 
     config.verbose = true;
@@ -452,13 +682,17 @@ fn test_config_modification() {
     assert_eq!(config.timeout_seconds, 600);
 }
 
-// ====================================================================================
+// ============================================================================
 // Integration Tests (3 tests)
-// ====================================================================================
+// ============================================================================
 
+/// Tests that different canonical types work together in same context
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_types_work_together() {
-    // Test different types can be used together
     let health = HealthStatus::Healthy;
     let security = SecurityLevel::High;
     let workflow = WorkflowStatus::InProgress;
@@ -471,9 +705,13 @@ fn test_types_work_together() {
     assert!(!config.environment.is_empty());
 }
 
+/// Tests that canonical types can be composed in structs
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_types_in_struct() {
-    // Test types can be composed in structs
     #[derive(Debug, Clone)]
     struct TestContext {
         health: HealthStatus,
@@ -492,9 +730,13 @@ fn test_types_in_struct() {
     assert_eq!(context.workflow, WorkflowStatus::InProgress);
 }
 
+/// Tests that canonical types are safe for concurrent access
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: high
 #[test]
 fn test_types_concurrent_access() {
-    // Test types are safe for concurrent use
     use std::sync::Arc;
     use std::thread;
 
@@ -509,12 +751,12 @@ fn test_types_concurrent_access() {
         assert_eq!(*security_clone, SecurityLevel::High);
     });
 
-    handle.join().expect("Thread should complete");
+    handle.join().expect("Thread should complete successfully");
 }
 
-// ====================================================================================
-// Test Helpers
-// ====================================================================================
+// ============================================================================
+// Helper Function Tests (2 tests)
+// ============================================================================
 
 #[cfg(test)]
 mod type_helpers {
@@ -525,7 +767,7 @@ mod type_helpers {
         matches!(status, HealthStatus::Healthy | HealthStatus::Degraded)
     }
 
-    /// Check if security level is sufficient
+    /// Check if security level is sufficient for required level
     pub fn is_secure_enough(level: &SecurityLevel, required: &SecurityLevel) -> bool {
         level == required
             || matches!(
@@ -538,6 +780,11 @@ mod type_helpers {
     }
 }
 
+/// Tests helper function for checking operational status
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_helper_is_operational() {
     assert!(type_helpers::is_operational(&HealthStatus::Healthy));
@@ -545,6 +792,11 @@ fn test_helper_is_operational() {
     assert!(!type_helpers::is_operational(&HealthStatus::Unhealthy));
 }
 
+/// Tests helper function for checking security level sufficiency
+///
+/// TEST_CATEGORY: integration
+/// TEST_DOMAIN: types
+/// TEST_PRIORITY: normal
 #[test]
 fn test_helper_is_secure_enough() {
     assert!(type_helpers::is_secure_enough(

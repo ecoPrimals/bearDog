@@ -25,6 +25,16 @@ async-trait = "0.1"
 crossbeam = "0.8"
 parking_lot = "0.12"
 
+# Modern cryptography (RustCrypto ecosystem - pure Rust, audited)
+aes-gcm = "0.10"              # AES-256-GCM authenticated encryption
+chacha20poly1305 = "0.10"     # ChaCha20-Poly1305 AEAD
+ed25519-dalek = "2.1"         # Ed25519 signatures
+getrandom = "0.2"             # OS entropy source
+hkdf = "0.12"                 # HMAC-based key derivation
+hmac = "0.12"                 # HMAC for message authentication
+sha2 = "0.10"                 # SHA-256/512 hashing
+zeroize = { version = "1.7", features = ["derive"] }  # Memory zeroing for keys
+
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = { version = "0.5", features = ["html_reports"] }

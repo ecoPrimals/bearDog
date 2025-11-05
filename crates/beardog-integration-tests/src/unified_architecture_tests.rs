@@ -731,17 +731,29 @@ mod tests {
     #[tokio::test]
     async async fn test_provider_registration_test() {
         let suite = UnifiedArchitectureTestSuite::new().await.unwrap();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let result = suite.test_provider_registration().await;
         assert!(result.is_ok(), "Provider registration test should pass");
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async async fn test_zero_cost_dispatch_test() {
         let mut suite = UnifiedArchitectureTestSuite::new().await.unwrap();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let result = suite.test_zero_cost_dispatch().await;
         assert!(result.is_ok(), "Zero-cost dispatch test should pass");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async async fn test_ecosystem_integration_test() {
         let suite = UnifiedArchitectureTestSuite::new().await.unwrap();

@@ -109,6 +109,9 @@ fn test_ed25519_multiple_messages() {
 
     let messages = vec![
         b"Message 1".as_slice(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         b"Message 2".as_slice(),
         b"A much longer message with more content".as_slice(),
         b"".as_slice(), // Empty message
@@ -127,6 +130,9 @@ fn test_ed25519_multiple_messages() {
         );
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // AES-GCM Encryption/Decryption Tests
@@ -142,6 +148,9 @@ fn test_aes_gcm_encrypt_decrypt() {
         BearDogCrypto::encrypt_aes_gcm(&key, plaintext, None).expect("Encryption should succeed");
 
     // Verify ciphertext is different from plaintext
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     assert_ne!(
         ciphertext, plaintext,
         "Ciphertext should differ from plaintext"
@@ -155,12 +164,18 @@ fn test_aes_gcm_encrypt_decrypt() {
     assert_eq!(decrypted, plaintext, "Decrypted data should match original");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_aes_gcm_with_custom_nonce() {
     let key = BearDogCrypto::generate_secure_random(32);
     let plaintext = b"Test data";
     let nonce = BearDogCrypto::generate_secure_nonce(12);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let (ciphertext, returned_nonce) =
         BearDogCrypto::encrypt_aes_gcm(&key, plaintext, Some(&nonce))
             .expect("Encryption should succeed");
@@ -171,6 +186,9 @@ fn test_aes_gcm_with_custom_nonce() {
     );
 
     let decrypted = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &nonce)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         .expect("Decryption should succeed");
 
     assert_eq!(decrypted, plaintext, "Decrypted data should match original");
@@ -178,6 +196,9 @@ fn test_aes_gcm_with_custom_nonce() {
 
 #[test]
 fn test_aes_gcm_encrypt_with_invalid_key_length() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let invalid_key = vec![0u8; 16]; // Wrong length (should be 32)
     let plaintext = b"Test data";
 
@@ -204,6 +225,9 @@ fn test_aes_gcm_decrypt_with_invalid_nonce_length() {
     let key = BearDogCrypto::generate_secure_random(32);
     let invalid_nonce = vec![0u8; 16]; // Wrong length
     let ciphertext = vec![0u8; 32];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 
     let result = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &invalid_nonce);
     assert!(result.is_err(), "Should fail with invalid nonce length");
@@ -224,6 +248,9 @@ fn test_aes_gcm_empty_plaintext() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_aes_gcm_large_plaintext() {
     let key = BearDogCrypto::generate_secure_random(32);
     let plaintext = vec![0xABu8; 10_000]; // 10KB of data
@@ -242,12 +269,18 @@ fn test_aes_gcm_large_plaintext() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 fn test_argon2_password_hashing() {
     let password = "MySecurePassword123!";
 
     let hash =
         BearDogCrypto::hash_password_argon2(password).expect("Password hashing should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     assert!(!hash.is_empty(), "Hash should not be empty");
     assert!(hash.starts_with("$argon2"), "Hash should be Argon2 format");
 }
@@ -259,6 +292,9 @@ fn test_argon2_password_verification_success() {
     let hash =
         BearDogCrypto::hash_password_argon2(password).expect("Password hashing should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let is_valid = BearDogCrypto::verify_password_argon2(password, &hash)
         .expect("Password verification should succeed");
 
@@ -266,6 +302,9 @@ fn test_argon2_password_verification_success() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_argon2_password_verification_failure() {
     let password = "CorrectPassword";
     let wrong_password = "WrongPassword";
@@ -277,6 +316,9 @@ fn test_argon2_password_verification_failure() {
         .expect("Password verification should succeed");
 
     assert!(!is_valid, "Wrong password should fail verification");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -292,6 +334,9 @@ fn test_argon2_different_hashes_for_same_password() {
         "Same password should produce different hashes (different salts)"
     );
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // But both should verify correctly
     assert!(BearDogCrypto::verify_password_argon2(password, &hash1).unwrap());
     assert!(BearDogCrypto::verify_password_argon2(password, &hash2).unwrap());
@@ -300,6 +345,9 @@ fn test_argon2_different_hashes_for_same_password() {
 #[test]
 fn test_argon2_empty_password() {
     let password = "";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let hash = BearDogCrypto::hash_password_argon2(password)
         .expect("Hashing empty password should succeed");
@@ -310,6 +358,9 @@ fn test_argon2_empty_password() {
     assert!(is_valid, "Empty password should verify correctly");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 // ============================================================================
 // PBKDF2 Key Derivation Tests
 // ============================================================================
@@ -321,6 +372,9 @@ fn test_pbkdf2_key_derivation() {
     let iterations = 10000;
     let key_length = 32;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let key = BearDogCrypto::derive_pbkdf2_key(password, salt, iterations, key_length)
         .expect("Key derivation should succeed");
 
@@ -336,6 +390,9 @@ fn test_pbkdf2_key_derivation() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_pbkdf2_deterministic() {
     let password = b"TestPassword";
@@ -350,6 +407,9 @@ fn test_pbkdf2_deterministic() {
 
     assert_eq!(key1, key2, "Same inputs should produce same key");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_pbkdf2_different_salts_produce_different_keys() {
@@ -369,6 +429,9 @@ fn test_pbkdf2_different_salts_produce_different_keys() {
 
 #[test]
 fn test_pbkdf2_zero_iterations_fails() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let password = b"Password";
     let salt = b"Salt";
     let iterations = 0; // Invalid
@@ -381,6 +444,9 @@ fn test_pbkdf2_zero_iterations_fails() {
 // ============================================================================
 // Random Generation Tests
 // ============================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_secure_random_generation() {
@@ -394,6 +460,9 @@ fn test_secure_random_generation() {
     assert_ne!(random1, vec![0u8; size], "Random should not be all zeros");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_secure_random_various_sizes() {
     let sizes = vec![0, 1, 16, 32, 64, 128, 256, 1024];
@@ -406,6 +475,9 @@ fn test_secure_random_various_sizes() {
 
 #[test]
 fn test_secure_nonce_generation() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let size = 12; // Typical nonce size for AES-GCM
     let nonce1 = BearDogCrypto::generate_secure_nonce(size);
     let nonce2 = BearDogCrypto::generate_secure_nonce(size);
@@ -415,6 +487,9 @@ fn test_secure_nonce_generation() {
     assert_ne!(nonce1, nonce2, "Two nonces should be different");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 // ============================================================================
 // SHA-256 Hashing Tests
 // ============================================================================
@@ -422,6 +497,9 @@ fn test_secure_nonce_generation() {
 #[test]
 fn test_sha256_hash() {
     let data = b"Hello, BearDog!";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let hash = compute_sha256_hash(data).expect("SHA-256 hashing should succeed");
 
@@ -434,12 +512,18 @@ fn test_sha256_deterministic() {
 
     let hash1 = compute_sha256_hash(data).unwrap();
     let hash2 = compute_sha256_hash(data).unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     assert_eq!(hash1, hash2, "Same data should produce same hash");
 }
 
 #[test]
 fn test_sha256_different_data() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let data1 = b"Data 1";
     let data2 = b"Data 2";
 
@@ -447,7 +531,11 @@ fn test_sha256_different_data() {
     let hash2 = compute_sha256_hash(data2).unwrap();
 
     assert_ne!(
-        hash1, hash2,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
+        hash1,
+        hash2,
         "Different data should produce different hashes"
     );
 }
@@ -458,6 +546,9 @@ fn test_sha256_empty_data() {
 
     let hash = compute_sha256_hash(data).expect("Hashing empty data should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_eq!(hash.len(), 32, "Empty data hash should still be 32 bytes");
 }
 
@@ -468,6 +559,9 @@ fn test_sha256_empty_data() {
 #[test]
 fn test_end_to_end_secure_message_flow() {
     // Generate key pair for signing
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let (signing_key, verifying_key) = BearDogCrypto::generate_ed25519_keypair();
 
     // Generate encryption key
@@ -499,6 +593,9 @@ fn test_end_to_end_secure_message_flow() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 #[test]
 fn test_key_derivation_for_encryption() {
     // Derive encryption key from password

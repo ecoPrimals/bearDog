@@ -64,21 +64,24 @@ impl UniversalHsmManager {
 
 ///
 /// Manages the genetic algorithm-based spawning and evolution of ecosystem
-/// components, handling hybrid node creation, trait combination, and
+/// Genetic spawner for creating new primal instances
+///
+/// Uses evolutionary algorithms to spawn new primal instances with inherited and
+/// evolved traits, managing hybrid node creation and trait combination.
 #[derive(Debug)]
 pub struct EcosystemGeneticSpawner {
-    /// The universal hsm value
+    /// Universal HSM manager for cryptographic operations
     pub universal_hsm: Arc<UniversalHsmManager>,
     // Universal service mesh_discovery - using universal adapter pattern
+    /// Genetics configuration settings
     pub genetics_config: GeneticsConfig,
     /// Currently active spawning operations
-    /// The active spawns value
     pub active_spawns: Arc<RwLock<ahash::HashMap<String, EcosystemSpawningOperation>>>,
     /// Hybrid nodes created through genetic combination
     pub hybrid_nodes: Arc<RwLock<ahash::HashMap<String, EcosystemHybridNode>>>,
-    /// The primal clients value
+    /// Compute clients for primal operations
     pub primal_clients: Arc<RwLock<ahash::HashMap<String, UniversalComputeClient>>>,
-    /// The statistics value
+    /// Spawning operation statistics
     pub statistics: Arc<RwLock<EcosystemSpawningStatistics>>,
 }
 

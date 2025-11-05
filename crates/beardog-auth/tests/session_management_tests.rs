@@ -61,15 +61,24 @@ async fn test_session_data_fields() {
     let credentials = "testuser:secure_password";
     let session = handler
         .authenticate(credentials)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .await
         .expect("Auth should succeed");
 
     assert_eq!(session.user_id, "testuser");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!session.token.is_empty());
     assert!(session.expires_at > chrono::Utc::now());
 }
 
 #[tokio::test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 async fn test_failed_authentication() {
     let config = AuthConfig::default();
     let mut handler = AuthenticationHandler::new(config);
@@ -80,6 +89,9 @@ async fn test_failed_authentication() {
         .expect("Registration should succeed");
 
     // Try with wrong password
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let credentials = "testuser:wrong_password";
     let result = handler.authenticate(credentials).await;
 
@@ -93,6 +105,9 @@ async fn test_rate_limiting_increments() {
         max_login_attempts: 3,
         require_mfa: false,
     };
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut handler = AuthenticationHandler::new(config);
 
     // Register test user
@@ -111,6 +126,9 @@ async fn test_rate_limiting_increments() {
     assert_eq!(handler.get_login_attempts("testuser"), 2);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 #[tokio::test]
 async fn test_account_lockout() {
     let config = AuthConfig {
@@ -125,6 +143,9 @@ async fn test_account_lockout() {
         .register_user("testuser", "correct_password", vec!["read".to_string()])
         .expect("Registration should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let credentials = "testuser:wrong_password";
 
     // Exhaust login attempts
@@ -147,6 +168,9 @@ async fn test_account_lockout() {
 async fn test_is_user_locked() {
     let config = AuthConfig {
         session_timeout_hours: 24,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         max_login_attempts: 3,
         require_mfa: false,
     };
@@ -176,6 +200,9 @@ async fn test_reset_login_attempts() {
         max_login_attempts: 3,
         require_mfa: false,
     };
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut handler = AuthenticationHandler::new(config);
 
     // Register test user
@@ -199,6 +226,9 @@ async fn test_reset_login_attempts() {
     assert_eq!(handler.get_login_attempts("testuser"), 0);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_successful_auth_resets_attempts() {
     let config = AuthConfig::default();
@@ -226,6 +256,9 @@ async fn test_successful_auth_resets_attempts() {
 #[tokio::test]
 async fn test_session_validation() {
     let config = AuthConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut handler = AuthenticationHandler::new(config);
 
     // Register test user
@@ -247,6 +280,9 @@ async fn test_session_validation() {
 #[tokio::test]
 async fn test_invalid_session_validation() {
     let config = AuthConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let handler = AuthenticationHandler::new(config);
 
     let result = handler.validate_session("invalid_token_12345");
@@ -265,12 +301,18 @@ async fn test_session_logout() {
 
     let credentials = "testuser:secure_password";
     let session = handler
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         .authenticate(credentials)
         .await
         .expect("Auth should succeed");
 
     // Logout should succeed
     let result = handler.logout(&session.token);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(result.is_ok());
 
     // Session should no longer be valid
@@ -293,6 +335,9 @@ async fn test_multiple_sessions() {
 
     let session1 = handler
         .authenticate("user1:password1")
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .await
         .expect("Auth1 should succeed");
     let session2 = handler
@@ -317,6 +362,9 @@ async fn test_session_expiration_cleanup() {
     // Register test user
     handler
         .register_user("testuser", "secure_password", vec!["read".to_string()])
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .expect("Registration should succeed");
 
     // Create a session
@@ -343,6 +391,9 @@ async fn test_login_attempts_for_different_users() {
     handler
         .register_user("user1", "password1", vec!["read".to_string()])
         .expect("Registration should succeed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     handler
         .register_user("user2", "password2", vec!["read".to_string()])
         .expect("Registration should succeed");
@@ -365,6 +416,9 @@ async fn test_session_permissions() {
     let mut handler = AuthenticationHandler::new(config);
 
     // Register test user with permissions
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     handler
         .register_user(
             "testuser",
@@ -388,6 +442,9 @@ async fn test_session_permissions() {
 #[tokio::test]
 async fn test_auth_config_serialization() {
     let config = AuthConfig {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         session_timeout_hours: 12,
         max_login_attempts: 3,
         require_mfa: true,
@@ -399,6 +456,9 @@ async fn test_auth_config_serialization() {
     assert!(json.contains("true"));
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_auth_config_deserialization() {
     let json = r#"{"session_timeout_hours":12,"max_login_attempts":3,"require_mfa":true}"#;

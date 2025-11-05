@@ -63,8 +63,14 @@ impl Default for ThreatDetectionConfig {
             notification_endpoints: Vec::new(true,
             rules_path: String::with_capacity(64),
             monitor_paths: Vec::new(0.8,
-            cache_size: 1000,
-            monitoring_interval: 300,
+            cache_size: std::env::var("BEARDOG_THREAT_CACHE_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000), // 1000 entries default
+            monitoring_interval: std::env::var("BEARDOG_THREAT_MONITORING_INTERVAL")
+                .ok()
+                .and_then(|i| i.parse().ok())
+                .unwrap_or(300), // 5 minutes default
         }
     }
 }

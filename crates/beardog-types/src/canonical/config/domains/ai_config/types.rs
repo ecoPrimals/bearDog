@@ -235,17 +235,26 @@ mod tests {
         assert!(OversightLevel::new(0.5).is_ok());
         assert!(OversightLevel::new(1.0).is_ok());
         assert!(OversightLevel::new(-0.1).is_err());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(OversightLevel::new(1.1).is_err());
     }
 
     #[test]
     fn test_learning_rate_validation() {
         assert!(LearningRate::new(0.001).is_ok());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(LearningRate::new(0.0).is_err());
         assert!(LearningRate::new(-0.1).is_err());
         assert!(LearningRate::new(f64::INFINITY).is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_confidence_threshold_validation() {
         assert!(ConfidenceThreshold::new(0.5).is_ok());

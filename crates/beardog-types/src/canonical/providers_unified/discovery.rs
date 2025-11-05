@@ -40,10 +40,21 @@ pub struct DiscoveryConfig {
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
-        let default_endpoints = std::env::var("BEARDOG_DISCOVERY_ENDPOINTS").map_or_else(
-            |_| vec!["localhost:8500".to_string()],
-            |s| s.split(',').map(|e| e.trim().to_string()).collect(),
-        );
+        let default_endpoints = std::env::var("BEARDOG_DISCOVERY_ENDPOINTS")
+            .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
+            .map_or_else(
+                |_| {
+                    // Use network config for consistent host/port handling
+                    let network_config =
+                        crate::canonical::config::network::NetworkConfig::default();
+                    let consul_port = std::env::var("CONSUL_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(8500);
+                    vec![format!("{}:{}", network_config.default_host, consul_port)]
+                },
+                |s| s.split(',').map(|e| e.trim().to_string()).collect(),
+            );
 
         Self {
             enabled: std::env::var("BEARDOG_DISCOVERY_ENABLED")

@@ -23,12 +23,18 @@ mod auth_tests {
     }
 
     #[derive(Debug, Clone)]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     pub struct MockSessionData {
         pub session_id: String,
         pub user_id: String,
         /// The expires at value
         pub expires_at: std::time::SystemTime,
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     impl Default for MockSessionData {
         fn default() -> Self {
@@ -60,6 +66,9 @@ mod auth_tests {
         assert_eq!(session_data.user_id, user_id);
         assert_eq!(session_data.session_id, session_id);
         assert!(session_data.is_valid());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -71,6 +80,9 @@ mod auth_tests {
         });
         assert_eq!(token.len(), 6); // Standard TOTP length
         assert!(token.chars().all(|c| c.is_ascii_digit()));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -79,10 +91,16 @@ mod auth_tests {
         assert_eq!(token.len(), 17);
         assert!(token.starts_with("mock_token"));
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_user_authentication_flow() {
         let username = "testuser";
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let password = "secure_password_123";
 
         let user = create_test_user(username, password).unwrap_or_else(|e| {
@@ -100,6 +118,9 @@ mod auth_tests {
         assert!(auth_result.session_token.is_some());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_role_based_access() {
         let user_roles = vec!["user", "read_only"];

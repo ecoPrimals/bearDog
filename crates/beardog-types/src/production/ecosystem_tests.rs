@@ -157,12 +157,18 @@ fn test_production_flags_enable_all() {
 
     assert!(flags.enable_advanced_monitoring);
     assert!(flags.enable_distributed_tracing);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(flags.enable_performance_profiling);
     assert!(flags.enable_security_auditing);
     assert!(flags.enable_auto_scaling);
     assert!(flags.enable_circuit_breakers);
     assert!(flags.enable_rate_limiting);
     assert!(flags.enable_caching);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -172,11 +178,17 @@ fn test_production_flags_partial() {
         enable_distributed_tracing: false,
         ..Default::default()
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert!(!flags.enable_advanced_monitoring);
     assert!(!flags.enable_distributed_tracing);
     // Most others still enabled by default
     assert!(flags.enable_performance_profiling);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(flags.enable_circuit_breakers);
 }
 
@@ -188,6 +200,9 @@ fn test_production_flags_partial() {
 fn test_production_state_default() {
     let state = ProductionState::default();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(state.status, OperationalStatus::Initializing);
     assert_eq!(state.cpu_usage_percent, 0.0);
     assert_eq!(state.active_connections, 0);
@@ -198,6 +213,9 @@ fn test_production_state_default() {
 #[test]
 fn test_production_state_update_status() {
     let mut state = ProductionState::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     state.status = OperationalStatus::Healthy;
 
     assert_eq!(state.status, OperationalStatus::Healthy);
@@ -220,6 +238,9 @@ fn test_production_state_update_metrics() {
 #[test]
 fn test_production_state_clone() {
     let state1 = ProductionState {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         status: OperationalStatus::Healthy,
         cpu_usage_percent: 50.0,
         active_connections: 200,
@@ -228,16 +249,25 @@ fn test_production_state_clone() {
         error_count_hourly: 10,
         performance: PerformanceMetrics::default(),
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let state2 = state1.clone();
 
     assert_eq!(state1.status, state2.status);
     assert_eq!(state1.cpu_usage_percent, state2.cpu_usage_percent);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(state1.active_connections, state2.active_connections);
 }
 
 // ============================================================================
 // OperationalStatus Tests
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -247,6 +277,9 @@ fn test_operational_status_variants() {
     let degraded = OperationalStatus::Degraded;
     let unhealthy = OperationalStatus::Unhealthy;
     let critical = OperationalStatus::Critical;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let shutdown = OperationalStatus::Shutdown;
 
     assert_ne!(initializing, healthy);
@@ -259,6 +292,9 @@ fn test_operational_status_variants() {
 #[test]
 fn test_operational_status_equality() {
     let status1 = OperationalStatus::Healthy;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let status2 = OperationalStatus::Healthy;
 
     assert_eq!(status1, status2);
@@ -279,6 +315,9 @@ fn test_operational_status_debug() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // PerformanceMetrics Tests
 // ============================================================================
 
@@ -295,6 +334,9 @@ fn test_performance_metrics_default() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_performance_metrics_custom_values() {
     let metrics = PerformanceMetrics {
         avg_response_time_ms: 25.5,
@@ -303,11 +345,17 @@ fn test_performance_metrics_custom_values() {
         requests_per_second: 1000.0,
         error_rate_percent: 0.5,
         throughput_bytes_per_sec: 1_000_000,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     assert_eq!(metrics.avg_response_time_ms, 25.5);
     assert_eq!(metrics.p95_response_time_ms, 50.0);
     assert_eq!(metrics.p99_response_time_ms, 100.0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(metrics.requests_per_second, 1000.0);
     assert_eq!(metrics.error_rate_percent, 0.5);
     assert_eq!(metrics.throughput_bytes_per_sec, 1_000_000);
@@ -319,6 +367,9 @@ fn test_performance_metrics_high_load() {
         avg_response_time_ms: 500.0,
         p95_response_time_ms: 1000.0,
         p99_response_time_ms: 2000.0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         requests_per_second: 10000.0,
         error_rate_percent: 5.0,
         throughput_bytes_per_sec: 100_000_000,
@@ -339,6 +390,9 @@ fn test_performance_metrics_clone() {
         throughput_bytes_per_sec: 50_000,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let metrics2 = metrics1.clone();
 
     assert_eq!(metrics1.avg_response_time_ms, metrics2.avg_response_time_ms);
@@ -352,14 +406,23 @@ fn test_performance_metrics_clone() {
 #[test]
 fn test_production_ecosystem_new() {
     let config = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = ProductionEcosystem::new(config);
 
     assert!(result.is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_ecosystem_new_with_custom_config() {
     let mut config = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     config.core.service_name = "test-ecosystem".to_string();
     config.core.environment_level = EnvironmentLevel::Production;
 
@@ -369,6 +432,9 @@ fn test_production_ecosystem_new_with_custom_config() {
     let ecosystem = result.unwrap();
     assert_eq!(ecosystem.config.core.service_name, "test-ecosystem");
     assert_eq!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         ecosystem.config.core.environment_level,
         EnvironmentLevel::Production
     );
@@ -378,6 +444,9 @@ fn test_production_ecosystem_new_with_custom_config() {
 fn test_production_ecosystem_initial_state() {
     let config = ProductionConfig::default();
     let ecosystem = ProductionEcosystem::new(config).unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let state = ecosystem.get_status();
     assert_eq!(state.status, OperationalStatus::Initializing);
@@ -394,6 +463,9 @@ fn test_production_ecosystem_initialize() {
     let state = ecosystem.get_status();
     assert_eq!(state.status, OperationalStatus::Healthy);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_production_ecosystem_uptime() {
@@ -406,6 +478,9 @@ fn test_production_ecosystem_uptime() {
 
 #[test]
 fn test_production_ecosystem_uptime_increases() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = ProductionConfig::default();
     let ecosystem = ProductionEcosystem::new(config).unwrap();
 
@@ -424,11 +499,17 @@ fn test_production_ecosystem_get_status() {
     ecosystem.initialize().unwrap();
 
     let status = ecosystem.get_status();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(status.status, OperationalStatus::Healthy);
 }
 
 #[test]
 fn test_production_ecosystem_shutdown() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = ProductionConfig::default();
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
 
@@ -443,12 +524,18 @@ fn test_production_ecosystem_shutdown() {
 
 #[test]
 fn test_production_ecosystem_lifecycle() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = ProductionConfig::default();
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
 
     // Start in Initializing state
     assert_eq!(
         ecosystem.get_status().status,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         OperationalStatus::Initializing
     );
 
@@ -458,12 +545,18 @@ fn test_production_ecosystem_lifecycle() {
 
     // Shutdown
     ecosystem.shutdown().unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(ecosystem.get_status().status, OperationalStatus::Shutdown);
 }
 
 #[test]
 fn test_production_ecosystem_health_check() {
     let config = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
 
     ecosystem.initialize().unwrap();
@@ -473,6 +566,9 @@ fn test_production_ecosystem_health_check() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_production_ecosystem_update_metrics() {
     let config = ProductionConfig::default();
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
@@ -481,6 +577,9 @@ fn test_production_ecosystem_update_metrics() {
 
     let result = ecosystem.update_metrics();
     assert!(result.is_ok());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -492,6 +591,9 @@ fn test_production_ecosystem_auto_scaling_disabled() {
     ecosystem.initialize().unwrap();
 
     // Should succeed even with auto-scaling disabled
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = ecosystem.update_metrics();
     assert!(result.is_ok());
 }
@@ -509,6 +611,9 @@ fn test_production_ecosystem_auto_scaling_enabled() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ProductionEcosystemBuilder Tests
 // ============================================================================
 
@@ -517,6 +622,9 @@ fn test_builder_new() {
     let builder = ProductionEcosystemBuilder::new();
     assert_eq!(builder.config.core.service_name, "beardog-ecosystem");
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_builder_default() {
@@ -525,6 +633,9 @@ fn test_builder_default() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_builder_environment_level() {
     let builder = ProductionEcosystemBuilder::new().environment_level(EnvironmentLevel::Production);
 
@@ -535,6 +646,9 @@ fn test_builder_environment_level() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_builder_service() {
     let builder =
         ProductionEcosystemBuilder::new().service("my-service".to_string(), "2.0.0".to_string());
@@ -548,12 +662,21 @@ fn test_builder_deployment() {
     let builder = ProductionEcosystemBuilder::new().deployment(
         "deploy-456".to_string(),
         "eu-west-1".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         "cluster-02".to_string(),
     );
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(builder.config.core.deployment_id, "deploy-456");
     assert_eq!(builder.config.core.region, "eu-west-1");
     assert_eq!(builder.config.core.cluster_id, "cluster-02");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -561,12 +684,18 @@ fn test_builder_enable_advanced_features() {
     let builder = ProductionEcosystemBuilder::new().enable_advanced_features();
 
     assert!(builder.config.core.flags.enable_advanced_monitoring);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(builder.config.core.flags.enable_distributed_tracing);
     assert!(builder.config.core.flags.enable_performance_profiling);
     assert!(builder.config.core.flags.enable_security_auditing);
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_builder_build() {
     let result = ProductionEcosystemBuilder::new().build();
 
@@ -577,6 +706,9 @@ fn test_builder_build() {
 fn test_builder_chain_all_methods() {
     let result = ProductionEcosystemBuilder::new()
         .environment_level(EnvironmentLevel::Staging)
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         .service("chain-test".to_string(), "1.2.3".to_string())
         .deployment(
             "deploy-789".to_string(),
@@ -584,10 +716,16 @@ fn test_builder_chain_all_methods() {
             "cluster-03".to_string(),
         )
         .enable_advanced_features()
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         .build();
 
     assert!(result.is_ok());
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let ecosystem = result.unwrap();
     assert_eq!(ecosystem.config.core.service_name, "chain-test");
     assert_eq!(ecosystem.config.core.service_version, "1.2.3");
@@ -611,6 +749,9 @@ fn test_builder_production_ready() {
         )
         .enable_advanced_features()
         .build();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert!(result.is_ok());
 
@@ -634,6 +775,9 @@ fn test_builder_multiple_builds() {
 
     let builder2 =
         ProductionEcosystemBuilder::new().service("service-2".to_string(), "2.0.0".to_string());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let ecosystem2 = builder2.build().unwrap();
 
@@ -651,6 +795,9 @@ fn test_full_ecosystem_workflow() {
     let mut ecosystem = ProductionEcosystemBuilder::new()
         .environment_level(EnvironmentLevel::Production)
         .service("workflow-test".to_string(), "1.0.0".to_string())
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         .enable_advanced_features()
         .build()
         .unwrap();
@@ -678,6 +825,9 @@ fn test_full_ecosystem_workflow() {
 #[test]
 fn test_multiple_ecosystems() {
     let config1 = ProductionConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut eco1 = ProductionEcosystem::new(config1).unwrap();
 
     let config2 = ProductionConfig::default();
@@ -690,6 +840,9 @@ fn test_multiple_ecosystems() {
     assert_eq!(eco2.get_status().status, OperationalStatus::Healthy);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_config_independence() {
     let mut config1 = ProductionConfig::default();

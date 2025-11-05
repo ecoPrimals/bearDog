@@ -352,6 +352,9 @@ mod tests {
     // Tests moved to crates/beardog-security/src/tests/crypto_primitives_tests.rs
     // for better organization and comprehensive coverage
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn placeholder_test() {
         // Tests now in crypto_primitives_tests.rs

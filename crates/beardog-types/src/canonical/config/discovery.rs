@@ -425,11 +425,18 @@ pub enum AuthEffect {
 
 impl Default for ConsolidatedDiscoveryConfig {
     fn default() -> Self {
+        use super::runtime_config::RuntimeNetworkConfig;
+        
+        // Use environment-driven configuration instead of hardcoded localhost
+        let config = RuntimeNetworkConfig::from_env();
+        let endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .unwrap_or_else(|_| config.discovery_endpoint);
+        
         Self {
             service_id: "beardog-discovery".to_string(),
             enabled_protocols: vec![
                 DiscoveryProtocol::Http {
-                    endpoint: format!("http://localhost:{}/discovery", crate::constants::domains::network::defaults::default_api_port()),
+                    endpoint,
                     headers: HashMap::new(),
                     timeout_ms: beardog_types::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_millis() as u64,
                 },
@@ -448,8 +455,18 @@ impl Default for ServiceRegistryConfig {
     fn default() -> Self {
         Self {
             max_services: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
-            service_ttl: Duration::from_secs(300),
-            cleanup_interval: Duration::from_secs(60),
+            service_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_SERVICE_REGISTRY_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300)
+            ),
+            cleanup_interval: Duration::from_secs(
+                std::env::var("BEARDOG_SERVICE_REGISTRY_CLEANUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
             enable_versioning: true,
             metadata_storage: MetadataStorageConfig::default(),
         }
@@ -472,8 +489,18 @@ impl Default for MetadataStorageConfig {
 impl Default for HealthCheckConfig {
     fn default() -> Self {
         Self {
-            check_interval: Duration::from_secs(30),
-            check_timeout: Duration::from_secs(5),
+            check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
+            check_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5)
+            ),
             failure_threshold: 3,
             success_threshold: 2,
             enable_metrics: true,
@@ -481,7 +508,12 @@ impl Default for HealthCheckConfig {
                 path: "/health".to_string(),
                 method: "GET".to_string(),
                 expected_status: 200,
-                timeout: Duration::from_secs(5),
+                timeout: Duration::from_secs(
+                    std::env::var("BEARDOG_HEALTH_ENDPOINT_TIMEOUT_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(5)
+                ),
             }],
         }
     }
@@ -504,7 +536,12 @@ impl Default for CircuitBreakerConfig {
         Self {
             failure_threshold: 5,
             success_threshold: 3,
-            timeout: Duration::from_secs(60),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_CIRCUIT_BREAKER_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
             half_open_max_calls: 3,
         }
     }
@@ -523,19 +560,42 @@ impl Default for RetryConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        use std::str::FromStr;
+        use std::net::{Ipv4Addr, SocketAddr};
         let api_port = crate::constants::domains::network::defaults::default_api_port();
         Self {
-            bind_address: SocketAddr::from_str(&format!("0.0.0.0:{}", api_port))
-                .expect("Hardcoded bind address should be valid"),
-            multicast_address: IpAddr::from_str("224.0.0.251")
-                .expect("Hardcoded multicast address should be valid"),
-            multicast_port: 5353,
-            discovery_port_range: (api_port, 8090),
-            max_packet_size: 1500,
+            bind_address: SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+                api_port,
+            ),
+            multicast_address: IpAddr::V4(Ipv4Addr::new(224, 0, 0, 251)),
+            multicast_port: std::env::var("BEARDOG_MULTICAST_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5353), // mDNS standard port
+            discovery_port_range: (
+                api_port,
+                std::env::var("BEARDOG_DISCOVERY_PORT_RANGE_END")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8090),
+            ),
+            max_packet_size: std::env::var("BEARDOG_MAX_PACKET_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1500), // Standard MTU
             connection_timeout: Duration::from_secs(beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64),
-            read_timeout: Duration::from_secs(30),
-            write_timeout: Duration::from_secs(30),
+            read_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_READ_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
+            write_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_WRITE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
             enable_ipv6: false,
             interface: None,
             tls: None,
@@ -547,7 +607,12 @@ impl Default for CacheConfig {
     fn default() -> Self {
         Self {
             max_entries: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
-            ttl: Duration::from_secs(300),
+            ttl: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_CACHE_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300)
+            ),
             eviction_policy: EvictionPolicy::LRU,
             enable_compression: false,
             persistence: None,

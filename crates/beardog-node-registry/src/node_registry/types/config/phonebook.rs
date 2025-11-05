@@ -31,15 +31,35 @@ use std::time::Duration;
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
-impl Default for PhonebookConfig {}
-
-    fn default(true,
-            bind_address: "0.0.0.0".to_string(),
-            cache_size: 10000,
-            cache_ttl_seconds: 300, // 5 minutes
-            refresh_interval_seconds: 60, // 1 minute
-            max_tracked_nodes: 10000,
-            node_entry_ttl: Duration::from_secs(300), // 5 minutes
+impl Default for PhonebookConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            bind_address: std::env::var("BEARDOG_PHONEBOOK_BIND_ADDRESS")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+            cache_size: std::env::var("BEARDOG_PHONEBOOK_CACHE_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10000), // 10K entries default
+            cache_ttl_seconds: std::env::var("BEARDOG_PHONEBOOK_CACHE_TTL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300), // 5 minutes default
+            refresh_interval_seconds: std::env::var("BEARDOG_PHONEBOOK_REFRESH_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60), // 1 minute default
+            max_tracked_nodes: std::env::var("BEARDOG_MAX_TRACKED_NODES")
+                .ok()
+                .and_then(|n| n.parse().ok())
+                .unwrap_or(10000), // 10K nodes default
+            node_entry_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_NODE_ENTRY_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300) // 5 minutes default
+            ),
             default_regions: vec!["default".to_string()],
             metadata: HashMap::with_capacity(16),
         }
@@ -135,6 +155,9 @@ impl PhonebookConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]}
 
 

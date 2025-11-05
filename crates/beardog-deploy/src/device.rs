@@ -189,11 +189,12 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::unnecessary_wraps)]
     pub fn detect_android_devices(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         debug!("🔍 Detecting Android devices...");
 
         // Mock Android device detection using adb
+        // TODO: Implement actual adb device detection
         let devices = vec![DeviceInfo {
             id: "emulator-5554".to_string(),
             name: "Android Emulator".to_string(),
@@ -221,7 +222,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::unused_self)]
     pub fn deploy_to_android(&self, device_id: &str, apk_path: &str) -> Result<(), BearDogError> {
         info!(
             "📲 Deploying to Android device: {} with APK: {}",

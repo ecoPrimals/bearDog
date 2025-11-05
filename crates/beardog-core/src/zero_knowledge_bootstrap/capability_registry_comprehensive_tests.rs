@@ -73,6 +73,9 @@ mod comprehensive_tests {
         assert_eq!(results.len(), 10);
         assert!(results.iter().all(|r| r.is_ok()));
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_registry_empty_discovery() {
@@ -98,6 +101,9 @@ mod comprehensive_tests {
         for _ in 0..2 {
             registry
                 .update_health_status(&id, HealthStatus::Degraded)
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 .await
                 .unwrap();
         }
@@ -106,6 +112,9 @@ mod comprehensive_tests {
         assert_eq!(registered.consecutive_failures, 2);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_registry_cleanup_threshold() {
         let config = CapabilityRegistryConfig {
@@ -124,6 +133,9 @@ mod comprehensive_tests {
         for _ in 0..3 {
             registry
                 .update_health_status(&id, HealthStatus::Unhealthy)
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 .await
                 .unwrap();
         }
@@ -147,6 +159,9 @@ mod comprehensive_tests {
         let unhealthy_cap = create_test_capability_with_metadata(
             ServiceCapabilityType::Storage,
             HashMap::new(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         );
         let unhealthy_id = registry.register(unhealthy_cap).await.unwrap();
         
@@ -176,12 +191,18 @@ mod comprehensive_tests {
     #[tokio::test]
     async fn test_registry_update_health_nonexistent() {
         let registry = CapabilityRegistry::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let fake_id = CapabilityId::new();
         
         let result = registry
             .update_health_status(&fake_id, HealthStatus::Healthy)
             .await;
         assert!(result.is_err());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -190,10 +211,16 @@ mod comprehensive_tests {
         let all = registry.list_all().await.unwrap();
         assert_eq!(all.len(), 0);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_registry_list_all_populated() {
         let registry = CapabilityRegistry::new();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         for i in 0..5 {
             let mut metadata = HashMap::new();
@@ -209,6 +236,9 @@ mod comprehensive_tests {
         assert_eq!(all.len(), 5);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_capability_id_uniqueness() {
         let id1 = CapabilityId::new();

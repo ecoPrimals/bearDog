@@ -63,6 +63,9 @@ mod tests {
     #[tokio::test]
     async fn test_security_sentinel_basic() -> Result<(), BearDogError> {
         let sentinel = SecuritySentinel::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
 
         sentinel.start_monitoring()?;
 
@@ -74,6 +77,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_security_event_processing() -> Result<(), BearDogError> {
         let sentinel = SecuritySentinel::default();

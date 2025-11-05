@@ -97,19 +97,22 @@ impl EnvUtils {
         }
 
         // Universal capability-based environment variables (replaces hardcoded primal endpoints)
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         let warnings = [
             ("BEARDOG_LOG_LEVEL", "INFO"),
             (
                 "BEARDOG_DISCOVERY_ENDPOINT",
-                "https://discovery.ecosystem.internal:8080",
+                &format!("https://discovery.ecosystem.internal:{}", network_config.service_ports.api_port),
             ),
             (
                 "BEARDOG_CAPABILITY_REGISTRY",
-                "https://capabilities.ecosystem.internal:8443",
+                &format!("https://capabilities.ecosystem.internal:{}", network_config.service_ports.admin_port),
             ),
             (
                 "BEARDOG_SERVICE_MESH_ENDPOINT",
-                "https://mesh.ecosystem.internal:8443",
+                &format!("https://mesh.ecosystem.internal:{}", network_config.service_ports.admin_port),
             ),
             ("BEARDOG_SMTP_SERVER", "smtp.example.com"),
         ];
@@ -143,9 +146,12 @@ impl EnvUtils {
     /// Gets network_config
     /// Gets network_config
     pub fn get_network_config() -> NetworkEnvConfig {
+        // Use network config for consistent defaults
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        
         NetworkEnvConfig {
-            host: Self::get_optional("BEARDOG_HOST", "127.0.0.1"),
-            port: Self::get_u16("BEARDOG_PORT", 8080),
+            host: Self::get_optional("BEARDOG_HOST", &network_config.default_host),
+            port: Self::get_u16("BEARDOG_PORT", network_config.service_ports.api_port),
             max_connections: Self::get_u32("BEARDOG_MAX_CONNECTIONS", 1000) as usize,
             enable_tls: Self::get_bool("BEARDOG_TLS", false),
         }
@@ -241,6 +247,9 @@ impl EnvValidator {
 mod tests {
     use super::*;
     use std::env;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_get_optional() {
         env::set_var("TEST_VAR", "test_value");

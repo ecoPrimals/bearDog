@@ -332,6 +332,9 @@ mod tests {
     #[tokio::test]
     fn test_pkcs11_provider_creation() {
         let config = Pkcs11ConfigBuilder::new()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             .library_path("/usr/lib/softhsm/libsofthsm2.so")
             .slot_id(0)
             .pin("1234")
@@ -353,6 +356,9 @@ mod tests {
         assert_eq!(provider.library_path, "/usr/lib/softhsm/libsofthsm2.so");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_pkcs11_configuration_builder() {
         let config = Pkcs11ConfigBuilder::new()

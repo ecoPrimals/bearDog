@@ -12,9 +12,9 @@
 //! Add documentation tags to your tests:
 //!
 //! ```rust
-//! /// TEST_CATEGORY: unit
-//! /// TEST_DOMAIN: security
-//! /// TEST_PRIORITY: high
+//! // TEST_CATEGORY: unit
+//! // TEST_DOMAIN: security
+//! // TEST_PRIORITY: high
 //! #[test]
 //! fn test_security_encryption_basic() {
 //!     // Test implementation
@@ -118,8 +118,8 @@ pub fn should_run_domain(domain: &str) -> bool {
 mod tests {
     use super::*;
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: types
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
     #[test]
     fn test_category_constants_defined() {
         assert_eq!(category::UNIT, "unit");
@@ -127,8 +127,8 @@ mod tests {
         assert_eq!(category::E2E, "e2e");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: types
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
     #[test]
     fn test_domain_constants_defined() {
         assert_eq!(domain::CORE, "core");

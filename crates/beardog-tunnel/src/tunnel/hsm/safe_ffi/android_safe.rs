@@ -52,7 +52,7 @@ impl SafeAndroidProvider {
         warn!("Android StrongBox key generation not yet fully implemented - using placeholder");
 
         Err(BearDogError::not_implemented(
-            "Android StrongBox key generation not yet implemented safely".to_string(),
+            "Android StrongBox key generation not yet implemented safely",
         ))
     }
 
@@ -61,7 +61,7 @@ impl SafeAndroidProvider {
         warn!("Android StrongBox signing not yet fully implemented - using placeholder");
 
         Err(BearDogError::not_implemented(
-            "Android StrongBox signing not yet implemented safely".to_string(),
+            "Android StrongBox signing not yet implemented safely",
         ))
     }
 
@@ -75,7 +75,7 @@ impl SafeAndroidProvider {
         warn!("Android StrongBox verification not yet fully implemented - using placeholder");
 
         Err(BearDogError::not_implemented(
-            "Android StrongBox verification not yet implemented safely".to_string(),
+            "Android StrongBox verification not yet implemented safely",
         ))
     }
 }

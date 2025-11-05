@@ -31,7 +31,12 @@ impl RealTimeMetricCollector {
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             metrics_buffer: Arc::new(RwLock::new(MetricsBuffer::new())),
-            collection_interval: Duration::from_millis(100), // 100ms collection interval
+            collection_interval: Duration::from_millis(
+                std::env::var("BEARDOG_METRICS_COLLECTION_INTERVAL_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100) // 100ms default collection interval
+            ),
             metric_sources: Vec::new(),
             aggregation_rules: HashMap::with_capacity(16),
             retention_policy: RetentionPolicy::default(),
@@ -158,7 +163,12 @@ impl RealTimeMetricCollector {
         Ok(AggregationFunction::Average,
                 window: Duration::from_secs(AggregationFunction::Maximum,
                 window: Duration::from_secs(AggregationFunction::Sum,
-                window: Duration::from_secs(60),
+                window: Duration::from_secs(
+                    std::env::var("BEARDOG_METRICS_WINDOW_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(60)
+                ),
             }
         );
     }

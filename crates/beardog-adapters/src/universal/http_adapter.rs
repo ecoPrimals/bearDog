@@ -57,7 +57,12 @@ impl HttpAdapter {
             .client
             .post(&url)
             .json(&body)
-            .timeout(std::time::Duration::from_secs(30))
+            .timeout(std::time::Duration::from_secs(
+                std::env::var("BEARDOG_HTTP_ADAPTER_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ))
             .send()
         {
             Ok(response) => {

@@ -87,7 +87,12 @@ impl Default for MaintenanceConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            window_duration: Duration::from_secs(3600),
+            window_duration: Duration::from_secs(
+                std::env::var("BEARDOG_MAINTENANCE_WINDOW_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600),
+            ),
         }
     }
 }
@@ -96,7 +101,12 @@ impl Default for BackupConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            interval: Duration::from_secs(86400), // Daily
+            interval: Duration::from_secs(
+                std::env::var("BEARDOG_BACKUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(86400),
+            ),
         }
     }
 }
@@ -105,7 +115,12 @@ impl Default for DisasterRecoveryConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            rto: Duration::from_secs(3600), // 1 hour
+            rto: Duration::from_secs(
+                std::env::var("BEARDOG_DR_RTO_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600),
+            ),
         }
     }
 }

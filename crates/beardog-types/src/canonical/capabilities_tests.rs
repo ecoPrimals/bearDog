@@ -40,6 +40,9 @@ mod capability_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_capability_validation() {
         use crate::canonical::capabilities::CapabilitySet;
         use std::collections::HashSet;
@@ -51,6 +54,9 @@ mod capability_tests {
         caps.capabilities.insert("execute".to_string());
         
         // Validate capability exists
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(caps.capabilities.contains("execute"));
         
         // Validate capability doesn't exist
@@ -66,6 +72,9 @@ mod capability_tests {
             optional_capabilities: vec!["execute".to_string()],
         };
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(requirement.required_capabilities.len(), 2);
         assert_eq!(requirement.optional_capabilities.len(), 1);
     }
@@ -81,6 +90,9 @@ mod capability_tests {
         caps.capabilities.insert("read".to_string());
         caps.capabilities.insert("write".to_string());
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let requirement = CapabilityRequirement {
             required_capabilities: vec!["read".to_string()],
             optional_capabilities: vec![],
@@ -91,6 +103,9 @@ mod capability_tests {
             assert!(caps.capabilities.contains(required));
         }
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_capability_hierarchy() {
@@ -110,6 +125,9 @@ mod capability_tests {
         use crate::canonical::capabilities::CapabilityMetadata;
         use std::collections::HashMap;
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), "1.0".to_string());
         metadata.insert("provider".to_string(), "beardog".to_string());
@@ -120,6 +138,9 @@ mod capability_tests {
             metadata,
         };
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(cap_metadata.name, "storage");
         assert_eq!(cap_metadata.version, "1.0");
         assert_eq!(cap_metadata.metadata.len(), 2);
@@ -137,6 +158,9 @@ mod capability_tests {
         };
         
         assert_eq!(discovered.capability_name, "encryption");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(discovered.available);
         assert!(discovered.confidence > 0.9);
     }
@@ -150,6 +174,9 @@ mod capability_tests {
         let serialized = serde_json::to_string(&cap).expect("Failed to serialize");
         assert!(!serialized.is_empty());
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let deserialized: Capability = serde_json::from_str(&serialized)
             .expect("Failed to deserialize");
         assert!(matches!(deserialized, Capability::Storage));
@@ -161,6 +188,9 @@ mod capability_tests {
         
         let cap1 = Capability::Network;
         let cap2 = Capability::Network;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let cap3 = Capability::Storage;
         
         assert_eq!(cap1, cap2);
@@ -170,12 +200,18 @@ mod capability_tests {
     #[test]
     fn test_capability_display() {
         use crate::canonical::capabilities::Capability;
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         let cap = Capability::Compute;
         let display_str = format!("{:?}", cap);
         assert!(display_str.contains("Compute"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_from_string() {
         // Test parsing capability from string

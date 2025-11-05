@@ -36,7 +36,10 @@ impl Default for NeuralNetworkConfig {
             architecture: NetworkArchitecture::Feedforward,
             hidden_layers: vec![128, 64],
             activation: ActivationFunction::Relu,
-            dropout_rate: 0.2,
+            dropout_rate: std::env::var("BEARDOG_AI_NEURAL_DROPOUT_RATE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.2),
             regularization: RegularizationConfig::default(),
             optimizer: OptimizerConfig::default(),
             detailed_architecture: None,
@@ -504,9 +507,18 @@ pub struct RegularizationConfig {
 impl Default for RegularizationConfig {
     fn default() -> Self {
         Self {
-            l1: 0.0,
-            l2: 0.001,
-            dropout: 0.2,
+            l1: std::env::var("BEARDOG_AI_REGULARIZATION_L1")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0),
+            l2: std::env::var("BEARDOG_AI_REGULARIZATION_L2")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.001),
+            dropout: std::env::var("BEARDOG_AI_REGULARIZATION_DROPOUT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.2),
         }
     }
 }
@@ -526,7 +538,10 @@ impl Default for OptimizerConfig {
     fn default() -> Self {
         Self {
             optimizer_type: OptimizerType::Adam,
-            learning_rate: 0.001,
+            learning_rate: std::env::var("BEARDOG_AI_OPTIMIZER_LEARNING_RATE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.001),
             momentum: None,
         }
     }

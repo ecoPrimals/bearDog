@@ -95,6 +95,18 @@ pub enum KeyMaterial {
     },
 }
 
+impl KeyMaterial {
+    /// Get the raw key data (for encrypted variant) or identifier (for references)
+    pub fn data(&self) -> &[u8] {
+        match self {
+            KeyMaterial::Encrypted { encrypted_data, .. } => encrypted_data,
+            KeyMaterial::Reference { key_reference, .. } => key_reference.as_bytes(),
+            KeyMaterial::HardwareReference { reference, .. } => reference.as_bytes(),
+            KeyMaterial::Handle { key_handle, .. } => key_handle.as_bytes(),
+        }
+    }
+}
+
 /// HSM key information
 #[derive(Debug, Clone)]
 pub struct HsmKeyInfo {

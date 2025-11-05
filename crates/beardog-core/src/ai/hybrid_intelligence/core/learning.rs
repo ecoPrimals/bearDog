@@ -137,10 +137,24 @@ impl Default for OnlineLearningConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            learning_rate: 0.001,
-            batch_size: 32,
-            memory_buffer_size: 1000,
-            update_frequency: Duration::from_secs(60),
+            learning_rate: std::env::var("BEARDOG_AI_ADAPTIVE_LEARNING_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.001),
+            batch_size: std::env::var("BEARDOG_AI_ADAPTIVE_BATCH_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(32),
+            memory_buffer_size: std::env::var("BEARDOG_AI_MEMORY_BUFFER_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000),
+            update_frequency: Duration::from_secs(
+                std::env::var("BEARDOG_LEARNING_UPDATE_FREQUENCY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
         }
     }
 }
