@@ -29,10 +29,16 @@ fn test_metrics_config_custom() {
 
 #[test]
 fn test_metrics_config_with_labels() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut labels = HashMap::new();
     labels.insert("environment".to_string(), "production".to_string());
     labels.insert("region".to_string(), "us-west-2".to_string());
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = MetricsConfig {
         collection_interval_seconds: 30,
         retention_count: 1000,
@@ -45,6 +51,9 @@ fn test_metrics_config_with_labels() {
     assert_eq!(config.labels.get("environment").unwrap(), "production");
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_current_metrics_creation() {
     let metrics = CurrentMetrics {
@@ -60,6 +69,9 @@ fn test_current_metrics_creation() {
     };
 
     assert_eq!(metrics.cpu_usage_percent, 45.5);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(metrics.active_connections, 150);
 }
 
@@ -75,6 +87,9 @@ fn test_current_metrics_with_custom() {
         memory_usage_percent: 50.0,
         disk_usage_percent: 40.0,
         network_throughput_bps: 500_000,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         active_connections: 100,
         latency_ms: 15.0,
         error_rate_percent: 0.0,
@@ -94,12 +109,18 @@ fn test_production_metrics_collector_new() {
     // Collector creation itself is the test - if we got here it succeeded
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_metrics_collector_lifecycle() {
     let config = MetricsConfig {
         collection_interval_seconds: 60,
         retention_count: 2000,
         enable_streaming: false,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         batch_size: 50,
         labels: HashMap::new(),
     };
@@ -112,6 +133,9 @@ fn test_metrics_collector_lifecycle() {
 #[test]
 fn test_metrics_config_serialization() {
     let config = MetricsConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let json = serde_json::to_string(&config).unwrap();
     let deserialized: MetricsConfig = serde_json::from_str(&json).unwrap();
 
@@ -122,6 +146,9 @@ fn test_metrics_config_serialization() {
     assert_eq!(config.retention_count, deserialized.retention_count);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_current_metrics_serialization() {
     let metrics = CurrentMetrics {

@@ -55,10 +55,16 @@ pub struct InternalDnsPatterns {
 
 impl Default for UniversalEndpointConfig {
     fn default() -> Self {
+        let network_config = super::super::config::network::NetworkConfig::default();
+        
         Self {
             discovery_endpoint: env::var("BEARDOG_DISCOVERY_ENDPOINT")
                 .or_else(|_| env::var("UNIVERSAL_DISCOVERY_ENDPOINT"))
-                .unwrap_or_else(|_| "http://discovery.ecosystem.internal:8080".to_string()),
+                .unwrap_or_else(|_| {
+                    let discovery_host = env::var("DISCOVERY_HOST")
+                        .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
+                    format!("http://{}:{}", discovery_host, network_config.service_ports.discovery_port)
+                }),
             service_endpoints: HashMap::new(),
             development_fallbacks: DevelopmentFallbacks::default(),
             internal_dns_patterns: InternalDnsPatterns::default(),
@@ -68,16 +74,23 @@ impl Default for UniversalEndpointConfig {
 
 impl Default for DevelopmentFallbacks {
     fn default() -> Self {
+        // Use NetworkConfig for consistent port configuration
+        let network_config = super::super::config::network::NetworkConfig::default();
+        
         Self {
             base_discovery: std::env::var("BEARDOG_LOCAL_DISCOVERY")
-        .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
+        .unwrap_or_else(|_| {
+            let localhost = std::env::var("BEARDOG_LOCALHOST")
+                .unwrap_or_else(|| network_config.default_host.clone());
+            format!("http://{}:{}", localhost, network_config.service_ports.discovery_port)
+        }),
             service_ports: {
                 let mut ports = HashMap::new();
-                ports.insert("compute".to_string(), 8001);
-                ports.insert("mesh".to_string(), 8002);
-                ports.insert("ai".to_string(), 8003);
-                ports.insert("storage".to_string(), 8004);
-                ports.insert("security".to_string(), 8005);
+                ports.insert("compute".to_string(), network_config.service_ports.compute_port);
+                ports.insert("mesh".to_string(), network_config.service_ports.mesh_port);
+                ports.insert("ai".to_string(), network_config.service_ports.ai_port);
+                ports.insert("storage".to_string(), network_config.service_ports.storage_port);
+                ports.insert("security".to_string(), network_config.service_ports.security_port);
                 ports
             },
             bind_to_all_interfaces: env::var("BEARDOG_BIND_ALL_INTERFACES")
@@ -105,11 +118,31 @@ impl Default for InternalDnsPatterns {
             },
             default_ports: {
                 let mut ports = HashMap::new();
-                ports.insert("http".to_string(), 8080);
-                ports.insert("https".to_string(), 8443);
-                ports.insert("grpc".to_string(), 9090);
-                ports.insert("metrics".to_string(), 9091);
-                ports.insert("health".to_string(), 8081);
+                ports.insert("http".to_string(), 
+                    env::var("BEARDOG_DEFAULT_HTTP_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(8080));
+                ports.insert("https".to_string(), 
+                    env::var("BEARDOG_DEFAULT_HTTPS_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(8443));
+                ports.insert("grpc".to_string(), 
+                    env::var("BEARDOG_DEFAULT_GRPC_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(9090));
+                ports.insert("metrics".to_string(), 
+                    env::var("BEARDOG_DEFAULT_METRICS_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(9091));
+                ports.insert("health".to_string(), 
+                    env::var("BEARDOG_DEFAULT_HEALTH_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(8081));
                 ports
             },
         }
@@ -152,7 +185,11 @@ impl UniversalEndpointConfig {
         
         // Fallback to development configuration
         if let Some(port) = self.development_fallbacks.service_ports.get(service_name) {
-            return format!("http://127.0.0.1:{}", port);
+            use super::super::config::network::NetworkConfig;
+            let network_config = NetworkConfig::default();
+            let localhost = std::env::var("BEARDOG_LOCALHOST")
+                .unwrap_or_else(|| network_config.default_host.clone());
+            return format!("http://{}:{}", localhost, port);
         }
         
         // Ultimate fallback to discovery endpoint
@@ -161,15 +198,18 @@ impl UniversalEndpointConfig {
     
     /// Get bind address using universal patterns
     /// Gets bind_address
-    /// Gets bind_address
     pub fn get_bind_address(&self, default_port: u16) -> String {
+        use super::super::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         let host = if self.development_fallbacks.bind_to_all_interfaces {
-            "0.0.0.0"
+            std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string())
         } else {
-            "127.0.0.1"
+            std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|| network_config.default_host.clone())
         };
         
         let port = env::var("BEARDOG_PORT")
+            .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(default_port);
             
@@ -178,30 +218,49 @@ impl UniversalEndpointConfig {
     
     /// Get database endpoint using universal discovery
     /// Gets database_endpoint
-    /// Gets database_endpoint
     pub fn get_database_endpoint(&self) -> String {
+        let network_config = super::super::config::network::NetworkConfig::default();
+        
         env::var("DATABASE_ENDPOINT")
             .or_else(|_| env::var("BEARDOG_DB_HOST").map(|host| {
                 let port = env::var("BEARDOG_DB_PORT")
+                    .ok()
                     .and_then(|p| p.parse().ok())
-                    .unwrap_or(5432);
+                    .unwrap_or(network_config.service_ports.database_port);
                 format!("{}:{}", host, port)
             }))
-            .unwrap_or_else(|_| "database.ecosystem.internal:5432".to_string())
+            .unwrap_or_else(|_| {
+                let db_host = env::var("DATABASE_HOST")
+                    .unwrap_or_else(|_| "database.ecosystem.internal".to_string());
+                format!("{}:{}", db_host, network_config.service_ports.database_port)
+            })
     }
     
     /// Get monitoring endpoints using universal discovery
     /// Gets monitoring_endpoints
-    /// Gets monitoring_endpoints
     pub fn get_monitoring_endpoints(&self) -> MonitoringEndpoints {
+        let network_config = super::super::config::network::NetworkConfig::default();
+        
         MonitoringEndpoints {
             prometheus: env::var("BEARDOG_METRICS_ENDPOINT")
                 .or_else(|_| env::var("PROMETHEUS_ENDPOINT"))
-                .unwrap_or_else(|_| "http://metrics.ecosystem.internal:9090".to_string()),
+                .unwrap_or_else(|_| {
+                    let metrics_host = env::var("METRICS_HOST")
+                        .unwrap_or_else(|_| "metrics.ecosystem.internal".to_string());
+                    format!("http://{}:{}", metrics_host, network_config.service_ports.metrics_port)
+                }),
             grafana: env::var("GRAFANA_ENDPOINT")
-                .unwrap_or_else(|_| "http://grafana.ecosystem.internal:3000".to_string()),
+                .unwrap_or_else(|_| {
+                    let grafana_host = env::var("GRAFANA_HOST")
+                        .unwrap_or_else(|_| "grafana.ecosystem.internal".to_string());
+                    format!("http://{}:{}", grafana_host, network_config.service_ports.grafana_port)
+                }),
             jaeger: env::var("JAEGER_ENDPOINT")
-                .unwrap_or_else(|_| "http://jaeger.ecosystem.internal:14268/api/traces".to_string()),
+                .unwrap_or_else(|_| {
+                    let jaeger_host = env::var("JAEGER_HOST")
+                        .unwrap_or_else(|_| "jaeger.ecosystem.internal".to_string());
+                    format!("http://{}:{}/api/traces", jaeger_host, network_config.service_ports.jaeger_port)
+                }),
         }
     }
     
@@ -271,7 +330,12 @@ impl UniversalEndpointResolver {
         Self {
             config: UniversalEndpointConfig::new(),
             cache: std::sync::RwLock::new(HashMap::new()),
-            cache_ttl: std::time::Duration::from_secs(300), // 5 minutes
+            cache_ttl: std::time::Duration::from_secs(
+                env::var("BEARDOG_ENDPOINT_CACHE_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300) // 5 minutes
+            ),
         }
     }
     
@@ -327,24 +391,39 @@ mod tests {
         let config = UniversalEndpointConfig::default();
         let endpoint = config.get_service_endpoint("compute");
         assert!(endpoint.contains("compute") || endpoint.contains("127.0.0.1"));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
     
     #[tokio::test]
     fn test_bind_address_generation() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = UniversalEndpointConfig::default();
         let bind_addr = config.get_bind_address(8080);
         assert!(bind_addr.contains("8080"));
         assert!(bind_addr.contains("0.0.0.0") || bind_addr.contains("127.0.0.1"));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
     
     #[tokio::test]
     fn test_database_endpoint_resolution() {
         let config = UniversalEndpointConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let db_endpoint = config.get_database_endpoint();
         assert!(!db_endpoint.is_empty());
         assert!(db_endpoint.contains(":"));
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_endpoint_resolver() {
         let resolver = UniversalEndpointResolver::new();

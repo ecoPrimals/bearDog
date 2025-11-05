@@ -138,6 +138,9 @@ mod tests {
     #[tokio::test]
     async fn test_basic_spawning() -> Result<(), BearDogError> {
         let engine = GeneticSpawningEngine::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
 
         let request = SpawnRequest {
             required_capabilities: vec![NodeCapability::ComputeProvider],
@@ -155,6 +158,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_inheritance_spawning() -> Result<(), BearDogError> {
         let engine = GeneticSpawningEngine::new();

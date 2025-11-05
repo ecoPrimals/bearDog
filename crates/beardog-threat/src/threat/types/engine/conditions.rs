@@ -251,11 +251,13 @@ impl ConditionBuilder {
     /// Builds and
     /// Builds and
     #[must_use]
-    pub fn build_and(mut self) -> RuleCondition {
+    pub fn build_and(self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            // Length check guarantees pop() returns Some
-            // SAFETY: We just checked that len() == 1, so pop() will return Some
-            self.conditions.pop().unwrap()
+            // Safe: We just verified len() == 1, so we can safely remove and return the first element
+            self.conditions
+                .into_iter()
+                .next()
+                .unwrap_or(RuleCondition::Always)
         } else {
             RuleCondition::and(self.conditions)
         }
@@ -265,11 +267,13 @@ impl ConditionBuilder {
     /// Builds or
     /// Builds or
     #[must_use]
-    pub fn build_or(mut self) -> RuleCondition {
+    pub fn build_or(self) -> RuleCondition {
         if self.conditions.len() == 1 {
-            // Length check guarantees pop() returns Some
-            // SAFETY: We just checked that len() == 1, so pop() will return Some
-            self.conditions.pop().unwrap()
+            // Safe: We just verified len() == 1, so we can safely remove and return the first element
+            self.conditions
+                .into_iter()
+                .next()
+                .unwrap_or(RuleCondition::Always)
         } else {
             RuleCondition::or(self.conditions)
         }
@@ -304,6 +308,9 @@ mod tests {
         );
 
         assert!(condition.evaluate(&event_data));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         event_data.insert("message".to_string(), "Success message".to_string());
         assert!(!condition.evaluate(&event_data));
@@ -314,6 +321,9 @@ mod tests {
         let condition = RuleCondition::field_exists("user_id");
 
         let mut event_data = HashMap::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         event_data.insert("user_id".to_string(), "admin".to_string());
 
         assert!(condition.evaluate(&event_data));
@@ -327,6 +337,9 @@ mod tests {
         let condition = RuleCondition::and(vec![
             RuleCondition::field_equals("event_type", "login"),
             RuleCondition::field_exists("user_id"),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
         ]);
 
         let mut event_data = HashMap::new();
@@ -337,6 +350,9 @@ mod tests {
 
         event_data.remove("user_id");
         assert!(!condition.evaluate(&event_data));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -351,6 +367,9 @@ mod tests {
 
         assert!(condition.evaluate(&event_data));
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         event_data.insert("event_type".to_string(), "logout".to_string());
         assert!(condition.evaluate(&event_data));
 
@@ -367,6 +386,9 @@ mod tests {
         event_data.insert("status".to_string(), "error ".to_string());
 
         assert!(condition.evaluate(&event_data));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         event_data.insert("status".to_string(), "success ".to_string());
         assert!(!condition.evaluate(&event_data));
@@ -378,6 +400,9 @@ mod tests {
         assert_eq!(simple.complexity_score(), 1);
 
         let complex = RuleCondition::and(vec![
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             simple.clone(),
             RuleCondition::or(vec![
                 RuleCondition::field_exists("field1"),
@@ -391,6 +416,9 @@ mod tests {
     #[test]
     fn test_referenced_fields() {
         let condition = RuleCondition::and(vec![
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             RuleCondition::field_equals("event_type", "login"),
             RuleCondition::field_exists("user_id"),
             RuleCondition::field_contains("message", "success "),
@@ -402,6 +430,9 @@ mod tests {
         assert!(fields.contains(&"message".to_string()));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_condition_builder() {
         let condition = ConditionBuilder::new()

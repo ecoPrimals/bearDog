@@ -3,7 +3,7 @@
 //! Tests edge cases and error conditions during system initialization
 
 #[cfg(test)]
-mod initialization_edge_cases {
+mod tests {
     use beardog_types::canonical::config::runtime_config::RuntimeConfig;
 
     #[test]
@@ -33,6 +33,9 @@ mod initialization_edge_cases {
     #[test]
     fn test_runtime_config_network_discovery() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Should have network configuration
         assert!(!config.network.api_host.is_empty());
@@ -54,6 +57,9 @@ mod initialization_edge_cases {
                 || !config.network.api_host.contains(' ') // Basic hostname validation
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_runtime_config_tls_defaults() {
@@ -62,6 +68,9 @@ mod initialization_edge_cases {
         // TLS should be enabled by default for production readiness
         assert!(config.network.enable_tls);
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_runtime_config_reasonable_connections() {
@@ -73,11 +82,17 @@ mod initialization_edge_cases {
             "Should support at least 100 connections"
         );
         assert!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             config.network.max_connections <= 10_000,
             "Should not exceed 10,000 connections"
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_runtime_config_timeout_reasonable() {
         let config = RuntimeConfig::default();
@@ -89,7 +104,9 @@ mod initialization_edge_cases {
         );
         assert!(
             config.network.timeout_seconds <= 300,
-            "Timeout should not exceed 5 minutes"
+            "Timeout should not exceed 5 minutes" // TEST_CATEGORY: integration
+                                                  // TEST_DOMAIN: core
+                                                  // TEST_PRIORITY: normal
         );
     }
 
@@ -102,11 +119,17 @@ mod initialization_edge_cases {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_runtime_config_grpc_port_differs() {
         let config = RuntimeConfig::default();
 
         // gRPC port should differ from other ports
         assert_ne!(config.network.grpc_port, config.network.api_port);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_ne!(config.network.grpc_port, config.network.ws_port);
         assert_ne!(config.network.grpc_port, config.network.metrics_port);
     }
@@ -114,6 +137,9 @@ mod initialization_edge_cases {
     #[test]
     fn test_runtime_config_all_ports_unique() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Collect all ports
         let ports = [
@@ -133,6 +159,9 @@ mod initialization_edge_cases {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_runtime_config_endpoints_not_empty() {
         let config = RuntimeConfig::default();

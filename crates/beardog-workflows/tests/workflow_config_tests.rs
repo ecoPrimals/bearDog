@@ -16,6 +16,9 @@ fn test_workflow_config_creation() {
 
     assert_eq!(config.max_concurrent_workflows, 10);
     assert_eq!(config.default_timeout_seconds, 300);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert_eq!(config.retry_attempts, 3);
     assert!(config.enable_audit_logging);
     assert_eq!(config.workflow_storage_path, "/var/lib/beardog/workflows");
@@ -30,6 +33,9 @@ fn test_workflow_config_serialization() {
         enable_audit_logging: true,
         workflow_storage_path: "/var/lib/beardog/workflows".to_string(),
     };
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 
     let json = serde_json::to_string(&config).expect("Serialization should succeed");
     assert!(json.contains("10"));
@@ -37,6 +43,9 @@ fn test_workflow_config_serialization() {
     assert!(json.contains("3"));
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_config_deserialization() {
     let json = r#"{
@@ -58,6 +67,9 @@ fn test_workflow_config_deserialization() {
 #[test]
 fn test_workflow_config_high_concurrency() {
     let config = WorkflowConfig {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         max_concurrent_workflows: 1000,
         default_timeout_seconds: 60,
         retry_attempts: 5,
@@ -68,6 +80,9 @@ fn test_workflow_config_high_concurrency() {
     assert_eq!(config.max_concurrent_workflows, 1000);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_config_no_retries() {
     let config = WorkflowConfig {

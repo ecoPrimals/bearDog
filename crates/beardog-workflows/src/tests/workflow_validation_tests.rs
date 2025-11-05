@@ -18,18 +18,33 @@ mod workflow_validation {
         // Test passes (placeholder removed) // Placeholder
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[test]
     fn test_workflow_validation_with_invalid_transitions() {
         // Test invalid state transitions are rejected
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed) // Placeholder
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: important
     #[test]
     fn test_workflow_validation_with_missing_required_fields() {
         // Test validation of required workflow fields
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed) // Placeholder
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[test]
     fn test_workflow_execution_timeout_handling() {
         // Test workflow timeout scenarios

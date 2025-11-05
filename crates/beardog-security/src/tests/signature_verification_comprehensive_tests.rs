@@ -48,6 +48,9 @@ mod signature_tests {
         let result = verifying_key.verify(different_data, &signature);
 
         assert!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             result.is_err(),
             "Invalid signature should fail verification"
         );
@@ -60,6 +63,9 @@ mod signature_tests {
         let signing_key2 = generate_signing_key();
         let verifying_key2 = signing_key2.verifying_key();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         // Sign with first key
         let data = b"Test message";
         let signature: Signature = signing_key1.sign(data);
@@ -77,6 +83,9 @@ mod signature_tests {
     fn test_sign_empty_data() {
         let signing_key = generate_signing_key();
         let verifying_key = signing_key.verifying_key();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Sign empty data
         let empty_data = b"";
@@ -94,6 +103,9 @@ mod signature_tests {
 
         // Sign large data (1 MB)
         let large_data = vec![0u8; 1024 * 1024];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let signature: Signature = signing_key.sign(&large_data);
 
         // Verify large data signature
@@ -105,6 +117,9 @@ mod signature_tests {
     fn test_verify_corrupted_signature() {
         let signing_key = generate_signing_key();
         let verifying_key = signing_key.verifying_key();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let data = b"Test message";
         let signature: Signature = signing_key.sign(data);
@@ -116,6 +131,9 @@ mod signature_tests {
 
         // Try to verify corrupted signature
         let result = verifying_key.verify(data, &corrupted_sig);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Should return error
         assert!(result.is_err(), "Corrupted signature should not verify");
@@ -133,6 +151,9 @@ mod signature_tests {
         // Truncate the signature - ed25519 signatures are exactly 64 bytes
         // Creating a signature from truncated bytes will fail
         let truncated = &sig_bytes[..54]; // 10 bytes shorter
+                                          // TEST_CATEGORY: integration
+                                          // TEST_DOMAIN: security
+                                          // TEST_PRIORITY: normal
 
         // Try to create signature from truncated bytes (should fail at construction)
         assert_eq!(
@@ -155,6 +176,9 @@ mod signature_tests {
         let signature1: Signature = signing_key.sign(data);
         let signature2: Signature = signing_key.sign(data);
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Ed25519 signatures are deterministic
         assert_eq!(
             signature1, signature2,
@@ -168,6 +192,9 @@ mod signature_tests {
         let verifying_key = signing_key.verifying_key();
 
         // Sign multiple different messages
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let messages = vec![
             b"Message 1".as_slice(),
             b"Message 2".as_slice(),
@@ -197,6 +224,9 @@ mod signature_tests {
     #[test]
     fn test_signature_boundary_conditions() {
         let signing_key = generate_signing_key();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         let verifying_key = signing_key.verifying_key();
 
         // Test various data sizes
@@ -211,6 +241,9 @@ mod signature_tests {
         }
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_signature_with_special_characters() {
         let signing_key = generate_signing_key();

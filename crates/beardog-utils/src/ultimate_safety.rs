@@ -488,6 +488,9 @@ mod tests {
 
         // Test safe write
         let data = b"Hello, World!";
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let written = buffer.safe_write(data)?;
         assert_eq!(written, data.len());
 
@@ -507,6 +510,9 @@ mod tests {
     #[test]
     fn test_ultimate_safe_memory_pool() -> Result<(), Box<dyn std::error::Error>> {
         let pool = UltimateSafeMemoryPool::new(|| String::from("test"), 10);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Test borrowing
         let obj1 = pool.safe_borrow()?;
@@ -522,6 +528,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_safe_reference() -> Result<(), Box<dyn std::error::Error>> {
         let safe_ref = SafeReference::new(42i32);

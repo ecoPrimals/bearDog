@@ -157,9 +157,19 @@ pub struct CapabilityRegistryConfig {
 impl Default for CapabilityRegistryConfig {
     fn default() -> Self {
         Self {
-            health_check_interval: Duration::from_secs(30),
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_CAPABILITY_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
             max_consecutive_failures: 3,
-            health_check_timeout: Duration::from_secs(5),
+            health_check_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_CAPABILITY_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            ),
             auto_remove_unhealthy: false,
         }
     }
@@ -573,6 +583,9 @@ mod tests {
     }
 
     #[tokio::test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     async fn test_discover_by_type() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
 
@@ -581,6 +594,9 @@ mod tests {
         registry.register(compute_cap).await?;
 
         // Register storage capability
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let storage_cap = create_test_capability(ServiceCapabilityType::Storage);
         registry.register(storage_cap).await?;
 
@@ -604,6 +620,9 @@ mod tests {
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
         let id = registry.register(capability).await?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Update health status
         registry
@@ -611,7 +630,10 @@ mod tests {
             .await?;
 
         // Verify update
-        let cap = registry.get(&id).await?.unwrap();
+        let cap = registry
+            .get(&id)
+            .await?
+            .expect("capability should exist after update");
         assert_eq!(cap.consecutive_failures, 0);
 
         Ok(())
@@ -620,6 +642,9 @@ mod tests {
     #[tokio::test]
     async fn test_remove_capability() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let capability = create_test_capability(ServiceCapabilityType::Compute);
 
         let id = registry.register(capability).await?;
@@ -634,6 +659,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_statistics() -> Result<(), Box<dyn std::error::Error>> {
         let registry = CapabilityRegistry::new();
@@ -653,11 +681,17 @@ mod tests {
 
         assert_eq!(stats.total_capabilities, 3);
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Compute).unwrap(),
+            *stats
+                .by_type
+                .get(&ServiceCapabilityType::Compute)
+                .expect("compute type should be in stats"),
             2
         );
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Storage).unwrap(),
+            *stats
+                .by_type
+                .get(&ServiceCapabilityType::Storage)
+                .expect("storage type should be in stats"),
             1
         );
 

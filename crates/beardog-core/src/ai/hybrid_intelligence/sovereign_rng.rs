@@ -1,17 +1,29 @@
-// Sovereign Entropy-Driven Randomization for Neural Networks
-//
-// This module implements a revolutionary approach to AI randomization by utilizing
-// BearDog's human entropy hierarchy. Instead of relying solely on machine-generated
-// randomness, human-operated neural networks can use human-generated entropy for
-// weight initialization, data augmentation, and training randomization.
-//
-// ## Entropy Hierarchy Integration
-//
-// - **Tier 3 (Human Lived Experience)**: For human-owned AI models
-// - **Tier 2 (Human Supervised Machine)**: For human-validated systems
-// - **Tier 1 (Store Bought Machine)**: For automated/validation systems
-//
-// This preserves human sovereignty over AI systems while maintaining security.
+//! # Sovereign Entropy-Driven Randomization for Neural Networks
+//!
+//! Implements a revolutionary approach to AI randomization by utilizing BearDog's
+//! human entropy hierarchy. Instead of relying solely on machine-generated randomness,
+//! human-operated neural networks can use human-generated entropy for weight
+//! initialization, data augmentation, and training randomization.
+//!
+//! ## Entropy Hierarchy Integration
+//!
+//! - **Tier 3 (Human Lived Experience)**: For human-owned AI models
+//! - **Tier 2 (Human Supervised Machine)**: For human-validated systems
+//! - **Tier 1 (Store Bought Machine)**: For automated/validation systems
+//!
+//! This preserves human sovereignty over AI systems while maintaining security.
+//!
+//! ## Example
+//!
+//! ```rust,ignore
+//! use beardog_core::ai::hybrid_intelligence::sovereign_rng::SovereignRng;
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! let rng = SovereignRng::new_with_human_entropy("user_id", 3)?;
+//! let weights = rng.generate_weights_for_layer((256, 512))?;
+//! # Ok(())
+//! # }
+//! ```
 
 use super::neural_networks::{EntropyDistribution, WeightInitialization};
 use beardog_errors::BearDogError;
@@ -25,28 +37,36 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info};
 
+/// Sovereign random number generator using human entropy
+///
+/// Provides cryptographically secure random number generation backed by
+/// human-generated entropy from the `BearDog` sovereignty hierarchy, ensuring
+/// AI systems respect human control and dignity.
 #[derive(Debug, Clone)]
 pub struct SovereignRng {
     #[allow(dead_code)] // Used for entropy management but not yet fully implemented
     entropy_manager: EntropyHierarchyManager,
     /// Cached entropy seeds by human identity
     entropy_cache: HashMap<String, CachedEntropySeed>,
+    /// Configuration for sovereign RNG behavior
     config: SovereignRngConfig,
 }
 
+/// Configuration for sovereign random number generation
+///
+/// Controls how human entropy is sourced, cached, and used for AI randomization,
+/// including fallback behavior and audit settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SovereignRngConfig {
-    /// Number of `min_entropy_tier`
+    /// Minimum entropy tier required (1-3, higher is more secure)
     pub min_entropy_tier: u8,
-    /// Whether `cache_entropy` is enabled
+    /// Whether to cache entropy seeds for performance
     pub cache_entropy: bool,
-    /// Maximum cache age in seconds
-    /// Number of `cache_max_age_seconds`
+    /// Maximum age for cached entropy in seconds
     pub cache_max_age_seconds: u64,
     /// Fallback to machine entropy when human entropy unavailable
-    /// Whether `allow_machine_fallback` is enabled
     pub allow_machine_fallback: bool,
-    /// Whether `audit_entropy_usage` is enabled
+    /// Whether to audit all entropy usage for sovereignty compliance
     pub audit_entropy_usage: bool,
 }
 
@@ -65,16 +85,18 @@ struct CachedEntropySeed {
 }
 
 /// Neural network weight initialization using human entropy
+///
+/// Initializes neural network weights using human-generated entropy,
+/// ensuring AI models respect human sovereignty from their inception.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyWeightInitializer {
-    /// Required entropy tier
-    /// Number of `entropy_tier`
+    /// Required entropy tier (1-3) for weight initialization
     pub entropy_tier: u8,
+    /// Human identity providing the entropy
     pub human_identity_id: String,
-    /// Distribution configuration
-    /// The distribution value
+    /// Statistical distribution for weight sampling
     pub distribution: EntropyDistribution,
-    /// The layer shape value
+    /// Layer dimensions (`input_size`, `output_size`)
     pub layer_shape: (usize, usize),
 }
 
@@ -403,15 +425,22 @@ impl SovereignRng {
     }
 }
 
+/// Statistics about sovereign RNG usage and entropy caching
+///
+/// Tracks operational metrics for monitoring entropy consumption
+/// and cache effectiveness in sovereign random number generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SovereignRngStats {
-    /// Number of cached entropy seeds
-    /// Number of `cached_seeds`
+    /// Number of entropy seeds currently in cache
     pub cached_seeds: usize,
-    /// Current configuration
+    /// Active RNG configuration
     pub config: SovereignRngConfig,
 }
 
+/// Integration layer for using sovereign entropy in neural networks
+///
+/// Bridges between `BearDog`'s human entropy system and neural network
+/// weight initialization, enabling AI training with human-owned randomness.
 #[derive(Debug)]
 pub struct NeuralNetworkEntropyIntegration;
 
@@ -457,11 +486,17 @@ mod tests {
     #[tokio::test]
     async fn test_sovereign_rng_creation() {
         let entropy_manager = EntropyHierarchyManager::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = SovereignRngConfig::default();
         let _rng = SovereignRng::new(entropy_manager, config);
         // Test passes if no panic
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_entropy_distribution_variants() {
         let distributions = [

@@ -81,8 +81,14 @@ impl Default for HybridIntelligenceConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            human_oversight_level: 0.5,
-            auto_decision_threshold: 0.9,
+            human_oversight_level: std::env::var("BEARDOG_AI_HUMAN_OVERSIGHT_LEVEL")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.5),
+            auto_decision_threshold: std::env::var("BEARDOG_AI_AUTO_DECISION_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.9),
             feedback_learning: true,
             human_input_timeout: Duration::from_secs(30),
         }
@@ -116,10 +122,19 @@ impl Default for InferenceConfig {
         Self {
             enabled: true,
             endpoints: vec![],
-            batch_size: 32,
-            max_latency_ms: 100,
+            batch_size: std::env::var("BEARDOG_AI_BATCH_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(32),
+            max_latency_ms: std::env::var("BEARDOG_AI_MAX_LATENCY_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
             enable_caching: true,
-            cache_size_mb: 1024,
+            cache_size_mb: std::env::var("BEARDOG_AI_CACHE_SIZE_MB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1024),
         }
     }
 }

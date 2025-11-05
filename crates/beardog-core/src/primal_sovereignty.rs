@@ -16,28 +16,33 @@ type SovereigntyConfig = PrimalSovereigntyConfig;
 
 /// Primal sovereignty configuration
 /// Renamed from `SovereigntyConfig` to avoid collision with `sovereignty::SovereigntyConfig`
+/// Configuration for primal sovereignty management
+///
+/// Defines sovereignty monitoring and validation thresholds for primal instances.
 #[derive(Debug, Clone, Default)]
 pub struct PrimalSovereigntyConfig {
+    /// Unique primal identifier
     pub primal_id: String,
-    /// Whether to enable sovereignty monitoring
-    /// Whether `enable_sovereignty_monitoring` is enabled
+    /// Whether to enable continuous sovereignty monitoring
     pub enable_sovereignty_monitoring: bool,
-    /// The sovereignty threshold value
+    /// Minimum sovereignty score threshold (0.0-1.0)
     pub sovereignty_threshold: f64,
 }
 
+/// Current sovereignty state of a primal
+///
+/// Tracks the sovereignty status, score, and validation history of a primal instance.
 #[derive(Debug, Clone)]
 pub struct SovereigntyState {
+    /// Primal identifier
     pub primal_id: String,
-    /// When this primal was first initialized
+    /// When this primal was first initialized (genesis)
     pub genesis_timestamp: DateTime<Utc>,
     /// Whether sovereignty is currently active
-    /// Whether `is_active` is enabled
     pub is_active: bool,
-    /// Current sovereignty score (0.0-1.0)
-    /// The sovereignty score value
+    /// Current sovereignty score (0.0-1.0, where 1.0 is fully sovereign)
     pub sovereignty_score: f64,
-    /// Timestamp of last validation check
+    /// Timestamp of last sovereignty validation check
     pub last_validation: DateTime<Utc>,
 }
 
@@ -53,15 +58,24 @@ impl Default for SovereigntyState {
     }
 }
 
+/// Sovereignty manager for primal instances
+///
+/// Manages sovereignty validation, genetic spawning, cryptography, and entropy hierarchy
+/// for maintaining primal autonomy and sovereignty.
 #[derive(Debug)]
 pub struct SovereigntyManager {
+    /// Sovereignty configuration
     config: PrimalSovereigntyConfig,
+    /// Genetic spawning engine for primal evolution
     #[allow(dead_code)]
     genetics: GeneticSpawningEngine,
+    /// Encryption configuration
     #[allow(dead_code)]
     crypto_config: EncryptionConfig,
+    /// Human entropy hierarchy manager
     #[allow(dead_code)]
     hierarchy_manager: EntropyHierarchyManager,
+    /// Current sovereignty state
     sovereignty_state: SovereigntyState,
 }
 
@@ -155,14 +169,20 @@ impl SovereigntyManager {
     }
 }
 
+/// Sovereignty status information for a primal
+///
+/// Provides a snapshot of primal sovereignty state including score and validation timing.
 #[derive(Debug, Clone)]
 pub struct SovereigntyStatus {
+    /// Primal identifier
     pub primal_id: String,
+    /// Genesis timestamp (when primal was created)
     pub genesis_timestamp: DateTime<Utc>,
-    /// Whether `is_active` is enabled
+    /// Whether sovereignty is currently active
     pub is_active: bool,
-    /// The sovereignty score value
+    /// Current sovereignty score (0.0-1.0)
     pub sovereignty_score: f64,
+    /// Last validation timestamp
     pub last_validation: DateTime<Utc>,
 }
 

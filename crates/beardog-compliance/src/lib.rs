@@ -55,3 +55,7 @@ pub use compliance::*;
 // October 27, 2025: Comprehensive test expansion
 #[cfg(test)]
 mod audit_comprehensive_tests;
+
+// October 31, 2025: Week 3 Test Expansion - Compliance Validation
+#[cfg(test)]
+mod compliance_validation_tests;

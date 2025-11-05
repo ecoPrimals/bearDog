@@ -163,6 +163,9 @@ mod tests {
     #[test]
     fn test_consolidated_builder() {
         let config = ConsolidatedAiConfig::builder()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .enabled(true)
             .build()
             ?;
@@ -170,6 +173,9 @@ mod tests {
         assert!(config.is_enabled());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_presets() {
         let prod = ConsolidatedAiConfigBuilder::production_safe()

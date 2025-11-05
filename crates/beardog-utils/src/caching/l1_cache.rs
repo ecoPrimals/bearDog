@@ -297,6 +297,9 @@ mod tests {
 
         // Test miss
         let result = cache.get("nonexistent")?;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(result, None);
 
         // Test statistics
@@ -316,6 +319,9 @@ mod tests {
         // Fill cache
         cache.set("key1", b"value1")?;
         cache.set("key2", b"value2")?;
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         // This should evict key1 (LRU)
         cache.set("key3", b"value3")?;
@@ -333,6 +339,9 @@ mod tests {
         let mut cache = L1Cache::new(config)?;
 
         // Set with very short TTL
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         cache.set_with_ttl("key1", b"value1", Some(Duration::from_millis(1)))?;
 
         // Wait for expiration
@@ -347,6 +356,9 @@ mod tests {
     #[test]
     fn test_l1_cache_clear() -> Result<(), BearDogError> {
         let config = CacheConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut cache = L1Cache::new(config)?;
 
         cache.set("key1", b"value1")?;
@@ -362,6 +374,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_l1_cache_hit_ratio() -> Result<(), BearDogError> {
         let config = CacheConfig::default();

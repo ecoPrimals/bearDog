@@ -48,6 +48,9 @@ async fn test_production_deployment_e2e() {
         test_result.error_message
     );
     assert!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         test_result.metrics.successful_requests > 0,
         "No successful requests"
     );
@@ -72,6 +75,9 @@ async fn test_full_stack_integration_e2e() {
     assert!(
         test_result.success,
         "Full-stack integration scenario failed: {:?}",
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         test_result.error_message
     );
     assert!(
@@ -92,6 +98,9 @@ async fn test_security_flow_e2e() {
     let test_result = result.unwrap();
     assert!(
         test_result.success,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "Security flow scenario failed: {:?}",
         test_result.error_message
     );
@@ -110,6 +119,9 @@ async fn test_disaster_recovery_e2e() {
     let result = framework.run_scenario(E2EScenario::DisasterRecovery).await;
     assert!(result.is_ok(), "Disaster recovery test failed");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let test_result = result.unwrap();
     assert!(
         test_result.success,
@@ -128,6 +140,9 @@ async fn test_all_e2e_scenarios() {
         .await
         .expect("Failed to create E2E framework");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let results = framework
         .run_all_scenarios()
         .await
@@ -150,9 +165,15 @@ async fn test_all_e2e_scenarios() {
 #[tokio::test]
 async fn test_e2e_framework_initialization() {
     let result = E2ETestFramework::new().await;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(result.is_ok(), "E2E framework initialization failed");
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_e2e_scenario_types() {
     // Verify scenario enum variants

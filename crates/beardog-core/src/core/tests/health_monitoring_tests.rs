@@ -30,6 +30,9 @@ async fn test_health_status_after_init() {
         HealthStatus::Healthy,
         "Health should remain Healthy after initialization"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     drop(state);
 }
 
@@ -40,6 +43,9 @@ async fn test_development_config_health() {
 
     let state = core.state.read().await;
     assert_eq!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         state.overall_health,
         HealthStatus::Healthy,
         "Development config should have Healthy status"
@@ -51,6 +57,9 @@ async fn test_development_config_health() {
 async fn test_production_config_health() {
     let config = UnifiedBearDogConfig::production();
     let core = BearDogCore::new(config);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let state = core.state.read().await;
     assert_eq!(
@@ -62,6 +71,9 @@ async fn test_production_config_health() {
 }
 
 #[tokio::test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 async fn test_components_registry_accessible() {
     let core = BearDogCore::with_default_config().unwrap();
     let state = core.state.read().await;
@@ -73,6 +85,9 @@ async fn test_components_registry_accessible() {
 
 #[tokio::test]
 async fn test_multiple_health_checks() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let core = BearDogCore::with_default_config().unwrap();
 
     // Check health multiple times
@@ -80,6 +95,9 @@ async fn test_multiple_health_checks() {
         let state = core.state.read().await;
         assert_eq!(state.overall_health, HealthStatus::Healthy);
         drop(state); // Release lock
+                     // TEST_CATEGORY: integration
+                     // TEST_DOMAIN: core
+                     // TEST_PRIORITY: normal
     }
 }
 
@@ -89,6 +107,9 @@ async fn test_concurrent_health_checks() {
 
     let mut handles = vec![];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for _ in 0..10 {
         let core_clone = std::sync::Arc::clone(&core);
         let handle = tokio::spawn(async move {
@@ -108,6 +129,9 @@ async fn test_concurrent_health_checks() {
 #[tokio::test]
 async fn test_health_status_consistency() {
     let core = BearDogCore::with_default_config().unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let state1 = core.state.read().await;
     let health1 = state1.overall_health;
@@ -120,6 +144,9 @@ async fn test_health_status_consistency() {
     assert_eq!(health1, health2, "Health status should be consistent");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_initialized_core_health() {
     let config = UnifiedBearDogConfig::default();

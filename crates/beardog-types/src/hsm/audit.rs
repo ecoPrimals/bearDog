@@ -81,10 +81,16 @@ mod tests {
         assert_eq!(event.event_type, "key_generation");
         assert!(event.metadata.is_empty());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_audit_event_with_metadata() {
         let event = AuditEvent::new("key_access")
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             .with_user("user123")
             .with_resource("hsm-key-001")
             .with_action("encrypt")
@@ -99,6 +105,9 @@ mod tests {
         assert_eq!(event.metadata.get("outcome"), Some(&"success".to_string()));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_audit_event_default() {
         let event = AuditEvent::default();

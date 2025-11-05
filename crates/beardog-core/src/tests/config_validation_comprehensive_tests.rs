@@ -53,7 +53,11 @@ mod config_validation_tests {
             "API and health ports should differ"
         );
         assert_ne!(
-            config.network.api_port, config.network.metrics_port,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
+            config.network.api_port,
+            config.network.metrics_port,
             "API and metrics ports should differ"
         );
         assert_ne!(
@@ -66,6 +70,9 @@ mod config_validation_tests {
     fn test_timeout_is_reasonable() {
         let config = RuntimeConfig::default();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Timeout should be reasonable (not too short, not too long)
         assert!(
             config.network.timeout_seconds >= 1,
@@ -82,6 +89,9 @@ mod config_validation_tests {
         let config = RuntimeConfig::default();
 
         // Max connections should be reasonable
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(
             config.network.max_connections >= 10,
             "Should support at least 10 connections"
@@ -98,6 +108,9 @@ mod config_validation_tests {
         let cloned = config.clone();
 
         // Verify clone produces equivalent config
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.network.api_port, cloned.network.api_port);
         assert_eq!(config.network.health_port, cloned.network.health_port);
         assert_eq!(config.network.metrics_port, cloned.network.metrics_port);
@@ -110,6 +123,9 @@ mod config_validation_tests {
 
         // Should be able to debug print config
         let debug_output = format!("{config:?}");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!debug_output.is_empty(), "Debug output should not be empty");
         assert!(
             debug_output.contains("RuntimeConfig"),
@@ -122,6 +138,9 @@ mod config_validation_tests {
         let config = RuntimeConfig::default();
 
         // TLS should be enabled by default for security
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(
             config.network.enable_tls,
             "TLS should be enabled by default"
@@ -131,6 +150,9 @@ mod config_validation_tests {
     #[test]
     fn test_environment_is_set() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Environment should be set
         assert!(
@@ -141,6 +163,9 @@ mod config_validation_tests {
 
     #[test]
     fn test_api_host_not_empty() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = RuntimeConfig::default();
 
         assert!(
@@ -149,6 +174,9 @@ mod config_validation_tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_port_ranges_valid() {
         let config = RuntimeConfig::default();
@@ -157,6 +185,9 @@ mod config_validation_tests {
         assert!(config.network.api_port > 0);
         assert!(config.network.health_port > 0);
         assert!(config.network.metrics_port > 0);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -164,13 +195,18 @@ mod config_validation_tests {
         let config = RuntimeConfig::default();
 
         // Check various sensible defaults
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(
             config.network.api_port > 1024,
             "API port should be above privileged range"
         );
         assert!(
             config.network.health_port > 1024,
-            "Health port should be above privileged range"
+            "Health port should be above privileged range" // TEST_CATEGORY: integration
+                                                           // TEST_DOMAIN: core
+                                                           // TEST_PRIORITY: normal
         );
         assert!(
             config.network.metrics_port > 1024,
@@ -187,6 +223,9 @@ mod config_validation_tests {
             "Network timeout should be greater than zero"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_network_max_connections_not_zero() {
@@ -194,6 +233,9 @@ mod config_validation_tests {
 
         assert!(
             config.network.max_connections > 0,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             "Max connections should be greater than zero"
         );
     }
@@ -201,12 +243,18 @@ mod config_validation_tests {
     #[test]
     fn test_config_enables_security_by_default() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Security features should be enabled by default
         assert!(config.network.enable_tls, "TLS should be enabled");
         // Add more security-related checks as needed
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_config_struct_size_reasonable() {
         use std::mem::size_of;

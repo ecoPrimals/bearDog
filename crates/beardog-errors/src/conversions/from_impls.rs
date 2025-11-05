@@ -22,6 +22,9 @@ mod tests {
     use super::*;
     use beardog_errors::BearDogError;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     #[test]
     fn test_configuration_error() {
         let error = BearDogError::configuration("Invalid configuration file");

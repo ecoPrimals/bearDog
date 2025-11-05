@@ -136,8 +136,13 @@ impl Default for CanonicalAuthConfig {
         Self {
             enabled: true,
             providers: vec![AuthProvider::Local],
-            session_timeout: Duration::from_secs(3600), // 1 hour default
-            max_login_attempts: 5,                      // Reasonable default to prevent brute force
+            session_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_AUTH_SESSION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600),
+            ),
+            max_login_attempts: 5, // Reasonable default to prevent brute force
         }
     }
 }

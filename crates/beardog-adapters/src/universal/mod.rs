@@ -3,6 +3,7 @@
 // This module contains all universal adapters that replace hardcoded integrations
 // with dynamic capability-based discovery and interaction.
 
+pub mod adapter_types;
 pub mod capability_based_adapter;
 pub mod primal_capability_adapter;
 pub mod capability_adapter;
@@ -16,6 +17,7 @@ pub mod entropy_capability_adapter;
 
 pub mod vendor_adapter;
 
+pub use adapter_types::*;
 pub use capability_based_adapter::*;
 pub use primal_capability_adapter::*;
 pub use capability_adapter::*;

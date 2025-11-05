@@ -95,20 +95,32 @@ mod monitoring_error_tests {
         let result = aggregator.aggregate(metrics);
         assert!(result.is_err(), "Should reject NaN and Infinity values");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_monitoring_service_concurrent_start() {
         // Test concurrent start attempts
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let service = Arc::new(MonitoringServiceWrapper::new());
         let service_clone = Arc::clone(&service);
 
         let handle = std::thread::spawn(move || service_clone.start());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
 
         let result1 = service.start();
         let result2 = handle.join().expect("Thread should complete");
 
         // One should succeed, one should detect already running
         assert!(result1.is_ok() || result2.is_ok());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         assert!(result1.is_err() || result2.is_err());
     }
 
@@ -117,12 +129,18 @@ mod monitoring_error_tests {
         // Test stopping service that was never started
         let service = MonitoringServiceWrapper::new();
         let result = service.stop();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: important
 
         assert!(result.is_err(), "Should fail to stop non-running service");
     }
 
     #[test]
     fn test_threshold_violation_detection() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test threshold violation detection
         let monitor = ThresholdMonitor::new(100.0);
 
@@ -133,13 +151,18 @@ mod monitoring_error_tests {
         );
         assert!(
             monitor.check_violation(101.0),
-            "Should violate above threshold"
+            "Should violate above threshold" // TEST_CATEGORY: integration
+                                             // TEST_DOMAIN: monitoring
+                                             // TEST_PRIORITY: normal
         );
     }
 
     #[test]
     fn test_threshold_violation_negative_values() {
         // Test threshold with negative values
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: important
         let monitor = ThresholdMonitor::new(0.0);
 
         // -1.0 is NOT > 0.0, so it should not violate
@@ -156,6 +179,9 @@ mod monitoring_error_tests {
     #[test]
     fn test_circular_metric_buffer() {
         // Test circular buffer overflow handling
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let mut buffer = CircularMetricBuffer::with_capacity(3);
 
         buffer.push(1.0);
@@ -169,12 +195,18 @@ mod monitoring_error_tests {
 
     #[test]
     fn test_circular_metric_buffer_empty() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test operations on empty buffer
         let buffer = CircularMetricBuffer::with_capacity(10);
 
         assert_eq!(buffer.len(), 0);
         assert!(buffer.get_values().is_empty());
         assert!(buffer.average().is_none());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -188,6 +220,9 @@ mod monitoring_error_tests {
 
         let result = exporter.export(metrics, "invalid://destination");
         assert!(result.is_err(), "Should fail with invalid destination");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -201,6 +236,9 @@ mod monitoring_error_tests {
 
         let result = exporter.export(metrics, "http://unreachable:9999");
         assert!(result.is_err(), "Should fail when connection fails");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -212,6 +250,9 @@ mod monitoring_error_tests {
         let result2 = manager.send_alert("error", vec!["admin@test.com"]);
 
         assert!(result1.is_ok());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         assert!(result2.is_err(), "Should deduplicate identical alert");
     }
 
@@ -219,6 +260,9 @@ mod monitoring_error_tests {
     fn test_health_check_partial_failure() {
         // Test health check when some components fail
         let checker = HealthCheckService::new();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: important
         checker.register_component("db", true);
         checker.register_component("cache", false);
         checker.register_component("api", true);
@@ -229,6 +273,9 @@ mod monitoring_error_tests {
         let status = result.unwrap();
         assert!(!status.all_healthy, "Should indicate partial failure");
         assert_eq!(status.failed_components.len(), 1);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: important
     }
 
     #[test]
@@ -239,6 +286,9 @@ mod monitoring_error_tests {
         storage.store(Metric {
             value: 1.0,
             timestamp: 0,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: monitoring
+            // TEST_PRIORITY: normal
         });
         storage.store(Metric {
             value: 2.0,
@@ -248,6 +298,9 @@ mod monitoring_error_tests {
         storage.cleanup_old_metrics(150);
 
         let metrics = storage.get_all();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: important
         assert_eq!(metrics.len(), 1, "Should retain only recent metrics");
     }
 
@@ -261,6 +314,9 @@ mod monitoring_error_tests {
             let counter_clone = Arc::clone(&counter);
             let handle = std::thread::spawn(move || {
                 for _ in 0..100 {
+                    // TEST_CATEGORY: integration
+                    // TEST_DOMAIN: monitoring
+                    // TEST_PRIORITY: normal
                     counter_clone.fetch_add(1, Ordering::SeqCst);
                 }
             });
@@ -278,6 +334,9 @@ mod monitoring_error_tests {
     fn test_monitoring_graceful_shutdown() {
         // Test graceful shutdown preserves data
         let service = MonitoringServiceWrapper::new();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         service.start().expect("Should start");
 
         let _ = service.record_metric(Metric {
@@ -298,6 +357,9 @@ mod monitoring_error_tests {
         let manager = AlertManager::new();
 
         // Send multiple warnings
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         for _ in 0..5 {
             let _ = manager.send_alert("warning", vec!["admin@test.com"]);
         }
@@ -313,6 +375,9 @@ mod monitoring_error_tests {
         let sampler = MetricSampler::with_rate(0.5);
 
         let mut sampled = 0;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         for _ in 0..1000 {
             if sampler.should_sample() {
                 sampled += 1;
@@ -325,6 +390,9 @@ mod monitoring_error_tests {
             "Sampling rate off: {}",
             sampled
         );
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -342,6 +410,9 @@ mod monitoring_error_tests {
     #[test]
     fn test_health_check_timeout() {
         // Test health check with timeout
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let checker = HealthCheckService::with_timeout(1);
         let result = checker.check_slow_service();
 
@@ -351,12 +422,18 @@ mod monitoring_error_tests {
     #[test]
     fn test_metric_overflow_protection() {
         // Test metric counter overflow protection
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let counter = SafeCounter::new();
 
         counter.set(u64::MAX);
         let result = counter.increment();
 
         assert!(result.is_err(), "Should detect overflow at MAX");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: important
     }
 
     #[test]
@@ -365,6 +442,9 @@ mod monitoring_error_tests {
         let manager = AlertManager::with_queue_size(2);
 
         let result1 = manager.send_alert("info", vec!["admin@test.com"]);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let result2 = manager.send_alert("info", vec!["admin@test.com"]);
         let result3 = manager.send_alert("info", vec!["admin@test.com"]);
 
@@ -376,6 +456,9 @@ mod monitoring_error_tests {
     #[test]
     fn test_metrics_aggregation_percentiles() {
         // Test percentile calculation with edge cases
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         let aggregator = MetricsAggregator::new();
 
         let metrics = vec![
@@ -398,6 +481,9 @@ mod monitoring_error_tests {
         assert!((result.unwrap() - 2.0).abs() < 0.1);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_monitoring_memory_limit() {
         // Test monitoring respects memory limits

@@ -17,10 +17,25 @@ use beardog_errors::BearDogError;
             )));
         }
 
+        // Use environment-configurable Grafana endpoint with sensible defaults
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        let default_grafana_endpoint = format!(
+            "http://{}:{}",
+            std::env::var("BEARDOG_GRAFANA_HOST")
+                .or_else(|_| std::env::var("GRAFANA_HOST"))
+                .unwrap_or_else(|_| network_config.default_host.clone()),
+            std::env::var("BEARDOG_GRAFANA_PORT")
+                .or_else(|_| std::env::var("GRAFANA_PORT"))
+                .ok()
+                .and_then(|p| p.parse::<u16>().ok())
+                .unwrap_or(3000)
+        );
+        
         let endpoint = payload
             .get("endpoint")
             .and_then(|v| v.as_str())
-            .unwrap_or("http://localhost:3000");
+            .unwrap_or(&default_grafana_endpoint);
 
         tracing::info!(
             "📊 Grafana {} operation to endpoint {}",

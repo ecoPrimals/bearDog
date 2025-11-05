@@ -70,10 +70,22 @@ pub struct ConnectionConfig {
 impl Default for ConnectionConfig {
     fn default() -> Self {
         Self {
-            timeout_ms: 30_000,
-            max_retries: 3,
-            retry_delay_ms: 1000,
-            keep_alive_seconds: Some(300),
+            timeout_ms: std::env::var("BEARDOG_HSM_CONNECTION_TIMEOUT_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30_000),
+            max_retries: std::env::var("BEARDOG_HSM_CONNECTION_MAX_RETRIES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            retry_delay_ms: std::env::var("BEARDOG_HSM_CONNECTION_RETRY_DELAY_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000),
+            keep_alive_seconds: std::env::var("BEARDOG_HSM_KEEP_ALIVE_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .or(Some(300)),
         }
     }
 }
@@ -103,7 +115,12 @@ impl Default for SecurityConfig {
         Self {
             strict_mode: true,
             key_validation: "strict".to_string(),
-            session_timeout: Duration::from_secs(3600),
+            session_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_SESSION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600),
+            ),
             audit_logging: true,
             access_policies: vec![
                 "authenticated_access".to_string(),
@@ -184,7 +201,12 @@ impl Default for HsmConfig {
             connection: ConnectionConfig::default(),
             security: SecurityConfig::default(),
             auth_method: AuthMethod::default(),
-            operation_timeout: Duration::from_secs(30),
+            operation_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
             cache_size: Some(100),
             custom_params: HashMap::new(),
         }
@@ -211,9 +233,12 @@ pub struct SoftwareHsmConfig {
 
 impl Default for SoftwareHsmConfig {
     fn default() -> Self {
+        use crate::constants::domains::system::defaults::DEFAULT_TEMP_DIR;
+
         Self {
             base: HsmConfig::default(),
-            storage_path: "/tmp/beardog_hsm".to_string(),
+            storage_path: std::env::var("BEARDOG_HSM_STORAGE_PATH")
+                .unwrap_or_else(|_| format!("{}/hsm", DEFAULT_TEMP_DIR)),
             kek: None,
             memory_protection: true,
         }
@@ -284,10 +309,17 @@ pub struct NetworkHsmConfig {
 
 impl Default for NetworkHsmConfig {
     fn default() -> Self {
+        use crate::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+
         Self {
             base: HsmConfig::default(),
-            server_address: "localhost".to_string(),
-            port: 9000,
+            server_address: std::env::var("BEARDOG_HSM_SERVER")
+                .unwrap_or_else(|_| network_config.default_host.clone()),
+            port: std::env::var("BEARDOG_HSM_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(9000),
             use_tls: true,
             tls_cert_path: None,
             load_balancing: None,

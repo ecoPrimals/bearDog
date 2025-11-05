@@ -122,7 +122,11 @@ impl ProductionManager {
         info!("💾 Starting backup scheduler");
         let backup_config = self.&config.backup_config;
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(3600)); // Check hourly
+            let backup_interval_secs = std::env::var("BEARDOG_BACKUP_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3600); // Check hourly by default
+            let mut interval = tokio::time::interval(Duration::from_secs(backup_interval_secs));
             loop {
                 interval.tick();
                 if Self::should_run_backup(&backup_config.schedule) {
@@ -136,7 +140,11 @@ impl ProductionManager {
     fn start_maintenance_scheduler(&self) -> Result<(), BearDogError> {
         info!("🔧 Starting maintenance scheduler");
         let maintenance_config = self.&config.maintenance_config;
-            let mut interval = tokio::time::interval(Duration::from_secs(300)); // Check every 5 minutes
+            let maintenance_interval_secs = std::env::var("BEARDOG_MAINTENANCE_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300); // Check every 5 minutes by default
+            let mut interval = tokio::time::interval(Duration::from_secs(maintenance_interval_secs));
                 if Self::is_maintenance_window(&maintenance_config.maintenance_windows) {
                     info!("🔧 Maintenance window active");
 

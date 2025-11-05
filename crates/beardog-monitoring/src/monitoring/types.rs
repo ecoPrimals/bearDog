@@ -196,7 +196,10 @@ impl Default for AlertThresholds {
             cpu_threshold: 80.0,
             memory_threshold: 85.0,
             disk_threshold: 90.0,
-            network_latency_ms: 1000,
+            network_latency_ms: std::env::var("BEARDOG_NETWORK_LATENCY_THRESHOLD_MS")
+                .ok()
+                .and_then(|l| l.parse().ok())
+                .unwrap_or(1000), // 1 second default
             error_rate_threshold: 5.0,
         }
     }
@@ -318,7 +321,10 @@ impl Default for PrometheusConfig {
         Self {
             enabled: true,
             endpoint: "/metrics".to_string(),
-            port: 9090,
+            port: std::env::var("BEARDOG_PROMETHEUS_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(9090), // Prometheus standard port
             prefix: "beardog".to_string(),
         }
     }

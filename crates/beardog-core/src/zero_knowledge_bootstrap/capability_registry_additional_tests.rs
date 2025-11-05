@@ -36,6 +36,9 @@ mod capability_registry_additional_tests {
             health_status: Default::default(),
         };
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let result = registry.register(capability).await;
         assert!(result.is_ok());
     }
@@ -43,6 +46,9 @@ mod capability_registry_additional_tests {
     #[tokio::test]
     async fn test_register_multiple_capabilities() {
         let registry = CapabilityRegistry::new();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         for i in 0..5 {
             let capability = UniversalCapability {
@@ -58,6 +64,9 @@ mod capability_registry_additional_tests {
             let result = registry.register(capability).await;
             assert!(result.is_ok(), "Failed to register capability {}", i);
         }
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         let all_caps = registry.get_all_capabilities().await;
         assert!(all_caps.is_ok());
@@ -79,6 +88,9 @@ mod capability_registry_additional_tests {
                 metadata: CapabilityMetadata::default(),
                 health_status: Default::default(),
             };
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             registry.register(capability).await.unwrap();
         }
         
@@ -121,6 +133,9 @@ mod capability_registry_additional_tests {
             provider_id: "test-provider".to_string(),
             endpoint: "http://localhost:8080".to_string(),
             metadata: CapabilityMetadata::default(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             health_status: Default::default(),
         };
         
@@ -150,6 +165,9 @@ mod capability_registry_additional_tests {
         for i in 0..10 {
             let registry_clone = Arc::clone(&registry);
             let handle = tokio::spawn(async move {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 let capability = UniversalCapability {
                     id: format!("concurrent-cap-{}", i),
                     name: format!("Concurrent Capability {}", i),
@@ -183,6 +201,9 @@ mod capability_registry_additional_tests {
         
         let cap_id = "updateable-cap".to_string();
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Register initial capability
         let capability_v1 = UniversalCapability {
             id: cap_id.clone(),
@@ -219,6 +240,9 @@ mod capability_registry_additional_tests {
     #[tokio::test]
     async fn test_empty_registry_operations() {
         let registry = CapabilityRegistry::new();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         // All operations should work on empty registry
         let all_caps = registry.get_all_capabilities().await;
@@ -237,6 +261,9 @@ mod capability_registry_additional_tests {
         // Either is acceptable for non-existent removal
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_capability_metadata_preservation() {
         let registry = CapabilityRegistry::new();

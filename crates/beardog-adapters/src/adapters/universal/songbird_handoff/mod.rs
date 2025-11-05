@@ -318,34 +318,38 @@ impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
             },
         };
 
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        let default_host = network_config.default_host.clone();
+        
         let endpoints = ServiceEndpoints {
             primary: std::env::var("SERVICE_MESH_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
                     let port = std::env::var("BEARDOG_API_PORT").unwrap_or_else(|_| "8080".to_string());
                     format!("http://{}:{}/api/v1/capabilities", host, port)
                 }),
             health: std::env::var("SERVICE_MESH_HEALTH_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
                     let port = std::env::var("BEARDOG_HEALTH_PORT").unwrap_or_else(|_| "8081".to_string());
                     format!("http://{}:{}/health", host, port)
                 }),
             metrics: std::env::var("SERVICE_MESH_METRICS_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
                     let port = std::env::var("BEARDOG_METRICS_PORT").unwrap_or_else(|_| "9090".to_string());
                     format!("http://{}:{}/metrics", host, port)
                 }),
             admin: std::env::var("SERVICE_MESH_ADMIN_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
                     let port = std::env::var("BEARDOG_ADMIN_PORT").unwrap_or_else(|_| "8082".to_string());
                     format!("http://{}:{}/admin", host, port)
                 }),
             websocket: Some(std::env::var("SERVICE_MESH_WS_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
                     let port = std::env::var("BEARDOG_WS_PORT").unwrap_or_else(|_| "8080".to_string());
                     format!("ws://{}:{}/ws", host, port)
                 })),

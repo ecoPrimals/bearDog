@@ -13,37 +13,40 @@ use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 /// Each primal maintains only its own identity and capabilities
+/// Self-identity information for a service
+///
+/// Describes a service's own identity, capabilities, and status for ecosystem registration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SelfIdentity {
+    /// Unique identifier for this service
     pub id: String,
-    /// Human-readable name (e.g., "`BearDog`", "`ComputePrimal`", etc.)
-    /// Name of the item
+    /// Human-readable name (e.g., "`BearDog`", "`ComputePrimal`")
     pub name: String,
-    /// Version of this primal
-    /// The version value
+    /// Version string of this service
     pub version: String,
-    /// Capabilities this primal provides to the ecosystem
-    /// Collection of capabilities
+    /// Capabilities this service provides to the ecosystem
     pub capabilities: Vec<ServiceCapabilityType>,
-    /// Endpoint where this primal can be reached
-    /// The endpoint value
+    /// Endpoint URL where this service can be reached
     pub endpoint: String,
-    /// Health status
-    /// Current status of the health
+    /// Current health status
     pub health_status: HealthStatus,
-    /// Mapping of metadata
+    /// Additional service metadata
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
+/// Health status of a service or component
+///
+/// Categorizes operational health from healthy to unknown,
+/// enabling monitoring and automated response to degraded states.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStatus {
-    /// Represents healthy variant
+    /// Fully operational with no issues
     Healthy,
-    /// State indicating degraded
+    /// Partially operational with reduced capabilities
     Degraded,
-    /// Represents unhealthy variant
+    /// Not operational or experiencing critical issues
     Unhealthy,
-    /// Unknown or undefined state
+    /// Health status cannot be determined
     Unknown,
 }
 
@@ -277,20 +280,24 @@ impl SelfDiscoveryManager {
     }
 }
 
+/// Information about a discovered service in the ecosystem
+///
+/// Represents a service found through discovery, including its capabilities and health.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveredService {
+    /// Unique identifier of the discovered service
     pub service_id: String,
-    /// Name of the item
+    /// Human-readable name of the service
     pub name: String,
-    /// The endpoint value
+    /// Endpoint URL for accessing the service
     pub endpoint: String,
-    /// Collection of capabilities
+    /// Capabilities provided by this service
     pub capabilities: Vec<ServiceCapabilityType>,
-    /// Current status of the health
+    /// Current health status of the service
     pub health_status: HealthStatus,
-    /// Mapping of metadata
+    /// Additional service metadata
     pub metadata: HashMap<String, serde_json::Value>,
-    /// The discovered at value
+    /// Timestamp when the service was discovered
     pub discovered_at: chrono::DateTime<chrono::Utc>,
 }
 

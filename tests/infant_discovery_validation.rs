@@ -50,7 +50,9 @@ async fn test_no_hardcoded_primal_names() {
                 !discovered.to_lowercase().contains(forbidden),
                 "Discovered name '{}' should not contain hardcoded primal name '{}'",
                 discovered,
-                forbidden
+                forbidden // TEST_CATEGORY: unit
+                          // TEST_DOMAIN: core
+                          // TEST_PRIORITY: important
             );
         }
     }
@@ -67,6 +69,9 @@ async fn test_capability_based_discovery() {
     // WHEN: Discovery happens (simulated)
     // In real implementation: adapter.discover_by_capability(requested_capability)
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // THEN: Results should be based on capability, not primal name
     // This test validates the principle
 
@@ -89,6 +94,9 @@ fn test_universal_adapter_complexity() {
 
     // WHEN: Using universal adapter pattern
     // Each primal connects to 1 universal adapter
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let connections_with_adapter = num_primals; // O(1) per primal
 
     // WHEN: Using direct connections (anti-pattern)
@@ -109,6 +117,9 @@ fn test_universal_adapter_complexity() {
 
     // Ratio gets worse as scale increases (validates O(n²) problem)
     let small_ratio = connections_without_adapter as f64 / connections_with_adapter as f64;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let large_ratio = direct_connections as f64 / adapter_connections as f64;
 
     assert!(
@@ -147,6 +158,9 @@ fn test_environment_aware_configuration() {
 /// Test: Generic Naming Convention
 ///
 /// Validates that naming follows generic, capability-based patterns,
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 /// not specific primal or vendor names.
 #[test]
 fn test_generic_naming_convention() {
@@ -169,6 +183,9 @@ fn test_generic_naming_convention() {
                 !name.to_lowercase().contains(pattern),
                 "Generic name '{}' should not contain specific pattern '{}'",
                 name,
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 pattern
             );
         }
@@ -209,6 +226,9 @@ fn test_sovereignty_compliance() {
 
 /// Test: Infant Pattern Principle
 ///
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 /// Validates the core infant discovery principle at a conceptual level.
 #[test]
 fn test_infant_pattern_principle() {
@@ -225,6 +245,9 @@ fn test_infant_pattern_principle() {
     // Phase 2: Announcement
     let announced_to_ecosystem = true;
     assert!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         announced_to_ecosystem,
         "Phase 2: Infant announces capabilities"
     );
@@ -263,6 +286,9 @@ fn test_file_size_compliance() {
         "Files should not exceed {} lines for maintainability",
         max_lines
     );
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 /// Test: Zero Unsafe Code Principle
@@ -277,6 +303,9 @@ fn test_zero_unsafe_code_principle() {
     let unsafe_trait_impls_allowed = 0;
     let unsafe_functions_allowed = 0;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(unsafe_blocks_allowed, 0, "Zero unsafe blocks allowed");
     assert_eq!(
         unsafe_trait_impls_allowed, 0,
@@ -295,6 +324,9 @@ mod integration_tests {
 
         // 1. Birth: Primal knows only itself
         let self_id = "test_primal_uuid";
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!self_id.is_empty(), "Primal has self-identity");
 
         // 2. Discovery: No hardcoded ecosystem knowledge
@@ -322,6 +354,9 @@ mod integration_tests {
     #[test]
     fn test_network_effects_scaling() {
         // Validate that adding primals doesn't require quadratic connections
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Scenario 1: 5 primals
         let primals_5 = 5;
@@ -347,6 +382,9 @@ mod integration_tests {
 #[cfg(test)]
 mod performance_tests {
     /// Performance test: Discovery should be fast
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_discovery_performance() {
         use std::time::Instant;

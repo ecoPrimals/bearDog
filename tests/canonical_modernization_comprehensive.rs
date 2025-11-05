@@ -3,9 +3,15 @@ use beardog_errors::BearDogError;
 #[tokio::test]
 async fn test_canonical_modernization_basic() -> Result<(), BearDogError> {
     println!("Canonical modernization test running");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     Ok(())
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 #[test]
 fn test_error_system_basic() {
     let security_error = BearDogError::security("Test security".to_string());

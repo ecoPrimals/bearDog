@@ -122,8 +122,16 @@ impl Default for UnifiedHsmConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            default_timeout: Duration::from_secs(30),
-            connection_pool_size: 10,
+            default_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_DEFAULT_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(30),
+            ),
+            connection_pool_size: std::env::var("BEARDOG_HSM_CONNECTION_POOL_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
             retry_policy: HsmRetryPolicy::default(),
             hardware: UnifiedHardwareHsmConfig::default(),
             software: UnifiedSoftwareHsmConfig::default(),
@@ -169,9 +177,22 @@ impl Default for HsmRetryPolicy {
     fn default() -> Self {
         Self {
             enabled: true,
-            max_retries: 3,
-            initial_delay: Duration::from_millis(100),
-            max_delay: Duration::from_secs(30),
+            max_retries: std::env::var("BEARDOG_HSM_MAX_RETRIES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            initial_delay: Duration::from_millis(
+                std::env::var("BEARDOG_HSM_RETRY_INITIAL_DELAY_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+            ),
+            max_delay: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_RETRY_MAX_DELAY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
             backoff_multiplier: 2.0,
             retry_on_timeout: true,
             retry_on_connection_error: true,
@@ -199,7 +220,12 @@ impl Default for HsmTierManagementConfig {
         Self {
             enabled: true,
             auto_tier_assignment: true,
-            tier_evaluation_interval: Duration::from_secs(300),
+            tier_evaluation_interval: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_TIER_EVALUATION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(300),
+            ),
             tier_criteria: HashMap::new(),
         }
     }
@@ -420,10 +446,26 @@ impl Default for HsmHealthCheckConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            check_interval: Duration::from_secs(30),
-            timeout: Duration::from_secs(10),
-            failure_threshold: 3,
-            recovery_threshold: 2,
+            check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(30),
+            ),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(10),
+            ),
+            failure_threshold: std::env::var("BEARDOG_HSM_HEALTH_FAILURE_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(3),
+            recovery_threshold: std::env::var("BEARDOG_HSM_HEALTH_RECOVERY_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(2),
             health_check_types: vec![
                 HealthCheckType::Connectivity,
                 HealthCheckType::Authentication,
@@ -538,9 +580,19 @@ impl Default for FailoverConfig {
         Self {
             enabled: true,
             automatic_failover: true,
-            failover_timeout: Duration::from_secs(30),
+            failover_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_FAILOVER_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(30),
+            ),
             failback_enabled: true,
-            failback_delay: Duration::from_secs(60),
+            failback_delay: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_FAILBACK_DELAY_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(60),
+            ),
         }
     }
 }
@@ -566,8 +618,16 @@ impl Default for SessionManagementConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            session_timeout: Duration::from_secs(3600),
-            max_concurrent_sessions: 100,
+            session_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_SESSION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(3600),
+            ),
+            max_concurrent_sessions: std::env::var("BEARDOG_HSM_MAX_CONCURRENT_SESSIONS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
             session_pooling: true,
             session_encryption: true,
         }
@@ -601,8 +661,18 @@ impl Default for HsmBackupConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            backup_interval: Duration::from_secs(86400), // 24 hours
-            retention_period: Duration::from_secs(86400 * 30), // 30 days
+            backup_interval: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_BACKUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(86400), // 24 hours default
+            ),
+            retention_period: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_BACKUP_RETENTION_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(86400 * 30), // 30 days default
+            ),
             encryption_enabled: true,
             remote_backup: false,
             backup_verification: true,

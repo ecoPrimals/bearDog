@@ -113,18 +113,33 @@ mod tests {
         assert_eq!(provider.id, "openssl");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_rust_crypto_provider_creation() {
         let provider = RustCryptoProvider::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let _ = provider; // Just ensure it compiles
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_ring_provider_creation() {
         let provider = RingCryptoProvider::new("test-ring");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(provider.id, "test-ring");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_ring_provider_default() {
         let provider = RingCryptoProvider::default();

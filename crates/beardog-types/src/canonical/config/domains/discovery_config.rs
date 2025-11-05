@@ -9,126 +9,304 @@ use std::time::Duration;
 
 use crate::canonical::config::r#trait::BearDogConfig;
 
-/// **CONSOLIDATED DISCOVERY CONFIGURATION** - Unifies all discovery configs
+/// Consolidated discovery configuration for the BearDog ecosystem
 ///
-/// Consolidates: `DiscoveryConfig`, `ServiceRegistryConfig`, `QuantumDiscoveryConfig`, etc.
+/// This structure unifies all discovery-related configuration into a single coherent
+/// system that manages service discovery, network protocols, quantum communication,
+/// and caching strategies.
+///
+/// # Purpose
+///
+/// The discovery system enables zero-knowledge bootstrap by allowing services to
+/// find each other dynamically without hardcoded assumptions. This follows the
+/// "infant learning" pattern where the system gradually discovers capabilities
+/// through observation.
+///
+/// # Components
+///
+/// - **Service Registry**: Centralized or distributed service registration
+/// - **Network Discovery**: Protocol-based service location  
+/// - **Quantum Discovery**: Advanced discovery using quantum algorithms
+/// - **Cache**: Performance optimization for repeated lookups
+/// - **Security**: Authentication and authorization for discovery
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::ConsolidatedDiscoveryConfig;
+///
+/// let config = ConsolidatedDiscoveryConfig::default();
+/// assert!(config.enabled);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ConsolidatedDiscoveryConfig {
-    /// Enable discovery services
+    /// Enable or disable discovery services
+    ///
+    /// When `false`, the system operates in isolated mode without
+    /// attempting to discover other services.
     pub enabled: bool,
 
-    /// Service registry configuration
+    /// Service registry configuration for centralized service tracking
     pub registry: ServiceRegistryConfig,
 
-    /// Network discovery configuration
+    /// Network-based discovery configuration for protocol scanning
     pub network: NetworkDiscoveryConfig,
 
-    /// Quantum discovery configuration
+    /// Quantum discovery configuration for advanced service location
     pub quantum: QuantumDiscoveryConfig,
 
-    /// Cache configuration for discovery
+    /// Cache configuration to optimize repeated discovery operations
     pub cache: DiscoveryCacheConfig,
 
-    /// Security configuration for discovery
+    /// Security settings for authenticating discovered services
     pub security: DiscoverySecurityConfig,
 }
 
-/// Service registry configuration
+/// Service registry configuration for tracking available services
+///
+/// Manages the registration and lookup of services in the ecosystem, supporting
+/// both centralized and distributed registry backends.
+///
+/// # Supported Backends
+///
+/// - `etcd` - Distributed key-value store
+/// - `consul` - Service mesh solution
+/// - `zookeeper` - Centralized coordination service
+/// - `redis` - In-memory data store
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::ServiceRegistryConfig;
+/// use std::time::Duration;
+///
+/// let config = ServiceRegistryConfig {
+///     backend: "etcd".to_string(),
+///     endpoints: vec!["http://localhost:2379".to_string()],
+///     service_ttl: Duration::from_secs(30),
+///     health_check_interval: Duration::from_secs(5),
+///     cleanup_interval: Duration::from_secs(60),
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ServiceRegistryConfig {
-    /// Registry backend type
+    /// Registry backend type (e.g., "etcd", "consul", "zookeeper")
     pub backend: String,
 
-    /// Registry endpoints
+    /// Registry endpoint URLs for connecting to the backend
     pub endpoints: Vec<String>,
 
-    /// Service TTL
+    /// Time-to-live for service registrations before automatic expiration
     pub service_ttl: Duration,
 
-    /// Health check interval
+    /// Interval between health checks to verify service availability
     pub health_check_interval: Duration,
 
-    /// Cleanup interval
+    /// Interval between cleanup operations to remove stale entries
     pub cleanup_interval: Duration,
 }
 
-/// Network discovery configuration
+/// Network discovery configuration for protocol-based service location
+///
+/// Enables discovery of services using network scanning and protocol detection.
+/// Supports multiple protocols and intelligent retry strategies.
+///
+/// # Supported Protocols
+///
+/// - `mdns` - Multicast DNS for local network discovery
+/// - `dns-sd` - DNS Service Discovery
+/// - `upnp` - Universal Plug and Play
+/// - `ssdp` - Simple Service Discovery Protocol
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::{
+///     NetworkDiscoveryConfig, RetryConfig
+/// };
+/// use std::time::Duration;
+///
+/// let config = NetworkDiscoveryConfig {
+///     protocols: vec!["mdns".to_string(), "dns-sd".to_string()],
+///     ports: vec![5353, 80, 443],
+///     timeout: Duration::from_secs(5),
+///     retry: RetryConfig::default(),
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NetworkDiscoveryConfig {
-    /// Discovery protocols
+    /// Discovery protocols to use for service location
     pub protocols: Vec<String>,
 
-    /// Discovery ports
+    /// Ports to scan during network discovery
     pub ports: Vec<u16>,
 
-    /// Discovery timeout
+    /// Maximum time to wait for discovery responses
     pub timeout: Duration,
 
-    /// Retry configuration
+    /// Retry strategy configuration for failed discovery attempts
     pub retry: RetryConfig,
 }
 
-/// Quantum discovery configuration
+/// Quantum discovery configuration for advanced service location
+///
+/// Experimental configuration for quantum-enhanced discovery algorithms that
+/// provide faster and more efficient service location in large-scale systems.
+///
+/// # Status
+///
+/// This is experimental and requires quantum-capable hardware or simulators.
+/// Falls back to classical algorithms when quantum resources are unavailable.
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::QuantumDiscoveryConfig;
+/// use std::time::Duration;
+///
+/// let config = QuantumDiscoveryConfig {
+///     enabled: false,  // Disabled by default
+///     algorithms: vec!["grover".to_string()],
+///     coherence_time: Duration::from_millis(100),
+///     error_threshold: 0.01,
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct QuantumDiscoveryConfig {
-    /// Enable quantum discovery
+    /// Enable or disable quantum discovery features
     pub enabled: bool,
 
-    /// Quantum algorithms
+    /// Quantum algorithms to use (e.g., "grover", "qaoa")
     pub algorithms: Vec<String>,
 
-    /// Quantum coherence time
+    /// Quantum coherence time before decoherence occurs
     pub coherence_time: Duration,
 
-    /// Error correction threshold
+    /// Maximum acceptable error rate for quantum operations (0.0-1.0)
     pub error_threshold: f64,
 }
 
-/// Discovery cache configuration
+/// Discovery cache configuration for optimizing repeated lookups
+///
+/// Caches discovery results to reduce network traffic and improve response
+/// times for frequently accessed services.
+///
+/// # Eviction Policies
+///
+/// - `lru` - Least Recently Used (recommended)
+/// - `lfu` - Least Frequently Used
+/// - `fifo` - First In First Out
+/// - `ttl` - Time-based expiration only
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::DiscoveryCacheConfig;
+/// use std::time::Duration;
+///
+/// let config = DiscoveryCacheConfig {
+///     enabled: true,
+///     size: 1000,  // Cache up to 1000 entries
+///     ttl: Duration::from_secs(300),  // 5 minutes
+///     eviction_policy: "lru".to_string(),
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiscoveryCacheConfig {
-    /// Enable caching
+    /// Enable or disable result caching
     pub enabled: bool,
 
-    /// Cache size
+    /// Maximum number of entries to cache
     pub size: usize,
 
-    /// Cache TTL
+    /// Time-to-live for cached discovery results
     pub ttl: Duration,
 
-    /// Eviction policy
+    /// Eviction policy when cache is full (lru, lfu, fifo, ttl)
     pub eviction_policy: String,
 }
 
-/// Discovery security configuration
+/// Discovery security configuration for authenticating services
+///
+/// Controls security measures applied during service discovery to prevent
+/// unauthorized access and man-in-the-middle attacks.
+///
+/// # Security Layers
+///
+/// 1. **Authentication**: Verify service identity before trusting
+/// 2. **Encryption**: Protect discovery traffic from eavesdropping
+/// 3. **Network Trust**: Limit discovery to trusted network segments
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::DiscoverySecurityConfig;
+///
+/// // Production configuration
+/// let config = DiscoverySecurityConfig {
+///     enabled: true,
+///     auth_required: true,
+///     encryption_required: true,
+///     trusted_networks: vec![
+///         "10.0.0.0/8".to_string(),
+///         "192.168.0.0/16".to_string(),
+///     ],
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiscoverySecurityConfig {
-    /// Enable security
+    /// Enable security features for discovery
     pub enabled: bool,
 
-    /// Authentication required
+    /// Require authentication for discovered services
     pub auth_required: bool,
 
-    /// Encryption required
+    /// Require encryption for discovery traffic
     pub encryption_required: bool,
 
-    /// Trusted networks
+    /// CIDR ranges of trusted networks for service discovery
     pub trusted_networks: Vec<String>,
 }
 
-/// Retry configuration
+/// Retry configuration for handling transient failures
+///
+/// Implements exponential backoff with configurable parameters to handle
+/// temporary network issues or service unavailability gracefully.
+///
+/// # Retry Strategy
+///
+/// The delay between retries follows exponential backoff:
+/// ```text
+/// delay = min(initial_delay * (backoff_multiplier ^ attempt), max_delay)
+/// ```
+///
+/// # Examples
+///
+/// ```rust
+/// use beardog_types::canonical::config::domains::discovery_config::RetryConfig;
+/// use std::time::Duration;
+///
+/// // Standard configuration: 3 retries with 2x backoff
+/// let config = RetryConfig {
+///     max_attempts: 3,
+///     initial_delay: Duration::from_millis(100),
+///     backoff_multiplier: 2.0,
+///     max_delay: Duration::from_secs(30),
+/// };
+/// // Retry delays: 100ms, 200ms, 400ms
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RetryConfig {
-    /// Maximum retry attempts
+    /// Maximum number of retry attempts before giving up
     pub max_attempts: usize,
 
-    /// Initial delay
+    /// Initial delay before the first retry
     pub initial_delay: Duration,
 
-    /// Backoff multiplier
+    /// Multiplier for exponential backoff (typically 2.0)
     pub backoff_multiplier: f64,
 
-    /// Maximum delay
+    /// Maximum delay between retries (caps exponential growth)
     pub max_delay: Duration,
 }
 
@@ -148,22 +326,63 @@ impl Default for ConsolidatedDiscoveryConfig {
 
 impl Default for ServiceRegistryConfig {
     fn default() -> Self {
+        use super::super::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+
+        let default_backend =
+            std::env::var("BEARDOG_REGISTRY_BACKEND").unwrap_or_else(|_| "consul".to_string());
+
+        let default_endpoints = std::env::var("BEARDOG_REGISTRY_ENDPOINTS").map_or_else(
+            |_| vec![format!("http://{}:8500", network_config.default_host)],
+            |s| s.split(',').map(|e| e.trim().to_string()).collect(),
+        );
+
+        let service_ttl_secs = std::env::var("BEARDOG_REGISTRY_SERVICE_TTL_SECS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(30);
+
+        let health_check_interval_secs =
+            std::env::var("BEARDOG_REGISTRY_HEALTH_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10);
+
+        let cleanup_interval_secs = std::env::var("BEARDOG_REGISTRY_CLEANUP_INTERVAL_SECS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(60);
+
         Self {
-            backend: "consul".to_string(),
-            endpoints: vec!["http://localhost:8500".to_string()],
-            service_ttl: Duration::from_secs(30),
-            health_check_interval: Duration::from_secs(10),
-            cleanup_interval: Duration::from_secs(60),
+            backend: default_backend,
+            endpoints: default_endpoints,
+            service_ttl: Duration::from_secs(service_ttl_secs),
+            health_check_interval: Duration::from_secs(health_check_interval_secs),
+            cleanup_interval: Duration::from_secs(cleanup_interval_secs),
         }
     }
 }
 
 impl Default for NetworkDiscoveryConfig {
     fn default() -> Self {
+        let default_ports = std::env::var("BEARDOG_DISCOVERY_PORTS")
+            .ok()
+            .and_then(|s| {
+                s.split(',')
+                    .map(|p| p.trim().parse::<u16>().ok())
+                    .collect::<Option<Vec<u16>>>()
+            })
+            .unwrap_or_else(|| vec![8080, 9090]);
+
+        let timeout_secs = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(5);
+
         Self {
             protocols: vec!["http".to_string(), "grpc".to_string()],
-            ports: vec![8080, 9090],
-            timeout: Duration::from_secs(5),
+            ports: default_ports,
+            timeout: Duration::from_secs(timeout_secs),
             retry: RetryConfig::default(),
         }
     }
@@ -174,8 +393,16 @@ impl Default for QuantumDiscoveryConfig {
         Self {
             enabled: false, // Quantum discovery is experimental
             algorithms: vec!["grover".to_string(), "shor".to_string()],
-            coherence_time: Duration::from_millis(100),
-            error_threshold: 0.01,
+            coherence_time: Duration::from_millis(
+                std::env::var("BEARDOG_QUANTUM_COHERENCE_TIME_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+            ),
+            error_threshold: std::env::var("BEARDOG_DISCOVERY_ERROR_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.01),
         }
     }
 }
@@ -184,9 +411,18 @@ impl Default for DiscoveryCacheConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            size: 1000,
-            ttl: Duration::from_secs(300), // 5 minutes
-            eviction_policy: "lru".to_string(),
+            size: std::env::var("BEARDOG_DISCOVERY_CACHE_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000),
+            ttl: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_CACHE_TTL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(300),
+            ), // 5 minutes default
+            eviction_policy: std::env::var("BEARDOG_DISCOVERY_CACHE_EVICTION_POLICY")
+                .unwrap_or_else(|_| "lru".to_string()),
         }
     }
 }
@@ -205,10 +441,26 @@ impl Default for DiscoverySecurityConfig {
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: 3,
-            initial_delay: Duration::from_millis(100),
-            backoff_multiplier: 2.0,
-            max_delay: Duration::from_secs(30),
+            max_attempts: std::env::var("BEARDOG_DISCOVERY_RETRY_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            initial_delay: Duration::from_millis(
+                std::env::var("BEARDOG_RETRY_INITIAL_DELAY_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+            ),
+            backoff_multiplier: std::env::var("BEARDOG_DISCOVERY_BACKOFF_MULTIPLIER")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(2.0),
+            max_delay: Duration::from_secs(
+                std::env::var("BEARDOG_RETRY_MAX_DELAY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
         }
     }
 }

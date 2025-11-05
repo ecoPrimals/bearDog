@@ -33,6 +33,9 @@ mod tests {
 
         // Create a set and verify no duplicates
         let unique_ports: std::collections::HashSet<_> = ports.iter().collect();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(
             unique_ports.len(),
             ports.len(),
@@ -43,6 +46,9 @@ mod tests {
     #[test]
     fn test_timeout_reasonable_bounds() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         // Timeout should be reasonable
         assert!(
@@ -61,6 +67,9 @@ mod tests {
 
         // Max connections should be reasonable
         assert!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             config.network.max_connections >= 10,
             "Should support at least 10 connections"
         );
@@ -73,6 +82,9 @@ mod tests {
     #[test]
     fn test_api_host_not_empty() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         assert!(
             !config.network.api_host.is_empty(),
@@ -85,6 +97,9 @@ mod tests {
         let config = RuntimeConfig::default();
 
         // Should be a valid URL format
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(
             config.network.discovery_endpoint.starts_with("http://")
                 || config.network.discovery_endpoint.starts_with("https://"),
@@ -92,6 +107,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_tls_enabled_by_default() {
         let config = RuntimeConfig::default();
@@ -101,6 +119,9 @@ mod tests {
             config.network.enable_tls,
             "TLS should be enabled by default for security"
         );
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -109,6 +130,9 @@ mod tests {
 
         // Should avoid well-known ports (0-1023) to prevent permission issues
         let ports = vec![
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             config.network.api_port,
             config.network.metrics_port,
             config.network.health_port,
@@ -128,6 +152,9 @@ mod tests {
     #[test]
     fn test_config_cloneable() {
         let config = RuntimeConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let cloned = config.clone();
 
         // Verify clone produces equivalent config
@@ -140,6 +167,9 @@ mod tests {
         assert_eq!(config.network.enable_tls, cloned.network.enable_tls);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_config_debug_output() {
         let config = RuntimeConfig::default();

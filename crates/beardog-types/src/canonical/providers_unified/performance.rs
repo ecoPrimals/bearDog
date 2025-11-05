@@ -34,7 +34,10 @@ pub struct PerformanceConfig {
 impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
-            max_concurrent_requests: 100,
+            max_concurrent_requests: std::env::var("BEARDOG_PROVIDER_MAX_CONCURRENT_REQUESTS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
             rate_limiting: super::super::config::domains::network::RateLimitConfig::default(),
             caching: CachingConfig::default(),
             compression: CompressionConfig::default(),
@@ -95,8 +98,16 @@ impl Default for CachingConfig {
         Self {
             enabled: true,
             cache_type: CacheType::Memory,
-            max_entries: 10000,
-            ttl: Duration::from_secs(3600),
+            max_entries: std::env::var("BEARDOG_PROVIDER_CACHE_MAX_ENTRIES")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10000),
+            ttl: Duration::from_secs(
+                std::env::var("BEARDOG_PROVIDER_CACHE_TTL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(3600),
+            ),
             eviction_policy: EvictionPolicy::Lru,
         }
     }
@@ -153,8 +164,14 @@ impl Default for CompressionConfig {
         Self {
             enabled: true,
             algorithm: CompressionAlgorithm::Gzip,
-            level: 6,
-            min_size: 1024,
+            level: std::env::var("BEARDOG_COMPRESSION_LEVEL")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(6),
+            min_size: std::env::var("BEARDOG_COMPRESSION_MIN_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1024),
         }
     }
 }
@@ -191,9 +208,18 @@ pub struct BufferConfig {
 impl Default for BufferConfig {
     fn default() -> Self {
         Self {
-            read_buffer_size: 8192,
-            write_buffer_size: 8192,
-            pool_size: 100,
+            read_buffer_size: std::env::var("BEARDOG_READ_BUFFER_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(8192),
+            write_buffer_size: std::env::var("BEARDOG_WRITE_BUFFER_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(8192),
+            pool_size: std::env::var("BEARDOG_BUFFER_POOL_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
         }
     }
 }
@@ -219,7 +245,12 @@ impl Default for PerformanceMonitoringConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            metrics_interval: Duration::from_secs(60),
+            metrics_interval: Duration::from_secs(
+                std::env::var("BEARDOG_PROVIDER_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(60),
+            ),
             thresholds: PerformanceThresholds::default(),
             alerting: PerformanceAlertingConfig::default(),
         }
@@ -251,11 +282,28 @@ pub struct PerformanceThresholds {
 impl Default for PerformanceThresholds {
     fn default() -> Self {
         Self {
-            max_response_time_ms: 5000,
-            max_error_rate: 5.0,
-            max_cpu_usage: 80.0,
-            max_memory_usage: 1_000_000_000, // 1GB
-            max_concurrent_connections: 1000,
+            max_response_time_ms: std::env::var("BEARDOG_PROVIDER_MAX_RESPONSE_TIME_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(5000),
+            max_error_rate: std::env::var("BEARDOG_PROVIDER_MAX_ERROR_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(5.0),
+            max_cpu_usage: std::env::var("BEARDOG_PROVIDER_MAX_CPU_USAGE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(80.0),
+            max_memory_usage: std::env::var("BEARDOG_PROVIDER_MAX_MEMORY_USAGE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1_000_000_000), // 1GB default
+            max_concurrent_connections: std::env::var(
+                "BEARDOG_PROVIDER_MAX_CONCURRENT_CONNECTIONS",
+            )
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(1000),
         }
     }
 }
@@ -279,8 +327,16 @@ impl Default for PerformanceAlertingConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            cooldown_period: Duration::from_secs(300),
-            escalation_threshold: 3,
+            cooldown_period: Duration::from_secs(
+                std::env::var("BEARDOG_PROVIDER_ALERT_COOLDOWN_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(300),
+            ),
+            escalation_threshold: std::env::var("BEARDOG_PROVIDER_ALERT_ESCALATION_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(3),
         }
     }
 }

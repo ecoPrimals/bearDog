@@ -26,6 +26,9 @@ mod initialization_tests {
         let cloned = config.clone();
         
         // Both should exist
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _ = (config, cloned);
         assert!(true, "Config should be cloneable");
     }
@@ -35,6 +38,9 @@ mod initialization_tests {
         // Test that config is Send + Sync for thread safety
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<beardog_types::canonical::config::unified::UnifiedBearDogConfig>();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -45,18 +51,30 @@ mod initialization_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_initialization_no_panic() {
         // Test that basic initialization doesn't panic
         // This is a smoke test
         assert!(true, "Initialization smoke test passed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     }
 
     #[test]
     fn test_type_safety_guarantees() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Test that type system enforces safety
         use std::sync::Arc;
         
         let value = Arc::new(42);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let clone = Arc::clone(&value);
         
         assert_eq!(*value, *clone);
@@ -65,10 +83,16 @@ mod initialization_tests {
     #[test]
     fn test_async_runtime_available() {
         // Test that async runtime is available
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let rt = tokio::runtime::Runtime::new();
         assert!(rt.is_ok(), "Tokio runtime should be constructable");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_concurrent_initialization() {
         // Test that initialization can happen concurrently

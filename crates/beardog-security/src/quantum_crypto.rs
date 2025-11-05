@@ -379,6 +379,9 @@ mod tests {
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: normal
 
         let keypair = engine.generate_kem_keypair(KemAlgorithm::Kyber1024).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
@@ -400,6 +403,9 @@ mod tests {
     #[tokio::test]
     fn test_quantum_signatures() {
         let engine = QuantumCryptoEngine::new(SecurityLevel::Level5).map_err(|e| {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
@@ -422,6 +428,9 @@ mod tests {
         assert_eq!(signature.algorithm_used, SignatureAlgorithm::Dilithium5);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_quantum_stats() {
         let engine = QuantumCryptoEngine::new(SecurityLevel::Level3).map_err(|e| {

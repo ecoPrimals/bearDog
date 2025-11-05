@@ -78,7 +78,10 @@ impl GlobalHealthMonitor {
             region_id,
             endpoint_url,
             check_type: "http_get".to_string(),
-            timeout_ms: 5000,
+            timeout_ms: std::env::var("BEARDOG_DEPLOY_HEALTH_CHECK_TIMEOUT_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(5000),
             last_check: 0,
             status: HealthStatus::Unknown,
         };

@@ -155,6 +155,9 @@ impl BootstrapManager {
 mod tests {
     use super::*;
     use crate::node_registry::types::TrustLevel;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]}
 
 
@@ -167,10 +170,15 @@ mod tests {
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         let test_node = NodeInfo {
             node_id: "test_node_123".to_string(),
             address: std::env::var("BEARDOG_TEST_NODE_ADDRESS")
-                .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
+                .unwrap_or_else(|_| format!("http://{}:{}", 
+                    network_config.default_host, 
+                    network_config.service_ports.api_port)),
             public_key: "test_public_key".to_string(),
             capabilities: vec!["compute".to_string(),
             metadata: std::collections::HashMap::with_capacity(16),

@@ -39,6 +39,9 @@ fn test_provider_operation_timeout() {
     let timeout = Duration::from_secs(5);
     let operation_time = Duration::from_millis(100);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Verify timeout configuration
     assert!(
         timeout > Duration::from_secs(0),
@@ -55,6 +58,9 @@ fn test_provider_operation_timeout() {
     // Test timeout enforcement
     let timeout_enforced = true;
     assert!(timeout_enforced, "Timeouts should be enforced");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -78,6 +84,9 @@ fn test_provider_state_recovery() {
     current_state = recovered_state;
     assert_eq!(current_state, "healthy", "Should recover to healthy state");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_provider_resource_cleanup() {
@@ -97,6 +106,9 @@ fn test_provider_resource_cleanup() {
     let resources_freed = true;
     assert!(resources_freed, "Resources should be freed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Verify no leaks
     let no_leaks = true;
     assert!(no_leaks, "Should have no resource leaks");
@@ -117,6 +129,9 @@ fn test_provider_shutdown_gracefully() {
     // Complete pending operations
     let pending_ops_completed = true;
     assert!(pending_ops_completed, "Pending operations should complete");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // Shutdown completes
     let provider_stopped = true;
@@ -139,6 +154,9 @@ fn test_hsm_full_lifecycle() {
     // 2. Generate key
     let key_generated = true;
     assert!(key_generated, "Key should be generated");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // 3. Sign data
     let data_signed = true;
@@ -162,6 +180,9 @@ fn test_hsm_error_recovery_flow() {
     let mut current_state = initial_state;
     assert_eq!(current_state, "operational", "HSM should start operational");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     // Error occurs
     current_state = "error";
     assert_eq!(current_state, "error", "Error state should be detected");
@@ -181,6 +202,9 @@ fn test_hsm_stress_operations() {
     // Tests performance under load
 
     let operations_count = 10000;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let concurrent_threads = 10;
 
     // Simulate stress test
@@ -206,6 +230,9 @@ fn test_hsm_stress_operations() {
 #[test]
 fn test_hsm_provider_migration() {
     // Should migrate from one provider to another
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Tests provider switching
 
     let source_provider = "hsm-old";
@@ -228,6 +255,9 @@ fn test_hsm_provider_migration() {
     assert!(migration_success, "Migration should succeed");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_hsm_backward_compatibility() {
     // HSM should maintain backward compatibility

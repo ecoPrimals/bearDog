@@ -38,12 +38,18 @@ mod workflow_tests {
         match failed {
             WorkflowState::Failed { error } => {
                 assert_eq!(error, "Test error");
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             }
             _ => panic!("Expected Failed state"),
         }
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_workflow_execution_context() {
         let context = WorkflowExecutionContext {
             workflow_id: "wf-123".to_string(),
@@ -56,6 +62,9 @@ mod workflow_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
     fn test_workflow_step_execution() {
         let step = WorkflowStepExecution {
             step_id: "step-1".to_string(),
@@ -67,6 +76,9 @@ mod workflow_tests {
         
         assert_eq!(step.step_id, "step-1");
         assert!(matches!(step.status, StepStatus::Success));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(step.completed_at.is_some());
     }
 
@@ -76,6 +88,9 @@ mod workflow_tests {
         assert!(matches!(StepStatus::Running, StepStatus::Running));
         assert!(matches!(StepStatus::Success, StepStatus::Success));
         assert!(matches!(StepStatus::Failed, StepStatus::Failed));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(matches!(StepStatus::Skipped, StepStatus::Skipped));
     }
 
@@ -88,12 +103,18 @@ mod workflow_tests {
             continue_on_error: false,
         };
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.max_retries, 3);
         assert_eq!(config.timeout_seconds, 300);
         assert!(!config.parallel_execution);
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_workflow_result_success() {
         let result = WorkflowExecutionResult {
             workflow_id: "wf-456".to_string(),
@@ -105,6 +126,9 @@ mod workflow_tests {
         
         assert_eq!(result.workflow_id, "wf-456");
         assert!(matches!(result.final_state, WorkflowState::Completed));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(result.steps_executed, 5);
         assert!(result.error.is_none());
     }
@@ -118,6 +142,9 @@ mod workflow_tests {
             },
             steps_executed: 3,
             duration_ms: 800,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: important
             error: Some("Step 3 failed".to_string()),
         };
         
@@ -132,6 +159,9 @@ mod workflow_tests {
         variables.insert("env".to_string(), "production".to_string());
         variables.insert("region".to_string(), "us-east-1".to_string());
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let context = WorkflowExecutionContext {
             workflow_id: "wf-vars".to_string(),
             started_at: chrono::Utc::now(),
@@ -145,6 +175,9 @@ mod workflow_tests {
     #[test]
     fn test_workflow_timeout_configuration() {
         let config = WorkflowConfiguration {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             max_retries: 0,
             timeout_seconds: 60,
             parallel_execution: false,
@@ -155,6 +188,9 @@ mod workflow_tests {
         assert_eq!(config.max_retries, 0);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_workflow_parallel_execution() {
         let config = WorkflowConfiguration {

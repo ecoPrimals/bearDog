@@ -49,6 +49,9 @@ fn test_workflow_config_has_sensible_defaults() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 // Test 2: Workflow Config Serialization
 // ============================================================================
 
@@ -82,6 +85,9 @@ fn test_workflow_config_serialization_roundtrip() {
         config.enable_audit_logging,
         deserialized.enable_audit_logging
     );
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     assert_eq!(
         config.workflow_storage_path,
         deserialized.workflow_storage_path
@@ -119,6 +125,9 @@ fn test_example_workflow_status_covers_all_states() {
 // ============================================================================
 // Test 4: Example Workflow Status Transitions
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_example_workflow_status_transitions() {
@@ -144,6 +153,9 @@ fn test_example_workflow_status_transitions() {
         _ => panic!("Expected Failed status"),
     }
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Test 5: Workflow System Version
@@ -170,6 +182,9 @@ fn test_workflow_system_version_is_set() {
 
 // ============================================================================
 // Test 6: Workflow Config Concurrent Limits
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -190,6 +205,9 @@ fn test_workflow_config_supports_various_concurrent_limits() {
         default_timeout_seconds: 300,
         retry_attempts: 3,
         enable_audit_logging: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         workflow_storage_path: "/tmp/medium".to_string(),
     };
     assert_eq!(medium.max_concurrent_workflows, 25);
@@ -224,6 +242,9 @@ fn test_workflow_config_timeout_values_are_reasonable() {
     // Standard timeout
     let standard = WorkflowConfig {
         max_concurrent_workflows: 10,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         default_timeout_seconds: 300, // 5 minutes
         retry_attempts: 3,
         enable_audit_logging: true,
@@ -258,6 +279,9 @@ fn test_workflow_config_retry_strategy_options() {
     };
     assert_eq!(no_retry.retry_attempts, 0, "Fail-fast strategy: no retries");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     // Standard retry
     let standard_retry = WorkflowConfig {
         max_concurrent_workflows: 10,
@@ -295,6 +319,9 @@ fn test_workflow_config_audit_logging_can_be_toggled() {
         retry_attempts: 3,
         enable_audit_logging: true,
         workflow_storage_path: "/var/lib/production".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
     };
     assert!(
         with_audit.enable_audit_logging,
@@ -325,6 +352,9 @@ fn test_workflow_config_storage_path_formats() {
     let absolute = WorkflowConfig {
         max_concurrent_workflows: 10,
         default_timeout_seconds: 300,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         retry_attempts: 3,
         enable_audit_logging: true,
         workflow_storage_path: "/var/lib/beardog/workflows".to_string(),
@@ -359,6 +389,9 @@ fn test_workflow_config_storage_path_formats() {
 #[test]
 fn test_multiple_workflow_configs_are_independent() {
     let config1 = WorkflowConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         max_concurrent_workflows: 5,
         default_timeout_seconds: 100,
         retry_attempts: 2,
@@ -400,6 +433,9 @@ fn test_multiple_workflow_configs_are_independent() {
 // Test 12: Workflow Config Clone Semantics
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 #[test]
 fn test_workflow_config_clone_creates_independent_copy() {
     let original = WorkflowConfig {

@@ -128,6 +128,9 @@ fn test_key_generation_correct_length() {
         assert_eq!(k.len(), 32, "Key should be 32 bytes for AES-256");
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 
 #[test]
 fn test_key_deletion_nonexistent() {
@@ -135,6 +138,9 @@ fn test_key_deletion_nonexistent() {
     let result = delete_nonexistent_key("nonexistent_key_id");
     assert!(
         result.is_err(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         "Should error when deleting non-existent key"
     );
 }
@@ -142,6 +148,9 @@ fn test_key_deletion_nonexistent() {
 #[test]
 fn test_key_rotation_failure_recovery() {
     // Test that failed key rotation can be recovered
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let original_key = generate_test_key().expect("Should generate key");
 
     // Simulate rotation failure
@@ -150,6 +159,9 @@ fn test_key_rotation_failure_recovery() {
 
     // Original key should still be usable
     let data = b"test";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let encrypt_result = attempt_encryption(data, &original_key);
     assert!(encrypt_result.is_ok(), "Original key should still work");
 }
@@ -161,6 +173,9 @@ fn test_concurrent_key_access() {
     let success = Arc::new(AtomicBool::new(true));
 
     let handles: Vec<_> = (0..10)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         .map(|_| {
             let key_id_clone = key_id.clone();
             let success_clone = Arc::clone(&success);
@@ -169,6 +184,9 @@ fn test_concurrent_key_access() {
                 if result.is_err() {
                     success_clone.store(false, Ordering::SeqCst);
                 }
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             })
         })
         .collect();
@@ -176,6 +194,9 @@ fn test_concurrent_key_access() {
     for handle in handles {
         handle.join().expect("Thread should complete");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 
     assert!(
         success.load(Ordering::SeqCst),
@@ -183,6 +204,9 @@ fn test_concurrent_key_access() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 // ========================================================================
 // Hash Function Edge Cases
 // ========================================================================
@@ -197,6 +221,9 @@ fn test_hash_empty_input() {
     if let Ok(h) = hash {
         assert_eq!(h.len(), 32, "SHA-256 hash should be 32 bytes");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -209,6 +236,9 @@ fn test_hash_very_large_input() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_hash_deterministic() {
     // Test hash function is deterministic
     let data = b"test data for hashing";
@@ -216,6 +246,9 @@ fn test_hash_deterministic() {
     let hash1 = compute_test_hash(data).expect("Should hash");
     let hash2 = compute_test_hash(data).expect("Should hash");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_eq!(hash1, hash2, "Hash should be deterministic");
 }
 
@@ -223,6 +256,9 @@ fn test_hash_deterministic() {
 fn test_hash_avalanche_effect() {
     // Test that small input changes produce large hash changes
     let data1 = b"test data";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let data2 = b"test datb"; // One bit different
 
     let hash1 = compute_test_hash(data1).expect("Should hash");
@@ -235,6 +271,9 @@ fn test_hash_avalanche_effect() {
         .iter()
         .zip(hash2.iter())
         .map(|(a, b)| (a ^ b).count_ones())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         .sum();
 
     assert!(
@@ -265,6 +304,9 @@ fn test_constant_time_compare_different_data() {
     let result = constant_time_eq(data1, data2);
     assert!(!result, "Different data should not be equal");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_constant_time_compare_different_lengths() {
@@ -274,12 +316,18 @@ fn test_constant_time_compare_different_lengths() {
 
     let result = constant_time_eq(data1, data2);
     assert!(!result, "Different lengths should not be equal");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_constant_time_compare_prefix() {
     // Test that prefix matching doesn't cause early exit
     let data1 = b"prefix_different";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let data2 = b"prefix_also_different";
 
     let result = constant_time_eq(data1, data2);
@@ -288,6 +336,9 @@ fn test_constant_time_compare_prefix() {
 
 // ========================================================================
 // Memory Zeroing
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 // ========================================================================
 
 #[test]
@@ -313,12 +364,18 @@ fn test_secure_zero_empty_slice() {
 
 #[test]
 fn test_secure_zero_large_buffer() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Test zeroing large buffer
     let mut large = vec![0xFFu8; 10 * 1024 * 1024]; // 10MB
 
     secure_zero(&mut large);
 
     // Sample check (checking all would be slow)
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_eq!(large[0], 0);
     assert_eq!(large[large.len() / 2], 0);
     assert_eq!(large[large.len() - 1], 0);
@@ -326,6 +383,9 @@ fn test_secure_zero_large_buffer() {
 
 // ========================================================================
 // Authentication Edge Cases
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 // ========================================================================
 
 #[test]
@@ -333,6 +393,9 @@ fn test_auth_with_empty_credentials() {
     // Test authentication with empty credentials
     let result = authenticate_user("", "");
     assert!(result.is_err(), "Should reject empty credentials");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -344,6 +407,9 @@ fn test_auth_with_very_long_password() {
     // Should either succeed or fail with length limit error
     assert!(result.is_ok() || result.is_err());
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_auth_with_special_characters() {
@@ -353,12 +419,18 @@ fn test_auth_with_special_characters() {
 
     assert!(result.is_ok(), "Should handle special characters");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_auth_with_unicode_password() {
     // Test authentication with Unicode characters
     let unicode_password = "пароль密码🔐";
     let result = authenticate_user("user", unicode_password);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     assert!(result.is_ok(), "Should handle Unicode passwords");
 }
@@ -373,10 +445,16 @@ fn test_auth_rate_limiting() {
         let result = authenticate_user("user", "wrong_password");
         attempts += 1;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         if let Err(e) = result {
             // Check if error is due to rate limiting
             if e.to_string().contains("rate") || e.to_string().contains("too many") {
                 failed = true;
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: security
+                // TEST_PRIORITY: critical
                 break;
             }
         }
@@ -384,18 +462,27 @@ fn test_auth_rate_limiting() {
 
     // Either rate limiting kicked in or we made enough attempts
     assert!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         failed || attempts >= 20,
         "Should have rate limiting or max attempts"
     );
 }
 
 // ========================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 // Signature Verification Edge Cases
 // ========================================================================
 
 #[test]
 fn test_verify_with_empty_signature() {
     // Test signature verification with empty signature
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let data = b"test data";
     let empty_sig: &[u8] = &[];
 
@@ -423,6 +510,9 @@ fn test_verify_signature_with_modified_data() {
     let signature = generate_test_signature(original_data);
     if let Ok(sig) = signature {
         let result = verify_signature_with_data(modified_data, &sig, original_data);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(result.is_err(), "Should detect data modification");
     }
 }
@@ -430,6 +520,9 @@ fn test_verify_signature_with_modified_data() {
 // ========================================================================
 // Random Number Generation Edge Cases
 // ========================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 
 #[test]
 fn test_random_bytes_length() {
@@ -437,6 +530,9 @@ fn test_random_bytes_length() {
     let sizes = vec![16, 32, 64, 128, 256];
 
     for size in sizes {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let random = generate_random_bytes(size);
         assert!(random.is_ok(), "Should generate {} bytes", size);
 
@@ -452,6 +548,9 @@ fn test_random_bytes_not_all_same() {
     let random = generate_random_bytes(256).expect("Should generate");
 
     let first = random[0];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let all_same = random.iter().all(|&b| b == first);
 
     assert!(!all_same, "Random bytes should vary");
@@ -464,6 +563,9 @@ fn test_random_generation_entropy() {
 
     // Count unique bytes
     let mut seen = std::collections::HashSet::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     for &byte in &random {
         seen.insert(byte);
     }
@@ -472,6 +574,9 @@ fn test_random_generation_entropy() {
     assert!(
         seen.len() >= 128,
         "Should have good entropy: {} unique bytes",
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         seen.len()
     );
 }
@@ -492,18 +597,27 @@ fn test_config_with_invalid_key_size() {
 #[test]
 fn test_config_with_zero_timeout() {
     // Test configuration with zero timeout
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let config = create_config_with_timeout(0);
     let result = validate_config(&config);
 
     assert!(result.is_err(), "Should reject zero timeout");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_config_with_negative_values() {
     // Test configuration rejects negative values where inappropriate
     let config = create_config_with_max_attempts(-1);
     let result = validate_config(&config);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(result.is_err(), "Should reject negative values");
 }
 
@@ -514,6 +628,9 @@ fn test_config_with_negative_values() {
 #[test]
 fn test_recovery_from_encryption_failure() {
     // Test that system can recover from encryption failure
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let data = b"test data";
     let bad_key = vec![];
 
@@ -527,6 +644,9 @@ fn test_recovery_from_encryption_failure() {
     assert!(result2.is_ok(), "Should recover and work with good key");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_recovery_from_key_generation_failure() {
     // Test recovery from key generation failure

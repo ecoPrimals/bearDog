@@ -66,10 +66,16 @@ mod sha256_comprehensive {
                 hash.len(),
                 32,
                 "Hash should always be 32 bytes for size {}",
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: security
+                // TEST_PRIORITY: normal
                 size
             );
         }
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -77,6 +83,9 @@ mod sha256_comprehensive {
         let texts = vec![
             "Hello, World!",
             "你好世界",
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             "مرحبا بالعالم",
             "Привет мир",
             "🌍🌎🌏",
@@ -86,6 +95,9 @@ mod sha256_comprehensive {
         for text in texts {
             let hash = compute_sha256_hash(text.as_bytes())?;
             assert_eq!(hash.len(), 32);
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
         }
         Ok(())
     }
@@ -100,6 +112,9 @@ mod sha256_comprehensive {
             (0..32).collect::<Vec<u8>>(),
             (0..32).rev().collect::<Vec<u8>>(),
         ];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         for pattern in patterns {
             let hash = compute_sha256_hash(&pattern)?;
@@ -114,6 +129,9 @@ mod sha256_comprehensive {
         let hash = compute_sha256_hash(&large_data)?;
         assert_eq!(hash.len(), 32);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -129,6 +147,9 @@ mod sha256_comprehensive {
         // Count different bits
         let diff_bits: u32 = hash1
             .iter()
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             .zip(hash2.iter())
             .map(|(a, b)| (a ^ b).count_ones())
             .sum();
@@ -144,11 +165,17 @@ mod sha256_comprehensive {
 
     #[test]
     fn test_sha256_concurrent_hashing() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Test that hashing is thread-safe
         use std::sync::Arc;
         use std::thread;
 
         let data = Arc::new(b"concurrent test".to_vec());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let mut handles = vec![];
 
         for _ in 0..10 {
@@ -172,6 +199,9 @@ mod sha256_comprehensive {
 
 #[cfg(test)]
 mod sha512_comprehensive {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     use super::*;
 
     #[test]
@@ -201,10 +231,16 @@ mod sha512_comprehensive {
         assert_eq!(hash512.len(), 64);
         assert_ne!(&hash512[..32], &hash256[..]);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_sha512_large_input() -> BearDogResult<()> {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let large_data = vec![0x55; 1024 * 1024]; // 1 MB
         let hash = compute_sha512_hash(&large_data)?;
         assert_eq!(hash.len(), 64);
@@ -212,6 +248,9 @@ mod sha512_comprehensive {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_sha512_various_sizes() -> BearDogResult<()> {
         let sizes = vec![0, 1, 10, 100, 512, 1000, 4096];
 
@@ -221,11 +260,17 @@ mod sha512_comprehensive {
             assert_eq!(
                 hash.len(),
                 64,
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: security
+                // TEST_PRIORITY: normal
                 "Hash should always be 64 bytes for size {}",
                 size
             );
         }
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -245,6 +290,9 @@ mod hash_comparison_tests {
 
         // Hashes from different algorithms should be different
         assert_ne!(&hash512[..32], &hash256[..]);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         Ok(())
     }
 
@@ -257,6 +305,9 @@ mod hash_comparison_tests {
 
         let sha512_results: Vec<_> = (0..5).map(|_| compute_sha512_hash(data).unwrap()).collect();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // All SHA-256 results should match
         for i in 1..sha256_results.len() {
             assert_eq!(sha256_results[0], sha256_results[i]);
@@ -281,6 +332,9 @@ mod edge_cases {
         let hash256 = compute_sha256_hash(&data)?;
         let hash512 = compute_sha512_hash(&data)?;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert_eq!(hash256.len(), 32);
         assert_eq!(hash512.len(), 64);
         Ok(())
@@ -289,6 +343,9 @@ mod edge_cases {
     #[test]
     fn test_hash_max_bytes() -> BearDogResult<()> {
         let data = vec![0xFF; 100];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let hash256 = compute_sha256_hash(&data)?;
         let hash512 = compute_sha512_hash(&data)?;
 
@@ -297,6 +354,9 @@ mod edge_cases {
         Ok(())
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hash_alternating_pattern() -> BearDogResult<()> {
         let data: Vec<u8> = (0..100)

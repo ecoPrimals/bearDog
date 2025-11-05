@@ -116,6 +116,9 @@ impl FederationConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_federation_config_default() {
         let config = FederationConfig::default();

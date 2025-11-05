@@ -175,6 +175,9 @@ pub fn validate_env_vars() -> Vec<String> {
 mod tests {
     use std::io::Write;
     use tempfile::NamedTempFile;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_validate_valid_config() {
         let mut file = NamedTempFile::new().map_err(|e| {

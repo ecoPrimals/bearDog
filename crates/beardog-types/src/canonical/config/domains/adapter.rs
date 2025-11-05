@@ -396,10 +396,19 @@ pub enum AuthLevel {
 impl Default for CoreAdapterConfig {
     fn default() -> Self {
         Self {
-            adapter_id: "default-adapter".to_string(),
+            adapter_id: std::env::var("BEARDOG_ADAPTER_ID")
+                .unwrap_or_else(|_| "default-adapter".to_string()),
             adapter_type: AdapterType::Universal,
-            max_connections: 100,
-            connection_timeout: Duration::from_secs(30),
+            max_connections: std::env::var("BEARDOG_ADAPTER_MAX_CONNECTIONS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            connection_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_CONNECTION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(30),
+            ),
             registry_enabled: true,
             metadata: HashMap::new(),
         }
@@ -408,18 +417,46 @@ impl Default for CoreAdapterConfig {
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
-        const DEFAULT_DISCOVERY_PORT: u16 = 8080;
-        let default_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
-            .unwrap_or_else(|_| format!("http://localhost:{}/discovery", DEFAULT_DISCOVERY_PORT));
+        use super::super::runtime_config::RuntimeNetworkConfig;
+
+        // Use RuntimeNetworkConfig for environment-driven endpoints
+        let default_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
+            let config = RuntimeNetworkConfig::from_env();
+            config.discovery_endpoint
+        });
 
         Self {
-            timeout: Duration::from_secs(10),
-            max_attempts: 3,
-            discovery_interval: Duration::from_secs(60),
-            cache_enabled: true,
-            cache_ttl: Duration::from_secs(300),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_DISCOVERY_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(10),
+            ),
+            max_attempts: std::env::var("BEARDOG_ADAPTER_DISCOVERY_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            discovery_interval: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_DISCOVERY_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
+            cache_enabled: std::env::var("BEARDOG_ADAPTER_CACHE_ENABLED")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            cache_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_CACHE_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
             endpoints: vec![default_endpoint],
-            predictive_enabled: false,
+            predictive_enabled: std::env::var("BEARDOG_ADAPTER_PREDICTIVE_ENABLED")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(false),
         }
     }
 }
@@ -427,12 +464,23 @@ impl Default for DiscoveryConfig {
 impl Default for ChainConfig {
     fn default() -> Self {
         Self {
-            max_chain_length: 10,
-            processing_timeout: Duration::from_secs(300),
+            max_chain_length: std::env::var("BEARDOG_ADAPTER_MAX_CHAIN_LENGTH")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
+            processing_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_PROCESSING_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(300),
+            ),
             step: StepConfig::default(),
             retry: RetryConfig::default(),
             parallel_enabled: true,
-            max_workers: 4,
+            max_workers: std::env::var("BEARDOG_ADAPTER_MAX_WORKERS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(4),
         }
     }
 }
@@ -440,9 +488,20 @@ impl Default for ChainConfig {
 impl Default for StepConfig {
     fn default() -> Self {
         Self {
-            timeout: Duration::from_secs(30),
-            max_attempts: 3,
-            validation_enabled: true,
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_STEP_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            max_attempts: std::env::var("BEARDOG_ADAPTER_STEP_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            validation_enabled: std::env::var("BEARDOG_ADAPTER_STEP_VALIDATION_ENABLED")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
             metadata: HashMap::new(),
         }
     }
@@ -451,10 +510,26 @@ impl Default for StepConfig {
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: 3,
-            initial_delay: Duration::from_millis(100),
-            max_delay: Duration::from_secs(30),
-            backoff_multiplier: 2.0,
+            max_attempts: std::env::var("BEARDOG_ADAPTER_RETRY_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            initial_delay: Duration::from_millis(
+                std::env::var("BEARDOG_ADAPTER_RETRY_INITIAL_DELAY_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+            ),
+            max_delay: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_RETRY_MAX_DELAY_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            backoff_multiplier: std::env::var("BEARDOG_ADAPTER_RETRY_BACKOFF_MULTIPLIER")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(2.0),
             exponential_backoff: true,
             jitter_factor: 0.1,
         }
@@ -464,11 +539,23 @@ impl Default for RetryConfig {
 impl Default for OptimizationConfig {
     fn default() -> Self {
         Self {
-            enabled: true,
-            level: 3,
-            simd_enabled: true,
+            enabled: std::env::var("BEARDOG_ADAPTER_OPTIMIZATION_ENABLED")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            level: std::env::var("BEARDOG_ADAPTER_OPTIMIZATION_LEVEL")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            simd_enabled: std::env::var("BEARDOG_ADAPTER_SIMD_ENABLED")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
             zero_copy_enabled: true,
-            buffer_size: 8192,
+            buffer_size: std::env::var("BEARDOG_OPTIMIZATION_BUFFER_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(8192),
             adaptive_enabled: true,
             metrics_enabled: true,
         }
@@ -478,9 +565,18 @@ impl Default for OptimizationConfig {
 impl Default for MeshDiscoveryConfig {
     fn default() -> Self {
         Self {
-            protocol: "https".to_string(),
-            port: 8443,
-            timeout: Duration::from_secs(5),
+            protocol: std::env::var("BEARDOG_MESH_PROTOCOL")
+                .unwrap_or_else(|_| "https".to_string()),
+            port: std::env::var("BEARDOG_MESH_DISCOVERY_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8443),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_MESH_DISCOVERY_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|t| t.parse().ok())
+                    .unwrap_or(5),
+            ),
             mtls_enabled: true,
         }
     }
@@ -489,10 +585,21 @@ impl Default for MeshDiscoveryConfig {
 impl Default for HandoffRetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: 3,
-            timeout: Duration::from_secs(10),
+            max_attempts: std::env::var("BEARDOG_HANDOFF_RETRY_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HANDOFF_RETRY_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|t| t.parse().ok())
+                    .unwrap_or(10),
+            ),
             circuit_breaker_enabled: true,
-            circuit_breaker_threshold: 5,
+            circuit_breaker_threshold: std::env::var("BEARDOG_ADAPTER_CIRCUIT_BREAKER_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5),
         }
     }
 }
@@ -512,8 +619,18 @@ impl Default for MeshSecurityConfig {
 impl Default for HealthMonitorConfig {
     fn default() -> Self {
         Self {
-            check_interval: Duration::from_secs(30),
-            check_timeout: Duration::from_secs(5),
+            check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|t| t.parse().ok())
+                    .unwrap_or(30),
+            ),
+            check_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|t| t.parse().ok())
+                    .unwrap_or(5),
+            ),
             predictive_enabled: false,
             endpoints: vec!["/health".to_string()],
         }
@@ -559,11 +676,21 @@ impl Default for AdapterMonitoringConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            metrics_interval: Duration::from_secs(60),
+            metrics_interval: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
             performance_metrics: true,
             error_metrics: true,
             usage_metrics: true,
-            retention_period: Duration::from_secs(86400), // 24 hours
+            retention_period: Duration::from_secs(
+                std::env::var("BEARDOG_ADAPTER_RETENTION_PERIOD_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(86400), // 24 hours
+            ),
         }
     }
 }
@@ -806,12 +933,18 @@ mod tests {
         assert!(config.validate().is_ok());
 
         let mut invalid_config = config.clone();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         invalid_config.core.adapter_id = String::new();
         assert!(invalid_config.validate().is_err());
     }
 
     #[test]
     fn test_development_config() -> Result<(), Box<dyn std::error::Error>> {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = UnifiedAdapterConfig::development()?;
         assert!(!config.security.auth_required);
         assert!(!config.security.encryption_in_transit);
@@ -819,6 +952,9 @@ mod tests {
         assert_eq!(config.optimization.level, 1);
         Ok(())
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_production_config() -> Result<(), Box<dyn std::error::Error>> {
@@ -826,6 +962,9 @@ mod tests {
         assert_eq!(config.security.auth_level, AuthLevel::MultiFactor);
         assert!(config.security.encryption_at_rest);
         assert_eq!(config.optimization.level, 5);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.service_mesh.enabled);
         Ok(())
     }
@@ -833,6 +972,9 @@ mod tests {
     #[test]
     fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedAdapterConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let toml_str = config.to_toml()?;
         assert!(toml_str.contains("[core]"));
         assert!(toml_str.contains("[discovery]"));
@@ -840,6 +982,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_migration_utilities() {
         let migrated = migration::migrate_legacy_adapter_config("test-adapter".to_string(), 50, 15);

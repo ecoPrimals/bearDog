@@ -69,7 +69,10 @@ impl Default for IntegrationConfig {
         Self {
             auto_discovery: true,
             gradual_migration: true,
-            migration_timeout_secs: 300, // 5 minutes
+            migration_timeout_secs: std::env::var("BEARDOG_PROVIDER_MIGRATION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(300), // 5 minutes default
             enable_fallback: true,
             max_concurrent_migrations: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
         }
@@ -661,10 +664,16 @@ mod tests {
         let state = integrator.get_migration_state().await;
         assert_eq!(state.phase, MigrationPhase::Discovery);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
     async fn test_hsm_provider_discovery() {
         let adapter = HsmMigrationAdapter::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let discovered = adapter.discover_providers()?;
         
         assert!(!discovered.is_empty());
@@ -672,6 +681,9 @@ mod tests {
         assert!(discovered.iter().any(|p| p.name == "IosUniversalProvider"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
     async fn test_migration_plan_creation() {
         let integrator = EcosystemIntegrator::new().await?;

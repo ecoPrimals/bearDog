@@ -30,7 +30,8 @@ pub struct EcosystemGeneticEngine {
     /// The adaptive security value
     pub adaptive_security: AdaptiveSecurity,
 
-    /// Integrated from Squirrel horizontal gene transfer
+    /// Integrated via horizontal gene transfer from AI capability providers
+    /// (capability-based integration, no hardcoded primal names)
     /// The relationship evolution value
     pub relationship_evolution: RelationshipEvolutionGenetics,
     /// The ecosystem membership value
@@ -136,10 +137,22 @@ impl EcosystemGeneticEngine {
     pub fn generate_health_report(&self) -> EcosystemHealthReport {
         EcosystemHealthReport {
             overall_health: HealthStatus::Healthy,
-            genetic_diversity_score: 0.85,
-            adaptation_capability: 0.90,
-            symbiotic_strength: 0.88,
-            trust_network_integrity: 0.92,
+            genetic_diversity_score: std::env::var("BEARDOG_GENETICS_DIVERSITY_SCORE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.85),
+            adaptation_capability: std::env::var("BEARDOG_GENETICS_ADAPTATION_CAPABILITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.90),
+            symbiotic_strength: std::env::var("BEARDOG_GENETICS_SYMBIOTIC_STRENGTH")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.88),
+            trust_network_integrity: std::env::var("BEARDOG_GENETICS_TRUST_INTEGRITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.92),
             emergent_behaviors: vec![],
             timestamp: Utc::now(),
         }
@@ -155,9 +168,18 @@ impl Default for EcosystemGeneticEngine {
 impl Default for EvolutionAlgorithms {
     fn default() -> Self {
         Self {
-            genetic_drift_compensation: 0.15,
-            adaptive_mutation_rate: 0.05,
-            selection_pressure: 0.75,
+            genetic_drift_compensation: std::env::var("BEARDOG_GENETICS_DRIFT_COMPENSATION")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.15),
+            adaptive_mutation_rate: std::env::var("BEARDOG_GENETICS_ADAPTIVE_MUTATION_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.05),
+            selection_pressure: std::env::var("BEARDOG_GENETICS_SELECTION_PRESSURE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.75),
         }
     }
 }
@@ -165,9 +187,18 @@ impl Default for EvolutionAlgorithms {
 impl Default for TraitInheritance {
     fn default() -> Self {
         Self {
-            beneficial_trait_strength: 0.85,
-            recessive_expression_probability: 0.25,
-            generational_stability: 0.80,
+            beneficial_trait_strength: std::env::var("BEARDOG_GENETICS_BENEFICIAL_TRAIT_STRENGTH")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.85),
+            recessive_expression_probability: std::env::var("BEARDOG_GENETICS_RECESSIVE_EXPRESSION_PROBABILITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.25),
+            generational_stability: std::env::var("BEARDOG_GENETICS_GENERATIONAL_STABILITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.80),
         }
     }
 }
@@ -175,9 +206,18 @@ impl Default for TraitInheritance {
 impl Default for AdaptiveSecurity {
     fn default() -> Self {
         Self {
-            threat_detection_sensitivity: 0.90,
-            immune_response_strength: 0.85,
-            adaptation_speed: 0.70,
+            threat_detection_sensitivity: std::env::var("BEARDOG_GENETICS_THREAT_DETECTION_SENSITIVITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.90),
+            immune_response_strength: std::env::var("BEARDOG_GENETICS_IMMUNE_RESPONSE_STRENGTH")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.85),
+            adaptation_speed: std::env::var("BEARDOG_GENETICS_ADAPTATION_SPEED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.70),
         }
     }
 }
@@ -192,16 +232,25 @@ mod tests {
         assert!(engine.evolution_algorithms.adaptive_mutation_rate > 0.0);
         assert!(engine.trait_inheritance.beneficial_trait_strength > 0.0);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: genetics
+ // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_evolution_processing() {
         let mut engine = EcosystemGeneticEngine::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let context = EcosystemContext::default();
         
         let result = engine.process_evolution(&context).await;
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_health_report_generation() {
         let engine = EcosystemGeneticEngine::new();

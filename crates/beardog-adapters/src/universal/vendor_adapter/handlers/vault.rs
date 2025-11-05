@@ -278,6 +278,9 @@ impl CapabilityHandler for VaultCapabilityHandler {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_vault_handler_creation() -> Result<(), BearDogError> {
         let vault_url = std::env::var("VAULT_ADDR")

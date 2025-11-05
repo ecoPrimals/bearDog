@@ -43,6 +43,9 @@ fn test_sha512_variable_sizes() {
 /// Test key derivation with extreme iteration counts
 #[test]
 fn test_key_derivation_iterations() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let password = b"test_password";
     let salt = b"test_salt";
 
@@ -51,6 +54,9 @@ fn test_key_derivation_iterations() {
     assert!(result_low.is_ok());
 
     // Medium iterations
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let result_med = derive_key_from_password(password, salt, 1000);
     assert!(result_med.is_ok());
 
@@ -61,6 +67,9 @@ fn test_key_derivation_iterations() {
     // All should produce different results
     let key_low = result_low.unwrap();
     let key_med = result_med.unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let key_high = result_high.unwrap();
     assert_ne!(key_low, key_med);
     assert_ne!(key_med, key_high);
@@ -71,6 +80,9 @@ fn test_key_derivation_iterations() {
 fn test_secure_random_various_sizes() {
     let sizes = [1, 16, 32, 64, 128, 256, 512, 1024, 4096];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     for size in &sizes {
         let random = generate_secure_random_bytes(*size);
         assert!(random.is_ok(), "Should generate {} random bytes", size);
@@ -94,6 +106,9 @@ fn test_constant_time_equal_lengths() {
 
 /// Test constant-time comparison with different lengths
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_constant_time_different_lengths() {
     let short = [1u8, 2, 3];
     let long = [1u8, 2, 3, 4, 5];
@@ -103,6 +118,9 @@ fn test_constant_time_different_lengths() {
         "Different lengths should not match"
     );
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 /// Test secure memory zeroing
 #[test]
@@ -114,6 +132,9 @@ fn test_secure_zero_memory() {
     // Verify all bytes are zeroed
     for byte in &sensitive_data {
         assert_eq!(*byte, 0, "Memory should be zeroed");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -123,6 +144,9 @@ fn test_hash_collision_resistance() {
     let data1 = b"test_data_1";
     let data2 = b"test_data_2";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let hash1 = compute_sha256_hash(data1).unwrap();
     let hash2 = compute_sha256_hash(data2).unwrap();
 
@@ -133,6 +157,9 @@ fn test_hash_collision_resistance() {
 }
 
 /// Test hash determinism (same input = same output)
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_hash_determinism() {
     let data = b"deterministic_test";
@@ -145,6 +172,9 @@ fn test_hash_determinism() {
     assert_eq!(hash2, hash3, "Hash should be deterministic");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test random bytes uniqueness
 #[test]
 fn test_random_uniqueness() {
@@ -155,6 +185,9 @@ fn test_random_uniqueness() {
     assert_ne!(random1, random2, "Random bytes should be unique");
     assert_ne!(random2, random3, "Random bytes should be unique");
     assert_ne!(random1, random3, "Random bytes should be unique");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test key derivation salt independence
@@ -164,6 +197,9 @@ fn test_key_derivation_salt_independence() {
     let salt1 = b"salt_one";
     let salt2 = b"salt_two";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let key1 = derive_key_from_password(password, salt1, 1000).unwrap();
     let key2 = derive_key_from_password(password, salt2, 1000).unwrap();
 
@@ -174,6 +210,9 @@ fn test_key_derivation_salt_independence() {
 #[test]
 fn test_hash_idempotence() {
     let data = b"idempotent_test";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let hash1 = compute_sha256_hash(data).unwrap();
     let hash2 = compute_sha256_hash(data).unwrap();
@@ -182,6 +221,9 @@ fn test_hash_idempotence() {
 }
 
 /// Test zero-length input handling
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_zero_length_inputs() {
     let empty: &[u8] = &[];

@@ -40,46 +40,61 @@ pub mod mixed_lineage;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+/// Biome sovereignty configuration
+///
+/// Configures sovereignty features for a biome, including genetic algorithms,
+/// lineage management, and entropy collection preferences.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeSovereigntyConfig {
-    /// Enable genetic algorithm features
-    /// Whether `enable_genetic_algorithms` is enabled
+    /// Enable genetic algorithm features for adaptive evolution
     pub enable_genetic_algorithms: bool,
-    /// Enable mixed lineage key management
-    /// Whether `enable_mixed_lineage` is enabled
+    /// Enable mixed lineage key management (combining human and machine entropy)
     pub enable_mixed_lineage: bool,
-    /// Maximum number of genetic iterations
-    /// Number of `max_genetic_iterations`
+    /// Maximum genetic algorithm iterations before convergence
     pub max_genetic_iterations: u32,
-    /// Entropy collection preferences
-    /// The entropy preferences value
+    /// Preferred sources for entropy collection
     pub entropy_preferences: EntropyPreferences,
 }
 
+/// Preferences for entropy source selection
+///
+/// Specifies the preferred source of randomness for cryptographic operations,
+/// balancing sovereignty (human control) with practical performance needs.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EntropyPreferences {
+    /// Only use human-generated entropy (maximum sovereignty)
     HumanOnly,
+    /// Combine human and machine entropy (balanced approach)
     Hybrid,
+    /// Only use machine-generated entropy (maximum performance)
     MachineOnly,
 }
 
+/// Degree of sovereignty and autonomy for a biome
+///
+/// Classifies the independence level of a biome from external systems,
+/// from fully autonomous to dependent on external infrastructure.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SovereigntyLevel {
-    /// The biome is fully sovereign and autonomous.
+    /// Fully sovereign and autonomous biome
     Sovereign,
-    /// The biome is partially sovereign, with some external dependencies.
+    /// Partially sovereign with some external dependencies
     PartiallySovereign,
-    /// The biome is highly dependent on external systems and lacks autonomy.
+    /// Highly dependent on external systems, limited autonomy
     HighlyDependent,
 }
 
-/// `BiomeSovereigntyManager` provides core sovereignty functionality
+/// Manages sovereignty features and policies for a biome
+///
+/// Provides core sovereignty functionality including genetic algorithms,
+/// lineage management, and entropy collection for biome autonomy.
 #[derive(Debug)]
 pub struct BiomeSovereigntyManager {
+    /// Sovereignty configuration settings
     pub config: BiomeSovereigntyConfig,
+    /// Unique identifier for this biome
     pub biome_id: String,
-    /// Creation timestamp
-    /// The created at value
+    /// Timestamp when this biome was created
     pub created_at: DateTime<Utc>,
 }
 
@@ -231,14 +246,17 @@ impl BiomeSovereigntyManager {
     }
 }
 
+/// Current sovereignty operational status of a biome
+///
+/// Tracks the active sovereignty features and their operational state,
+/// providing real-time status for monitoring and decision-making.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SovereigntyStatus {
-    /// Biome identifier
+    /// Identifier of the biome being monitored
     pub biome_id: String,
-    /// Whether this biome is operating in sovereign mode
-    /// Whether `is_sovereign` is enabled
+    /// Whether biome is operating in fully sovereign mode
     pub is_sovereign: bool,
-    /// Whether genetic algorithms are active
+    /// Whether genetic evolution algorithms are currently active
     /// Whether `genetic_algorithms_active` is enabled
     pub genetic_algorithms_active: bool,
     /// Whether mixed lineage features are active

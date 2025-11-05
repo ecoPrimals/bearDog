@@ -36,8 +36,12 @@ impl UniversalServiceMeshClient {
     pub fn new(&str, api_key: &str) -> Result<Self, BearDogError> {
         info!("🔗 Initializing Universal Service Mesh Discovery Client");
 
+        let timeout_secs = std::env::var("BEARDOG_CLIENT_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30);
         let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(30))
+            .timeout(Duration::from_secs(timeout_secs))
             .user_agent("Universal-EcosystemComponent/1.0")
             .build()
             .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {e}")))?;

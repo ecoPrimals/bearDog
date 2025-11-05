@@ -60,3 +60,7 @@ pub use discovery_config::RetryConfig as DiscoveryRetryConfig;
 pub use workflow_config::RetryConfig as WorkflowRetryConfig;
 
 // All domain modules have been extracted and are complete
+
+// Test modules for comprehensive test coverage
+#[cfg(test)]
+mod tests;

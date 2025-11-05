@@ -103,18 +103,27 @@ mod tests {
         let auth2 = capabilities::authentication();
 
         assert_eq!(auth1.as_ptr(), auth2.as_ptr());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(*auth1, "authentication");
     }
 
     #[test]
     fn test_error_message_strings() {
         let err1 = error_messages::operation_failed();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         let err2 = error_messages::operation_failed();
 
         assert_eq!(err1.as_ptr(), err2.as_ptr());
         assert_eq!(*err1, "Operation failed");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_component_strings() {
         let core1 = components::core();

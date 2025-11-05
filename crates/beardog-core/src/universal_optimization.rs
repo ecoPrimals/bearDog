@@ -3,17 +3,24 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
 
+/// Optimization request types for universal optimization service
+///
+/// Defines different optimization strategies available through the ecosystem,
+/// from genetic algorithms to performance acceleration and cryptographic optimization.
 #[derive(Debug, Clone)]
 pub enum OptimizationRequest {
+    /// Genetic algorithm optimization for evolving solutions
     GeneticAlgorithm {
         optimization_target: GeneticTarget,
         quality_requirements: GeneticQualityRequirements,
     },
+    /// Performance acceleration optimization for workloads
     PerformanceAcceleration {
         workload_type: WorkloadType,
         current_metrics: PerformanceMetrics,
         target_improvement: f64, // 0.0 to 1.0
     },
+    /// Cryptographic algorithm optimization
     CryptographicOptimization {
         algorithm_type: CryptoAlgorithmType,
         security_requirements: SecurityRequirements,
@@ -113,6 +120,10 @@ pub struct OptimizationRecommendation {
     pub priority: RecommendationPriority,
 }
 
+/// Universal optimization service interface
+///
+/// Provides optimization capabilities across the ecosystem, enabling
+/// distributed optimization requests and capability discovery.
 pub trait UniversalOptimizationService: Send + Sync {
     /// Request optimization from the service
     ///
@@ -142,6 +153,10 @@ pub struct EcosystemOptimizationService<D, L> {
     fallback_optimizer: L,
 }
 
+/// Local optimization fallback interface
+///
+/// Provides local optimization capabilities when distributed optimization
+/// services are unavailable or unsuitable.
 pub trait LocalOptimizer: Send + Sync {
     /// Perform genetic optimization locally
     ///
@@ -259,49 +274,90 @@ pub struct GeneticQualityRequirements {
     pub diversity_threshold: f64,
 }
 
+/// Type of workload being optimized
+///
+/// Classifies workload patterns to enable targeted optimization strategies.
 #[derive(Debug, Clone, Copy)]
 pub enum WorkloadType {
+    /// CPU-intensive computational workload
     Computational,
+    /// Network-intensive communication workload
     Network,
+    /// Storage-intensive data workload
     Storage,
+    /// Mixed workload with multiple components
     Mixed,
 }
 
+/// Cryptographic algorithm types for optimization
+///
+/// Supported cryptographic algorithms that can be optimized for performance.
 #[derive(Debug, Clone, Copy)]
 pub enum CryptoAlgorithmType {
+    /// AES-256 symmetric encryption
     Aes256,
+    /// `ChaCha20` stream cipher
     ChaCha20,
+    /// Ed25519 digital signature algorithm
     Ed25519,
+    /// X25519 key exchange algorithm
     X25519,
 }
 
+/// Game type classification for optimization
+///
+/// Categorizes games by type to apply appropriate optimization strategies.
 #[derive(Debug, Clone, Copy)]
 pub enum GameType {
+    /// First-person shooter
     Fps,
+    /// Real-time strategy
     Rts,
+    /// Massively multiplayer online role-playing game
     Mmorpg,
+    /// Casual game
     Casual,
 }
 
+/// Machine learning model types for optimization
+///
+/// Specifies ML model architectures that can be optimized.
 #[derive(Debug, Clone, Copy)]
 pub enum MLModelType {
+    /// Neural network model
     NeuralNetwork,
+    /// Decision tree model
     DecisionTree,
+    /// Random forest ensemble
     RandomForest,
+    /// Support vector machine
     Svm,
 }
 
+/// Implementation effort level for optimization recommendations
+///
+/// Indicates the complexity and time required to implement an optimization.
 #[derive(Debug, Clone, Copy)]
 pub enum EffortLevel {
+    /// Low effort, quick to implement
     Low,
+    /// Medium effort, moderate implementation time
     Medium,
+    /// High effort, significant implementation work
     High,
 }
 
+/// Priority level for optimization recommendations
+///
+/// Ranks recommendations by importance and urgency.
 #[derive(Debug, Clone, Copy)]
 pub enum RecommendationPriority {
+    /// Low priority recommendation
     Low,
+    /// Medium priority recommendation
     Medium,
+    /// High priority recommendation
     High,
+    /// Critical priority requiring immediate action
     Critical,
 }

@@ -38,6 +38,9 @@ fn test_security_error_authentication() {
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 /// Test security error creation with authorization category
 #[test]
 fn test_security_error_authorization() {
@@ -48,6 +51,9 @@ fn test_security_error_authorization() {
             assert_eq!(msg, "Insufficient permissions");
         }
         _ => panic!("Expected Authorization error"),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
     }
 }
 
@@ -58,6 +64,9 @@ fn test_security_error_cryptography() {
 
     match error {
         MockSecurityError::Cryptography(msg) => {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: critical
             assert!(msg.contains("Encryption"));
         }
         _ => panic!("Expected Cryptography error"),
@@ -68,6 +77,9 @@ fn test_security_error_cryptography() {
 #[test]
 fn test_error_display_format() {
     let error = MockSecurityError::Authentication("Test error message".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     let error_string = format!("{}", error);
     assert!(
@@ -81,6 +93,9 @@ fn test_error_display_format() {
 }
 
 /// Test error conversion and propagation
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_error_propagation() {
     fn inner_function() -> Result<(), MockSecurityError> {

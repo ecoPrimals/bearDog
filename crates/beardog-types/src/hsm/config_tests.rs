@@ -40,6 +40,9 @@ mod tests {
             String::new(),
             "testdb".to_string(),
         );
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         assert!(config.validate().is_err());
     }
@@ -48,12 +51,18 @@ mod tests {
     fn test_database_config_empty_database_name() {
         let config = DatabaseConfig::new(
             "postgresql://localhost:5432/db".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             String::new(),
         );
         
         assert!(config.validate().is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_keystore_config_new() {
         let config = KeyStoreConfig::new(
@@ -61,6 +70,9 @@ mod tests {
             "secure123".to_string(),
         );
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.path, "/var/lib/beardog/keys");
         assert_eq!(config.encryption_key, "secure123");
     }
@@ -68,6 +80,9 @@ mod tests {
     #[test]
     fn test_keystore_config_default() {
         let config = KeyStoreConfig::default();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         assert!(!config.path.is_empty());
         assert!(!config.encryption_key.is_empty());
@@ -75,6 +90,9 @@ mod tests {
 
     #[test]
     fn test_keystore_config_validation() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let valid_config = KeyStoreConfig::new(
             "/tmp/keys".to_string(),
             "strongkey".to_string(),
@@ -83,11 +101,17 @@ mod tests {
         assert!(valid_config.validate().is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_keystore_config_empty_path() {
         let config = KeyStoreConfig::new(
             String::new(),
             "key123".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         );
         
         assert!(config.validate().is_err());
@@ -95,6 +119,9 @@ mod tests {
 
     #[test]
     fn test_keystore_config_weak_encryption_key() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = KeyStoreConfig::new(
             "/tmp/keys".to_string(),
             "123".to_string(), // Too short
@@ -102,6 +129,9 @@ mod tests {
         
         assert!(config.validate().is_err());
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_keystore_config_minimum_key_length() {
@@ -109,6 +139,9 @@ mod tests {
             "/tmp/keys".to_string(),
             "12345678".to_string(), // Minimum 8 chars
         );
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         assert!(config.validate().is_ok());
     }
@@ -116,6 +149,9 @@ mod tests {
     #[test]
     fn test_database_config_clone() {
         let config1 = DatabaseConfig::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             "postgresql://localhost:5432/db1".to_string(),
             "db1".to_string(),
         );
@@ -125,6 +161,9 @@ mod tests {
         assert_eq!(config1.database_name, config2.database_name);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_keystore_config_clone() {
         let config1 = KeyStoreConfig::new(

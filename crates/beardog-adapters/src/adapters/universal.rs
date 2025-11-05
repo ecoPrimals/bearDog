@@ -337,7 +337,11 @@ impl UniversalExternalAdapter {
             ))
         })?;
 
-        let timeout = Duration::from_secs(30);
+        let timeout_secs = std::env::var("BEARDOG_UNIVERSAL_ADAPTER_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30);
+        let timeout = Duration::from_secs(timeout_secs);
 
         match self.execute_with_retry(provider, request, timeout).await {
             Ok(result) => Ok(UniversalResponse {

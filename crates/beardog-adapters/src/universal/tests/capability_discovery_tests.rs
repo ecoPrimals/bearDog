@@ -26,6 +26,9 @@ fn test_discovery_request_with_constraints() {
         required_capabilities: vec![CapabilityType::Storage],
         constraints,
     };
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
     assert_eq!(request.constraints.len(), 2);
     assert_eq!(request.constraints.get("region"), Some(&"us-west".to_string()));
@@ -34,6 +37,9 @@ fn test_discovery_request_with_constraints() {
 #[test]
 fn test_discovery_response_creation() {
     let response = CapabilityDiscoveryResponse {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         discovered_providers: vec![
             "provider1".to_string(),
             "provider2".to_string(),
@@ -46,6 +52,9 @@ fn test_discovery_response_creation() {
 
 #[test]
 fn test_discovery_response_with_scores() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let mut scores = std::collections::HashMap::new();
     scores.insert("provider1".to_string(), 0.95);
     scores.insert("provider2".to_string(), 0.87);
@@ -56,6 +65,9 @@ fn test_discovery_response_with_scores() {
     };
 
     assert_eq!(response.confidence_scores.len(), 2);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert!(response.confidence_scores["provider1"] > 0.9);
 }
 
@@ -68,6 +80,9 @@ fn test_discovery_request_single_capability() {
 
     assert_eq!(request.required_capabilities.len(), 1);
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_discovery_response_no_providers() {
@@ -75,6 +90,9 @@ fn test_discovery_response_no_providers() {
         discovered_providers: vec![],
         confidence_scores: std::collections::HashMap::new(),
     };
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
     assert!(response.discovered_providers.is_empty());
     assert!(response.confidence_scores.is_empty());
@@ -83,6 +101,9 @@ fn test_discovery_response_no_providers() {
 #[test]
 fn test_discovery_request_multiple_capabilities() {
     let request = CapabilityDiscoveryRequest {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         required_capabilities: vec![
             CapabilityType::Security,
             CapabilityType::Compute,
@@ -95,6 +116,9 @@ fn test_discovery_request_multiple_capabilities() {
     assert_eq!(request.required_capabilities.len(), 4);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_discovery_confidence_score_range() {
     let mut scores = std::collections::HashMap::new();

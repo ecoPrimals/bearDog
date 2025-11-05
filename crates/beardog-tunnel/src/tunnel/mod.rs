@@ -11,6 +11,9 @@ pub use config::*;
 pub use events::*;
 pub use session::*;
 
+#[cfg(test)]
+mod config_tests;
+
 pub use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

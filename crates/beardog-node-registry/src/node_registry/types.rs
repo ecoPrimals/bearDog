@@ -86,6 +86,9 @@ pub type InMemoryNodeRegistry = crate::node_registry::BearDogNodeRegistry;
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     async fn test_registry_statistics() {
         let mut stats = RegistryStatistics::new();}

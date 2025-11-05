@@ -34,9 +34,15 @@ mod validation_tests {
             port: 0, // Invalid port
             max_connections: 100,
             timeout_seconds: 30,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enable_tls: false,
         };
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         // Port 0 is technically valid (system-assigned), but should be validated in production
         assert_eq!(settings.port, 0);
     }
@@ -48,6 +54,9 @@ mod validation_tests {
             max_login_attempts: 5,
             enable_mfa: true,
             hash_rounds: 12,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: important
             audit_retention_days: 365,
         };
 
@@ -59,6 +68,9 @@ mod validation_tests {
     #[test]
     fn test_database_settings_validation() {
         let settings = DatabaseSettings {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             connection_string: "postgres://localhost/beardog".to_string(),
             pool_size: 20,
             timeout_seconds: 10,
@@ -71,6 +83,9 @@ mod validation_tests {
 
     #[test]
     fn test_monitoring_settings_validation() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let settings = MonitoringSettings {
             enable_metrics: true,
             metrics_interval_seconds: 60,
@@ -81,6 +96,9 @@ mod validation_tests {
         assert!(settings.enable_metrics);
         assert_eq!(settings.metrics_interval_seconds, 60);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_performance_settings_validation() {
@@ -91,6 +109,9 @@ mod validation_tests {
             enable_optimization: true,
         };
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(settings.worker_threads, 8);
         assert!(settings.enable_optimization);
     }
@@ -101,6 +122,9 @@ mod validation_tests {
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: SimplifiedBearDogConfig = serde_json::from_str(&json).unwrap();
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.network.port, deserialized.network.port);
         assert_eq!(config.security.enable_mfa, deserialized.security.enable_mfa);
     }
@@ -108,6 +132,9 @@ mod validation_tests {
     #[test]
     fn test_config_with_custom_network() {
         let mut config = SimplifiedBearDogConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         config.network.port = 9000;
         config.network.max_connections = 500;
 
@@ -115,6 +142,9 @@ mod validation_tests {
         assert_eq!(config.network.max_connections, 500);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_config_with_custom_security() {
         let mut config = SimplifiedBearDogConfig::default();

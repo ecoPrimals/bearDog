@@ -330,6 +330,9 @@ mod tests {
         assert_eq!(config.timeout, Duration::from_secs(30));
         assert!(config.parallel_execution);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let fast_config = TestConfig::fast();
         assert_eq!(fast_config.timeout, Duration::from_secs(5));
         assert_eq!(fast_config.max_retries, 1);
@@ -338,12 +341,18 @@ mod tests {
     #[test]
     fn test_result_creation() {
         let result = TestResult::new("test1".to_string()).pass(crate::constants::domains::system::defaults::DEFAULT_RETRY_DELAY);
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         assert_eq!(result.name, "test1");
         assert!(result.is_successful());
         assert_eq!(result.duration, crate::constants::domains::system::defaults::DEFAULT_RETRY_DELAY);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_suite_operations() {
         let mut suite = TestSuite::new("Test Suite".to_string());

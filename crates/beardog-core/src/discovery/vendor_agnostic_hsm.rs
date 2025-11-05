@@ -278,10 +278,36 @@ impl VendorAgnosticHsmDiscovery {
             HsmDetectionPattern {
                 name: "network_hsm_appliance".to_string(),
                 detection_method: HsmDetectionMethod::NetworkService {
-                    ports: vec![1792, 1800, 443, 8080],
+                    ports: {
+                        let default_ports = std::env::var("BEARDOG_HSM_DEFAULT_PORTS")
+                            .ok()
+                            .and_then(|s| {
+                                let ports: Vec<u16> = s.split(',')
+                                    .filter_map(|p| p.trim().parse().ok())
+                                    .collect();
+                                if ports.is_empty() { None } else { Some(ports) }
+                            })
+                            .unwrap_or_else(|| vec![1792, 1800, 443, 8080]);
+                        std::env::var("BEARDOG_HSM_PORTS")
+                            .ok()
+                            .and_then(|s| s.split(',')
+                                .filter_map(|p| p.trim().parse().ok())
+                                .collect::<Vec<u16>>()
+                                .into())
+                            .unwrap_or(default_ports)
+                    },
                 },
                 validation_method: HsmValidationMethod::HealthCheck {
-                    endpoint: "https://localhost:443/health".to_string(),
+                    endpoint: std::env::var("BEARDOG_HSM_HEALTH_ENDPOINT")
+                        .unwrap_or_else(|_| {
+                            let host = std::env::var("BEARDOG_HSM_HOST")
+                                .unwrap_or_else(|_| "localhost".to_string());
+                            let port = std::env::var("BEARDOG_HSM_PORT")
+                                .ok()
+                                .and_then(|p| p.parse().ok())
+                                .unwrap_or(443);
+                            format!("https://{}:{}/health", host, port)
+                        }),
                 },
                 expected_security_level: HsmSecurityLevel::Fips140Level3,
             },

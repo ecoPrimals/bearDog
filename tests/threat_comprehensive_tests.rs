@@ -10,10 +10,19 @@ mod tests {
     }
 
     #[tokio::test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     async fn test_error_handling() -> Result<(), BearDogError> {
         Ok(())
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_configuration() -> Result<(), BearDogError> {
         Ok(())

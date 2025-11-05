@@ -14,6 +14,9 @@ pub mod human_entropy_classifier;
 pub mod tier_manager;
 pub mod universal_adapter;
 
+#[cfg(test)]
+mod discovery_tests;
+
 pub use capability_detector::CapabilityDetector;
 pub use discovery_engine::DiscoveryEngine;
 pub use human_entropy_classifier::HumanEntropyClassifier;

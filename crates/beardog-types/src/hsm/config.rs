@@ -313,25 +313,40 @@ mod tests {
     fn test_database_config_postgres() {
         let config = DatabaseConfig::postgres("postgresql://localhost/beardog");
         assert!(config.url.starts_with("postgresql://"));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.max_connections, 50);
     }
 
     #[test]
     fn test_keystore_config_default() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = KeyStoreConfig::default();
         assert_eq!(config.storage_type, KeyStorageType::FileSystem);
         assert!(config.encrypted);
         assert!(config.enable_backup);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_keystore_config_memory() {
         let config = KeyStoreConfig::memory();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.storage_type, KeyStorageType::Memory);
         assert!(!config.encrypted);
         assert!(!config.enable_backup);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hsm_config_default() {
         let config = HsmConfig::default();

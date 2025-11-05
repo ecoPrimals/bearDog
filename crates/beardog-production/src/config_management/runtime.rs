@@ -421,9 +421,12 @@ impl Default for DatabaseConfig {
 
 impl Default for DatabaseConnection {
     fn default() -> Self {
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         Self {
             host: env::var("BEARDOG_DB_HOST")
-                .unwrap_or_else(|_| "localhost".to_string()),
+                .unwrap_or_else(|_| network_config.default_host.clone()),
             port: env::var("BEARDOG_DB_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

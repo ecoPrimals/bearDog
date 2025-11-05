@@ -215,6 +215,9 @@ impl std::fmt::Display for SpawningStage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     fn test_spawning_operation_creation() {
         let parent_nodes = vec![EcosystemNodeInfo::default()];

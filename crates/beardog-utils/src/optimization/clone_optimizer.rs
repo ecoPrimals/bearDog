@@ -192,6 +192,9 @@ mod tests {
             strategy,
             CloneOptimizationStrategy::SharedOwnership
         ));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         let strategy = optimizer.analyze_type("Vec<u8>", "occasional_modification");
         assert!(matches!(strategy, CloneOptimizationStrategy::CopyOnWrite));
@@ -205,6 +208,9 @@ mod tests {
         let shared1 = SharedOwnership::new(data);
         let shared2 = shared1.clone();
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(shared1.len(), 5);
         assert_eq!(shared2.len(), 5);
 
@@ -215,6 +221,9 @@ mod tests {
     #[test]
     fn test_copy_on_write() {
         let original_data = vec![1, 2, 3];
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut cow = CopyOnWrite::new(original_data);
 
         // Initially owned
@@ -225,6 +234,9 @@ mod tests {
         assert_eq!(cow.len(), 4);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_patterns() {
         let shared_str = patterns::optimize_string_sharing("test string");

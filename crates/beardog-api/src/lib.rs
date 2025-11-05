@@ -184,6 +184,9 @@ mod tests {
     #[tokio::test]
     async fn test_health_endpoint() -> Result<(), Box<dyn std::error::Error>> {
         let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let core = Arc::new(BearDogCore::new(config));
         let app = create_router(core);
 
@@ -197,6 +200,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_status_endpoint() -> Result<(), Box<dyn std::error::Error>> {
         let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();

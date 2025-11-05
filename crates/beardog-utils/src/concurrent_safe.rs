@@ -385,6 +385,9 @@ mod tests {
 
         // Test insert and get
         assert_eq!(map.insert("key1".to_string(), "value1".to_string()), None);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(map.get(&"key1".to_string()), Some("value1".to_string()));
 
         // Test update
@@ -402,6 +405,9 @@ mod tests {
     #[test]
     fn test_safe_concurrent_cache() {
         let cache = SafeConcurrentCache::new(2);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // Test insert and get
         assert!(cache
@@ -422,6 +428,9 @@ mod tests {
         assert_eq!(cache.get(&"key3".to_string()), Some("value3".to_string()));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_safe_concurrent_queue() {
         let queue = SafeConcurrentQueue::new();

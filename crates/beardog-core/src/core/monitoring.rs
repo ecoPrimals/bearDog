@@ -169,7 +169,7 @@ pub enum AlertType {
 ///
 /// Indicates the urgency and impact level of system alerts,
 /// helping prioritize response actions.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AlertSeverity {
     /// Informational message, no immediate action required
     Info,

@@ -59,7 +59,7 @@ impl SafeIosProvider {
         warn!("iOS Secure Enclave key generation not yet fully implemented - using placeholder");
 
         Err(BearDogError::not_implemented(
-            "iOS Secure Enclave key generation not yet implemented safely".to_string(),
+            "iOS Secure Enclave key generation not yet implemented safely",
         ))
     }
 
@@ -68,7 +68,7 @@ impl SafeIosProvider {
         warn!("iOS Secure Enclave signing not yet fully implemented - using placeholder");
 
         Err(BearDogError::not_implemented(
-            "iOS Secure Enclave signing not yet implemented safely".to_string(),
+            "iOS Secure Enclave signing not yet implemented safely",
         ))
     }
 
@@ -82,7 +82,7 @@ impl SafeIosProvider {
         warn!("iOS Secure Enclave verification not yet fully implemented - using placeholder");
 
         Err(BearDogError::not_implemented(
-            "iOS Secure Enclave verification not yet implemented safely".to_string(),
+            "iOS Secure Enclave verification not yet implemented safely",
         ))
     }
 

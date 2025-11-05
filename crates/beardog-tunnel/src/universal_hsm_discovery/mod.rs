@@ -501,7 +501,7 @@ impl UniversalHsmDiscovery {
             ],
             metadata: HashMap::from([
                 ("provider".to_string(), "ios".to_string()),
-                ("type".to_string(), "secure_enclave".to_string()),
+                ("type".to_string(), "secure_enclave"),
                 ("platform".to_string(), "ios".to_string()),
             ]),
         })

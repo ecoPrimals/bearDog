@@ -214,6 +214,9 @@ mod tests {
     #[tokio::test]
     fn test_capability_based_communication() {
         let mut adapter = PrimalCommunicationAdapter::new().map_err(|e| {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
@@ -241,6 +244,9 @@ mod tests {
         assert_eq!(response.capability_provided, "service_mesh_coordination");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_capability_availability() {
         let mut adapter = PrimalCommunicationAdapter::new().map_err(|e| {

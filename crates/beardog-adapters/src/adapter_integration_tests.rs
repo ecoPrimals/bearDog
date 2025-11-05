@@ -45,6 +45,9 @@ fn test_adapter_config_custom_values() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 // Test 3: AdapterConfig Serialization
 // ============================================================================
 
@@ -61,6 +64,9 @@ fn test_adapter_config_serialization() {
     assert_eq!(config.enable_caching, deserialized.enable_caching);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 // ============================================================================
 // Test 4: CapabilityRequest Construction
 // ============================================================================
@@ -75,6 +81,9 @@ fn test_capability_request_construction() {
         capability: "encryption".to_string(),
         operation: "encrypt".to_string(),
         parameters: params.clone(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
     };
 
     assert_eq!(request.capability, "encryption");
@@ -89,6 +98,9 @@ fn test_capability_request_construction() {
 
 #[test]
 fn test_capability_response_success() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let mut metadata = HashMap::new();
     metadata.insert("provider".to_string(), "test_provider".to_string());
 
@@ -108,6 +120,9 @@ fn test_capability_response_success() {
     );
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 // ============================================================================
 // Test 6: CapabilityResponse Error Case
 // ============================================================================
@@ -130,6 +145,9 @@ fn test_capability_response_error() {
 // Test 7: AIResponseMetadata Default Values
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: important
 #[test]
 fn test_ai_response_metadata_defaults() {
     let metadata = AIResponseMetadata::default();
@@ -145,6 +163,9 @@ fn test_ai_response_metadata_defaults() {
 
 #[test]
 fn test_ai_integration_response_with_suggestions() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let suggestions = vec![
         "action1".to_string(),
         "action2".to_string(),
@@ -155,6 +176,9 @@ fn test_ai_integration_response_with_suggestions() {
         result: "analysis_complete".to_string(),
         ai_metadata: AIResponseMetadata {
             confidence_score: 0.95,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             processing_time_ms: 150,
             model_version: "v2.0.0".to_string(),
         },
@@ -181,6 +205,9 @@ fn test_vendor_discovery_context_defaults() {
     // Capacity may vary based on HashMap implementation
     assert!(
         context.context.capacity() >= 16,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         "Context should have at least 16 capacity"
     );
     assert!(context.context.is_empty());
@@ -196,6 +223,9 @@ fn test_vendor_discovery_context_with_data() {
     ctx_data.insert("region".to_string(), "us-west-2".to_string());
     ctx_data.insert("environment".to_string(), "production".to_string());
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let context = VendorDiscoveryContext {
         discovery_method: "network_scan".to_string(),
         priority: 5,
@@ -218,6 +248,9 @@ fn test_vendor_discovery_context_with_data() {
 #[test]
 fn test_universal_adapter_creation() {
     let config = AdapterConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let _adapter = UniversalAdapter::new(config);
 
     // Adapter should be created successfully
@@ -229,6 +262,9 @@ fn test_universal_adapter_creation() {
 // Test 12: AdapterConfig Clone and Debug
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_adapter_config_clone_and_debug() {
     let config = AdapterConfig {

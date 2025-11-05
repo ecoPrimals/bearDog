@@ -53,6 +53,9 @@ mod capability_type_tests {
 
 #[cfg(test)]
 mod capability_collection_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     use super::*;
     use std::collections::HashSet;
 
@@ -65,17 +68,26 @@ mod capability_collection_tests {
         capabilities.insert(CapabilityType::ComputeIntelligence);
 
         assert_eq!(capabilities.len(), 3);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(capabilities.contains(&CapabilityType::Security));
         assert!(!capabilities.contains(&CapabilityType::Monitoring));
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_capability_set_no_duplicates() {
         let mut capabilities = HashSet::new();
 
         capabilities.insert(CapabilityType::Security);
         capabilities.insert(CapabilityType::Security);
         capabilities.insert(CapabilityType::Security);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         // Should only have one entry
         assert_eq!(capabilities.len(), 1);
@@ -89,6 +101,9 @@ mod capability_collection_tests {
             CapabilityType::ComputeIntelligence,
         ];
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(capabilities.len(), 3);
         assert_eq!(capabilities[0], CapabilityType::Security);
     }
@@ -99,6 +114,9 @@ mod capability_metadata_tests {
     use super::*;
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_beardog_primary_capabilities() {
         // BearDog's primary capability is Security
         let beardog_caps = [CapabilityType::Security];
@@ -108,6 +126,9 @@ mod capability_metadata_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_multi_capability_primal() {
         // Some primals might have multiple capabilities
         let capabilities = [
@@ -122,12 +143,18 @@ mod capability_metadata_tests {
 
 #[cfg(test)]
 mod capability_serialization_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     use super::*;
 
     #[test]
     fn test_capability_size() {
         use std::mem::size_of;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let size = size_of::<CapabilityType>();
         // Should be reasonably sized (enum with string data)
         assert!(
@@ -142,6 +169,9 @@ mod capability_serialization_tests {
         use std::mem::size_of;
 
         let size = size_of::<Option<CapabilityType>>();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         // Option<enum> should still be reasonably sized
         assert!(
             size <= 32,
@@ -152,6 +182,9 @@ mod capability_serialization_tests {
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 mod capability_pattern_tests {
     use super::*;
 
@@ -167,6 +200,9 @@ mod capability_pattern_tests {
             CapabilityType::DistributedIntelligence => "Provides AI services",
             CapabilityType::ContainerOrchestration => "Provides orchestration services",
             _ => "Provides other services",
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
         };
 
         assert_eq!(description, "Provides security services");
@@ -181,6 +217,9 @@ mod capability_pattern_tests {
             CapabilityType::ServiceMesh,
         ];
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let security_caps: Vec<_> = all_caps
             .iter()
             .filter(|&c| matches!(c, CapabilityType::Security))
@@ -200,12 +239,18 @@ mod capability_integration_tests {
         let discovered = [CapabilityType::Security];
 
         assert!(!discovered.is_empty());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(discovered[0], CapabilityType::Security);
     }
 
     #[test]
     fn test_capability_registration_simulation() {
         // Simulate registering capabilities with ecosystem
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let capabilities = vec![CapabilityType::Security];
 
         // Should be able to announce these
@@ -216,6 +261,9 @@ mod capability_integration_tests {
         }
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_lookup_simulation() {
         use std::collections::HashMap;

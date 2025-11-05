@@ -134,36 +134,69 @@ mod error_conversion_tests {
         let value = inner()?;
         assert_eq!(value, 42);
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn test_error_propagation() {
         fn inner() -> BearDogResult<i32> {
             Err(BearDogError::internal("Inner error".to_string()))
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: important
         }
 
         let result = inner();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         assert!(result.is_err());
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 
 #[cfg(test)]
 mod error_matching_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     use super::*;
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn test_match_system_error() {
         let error = BearDogError::system("Test".to_string());
         match error {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: important
             BearDogError::System { .. } => { /* Expected */ }
             _ => panic!("Wrong error variant"),
         }
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn test_match_security_error() {
         let error = BearDogError::security("Test".to_string());
         match error {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: important
             BearDogError::Security { .. } => { /* Expected */ }
             _ => panic!("Wrong error variant"),
         }
@@ -172,18 +205,30 @@ mod error_matching_tests {
     #[test]
     fn test_match_business_error() {
         let error = BearDogError::business("Test".to_string());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         match error {
             BearDogError::Business { .. } => { /* Expected */ }
             _ => panic!("Wrong error variant"),
         }
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 mod error_edge_cases {
     use super::*;
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn test_empty_message() {
         let error = BearDogError::internal(String::new());
         let display = format!("{}", error);
@@ -193,13 +238,22 @@ mod error_edge_cases {
     #[test]
     fn test_long_message() {
         let long_msg = "a".repeat(1000);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: normal
         let error = BearDogError::internal(long_msg);
         let display = format!("{}", error);
         assert!(display.len() > 900);
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_unicode_message() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: normal
         let error = BearDogError::internal("Error: 测试错误 🔥".to_string());
         let display = format!("{}", error);
         assert!(display.contains("测试错误"));
@@ -208,6 +262,9 @@ mod error_edge_cases {
     #[test]
     fn test_newline_in_message() {
         let error = BearDogError::internal("Line 1\nLine 2".to_string());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         let display = format!("{}", error);
         assert!(display.contains("Line 1"));
     }
@@ -220,18 +277,27 @@ mod error_helper_functions {
     #[test]
     fn test_system_error_helper() {
         let error = BearDogError::system("System".to_string());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         assert!(format!("{:?}", error).contains("System"));
     }
 
     #[test]
     fn test_security_error_helper() {
         let error = BearDogError::security("Security".to_string());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         assert!(format!("{:?}", error).contains("Security"));
     }
 
     #[test]
     fn test_internal_error_helper() {
         let error = BearDogError::internal("Internal".to_string());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         assert!(format!("{:?}", error).contains("System"));
     }
 
@@ -243,19 +309,31 @@ mod error_helper_functions {
 
     #[test]
     fn test_unauthorized_error_helper() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: normal
         let error = BearDogError::unauthorized("Unauthorized".to_string());
         assert!(format!("{:?}", error).contains("Security"));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
     #[test]
     fn test_configuration_error_helper() {
         let error = BearDogError::configuration("Config error");
         assert!(format!("{:?}", error).contains("System"));
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
 }
 
 #[cfg(test)]
 mod error_std_error_trait {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
     use super::*;
     use std::error::Error;
 
@@ -265,21 +343,39 @@ mod error_std_error_trait {
         assert!(!error.to_string().is_empty());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     #[test]
     fn test_error_as_trait_object() {
         let error = BearDogError::system("System error".to_string());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         let _: &dyn Error = &error;
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 
 #[cfg(test)]
 mod error_clone_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     use super::*;
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     fn test_error_clone() {
         let error1 = BearDogError::internal("Original".to_string());
         let error2 = error1.clone();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         assert_eq!(format!("{:?}", error1), format!("{:?}", error2));
     }
 
@@ -289,9 +385,15 @@ mod error_clone_tests {
         let _clone1 = error.clone();
         let _clone2 = error.clone();
         // Should not panic
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: important
 #[cfg(test)]
 mod error_send_sync_tests {
     use super::*;
@@ -300,10 +402,16 @@ mod error_send_sync_tests {
     fn test_error_is_send() {
         fn assert_send<T: Send>() {}
         assert_send::<BearDogError>();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 
     #[test]
     fn test_error_is_sync() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         fn assert_sync<T: Sync>() {}
         assert_sync::<BearDogError>();
     }
@@ -314,15 +422,27 @@ mod error_send_sync_tests {
         assert_send::<BearDogResult<i32>>();
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     #[test]
     fn test_result_is_sync() {
         fn assert_sync<T: Sync>() {}
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         assert_sync::<BearDogResult<i32>>();
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: errors
+// TEST_PRIORITY: normal
 
 #[cfg(test)]
 mod error_category_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
     use super::*;
     use crate::categories::*;
 
@@ -332,13 +452,22 @@ mod error_category_tests {
         assert!(matches!(error, BearDogError::System { .. }));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
     #[test]
     fn test_security_with_category() {
         let error =
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: errors
+            // TEST_PRIORITY: normal
             BearDogError::security_with_category("Crypto error", SecurityErrorCategory::Encryption);
         assert!(matches!(error, BearDogError::Security { .. }));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
     #[test]
     fn test_business_with_category() {
         let error =

@@ -59,6 +59,9 @@ fn test_signature_wrong_key_error() {
 }
 
 /// Test encryption with invalid algorithm
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_invalid_algorithm_error() {
     // When: Requesting unsupported algorithm
@@ -73,6 +76,9 @@ fn test_invalid_algorithm_error() {
 /// Test key generation failure recovery
 #[test]
 fn test_key_generation_failure_recovery() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     // When: Key generation fails (simulated)
     let max_retries = 3;
     let mut attempts = 0;
@@ -82,6 +88,9 @@ fn test_key_generation_failure_recovery() {
         attempts += 1;
         // Simulate retry logic
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     assert_eq!(attempts, max_retries, "Should attempt all retries");
 
@@ -91,6 +100,9 @@ fn test_key_generation_failure_recovery() {
 /// Test HSM connection timeout handling
 #[test]
 fn test_hsm_connection_timeout() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     // When: HSM connection times out
     let timeout_ms = 5000;
     let max_timeout = 10000;
@@ -104,6 +116,9 @@ fn test_hsm_connection_timeout() {
 /// Test resource exhaustion handling
 #[test]
 fn test_resource_exhaustion_error() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     // When: System resources exhausted
     let available_memory = 1024; // KB
     let required_memory = 2048; // KB
@@ -113,6 +128,9 @@ fn test_resource_exhaustion_error() {
         available_memory < required_memory,
         "Should detect insufficient resources"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     // Verify: Would return InsufficientResources error
 }
@@ -128,6 +146,9 @@ fn test_concurrent_access_conflict() {
     assert!(!resource_id.is_empty(), "Resource should be identified");
     assert!(lock_timeout_ms > 0, "Timeout should be positive");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Verify: Would use locking or return Busy error
 }
 
@@ -138,6 +159,9 @@ fn test_data_corruption_detection() {
     let data = b"some data";
     let expected_checksum = 12345u32;
     let actual_checksum = 54321u32;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     // Then: Should detect corruption
     assert_ne!(
@@ -151,6 +175,9 @@ fn test_data_corruption_detection() {
 
 /// Test graceful degradation on partial failure
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_graceful_degradation() {
     // When: Primary system fails, fallback available
     let primary_available = false;
@@ -162,6 +189,9 @@ fn test_graceful_degradation() {
 
     let can_operate = fallback_available;
     assert!(can_operate, "System should continue with fallback");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test error message quality
@@ -176,7 +206,9 @@ fn test_error_message_informativeness() {
 
     assert!(
         error_message.contains("Invalid"),
-        "Should state what's wrong"
+        "Should state what's wrong" // TEST_CATEGORY: integration
+                                    // TEST_DOMAIN: security
+                                    // TEST_PRIORITY: normal
     );
     assert!(error_message.contains("key-123"), "Should include context");
     assert!(
@@ -189,6 +221,9 @@ fn test_error_message_informativeness() {
 #[test]
 fn test_error_propagation() {
     // Errors should propagate correctly through call chain
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     // With context at each level
 
     let base_error = "Network timeout";
@@ -207,6 +242,9 @@ fn test_error_propagation() {
 #[test]
 fn test_transient_failure_retry() {
     // When: Transient network error occurs
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let max_retries = 3;
     let base_delay_ms = 100;
 
@@ -222,6 +260,9 @@ fn test_transient_failure_retry() {
 #[test]
 fn test_circuit_breaker() {
     // When: Repeated failures occur
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let failure_threshold = 5;
     let mut failures = 0;
 
@@ -234,6 +275,9 @@ fn test_circuit_breaker() {
     assert!(circuit_open, "Circuit should open after threshold");
 
     // Verify: Would stop attempts and return CircuitOpen error
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test error recovery success rate tracking
@@ -249,6 +293,9 @@ fn test_error_recovery_metrics() {
         successful_recoveries + failures,
         "Metrics should add up"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     let success_rate = (successful_recoveries as f64 / total_attempts as f64) * 100.0;
     assert!(
@@ -268,6 +315,9 @@ fn test_error_context_preservation() {
     // - System state
 
     let error_context = ErrorContext {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         operation: "key_generation",
         component: "hsm_provider",
         timestamp_ms: 1697820000000,
@@ -298,6 +348,9 @@ fn test_deadlock_detection() {
     let timeout_ms = 5000;
     let start_time = 0;
     let current_time = 6000;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // Then: Should detect timeout
     let elapsed = current_time - start_time;
@@ -310,6 +363,9 @@ fn test_deadlock_detection() {
 #[test]
 fn test_error_path_memory_safety() {
     // Error paths must not leak resources
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     // This is guaranteed by Rust's ownership system
 
     let resource = [1, 2, 3, 4, 5];
@@ -326,6 +382,9 @@ fn test_error_path_memory_safety() {
 }
 
 /// Test panic-free error handling
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 #[test]
 fn test_no_panic_on_errors() {
     // All errors should return Result, never panic

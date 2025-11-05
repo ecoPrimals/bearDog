@@ -61,6 +61,9 @@ fn test_auth_token_uniqueness() {
     assert_ne!(token2, token3, "Tokens should be unique");
     assert_ne!(token1, token3, "Tokens should be unique");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 /// Test credential comparison timing safety
 #[test]
@@ -69,6 +72,9 @@ fn test_credential_timing_safe_comparison() {
     let cred2 = b"user_credential_abc";
     let cred3 = b"user_credential_xyz";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Equal credentials
     assert!(
         constant_time_compare(cred1, cred2),
@@ -78,6 +84,9 @@ fn test_credential_timing_safe_comparison() {
     // Different credentials
     assert!(
         !constant_time_compare(cred1, cred3),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         "Different credentials should not match"
     );
 }
@@ -90,12 +99,17 @@ fn test_session_id_generation() {
     assert_eq!(
         session_id.unwrap().len(),
         16,
-        "Session ID should be 16 bytes"
+        "Session ID should be 16 bytes" // TEST_CATEGORY: integration
+                                        // TEST_DOMAIN: security
+                                        // TEST_PRIORITY: critical
     );
 }
 
 /// Test multiple session IDs are unique
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 fn test_session_id_uniqueness() {
     let sessions: Vec<_> = (0..10)
         .map(|_| generate_secure_random_bytes(16).unwrap())
@@ -105,6 +119,9 @@ fn test_session_id_uniqueness() {
     for i in 0..sessions.len() {
         for j in (i + 1)..sessions.len() {
             assert_ne!(sessions[i], sessions[j], "Session IDs should be unique");
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
         }
     }
 }
@@ -122,6 +139,9 @@ fn test_auth_failure_tracking() {
     assert!(max_failures > 0, "Should have failure limit");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test account lockout thresholds
 #[test]
 fn test_account_lockout_threshold() {
@@ -130,7 +150,9 @@ fn test_account_lockout_threshold() {
 
     assert!(
         lockout_threshold > 0,
-        "Lockout threshold should be positive"
+        "Lockout threshold should be positive" // TEST_CATEGORY: integration
+                                               // TEST_DOMAIN: security
+                                               // TEST_PRIORITY: normal
     );
     assert!(
         lockout_duration_minutes > 0,
@@ -143,6 +165,9 @@ fn test_account_lockout_threshold() {
 }
 
 /// Test password strength requirements
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 #[test]
 fn test_password_strength_validation() {
     let min_length = 8;
@@ -153,6 +178,9 @@ fn test_password_strength_validation() {
 
     assert!(
         weak_password.len() < min_length,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Weak password should be too short"
     );
     assert!(
@@ -170,6 +198,9 @@ fn test_password_strength_validation() {
 fn test_credential_expiration() {
     let creation_time: u64 = 1000;
     let expiration_time: u64 = 2000;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let current_time: u64 = 1500;
 
     assert!(
@@ -190,6 +221,9 @@ fn test_mfa_token_validation() {
     assert_eq!(mfa_token.len(), 6, "MFA token should be 6 bytes");
     assert!(
         mfa_token.iter().any(|&b| b != 0),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "MFA token should not be all zeros"
     );
 }
@@ -204,6 +238,9 @@ fn test_auth_rate_limiting() {
         current_attempts < max_attempts_per_minute,
         "Should allow more attempts"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(max_attempts_per_minute > 0, "Rate limit should be positive");
 }
 
@@ -213,6 +250,9 @@ fn test_secure_credential_storage() {
     let mut credential = vec![0xABu8; 32];
 
     // Simulate using credential
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let credential_copy = credential.clone();
     assert_eq!(credential, credential_copy);
 
@@ -222,7 +262,9 @@ fn test_secure_credential_storage() {
     // Verify cleared
     assert!(
         credential.iter().all(|&b| b == 0),
-        "Credential should be zeroed"
+        "Credential should be zeroed" // TEST_CATEGORY: integration
+                                      // TEST_DOMAIN: security
+                                      // TEST_PRIORITY: normal
     );
 }
 
@@ -239,6 +281,9 @@ fn test_auth_context_validation() {
 
 /// Test session timeout configuration
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: critical
 fn test_session_timeout() {
     let default_timeout_minutes = 30;
     let max_timeout_minutes = 480; // 8 hours
@@ -247,6 +292,9 @@ fn test_session_timeout() {
         default_timeout_minutes > 0,
         "Default timeout should be positive"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(
         default_timeout_minutes <= max_timeout_minutes,
         "Default should be within max"
@@ -260,6 +308,9 @@ fn test_auth_nonce_generation() {
     let nonce2 = generate_secure_random_bytes(32).unwrap();
 
     assert_ne!(nonce1, nonce2, "Nonces should be unique");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     assert_eq!(nonce1.len(), 32, "Nonce should be 32 bytes");
 }
 
@@ -267,6 +318,9 @@ fn test_auth_nonce_generation() {
 #[test]
 fn test_salt_randomness() {
     let salt1 = generate_secure_random_bytes(16).unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let salt2 = generate_secure_random_bytes(16).unwrap();
     let salt3 = generate_secure_random_bytes(16).unwrap();
 
@@ -276,6 +330,9 @@ fn test_salt_randomness() {
 }
 
 /// Test authentication challenge-response
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_challenge_response_flow() {
     let challenge = generate_secure_random_bytes(32).unwrap();

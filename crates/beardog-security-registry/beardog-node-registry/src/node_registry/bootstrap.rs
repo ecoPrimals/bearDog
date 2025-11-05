@@ -154,6 +154,9 @@ impl BootstrapManager {
 mod tests {
     use super::*;
     use crate::node_registry::types::TrustLevel;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]}
 
 

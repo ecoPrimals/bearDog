@@ -280,6 +280,9 @@ where
 #[cfg(test)]
 mod tests {
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[test]
     fn test_traits_exist() {}
 }

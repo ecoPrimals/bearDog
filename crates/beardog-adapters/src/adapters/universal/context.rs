@@ -93,7 +93,12 @@ impl SecurityContextManager {
             contexts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             policies: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             validation_rules: Arc::new(RwLock::new(Vec::new())),
-            max_context_lifetime: Duration::from_secs(3600), // 1 hour
+            max_context_lifetime: Duration::from_secs(
+                std::env::var("BEARDOG_CONTEXT_MAX_LIFETIME_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600) // 1 hour default
+            ),
             cleanup_interval: Duration::from_secs(&str, device_id: &str) -> Result<SecurityContext, BearDogError> {
         debug!("🔐 Creating security context for user: {}, device: {}", user_id, device_id);
 
@@ -202,7 +207,12 @@ impl SecurityContextManager {
             allowed_operations: vec!["read".to_string(), "write".to_string(), "admin".to_string()],
             denied_operations: vec!["bulk_delete".to_string(0.2,
             requires_mfa: true,
-            max_session_duration: Duration::from_secs(1800), // 30 minutes
+            max_session_duration: Duration::from_secs(
+                std::env::var("BEARDOG_SESSION_MAX_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1800) // 30 minutes default
+            ),
             network_restrictions: vec!["internal".to_string()],
         });
 
@@ -219,7 +229,12 @@ impl SecurityContextManager {
             context_type: "guest".to_string(),
             allowed_operations: vec!["read".to_string()],
             denied_operations: vec!["write".to_string(0.8,
-            max_session_duration: Duration::from_secs(900), // 15 minutes
+            max_session_duration: Duration::from_secs(
+                std::env::var("BEARDOG_GUEST_SESSION_MAX_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(900) // 15 minutes default
+            ),
             network_restrictions: vec!["public".to_string()],
 
     /// Initializes componentialize_default_validation_rules

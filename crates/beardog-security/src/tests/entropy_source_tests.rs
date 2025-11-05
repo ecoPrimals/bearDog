@@ -48,6 +48,9 @@ mod tests {
     fn test_entropy_min_length() {
         // Test that entropy generation meets minimum length requirements
         let entropy_bytes = [0u8; 32]; // 256 bits minimum
+                                       // TEST_CATEGORY: integration
+                                       // TEST_DOMAIN: security
+                                       // TEST_PRIORITY: normal
 
         assert!(
             entropy_bytes.len() >= 32,
@@ -60,6 +63,9 @@ mod tests {
         // Test that entropy is not all zeros
         let random_bytes: Vec<u8> = (0..32).map(|_| rand::random()).collect();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let all_zeros = random_bytes.iter().all(|&b| b == 0);
         assert!(!all_zeros, "Entropy should not be all zeros");
     }
@@ -77,6 +83,9 @@ mod tests {
     fn test_entropy_collection_size() {
         // Test that entropy collection respects size requirements
         let sizes = [16, 32, 64, 128];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         for &size in &sizes {
             let entropy = vec![0u8; size];
@@ -85,18 +94,27 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_multiple_entropy_sources() {
         // Test that multiple entropy sources can be combined
         let source1 = rand::random::<u64>();
         let source2 = rand::random::<u64>();
 
         // XOR combination as simple example
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let combined = source1 ^ source2;
 
         assert_ne!(combined, 0, "Combined entropy should not be zero");
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_entropy_timing_independence() {
         // Test that consecutive entropy generations are independent
         let e1 = rand::random::<u64>();
@@ -105,6 +123,9 @@ mod tests {
 
         // All should be different (with very high probability)
         assert_ne!(e1, e2);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert_ne!(e2, e3);
         assert_ne!(e1, e3);
     }
@@ -114,6 +135,9 @@ mod tests {
         // Test that entropy generation is thread-safe
         use std::sync::Arc;
         use std::sync::Mutex;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         use std::thread;
 
         let entropy_values = Arc::new(Mutex::new(Vec::new()));
@@ -124,6 +148,9 @@ mod tests {
             let handle = thread::spawn(move || {
                 let random = rand::random::<u64>();
                 values.lock().unwrap().push(random);
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: security
+                // TEST_PRIORITY: normal
             });
             handles.push(handle);
         }
@@ -156,6 +183,9 @@ mod tests {
         // Should not be sequential
         let is_sequential = entropy.windows(2).all(|w| w[1] == w[0].wrapping_add(1));
         assert!(!is_sequential, "Entropy should not be sequential");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -167,6 +197,9 @@ mod tests {
         // - Must be thread-safe
 
         // Test passes if we reach here - requirements documented
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -175,6 +208,9 @@ mod tests {
         let sample: Vec<u8> = (0..1000).map(|_| rand::random()).collect();
 
         // Count unique bytes
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let unique_count = sample.iter().collect::<HashSet<_>>().len();
 
         // Should have good variety (at least 200 unique values out of 1000)
@@ -188,6 +224,9 @@ mod tests {
     #[test]
     fn test_entropy_no_patterns() {
         // Test that entropy doesn't have obvious patterns
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let values: Vec<u8> = (0..100).map(|_| rand::random()).collect();
 
         // Check for repeating sequences
@@ -200,6 +239,9 @@ mod tests {
         // Test passes if we reach here - pattern check completed
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_entropy_buffer_size_limits() {
         // Test that entropy buffers have reasonable size limits

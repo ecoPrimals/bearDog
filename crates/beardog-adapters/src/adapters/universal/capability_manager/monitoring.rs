@@ -140,7 +140,10 @@ impl CapabilityMonitor {
                     quality_score: 1.0,
                 },
                 availability_history: Vec::new(AlertThresholds {
-                    max_response_time_ms: 1000,
+                    max_response_time_ms: std::env::var("BEARDOG_MAX_RESPONSE_TIME_MS")
+                        .ok()
+                        .and_then(|t| t.parse().ok())
+                        .unwrap_or(1000), // 1 second default
                     min_availability_percent: 95.0,
                     max_error_rate_percent: 5.0,
                     min_quality_score: 0.8,

@@ -13,9 +13,9 @@
 use super::*;
 use tracing::info;
 
-/// TEST_CATEGORY: chaos
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+// TEST_CATEGORY: chaos
+// TEST_DOMAIN: core
+// TEST_PRIORITY: high
 /// Test framework initialization
 pub async fn test_framework_initialization() -> Result<(), beardog_errors::BearDogError> {
     info!("🧪 Testing Framework Initialization");
@@ -35,9 +35,9 @@ pub async fn test_framework_initialization() -> Result<(), beardog_errors::BearD
     Ok(())
 }
 
-/// TEST_CATEGORY: chaos
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+// TEST_CATEGORY: chaos
+// TEST_DOMAIN: core
+// TEST_PRIORITY: high
 /// Test fault injector registration
 pub async fn test_fault_injector_registration() -> Result<(), beardog_errors::BearDogError> {
     info!("🧪 Testing Fault Injector Registration");
@@ -60,9 +60,9 @@ pub async fn test_fault_injector_registration() -> Result<(), beardog_errors::Be
     Ok(())
 }
 
-/// TEST_CATEGORY: chaos
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+// TEST_CATEGORY: chaos
+// TEST_DOMAIN: core
+// TEST_PRIORITY: high
 /// Test recovery validator setup
 pub async fn test_recovery_validator_setup() -> Result<(), beardog_errors::BearDogError> {
     info!("🧪 Testing Recovery Validator Setup");
@@ -84,9 +84,9 @@ pub async fn test_recovery_validator_setup() -> Result<(), beardog_errors::BearD
     Ok(())
 }
 
-/// TEST_CATEGORY: chaos
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+// TEST_CATEGORY: chaos
+// TEST_DOMAIN: core
+// TEST_PRIORITY: high
 /// Test scenario execution pipeline
 pub async fn test_scenario_execution() -> Result<(), beardog_errors::BearDogError> {
     info!("🧪 Testing Scenario Execution Pipeline");
@@ -250,27 +250,51 @@ mod tests {
     #[tokio::test]
     async fn test_scenario_exec() {
         let result = test_scenario_execution().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_metrics() {
         let result = test_metrics_collection().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_reporting() {
         let result = test_report_generation().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_controller() {
         let result = test_controller_lifecycle().await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(result.is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_tracking() {
         let result = test_fault_tracking().await;

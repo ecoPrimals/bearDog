@@ -25,7 +25,8 @@ pub mod types;
 pub mod safe_ffi;
 pub mod universal_discovery;
 
-// Crypto and dispatch
+// Crypto system
+pub mod crypto; // NEW: Universal Crypto Provider System
 pub mod crypto_dispatch;
 // NOTE: provider_dispatch depends on universal_hsm which is disabled
 // TODO: Re-enable after universal_hsm module rebuild

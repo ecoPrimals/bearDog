@@ -292,7 +292,7 @@ impl AndroidKeystore {
         _params: &AndroidKeyParams,
     ) -> Result<(), BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore key generation not yet implemented".to_string(),
+            "Android keystore key generation not yet implemented",
         ))
     }
 
@@ -306,7 +306,7 @@ impl AndroidKeystore {
         _params: &AndroidKeyParams,
     ) -> Result<(), BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore key generation not yet implemented".to_string(),
+            "Android keystore key generation not yet implemented",
         ))
     }
 
@@ -316,7 +316,7 @@ impl AndroidKeystore {
     /// Returns an error if encryption fails
     pub fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore encryption not yet implemented".to_string(),
+            "Android keystore encryption not yet implemented",
         ))
     }
 
@@ -326,7 +326,7 @@ impl AndroidKeystore {
     /// Returns an error if decryption fails
     pub fn decrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore decryption not yet implemented".to_string(),
+            "Android keystore decryption not yet implemented",
         ))
     }
 
@@ -336,7 +336,7 @@ impl AndroidKeystore {
     /// Returns an error if signing fails
     pub fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore signing not yet implemented".to_string(),
+            "Android keystore signing not yet implemented",
         ))
     }
 
@@ -351,7 +351,7 @@ impl AndroidKeystore {
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore verification not yet implemented".to_string(),
+            "Android keystore verification not yet implemented",
         ))
     }
 
@@ -361,7 +361,7 @@ impl AndroidKeystore {
     /// Returns an error if deletion fails
     pub fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
         Err(BearDogError::not_implemented(
-            "Android keystore key deletion not yet implemented".to_string(),
+            "Android keystore key deletion not yet implemented",
         ))
     }
 

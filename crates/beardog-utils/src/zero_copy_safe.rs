@@ -182,12 +182,18 @@ mod tests {
         assert_eq!(buffer.capacity(), 1024);
         assert_eq!(buffer.len(), 0);
         assert!(buffer.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         Ok(())
     }
 
     #[test]
     fn test_zero_copy_slice() -> Result<(), Box<dyn std::error::Error>> {
         let buffer_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let buffer = SafeZeroCopyBuffer::from_vec(buffer_data);
 
         let slice = buffer.as_slice(2, 4)?;
@@ -197,6 +203,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_buffer_pool() -> Result<(), Box<dyn std::error::Error>> {
         let pool = SafeBufferPool::new(1024, 10);

@@ -60,30 +60,72 @@ impl Default for DatabaseDomainConfig {
 
 impl Default for DatabaseConnectionConfig {
     fn default() -> Self {
+        let default_url = std::env::var("DATABASE_URL")
+            .unwrap_or_else(|_| std::env::var("BEARDOG_DATABASE_URL")
+                .unwrap_or_else(|_| "sqlite://beardog.db".to_string()));
+        
+        let max_connections = std::env::var("DATABASE_MAX_CONNECTIONS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE);
+        
+        let timeout_secs = std::env::var("DATABASE_TIMEOUT_SECONDS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(30);
+        
+        let ssl = std::env::var("DATABASE_SSL")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(false);
+        
         Self {
-            url: "sqlite://beardog.db".to_string(),
-            max_connections: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            timeout: Duration::from_secs(30),
-            ssl: false,
+            url: default_url,
+            max_connections,
+            timeout: Duration::from_secs(timeout_secs),
+            ssl,
         }
     }
 }
 
 impl Default for DatabasePoolConfig {
     fn default() -> Self {
+        let min_idle = std::env::var("DATABASE_POOL_MIN_IDLE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(1);
+        
+        let max_size = std::env::var("DATABASE_POOL_MAX_SIZE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE);
+        
+        let idle_timeout_secs = std::env::var("DATABASE_POOL_IDLE_TIMEOUT_SECONDS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(600);
+        
         Self {
-            min_idle: 1,
-            max_size: beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            idle_timeout: Duration::from_secs(600),
+            min_idle,
+            max_size,
+            idle_timeout: Duration::from_secs(idle_timeout_secs),
         }
     }
 }
 
 impl Default for MigrationConfig {
     fn default() -> Self {
+        let auto_migrate = std::env::var("DATABASE_AUTO_MIGRATE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(true);
+        
+        let directory = std::env::var("DATABASE_MIGRATION_DIR")
+            .unwrap_or_else(|_| "migrations".to_string());
+        
         Self {
-            auto_migrate: true,
-            directory: "migrations".to_string(),
+            auto_migrate,
+            directory,
         }
     }
 }

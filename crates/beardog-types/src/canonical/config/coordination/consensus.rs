@@ -156,7 +156,10 @@ impl Default for DecisionProtocol {
                     description: "Propose decision for collaborative review".to_string(),
                     required_participants: vec![],
                     optional_participants: vec![],
-                    min_participation: 0.5,
+                    min_participation: std::env::var("BEARDOG_CONSENSUS_MIN_PARTICIPATION")
+                        .ok()
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(0.5),
                 }
             ],
             advancement_requirements: vec![
@@ -171,7 +174,12 @@ impl Default for MutualAccountability {
         Self {
             accountability_agreements: vec![],
             shared_responsibilities: HashMap::new(),
-            review_schedule: Duration::from_secs(86400 * 7), // Weekly
+            review_schedule: Duration::from_secs(
+                std::env::var("BEARDOG_REVIEW_SCHEDULE_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(86400 * 7) // Weekly
+            ),
         }
     }
 } 

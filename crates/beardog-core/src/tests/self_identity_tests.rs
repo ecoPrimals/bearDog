@@ -33,6 +33,9 @@ fn test_self_identity_serialization() {
         capabilities: vec![ServiceCapabilityType::Security],
         endpoint: "http://localhost:9000".to_string(),
         health_status: HealthStatus::Healthy,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         metadata: HashMap::new(),
     };
 
@@ -48,6 +51,9 @@ fn test_self_identity_deserialization() {
         "name": "DeserializedPrimal",
         "version": "2.0.0",
         "capabilities": ["Security"],
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "endpoint": "http://localhost:7000",
         "health_status": "Healthy",
         "metadata": {}
@@ -62,6 +68,9 @@ fn test_self_identity_deserialization() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_self_identity_multiple_capabilities() {
     let capabilities = vec![
         ServiceCapabilityType::Security,
@@ -79,6 +88,9 @@ fn test_self_identity_multiple_capabilities() {
         metadata: HashMap::new(),
     };
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(identity.capabilities.len(), 3);
 }
 
@@ -97,6 +109,9 @@ fn test_self_identity_with_metadata() {
         health_status: HealthStatus::Healthy,
         metadata,
     };
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     assert_eq!(identity.metadata.len(), 2);
     assert!(identity.metadata.contains_key("region"));
@@ -115,6 +130,9 @@ fn test_self_identity_health_statuses() {
     for status in statuses {
         let identity = SelfIdentity {
             id: format!("status-{status:?}"),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             name: "StatusTest".to_string(),
             version: "1.0.0".to_string(),
             capabilities: vec![],
@@ -136,6 +154,9 @@ fn test_self_identity_clone() {
         capabilities: vec![ServiceCapabilityType::Security],
         endpoint: "http://localhost:8080".to_string(),
         health_status: HealthStatus::Healthy,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         metadata: HashMap::new(),
     };
 
@@ -153,10 +174,16 @@ fn test_health_status_equality() {
     assert_eq!(HealthStatus::Degraded, HealthStatus::Degraded);
     assert_ne!(HealthStatus::Healthy, HealthStatus::Degraded);
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_self_identity_empty_capabilities() {
     let identity = SelfIdentity {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         id: "no-caps".to_string(),
         name: "NoCaps".to_string(),
         version: "1.0.0".to_string(),
@@ -169,6 +196,9 @@ fn test_self_identity_empty_capabilities() {
     assert!(identity.capabilities.is_empty());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_self_identity_endpoint_formats() {
     let endpoints = vec![

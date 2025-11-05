@@ -30,6 +30,9 @@ workspace = true
 [dependencies.beardog-errors]
 workspace = true
 
+[dependencies.beardog-tunnel]
+path = "../beardog-tunnel"
+
 [dependencies.tokio]
 workspace = true
 
@@ -53,3 +56,12 @@ workspace = true
 
 [dependencies.chrono]
 workspace = true
+
+[dependencies.hex]
+version = "0.4"
+
+[dependencies.sha3]
+version = "0.10"
+
+[dev-dependencies]
+tempfile = "3.8"

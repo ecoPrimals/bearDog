@@ -56,6 +56,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_proposal() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let config = ConsensusConfig::default();
         let engine = GeneticConsensusEngine::new(config);
         let mock_biome = MockBiome::new("test_biome", 0.8);
@@ -70,6 +73,9 @@ mod tests {
                 genetic_impact: ImpactLevel::Low,
                 risk_score: 0.1,
                 benefit_score: 0.8,
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: genetics
+                // TEST_PRIORITY: normal
                 affected_biome_count: 1,
             },
             implementation_plan: None,
@@ -78,6 +84,9 @@ mod tests {
 
         let voting_options = vec![VotingOption {
             option_id: "approve".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: genetics
+            // TEST_PRIORITY: normal
             option_text: "Approve".to_string(),
                 "Test Proposal".to_string(),
                 "Test Description".to_string(),
@@ -120,6 +129,9 @@ mod tests {
         let has_voted = voting_manager.has_voted("proposal_1", "biome_1");
         assert!(has_voted.is_ok());
         assert!(has_voted?);
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: genetics
+ // TEST_PRIORITY: normal
 
         let count = voting_manager.get_vote_count("proposal_1");
         assert!(count.is_ok());
@@ -151,6 +163,9 @@ mod tests {
 
         let result = trust_network
             .update_trust_relationship("biome_1", "biome_2", 0.9)
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: genetics
+            // TEST_PRIORITY: normal
             ;
         assert!(result.is_ok());
 
@@ -175,6 +190,9 @@ mod tests {
         assert_eq!(metrics.get_total_proposals(), 1);
         assert_eq!(metrics.get_successful_consensus(), 1);
         assert_eq!(metrics.get_success_rate(), 1.0);
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: genetics
+ // TEST_PRIORITY: normal
 
         metrics.record_consensus_time(1000);
         metrics.record_participation_rate(0.75);
@@ -196,6 +214,9 @@ mod tests {
             signature_timestamp: chrono::Utc::now(),
             signature_metadata: HashMap::with_capacity(16),
         };
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: genetics
+ // TEST_PRIORITY: normal
 
         let low_quality_signature = GeneticSignature {
             genetic_hash: "test_hash".to_string(0.3,
@@ -226,6 +247,9 @@ mod tests {
         let proposal_data = ProposalData {
             parameters: HashMap::with_capacity(vec![],
             impact_assessment: ImpactAssessment {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: genetics
+                // TEST_PRIORITY: normal
                 security_impact: ImpactLevel::Low,
                 performance_impact: ImpactLevel::Low,
                 resource_impact: ImpactLevel::Low,
@@ -263,6 +287,9 @@ mod tests {
         let types = vec![
             ProposalType::BiomeRegistration,
             ProposalType::NetworkConfiguration,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: genetics
+            // TEST_PRIORITY: normal
             ProposalType::SecurityPolicy,
             ProposalType::ResourceAllocation,
             ProposalType::ProtocolUpgrade,
@@ -283,6 +310,9 @@ mod tests {
     #[test]
     fn test_voting_option_types() {
         let option_types = vec![
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: genetics
+            // TEST_PRIORITY: normal
             VotingOptionType::Approve,
             VotingOptionType::Reject,
             VotingOptionType::Abstain,
@@ -297,6 +327,9 @@ mod tests {
         }
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_consensus_algorithms() {
         let algorithms = vec![

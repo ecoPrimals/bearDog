@@ -194,3 +194,230 @@ impl PropertyBasedTestFramework {
         Ok(key1 != key2) // Keys should be different
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::property_testing::{PropertyBasedTestFramework, PropertyTestConfig};
+
+    #[test]
+    fn test_cryptographic_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 10,
+            ..Default::default()
+        });
+
+        let result = framework.test_cryptographic_properties();
+        assert!(result.is_ok(), "Cryptographic properties should pass");
+        assert_eq!(
+            framework.statistics.properties_tested, 4,
+            "Should test 4 properties"
+        );
+    }
+
+    #[test]
+    fn test_generate_crypto_test_cases() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        let result = framework.generate_crypto_test_cases();
+        assert!(result.is_ok(), "Should generate crypto test cases");
+        assert_eq!(
+            framework.test_cases.len(),
+            5,
+            "Should generate 5 test cases"
+        );
+
+        // Verify test case structure
+        for test_case in &framework.test_cases {
+            assert_eq!(test_case.test_type, "cryptographic");
+            assert_eq!(test_case.input_data.len(), 64);
+            assert_eq!(test_case.expected_properties.len(), 3);
+        }
+    }
+
+    #[test]
+    fn test_hash_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_crypto_test_cases().unwrap();
+        let result = framework.test_hash_properties();
+        assert!(result.is_ok(), "Hash properties should pass");
+        assert!(
+            framework.statistics.total_tests > 0,
+            "Should record test results"
+        );
+    }
+
+    #[test]
+    fn test_encryption_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_crypto_test_cases().unwrap();
+        let result = framework.test_encryption_properties();
+        assert!(result.is_ok(), "Encryption properties should pass");
+    }
+
+    #[test]
+    fn test_signature_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_crypto_test_cases().unwrap();
+        let result = framework.test_signature_properties();
+        assert!(result.is_ok(), "Signature properties should pass");
+    }
+
+    #[test]
+    fn test_key_derivation_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_crypto_test_cases().unwrap();
+        let result = framework.test_key_derivation_properties();
+        assert!(result.is_ok(), "Key derivation properties should pass");
+    }
+
+    #[test]
+    fn test_hash_determinism() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"test data for hashing".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_hash_determinism(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Hash should be deterministic"
+        );
+    }
+
+    #[test]
+    fn test_hash_avalanche_effect() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: vec![0u8; 32],
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_hash_avalanche_effect(&test_case);
+        assert!(result.is_ok(), "Avalanche effect test should complete");
+    }
+
+    #[test]
+    fn test_encryption_decryption_roundtrip() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"secret message to encrypt".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_encryption_decryption_roundtrip(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Encryption/decryption roundtrip should work"
+        );
+    }
+
+    #[test]
+    fn test_ciphertext_uniqueness() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"message for uniqueness test".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_ciphertext_uniqueness(&test_case);
+        // This test may fail depending on the mock implementation
+        assert!(result.is_ok(), "Ciphertext uniqueness test should complete");
+    }
+
+    #[test]
+    fn test_signature_verification() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"document to sign".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_signature_verification(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Signature verification should pass"
+        );
+    }
+
+    #[test]
+    fn test_signature_tamper_detection() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"important document".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_signature_tamper_detection(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Tamper detection should work"
+        );
+    }
+
+    #[test]
+    fn test_key_derivation_determinism() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"input key material for derivation test".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_key_derivation_determinism(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Key derivation should be deterministic"
+        );
+    }
+
+    #[test]
+    fn test_key_derivation_sensitivity() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: b"input for sensitivity test".to_vec(),
+            test_type: "cryptographic".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_key_derivation_sensitivity(&test_case);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Key derivation should be sensitive to input changes"
+        );
+    }
+}

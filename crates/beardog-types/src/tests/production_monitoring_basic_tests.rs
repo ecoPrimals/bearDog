@@ -127,11 +127,17 @@ fn test_production_ecosystem_builder() {
         )
         .enable_advanced_features()
         .build();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert!(ecosystem.is_ok());
     let ecosystem = ecosystem.unwrap();
     assert_eq!(
         ecosystem.config.core.environment_level,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         EnvironmentLevel::Staging
     );
     assert_eq!(ecosystem.config.core.service_name, "test-service");
@@ -147,6 +153,9 @@ fn test_production_ecosystem_new() {
 
 #[test]
 fn test_production_ecosystem_initialization() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = ProductionConfig::default();
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
 
@@ -158,6 +167,9 @@ fn test_production_ecosystem_initialization() {
 #[test]
 fn test_production_ecosystem_status_tracking() {
     let config = ProductionConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
 
     let initial_status = ecosystem.get_status();
@@ -168,6 +180,9 @@ fn test_production_ecosystem_status_tracking() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_production_ecosystem_uptime() {
     let config = ProductionConfig::default();
     let ecosystem = ProductionEcosystem::new(config).unwrap();
@@ -176,6 +191,9 @@ fn test_production_ecosystem_uptime() {
     // Uptime should be a valid duration (non-negative by type)
     assert!(uptime.as_secs() < u64::MAX);
     assert!(uptime.as_millis() < u128::MAX);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -188,6 +206,9 @@ fn test_production_ecosystem_health_check() {
     assert!(report.is_ok());
 
     let report = report.unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(report.overall_status, HealthStatus::Healthy);
 }
 
@@ -196,6 +217,9 @@ fn test_production_ecosystem_shutdown() {
     let config = ProductionConfig::default();
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
     ecosystem.initialize().unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     let result = ecosystem.shutdown();
     assert!(result.is_ok());
@@ -216,10 +240,16 @@ fn test_production_ecosystem_with_auto_scaling() {
 }
 
 // ====================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // Monitoring Configuration Tests
 // ====================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_monitoring_config_default() {
     let config = MonitoringConfig::default();
     assert_eq!(config.monitoring_interval_seconds, 60);
@@ -227,6 +257,9 @@ fn test_monitoring_config_default() {
     assert_eq!(config.alert_retention_count, 1000);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_performance_config_default() {
     let config = PerformanceConfig::default();
@@ -236,6 +269,9 @@ fn test_performance_config_default() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_system_config_default() {
     let config = SystemConfig::default();
     assert!(config.enable_cpu_monitoring);
@@ -244,6 +280,9 @@ fn test_system_config_default() {
     assert_eq!(config.system_interval_seconds, 30);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_system_config_custom_intervals() {
     let config = SystemConfig {
@@ -254,6 +293,9 @@ fn test_system_config_custom_intervals() {
     };
 
     assert!(config.enable_cpu_monitoring);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(!config.enable_disk_monitoring);
     assert_eq!(config.system_interval_seconds, 60);
 }
@@ -262,6 +304,9 @@ fn test_system_config_custom_intervals() {
 // Alert System Tests
 // ====================
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_metric_type_variants() {
     let types = [
@@ -276,22 +321,33 @@ fn test_metric_type_variants() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_alert_severity_ordering() {
     use std::cmp::Ordering;
 
     assert_eq!(
         AlertSeverity::Info.cmp(&AlertSeverity::Warning),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         Ordering::Less
     );
     assert_eq!(
         AlertSeverity::Warning.cmp(&AlertSeverity::Critical),
-        Ordering::Less
+        Ordering::Less // TEST_CATEGORY: integration
+                       // TEST_DOMAIN: types
+                       // TEST_PRIORITY: normal
     );
     assert_eq!(
         AlertSeverity::Critical.cmp(&AlertSeverity::Emergency),
         Ordering::Less
     );
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_alert_status_variants() {
@@ -307,6 +363,9 @@ fn test_alert_status_variants() {
 
 #[test]
 fn test_operation_status_variants() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let statuses = [
         OperationStatus::Processing,
         OperationStatus::Completed,
@@ -317,6 +376,9 @@ fn test_operation_status_variants() {
     assert_eq!(statuses.len(), 4);
     assert_eq!(statuses[1], OperationStatus::Completed);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_alert_manager_creation() {
@@ -332,6 +394,9 @@ fn test_alert_manager_creation() {
     let manager = AlertManager::new(thresholds);
     // Just verify it was created successfully
     let recent_alerts = manager.get_recent_alerts(10);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(recent_alerts.is_ok());
 }
 
@@ -341,6 +406,9 @@ fn test_alert_manager_cpu_threshold() {
         cpu_threshold_percent: 70.0,
         memory_threshold_percent: 85.0,
         disk_threshold_percent: 90.0,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         network_threshold_bps: 100_000_000,
         error_rate_threshold_percent: 5.0,
         response_time_threshold_ms: 1000.0,
@@ -351,6 +419,9 @@ fn test_alert_manager_cpu_threshold() {
     // System metrics exceeding CPU threshold
     let system_metrics = SystemMetrics {
         cpu_utilization: 75.0, // Exceeds 70% threshold
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         memory_utilization: 50.0,
         disk_utilization: 40.0,
         network_utilization_bps: 50_000_000,
@@ -365,6 +436,9 @@ fn test_alert_manager_cpu_threshold() {
     assert_eq!(alerts[0].severity, AlertSeverity::Warning);
     assert!(alerts[0].message.contains("High CPU utilization"));
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_alert_manager_no_threshold_violations() {
@@ -393,6 +467,9 @@ fn test_alert_manager_no_threshold_violations() {
 
     let alerts = alerts.unwrap();
     assert!(alerts.is_empty());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -419,6 +496,9 @@ fn test_alert_manager_get_recent_alerts() {
 
 // ====================
 // System Metrics Tests
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // ====================
 
 #[test]
@@ -442,12 +522,18 @@ fn test_system_metrics_custom() {
     assert_eq!(metrics.cpu_utilization, 45.5);
     assert_eq!(metrics.network_utilization_bps, 1_500_000);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_system_metrics_collector_new() {
     let interval = Duration::seconds(60);
     let collector = SystemMetricsCollector::new(interval);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = collector.get_config();
     assert_eq!(config.monitoring_interval_seconds, 60);
     assert!(config.enable_alerting);
@@ -458,6 +544,9 @@ fn test_system_metrics_collector_start() {
     let interval = Duration::seconds(30);
     let mut collector = SystemMetricsCollector::new(interval);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let result = collector.start_collection();
     assert!(result.is_ok());
 }
@@ -465,12 +554,18 @@ fn test_system_metrics_collector_start() {
 #[test]
 fn test_system_metrics_collector_summary() {
     let interval = Duration::seconds(60);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let collector = SystemMetricsCollector::new(interval);
 
     let summary = collector.get_summary();
     assert!(summary.is_ok());
 
     let summary = summary.unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(summary.health_score >= 0.0 && summary.health_score <= 1.0);
     assert_eq!(summary.active_alerts_count, 0);
 }
@@ -481,6 +576,9 @@ fn test_system_metrics_collector_history() {
     let mut collector = SystemMetricsCollector::new(interval);
 
     // Initially empty
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(collector.get_metrics_history().len(), 0);
 
     // Add some metrics
@@ -505,6 +603,9 @@ fn test_system_metrics_collector_history() {
 #[test]
 fn test_system_metrics_collector_history_retention() {
     let interval = Duration::seconds(60);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let mut collector = SystemMetricsCollector::new(interval);
 
     // Add more metrics than retention limit
@@ -528,6 +629,9 @@ fn test_system_metrics_collector_history_retention() {
     assert_eq!(collector.get_metrics_history().len(), retention_limit);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_system_metrics_collector_clear_history() {
     let interval = Duration::seconds(60);

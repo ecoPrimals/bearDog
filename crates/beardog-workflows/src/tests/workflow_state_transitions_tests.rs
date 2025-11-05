@@ -74,6 +74,9 @@ fn test_workflow_status_transitions() {
 #[test]
 fn test_workflow_progress_tracking() -> Result<(), BearDogError> {
     let workflow_id = Uuid::new_v4().to_string();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     let mut state = WorkflowState {
         workflow_id: workflow_id.clone(),
         status: WorkflowStatus::Pending,
@@ -92,6 +95,9 @@ fn test_workflow_progress_tracking() -> Result<(), BearDogError> {
     // Progress to step 2
     state.current_step = 2;
     assert_eq!(state.current_step, 2);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 
     // Complete workflow
     state.current_step = 3;
@@ -104,6 +110,9 @@ fn test_workflow_progress_tracking() -> Result<(), BearDogError> {
 
 #[test]
 fn test_workflow_error_handling() -> Result<(), BearDogError> {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     let workflow_id = Uuid::new_v4().to_string();
     let mut state = WorkflowState {
         workflow_id,
@@ -132,6 +141,9 @@ fn test_workflow_execution_context() -> Result<(), BearDogError> {
     let context = WorkflowExecutionContext {
         workflow_id: Uuid::new_v4().to_string(),
         user_id: Some("test_user".to_string()),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: important
         trigger: "manual".to_string(),
         parameters: std::collections::HashMap::new(),
     };
@@ -154,6 +166,9 @@ fn test_workflow_with_parameters() -> Result<(), BearDogError> {
         workflow_id: Uuid::new_v4().to_string(),
         user_id: Some("admin".to_string()),
         trigger: "scheduled".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         parameters: params.clone(),
     };
 
@@ -168,6 +183,9 @@ fn test_workflow_with_parameters() -> Result<(), BearDogError> {
     assert_eq!(context.parameters.len(), 2);
 
     Ok(())
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -191,6 +209,9 @@ fn test_workflow_state_cloning() -> Result<(), BearDogError> {
     assert_eq!(cloned.error_message, original.error_message);
 
     Ok(())
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -211,6 +232,9 @@ fn test_workflow_timestamp_ordering() -> Result<(), BearDogError> {
 
     // Updated should be after created
     assert!(state.updated_at >= state.created_at);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
 
     Ok(())
 }
@@ -230,6 +254,9 @@ fn test_workflow_status_serialization() {
         assert!(!formatted.is_empty(), "Status should be formattable");
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_multiple_concurrent_workflows() -> Result<(), BearDogError> {
@@ -243,6 +270,9 @@ fn test_multiple_concurrent_workflows() -> Result<(), BearDogError> {
             },
             current_step: i % 5,
             total_steps: 5,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: workflows
+            // TEST_PRIORITY: normal
             created_at: SystemTime::now(),
             updated_at: SystemTime::now(),
             error_message: None,
@@ -268,6 +298,9 @@ fn test_workflow_completion_percentage() -> Result<(), BearDogError> {
             workflow_id: Uuid::new_v4().to_string(),
             status: WorkflowStatus::Running,
             current_step: current,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: workflows
+            // TEST_PRIORITY: normal
             total_steps: total,
             created_at: SystemTime::now(),
             updated_at: SystemTime::now(),
@@ -292,6 +325,9 @@ fn test_workflow_state_with_long_error_message() -> Result<(), BearDogError> {
     let state = WorkflowState {
         workflow_id: Uuid::new_v4().to_string(),
         status: WorkflowStatus::Failed,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: important
         current_step: 5,
         total_steps: 10,
         created_at: SystemTime::now(),
@@ -308,6 +344,9 @@ fn test_workflow_state_with_long_error_message() -> Result<(), BearDogError> {
 #[test]
 fn test_workflow_context_with_empty_user() -> Result<(), BearDogError> {
     let context = WorkflowExecutionContext {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         workflow_id: Uuid::new_v4().to_string(),
         user_id: None,
         trigger: "system".to_string(),
@@ -323,6 +362,9 @@ fn test_workflow_context_with_empty_user() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: important
 #[test]
 fn test_workflow_edge_case_zero_steps() -> Result<(), BearDogError> {
     let state = WorkflowState {

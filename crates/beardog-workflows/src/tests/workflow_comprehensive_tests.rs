@@ -4,10 +4,7 @@
 //!
 //! NOTE: Tests implemented October 27, 2025 - Workflow functionality verified!
 
-use crate::{
-    workflows::types::enums::{WorkflowPriority, WorkflowStatus},
-    WorkflowConfig,
-};
+use crate::{workflows::types::enums::WorkflowStatus, WorkflowConfig};
 
 #[cfg(test)]
 mod workflow_creation_tests {
@@ -58,6 +55,9 @@ mod workflow_creation_tests {
         let failed = WorkflowStatus::Failed;
         let cancelled = WorkflowStatus::Cancelled;
         let suspended = WorkflowStatus::Suspended;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
 
         // Verify all states are distinct
         assert_ne!(format!("{:?}", created), format!("{:?}", pending));
@@ -71,9 +71,11 @@ mod workflow_creation_tests {
 
 #[cfg(test)]
 mod workflow_execution_tests {
-    use super::*;
     use crate::workflows::types::enums::ExecutionStatus;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[test]
     fn test_workflow_start() {
         // Test workflow initialization state
@@ -88,6 +90,9 @@ mod workflow_execution_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     fn test_workflow_step_execution() {
         // Test execution state transitions
         let queued = ExecutionStatus::Queued;
@@ -110,6 +115,9 @@ mod workflow_execution_tests {
         let completed = ExecutionStatus::Completed;
 
         assert!(matches!(completed, ExecutionStatus::Completed));
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
 
         // Verify completion is terminal state
         let json = serde_json::to_string(&completed).unwrap();
@@ -120,6 +128,9 @@ mod workflow_execution_tests {
     fn test_workflow_cancellation() {
         // Test workflow cancellation
         let cancelled = ExecutionStatus::Cancelled;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
 
         assert!(matches!(cancelled, ExecutionStatus::Cancelled));
 
@@ -131,10 +142,12 @@ mod workflow_execution_tests {
 
 #[cfg(test)]
 mod workflow_state_tests {
-    use super::*;
     use crate::workflows::types::enums::WorkflowExecutionState;
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     fn test_workflow_state_transitions() {
         // Test valid state transitions
         let initialized = WorkflowExecutionState::Initialized;
@@ -144,6 +157,9 @@ mod workflow_state_tests {
         let cancelled = WorkflowExecutionState::Cancelled;
 
         // Verify all states are distinct
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         assert!(matches!(initialized, WorkflowExecutionState::Initialized));
         assert!(matches!(executing, WorkflowExecutionState::Executing));
         assert!(matches!(completed, WorkflowExecutionState::Completed));
@@ -158,6 +174,9 @@ mod workflow_state_tests {
 
         // Serialize to JSON
         let json = serde_json::to_string(&state).unwrap();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         assert!(!json.is_empty());
         assert!(json.contains("Executing"));
 
@@ -172,6 +191,9 @@ mod workflow_state_tests {
         let failed = WorkflowExecutionState::Failed;
 
         // Verify failed state is terminal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         assert!(matches!(failed, WorkflowExecutionState::Failed));
 
         // Verify we can represent recovery by creating new workflow
@@ -184,6 +206,9 @@ mod workflow_state_tests {
 }
 
 #[cfg(test)]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 mod workflow_error_handling_tests {
     #[test]
     #[ignore = "Placeholder: Implement when error propagation is ready"]
@@ -200,24 +225,42 @@ mod workflow_error_handling_tests {
     #[test]
     #[ignore = "Placeholder: Implement when error recovery is ready"]
     fn test_workflow_error_recovery() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: important
         // TODO: Recovery from errors
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: workflows
+// TEST_PRIORITY: normal
 
 #[cfg(test)]
 mod workflow_integration_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: important
     #[test]
     #[ignore = "Placeholder: Implement when security integration is ready"]
     fn test_workflow_with_security() {
         // TODO: Integration with security module
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[test]
     #[ignore = "Placeholder: Implement when monitoring integration is ready"]
     fn test_workflow_with_monitoring() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
         // TODO: Integration with monitoring
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[test]
     #[ignore = "Placeholder: Implement when end-to-end workflow is ready"]
     fn test_workflow_end_to_end() {

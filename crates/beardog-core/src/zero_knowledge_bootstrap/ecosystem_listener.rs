@@ -202,6 +202,7 @@ impl EcosystemListener {
     }
 
     /// Logs the final listening status
+    #[allow(clippy::cognitive_complexity)]
     fn log_listening_status(&self) {
         info!("🎉 Ecosystem listening active!");
         info!("📊 Listening Status:");
@@ -246,8 +247,12 @@ impl EcosystemListener {
                     }
                 }
 
-                // Wait before next poll
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                // Wait before next poll (configurable via BEARDOG_MDNS_POLL_INTERVAL_SECS, default: 5s)
+                let poll_interval = std::env::var("BEARDOG_MDNS_POLL_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(5);
+                tokio::time::sleep(tokio::time::Duration::from_secs(poll_interval)).await;
             }
         });
 
@@ -284,8 +289,12 @@ impl EcosystemListener {
                     }
                 }
 
-                // Wait before next poll
-                tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                // Wait before next poll (configurable via BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS, default: 10s)
+                let poll_interval = std::env::var("BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(10);
+                tokio::time::sleep(tokio::time::Duration::from_secs(poll_interval)).await;
             }
         });
 
@@ -322,8 +331,12 @@ impl EcosystemListener {
                     }
                 }
 
-                // Wait before next check
-                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+                // Wait before next check (configurable via BEARDOG_ENV_CHECK_INTERVAL_SECS, default: 15s)
+                let check_interval = std::env::var("BEARDOG_ENV_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(15);
+                tokio::time::sleep(tokio::time::Duration::from_secs(check_interval)).await;
             }
         });
 
@@ -354,14 +367,19 @@ impl EcosystemListener {
                     }
                 }
 
-                // Wait before next discovery
-                tokio::time::sleep(tokio::time::Duration::from_secs(20)).await;
+                // Wait before next discovery (configurable via BEARDOG_MESH_DISCOVERY_INTERVAL_SECS, default: 20s)
+                let discovery_interval = std::env::var("BEARDOG_MESH_DISCOVERY_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(20);
+                tokio::time::sleep(tokio::time::Duration::from_secs(discovery_interval)).await;
             }
         });
 
         task
     }
 
+    #[allow(clippy::cognitive_complexity)]
     async fn listen_mdns_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🔍 Listening for mDNS primal announcements...");
 
@@ -395,19 +413,40 @@ impl EcosystemListener {
     }
 
     /// Poll HTTP discovery endpoints
+    #[allow(clippy::cognitive_complexity)]
     async fn poll_http_discovery() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🌐 Polling HTTP discovery endpoints...");
 
         let mut announcements = Vec::new();
 
-        // Check common discovery endpoints
+        // Check common discovery endpoints - use config system instead of hardcoding
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        // Use api_port for discovery endpoint (or environment override)
+        let discovery_base_port = std::env::var("BEARDOG_DISCOVERY_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(network_config.service_ports.api_port);
+
         let discovery_endpoints = vec![
+            // Primary: Environment-specified discovery endpoint
             std::env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-                std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| "http://discovery.ecosystem.internal:8080".to_string())
+                // Secondary: Ecosystem-wide discovery endpoint from env
+                std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
+                    // Fallback: Construct from config
+                    let discovery_host = std::env::var("DISCOVERY_HOST")
+                        .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
+                    format!("http://{discovery_host}:{discovery_base_port}")
+                })
             }),
-            std::env::var("LOCAL_DISCOVERY_ENDPOINT")
-                .unwrap_or_else(|_| "http://127.0.0.1:8080/discovery".to_string()),
+            // Local discovery endpoint
+            std::env::var("LOCAL_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
+                use beardog_types::canonical::config::network::NetworkConfig;
+                let network_config = NetworkConfig::default();
+                format!(
+                    "http://{}:{}/discovery",
+                    network_config.default_host, discovery_base_port
+                )
+            }),
         ];
 
         for endpoint in discovery_endpoints {
@@ -415,7 +454,12 @@ impl EcosystemListener {
 
             // Attempt HTTP discovery request with timeout
             match tokio::time::timeout(
-                std::time::Duration::from_secs(5),
+                std::time::Duration::from_secs(
+                    std::env::var("BEARDOG_ECOSYSTEM_LISTENER_INTERVAL_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(5),
+                ),
                 Self::make_discovery_request(&endpoint),
             )
             .await
@@ -435,6 +479,7 @@ impl EcosystemListener {
         Ok(announcements)
     }
 
+    #[allow(clippy::cognitive_complexity)]
     async fn check_environment_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🔧 Checking environment for primal announcements...");
 
@@ -473,7 +518,8 @@ impl EcosystemListener {
                         protocols: vec!["HTTP".to_string()],
                         auth_requirements:
                             crate::ecosystem::primal_types::AuthRequirements::default(),
-                        security_config: Default::default(),
+                        security_config:
+                            crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
                     }],
                     metadata: PrimalMetadata {
                         display_name: Some(format!("Environment-Discovered-{var}")),
@@ -509,6 +555,7 @@ impl EcosystemListener {
 
     /// Process primal announcement
     /// Processes `primal_announcement`
+    #[allow(clippy::cognitive_complexity)]
     async fn process_primal_announcement(
         announcement: PrimalAnnouncement,
         discovered_primals: &Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
@@ -537,7 +584,7 @@ impl EcosystemListener {
                 url: "unknown".to_string(),
                 protocols: vec![],
                 auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
-                security_config: Default::default(),
+                security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
             }
         });
 
@@ -548,10 +595,10 @@ impl EcosystemListener {
             metadata: announcement.metadata.clone(),
             discovered_at: announcement.announcement_timestamp,
             metrics: PrimalMetrics {
-                response_times: Default::default(),
+                response_times: crate::ecosystem::primal_types::ResponseTimeMetrics::default(),
                 availability: 1.0, // Assume available until proven otherwise
-                load_metrics: Default::default(),
-                error_rates: Default::default(),
+                load_metrics: crate::ecosystem::primal_types::LoadMetrics::default(),
+                error_rates: crate::ecosystem::primal_types::ErrorRateMetrics::default(),
             },
         };
 
@@ -648,6 +695,7 @@ impl EcosystemListener {
     /// Stop all listening tasks
     /// Stops listening
     /// Stops listening
+    #[allow(clippy::cognitive_complexity)] // Cleanup of multiple listener tasks - complexity is necessary
     pub fn stop_listening(&mut self) {
         info!("🛑 Stopping ecosystem listening...");
 
@@ -683,7 +731,7 @@ impl EcosystemListener {
 
         // For HTTP discovery, we expect a JSON response with primal announcements
         // If the endpoint is not accessible, we return empty results rather than failing
-        let announcements = Self::attempt_http_request(&url)?;
+        let announcements = Self::attempt_http_request(&url);
         debug!(
             "Successfully discovered {} primals from {}",
             announcements.len(),
@@ -693,11 +741,11 @@ impl EcosystemListener {
     }
 
     /// Attempt HTTP request with basic implementation
-    const fn attempt_http_request(_uri: &http::Uri) -> BearDogResult<Vec<PrimalAnnouncement>> {
+    const fn attempt_http_request(_uri: &http::Uri) -> Vec<PrimalAnnouncement> {
         // Basic HTTP implementation - in production this would make actual HTTP requests
         // For now, return empty to avoid external dependencies
         // This could be enhanced with tokio's native HTTP capabilities
-        Ok(Vec::new())
+        Vec::new()
     }
 }
 

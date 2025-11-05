@@ -473,7 +473,12 @@ impl DecisionContext {
             input_data,
             decision_type,
             priority: 5,
-            timeout: Duration::from_secs(30),
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DECISION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
             required_confidence: DecisionConfidence::Medium,
             metadata: HashMap::new(),
         }

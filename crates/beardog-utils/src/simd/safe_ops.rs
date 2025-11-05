@@ -260,6 +260,9 @@ mod tests {
         assert_eq!(hash.len(), 32);
 
         // Hash should be deterministic
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let hash2 = processor.safe_simd_hash(test_data)?;
         assert_eq!(hash, hash2);
     }
@@ -270,6 +273,9 @@ mod tests {
         let data1 = vec![1u8; 64];
         let data2 = vec![1u8; 64];
         let data3 = vec![2u8; 64];
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         assert!(processor.safe_compare_arrays(&data1, &data2));
         assert!(!processor.safe_compare_arrays(&data1, &data3));
@@ -278,6 +284,9 @@ mod tests {
     #[test]
     async fn test_constant_time_comparison() {
         let processor = SafeSimdProcessor::new();
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         // Test that comparison is constant-time (no early exit)
         let data1 = vec![0u8; beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE];
@@ -287,6 +296,9 @@ mod tests {
         assert!(!processor.safe_compare_arrays(&data1, &data2));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     async fn test_vectorized_processing() {
         let processor = SafeSimdProcessor::new();

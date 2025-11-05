@@ -91,6 +91,9 @@ mod validation_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_operational_status_debug() {
         let status = OperationalStatus::Critical;
         let debug_str = format!("{:?}", status);
@@ -98,6 +101,9 @@ mod validation_tests {
     }
 
     // ============================================================================
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Production Flags Tests
     // ============================================================================
 
@@ -110,10 +116,16 @@ mod validation_tests {
         assert!(flags.enable_performance_profiling);
         assert!(flags.enable_security_auditing);
         assert!(flags.enable_circuit_breakers);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(flags.enable_rate_limiting);
         assert!(flags.enable_caching);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_production_flags_custom_values() {
         let flags = ProductionFlags {
@@ -122,6 +134,9 @@ mod validation_tests {
             enable_performance_profiling: true,
             enable_security_auditing: true,
             enable_auto_scaling: true,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enable_circuit_breakers: false,
             enable_rate_limiting: false,
             enable_caching: true,
@@ -133,6 +148,9 @@ mod validation_tests {
 
     #[test]
     fn test_production_flags_serialization() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let flags = ProductionFlags::default();
         let serialized = serde_json::to_string(&flags).expect("Serialization should succeed");
         let deserialized: ProductionFlags =
@@ -140,6 +158,9 @@ mod validation_tests {
 
         assert_eq!(
             flags.enable_advanced_monitoring,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             deserialized.enable_advanced_monitoring
         );
     }
@@ -147,6 +168,9 @@ mod validation_tests {
     #[test]
     fn test_production_flags_clone() {
         let original = ProductionFlags::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let cloned = original.clone();
 
         assert_eq!(
@@ -155,6 +179,9 @@ mod validation_tests {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // ============================================================================
     // Performance Metrics Tests
     // ============================================================================
@@ -165,6 +192,9 @@ mod validation_tests {
             avg_response_time_ms: 50.0,
             p95_response_time_ms: 100.0,
             p99_response_time_ms: 200.0,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             requests_per_second: 1000.0,
             error_rate_percent: 0.1,
             throughput_bytes_per_sec: 10_000_000,
@@ -179,6 +209,9 @@ mod validation_tests {
         let metrics = PerformanceMetrics {
             avg_response_time_ms: 50.0,
             p95_response_time_ms: 100.0,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             p99_response_time_ms: 200.0,
             requests_per_second: 1000.0,
             error_rate_percent: 0.1,
@@ -189,6 +222,9 @@ mod validation_tests {
         assert!(metrics.p95_response_time_ms <= metrics.p99_response_time_ms);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_performance_metrics_serialization() {
         let metrics = PerformanceMetrics {
@@ -201,6 +237,9 @@ mod validation_tests {
         };
 
         let serialized = serde_json::to_string(&metrics).expect("Serialization should succeed");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let deserialized: PerformanceMetrics =
             serde_json::from_str(&serialized).expect("Deserialization should succeed");
 
@@ -213,6 +252,9 @@ mod validation_tests {
     #[test]
     fn test_performance_metrics_zero_values() {
         let metrics = PerformanceMetrics {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             avg_response_time_ms: 0.0,
             p95_response_time_ms: 0.0,
             p99_response_time_ms: 0.0,
@@ -225,6 +267,9 @@ mod validation_tests {
         assert_eq!(metrics.error_rate_percent, 0.0);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // ============================================================================
     // Production State Tests
     // ============================================================================
@@ -243,6 +288,9 @@ mod validation_tests {
             status: OperationalStatus::Healthy,
             active_connections: 100,
             total_requests: 10000,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             memory_usage_bytes: 1_000_000_000,
             cpu_usage_percent: 45.5,
             error_count_hourly: 5,
@@ -259,11 +307,17 @@ mod validation_tests {
         assert_eq!(state.status, OperationalStatus::Healthy);
         assert_eq!(state.active_connections, 100);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_production_state_serialization() {
         let state = ProductionState::default();
         let serialized = serde_json::to_string(&state).expect("Serialization should succeed");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let deserialized: ProductionState =
             serde_json::from_str(&serialized).expect("Deserialization should succeed");
 
@@ -284,6 +338,9 @@ mod validation_tests {
     // ============================================================================
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_production_core_config_default() {
         let config = ProductionCoreConfig::default();
 
@@ -291,6 +348,9 @@ mod validation_tests {
         assert_eq!(config.service_name, "beardog-ecosystem");
         assert!(!config.deployment_id.is_empty());
         assert!(!config.region.is_empty());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -301,6 +361,9 @@ mod validation_tests {
             service_version: "2.0.0".to_string(),
             deployment_id: "deploy-123".to_string(),
             region: "us-west-2".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             cluster_id: "prod-cluster".to_string(),
             node_id: "node-001".to_string(),
             flags: ProductionFlags::default(),
@@ -308,6 +371,9 @@ mod validation_tests {
 
         assert_eq!(config.environment_level, EnvironmentLevel::Production);
         assert_eq!(config.service_name, "custom-service");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.region, "us-west-2");
     }
 
@@ -323,6 +389,9 @@ mod validation_tests {
 
     #[test]
     fn test_production_core_config_clone() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let original = ProductionCoreConfig::default();
         let cloned = original.clone();
 
@@ -330,6 +399,9 @@ mod validation_tests {
         assert_eq!(original.environment_level, cloned.environment_level);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // ============================================================================
     // Production Config Tests
     // ============================================================================
@@ -340,11 +412,17 @@ mod validation_tests {
 
         // Should have valid sub-configurations
         assert_eq!(config.core.environment_level, EnvironmentLevel::Development);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_production_config_serialization() {
         let config = ProductionConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let serialized = serde_json::to_string(&config).expect("Serialization should succeed");
         let deserialized: ProductionConfig =
             serde_json::from_str(&serialized).expect("Deserialization should succeed");
@@ -352,6 +430,9 @@ mod validation_tests {
         assert_eq!(config.core.service_name, deserialized.core.service_name);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_production_config_clone() {
         let original = ProductionConfig::default();

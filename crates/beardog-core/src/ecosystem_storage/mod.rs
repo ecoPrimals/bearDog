@@ -1,30 +1,64 @@
-// **ECOSYSTEM STORAGE SYSTEM** - Modularized Architecture
-//
-// This module provides a comprehensive ecosystem storage system that enables
-// distributed, scalable, and resilient data storage across the BearDog ecosystem
-// through a unified, extensible, and type-safe interface.
-//
-// ## Module Organization
-//
-// - `types` - Core storage types, enums, and data structures
-// - `config` - Storage configuration and settings
-// - `manager` - Core storage management implementation
-// - `backends` - Storage backend implementations and traits
-// - `cache` - Caching layer and cache management
-// - `replication` - Data replication and consistency
-// - `metrics` - Storage metrics and monitoring
-// - `operations` - Storage operation handling
+//! # Ecosystem Storage System
+//!
+//! Provides comprehensive ecosystem storage capabilities enabling distributed, scalable,
+//! and resilient data storage across the BearDog ecosystem through a unified,
+//! extensible, and type-safe interface.
+//!
+//! ## Overview
+//!
+//! The ecosystem storage system offers:
+//! - **Multi-backend support**: Memory, filesystem, distributed storage
+//! - **Caching layer**: Performance optimization with configurable policies
+//! - **Replication**: Data consistency across distributed nodes
+//! - **Metrics**: Real-time monitoring and performance tracking
+//! - **Type safety**: Strongly-typed storage operations
+//!
+//! ## Module Organization
+//!
+//! - [`types`] - Core storage types and data structures
+//! - [`config`] - Storage configuration
+//! - [`manager`] - Storage management (main API)
+//! - [`backends`] - Storage backend implementations
+//! - [`cache`] - Caching layer
+//! - [`replication`] - Data replication
+//! - [`metrics`] - Metrics and monitoring
+//! - [`operations`] - Storage operations
+//!
+//! ## Example
+//!
+//! ```rust,ignore
+//! use beardog_core::ecosystem_storage::{EcosystemStorageManager, EcosystemStorageConfig};
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! let config = EcosystemStorageConfig::default();
+//! let storage = EcosystemStorageManager::new(config)?;
+//!
+//! // Store data
+//! storage.store("key", b"value").await?;
+//!
+//! // Retrieve data
+//! let data = storage.retrieve("key").await?;
+//! # Ok(())
+//! # }
+//! ```
 
-// Public API modules
+/// Storage backend implementations and traits
 pub mod backends;
+
+/// Caching layer and cache management
 pub mod cache;
-/// Configuration management
-/// Configuration management
+
+/// Configuration management for ecosystem storage
 pub mod config;
+/// Storage management and orchestration
 pub mod manager;
+/// Metrics and monitoring
 pub mod metrics;
+/// Storage operations
 pub mod operations;
+/// Data replication
 pub mod replication;
+/// Storage type definitions
 pub mod types;
 
 // Re-export main types for backwards compatibility

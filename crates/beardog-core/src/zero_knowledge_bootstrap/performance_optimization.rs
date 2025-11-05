@@ -129,12 +129,24 @@ pub struct OptimizationResult {
 impl Default for OptimizationConfig {
     fn default() -> Self {
         Self {
-            max_cache_ttl_ms: 30000, // 30 seconds
-            max_concurrent_tasks: 10,
+            max_cache_ttl_ms: std::env::var("BEARDOG_ZK_MAX_CACHE_TTL_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30000), // 30 seconds default
+            max_concurrent_tasks: std::env::var("BEARDOG_ZK_MAX_CONCURRENT_TASKS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10),
             enable_aggressive_caching: true,
             preload_common_capabilities: true,
-            target_discovery_time_ms: 100,
-            enable_profiling: true,
+            target_discovery_time_ms: std::env::var("BEARDOG_ZK_TARGET_DISCOVERY_TIME_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            enable_profiling: std::env::var("BEARDOG_ZK_ENABLE_PROFILING")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
         }
     }
 }
@@ -424,8 +436,11 @@ impl PerformanceOptimizer {
         // Check if we have a cached identity that's still valid
         if let Some(cached) = &self.cached_identity {
             let cache_age = self.last_cache_update.elapsed();
-            if cache_age < std::time::Duration::from_secs(300) {
-                // 5 minute cache
+            let cache_ttl_secs = std::env::var("BEARDOG_IDENTITY_CACHE_TTL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300); // 5 minute default
+            if cache_age < std::time::Duration::from_secs(cache_ttl_secs) {
                 debug!("Using cached self-identity (age: {:?})", cache_age);
                 return Ok(Some(cached.clone()));
             } else {
@@ -576,12 +591,18 @@ mod tests {
         assert!(optimizer.config.preload_common_capabilities);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_performance_metrics() {
         let mut optimizer = PerformanceOptimizer::new()?;
 
         // Simulate some discovery operations
         optimizer.update_discovery_metrics(50);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         optimizer.update_discovery_metrics(75);
         optimizer.update_discovery_metrics(100);
 
@@ -594,6 +615,9 @@ mod tests {
     #[tokio::test]
     async fn test_performance_grading() {
         let mut optimizer = PerformanceOptimizer::new()?;
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         // Test excellent performance
         optimizer.update_discovery_metrics(25); // 25ms < 50% of 100ms target
@@ -611,6 +635,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_cache_effectiveness() {
         let mut optimizer = PerformanceOptimizer::new()?;

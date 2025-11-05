@@ -57,6 +57,9 @@ fn test_core_creation_deterministic() {
     );
 
     // Verify both cores are independently functional
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let core1 = result1.unwrap();
     let core2 = result2.unwrap();
 
@@ -71,6 +74,9 @@ fn test_core_config_preservation() {
     let core = BearDogCore::new(config);
 
     // Configuration should be preserved in core
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Verify config field exists and is accessible
     let _preserved_config = &core.config;
 }
@@ -82,6 +88,9 @@ fn test_core_initial_state() {
 
     // Verify state is properly initialized
     let core = core.unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let _state = &core.state;
 }
 
@@ -98,6 +107,9 @@ fn test_development_configuration() {
     let _security = &core.security;
     let _state = &core.state;
     let _monitor = &core.monitor;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -105,6 +117,9 @@ fn test_production_configuration() {
     // Production config should be more restrictive
     let config = BearDogConfig::production();
     let core = BearDogCore::new(config);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Production configuration should create a valid core
     let _security = &core.security;
@@ -116,6 +131,9 @@ fn test_production_configuration() {
 fn test_custom_configuration_fields() {
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Custom configuration fields should be respected
     let _preserved_config = &core.config;
@@ -124,6 +142,9 @@ fn test_custom_configuration_fields() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_configuration_validation() {
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config);
@@ -133,6 +154,9 @@ fn test_configuration_validation() {
     let _monitor = &core.monitor;
     let _optimizer = &core.genetic_optimizer;
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_configuration_defaults() {
@@ -141,6 +165,9 @@ fn test_configuration_defaults() {
 
     // TODO: Default configuration should have sensible values
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Component Lifecycle Tests
@@ -149,6 +176,9 @@ fn test_configuration_defaults() {
 #[tokio::test]
 async fn test_component_initialization_order() {
     let mut core = BearDogCore::with_default_config().expect("Core creation");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Initialize should complete without panic
     let result = core.initialize().await;
@@ -158,6 +188,9 @@ async fn test_component_initialization_order() {
         result.is_ok() || result.is_err(),
         "Initialization completes"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[tokio::test]
@@ -169,6 +202,9 @@ async fn test_monitor_component_startup() {
     // Monitor should start as part of initialization
     assert!(
         result.is_ok() || result.is_err(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         "Monitor component handles startup"
     );
 }
@@ -179,6 +215,9 @@ async fn test_genetic_optimizer_initialization() {
 
     let result = core.initialize().await;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Genetic optimizer should initialize
     assert!(
         result.is_ok() || result.is_err(),
@@ -189,6 +228,9 @@ async fn test_genetic_optimizer_initialization() {
 #[tokio::test]
 async fn test_component_health_tracking() {
     let mut core = BearDogCore::with_default_config().expect("Core creation");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let _result = core.initialize().await;
 
@@ -196,6 +238,9 @@ async fn test_component_health_tracking() {
     // TODO: Component health is tracked
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_initialization_idempotency() {
     let mut core = BearDogCore::with_default_config().expect("Core creation");

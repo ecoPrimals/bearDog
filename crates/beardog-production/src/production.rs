@@ -103,7 +103,11 @@ impl ProductionManager {
     fn start_maintenance_scheduler(&self) -> Result<(), BearDogError> {
         info!("🔧 Starting maintenance scheduler ");
         let maintenance_config = &self.config.maintenance_config;
-        let _interval = tokio::time::interval(Duration::from_secs(300));
+        let interval_secs = std::env::var("BEARDOG_PRODUCTION_MAINTENANCE_INTERVAL_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(300);
+        let _interval = tokio::time::interval(Duration::from_secs(interval_secs));
         if maintenance_config.enabled {
             info!("🔧 Maintenance mode enabled");
         }
@@ -211,11 +215,17 @@ mod tests {
     #[tokio::test]
     async fn test_default_production_config() {
         let config = ProductionManager::default_production_config();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.environment, Environment::Production);
         // Canonical BackupConfig uses default values from beardog-types
         assert!(config.backup_config.enabled);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_circuit_breaker_config() {
         // Test circuit breaker configuration

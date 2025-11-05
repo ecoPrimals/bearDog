@@ -51,29 +51,44 @@ mod key_generation_tests {
             keys.push(key);
         }
         
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Check all keys are unique
         for i in 0..keys.len() {
             for j in (i+1)..keys.len() {
                 assert_ne!(keys[i], keys[j], "All generated keys should be unique");
             }
         }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_key_generation_entropy_quality() {
         // Test that generated keys have good entropy
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let key: [u8; 32] = rand::thread_rng().gen();
         
         // Count unique bytes
         let unique_count = key.iter().collect::<std::collections::HashSet<_>>().len();
         
         // Should have reasonable variety (at least 20 unique bytes out of 32)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(unique_count >= 20, "Key should have good entropy: {} unique bytes", unique_count);
     }
 
     #[test]
     fn test_key_generation_thread_safety() {
         // Test that key generation is thread-safe
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         use std::sync::{Arc, Mutex};
         use std::thread;
         
@@ -89,6 +104,9 @@ mod key_generation_tests {
             handles.push(handle);
         }
         
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         for handle in handles {
             handle.join().unwrap();
         }
@@ -98,6 +116,9 @@ mod key_generation_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_key_sizes_128_bit() {
         // Test 128-bit key generation
         let key: [u8; 16] = rand::thread_rng().gen();
@@ -121,18 +142,30 @@ mod key_generation_tests {
     #[test]
     fn test_key_generation_deterministic_from_seed() {
         // Test that seeded RNG produces deterministic results
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         use rand::SeedableRng;
         use rand::rngs::StdRng;
         
         let seed = [42u8; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut rng1 = StdRng::from_seed(seed);
         let mut rng2 = StdRng::from_seed(seed);
         
         let key1: [u8; 32] = rng1.gen();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let key2: [u8; 32] = rng2.gen();
         
         assert_eq!(key1, key2, "Seeded RNGs should produce identical keys");
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_key_generation_different_seeds_different_keys() {
@@ -146,6 +179,9 @@ mod key_generation_tests {
         let mut rng1 = StdRng::from_seed(seed1);
         let mut rng2 = StdRng::from_seed(seed2);
         
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let key1: [u8; 32] = rng1.gen();
         let key2: [u8; 32] = rng2.gen();
         
@@ -161,6 +197,9 @@ mod key_generation_tests {
         let avg = sum / key.len() as u32;
         
         // Average should be near 127.5 for uniform distribution
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!((avg as i32 - 127).abs() < 50, "Key bytes should be well-distributed");
     }
 
@@ -170,12 +209,18 @@ mod key_generation_tests {
         let key: [u8; 32] = rand::thread_rng().gen();
         
         let is_sequential = key.windows(2).all(|w| w[1] == w[0].wrapping_add(1));
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!is_sequential, "Key should not have sequential pattern");
     }
 
     #[test]
     fn test_key_generation_no_repeating_pattern() {
         // Test that keys don't have obvious repeating patterns
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let key: [u8; 32] = rand::thread_rng().gen();
         
         // Check for repeating bytes
@@ -184,6 +229,9 @@ mod key_generation_tests {
         assert!(!all_same, "Key should not have all same bytes");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_key_zeroization_support() {
         // Test that keys can be securely zeroized

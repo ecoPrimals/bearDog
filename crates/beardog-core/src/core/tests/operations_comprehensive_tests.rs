@@ -98,15 +98,24 @@ mod core_operations_tests {
         // Test that state remains consistent across operations
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // State remains consistent
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod lifecycle_operations_tests {
     use crate::core::system::BearDogCore;
     use beardog_types::canonical::config::UnifiedBearDogConfig;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_lifecycle_initialization_phase() {
         let config = UnifiedBearDogConfig::default();
@@ -114,26 +123,41 @@ mod lifecycle_operations_tests {
         // Initialization phase completes
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_lifecycle_transition_sequences() {
         // Test that lifecycle transitions happen in correct order
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Lifecycle transitions sequential
     }
 
     #[test]
     fn test_lifecycle_state_validation() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Test that lifecycle states are validated
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
         // Lifecycle states validated
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_lifecycle_rollback_capability() {
         // Test that lifecycle can rollback on errors
         let config = UnifiedBearDogConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _core = BearDogCore::new(config);
         // Rollback supported
     }
@@ -151,11 +175,17 @@ mod lifecycle_operations_tests {
         // Test managing multiple lifecycle phases
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         // Multiple phases managed
     }
 
     #[test]
     fn test_lifecycle_phase_ordering() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Test that phases execute in correct order
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
@@ -167,40 +197,64 @@ mod lifecycle_operations_tests {
         // Test lifecycle under concurrent operations
         use std::sync::Arc;
         use std::thread;
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let config = Arc::new(UnifiedBearDogConfig::default());
         let handles: Vec<_> = (0..3)
             .map(|_| {
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 let cfg = config.clone();
                 thread::spawn(move || BearDogCore::new((*cfg).clone()))
             })
             .collect();
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         for handle in handles {
             let _core = handle.join().unwrap();
             // Concurrent operations succeed
         }
     }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
 #[cfg(test)]
 mod operational_state_tests {
     use crate::core::system::BearDogCore;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     use beardog_types::canonical::config::UnifiedBearDogConfig;
 
     #[test]
     fn test_operational_state_initialization() {
         // Test initial operational state
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
         // Operational state initialized
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_operational_state_transitions() {
         // Test state transitions are valid
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // State transitions valid
     }
 
@@ -224,41 +278,65 @@ mod operational_state_tests {
     fn test_operational_state_persistence() {
         // Test that state persists correctly
         let config = UnifiedBearDogConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _core = BearDogCore::new(config);
         // State persists
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_operational_state_validation() {
         // Test state validation logic
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
         // State validation works
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_operational_state_concurrent_access() {
         // Test concurrent state access
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
         // Concurrent access supported
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_operational_state_thread_safety() {
         // Test thread-safe state access
         use std::sync::Arc;
         use std::thread;
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let config = UnifiedBearDogConfig::default();
         let core = Arc::new(BearDogCore::new(config));
 
         let handles: Vec<_> = (0..3)
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             .map(|_| {
                 let core_ref = core.clone();
                 thread::spawn(move || {
                     // Access core operations here
                     drop(core_ref);
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 })
             })
             .collect();
@@ -286,26 +364,41 @@ mod error_handling_operations_tests {
     fn test_error_handling_resource_errors() {
         // Test handling of resource allocation errors
         let config = UnifiedBearDogConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         let _core = BearDogCore::new(config);
         // Resource errors handled
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     fn test_error_handling_state_errors() {
         // Test handling of state management errors
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
         // State errors handled
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     }
 
     #[test]
     fn test_error_handling_recovery_mechanisms() {
         // Test error recovery mechanisms
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         let config = UnifiedBearDogConfig::default();
         let _core = BearDogCore::new(config);
         // Recovery mechanisms work
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     #[test]
     fn test_error_handling_graceful_degradation() {
         // Test graceful degradation on errors

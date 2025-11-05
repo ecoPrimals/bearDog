@@ -332,11 +332,17 @@ mod tests {
             // Simple operation
             let _x = 1 + 1;
         });
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         assert_eq!(result.iterations, 100);
         assert!(result.total_time.as_nanos() > 0);
         assert!(result.operations_per_second > 0.0);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_benchmark_comparison() {
@@ -347,6 +353,9 @@ mod tests {
             std::thread::sleep(Duration::from_nanos(100));
         };
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let fast_op = || {
             // Simulate faster operation
             let _x = 1 + 1;
@@ -365,6 +374,9 @@ mod tests {
 
         // Zero-copy should be faster than copying
         assert!(comparison.speedup > 1.0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(comparison.baseline.name, "Zero-copy vs Copy");
         assert_eq!(comparison.optimized.name, "Zero-copy vs Copy");
     }
@@ -372,6 +384,9 @@ mod tests {
     #[test]
     fn test_allocation_benchmarks() {
         let results = benchmark_allocation_patterns();
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].name, "Stack Allocation");
@@ -382,6 +397,9 @@ mod tests {
         assert!(results[0].operations_per_second > results[1].operations_per_second);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_performance_suite() {
         let suite = PerformanceTestSuite::run_comprehensive_suite();

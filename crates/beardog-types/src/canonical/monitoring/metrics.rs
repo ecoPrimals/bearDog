@@ -149,7 +149,10 @@ impl Default for GaugeConfig {
             prefix: "beardog_gauge".to_string(),
             labels: HashMap::new(),
             smoothing: false,
-            smoothing_factor: 0.1,
+            smoothing_factor: std::env::var("BEARDOG_METRICS_SMOOTHING_FACTOR")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.1),
         }
     }
 }
@@ -181,7 +184,10 @@ impl Default for HistogramConfig {
             buckets: vec![
                 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
             ],
-            max_buckets: 50,
+            max_buckets: std::env::var("BEARDOG_HISTOGRAM_MAX_BUCKETS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(50),
         }
     }
 }
@@ -240,11 +246,20 @@ impl Default for MetricCollectionConfig {
         Self {
             enabled: true,
             batch_config: BatchConfig::default(),
-            buffer_size: 10000,
-            collection_threads: 4,
+            buffer_size: std::env::var("BEARDOG_METRICS_BUFFER_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10000),
+            collection_threads: std::env::var("BEARDOG_METRICS_COLLECTION_THREADS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(4),
             collection_timeout: Duration::from_secs(30),
             retry_failed_collections: true,
-            max_collection_errors: 10,
+            max_collection_errors: std::env::var("BEARDOG_METRICS_MAX_COLLECTION_ERRORS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
         }
     }
 }
@@ -440,7 +455,10 @@ impl Default for ForecastingConfig {
             enabled: false,
             algorithm: ForecastingAlgorithm::LinearRegression,
             horizon: Duration::from_secs(3600),
-            confidence_interval: 0.95,
+            confidence_interval: std::env::var("BEARDOG_METRICS_CONFIDENCE_INTERVAL")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.95),
         }
     }
 }
@@ -483,8 +501,14 @@ impl Default for AnomalyDetectionConfig {
         Self {
             enabled: true,
             algorithm: AnomalyDetectionAlgorithm::StatisticalOutlier,
-            sensitivity: 0.95,
-            min_data_points: 10,
+            sensitivity: std::env::var("BEARDOG_ANOMALY_DETECTION_SENSITIVITY")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.95),
+            min_data_points: std::env::var("BEARDOG_ANOMALY_MIN_DATA_POINTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
             detection_interval: Duration::from_secs(60),
         }
     }
@@ -524,7 +548,10 @@ impl Default for TrendAnalysisConfig {
         Self {
             enabled: true,
             time_window: Duration::from_secs(3600),
-            trend_threshold: 0.1,
+            trend_threshold: std::env::var("BEARDOG_METRICS_TREND_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.1),
             seasonal_adjustment: false,
         }
     }
@@ -616,7 +643,10 @@ impl Default for MetricExportConfig {
         Self {
             enabled: true,
             exporters: vec![MetricExporter::Prometheus],
-            export_batch_size: 1000,
+            export_batch_size: std::env::var("BEARDOG_METRIC_EXPORT_BATCH_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000),
             export_timeout: Duration::from_secs(30),
         }
     }

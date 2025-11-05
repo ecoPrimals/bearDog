@@ -299,6 +299,9 @@ mod tests {
             "api".to_string(),
             "https://api.example.com".to_string(),
         );
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         assert_eq!(endpoint.name, "api");
         assert_eq!(endpoint.url, "https://api.example.com");
@@ -309,6 +312,9 @@ mod tests {
     #[test]
     fn test_endpoint_methods() {
         let endpoint = UnifiedServiceEndpoint::https(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             "api".to_string(),
             "https://api.example.com".to_string(),
         ).with_methods(vec!["GET".to_string(), "POST".to_string()]);
@@ -318,6 +324,9 @@ mod tests {
         assert!(!endpoint.supports_method("DELETE"));
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_grpc_endpoint() {
         let endpoint = UnifiedServiceEndpoint::grpc(

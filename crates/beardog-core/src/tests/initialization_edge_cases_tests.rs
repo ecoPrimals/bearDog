@@ -36,22 +36,34 @@ mod initialization_edge_cases {
 
     #[test]
     fn test_multiple_instances_independent() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let core1 = BearDogCore::new(UnifiedBearDogConfig::development());
         let core2 = BearDogCore::new(UnifiedBearDogConfig::development());
         
         // Each instance should be independent
         assert!(!core1.is_started());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!core2.is_started());
     }
 
     #[test]
     fn test_config_is_stored() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = UnifiedBearDogConfig::development();
         let core = BearDogCore::new(config);
         
         // Core should store configuration
         assert!(!core.is_started());
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_initial_status_is_not_started() {
@@ -59,31 +71,49 @@ mod initialization_edge_cases {
         
         assert!(!core.is_started());
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_components_initially_empty() {
         let core = BearDogCore::new(UnifiedBearDogConfig::development());
         
         let components = core.list_components();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(components.is_empty());
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_health_status_initial_state() {
         let core = BearDogCore::new(UnifiedBearDogConfig::development());
         
         let health = core.get_health_status();
         assert!(health.is_ok());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_system_info_available() {
         let core = BearDogCore::new(UnifiedBearDogConfig::development());
+         // TEST_CATEGORY: integration
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         let info = core.get_system_info();
         assert!(info.is_ok());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_configuration_methods_accessible() {
         let core = BearDogCore::new(UnifiedBearDogConfig::development());

@@ -132,10 +132,28 @@ pub enum InvalidationEvent {
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
-            max_entries: 1000,
-            default_ttl: Duration::from_secs(300), // 5 minutes
-            health_check_interval: Duration::from_secs(30),
-            cleanup_interval: Duration::from_secs(60),
+            max_entries: std::env::var("BEARDOG_CAPABILITY_CACHE_MAX_ENTRIES")
+                .ok()
+                .and_then(|e| e.parse().ok())
+                .unwrap_or(1000), // 1000 entries default
+            default_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_CACHE_DEFAULT_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300) // 5 minutes default
+            ),
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_CACHE_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30)
+            ),
+            cleanup_interval: Duration::from_secs(
+                std::env::var("BEARDOG_DISCOVERY_CACHE_CLEANUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60)
+            ),
             enable_optimization: true,
         }
     }
@@ -593,6 +611,9 @@ mod tests {
         // Insert and retrieve
         cache.insert(capability.clone(), CachePriority::Normal);
         let retrieved = cache.get(&capability_id);
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().provider.provider_id, capability_id);
@@ -604,6 +625,9 @@ mod tests {
 
         // Insert multiple capabilities of same type
         for i in 1..=3 {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             let capability =
                 create_test_capability(&format!("kms-{}", i), CapabilityType::KeyManagement);
             cache.insert(capability, CachePriority::Normal);
@@ -617,6 +641,9 @@ mod tests {
     #[test]
     fn test_cache_eviction() {
         let config = CacheConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             max_entries: 2,
             ..Default::default()
         };
@@ -636,6 +663,9 @@ mod tests {
         assert!(cache.get("test-1").is_none());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     fn test_cache_metrics() {
         let cache = CapabilityDiscoveryCache::default();

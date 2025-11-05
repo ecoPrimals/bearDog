@@ -473,6 +473,9 @@ mod tests {
         let service = MonitoringService::new(config);
         let metrics = service.collect_performance_metrics()?;
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         assert!(metrics.cpu_usage_percent >= 0.0);
         assert!(metrics.memory_usage_percent > 0.0);
 
@@ -482,6 +485,9 @@ mod tests {
     #[tokio::test]
     async fn test_alert_generation() -> Result<(), BearDogError> {
         let config = MonitoringConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: monitoring
+            // TEST_PRIORITY: normal
             ..Default::default()
         };
 
@@ -496,6 +502,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_alert_level_ordering() {
         assert_eq!(AlertLevel::Low, AlertLevel::Low);

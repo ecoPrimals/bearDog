@@ -148,12 +148,20 @@ impl ConsolidatedNetworkConfiguration {
         let mut config = Self::default();
 
         // Strict settings for production
-        config.server.max_connections = 10000;
+        config.server.max_connections = std::env::var("BEARDOG_PRODUCTION_MAX_CONNECTIONS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(10000);
         config.rate_limiting.global_rps = Some(
             crate::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_millis()
                 as u64,
         );
-        config.rate_limiting.per_ip_rpm = Some(100);
+        config.rate_limiting.per_ip_rpm = Some(
+            std::env::var("BEARDOG_PRODUCTION_PER_IP_RPM")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
+        );
         config
             .security
             .ddos_protection

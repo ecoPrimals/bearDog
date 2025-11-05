@@ -114,6 +114,9 @@ fn test_alert_manager_slightly_over_threshold() {
     let mut manager = AlertManager::new(thresholds);
 
     // Slightly over threshold
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let system_metrics = SystemMetrics {
         cpu_utilization: 80.1, // Slightly over
         memory_utilization: 60.0,
@@ -138,6 +141,9 @@ fn test_alert_manager_get_recent_alerts_empty() {
         network_threshold_bps: 100_000_000,
         error_rate_threshold_percent: 5.0,
         response_time_threshold_ms: 1000.0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     let manager = AlertManager::new(thresholds);
@@ -173,6 +179,9 @@ fn test_alert_manager_get_recent_alerts_large_limit() {
     let thresholds = AlertThresholds {
         cpu_threshold_percent: 80.0,
         memory_threshold_percent: 85.0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         disk_threshold_percent: 90.0,
         network_threshold_bps: 100_000_000,
         error_rate_threshold_percent: 5.0,
@@ -196,6 +205,9 @@ fn test_system_metrics_zero_values() {
         memory_utilization: 0.0,
         disk_utilization: 0.0,
         network_utilization_bps: 0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     assert_eq!(metrics.cpu_utilization, 0.0);
@@ -222,6 +234,9 @@ fn test_system_metrics_maximum_values() {
 #[test]
 fn test_system_metrics_realistic_values() {
     let metrics = SystemMetrics {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         cpu_utilization: 45.5,
         memory_utilization: 62.3,
         disk_utilization: 78.9,
@@ -240,6 +255,9 @@ fn test_system_metrics_serialization() {
         cpu_utilization: 45.5,
         memory_utilization: 72.3,
         disk_utilization: 35.8,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         network_utilization_bps: 1_500_000,
     };
 
@@ -255,6 +273,9 @@ fn test_system_metrics_serialization() {
         metrics.network_utilization_bps
     );
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // AlertThresholds Tests
@@ -273,6 +294,9 @@ fn test_alert_thresholds_conservative() {
 
     assert!(thresholds.cpu_threshold_percent > 90.0);
     assert!(thresholds.memory_threshold_percent > 90.0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(thresholds.disk_threshold_percent > 90.0);
 }
 
@@ -285,6 +309,9 @@ fn test_alert_thresholds_aggressive() {
         network_threshold_bps: 10_000_000,
         error_rate_threshold_percent: 1.0,
         response_time_threshold_ms: 100.0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     assert!(thresholds.cpu_threshold_percent < 60.0);
@@ -297,6 +324,9 @@ fn test_alert_thresholds_serialization() {
     let thresholds = AlertThresholds {
         cpu_threshold_percent: 80.0,
         memory_threshold_percent: 85.0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         disk_threshold_percent: 90.0,
         network_threshold_bps: 100_000_000,
         error_rate_threshold_percent: 5.0,
@@ -309,6 +339,9 @@ fn test_alert_thresholds_serialization() {
 
     assert_eq!(
         deserialized.cpu_threshold_percent,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         thresholds.cpu_threshold_percent
     );
     assert_eq!(
@@ -332,6 +365,9 @@ fn test_alert_severity_ordering() {
     );
     assert_eq!(
         AlertSeverity::Warning.cmp(&AlertSeverity::Critical),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         Ordering::Less
     );
     assert_eq!(
@@ -345,6 +381,9 @@ fn test_alert_severity_equality() {
     assert_eq!(AlertSeverity::Info, AlertSeverity::Info);
     assert_eq!(AlertSeverity::Warning, AlertSeverity::Warning);
     assert_eq!(AlertSeverity::Critical, AlertSeverity::Critical);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(AlertSeverity::Emergency, AlertSeverity::Emergency);
 }
 
@@ -358,6 +397,9 @@ fn test_alert_status_equality() {
 #[test]
 fn test_alert_status_inequality() {
     assert_ne!(AlertStatus::Active, AlertStatus::Acknowledged);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_ne!(AlertStatus::Acknowledged, AlertStatus::Resolved);
     assert_ne!(AlertStatus::Active, AlertStatus::Resolved);
 }
@@ -384,6 +426,9 @@ fn test_metric_type_variants() {
 
 #[test]
 fn test_metric_type_equality() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(MetricType::Counter, MetricType::Counter);
     assert_eq!(MetricType::Gauge, MetricType::Gauge);
     assert_eq!(MetricType::Histogram, MetricType::Histogram);
@@ -400,15 +445,24 @@ fn test_metric_type_inequality() {
 // ============================================================================
 // OperationStatus Tests
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_operation_status_variants() {
     let statuses = [
         OperationStatus::Processing,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         OperationStatus::Completed,
         OperationStatus::Failed,
         OperationStatus::Timeout,
     ];
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert_eq!(statuses.len(), 4);
     for status in statuses {
@@ -417,6 +471,9 @@ fn test_operation_status_variants() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_operation_status_equality() {
     assert_eq!(OperationStatus::Processing, OperationStatus::Processing);
     assert_eq!(OperationStatus::Completed, OperationStatus::Completed);
@@ -430,11 +487,17 @@ fn test_operation_status_equality() {
 
 #[test]
 fn test_metrics_summary_structure() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let summary = MetricsSummary {
         health_score: 0.95,
         active_alerts_count: 2,
         avg_cpu_utilization: 45.5,
         avg_memory_utilization: 62.3,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         avg_response_time_ms: 12.5,
         total_requests: 10_000,
         error_rate_percent: 0.1,
@@ -443,6 +506,9 @@ fn test_metrics_summary_structure() {
 
     assert_eq!(summary.health_score, 0.95);
     assert_eq!(summary.active_alerts_count, 2);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(summary.avg_cpu_utilization, 45.5);
     assert!(summary.total_requests > 0);
 }
@@ -455,6 +521,9 @@ fn test_metrics_summary_health_score_range() {
         let summary = MetricsSummary {
             health_score: score,
             active_alerts_count: 0,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             avg_cpu_utilization: 50.0,
             avg_memory_utilization: 60.0,
             avg_response_time_ms: 10.0,
@@ -464,6 +533,9 @@ fn test_metrics_summary_health_score_range() {
         };
 
         assert!(summary.health_score >= 0.0 && summary.health_score <= 1.0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -480,6 +552,9 @@ fn test_metrics_summary_serialization() {
         timestamp: chrono::Utc::now(),
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let serialized = serde_json::to_string(&summary).expect("Should serialize");
     let deserialized: MetricsSummary =
         serde_json::from_str(&serialized).expect("Should deserialize");
@@ -497,6 +572,9 @@ fn test_metrics_summary_serialization() {
 
 #[test]
 fn test_performance_summary_structure() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let summary = PerformanceSummary {
         trend_indicator: 1,
         primary_bottleneck: Some("Database".to_string()),
@@ -522,6 +600,9 @@ fn test_performance_summary_trend_indicators() {
             recommendations: vec![],
             efficiency_score: 0.90,
             timestamp: chrono::Utc::now(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
         };
 
         assert!(summary.trend_indicator >= -1 && summary.trend_indicator <= 1);
@@ -535,6 +616,9 @@ fn test_performance_summary_no_bottleneck() {
         primary_bottleneck: None,
         recommendations: vec![],
         efficiency_score: 0.95,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         timestamp: chrono::Utc::now(),
     };
 
@@ -549,6 +633,9 @@ fn test_performance_summary_multiple_recommendations() {
         recommendations: vec![
             "Increase bandwidth".to_string(),
             "Add caching".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             "Optimize payloads".to_string(),
         ],
         efficiency_score: 0.75,
@@ -559,6 +646,9 @@ fn test_performance_summary_multiple_recommendations() {
 }
 
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // SystemOverview Tests
 // ============================================================================
 
@@ -577,6 +667,9 @@ fn test_system_overview_structure() {
         },
         timestamp: chrono::Utc::now(),
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     assert_eq!(overview.status, "Healthy");
     assert_eq!(overview.uptime_seconds, 3600);
@@ -596,6 +689,9 @@ fn test_system_overview_with_failures() {
             memory_percent: 80.0,
             disk_percent: 85.0,
             network_percent: 60.0,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: important
         },
         timestamp: chrono::Utc::now(),
     };
@@ -613,6 +709,9 @@ fn test_system_overview_serialization() {
         failed_services: 0,
         resource_utilization: ResourceUtilization {
             cpu_percent: 45.0,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             memory_percent: 60.0,
             disk_percent: 35.0,
             network_percent: 20.0,
@@ -638,6 +737,9 @@ fn test_resource_utilization_low() {
         cpu_percent: 10.0,
         memory_percent: 20.0,
         disk_percent: 15.0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         network_percent: 5.0,
     };
 
@@ -650,6 +752,9 @@ fn test_resource_utilization_low() {
 #[test]
 fn test_resource_utilization_high() {
     let utilization = ResourceUtilization {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         cpu_percent: 90.0,
         memory_percent: 85.0,
         disk_percent: 92.0,
@@ -662,6 +767,9 @@ fn test_resource_utilization_high() {
     assert!(utilization.network_percent > 80.0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_resource_utilization_serialization() {
     let utilization = ResourceUtilization {

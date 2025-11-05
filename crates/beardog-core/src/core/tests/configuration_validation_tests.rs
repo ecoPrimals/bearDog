@@ -29,6 +29,9 @@ async fn test_core_with_development_config() {
         HealthStatus::Healthy,
         "Development config should result in healthy initial state"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     drop(state);
 }
 
@@ -36,6 +39,9 @@ async fn test_core_with_development_config() {
 #[tokio::test]
 async fn test_core_with_production_config() {
     let config = UnifiedBearDogConfig::production();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let core = BearDogCore::new(config);
 
     let state = core.state.read().await;
@@ -48,6 +54,9 @@ async fn test_core_with_production_config() {
 }
 
 /// Test that core preserves configuration after creation
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_configuration_preservation_after_init() {
     let config = UnifiedBearDogConfig::development();
@@ -60,6 +69,9 @@ async fn test_configuration_preservation_after_init() {
         "Initialization should succeed with valid config"
     );
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Configuration should still be accessible and valid
     let state = core.state.read().await;
     assert_eq!(state.overall_health, HealthStatus::Healthy);
@@ -76,6 +88,9 @@ async fn test_concurrent_core_creation() {
 
     let handle2 = tokio::spawn(async {
         let config = UnifiedBearDogConfig::development();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         BearDogCore::new(config)
     });
 
@@ -99,6 +114,9 @@ async fn test_system_state_initialization() {
     let core = BearDogCore::new(config);
 
     let state = core.state.read().await;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Verify initial state properties
     assert_eq!(state.overall_health, HealthStatus::Healthy);
@@ -114,6 +132,9 @@ async fn test_system_state_initialization() {
 #[tokio::test]
 async fn test_component_state_management() {
     let config = UnifiedBearDogConfig::development();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut core = BearDogCore::new(config);
 
     // Initialize should set up components
@@ -127,6 +148,9 @@ async fn test_component_state_management() {
 }
 
 /// Test health status tracking after operations
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_health_status_tracking() {
     let config = UnifiedBearDogConfig::development();

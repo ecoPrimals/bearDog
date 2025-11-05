@@ -109,6 +109,9 @@ fn test_deployment_config_empty_environment() {
 #[test]
 fn test_deployment_config_zero_instances() {
     let config = DeploymentConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         environment: "test".to_string(),
         region: "local".to_string(),
         instance_count: 0,
@@ -116,6 +119,9 @@ fn test_deployment_config_zero_instances() {
     };
 
     assert_eq!(config.instance_count, 0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -128,6 +134,9 @@ fn test_deployment_config_large_instance_count() {
     };
 
     assert_eq!(config.instance_count, 1000);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -138,6 +147,9 @@ fn test_deployment_config_various_environments() {
         let config = DeploymentConfig {
             environment: env.to_string(),
             region: "local".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             instance_count: 1,
             monitoring_enabled: true,
         };
@@ -146,6 +158,9 @@ fn test_deployment_config_various_environments() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_deployment_config_various_regions() {
     let regions = vec!["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"];
 
@@ -153,6 +168,9 @@ fn test_deployment_config_various_regions() {
         let config = DeploymentConfig {
             environment: "production".to_string(),
             region: region.to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             instance_count: 1,
             monitoring_enabled: true,
         };
@@ -169,6 +187,9 @@ fn test_deployment_config_monitoring_disabled() {
         monitoring_enabled: false,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!config.monitoring_enabled);
 }
 
@@ -178,6 +199,9 @@ fn test_deployment_config_monitoring_disabled() {
 
 #[test]
 fn test_deployment_manager_new() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config.clone());
 
@@ -187,6 +211,9 @@ fn test_deployment_manager_new() {
 
 #[test]
 fn test_deployment_manager_with_custom_config() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = DeploymentConfig {
         environment: "production".to_string(),
         region: "us-east-1".to_string(),
@@ -196,6 +223,9 @@ fn test_deployment_manager_with_custom_config() {
 
     let manager = DeploymentManager::new(config.clone());
     assert_eq!(manager.config.environment, "production");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(manager.config.instance_count, 5);
 }
 
@@ -208,6 +238,9 @@ fn test_deployment_manager_clone() {
     assert_eq!(manager1.config.environment, manager2.config.environment);
     assert_eq!(manager1.config.region, manager2.config.region);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_deployment_manager_debug_format() {
@@ -220,6 +253,9 @@ fn test_deployment_manager_debug_format() {
 
 // ============================================================================
 // DeploymentManager Initialize Tests
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 
 #[test]
@@ -233,12 +269,18 @@ fn test_deployment_manager_initialize_success() {
 
 #[test]
 fn test_deployment_manager_initialize_with_production_config() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = DeploymentConfig {
         environment: "production".to_string(),
         region: "us-west-2".to_string(),
         instance_count: 10,
         monitoring_enabled: true,
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let manager = DeploymentManager::new(config);
 
     let result = manager.initialize();
@@ -250,6 +292,9 @@ fn test_deployment_manager_initialize_empty_environment_fails() {
     let config = DeploymentConfig {
         environment: "".to_string(),
         region: "local".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         instance_count: 1,
         monitoring_enabled: true,
     };
@@ -257,6 +302,9 @@ fn test_deployment_manager_initialize_empty_environment_fails() {
 
     let result = manager.initialize();
     assert!(result.is_err());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let error = result.unwrap_err();
     let error_msg = format!("{:?}", error);
@@ -267,12 +315,18 @@ fn test_deployment_manager_initialize_empty_environment_fails() {
 fn test_deployment_manager_initialize_multiple_times() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Initialize multiple times should work
     assert!(manager.initialize().is_ok());
     assert!(manager.initialize().is_ok());
     assert!(manager.initialize().is_ok());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_deployment_manager_initialize_with_monitoring_disabled() {
@@ -284,6 +338,9 @@ fn test_deployment_manager_initialize_with_monitoring_disabled() {
     };
     let manager = DeploymentManager::new(config);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     let result = manager.initialize();
     assert!(result.is_ok());
 }
@@ -299,6 +356,9 @@ fn test_deployment_manager_initialize_with_zero_instances() {
     let manager = DeploymentManager::new(config);
 
     // Should still initialize (instance_count validation not implemented)
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let result = manager.initialize();
     assert!(result.is_ok());
 }
@@ -307,6 +367,9 @@ fn test_deployment_manager_initialize_with_zero_instances() {
 // Integration Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_full_deployment_lifecycle_development() {
     let config = DeploymentConfig::default();
@@ -318,6 +381,9 @@ fn test_full_deployment_lifecycle_development() {
 
 #[test]
 fn test_full_deployment_lifecycle_production() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = DeploymentConfig {
         environment: "production".to_string(),
         region: "us-east-1".to_string(),
@@ -334,12 +400,18 @@ fn test_deployment_manager_with_different_configurations() {
     let configs = vec![
         DeploymentConfig {
             environment: "dev".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             region: "local".to_string(),
             instance_count: 1,
             monitoring_enabled: false,
         },
         DeploymentConfig {
             environment: "staging".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             region: "us-west-1".to_string(),
             instance_count: 3,
             monitoring_enabled: true,
@@ -350,6 +422,9 @@ fn test_deployment_manager_with_different_configurations() {
             instance_count: 10,
             monitoring_enabled: true,
         },
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     ];
 
     for config in configs {
@@ -380,6 +455,9 @@ fn test_deployment_config_long_environment_name() {
     let config = DeploymentConfig {
         environment: long_name.clone(),
         region: "local".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         instance_count: 1,
         monitoring_enabled: true,
     };
@@ -389,6 +467,9 @@ fn test_deployment_config_long_environment_name() {
 
 #[test]
 fn test_deployment_config_long_region_name() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let long_region = "region-".to_string() + &"x".repeat(50);
     let config = DeploymentConfig {
         environment: "test".to_string(),
@@ -399,6 +480,9 @@ fn test_deployment_config_long_region_name() {
 
     assert_eq!(config.region, long_region);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_deployment_config_max_instance_count() {
@@ -409,6 +493,9 @@ fn test_deployment_config_max_instance_count() {
         monitoring_enabled: true,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(config.instance_count, u32::MAX);
 }
 
@@ -418,6 +505,9 @@ fn test_deployment_config_json_roundtrip() {
         environment: "test-env".to_string(),
         region: "test-region".to_string(),
         instance_count: 7,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         monitoring_enabled: false,
     };
 
@@ -434,6 +524,9 @@ fn test_deployment_config_json_roundtrip() {
 #[test]
 fn test_deployment_config_json_pretty() {
     let config = DeploymentConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let json = serde_json::to_string_pretty(&config).expect("Pretty serialization should succeed");
     assert!(json.contains("development"));
@@ -441,6 +534,9 @@ fn test_deployment_config_json_pretty() {
     assert!(json.contains("instance_count"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_deployment_manager_const_new() {
     // Test that new() is const and can be used in const contexts

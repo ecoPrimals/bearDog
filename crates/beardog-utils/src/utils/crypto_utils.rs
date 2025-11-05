@@ -284,6 +284,9 @@ mod tests {
         let data = b"hello world";
         let hash = sha256_hash(data);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(hash.len(), 64); // 32 bytes = 64 hex chars
         assert_eq!(
             hash,
@@ -293,6 +296,9 @@ mod tests {
     #[test]
     #[allow(deprecated)]
     fn test_hmac_sha256() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let key = b"secret_key";
         let data = b"hello";
         let hmac = hmac_sha256(key, data).map_err(|e| {
@@ -304,6 +310,9 @@ mod tests {
             hmac,
             "cf1a418afaafc798df48fd804a2abf6970283afd8c40b41f818ad9b6ca4f8ca8"
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     #[allow(deprecated)]
     fn test_secure_random_bytes() {

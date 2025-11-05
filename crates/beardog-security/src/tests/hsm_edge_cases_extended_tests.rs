@@ -44,6 +44,9 @@ fn test_hsm_connection_timeouts() {
 
 /// Test HSM key storage limits
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_hsm_key_storage_limits() {
     let max_keys = 10000; // Typical HSM limit
     let current_keys = 50;
@@ -58,6 +61,9 @@ fn test_hsm_retry_logic() {
     let max_retries = 3;
     let retry_delay_ms = 100;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     for attempt in 1..=max_retries {
         assert!(
             attempt <= max_retries,
@@ -67,6 +73,9 @@ fn test_hsm_retry_logic() {
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test HSM session management
 #[test]
 fn test_hsm_session_lifecycle() {
@@ -76,6 +85,9 @@ fn test_hsm_session_lifecycle() {
     for state in &states {
         assert!(!state.is_empty(), "State should be defined");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test HSM key backup and recovery
@@ -83,6 +95,9 @@ fn test_hsm_session_lifecycle() {
 fn test_hsm_key_backup() {
     let key_id = "test-key-123";
     let backup_location = "/secure/backup/";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     assert!(!key_id.is_empty(), "Key ID should be defined");
     assert!(
@@ -95,6 +110,9 @@ fn test_hsm_key_backup() {
 #[test]
 fn test_hsm_batch_operations() {
     let batch_sizes = [1, 10, 50, 100];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     for size in &batch_sizes {
         assert!(*size > 0, "Batch size should be positive");
@@ -103,6 +121,9 @@ fn test_hsm_batch_operations() {
 }
 
 /// Test HSM error code mapping
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_hsm_error_codes() {
     // Common HSM error codes
@@ -113,6 +134,9 @@ fn test_hsm_error_codes() {
         (0x03, "Invalid Parameter"),
     ];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     for (code, description) in &error_codes {
         assert!(!description.is_empty(), "Error should have description");
         assert!(*code <= 0xFF, "Error code should fit in byte");
@@ -121,6 +145,9 @@ fn test_hsm_error_codes() {
 
 /// Test HSM performance metrics
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 fn test_hsm_performance_thresholds() {
     let max_latency_ms = 100;
     let min_throughput_ops = 100;
@@ -135,6 +162,9 @@ fn test_hsm_failover() {
     let primary_hsm = "hsm-primary";
     let secondary_hsm = "hsm-secondary";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_ne!(
         primary_hsm, secondary_hsm,
         "Primary and secondary should differ"
@@ -142,6 +172,9 @@ fn test_hsm_failover() {
     assert!(!primary_hsm.is_empty(), "Primary HSM should be configured");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: important
 /// Test HSM audit logging
 #[test]
 fn test_hsm_audit_logging() {
@@ -152,6 +185,9 @@ fn test_hsm_audit_logging() {
         assert!(op.len() > 3, "Operation name should be descriptive");
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 /// Test HSM key rotation policies
 #[test]
@@ -160,6 +196,9 @@ fn test_hsm_key_rotation() {
     let warning_threshold_days = 7;
 
     assert!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         rotation_period_days > 0,
         "Rotation period should be positive"
     );
@@ -173,6 +212,9 @@ fn test_hsm_key_rotation() {
 #[test]
 fn test_hsm_concurrent_access() {
     let max_concurrent_sessions = 10;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let current_sessions = 3;
 
     assert!(
@@ -186,6 +228,9 @@ fn test_hsm_concurrent_access() {
 }
 
 /// Test HSM key metadata validation
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_hsm_key_metadata() {
     let key_types = ["encryption", "signing", "derivation"];

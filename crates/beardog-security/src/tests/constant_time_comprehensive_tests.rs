@@ -87,6 +87,9 @@ mod constant_time_compare_tests {
             "Same pattern should be equal"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_constant_time_first_byte_different() {
@@ -95,6 +98,9 @@ mod constant_time_compare_tests {
         a[0] = 2;
 
         assert!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             !constant_time_compare(&a, &b),
             "First byte difference should be detected"
         );
@@ -103,6 +109,9 @@ mod constant_time_compare_tests {
     #[test]
     fn test_constant_time_last_byte_different() {
         let mut a = vec![1u8; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let b = vec![1u8; 32];
         a[31] = 2;
 
@@ -111,11 +120,17 @@ mod constant_time_compare_tests {
             "Last byte difference should be detected"
         );
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_constant_time_middle_byte_different() {
         let mut a = vec![1u8; 32];
         let b = vec![1u8; 32];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         a[16] = 2;
 
         assert!(
@@ -124,16 +139,25 @@ mod constant_time_compare_tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_constant_time_multiple_differences() {
         let mut a = vec![1u8; 32];
         let b = vec![1u8; 32];
         a[0] = 2;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         a[16] = 3;
         a[31] = 4;
 
         assert!(
             !constant_time_compare(&a, &b),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
             "Multiple differences should be detected"
         );
     }
@@ -142,6 +166,9 @@ mod constant_time_compare_tests {
 #[cfg(test)]
 mod secure_zero_memory_tests {
     use super::*;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_secure_zero_single_byte() {
@@ -151,6 +178,9 @@ mod secure_zero_memory_tests {
         assert_eq!(data[0], 0, "Single byte should be zeroed");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_secure_zero_multiple_bytes() {
         let mut data = vec![0xFF; 32];
@@ -160,6 +190,9 @@ mod secure_zero_memory_tests {
             assert_eq!(*byte, 0, "All bytes should be zeroed");
         }
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_secure_zero_mixed_data() {
@@ -169,6 +202,9 @@ mod secure_zero_memory_tests {
         for byte in &data {
             assert_eq!(*byte, 0, "All bytes should be zeroed");
         }
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -185,11 +221,17 @@ mod secure_zero_memory_tests {
     fn test_secure_zero_large_buffer() {
         let mut data = vec![0xAB; 1024];
         secure_zero_memory(&mut data);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         for byte in &data {
             assert_eq!(*byte, 0, "Large buffer should be completely zeroed");
         }
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_secure_zero_empty() {
@@ -197,6 +239,9 @@ mod secure_zero_memory_tests {
         secure_zero_memory(&mut data);
 
         assert!(data.is_empty(), "Empty buffer should remain empty");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -204,6 +249,9 @@ mod secure_zero_memory_tests {
 mod key_derivation_tests {
     use super::*;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_key_derivation_basic() -> BearDogResult<()> {
         let password = b"test_password";
@@ -211,6 +259,9 @@ mod key_derivation_tests {
 
         let key = derive_key_from_password(password, salt, 1000)?;
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(!key.is_empty(), "Derived key should not be empty");
         assert_eq!(key.len(), 32, "Derived key should be 32 bytes (SHA-256)");
 
@@ -218,6 +269,9 @@ mod key_derivation_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_key_derivation_deterministic() -> BearDogResult<()> {
         let password = b"test_password";
         let salt = b"test_salt";
@@ -228,6 +282,9 @@ mod key_derivation_tests {
         assert_eq!(key1, key2, "Key derivation should be deterministic");
 
         Ok(())
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -238,7 +295,11 @@ mod key_derivation_tests {
         let key2 = derive_key_from_password(b"password2", salt, 1000)?;
 
         assert_ne!(
-            key1, key2,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
+            key1,
+            key2,
             "Different passwords should produce different keys"
         );
 
@@ -248,6 +309,9 @@ mod key_derivation_tests {
     #[test]
     fn test_key_derivation_different_salts() -> BearDogResult<()> {
         let password = b"test_password";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let key1 = derive_key_from_password(password, b"salt1", 1000)?;
         let key2 = derive_key_from_password(password, b"salt2", 1000)?;
@@ -260,6 +324,9 @@ mod key_derivation_tests {
     #[test]
     fn test_key_derivation_different_iterations() -> BearDogResult<()> {
         let password = b"test_password";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let salt = b"test_salt";
 
         let key1 = derive_key_from_password(password, salt, 100)?;
@@ -269,6 +336,9 @@ mod key_derivation_tests {
             key1, key2,
             "Different iterations should produce different keys"
         );
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         Ok(())
     }
@@ -282,6 +352,9 @@ mod key_derivation_tests {
         assert!(!key.is_empty(), "Empty password should still produce a key");
         assert_eq!(key.len(), 32);
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         Ok(())
     }
 
@@ -291,6 +364,9 @@ mod key_derivation_tests {
         let salt = b"test_salt";
 
         let key = derive_key_from_password(password, salt, 1000)?;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert_eq!(
             key.len(),
@@ -304,6 +380,9 @@ mod key_derivation_tests {
     #[test]
     fn test_key_derivation_binary_data() -> BearDogResult<()> {
         let password = &[0x00, 0xFF, 0xAA, 0x55, 0x12, 0x34, 0x56, 0x78];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let salt = &[0xFF, 0x00, 0x55, 0xAA];
 
         let key = derive_key_from_password(password, salt, 1000)?;
@@ -313,6 +392,9 @@ mod key_derivation_tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_key_derivation_minimal_iterations() -> BearDogResult<()> {
         let password = b"test_password";

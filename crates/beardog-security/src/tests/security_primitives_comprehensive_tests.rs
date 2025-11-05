@@ -74,6 +74,9 @@ mod security_primitives_tests {
     // ============================================================================
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_sha512_empty_input() {
         let data = b"";
         let hash = compute_sha512_hash(data).expect("Failed to hash empty data");
@@ -87,6 +90,9 @@ mod security_primitives_tests {
         assert_eq!(hash.len(), 64);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_sha512_large_input() {
         let data = vec![0u8; 1_000_000]; // 1MB of zeros
@@ -97,15 +103,24 @@ mod security_primitives_tests {
     #[test]
     fn test_sha512_deterministic() {
         let data = b"Deterministic test";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let hash1 = compute_sha512_hash(data).expect("Failed first hash");
         let hash2 = compute_sha512_hash(data).expect("Failed second hash");
         assert_eq!(hash1, hash2, "SHA-512 must be deterministic");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_sha512_different_from_sha256() {
         let data = b"Compare algorithms";
         let sha256 = compute_sha256_hash(data).expect("Failed SHA-256");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let sha512 = compute_sha512_hash(data).expect("Failed SHA-512");
 
         assert_ne!(sha256.len(), sha512.len());
@@ -113,6 +128,9 @@ mod security_primitives_tests {
         assert_eq!(sha512.len(), 64);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // ============================================================================
     // Random Bytes Generation Tests
     // ============================================================================
@@ -121,23 +139,38 @@ mod security_primitives_tests {
     fn test_generate_random_bytes_length() {
         for size in [8, 16, 32, 64, 128, 256] {
             let bytes =
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: security
+                // TEST_PRIORITY: normal
                 generate_secure_random_bytes(size).expect("Failed to generate random bytes");
             assert_eq!(
                 bytes.len(),
                 size,
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: security
+                // TEST_PRIORITY: normal
                 "Random bytes should match requested size"
             );
         }
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_generate_random_bytes_zero_length() {
         let bytes = generate_secure_random_bytes(0).expect("Failed to generate zero bytes");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert_eq!(bytes.len(), 0);
     }
 
     #[test]
     fn test_generate_random_bytes_uniqueness() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let bytes1 = generate_secure_random_bytes(32).expect("Failed first generation");
         let bytes2 = generate_secure_random_bytes(32).expect("Failed second generation");
 
@@ -150,6 +183,9 @@ mod security_primitives_tests {
         let bytes = generate_secure_random_bytes(256).expect("Failed to generate bytes");
 
         let first_byte = bytes[0];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let all_same = bytes.iter().all(|&b| b == first_byte);
 
         assert!(!all_same, "Random bytes should have varied values");
@@ -160,14 +196,23 @@ mod security_primitives_tests {
         let size = 1_000_000; // 1MB
         let bytes = generate_secure_random_bytes(size).expect("Failed to generate large random");
         assert_eq!(bytes.len(), size);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     // ============================================================================
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Cross-Function Integration Tests
     // ============================================================================
 
     #[test]
     fn test_hash_random_bytes() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let random = generate_secure_random_bytes(1024).expect("Failed to generate random");
         let hash256 = compute_sha256_hash(&random).expect("Failed to hash random");
         let hash512 = compute_sha512_hash(&random).expect("Failed to hash random");
@@ -176,6 +221,9 @@ mod security_primitives_tests {
         assert_eq!(hash512.len(), 64);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hash_consistency_with_random() {
         let random = generate_secure_random_bytes(64).expect("Failed to generate");
@@ -184,13 +232,20 @@ mod security_primitives_tests {
         let hash2 = compute_sha256_hash(&random).expect("Failed hash2");
 
         assert_eq!(
-            hash1, hash2,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
+            hash1,
+            hash2,
             "Hashing same random data should be consistent"
         );
     }
 
     // ============================================================================
     // Error Handling Tests
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // ============================================================================
 
     #[test]
@@ -205,6 +260,9 @@ mod security_primitives_tests {
         ];
 
         for input in inputs {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: important
             assert!(compute_sha256_hash(&input).is_ok());
             assert!(compute_sha512_hash(&input).is_ok());
         }
@@ -223,6 +281,9 @@ mod security_primitives_tests {
         let start = Instant::now();
         let _ = compute_sha256_hash(&data).expect("Failed hash");
         let duration = start.elapsed();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Should complete in reasonable time (< 100ms for 1MB on modern hardware)
         assert!(
@@ -237,6 +298,9 @@ mod security_primitives_tests {
 
         let start = Instant::now();
         let _ = generate_secure_random_bytes(1_000_000).expect("Failed generation");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let duration = start.elapsed();
 
         // Should complete in reasonable time
@@ -253,6 +317,9 @@ mod security_primitives_tests {
     #[test]
     fn test_sha256_max_chunk_boundary() {
         // SHA-256 processes in 512-bit (64-byte) chunks
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         for size in [63, 64, 65, 127, 128, 129] {
             let data = vec![0u8; size];
             let hash = compute_sha256_hash(&data).expect("Failed at chunk boundary");
@@ -260,6 +327,9 @@ mod security_primitives_tests {
         }
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     #[test]
     fn test_sha512_max_chunk_boundary() {
         // SHA-512 processes in 1024-bit (128-byte) chunks

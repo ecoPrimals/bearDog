@@ -75,6 +75,9 @@ mod tests {
     #[tokio::test]
     fn test_crypto_sovereignty() -> Result<(), beardog_errors::BearDogError> {
         let sovereignty = CryptoSovereignty::new(CryptoSovereigntyConfig::default());
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: critical
 
         let result = sovereignty
             .establish_crypto_sovereignty("test-identity")
@@ -89,6 +92,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_trust_verification() -> Result<(), beardog_errors::BearDogError> {
         let sovereignty = CryptoSovereignty::new(CryptoSovereigntyConfig::default());

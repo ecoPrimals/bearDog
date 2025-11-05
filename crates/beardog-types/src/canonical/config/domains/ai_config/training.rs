@@ -38,12 +38,30 @@ impl Default for TrainingConfig {
         Self {
             enabled: false,
             data_sources: vec![],
-            batch_size: 32,
-            learning_rate: 0.001,
-            epochs: 10,
-            validation_split: 0.2,
-            early_stopping_patience: 5,
-            checkpoint_frequency: 1,
+            batch_size: std::env::var("BEARDOG_AI_TRAINING_BATCH_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(32),
+            learning_rate: std::env::var("BEARDOG_AI_LEARNING_RATE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.001),
+            epochs: std::env::var("BEARDOG_AI_EPOCHS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
+            validation_split: std::env::var("BEARDOG_AI_VALIDATION_SPLIT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.2),
+            early_stopping_patience: std::env::var("BEARDOG_AI_EARLY_STOPPING_PATIENCE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5),
+            checkpoint_frequency: std::env::var("BEARDOG_AI_CHECKPOINT_FREQUENCY")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1),
         }
     }
 }
@@ -68,9 +86,18 @@ pub struct TrainingParams {
 impl Default for TrainingParams {
     fn default() -> Self {
         Self {
-            epochs: 10,
-            batch_size: 32,
-            validation_split: 0.2,
+            epochs: std::env::var("BEARDOG_TRAINING_PARAMS_EPOCHS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
+            batch_size: std::env::var("BEARDOG_TRAINING_PARAMS_BATCH_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(32),
+            validation_split: std::env::var("BEARDOG_TRAINING_PARAMS_VALIDATION_SPLIT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.2),
             shuffle: true,
             random_seed: None,
             verbose: VerboseLevel::Normal,
@@ -115,8 +142,14 @@ impl Default for EarlyStoppingConfig {
         Self {
             monitor: "val_loss".to_string(),
             mode: MonitoringMode::Min,
-            patience: 10,
-            min_delta: 0.0001,
+            patience: std::env::var("BEARDOG_AI_EARLY_STOPPING_PATIENCE_EPOCHS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
+            min_delta: std::env::var("BEARDOG_AI_EARLY_STOPPING_MIN_DELTA")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0001),
             restore_best_weights: true,
             baseline: None,
         }
@@ -155,7 +188,10 @@ impl Default for CheckpointConfig {
     fn default() -> Self {
         Self {
             checkpoint_dir: "./checkpoints".to_string(),
-            frequency: 1,
+            frequency: std::env::var("BEARDOG_AI_CHECKPOINT_FREQUENCY_EPOCHS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1),
             save_best_only: true,
             monitor: "val_loss".to_string(),
             mode: MonitoringMode::Min,

@@ -46,11 +46,11 @@ pub struct ComputeDiscoveryConfig {
     /// Number of `cache_duration_ms`
     pub cache_duration_ms: u64,
     /// Preferred compute architectures
-    /// Collection of preferred architectures
+    /// Preferred compute architectures
     pub preferred_architectures: Vec<ComputeArchitecture>,
+    /// Minimum performance score required (0.0-100.0)
     pub min_performance_score: f64,
-    /// Enable automatic failover
-    /// Whether `enable_failover` is enabled
+    /// Enable automatic failover to backup compute providers
     pub enable_failover: bool,
 }
 
@@ -84,14 +84,18 @@ pub enum ComputePriority {
     Critical,
 }
 
+/// Types of optimization for compute resource allocation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of optimization
 pub enum OptimizationType {
+    /// Optimize for maximum speed/performance
     Speed,
+    /// Optimize for minimal memory usage
     Memory,
+    /// Optimize for power efficiency
     Power,
+    /// Optimize for cost effectiveness
     Cost,
-    /// Balanced optimization
+    /// Balanced optimization across all factors
     Balanced,
 }
 
@@ -143,61 +147,59 @@ pub struct UniversalComputeRequest {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
-/// Universal compute response
+/// Response from a universal compute operation
+///
+/// Contains computation results, provider information, timing, and resource usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalComputeResponse {
     /// Original request identifier
     pub request_id: String,
-    /// Success status
-    /// Whether success is enabled
+    /// Whether the computation succeeded
     pub success: bool,
-    /// Computation result
-    /// Optional result
+    /// Computation result data
     pub result: Option<serde_json::Value>,
-    /// Error message if failed
-    /// Optional error message
+    /// Error message if the computation failed
     pub error_message: Option<String>,
     /// Processing time in milliseconds
     pub processing_time_ms: u64,
+    /// Information about the compute provider that handled the request
     pub provider_info: ComputeProviderInfo,
-    /// Resource usage statistics
-    /// The resource usage value
+    /// Resource usage statistics for this computation
     pub resource_usage: ResourceUsageStats,
 }
 
+/// Information about a compute provider
+///
+/// Describes a discovered compute provider including its capabilities,
+/// endpoint, performance, and supported architectures.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeProviderInfo {
-    /// Provider identifier (dynamic, not primal name)
+    /// Provider identifier (dynamic, capability-based)
     pub provider_id: String,
-    /// Capability type provided
-    /// The capability type value
+    /// Capability type provided by this provider
     pub capability_type: String,
-    /// Provider endpoint
-    /// The endpoint value
+    /// Provider connection endpoint
     pub endpoint: String,
+    /// Performance score (0.0-100.0)
     pub performance_score: f64,
-    /// Available architectures
-    /// Collection of available architectures
+    /// Compute architectures available from this provider
     pub available_architectures: Vec<ComputeArchitecture>,
 }
 
-/// Resource usage statistics
+/// Resource usage statistics for compute operations
+///
+/// Tracks CPU, memory, GPU, network usage, and cost estimates for a computation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsageStats {
-    /// CPU usage percentage
-    /// The cpu usage percent value
+    /// CPU usage percentage (0.0-100.0)
     pub cpu_usage_percent: f64,
-    /// Memory usage in MB
-    /// Number of `memory_usage_mb`
+    /// Memory usage in megabytes
     pub memory_usage_mb: u64,
-    /// GPU usage percentage
-    /// Optional gpu usage percent
+    /// GPU usage percentage (if applicable)
     pub gpu_usage_percent: Option<f64>,
-    /// Network bandwidth used in MB
-    /// Number of `network_usage_mb`
+    /// Network bandwidth used in megabytes
     pub network_usage_mb: u64,
-    /// Cost estimation
-    /// Optional estimated cost
+    /// Estimated cost in dollars
     pub estimated_cost: Option<f64>,
 }
 
@@ -212,25 +214,34 @@ pub struct UniversalComputeClient {
     metrics: Arc<tokio::sync::RwLock<ComputeMetrics>>,
 }
 
+/// Metrics for compute operations
+///
+/// Tracks request counts, response times, compute usage, and failover events.
 #[derive(Debug, Clone, Default)]
 pub struct ComputeMetrics {
-    /// Number of `total_requests`
+    /// Total number of compute requests made
     pub total_requests: u64,
-    /// Number of `successful_requests`
+    /// Number of successful compute requests
     pub successful_requests: u64,
-    /// Number of `failed_requests`
+    /// Number of failed compute requests
     pub failed_requests: u64,
+    /// Average response time in milliseconds
     pub avg_response_time_ms: f64,
+    /// Total compute time used in milliseconds
     pub total_compute_time_ms: u64,
+    /// Number of compute providers discovered
     pub providers_discovered: u64,
-    /// Number of `failover_events`
+    /// Number of failover events that occurred
     pub failover_events: u64,
 }
 
 impl Default for UniversalComputeConfig {
     fn default() -> Self {
         Self {
-            request_timeout_ms: 30000, // 30 seconds
+            request_timeout_ms: std::env::var("BEARDOG_COMPUTE_REQUEST_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30000), // 30 seconds default
             max_concurrent_requests: 10,
             retry_attempts: 3,
             enable_batching: true,
@@ -244,8 +255,14 @@ impl Default for UniversalComputeConfig {
 impl Default for ComputeDiscoveryConfig {
     fn default() -> Self {
         Self {
-            discovery_timeout_ms: 5000,
-            cache_duration_ms: 300_000, // 5 minutes
+            discovery_timeout_ms: std::env::var("BEARDOG_COMPUTE_DISCOVERY_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(5000), // 5 seconds default
+            cache_duration_ms: std::env::var("BEARDOG_COMPUTE_CACHE_DURATION_MS")
+                .ok()
+                .and_then(|d| d.parse().ok())
+                .unwrap_or(300_000), // 5 minutes default
             preferred_architectures: vec![ComputeArchitecture::X86_64, ComputeArchitecture::Arm64],
             min_performance_score: 0.7,
             enable_failover: true,

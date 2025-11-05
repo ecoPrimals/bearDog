@@ -10,6 +10,9 @@ async fn test_memory_pressure_resilience() {
 
     for i in 0..100 {
         let handle = tokio::spawn(async move {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             let _data = vec![0u8; 1024 * 100]; // 100KB per task
             sleep(Duration::from_millis(10));
             format!("task_{i}")
@@ -47,6 +50,9 @@ async fn test_concurrent_operation_resilience() {
 
     let start = Instant::now();
     let mut handles = Vec::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     for i in 0..50 {
         let handle = tokio::spawn(async move {
@@ -103,6 +109,9 @@ async fn test_concurrent_operation_resilience() {
 #[tokio::test]
 async fn test_network_fault_tolerance() {
     println!("🔥 CHAOS TEST: Network Fault Tolerance");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let start = Instant::now();
 
@@ -151,6 +160,9 @@ async fn test_network_fault_tolerance() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_resource_exhaustion_recovery() {
     println!("🔥 CHAOS TEST: Resource Exhaustion Recovery");

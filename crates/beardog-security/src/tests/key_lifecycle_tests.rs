@@ -61,6 +61,9 @@ fn test_key_rotation() {
 
 /// Test key versioning
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_key_versioning() {
     let key_versions = ["v1", "v2", "v3"];
 
@@ -70,6 +73,9 @@ fn test_key_versioning() {
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test key backup and recovery
 #[test]
 fn test_key_backup() {
@@ -81,6 +87,9 @@ fn test_key_backup() {
 }
 
 /// Test key secure deletion
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_key_secure_deletion() {
     let mut key = vec![0xFFu8; 32];
@@ -94,6 +103,9 @@ fn test_key_secure_deletion() {
     // Verify deletion
     assert!(key.iter().all(|&b| b == 0), "Key should be securely zeroed");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 
 /// Test key expiration tracking
 #[test]
@@ -105,6 +117,9 @@ fn test_key_expiration() {
     assert_eq!(expiration_timestamp - creation_timestamp, rotation_period);
     assert!(
         creation_timestamp < expiration_timestamp,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Expiration should be after creation"
     );
 }
@@ -113,6 +128,9 @@ fn test_key_expiration() {
 #[test]
 fn test_key_usage_tracking() {
     let max_usage_count = 10000;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let current_usage = 50;
 
     assert!(
@@ -120,6 +138,9 @@ fn test_key_usage_tracking() {
         "Usage should be within limit"
     );
     assert!(current_usage >= 0, "Usage count should be non-negative");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test key strength validation
@@ -131,7 +152,9 @@ fn test_key_strength() {
 
     assert!(
         weak_key_size < min_acceptable,
-        "Weak key should be rejected"
+        "Weak key should be rejected" // TEST_CATEGORY: integration
+                                      // TEST_DOMAIN: security
+                                      // TEST_PRIORITY: normal
     );
     assert!(
         strong_key_size >= min_acceptable,
@@ -143,6 +166,9 @@ fn test_key_strength() {
 #[test]
 fn test_key_metadata() {
     let key_id = "key-12345";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let key_purpose = "encryption";
     let key_algorithm = "AES-256-GCM";
 
@@ -153,6 +179,9 @@ fn test_key_metadata() {
 
 /// Test key access control
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_key_access_control() {
     let authorized_roles = ["admin", "security_officer", "key_manager"];
     let unauthorized_role = "guest";
@@ -167,6 +196,9 @@ fn test_key_access_control() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test key encryption for storage
 #[test]
 fn test_key_encryption_at_rest() {
@@ -176,6 +208,9 @@ fn test_key_encryption_at_rest() {
     // Simulate encryption
     let encrypted_key = compute_sha256_hash(&plain_key).unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_ne!(
         plain_key, encrypted_key,
         "Encrypted key should differ from plaintext"
@@ -189,6 +224,9 @@ fn test_key_hierarchy() {
 
     for level in &levels {
         assert!(!level.is_empty(), "Hierarchy level should be defined");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
     }
 
     assert_eq!(levels.len(), 3, "Should have 3 hierarchy levels");
@@ -201,6 +239,9 @@ fn test_key_algorithm_compatibility() {
         ("AES-128", 16),
         ("AES-192", 24),
         ("AES-256", 32),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         ("ChaCha20", 32),
     ];
 
@@ -210,6 +251,9 @@ fn test_key_algorithm_compatibility() {
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test key import validation
 #[test]
 fn test_key_import_validation() {
@@ -223,6 +267,9 @@ fn test_key_import_validation() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 /// Test key export with protection
 #[test]
 fn test_key_export_protection() {
@@ -233,6 +280,9 @@ fn test_key_export_protection() {
 
     assert_eq!(export_key.len(), 32, "Export should maintain key size");
     assert_ne!(key, export_key, "Export should be protected/wrapped");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 /// Test key rollback capability
@@ -242,6 +292,9 @@ fn test_key_rollback() {
     let rollback_version = 2;
 
     assert!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         rollback_version < current_version,
         "Rollback should go to earlier version"
     );
@@ -252,6 +305,9 @@ fn test_key_rollback() {
 #[test]
 fn test_key_audit_logging() {
     let audit_events = ["key_created", "key_used", "key_rotated", "key_deleted"];
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     for event in &audit_events {
         assert!(!event.is_empty(), "Audit event should be defined");
@@ -260,6 +316,9 @@ fn test_key_audit_logging() {
 }
 
 /// Test key performance metrics
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_key_operation_performance() {
     let max_generation_time_ms = 100;

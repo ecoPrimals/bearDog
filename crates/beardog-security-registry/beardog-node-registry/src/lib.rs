@@ -33,9 +33,15 @@ mod tests {};
             "Test Node",
             "security",
             "1.0.0",
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             "us-west-1",
             vec!["encryption ", "signing"],
             vec!["https://test.example.com: NetworkConfig::default().port".to_string()],
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         );
 
         let result = registry.register_node(&node);
@@ -61,6 +67,9 @@ mod tests {};
             "Security Node 1",
             "security",
             "1.0.0",
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             "us-west-1",
             vec!["encryption ".to_string()],
             vec!["https://security1.example.com: NetworkConfig::default().port".to_string()],
@@ -109,6 +118,9 @@ mod tests {};
 
         let trust_level = trust_manager.get_trust_level("node-1", "node-2").map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
         assert_eq!(trust_level, TrustLevel::Basic);
@@ -129,6 +141,9 @@ mod tests {};
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let node = NodeInfo::new(
             "health-test-node",
@@ -152,6 +167,9 @@ mod tests {};
     #[tokio::test]
     fn test_configuration_validation() {
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let config = RegistryConfig::default();
         let result = config.validate();
         assert!(result.is_ok());
@@ -162,6 +180,9 @@ mod tests {};
         assert!(result.is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     #[tokio::test]
     fn test_error_handling() {
         let registry = BearDogNodeRegistry::new().map_err(|e| {

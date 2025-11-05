@@ -56,7 +56,9 @@ fn test_aes_gcm_large_data_1mb() -> Result<(), BearDogError> {
 
     assert_eq!(
         decrypted, large_data,
-        "Large data (1MB) should encrypt/decrypt correctly"
+        "Large data (1MB) should encrypt/decrypt correctly" // TEST_CATEGORY: integration
+                                                            // TEST_DOMAIN: security
+                                                            // TEST_PRIORITY: normal
     );
     Ok(())
 }
@@ -77,6 +79,9 @@ fn test_aes_gcm_10mb_data() -> Result<(), BearDogError> {
         "10MB data should encrypt/decrypt with correct length"
     );
     Ok(())
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 }
 
 #[test]
@@ -89,6 +94,9 @@ fn test_aes_gcm_wrong_key_fails() -> Result<(), BearDogError> {
 
     // Attempting to decrypt with wrong key should fail
     let result = BearDogCrypto::decrypt_aes_gcm(&key2, &ciphertext, &nonce);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(result.is_err(), "Decryption with wrong key should fail");
 
     Ok(())
@@ -103,6 +111,9 @@ fn test_aes_gcm_tampered_ciphertext_fails() -> Result<(), BearDogError> {
 
     // Tamper with the ciphertext
     if !ciphertext.is_empty() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         ciphertext[0] ^= 0xFF; // Flip bits in ciphertext
     }
 
@@ -118,6 +129,9 @@ fn test_aes_gcm_tampered_ciphertext_fails() -> Result<(), BearDogError> {
 
 #[test]
 fn test_aes_gcm_tampered_nonce_fails() -> Result<(), BearDogError> {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let key = BearDogCrypto::generate_secure_random(32);
     let data = b"Nonce-sensitive data";
 
@@ -130,6 +144,9 @@ fn test_aes_gcm_tampered_nonce_fails() -> Result<(), BearDogError> {
 
     // Decryption should fail due to wrong nonce
     let result = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &nonce);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     assert!(
         result.is_err(),
         "Decryption with tampered nonce should fail"
@@ -149,6 +166,9 @@ fn test_aes_gcm_with_custom_nonce() -> Result<(), BearDogError> {
         BearDogCrypto::encrypt_aes_gcm(&key, data, Some(&custom_nonce))?;
 
     // Verify the nonce was used
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     assert_eq!(returned_nonce, custom_nonce, "Custom nonce should be used");
 
     // Decrypt using the same nonce
@@ -168,6 +188,9 @@ fn test_aes_gcm_key_size_validation() -> Result<(), BearDogError> {
     // Test with invalid key sizes (should fail)
     let key_16 = BearDogCrypto::generate_secure_random(16);
     let result = BearDogCrypto::encrypt_aes_gcm(&key_16, data, None);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(
         result.is_err(),
         "16-byte key should fail (requires 32 bytes for AES-256)"
@@ -188,6 +211,9 @@ fn test_aes_gcm_key_size_validation() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_key_derivation_various_parameters() -> Result<(), BearDogError> {
     let password = b"test_password";
@@ -212,6 +238,9 @@ fn test_key_derivation_various_parameters() -> Result<(), BearDogError> {
     let key_repeat = BearDogCrypto::derive_pbkdf2_key(password, &salt, 10_000, 32)?;
     assert_eq!(
         key_10k, key_repeat,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Same parameters should produce same key"
     );
 
@@ -239,6 +268,9 @@ fn test_hmac_empty_message() -> Result<(), BearDogError> {
 
     let hmac = BearDogCrypto::hmac_sha256(&key, empty_msg)?;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // HMAC of empty message should still produce a valid tag
     assert!(!hmac.is_empty(), "HMAC of empty message should produce tag");
     assert_eq!(hmac.len(), 32, "HMAC should be 32 bytes (SHA-256)");
@@ -250,6 +282,9 @@ fn test_hmac_empty_message() -> Result<(), BearDogError> {
 fn test_hmac_different_key_sizes() -> Result<(), BearDogError> {
     let msg = b"test message";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Test various key sizes
     let key_16 = BearDogCrypto::generate_secure_random(16);
     let key_32 = BearDogCrypto::generate_secure_random(32);
@@ -261,6 +296,9 @@ fn test_hmac_different_key_sizes() -> Result<(), BearDogError> {
 
     // All should produce valid HMACs
     assert_eq!(hmac_16.len(), 32, "HMAC with 16-byte key should work");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert_eq!(hmac_32.len(), 32, "HMAC with 32-byte key should work");
     assert_eq!(hmac_64.len(), 32, "HMAC with 64-byte key should work");
 
@@ -283,6 +321,9 @@ fn test_password_hashing_edge_cases() -> Result<(), BearDogError> {
 
     // Test with empty password (should this fail or hash?)
     let empty_password = "";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     let result = BearDogCrypto::hash_password_argon2(empty_password);
     // Implementation dependent - document behavior
     assert!(
@@ -310,6 +351,9 @@ fn test_password_verification_negative_cases() -> Result<(), BearDogError> {
     let wrong_password = "wrong_password";
     let verify_result = BearDogCrypto::verify_password_argon2(wrong_password, &hash)?;
     assert!(!verify_result, "Wrong password should not verify");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // Slightly different password should fail
     let almost_password = "correct_passwor"; // One char short
@@ -329,6 +373,9 @@ fn test_concurrent_key_generation() -> Result<(), BearDogError> {
 
     // Test that key generation is thread-safe
     let handles: Vec<_> = (0..10)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         .map(|_| {
             thread::spawn(|| {
                 for _ in 0..100 {
@@ -351,6 +398,9 @@ fn test_concurrent_key_generation() -> Result<(), BearDogError> {
 #[test]
 fn test_key_uniqueness() -> Result<(), BearDogError> {
     // Generate multiple keys and ensure they're unique
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let mut keys = Vec::new();
     for _ in 0..100 {
         let key = BearDogCrypto::generate_secure_random(32);
@@ -371,6 +421,9 @@ fn test_key_uniqueness() -> Result<(), BearDogError> {
     Ok(())
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_nonce_uniqueness() -> Result<(), BearDogError> {
     let key = BearDogCrypto::generate_secure_random(32);

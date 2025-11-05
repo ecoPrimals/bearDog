@@ -29,11 +29,17 @@ mod compliance_tests {
     #[test]
     fn test_compliance_event_creation() {
         let event = ComplianceEvent {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             id: Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
             event_type: ComplianceEventType::DataAccess,
             standard: ComplianceStandard::Gdpr,
             description: "Test event description".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             severity: ComplianceSeverity::Medium,
             metadata: serde_json::json!({"test": "data"}),
         };
@@ -43,7 +49,9 @@ mod compliance_tests {
     }
 
     #[tokio::test]
-    async fn test_compliance_engine_basic_operations(
+    async fn test_compliance_engine_basic_operations(// TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let _config = ComplianceConfig::default();
 
@@ -57,11 +65,17 @@ mod compliance_tests {
             ReportFormat::Pdf,
             ReportFormat::Csv,
             ReportFormat::Html,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             ReportFormat::Xml,
         ];
 
         assert_eq!(formats.len(), 5);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         for format in formats {
             match format {
                 ReportFormat::Json => {}
@@ -82,11 +96,17 @@ mod compliance_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_compliance_violation_creation() {
         let violation = ComplianceViolation {
             id: Uuid::new_v4().to_string(),
             rule: "GDPR Article 6".to_string(),
             description: "Data processing without legal basis".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             severity: ComplianceSeverity::High,
             remediation: "Obtain proper consent or establish legal basis".to_string(),
             affected_data: Some("Personal identifiers".to_string()),
@@ -100,10 +120,16 @@ mod compliance_tests {
     #[test]
     fn test_compliance_severity_ordering() {
         assert!(ComplianceSeverity::Critical > ComplianceSeverity::High);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(ComplianceSeverity::High > ComplianceSeverity::Medium);
         assert!(ComplianceSeverity::Medium > ComplianceSeverity::Low);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_compliance_result_creation() {
         let result = ComplianceResult {

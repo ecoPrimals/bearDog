@@ -162,9 +162,15 @@ mod tests {
         assert!(ProductionConfigValidator::validate_config(&config).is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_production_config_builder() {
         let config = ProductionConfigBuilder::new()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             .environment(Environment::Development)
             .build();
         
@@ -176,6 +182,9 @@ mod tests {
         assert_eq!(config.environment, Environment::Development);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_empty_cluster_validation() {
         let mut config = ProductionConfig::default();

@@ -511,6 +511,9 @@ mod tests {
             create_mock_kms_capability("universal_kms", ProviderType::Vendor),
             create_mock_kms_capability("universal_kv", ProviderType::Vendor),
             create_mock_kms_capability("beardog_kms", ProviderType::Builtin),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         ];
         
         let handler = UniversalKmsHandler::new(capabilities);
@@ -521,6 +524,9 @@ mod tests {
     #[tokio::test]
     fn test_encrypt_operation() {
         let capabilities = vec![
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             create_mock_kms_capability("test_kms", ProviderType::Vendor),
         ];
         
@@ -542,6 +548,9 @@ mod tests {
         assert!(response.data.is_some());
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_provider_selection() {
         let capabilities = vec![

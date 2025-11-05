@@ -21,7 +21,10 @@ impl Default for DecisionEngineConfig {
         Self {
             enabled: false,
             strategy: DecisionStrategy::ConsensusVoting,
-            confidence_threshold: 0.8,
+            confidence_threshold: std::env::var("BEARDOG_AI_CONFIDENCE_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.8),
         }
     }
 }
@@ -90,7 +93,10 @@ impl Default for AiPerformanceConfig {
         Self {
             enabled: true,
             use_gpu: false,
-            num_workers: 4,
+            num_workers: std::env::var("BEARDOG_AI_NUM_WORKERS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(4),
             mixed_precision: false,
         }
     }

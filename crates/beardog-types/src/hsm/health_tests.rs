@@ -38,6 +38,9 @@ mod tests {
 
     #[test]
     fn test_provider_health_unhealthy() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let health = ProviderHealth::unhealthy("connection failed".to_string());
         
         assert!(!health.is_available);
@@ -48,24 +51,36 @@ mod tests {
     #[test]
     fn test_provider_health_is_healthy() {
         let healthy = ProviderHealth::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             true,
             "ok".to_string(),
             Duration::from_millis(10),
         );
         assert!(healthy.is_healthy());
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let unhealthy = ProviderHealth::new(
             false,
             "error".to_string(),
             Duration::from_secs(1),
         );
         assert!(!unhealthy.is_healthy());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_provider_health_with_fast_response() {
         let health = ProviderHealth::new(
             true,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             "fast".to_string(),
             Duration::from_millis(5),
         );
@@ -80,6 +95,9 @@ mod tests {
             true,
             "slow".to_string(),
             Duration::from_secs(2),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         );
         
         assert!(health.is_available);
@@ -89,6 +107,9 @@ mod tests {
     #[test]
     fn test_provider_health_update_status() {
         let mut health = ProviderHealth::healthy();
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         health.update_status(false, "service down".to_string());
         
@@ -98,6 +119,9 @@ mod tests {
 
     #[test]
     fn test_provider_health_update_response_time() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let mut health = ProviderHealth::healthy();
         
         health.update_response_time(Duration::from_millis(75));
@@ -105,12 +129,18 @@ mod tests {
         assert_eq!(health.response_time, Duration::from_millis(75));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_provider_health_clone() {
         let health1 = ProviderHealth::new(
             true,
             "active".to_string(),
             Duration::from_millis(25),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         );
         let health2 = health1.clone();
         
@@ -122,6 +152,9 @@ mod tests {
     #[test]
     fn test_provider_health_debug_format() {
         let health = ProviderHealth::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             true,
             "testing".to_string(),
             Duration::from_millis(30),
@@ -131,6 +164,9 @@ mod tests {
         assert!(debug_str.contains("ProviderHealth"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_provider_health_transitions() {
         let mut health = ProviderHealth::healthy();

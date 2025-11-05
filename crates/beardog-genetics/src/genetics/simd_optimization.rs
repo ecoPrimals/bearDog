@@ -175,15 +175,32 @@ pub struct SimdGeneticsConfig {
     pub chromosome_length: usize,}
 
 impl Default for SimdGeneticsConfig {
+    fn default() -> Self {
+        Self {
             enable_simd: true,
             force_instruction_set: None,
-            memory_alignment: 64, // 64-byte alignment for AVX-512
-            population_size: 1000,
-            chromosome_length: 100,}
+            memory_alignment: std::env::var("BEARDOG_GENETICS_MEMORY_ALIGNMENT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(64), // 64-byte alignment for AVX-512
+            population_size: std::env::var("BEARDOG_GENETICS_SIMD_POPULATION_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000),
+            chromosome_length: std::env::var("BEARDOG_GENETICS_CHROMOSOME_LENGTH")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_cpu_feature_detection() {
         let features = CpuFeatures::default();

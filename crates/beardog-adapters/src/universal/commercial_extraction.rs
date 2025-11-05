@@ -146,6 +146,9 @@ impl Default for ExtractionConfig {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_commercial_extraction() -> Result<(), BearDogError> {
         let mut extractor = CommercialExtractor::new(ExtractionConfig::default());

@@ -112,6 +112,8 @@ pub mod production;
 /// Runtime settings with environment variable overrides for network endpoints,
 /// ports, and other deployment-specific values.
 pub mod runtime_config;
+pub mod source;
+pub mod test_fixtures;
 
 /// Security configuration
 ///

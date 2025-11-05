@@ -5,28 +5,24 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Status of data replication across storage nodes
+///
+/// Tracks replication health, replica locations, lag times, and replication factor.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplicationStatus {
-    /// Primary location
-    /// The primary location value
+    /// Primary storage location
     pub primary_location: String,
-    /// Replica locations
-    /// Collection of replica locations
+    /// Locations of data replicas
     pub replica_locations: Vec<String>,
-    /// Replication factor (desired number of replicas)
-    /// Number of `replication_factor`
+    /// Desired number of replicas (replication factor)
     pub replication_factor: u32,
     /// Current number of healthy replicas
-    /// Number of `healthy_replicas`
     pub healthy_replicas: u32,
-    /// Overall replication health
-    /// The health value
+    /// Overall replication health status
     pub health: ReplicationHealth,
-    /// Last replication check
-    /// The last check value
+    /// Last replication health check timestamp
     pub last_check: DateTime<Utc>,
-    /// Replication lag per replica (in seconds)
-    /// Mapping of replication lag
+    /// Replication lag per replica in seconds
     pub replication_lag: HashMap<String, f64>,
 }
 

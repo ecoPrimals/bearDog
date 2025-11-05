@@ -42,17 +42,18 @@ pub struct UniversalRegistrationManager<T> {
     config: ServiceMeshHandoffConfig,
 }
 
-/// 
-/// 
-impl<T: Send + Sync> SongBirdRegistrationManager<T> {
+/// Universal registration manager implementation
+/// Uses capability-based discovery instead of hardcoded primal names
+impl<T: Send + Sync> UniversalRegistrationManager<T> {
 
-/// New operation.
-    /// Creates a new instance
-    pub async fn new(Arc<T>,
+    /// Create new universal registration manager
+    /// Discovers service mesh capability providers (no hardcoded primal names)
+    pub async fn new(
+        core: Arc<T>,
         capability_manager: Arc<CapabilityManager>,
         config: ServiceMeshHandoffConfig,
     ) -> Result<Self, BearDogError> {
-        info!("ServiceMeshCapability");
+        info!("Initializing universal registration with ServiceMeshCapability discovery");
 
         {
             let mut status = self.registration_status.write();
@@ -148,11 +149,23 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 endpoints: ServiceEndpoints {
                     health: health_check_url.clone(),
                     metrics: std::env::var("BEARDOG_METRICS_URL")
-                        .unwrap_or_else(|_| "http://0.0.0.0:9090/metrics".to_string()),
+                        .unwrap_or_else(|_| {
+                            use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+                            let config = RuntimeNetworkConfig::from_env();
+                            format!("http://{}:{}/metrics", config.api_host, config.metrics_port)
+                        }),
                     admin: std::env::var("BEARDOG_ADMIN_URL")
-                        .unwrap_or_else(|_| "http://0.0.0.0:8080/admin".to_string()),
+                        .unwrap_or_else(|_| {
+                            use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+                            let config = RuntimeNetworkConfig::from_env();
+                            format!("http://{}:{}/admin", config.api_host, config.api_port)
+                        }),
                     primary: std::env::var("BEARDOG_PRIMARY_URL")
-                        .unwrap_or_else(|_| "http://0.0.0.0:8080/api/v1".to_string()),
+                        .unwrap_or_else(|_| {
+                            use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+                            let config = RuntimeNetworkConfig::from_env();
+                            format!("http://{}:{}/api/v1", config.api_host, config.api_port)
+                        }),
                 resource_requirements: ResourceSpec {
                     cpu_cores: Some(1.0),
                     memory_mb: Some(512),
@@ -191,19 +204,35 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
 
     /// Creates universal_service_endpoints
     fn create_universal_service_endpoints(&self) -> Result<Vec<ServiceEndpoint>, BearDogError>> {
+        use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
+        let config = RuntimeNetworkConfig::from_env();
+        
+        // For service registration, use bind address from env or config
+        let bind_host = std::env::var("BEARDOG_BIND_ADDRESS")
+            .unwrap_or_else(|_| "0.0.0.0".to_string()); // Standard bind-to-all-interfaces
+        
         let endpoints = vec![
-
             ServiceEndpoint {
-                url: "https://0.0.0.0:8443/api/v1".to_string(),
+                url: std::env::var("BEARDOG_HTTPS_URL")
+                    .unwrap_or_else(|_| format!("https://{}:{}/api/v1", bind_host,
+                        std::env::var("BEARDOG_HTTPS_PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8443))),
                 protocol: "https".to_string(),
-
-                url: "grpc://0.0.0.0:9443".to_string(),
+                endpoint_type: EndpointType::Primary,
+            },
+            ServiceEndpoint {
+                url: std::env::var("BEARDOG_GRPC_URL")
+                    .unwrap_or_else(|_| format!("grpc://{}:{}", bind_host, config.grpc_port)),
                 endpoint_type: EndpointType::Custom("grpc".to_string()),
                 protocol: "grpc".to_string(),
-
+                port: config.grpc_port,
+            },
+            ServiceEndpoint {
                 url: std::env::var("BEARDOG_METRICS_URL")
-                    .unwrap_or_else(|_| "http://0.0.0.0:9090/metrics".to_string()),
+                    .unwrap_or_else(|_| format!("http://{}:{}/metrics", config.api_host, config.metrics_port)),
                 protocol: "http".to_string(),
+                endpoint_type: EndpointType::Metrics,
+                port: config.metrics_port,
+            },
         ];
         Ok(&[Capability],
     ) -> Result<OrchestrationMetadata, BearDogError> {
@@ -224,7 +253,11 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
     /// Starts health_monitoring_task
     fn start_health_monitoring_task(&self) -> Result<(), BearDogError> {
         debug!("🏥 Starting universal health monitoring task");
-            let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+            let health_interval_secs = std::env::var("BEARDOG_HEALTH_MONITOR_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60);
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(health_interval_secs));
 
                 match Self::perform_health_check(&primal_id) {
                     Ok(health_status) => {

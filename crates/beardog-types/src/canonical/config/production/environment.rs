@@ -110,7 +110,9 @@ impl EnvironmentConfig {
     pub fn new(environment_type: EnvironmentType) -> Self {
         Self {
             environment_type,
-            ..Default::default()
+            overrides: HashMap::new(),
+            validation: EnvironmentValidation::default(),
+            secrets: ModernSecretsConfig::default(),
         }
     }
 
@@ -222,7 +224,12 @@ impl Default for EnvironmentValidation {
         Self {
             validate_on_startup: true,
             validate_periodically: false,
-            validation_interval: Duration::from_secs(300), // 5 minutes
+            validation_interval: Duration::from_secs(
+                std::env::var("BEARDOG_ENV_VALIDATION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
             required_environment_variables: vec!["PATH".to_string(), "HOME".to_string()],
             required_files: vec![],
             required_endpoints: vec![],
@@ -253,12 +260,37 @@ impl EnvironmentType {
     #[must_use]
     pub fn metrics_collection_interval(&self) -> Duration {
         match self {
-            Self::Local => Duration::from_secs(60),       // 1 minute
-            Self::Development => Duration::from_secs(30), // 30 seconds
-            Self::Testing => Duration::from_secs(15),     // 15 seconds
-            Self::Staging => Duration::from_secs(10),     // 10 seconds
-            Self::Production => Duration::from_secs(5),   // 5 seconds
-            Self::Disaster => Duration::from_secs(1),     // 1 second
+            Self::Local => Duration::from_secs(
+                std::env::var("BEARDOG_LOCAL_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+            ),
+            Self::Development => Duration::from_secs(
+                std::env::var("BEARDOG_DEV_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            Self::Testing => Duration::from_secs(
+                std::env::var("BEARDOG_TEST_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(15),
+            ),
+            Self::Staging => Duration::from_secs(
+                std::env::var("BEARDOG_STAGING_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(10),
+            ),
+            Self::Production => Duration::from_secs(
+                std::env::var("BEARDOG_PRODUCTION_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            ),
+            Self::Disaster => Duration::from_secs(1), // 1 second
         }
     }
 }
@@ -349,6 +381,137 @@ impl ModernSecretsConfig {
             CapabilityType::SecretsManagement
         } else {
             CapabilityType::Custom("local_secrets".to_string())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn test_environment_type_display() {
+        assert_eq!(EnvironmentType::Local as i32, 0);
+        assert!(matches!(
+            EnvironmentType::Production,
+            EnvironmentType::Production
+        ));
+    }
+
+    #[test]
+    fn test_environment_config_default() {
+        let config = EnvironmentConfig::default();
+        assert_eq!(config.environment_type, EnvironmentType::Development);
+        assert!(config.overrides.is_empty());
+        assert!(config.validation.validate_on_startup);
+    }
+
+    #[test]
+    fn test_environment_config_new() {
+        let config = EnvironmentConfig::new(EnvironmentType::Production);
+        assert_eq!(config.environment_type, EnvironmentType::Production);
+    }
+
+    #[test]
+    fn test_environment_config_with_override() {
+        let config = EnvironmentConfig::default()
+            .with_override("key1", "value1")
+            .with_override("key2", "value2");
+
+        assert_eq!(config.get_override("key1"), Some(&"value1".to_string()));
+        assert_eq!(config.get_override("key2"), Some(&"value2".to_string()));
+        assert_eq!(config.get_override("key3"), None);
+    }
+
+    #[test]
+    fn test_environment_config_validate_success() {
+        let config = EnvironmentConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_environment_config_validate_interval_too_short() {
+        let mut config = EnvironmentConfig::default();
+        config.validation.validate_periodically = true;
+        config.validation.validation_interval = Duration::from_secs(30);
+
+        let result = config.validate();
+        assert!(result.is_err());
+        if let Err(BearDogError::Business { message, .. }) = result {
+            assert!(message.contains("at least 60 seconds"));
+        }
+    }
+
+    #[test]
+    fn test_environment_config_is_production_like() {
+        assert!(EnvironmentConfig::new(EnvironmentType::Production).is_production_like());
+        assert!(EnvironmentConfig::new(EnvironmentType::Staging).is_production_like());
+        assert!(EnvironmentConfig::new(EnvironmentType::Disaster).is_production_like());
+        assert!(!EnvironmentConfig::new(EnvironmentType::Development).is_production_like());
+        assert!(!EnvironmentConfig::new(EnvironmentType::Local).is_production_like());
+        assert!(!EnvironmentConfig::new(EnvironmentType::Testing).is_production_like());
+    }
+
+    #[test]
+    fn test_environment_config_recommended_for_type_production() {
+        let config = EnvironmentConfig::recommended_for_type(EnvironmentType::Production);
+        assert!(config.validation.validate_on_startup);
+        assert!(config.validation.validate_periodically);
+    }
+
+    #[test]
+    fn test_environment_type_requires_high_availability() {
+        assert!(EnvironmentType::Production.requires_high_availability());
+        assert!(EnvironmentType::Staging.requires_high_availability());
+        assert!(EnvironmentType::Disaster.requires_high_availability());
+        assert!(!EnvironmentType::Development.requires_high_availability());
+    }
+
+    #[test]
+    fn test_environment_type_recommended_log_level() {
+        assert_eq!(EnvironmentType::Local.recommended_log_level(), "debug");
+        assert_eq!(
+            EnvironmentType::Development.recommended_log_level(),
+            "debug"
+        );
+        assert_eq!(EnvironmentType::Testing.recommended_log_level(), "info");
+        assert_eq!(EnvironmentType::Staging.recommended_log_level(), "info");
+        assert_eq!(EnvironmentType::Production.recommended_log_level(), "warn");
+        assert_eq!(EnvironmentType::Disaster.recommended_log_level(), "error");
+    }
+
+    #[test]
+    fn test_environment_type_metrics_collection_interval() {
+        let disaster = EnvironmentType::Disaster.metrics_collection_interval();
+        assert_eq!(disaster, Duration::from_secs(1));
+    }
+
+    #[test]
+    fn test_modern_secrets_config_default() {
+        let secrets = ModernSecretsConfig::default();
+        assert_eq!(secrets.required_capabilities.len(), 1);
+        assert_eq!(
+            secrets.required_capabilities[0],
+            CapabilityType::SecretsManagement
+        );
+    }
+
+    #[test]
+    fn test_all_environment_types() {
+        let types = vec![
+            EnvironmentType::Local,
+            EnvironmentType::Development,
+            EnvironmentType::Testing,
+            EnvironmentType::Staging,
+            EnvironmentType::Production,
+            EnvironmentType::Disaster,
+        ];
+
+        for env_type in types {
+            let config = EnvironmentConfig::recommended_for_type(env_type);
+            assert_eq!(config.environment_type, env_type);
+            assert!(config.validate().is_ok());
         }
     }
 }

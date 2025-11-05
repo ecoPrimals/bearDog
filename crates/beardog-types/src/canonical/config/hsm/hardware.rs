@@ -114,9 +114,20 @@ pub struct HsmConnectionConfig {
 impl Default for HsmConnectionConfig {
     fn default() -> Self {
         Self {
-            timeout: Duration::from_secs(30),
-            max_retries: 3,
-            pool_size: 10,
+            timeout: Duration::from_secs(
+                std::env::var("BEARDOG_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            max_retries: std::env::var("BEARDOG_HSM_HARDWARE_MAX_RETRIES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            pool_size: std::env::var("BEARDOG_HSM_POOL_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
             keep_alive: true,
             ssl_enabled: true,
             parameters: HashMap::new(),
@@ -242,10 +253,16 @@ impl Default for HsmPerformanceConfig {
     fn default() -> Self {
         Self {
             max_operations_per_second: None,
-            batch_size: 10,
+            batch_size: std::env::var("BEARDOG_HSM_BATCH_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
             concurrent_operations: 4,
             cache_enabled: true,
-            cache_size: 1000,
+            cache_size: std::env::var("BEARDOG_HSM_CACHE_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000), // 1000 entries default
         }
     }
 }

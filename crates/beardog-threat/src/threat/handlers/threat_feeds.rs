@@ -256,10 +256,16 @@ mod tests {
         assert_eq!(IndicatorType::DomainName.to_string(), "Domain Name");
         assert_eq!(IndicatorType::FileHash.to_string(), "File Hash");
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[tokio::test]
     async fn test_threat_feed_processing() -> Result<(), BearDogError> {
         let config = ThreatDetectionConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut engine = ThreatDetectionEngine::new(config)?;
 
         // Create a test threat feed
@@ -292,6 +298,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_indicator_matching() -> Result<(), BearDogError> {
         let config = ThreatDetectionConfig::default();

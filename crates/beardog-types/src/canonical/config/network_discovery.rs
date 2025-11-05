@@ -445,22 +445,46 @@ impl Default for FallbackNetworkConfig {
         let mut port_ranges = HashMap::new();
         let api_port = crate::constants::domains::network::defaults::default_api_port();
         
+        // Compute service port range
         port_ranges.insert("compute".to_string(), PortRange {
             start: api_port,
-            end: 8089,
+            end: std::env::var("BEARDOG_COMPUTE_PORT_END")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8089),
             default: api_port,
         });
         
+        // Storage service port range
         port_ranges.insert("storage".to_string(), PortRange {
-            start: 8090,
-            end: 8099,
-            default: 8090,
+            start: std::env::var("BEARDOG_STORAGE_PORT_START")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8090),
+            end: std::env::var("BEARDOG_STORAGE_PORT_END")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8099),
+            default: std::env::var("BEARDOG_STORAGE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8090),
         });
         
+        // Intelligence service port range
         port_ranges.insert("intelligence".to_string(), PortRange {
-            start: 8100,
-            end: 8109,
-            default: 8100,
+            start: std::env::var("BEARDOG_INTELLIGENCE_PORT_START")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8100),
+            end: std::env::var("BEARDOG_INTELLIGENCE_PORT_END")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8109),
+            default: std::env::var("BEARDOG_INTELLIGENCE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8100),
         });
         
         Self {
@@ -521,9 +545,12 @@ impl Default for NetworkSecurityConfig {
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
             cert_paths: CertificatePaths::default(),
-            cipher_suites: vec!["TLS_AES_256_GCM_SHA384".to_string(),"TLS_CHACHA20_POLY1305_SHA256".to_string(),"TLS_AES_128_GCM_SHA256".to_string(),
+            cipher_suites: vec![
+                "TLS_AES_256_GCM_SHA384".to_string(),
+                "TLS_CHACHA20_POLY1305_SHA256".to_string(),
+                "TLS_AES_128_GCM_SHA256".to_string(),
             ],
-            min_tls_version: 1"."2.to_string(),
+            min_tls_version: "1.2".to_string(),
         }
     }
 }
@@ -607,22 +634,37 @@ mod tests {
         let config = NetworkDiscoveryConfig::production();
         assert!(!config.fallback_config.enable_localhost_fallback);
         assert!(config.security_config.tls_enabled);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.security_config.verify_certificates);
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_development_config() {
         let config = NetworkDiscoveryConfig::development();
         assert!(config.fallback_config.enable_localhost_fallback);
         assert!(!config.security_config.tls_enabled);
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_config_validation() {
         let config = NetworkDiscoveryConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.validate().is_ok());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_service_endpoint_fallback() {
         let compute_config = ServiceEndpointConfig::compute();

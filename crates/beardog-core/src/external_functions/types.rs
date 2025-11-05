@@ -88,15 +88,19 @@ pub enum LibraryStatus {
     Unloaded,
 }
 
+/// Safety level for external function calls
+///
+/// Classifies the safety guarantees of FFI function calls,
+/// from fully safe to potentially unsafe operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SafetyLevel {
-    /// Safe to call without restrictions
+    /// Safe to call without restrictions (no unsafe operations)
     Safe,
-    /// Potentially unsafe but verified
+    /// Potentially unsafe but verified through testing and audits
     Verified,
-    /// Unsafe but sandboxed
+    /// Unsafe operations contained within a sandbox
     Sandboxed,
-    /// Unsafe and unsandboxed
+    /// Unsafe operations without sandbox protection
     Unsafe,
 }
 
@@ -124,19 +128,18 @@ pub struct FunctionHandle {
     pub metadata: FunctionMetadata,
 }
 
+/// Function signature for external function calls
+///
+/// Describes the parameters, return type, calling convention, and attributes of an external function.
 #[derive(Debug, Clone)]
 pub struct FunctionSignature {
-    /// Parameter types
-    /// Collection of parameters
+    /// Parameter types for this function
     pub parameters: Vec<ParameterType>,
-    /// Return type
-    /// The return type value
+    /// Return type of the function
     pub return_type: ReturnType,
-    /// Calling convention
-    /// The calling convention value
+    /// Calling convention (C, Std, Fast, etc.)
     pub calling_convention: CallingConvention,
-    /// Function attributes
-    /// Collection of attributes
+    /// Function attributes (Pure, `ThreadSafe`, etc.)
     pub attributes: Vec<FunctionAttribute>,
 }
 
@@ -216,31 +219,31 @@ pub enum FunctionAttribute {
     Custom(String),
 }
 
-/// Function metadata
+/// Metadata about an external function
+///
+/// Provides detailed information about safety, performance, and security characteristics.
 #[derive(Debug, Clone)]
 pub struct FunctionMetadata {
-    /// Function description
-    /// The description value
+    /// Human-readable function description
     pub description: String,
-    /// Safety level
-    /// The safety level value
+    /// Safety level classification
     pub safety_level: SafetyLevel,
+    /// Performance characteristics and estimates
     pub performance: PerformanceInfo,
-    /// Security considerations
-    /// The security value
+    /// Security requirements and restrictions
     pub security: SecurityInfo,
-    /// Custom metadata
-    /// Mapping of custom
+    /// Custom metadata key-value pairs
     pub custom: HashMap<String, String>,
 }
 
+/// Performance characteristics of an external function
+///
+/// Provides estimates for execution time, memory usage, and CPU intensity.
 #[derive(Debug, Clone)]
 pub struct PerformanceInfo {
     /// Expected execution time in microseconds
-    /// Optional expected duration us
     pub expected_duration_us: Option<u64>,
-    /// Memory usage estimate in bytes
-    /// Optional memory usage bytes
+    /// Estimated memory usage in bytes
     pub memory_usage_bytes: Option<usize>,
     /// CPU intensity level
     /// The cpu intensity value
@@ -263,19 +266,18 @@ pub enum CpuIntensity {
     Critical,
 }
 
+/// Security information for an external function
+///
+/// Defines security clearance, auditing requirements, sandboxing, and access restrictions.
 #[derive(Debug, Clone)]
 pub struct SecurityInfo {
-    /// Security clearance required
-    /// The clearance required value
+    /// Security clearance level required to call this function
     pub clearance_required: SecurityClearance,
-    /// Audit logging required
-    /// Whether `audit_required` is enabled
+    /// Whether audit logging is required for calls
     pub audit_required: bool,
-    /// Sandbox required
-    /// Whether `sandbox_required` is enabled
+    /// Whether the function must run in a sandbox
     pub sandbox_required: bool,
-    /// Access restrictions
-    /// Collection of access restrictions
+    /// Access restrictions for calling this function
     pub access_restrictions: Vec<AccessRestriction>,
 }
 
@@ -336,6 +338,10 @@ impl Clone for AccessRestriction {
     }
 }
 
+/// Value types that can be passed to/from external functions
+///
+/// Supports common data types for FFI interoperability, including
+/// primitives, binary data, and nested structures.
 #[derive(Debug, Clone)]
 pub enum FunctionValue {
     /// String value
@@ -357,40 +363,49 @@ pub enum FunctionValue {
 }
 
 /// External function representation
+///
+/// Describes an external C function available for calling via FFI.
 #[derive(Debug, Clone)]
 pub struct ExternalFunction {
+    /// Unique function identifier
     pub id: String,
-    /// Name of the item
+    /// Function name
     pub name: String,
-    /// The signature value
+    /// Function signature (parameters, return type, etc.)
     pub signature: FunctionSignature,
-    /// The metadata value
+    /// Function metadata (performance, security, etc.)
     pub metadata: FunctionMetadata,
+    /// ID of the library containing this function
     pub library_id: String,
 }
 
-/// Function parameter
+/// Function parameter definition
+///
+/// Describes a single parameter for an external function including name, type, and constraints.
 #[derive(Debug, Clone)]
 pub struct FunctionParameter {
-    /// Name of the item
+    /// Parameter name
     pub name: String,
-    /// The param type value
+    /// Parameter type
     pub param_type: ParameterType,
-    /// Whether required is enabled
+    /// Whether this parameter is required
     pub required: bool,
-    /// Optional default value
+    /// Default value if not provided
     pub default_value: Option<FunctionValue>,
 }
 
-/// Function result
+/// Result of an external function call
+///
+/// Contains the return value, success status, error information, and timing.
 #[derive(Debug, Clone)]
 pub struct FunctionResult {
-    /// Whether success is enabled
+    /// Whether the function call succeeded
     pub success: bool,
-    /// Optional value
+    /// Return value from the function
     pub value: Option<FunctionValue>,
-    /// Optional error
+    /// Error message if the call failed
     pub error: Option<String>,
+    /// Execution time in microseconds
     pub execution_time_us: u64,
 }
 

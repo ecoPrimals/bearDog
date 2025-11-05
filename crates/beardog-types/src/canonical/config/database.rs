@@ -178,15 +178,31 @@ mod tests {
             enabled: true,
             connection_string: "postgresql://localhost:5432/beardog".to_string(),
             max_connections: 10,
-            connection_timeout: Duration::from_secs(5),
-            query_timeout: Duration::from_secs(30),
+            connection_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DB_CONNECTION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            ),
+            query_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_DB_QUERY_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
         };
         assert!(config.enabled);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.max_connections, 10);
         assert!(config.connection_string.contains("postgresql"));
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_database_config_disabled_for_testing() {
         let config = CanonicalDatabaseConfig {
             enabled: false,
@@ -198,24 +214,36 @@ mod tests {
     #[test]
     fn test_database_config_connection_timeout() {
         let config = CanonicalDatabaseConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             connection_timeout: Duration::from_secs(10),
             ..Default::default()
         };
         assert_eq!(config.connection_timeout, Duration::from_secs(10));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_database_config_query_timeout() {
         let config = CanonicalDatabaseConfig {
             query_timeout: Duration::from_secs(60),
             ..Default::default()
         };
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.query_timeout, Duration::from_secs(60));
     }
 
     #[test]
     fn test_database_config_high_concurrency() {
         let config = CanonicalDatabaseConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enabled: true,
             max_connections: 100,
             ..Default::default()
@@ -223,6 +251,9 @@ mod tests {
         assert_eq!(config.max_connections, 100);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_type_alias() {
         let _config: DatabaseConfig = CanonicalDatabaseConfig::default();

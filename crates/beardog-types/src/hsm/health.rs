@@ -152,12 +152,18 @@ mod tests {
 
         assert_eq!(info.capabilities.len(), 3);
         assert!(info.capabilities.contains(&"encrypt".to_string()));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_provider_info_with_capabilities_bulk() {
         let caps = vec!["encrypt", "decrypt", "sign", "verify"];
         let info = ProviderInfo::new("hsm-1", "hardware").with_capabilities(caps);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         assert_eq!(info.capabilities.len(), 4);
     }
@@ -166,19 +172,31 @@ mod tests {
     fn test_provider_health_healthy() {
         let health = ProviderHealth::healthy();
         assert!(health.is_healthy);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(health.error_count, 0);
     }
 
     #[test]
     fn test_provider_health_unhealthy() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let health = ProviderHealth::unhealthy(5);
         assert!(!health.is_healthy);
         assert_eq!(health.error_count, 5);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_provider_health_update() {
         let mut health = ProviderHealth::healthy();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         health.update(false);
         assert!(!health.is_healthy);
         assert_eq!(health.error_count, 1);
@@ -187,6 +205,9 @@ mod tests {
         assert_eq!(health.error_count, 2);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_provider_health_reset() {
         let mut health = ProviderHealth::unhealthy(10);

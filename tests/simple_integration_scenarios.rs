@@ -117,6 +117,9 @@ fn test_config_in_option() {
 #[test]
 fn test_error_with_config_validation() {
     // Test error in config validation scenario
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn validate_config_env(env: &str) -> BearDogResult<()> {
         if env.is_empty() {
             return Err(BearDogError::validation("Environment cannot be empty"));
@@ -127,6 +130,9 @@ fn test_error_with_config_validation() {
     assert!(validate_config_env("production").is_ok());
     assert!(validate_config_env("").is_err());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_error_recovery_with_default() {
@@ -135,6 +141,9 @@ fn test_error_recovery_with_default() {
         // Simulate load failure
         let result: BearDogResult<BearDogConfig> =
             Err(BearDogError::not_found("Config not found".to_string()));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         result.unwrap_or_else(|_| BearDogConfig::default())
     }
@@ -145,6 +154,9 @@ fn test_error_recovery_with_default() {
 
 #[test]
 fn test_error_chain_through_functions() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test error propagates through function chain
     fn step1() -> BearDogResult<i32> {
         Ok(42)
@@ -154,6 +166,9 @@ fn test_error_chain_through_functions() {
         if value > 0 {
             Ok(value * 2)
         } else {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             Err(BearDogError::invalid_input("Value must be positive"))
         }
     }
@@ -162,12 +177,18 @@ fn test_error_chain_through_functions() {
         let v = step1()?;
         step2(v)
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let result = process();
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), 84);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_error_with_health_status() {
     // Test error handling with health status
@@ -179,6 +200,9 @@ fn test_error_with_health_status() {
             _ => Ok(()),
         }
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert!(check_health(HealthStatus::Healthy).is_ok());
     assert!(check_health(HealthStatus::Unhealthy).is_err());
@@ -192,6 +216,9 @@ fn test_error_multiple_recovery_attempts() {
             Err(BearDogError::system("Not ready".to_string()))
         } else {
             Ok("Success".to_string())
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: important
         }
     }
 
@@ -203,6 +230,9 @@ fn test_error_multiple_recovery_attempts() {
         result = try_operation(3);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     assert!(result.is_ok());
 }
 
@@ -215,6 +245,9 @@ fn test_error_collection_handling() {
             .map(|v| {
                 if v >= 0 {
                     Ok(v * 2)
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: important
                 } else {
                     Err(BearDogError::invalid_input("Negative values not allowed"))
                 }
@@ -237,6 +270,9 @@ fn test_error_nested_results() {
         Ok("success".to_string())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     let result = outer_operation();
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "success");
@@ -250,6 +286,9 @@ fn test_error_with_logging_context() {
             return Err(BearDogError::validation("ID cannot be empty"));
         }
         Ok(())
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
     }
 
     let result = operation_with_context("");
@@ -269,6 +308,9 @@ fn test_error_with_logging_context() {
 fn test_health_status_in_system_check() {
     // Test health status in system check scenario
     struct SystemStatus {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         health: HealthStatus,
         uptime_secs: u64,
     }
@@ -286,6 +328,9 @@ fn test_health_status_in_system_check() {
 fn test_workflow_status_transitions() {
     // Test workflow state transitions
     let mut workflow_state = WorkflowStatus::Pending;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     // Start workflow
     workflow_state = WorkflowStatus::InProgress;
@@ -299,7 +344,10 @@ fn test_workflow_status_transitions() {
 #[test]
 fn test_types_in_vec_operations() {
     // Test types work in vector operations
-    let statuses = vec![
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
+    let statuses = [
         HealthStatus::Healthy,
         HealthStatus::Degraded,
         HealthStatus::Unhealthy,
@@ -319,6 +367,9 @@ fn test_types_in_hashmap_like_usage() {
     use std::collections::HashMap;
 
     let mut status_counts = HashMap::new();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     status_counts.insert("healthy", 10);
     status_counts.insert("degraded", 2);
     status_counts.insert("unhealthy", 0);
@@ -333,6 +384,9 @@ fn test_canonical_test_config_usage() {
 
     // Simulate test setup
     assert!(test_config.parallel_execution);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(test_config.environment, "test");
     assert!(test_config.max_threads > 0);
 }
@@ -344,6 +398,9 @@ fn test_type_conversion_scenarios() {
     let debug_str = format!("{:?}", health);
 
     assert!(!debug_str.is_empty());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(debug_str.contains("Healthy"));
 }
 
@@ -358,16 +415,22 @@ fn test_types_with_conditional_logic() {
     assert!(should_alert(HealthStatus::Unhealthy));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_types_clone_and_compare() {
     // Test cloning and comparison
     let status1 = HealthStatus::Healthy;
-    let status2 = status1.clone();
+    let status2 = status1;
     let status3 = HealthStatus::Degraded;
 
     assert_eq!(status1, status2);
     assert_ne!(status1, status3);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 // ====================================================================================
 // Workflow Integration Tests (6 tests)
@@ -376,6 +439,9 @@ fn test_types_clone_and_compare() {
 #[test]
 fn test_simple_workflow_execution() {
     // Test simple workflow execution pattern
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn execute_workflow() -> BearDogResult<WorkflowStatus> {
         // Simulate workflow steps
         Ok(WorkflowStatus::Completed)
@@ -383,6 +449,9 @@ fn test_simple_workflow_execution() {
 
     let result = execute_workflow();
     assert!(result.is_ok());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(result.unwrap(), WorkflowStatus::Completed);
 }
 
@@ -391,6 +460,9 @@ fn test_workflow_with_config() {
     // Test workflow using configuration
     let config = BearDogConfig::default();
     let workflow = WorkflowStatus::InProgress;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Simulate workflow using config
     assert!(!config.environment.is_empty());
@@ -403,6 +475,9 @@ fn test_workflow_error_handling() {
     fn risky_workflow() -> BearDogResult<WorkflowStatus> {
         // Simulate failure
         Err(BearDogError::workflow("Step 2 failed".to_string()))
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     let result = risky_workflow();
@@ -413,6 +488,9 @@ fn test_workflow_error_handling() {
 fn test_workflow_cancellation() {
     // Test workflow cancellation
     let mut status = WorkflowStatus::InProgress;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Cancel workflow
     status = WorkflowStatus::Cancelled;
@@ -421,6 +499,9 @@ fn test_workflow_cancellation() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 fn test_workflow_failure_recovery() {
     // Test workflow failure and recovery
     let mut status = WorkflowStatus::InProgress;
@@ -430,6 +511,9 @@ fn test_workflow_failure_recovery() {
     assert_eq!(status, WorkflowStatus::Failed);
 
     // Restart workflow
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     status = WorkflowStatus::Pending;
     assert_eq!(status, WorkflowStatus::Pending);
 }
@@ -438,6 +522,9 @@ fn test_workflow_failure_recovery() {
 fn test_workflow_status_check() {
     // Test workflow status checking
     fn is_terminal(status: &WorkflowStatus) -> bool {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         matches!(
             status,
             WorkflowStatus::Completed | WorkflowStatus::Failed | WorkflowStatus::Cancelled
@@ -449,6 +536,9 @@ fn test_workflow_status_check() {
     assert!(is_terminal(&WorkflowStatus::Completed));
     assert!(is_terminal(&WorkflowStatus::Failed));
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 // ====================================================================================
 // System Integration Tests (5 tests)
@@ -466,6 +556,9 @@ fn test_system_initialization_flow() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_system_with_test_config() {
     // Test system with test configuration
     let sys_config = BearDogConfig::default();
@@ -474,6 +567,9 @@ fn test_system_with_test_config() {
     assert_eq!(sys_config.environment, "development");
     assert_eq!(test_config.environment, "test");
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_system_health_monitoring() {
@@ -481,6 +577,9 @@ fn test_system_health_monitoring() {
     fn check_system_health() -> HealthStatus {
         // Simulate health check
         HealthStatus::Healthy
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     let health = check_system_health();
@@ -490,6 +589,9 @@ fn test_system_health_monitoring() {
 #[test]
 fn test_system_error_recovery() {
     // Test system-level error recovery
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     fn system_operation() -> BearDogResult<()> {
         // Simulate successful operation
         Ok(())
@@ -499,6 +601,9 @@ fn test_system_error_recovery() {
     assert!(result.is_ok());
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_system_component_interaction() {
     // Test interaction between system components

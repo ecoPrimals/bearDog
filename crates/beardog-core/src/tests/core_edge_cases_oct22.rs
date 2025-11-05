@@ -74,6 +74,9 @@ fn test_concurrent_initialization_attempts() {
 #[test]
 fn test_config_with_empty_name() {
     // Test configuration with empty name
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = TestConfig {
         name: String::new(),
         port: 8080,
@@ -83,12 +86,18 @@ fn test_config_with_empty_name() {
     let result = validate_core_config(&config);
     assert!(result.is_err(), "Should reject empty name");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 
 #[test]
 fn test_config_with_invalid_port() {
     // Test configuration with invalid port
     let config = TestConfig {
         name: "test".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         port: 0,
         timeout: 30,
     };
@@ -100,6 +109,9 @@ fn test_config_with_invalid_port() {
 #[test]
 fn test_config_with_max_port() {
     // Test configuration with maximum valid port
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = TestConfig {
         name: "test".to_string(),
         port: 65535,
@@ -122,6 +134,9 @@ fn test_config_with_negative_timeout() {
     let result = validate_core_config(&config);
     assert!(result.is_err(), "Should reject negative timeout");
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_config_with_very_long_name() {
@@ -132,6 +147,9 @@ fn test_config_with_very_long_name() {
         port: 8080,
         timeout: 30,
     };
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     let result = validate_core_config(&config);
     // Should either reject or accept with truncation
@@ -142,6 +160,9 @@ fn test_config_with_very_long_name() {
 }
 
 // ========================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // Shutdown and Cleanup
 // ========================================================================
 
@@ -150,8 +171,10 @@ fn test_clean_shutdown() {
     // Test clean shutdown releases all resources
     let resources = Arc::new(AtomicUsize::new(5));
 
-    let result = perform_clean_shutdown(&resources);
-    assert!(result.is_ok(), "Shutdown should succeed");
+    perform_clean_shutdown(&resources);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(
         resources.load(Ordering::SeqCst),
         0,
@@ -162,6 +185,9 @@ fn test_clean_shutdown() {
 #[test]
 fn test_shutdown_before_initialization() {
     // Test shutdown when not initialized
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let initialized = Arc::new(AtomicBool::new(false));
 
     let result = perform_shutdown_uninitialized(&initialized);
@@ -181,6 +207,9 @@ fn test_double_shutdown() {
 
     let result2 = perform_shutdown(&state);
     assert!(result2.is_err(), "Second shutdown should fail gracefully");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -188,10 +217,12 @@ fn test_forced_shutdown_with_active_tasks() {
     // Test forced shutdown with active tasks
     let active_tasks = Arc::new(AtomicUsize::new(5));
 
-    let result = perform_forced_shutdown(&active_tasks);
-    assert!(result.is_ok(), "Forced shutdown should succeed");
+    perform_forced_shutdown(&active_tasks);
     // Tasks should be terminated
     assert_eq!(
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         active_tasks.load(Ordering::SeqCst),
         0,
         "All tasks should be terminated"
@@ -201,6 +232,9 @@ fn test_forced_shutdown_with_active_tasks() {
 // ========================================================================
 // Error Recovery
 // ========================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_recovery_from_panic() {
@@ -210,10 +244,13 @@ fn test_recovery_from_panic() {
     });
 
     assert!(result.is_err(), "Panic should be caught");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // System should still be operational
-    let recovery_result = attempt_recovery();
-    assert!(recovery_result.is_ok(), "System should recover");
+    attempt_recovery();
+    // Recovery completed without panic - test passes
 }
 
 #[test]
@@ -226,6 +263,9 @@ fn test_cascading_failure_prevention() {
     component_a.fail();
 
     // Component B should still work
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(
         component_b.is_operational(),
         "Component B should remain operational"
@@ -237,6 +277,9 @@ fn test_circuit_breaker_activation() {
     // Test circuit breaker activates after repeated failures
     let circuit = CircuitBreaker::new(3);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     for _ in 0..3 {
         circuit.record_failure();
     }
@@ -250,6 +293,9 @@ fn test_circuit_breaker_activation() {
 #[test]
 fn test_circuit_breaker_reset() {
     // Test circuit breaker resets after cooldown
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let circuit = CircuitBreaker::new(3);
 
     for _ in 0..3 {
@@ -262,6 +308,9 @@ fn test_circuit_breaker_reset() {
     std::thread::sleep(std::time::Duration::from_millis(100));
     circuit.attempt_reset();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!circuit.is_open(), "Circuit should reset after cooldown");
 }
 
@@ -281,6 +330,9 @@ fn test_high_concurrency_operations() {
             })
         })
         .collect();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     for handle in handles {
         handle.join().expect("Thread should complete");
@@ -302,6 +354,9 @@ fn test_deadlock_prevention() {
     let a_clone = Arc::clone(&resource_a);
     let b_clone = Arc::clone(&resource_b);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let handle = std::thread::spawn(move || acquire_resources_ordered(&a_clone, &b_clone));
 
     let result = acquire_resources_ordered(&resource_a, &resource_b);
@@ -323,6 +378,9 @@ fn test_memory_limit_enforcement() {
     let large_allocation = vec![0u8; 100 * 1024 * 1024]; // 100MB
 
     let result = check_memory_limit(large_allocation.len());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Should either accept or reject based on limits
     assert!(result.is_ok() || result.is_err());
 }
@@ -330,6 +388,9 @@ fn test_memory_limit_enforcement() {
 #[test]
 fn test_connection_limit_enforcement() {
     // Test connection limit enforcement
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let max_connections = 1000;
     let current_connections = 999;
 
@@ -340,6 +401,9 @@ fn test_connection_limit_enforcement() {
     assert!(result.is_err(), "Should reject connection at limit");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_rate_limiting() {
     // Test rate limiting
@@ -419,10 +483,9 @@ fn validate_core_config(config: &TestConfig) -> Result<(), BearDogError> {
     Ok(())
 }
 
-fn perform_clean_shutdown(resources: &Arc<AtomicUsize>) -> Result<(), BearDogError> {
+fn perform_clean_shutdown(resources: &Arc<AtomicUsize>) {
     // Simulate resource cleanup
     resources.store(0, Ordering::SeqCst);
-    Ok(())
 }
 
 fn perform_shutdown_uninitialized(initialized: &Arc<AtomicBool>) -> Result<(), BearDogError> {
@@ -450,18 +513,17 @@ fn perform_shutdown(state: &Arc<AtomicUsize>) -> Result<(), BearDogError> {
     }
 }
 
-fn perform_forced_shutdown(active_tasks: &Arc<AtomicUsize>) -> Result<(), BearDogError> {
+fn perform_forced_shutdown(active_tasks: &Arc<AtomicUsize>) {
     // Force terminate all tasks
     active_tasks.store(0, Ordering::SeqCst);
-    Ok(())
 }
 
 fn trigger_controlled_panic() {
     panic!("Controlled panic for testing");
 }
 
-fn attempt_recovery() -> Result<(), BearDogError> {
-    Ok(())
+fn attempt_recovery() {
+    // Recovery logic here
 }
 
 fn acquire_resources_ordered(

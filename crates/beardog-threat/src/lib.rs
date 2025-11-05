@@ -44,6 +44,10 @@
 #[cfg(test)]
 mod threat_comprehensive_tests;
 
+// October 31, 2025: Week 3 Test Expansion
+#[cfg(test)]
+mod tests;
+
 /// Core threat detection engine and analysis
 ///
 /// Provides the main threat detection engine and related security analysis operations.

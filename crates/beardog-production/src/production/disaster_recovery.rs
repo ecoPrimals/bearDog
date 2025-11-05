@@ -514,6 +514,9 @@ impl Default for DisasterRecoveryManager {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]}
 
 

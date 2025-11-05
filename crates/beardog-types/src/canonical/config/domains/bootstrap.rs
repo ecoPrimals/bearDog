@@ -185,9 +185,18 @@ pub struct CoreBootstrapConfig {
 impl Default for CoreBootstrapConfig {
     fn default() -> Self {
         Self {
-            discovery_timeout_ms: 30000, // 30 seconds
-            max_discovery_attempts: 5,
-            min_capabilities_threshold: 3,
+            discovery_timeout_ms: std::env::var("BEARDOG_DISCOVERY_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30000), // 30 seconds default
+            max_discovery_attempts: std::env::var("BEARDOG_MAX_DISCOVERY_ATTEMPTS")
+                .ok()
+                .and_then(|a| a.parse().ok())
+                .unwrap_or(5),
+            min_capabilities_threshold: std::env::var("BEARDOG_MIN_CAPABILITIES")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(3),
             enable_passive_listening: true,
             retry_strategy: RetryStrategy::Exponential,
         }
@@ -281,10 +290,20 @@ impl Default for InfantPatternConfig {
         Self {
             min_observations: 5,
             confidence_threshold: 0.7,
-            pattern_max_age: Duration::from_secs(3600), // 1 hour
+            pattern_max_age: Duration::from_secs(
+                std::env::var("BEARDOG_PATTERN_MAX_AGE_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ),
             learning_rate: 0.1,
             enable_continuous_learning: true,
-            consolidation_interval: Duration::from_secs(300), // 5 minutes
+            consolidation_interval: Duration::from_secs(
+                std::env::var("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300), // 5 minutes default
+            ),
         }
     }
 }
@@ -355,11 +374,26 @@ pub struct ProtocolTimeouts {
 impl Default for ProtocolTimeouts {
     fn default() -> Self {
         Self {
-            mdns_timeout_ms: 5000,
-            http_timeout_ms: 10000,
-            env_timeout_ms: 1000,
-            mesh_timeout_ms: 15000,
-            container_timeout_ms: 10000,
+            mdns_timeout_ms: std::env::var("BEARDOG_MDNS_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(5000),
+            http_timeout_ms: std::env::var("BEARDOG_HTTP_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(10000),
+            env_timeout_ms: std::env::var("BEARDOG_ENV_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(1000),
+            mesh_timeout_ms: std::env::var("BEARDOG_MESH_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(15000),
+            container_timeout_ms: std::env::var("BEARDOG_CONTAINER_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(10000),
         }
     }
 }
@@ -388,9 +422,15 @@ impl Default for BootstrapNetworkConfig {
         Self {
             listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
             multicast_group: crate::constants::domains::network::addresses::multicast_address(),
-            discovery_port: 5353,
+            discovery_port: std::env::var("BEARDOG_BOOTSTRAP_DISCOVERY_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5353), // mDNS standard port
             enable_ipv6: true,
-            buffer_size: 8192,
+            buffer_size: std::env::var("BEARDOG_BOOTSTRAP_BUFFER_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(8192), // 8KB default buffer
         }
     }
 }
@@ -418,7 +458,12 @@ impl Default for BootstrapPerformanceConfig {
     fn default() -> Self {
         Self {
             enable_caching: true,
-            cache_duration: Duration::from_secs(300),
+            cache_duration: Duration::from_secs(
+                std::env::var("BEARDOG_BOOTSTRAP_CACHE_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300),
+            ),
             enable_parallel: true,
             worker_threads: 0, // Auto-detect
             enable_metrics: true,
@@ -515,17 +560,29 @@ mod tests {
     #[test]
     fn test_invalid_confidence_threshold() {
         let mut config = UnifiedBootstrapConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         config.infant_patterns.confidence_threshold = 1.5; // Invalid: > 1.0
         assert!(config.validate().is_err());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_zero_discovery_timeout() {
         let mut config = UnifiedBootstrapConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         config.core.discovery_timeout_ms = 0;
         assert!(config.validate().is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_empty_protocols() {
         let mut config = UnifiedBootstrapConfig::default();

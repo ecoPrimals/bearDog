@@ -104,7 +104,10 @@ impl Default for NetworkConfig {
 /// Default service host (configurable via `BEARDOG_SERVICE_HOST` environment variable)
 pub fn default_service_host() -> String {
     std::env::var("BEARDOG_SERVICE_HOST").unwrap_or_else(|_| {
-        std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "localhost".to_string())
+        std::env::var("BEARDOG_HOST").unwrap_or_else(|_| {
+            use crate::constants::domains::network::config::LOCALHOST_NAME;
+            LOCALHOST_NAME.to_string()
+        })
     })
 }
 
@@ -120,6 +123,15 @@ pub fn default_service_host() -> String {
 /// * `metrics_port` - 9090 (Prometheus metrics)
 /// * `websocket_port` - 8082 (WebSocket connections)
 /// * `health_port` - 8083 (health checks)
+/// * `compute_port` - 8001 (compute service)
+/// * `mesh_port` - 8002 (service mesh)
+/// * `ai_port` - 8003 (AI service)
+/// * `storage_port` - 8004 (storage service)
+/// * `security_port` - 8005 (security service)
+/// * `database_port` - 5432 (database)
+/// * `grafana_port` - 3000 (Grafana)
+/// * `jaeger_port` - 14268 (Jaeger)
+/// * `discovery_port` - 8080 (discovery service)
 ///
 /// # Examples
 ///
@@ -137,6 +149,7 @@ pub fn default_service_host() -> String {
 /// ```bash
 /// export BEARDOG_API_PORT=9000
 /// export BEARDOG_ADMIN_PORT=9001
+/// export BEARDOG_COMPUTE_PORT=8001
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServicePorts {
@@ -155,6 +168,24 @@ pub struct ServicePorts {
     /// Health check port
     /// Number of `health_port`
     pub health_port: u16,
+    /// Compute service port
+    pub compute_port: u16,
+    /// Service mesh port
+    pub mesh_port: u16,
+    /// AI service port
+    pub ai_port: u16,
+    /// Storage service port
+    pub storage_port: u16,
+    /// Security service port
+    pub security_port: u16,
+    /// Database port
+    pub database_port: u16,
+    /// Grafana port
+    pub grafana_port: u16,
+    /// Jaeger port
+    pub jaeger_port: u16,
+    /// Discovery service port
+    pub discovery_port: u16,
 }
 
 impl Default for ServicePorts {
@@ -180,6 +211,42 @@ impl Default for ServicePorts {
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8083),
+            compute_port: std::env::var("BEARDOG_COMPUTE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8001),
+            mesh_port: std::env::var("BEARDOG_MESH_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8002),
+            ai_port: std::env::var("BEARDOG_AI_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8003),
+            storage_port: std::env::var("BEARDOG_STORAGE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8004),
+            security_port: std::env::var("BEARDOG_SECURITY_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8005),
+            database_port: std::env::var("BEARDOG_DATABASE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5432),
+            grafana_port: std::env::var("BEARDOG_GRAFANA_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(3000),
+            jaeger_port: std::env::var("BEARDOG_JAEGER_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(14268),
+            discovery_port: std::env::var("BEARDOG_DISCOVERY_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8080),
         }
     }
 }

@@ -183,9 +183,15 @@ mod tests {
     #[test]
     fn test_entropy_validator_creation() {
         let config = EntropyHierarchyConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let _validator = EntropyValidator::new(config);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_entropy_quality_validation() -> Result<(), Box<dyn std::error::Error>> {
         let config = EntropyHierarchyConfig::default();

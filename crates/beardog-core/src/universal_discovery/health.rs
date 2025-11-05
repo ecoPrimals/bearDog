@@ -42,6 +42,10 @@ impl Default for HealthCheckConfig {
     }
 }
 
+/// Health check method for service monitoring
+///
+/// Defines different protocols and approaches for verifying service health,
+/// from simple TCP connections to application-level HTTP checks.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HealthCheckMethod {
     /// HTTP health check using GET requests
@@ -92,6 +96,9 @@ pub struct HealthStatistics {
     pub total_failures: u64,
 }
 
+/// Health monitor for discovered services
+///
+/// Monitors service health through periodic checks and tracks health state history.
 #[derive(Debug)]
 pub struct HealthMonitor {
     /// Health check configuration settings
@@ -101,16 +108,18 @@ pub struct HealthMonitor {
     monitored_services: Arc<RwLock<HashMap<String, ServiceHealthState>>>,
 }
 
+/// Health state of a monitored service
+///
+/// Tracks current health status, failure/success counts, and last check timing.
 #[derive(Debug, Clone)]
 pub struct ServiceHealthState {
+    /// Service identifier
     pub service_id: String,
-    /// Current health status of the service
-    /// Current status of the current
+    /// Current health status (Healthy, Degraded, Unhealthy, Unknown)
     pub current_status: HealthStatus,
-    /// Number of consecutive health check failures
-    /// Number of `consecutive_failures`
+    /// Number of consecutive failed health checks
     pub consecutive_failures: u32,
-    /// Number of consecutive health check successes
+    /// Number of consecutive successful health checks
     /// Number of `consecutive_successes`
     pub consecutive_successes: u32,
     /// Timestamp of the last health check

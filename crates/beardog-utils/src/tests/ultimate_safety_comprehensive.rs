@@ -78,6 +78,9 @@ fn test_safe_buffer_safety_statistics() {
     buffer.safe_read(4).unwrap();
 
     let stats = buffer.get_safety_stats();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(stats.bounds_checks_performed >= 2);
     assert!(stats.safe_operations_completed >= 2);
 }
@@ -91,6 +94,9 @@ fn test_safe_buffer_clone() {
     let stats = buffer2.get_safety_stats();
     assert!(stats.safe_operations_completed > 0);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 
 #[test]
 fn test_ultimate_safe_memory_pool_basic() {
@@ -102,6 +108,9 @@ fn test_ultimate_safe_memory_pool_basic() {
     assert!(obj.unwrap().as_ref().is_some());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_memory_pool_multiple_borrows() {
     let pool = UltimateSafeMemoryPool::new(|| String::from("test"), 5);
@@ -115,10 +124,16 @@ fn test_memory_pool_multiple_borrows() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_memory_pool_object_return() {
     let pool = UltimateSafeMemoryPool::new(|| 42, 5);
 
     {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let _obj = pool.safe_borrow().unwrap();
         // Object should be returned when dropped
     }
@@ -130,6 +145,9 @@ fn test_memory_pool_object_return() {
 
 #[test]
 fn test_memory_pool_statistics() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let pool = UltimateSafeMemoryPool::new(|| vec![0u8; 100], 10);
 
     let _obj1 = pool.safe_borrow().unwrap();
@@ -139,6 +157,9 @@ fn test_memory_pool_statistics() {
     assert_eq!(stats.total_created, 2);
     assert_eq!(stats.pool_misses, 2);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_memory_pool_reuse() {
@@ -146,6 +167,9 @@ fn test_memory_pool_reuse() {
 
     {
         let _obj1 = pool.safe_borrow().unwrap();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     } // obj1 returned to pool
 
     let _obj2 = pool.safe_borrow().unwrap(); // Should reuse obj1
@@ -153,6 +177,9 @@ fn test_memory_pool_reuse() {
     let stats = pool.get_stats();
     assert!(stats.pool_hits > 0);
     assert_eq!(stats.total_created, 1); // Only one object created
+                                        // TEST_CATEGORY: integration
+                                        // TEST_DOMAIN: core
+                                        // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -162,6 +189,9 @@ fn test_safe_reference_basic_operations() {
     // Test safe read
     let value = safe_ref.safe_read(|x| *x);
     assert!(value.is_ok());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(value.unwrap(), 100);
 }
 
@@ -173,6 +203,9 @@ fn test_safe_reference_safe_write() {
     let result = safe_ref.safe_write(|x| *x = 200);
     assert!(result.is_ok());
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Verify write
     let value = safe_ref.safe_read(|x| *x).unwrap();
     assert_eq!(value, 200);
@@ -182,6 +215,9 @@ fn test_safe_reference_safe_write() {
 fn test_safe_reference_invalidation() {
     let safe_ref = SafeReference::new(42);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Invalidate reference
     safe_ref.invalidate();
 
@@ -194,6 +230,9 @@ fn test_safe_reference_invalidation() {
     assert!(result.is_err());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_safety_token_creation() {
     let _token1 = SafetyToken::new(SafetyLevel::Basic);
@@ -201,6 +240,9 @@ fn test_safety_token_creation() {
     let _token3 = SafetyToken::new(SafetyLevel::Ultimate);
 
     // Tokens are created successfully with different safety levels
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Note: context_id is private, so we test behavior instead
     // No panic means tokens were created successfully
 }
@@ -211,6 +253,9 @@ fn test_safety_level_verification() {
     let enhanced_token = SafetyToken::new(SafetyLevel::Enhanced);
     let ultimate_token = SafetyToken::new(SafetyLevel::Ultimate);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     // Basic token doesn't meet Enhanced requirement
     assert!(!basic_token.verify_safety_level(SafetyLevel::Enhanced));
 
@@ -224,6 +269,9 @@ fn test_safety_level_verification() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_safety_level_ordering() {
     assert!(SafetyLevel::Ultimate > SafetyLevel::Enhanced);
     assert!(SafetyLevel::Enhanced > SafetyLevel::Basic);
@@ -232,6 +280,9 @@ fn test_safety_level_ordering() {
 
 #[test]
 fn test_safety_error_display() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let error1 = SafetyError::BufferOverflow {
         attempted_size: 100,
         available_space: 50,
@@ -247,10 +298,16 @@ fn test_safety_error_display() {
 #[test]
 fn test_pool_stats_clone() {
     let stats = PoolStats {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         objects_in_pool: 5,
         objects_borrowed: 2,
         total_created: 10,
         pool_hits: 15,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         pool_misses: 3,
         leaks_prevented: 0,
     };
@@ -262,6 +319,9 @@ fn test_pool_stats_clone() {
 
 #[test]
 fn test_safe_buffer_empty_write() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut buffer = UltimateSafeBuffer::new(100);
     let result = buffer.safe_write(&[]);
     assert!(result.is_ok());
@@ -275,11 +335,17 @@ fn test_safe_buffer_empty_read() {
 
     let result = buffer.safe_read(0);
     assert!(result.is_ok());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(result.unwrap().len(), 0);
 }
 
 #[test]
 fn test_safe_reference_with_string() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let safe_ref = SafeReference::new(String::from("Hello"));
 
     let length = safe_ref.safe_read(|s| s.len()).unwrap();
@@ -287,6 +353,9 @@ fn test_safe_reference_with_string() {
 
     safe_ref.safe_write(|s| s.push_str(" World")).unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let new_value = safe_ref.safe_read(|s| s.clone()).unwrap();
     assert_eq!(new_value, "Hello World");
 }
@@ -297,6 +366,9 @@ fn test_memory_pool_with_complex_type() {
     struct ComplexData {
         _id: u64,
         _data: Vec<u8>,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     let pool = UltimateSafeMemoryPool::new(
@@ -314,12 +386,18 @@ fn test_memory_pool_with_complex_type() {
 #[test]
 fn test_safety_statistics_defaults() {
     let stats = SafetyStatistics::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(stats.bounds_checks_performed, 0);
     assert_eq!(stats.bounds_violations_prevented, 0);
     assert_eq!(stats.safe_operations_completed, 0);
     assert_eq!(stats.allocations_tracked, 0);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 #[test]
 fn test_safe_buffer_capacity_boundary() {
     let mut buffer = UltimateSafeBuffer::new(10);

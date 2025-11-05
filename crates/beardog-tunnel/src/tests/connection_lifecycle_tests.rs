@@ -187,11 +187,192 @@ fn test_connection_cleanup_on_disconnect() -> Result<(), Box<dyn std::error::Err
 }
 
 // ============================================================================
+// Additional Connection Lifecycle Tests - Day 2 Expansion
+// ============================================================================
+
+#[test]
+fn test_connection_with_authentication_timeout() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    conn.connect()?;
+
+    // Simulate authentication timeout
+    std::thread::sleep(Duration::from_millis(1));
+
+    let result = conn.authenticate();
+    assert!(result.is_ok(), "Authentication should succeed");
+
+    Ok(())
+}
+
+#[test]
+fn test_rapid_connect_disconnect_cycles() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    // Perform rapid cycles
+    for _ in 0..10 {
+        conn.connect()?;
+        assert!(conn.is_connected());
+        conn.disconnect()?;
+        assert!(!conn.is_connected());
+    }
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_state_after_authentication() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    conn.connect()?;
+    assert_eq!(conn.state, ConnectionState::Connected);
+
+    conn.authenticate()?;
+    assert_eq!(conn.state, ConnectionState::Connected);
+    assert!(conn.is_authenticated);
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_resource_leak_prevention() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    // Connect and disconnect multiple times
+    for _ in 0..5 {
+        conn.connect()?;
+        assert_eq!(conn.resource_count, 1);
+        conn.disconnect()?;
+        assert_eq!(conn.resource_count, 0);
+    }
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_state_consistency() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    // State should be consistent at each step
+    assert_eq!(conn.state, ConnectionState::Disconnected);
+    assert!(!conn.is_authenticated);
+    assert_eq!(conn.resource_count, 0);
+
+    conn.connect()?;
+    assert_eq!(conn.state, ConnectionState::Connected);
+    assert_eq!(conn.resource_count, 1);
+
+    conn.authenticate()?;
+    assert!(conn.is_authenticated);
+
+    conn.disconnect()?;
+    assert_eq!(conn.state, ConnectionState::Disconnected);
+    assert!(!conn.is_authenticated);
+    assert_eq!(conn.resource_count, 0);
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_error_on_authenticate_when_disconnected(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    let result = conn.authenticate();
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err(), "Not connected");
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_multiple_resource_tracking() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    assert_eq!(conn.resource_count, 0);
+
+    conn.connect()?;
+    assert_eq!(
+        conn.resource_count, 1,
+        "Should have 1 resource after connect"
+    );
+
+    // Disconnect releases resources
+    conn.disconnect()?;
+    assert_eq!(
+        conn.resource_count, 0,
+        "Should have 0 resources after disconnect"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_authentication_cleared_on_disconnect() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut conn = MockConnection::new();
+
+    conn.connect()?;
+    conn.authenticate()?;
+    assert!(conn.is_authenticated);
+
+    conn.disconnect()?;
+    assert!(
+        !conn.is_authenticated,
+        "Auth should be cleared on disconnect"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_state_machine_validity() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    // Valid transitions
+    assert_eq!(conn.state, ConnectionState::Disconnected);
+
+    conn.connect()?;
+    assert_eq!(conn.state, ConnectionState::Connected);
+
+    conn.disconnect()?;
+    assert_eq!(conn.state, ConnectionState::Disconnected);
+
+    // Invalid transition (already disconnected)
+    let result = conn.disconnect();
+    assert!(result.is_err());
+
+    Ok(())
+}
+
+#[test]
+fn test_connection_resource_cleanup_idempotent() -> Result<(), Box<dyn std::error::Error>> {
+    let mut conn = MockConnection::new();
+
+    conn.connect()?;
+    conn.disconnect()?;
+
+    // Resources should be 0
+    assert_eq!(conn.resource_count, 0);
+
+    // Second disconnect should fail but not cause issues
+    let result = conn.disconnect();
+    assert!(result.is_err());
+
+    // Resources still 0
+    assert_eq!(conn.resource_count, 0);
+
+    Ok(())
+}
+
+// ============================================================================
 // Test Summary
 // ============================================================================
-// Total tests added: 7
-// Category: Connection lifecycle
-// Purpose: Week 1 test coverage expansion
-// Focus: State management, resource cleanup, edge cases
-// Date: October 17, 2025
+// Original tests: 7
+// New tests added: 10
+// Total tests: 17
+// Category: Connection lifecycle, state machine, resource management
+// Purpose: Day 2 test coverage expansion
+// Focus: State machine validation, resource tracking, edge cases
+// Date: November 5, 2025
 // ============================================================================

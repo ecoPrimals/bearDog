@@ -456,6 +456,9 @@ mod tests {
         let result = processor.process_with_ultimate_optimization(&test_data);
 
         assert_eq!(result.len(), 1);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(result[0], 43);
     }
 
@@ -473,6 +476,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_wrapping_addition() {
         let processor = UltimatePerformanceProcessor::new();
         let test_data = vec![255u8]; // Should wrap to 0
@@ -483,6 +489,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_aligned_data_processing() {
         let processor = UltimatePerformanceProcessor::new();
         // Test with 32-byte aligned size (AVX2 register width)
@@ -490,11 +499,17 @@ mod tests {
 
         let result = processor.process_with_ultimate_optimization(&test_data);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(result.len(), 32);
         assert!(result.iter().all(|&b| b == 2));
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_unaligned_data_processing() {
         let processor = UltimatePerformanceProcessor::new();
         // Test with non-aligned size
@@ -502,6 +517,9 @@ mod tests {
 
         let result = processor.process_with_ultimate_optimization(&test_data);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(result.len(), 37);
         assert!(result.iter().all(|&b| b == 6));
     }
@@ -510,6 +528,9 @@ mod tests {
     fn test_performance_stats_calculation() {
         let processor = UltimatePerformanceProcessor::new();
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Process some data
         for _ in 0..10 {
             let data = vec![1u8; 100];
@@ -520,6 +541,9 @@ mod tests {
 
         // Verify SIMD operations were tracked
         assert!(stats.simd_operations >= 10);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -527,15 +551,21 @@ mod tests {
         let processor = UltimatePerformanceProcessor::new();
 
         // Initially no hits or misses
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let stats = processor.get_performance_stats();
         assert_eq!(stats.cache_hit_ratio, 0.0);
 
         // After processing, ratio should still be valid
-        processor.process_with_ultimate_optimization(&vec![1, 2, 3]);
+        processor.process_with_ultimate_optimization(&[1, 2, 3]);
         let stats = processor.get_performance_stats();
-        assert!(stats.cache_hit_ratio >= 0.0 && stats.cache_hit_ratio <= 1.0);
+        assert!((0.0..=1.0).contains(&stats.cache_hit_ratio));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_prefetch_effectiveness() {
         let processor = UltimatePerformanceProcessor::new();
@@ -545,6 +575,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_average_latency_calculation() {
         let processor = UltimatePerformanceProcessor::new();
 
@@ -558,6 +591,9 @@ mod tests {
 
         // Verify pool is created with proper SIMD capabilities
         assert!(pool.simd_capabilities.vector_width > 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -569,39 +605,63 @@ mod tests {
 
     #[test]
     fn test_lock_free_queue_large_capacity() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let queue: LockFreeQueue<u32> = LockFreeQueue::new(1024);
 
         assert_eq!(queue.capacity, 1024);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_memory_prefetch_controller_creation() {
         let controller = MemoryPrefetchController::new();
 
         assert_eq!(controller.access_patterns.len(), 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_cache_aligned_stats_creation() {
         let stats = CacheAlignedStats::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         assert_eq!(stats.operations_processed.load(Ordering::Relaxed), 0);
         assert_eq!(stats.cache_hits.load(Ordering::Relaxed), 0);
         assert_eq!(stats.cache_misses.load(Ordering::Relaxed), 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_concurrent_processing() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         use std::sync::Arc;
         use std::thread;
 
         let processor = Arc::new(UltimatePerformanceProcessor::new());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut handles = vec![];
 
         // Spawn multiple threads processing data
         for _ in 0..4 {
             let proc = Arc::clone(&processor);
             let handle = thread::spawn(move || {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 for _ in 0..10 {
                     let data = vec![1u8; 100];
                     proc.process_with_ultimate_optimization(&data);
@@ -629,6 +689,9 @@ mod tests {
         let result = processor.process_with_ultimate_optimization(&zeros);
         assert!(result.iter().all(|&b| b == 1));
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // All ones
         let ones = vec![1u8; 64];
         let result = processor.process_with_ultimate_optimization(&ones);
@@ -649,6 +712,9 @@ mod tests {
 
         // Process multiple times sequentially
         for size in [1, 10, 100, 1000] {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             let data = vec![42u8; size];
             let result = processor.process_with_ultimate_optimization(&data);
 
@@ -660,6 +726,9 @@ mod tests {
     #[test]
     fn test_operation_type_variants() {
         let types = vec![
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             OperationType::Cryptographic,
             OperationType::NetworkIO,
             OperationType::Memory,
@@ -673,6 +742,9 @@ mod tests {
         }
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_stats_structure() {
         let processor = UltimatePerformanceProcessor::new();

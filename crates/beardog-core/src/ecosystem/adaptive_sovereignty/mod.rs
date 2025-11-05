@@ -1,9 +1,37 @@
-// Adaptive Sovereignty System
-//
-// This advanced system continuously learns from ecosystem interactions and
-// adaptively evolves the primal sovereignty architecture for optimal
-// performance, security, and resilience.
+//! # Adaptive Sovereignty System
+//!
+//! Continuously learns from ecosystem interactions and adaptively evolves
+//! the primal sovereignty architecture for optimal performance, security,
+//! and resilience.
+//!
+//! ## Overview
+//!
+//! The adaptive sovereignty system uses machine learning to:
+//! - Monitor ecosystem behavior patterns
+//! - Identify optimal sovereignty configurations
+//! - Automatically adjust policies based on learned patterns
+//! - Maintain security while improving performance
+//!
+//! ## Key Components
+//!
+//! - [`learning_engine`] - Core learning and adaptation engine
+//!
+//! ## Example
+//!
+//! ```rust,ignore
+//! use beardog_core::ecosystem::adaptive_sovereignty::LearningEngine;
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! let engine = LearningEngine::new();
+//!
+//! // System learns and adapts automatically
+//! engine.observe_ecosystem_behavior().await?;
+//! engine.adapt_sovereignty_policies().await?;
+//! # Ok(())
+//! # }
+//! ```
 
+/// Core learning and adaptation engine
 pub mod learning_engine;
 
 // Re-export main types
@@ -433,8 +461,18 @@ impl Default for AdaptiveConfig {
             learning_rate: 0.001,
             adaptation_threshold: 0.8,
             max_strategies: 10,
-            evolution_interval: Duration::from_secs(300), // 5 minutes
-            performance_window: Duration::from_secs(3600), // 1 hour
+            evolution_interval: Duration::from_secs(
+                std::env::var("BEARDOG_SOVEREIGNTY_EVOLUTION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300)
+            ),
+            performance_window: Duration::from_secs(
+                std::env::var("BEARDOG_SOVEREIGNTY_PERFORMANCE_WINDOW_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600)
+            ),
         }
     }
 }

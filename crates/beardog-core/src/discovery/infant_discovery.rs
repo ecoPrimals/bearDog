@@ -167,18 +167,31 @@ impl InfantDiscoverySystem {
     /// Initialize the basic learning patterns (how to recognize capabilities)
     /// Initializes componentialize_learning_patterns
     fn initialize_learning_patterns() -> Vec<LearningPattern> {
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        let default_host = network_config.default_host.clone();
+        
         vec![
             // Pattern: Service running on standard ports
             LearningPattern {
                 name: "http_service".to_string(),
                 detection_method: DetectionMethod::NetworkEndpoint {
                     host: std::env::var("DISCOVERY_HOST")
-                        .unwrap_or_else(|_| "localhost".to_string()),
-                    port: 8080,
+                        .unwrap_or_else(|| default_host.clone()),
+                    port: std::env::var("DISCOVERY_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(network_config.service_ports.api_port),
                 },
                 validation_method: ValidationMethod::HealthCheck {
                     endpoint: std::env::var("DISCOVERY_ENDPOINT")
-                        .unwrap_or_else(|_| "http://localhost:8080/health".to_string()),
+                        .unwrap_or_else(|| {
+                            use beardog_types::canonical::config::network::NetworkConfig;
+                            let network_config = NetworkConfig::default();
+                            format!("http://{}:{}/health", 
+                                network_config.default_host, 
+                                network_config.service_ports.api_port)
+                        }),
                 },
             },
             // Pattern: Environment-advertised services
@@ -385,9 +398,13 @@ impl InfantDiscoverySystem {
         debug!("🏥 Testing health endpoint: {}", endpoint);
 
         let client = reqwest::Client::new();
+        let timeout_secs = std::env::var("BEARDOG_DISCOVERY_HTTP_TIMEOUT_SECS")
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(5);
         match client
             .get(endpoint)
-            .timeout(std::time::Duration::from_secs(5))
+            .timeout(std::time::Duration::from_secs(timeout_secs))
             .send()
         {
             Ok(response) => {

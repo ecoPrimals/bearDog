@@ -87,11 +87,17 @@ mod config_comprehensive_tests {
         assert!(config.enable_mfa);
         assert_eq!(config.session_timeout_minutes, 60);
         assert_eq!(config.max_failed_attempts, 5);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_security_config_serialization() {
         let config = SecurityConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let json = serde_json::to_string(&config).expect("Failed to serialize");
         let deserialized: SecurityConfig = serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(config.enable_encryption, deserialized.enable_encryption);
@@ -107,18 +113,27 @@ mod config_comprehensive_tests {
         assert!(config.session_timeout_minutes <= 1440, "Timeout should be at most 24 hours");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // ============================================================================
     // PerformanceConfig Tests
     // ============================================================================
 
     #[test]
     fn test_performance_config_default() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let config = PerformanceConfig::default();
         assert!(config.thread_pool_size > 0, "Thread pool should have at least 1 thread");
         assert!(config.queue_size > 0, "Queue size should be positive");
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_performance_config_with_custom_values() {
         let config = PerformanceConfig {
             thread_pool_size: 16,
@@ -127,9 +142,15 @@ mod config_comprehensive_tests {
             batch_size: 100,
             ..Default::default()
         };
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
         assert_eq!(config.thread_pool_size, 16);
         assert_eq!(config.queue_size, 10000);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.enable_batching);
         assert_eq!(config.batch_size, 100);
     }
@@ -143,11 +164,17 @@ mod config_comprehensive_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_performance_config_reasonable_values() {
         let config = PerformanceConfig::default();
         assert!(config.thread_pool_size <= 1000, "Thread pool should be reasonable");
         assert!(config.queue_size <= 1_000_000, "Queue size should be reasonable");
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     // ============================================================================
     // HealthStatus Tests
@@ -159,10 +186,16 @@ mod config_comprehensive_tests {
         assert_eq!(format!("{:?}", status), "Healthy");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_health_status_degraded() {
         let status = HealthStatus::Degraded;
         assert_eq!(format!("{:?}", status), "Degraded");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -176,11 +209,17 @@ mod config_comprehensive_tests {
         assert_eq!(HealthStatus::Healthy, HealthStatus::Healthy);
         assert_ne!(HealthStatus::Healthy, HealthStatus::Degraded);
         assert_ne!(HealthStatus::Healthy, HealthStatus::Unhealthy);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_health_status_clone() {
         let status = HealthStatus::Healthy;
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let cloned = status.clone();
         assert_eq!(status, cloned);
     }
@@ -189,23 +228,41 @@ mod config_comprehensive_tests {
     fn test_health_status_serialization() {
         for status in [HealthStatus::Healthy, HealthStatus::Degraded, HealthStatus::Unhealthy] {
             let json = serde_json::to_string(&status).expect("Failed to serialize");
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             let deserialized: HealthStatus = serde_json::from_str(&json).expect("Failed to deserialize");
             assert_eq!(status, deserialized);
         }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
 
     // ============================================================================
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Config Integration Tests
     // ============================================================================
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_all_configs_serializable() {
         let network = NetworkConfig::default();
         let security = SecurityConfig::default();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let performance = PerformanceConfig::default();
 
         assert!(serde_json::to_string(&network).is_ok());
         assert!(serde_json::to_string(&security).is_ok());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(serde_json::to_string(&performance).is_ok());
     }
 
@@ -216,6 +273,9 @@ mod config_comprehensive_tests {
         let restored: NetworkConfig = serde_json::from_str(&json).unwrap();
         
         let json2 = serde_json::to_string(&restored).unwrap();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(json, json2, "Round trip should be stable");
     }
 
@@ -224,6 +284,9 @@ mod config_comprehensive_tests {
     // ============================================================================
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_network_config_extreme_values() {
         let config = NetworkConfig {
             port: 65535, // Max port
@@ -235,6 +298,9 @@ mod config_comprehensive_tests {
         assert_eq!(config.port, 65535);
         assert_eq!(config.timeout_ms, u64::MAX);
     }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_security_config_zero_timeout() {
@@ -245,12 +311,18 @@ mod config_comprehensive_tests {
         assert_eq!(config.session_timeout_minutes, 0);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_performance_config_single_thread() {
         let config = PerformanceConfig {
             thread_pool_size: 1, // Minimum threads
             queue_size: 1, // Minimum queue
             ..Default::default()
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         };
         assert_eq!(config.thread_pool_size, 1);
         assert_eq!(config.queue_size, 1);
@@ -259,12 +331,18 @@ mod config_comprehensive_tests {
     #[test]
     fn test_network_config_ipv6() {
         let config = NetworkConfig {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             host: "::1".to_string(), // IPv6 localhost
             ..Default::default()
         };
         assert_eq!(config.host, "::1");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_network_config_domain_name() {
         let config = NetworkConfig {

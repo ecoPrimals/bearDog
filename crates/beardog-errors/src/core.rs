@@ -12,6 +12,7 @@ pub use crate::categories::{
     WorkflowErrorCategory,
 };
 
+/// Primary error type for the `BearDog` ecosystem
 ///
 /// This enum provides a comprehensive error taxonomy covering all domains
 /// within the `BearDog` system. Each variant includes detailed categorization
@@ -22,16 +23,61 @@ pub use crate::categories::{
 /// - **Domain Categorization**: Errors are organized by functional domain
 /// - **Rich Context**: Each error includes detailed categorization
 /// - **Zero-Cost Abstractions**: Efficient error propagation patterns
+/// - **Type Safety**: Compile-time guarantees for error handling
+///
+/// # Error Domains
+///
+/// - [`Security`](BearDogError::Security) - Authentication, authorization, cryptography
+/// - [`System`](BearDogError::System) - Resource exhaustion, I/O, OS interactions
+/// - [`Business`](BearDogError::Business) - Validation, workflow, business logic
+/// - [`Network`](BearDogError::Network) - Connectivity, timeouts, protocol errors
+/// - [`Configuration`](BearDogError::Configuration) - Invalid config, missing parameters
+/// - [`Hsm`](BearDogError::Hsm) - Hardware security module operations
+/// - [`Workflow`](BearDogError::Workflow) - Process orchestration, state machines
+/// - [`Api`](BearDogError::Api) - API-specific errors and validation
+/// - [`Testing`](BearDogError::Testing) - Test-specific errors
 ///
 /// # Usage Examples
+///
+/// ## Creating Errors
 ///
 /// ```rust
 /// use beardog_errors::BearDogError;
 ///
-/// // Create domain-specific errors
-/// let _security_error = BearDogError::security("Authentication failed".to_string());
-/// let _system_error = BearDogError::system("Database connection lost".to_string());
-/// let _business_error = BearDogError::business("Invalid user input".to_string());
+/// // Create domain-specific errors using convenient constructors
+/// let security_error = BearDogError::security("Authentication failed".to_string());
+/// let system_error = BearDogError::system("Database connection lost".to_string());
+/// let business_error = BearDogError::business("Invalid user input".to_string());
+/// ```
+///
+/// ## Error Propagation
+///
+/// ```rust
+/// use beardog_errors::{BearDogError, BearDogResult};
+///
+/// fn authenticate(token: &str) -> BearDogResult<u64> {
+///     if token.is_empty() {
+///         return Err(BearDogError::security("Empty token".to_string()));
+///     }
+///     Ok(42)
+/// }
+///
+/// fn process_request(token: &str) -> BearDogResult<String> {
+///     let user_id = authenticate(token)?; // Error propagates automatically
+///     Ok(format!("User {}", user_id))
+/// }
+/// ```
+///
+/// ## Converting External Errors
+///
+/// ```rust
+/// use beardog_errors::BearDogError;
+/// use std::fs;
+///
+/// fn load_config(path: &str) -> Result<String, BearDogError> {
+///     fs::read_to_string(path)
+///         .map_err(|e| BearDogError::system(format!("Failed to read config: {}", e)))
+/// }
 /// ```
 #[derive(Error, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum BearDogError {
@@ -490,7 +536,7 @@ impl BearDogError {
 
     /// Create an unsupported operation error
     #[must_use]
-    pub fn unsupported_operation(operation: String) -> Self {
+    pub fn unsupported_operation(operation: &str) -> Self {
         Self::Business {
             message: format!("Unsupported operation: {operation}"),
             category: BusinessErrorCategory::Validation,
@@ -499,7 +545,7 @@ impl BearDogError {
 
     /// Create a not implemented error
     #[must_use]
-    pub fn not_implemented(feature: String) -> Self {
+    pub fn not_implemented(feature: &str) -> Self {
         Self::Business {
             message: format!("Not yet implemented: {feature}"),
             category: BusinessErrorCategory::Validation,
@@ -508,7 +554,7 @@ impl BearDogError {
 
     /// Create an I/O error
     #[must_use]
-    pub fn io_error(details: String) -> Self {
+    pub fn io_error(details: &str) -> Self {
         Self::System {
             message: format!("I/O operation failed: {details}"),
             category: SystemErrorCategory::FileSystem,
@@ -517,7 +563,7 @@ impl BearDogError {
 
     /// Create a cryptographic error
     #[must_use]
-    pub fn crypto_error(details: String) -> Self {
+    pub fn crypto_error(details: &str) -> Self {
         Self::Cryptographic {
             message: format!("Cryptographic operation failed: {details}"),
         }
@@ -525,7 +571,7 @@ impl BearDogError {
 
     /// Create a serialization error
     #[must_use]
-    pub fn serialization(details: String) -> Self {
+    pub fn serialization(details: &str) -> Self {
         Self::System {
             message: format!("Serialization failed: {details}"),
             category: SystemErrorCategory::General,

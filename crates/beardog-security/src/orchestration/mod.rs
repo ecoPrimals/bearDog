@@ -14,25 +14,26 @@ pub use crypto_coordination::CryptoCoordinator;
 pub use security_orchestration::{SecurityOrchestrationConfig, SecurityOrchestrator};
 
 pub trait SecurityOrchestrationOps: Send + Sync {
-
-
-    fn orchestrate_security_workflow(&str,
+    fn orchestrate_security_workflow(
+        &self,
+        workflow_type: &str,
     ) -> impl std::future::Future<Output = Result<SecurityWorkflowResult, crate::BearDogSecurityError>>
            + Send;
 
-
-    fn check_security_health(&str,
+    fn check_security_health(
+        &self,
+        component: &str,
     ) -> impl std::future::Future<Output = Result<SecurityHealthStatus, crate::BearDogSecurityError>>
            + Send;
 }
 
 #[derive(Debug, Clone)]
+pub struct SecurityWorkflowResult {
     /// Current status of the component
     pub status: SecurityWorkflowStatus,
 
     /// Collection of operations completed
     pub operations_completed: Vec<String>,
-
 
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }

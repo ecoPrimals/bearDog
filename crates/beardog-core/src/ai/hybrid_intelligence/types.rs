@@ -42,9 +42,18 @@ pub struct TrainingConfig {
 impl Default for TrainingConfig {
     fn default() -> Self {
         Self {
-            batch_size: 32,
-            epochs: 100,
-            learning_rate: 0.001,
+            batch_size: std::env::var("BEARDOG_AI_TRAINING_BATCH_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(32),
+            epochs: std::env::var("BEARDOG_AI_TRAINING_EPOCHS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            learning_rate: std::env::var("BEARDOG_AI_LEARNING_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.001),
             validation_split: 0.2,
             early_stopping: None,
             regularization: None,
@@ -72,8 +81,14 @@ pub struct InferenceConfig {
 impl Default for InferenceConfig {
     fn default() -> Self {
         Self {
-            batch_size: 1,
-            max_inference_time_ms: 1000,
+            batch_size: std::env::var("BEARDOG_AI_INFERENCE_BATCH_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1),
+            max_inference_time_ms: std::env::var("BEARDOG_AI_MAX_INFERENCE_TIME_MS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000),
             serving_config: ServingConfig::default(),
             caching: None,
         }
@@ -164,16 +179,28 @@ impl Default for NeuralNetworkConfig {
                 },
                 hidden_layers: vec![],
                 output_layer: crate::ai::hybrid_intelligence::neural_networks::OutputLayerConfig {
-                    units: 10,
+                    units: std::env::var("BEARDOG_AI_OUTPUT_UNITS")
+                        .ok()
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(10),
                     activation: crate::ai::hybrid_intelligence::neural_networks::ActivationFunction::Softmax,
                     loss_function: crate::ai::hybrid_intelligence::neural_networks::LossFunction::MeanSquaredError,
                 },
                 skip_connections: vec![],
             },
             training_params: TrainingParams {
-                batch_size: 32,
-                epochs: 100,
-                learning_rate: 0.001,
+                batch_size: std::env::var("BEARDOG_AI_TRAINING_BATCH_SIZE")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(32),
+                epochs: std::env::var("BEARDOG_AI_TRAINING_EPOCHS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+                learning_rate: std::env::var("BEARDOG_AI_LEARNING_RATE")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.001),
                 lr_scheduler: None,
                 optimizer: crate::ai::hybrid_intelligence::neural_networks::Optimizer {
                     optimizer_type: crate::ai::hybrid_intelligence::neural_networks::OptimizerType::Adam,
@@ -199,7 +226,10 @@ impl Default for NeuralNetworkConfig {
                 early_stopping: Some(crate::ai::hybrid_intelligence::neural_networks::EarlyStoppingConfig {
                     monitor: "val_loss".to_string(),
                     min_delta: 0.001,
-                    patience: 10,
+                    patience: std::env::var("BEARDOG_AI_EARLY_STOPPING_PATIENCE")
+                        .ok()
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(10),
                     restore_best_weights: true,
                     mode: crate::ai::hybrid_intelligence::neural_networks::MonitoringMode::Min,
                 }),
@@ -454,8 +484,16 @@ pub struct ServingConfig {
 impl Default for ServingConfig {
     fn default() -> Self {
         Self {
-            max_concurrent_requests: 100,
-            request_timeout: Duration::from_secs(30),
+            max_concurrent_requests: std::env::var("BEARDOG_AI_SERVING_MAX_CONCURRENT_REQUESTS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            request_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_AI_ROUTING_REQUEST_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
             load_balancing: LoadBalancingStrategy::RoundRobin,
         }
     }
@@ -511,10 +549,15 @@ pub type RegistryConfig = AIRegistryConfig;
 
 impl Default for AIRegistryConfig {
     fn default() -> Self {
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         Self {
             registry_type: RegistryType::Local,
-            endpoint: std::env::var("BEARDOG_AI_REGISTRY_ENDPOINT")
-                .unwrap_or_else(|_| "localhost:8080".to_string()),
+            endpoint: std::env::var("BEARDOG_AI_REGISTRY_ENDPOINT").unwrap_or_else(|_| {
+                format!(
+                    "{}:{}",
+                    network_config.default_host, network_config.service_ports.ai_port
+                )
+            }),
             auth: None,
         }
     }
@@ -585,7 +628,9 @@ impl Default for AIMonitoringConfig {
     }
 }
 
-// Backward compatibility alias
+/// Backward compatibility alias for `AIMonitoringConfig`
+///
+/// Deprecated: Use `AIMonitoringConfig` directly instead.
 #[deprecated(since = "3.1.0", note = "Use AIMonitoringConfig instead")]
 pub type MonitoringConfig = AIMonitoringConfig;
 
@@ -772,10 +817,21 @@ pub struct ResourceRequirements {
 impl Default for ResourceRequirements {
     fn default() -> Self {
         Self {
-            cpu: 1.0,
-            memory: 1024,
-            gpu: None,
-            storage: 10,
+            cpu: std::env::var("BEARDOG_AI_RESOURCE_CPU")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1.0),
+            memory: std::env::var("BEARDOG_AI_RESOURCE_MEMORY_MB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1024),
+            gpu: std::env::var("BEARDOG_AI_RESOURCE_GPU")
+                .ok()
+                .and_then(|s| s.parse().ok()),
+            storage: std::env::var("BEARDOG_AI_RESOURCE_STORAGE_GB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
         }
     }
 }

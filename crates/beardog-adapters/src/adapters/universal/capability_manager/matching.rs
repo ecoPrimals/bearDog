@@ -428,7 +428,12 @@ impl QoSRequirements {
             min_availability_percent: Some(Some(ThroughputRequirement {
                 min_value: 1000,
                 unit: "requests/sec".to_string(),
-                sustained_duration: Duration::from_secs(60),
+                sustained_duration: Duration::from_secs(
+                    std::env::var("BEARDOG_CAPABILITY_SUSTAINED_DURATION_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(60)
+                ),
             }),
             max_error_rate_percent: Some(vec![ReliabilityRequirement {
                 requirement_type: ReliabilityType::Uptime,

@@ -23,7 +23,8 @@ pub struct EcosystemGeneticEngine {
     /// The adaptive security value
     pub adaptive_security: AdaptiveSecurity,
 
-    /// Integrated from Squirrel horizontal gene transfer
+    /// Integrated via horizontal gene transfer from AI capability providers
+    /// (capability-based integration, no hardcoded primal names)
     /// The relationship evolution value
     pub relationship_evolution: RelationshipEvolutionGenetics,
     /// The ecosystem membership value

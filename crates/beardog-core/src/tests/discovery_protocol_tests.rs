@@ -51,6 +51,9 @@ mod discovery_protocol_tests {
 
         let json = serde_json::to_string(&protocol).expect("Serialization failed");
         let deserialized: DiscoveryProtocol = serde_json::from_str(&json).expect("Deserialization failed");
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         match deserialized {
             DiscoveryProtocol::Http { endpoint, .. } => {
@@ -67,6 +70,9 @@ mod discovery_protocol_tests {
     #[test]
     fn test_dns_protocol_creation() {
         let protocol = DiscoveryProtocol::Dns {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             domain: "services.example.com".to_string(),
             servers: vec!["8.8.8.8".to_string(), "8.8.4.4".to_string()],
         };
@@ -78,6 +84,9 @@ mod discovery_protocol_tests {
                 assert_eq!(servers[0], "8.8.8.8");
             }
             _ => panic!("Expected DNS protocol"),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         }
     }
 
@@ -97,6 +106,9 @@ mod discovery_protocol_tests {
     }
 
     // ============================================================================
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // mDNS Discovery Protocol Tests
     // ============================================================================
 
@@ -111,6 +123,9 @@ mod discovery_protocol_tests {
 
         match protocol {
             DiscoveryProtocol::Mdns { service_type, interface, timeout_ms, continuous_monitoring } => {
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 assert_eq!(service_type, "_http._tcp");
                 assert_eq!(interface, "eth0");
                 assert_eq!(timeout_ms, 5000);
@@ -127,6 +142,9 @@ mod discovery_protocol_tests {
             interface: "lo".to_string(),
             timeout_ms: 1000,
             continuous_monitoring: false,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         };
 
         match protocol {
@@ -144,6 +162,9 @@ mod discovery_protocol_tests {
     #[test]
     fn test_consul_protocol_creation() {
         let protocol = DiscoveryProtocol::Consul {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             address: "localhost:8500".to_string(),
             datacenter: "dc1".to_string(),
         };
@@ -162,6 +183,9 @@ mod discovery_protocol_tests {
         let protocol = DiscoveryProtocol::Consul {
             address: "consul.example.com:8500".to_string(),
             datacenter: "us-east-1".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         };
 
         match protocol {
@@ -175,6 +199,9 @@ mod discovery_protocol_tests {
 
     // ============================================================================
     // etcd Discovery Protocol Tests
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // ============================================================================
 
     #[test]
@@ -192,6 +219,9 @@ mod discovery_protocol_tests {
                 assert_eq!(timeout_ms, 3000);
             }
             _ => panic!("Expected etcd protocol"),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         }
     }
 
@@ -207,6 +237,9 @@ mod discovery_protocol_tests {
             timeout_ms: 5000,
         };
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         match protocol {
             DiscoveryProtocol::Etcd { endpoints, .. } => {
                 assert_eq!(endpoints.len(), 3);
@@ -228,6 +261,9 @@ mod discovery_protocol_tests {
 
         let http2 = DiscoveryProtocol::Http {
             endpoint: "http://localhost:8080".to_string(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             headers: HashMap::new(),
         };
 
@@ -240,6 +276,9 @@ mod discovery_protocol_tests {
             endpoint: "http://localhost:8080".to_string(),
             headers: HashMap::new(),
         };
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let dns = DiscoveryProtocol::Dns {
             domain: "localhost".to_string(),
@@ -256,6 +295,9 @@ mod discovery_protocol_tests {
     #[test]
     fn test_protocol_hashable() {
         use std::collections::HashSet;
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let protocols = vec![
             DiscoveryProtocol::Http {
@@ -276,6 +318,9 @@ mod discovery_protocol_tests {
     // Serialization Round-Trip Tests
     // ============================================================================
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_all_protocols_serializable() {
         let protocols = vec![

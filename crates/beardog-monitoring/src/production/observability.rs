@@ -439,12 +439,32 @@ impl Default for ObservabilityConfig {
     fn default() -> Self {
         Self {
             metrics_config: MetricsConfig {
-                collection_interval: Duration::from_secs(60),
-                retention_period: Duration::from_secs(86400 * 7), // 7 days
+                collection_interval: Duration::from_secs(
+                    std::env::var("BEARDOG_OBSERVABILITY_COLLECTION_INTERVAL_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(60)
+                ),
+                retention_period: Duration::from_secs(
+                    std::env::var("BEARDOG_OBSERVABILITY_RETENTION_PERIOD_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(86400 * 7)
+                ),
             },
             health_config: HealthConfig {
-                check_interval: Duration::from_secs(30),
-                timeout: Duration::from_secs(10),
+                check_interval: Duration::from_secs(
+                    std::env::var("BEARDOG_OBSERVABILITY_HEALTH_CHECK_INTERVAL_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(30)
+                ),
+                timeout: Duration::from_secs(
+                    std::env::var("BEARDOG_OBSERVABILITY_HEALTH_TIMEOUT_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(10)
+                ),
             },
             sla_config: SLAConfig {
                 max_latency: Duration::from_millis(0.01, // 1%

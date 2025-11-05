@@ -299,6 +299,9 @@ mod tests {
         let manager = AdvancedCacheManager::new(config)?;
 
         // Test set and get
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         manager.set("key1", b"value1")?;
         let result = manager.get("key1")?;
         assert_eq!(result, Some(b"value1".to_vec()));
@@ -313,6 +316,9 @@ mod tests {
     #[tokio::test]
     fn test_cache_manager_multilevel() -> Result<(), BearDogError> {
         let config = CacheConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let manager = AdvancedCacheManager::new(config)?;
 
         // Set in all levels
@@ -329,6 +335,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_cache_manager_stats() -> Result<(), BearDogError> {
         let config = CacheConfig::default();

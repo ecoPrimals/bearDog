@@ -12,14 +12,18 @@ use serde_json;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 
+/// Core integration engine for ecosystem service coordination
+///
+/// Manages integration configuration, HSM connections, and ecosystem
+/// integration status for unified service orchestration.
 #[derive(Debug, Clone)]
 pub struct IntegrationEngine {
+    /// Integration configuration
     pub config: IntegrationConfig,
-    /// Optional universal hsm
+    /// Universal HSM manager for cryptographic operations
     pub universal_hsm: Option<Arc<UniversalHsmManager>>,
     // Universal service mesh_discovery - replaced with universal adapter
     /// Whether the ecosystem is fully integrated
-    /// Whether `ecosystem_integrated` is enabled
     pub ecosystem_integrated: bool,
 }
 

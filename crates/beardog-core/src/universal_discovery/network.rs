@@ -64,14 +64,42 @@ impl Default for NetworkConfig {
                     tracing::warn!("Failed to parse multicast address, using fallback: {}", e);
                     IpAddr::V4(std::net::Ipv4Addr::new(224, 0, 0, 251))
                 }),
-            multicast_port: 5353,
-            discovery_port_range: (8081, 8090),
-            max_packet_size: 65536,
-            connection_timeout_ms: 5000,
-            read_timeout_ms: 3000,
-            write_timeout_ms: 3000,
-            enable_ipv6: true,
-            interface: None,
+            multicast_port: std::env::var("BEARDOG_DISCOVERY_MULTICAST_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5353),
+            discovery_port_range: {
+                let start = std::env::var("BEARDOG_DISCOVERY_PORT_START")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8081);
+                let end = std::env::var("BEARDOG_DISCOVERY_PORT_END")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8090);
+                (start, end)
+            },
+            max_packet_size: std::env::var("BEARDOG_DISCOVERY_MAX_PACKET_SIZE")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(65536),
+            connection_timeout_ms: std::env::var("BEARDOG_DISCOVERY_CONNECTION_TIMEOUT_MS")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5000),
+            read_timeout_ms: std::env::var("BEARDOG_DISCOVERY_READ_TIMEOUT_MS")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(3000),
+            write_timeout_ms: std::env::var("BEARDOG_DISCOVERY_WRITE_TIMEOUT_MS")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(3000),
+            enable_ipv6: std::env::var("BEARDOG_DISCOVERY_ENABLE_IPV6")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
+            interface: std::env::var("BEARDOG_DISCOVERY_INTERFACE").ok(),
             tls_config: None,
         }
     }
@@ -186,6 +214,10 @@ impl Default for SecurityConfig {
     }
 }
 
+/// Authentication method for service access
+///
+/// Specifies how clients authenticate to discovered services,
+/// from no authentication to certificate-based mutual TLS.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum AuthenticationMethod {
     /// No authentication required
@@ -231,8 +263,14 @@ impl NetworkUtils {
     /// # Errors
     /// Returns an error if address format parsing fails or if network operations encounter errors during port scanning.
     pub async fn find_available_port(start: u16, end: u16) -> Result<Option<u16>, BearDogError> {
+        // Use environment variable or network config default
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let _network_config = NetworkConfig::default();
+        let bind_host = std::env::var("BEARDOG_BIND_HOST")
+            .unwrap_or_else(|_| NetworkConfig::default().default_host);
+
         for port in start..=end {
-            let addr: SocketAddr = format!("127.0.0.1:{port}").parse().map_err(|e| {
+            let addr: SocketAddr = format!("{bind_host}:{port}").parse().map_err(|e| {
                 BearDogError::system(format!("Invalid address format for port {port}: {e}"))
             })?;
             if Self::is_port_available(&addr).await? {

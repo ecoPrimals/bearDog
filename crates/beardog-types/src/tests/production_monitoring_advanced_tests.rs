@@ -107,20 +107,35 @@ fn test_performance_monitor_history_retention() {
             avg_response_time_ms: i as f64,
             p95_response_time_ms: 20.0,
             p99_response_time_ms: 30.0,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             requests_per_second: 100.0,
             error_rate_percent: 0.5,
             throughput_bytes_per_sec: 1_000_000,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
         };
         monitor.add_performance_data(metrics);
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Should be capped at 1000
     assert_eq!(monitor.get_performance_history().len(), 1000);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_performance_monitor_clear_history() {
     let mut monitor = PerformanceMonitor::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Add data
     for _ in 0..10 {
@@ -129,6 +144,9 @@ fn test_performance_monitor_clear_history() {
 
     assert_eq!(monitor.get_performance_history().len(), 10);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     monitor.clear_history();
     assert_eq!(monitor.get_performance_history().len(), 0);
 }
@@ -151,6 +169,9 @@ fn test_system_monitor_default() {
     let monitor = SystemMonitor::default();
     assert_eq!(monitor.get_monitoring_interval(), 30);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_system_monitor_initialize() {
@@ -160,6 +181,9 @@ fn test_system_monitor_initialize() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_system_monitor_collect_metrics() {
     let monitor = SystemMonitor::new();
     let result = monitor.collect_system_metrics();
@@ -178,6 +202,9 @@ fn test_system_monitor_overview() {
 
     let overview = result.unwrap();
     assert_eq!(overview.status, "Healthy");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(overview.active_services > 0);
 }
 
@@ -194,19 +221,31 @@ fn test_system_monitor_update_config() {
 
     monitor.update_config(new_config);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let config = monitor.get_config();
     assert!(config.enable_cpu_monitoring);
     assert!(!config.enable_memory_monitoring);
     assert_eq!(config.system_interval_seconds, 60);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_system_monitor_selective_monitoring() {
     let mut monitor = SystemMonitor::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Disable some monitoring
     let config = SystemConfig {
         enable_cpu_monitoring: true,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         enable_memory_monitoring: false,
         enable_disk_monitoring: false,
         system_interval_seconds: 30,
@@ -215,6 +254,9 @@ fn test_system_monitor_selective_monitoring() {
     monitor.update_config(config);
 
     let overview = monitor.get_overview().unwrap();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Only CPU monitoring is enabled
     assert!(overview.resource_utilization.cpu_percent > 0.0);
@@ -223,6 +265,9 @@ fn test_system_monitor_selective_monitoring() {
 }
 
 // ====================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 // Resource Utilization Tests
 // ====================
 
@@ -239,6 +284,9 @@ fn test_resource_utilization_basic() {
     assert_eq!(utilization.memory_percent, 62.3);
     assert_eq!(utilization.disk_percent, 78.9);
     assert_eq!(utilization.network_percent, 23.1);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 // ====================
@@ -262,6 +310,9 @@ fn test_full_production_monitoring_lifecycle() {
 
     // Health check
     let health_report = ecosystem.health_check();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(health_report.is_ok());
 
     // Shutdown
@@ -278,6 +329,9 @@ fn test_alert_system_integration() {
         disk_threshold_percent: 85.0,
         network_threshold_bps: 100_000_000,
         error_rate_threshold_percent: 5.0,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         response_time_threshold_ms: 1000.0,
     };
 
@@ -300,6 +354,9 @@ fn test_alert_system_integration() {
         throughput_bytes_per_sec: 5_000_000,
     };
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let alerts = manager.check_thresholds(&high_load_metrics, &performance_metrics);
     assert!(alerts.is_ok());
 
@@ -335,6 +392,9 @@ fn test_metrics_collection_over_time() {
             disk_usage_percent: 40.0,
             network_throughput_bps: 1_000_000 + (u64::from(i) * 100_000),
             active_connections: 100 + (i * 10),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             latency_ms: 10.0 + (f64::from(i)) * 0.5,
             error_rate_percent: 0.1,
             custom_metrics: std::collections::HashMap::new(),
@@ -342,6 +402,9 @@ fn test_metrics_collection_over_time() {
         collector.add_metrics_to_history(metrics);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let history = collector.get_metrics_history();
     assert_eq!(history.len(), 10);
 
@@ -375,11 +438,17 @@ fn test_negative_duration_handling() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_extreme_metric_values() {
     let metrics = SystemMetrics {
         cpu_utilization: 999.9,
         memory_utilization: 1000.0,
         disk_utilization: 150.0,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         network_utilization_bps: u64::MAX,
     };
 
@@ -389,6 +458,9 @@ fn test_extreme_metric_values() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_concurrent_metric_collection_simulation() {
     let interval = Duration::seconds(5);
     let mut collector = SystemMetricsCollector::new(interval);
@@ -400,6 +472,9 @@ fn test_concurrent_metric_collection_simulation() {
             timestamp: chrono::Utc::now(),
             cpu_usage_percent: f64::from(i % 100),
             memory_usage_percent: (f64::from(i % 100)) * 0.8,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             disk_usage_percent: 40.0,
             network_throughput_bps: u64::from(i * 1000),
             active_connections: i,
@@ -422,6 +497,9 @@ fn test_alert_metadata_handling() {
         network_threshold_bps: 50_000_000,
         error_rate_threshold_percent: 1.0,
         response_time_threshold_ms: 500.0,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     };
 
     let mut manager = AlertManager::new(thresholds);
@@ -450,6 +528,9 @@ fn test_production_ecosystem_multiple_health_checks() {
     let mut ecosystem = ProductionEcosystem::new(config).unwrap();
     ecosystem.initialize().unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     // Multiple consecutive health checks
     for _ in 0..5 {
         let report = ecosystem.health_check();
@@ -462,6 +543,9 @@ fn test_production_ecosystem_multiple_health_checks() {
 #[test]
 fn test_performance_summary_recommendations() {
     let mut monitor = PerformanceMonitor::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     // Add minimal data
     for _ in 0..3 {
@@ -480,6 +564,9 @@ fn test_performance_summary_recommendations() {
     assert!(!summary.recommendations.is_empty());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_system_overview_completeness() {
     let monitor = SystemMonitor::new();

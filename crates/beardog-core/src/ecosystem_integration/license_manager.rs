@@ -13,22 +13,22 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::debug;
 
+/// Information about a software license
+///
+/// Describes license terms, validity period, granted capabilities, and restrictions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseInfo {
+    /// Unique license identifier
     pub license_id: String,
     /// Type of license (e.g., "MIT", "Apache-2.0", "Commercial")
-    /// The license type value
     pub license_type: String,
     /// When the license was issued
-    /// The issued at value
     pub issued_at: DateTime<Utc>,
-    /// Optional expires at
+    /// When the license expires (if applicable)
     pub expires_at: Option<DateTime<Utc>>,
     /// Capabilities granted by this license
-    /// Collection of capabilities
     pub capabilities: Vec<String>,
     /// Restrictions imposed by this license
-    /// Mapping of restrictions
     pub restrictions: HashMap<String, String>,
 }
 
@@ -113,6 +113,9 @@ mod tests {
     #[test]
     fn test_license_info_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let license = LicenseInfo {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             license_id: "test-001".to_string(),
             license_type: "test".to_string(),
             issued_at: Utc::now(),
@@ -128,6 +131,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_license_validation() {
         let validation = LicenseValidation {

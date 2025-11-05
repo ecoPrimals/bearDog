@@ -32,9 +32,18 @@ impl Default for SimpleEcosystemConfig {
         Self {
             // Use capability-based discovery instead of hardcoded service names
             enabled_services: DEFAULT_CAPABILITIES.iter().map(|&s| s.into()).collect(),
-            discovery_timeout_ms: 5000,
-            health_check_interval_ms: 30000,
-            retry_attempts: 3,
+            discovery_timeout_ms: std::env::var("BEARDOG_DISCOVERY_TIMEOUT_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5000),
+            health_check_interval_ms: std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30000),
+            retry_attempts: std::env::var("BEARDOG_RETRY_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
         }
     }
 }
@@ -116,9 +125,13 @@ impl SimpleEcosystemManager {
                 self.get_environment_endpoint(service_name)
                     .unwrap_or_else(|| {
                         // Ultimate fallback to universal discovery service
-                        std::env::var("UNIVERSAL_DISCOVERY_ENDPOINT")
-                            .unwrap_or_else(|_| "http://universal-discovery:8080".to_string())
-                            + &format!("/capability/{}", service_name)
+                        let base_endpoint = std::env::var("UNIVERSAL_DISCOVERY_ENDPOINT")
+                            .unwrap_or_else(|_| {
+                                use beardog_types::canonical::config::network::NetworkConfig;
+                                let config = NetworkConfig::default();
+                                format!("http://universal-discovery:{}", config.service_ports.api_port)
+                            });
+                        base_endpoint + &format!("/capability/{}", service_name)
                     })
             });
 

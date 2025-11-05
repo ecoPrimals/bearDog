@@ -43,6 +43,9 @@ fn test_ultimate_performance_processor_empty_data() {
     let result = processor.process_with_ultimate_optimization(&empty_data);
     assert!(result.is_empty());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_ultimate_performance_processor_large_data() {
@@ -50,11 +53,17 @@ fn test_ultimate_performance_processor_large_data() {
     let large_data = vec![42u8; 1024];
 
     let result = processor.process_with_ultimate_optimization(&large_data);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(result.len(), 1024);
     assert!(result.iter().all(|&b| b == 43));
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_ultimate_performance_stats_calculation() {
     let processor = UltimatePerformanceProcessor::new();
     let stats = processor.get_performance_stats();
@@ -65,12 +74,18 @@ fn test_ultimate_performance_stats_calculation() {
     assert_eq!(stats.average_latency_ns, 0.0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_ultimate_performance_stats_clone() {
     let processor = UltimatePerformanceProcessor::new();
     let stats1 = processor.get_performance_stats();
     let stats2 = stats1.clone();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(stats1.operations_processed, stats2.operations_processed);
     assert_eq!(stats1.simd_operations, stats2.simd_operations);
 }
@@ -78,6 +93,9 @@ fn test_ultimate_performance_stats_clone() {
 #[test]
 fn test_ultimate_performance_stats_debug() {
     let processor = UltimatePerformanceProcessor::new();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = processor.get_performance_stats();
 
     let debug_str = format!("{:?}", stats);
@@ -86,6 +104,9 @@ fn test_ultimate_performance_stats_debug() {
 
 #[test]
 fn test_operation_type_variants() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let types = vec![
         OperationType::Cryptographic,
         OperationType::NetworkIO,
@@ -93,12 +114,18 @@ fn test_operation_type_variants() {
         OperationType::Compute,
     ];
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for op_type in types {
         let cloned = op_type;
         // Test that operation types are Copy
         let _another = op_type;
         let _yet_another = cloned;
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -113,16 +140,25 @@ fn test_ultimate_performance_processor_wrapping_add() {
     let processor = UltimatePerformanceProcessor::new();
     let test_data = vec![255u8]; // Will wrap around
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let result = processor.process_with_ultimate_optimization(&test_data);
     assert_eq!(result[0], 0); // 255 + 1 wraps to 0
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_ultimate_performance_processor_multiple_calls() {
     let processor = UltimatePerformanceProcessor::new();
 
     // Process multiple times
     let _result1 = processor.process_with_ultimate_optimization(&[1, 2, 3]);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let _result2 = processor.process_with_ultimate_optimization(&[4, 5, 6]);
     let result3 = processor.process_with_ultimate_optimization(&[7, 8, 9]);
 
@@ -132,12 +168,18 @@ fn test_ultimate_performance_processor_multiple_calls() {
 #[test]
 fn test_ultimate_performance_processor_single_byte() {
     let processor = UltimatePerformanceProcessor::new();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let single = vec![100u8];
 
     let result = processor.process_with_ultimate_optimization(&single);
     assert_eq!(result, vec![101]);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_ultimate_performance_processor_aligned_size() {
     let processor = UltimatePerformanceProcessor::new();

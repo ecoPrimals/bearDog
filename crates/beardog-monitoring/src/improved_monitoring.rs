@@ -459,6 +459,9 @@ mod tests {
             description: "Test alert for monitoring".to_string(),
             source_component: "test_component".to_string(),
             created_at: chrono::Utc::now(),
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_improved_system_health_monitoring() {
         let components = vec![

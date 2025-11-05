@@ -65,6 +65,9 @@ fn test_generated_key_exists() {
     let key_id = manager
         .generate_key()
         .expect("Key generation should succeed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let exists = manager
         .key_exists(&key_id)
@@ -79,6 +82,9 @@ fn test_generated_key_exists() {
 
 #[test]
 fn test_store_and_retrieve_key() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let config = MemoryKeyConfig::default();
     let mut manager = MemoryKeyManager::new(config).expect("Key manager creation should succeed");
 
@@ -102,6 +108,9 @@ fn test_store_and_retrieve_key() {
     assert_eq!(retrieved, key_data, "Retrieved key should match stored key");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_store_empty_key() {
     let config = MemoryKeyConfig::default();
@@ -119,6 +128,9 @@ fn test_store_empty_key() {
         .expect("Empty key storage should succeed");
 
     let retrieved = manager
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         .get_key(&key_id)
         .expect("Empty key retrieval should succeed");
 
@@ -141,6 +153,9 @@ fn test_store_large_key() {
     let key_id = manager
         .store_key(&key_data, metadata)
         .expect("Large key storage should succeed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let retrieved = manager
         .get_key(&key_id)
@@ -161,6 +176,9 @@ fn test_retrieve_nonexistent_key() {
 
     let result = manager.get_key("nonexistent_key");
     assert!(result.is_err(), "Retrieving nonexistent key should fail");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -187,12 +205,17 @@ fn test_multiple_keys_storage() {
 
     // Retrieve and verify all keys
     for (key_id, expected_data) in stored_keys {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let retrieved = manager
             .get_key(&key_id)
             .expect("Key retrieval should succeed");
         assert_eq!(
             retrieved, expected_data,
-            "Retrieved key should match stored key"
+            "Retrieved key should match stored key" // TEST_CATEGORY: integration
+                                                    // TEST_DOMAIN: security
+                                                    // TEST_PRIORITY: normal
         );
     }
 }
@@ -228,6 +251,9 @@ fn test_delete_key() {
         .delete_key(&key_id)
         .expect("Key deletion should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Verify key no longer exists
     assert!(
         !manager.key_exists(&key_id).unwrap(),
@@ -259,6 +285,9 @@ fn test_delete_and_recreate_key() {
         id: "test_key".to_string(),
         created_at: chrono::Utc::now(),
         key_type: "test".to_string(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     };
 
     // Store first key
@@ -269,6 +298,9 @@ fn test_delete_and_recreate_key() {
     // Delete key
     manager
         .delete_key(&key_id1)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         .expect("Key deletion should succeed");
 
     // Store new key (will have different ID)
@@ -308,6 +340,9 @@ fn test_key_exists() {
 
     assert!(
         manager.key_exists(&key_id).unwrap(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         "Stored key should exist"
     );
     assert!(
@@ -344,6 +379,9 @@ fn test_key_config_defaults() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_custom_key_config() {
     let config = MemoryKeyConfig {
@@ -356,6 +394,9 @@ fn test_custom_key_config() {
         .expect("Key manager with custom config should succeed");
 
     // Manager should be created successfully with custom config
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(
         manager.generate_key().is_ok(),
         "Key generation with custom config should work"
@@ -375,6 +416,9 @@ fn test_concurrent_key_generation() {
     let manager =
         Arc::new(MemoryKeyManager::new(config).expect("Key manager creation should succeed"));
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let mut handles = vec![];
 
     // Generate keys concurrently
@@ -411,6 +455,9 @@ fn test_concurrent_key_access() {
     use std::thread;
 
     let config = MemoryKeyConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let manager =
         Arc::new(MemoryKeyManager::new(config).expect("Key manager creation should succeed"));
 
@@ -446,12 +493,18 @@ fn test_concurrent_key_access() {
 #[test]
 fn test_empty_key_id_retrieval() {
     let config = MemoryKeyConfig::default();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let manager = MemoryKeyManager::new(config).expect("Key manager creation should succeed");
 
     let result = manager.get_key("");
     assert!(result.is_err(), "Retrieving with empty key ID should fail");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_key_lifecycle_complete() {
     let config = MemoryKeyConfig::default();

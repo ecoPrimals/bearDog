@@ -52,6 +52,9 @@ async fn test_complete_auth_workflow_invalid_credentials() {
     let password = "CorrectPassword123!";
     let permissions = vec!["read".to_string()];
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     auth_handler
         .register_user(user_id, password, permissions)
         .unwrap();
@@ -80,6 +83,9 @@ async fn test_complete_auth_workflow_invalid_credentials() {
 async fn test_auth_workflow_with_rate_limiting() {
     // Step 1: Initialize with custom config for faster testing
     let config = AuthConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         session_timeout_hours: 24,
         max_login_attempts: 3,
         require_mfa: false,
@@ -112,6 +118,9 @@ async fn test_auth_workflow_with_rate_limiting() {
 
     // Step 4: Verify account is now locked even with correct password
     let correct_credentials = format!("{}:{}", user_id, password);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let locked_result = auth_handler.authenticate(&correct_credentials).await;
 
     assert!(locked_result.is_err(), "Account should remain locked");
@@ -157,6 +166,9 @@ async fn test_session_lifecycle() {
 
     // Step 4: Verify all sessions are unique
     assert_eq!(sessions.len(), 3);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_ne!(sessions[0].token, sessions[1].token);
     assert_ne!(sessions[1].token, sessions[2].token);
     assert_ne!(sessions[0].token, sessions[2].token);
@@ -204,6 +216,9 @@ async fn test_concurrent_user_authentication() {
 
     // All should succeed
     assert_eq!(successful_auths, 5);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 // ============================================================================
@@ -237,6 +252,9 @@ async fn test_permission_based_workflow() {
             vec!["read".to_string()],
         )
         .unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     auth_handler
         .register_user(
@@ -291,6 +309,9 @@ async fn test_session_token_uniqueness_across_logins() {
     let session2 = auth_handler.authenticate(&credentials).await.unwrap();
 
     // Step 4: Verify tokens are different (when timestamps differ)
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Note: The session is overwritten for the same user, but token should be different
     assert_ne!(
         session1.token, session2.token,
@@ -323,6 +344,9 @@ async fn test_invalid_credential_formats() {
     ];
 
     for invalid_creds in invalid_formats {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         let result = auth_handler.authenticate(invalid_creds).await;
         assert!(
             result.is_err(),
@@ -354,6 +378,9 @@ async fn test_authentication_nonexistent_user() {
 // ============================================================================
 // Session Expiry Configuration E2E
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_session_expiry_configuration() {
@@ -370,6 +397,9 @@ async fn test_session_expiry_configuration() {
         .register_user("expiry_test_user", "Password123!", vec!["read".to_string()])
         .unwrap();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let credentials = "expiry_test_user:Password123!";
     let session = auth_handler.authenticate(credentials).await.unwrap();
 
@@ -397,6 +427,9 @@ async fn test_user_with_no_permissions() {
 
     let credentials = "no_perms_user:Password123!";
     let session = auth_handler.authenticate(credentials).await.unwrap();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(session.permissions.len(), 0);
 }
@@ -414,6 +447,9 @@ async fn test_password_not_stored_plaintext() {
     let password = "VerySecurePassword123!";
 
     // Register user
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     auth_handler
         .register_user(user_id, password, vec!["read".to_string()])
         .unwrap();
@@ -439,6 +475,9 @@ async fn test_rapid_sequential_authentications() {
     let mut auth_handler = AuthenticationHandler::new(config);
 
     auth_handler
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .register_user("rapid_user", "Password123!", vec!["read".to_string()])
         .unwrap();
 
@@ -458,6 +497,9 @@ async fn test_rapid_sequential_authentications() {
 #[tokio::test]
 async fn test_mixed_success_and_failure_attempts() {
     let config = AuthConfig {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         session_timeout_hours: 24,
         max_login_attempts: 5,
         require_mfa: false,
@@ -489,6 +531,9 @@ async fn test_mixed_success_and_failure_attempts() {
 // Complete Workflow Integration Test
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_complete_multi_user_workflow() {
     // This test simulates a realistic multi-user system

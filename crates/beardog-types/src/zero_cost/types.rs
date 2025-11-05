@@ -75,9 +75,13 @@ pub enum MigrationComplexity {
     High,
 }
 
-/// Cryptographic key types
+// Re-export canonical KeyType as CanonicalKeyType (vendor-agnostic)
+pub use crate::canonical::providers_unified::traits::security_traits::KeyType as CanonicalKeyType;
+
+/// Zero-cost specific key types with fixed parameters
+///
+/// For new code, use `CanonicalKeyType` from beardog_types::canonical.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of key
 pub enum KeyType {
     /// RSA 2048-bit key
     Rsa2048,
@@ -85,6 +89,29 @@ pub enum KeyType {
     EcdsaP256,
     /// AES 256-bit symmetric key
     Aes256,
+}
+
+impl From<CanonicalKeyType> for KeyType {
+    fn from(ckt: CanonicalKeyType) -> Self {
+        match ckt {
+            CanonicalKeyType::Rsa => KeyType::Rsa2048,
+            CanonicalKeyType::EllipticCurve | CanonicalKeyType::Ed25519 => KeyType::EcdsaP256,
+            CanonicalKeyType::Aes | CanonicalKeyType::ChaCha20 => KeyType::Aes256,
+            CanonicalKeyType::X25519 | CanonicalKeyType::Generic | CanonicalKeyType::Custom(_) => {
+                KeyType::Aes256
+            } // Default
+        }
+    }
+}
+
+impl From<KeyType> for CanonicalKeyType {
+    fn from(kt: KeyType) -> Self {
+        match kt {
+            KeyType::Rsa2048 => CanonicalKeyType::Rsa,
+            KeyType::EcdsaP256 => CanonicalKeyType::EllipticCurve,
+            KeyType::Aes256 => CanonicalKeyType::Aes,
+        }
+    }
 }
 
 /// Security level classifications
@@ -321,12 +348,18 @@ mod tests {
     fn test_optimization_patterns() {
         let pattern = OptimizationPattern::EnumDispatch;
         assert!(matches!(pattern, OptimizationPattern::EnumDispatch));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         let pattern2 = OptimizationPattern::ZeroCopy;
         assert!(matches!(pattern2, OptimizationPattern::ZeroCopy));
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_key_type_variants() {
         let rsa = KeyType::Rsa2048;
         let ecdsa = KeyType::EcdsaP256;
@@ -344,12 +377,18 @@ mod tests {
         let critical = SecurityLevel::Critical;
 
         assert!(matches!(standard, SecurityLevel::Standard));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(matches!(high, SecurityLevel::High));
         assert!(matches!(critical, SecurityLevel::Critical));
     }
 
     #[test]
     fn test_hsm_key_creation() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let metadata = std::collections::HashMap::new();
         let key = HsmKey {
             key_id: "test-key-123".to_string(),
@@ -358,6 +397,9 @@ mod tests {
             metadata,
         };
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(key.key_id, "test-key-123");
         assert!(matches!(key.key_type, KeyType::EcdsaP256));
     }
@@ -366,6 +408,9 @@ mod tests {
     fn test_health_status_creation() {
         let mut details = std::collections::HashMap::new();
         details.insert("cpu".to_string(), "50%".to_string());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
 
         let health = HealthStatus {
             status: "healthy".to_string(),
@@ -377,6 +422,9 @@ mod tests {
         assert_eq!(health.details.get("cpu").map(String::as_str), Some("50%"));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_workflow_creation() {
         let workflow = Workflow {
@@ -389,6 +437,9 @@ mod tests {
         assert_eq!(workflow.id, "workflow-1");
         assert_eq!(workflow.workflow_type, "deployment");
         assert_eq!(workflow.steps.len(), 0);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -400,6 +451,9 @@ mod tests {
             id: "step-1".to_string(),
             action: "validate".to_string(),
             parameters: params,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
         };
 
         assert_eq!(step.id, "step-1");
@@ -416,6 +470,9 @@ mod tests {
             CompilationStrategy::Conservative,
             CompilationStrategy::Conservative
         ));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(matches!(
             CompilationStrategy::Balanced,
             CompilationStrategy::Balanced
@@ -433,6 +490,9 @@ mod tests {
     #[test]
     fn test_implementation_status_lifecycle() {
         assert!(matches!(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             ImplementationStatus::Planned,
             ImplementationStatus::Planned
         ));
@@ -450,6 +510,9 @@ mod tests {
         ));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_migration_complexity_levels() {
         assert!(matches!(MigrationComplexity::Low, MigrationComplexity::Low));

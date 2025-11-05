@@ -188,20 +188,35 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_human_entropy_method_all() {
         let methods = HumanEntropyMethod::all();
         assert_eq!(methods.len(), 5);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_human_entropy_capabilities_creation() {
         let caps = HumanEntropyCapabilities::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             vec![
                 HumanEntropyMethod::TouchPattern,
                 HumanEntropyMethod::Biometric,
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
             ],
             0.8,
         );
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(caps.method_count(), 2);
         assert_eq!(caps.quality_estimate, 0.8);
     }
@@ -212,10 +227,16 @@ mod tests {
         assert!(caps.has_method(HumanEntropyMethod::TouchPattern));
         assert!(!caps.has_method(HumanEntropyMethod::Biometric));
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_human_entropy_capabilities_add_method() {
         let mut caps = HumanEntropyCapabilities::none();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(caps.method_count(), 0);
 
         caps.add_method(HumanEntropyMethod::TouchPattern);
@@ -226,6 +247,9 @@ mod tests {
         assert_eq!(caps.method_count(), 1);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_quality_estimate_clamping() {
         let caps1 = HumanEntropyCapabilities::new(vec![], 1.5);

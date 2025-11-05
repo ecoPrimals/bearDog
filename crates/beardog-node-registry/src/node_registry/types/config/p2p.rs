@@ -27,21 +27,29 @@ use std::time::Duration;
 }
 impl Default for P2PConfig {
     fn default() -> Self {
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         Self {
             enabled: true,
             listen_address: std::env::var("BEARDOG_P2P_LISTEN_ADDRESS")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
                 .unwrap_or_else(|_| "0.0.0.0".to_string()),
             listen_port: std::env::var("BEARDOG_P2P_LISTEN_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8081),
+                .unwrap_or(network_config.service_ports.p2p_port),
             bootstrap_peers: Vec::new(),
             max_peers: std::env::var("BEARDOG_P2P_MAX_PEERS")
                 .ok()
                 .and_then(|m| m.parse().ok())
                 .unwrap_or(50),
-            connection_timeout_seconds: 30,
-            peer_discovery_interval_seconds: 60,
+            connection_timeout_seconds: std::env::var("BEARDOG_P2P_CONNECTION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30),
+            peer_discovery_interval_seconds: std::env::var("BEARDOG_P2P_PEER_DISCOVERY_INTERVAL_SECS")
+                .ok()
+                .and_then(|i| i.parse().ok())
+                .unwrap_or(60),
             metadata: HashMap::with_capacity(16),
         }
     }
@@ -127,6 +135,9 @@ impl P2PConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]}
 
 

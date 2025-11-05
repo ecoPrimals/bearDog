@@ -13,7 +13,6 @@
 //! - Error handling
 
 use super::*;
-use serde_json;
 
 // ============================================================================
 // ApiResponse<T> Tests
@@ -139,18 +138,27 @@ fn test_api_response_long_error_message() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_api_response_with_option() {
     let response = ApiResponse::success(Some("nested_option".to_string()));
 
     assert!(response.success);
     assert_eq!(response.data, Some(Some("nested_option".to_string())));
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 
 #[test]
 fn test_api_response_with_vec() {
     let data = vec![1, 2, 3, 4, 5];
     let response = ApiResponse::success(data.clone());
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(response.success);
     assert_eq!(response.data, Some(data));
 }
@@ -158,16 +166,25 @@ fn test_api_response_with_vec() {
 // ============================================================================
 // HealthResponse Tests
 // ============================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_health_response_creation() {
     let response = HealthResponse {
         status: "healthy".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         version: "1.0.0".to_string(),
     };
 
     assert_eq!(response.status, "healthy");
     assert_eq!(response.version, "1.0.0");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -181,6 +198,9 @@ fn test_health_response_clone() {
     assert_eq!(response1.status, response2.status);
     assert_eq!(response1.version, response2.version);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_health_response_debug_format() {
@@ -188,12 +208,18 @@ fn test_health_response_debug_format() {
         status: "healthy".to_string(),
         version: "1.0.0".to_string(),
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let debug_str = format!("{:?}", response);
 
     assert!(debug_str.contains("HealthResponse"));
     assert!(debug_str.contains("healthy"));
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_health_response_serialization() {
     let response = HealthResponse {
@@ -203,6 +229,9 @@ fn test_health_response_serialization() {
 
     let serialized = serde_json::to_string(&response).expect("Serialization should succeed");
     let deserialized: HealthResponse =
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
 
     assert_eq!(response.status, deserialized.status);
@@ -211,22 +240,34 @@ fn test_health_response_serialization() {
 
 #[test]
 fn test_health_response_different_statuses() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     let statuses = vec!["healthy", "degraded", "unhealthy", "starting", "stopping"];
 
     for status in statuses {
         let response = HealthResponse {
             status: status.to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: important
             version: "1.0.0".to_string(),
         };
         assert_eq!(response.status, status);
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_health_response_empty_version() {
     let response = HealthResponse {
         status: "healthy".to_string(),
         version: "".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     };
 
     assert!(response.version.is_empty());
@@ -237,6 +278,9 @@ fn test_health_response_empty_version() {
 // ============================================================================
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_status_response_creation() {
     let response = StatusResponse {
         status: "operational".to_string(),
@@ -245,6 +289,9 @@ fn test_status_response_creation() {
     };
 
     assert_eq!(response.status, "operational");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(response.connections, 42);
     assert_eq!(response.memory_usage, 1024 * 1024);
 }
@@ -254,6 +301,9 @@ fn test_status_response_zero_connections() {
     let response = StatusResponse {
         status: "idle".to_string(),
         connections: 0,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         memory_usage: 1024,
     };
 
@@ -263,6 +313,9 @@ fn test_status_response_zero_connections() {
 #[test]
 fn test_status_response_high_connections() {
     let response = StatusResponse {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         status: "busy".to_string(),
         connections: 10000,
         memory_usage: 1024 * 1024 * 1024,
@@ -275,6 +328,9 @@ fn test_status_response_high_connections() {
 fn test_status_response_clone() {
     let response1 = StatusResponse {
         status: "operational".to_string(),
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         connections: 100,
         memory_usage: 2048,
     };
@@ -285,6 +341,9 @@ fn test_status_response_clone() {
     assert_eq!(response1.memory_usage, response2.memory_usage);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_status_response_debug_format() {
     let response = StatusResponse {
@@ -296,6 +355,9 @@ fn test_status_response_debug_format() {
 
     assert!(debug_str.contains("StatusResponse"));
     assert!(debug_str.contains("operational"));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -306,6 +368,9 @@ fn test_status_response_serialization() {
         memory_usage: 8192,
     };
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let serialized = serde_json::to_string(&response).expect("Serialization should succeed");
     let deserialized: StatusResponse =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
@@ -314,6 +379,9 @@ fn test_status_response_serialization() {
     assert_eq!(response.connections, deserialized.connections);
     assert_eq!(response.memory_usage, deserialized.memory_usage);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_status_response_different_statuses() {
@@ -322,6 +390,9 @@ fn test_status_response_different_statuses() {
     for status in statuses {
         let response = StatusResponse {
             status: status.to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             connections: 1,
             memory_usage: 1024,
         };
@@ -333,6 +404,9 @@ fn test_status_response_different_statuses() {
 // ApiState Tests
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_api_state_creation() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
@@ -343,6 +417,9 @@ fn test_api_state_creation() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_api_state_clone() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
@@ -357,6 +434,9 @@ fn test_api_state_clone() {
 fn test_api_state_debug_format() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let state = ApiState { core };
 
     let debug_str = format!("{:?}", state);
@@ -372,12 +452,18 @@ fn test_create_router() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
     let _router = create_router(core);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Router creation should not panic
 }
 
 #[test]
 fn test_create_router_multiple_times() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
 
@@ -386,6 +472,9 @@ fn test_create_router_multiple_times() {
     }
     // Should be able to create multiple routers
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Utility Function Tests
@@ -397,12 +486,18 @@ fn test_get_memory_usage_returns_value() {
 
     // Memory usage should be non-zero (process ID * 1024)
     assert!(memory > 0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_get_memory_usage_consistent() {
     let memory1 = get_memory_usage();
     let memory2 = get_memory_usage();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Should return same value in quick succession (same process ID)
     assert_eq!(memory1, memory2);
@@ -415,11 +510,17 @@ fn test_get_memory_usage_consistent() {
 #[tokio::test]
 async fn test_health_endpoint_success_response() {
     use axum::{
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         body::Body,
         http::{Method, Request},
     };
     use tower::ServiceExt;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
     let app = create_router(core);
@@ -430,6 +531,9 @@ async fn test_health_endpoint_success_response() {
         .body(Body::empty())
         .expect("Request build should succeed");
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let response = app.oneshot(request).await.expect("Request should succeed");
 
     assert_eq!(response.status(), StatusCode::OK);
@@ -450,6 +554,9 @@ async fn test_status_endpoint_success_response() {
     let request = Request::builder()
         .method(Method::GET)
         .uri("/status")
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .body(Body::empty())
         .expect("Request build should succeed");
 
@@ -470,6 +577,9 @@ async fn test_health_endpoint_response_body() {
     let core = Arc::new(BearDogCore::new(config));
     let app = create_router(core);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let request = Request::builder()
         .method(Method::GET)
         .uri("/health")
@@ -497,6 +607,9 @@ async fn test_status_endpoint_response_body() {
     use tower::ServiceExt;
 
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let core = Arc::new(BearDogCore::new(config));
     let app = create_router(core);
 
@@ -526,6 +639,9 @@ async fn test_nonexistent_endpoint_returns_404() {
         body::Body,
         http::{Method, Request},
     };
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     use tower::ServiceExt;
 
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
@@ -546,6 +662,9 @@ async fn test_nonexistent_endpoint_returns_404() {
 #[tokio::test]
 async fn test_health_endpoint_multiple_requests() {
     use axum::{
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         body::Body,
         http::{Method, Request},
     };
@@ -567,6 +686,9 @@ async fn test_health_endpoint_multiple_requests() {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_status_endpoint_multiple_requests() {
     use axum::{

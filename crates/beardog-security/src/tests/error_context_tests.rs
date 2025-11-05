@@ -46,6 +46,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
     fn test_result_err_propagation() {
         // Test that Err results propagate correctly
         fn returns_err() -> Result<i32, beardog_errors::BearDogError> {
@@ -54,6 +57,9 @@ mod tests {
             ))
         }
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         let result = returns_err();
         assert!(result.is_err());
     }
@@ -62,10 +68,16 @@ mod tests {
     fn test_result_question_mark_operator() {
         // Test that ? operator works with our errors
         fn inner() -> Result<i32, beardog_errors::BearDogError> {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: important
             Err(beardog_errors::BearDogError::internal(
                 "inner error".to_string(),
             ))
         }
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         fn outer() -> Result<i32, beardog_errors::BearDogError> {
             let _value = inner()?;
@@ -75,6 +87,9 @@ mod tests {
         let result = outer();
         assert!(result.is_err());
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_error_chain() {
@@ -85,6 +100,9 @@ mod tests {
         let error2 = BearDogError::internal(format!("wrapped: {}", error1));
 
         // Test passes if error chaining compiles and runs
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert!(error2.to_string().contains("wrapped"));
     }
 
@@ -100,6 +118,9 @@ mod tests {
         assert!(!error.to_string().is_empty());
         assert!(!error2.to_string().is_empty());
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_result_map() {
@@ -109,6 +130,9 @@ mod tests {
 
         assert_eq!(doubled.unwrap(), 42);
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_result_map_err() {
@@ -119,12 +143,18 @@ mod tests {
         let converted = result.map_err(|e| BearDogError::internal(e.to_string()));
 
         assert!(converted.is_err());
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_result_and_then() {
         // Test Result::map chaining (more idiomatic than and_then with Ok)
         let result: Result<i32, beardog_errors::BearDogError> = Ok(21);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let chained = result.map(|x| x * 2);
 
         assert_eq!(chained.unwrap(), 42);
@@ -133,12 +163,18 @@ mod tests {
     #[test]
     #[allow(clippy::unnecessary_lazy_evaluations)]
     fn test_result_or_else() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         // Test Result::or_else fallback
         let result: Result<i32, beardog_errors::BearDogError> =
             Err(beardog_errors::BearDogError::internal("error".to_string()));
         let fallback: Result<i32, beardog_errors::BearDogError> = result.or_else(|_| Ok(42));
 
         assert_eq!(fallback.unwrap(), 42);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -147,6 +183,9 @@ mod tests {
     #[allow(clippy::unnecessary_literal_unwrap)]
     fn test_result_unwrap_or() {
         // Test Result::unwrap_or with default
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let result: Result<i32, beardog_errors::BearDogError> = Ok(42);
         let value = result.unwrap_or(0);
 
@@ -169,12 +208,18 @@ mod tests {
     #[test]
     fn test_result_ok_method() {
         // Test Result::ok conversion to Option
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let result: Result<i32, beardog_errors::BearDogError> = Ok(42);
         let option = result.ok();
 
         assert_eq!(option, Some(42));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_result_err_method() {
         // Test Result::err conversion to Option

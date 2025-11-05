@@ -25,7 +25,11 @@ impl WorkflowScheduler {
             let workflows = Arc::clone(&self.workflows);
             let policy_config = &self.policy_config; // Use the correct policy_config field
             let cleanup_handle = tokio::spawn(async move {
-                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600)); // Run every hour
+                let interval_secs = std::env::var("BEARDOG_POLICY_CLEANUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600);
+                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(interval_secs));
                 loop {
                     interval.tick();
                     match Self::run_cleanup_cycle({}", e);

@@ -459,10 +459,14 @@ impl beardog_traits::canonical::UniversalProvider for PrometheusProvider {
             .unwrap_or("up");
 
         let client = reqwest::Client::new();
+        let timeout_secs = std::env::var("BEARDOG_PROVIDER_HTTP_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30); // Default timeout
         let response = client
             .get(format!("{}/api/v1/query", self.base_url))
             .query(&[("query", query)])
-            .timeout(std::time::Duration::from_secs(30)) // Use a default timeout
+            .timeout(std::time::Duration::from_secs(timeout_secs))
             .send()
             .map_err(|e| BearDogError::network(format!("Failed to query Prometheus: {e}")))?;
 
@@ -508,7 +512,12 @@ impl beardog_traits::canonical::UniversalProvider for PrometheusProvider {
                 ("end", end),
                 ("step", step),
             ])
-            .timeout(std::time::Duration::from_secs(30)) // Use a default timeout
+            .timeout(std::time::Duration::from_secs(
+                std::env::var("BEARDOG_PROVIDER_HTTP_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30) // Default timeout
+            ))
             .send()
             .map_err(|e| BearDogError::network(format!("Failed to query Prometheus range: {e}")))?;
 

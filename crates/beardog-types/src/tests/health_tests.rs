@@ -91,6 +91,9 @@ mod health_check_tests {
         let check = create_test_health_check();
         assert_eq!(check.name, "test_check");
         assert_eq!(check.status, HealthStatus::Healthy);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(check.message, Some("All good".to_string()));
         assert_eq!(check.duration_ms, 42);
         assert!(check.details.is_empty());
@@ -104,27 +107,45 @@ mod health_check_tests {
 
         let check = HealthCheck {
             name: "detailed_check".to_string(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             status: HealthStatus::Healthy,
             message: None,
             timestamp: Utc::now(),
             duration_ms: 100,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             details: details.clone(),
         };
 
         assert_eq!(check.details.len(), 2);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(check.details.get("key1"), Some(&"value1".to_string()));
         assert_eq!(check.details.get("key2"), Some(&"value2".to_string()));
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_health_check_without_message() {
         let check = HealthCheck {
             name: "no_message".to_string(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             status: HealthStatus::Healthy,
             message: None,
             timestamp: Utc::now(),
             duration_ms: 0,
             details: HashMap::new(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
         };
 
         assert!(check.message.is_none());
@@ -146,8 +167,14 @@ mod health_check_tests {
         assert!(serialized.is_ok());
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_health_check_deserialize() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let json = r#"{
             "name": "test",
             "status": "Healthy",
@@ -170,6 +197,9 @@ mod health_check_tests {
             HealthStatus::Degraded,
             HealthStatus::Unhealthy,
             HealthStatus::Critical,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             HealthStatus::Unknown,
         ];
 
@@ -181,16 +211,25 @@ mod health_check_tests {
                 timestamp: Utc::now(),
                 duration_ms: 100,
                 details: HashMap::new(),
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
             };
             assert_eq!(check.status, status);
         }
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod service_health_tests {
     use super::*;
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn create_test_service_health() -> ServiceHealth {
         ServiceHealth {
             service_name: "test_service".to_string(),
@@ -205,6 +244,9 @@ mod service_health_tests {
     #[test]
     fn test_service_health_creation() {
         let service = create_test_service_health();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(service.service_name, "test_service");
         assert_eq!(service.status, HealthStatus::Healthy);
         assert_eq!(service.uptime_seconds, 3600);
@@ -241,6 +283,9 @@ mod service_health_tests {
         let checks = vec![
             HealthCheck {
                 name: "check1".to_string(),
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
                 status: HealthStatus::Healthy,
                 message: None,
                 timestamp: Utc::now(),
@@ -248,6 +293,9 @@ mod service_health_tests {
                 details: HashMap::new(),
             },
             HealthCheck {
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
                 name: "check2".to_string(),
                 status: HealthStatus::Degraded,
                 message: Some("Slow response".to_string()),
@@ -269,6 +317,9 @@ mod service_health_tests {
         assert_eq!(service.checks.len(), 2);
         assert_eq!(service.checks[1].message, Some("Slow response".to_string()));
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_service_health_serialize() {
@@ -300,10 +351,16 @@ mod system_health_report_tests {
             unknown_services: 0,
         }
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     fn create_test_system_health_report() -> SystemHealthReport {
         SystemHealthReport {
             overall_status: HealthStatus::Healthy,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             services: vec![],
             timestamp: Utc::now(),
             summary: create_test_summary(),
@@ -334,11 +391,17 @@ mod system_health_report_tests {
             services: vec![service],
             timestamp: Utc::now(),
             summary: create_test_summary(),
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
         };
 
         assert_eq!(report.services.len(), 1);
         assert_eq!(report.services[0].service_name, "api");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_health_summary_counts() {
@@ -358,6 +421,9 @@ mod system_health_report_tests {
             healthy_services: 5,
             degraded_services: 0,
             unhealthy_services: 0,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             critical_services: 0,
             unknown_services: 0,
         };
@@ -366,6 +432,9 @@ mod system_health_report_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_health_summary_mixed_states() {
         let summary = HealthSummary {
             total_services: 10,
@@ -377,6 +446,9 @@ mod system_health_report_tests {
         };
 
         let total_counted = summary.healthy_services
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             + summary.degraded_services
             + summary.unhealthy_services
             + summary.critical_services
@@ -394,10 +466,16 @@ mod system_health_report_tests {
 
     #[test]
     fn test_system_health_report_clone() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let report = create_test_system_health_report();
         let cloned = report.clone();
         assert_eq!(report.overall_status, cloned.overall_status);
         assert_eq!(report.summary.total_services, cloned.summary.total_services);
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -408,6 +486,9 @@ mod health_integration_tests {
     #[test]
     fn test_full_health_hierarchy() {
         // Create a complete health check hierarchy
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let details = HashMap::new();
 
         let check = HealthCheck {
@@ -451,6 +532,9 @@ mod health_integration_tests {
         assert_eq!(report.summary.healthy_services, 1);
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_degraded_service_affects_overall_status() {
         let service1 = ServiceHealth {

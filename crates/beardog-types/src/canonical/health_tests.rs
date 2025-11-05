@@ -57,6 +57,9 @@ mod health_status_tests {
         
         assert!(json.is_ok());
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         if let Ok(json_str) = json {
             let deserialized: Result<HealthStatus, _> = serde_json::from_str(&json_str);
             assert!(deserialized.is_ok());
@@ -68,6 +71,9 @@ mod health_status_tests {
 #[cfg(test)]
 mod health_check_result_tests {
     use crate::canonical::health::{HealthStatus, HealthCheckResult};
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     use std::time::SystemTime;
     
     #[test]
@@ -76,17 +82,26 @@ mod health_check_result_tests {
             status: HealthStatus::Healthy,
             message: "All systems operational".to_string(),
             timestamp: SystemTime::now(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             details: Default::default(),
         };
         
         assert_eq!(result.status, HealthStatus::Healthy);
         assert!(!result.message.is_empty());
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
     
     #[test]
     fn test_health_check_result_with_details() {
         use std::collections::HashMap;
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let mut details = HashMap::new();
         details.insert("cpu_usage".to_string(), "25%".to_string());
         details.insert("memory_usage".to_string(), "512MB".to_string());
@@ -106,6 +121,9 @@ mod health_check_result_tests {
     fn test_health_check_timestamp_ordering() {
         use std::time::Duration;
         use std::thread::sleep;
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         let result1 = HealthCheckResult {
             status: HealthStatus::Healthy,
@@ -116,6 +134,9 @@ mod health_check_result_tests {
         
         sleep(Duration::from_millis(10));
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let result2 = HealthCheckResult {
             status: HealthStatus::Healthy,
             message: "Check 2".to_string(),
@@ -132,6 +153,9 @@ mod health_check_result_tests {
 mod health_metrics_tests {
     #[test]
     fn test_consecutive_failures_tracking() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let mut failures = 0u32;
         
         // Simulate failures
@@ -157,6 +181,9 @@ mod health_metrics_tests {
         assert!(failures >= threshold);
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
     #[test]
     fn test_success_rate_calculation() {
         let total_checks = 100;
@@ -170,6 +197,9 @@ mod health_metrics_tests {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: important
 #[cfg(test)]
 mod health_transitions_tests {
     use crate::canonical::health::HealthStatus;
@@ -178,6 +208,9 @@ mod health_transitions_tests {
     fn test_healthy_to_degraded_transition() {
         let mut status = HealthStatus::Healthy;
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         // Simulate degradation
         status = HealthStatus::Degraded;
         
@@ -192,6 +225,9 @@ mod health_transitions_tests {
         status = HealthStatus::Unhealthy;
         
         assert_eq!(status, HealthStatus::Unhealthy);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     }
     
     #[test]
@@ -199,6 +235,9 @@ mod health_transitions_tests {
         let mut status = HealthStatus::Unhealthy;
         
         // Simulate recovery
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         status = HealthStatus::Degraded;
         assert_eq!(status, HealthStatus::Degraded);
         
@@ -206,6 +245,9 @@ mod health_transitions_tests {
         assert_eq!(status, HealthStatus::Healthy);
     }
 }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
 #[cfg(test)]
 mod concurrent_health_checks {
@@ -222,6 +264,9 @@ mod concurrent_health_checks {
         for i in 0..5 {
             let status_clone = Arc::clone(&status);
             let handle = thread::spawn(move || {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: types
+                // TEST_PRIORITY: normal
                 let mut s = status_clone.lock().unwrap();
                 if i % 2 == 0 {
                     *s = HealthStatus::Healthy;
@@ -257,6 +302,9 @@ mod edge_cases {
             status: HealthStatus::Healthy,
             message: String::new(),
             timestamp: SystemTime::now(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             details: Default::default(),
         };
         
@@ -266,6 +314,9 @@ mod edge_cases {
     #[test]
     fn test_very_long_health_message() {
         let long_message = "Error: ".to_string() + &"x".repeat(1000);
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: types
+         // TEST_PRIORITY: normal
         
         let result = HealthCheckResult {
             status: HealthStatus::Unhealthy,
@@ -277,6 +328,9 @@ mod edge_cases {
         assert_eq!(result.message.len(), long_message.len());
     }
     
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_unknown_status_handling() {
         let status = HealthStatus::Unknown;

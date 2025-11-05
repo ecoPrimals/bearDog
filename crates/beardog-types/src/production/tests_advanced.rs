@@ -57,6 +57,9 @@ fn test_production_ecosystem_shutdown() -> Result<(), Box<dyn std::error::Error>
     let mut ecosystem = ProductionEcosystem::new(config)?;
     let _ = ecosystem.initialize();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     ecosystem.shutdown()?;
 
     let status = ecosystem.get_status();
@@ -76,6 +79,9 @@ fn test_production_ecosystem_uptime() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_environment_level_equality() {
     assert_eq!(EnvironmentLevel::Development, EnvironmentLevel::Development);
     assert_ne!(EnvironmentLevel::Development, EnvironmentLevel::Production);
@@ -86,6 +92,9 @@ fn test_environment_level_equality() {
 
 #[test]
 fn test_operational_status_equality() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(OperationalStatus::Healthy, OperationalStatus::Healthy);
     assert_ne!(OperationalStatus::Healthy, OperationalStatus::Degraded);
 
@@ -96,6 +105,9 @@ fn test_operational_status_equality() {
 #[test]
 fn test_production_flags_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let flags = ProductionFlags::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let serialized = serde_json::to_string(&flags)?;
     assert!(!serialized.is_empty());
 
@@ -106,6 +118,9 @@ fn test_production_flags_serialization() -> Result<(), Box<dyn std::error::Error
 
 #[test]
 fn test_production_state_defaults() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let state = ProductionState::default();
     assert_eq!(state.status, OperationalStatus::Initializing);
     assert_eq!(state.active_connections, 0);
@@ -114,18 +129,27 @@ fn test_production_state_defaults() {
     assert_eq!(state.cpu_usage_percent, 0.0);
     assert_eq!(state.error_count_hourly, 0);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_performance_metrics_defaults() {
     let metrics = PerformanceMetrics::default();
     assert_eq!(metrics.avg_response_time_ms, 0.0);
     assert_eq!(metrics.p95_response_time_ms, 0.0);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert_eq!(metrics.p99_response_time_ms, 0.0);
     assert_eq!(metrics.requests_per_second, 0.0);
     assert_eq!(metrics.error_rate_percent, 0.0);
     assert_eq!(metrics.throughput_bytes_per_sec, 0);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_production_config_clone() {
     let config1 = ProductionConfig::default();
@@ -133,7 +157,9 @@ fn test_production_config_clone() {
 
     assert_eq!(
         config1.core.environment_level,
-        config2.core.environment_level
+        config2.core.environment_level // TEST_CATEGORY: unit
+                                       // TEST_DOMAIN: types
+                                       // TEST_PRIORITY: normal
     );
     assert_eq!(config1.core.service_name, config2.core.service_name);
 }
@@ -142,6 +168,9 @@ fn test_production_config_clone() {
 fn test_environment_level_all_variants() {
     let levels = vec![
         EnvironmentLevel::Development,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         EnvironmentLevel::Staging,
         EnvironmentLevel::PreProduction,
         EnvironmentLevel::Production,
@@ -150,6 +179,9 @@ fn test_environment_level_all_variants() {
 
     for level in levels {
         let cloned = level.clone();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(level, cloned);
     }
 }
@@ -159,6 +191,9 @@ fn test_operational_status_all_variants() {
     let statuses = vec![
         OperationalStatus::Initializing,
         OperationalStatus::Healthy,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         OperationalStatus::Degraded,
         OperationalStatus::Unhealthy,
         OperationalStatus::Critical,
@@ -172,6 +207,9 @@ fn test_operational_status_all_variants() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 fn test_production_core_config_node_id() {
     let config = ProductionCoreConfig::default();
     // node_id should be set (either from HOSTNAME or "unknown")
@@ -186,10 +224,16 @@ fn test_production_flags_individual_features() {
     flags.enable_advanced_monitoring = false;
     assert!(!flags.enable_advanced_monitoring);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     flags.enable_auto_scaling = true;
     assert!(flags.enable_auto_scaling);
 
     flags.enable_circuit_breakers = false;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     assert!(!flags.enable_circuit_breakers);
 }
 
@@ -202,6 +246,9 @@ fn test_builder_service_method() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(ecosystem.config.core.service_name, "custom-service");
     assert_eq!(ecosystem.config.core.service_version, "2.0.0");
     Ok(())
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -210,6 +257,9 @@ fn test_builder_deployment_method() -> Result<(), Box<dyn std::error::Error>> {
         .deployment(
             "deploy-456".to_string(),
             "eu-west-1".to_string(),
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             "test-cluster".to_string(),
         )
         .build()?;
@@ -223,6 +273,9 @@ fn test_builder_deployment_method() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_production_state_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let state = ProductionState::default();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     let serialized = serde_json::to_string(&state)?;
     assert!(!serialized.is_empty());
 
@@ -231,6 +284,9 @@ fn test_production_state_serialization() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: types
+// TEST_PRIORITY: normal
 #[test]
 fn test_performance_metrics_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let metrics = PerformanceMetrics::default();

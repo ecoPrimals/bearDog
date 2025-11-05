@@ -28,6 +28,9 @@ fn test_capability_type_equality() {
 
 #[test]
 fn test_capability_type_variants() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     // Verify all capability types can be created
     let types = vec![
         CapabilityType::Security,
@@ -37,6 +40,9 @@ fn test_capability_type_variants() {
         CapabilityType::Monitoring,
     ];
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(types.len(), 5);
 }
 
@@ -44,6 +50,9 @@ fn test_capability_type_variants() {
 fn test_capability_response_success() {
     let response = CapabilityResponse {
         success: true,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         result: serde_json::json!({"status": "ok"}),
         metadata: std::collections::HashMap::new(),
     };
@@ -55,6 +64,9 @@ fn test_capability_response_success() {
 #[test]
 fn test_capability_response_failure() {
     let mut metadata = std::collections::HashMap::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     metadata.insert("error".to_string(), "capability not found".to_string());
 
     let response = CapabilityResponse {
@@ -64,6 +76,9 @@ fn test_capability_response_failure() {
     };
 
     assert!(!response.success);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: important
     assert!(response.metadata.contains_key("error"));
 }
 
@@ -76,6 +91,9 @@ fn test_capability_metadata() {
     assert_eq!(metadata.len(), 2);
     assert_eq!(metadata.get("priority"), Some(&"high".to_string()));
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: adapters
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_capability_request_with_empty_metadata() {
@@ -83,6 +101,9 @@ fn test_capability_request_with_empty_metadata() {
         required_capability: CapabilityType::Compute,
         payload: serde_json::json!({}),
         metadata: std::collections::HashMap::new(),
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     };
 
     assert!(request.metadata.is_empty());
@@ -91,6 +112,9 @@ fn test_capability_request_with_empty_metadata() {
 #[test]
 fn test_capability_request_with_complex_payload() {
     let payload = serde_json::json!({
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         "operation": "process",
         "data": [1, 2, 3, 4, 5],
         "options": {
@@ -109,6 +133,9 @@ fn test_capability_request_with_complex_payload() {
     assert!(request.payload["data"].is_array());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_response_with_metadata() {
     let mut metadata = std::collections::HashMap::new();

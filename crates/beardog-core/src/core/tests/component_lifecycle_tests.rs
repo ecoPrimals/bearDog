@@ -32,6 +32,9 @@ async fn test_component_status_after_creation() {
     let state = core.state.read().await;
 
     // Should have components map (even if empty initially)
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Components map should be accessible (len() is always >= 0 for usize)
     let _components = &state.components;
 }
@@ -40,6 +43,9 @@ async fn test_component_status_after_creation() {
 async fn test_component_initialization_order() {
     let mut core = BearDogCore::with_default_config().unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Initialize should complete without error
     let result = core.initialize().await;
     assert!(result.is_ok());
@@ -47,6 +53,9 @@ async fn test_component_initialization_order() {
 
 #[tokio::test]
 async fn test_multiple_component_access() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let core = BearDogCore::with_default_config().unwrap();
 
     // Multiple reads should work
@@ -54,12 +63,18 @@ async fn test_multiple_component_access() {
     drop(state1);
 
     let state2 = core.state.read().await;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     drop(state2);
 
     // Test passes (placeholder removed)
 }
 
 #[tokio::test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 async fn test_component_concurrent_reads() {
     let core = std::sync::Arc::new(BearDogCore::with_default_config().unwrap());
 
@@ -71,6 +86,9 @@ async fn test_component_concurrent_reads() {
             let state = core_clone.state.read().await;
             let _count = state.components.len();
         });
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         handles.push(handle);
     }
 
@@ -88,6 +106,9 @@ async fn test_component_state_consistency() {
     drop(state1);
 
     let state2 = core.state.read().await;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let count2 = state2.components.len();
 
     assert_eq!(count1, count2);
@@ -100,6 +121,9 @@ async fn test_development_config_components() {
     let core = BearDogCore::new(config);
 
     let state = core.state.read().await;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Development config should have valid state
     // Components map should be accessible (len() is always >= 0 for usize)
     let _components = &state.components;
@@ -108,6 +132,9 @@ async fn test_development_config_components() {
 #[tokio::test]
 async fn test_production_config_components() {
     let config = UnifiedBearDogConfig::production();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let core = BearDogCore::new(config);
 
     let state = core.state.read().await;
@@ -116,6 +143,9 @@ async fn test_production_config_components() {
     let _components = &state.components;
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_component_lifecycle_full_flow() {
     let config = UnifiedBearDogConfig::default();

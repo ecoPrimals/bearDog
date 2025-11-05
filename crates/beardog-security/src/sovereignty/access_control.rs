@@ -127,6 +127,9 @@ impl AccessController {
 mod tests {
     use super::*;}
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_access_controller() -> Result<(), beardog_errors::BearDogError> {
         let controller = AccessController::new(AccessControlConfig::default());

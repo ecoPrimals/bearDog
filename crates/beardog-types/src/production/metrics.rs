@@ -238,6 +238,9 @@ mod tests {
         let config = MetricsConfig {
             collection_interval_seconds: 60,
             retention_count: 5000,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             enable_streaming: false,
             batch_size: 200,
             labels,
@@ -245,6 +248,9 @@ mod tests {
 
         assert_eq!(config.collection_interval_seconds, 60);
         assert_eq!(config.retention_count, 5000);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(!config.enable_streaming);
         assert_eq!(config.labels.len(), 1);
     }
@@ -261,6 +267,9 @@ mod tests {
             disk_usage_percent: 70.0,
             network_throughput_bps: 1_000_000,
             active_connections: 50,
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             latency_ms: 25.5,
             error_rate_percent: 0.1,
             custom_metrics: custom,
@@ -280,11 +289,17 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     fn test_collector_start_stop() {
         let config = MetricsConfig::default();
         let mut collector = ProductionMetricsCollector::new(config);
 
         // Start collection
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let result = collector.start_collection();
         assert!(result.is_ok());
         assert!(collector.is_collecting);
@@ -302,6 +317,9 @@ mod tests {
     #[test]
     fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let config = MetricsConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         let json = serde_json::to_string(&config)?;
         assert!(!json.is_empty());
 
@@ -310,6 +328,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_current_metrics_serialization() {
         let metrics = CurrentMetrics {

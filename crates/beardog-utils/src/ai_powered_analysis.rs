@@ -647,6 +647,9 @@ impl Default for AICodeAnalysisEngine {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_ai_code_analysis() {
         let mut engine = AICodeAnalysisEngine::new();

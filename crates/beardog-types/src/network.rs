@@ -22,15 +22,16 @@ pub struct EndpointConfig {
 
 impl Default for EndpointConfig {
     fn default() -> Self {
+        use crate::canonical::config::runtime_config::RuntimeNetworkConfig;
+        
+        // Use environment-driven configuration instead of hardcoded localhost
+        let config = RuntimeNetworkConfig::from_env();
+        
         Self {
-            address: std::env::var("BEARDOG_DEFAULT_HOST")
-                .unwrap_or_else(|_| "localhost".to_string()),
-            port: std::env::var("BEARDOG_DEFAULT_PORT")
-                .ok()
-                .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
-            timeout_ms: 5000,
-            ssl_enabled: false,
+            address: config.api_host,
+            port: config.api_port,
+            timeout_ms: (config.timeout_seconds * 1000) as u64,
+            ssl_enabled: config.enable_tls,
         }
     }
 }
@@ -257,31 +258,40 @@ impl NetworkConfig {
     /// Create a new network configuration with environment-aware defaults
     /// Creates a new instance
     pub fn new() -> Self {
+        use crate::canonical::config::runtime_config::RuntimeNetworkConfig;
+        
+        // Use environment-driven configuration
+        let config = RuntimeNetworkConfig::from_env();
+        
         Self {
-            connection: NetworkConnection::http(
-                std::env::var("BEARDOG_NETWORK_ADDRESS")
-                    .or_else(|_| std::env::var("BEARDOG_HOST"))
-                    .unwrap_or_else(|_| "localhost".to_string()),
-                std::env::var("BEARDOG_PORT")
-                    .ok()
-                    .and_then(|p| p.parse().ok())
-                    .unwrap_or(8080),
-            ),
+            connection: if config.enable_tls {
+                NetworkConnection::https(config.api_host.clone(), config.api_port)
+            } else {
+                NetworkConnection::http(config.api_host.clone(), config.api_port)
+            },
             security: NetworkSecurityConfig {
-                tls_enabled: true,
+                tls_enabled: config.enable_tls,
                 verify_certificates: true,
                 ..Default::default()
             },
-            pool: ConnectionPoolConfig::default(),
+            pool: ConnectionPoolConfig {
+                max_connections: config.max_connections,
+                ..Default::default()
+            },
             rate_limit: RateLimitConfig::default(),
-            request_timeout: Duration::from_secs(30),
+            request_timeout: Duration::from_secs(config.timeout_seconds),
             response_timeout: Duration::from_secs(60),
         }
     }
 
     pub fn local() -> Self {
+        use crate::canonical::config::test_fixtures::TestNetworkConfig;
+        
+        // Use test configuration for local development
+        let test_config = TestNetworkConfig::local();
+        
         Self {
-            connection: NetworkConnection::http("localhost".to_string(), 8080),
+            connection: NetworkConnection::http(test_config.api_host, test_config.api_port),
             security: NetworkSecurityConfig {
                 tls_enabled: false,
                 verify_certificates: false,
@@ -292,15 +302,26 @@ impl NetworkConfig {
     }
 
     pub fn production() -> Self {
+        use crate::canonical::config::runtime_config::RuntimeNetworkConfig;
+        
+        // Use environment-driven production configuration
+        let config = RuntimeNetworkConfig::from_env();
+        
         Self {
-            connection: NetworkConnection::https("0.0.0.0".to_string(), 8443),
+            connection: NetworkConnection::https(
+                std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string()),
+                std::env::var("BEARDOG_HTTPS_PORT")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8443)
+            ),
             security: NetworkSecurityConfig {
                 tls_enabled: true,
                 verify_certificates: true,
                 ..Default::default()
             },
             pool: ConnectionPoolConfig {
-                max_connections: 100,
+                max_connections: config.max_connections,
                 ..Default::default()
             },
             ..Default::default()
@@ -349,6 +370,9 @@ mod tests {
         let local_config = EndpointConfig::new("localhost".to_string(), 3000);
         assert!(local_config.is_local());
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_network_connection() {
@@ -356,12 +380,18 @@ mod tests {
         assert_eq!(conn.url(), "http://api.example.com:80");
 
         let secure_conn = NetworkConnection::https("api.example.com".to_string(), 443);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(secure_conn.url(), "https://api.example.com:443");
     }
 
     #[test]
     fn test_network_config_validation() {
         let mut config = NetworkConfig::local();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.validate().is_ok());
 
         // Test invalid port
@@ -374,6 +404,9 @@ mod tests {
         assert!(config.validate().is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_production_config() {
         let config = NetworkConfig::production();

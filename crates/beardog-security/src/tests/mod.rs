@@ -124,3 +124,32 @@ mod crypto_error_boundary_tests;
 // October 22, 2025 - Security Edge Cases (High-Value Test Coverage Expansion)
 #[cfg(test)]
 mod security_edge_cases_oct22;
+
+// October 31, 2025 - Week 1 Test Expansion: Authorization Tests
+#[cfg(test)]
+mod authorization_comprehensive_tests;
+
+// October 31, 2025 - Week 1 Test Expansion: Quantum Crypto Tests
+// NOTE: Disabled until quantum_crypto module is properly implemented and exported
+// #[cfg(test)]
+// mod quantum_crypto_comprehensive_tests;
+
+// October 31, 2025 - Week 1 Test Expansion: Orchestration Tests
+#[cfg(test)]
+mod orchestration_comprehensive_tests;
+
+// October 31, 2025 - Week 2 Test Expansion: Recovery Mechanism Tests
+#[cfg(test)]
+mod recovery_tests;
+
+// October 31, 2025 - Week 2 Test Expansion: Sovereignty Tests
+#[cfg(test)]
+mod sovereignty_tests;
+
+// October 31, 2025 - Week 2 Test Expansion: Memory Key Manager Tests
+#[cfg(test)]
+mod memory_key_manager_comprehensive_tests;
+
+// October 31, 2025 - Week 2 Test Expansion: SIMD Crypto Tests
+#[cfg(test)]
+mod simd_crypto_comprehensive_tests;

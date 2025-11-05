@@ -702,6 +702,9 @@ mod tests {
         // Test validation
         assert!(UnifiedConfigUtils::validate_config_file(temp_file.path()));
     }
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: types
+ // TEST_PRIORITY: normal
 
     #[test]
     fn test_config_merging() {
@@ -715,6 +718,9 @@ mod tests {
         };
 
         let override_config = TestConfig {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: types
+            // TEST_PRIORITY: normal
             name: "override".to_string(),
             value: 20,
             nested: NestedConfig {
@@ -740,6 +746,9 @@ mod tests {
         assert!(Arc::ptr_eq(&config1, &config2));
 
         // Test removal
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(UnifiedConfigUtils::remove_shared_config("test_config"));
         assert!(!UnifiedConfigUtils::remove_shared_config("nonexistent"));
     }
@@ -750,6 +759,9 @@ mod tests {
         assert!(!paths.is_empty());
         
         // Should include current directory
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(paths.iter().any(|p| p.to_string_lossy().contains("./myapp.toml")));
         
         // Should include config directory
@@ -759,11 +771,17 @@ mod tests {
     #[test]
     fn test_performance_metrics() {
         let metrics = UnifiedConfigUtils::get_performance_metrics();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(metrics.consolidation_benefit > 0.0);
         assert!(metrics.memory_reduction_mb > 0.0);
         assert!(metrics.config_operations_per_second > 0.0);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_legacy_compatibility() {
         // Test that legacy functions still work

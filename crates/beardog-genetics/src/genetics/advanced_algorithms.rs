@@ -37,14 +37,37 @@ use uuid::Uuid;
 }
 
 impl Default for EvolutionConfig {
-    fn default(100,
-            mutation_rate: 0.05,
-            crossover_rate: 0.8,
-            elitism_percentage: 0.1,
-            max_generations: 1000,
-            fitness_threshold: 0.95,
+    fn default() -> Self {
+        Self {
+            population_size: std::env::var("BEARDOG_GENETICS_POPULATION_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100),
+            mutation_rate: std::env::var("BEARDOG_GENETICS_MUTATION_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.05),
+            crossover_rate: std::env::var("BEARDOG_GENETICS_CROSSOVER_RATE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.8),
+            elitism_percentage: std::env::var("BEARDOG_GENETICS_ELITISM_PERCENTAGE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.1),
+            max_generations: std::env::var("BEARDOG_GENETICS_MAX_GENERATIONS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1000),
+            fitness_threshold: std::env::var("BEARDOG_GENETICS_FITNESS_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.95),
             diversity_preservation: true,
-            adaptive_parameters: true,
+            adaptive_parameters: std::env::var("BEARDOG_GENETICS_ADAPTIVE_PARAMETERS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
         }
     }
 }
@@ -489,12 +512,18 @@ mod tests {
     #[tokio::test]
     fn test_genetic_evolution_engine_creation() {
         let config = EvolutionConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let engine = GeneticEvolutionEngine::new(config);
 
         assert_eq!(engine.evolution_config.population_size, 100);
         assert_eq!(engine.evolution_config.mutation_rate, 0.05);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_population_initialization(10,
             ..Default::default()

@@ -5,13 +5,16 @@
 
 use super::super::types::KeyType;
 use super::audit::logger::DefaultAuditLogger;
-// NOTE: Using stub crypto providers since crypto_providers module is temporarily disabled
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
 use super::types::ProtectedMemory;
 use super::types::*;
+use crate::tunnel::hsm::crypto::{
+    CryptoProviderManager, CryptoRequirements, DecryptionOptions, EncryptionOptions,
+    RustCryptoProvider, SigningOptions, VerificationOptions,
+};
 use crate::tunnel::hsm::manager::HsmProvider;
 use crate::tunnel::hsm::stub_types::{
-    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider as StubRustCryptoProvider,
 };
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
@@ -96,6 +99,7 @@ pub struct RustSoftwareHsm {
     config: CanonicalSoftwareHsmConfig,
     key_store: Arc<RwLock<SoftwareKeyStore>>,
     crypto_provider: Arc<dyn CryptoProvider + Send + Sync>,
+    crypto_manager: Arc<CryptoProviderManager>, // NEW: Universal Crypto Provider
     memory_protector: Arc<DefaultMemoryProtector>,
     audit_logger: Arc<DefaultAuditLogger>,
     health_monitor: Arc<SoftwareHealthMonitor>,
@@ -165,16 +169,23 @@ impl RustSoftwareHsm {
         let audit_logger = Arc::new(DefaultAuditLogger::new().await?);
         let health_monitor = Arc::new(SoftwareHealthMonitor::new().await?);
 
+        // NEW: Initialize Universal Crypto Provider Manager
+        let crypto_manager = Arc::new(CryptoProviderManager::new());
+        let rust_crypto = Arc::new(RustCryptoProvider::new())
+            as Arc<dyn crate::tunnel::hsm::crypto::UniversalCryptoProvider>;
+        crypto_manager.register_provider(rust_crypto).await?;
+
         let hsm = Self {
             config,
             key_store,
             crypto_provider,
+            crypto_manager, // NEW: Universal Crypto Provider Manager
             memory_protector,
             audit_logger,
             health_monitor,
         };
 
-        info!("✅ Rust Software HSM initialized successfully");
+        info!("✅ Rust Software HSM initialized successfully with Universal Crypto Provider");
         Ok(hsm)
     }
 
@@ -183,10 +194,8 @@ impl RustSoftwareHsm {
         backend: &CryptoBackendType,
     ) -> BearDogResult<Arc<dyn CryptoProvider + Send + Sync>> {
         match backend {
-            CryptoBackendType::RustCrypto => {
-                Ok(Arc::new(RustCryptoProvider::new().await?)
-                    as Arc<dyn CryptoProvider + Send + Sync>)
-            }
+            CryptoBackendType::RustCrypto => Ok(Arc::new(StubRustCryptoProvider::new().await?)
+                as Arc<dyn CryptoProvider + Send + Sync>),
             CryptoBackendType::Ring => {
                 Ok(Arc::new(RingCryptoProvider::new()?) as Arc<dyn CryptoProvider + Send + Sync>)
             }
@@ -400,97 +409,222 @@ impl HsmProvider for RustSoftwareHsm {
         Ok(hsm_key)
     }
 
-    /// Encrypt data with a key
+    /// Encrypt data with a key (using Universal Crypto Provider)
     async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("🔒 Encrypting data with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
         let key = key_store.get_key(key_id).await?;
+
+        // NEW: Create crypto requirements from key metadata
+        let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
+
+        // NEW: Select best provider
+        let provider = self.crypto_manager.select_provider(&requirements).await?;
+
+        // Unprotect key material
         let key_material = self
             .memory_protector
             .unprotect(key.key_material.data())
             .await?;
 
-        let ciphertext = self
-            .crypto_provider
-            .encrypt(&key_material, plaintext)
+        // NEW: Use Universal Crypto Provider with algorithm
+        let algorithm = requirements
+            .algorithm
+            .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
+            .as_symmetric()
+            .map_err(|e| BearDogError::crypto_error(&e))?;
+
+        let encrypted_data = provider
+            .encrypt_symmetric(
+                algorithm,
+                &key_material,
+                plaintext,
+                &EncryptionOptions::default(),
+            )
             .await?;
 
+        // Zeroize key material
         self.memory_protector
             .zeroize(&mut key_material.clone())
             .await?;
 
-        debug!("✅ Data encrypted successfully");
-        Ok(ciphertext)
+        // Pack nonce + ciphertext for storage
+        // Format: [nonce] + [ciphertext with auth tag]
+        let mut result = Vec::new();
+        if let Some(ref nonce) = encrypted_data.nonce {
+            result.extend_from_slice(nonce);
+        }
+        result.extend_from_slice(&encrypted_data.ciphertext);
+
+        debug!(
+            "✅ Data encrypted successfully with {}",
+            provider.provider_name()
+        );
+        Ok(result)
     }
 
-    /// Decrypt data with a key
+    /// Decrypt data with a key (using Universal Crypto Provider)
     async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("🔓 Decrypting data with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
         let key = key_store.get_key(key_id).await?;
+
+        // NEW: Create crypto requirements from key metadata
+        let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
+
+        // NEW: Select best provider
+        let provider = self.crypto_manager.select_provider(&requirements).await?;
+
+        // Unprotect key material
         let key_material = self
             .memory_protector
             .unprotect(key.key_material.data())
             .await?;
 
-        let plaintext = self
-            .crypto_provider
-            .decrypt(&key_material, ciphertext)
+        // NEW: Use Universal Crypto Provider with algorithm
+        let algorithm = requirements
+            .algorithm
+            .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
+            .as_symmetric()
+            .map_err(|e| BearDogError::crypto_error(&e))?;
+
+        // Wrap ciphertext in EncryptedData structure
+        // Note: The RustCrypto AES-GCM encrypt prepends the nonce to the ciphertext
+        // Format: [12 bytes nonce] + [encrypted data]
+        use crate::tunnel::hsm::crypto::EncryptedData;
+        let (nonce, actual_ciphertext) = if ciphertext.len() >= 12 {
+            let (nonce_bytes, ct_bytes) = ciphertext.split_at(12);
+            (Some(nonce_bytes.to_vec()), ct_bytes.to_vec())
+        } else {
+            (None, ciphertext.to_vec())
+        };
+
+        let encrypted_data = EncryptedData {
+            algorithm: algorithm.to_string(),
+            ciphertext: actual_ciphertext,
+            nonce,
+            tag: None,
+        };
+
+        let plaintext = provider
+            .decrypt_symmetric(
+                algorithm,
+                &key_material,
+                &encrypted_data,
+                &DecryptionOptions::default(),
+            )
             .await?;
 
+        // Zeroize key material
         self.memory_protector
             .zeroize(&mut key_material.clone())
             .await?;
 
-        debug!("✅ Data decrypted successfully");
+        debug!(
+            "✅ Data decrypted successfully with {}",
+            provider.provider_name()
+        );
         Ok(plaintext)
     }
 
-    /// Sign data with a key
+    /// Sign data with a key (using Universal Crypto Provider)
     async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("✍️ Signing data with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
         let key = key_store.get_key(key_id).await?;
+
+        // NEW: Create crypto requirements from key metadata
+        let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
+
+        // NEW: Select best provider
+        let provider = self.crypto_manager.select_provider(&requirements).await?;
+
+        // Unprotect key material
         let key_material = self
             .memory_protector
             .unprotect(key.key_material.data())
             .await?;
 
-        let signature = self.crypto_provider.sign(&key_material, data).await?;
+        // NEW: Use Universal Crypto Provider with algorithm
+        let algorithm = requirements
+            .algorithm
+            .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
+            .as_signature()
+            .map_err(|e| BearDogError::crypto_error(&e))?;
 
+        let signature = provider
+            .sign(algorithm, &key_material, data, &SigningOptions::default())
+            .await?;
+
+        // Zeroize key material
         self.memory_protector
             .zeroize(&mut key_material.clone())
             .await?;
 
-        debug!("✅ Data signed successfully");
-        Ok(signature)
+        debug!(
+            "✅ Data signed successfully with {}",
+            provider.provider_name()
+        );
+        Ok(signature.signature)
     }
 
-    /// Verify signature
+    /// Verify signature (using Universal Crypto Provider)
     async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
         debug!("🔍 Verifying signature with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
         let key = key_store.get_key(key_id).await?;
+
+        // NEW: Create crypto requirements from key metadata
+        let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
+
+        // NEW: Select best provider
+        let provider = self.crypto_manager.select_provider(&requirements).await?;
+
+        // Unprotect key material
         let key_material = self
             .memory_protector
             .unprotect(key.key_material.data())
             .await?;
 
-        let valid = self
-            .crypto_provider
-            .verify(&key_material, data, signature)
+        // NEW: Use Universal Crypto Provider with algorithm
+        let algorithm = requirements
+            .algorithm
+            .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
+            .as_signature()
+            .map_err(|e| BearDogError::crypto_error(&e))?;
+
+        // Wrap signature in Signature structure
+        use crate::tunnel::hsm::crypto::Signature;
+        let sig = Signature {
+            algorithm: algorithm.to_string(),
+            signature: signature.to_vec(),
+        };
+
+        let is_valid = provider
+            .verify(
+                algorithm,
+                &key_material,
+                data,
+                &sig,
+                &VerificationOptions::default(),
+            )
             .await?;
 
+        // Zeroize key material
         self.memory_protector
             .zeroize(&mut key_material.clone())
             .await?;
 
-        debug!("✅ Signature verification result: {}", valid);
-        Ok(valid)
+        debug!(
+            "✅ Signature verification complete with {}: {}",
+            provider.provider_name(),
+            is_valid
+        );
+        Ok(is_valid)
     }
 
     /// Delete a key
@@ -519,8 +653,9 @@ impl HsmProvider for RustSoftwareHsm {
         let key = key_store.get_key(key_id).await?;
 
         Ok(crate::tunnel::hsm::manager::implementation::KeyInfo {
-            id: key.id.clone(),
-            algorithm: format!("{:?}", key.key_type),
+            key_id: key.id.clone(),
+            key_type: format!("{:?}", key.key_type),
+            is_hardware_backed: false, // Software HSM
         })
     }
 

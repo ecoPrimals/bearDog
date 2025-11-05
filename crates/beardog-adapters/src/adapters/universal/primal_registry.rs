@@ -172,6 +172,9 @@ impl CapabilityBasedPrimalRegistry {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     fn test_capability_based_discovery() {
         let mut registry = CapabilityBasedPrimalRegistry::new();

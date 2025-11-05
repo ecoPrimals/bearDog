@@ -61,6 +61,9 @@ mod access_control_tests {
 
     /// Test role assignment
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_assign_role() {
         let user_id = "user123";
         let role = "admin";
@@ -68,6 +71,9 @@ mod access_control_tests {
         create_role(role, &["read:all"]).expect("Create role");
         let result = assign_role(user_id, role);
         assert!(result.is_ok(), "Should assign role");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
     }
 
     /// Test role removal
@@ -76,6 +82,9 @@ mod access_control_tests {
         let user_id = "user123";
         let role = "admin";
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         create_role(role, &["read:all"]).expect("Create role");
         assign_role(user_id, role).expect("Assign role");
 
@@ -85,6 +94,9 @@ mod access_control_tests {
 
     /// Test inherited permissions from role
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_role_inherited_permissions() {
         let user_id = "user123";
         let role = "editor";
@@ -92,6 +104,9 @@ mod access_control_tests {
 
         create_role(role, &[permission]).expect("Create role");
         assign_role(user_id, role).expect("Assign role");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let result = has_permission(user_id, permission);
         assert!(result.is_ok(), "Check should succeed");
@@ -99,6 +114,9 @@ mod access_control_tests {
 
     /// Test multiple roles
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_multiple_roles() {
         let user_id = "user123";
 
@@ -107,6 +125,9 @@ mod access_control_tests {
 
         assign_role(user_id, "reader").expect("Assign reader");
         assign_role(user_id, "writer").expect("Assign writer");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert!(has_permission(user_id, "read:all").unwrap_or(false));
         assert!(has_permission(user_id, "write:all").unwrap_or(false));
@@ -117,6 +138,9 @@ mod access_control_tests {
     fn test_create_policy() {
         let policy_name = "data_access_policy";
         let rules = vec!["allow read if authenticated", "deny delete if guest"];
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let result = create_policy(policy_name, &rules);
         assert!(result.is_ok(), "Should create policy");
@@ -128,6 +152,9 @@ mod access_control_tests {
         let resource_id = "document123";
         let policy = "data_access_policy";
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         create_policy(policy, &["allow read"]).expect("Create policy");
         let result = apply_policy(resource_id, policy);
         assert!(result.is_ok(), "Should apply policy");
@@ -140,6 +167,9 @@ mod access_control_tests {
         let resource_id = "document123";
         let action = "read";
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let policy = "allow_policy";
         create_policy(policy, &["allow read"]).expect("Create");
         apply_policy(resource_id, policy).expect("Apply");
@@ -147,6 +177,9 @@ mod access_control_tests {
         let result = evaluate_policy(user_id, resource_id, action);
         assert!(result.is_ok(), "Evaluation should complete");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test policy evaluation deny
     #[test]
@@ -155,6 +188,9 @@ mod access_control_tests {
         let resource_id = "document123";
         let action = "delete";
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let policy = "deny_policy";
         create_policy(policy, &["deny delete"]).expect("Create");
         apply_policy(resource_id, policy).expect("Apply");
@@ -167,6 +203,9 @@ mod access_control_tests {
     }
 
     /// Test hierarchical permissions
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_hierarchical_permissions() {
         let user_id = "user123";
@@ -182,6 +221,9 @@ mod access_control_tests {
     /// Test permission wildcards
     #[test]
     fn test_permission_wildcards() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let user_id = "user123";
 
         grant_permission(user_id, "resource:*").expect("Grant wildcard");
@@ -192,6 +234,9 @@ mod access_control_tests {
 
     /// Test temporary permissions
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     fn test_temporary_permission() {
         let user_id = "user123";
         let permission = "temp:access";
@@ -200,6 +245,9 @@ mod access_control_tests {
         let result = grant_temporary_permission(user_id, permission, duration_secs);
         assert!(result.is_ok(), "Should grant temporary permission");
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     /// Test permission expiry
     #[test]
@@ -208,6 +256,9 @@ mod access_control_tests {
         let permission = "temp:access";
 
         grant_temporary_permission(user_id, permission, 1).expect("Grant temp");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Check immediately - should have permission
         assert!(has_permission(user_id, permission).unwrap_or(false));
@@ -220,6 +271,9 @@ mod access_control_tests {
     #[test]
     fn test_create_acl() {
         let resource_id = "document123";
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let acl = vec![("user1", "read"), ("user2", "write"), ("user3", "admin")];
 
         let result = create_acl(resource_id, &acl);
@@ -227,6 +281,9 @@ mod access_control_tests {
     }
 
     /// Test ACL check
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_check_acl() {
         let resource_id = "document123";

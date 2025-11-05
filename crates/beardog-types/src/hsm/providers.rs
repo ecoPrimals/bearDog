@@ -159,16 +159,25 @@ mod tests {
         assert_eq!(config.provider_id, "software");
         assert_eq!(config.provider_type, CryptoProviderType::Software);
         assert!(!config.fips_mode);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_crypto_provider_config_openssl() {
         let config = CryptoProviderConfig::openssl();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(config.provider_id, "openssl");
         assert_eq!(config.provider_type, CryptoProviderType::OpenSsl);
         assert!(config.capabilities.hardware_acceleration);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_provider_capabilities_default() {
         let caps = ProviderCapabilities::default();

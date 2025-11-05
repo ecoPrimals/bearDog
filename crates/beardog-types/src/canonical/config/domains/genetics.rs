@@ -17,17 +17,18 @@ pub struct ConsolidatedGeneticsConfiguration {
     pub population_size: usize,
 }
 
-impl Default for ConsolidatedGeneticsConfiguration {
-    fn default() -> Self {
+impl ConsolidatedGeneticsConfiguration {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_parsed;
+        
         Self {
             enabled: true,
             mutation_rate: 0.1,
-            population_size: 100,
+            population_size: get_parsed(source, "BEARDOG_GENETICS_POPULATION_SIZE", 100),
         }
     }
-}
 
-impl ConsolidatedGeneticsConfiguration {
     /// Validate genetics configuration
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.mutation_rate < 0.0 || self.mutation_rate > 1.0 {
@@ -44,5 +45,12 @@ impl ConsolidatedGeneticsConfiguration {
     /// Create production configuration
     pub fn production() -> Self {
         Self::default()
+    }
+}
+
+impl Default for ConsolidatedGeneticsConfiguration {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 } 

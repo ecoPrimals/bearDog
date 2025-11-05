@@ -84,7 +84,9 @@ fn test_hash_collision_resistance() {
 
     assert_ne!(
         hash1, hash2,
-        "Small differences should produce different hashes"
+        "Small differences should produce different hashes" // TEST_CATEGORY: integration
+                                                            // TEST_DOMAIN: security
+                                                            // TEST_PRIORITY: normal
     );
 }
 
@@ -92,12 +94,18 @@ fn test_hash_collision_resistance() {
 fn test_hash_algorithm_difference() {
     let data = b"test data";
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let hash256 = compute_sha256_hash(data).expect("SHA-256 should succeed");
     let hash512 = compute_sha512_hash(data).expect("SHA-512 should succeed");
 
     assert_ne!(hash256.len(), hash512.len());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_secure_random_32_bytes() {
     let random = generate_secure_random_bytes(32).expect("Random generation should succeed");
@@ -105,24 +113,37 @@ fn test_secure_random_32_bytes() {
     assert_eq!(random.len(), 32);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_secure_random_unique() {
     let random1 = generate_secure_random_bytes(32).expect("Random generation should succeed");
     let random2 = generate_secure_random_bytes(32).expect("Random generation should succeed");
 
     assert_ne!(
-        random1, random2,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
+        random1,
+        random2,
         "Sequential random values should be unique"
     );
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_secure_random_zero_length() {
     let random = generate_secure_random_bytes(0).expect("Zero length request should succeed");
 
     assert_eq!(random.len(), 0);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_secure_random_large() {
     let random = generate_secure_random_bytes(4096).expect("Large random request should succeed");
@@ -134,6 +155,9 @@ fn test_secure_random_large() {
 fn test_key_manager_creation() {
     let config = MemoryKeyConfig::default();
     let _manager = MemoryKeyManager::new(config).expect("MemoryKeyManager creation should succeed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     // Verify manager is created successfully
     // Test placeholder - actual verification done via expect() above
@@ -145,6 +169,9 @@ fn test_key_generation() {
     let manager = MemoryKeyManager::new(config).expect("MemoryKeyManager creation should succeed");
 
     let key_id = manager
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         .generate_key()
         .expect("Key generation should succeed");
 
@@ -152,10 +179,16 @@ fn test_key_generation() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_key_retrieval() {
     let config = MemoryKeyConfig::default();
     let manager = MemoryKeyManager::new(config).expect("MemoryKeyManager creation should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let key_id = manager
         .generate_key()
         .expect("Key generation should succeed");
@@ -164,20 +197,32 @@ fn test_key_retrieval() {
         .get_key(&key_id)
         .expect("Key retrieval should succeed");
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(!key.is_empty());
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_key_deletion() {
     let config = MemoryKeyConfig::default();
     let mut manager =
         MemoryKeyManager::new(config).expect("MemoryKeyManager creation should succeed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let key_id = manager
         .generate_key()
         .expect("Key generation should succeed");
 
     manager
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         .delete_key(&key_id)
         .expect("Key deletion should succeed");
 
@@ -187,6 +232,9 @@ fn test_key_deletion() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[ignore] // Key rotation not yet implemented in current API
 fn test_key_rotation() {
     // Test pending key rotation API implementation
@@ -200,6 +248,9 @@ fn test_key_expiration() {
     // Placeholder preserved for future implementation
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_key_not_found() {
     let config = MemoryKeyConfig::default();
@@ -216,14 +267,23 @@ fn test_encryption_config() {
 
     assert!(config.key_size > 0);
     // EncryptionAlgorithm is an enum, not a string - it always has a value
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Just verify it exists
     let _ = config.algorithm;
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 #[ignore] // SecurityMetrics module reorganized
 fn test_security_metrics() {
     // Test pending new metrics API stabilization
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Placeholder preserved for future implementation
 }
 
@@ -231,6 +291,9 @@ fn test_security_metrics() {
 fn test_constant_time_compare() {
     let a = b"secret_data";
     let b = b"secret_data";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
     let c = b"different_data";
 
     assert!(constant_time_compare(a, b), "Equal data should return true");
@@ -238,10 +301,16 @@ fn test_constant_time_compare() {
         !constant_time_compare(a, c),
         "Different data should return false"
     );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: critical
 }
 
 #[test]
 fn test_constant_time_compare_different_lengths() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let a = b"short";
     let b = b"longer_string";
 
@@ -252,6 +321,9 @@ fn test_constant_time_compare_different_lengths() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 fn test_secure_zero_memory() {
     let mut data = vec![1u8, 2, 3, 4, 5];
     secure_zero_memory(&mut data);
@@ -260,6 +332,9 @@ fn test_secure_zero_memory() {
     for &byte in &data {
         assert_eq!(byte, 0);
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -268,6 +343,9 @@ fn test_key_derivation() {
     let salt = b"test_salt";
 
     let key =
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         derive_key_from_password(password, salt, 1000).expect("Key derivation should succeed");
 
     assert!(!key.is_empty());
@@ -276,6 +354,9 @@ fn test_key_derivation() {
 #[test]
 fn test_key_derivation_deterministic() {
     let password = b"test_password";
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let salt = b"test_salt";
 
     let key1 =
@@ -286,6 +367,9 @@ fn test_key_derivation_deterministic() {
     assert_eq!(key1, key2, "Key derivation should be deterministic");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_key_derivation_different_salts() {
     let password = b"test_password";

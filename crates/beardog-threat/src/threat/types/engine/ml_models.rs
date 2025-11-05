@@ -494,6 +494,9 @@ mod tests {
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_model_accuracy_update() {
         let mut model = MlModel::new(
             "Test Model",
@@ -508,6 +511,9 @@ mod tests {
         assert!(model.is_high_accuracy());
         assert_eq!(model.accuracy, 0.9);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_model_retraining_check() {
@@ -521,6 +527,9 @@ mod tests {
         // Low accuracy should trigger retraining
         model.update_accuracy(0.5);
         assert!(model.needs_retraining());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         // High accuracy should not trigger retraining (for recent models)
         model.update_accuracy(0.95);
@@ -536,6 +545,9 @@ mod tests {
             false_negatives: 20,
         };
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(matrix.accuracy(), 150.0 / 180.0);
         assert_eq!(matrix.precision(), 80.0 / 90.0);
         assert_eq!(matrix.recall(), 80.0 / 100.0);
@@ -551,6 +563,9 @@ mod tests {
 
         assert!(prediction.is_high_confidence());
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         prediction.add_probability_score("positive", 0.85);
         prediction.add_probability_score("negative", 0.15);
 
@@ -561,6 +576,9 @@ mod tests {
     #[test]
     fn test_model_type_display() {
         assert_eq!(MlModelType::Classification.to_string(), "Classification");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(
             MlModelType::AnomalyDetection.to_string(),
             "Anomaly Detection"
@@ -571,6 +589,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_model_activation() {
         let mut model = MlModel::new(

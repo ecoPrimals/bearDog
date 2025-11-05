@@ -1,7 +1,43 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! # Context-Aware Licensing Module
+//!
+//! Provides intelligent licensing and usage classification based on deployment
+//! context, enabling fair pricing that adapts to actual usage patterns.
+//!
+//! ## Overview
+//!
+//! This module implements context-aware licensing that:
+//! - Detects enterprise vs. small-scale usage automatically
+//! - Adjusts pricing based on actual usage patterns
+//! - Collects evidence for usage classification
+//! - Provides fair, transparent pricing models
+//!
+//! ## Key Components
+//!
+//! - [`ContextAwareLicense`] - License configuration
+//! - [`EnterpriseIndicator`] - Metrics for detecting enterprise usage
+//! - [`EnterprisePricingModel`] - Pricing calculation
+//! - [`ClassificationEvidence`] - Usage pattern evidence
+//! - [`FunctionUsagePattern`] - Function-level usage tracking
+//! - [`HardwareProfile`] - Hardware resource tracking
+//!
+//! ## Example
+//!
+//! ```rust,ignore
+//! use beardog_core::context_aware_licensing::{EnterpriseIndicator, EnterprisePricingModel};
+//!
+//! # fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Detect enterprise usage
+//! let indicator = EnterpriseIndicator {
+//!     organization_size: 500,
+//!     usage_volume: 1_000_000,
+//!     integration_complexity: 0.8,
+//! };
+//!
+//! // Calculate appropriate pricing
+//! let pricing = EnterprisePricingModel::calculate(&indicator)?;
+//! # Ok(())
+//! # }
+//! ```
 
 use serde::{Deserialize, Serialize};
 
@@ -70,13 +106,15 @@ pub struct FunctionUsagePattern {
     pub peak_usage: u64,
 }
 
+/// Hardware resource profile for usage classification
+///
+/// Tracks hardware resources to help determine deployment scale and
+/// appropriate license tier (e.g., individual developer vs. data center).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareProfile {
     /// Number of CPU cores available
-    /// Number of cpu_cores
     pub cpu_cores: u32,
     /// Memory capacity in gigabytes
-    /// Number of memory_gb
     pub memory_gb: u32,
     /// Storage capacity in gigabytes
     /// Number of storage_gb

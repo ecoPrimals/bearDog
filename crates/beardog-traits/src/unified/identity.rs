@@ -129,11 +129,17 @@ mod tests {
     #[test]
     fn test_identity_info_default() {
         let info = IdentityInfo::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!info.id.is_empty());
         assert_eq!(info.entity_type, "unknown");
         assert!(info.created_at.is_some());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_identity_validation() {
         let validation = IdentityValidation {

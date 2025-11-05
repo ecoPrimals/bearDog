@@ -46,7 +46,10 @@ impl Default for ServerConfiguration {
             port: crate::constants::domains::network::defaults::default_api_port(),
             enable_ipv6: true,
             max_connections: crate::constants::domains::system::defaults::DEFAULT_MAX_CONNECTIONS,
-            backlog_size: 1024,
+            backlog_size: std::env::var("BEARDOG_SERVER_BACKLOG_SIZE")
+                .ok()
+                .and_then(|b| b.parse().ok())
+                .unwrap_or(1024), // 1024 connections default
             enable_keepalive: true,
             keepalive_timeout_seconds: 60,
             tcp_nodelay: true,
@@ -114,6 +117,9 @@ mod tests {
             crate::constants::domains::network::defaults::default_api_port()
         );
         assert!(config.enable_ipv6);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert!(config.enable_keepalive);
         assert!(config.tcp_nodelay);
     }
@@ -124,14 +130,23 @@ mod tests {
         config.port = 0;
         assert!(config.validate().is_err());
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
 
     #[test]
     fn test_invalid_max_connections() {
         let mut config = ServerConfiguration::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: important
         config.max_connections = 0;
         assert!(config.validate().is_err());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_socket_buffer_validation() {
         let config = SocketBufferConfiguration::default();

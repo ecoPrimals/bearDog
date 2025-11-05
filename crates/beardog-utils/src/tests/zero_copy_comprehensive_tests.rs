@@ -149,6 +149,9 @@ fn test_zero_copy_builder_basic() {
     assert!(!builder.is_optimized());
 
     let built = builder.build();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(built, "test value");
 }
 
@@ -165,6 +168,9 @@ fn test_zero_copy_builder_optimize() {
 
 #[test]
 fn test_is_valid_service_capability() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(is_valid_service_capability("communication_mesh"));
     assert!(is_valid_service_capability("storage_services"));
     assert!(is_valid_service_capability("compute_orchestration"));
@@ -186,6 +192,9 @@ fn test_get_all_standard_capabilities() {
 
     assert_eq!(capabilities.len(), 9);
     assert!(capabilities.contains(&"communication_mesh"));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(capabilities.contains(&"security_provider"));
     assert!(capabilities.contains(&"hsm"));
 }
@@ -197,6 +206,9 @@ fn test_get_all_standard_capabilities() {
 #[test]
 fn test_request_cache_creation() {
     let cache: RequestCache<String> = RequestCache::new(Duration::from_secs(60));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(cache.is_empty());
     assert_eq!(cache.len(), 0);
 }
@@ -207,6 +219,9 @@ fn test_request_cache_insert_and_get() {
 
     cache.insert("key1".to_string(), "value1".to_string());
     cache.insert("key2".to_string(), "value2".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(cache.len(), 2);
     assert!(!cache.is_empty());
@@ -215,6 +230,9 @@ fn test_request_cache_insert_and_get() {
     assert_eq!(cache.get("key2"), Some("value2".to_string()));
     assert_eq!(cache.get("key3"), None);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_request_cache_overwrite() {
@@ -234,24 +252,36 @@ fn test_request_cache_expiration() {
     cache.insert("temp_key".to_string(), "temp_value".to_string());
     assert_eq!(cache.get("temp_key"), Some("temp_value".to_string()));
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Wait for expiration
     std::thread::sleep(Duration::from_millis(20));
 
     assert_eq!(cache.get("temp_key"), None);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_request_cache_cleanup_expired() {
     let cache = RequestCache::new(Duration::from_millis(10));
 
     cache.insert("key1".to_string(), "value1".to_string());
     cache.insert("key2".to_string(), "value2".to_string());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(cache.len(), 2);
 
     // Wait for expiration
     std::thread::sleep(Duration::from_millis(20));
 
     cache.cleanup_expired();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(cache.len(), 0);
 }
 
@@ -260,6 +290,9 @@ fn test_request_cache_default() {
     let cache: RequestCache<i32> = RequestCache::default();
     assert!(cache.is_empty());
     cache.insert("test".to_string(), 42);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(cache.get("test"), Some(42));
 }
 
@@ -268,6 +301,9 @@ fn test_request_cache_complex_types() {
     #[derive(Clone, Debug, PartialEq)]
     struct ComplexData {
         id: u64,
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         name: String,
         values: Vec<i32>,
     }
@@ -282,6 +318,9 @@ fn test_request_cache_complex_types() {
 
     cache.insert("complex".to_string(), data.clone());
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let retrieved = cache.get("complex");
     assert_eq!(retrieved, Some(data));
 }
@@ -293,10 +332,16 @@ fn test_request_cache_complex_types() {
 #[test]
 fn test_optimized_string_shared() {
     let s = zero_copy_optimized::OptimizedString::Shared(Arc::from("shared"));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(s.as_str(), "shared");
     assert!(s.is_optimized());
     assert_eq!(s.to_string(), "shared");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
@@ -309,6 +354,9 @@ fn test_optimized_string_owned() {
 }
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_optimized_string_into_string() {
     let shared = zero_copy_optimized::OptimizedString::Shared(Arc::from("test"));
     let owned = zero_copy_optimized::OptimizedString::Owned("test".to_string());
@@ -317,6 +365,9 @@ fn test_optimized_string_into_string() {
     assert_eq!(owned.into_string(), "test");
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_optimized_string_display() {
     let shared = zero_copy_optimized::OptimizedString::Shared(Arc::from("display"));
@@ -327,6 +378,9 @@ fn test_optimized_string_display() {
 }
 
 // =============================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // OptimizedBytes Tests
 // =============================================================================
 
@@ -339,11 +393,17 @@ fn test_optimized_bytes_shared() {
     assert!(opt.is_optimized());
     assert_eq!(opt.to_vec(), vec![1, 2, 3, 4, 5]);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_optimized_bytes_owned() {
     let bytes = vec![1u8, 2, 3, 4, 5];
     let opt = zero_copy_optimized::OptimizedBytes::Owned(bytes);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(opt.as_slice(), &[1, 2, 3, 4, 5]);
     assert!(!opt.is_optimized());
@@ -368,24 +428,36 @@ fn test_string_zero_copy_optimized() {
 #[test]
 fn test_vec_zero_copy_optimized() {
     use zero_copy_optimized::ZeroCopyOptimized;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let manager = zero_copy_optimized::ZeroCopyManager::new();
     let v = vec![1u8, 2, 3, 4];
 
     let optimized = v.optimize(&manager);
     assert_eq!(optimized, vec![1, 2, 3, 4]);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 // =============================================================================
 // Global Manager Tests (from optimized.rs)
 // =============================================================================
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_global_manager_optimize_string() {
     let s1 = zero_copy_optimized::optimize_string("GET");
     let _s2 = zero_copy_optimized::optimize_string("GET");
 
     assert!(s1.is_optimized());
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(s1.as_str(), "GET");
     // Can't directly test Arc equality across calls to optimize_string
 }
@@ -396,6 +468,9 @@ fn test_global_manager_optimize_bytes() {
     let opt = zero_copy_optimized::optimize_bytes(&bytes);
 
     // Check that it processes correctly (whether optimized depends on implementation details)
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(opt.as_slice().len(), 2000);
     // Note: optimization decision is implementation-specific
 }
@@ -403,6 +478,9 @@ fn test_global_manager_optimize_bytes() {
 #[test]
 fn test_global_manager_shared_string() {
     let s1 = zero_copy_optimized::shared_string("shared_test");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let s2 = zero_copy_optimized::shared_string("shared_test");
 
     assert_eq!(&*s1, "shared_test");
@@ -414,6 +492,9 @@ fn test_global_manager_shared_string() {
 // =============================================================================
 
 #[test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_aligned_buffer_creation() {
     use crate::zero_copy::hyperoptimized_zero_copy::AlignedBuffer;
     let buffer = AlignedBuffer::new(1024);
@@ -422,6 +503,9 @@ fn test_aligned_buffer_creation() {
     let buf = buffer.unwrap();
     assert_eq!(buf.capacity(), 1024);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_aligned_buffer_as_slice() {
@@ -434,6 +518,9 @@ fn test_aligned_buffer_as_slice() {
 #[test]
 fn test_aligned_buffer_as_mut_slice() {
     use crate::zero_copy::hyperoptimized_zero_copy::AlignedBuffer;
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut buffer = AlignedBuffer::new(1024).unwrap();
     let slice = buffer.as_mut_slice();
     assert_eq!(slice.len(), 1024); // Full capacity for mut slice
@@ -441,6 +528,9 @@ fn test_aligned_buffer_as_mut_slice() {
 
 #[test]
 fn test_aligned_buffer_zero_capacity() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     use crate::zero_copy::hyperoptimized_zero_copy::AlignedBuffer;
     let buffer = AlignedBuffer::new(0);
     assert!(buffer.is_ok());
@@ -448,6 +538,9 @@ fn test_aligned_buffer_zero_capacity() {
     let buf = buffer.unwrap();
     assert_eq!(buf.capacity(), 0);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_aligned_buffer_large_capacity() {
@@ -458,6 +551,9 @@ fn test_aligned_buffer_large_capacity() {
     let buf = buffer.unwrap();
     assert_eq!(buf.capacity(), 1024 * 1024);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 // =============================================================================
 // ZeroCopyStats Tests
@@ -465,23 +561,34 @@ fn test_aligned_buffer_large_capacity() {
 
 #[test]
 fn test_zero_copy_stats_default() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let stats = zero_copy_optimized::ZeroCopyStats::default();
 
     assert_eq!(
         stats
             .clones_avoided
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             .load(std::sync::atomic::Ordering::Relaxed),
         0
     );
     assert_eq!(
         stats
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             .memory_saved
             .load(std::sync::atomic::Ordering::Relaxed),
         0
     );
     assert_eq!(
         stats.cache_hits.load(std::sync::atomic::Ordering::Relaxed),
-        0
+        0 // TEST_CATEGORY: integration
+          // TEST_DOMAIN: core
+          // TEST_PRIORITY: normal
     );
     assert_eq!(
         stats
@@ -493,6 +600,9 @@ fn test_zero_copy_stats_default() {
 
 #[test]
 fn test_zero_copy_manager_stats_tracking() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let manager = zero_copy_optimized::ZeroCopyManager::new();
 
     // Trigger some operations
@@ -518,6 +628,9 @@ fn test_zero_copy_manager_stats_tracking() {
 #[test]
 fn test_empty_string_optimization() {
     let manager = zero_copy_optimized::ZeroCopyManager::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let opt = manager.optimize_string("");
 
     assert_eq!(opt.as_str(), "");
@@ -539,11 +652,17 @@ fn test_empty_bytes_optimization() {
     let opt = manager.optimize_bytes(&[]);
 
     assert_eq!(opt.as_slice().len(), 0);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]
 fn test_request_cache_many_entries() {
     let cache = RequestCache::new(Duration::from_secs(60));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     for i in 0..1000 {
         cache.insert(format!("key_{}", i), format!("value_{}", i));
@@ -551,11 +670,17 @@ fn test_request_cache_many_entries() {
 
     assert_eq!(cache.len(), 1000);
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     for i in 0..1000 {
         assert_eq!(
             cache.get(&format!("key_{}", i)),
             Some(format!("value_{}", i))
         );
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 }
 
@@ -571,6 +696,9 @@ fn test_concurrent_string_caching() {
         let manager_clone = Arc::clone(&manager);
         let handle = thread::spawn(move || {
             for _ in 0..100 {
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 let _s = manager_clone.get_shared_string(format!("thread_{}", i));
             }
         });
@@ -602,6 +730,9 @@ fn test_zero_copy_builder_chaining() {
 }
 
 // =============================================================================
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // Integration Tests
 // =============================================================================
 
@@ -611,6 +742,9 @@ fn test_full_zero_copy_workflow() {
 
     // Test string caching
     let s1 = manager.get_shared_string("workflow_test");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let s2 = manager.get_shared_string("workflow_test");
     assert!(Arc::ptr_eq(&s1, &s2));
 
@@ -634,6 +768,9 @@ fn test_full_zero_copy_workflow() {
 #[test]
 fn test_request_cache_workflow() {
     let cache = RequestCache::new(Duration::from_secs(60));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Insert multiple entries
     for i in 0..10 {
@@ -650,6 +787,9 @@ fn test_request_cache_workflow() {
     assert_eq!(cache.len(), 10);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_optimized_types_workflow() {
     let manager = zero_copy_optimized::ZeroCopyManager::new();

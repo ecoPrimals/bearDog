@@ -709,11 +709,17 @@ mod tests {
         assert_eq!(stats.borrowed, 1);
         assert_eq!(stats.misses, 1); // First borrow is always a miss
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         // Return object (automatic on drop)
         drop(obj);
         let stats = pool.stats();
         assert_eq!(stats.borrowed, 0);
         assert_eq!(stats.available, 1);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -728,6 +734,9 @@ mod tests {
         let obj = pool.borrow();
         drop(obj);
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         let stats = pool.stats();
         assert_eq!(stats.hits, 1); // Should be a hit since pool was pre-warmed
     }
@@ -741,6 +750,9 @@ mod tests {
         
         let snapshot = stats.snapshot();
         assert_eq!(snapshot.total_requests, 1);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         assert_eq!(snapshot.successful_requests, 1);
         assert_eq!(snapshot.success_rate, 1.0);
     }
@@ -751,6 +763,9 @@ mod tests {
         assert_eq!(router.handler_count(), 0);
         
         let stats = router.get_optimization_stats();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         assert!(stats.object_pooling_enabled);
         assert!(stats.simd_enabled);
         assert!(stats.lock_free_enabled);
@@ -759,12 +774,18 @@ mod tests {
     #[test]
     async fn test_simd_processor() {
         let processor = SIMDProcessor::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         assert!(processor.batch_size > 0);
         
         let optimal_size = SIMDProcessor::optimal_batch_size();
         assert!(optimal_size >= 8);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async async fn test_batch_processing() {
         let mut router = OptimizedCapabilityRouter::new().await?;

@@ -96,6 +96,9 @@ impl SpawningStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     fn test_spawning_statistics_success_rate() {
         let mut stats = SpawningStatistics::new();

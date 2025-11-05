@@ -78,15 +78,27 @@ mod tests {
     #[test]
     fn test_health_monitor_default() {
         let monitor = DefaultHsmHealthMonitor::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(monitor.id, "default");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: normal
     #[test]
     fn test_failover_manager_creation() {
         let manager = DefaultHsmFailoverManager::new("failover-1");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: important
         assert_eq!(manager.id, "failover-1");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: types
+    // TEST_PRIORITY: important
     #[test]
     fn test_failover_manager_default() {
         let manager = DefaultHsmFailoverManager::default();

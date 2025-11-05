@@ -344,6 +344,9 @@ mod tests {
         metrics.update_with_analysis(200.0, true);
 
         assert_eq!(metrics.total_events_processed, 3);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(metrics.threats_detected, 2);
         assert_eq!(metrics.threat_detection_rate(), 2.0 / 3.0);
         assert!(metrics.avg_processing_time() > 0.0);
@@ -355,6 +358,9 @@ mod tests {
             .with_source_ip("192.168.1.100")
             .with_user_id("admin");
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(event.event_type, "login_failure");
         assert_eq!(event.severity, "high");
         assert_eq!(event.source_ip, Some("192.168.1.100".to_string()));
@@ -364,6 +370,9 @@ mod tests {
     #[test]
     async fn test_threat_analysis_result() {
         let result = ThreatAnalysisResult::new("analysis-1", "event-1")
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             .with_threat_detected(true)
             .with_confidence(0.9)
             .with_threat_level("high");
@@ -375,6 +384,9 @@ mod tests {
         assert_eq!(result.threat_level, "high");
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     async fn test_analysis_session() {
         let mut session = ThreatAnalysisSession::new("session-1");

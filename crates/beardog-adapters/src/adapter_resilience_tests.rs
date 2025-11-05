@@ -47,6 +47,9 @@ fn test_adapter_config_serialization_roundtrip() {
     // Serialize to JSON
     let json = serde_json::to_string(&config).unwrap();
     assert!(!json.is_empty(), "Serialized config should not be empty");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
 
     // Deserialize back
     let deserialized: AdapterConfig = serde_json::from_str(&json).unwrap();
@@ -66,6 +69,9 @@ fn test_capability_request_creation_and_serialization() {
     params.insert("key_id".to_string(), "test-key-123".to_string());
     params.insert("algorithm".to_string(), "RSA-2048".to_string());
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     let request = CapabilityRequest {
         capability: "crypto.sign".to_string(),
         operation: "sign_data".to_string(),
@@ -87,6 +93,9 @@ fn test_capability_request_creation_and_serialization() {
     assert_eq!(request.capability, deserialized.capability);
     assert_eq!(request.operation, deserialized.operation);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Test 4: Capability Response Success Case
@@ -116,6 +125,9 @@ fn test_capability_response_success_structure() {
     );
     assert_eq!(response.metadata.len(), 2);
     assert_eq!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         response.metadata.get("provider"),
         Some(&"test-hsm".to_string())
     );
@@ -146,6 +158,9 @@ fn test_capability_response_error_structure() {
         "Error response should not have data"
     );
     assert!(
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: important
         response.error.is_some(),
         "Error response should have error message"
     );
@@ -174,6 +189,9 @@ fn test_ai_response_metadata_validation() {
 
     assert_eq!(metadata.confidence_score, deserialized.confidence_score);
     assert_eq!(metadata.processing_time_ms, deserialized.processing_time_ms);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(metadata.model_version, deserialized.model_version);
 }
 
@@ -196,6 +214,9 @@ fn test_ai_integration_response_complete_structure() {
     };
 
     assert_eq!(response.result, "Analysis complete");
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(response.ai_metadata.confidence_score, 0.88);
     assert_eq!(response.ai_metadata.processing_time_ms, 456);
     assert_eq!(response.ai_metadata.model_version, "claude-3-opus");
@@ -218,6 +239,9 @@ fn test_vendor_discovery_context_creation() {
     assert_eq!(context.priority, 1);
     assert_eq!(context.context.len(), 0);
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 
 // ============================================================================
 // Test 9: Universal Adapter Initialization
@@ -232,6 +256,9 @@ fn test_universal_adapter_creates_with_default_config() {
     // Verify it has the expected configuration
     assert_eq!(adapter.config.timeout_seconds, config.timeout_seconds);
     assert_eq!(adapter.config.retry_attempts, config.retry_attempts);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     assert_eq!(adapter.config.enable_caching, config.enable_caching);
 }
 
@@ -245,6 +272,9 @@ fn test_multiple_adapters_with_different_configs() {
         timeout_seconds: 10,
         retry_attempts: 2,
         enable_caching: true,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
     };
 
     let config2 = AdapterConfig {
@@ -270,6 +300,9 @@ fn test_multiple_adapters_with_different_configs() {
 #[test]
 fn test_capability_request_with_empty_parameters() {
     let request = CapabilityRequest {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: adapters
+        // TEST_PRIORITY: normal
         capability: "health.check".to_string(),
         operation: "ping".to_string(),
         parameters: HashMap::new(),
@@ -293,6 +326,9 @@ fn test_capability_request_with_empty_parameters() {
 // Test 12: Capability Response Metadata Extensibility
 // ============================================================================
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: adapters
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_response_metadata_is_extensible() {
     let mut metadata = HashMap::new();

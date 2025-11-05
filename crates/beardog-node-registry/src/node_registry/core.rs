@@ -315,7 +315,13 @@ impl BearDogNodeRegistry {
             public_key,
             private_key,
             endpoints: vec![std::env::var("BEARDOG_REGISTRY_ENDPOINT")
-                .unwrap_or_else(|_| "https://localhost:8843".to_string())],
+                .unwrap_or_else(|_| {
+                    use beardog_types::canonical::config::network::NetworkConfig;
+                    let network_config = NetworkConfig::default();
+                    format!("https://{}:{}", 
+                        network_config.default_host, 
+                        network_config.service_ports.admin_port)
+                })],
             capabilities: vec![
                 "security".to_string(),
                 "trust-management".to_string(),

@@ -52,9 +52,15 @@ mod tests {
     #[test]
     fn test_builder_default() {
         let builder = HybridIntelligenceBuilder::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(builder.config.is_none());
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_builder_with_config() {
         let config = HybridIntelligenceConfig::default();

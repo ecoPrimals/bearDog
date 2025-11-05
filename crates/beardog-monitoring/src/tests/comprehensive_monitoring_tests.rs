@@ -106,89 +106,194 @@ mod alert_tests {
     }
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     fn test_alert_suppression() {
         // Test passes (placeholder removed)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_alert_escalation() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     fn test_alert_recovery() {
         // Test passes (placeholder removed)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: monitoring
+// TEST_PRIORITY: normal
 
 #[cfg(test)]
 mod monitoring_integration_tests {
     #[test]
     fn test_prometheus_integration() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     fn test_grafana_metrics() {
         // Test passes (placeholder removed)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_logging_integration() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     fn test_tracing_integration() {
         // Test passes (placeholder removed)
     }
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: monitoring
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod performance_monitoring_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_latency_tracking() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     fn test_throughput_monitoring() {
         // Test passes (placeholder removed)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
     #[test]
     fn test_error_rate_tracking() {
         // Test passes (placeholder removed)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_resource_utilization() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_sla_compliance() {
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: monitoring
+// TEST_PRIORITY: normal
 #[cfg(test)]
 mod snapshot_tests {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: important
     #[test]
     fn test_snapshot_creation() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_snapshot_storage() {
         // Test passes (placeholder removed)
     }
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
 
     #[test]
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     fn test_snapshot_retrieval() {
         // Test passes (placeholder removed)
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: monitoring
+        // TEST_PRIORITY: normal
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: monitoring
+    // TEST_PRIORITY: normal
     #[test]
     fn test_snapshot_comparison() {
         // Test passes (placeholder removed)

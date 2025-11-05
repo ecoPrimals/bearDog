@@ -51,6 +51,9 @@ pub struct DiscoveryConfig {
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         Self {
             timeout_ms: 5000,
             max_concurrent: 10,
@@ -58,9 +61,11 @@ impl Default for DiscoveryConfig {
             health_check_interval_ms: 60_000, // 1 minute
             discovery_endpoints: vec![
                 std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| "https://discovery.ecosystem.internal:8080".to_string()),
+                    .unwrap_or_else(|_| format!("https://discovery.ecosystem.internal:{}", 
+                        network_config.service_ports.api_port)),
                 std::env::var("BEARDOG_CAPABILITY_REGISTRY")
-                    .unwrap_or_else(|_| "https://capabilities.ecosystem.internal:8443".to_string()),
+                    .unwrap_or_else(|_| format!("https://capabilities.ecosystem.internal:{}", 
+                        network_config.service_ports.admin_port)),
             ],
             auto_register: true,
         }
@@ -342,12 +347,17 @@ pub struct EnvironmentDiscoveryStrategy {
 impl EnvironmentDiscoveryStrategy {
     /// Creates a new instance
     pub fn new() -> Self {
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        
         Self {
             endpoints: vec![
                 std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| "https://discovery.ecosystem.internal:8080".to_string()),
+                    .unwrap_or_else(|_| format!("https://discovery.ecosystem.internal:{}", 
+                        network_config.service_ports.api_port)),
                 std::env::var("FALLBACK_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| "http://discovery.ecosystem.internal:8080".to_string()),
+                    .unwrap_or_else(|_| format!("http://discovery.ecosystem.internal:{}", 
+                        network_config.service_ports.api_port)),
             ],
         }
     }

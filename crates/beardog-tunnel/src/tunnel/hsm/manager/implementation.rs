@@ -24,9 +24,11 @@ pub struct ProviderInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyInfo {
     /// Key ID
-    pub id: String,
-    /// Key algorithm
-    pub algorithm: String,
+    pub key_id: String,
+    /// Key type/algorithm
+    pub key_type: String,
+    /// Whether this key is backed by hardware security
+    pub is_hardware_backed: bool,
 }
 
 /// Health status structure  
@@ -228,8 +230,9 @@ mod tests {
 
         async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
             Ok(KeyInfo {
-                id: key_id.to_string(),
-                algorithm: "Ed25519".to_string(),
+                key_id: key_id.to_string(),
+                key_type: "Ed25519".to_string(),
+                is_hardware_backed: false, // Software HSM
             })
         }
 

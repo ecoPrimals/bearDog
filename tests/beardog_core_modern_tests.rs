@@ -57,6 +57,9 @@ fn test_security_error_types() {
     let error = BearDogError::security("Test security issue".to_string());
     assert!(format!("{:?}", error).contains("Test security issue"));
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_async_error_handling() -> BearDogResult<()> {
@@ -71,6 +74,9 @@ async fn test_async_error_handling() -> BearDogResult<()> {
         _ => panic!("Expected system error"),
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     Ok(())
 }
 
@@ -81,19 +87,31 @@ fn test_crypto_algorithm_types() {
     let aes = CryptoAlgorithm::Aes { key_size: 256 };
     let chacha = CryptoAlgorithm::ChaCha20;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(matches!(aes, CryptoAlgorithm::Aes { key_size: 256 }));
     assert!(matches!(chacha, CryptoAlgorithm::ChaCha20));
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 fn test_encryption_modes() {
     use beardog_types::canonical::crypto::EncryptionMode;
 
     let modes = [
         EncryptionMode::Gcm,
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         EncryptionMode::Cbc,
         EncryptionMode::Ctr,
     ];
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 
     assert_eq!(modes.len(), 3);
 }
@@ -107,6 +125,9 @@ fn test_key_config_defaults() {
     // Verify key config has reasonable defaults
     assert!(key_config.key_size >= 128); // Minimum secure key size
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_concurrent_config_access() -> BearDogResult<()> {
@@ -115,6 +136,9 @@ async fn test_concurrent_config_access() -> BearDogResult<()> {
 
     let handles: Vec<_> = (0..10)
         .map(|_| {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             task::spawn(async {
                 let config = EncryptionConfig::default();
                 assert!(matches!(config.algorithm, CryptoAlgorithm::Aes { .. }));
@@ -125,6 +149,9 @@ async fn test_concurrent_config_access() -> BearDogResult<()> {
     for handle in handles {
         handle.await.expect("Task should complete successfully");
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     Ok(())
 }
@@ -132,6 +159,9 @@ async fn test_concurrent_config_access() -> BearDogResult<()> {
 #[test]
 fn test_crypto_algorithm_equality() {
     use beardog_types::canonical::crypto::CryptoAlgorithm;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Verify crypto algorithms have distinct types
     let aes = CryptoAlgorithm::Aes { key_size: 256 };
@@ -150,6 +180,9 @@ fn test_error_conversion_patterns() {
 
     assert!(format!("{:?}", beardog_error).contains("Test IO error"));
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_timeout_handling() -> BearDogResult<()> {
@@ -158,6 +191,9 @@ async fn test_timeout_handling() -> BearDogResult<()> {
     // Test that operations can be timed out
     let result = timeout(Duration::from_millis(100), async {
         tokio::time::sleep(Duration::from_millis(50)).await;
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
         Ok::<(), BearDogError>(())
     })
     .await;
@@ -166,6 +202,9 @@ async fn test_timeout_handling() -> BearDogResult<()> {
 
     Ok(())
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_config_serialization() -> BearDogResult<()> {
@@ -179,6 +218,9 @@ fn test_config_serialization() -> BearDogResult<()> {
 
     // Test deserialization
     let _deserialized: EncryptionConfig = serde_json::from_str(&json)
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .map_err(|e| BearDogError::internal(format!("Deserialization failed: {}", e)))?;
 
     Ok(())
@@ -193,6 +235,9 @@ fn test_multiple_error_types() {
         BearDogError::invalid_input("Invalid input"),
     ];
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
     assert_eq!(errors.len(), 4);
 
     for error in errors {
@@ -207,6 +252,9 @@ async fn test_parallel_operations() -> BearDogResult<()> {
 
     let tasks: Vec<_> = (0..5)
         .map(|i| {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             task::spawn(async move {
                 let config = WorkingUnifiedConfig::default();
                 // Simulate some work
@@ -230,6 +278,9 @@ async fn test_parallel_operations() -> BearDogResult<()> {
 #[test]
 fn test_crypto_config_completeness() {
     use beardog_types::canonical::crypto::CryptoConfig;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let config = CryptoConfig::default();
 
@@ -240,6 +291,9 @@ fn test_crypto_config_completeness() {
     let _rng = config.rng;
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_result_combinators() -> BearDogResult<()> {
     // Test Result combinators work with BearDogResult

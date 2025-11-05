@@ -62,9 +62,15 @@ mod self_discovery_extended_tests {
             "Metadata should include display name"
         );
         assert!(
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             !identity.metadata.version.is_empty(),
             "Version should not be empty"
         );
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
@@ -83,6 +89,9 @@ mod self_discovery_extended_tests {
             let _cap_str = format!("{:?}", capability);
             assert!(
                 !_cap_str.is_empty(),
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 "Capability should have valid representation"
             );
         }
@@ -112,6 +121,9 @@ mod self_discovery_extended_tests {
     async fn test_metadata_completeness() {
         let mut engine = SelfDiscoveryEngine::new().unwrap();
         let identity = engine.discover_self_identity().unwrap();
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let metadata = &identity.metadata;
 
@@ -130,6 +142,9 @@ mod self_discovery_extended_tests {
 
     #[tokio::test]
     async fn test_multiple_discovery_calls_consistent() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut engine = SelfDiscoveryEngine::new().unwrap();
 
         let identity1 = engine.discover_self_identity().unwrap();
@@ -147,6 +162,9 @@ mod self_discovery_extended_tests {
 
         // Both should have 'beardog' as the type
         assert_eq!(parts1[0], "beardog");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(parts2[0], "beardog");
     }
 
@@ -164,6 +182,9 @@ mod self_discovery_extended_tests {
 
     #[tokio::test]
     async fn test_primal_id_format_validity() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut engine = SelfDiscoveryEngine::new().unwrap();
         let identity = engine.discover_self_identity().unwrap();
 
@@ -183,6 +204,9 @@ mod self_discovery_extended_tests {
 
     #[tokio::test]
     async fn test_discovery_with_environment_variables() {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Set environment variable for display name
         std::env::set_var("BEARDOG_DISPLAY_NAME", "Test BearDog Instance");
 
@@ -192,6 +216,9 @@ mod self_discovery_extended_tests {
         // Should pick up environment variable if supported
         if let Some(display_name) = &identity.metadata.display_name {
             assert!(!display_name.is_empty(), "Display name should not be empty");
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         }
 
         // Cleanup
@@ -208,6 +235,9 @@ mod self_discovery_extended_tests {
             let cap_debug = format!("{:?}", capability);
             assert!(
                 !cap_debug.is_empty(),
+                // TEST_CATEGORY: integration
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 "Capability should have valid debug representation"
             );
         }
@@ -222,6 +252,9 @@ mod self_discovery_extended_tests {
 
         let mut handles = vec![];
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         // Spawn multiple concurrent discovery operations
         for _ in 0..10 {
             let engine_clone = Arc::clone(&engine);
@@ -234,6 +267,9 @@ mod self_discovery_extended_tests {
 
         // Wait for all to complete
         for handle in handles {
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             let result = handle.await.unwrap();
             assert!(result.is_ok(), "Concurrent discovery should succeed");
         }
@@ -257,6 +293,9 @@ mod self_discovery_extended_tests {
     async fn test_endpoint_format_validation() {
         let mut engine = SelfDiscoveryEngine::new().unwrap();
         let identity = engine.discover_self_identity().unwrap();
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: important
 
         for endpoint in &identity.endpoints {
             // Endpoints should be valid
@@ -268,6 +307,9 @@ mod self_discovery_extended_tests {
         }
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_version_format_semantic() {
         let mut engine = SelfDiscoveryEngine::new().unwrap();
@@ -280,6 +322,9 @@ mod self_discovery_extended_tests {
             parts.len() >= 2,
             "Version should have at least major.minor: {}",
             version
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         );
 
         // First two parts should be numbers
@@ -302,6 +347,9 @@ mod self_discovery_extended_tests {
 
         for capability in &identity.capabilities {
             let key = format!("{:?}", capability);
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             assert!(
                 seen_capabilities.insert(key.clone()),
                 "Duplicate capability found: {}",
@@ -316,6 +364,9 @@ mod self_discovery_extended_tests {
         let identity = engine.discover_self_identity().unwrap();
 
         let mut seen_endpoints = std::collections::HashSet::new();
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         for endpoint in &identity.endpoints {
             let endpoint_str = format!("{:?}", endpoint);
@@ -330,6 +381,9 @@ mod self_discovery_extended_tests {
     #[tokio::test]
     async fn test_discovery_performance() {
         use std::time::Instant;
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         let start = Instant::now();
         let mut engine = SelfDiscoveryEngine::new().unwrap();
@@ -344,6 +398,9 @@ mod self_discovery_extended_tests {
         );
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_identity_serialization_readiness() {
         let mut engine = SelfDiscoveryEngine::new().unwrap();

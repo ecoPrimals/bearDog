@@ -326,6 +326,9 @@ impl PrimalDiscoveryClient for DefaultPrimalDiscoveryClient {
         // This would use the universal infant discovery system
         // For now, return mock services for demonstration
         let mut services = Vec::new();
+        
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
 
         for capability in capabilities {
             let service = UniversalServiceDescriptor {
@@ -333,8 +336,8 @@ impl PrimalDiscoveryClient for DefaultPrimalDiscoveryClient {
                 capabilities: vec![capability],
                 endpoint: beardog_types::canonical::discovery::ServiceEndpoint {
                     protocol: "http".to_string(),
-                    host: "localhost".to_string(),
-                    port: 8080,
+                    host: network_config.default_host.clone(),
+                    port: network_config.service_ports.api_port,
                     path: Some("/api/v1".to_string()),
                     parameters: HashMap::new(),
                 },

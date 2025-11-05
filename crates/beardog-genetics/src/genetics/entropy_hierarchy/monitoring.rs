@@ -264,9 +264,15 @@ mod tests {
     #[test]
     fn test_entropy_monitor_creation() {
         let config = EntropyHierarchyConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: genetics
+        // TEST_PRIORITY: normal
         let _monitor = EntropyMonitor::new(&config);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[test]
     fn test_statistics_calculation() {
         let config = EntropyHierarchyConfig::default();

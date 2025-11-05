@@ -190,12 +190,16 @@ impl<C, S> ZeroCostBuilder<C, S> {
 pub mod examples {
     use super::{BearDogError, ZeroCostBearDog, ZeroCostBuilder, ZeroCostCache, ZeroCostSecurity};
 
+    /// Memory-backed zero-cost cache with string keys
     pub type MemoryCache = ZeroCostCache<String>;
 
+    /// Hardware-backed zero-cost cache with byte vector keys
     pub type HardwareCache = ZeroCostCache<Vec<u8>>;
 
+    /// Software-based security with 32-byte keys
     pub type SoftwareSecurity = ZeroCostSecurity<32>;
 
+    /// Hardware-based security with 64-byte keys
     pub type HardwareSecurity = ZeroCostSecurity<64>;
 
     /// Create development configuration
@@ -247,17 +251,29 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_cost_demo() -> Result<(), BearDogError> {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         examples::zero_cost_demo()?;
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_compile_time_config() {
         let config: ZeroCostConfig<1024, 100> = ZeroCostConfig::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(config.cache_size(), 1024);
         assert_eq!(config.max_connections(), 100);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_security_key_size() {
         let security: ZeroCostSecurity<256> = ZeroCostSecurity::new();

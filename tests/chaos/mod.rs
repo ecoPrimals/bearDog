@@ -201,10 +201,16 @@ mod tests {
         let config = ChaosTestConfig::default();
         let controller = ChaosController::new(config);
         
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!controller.is_running());
         controller.start();
         assert!(controller.is_running());
         controller.stop();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(!controller.is_running());
     }
 
@@ -214,12 +220,18 @@ mod tests {
         assert!(collector.start_collection().is_ok());
         
         let baseline = collector.get_baseline();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(baseline.is_some());
     }
 
     #[tokio::test]
     async fn test_fault_injection_helpers() {
         let fault = FaultType::NetworkPartition { duration_ms: 1000 };
+         // TEST_CATEGORY: unit
+         // TEST_DOMAIN: core
+         // TEST_PRIORITY: normal
         
         let component = fault_injection::determine_target_component(&fault);
         assert_eq!(component, "network");
@@ -231,6 +243,9 @@ mod tests {
         assert!(matches!(severity, FaultSeverity::High));
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_default_scenarios() {
         let scenarios = create_default_scenarios();

@@ -19,6 +19,9 @@ mod tests {
         assert_ne!(key1, key3, "Keys should be unique");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_key_rotation_preserves_old_data_decryption() {
         // When rotating keys, old data with old key should still decrypt
@@ -28,6 +31,9 @@ mod tests {
         let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&old_key, plaintext, None)
             .expect("Encryption with old key should succeed");
 
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         // Even after generating new key, old key should still decrypt old data
         let _new_key = BearDogCrypto::generate_secure_random(32);
 
@@ -43,6 +49,9 @@ mod tests {
         let key_16 = BearDogCrypto::generate_secure_random(16); // AES-128
         let key_24 = BearDogCrypto::generate_secure_random(24); // AES-192
         let key_32 = BearDogCrypto::generate_secure_random(32); // AES-256
+                                                                // TEST_CATEGORY: integration
+                                                                // TEST_DOMAIN: security
+                                                                // TEST_PRIORITY: normal
 
         assert_eq!(key_16.len(), 16);
         assert_eq!(key_24.len(), 24);
@@ -56,6 +65,9 @@ mod tests {
     #[test]
     fn test_key_derivation_consistency() {
         // Same password + salt should always derive same key
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let password = b"StrongPassword123!";
         let salt = BearDogCrypto::generate_secure_random(16);
 
@@ -67,6 +79,9 @@ mod tests {
         assert_eq!(key1, key2, "Same inputs should derive same key");
     }
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     #[test]
     fn test_key_derivation_different_salts() {
         // Different salts should produce different keys

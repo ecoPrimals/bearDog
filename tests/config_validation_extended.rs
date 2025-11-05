@@ -87,6 +87,9 @@ fn test_config_node_id_persistence() {
     assert_eq!(config1.node_id, config2.node_id);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_config_modification_immutability() {
     // Test that modifying one config doesn't affect another
@@ -94,32 +97,47 @@ fn test_config_modification_immutability() {
     let mut config2 = config1.clone();
 
     let original_env = config2.environment.clone();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     config2.environment = "modified".to_string();
 
     assert_eq!(config1.environment, original_env);
     assert_ne!(config1.environment, config2.environment);
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_config_debug_format() {
     // Test that config can be debug-formatted without panics
     let config = BearDogConfig::default();
     let debug_str = format!("{:?}", config);
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("BearDogConfig") || debug_str.len() > 10);
 }
 
 #[test]
 fn test_config_display_or_string_conversion() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test that config has meaningful string representation
     let config = BearDogConfig::default();
-    let node_id_str = format!("{}", config.node_id);
+    let node_id_str = config.node_id.to_string();
 
     assert!(!node_id_str.is_empty());
     assert_eq!(node_id_str.len(), 36); // UUID format
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ====================================================================================
 // Configuration Edge Cases (10 tests)
 // ====================================================================================
@@ -135,12 +153,18 @@ fn test_config_empty_environment_handling() {
     // Either rejects empty or has default behavior
     assert!(config.environment.is_empty() || !original.is_empty());
 }
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_config_special_characters_in_environment() {
     // Test special characters in environment names
     let mut config = BearDogConfig::default();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test various special characters
     config.environment = "dev-test".to_string();
     assert_eq!(config.environment, "dev-test");
@@ -151,6 +175,9 @@ fn test_config_special_characters_in_environment() {
 
 #[test]
 fn test_config_case_sensitivity() {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Test case sensitivity in environment names
     let mut config1 = BearDogConfig::default();
     let mut config2 = BearDogConfig::default();
@@ -158,6 +185,9 @@ fn test_config_case_sensitivity() {
     config1.environment = "Production".to_string();
     config2.environment = "production".to_string();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // These should be treated as different
     assert_ne!(config1.environment, config2.environment);
 }
@@ -169,6 +199,9 @@ fn test_config_whitespace_handling() {
 
     config.environment = " production ".to_string();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Should either trim or preserve whitespace consistently
     assert!(config.environment.contains("production"));
 }
@@ -178,6 +211,9 @@ fn test_config_very_long_environment_name() {
     // Test handling of very long environment names
     let mut config = BearDogConfig::default();
     let long_name = "a".repeat(1000);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     config.environment = long_name.clone();
 
@@ -188,6 +224,9 @@ fn test_config_very_long_environment_name() {
 #[test]
 fn test_config_unicode_in_environment() {
     // Test Unicode characters in environment names
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let mut config = BearDogConfig::default();
 
     config.environment = "production-🐻".to_string();
@@ -198,6 +237,9 @@ fn test_config_unicode_in_environment() {
 }
 
 #[test]
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 fn test_config_version_update() {
     // Test version update doesn't break config
     let mut config = BearDogConfig::default();
@@ -206,6 +248,9 @@ fn test_config_version_update() {
     assert_eq!(config.version, "4.0.0");
 
     config.version = "5.1.2-beta".to_string();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(config.version, "5.1.2-beta");
 }
 
@@ -215,6 +260,9 @@ fn test_config_concurrent_default_creation() {
     use std::thread;
 
     let handles: Vec<_> = (0..10)
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .map(|_| {
             thread::spawn(|| {
                 let config = BearDogConfig::default();
@@ -224,6 +272,9 @@ fn test_config_concurrent_default_creation() {
         })
         .collect();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let node_ids: Vec<String> = handles
         .into_iter()
         .map(|h| h.join().expect("Thread should complete"))
@@ -233,6 +284,9 @@ fn test_config_concurrent_default_creation() {
     for (i, id1) in node_ids.iter().enumerate() {
         for (j, id2) in node_ids.iter().enumerate() {
             if i != j {
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 assert_ne!(id1, id2, "Concurrent configs should have unique IDs");
             }
         }
@@ -260,6 +314,9 @@ fn test_config_clone_chain() {
 
     // All should have same values
     assert_eq!(config1.node_id, config2.node_id);
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     assert_eq!(config2.node_id, config3.node_id);
     assert_eq!(config3.node_id, config4.node_id);
     assert_eq!(config1.environment, config4.environment);
@@ -268,6 +325,9 @@ fn test_config_clone_chain() {
 // ====================================================================================
 // Configuration Integration Tests (5 tests)
 // ====================================================================================
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[test]
 fn test_config_with_health_status_check() {
@@ -284,6 +344,9 @@ fn test_multiple_configs_different_environments() {
     // Test multiple configs with different environments
     let mut dev_config = BearDogConfig::default();
     dev_config.environment = "development".to_string();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     let mut prod_config = BearDogConfig::default();
     prod_config.environment = "production".to_string();
@@ -291,6 +354,9 @@ fn test_multiple_configs_different_environments() {
     let mut staging_config = BearDogConfig::default();
     staging_config.environment = "staging".to_string();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // All should be valid but different
     assert_ne!(dev_config.environment, prod_config.environment);
     assert_ne!(dev_config.environment, staging_config.environment);
@@ -310,6 +376,9 @@ fn test_config_lifecycle_complete() {
     assert!(!config.node_id.is_empty());
 
     // 2. Modify
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     config.environment = "test".to_string();
     assert_eq!(config.environment, "test");
 
@@ -330,6 +399,9 @@ fn test_config_equality_after_modification() {
     let config1 = BearDogConfig::default();
     let mut config2 = config1.clone();
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Initially equal
     assert_eq!(config1.node_id, config2.node_id);
 
@@ -342,6 +414,9 @@ fn test_config_equality_after_modification() {
 #[test]
 fn test_config_stress_rapid_access() {
     // Test rapid config field access doesn't cause issues
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let config = BearDogConfig::default();
 
     for _ in 0..10000 {
@@ -375,6 +450,9 @@ mod test_helpers {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_helper_create_test_config() {
     // Test the helper function works

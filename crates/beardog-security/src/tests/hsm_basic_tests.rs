@@ -57,6 +57,9 @@ fn test_multiple_provider_initialization() {
         cache_size: Some(200),
         custom_params: HashMap::new(),
     };
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     assert_eq!(config1.provider, HsmProviderType::Software);
     assert_eq!(config2.provider, HsmProviderType::Hardware);
@@ -73,6 +76,9 @@ fn test_provider_initialization_with_config() {
     custom_params.insert("algorithm".to_string(), "RSA".to_string());
 
     let config = HsmConfig {
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         provider: HsmProviderType::Software,
         connection: ConnectionConfig::default(),
         security: SecurityConfig::default(),
@@ -100,6 +106,9 @@ fn test_provider_initialization_failure_recovery() {
     let config = HsmConfig {
         provider: HsmProviderType::Software,
         connection: ConnectionConfig::default(),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         security: SecurityConfig::default(),
         auth_method: AuthMethod::None,
         operation_timeout: Duration::from_secs(30),
@@ -123,6 +132,9 @@ fn test_provider_reinitialization() {
         security: SecurityConfig::default(),
         auth_method: AuthMethod::None,
         operation_timeout: Duration::from_secs(30),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: important
         cache_size: Some(100),
         custom_params: HashMap::new(),
     };
@@ -143,6 +155,9 @@ fn test_provider_reinitialization() {
     assert_eq!(config1.cache_size, config2.cache_size);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 // ============================================================================
 // Provider Health Check Tests
 // ============================================================================
@@ -174,6 +189,9 @@ fn test_provider_health_check_healthy() {
             cache_size: Some(100),
             custom_params: HashMap::new(),
         };
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         assert_eq!(config.provider, provider_type);
     }
 }
@@ -202,6 +220,9 @@ fn test_provider_health_check_unhealthy() {
             operation_timeout: Duration::from_secs(30),
             cache_size: Some(100),
             custom_params,
+            // TEST_CATEGORY: integration
+            // TEST_DOMAIN: security
+            // TEST_PRIORITY: normal
         };
 
         assert_eq!(config.provider, provider_type);
@@ -230,6 +251,9 @@ fn test_provider_health_check_timeout() {
 
     // Verify ordering: quick < network < diagnostics < extended
     assert!(timeout_durations[0] < timeout_durations[1]);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     assert!(timeout_durations[1] < timeout_durations[2]);
     assert!(timeout_durations[2] < timeout_durations[3]);
 }
@@ -252,6 +276,9 @@ fn test_provider_health_recovery() {
         (HealthState::Healthy, HealthState::Degraded),
         (HealthState::Degraded, HealthState::Unhealthy),
         (HealthState::Unhealthy, HealthState::Recovering),
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         (HealthState::Recovering, HealthState::Healthy),
     ];
 
@@ -276,6 +303,9 @@ fn test_periodic_health_checks() {
     // Calculate jittered intervals (±10%)
     for base_interval in &base_intervals {
         let base_millis = base_interval.as_millis();
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
         let jitter_ms = (base_millis as f64 * 0.1) as u128;
 
         let min_interval = base_millis.saturating_sub(jitter_ms);
@@ -308,6 +338,9 @@ fn test_hsm_key_generation_basic() {
     // - Provide key identifier for future use
 
     // Validates key generation interface
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let key_type = "ed25519";
     let key_id = "generated-key-001";
@@ -333,6 +366,9 @@ fn test_hsm_key_generation_types() {
     // - Ed25519 (signatures) - BearDog primary
     // - AES-256 (symmetric encryption)
     // - X25519 (key exchange)
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // - ChaCha20-Poly1305 (AEAD)
 
     // Validates multi-algorithm support
@@ -369,6 +405,9 @@ fn test_hsm_key_generation_concurrency() {
     // Tests thread safety
 
     // Concurrent operations should:
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // - Generate unique keys for each request
     // - Maintain isolation between operations
     // - Preserve key uniqueness guarantees
@@ -406,6 +445,9 @@ fn test_hsm_key_generation_concurrency() {
 #[test]
 fn test_hsm_key_generation_limits() {
     // HSM should respect key generation limits
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     // Tests resource management
 
     // Resource limits:
@@ -436,6 +478,9 @@ fn test_hsm_key_generation_limits() {
     );
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: security
+// TEST_PRIORITY: normal
 #[test]
 fn test_hsm_generated_key_uniqueness() {
     // All generated keys should be unique

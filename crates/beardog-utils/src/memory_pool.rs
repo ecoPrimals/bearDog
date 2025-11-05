@@ -366,6 +366,9 @@ mod tests {
             tracing::error!(
                 "Operation failed ({}): {:?}",
                 "Pool creation should succeed",
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
                 e
             );
             beardog_errors::BearDogError::internal(
@@ -384,6 +387,9 @@ mod tests {
     #[test]
     fn test_buffer_allocation_and_return() -> Result<(), Box<dyn std::error::Error>> {
         let pool = MemoryPool::new(1024, 2, 8).map_err(|e| {
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             tracing::error!(
                 "Operation failed ({}): {:?}",
                 "Pool creation should succeed",
@@ -443,6 +449,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_global_pools() -> Result<(), Box<dyn std::error::Error>> {
         let pools = GlobalPools::new().map_err(|e| {

@@ -141,6 +141,9 @@ mod tests {
         let manager = MemoryManager::new(config)?;
 
         // Test allocation
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         manager.allocate(1024)?;
         let stats = manager.get_stats()?;
         assert_eq!(stats.current_usage, 1024);
@@ -157,6 +160,9 @@ mod tests {
     #[test]
     fn test_memory_manager_gc() -> Result<(), BearDogError> {
         let config = CacheConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let manager = MemoryManager::new(config)?;
 
         manager.allocate(1000)?;
@@ -170,6 +176,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_memory_pressure() -> Result<(), BearDogError> {
         let config = CacheConfig::default();

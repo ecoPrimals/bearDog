@@ -53,8 +53,9 @@ pub async fn initialize_mobile_hsm_manager(
             // NOTE: Simplified to unit variant - device_type and secure_enclave info managed separately
             let mobile_tier = HsmTier::Mobile;
 
-            // TODO: Implement HsmProvider trait for AndroidStrongBoxHsm
+            // TODO: Re-enable after fixing type mismatch compile errors (AndroidStrongBoxHsm uses wrong HsmProvider trait)
             // hsm_manager.register_hsm_provider(mobile_tier, Arc::new(mobile_hsm))?;
+            // info!("✅ Mobile HSM registered with HSM manager");
             let _ = (mobile_tier, mobile_hsm); // Suppress unused variable warnings
         }
         Err(e) => {

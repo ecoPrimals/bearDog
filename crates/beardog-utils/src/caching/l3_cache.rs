@@ -191,6 +191,9 @@ mod tests {
         let mut cache = L3Cache::new(config)?;
 
         // Test set and get
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         cache.set("key1", b"value1")?;
         let result = cache.get("key1")?;
         assert_eq!(result, Some(b"value1".to_vec()));
@@ -205,6 +208,9 @@ mod tests {
     #[test]
     fn test_l3_cache_persistence() -> Result<(), BearDogError> {
         let config = CacheConfig::default();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let mut cache = L3Cache::new(config)?;
 
         cache.set("key1", b"value1")?;
@@ -220,6 +226,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_l3_cache_stats() -> Result<(), BearDogError> {
         let config = CacheConfig::default();

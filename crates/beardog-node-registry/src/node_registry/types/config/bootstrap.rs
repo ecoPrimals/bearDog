@@ -59,9 +59,18 @@ impl Default for BootstrapNodeConfig {
             network_address: default_network_address,
             capabilities: Vec::new(),
             trust_level: crate::node_registry::types::trust::TrustLevel::Unknown,
-            connection_timeout_seconds: 30,
-            retry_attempts: 3,
-            retry_delay_seconds: 5,
+            connection_timeout_seconds: std::env::var("BEARDOG_BOOTSTRAP_CONNECTION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30),
+            retry_attempts: std::env::var("BEARDOG_BOOTSTRAP_RETRY_ATTEMPTS")
+                .ok()
+                .and_then(|r| r.parse().ok())
+                .unwrap_or(3),
+            retry_delay_seconds: std::env::var("BEARDOG_BOOTSTRAP_RETRY_DELAY_SECS")
+                .ok()
+                .and_then(|d| d.parse().ok())
+                .unwrap_or(5),
             metadata: HashMap::with_capacity(16),
         }
     }
@@ -151,6 +160,9 @@ impl BootstrapNodeConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_bootstrap_node_config() {
         let config = BootstrapNodeConfig::new("test_node".to_string(), "localhost".to_string(), 8080)

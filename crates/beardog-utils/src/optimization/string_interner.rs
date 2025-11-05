@@ -188,6 +188,9 @@ mod tests {
         assert_eq!(stats.cache_hits, 1);
         assert_eq!(stats.unique_strings, 1);
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         Ok(())
     }
 
@@ -203,6 +206,9 @@ mod tests {
         assert_eq!(&*s1, "hello");
         assert_eq!(&*s2, "world");
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(interner.len()?, 2);
 
         Ok(())
@@ -217,6 +223,9 @@ mod tests {
             interner.intern("test")?;
         }
 
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let hit_ratio = interner.hit_ratio()?;
         assert!((hit_ratio - 0.8).abs() < f64::EPSILON); // 4 hits out of 5 requests
 
@@ -229,6 +238,9 @@ mod tests {
         let s2 = intern_string("global_test")?;
 
         assert!(Arc::ptr_eq(&s1, &s2));
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert_eq!(&*s1, "global_test");
 
         Ok(())
@@ -237,6 +249,9 @@ mod tests {
     #[test]
     fn test_interner_clear() -> Result<(), BearDogError> {
         let interner = StringInterner::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         interner.intern("test1")?;
         interner.intern("test2")?;
@@ -251,6 +266,9 @@ mod tests {
         Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_memory_usage() -> Result<(), BearDogError> {
         let interner = StringInterner::new();
@@ -262,7 +280,7 @@ mod tests {
         assert!(memory > 0);
 
         let efficiency = interner.memory_efficiency()?;
-        assert!(efficiency >= 0.0 && efficiency <= 1.0);
+        assert!((0.0..=1.0).contains(&efficiency));
 
         Ok(())
     }

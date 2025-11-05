@@ -118,3 +118,195 @@ impl PropertyBasedTestFramework {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::property_testing::{PropertyBasedTestFramework, PropertyTestConfig};
+
+    #[test]
+    fn test_api_validation_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 10,
+            ..Default::default()
+        });
+
+        let result = framework.test_api_validation_properties();
+        assert!(result.is_ok(), "API validation properties should pass");
+        assert_eq!(
+            framework.statistics.properties_tested, 3,
+            "Should test 3 properties"
+        );
+    }
+
+    #[test]
+    fn test_generate_api_test_cases() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        let result = framework.generate_api_test_cases();
+        assert!(result.is_ok(), "Should generate API test cases");
+        assert_eq!(
+            framework.test_cases.len(),
+            5,
+            "Should generate 5 test cases"
+        );
+
+        // Verify test case structure
+        for test_case in &framework.test_cases {
+            assert!(test_case.id >= 1000, "Test case ID should be offset");
+            assert_eq!(test_case.test_type, "api_validation");
+            assert_eq!(test_case.expected_properties.len(), 3);
+        }
+    }
+
+    #[test]
+    fn test_input_sanitization_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_api_test_cases().unwrap();
+        let result = framework.test_input_sanitization_properties();
+        assert!(result.is_ok(), "Input sanitization should pass");
+        assert!(
+            framework.statistics.total_tests > 0,
+            "Should record test results"
+        );
+    }
+
+    #[test]
+    fn test_boundary_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_api_test_cases().unwrap();
+        let result = framework.test_boundary_properties();
+        assert!(result.is_ok(), "Boundary properties should pass");
+    }
+
+    #[test]
+    fn test_error_handling_properties() {
+        let mut framework = PropertyBasedTestFramework::new(PropertyTestConfig {
+            test_cases: 5,
+            ..Default::default()
+        });
+
+        framework.generate_api_test_cases().unwrap();
+        let result = framework.test_error_handling_properties();
+        assert!(result.is_ok(), "Error handling properties should pass");
+    }
+
+    #[test]
+    fn test_injection_prevention() {
+        let framework = PropertyBasedTestFramework::default();
+
+        // Test SQL injection
+        let sql_injection = TestCase {
+            id: 1,
+            input_data: b"'; DROP TABLE users; --".to_vec(),
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_injection_prevention(&sql_injection);
+        assert!(result.is_ok(), "Should detect SQL injection");
+
+        // Test XSS
+        let xss_injection = TestCase {
+            id: 2,
+            input_data: b"<script>alert('xss')</script>".to_vec(),
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_injection_prevention(&xss_injection);
+        assert!(result.is_ok(), "Should detect XSS");
+
+        // Test path traversal
+        let path_traversal = TestCase {
+            id: 3,
+            input_data: b"../../../etc/passwd".to_vec(),
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_injection_prevention(&path_traversal);
+        assert!(result.is_ok(), "Should detect path traversal");
+    }
+
+    #[test]
+    fn test_length_validation() {
+        let framework = PropertyBasedTestFramework::default();
+
+        // Test normal length
+        let normal = TestCase {
+            id: 1,
+            input_data: vec![0u8; 100],
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_length_validation(&normal);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Normal length should pass"
+        );
+
+        // Test large but acceptable length
+        let large = TestCase {
+            id: 2,
+            input_data: vec![0u8; 9999],
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_length_validation(&large);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Large length should pass"
+        );
+    }
+
+    #[test]
+    fn test_overflow_prevention() {
+        let framework = PropertyBasedTestFramework::default();
+
+        let test_case = TestCase {
+            id: 1,
+            input_data: vec![0u8; 1000],
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_overflow_prevention(&test_case);
+        assert!(result.is_ok() && result.unwrap(), "Should prevent overflow");
+    }
+
+    #[test]
+    fn test_graceful_error_handling() {
+        let framework = PropertyBasedTestFramework::default();
+
+        // Test with valid data
+        let valid = TestCase {
+            id: 1,
+            input_data: b"valid data".to_vec(),
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_graceful_error_handling(&valid);
+        assert!(result.is_ok() && result.unwrap(), "Valid data should pass");
+
+        // Test with empty data (should fail gracefully)
+        let empty = TestCase {
+            id: 2,
+            input_data: vec![],
+            test_type: "api_validation".to_string(),
+            expected_properties: vec![],
+        };
+        let result = framework.test_graceful_error_handling(&empty);
+        assert!(
+            result.is_ok() && result.unwrap(),
+            "Empty data should fail gracefully"
+        );
+    }
+}

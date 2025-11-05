@@ -126,6 +126,9 @@ mod tests {
         match error {
             BearDogError::Security { message, category } => {
                 assert_eq!(message, "Test error");
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: errors
+                // TEST_PRIORITY: important
                 assert_eq!(category, SecurityErrorCategory::Authentication);
             }
             _ => panic!("Expected Security error"),
@@ -140,6 +143,9 @@ mod tests {
     #[test]
     fn test_validation_error_creation() {
         let error = validation_error("username", "cannot be empty");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
         match error {
             BearDogError::Business { message, category } => {
                 assert!(message.contains("username"));
@@ -155,6 +161,9 @@ mod tests {
     /// # Panics
     /// Panics if the created error is not a System variant or if the message
     /// doesn't contain expected network-related content.
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     #[test]
     fn test_network_error_creation() {
         let error = network_error("connect", "timeout ");

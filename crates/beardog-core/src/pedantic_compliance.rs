@@ -264,11 +264,17 @@ mod pedantic_compliance_tests {
         let env_default = manager.get_default_value("BEARDOG_ENVIRONMENT");
         assert!(env_default.is_ok());
         assert_eq!(env_default.map_err(|e| {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     tracing::error!("Operation failed ({}): {:?}", "Default should exist", e);
     beardog_errors::BearDogError::internal(format!("Error: {:?}", "Default should exist", e))
 })?, "development");
 
         let invalid_key = manager.get_default_value("INVALID_KEY");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!(invalid_key.is_err());
     }
 
@@ -281,6 +287,9 @@ mod pedantic_compliance_tests {
         assert!(success_result.is_ok());
         assert_eq!(
             success_result.map_err(|e| {
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     tracing::error!("Operation failed ({}): {:?}", "Success case should return Ok", e);
     beardog_errors::BearDogError::internal(format!("Error: {:?}", "Success case should return Ok", e))
 })?, 
@@ -300,6 +309,9 @@ mod pedantic_compliance_tests {
 
         std::env::set_var("BEARDOG_ENVIRONMENT", "testing");
         std::env::set_var("BEARDOG_LOG_LEVEL", "debug");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         std::env::set_var("BEARDOG_TIMEOUT_SECONDS", "60");
 
         let load_result = manager.load_configuration();
@@ -319,6 +331,9 @@ mod pedantic_compliance_tests {
     #[test]
     fn test_pedantic_validation() {
         let mut manager = PedanticConfigManager::new();
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
         std::env::set_var("BEARDOG_ENVIRONMENT", "invalid_env");
         let load_result = manager.load_configuration();
@@ -335,6 +350,9 @@ mod pedantic_compliance_tests {
     }
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_comprehensive_pedantic_compliance() {
     println!("🎯 Testing Comprehensive Pedantic Compliance...");

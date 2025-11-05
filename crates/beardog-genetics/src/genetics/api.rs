@@ -60,6 +60,9 @@ impl GeneticsStore for InMemoryGeneticsStore {
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_genetics_api() {
         let store = InMemoryGeneticsStore::default();

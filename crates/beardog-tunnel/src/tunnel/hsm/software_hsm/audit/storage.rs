@@ -98,7 +98,7 @@ impl PersistentAuditStorage {
 
         // Persist to file
         let json = serde_json::to_string(entry).map_err(|e| {
-            BearDogError::serialization(format!("Failed to serialize audit entry: {}", e))
+            BearDogError::serialization(&format!("Failed to serialize audit entry: {}", e))
         })?;
 
         let mut file = OpenOptions::new()

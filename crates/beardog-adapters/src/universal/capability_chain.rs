@@ -522,6 +522,9 @@ mod tests {
     #[tokio::test]
     fn test_capability_chain_creation() {
         let chain = CapabilityChain::new()
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: adapters
+            // TEST_PRIORITY: normal
             .add_step(ServiceCapabilityType::DataStorage, "fetch")
             .add_step(ServiceCapabilityType::ComputeIntelligence, "process")
             .add_step(ServiceCapabilityType::DistributedIntelligence, "analyze");
@@ -541,6 +544,9 @@ mod tests {
         );
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[test]
     fn test_no_hardcoded_primal_names() {
         let chain = CapabilityChain::new().add_step(ServiceCapabilityType::ServiceMesh, "route"); // Capability-based

@@ -114,12 +114,18 @@ fn security_registry_module_loads() {
     };
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn registry_initialization() -> Result<(), beardog_errors::BearDogError> {
     let config = SecurityRegistryConfig::default();
     let _registry = SecurityRegistry::new(config).map_err(|e| {
         tracing::error!(
             "Operation failed ({}): {:?}",
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
             "Failed to create registry",
             e
         );
@@ -133,8 +139,14 @@ async fn registry_initialization() -> Result<(), beardog_errors::BearDogError> {
 #[tokio::test]
 fn registry_node_registration() {
     println!("\u{2705} Security registry node registration test passed");
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 }
 
+// TEST_CATEGORY: unit
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 fn registry_security_validation() {
     println!("\u{2705} Security registry validation test passed");

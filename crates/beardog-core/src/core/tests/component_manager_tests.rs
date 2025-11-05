@@ -51,12 +51,18 @@ async fn test_multiple_component_registration() {
         .await
         .unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Verify all components are registered
     let components = manager.get_all_components().await.unwrap();
     assert_eq!(components.len(), 3);
     assert!(components.contains_key("security"));
     assert!(components.contains_key("auth"));
     assert!(components.contains_key("monitor"));
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[tokio::test]
@@ -69,6 +75,9 @@ async fn test_component_status_update() {
         .await
         .unwrap();
 
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Update status
     manager
         .update_component_status("security", ComponentStatus::Running)
@@ -92,6 +101,9 @@ async fn test_component_status_update_nonexistent() {
     // Should return error
     assert!(result.is_err());
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
 #[tokio::test]
 async fn test_get_nonexistent_component() {
@@ -110,6 +122,9 @@ async fn test_all_components_healthy_when_all_running() {
 
     // Register all components as running
     manager
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .register_component("security", ComponentStatus::Running)
         .await
         .unwrap();
@@ -120,6 +135,9 @@ async fn test_all_components_healthy_when_all_running() {
     manager
         .register_component("monitor", ComponentStatus::Running)
         .await
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .unwrap();
 
     // All should be healthy
@@ -128,6 +146,9 @@ async fn test_all_components_healthy_when_all_running() {
 }
 
 #[tokio::test]
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 async fn test_all_components_healthy_with_failed_or_stopped_component() {
     let manager = ComponentManager::new();
 
@@ -148,6 +169,9 @@ async fn test_all_components_healthy_with_failed_or_stopped_component() {
     // Should not all be healthy
     let all_healthy = manager.all_components_healthy().await.unwrap();
     assert!(!all_healthy);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: important
 }
 
 #[tokio::test]
@@ -168,6 +192,9 @@ async fn test_all_components_healthy_with_failed_component() {
     let all_healthy = manager.all_components_healthy().await.unwrap();
     assert!(!all_healthy);
 }
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: important
 
 #[tokio::test]
 async fn test_system_health_when_all_healthy() {
@@ -184,6 +211,9 @@ async fn test_system_health_when_all_healthy() {
         .unwrap();
 
     // System health should be Healthy
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     let health = manager.get_system_health().await.unwrap();
     assert_eq!(health, HealthStatus::Healthy);
 }
@@ -200,6 +230,9 @@ async fn test_system_health_when_not_all_running() {
     manager
         .register_component("auth", ComponentStatus::Starting)
         .await
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .unwrap();
 
     // System health should be Degraded
@@ -216,12 +249,18 @@ async fn test_component_manager_default() {
     assert!(components.is_empty());
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_concurrent_component_access() {
     let manager = ComponentManager::new();
 
     // Register component
     manager
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         .register_component("security", ComponentStatus::Running)
         .await
         .unwrap();
@@ -246,6 +285,9 @@ async fn test_concurrent_component_access() {
 #[tokio::test]
 async fn test_component_lifecycle_transitions() {
     let manager = ComponentManager::new();
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     // Test full lifecycle: Starting -> Running -> Stopping -> Stopped
     manager
@@ -273,6 +315,9 @@ async fn test_component_lifecycle_transitions() {
     assert_eq!(status, ComponentStatus::Stopping);
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_empty_manager_is_healthy() {
     let manager = ComponentManager::new();

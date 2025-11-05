@@ -54,18 +54,33 @@ fn test_ecosystem_listener_creation() {
 
 #[test]
 fn test_passive_discovery_initialization() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Passive listening should initialize
     // TODO: Passive discovery initializes
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_announcement_detection() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Should detect announcements from other primals
     // TODO: Announcement detection works
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_primal_registration() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Should register discovered primals
     // TODO: Primal registration works
 }
@@ -73,18 +88,33 @@ fn test_primal_registration() {
 #[test]
 fn test_duplicate_primal_handling() {
     // Should handle duplicate primal announcements
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // TODO: Duplicate primal handling works
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 // ============================================================================
 // Capability Registry Tests
 // ============================================================================
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_capability_registry_creation() {
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // Capability registry should be created
     // TODO: Capability registry created
 }
+ // TEST_CATEGORY: integration
+ // TEST_DOMAIN: core
+ // TEST_PRIORITY: normal
 
 #[test]
 fn test_capability_registration() {
@@ -92,18 +122,33 @@ fn test_capability_registration() {
     // TODO: Capability registration works
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_lookup() {
     // Should find capabilities by type
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // TODO: Capability lookup works
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_multi_provider_capabilities() {
     // Should handle multiple providers for same capability
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     // TODO: Multi-provider capabilities handled
 }
 
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 #[test]
 fn test_capability_deregistration() {
     // Should remove capabilities when primals leave
