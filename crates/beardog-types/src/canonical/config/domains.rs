@@ -26,7 +26,8 @@ pub mod security;
 pub mod system;
 pub mod testing;
 pub mod threat;
-pub mod timeout;  // ✅ Canonical TimeoutConfig (Nov 8, 2025)
+pub mod timeout;  // ⚠️  DEPRECATED - Use timeout_unified (Nov 8, 2025)
+pub mod timeout_unified;  // ✅ Unified TimeoutConfig (Nov 8, 2025)
 pub mod workflow_config;
 
 // Re-export all domain configurations for easy access
