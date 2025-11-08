@@ -400,9 +400,6 @@ impl Default for NodeTypeRegistry {
 pub mod node_types {
     // Re-export service types from centralized ecosystem constants
     pub use beardog_types::constants::domains::ecosystem::service_types::*;
-
-
-    pub const GATEWAY: &str = "gateway";
 #[cfg(test)]
 mod tests {
     use super::*;
