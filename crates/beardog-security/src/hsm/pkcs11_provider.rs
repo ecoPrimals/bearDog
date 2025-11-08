@@ -33,18 +33,8 @@ type CK_OBJECT_HANDLE = u64;
 
 type CK_RV = u32;
 
-mod pkcs11_constants {
-    pub const CKR_OK: u32 = 0x00000000;
-    pub const CKR_CANCEL: u32 = 0x00000001;
-    pub const CKR_HOST_MEMORY: u32 = 0x00000002;
-    pub const CKR_SLOT_ID_INVALID: u32 = 0x00000003;
-    pub const CKR_GENERAL_ERROR: u32 = 0x00000005;
-    pub const CKR_FUNCTION_FAILED: u32 = 0x00000006;
-    pub const CKR_ARGUMENTS_BAD: u32 = 0x00000007;
-    pub const CKR_NO_EVENT: u32 = 0x00000008;
-    pub const CKR_NEED_TO_CREATE_THREADS: u32 = 0x00000009;
-    pub const CKR_CANT_LOCK: u32 = 0x0000000A;
-}
+// Use centralized PKCS#11 constants
+use beardog_types::constants::domains::pkcs11::return_codes as pkcs11_constants;
 
 #[derive(Debug, Clone)]
     library_path: String,

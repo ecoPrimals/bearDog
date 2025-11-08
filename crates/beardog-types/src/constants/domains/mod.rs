@@ -21,6 +21,8 @@ pub mod ecosystem;
 pub mod math;
 /// Network module
 pub mod network;
+/// PKCS#11 module
+pub mod pkcs11;
 /// Security module
 pub mod security;
 /// Storage module
