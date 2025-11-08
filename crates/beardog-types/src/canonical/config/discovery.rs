@@ -167,6 +167,7 @@ pub struct LoadBalancingConfig {
     /// Circuit breaker configuration
     pub circuit_breaker: CircuitBreakerConfig,
     /// Retry configuration
+    #[deprecated(since = "3.1.0", note = "Use domains::retry::CanonicalRetryConfig instead")]
     pub retry: RetryConfig,
     /// Sticky sessions configuration
     pub sticky_sessions: Option<StickySessionsConfig>,
@@ -293,6 +294,15 @@ pub struct CircuitBreakerConfig {
     pub half_open_max_calls: u32,
 }
 
+/// Retry Configuration - DEPRECATED
+///
+/// ⚠️ **DEPRECATED**: Use `domains::retry::CanonicalRetryConfig` instead.
+///
+/// This type is deprecated. See `RETRY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use domains::retry::CanonicalRetryConfig instead. See RETRY_CONFIG_MIGRATION_GUIDE.md"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryConfig {
     /// Maximum number of retries
