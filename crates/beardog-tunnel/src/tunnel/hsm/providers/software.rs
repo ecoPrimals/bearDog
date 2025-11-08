@@ -45,17 +45,20 @@ pub struct SoftwareCapabilities {
     pub key_derivation_supported: bool,
 }
 
-/// Crypto provider types for software HSM
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CryptoProviderType {
-    /// Rust crypto implementation
-    RustCrypto,
-    /// OpenSSL backend
-    OpenSsl,
-    /// Ring crypto library
-    Ring,
-    /// Custom provider
-    Custom(String),
+// Re-export canonical CryptoProviderType from beardog-types
+// Note: Custom(String) variant removed - use provider configuration instead
+pub use beardog_types::hsm::providers::CryptoProviderType;
+
+// Mapping helpers for legacy code
+impl From<&str> for CryptoProviderType {
+    fn from(s: &str) -> Self {
+        match s {
+            "rust-crypto" | "RustCrypto" => CryptoProviderType::Software,
+            "openssl" | "OpenSsl" => CryptoProviderType::OpenSsl,
+            "ring" | "Ring" => CryptoProviderType::Ring,
+            _ => CryptoProviderType::Software, // Default to software for custom
+        }
+    }
 }
 
 impl SoftwareUniversalProvider {
@@ -335,7 +338,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_software_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await;
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await;
         assert!(provider.is_ok());
         Ok(())
     }
@@ -376,16 +379,14 @@ mod tests {
     #[test]
     fn test_crypto_provider_types() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
-            CryptoProviderType::RustCrypto,
-            CryptoProviderType::RustCrypto
+            CryptoProviderType::Software,
+            CryptoProviderType::Software
         );
-        assert_ne!(CryptoProviderType::RustCrypto, CryptoProviderType::OpenSsl);
+        assert_ne!(CryptoProviderType::Software, CryptoProviderType::OpenSsl);
 
-        let custom = CryptoProviderType::Custom("MyProvider".to_string());
-        match custom {
-            CryptoProviderType::Custom(name) => assert_eq!(name, "MyProvider"),
-            _ => panic!("Expected Custom variant"),
-        }
+        // Test variant coverage
+        let _hardware = CryptoProviderType::Hardware;
+        let _cloud = CryptoProviderType::CloudKms;
         Ok(())
     }
 
