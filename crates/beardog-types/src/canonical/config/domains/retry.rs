@@ -4,6 +4,7 @@
 // All domain-specific RetryConfig types should use this canonical version
 // or create type aliases to it.
 
+use crate::canonical::traits::RetryStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -87,6 +88,43 @@ impl Default for CanonicalRetryConfig {
             enable_exponential_backoff: true,
         }
     }
+}
+
+// ============================================================================
+// RetryStrategy Trait Implementation
+// ============================================================================
+
+impl RetryStrategy for CanonicalRetryConfig {
+    fn max_attempts(&self) -> u32 {
+        self.max_attempts.max(1) // Ensure at least 1 attempt
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        if attempt == 0 {
+            return Duration::ZERO;
+        }
+
+        if self.enable_exponential_backoff {
+            // Calculate exponential backoff: initial_delay * multiplier^(attempt-1)
+            let delay_ms = (self.initial_delay.as_millis() as f64
+                * self.backoff_multiplier.powi((attempt - 1) as i32)) as u64;
+
+            // Cap at max_delay
+            Duration::from_millis(delay_ms.min(self.max_delay.as_millis() as u64))
+        } else {
+            // Constant backoff: always use initial_delay
+            self.initial_delay.min(self.max_delay)
+        }
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    // Uses default implementations for:
+    // - should_retry_error (retries all errors)
+    // - is_limit_reached (checks against max_attempts)
+    // - total_delay (sums all delays)
 }
 
 impl CanonicalRetryConfig {
