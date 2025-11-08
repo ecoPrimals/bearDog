@@ -17,6 +17,8 @@
 pub mod buffers;
 /// Ecosystem module
 pub mod ecosystem;
+/// Math module
+pub mod math;
 /// Network module
 pub mod network;
 /// Security module
