@@ -169,7 +169,8 @@ pub struct ConstTables;
 impl ConstTables {
     pub const CRC32_TABLE: [u32; 256] = Self::generate_crc32_table();
 
-    pub const SINE_TABLE: [f32; 360] = Self::generate_sine_table();
+    // Reference centralized sine table
+    pub const SINE_TABLE: [f32; 360] = beardog_types::constants::domains::math::SINE_TABLE_360;
 
     pub const PRIMES_1000: [u16; 168] = Self::generate_primes_1000();
 
