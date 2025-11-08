@@ -17,6 +17,7 @@
 use chrono::Utc;
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod orchestration_comprehensive_tests {
     use super::*;
 

@@ -5,6 +5,10 @@ use super::types::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    // Shared mutex for tests that use timing/sleep
+    static TIMING_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     /// TEST 7: Session-Based Recovery
     ///
@@ -15,6 +19,9 @@ mod tests {
     /// - Session revocation
     #[test]
     fn test_session_based_recovery() {
+        // Use a lock to ensure this test runs serially with other timing-dependent tests
+        let _guard = TIMING_TEST_LOCK.lock().unwrap();
+
         // Create recovery session
         let session = RecoverySession::new("user_123", std::time::Duration::from_secs(1800));
         assert_eq!(session.user_id(), "user_123");

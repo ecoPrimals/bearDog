@@ -72,13 +72,35 @@ impl UniversalCapabilityAdapter {
         Ok(adapter)
     }
 
-    /// Get available capabilities
+    /// Get reference to capabilities (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to capabilities.
+    pub fn capabilities_ref(&self) -> Arc<RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>> {
+        Arc::clone(&self.capabilities)
+    }
+
+    /// Get reference to primals (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to discovered primals.
+    pub fn primals_ref(&self) -> Arc<RwLock<HashMap<String, DiscoveredPrimal>>> {
+        Arc::clone(&self.primals)
+    }
+
+    /// Get available capabilities snapshot
+    /// 
+    /// **Performance Note**: This clones the entire HashMap. For read-only access,
+    /// prefer `capabilities_ref()` which is much cheaper.
     pub async fn get_available_capabilities(&self) -> BearDogResult<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>> {
         let capabilities = self.capabilities.read().await;
         Ok(capabilities.clone())
     }
 
-    /// Get discovered primals
+    /// Get discovered primals snapshot
+    /// 
+    /// **Performance Note**: This clones the entire HashMap. For read-only access,
+    /// prefer `primals_ref()` which is much cheaper.
     pub async fn get_discovered_primals(&self) -> BearDogResult<HashMap<String, DiscoveredPrimal>> {
         let primals = self.primals.read().await;
         Ok(primals.clone())

@@ -71,19 +71,20 @@ impl AndroidKeystore {
     ) -> Result<KeyType, BearDogError> {
         match algorithm {
             AndroidKeyAlgorithm::Ec => match key_size {
-                256 => Ok(KeyType::EccP256),
-                384 => Ok(KeyType::EccP384),
+                256 => Ok(KeyType::EllipticCurve),
+                384 => Ok(KeyType::EllipticCurve),
                 521 => Ok(KeyType::EccP521),
                 _ => Err(BearDogError::UnsupportedKeyType {
                     key_type: format!("EC-{key_size}"),
                 }),
             },
-            AndroidKeyAlgorithm::Rsa => Ok(KeyType::Rsa { key_size }),
+            AndroidKeyAlgorithm::Rsa => Ok(KeyType::Rsa), // Vendor-agnostic RSA
             AndroidKeyAlgorithm::Aes => match key_size {
-                128 => Ok(KeyType::Aes128),
-                192 => Ok(KeyType::Aes192),
-                256 => Ok(KeyType::Aes256),
+                128 | 192 | 256 => Ok(KeyType::Aes), // Vendor-agnostic AES
+                _ => Err(BearDogError::UnsupportedKeyType {
                     key_type: format!("AES-{key_size}"),
+                }),
+            },
 
 /// Is Strongbox Available operation.
     /// Checks if strongbox available

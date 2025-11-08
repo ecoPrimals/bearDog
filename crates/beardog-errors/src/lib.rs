@@ -97,14 +97,24 @@ pub mod constructors_unified;
 /// Extension traits and helpers for idiomatic error handling in Rust.
 pub mod idiomatic;
 
+/// Enhanced error constructor examples
+///
+/// Real-world examples demonstrating how to use enhanced error constructors
+/// with remediation hints, context, and documentation links.
+#[cfg(any(test, doc))]
+pub mod examples_enhanced;
+
 /// Comprehensive test suites
 #[cfg(test)]
 mod tests;
 
 pub use categories::*;
 pub use constructors_unified::{
-    authentication_error, authorization_error, configuration_error, crypto_error, io_error,
+    authentication_error, authentication_error_with_hint, authorization_error,
+    authorization_error_with_hint, configuration_error, configuration_error_with_docs,
+    crypto_error, crypto_error_with_details, io_error, network_error_with_context,
     not_implemented, security_error, system_error, unsupported_operation, validation_error,
+    validation_error_with_suggestion,
 };
 pub use core::BearDogError;
 

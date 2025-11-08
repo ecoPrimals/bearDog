@@ -149,18 +149,8 @@ pub struct UniversalHsmConfig {
     pub features: FeatureRequirements,
 }
 
-/// HSM provider types
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum HsmProviderType {
-    /// Software HSM
-    Software,
-    /// Hardware HSM
-    Hardware,
-    /// Cloud HSM
-    Cloud,
-    /// Mobile platform (iOS/Android)
-    Mobile,
-}
+// Re-export canonical HsmProviderType
+pub use beardog_types::canonical::hsm::HsmProviderType;
 
 /// Security levels
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -11,6 +11,7 @@ pub mod crypto_providers;
 pub mod entropy;
 pub mod health;
 pub mod implementations;
+pub mod key_lifecycle;
 pub mod managers;
 pub mod mobile;
 pub mod mobile_hsm;
@@ -25,6 +26,10 @@ pub use crypto_providers::{OpenSslCryptoProvider, RingCryptoProvider, RustCrypto
 pub use entropy::{EphemeralSeed, HumanEntropyCapabilities, HumanEntropyMethod};
 pub use health::{ProviderHealth, ProviderInfo};
 pub use implementations::{InMemoryStorageBackend, RustSoftwareHsm};
+pub use key_lifecycle::{
+    KeyLifecycleState, KeyMetadataWithLifecycle, KeyRotationConfig, KeyRotationEvent,
+    KeyRotationReason,
+};
 pub use managers::{DefaultHsmFailoverManager, DefaultHsmHealthMonitor};
 pub use mobile::{AndroidDeviceInfo, SecurityLevel};
 pub use mobile_hsm::{AndroidStrongBoxHsm, IosSecureEnclaveHsm};

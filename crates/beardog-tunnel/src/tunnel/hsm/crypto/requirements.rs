@@ -76,33 +76,33 @@ impl CryptoRequirements {
         use crate::tunnel::hsm::types::key::KeyType;
 
         match key_type {
-            KeyType::Aes { key_size } => (
+            KeyType::Aes => (
                 CryptoOperation::SymmetricEncryption,
                 CryptoAlgorithm::Symmetric(SymmetricAlgorithm::Aes {
                     mode: AesMode::Gcm,
-                    key_size: *key_size,
+                    key_size: 256, // Default to AES-256 for vendor-agnostic
                 }),
             ),
             KeyType::Ed25519 => (
                 CryptoOperation::Signing,
                 CryptoAlgorithm::Signature(SignatureAlgorithm::Ed25519),
             ),
-            KeyType::EccP256 => (
+            KeyType::EllipticCurve => (
                 CryptoOperation::Signing,
                 CryptoAlgorithm::Signature(SignatureAlgorithm::EcdsaP256 {
                     hash: HashAlgorithm::Sha256,
                 }),
             ),
-            KeyType::EccP384 => (
+            KeyType::EllipticCurve => (
                 CryptoOperation::Signing,
                 CryptoAlgorithm::Signature(SignatureAlgorithm::EcdsaP384 {
                     hash: HashAlgorithm::Sha384,
                 }),
             ),
-            KeyType::Rsa { key_size } => (
+            KeyType::Rsa => (
                 CryptoOperation::AsymmetricEncryption,
                 CryptoAlgorithm::Asymmetric(AsymmetricAlgorithm::RsaOaep {
-                    key_size: *key_size,
+                    key_size: 2048, // Default to RSA-2048 for vendor-agnostic
                     hash: HashAlgorithm::Sha256,
                 }),
             ),

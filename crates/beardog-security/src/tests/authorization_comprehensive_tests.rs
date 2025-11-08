@@ -12,6 +12,7 @@
 //! - Error handling
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod authorization_comprehensive_tests {
     use super::*;
     use beardog_errors::BearDogError;

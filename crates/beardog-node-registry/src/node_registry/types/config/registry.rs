@@ -55,13 +55,16 @@ impl Default for RegistryConfig {
         Self {
             registry_id: std::env::var("BEARDOG_REGISTRY_ID")
                 .unwrap_or_else(|_| "beardog-registry".to_string()),
-            registry_name: std::env::var("BEARDOG_REGISTRY_NAME")
+            registry_            name: std::env::var("BEARDOG_REGISTRY_NAME")
                 .unwrap_or_else(|_| "BearDog Node Registry".to_string()),
             version: std::env::var("BEARDOG_REGISTRY_VERSION")
                 .unwrap_or_else(|_| "1.0.0".to_string()),
             bind_address: std::env::var("BEARDOG_REGISTRY_BIND_ADDRESS")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+                .unwrap_or_else(|_| {
+                    use beardog_types::constants::domains::network::config;
+                    config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()
+                }),
             port: std::env::var("BEARDOG_REGISTRY_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

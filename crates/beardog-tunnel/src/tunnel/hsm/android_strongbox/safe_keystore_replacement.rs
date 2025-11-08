@@ -174,7 +174,7 @@ mod tests {
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         })?;
 
-        let key_type = KeyType::EccP256;
+        let key_type = KeyType::EllipticCurve;
         let key = keystore
             .safe_generate_key_with_strongbox("test_key", &key_type, false)
             ;

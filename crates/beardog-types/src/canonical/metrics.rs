@@ -246,3 +246,224 @@ impl SystemMetrics {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // PerformanceMetrics tests
+    #[test]
+    fn test_performance_metrics_default() {
+        let metrics = PerformanceMetrics::default();
+        
+        assert_eq!(metrics.cpu_usage_percent, 0.0);
+        assert_eq!(metrics.memory_usage_mb, 0.0);
+        assert_eq!(metrics.disk_usage_percent, 0.0);
+        assert_eq!(metrics.network_throughput_mbps, 0.0);
+        assert_eq!(metrics.operations_per_second, 0.0);
+    }
+
+    #[test]
+    fn test_performance_metrics_custom() {
+        let metrics = PerformanceMetrics {
+            cpu_usage_percent: 45.5,
+            memory_usage_mb: 2048.0,
+            disk_usage_percent: 75.0,
+            network_throughput_mbps: 125.5,
+            operations_per_second: 1500.0,
+        };
+        
+        assert_eq!(metrics.cpu_usage_percent, 45.5);
+        assert_eq!(metrics.memory_usage_mb, 2048.0);
+        assert!(metrics.disk_usage_percent > 50.0);
+    }
+
+    // SecurityMetrics tests
+    #[test]
+    fn test_security_metrics_default() {
+        let metrics = SecurityMetrics::default();
+        
+        assert_eq!(metrics.failed_auth_attempts, 0);
+        assert_eq!(metrics.successful_auths, 0);
+        assert_eq!(metrics.security_violations, 0);
+        assert_eq!(metrics.blocked_requests, 0);
+        assert!(metrics.last_security_event.is_none());
+    }
+
+    #[test]
+    fn test_security_metrics_with_events() {
+        let metrics = SecurityMetrics {
+            failed_auth_attempts: 5,
+            successful_auths: 100,
+            security_violations: 2,
+            blocked_requests: 10,
+            last_security_event: Some(SystemTime::now()),
+        };
+        
+        assert_eq!(metrics.failed_auth_attempts, 5);
+        assert_eq!(metrics.successful_auths, 100);
+        assert!(metrics.last_security_event.is_some());
+        
+        let success_rate = metrics.successful_auths as f64 
+            / (metrics.successful_auths + metrics.failed_auth_attempts) as f64;
+        assert!(success_rate > 0.95);
+    }
+
+    // ErrorMetrics tests
+    #[test]
+    fn test_error_metrics_default() {
+        let metrics = ErrorMetrics::default();
+        
+        assert_eq!(metrics.total_errors, 0);
+        assert_eq!(metrics.critical_errors, 0);
+        assert_eq!(metrics.warnings, 0);
+        assert_eq!(metrics.error_rate_per_minute, 0.0);
+        assert!(metrics.recent_errors.is_empty());
+        assert!(metrics.last_error.is_none());
+    }
+
+    #[test]
+    fn test_error_metrics_with_errors() {
+        let metrics = ErrorMetrics {
+            total_errors: 50,
+            critical_errors: 5,
+            warnings: 20,
+            error_rate_per_minute: 2.5,
+            recent_errors: vec!["Error 1".to_string(), "Error 2".to_string()],
+            last_error: Some(SystemTime::now()),
+        };
+        
+        assert_eq!(metrics.total_errors, 50);
+        assert_eq!(metrics.critical_errors, 5);
+        assert_eq!(metrics.recent_errors.len(), 2);
+        assert!(metrics.last_error.is_some());
+        
+        let critical_rate = metrics.critical_errors as f64 / metrics.total_errors as f64;
+        assert_eq!(critical_rate, 0.1);
+    }
+
+    // BusinessMetrics tests
+    #[test]
+    fn test_business_metrics_creation() {
+        let metrics = BusinessMetrics {
+            total_transactions: 10000,
+            successful_transactions: 9950,
+            failed_transactions: 50,
+            revenue: 50000.0,
+            average_transaction_value: 5.0,
+        };
+        
+        assert_eq!(metrics.total_transactions, 10000);
+        assert_eq!(metrics.successful_transactions, 9950);
+        
+        let success_rate = metrics.successful_transactions as f64 / metrics.total_transactions as f64;
+        assert!(success_rate > 0.99);
+    }
+
+    // CustomMetrics tests
+    #[test]
+    fn test_custom_metrics_empty() {
+        let metrics = CustomMetrics {
+            metrics: HashMap::new(),
+        };
+        
+        assert!(metrics.metrics.is_empty());
+    }
+
+    #[test]
+    fn test_custom_metrics_with_data() {
+        let mut metrics_map = HashMap::new();
+        metrics_map.insert("cache_hit_rate".to_string(), 0.85);
+        metrics_map.insert("queue_depth".to_string(), 150.0);
+        
+        let metrics = CustomMetrics {
+            metrics: metrics_map,
+        };
+        
+        assert_eq!(metrics.metrics.len(), 2);
+        assert_eq!(metrics.metrics.get("cache_hit_rate"), Some(&0.85));
+    }
+
+    // SystemMetrics tests
+    #[test]
+    fn test_system_metrics_creation() {
+        let system_metrics = SystemMetrics {
+            performance: PerformanceMetrics::default(),
+            security: SecurityMetrics::default(),
+            errors: ErrorMetrics::default(),
+            business: BusinessMetrics {
+                total_transactions: 0,
+                successful_transactions: 0,
+                failed_transactions: 0,
+                revenue: 0.0,
+                average_transaction_value: 0.0,
+            },
+            custom: CustomMetrics {
+                metrics: HashMap::new(),
+            },
+            timestamp: SystemTime::now(),
+        };
+        
+        assert_eq!(system_metrics.performance.cpu_usage_percent, 0.0);
+        assert_eq!(system_metrics.security.failed_auth_attempts, 0);
+        assert_eq!(system_metrics.errors.total_errors, 0);
+    }
+
+    #[test]
+    fn test_system_metrics_health_score() {
+        let system_metrics = SystemMetrics {
+            performance: PerformanceMetrics {
+                cpu_usage_percent: 50.0,
+                memory_usage_mb: 1024.0,
+                disk_usage_percent: 60.0,
+                network_throughput_mbps: 100.0,
+                operations_per_second: 1000.0,
+            },
+            security: SecurityMetrics {
+                failed_auth_attempts: 0,
+                successful_auths: 100,
+                security_violations: 0,
+                blocked_requests: 0,
+                last_security_event: None,
+            },
+            errors: ErrorMetrics::default(),
+            business: BusinessMetrics {
+                total_transactions: 100,
+                successful_transactions: 100,
+                failed_transactions: 0,
+                revenue: 1000.0,
+                average_transaction_value: 10.0,
+            },
+            custom: CustomMetrics {
+                metrics: HashMap::new(),
+            },
+            timestamp: SystemTime::now(),
+        };
+        
+        let health = system_metrics.health_score();
+        assert!(health > 0.0);
+        assert!(health <= 100.0);
+    }
+
+    // Serialization tests
+    #[test]
+    fn test_performance_metrics_serialization() {
+        let metrics = PerformanceMetrics::default();
+        let json = serde_json::to_string(&metrics);
+        assert!(json.is_ok(), "Should be able to serialize PerformanceMetrics");
+    }
+
+    #[test]
+    fn test_security_metrics_serialization() {
+        let metrics = SecurityMetrics::default();
+        let json = serde_json::to_string(&metrics);
+        assert!(json.is_ok(), "Should be able to serialize SecurityMetrics");
+    }
+
+    #[test]
+    fn test_error_metrics_serialization() {
+        let metrics = ErrorMetrics::default();
+        let json = serde_json::to_string(&metrics);
+        assert!(json.is_ok(), "Should be able to serialize ErrorMetrics");
+    }
+}

@@ -99,6 +99,10 @@ pub mod external_functions;
 /// and autonomous operation without corporate dependencies.
 pub mod primal_sovereignty;
 
+// Service discovery for distributed BearDog deployments
+// Note: Service discovery functionality is provided by beardog-adapters
+// pub mod service_discovery;
+
 /// Universal service discovery and network orchestration
 ///
 /// Zero-knowledge discovery system that finds and coordinates services

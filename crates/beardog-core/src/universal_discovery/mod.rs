@@ -69,6 +69,9 @@ mod protocols_tests;
 /// Service registry
 pub mod registry;
 
+#[cfg(test)]
+mod tests;
+
 // Re-export types for convenience
 // HealthCheckConfig is a domain-specific config for universal discovery
 pub use health::{HealthCheckConfig, HealthMonitor, ServiceHealthState};

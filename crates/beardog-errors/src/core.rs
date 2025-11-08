@@ -536,19 +536,19 @@ impl BearDogError {
 
     /// Create an unsupported operation error
     #[must_use]
-    pub fn unsupported_operation(operation: &str) -> Self {
-        Self::Business {
-            message: format!("Unsupported operation: {operation}"),
-            category: BusinessErrorCategory::Validation,
+    pub fn unsupported_operation<S: Into<String>>(operation: S) -> Self {
+        Self::System {
+            message: format!("Unsupported operation: {}", operation.into()),
+            category: SystemErrorCategory::NotSupported,
         }
     }
 
     /// Create a not implemented error
     #[must_use]
     pub fn not_implemented(feature: &str) -> Self {
-        Self::Business {
+        Self::System {
             message: format!("Not yet implemented: {feature}"),
-            category: BusinessErrorCategory::Validation,
+            category: SystemErrorCategory::NotImplemented,
         }
     }
 
@@ -563,9 +563,9 @@ impl BearDogError {
 
     /// Create a cryptographic error
     #[must_use]
-    pub fn crypto_error(details: &str) -> Self {
+    pub fn crypto_error<S: Into<String>>(details: S) -> Self {
         Self::Cryptographic {
-            message: format!("Cryptographic operation failed: {details}"),
+            message: format!("Cryptographic operation failed: {}", details.into()),
         }
     }
 

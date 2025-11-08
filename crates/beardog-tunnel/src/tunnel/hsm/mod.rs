@@ -28,8 +28,11 @@ pub mod universal_discovery;
 // Crypto system
 pub mod crypto; // NEW: Universal Crypto Provider System
 pub mod crypto_dispatch;
-// NOTE: provider_dispatch depends on universal_hsm which is disabled
-// TODO: Re-enable after universal_hsm module rebuild
+// NOTE: provider_dispatch needs API updates to match simplified UniversalHsmProvider trait
+// TODO: Refactor provider_dispatch to match UniversalHsmProvider::sign/verify/get_capabilities (4-8h)
+// TODO: The old trait had many methods (sign_data, verify_signature, health_check, etc.)
+// TODO: The new trait has only: sign, verify, generate_key, get_capabilities, get_provider_info
+// DEFER: This is a performance optimization layer - core HSM functionality works without it
 // pub mod provider_dispatch;
 pub mod zero_cost_provider;
 
@@ -68,9 +71,10 @@ pub use beardog_types::hsm::{
     KeyStoreConfig, ProviderHealth, ProviderInfo, RustSoftwareHsm,
 };
 
-// Use crypto provider implementations from stub_types (until KeyType alignment is complete)
-pub use stub_types::{
-    CryptoProvider, OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers and canonical trait
+pub use beardog_types::hsm::CryptoProvider; // Canonical trait
+pub use software_hsm::crypto_providers::{
+    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
 };
 pub use types::{
     AuthenticationMethod, HsmCapability, HsmKey, HsmKeyInfo, HsmKeyMetadata, HsmOperation, HsmTier,

@@ -922,40 +922,15 @@ pub enum NotificationChannel {
     Webhook,
 }
 
-/// Logging configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LoggingConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::system::LoggingConfig instead"
-)]
-pub type LoggingConfig = beardog_types::canonical::config::domains::system::LoggingConfig;
-
-/// Log levels (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogLevel` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::system::LogLevel instead"
-)]
-pub type LogLevel = beardog_types::canonical::config::domains::system::LogLevel;
-
-/// Log format (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogFormat` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::system::LogFormat instead"
-)]
-pub type LogFormat = beardog_types::canonical::config::domains::system::LogFormat;
-
-/// Log destinations (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogTargetType` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::system::LogTargetType instead"
-)]
-pub type LogDestination = beardog_types::canonical::config::domains::system::LogTargetType;
+// ═══════════════════════════════════════════════════════════════════════════
+// REMOVED: Deprecated type aliases (Nov 8, 2025)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The following deprecated type aliases were removed as they had zero usage:
+// - LoggingConfig → use beardog_types::canonical::config::domains::system::LoggingConfig
+// - LogLevel → use beardog_types::canonical::config::domains::system::LogLevel
+// - LogFormat → use beardog_types::canonical::config::domains::system::LogFormat
+// - LogDestination → use beardog_types::canonical::config::domains::system::LogTargetType
+//
+// All types are available at their canonical locations in beardog-types.
+// ═══════════════════════════════════════════════════════════════════════════

@@ -5,7 +5,7 @@
 
 
 use beardog_errors::BearDogError;
-use beardog_traits::unified::{BaseProvider, ProviderInfo, ProviderMetrics, UniversalProvider};
+use beardog_types::canonical::providers_unified::traits::{UnifiedProvider, ProviderInfo, ProviderMetrics};
 use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::providers_unified::ProviderStatus;
 use std::collections::HashMap;

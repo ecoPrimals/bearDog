@@ -68,7 +68,7 @@ pub struct OptimizationState {
 }
 
 /// Performance metrics captured during genetic optimization
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct PerformanceMetric {
     /// Timestamp when this metric was recorded
     pub timestamp: chrono::DateTime<chrono::Utc>,

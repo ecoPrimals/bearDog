@@ -187,7 +187,7 @@ impl NetworkHsmProvider {
 
     /// Get the underlying service information
     #[must_use]
-    pub fn service(&self) -> &NetworkHsmService {
+    pub const fn service(&self) -> &NetworkHsmService {
         &self.service
     }
 }

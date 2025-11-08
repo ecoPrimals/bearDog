@@ -98,7 +98,8 @@ pub struct NotificationConfig {
 ///
 /// This type alias will be removed in v3.3.0.
 #[deprecated(since = "3.1.0", note = "Use super::network::RateLimitConfig instead")]
-pub type RateLimitConfig = super::network::RateLimitConfig;
+// Re-export from network domain (consolidated Nov 7, 2025)
+pub use super::network::RateLimitConfig;
 
 /// Scheduling configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

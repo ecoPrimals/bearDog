@@ -171,7 +171,7 @@ pub enum SystemCommand {
 }
 
 /// Intelligence event types for system monitoring
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum IntelligenceEventType {
     /// Decision was made by the system
     DecisionMade,

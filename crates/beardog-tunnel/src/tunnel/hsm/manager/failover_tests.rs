@@ -64,9 +64,8 @@ mod failover_tests {
     /// Test failover manager creation
     #[test]
     fn test_failover_manager_creation() {
-        let manager = FailoverManager::new(3, 5);
-        // Manager should be created successfully
-        assert!(true);
+        let _manager = FailoverManager::new(3, 5);
+        // Test passes if manager creation succeeds
     }
 
     /// Test successful operation with failover

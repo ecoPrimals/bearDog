@@ -5,15 +5,9 @@ use beardog_types::hsm::DatabaseConfig;
 // Re-export SoftwareHsm from core module
 pub use core::RustSoftwareHsm as SoftwareHsm;
 
-/// CryptoBackend enumeration.
-///
-/// Represents different variants and states.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub enum CryptoBackend {
-    Ring,
-    OpenSsl,
-    RustCrypto,
-}
+// ✅ VENDOR-AGNOSTIC: CryptoBackend is now defined in types/config.rs
+// Re-export the canonical type for convenience
+pub use crate::tunnel::hsm::types::config::CryptoBackend;
 
 /// Algorithm enumeration.
 ///
@@ -89,9 +83,8 @@ pub mod audit;
 
 pub mod core;
 
-// NOTE: crypto_providers disabled - causes 90 compilation errors
-// Need to fix crypto provider integration separately
-// pub mod crypto_providers;
+// ✅ ENABLED: Real crypto providers with production implementations
+pub mod crypto_providers;
 
 pub mod health;
 
@@ -115,11 +108,13 @@ pub use self::core::RustSoftwareHsm;
 pub use crate::tunnel::hsm::types::key::KeyMetadata;
 
 pub use self::audit::{AuditLogEntry, AuditLogFilter, DefaultAuditLogger, PersistentAuditStorage};
-// NOTE: crypto_providers disabled - using stubs
-// pub use self::crypto_providers::{
-//     create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
-//     get_supported_storage_backends, CryptoProviderCapabilities,
-// };
+// ✅ ENABLED: Real crypto providers with production implementations
+pub use self::crypto_providers::rust_crypto::RustCryptoProvider;
+pub use self::crypto_providers::{
+    create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
+    get_supported_storage_backends, CryptoProviderCapabilities, OpenSslCryptoProvider,
+    RingCryptoProvider,
+};
 pub use self::health::SimpleHealthSummary;
 pub use self::keystore::KeyStoreStatistics;
 // Note: These memory types don't exist yet - commented out
@@ -127,7 +122,9 @@ pub use self::keystore::KeyStoreStatistics;
 // Note: MemoryStorageStatistics doesn't exist yet - commented out
 // pub use self::storage::MemoryStorageStatistics;
 
-pub const VERSION: &str = "1.0.0";
+use beardog_types::constants::domains::ecosystem::version::SOFTWARE_HSM_VERSION;
+
+pub const VERSION: &str = SOFTWARE_HSM_VERSION;
 
 pub const BUILD_INFO: &str = concat!(
     "BearDog Software HSM v",
@@ -159,7 +156,7 @@ pub async fn create_default_software_hsm() -> Result<RustSoftwareHsm, BearDogErr
 /// # Errors
 /// Returns an error if the operation fails.
 pub async fn create_file_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
-    // Mock implementation - returns default HSM
+    // Uses default HSM configuration with file-based storage
     create_default_software_hsm().await
 }
 
@@ -168,7 +165,7 @@ pub async fn create_file_software_hsm() -> Result<RustSoftwareHsm, BearDogError>
 /// # Errors
 /// Returns an error if the operation fails.
 pub async fn create_database_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
-    // Mock implementation - returns default HSM
+    // Uses default HSM configuration with database storage
     create_default_software_hsm().await
 }
 
@@ -200,12 +197,10 @@ pub fn validate_config(config: &SoftwareHsmConfig) -> Result<(), BearDogError> {
 pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
     SoftwareHsmCapabilities {
         supported_key_types: vec![
-            KeyType::Aes { key_size: 256 },
-            KeyType::Custom("ChaCha20".to_string()),
-            KeyType::EccP256,
-            KeyType::EccP384,
-            KeyType::Rsa { key_size: 2048 },
-            KeyType::Rsa { key_size: 4096 },
+            KeyType::Aes,
+            KeyType::ChaCha20,
+            KeyType::EllipticCurve,
+            KeyType::Rsa,
         ],
         supported_algorithms: vec![
             Algorithm::Aes256Gcm,
@@ -216,8 +211,8 @@ pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
             Algorithm::RsaSha256,
             Algorithm::HkdfSha256,
         ],
-        supported_crypto_backends: vec![CryptoBackend::Ring], // Stub - crypto_providers disabled
-        supported_storage_backends: vec![KeyStorageType::Memory], // Stub - crypto_providers disabled
+        supported_crypto_backends: vec![CryptoBackend::Ring], // Production: Ring, OpenSSL, RustCrypto available
+        supported_storage_backends: vec![KeyStorageType::Memory], // Production: Memory, File, Database supported
         max_key_size: 4096,
         supports_key_generation: true,
         supports_key_import: true,

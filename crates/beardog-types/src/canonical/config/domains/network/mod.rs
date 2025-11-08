@@ -355,15 +355,8 @@ impl RateLimitConfig {
     }
 }
 
-/// Backward compatibility alias (deprecated)
-#[deprecated(since = "3.1.0", note = "Use RateLimitConfig instead")]
+/// Backward compatibility alias (consolidated Nov 7, 2025)
 pub type RateLimitConfiguration = RateLimitConfig;
-
-/// Domain-specific type aliases for clarity (all point to canonical)
-pub type NetworkRateLimitConfig = RateLimitConfig;
-pub type SecurityRateLimitConfig = RateLimitConfig;
-pub type WorkflowRateLimitConfig = RateLimitConfig;
-pub type MonitoringRateLimitConfig = RateLimitConfig;
 
 #[cfg(test)]
 mod tests {

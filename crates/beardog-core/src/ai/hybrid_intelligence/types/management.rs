@@ -67,8 +67,10 @@ pub type RegistryConfig = AIModelRegistryConfig;
 
 impl Default for AIModelRegistryConfig {
     fn default() -> Self {
+        use beardog_types::constants::domains::network::config;
+        
         let default_host = std::env::var("BEARDOG_REGISTRY_HOST")
-            .unwrap_or_else(|_| "localhost".to_string());
+            .unwrap_or_else(|_| config::default_service_host());
         let default_port = std::env::var("BEARDOG_REGISTRY_PORT")
             .ok()
             .and_then(|s| s.parse().ok())

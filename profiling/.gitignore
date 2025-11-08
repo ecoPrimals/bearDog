@@ -1,0 +1,13 @@
+# Profiling outputs (don't commit large binary files)
+*.svg
+*.txt
+*.out.*
+*.prof
+*.data
+benchmarks/*.json
+reports/*.json
+
+# Keep the structure
+!README.md
+!config.toml
+!.gitignore

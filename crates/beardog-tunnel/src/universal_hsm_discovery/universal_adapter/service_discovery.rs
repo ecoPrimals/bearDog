@@ -6,6 +6,7 @@
 use super::core_types::*;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::network::NetworkConfig;
+use beardog_types::constants::domains::network::config;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -26,9 +27,22 @@ use uuid::Uuid;
             max_retries: 3,
             preferred_backends: vec!["dns".to_string(), "mdns".to_string()],
             discovery_endpoints: vec![
-                "https://service-mesh.ecosystem.internal:8443".to_string(),
+                // Use environment-aware configuration instead of hardcoded URLs
+                std::env::var("BEARDOG_SERVICE_MESH_ENDPOINT")
+                    .unwrap_or_else(|_| {
+                        format!(
+                            "https://service-mesh.ecosystem.internal:{}",
+                            config::default_https_port()
+                        )
+                    }),
                 universal_adapter.discover_service_endpoint("mesh-service")?.to_string(),
-                "https://localhost:8443".to_string() -> Result<Self, BearDogError> {
+                format!(
+                    "https://{}:{}",
+                    config::default_service_host(),
+                    config::default_https_port()
+                ),
+            ],
+        } -> Result<Self, BearDogError> {
         info!("🔍 Initializing Canonical Service Discovery Client");
         
         Ok(Self {

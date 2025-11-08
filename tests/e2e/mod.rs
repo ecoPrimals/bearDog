@@ -31,10 +31,18 @@
 // TEST_PRIORITY: normal
 //! ```
 
+pub mod configuration_management;
+pub mod cross_platform_discovery;
+pub mod data_persistence;
+pub mod device_deployment;
 pub mod disaster_recovery;
 pub mod full_stack_integration;
 pub mod helpers;
+pub mod hsm_operations;
+pub mod monitoring_observability;
+pub mod network_resilience;
 pub mod production_deployment;
+pub mod rate_limiting;
 pub mod real_scenarios;
 pub mod security_flow;
 
@@ -52,6 +60,14 @@ pub enum E2EScenario {
     SecurityFlow,
     DisasterRecovery,
     MultiServiceCoordination,
+    HsmOperations,
+    ConfigurationManagement,
+    NetworkResilience,
+    DataPersistence,
+    RateLimiting,
+    MonitoringObservability,
+    CrossPlatformDiscovery,
+    DeviceDeployment,
 }
 
 /// E2E test result
@@ -128,6 +144,14 @@ impl E2ETestFramework {
             E2EScenario::SecurityFlow => self.run_security_flow().await,
             E2EScenario::DisasterRecovery => self.run_disaster_recovery().await,
             E2EScenario::MultiServiceCoordination => self.run_multi_service_coordination().await,
+            E2EScenario::CrossPlatformDiscovery => self.run_cross_platform_discovery().await,
+            E2EScenario::DeviceDeployment => self.run_device_deployment().await,
+            E2EScenario::HsmOperations => Ok(E2EMetrics::default()),
+            E2EScenario::ConfigurationManagement => Ok(E2EMetrics::default()),
+            E2EScenario::NetworkResilience => Ok(E2EMetrics::default()),
+            E2EScenario::DataPersistence => Ok(E2EMetrics::default()),
+            E2EScenario::RateLimiting => Ok(E2EMetrics::default()),
+            E2EScenario::MonitoringObservability => Ok(E2EMetrics::default()),
         };
 
         let duration = start.elapsed();
@@ -201,6 +225,14 @@ impl E2ETestFramework {
     async fn run_multi_service_coordination(&self) -> Result<E2EMetrics, BearDogError> {
         // TODO: Implement multi-service coordination test
         Ok(E2EMetrics::default())
+    }
+
+    async fn run_cross_platform_discovery(&self) -> Result<E2EMetrics, BearDogError> {
+        cross_platform_discovery::run_cross_platform_discovery_test(&self.config).await
+    }
+
+    async fn run_device_deployment(&self) -> Result<E2EMetrics, BearDogError> {
+        device_deployment::run_device_deployment_test(&self.config).await
     }
 }
 

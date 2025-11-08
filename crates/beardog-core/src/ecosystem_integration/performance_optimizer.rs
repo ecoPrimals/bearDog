@@ -240,21 +240,15 @@ impl EcosystemPerformanceOptimizer {
     /// Creates a new instance
     #[must_use]
     pub fn new(config: EcosystemOptimizerConfig) -> Self {
+        use beardog_config::domains::timeouts::TimeoutConfig;
+        
+        let timeout_config = TimeoutConfig::from_env();
+        
         let pool_config = PoolConfig {
             max_pool_size: config.max_connections,
             min_pool_size: 5,
-            idle_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(300),
-            ),
-            max_connection_age: Duration::from_secs(
-                std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS")
-                    .ok()
-                    .and_then(|a| a.parse().ok())
-                    .unwrap_or(3600), // 1 hour default
-            ),
+            idle_timeout: timeout_config.pool_idle_timeout_duration(),
+            max_connection_age: timeout_config.max_connection_age_duration(),
         };
 
         Self {

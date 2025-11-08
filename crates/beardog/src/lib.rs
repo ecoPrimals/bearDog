@@ -12,7 +12,5 @@ pub use beardog_errors::BearDogError;
 pub use beardog_types::canonical::*;
 
 
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-
-pub const MISSION: &str = "Democratizing enterprise-grade security for everyone";
+// Re-export version and mission from centralized constants
+pub use beardog_types::constants::domains::ecosystem::version::{VERSION, MISSION};

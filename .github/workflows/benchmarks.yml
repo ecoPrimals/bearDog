@@ -1,0 +1,352 @@
+name: 🎯 Performance Benchmarks
+
+on:
+  # Run on PRs to main (for regression detection)
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'crates/**/*.rs'
+      - 'benchmarks/**/*.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/benchmarks.yml'
+  
+  # Run on push to main (to update baseline)
+  push:
+    branches: [main]
+    paths:
+      - 'crates/**/*.rs'
+      - 'benchmarks/**/*.rs'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      benchmark_suite:
+        description: 'Benchmark suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - hsm
+          - discovery
+          - production
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ============================================================================
+  # Quick Benchmark (for PRs)
+  # ============================================================================
+  quick-benchmark:
+    name: Quick Benchmark (PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need history for baseline comparison
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-
+      
+      - name: Run quick benchmarks
+        run: |
+          echo "🎯 Running quick benchmarks for PR validation..."
+          ./scripts/run_benchmarks.sh --quick
+      
+      - name: Generate summary
+        run: |
+          ./scripts/run_benchmarks.sh --summary
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results-pr-${{ github.event.pull_request.number }}
+          path: |
+            target/criterion/
+            benchmark-reports/
+          retention-days: 30
+      
+      - name: Comment PR with results
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('benchmark-reports/summary.txt', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🎯 Benchmark Results\n\n\`\`\`\n${summary}\n\`\`\`\n\n**Full results**: [Download artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+            });
+
+  # ============================================================================
+  # Full Benchmark (for main branch)
+  # ============================================================================
+  full-benchmark:
+    name: Full Benchmark Suite
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-bench-full-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run full benchmark suite
+        run: |
+          echo "🎯 Running complete benchmark suite..."
+          ./scripts/run_benchmarks.sh --all
+      
+      - name: Save baseline
+        run: |
+          cargo bench --package benchmarks -- --save-baseline main-${{ github.sha }}
+      
+      - name: Generate reports
+        run: |
+          ./scripts/run_benchmarks.sh --summary
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results-main-${{ github.sha }}
+          path: |
+            target/criterion/
+            benchmark-reports/
+          retention-days: 90
+      
+      - name: Upload flamegraphs
+        uses: actions/upload-artifact@v3
+        with:
+          name: flamegraphs-${{ github.sha }}
+          path: target/criterion/*/profile/*.svg
+          retention-days: 30
+
+  # ============================================================================
+  # Regression Detection (compare with previous run)
+  # ============================================================================
+  regression-check:
+    name: Regression Detection
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-regression-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Download baseline from main
+        uses: dawidd6/action-download-artifact@v2
+        continue-on-error: true
+        with:
+          workflow: benchmarks.yml
+          branch: main
+          name: benchmark-results-main-*
+          path: baseline/
+      
+      - name: Run benchmarks with comparison
+        run: |
+          if [ -d "baseline/target/criterion" ]; then
+            echo "📊 Comparing with main branch baseline..."
+            cargo bench --package benchmarks -- --baseline main
+          else
+            echo "⚠️  No baseline found, running without comparison"
+            ./scripts/run_benchmarks.sh
+          fi
+      
+      - name: Check for regressions
+        id: regression
+        run: |
+          # Parse criterion output for regressions
+          # This is a simplified check - production would parse JSON output
+          
+          echo "🔍 Checking for performance regressions..."
+          
+          REGRESSION_FOUND=false
+          REGRESSION_REPORT=""
+          
+          # Check critical paths (would be more sophisticated in production)
+          if grep -r "Performance has regressed" target/criterion/ 2>/dev/null; then
+            REGRESSION_FOUND=true
+            REGRESSION_REPORT="⚠️ Performance regressions detected in critical paths"
+          fi
+          
+          echo "regression_found=${REGRESSION_FOUND}" >> $GITHUB_OUTPUT
+          echo "regression_report=${REGRESSION_REPORT}" >> $GITHUB_OUTPUT
+      
+      - name: Fail on critical regression
+        if: steps.regression.outputs.regression_found == 'true'
+        run: |
+          echo "❌ CRITICAL REGRESSION DETECTED"
+          echo "${{ steps.regression.outputs.regression_report }}"
+          exit 1
+      
+      - name: Upload regression analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: regression-analysis-pr-${{ github.event.pull_request.number }}
+          path: |
+            target/criterion/
+            benchmark-reports/
+
+  # ============================================================================
+  # Manual Benchmark Run (workflow_dispatch)
+  # ============================================================================
+  manual-benchmark:
+    name: Manual Benchmark
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Run selected benchmark suite
+        run: |
+          case "${{ github.event.inputs.benchmark_suite }}" in
+            hsm)
+              echo "🔐 Running HSM benchmarks..."
+              ./scripts/run_benchmarks.sh --hsm
+              ;;
+            discovery)
+              echo "🔍 Running discovery benchmarks..."
+              ./scripts/run_benchmarks.sh --discovery
+              ;;
+            production)
+              echo "🚀 Running production benchmarks..."
+              ./scripts/run_benchmarks.sh --production
+              ;;
+            all|*)
+              echo "🎯 Running all benchmarks..."
+              ./scripts/run_benchmarks.sh --all
+              ;;
+          esac
+      
+      - name: Generate summary
+        run: ./scripts/run_benchmarks.sh --summary
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-manual-${{ github.run_number }}
+          path: |
+            target/criterion/
+            benchmark-reports/
+
+  # ============================================================================
+  # Weekly Performance Baseline
+  # ============================================================================
+  weekly-baseline:
+    name: Weekly Performance Baseline
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Run comprehensive benchmarks
+        run: |
+          echo "📊 Running weekly comprehensive benchmark suite..."
+          ./scripts/run_benchmarks.sh --all
+      
+      - name: Save weekly baseline
+        run: |
+          WEEK=$(date +%Y-W%U)
+          cargo bench --package benchmarks -- --save-baseline weekly-${WEEK}
+          echo "Saved baseline: weekly-${WEEK}"
+      
+      - name: Generate historical report
+        run: |
+          echo "📈 Generating historical performance trends..."
+          ./scripts/run_benchmarks.sh --summary
+      
+      - name: Upload baseline
+        uses: actions/upload-artifact@v3
+        with:
+          name: weekly-baseline-$(date +%Y-W%U)
+          path: |
+            target/criterion/
+            benchmark-reports/
+          retention-days: 365
+
+# Schedule weekly baseline runs (every Sunday at 00:00 UTC)
+# Commented out - uncomment to enable
+# on:
+#   schedule:
+#     - cron: '0 0 * * 0'
+

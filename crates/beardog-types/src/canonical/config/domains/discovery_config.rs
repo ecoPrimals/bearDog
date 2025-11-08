@@ -295,20 +295,15 @@ pub struct DiscoverySecurityConfig {
 /// };
 /// // Retry delays: 100ms, 200ms, 400ms
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct RetryConfig {
-    /// Maximum number of retry attempts before giving up
-    pub max_attempts: usize,
-
-    /// Initial delay before the first retry
-    pub initial_delay: Duration,
-
-    /// Multiplier for exponential backoff (typically 2.0)
-    pub backoff_multiplier: f64,
-
-    /// Maximum delay between retries (caps exponential growth)
-    pub max_delay: Duration,
-}
+// MIGRATED: Now using canonical RetryConfig from domains/retry.rs
+// Old definition (replaced Nov 8, 2025):
+// pub struct RetryConfig {
+//     pub max_attempts: usize,
+//     pub initial_delay: Duration,
+//     pub backoff_multiplier: f64,
+//     pub max_delay: Duration,
+// }
+pub use crate::canonical::config::domains::retry::CanonicalRetryConfig as RetryConfig;
 
 // Default implementations
 impl Default for ConsolidatedDiscoveryConfig {
@@ -438,32 +433,23 @@ impl Default for DiscoverySecurityConfig {
     }
 }
 
-impl Default for RetryConfig {
-    fn default() -> Self {
-        Self {
-            max_attempts: std::env::var("BEARDOG_DISCOVERY_RETRY_MAX_ATTEMPTS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(3),
-            initial_delay: Duration::from_millis(
-                std::env::var("BEARDOG_RETRY_INITIAL_DELAY_MS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(100),
-            ),
-            backoff_multiplier: std::env::var("BEARDOG_DISCOVERY_BACKOFF_MULTIPLIER")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(2.0),
-            max_delay: Duration::from_secs(
-                std::env::var("BEARDOG_RETRY_MAX_DELAY_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30),
-            ),
-        }
-    }
-}
+// REMOVED: Custom Default implementation for RetryConfig (Nov 8, 2025)
+// RetryConfig is now an alias for CanonicalRetryConfig, which has its own Default impl.
+// If environment variable overrides are needed, use a custom constructor function instead.
+//
+// Old implementation removed to fix conflict:
+// impl Default for RetryConfig {
+//     fn default() -> Self {
+//         Self {
+//             max_attempts: std::env::var("BEARDOG_DISCOVERY_RETRY_MAX_ATTEMPTS")
+//                 .ok().and_then(|s| s.parse().ok()).unwrap_or(3),
+//             ...
+//         }
+//     }
+// }
+//
+// If environment variable overrides are needed, add a helper function:
+// pub fn retry_config_from_env() -> RetryConfig { ... }
 
 // BearDogConfig implementation for ConsolidatedDiscoveryConfig
 impl BearDogConfig for ConsolidatedDiscoveryConfig {

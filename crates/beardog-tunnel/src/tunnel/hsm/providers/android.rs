@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn test_security_levels() -> Result<(), Box<dyn std::error::Error>> {
-        let mut provider_strongbox = AndroidUniversalProvider {
+        let provider_strongbox = AndroidUniversalProvider {
             capabilities: None,
             strongbox_available: true,
             tee_available: true,
@@ -236,7 +236,7 @@ mod tests {
         };
         assert_eq!(provider_strongbox.get_security_level(), 3);
 
-        let mut provider_tee = AndroidUniversalProvider {
+        let provider_tee = AndroidUniversalProvider {
             capabilities: None,
             strongbox_available: false,
             tee_available: true,
@@ -244,7 +244,7 @@ mod tests {
         };
         assert_eq!(provider_tee.get_security_level(), 2);
 
-        let mut provider_software = AndroidUniversalProvider {
+        let provider_software = AndroidUniversalProvider {
             capabilities: None,
             strongbox_available: false,
             tee_available: false,
@@ -410,7 +410,8 @@ mod tests {
             // Capabilities should be internally consistent
             if caps.strongbox_level == StrongBoxLevel::WithAttestation {
                 assert!(
-                    caps.attestation_supported || caps.strongbox_level == StrongBoxLevel::WithAttestation
+                    caps.attestation_supported
+                        || caps.strongbox_level == StrongBoxLevel::WithAttestation
                 );
             }
         }
@@ -518,7 +519,7 @@ mod tests {
 
         // All providers should initialize successfully
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
 
@@ -534,7 +535,10 @@ mod tests {
         assert!(is_android, "Should detect Android platform");
 
         #[cfg(not(target_os = "android"))]
-        assert!(!is_android, "Should not detect Android on non-Android platforms");
+        assert!(
+            !is_android,
+            "Should not detect Android on non-Android platforms"
+        );
 
         Ok(())
     }
@@ -587,7 +591,12 @@ mod tests {
         // Test that security levels are consistent with capabilities
         let test_cases = vec![
             (StrongBoxLevel::None, None, false, false),
-            (StrongBoxLevel::Basic, Some("QSEE".to_string()), false, false),
+            (
+                StrongBoxLevel::Basic,
+                Some("QSEE".to_string()),
+                false,
+                false,
+            ),
             (
                 StrongBoxLevel::WithAttestation,
                 Some("Trusty TEE".to_string()),
@@ -614,7 +623,8 @@ mod tests {
             // Verify capability structure is valid
             if caps.strongbox_level == StrongBoxLevel::WithAttestation {
                 assert!(
-                    caps.attestation_supported || caps.strongbox_level == StrongBoxLevel::WithAttestation
+                    caps.attestation_supported
+                        || caps.strongbox_level == StrongBoxLevel::WithAttestation
                 );
             }
 
@@ -656,13 +666,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_tee_types() -> Result<(), Box<dyn std::error::Error>> {
-        let tee_types = vec![
-            "Trusty TEE",
-            "QSEE",
-            "OP-TEE",
-            "Kinibi",
-            "Teegris",
-        ];
+        let tee_types = vec!["Trusty TEE", "QSEE", "OP-TEE", "Kinibi", "Teegris"];
 
         for tee_type in tee_types {
             let caps = AndroidCapabilities {

@@ -114,8 +114,7 @@ async fn test_config_load_workflow() {
     // Step 3: Simulate async config validation
     tokio::time::sleep(std::time::Duration::from_millis(5)).await;
 
-    // Workflow complete - config created successfully
-    assert!(true);
+    // Test passes - config workflow completed successfully
 }
 
 /// TEST_CATEGORY: e2e
@@ -210,7 +209,6 @@ mod e2e_test_metadata {
 
     #[test]
     fn test_e2e_framework_available() {
-        // Verify E2E test framework is properly set up
-        assert!(true);
+        // Test passes - E2E framework is available
     }
 }

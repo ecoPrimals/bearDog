@@ -2,7 +2,6 @@
 //!
 //! Manages multiple crypto providers and selects the best one for each operation.
 
-use super::algorithms::*;
 use super::capabilities::CryptoCapabilities;
 use super::provider::UniversalCryptoProvider;
 use super::requirements::CryptoRequirements;

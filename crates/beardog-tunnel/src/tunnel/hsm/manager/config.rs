@@ -171,7 +171,7 @@ mod tests {
     #[test]
     fn test_all_hsm_tiers() {
         // Test all tier types
-        let tiers = vec![
+        let tiers = [
             SimpleHsmTier::Smartphone,
             SimpleHsmTier::Software,
             SimpleHsmTier::Hardware,
@@ -191,7 +191,7 @@ mod tests {
     #[test]
     fn test_hsm_tier_clone() {
         let tier1 = SimpleHsmTier::Hardware;
-        let tier2 = tier1.clone();
+        let tier2 = tier1;
         assert_eq!(tier1, tier2);
     }
 
@@ -227,8 +227,14 @@ mod tests {
         assert_eq!(config1.enabled, config2.enabled);
         assert_eq!(config1.max_retries, config2.max_retries);
         assert_eq!(config1.retry_delay, config2.retry_delay);
-        assert_eq!(config1.circuit_breaker_threshold, config2.circuit_breaker_threshold);
-        assert_eq!(config1.circuit_breaker_timeout, config2.circuit_breaker_timeout);
+        assert_eq!(
+            config1.circuit_breaker_threshold,
+            config2.circuit_breaker_threshold
+        );
+        assert_eq!(
+            config1.circuit_breaker_timeout,
+            config2.circuit_breaker_timeout
+        );
     }
 
     #[test]
@@ -242,7 +248,10 @@ mod tests {
         let config2 = config1.clone();
 
         assert_eq!(config1.enable_caching, config2.enable_caching);
-        assert_eq!(config1.max_concurrent_operations, config2.max_concurrent_operations);
+        assert_eq!(
+            config1.max_concurrent_operations,
+            config2.max_concurrent_operations
+        );
         assert_eq!(config1.operation_timeout, config2.operation_timeout);
     }
 

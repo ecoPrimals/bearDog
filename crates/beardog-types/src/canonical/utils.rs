@@ -144,4 +144,83 @@ mod tests {
             .iter()
             .any(|(name, _)| *name == "CanonicalSecurityConfig"));
     }
+
+    #[test]
+    fn test_canonical_type_info_completeness() {
+        let info = canonical_type_info();
+        // Verify all expected canonical types are documented
+        assert!(info.iter().any(|(name, _)| *name == "HealthStatus"));
+        assert!(info.iter().any(|(name, _)| *name == "SessionConfig"));
+        assert!(info.iter().any(|(name, _)| *name == "SecurityContext"));
+        assert!(info.iter().any(|(name, _)| *name == "KeyStatus"));
+        assert!(info.iter().any(|(name, _)| *name == "WorkflowStatus"));
+    }
+
+    #[test]
+    fn test_canonical_type_info_has_descriptions() {
+        let info = canonical_type_info();
+        // Verify all types have non-empty descriptions
+        for (name, description) in info {
+            assert!(!name.is_empty(), "Type name should not be empty");
+            assert!(!description.is_empty(), "Description should not be empty");
+        }
+    }
+
+    #[test]
+    fn test_canonical_type_info_count() {
+        let info = canonical_type_info();
+        // We should have at least 5 canonical types documented
+        assert!(info.len() >= 5, "Should have at least 5 canonical types");
+    }
+
+    #[test]
+    fn test_validate_canonical_usage_success() {
+        let result = validate_canonical_usage();
+        assert!(result.is_ok(), "Canonical usage validation should pass");
+    }
+
+    #[test]
+    fn test_canonical_type_info_unique_names() {
+        let info = canonical_type_info();
+        let mut names = std::collections::HashSet::new();
+
+        for (name, _) in &info {
+            assert!(
+                names.insert(name),
+                "Type name '{}' appears multiple times",
+                name
+            );
+        }
+
+        assert_eq!(names.len(), info.len(), "All type names should be unique");
+    }
+
+    // Migration module tests
+    #[test]
+    fn test_migration_module_exists() {
+        // Verify migration module is accessible
+        // The migration utilities are available for use
+        // Migration module is accessible - test passes if we reach here
+    }
+
+    #[test]
+    fn test_canonical_type_info_structure() {
+        let info = canonical_type_info();
+
+        for (name, description) in info {
+            // Verify naming conventions
+            assert!(
+                name.chars().next().unwrap().is_uppercase(),
+                "Type name '{}' should start with uppercase",
+                name
+            );
+
+            // Verify description is meaningful
+            assert!(
+                description.len() > 10,
+                "Description for '{}' should be meaningful",
+                name
+            );
+        }
+    }
 }

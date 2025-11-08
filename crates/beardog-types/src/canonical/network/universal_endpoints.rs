@@ -80,9 +80,10 @@ impl Default for DevelopmentFallbacks {
         Self {
             base_discovery: std::env::var("BEARDOG_LOCAL_DISCOVERY")
         .unwrap_or_else(|_| {
-            let localhost = std::env::var("BEARDOG_LOCALHOST")
-                .unwrap_or_else(|| network_config.default_host.clone());
-            format!("http://{}:{}", localhost, network_config.service_ports.discovery_port)
+            use super::super::constants::domains::network::config;
+            let host = std::env::var("BEARDOG_LOCALHOST")
+                .unwrap_or_else(|_| config::default_service_host());
+            format!("http://{}:{}", host, network_config.service_ports.discovery_port)
         }),
             service_ports: {
                 let mut ports = HashMap::new();
@@ -185,11 +186,10 @@ impl UniversalEndpointConfig {
         
         // Fallback to development configuration
         if let Some(port) = self.development_fallbacks.service_ports.get(service_name) {
-            use super::super::config::network::NetworkConfig;
-            let network_config = NetworkConfig::default();
-            let localhost = std::env::var("BEARDOG_LOCALHOST")
-                .unwrap_or_else(|| network_config.default_host.clone());
-            return format!("http://{}:{}", localhost, port);
+            use super::super::constants::domains::network::config;
+            let host = std::env::var("BEARDOG_LOCALHOST")
+                .unwrap_or_else(|_| config::default_service_host());
+            return format!("http://{}:{}", host, port);
         }
         
         // Ultimate fallback to discovery endpoint
@@ -199,13 +199,14 @@ impl UniversalEndpointConfig {
     /// Get bind address using universal patterns
     /// Gets bind_address
     pub fn get_bind_address(&self, default_port: u16) -> String {
-        use super::super::config::network::NetworkConfig;
-        let network_config = NetworkConfig::default();
+        use super::super::constants::domains::network::config;
         
         let host = if self.development_fallbacks.bind_to_all_interfaces {
-            std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string())
+            std::env::var("BEARDOG_BIND_ADDRESS")
+                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string())
         } else {
-            std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|| network_config.default_host.clone())
+            std::env::var("BEARDOG_LOCALHOST")
+                .unwrap_or_else(|_| config::default_service_host())
         };
         
         let port = env::var("BEARDOG_PORT")

@@ -287,12 +287,15 @@ impl UniversalCapabilityAdapter {
         &self,
         capability_type: &ServiceCapabilityType,
     ) -> BearDogResult<Vec<UniversalCapability>> {
+        use beardog_types::constants::domains::network::config;
+        
         // Local fallback discovery using default ports and localhost
         let default_provider = UniversalCapability {
             provider_id: format!("local-{}-fallback", capability_type.as_str()),
             capability_type: capability_type.clone(),
             endpoint_url: format!(
-                "http://localhost:{}",
+                "http://{}:{}",
+                config::default_service_host(),
                 self.get_default_port(capability_type)
             ),
             metadata: {

@@ -319,3 +319,282 @@ impl AuthenticationHandler {
         attempts >= self.config.max_login_attempts
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_auth_config_default() {
+        let config = AuthConfig::default();
+
+        assert_eq!(config.session_timeout_hours, 24);
+        assert_eq!(config.max_login_attempts, 5);
+        assert!(!config.require_mfa, "MFA should be disabled by default");
+    }
+
+    #[test]
+    fn test_new_authentication_handler() {
+        let config = AuthConfig::default();
+        let handler = AuthenticationHandler::new(config.clone());
+
+        assert_eq!(handler.config.session_timeout_hours, 24);
+        assert_eq!(handler.get_login_attempts("test-user"), 0);
+    }
+
+    #[tokio::test]
+    async fn test_register_user_success() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        let result =
+            handler.register_user("testuser", "StrongPassword123!", vec!["read".to_string()]);
+        assert!(result.is_ok(), "User registration should succeed");
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_success() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        // Register a user first
+        handler
+            .register_user("alice", "SecurePass456!", vec!["admin".to_string()])
+            .unwrap();
+
+        // Authenticate with correct credentials
+        let result = handler.authenticate("alice:SecurePass456!").await;
+        assert!(
+            result.is_ok(),
+            "Authentication should succeed with correct credentials"
+        );
+
+        let session = result.unwrap();
+        assert_eq!(session.user_id, "alice");
+        assert!(!session.token.is_empty());
+        assert_eq!(session.permissions, vec!["admin".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_wrong_password() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        handler
+            .register_user("bob", "CorrectPass789!", vec!["user".to_string()])
+            .unwrap();
+
+        let result = handler.authenticate("bob:WrongPassword!").await;
+        assert!(
+            result.is_err(),
+            "Authentication should fail with wrong password"
+        );
+        assert_eq!(handler.get_login_attempts("bob"), 1);
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_nonexistent_user() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        let result = handler.authenticate("nonexistent:password").await;
+        assert!(
+            result.is_err(),
+            "Authentication should fail for nonexistent user"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_rate_limiting_locks_account() {
+        let config = AuthConfig {
+            max_login_attempts: 3,
+            ..Default::default()
+        };
+        let mut handler = AuthenticationHandler::new(config);
+
+        handler
+            .register_user("charlie", "Pass123!", vec![])
+            .unwrap();
+
+        // Attempt 3 failed logins
+        for _ in 0..3 {
+            let _ = handler.authenticate("charlie:wrong").await;
+        }
+
+        // Account should now be locked
+        assert!(handler.is_user_locked("charlie"));
+
+        // Next attempt should fail due to account lock
+        let result = handler.authenticate("charlie:wrong").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_successful_login_resets_attempts() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        handler
+            .register_user("david", "SecurePass!", vec![])
+            .unwrap();
+
+        // Failed attempt
+        let _ = handler.authenticate("david:wrong").await;
+        assert_eq!(handler.get_login_attempts("david"), 1);
+
+        // Successful login should reset attempts
+        let result = handler.authenticate("david:SecurePass!").await;
+        assert!(result.is_ok());
+        assert_eq!(handler.get_login_attempts("david"), 0);
+    }
+
+    #[test]
+    fn test_validate_session_success() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        let session = SessionData {
+            user_id: "eve".to_string(),
+            token: "test-token-123".to_string(),
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+            permissions: vec!["read".to_string()],
+        };
+
+        handler
+            .active_sessions
+            .insert("eve".to_string(), session.clone());
+
+        let result = handler.validate_session("test-token-123");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().user_id, "eve");
+    }
+
+    #[test]
+    fn test_validate_session_invalid_token() {
+        let config = AuthConfig::default();
+        let handler = AuthenticationHandler::new(config);
+
+        let result = handler.validate_session("invalid-token");
+        assert!(result.is_err(), "Invalid token should fail validation");
+    }
+
+    #[test]
+    fn test_logout_success() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        let session = SessionData {
+            user_id: "frank".to_string(),
+            token: "token-456".to_string(),
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+            permissions: vec![],
+        };
+
+        handler.active_sessions.insert("frank".to_string(), session);
+
+        let result = handler.logout("token-456");
+        assert!(result.is_ok());
+        assert!(
+            handler.validate_session("token-456").is_err(),
+            "Session should be invalidated after logout"
+        );
+    }
+
+    #[test]
+    fn test_cleanup_expired_sessions() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        // Add expired session
+        let expired_session = SessionData {
+            user_id: "grace".to_string(),
+            token: "expired-token".to_string(),
+            expires_at: chrono::Utc::now() - chrono::Duration::hours(1),
+            permissions: vec![],
+        };
+        handler
+            .active_sessions
+            .insert("grace".to_string(), expired_session);
+
+        // Add valid session
+        let valid_session = SessionData {
+            user_id: "henry".to_string(),
+            token: "valid-token".to_string(),
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+            permissions: vec![],
+        };
+        handler
+            .active_sessions
+            .insert("henry".to_string(), valid_session);
+
+        handler.cleanup_expired_sessions();
+
+        assert!(
+            handler.validate_session("expired-token").is_err(),
+            "Expired session should be removed"
+        );
+        assert!(
+            handler.validate_session("valid-token").is_ok(),
+            "Valid session should remain"
+        );
+    }
+
+    #[test]
+    fn test_reset_login_attempts() {
+        let config = AuthConfig::default();
+        let mut handler = AuthenticationHandler::new(config);
+
+        handler.login_attempts.insert("iris".to_string(), 3);
+        assert_eq!(handler.get_login_attempts("iris"), 3);
+
+        let result = handler.reset_login_attempts("iris");
+        assert!(result.is_ok());
+        assert_eq!(handler.get_login_attempts("iris"), 0);
+    }
+
+    #[test]
+    fn test_is_user_locked() {
+        let config = AuthConfig {
+            max_login_attempts: 5,
+            ..Default::default()
+        };
+        let mut handler = AuthenticationHandler::new(config);
+
+        assert!(
+            !handler.is_user_locked("jack"),
+            "User should not be locked initially"
+        );
+
+        handler.login_attempts.insert("jack".to_string(), 3);
+        assert!(
+            !handler.is_user_locked("jack"),
+            "User should not be locked at 3 attempts"
+        );
+
+        handler.login_attempts.insert("jack".to_string(), 5);
+        assert!(
+            handler.is_user_locked("jack"),
+            "User should be locked at 5 attempts"
+        );
+    }
+
+    #[test]
+    fn test_extract_user_id_success() {
+        let config = AuthConfig::default();
+        let handler = AuthenticationHandler::new(config);
+
+        let result = handler.extract_user_id("username:password");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "username");
+    }
+
+    #[test]
+    fn test_extract_user_id_complex_format() {
+        let config = AuthConfig::default();
+        let handler = AuthenticationHandler::new(config);
+
+        let result = handler.extract_user_id("user@example.com:pass:with:colons");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "user@example.com");
+    }
+}

@@ -13,6 +13,10 @@
 // - **Monitoring**: Metrics, logging, health check constants
 
 // Domain-specific constant modules
+/// Buffers module
+pub mod buffers;
+/// Ecosystem module
+pub mod ecosystem;
 /// Network module
 pub mod network;
 /// Security module

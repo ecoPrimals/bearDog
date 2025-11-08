@@ -5,9 +5,11 @@
 
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 
+use beardog_types::constants::domains::ecosystem::BEARDOG_ID;
+
 /// BearDog ecosystem identifier - the only hardcoded identity
 /// as BearDog only knows itself per sovereignty principles
-pub const BEARDOG: &str = "beardog";
+pub const BEARDOG: &str = BEARDOG_ID;
 
 /// Capability-based ecosystem identification
 /// Replaces hardcoded primal names with dynamic capability discovery

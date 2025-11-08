@@ -290,7 +290,10 @@ mod tests {
         let metrics2 = metrics1.clone();
 
         assert_eq!(metrics1.total_operations, metrics2.total_operations);
-        assert_eq!(metrics1.successful_operations, metrics2.successful_operations);
+        assert_eq!(
+            metrics1.successful_operations,
+            metrics2.successful_operations
+        );
         assert_eq!(metrics1.failed_operations, metrics2.failed_operations);
         assert_eq!(metrics1.average_latency_ms, metrics2.average_latency_ms);
     }
@@ -359,12 +362,12 @@ mod tests {
         };
 
         let tracker = HsmPerformanceTracker::with_config(config.clone());
-        
+
         // Verify configuration is used
         tracker
             .record_operation("provider-1".to_string(), true, 10.0)
             .await;
-        
+
         let metrics = tracker.get_metrics("provider-1").await;
         assert!(metrics.is_some());
     }
@@ -452,7 +455,7 @@ mod tests {
         let metrics = tracker.get_metrics("provider-1").await.unwrap();
         assert_eq!(metrics.min_latency_ms, 10.5);
         assert_eq!(metrics.max_latency_ms, 20.3);
-        
+
         // Average should be (10.5 + 20.3 + 15.7) / 3 = 15.5
         assert!((metrics.average_latency_ms - 15.5).abs() < 0.01);
     }

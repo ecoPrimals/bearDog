@@ -58,10 +58,11 @@ async fn test_discover_capabilities_empty_initial_state() {
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
-    let capabilities = adapter.get_available_capabilities().await;
+    // Use cheap accessor method - much faster!
+    let capabilities_ref = adapter.capabilities_ref();
+    let capabilities = capabilities_ref.read().await;
     
-    assert!(capabilities.is_ok(), "Should list capabilities even if empty");
-    assert!(capabilities.unwrap().is_empty(), "Should start with empty capabilities");
+    assert!(capabilities.is_empty(), "Should start with empty capabilities");
 }
 
 #[tokio::test]
@@ -78,13 +79,14 @@ async fn test_get_capabilities_returns_hashmap() {
 #[tokio::test]
 async fn test_get_discovered_primals_empty_initial() {
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
-    let primals = adapter.get_discovered_primals().await;
+    // Use cheap accessor method - much faster!
+    let primals_ref = adapter.primals_ref();
+    let primals = primals_ref.read().await;
     
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
-    assert!(primals.is_ok(), "Should get primals list");
-    assert!(primals.unwrap().is_empty(), "Should start with no discovered primals");
+    assert!(primals.is_empty(), "Should start with no discovered primals");
 }
 
 #[tokio::test]
@@ -148,9 +150,11 @@ async fn test_adapter_lifecycle() {
     // TEST_PRIORITY: normal
     let adapter = UniversalCapabilityAdapter::new().await.unwrap();
     
-    // Check initial state
-    let capabilities = adapter.get_available_capabilities().await.unwrap();
+    // Check initial state using cheap accessor
+    let capabilities_ref = adapter.capabilities_ref();
+    let capabilities = capabilities_ref.read().await;
     assert!(capabilities.is_empty());
+    drop(capabilities); // Release read lock
     
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: adapters

@@ -24,10 +24,11 @@
 
 use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
-// NOTE: Using stub crypto providers since crypto_providers module is temporarily disabled
-use crate::tunnel::hsm::stub_types::{
-    CryptoProvider, OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+// ✅ SECURITY FIX: Using real crypto providers with actual encryption
+use crate::tunnel::hsm::software_hsm::crypto_providers::{
+    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
 };
+use beardog_types::hsm::CryptoProvider;
 
 /// **Zero-Cost Crypto Provider Dispatch**
 ///
@@ -83,7 +84,7 @@ impl CryptoProviderDispatch {
 
 /// Implement CryptoProvider trait with zero-cost enum dispatch
 #[async_trait::async_trait]
-impl CryptoProvider for CryptoProviderDispatch {
+impl CryptoProvider<KeyType> for CryptoProviderDispatch {
     async fn initialize(&self) -> Result<(), BearDogError> {
         match self {
             Self::RustCrypto(p) => p.initialize().await,

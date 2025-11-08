@@ -50,3 +50,16 @@ workspace = true
 
 [dependencies.sha2]
 workspace = true
+
+# Crypto dependencies for migration module
+[dependencies.ring]
+version = "0.17"
+
+[dependencies.hmac]
+version = "0.12"
+
+[dependencies.hkdf]
+version = "0.12"
+
+[dependencies.hex]
+version = "0.4"

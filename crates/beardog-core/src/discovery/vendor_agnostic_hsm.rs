@@ -69,8 +69,6 @@ pub enum NetworkProtocol {
     Grpc,
     /// Custom protocol
     Custom { protocol_name: String },
-    Custom { protocol_name: String },
-    Custom { protocol_name: String },
 }
 
 /// Native OS interfaces
@@ -92,8 +90,6 @@ pub enum NativeInterface {
 pub enum CloudAuth {
     /// API key authentication
     ApiKey { key_env_var: String },
-    ApiKey { key_env_var: String },
-    ApiKey { key_env_var: String },
     /// OAuth token
     OAuth { token_endpoint: String },
     /// Service account
@@ -103,27 +99,37 @@ pub enum CloudAuth {
 }
 
 /// Cryptographic operations supported by HSM
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CryptoOperation {
     /// Key generation
-    KeyGeneration { algorithms: Vec<String> },
-    KeyGeneration { algorithms: Vec<String> },
-    KeyGeneration { algorithms: Vec<String> },
+    KeyGeneration,
     /// Digital signing
-    Signing { algorithms: Vec<String> },
-    /// Encryption/Decryption
-    Encryption { algorithms: Vec<String> },
+    Sign,
+    /// Signature verification
+    Verify,
+    /// Encryption
+    Encrypt,
+    /// Decryption
+    Decrypt,
     /// Key derivation
-    KeyDerivation { methods: Vec<String> },
+    KeyDerivation,
     /// Random number generation
     RandomGeneration,
     /// Certificate operations
     CertificateOps,
 }
 
-/// Security levels provided by HSM
+/// /// Security levels provided by HSM
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HsmSecurityLevel {
+    /// Low security
+    Low,
+    /// Medium security
+    Medium,
+    /// High security
+    High,
+    /// Very high security (hardware-backed, certified)
+    VeryHigh,
     /// Software-based (lowest security)
     Software,
     /// Hardware-backed but not certified
@@ -140,24 +146,20 @@ pub enum HsmSecurityLevel {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmPerformanceProfile {
-    /// Optional signing ops per sec
-    pub signing_ops_per_sec: Option<f64>,
-    /// Optional encryption ops per sec
-    pub encryption_ops_per_sec: Option<f64>,
-    /// Key generation time (ms)
-    pub key_generation_time_ms: Option<f64>,
+    /// Operations per second
+    pub operations_per_second: f64,
     /// Average latency (ms)
-    /// The avg latency ms value
     pub avg_latency_ms: f64,
+    /// Success rate (0.0 to 1.0)
+    pub success_rate: f64,
 }
 
 impl Default for HsmPerformanceProfile {
     fn default() -> Self {
         Self {
-            signing_ops_per_sec: None,
-            encryption_ops_per_sec: None,
-            key_generation_time_ms: None,
+            operations_per_second: 0.0,
             avg_latency_ms: 0.0,
+            success_rate: 0.0,
         }
     }
 }
@@ -179,12 +181,13 @@ pub struct HsmDetectionPattern {
 
 #[derive(Debug, Clone)]
 pub enum HsmDetectionMethod {
+    /// Check PKCS#11 library
     Pkcs11Library { library_paths: Vec<String> },
-    Pkcs11Library { library_paths: Vec<String> },
-    Pkcs11Library { library_paths: Vec<String> },
+    /// Check device file
     DeviceFile { device_paths: Vec<String> },
     /// Check environment variables
     Environment { variables: Vec<String> },
+    /// Check network service
     NetworkService { ports: Vec<u16> },
     /// Check system capabilities
     SystemCapability { capabilities: Vec<String> },
@@ -198,8 +201,7 @@ pub enum HsmValidationMethod {
     BasicOperations,
     /// Check version and capabilities
     CapabilityQuery,
-    CryptoTest { algorithm: String },
-    CryptoTest { algorithm: String },
+    /// Test cryptographic operations
     CryptoTest { algorithm: String },
     /// Health check endpoint
     HealthCheck { endpoint: String },
@@ -300,8 +302,9 @@ impl VendorAgnosticHsmDiscovery {
                 validation_method: HsmValidationMethod::HealthCheck {
                     endpoint: std::env::var("BEARDOG_HSM_HEALTH_ENDPOINT")
                         .unwrap_or_else(|_| {
+                            use beardog_types::constants::domains::network::config;
                             let host = std::env::var("BEARDOG_HSM_HOST")
-                                .unwrap_or_else(|_| "localhost".to_string());
+                                .unwrap_or_else(|_| config::default_service_host());
                             let port = std::env::var("BEARDOG_HSM_PORT")
                                 .ok()
                                 .and_then(|p| p.parse().ok())
@@ -364,19 +367,91 @@ impl VendorAgnosticHsmDiscovery {
             HsmDetectionMethod::Environment { variables } => {
                 variables.iter().any(|var| std::env::var(var).is_ok())
             }
-            HsmDetectionMethod::NetworkService { ports: _ } => {
-                // Would test network connectivity
-                false // Placeholder
+            HsmDetectionMethod::NetworkService { ports } => {
+                // Test network connectivity to HSM services
+                use beardog_types::constants::domains::network::config::LOCALHOST_IPV4;
+                debug!("Testing network service on ports: {:?}", ports);
+                
+                // Use configurable HSM probe timeout (was hardcoded to 500ms before Nov 2025)
+                let probe_timeout_millis = std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(500);
+                let probe_timeout = std::time::Duration::from_millis(probe_timeout_millis);
+                
+                ports.iter().any(|port| {
+                    std::net::TcpStream::connect(format!("{}:{}", LOCALHOST_IPV4, port))
+                        .timeout(probe_timeout)
+                        .is_ok()
+                })
             }
-            HsmDetectionMethod::SystemCapability { capabilities: _ } => {
-                // Would check system capabilities
-                false // Placeholder
+            HsmDetectionMethod::SystemCapability { capabilities } => {
+                // Check system HSM capabilities
+                debug!("Checking HSM system capabilities: {:?}", capabilities);
+                capabilities.iter().all(|cap| {
+                    match cap.as_str() {
+                        "tpm" | "tpm2.0" => {
+                            std::path::Path::new("/dev/tpm0").exists()
+                                || std::path::Path::new("/dev/tpmrm0").exists()
+                                || which::which("tpm2_getcap").is_ok()
+                        }
+                        "pkcs11" => {
+                            std::env::var("PKCS11_MODULE_PATH").is_ok()
+                                || std::path::Path::new("/usr/lib/softhsm/libsofthsm2.so").exists()
+                                || std::path::Path::new("/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so").exists()
+                        }
+                        "keystore" | "android_keystore" => {
+                            std::env::var("ANDROID_ROOT").is_ok()
+                        }
+                        "secure_enclave" | "ios_secure_enclave" => {
+                            cfg!(target_os = "ios") || cfg!(target_os = "macos")
+                        }
+                        "kms" => {
+                            std::env::var("AWS_KMS_ENDPOINT").is_ok()
+                                || std::env::var("AZURE_KEY_VAULT_ENDPOINT").is_ok()
+                                || std::env::var("GCP_KMS_ENDPOINT").is_ok()
+                        }
+                        _ => which::which(cap).is_ok()
+                    }
+                })
             }
             HsmDetectionMethod::CloudMetadata {
-                metadata_endpoints: _,
+                metadata_endpoints,
             } => {
-                // Would query cloud metadata
-                false // Placeholder
+                // Query cloud metadata endpoints
+                debug!("Checking cloud metadata endpoints: {:?}", metadata_endpoints);
+                
+                // Use configurable HSM operation timeout (was hardcoded to 2s before Nov 2025)
+                let operation_timeout_secs = std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(2);
+                let timeout = std::time::Duration::from_secs(operation_timeout_secs);
+                
+                metadata_endpoints.iter().any(|endpoint| {
+                    // Try to connect to cloud metadata service
+                    // Parse host from endpoint
+                    if let Ok(url) = endpoint.parse::<url::Url>() {
+                        if let Some(host) = url.host_str() {
+                            let port = url.port().unwrap_or(80);
+                            return std::net::TcpStream::connect(format!("{}:{}", host, port))
+                                .timeout(timeout)
+                                .is_ok();
+                        }
+                    }
+                    
+                    // Fallback: check common cloud metadata endpoints
+                    let common_endpoints = [
+                        "169.254.169.254:80",  // AWS, Azure, GCP
+                        "metadata.google.internal:80", // GCP
+                    ];
+                    
+                    common_endpoints.iter().any(|addr| {
+                        std::net::TcpStream::connect(addr)
+                            .timeout(timeout)  // Uses configured timeout from above
+                            .is_ok()
+                    })
+                })
             }
         };
 

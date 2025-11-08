@@ -148,9 +148,9 @@ pub mod unified;
 mod validation_comprehensive_tests;
 // unified_simple module REMOVED in Phase 2 (October 2025)
 // Functionality merged into unified.rs - use SimplifiedBearDogConfig
-/// Unified trait module (DEPRECATED - use r#trait)
-#[deprecated(since = "3.1.0", note = "Use config::r#trait module instead")]
-pub mod unified_trait;
+// REMOVED: unified_trait module (Nov 8, 2025)
+// This module was deprecated and replaced by trait.rs
+// Migration: Use `use beardog_types::canonical::config::BearDogConfig;`
 
 // MODULAR PRODUCTION CONFIGURATION - Split from oversized production.rs
 // This replaces the 1,436-line production.rs file with focused domain modules

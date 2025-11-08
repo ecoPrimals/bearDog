@@ -69,9 +69,9 @@ impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
 
         let registration_manager = Arc::new(
             UniversalRegistrationManager::new(
-                core.clone(),
-                capability_manager.clone(),
-                (*config).clone(),
+                Arc::clone(&core),
+                Arc::clone(&capability_manager),
+                Arc::clone(&config),
             )
             ?,
         );
@@ -116,7 +116,7 @@ impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
             last_updated: chrono::Utc::now(),
         }));
 
-        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        let network_config = Arc::new(beardog_types::canonical::config::network::NetworkConfig::default());
         
         let endpoints = ServiceEndpoints {
             primary: std::env::var("SERVICE_MESH_ENDPOINT")
@@ -320,36 +320,36 @@ impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
 
         use beardog_types::canonical::config::network::NetworkConfig;
         let network_config = NetworkConfig::default();
-        let default_host = network_config.default_host.clone();
+        let default_host = &network_config.default_host;
         
         let endpoints = ServiceEndpoints {
             primary: std::env::var("SERVICE_MESH_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.to_string());
                     let port = std::env::var("BEARDOG_API_PORT").unwrap_or_else(|_| "8080".to_string());
                     format!("http://{}:{}/api/v1/capabilities", host, port)
                 }),
             health: std::env::var("SERVICE_MESH_HEALTH_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.to_string());
                     let port = std::env::var("BEARDOG_HEALTH_PORT").unwrap_or_else(|_| "8081".to_string());
                     format!("http://{}:{}/health", host, port)
                 }),
             metrics: std::env::var("SERVICE_MESH_METRICS_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.to_string());
                     let port = std::env::var("BEARDOG_METRICS_PORT").unwrap_or_else(|_| "9090".to_string());
                     format!("http://{}:{}/metrics", host, port)
                 }),
             admin: std::env::var("SERVICE_MESH_ADMIN_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.to_string());
                     let port = std::env::var("BEARDOG_ADMIN_PORT").unwrap_or_else(|_| "8082".to_string());
                     format!("http://{}:{}/admin", host, port)
                 }),
             websocket: Some(std::env::var("SERVICE_MESH_WS_ENDPOINT")
                 .unwrap_or_else(|_| {
-                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.clone());
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|| default_host.to_string());
                     let port = std::env::var("BEARDOG_WS_PORT").unwrap_or_else(|_| "8080".to_string());
                     format!("ws://{}:{}/ws", host, port)
                 })),
@@ -496,11 +496,16 @@ impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
         &self,
         request: EcosystemRequest,
     ) -> Result<EcosystemResponse, BearDogError> {
-        let metrics = self.performance_metrics.read().clone();
+        // Use cheap Arc accessor - much faster!
+        let metrics_ref = self.performance_metrics_ref();
+        let metrics = metrics_ref.read();
+        let metrics_value = serde_json::to_value(&*metrics).unwrap_or_default();
+        drop(metrics); // Release read lock
+        
         Ok(EcosystemResponse {
             request_id: request.request_id,
             status: ResponseStatus::Success,
-            payload: serde_json::to_value(metrics).unwrap_or_default(),
+            payload: metrics_value,
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
         })
@@ -520,14 +525,44 @@ impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
         })
     }
 
-    /// Get current registration status
+    /// Get reference to registration status (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to registration status.
+    pub fn registration_status_ref(&self) -> Arc<RwLock<RegistrationStatus>> {
+        Arc::clone(&self.registration_status)
+    }
+
+    /// Get reference to service registration (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to service registration.
+    pub fn service_registration_ref(&self) -> Arc<RwLock<Option<ServiceRegistration>>> {
+        Arc::clone(&self.service_registration)
+    }
+
+    /// Get reference to performance metrics (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to performance metrics.
+    pub fn performance_metrics_ref(&self) -> Arc<RwLock<PerformanceMetrics>> {
+        Arc::clone(&self.performance_metrics)
+    }
+
+    /// Get current registration status snapshot
+    /// 
+    /// **Performance Note**: This clones the entire RegistrationStatus. For read-only access,
+    /// prefer `registration_status_ref()` which is much cheaper.
     /// Gets registration_status
     /// Gets registration_status
     pub fn get_registration_status(&self) -> RegistrationStatus {
         self.registration_status.read().clone()
     }
 
-    /// Get current service registration
+    /// Get current service registration snapshot
+    /// 
+    /// **Performance Note**: This clones the Option<ServiceRegistration>. For read-only access,
+    /// prefer `service_registration_ref()` which is much cheaper.
     /// Gets service_registration
     /// Gets service_registration
     pub fn get_service_registration(&self) -> Option<ServiceRegistration> {

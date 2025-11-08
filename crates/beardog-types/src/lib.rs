@@ -176,8 +176,7 @@
 // #### **OLD (Fragmented):**
 // ```rust,ignore
 // // Multiple imports from different locations
-// Removed: use beardog_traits::canonical::HsmProvider; - now use unified::
-// use beardog_traits::unified::SecurityProvider;
+// Legacy imports removed - now using beardog_types::canonical::providers_unified::traits
 // use local_module::CustomProvider;
 // ```
 //

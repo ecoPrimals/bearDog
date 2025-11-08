@@ -940,5 +940,235 @@ mod tests {
         assert!(decision.validate().is_ok());
     }
 
+    // ========================================================================
+    // Edge Case Tests - Nov 6, 2025
+    // ========================================================================
+
+    #[test]
+    fn test_session_config_zero_timeout() {
+        let mut config = SessionConfig::default();
+        config.timeout_seconds = 0;
+        assert!(config.validate().is_err(), "Should reject zero timeout");
+    }
+
+    #[test]
+    fn test_security_context_empty_auth_method() {
+        let context = SecurityContext {
+            authentication_method: "".to_string(),
+            ..Default::default()
+        };
+        assert!(
+            context.validate().is_err(),
+            "Should reject empty auth method"
+        );
+    }
+
+    #[test]
+    fn test_audit_event_empty_id() {
+        let mut event = SecurityAuditEvent::default();
+        event.event_id = "".to_string();
+        assert!(event.validate().is_err(), "Should reject empty event ID");
+    }
+
+    #[test]
+    fn test_audit_event_empty_type() {
+        let mut event = SecurityAuditEvent::default();
+        event.event_type = "".to_string();
+        assert!(
+            event.validate().is_err(),
+            "Should reject empty event type"
+        );
+    }
+
+    #[test]
+    fn test_policy_decision_empty_conditional() {
+        let decision = PolicyDecision::Conditional("".to_string());
+        assert!(
+            decision.validate().is_err(),
+            "Should reject empty condition"
+        );
+    }
+
+    #[test]
+    fn test_policy_decision_valid_conditional() {
+        let decision = PolicyDecision::Conditional("MFA_required".to_string());
+        assert!(decision.validate().is_ok(), "Should accept valid condition");
+    }
+
+    #[test]
+    fn test_health_status_all_variants() {
+        let statuses = [
+            HealthStatus::Healthy,
+            HealthStatus::Degraded,
+            HealthStatus::Unhealthy,
+            HealthStatus::Unknown,
+        ];
+
+        for status in &statuses {
+            assert!(status.validate().is_ok(), "All health statuses should be valid");
+        }
+    }
+
+    #[test]
+    fn test_key_status_all_variants() {
+        let statuses = [
+            KeyStatus::Active,
+            KeyStatus::Inactive,
+            KeyStatus::Revoked,
+            KeyStatus::Expired,
+            KeyStatus::Pending,
+        ];
+
+        for status in &statuses {
+            assert!(status.validate().is_ok(), "All key statuses should be valid");
+        }
+    }
+
+    #[test]
+    fn test_workflow_status_all_variants() {
+        let statuses = [
+            WorkflowStatus::Pending,
+            WorkflowStatus::InProgress,
+            WorkflowStatus::Completed,
+            WorkflowStatus::Failed,
+            WorkflowStatus::Cancelled,
+        ];
+
+        for status in &statuses {
+            assert!(
+                status.validate().is_ok(),
+                "All workflow statuses should be valid"
+            );
+        }
+    }
+
+    #[test]
+    fn test_security_context_concurrent_cloning() {
+        use std::sync::Arc;
+        use std::thread;
+
+        let context = Arc::new(SecurityContext {
+            authentication_method: "test".to_string(),
+            ..Default::default()
+        });
+
+        let mut handles = vec![];
+        for _ in 0..10 {
+            let ctx = Arc::clone(&context);
+            let handle = thread::spawn(move || {
+                let _cloned = (*ctx).clone();
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().expect("Thread should complete");
+        }
+    }
+
+    #[test]
+    fn test_audit_event_metadata_operations() {
+        let mut event = SecurityAuditEvent::default();
+        event.metadata.insert(
+            "key1".to_string(),
+            serde_json::json!("value1"),
+        );
+        event.metadata.insert(
+            "key2".to_string(),
+            serde_json::json!(42),
+        );
+
+        assert_eq!(event.metadata.len(), 2);
+        assert!(event.validate().is_ok());
+    }
+
+    #[test]
+    fn test_session_config_boundary_timeouts() {
+        // Test minimum valid timeout
+        let mut config = SessionConfig::default();
+        config.timeout_seconds = 1;
+        assert!(config.validate().is_ok(), "Should accept 1 second timeout");
+
+        // Test reasonable maximum
+        config.timeout_seconds = 86400; // 24 hours
+        assert!(config.validate().is_ok(), "Should accept 24 hour timeout");
+
+        // Test very large value (still valid u64)
+        config.timeout_seconds = u64::MAX;
+        assert!(config.validate().is_ok(), "Should handle large timeout values");
+    }
+
+    #[test]
+    fn test_security_level_ordering() {
+        // Verify SecurityLevel can be compared
+        use capabilities::SecurityLevel;
+
+        let standard = SecurityLevel::Standard;
+        let high = SecurityLevel::High;
+        let critical = SecurityLevel::Critical;
+
+        // Just verify they exist and are different
+        assert_ne!(
+            format!("{:?}", standard),
+            format!("{:?}", critical),
+            "Security levels should be distinct"
+        );
+        let _ = high; // Suppress unused warning
+    }
+
+    #[test]
+    fn test_audit_outcome_variants() {
+        let outcomes = [
+            AuditOutcome::Success,
+            AuditOutcome::Failure,
+            AuditOutcome::Denied,
+            AuditOutcome::Error,
+        ];
+
+        for outcome in &outcomes {
+            let event = SecurityAuditEvent {
+                outcome: outcome.clone(),
+                ..Default::default()
+            };
+            assert!(event.validate().is_ok(), "All audit outcomes should be valid");
+        }
+    }
+
+    #[test]
+    fn test_canonical_type_names() {
+        assert_eq!(HealthStatus::canonical_type_name(), "HealthStatus");
+        assert_eq!(SessionConfig::canonical_type_name(), "SessionConfig");
+        assert_eq!(SecurityContext::canonical_type_name(), "SecurityContext");
+        assert_eq!(
+            SecurityAuditEvent::canonical_type_name(),
+            "SecurityAuditEvent"
+        );
+        assert_eq!(PolicyDecision::canonical_type_name(), "PolicyDecision");
+        assert_eq!(KeyStatus::canonical_type_name(), "KeyStatus");
+        assert_eq!(WorkflowStatus::canonical_type_name(), "WorkflowStatus");
+    }
+
+    #[test]
+    fn test_canonical_type_versions() {
+        assert_eq!(HealthStatus::canonical_version(), "3.0.0");
+        assert_eq!(SessionConfig::canonical_version(), "3.0.0");
+        assert_eq!(SecurityContext::canonical_version(), "3.0.0");
+    }
+
+    #[test]
+    fn test_default_values_are_valid() {
+        // All default values should pass validation (except SecurityContext)
+        assert!(HealthStatus::default().validate().is_ok());
+        assert!(SessionConfig::default().validate().is_ok());
+        assert!(SecurityAuditEvent::default().validate().is_ok());
+        assert!(PolicyDecision::default().validate().is_ok());
+        assert!(KeyStatus::default().validate().is_ok());
+        assert!(WorkflowStatus::default().validate().is_ok());
+
+        // SecurityContext default has "none" auth which should fail validation
+        // Actually, "none" is a valid string, just empty string fails
+        assert!(SecurityContext::default().validate().is_ok());
+    }
+
     // Utility function tests moved to utils.rs
 }

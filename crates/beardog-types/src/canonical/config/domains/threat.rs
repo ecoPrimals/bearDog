@@ -72,44 +72,42 @@ pub struct CanonicalThreatDetectionConfig {
     pub additional_config: HashMap<String, String>,
 }
 
-impl Default for CanonicalThreatDetectionConfig {
-    fn default() -> Self {
+impl CanonicalThreatDetectionConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_parsed, get_bool};
+        
         Self {
             // Core Detection
-            ml_enhancement: true,
-            real_time_monitoring: true,
-            auto_response: false, // Safer default
+            ml_enhancement: get_bool(source, "BEARDOG_THREAT_ML_ENHANCEMENT", true),
+            real_time_monitoring: get_bool(source, "BEARDOG_THREAT_REAL_TIME_MONITORING", true),
+            auto_response: get_bool(source, "BEARDOG_THREAT_AUTO_RESPONSE", false),
 
             // Capacity
-            max_active_threats: DEFAULT_QUEUE_SIZE,
-            max_concurrent_analyses: std::env::var("BEARDOG_THREAT_MAX_CONCURRENT_ANALYSES")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(10),
+            max_active_threats: get_parsed(source, "BEARDOG_THREAT_MAX_ACTIVE", DEFAULT_QUEUE_SIZE),
+            max_concurrent_analyses: get_parsed(source, "BEARDOG_THREAT_MAX_CONCURRENT_ANALYSES", 10),
 
             // Sensitivity
-            sensitivity: std::env::var("BEARDOG_THREAT_SENSITIVITY")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.7),
+            sensitivity: get_parsed(source, "BEARDOG_THREAT_SENSITIVITY", 0.7),
             sensitivity_level: SensitivityLevel::Normal,
-            quarantine_threshold: std::env::var("BEARDOG_THREAT_QUARANTINE_THRESHOLD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.8),
-            block_threshold: std::env::var("BEARDOG_THREAT_BLOCK_THRESHOLD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.9),
+            quarantine_threshold: get_parsed(source, "BEARDOG_THREAT_QUARANTINE_THRESHOLD", 0.8),
+            block_threshold: get_parsed(source, "BEARDOG_THREAT_BLOCK_THRESHOLD", 0.9),
 
             // Rules & Patterns
             detection_rules: Vec::new(),
             custom_patterns: Vec::new(),
 
             // Integration
-            enable_threat_feeds: true,
+            enable_threat_feeds: get_bool(source, "BEARDOG_THREAT_ENABLE_FEEDS", true),
             additional_config: HashMap::new(),
         }
+    }
+}
+
+impl Default for CanonicalThreatDetectionConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 
@@ -176,21 +174,25 @@ pub struct ThreatResponseConfig {
     pub max_actions_per_minute: usize,
 }
 
+impl ThreatResponseConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_parsed, get_bool};
+        
+        Self {
+            auto_block: get_bool(source, "BEARDOG_THREAT_AUTO_BLOCK", false),
+            auto_quarantine: get_bool(source, "BEARDOG_THREAT_AUTO_QUARANTINE", true),
+            enable_alerts: get_bool(source, "BEARDOG_THREAT_ENABLE_ALERTS", true),
+            alert_threshold: get_parsed(source, "BEARDOG_THREAT_ALERT_THRESHOLD", 0.7),
+            max_actions_per_minute: get_parsed(source, "BEARDOG_THREAT_MAX_ACTIONS_PER_MINUTE", 100),
+        }
+    }
+}
+
 impl Default for ThreatResponseConfig {
     fn default() -> Self {
-        Self {
-            auto_block: false,
-            auto_quarantine: true,
-            enable_alerts: true,
-            alert_threshold: std::env::var("BEARDOG_THREAT_ALERT_THRESHOLD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.7),
-            max_actions_per_minute: std::env::var("BEARDOG_THREAT_MAX_ACTIONS_PER_MINUTE")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(100),
-        }
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 

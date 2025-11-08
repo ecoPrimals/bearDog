@@ -49,7 +49,7 @@ pub enum LearningAlgorithmType {
 // Note: OnlineLearningConfig is a temporary local definition pending canonical ai_config export.
 // This will be replaced with a canonical import once ai_config is properly modularized.
 /// Online learning configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct OnlineLearningConfig {
     /// Whether online learning is enabled
     pub enabled: bool,
@@ -254,7 +254,7 @@ pub struct FineTuningConfig {
 }
 
 /// Meta-learning configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MetaLearningConfig {
     /// Meta-learning algorithm
     /// The algorithm value
@@ -631,7 +631,7 @@ pub enum NasSearchStrategy {
 ///
 /// Enables efficient model evaluation by using techniques like early stopping
 /// and learning curve extrapolation to avoid full training when possible.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PerformanceEstimation {
     /// Method used to estimate performance
     pub method: PerformanceEstimationMethod,

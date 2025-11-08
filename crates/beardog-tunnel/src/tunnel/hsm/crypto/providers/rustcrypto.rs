@@ -153,7 +153,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 self.encrypt_chacha20_poly1305(key, plaintext, options)
                     .await
             }
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "RustCrypto doesn't support: {}",
                 algorithm
             ))),
@@ -186,7 +186,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 self.decrypt_chacha20_poly1305(key, ciphertext, options)
                     .await
             }
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "RustCrypto doesn't support: {}",
                 algorithm
             ))),
@@ -200,7 +200,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         _plaintext: &[u8],
         _options: &EncryptionOptions,
     ) -> Result<EncryptedData, BearDogError> {
-        Err(BearDogError::unsupported_operation(&format!(
+        Err(BearDogError::unsupported_operation(format!(
             "RustCrypto asymmetric encryption not yet implemented: {}",
             algorithm
         )))
@@ -213,7 +213,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         _ciphertext: &EncryptedData,
         _options: &DecryptionOptions,
     ) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::unsupported_operation(&format!(
+        Err(BearDogError::unsupported_operation(format!(
             "RustCrypto asymmetric decryption not yet implemented: {}",
             algorithm
         )))
@@ -231,7 +231,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
             SignatureAlgorithm::EcdsaP256 { .. } => {
                 self.sign_ecdsa_p256(private_key, message).await
             }
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "RustCrypto doesn't support signing with: {}",
                 algorithm
             ))),
@@ -253,7 +253,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
             SignatureAlgorithm::EcdsaP256 { .. } => {
                 self.verify_ecdsa_p256(public_key, message, signature).await
             }
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "RustCrypto doesn't support verification with: {}",
                 algorithm
             ))),
@@ -266,7 +266,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
             HashAlgorithm::Sha384 => Ok(self.hash_sha384(data)),
             HashAlgorithm::Sha512 => Ok(self.hash_sha512(data)),
             HashAlgorithm::Blake3 => Ok(self.hash_blake3(data)),
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "RustCrypto doesn't support hashing with: {}",
                 algorithm
             ))),
@@ -291,7 +291,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
             KdfAlgorithm::HkdfSha512 => {
                 self.derive_hkdf_sha512(input_key, salt, info, output_length)
             }
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "RustCrypto doesn't support KDF with: {}",
                 algorithm
             ))),
@@ -312,7 +312,7 @@ impl RustCryptoProvider {
         use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 
         let cipher = Aes256Gcm::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(&format!("Invalid AES-256 key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid AES-256 key: {}", e)))?;
 
         let nonce_vec = options
             .nonce
@@ -321,7 +321,7 @@ impl RustCryptoProvider {
         let nonce = Nonce::from_slice(&nonce_vec);
 
         let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(&format!("AES-256-GCM encryption failed: {}", e))
+            BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {}", e))
         })?;
 
         Ok(EncryptedData {
@@ -343,7 +343,7 @@ impl RustCryptoProvider {
         use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 
         let cipher = Aes256Gcm::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(&format!("Invalid AES-256 key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid AES-256 key: {}", e)))?;
 
         let nonce_vec = encrypted
             .nonce
@@ -354,7 +354,7 @@ impl RustCryptoProvider {
         let plaintext = cipher
             .decrypt(nonce, encrypted.ciphertext.as_ref())
             .map_err(|e| {
-                BearDogError::crypto_error(&format!("AES-256-GCM decryption failed: {}", e))
+                BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {}", e))
             })?;
 
         Ok(plaintext)
@@ -371,7 +371,7 @@ impl RustCryptoProvider {
         use aes_gcm::{Aes128Gcm, KeyInit, Nonce};
 
         let cipher = Aes128Gcm::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(&format!("Invalid AES-128 key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid AES-128 key: {}", e)))?;
 
         let nonce_vec = options
             .nonce
@@ -380,7 +380,7 @@ impl RustCryptoProvider {
         let nonce = Nonce::from_slice(&nonce_vec);
 
         let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(&format!("AES-128-GCM encryption failed: {}", e))
+            BearDogError::crypto_error(format!("AES-128-GCM encryption failed: {}", e))
         })?;
 
         Ok(EncryptedData {
@@ -402,7 +402,7 @@ impl RustCryptoProvider {
         use aes_gcm::{Aes128Gcm, KeyInit, Nonce};
 
         let cipher = Aes128Gcm::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(&format!("Invalid AES-128 key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid AES-128 key: {}", e)))?;
 
         let nonce_vec = encrypted
             .nonce
@@ -413,7 +413,7 @@ impl RustCryptoProvider {
         let plaintext = cipher
             .decrypt(nonce, encrypted.ciphertext.as_ref())
             .map_err(|e| {
-                BearDogError::crypto_error(&format!("AES-128-GCM decryption failed: {}", e))
+                BearDogError::crypto_error(format!("AES-128-GCM decryption failed: {}", e))
             })?;
 
         Ok(plaintext)
@@ -430,7 +430,7 @@ impl RustCryptoProvider {
         use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 
         let cipher = ChaCha20Poly1305::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(&format!("Invalid ChaCha20 key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid ChaCha20 key: {}", e)))?;
 
         let nonce_vec = options
             .nonce
@@ -439,7 +439,7 @@ impl RustCryptoProvider {
         let nonce = Nonce::from_slice(&nonce_vec);
 
         let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(&format!("ChaCha20-Poly1305 encryption failed: {}", e))
+            BearDogError::crypto_error(format!("ChaCha20-Poly1305 encryption failed: {}", e))
         })?;
 
         Ok(EncryptedData {
@@ -461,7 +461,7 @@ impl RustCryptoProvider {
         use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 
         let cipher = ChaCha20Poly1305::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(&format!("Invalid ChaCha20 key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid ChaCha20 key: {}", e)))?;
 
         let nonce_vec = encrypted
             .nonce
@@ -472,7 +472,7 @@ impl RustCryptoProvider {
         let plaintext = cipher
             .decrypt(nonce, encrypted.ciphertext.as_ref())
             .map_err(|e| {
-                BearDogError::crypto_error(&format!("ChaCha20-Poly1305 decryption failed: {}", e))
+                BearDogError::crypto_error(format!("ChaCha20-Poly1305 decryption failed: {}", e))
             })?;
 
         Ok(plaintext)
@@ -525,9 +525,7 @@ impl RustCryptoProvider {
                     .try_into()
                     .map_err(|_| BearDogError::crypto_error("Invalid Ed25519 public key length"))?,
             )
-            .map_err(|e| {
-                BearDogError::crypto_error(&format!("Invalid Ed25519 public key: {}", e))
-            })?
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid Ed25519 public key: {}", e)))?
         };
 
         let sig = Ed25519Signature::from_bytes(
@@ -544,26 +542,56 @@ impl RustCryptoProvider {
     /// Sign using ECDSA P-256
     async fn sign_ecdsa_p256(
         &self,
-        _private_key: &[u8],
-        _message: &[u8],
+        private_key: &[u8],
+        message: &[u8],
     ) -> Result<Signature, BearDogError> {
-        // TODO: Implement ECDSA P-256 signing
-        Err(BearDogError::not_implemented(
-            "ECDSA P-256 signing not yet implemented",
-        ))
+        use p256::ecdsa::{signature::Signer, SigningKey};
+
+        // Parse the private key
+        let signing_key = SigningKey::from_bytes(private_key.into()).map_err(|e| {
+            beardog_errors::crypto_error(
+                "sign_ecdsa_p256",
+                &format!("Invalid P-256 private key format: {}", e),
+            )
+        })?;
+
+        // Sign the message
+        let signature: p256::ecdsa::Signature = signing_key.sign(message);
+
+        Ok(Signature {
+            algorithm: "ECDSA-P256-SHA256".to_string(),
+            signature: signature.to_bytes().to_vec(),
+        })
     }
 
     /// Verify using ECDSA P-256
     async fn verify_ecdsa_p256(
         &self,
-        _public_key: &[u8],
-        _message: &[u8],
-        _signature: &Signature,
+        public_key: &[u8],
+        message: &[u8],
+        signature: &Signature,
     ) -> Result<bool, BearDogError> {
-        // TODO: Implement ECDSA P-256 verification
-        Err(BearDogError::not_implemented(
-            "ECDSA P-256 verification not yet implemented",
-        ))
+        use p256::ecdsa::{signature::Verifier, VerifyingKey};
+
+        // Parse the public key (SEC1 encoded point)
+        let verifying_key = VerifyingKey::from_sec1_bytes(public_key).map_err(|e| {
+            beardog_errors::crypto_error(
+                "verify_ecdsa_p256",
+                &format!("Invalid P-256 public key format: {}", e),
+            )
+        })?;
+
+        // Parse the signature
+        let sig = p256::ecdsa::Signature::from_bytes(signature.signature.as_slice().into())
+            .map_err(|e| {
+                beardog_errors::crypto_error(
+                    "verify_ecdsa_p256",
+                    &format!("Invalid signature format: {}", e),
+                )
+            })?;
+
+        // Verify the signature
+        Ok(verifying_key.verify(message, &sig).is_ok())
     }
 
     /// Hash using SHA-256
@@ -609,7 +637,7 @@ impl RustCryptoProvider {
         let hkdf = Hkdf::<Sha256>::new(Some(salt), input_key);
         let mut output = vec![0u8; output_length];
         hkdf.expand(info, &mut output)
-            .map_err(|e| BearDogError::crypto_error(&format!("HKDF expansion failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
 
         Ok(output)
     }
@@ -628,7 +656,7 @@ impl RustCryptoProvider {
         let hkdf = Hkdf::<Sha384>::new(Some(salt), input_key);
         let mut output = vec![0u8; output_length];
         hkdf.expand(info, &mut output)
-            .map_err(|e| BearDogError::crypto_error(&format!("HKDF expansion failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
 
         Ok(output)
     }
@@ -647,7 +675,7 @@ impl RustCryptoProvider {
         let hkdf = Hkdf::<Sha512>::new(Some(salt), input_key);
         let mut output = vec![0u8; output_length];
         hkdf.expand(info, &mut output)
-            .map_err(|e| BearDogError::crypto_error(&format!("HKDF expansion failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
 
         Ok(output)
     }

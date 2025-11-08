@@ -373,22 +373,20 @@ pub enum RecoveryStatus {
 
     /// State indicating paused
     Paused,
+}
 
-pub struct RetryConfig {
-    /// Number of max_attempts
-    pub max_attempts: u32,
-
-    /// The initial delay value
-    pub initial_delay: Duration,
-
-    /// The max delay value
-    pub max_delay: Duration,
-
-    /// The backoff multiplier value
-    pub backoff_multiplier: f64,
-
-    /// Whether jitter is enabled
-    pub jitter: bool,
+// MIGRATED: Now using canonical RetryConfig from beardog-types
+// See: crates/beardog-types/src/canonical/config/domains/retry.rs
+//
+// Old definition (replaced Nov 8, 2025):
+// pub struct RetryConfig {
+//     pub max_attempts: u32,
+//     pub initial_delay: Duration,
+//     pub max_delay: Duration,
+//     pub backoff_multiplier: f64,
+//     pub jitter: bool,
+// }
+pub use beardog_types::canonical::config::domains::retry::CanonicalRetryConfig as RetryConfig;
 
 impl OperationRouter {
 

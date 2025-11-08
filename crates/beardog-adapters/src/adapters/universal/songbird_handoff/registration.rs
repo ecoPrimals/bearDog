@@ -107,11 +107,9 @@ impl<T: Send + Sync> UniversalRegistrationManager<T> {
                 .unwrap_or("http"),
                 .map(&|e| e.url)
                 .unwrap_or_else(|| {
+                    use beardog_types::constants::domains::network::config;
                     std::env::var("BEARDOG_SERVICE_HOST")
-                        .unwrap_or_else(|_| {
-                            std::env::var("BEARDOG_SERVICE_HOST")
-                                .unwrap_or_else(|_| "localhost".to_string())
-                        })
+                        .unwrap_or_else(|_| config::default_service_host())
                         + ":" + &std::env::var(self.&config.load_balancer_algorithm,
             weight: 100,
             max_requests: 1000,
@@ -205,11 +203,12 @@ impl<T: Send + Sync> UniversalRegistrationManager<T> {
     /// Creates universal_service_endpoints
     fn create_universal_service_endpoints(&self) -> Result<Vec<ServiceEndpoint>, BearDogError>> {
         use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
-        let config = RuntimeNetworkConfig::from_env();
+        use beardog_types::constants::domains::network::config;
+        let runtime_config = RuntimeNetworkConfig::from_env();
         
         // For service registration, use bind address from env or config
         let bind_host = std::env::var("BEARDOG_BIND_ADDRESS")
-            .unwrap_or_else(|_| "0.0.0.0".to_string()); // Standard bind-to-all-interfaces
+            .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()); // Standard bind-to-all-interfaces
         
         let endpoints = vec![
             ServiceEndpoint {

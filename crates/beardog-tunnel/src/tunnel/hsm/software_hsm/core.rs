@@ -13,8 +13,9 @@ use crate::tunnel::hsm::crypto::{
     RustCryptoProvider, SigningOptions, VerificationOptions,
 };
 use crate::tunnel::hsm::manager::HsmProvider;
-use crate::tunnel::hsm::stub_types::{
-    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider as StubRustCryptoProvider,
+// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers
+use crate::tunnel::hsm::software_hsm::crypto_providers::{
+    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider as SoftwareRustCryptoProvider,
 };
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
@@ -98,7 +99,7 @@ type BearDogResult<T> = Result<T, BearDogError>;
 pub struct RustSoftwareHsm {
     config: CanonicalSoftwareHsmConfig,
     key_store: Arc<RwLock<SoftwareKeyStore>>,
-    crypto_provider: Arc<dyn CryptoProvider + Send + Sync>,
+    crypto_provider: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
     crypto_manager: Arc<CryptoProviderManager>, // NEW: Universal Crypto Provider
     memory_protector: Arc<DefaultMemoryProtector>,
     audit_logger: Arc<DefaultAuditLogger>,
@@ -192,15 +193,14 @@ impl RustSoftwareHsm {
     /// Create crypto provider based on backend configuration
     async fn create_crypto_provider(
         backend: &CryptoBackendType,
-    ) -> BearDogResult<Arc<dyn CryptoProvider + Send + Sync>> {
+    ) -> BearDogResult<Arc<dyn CryptoProvider<KeyType> + Send + Sync>> {
         match backend {
-            CryptoBackendType::RustCrypto => Ok(Arc::new(StubRustCryptoProvider::new().await?)
-                as Arc<dyn CryptoProvider + Send + Sync>),
-            CryptoBackendType::Ring => {
-                Ok(Arc::new(RingCryptoProvider::new()?) as Arc<dyn CryptoProvider + Send + Sync>)
-            }
+            CryptoBackendType::RustCrypto => Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
+                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
+            CryptoBackendType::Ring => Ok(Arc::new(RingCryptoProvider::new()?)
+                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
             CryptoBackendType::OpenSsl => Ok(Arc::new(OpenSslCryptoProvider::new().await?)
-                as Arc<dyn CryptoProvider + Send + Sync>),
+                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
         }
     }
 

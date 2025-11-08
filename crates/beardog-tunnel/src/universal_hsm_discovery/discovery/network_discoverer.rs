@@ -33,12 +33,46 @@ pub struct NetworkDiscoveryConfig {
 
 impl Default for NetworkDiscoveryConfig {
     fn default() -> Self {
+        use std::env;
+        
+        // Load from environment with fallback to defaults
+        let probe_timeout_secs = env::var("BEARDOG_HSM_PROBE_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5);
+        
+        let enable_mdns = env::var("BEARDOG_HSM_ENABLE_MDNS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(true);
+        
+        let enable_static_scan = env::var("BEARDOG_HSM_ENABLE_STATIC_SCAN")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(false); // Changed to false for security (was true)
+        
+        // Load known endpoints from env (comma-separated)
+        let known_endpoints = env::var("BEARDOG_HSM_KNOWN_ENDPOINTS")
+            .ok()
+            .map(|s| s.split(',').map(|e| e.trim().to_string()).collect())
+            .unwrap_or_default();
+        
+        // Load scan ports from env (comma-separated) or use defaults
+        let scan_ports = env::var("BEARDOG_HSM_SCAN_PORTS")
+            .ok()
+            .and_then(|s| {
+                s.split(',')
+                    .map(|p| p.trim().parse().ok())
+                    .collect::<Option<Vec<u16>>>()
+            })
+            .unwrap_or_else(|| vec![443, 8443, 9000, 9443]); // Common HSM ports
+        
         Self {
-            probe_timeout: Duration::from_secs(5),
-            enable_mdns: true,
-            enable_static_scan: true,
-            known_endpoints: Vec::new(),
-            scan_ports: vec![443, 8443, 9000, 9443], // Common HSM ports
+            probe_timeout: Duration::from_secs(probe_timeout_secs),
+            enable_mdns,
+            enable_static_scan,
+            known_endpoints,
+            scan_ports,
         }
     }
 }
@@ -196,18 +230,78 @@ impl NetworkDiscoverer {
         // Parse endpoint
         let (host, port, protocol) = self.parse_endpoint(endpoint)?;
 
-        // In a full implementation, this would:
-        // 1. Attempt to connect to the endpoint
-        // 2. Perform protocol-specific capability detection
-        // 3. Query for HSM type and capabilities
-        // 4. Return DiscoveredHsm if valid HSM found
+        // Build full URL for health check
+        let health_url = format!("{}://{}:{}/health", protocol, host, port);
+        let info_url = format!("{}://{}:{}/info", protocol, host, port);
 
-        // For now, we'll create a placeholder for configured endpoints
-        if self.is_endpoint_configured(endpoint) {
-            Ok(Some(self.create_network_hsm(endpoint.to_string(), host, port, protocol)))
-        } else {
-            Ok(None)
+        // Attempt to connect to the endpoint with timeout
+        let client = reqwest::Client::builder()
+            .timeout(self.config.probe_timeout)
+            .danger_accept_invalid_certs(false) // Security: validate certs
+            .build()
+            .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {}", e)))?;
+
+        // Try health endpoint first
+        match tokio::time::timeout(
+            self.config.probe_timeout,
+            client.get(&health_url).send()
+        ).await {
+            Ok(Ok(response)) => {
+                if response.status().is_success() {
+                    debug!("✓ Health check successful for {}", endpoint);
+                    
+                    // Try to get detailed info from /info endpoint
+                    match tokio::time::timeout(
+                        self.config.probe_timeout,
+                        client.get(&info_url).send()
+                    ).await {
+                        Ok(Ok(info_response)) if info_response.status().is_success() => {
+                            // Try to parse HSM info from response
+                            if let Ok(text) = info_response.text().await {
+                                debug!("HSM info response: {}", text);
+                                // Could parse JSON here for detailed capabilities
+                            }
+                        }
+                        _ => {
+                            debug!("Info endpoint not available for {}", endpoint);
+                        }
+                    }
+                    
+                    return Ok(Some(self.create_network_hsm(endpoint.to_string(), host, port, protocol)));
+                } else {
+                    debug!("Health check failed with status: {}", response.status());
+                }
+            }
+            Ok(Err(e)) => {
+                debug!("Connection failed to {}: {}", endpoint, e);
+            }
+            Err(_) => {
+                debug!("Connection timeout to {}", endpoint);
+            }
         }
+
+        // If health check failed, try a simple TCP connection test
+        match tokio::time::timeout(
+            self.config.probe_timeout,
+            tokio::net::TcpStream::connect(format!("{}:{}", host, port))
+        ).await {
+            Ok(Ok(_stream)) => {
+                info!("✓ TCP connection successful to {} (no HTTP health endpoint)", endpoint);
+                // Endpoint is reachable but doesn't have standard health endpoint
+                // Still create HSM entry if it's in known endpoints
+                if self.is_endpoint_configured(endpoint) {
+                    return Ok(Some(self.create_network_hsm(endpoint.to_string(), host, port, protocol)));
+                }
+            }
+            Ok(Err(e)) => {
+                debug!("TCP connection failed to {}: {}", endpoint, e);
+            }
+            Err(_) => {
+                debug!("TCP connection timeout to {}", endpoint);
+            }
+        }
+
+        Ok(None)
     }
 
     /// Parse endpoint string into components

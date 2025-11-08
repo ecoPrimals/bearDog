@@ -99,6 +99,12 @@ pub enum SystemErrorCategory {
 
     /// System performance degradation or optimization failure
     Performance,
+
+    /// Feature or functionality not yet implemented
+    NotImplemented,
+
+    /// Operation or platform not supported
+    NotSupported,
 }
 
 /// Categories of business logic errors for detailed classification and handling

@@ -134,11 +134,11 @@ impl SelfDiscoveryEngine {
         info!("✅ Detected {} capabilities", capabilities.len());
 
         // Phase 3: Discover endpoints
-        let endpoints = self.discover_endpoints()?;
+        let endpoints = Self::discover_endpoints();
         info!("✅ Discovered {} endpoints", endpoints.len());
 
         // Phase 4: Build metadata
-        let metadata = Self::build_self_metadata(&primal_id, &capabilities)?;
+        let metadata = Self::build_self_metadata(&primal_id, &capabilities);
         info!("✅ Built self-metadata");
 
         // Phase 5: Validate self-knowledge
@@ -169,6 +169,7 @@ impl SelfDiscoveryEngine {
 
     /// Logs the final discovery results
     #[allow(clippy::cognitive_complexity)] // Comprehensive logging function - complexity is from detailed output
+    #[allow(clippy::cast_possible_truncation)] // Duration clamped to u64::MAX, truncation is intentional
     fn log_discovery_results(self_identity: &SelfIdentity, start_time: std::time::Instant) {
         let discovery_duration = start_time.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
 
@@ -335,7 +336,7 @@ impl SelfDiscoveryEngine {
     }
 
     /// Discover communication endpoints
-    fn discover_endpoints(&self) -> BearDogResult<Vec<UniversalEndpoint>> {
+    fn discover_endpoints() -> Vec<UniversalEndpoint> {
         info!("📡 Discovering communication endpoints...");
         let mut endpoints = Vec::new();
 
@@ -352,7 +353,7 @@ impl SelfDiscoveryEngine {
         endpoints.push(mesh_endpoint);
 
         debug!("📡 Discovered {} endpoints", endpoints.len());
-        Ok(endpoints)
+        endpoints
     }
 
     /// Discover local endpoint
@@ -360,12 +361,13 @@ impl SelfDiscoveryEngine {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let port = network_config.service_ports.api_port;
 
-        // Use localhost from config or environment
-        let localhost = std::env::var("BEARDOG_LOCALHOST")
-            .unwrap_or_else(|_| network_config.default_host.clone());
+        // Use configured host from network config (respects BEARDOG_SERVICE_HOST)
+        use beardog_types::constants::domains::network::config;
+        let host =
+            std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|_| config::default_service_host());
 
         UniversalEndpoint {
-            url: format!("http://{localhost}:{port}"),
+            url: format!("http://{host}:{port}"),
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string()],
             auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
             security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
@@ -376,9 +378,16 @@ impl SelfDiscoveryEngine {
     fn discover_network_endpoint() -> UniversalEndpoint {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         // Get bind address from config or environment (0.0.0.0 is standard for binding)
+        use beardog_types::constants::domains::network::config;
         let host = std::env::var("BEARDOG_HOST")
             .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-            .unwrap_or_else(|_| "0.0.0.0".to_string()); // Standard bind-to-all-interfaces
+            .unwrap_or_else(|_| {
+                config::DEFAULT_API_BIND
+                    .split(':')
+                    .next()
+                    .unwrap_or("0.0.0.0")
+                    .to_string()
+            });
         let port = network_config.service_ports.api_port;
 
         UniversalEndpoint {
@@ -405,8 +414,14 @@ impl SelfDiscoveryEngine {
             });
 
         // Get bind address from environment
-        let bind_address =
-            std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string()); // Standard bind-to-all-interfaces
+        use beardog_types::constants::domains::network::config;
+        let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| {
+            config::DEFAULT_API_BIND
+                .split(':')
+                .next()
+                .unwrap_or("0.0.0.0")
+                .to_string()
+        });
 
         UniversalEndpoint {
             url: format!("https://{bind_address}:{mesh_port}"),
@@ -425,7 +440,7 @@ impl SelfDiscoveryEngine {
     fn build_self_metadata(
         primal_id: &str,
         capabilities: &[SelfCapabilityDetection],
-    ) -> BearDogResult<PrimalMetadata> {
+    ) -> PrimalMetadata {
         let version = env!("CARGO_PKG_VERSION").to_string();
 
         let mut custom_fields = HashMap::new();
@@ -440,7 +455,7 @@ impl SelfDiscoveryEngine {
         );
         custom_fields.insert("auto_detected".to_string(), "true".to_string());
 
-        Ok(PrimalMetadata {
+        PrimalMetadata {
             display_name: Some(format!("BearDog-{}", &primal_id[..8])),
             version,
             protocol_versions: vec!["1.0".to_string(), "2.0".to_string()],
@@ -453,7 +468,7 @@ impl SelfDiscoveryEngine {
             supported_protocols: vec!["http".to_string(), "https".to_string()],
             health_check_endpoint: "/health".to_string(),
             metrics_endpoint: "/metrics".to_string(),
-        })
+        }
     }
 
     /// Validate self-knowledge
