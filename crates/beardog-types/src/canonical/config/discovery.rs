@@ -1,18 +1,23 @@
-//! Discovery Configuration Module - Consolidated Service Discovery Configuration
+//! Discovery Configuration Module - DEPRECATED
 //!
-//! This module consolidates all service discovery configuration types from across the codebase
-//! into a unified, canonical system. It replaces scattered config types from:
-//! - `beardog-core/src/universal_discovery/mod.rs`
-//! - `beardog-core/src/universal_discovery/network.rs`
-//! - `beardog-core/src/universal_discovery/health.rs`
-//! - `beardog-core/src/universal_discovery/load_balancing.rs`
-//! - `beardog-core/src/universal_discovery/registry.rs`
+//! ⚠️ **DEPRECATED** (November 8, 2025)
+//! 
+//! This module is deprecated and will be removed in a future version.
+//! Please use `discovery_unified` instead:
+//! 
+//! ```rust
+//! // Old (deprecated):
+//! use beardog_types::canonical::config::discovery::ConsolidatedDiscoveryConfig;
+//! 
+//! // New (recommended):
+//! use beardog_types::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig;
+//! ```
 //!
-//! ## Consolidation Strategy
-//! - Single source of truth for all discovery configurations
-//! - Hierarchical organization by discovery domain (Network, Health, Load Balancing, Registry)
-//! - Protocol-agnostic design with pluggable discovery mechanisms
-//! - Environment-aware defaults for different deployment scenarios
+//! See `DISCOVERY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+//!
+//! ## Original Purpose
+//! This module consolidated service discovery configuration types from across the codebase.
+//! This functionality is now in `discovery_unified.rs` with enhanced features.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -20,10 +25,16 @@ use std::hash::{Hash, Hasher};
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
-/// **CONSOLIDATED DISCOVERY CONFIGURATION** - Primary discovery system configuration
+/// **CONSOLIDATED DISCOVERY CONFIGURATION** - DEPRECATED
 ///
-/// This is the single source of truth for all service discovery configuration across BearDog.
-/// It consolidates and replaces all scattered discovery config types.
+/// ⚠️ **DEPRECATED**: Use `discovery_unified::UnifiedDiscoveryConfig` instead.
+///
+/// This type is deprecated and will be removed in a future version.
+/// See `DISCOVERY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use discovery_unified::UnifiedDiscoveryConfig instead. See DISCOVERY_CONFIG_MIGRATION_GUIDE.md"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidatedDiscoveryConfig {
     /// Service identifier

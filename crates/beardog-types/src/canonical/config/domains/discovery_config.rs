@@ -1,6 +1,22 @@
-//! # Discovery Configuration Domain
+//! # Discovery Configuration Domain - DEPRECATED
 //!
-//! This module contains all service discovery-related configuration types, extracted from
+//! ⚠️ **DEPRECATED** (November 8, 2025)
+//!
+//! This module is deprecated and will be removed in a future version.
+//! Please use `discovery_unified` instead:
+//!
+//! ```rust
+//! // Old (deprecated):
+//! use beardog_types::canonical::config::domains::discovery_config::ConsolidatedDiscoveryConfig;
+//!
+//! // New (recommended):
+//! use beardog_types::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig;
+//! ```
+//!
+//! See `DISCOVERY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+//!
+//! ## Original Purpose
+//! This module contained service discovery-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
 use beardog_errors::{BearDogError, BearDogResult};
@@ -9,35 +25,34 @@ use std::time::Duration;
 
 use crate::canonical::config::r#trait::BearDogConfig;
 
-/// Consolidated discovery configuration for the BearDog ecosystem
+/// Consolidated discovery configuration for the BearDog ecosystem - DEPRECATED
 ///
-/// This structure unifies all discovery-related configuration into a single coherent
-/// system that manages service discovery, network protocols, quantum communication,
-/// and caching strategies.
+/// ⚠️ **DEPRECATED**: Use `discovery_unified::UnifiedDiscoveryConfig` instead.
 ///
-/// # Purpose
+/// This type is deprecated and will be removed in a future version.
+/// The new `UnifiedDiscoveryConfig` provides all the same features plus:
+/// - Enhanced protocol support (HTTP, DNS, mDNS, Consul, etcd, K8s)
+/// - Load balancing with circuit breaker
+/// - Builder pattern for flexible construction
+/// - Better validation and error messages
 ///
-/// The discovery system enables zero-knowledge bootstrap by allowing services to
-/// find each other dynamically without hardcoded assumptions. This follows the
-/// "infant learning" pattern where the system gradually discovers capabilities
-/// through observation.
+/// See `DISCOVERY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
 ///
-/// # Components
-///
-/// - **Service Registry**: Centralized or distributed service registration
-/// - **Network Discovery**: Protocol-based service location  
-/// - **Quantum Discovery**: Advanced discovery using quantum algorithms
-/// - **Cache**: Performance optimization for repeated lookups
-/// - **Security**: Authentication and authorization for discovery
-///
-/// # Examples
+/// # Migration Example
 ///
 /// ```rust
+/// // Old (deprecated):
 /// use beardog_types::canonical::config::domains::discovery_config::ConsolidatedDiscoveryConfig;
-///
 /// let config = ConsolidatedDiscoveryConfig::default();
-/// assert!(config.enabled);
+///
+/// // New (recommended):
+/// use beardog_types::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig;
+/// let config = UnifiedDiscoveryConfig::default();
 /// ```
+#[deprecated(
+    since = "3.1.0",
+    note = "Use discovery_unified::UnifiedDiscoveryConfig instead. See DISCOVERY_CONFIG_MIGRATION_GUIDE.md"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ConsolidatedDiscoveryConfig {
     /// Enable or disable discovery services
