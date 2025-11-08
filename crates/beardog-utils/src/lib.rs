@@ -8,7 +8,6 @@
 //!
 //! - **Zero-Copy Operations**: Minimize memory allocations and copies
 //! - **SIMD Acceleration**: Hardware-accelerated operations for performance
-
 //! - **Memory Pooling**: Efficient buffer and memory management
 //! - **Property Testing**: QuickCheck-based property testing framework
 //! - **AI Optimization**: Intelligent performance optimization
@@ -79,16 +78,6 @@ pub mod simd_optimizations;
 pub mod utils;
 pub mod zero_copy;
 pub mod zero_copy_optimized;
-
-/// Crypto migration helpers - aids transition from deprecated crypto_utils
-///
-/// This module provides compatibility wrappers to help migrate from deprecated
-/// crypto_utils functions to the modern UniversalCryptoProvider architecture.
-///
-/// **Usage**: Replace `crypto_utils::` calls with `crypto_migration::CryptoMigration::`
-///
-/// See module documentation for examples and migration path.
-pub mod crypto_migration;
 
 // Testing frameworks - canonical location
 pub mod property_testing;
