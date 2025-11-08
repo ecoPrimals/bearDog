@@ -198,27 +198,8 @@ impl ConstTables {
         table
     }
 
-    const fn generate_sine_table() -> [f32; 360] {
-        let mut table = [0.0f32; 360];
-        let mut i = 0;
-
-        while i < 360 {
-            let angle_rad = (i as f32) * std::f32::consts::PI / 180.0;
-            table[i] = Self::const_sin(angle_rad);
-            i += 1;
-        }
-
-        table
-    }
-
-    const fn const_sin(angle: f32) -> f32 {
-        let x2 = angle * angle;
-        let x3 = x2 * angle;
-        let x5 = x3 * x2;
-        let x7 = x5 * x2;
-
-        angle - (x3 / 6.0) + (x5 / 120.0) - (x7 / 5040.0)
-    }
+    // Note: generate_sine_table and const_sin moved to beardog-types/constants/domains/math.rs
+    // We now reference the centralized SINE_TABLE_360 instead
 
     const fn generate_primes_1000() -> [u16; 168] {
         let mut primes = [0u16; 168];
