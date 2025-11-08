@@ -18,7 +18,8 @@ pub mod adapter;
 pub mod ai_config;
 pub mod bootstrap;
 pub mod compliance;
-pub mod discovery_config;
+pub mod discovery_config; // ⚠️ DEPRECATED - Use discovery_unified (Nov 8, 2025)
+pub mod discovery_unified;
 pub mod monitoring_config;
 pub mod network;
 pub mod retry;  // ✅ Canonical RetryConfig (Nov 8, 2025)
@@ -37,6 +38,18 @@ pub use compliance::*;
 pub use discovery_config::{
     ConsolidatedDiscoveryConfig, DiscoveryCacheConfig, DiscoverySecurityConfig,
     NetworkDiscoveryConfig, QuantumDiscoveryConfig, ServiceRegistryConfig,
+};
+pub use discovery_unified::{
+    UnifiedDiscoveryConfig,
+    ServiceRegistryConfig as UnifiedServiceRegistryConfig,
+    NetworkDiscoveryConfig as UnifiedNetworkDiscoveryConfig,
+    QuantumDiscoveryConfig as UnifiedQuantumDiscoveryConfig,
+    DiscoveryCacheConfig as UnifiedDiscoveryCacheConfig,
+    DiscoverySecurityConfig as UnifiedDiscoverySecurityConfig,
+    LoadBalancingConfig as UnifiedLoadBalancingConfig,
+    CircuitBreakerConfig as UnifiedCircuitBreakerConfig,
+    DiscoveryProtocol,
+    LoadBalancingAlgorithm,
 };
 pub use monitoring_config::*;
 pub use system::{
