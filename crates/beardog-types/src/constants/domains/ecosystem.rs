@@ -10,13 +10,6 @@ pub const BEARDOG_ID: &str = "beardog";
 
 /// Service type identifiers used in federation and node registry
 pub mod service_types {
-    // Import network node service definitions
-    pub use super::super::network::nodes::{
-        SECURITY_SERVICE as SECURITY_RAW,
-        PHONEBOOK_SERVICE as PHONEBOOK_RAW,
-        FEDERATION_SERVICE as FEDERATION_RAW,
-    };
-    
     /// Security service identifier
     pub const SECURITY: &str = "security";
     

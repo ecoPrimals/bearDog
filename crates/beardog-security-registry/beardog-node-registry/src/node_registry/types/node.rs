@@ -398,34 +398,8 @@ impl Default for NodeTypeRegistry {
         Self::new()
 
 pub mod node_types {
-    use beardog_types::constants::domains::network::nodes::*;
-
-
-    pub const SECURITY: &str = SECURITY_SERVICE;
-
-
-    pub const PHONEBOOK: &str = PHONEBOOK_SERVICE;
-
-
-    pub const FEDERATION: &str = FEDERATION_SERVICE;
-
-
-    pub const COMPUTE: &str = "compute";
-
-
-    pub const STORAGE: &str = "storage";
-
-
-    pub const RELAY: &str = "relay";
-
-
-    pub const BACKUP: &str = "backup";
-
-
-    pub const MONITORING: &str = "monitoring";
-
-
-    pub const ANALYTICS: &str = "analytics";
+    // Re-export service types from centralized ecosystem constants
+    pub use beardog_types::constants::domains::ecosystem::service_types::*;
 
 
     pub const GATEWAY: &str = "gateway";
