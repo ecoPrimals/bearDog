@@ -18,8 +18,8 @@
 //!
 //! ## Available Traits
 //!
-//! - [`RetryStrategy`] - Common interface for retry configurations
-//! - [`TlsConfiguration`] - Common interface for TLS settings (planned)
+//! - [`RetryStrategy`] - Common interface for retry configurations ✅
+//! - [`TlsConfiguration`] - Common interface for TLS settings ✅
 //! - [`TimeoutPolicy`] - Common interface for timeout configurations (planned)
 //! - [`CacheStrategy`] - Common interface for cache configurations (planned)
 //! - [`MonitoringConfig`] - Common interface for monitoring settings (planned)
@@ -43,7 +43,10 @@
 //! ```
 
 pub mod retry;
+pub mod tls;
+pub mod tls_impls;
 
 // Re-export main traits
 pub use retry::RetryStrategy;
+pub use tls::{TlsConfiguration, TlsVersion};
 
