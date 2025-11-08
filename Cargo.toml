@@ -105,6 +105,7 @@ members = [
     
     # Testing & Validation
     "crates/beardog-integration-tests", # E2E, chaos, and integration tests
+    "benchmarks", "crates/beardog-config",                        # Performance benchmarking suite
 ]
 
 resolver = "2"

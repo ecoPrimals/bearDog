@@ -544,7 +544,7 @@ mod tests {
     #[tokio::test]
     async fn test_discovery_engine_full_scan() -> Result<(), Box<dyn std::error::Error>> {
         let engine = DiscoveryEngine::new().await?;
-        
+
         // Test all discovery methods
         let pkcs11_result = engine.discover_pkcs11_hsms();
         let cloud_result = engine.discover_cloud_kms_hsms();
@@ -599,7 +599,7 @@ mod tests {
     #[test]
     fn test_tpm_interface_types() -> Result<(), Box<dyn std::error::Error>> {
         // Test all TPM interface types
-        let types = vec![
+        let types = [
             TpmInterfaceType::Tpm12,
             TpmInterfaceType::Tpm20,
             TpmInterfaceType::FirmwareTpm,
@@ -632,8 +632,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_concurrent_discovery_engine_creation() -> Result<(), Box<dyn std::error::Error>>
-    {
+    async fn test_concurrent_discovery_engine_creation() -> Result<(), Box<dyn std::error::Error>> {
         // Test creating multiple discovery engines concurrently
         let mut handles = vec![];
 
@@ -644,7 +643,7 @@ mod tests {
 
         // All should succeed
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
 
@@ -654,60 +653,60 @@ mod tests {
     #[test]
     fn test_pkcs11_search_paths() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = Pkcs11Discoverer::new()?;
-        
+
         // Verify discoverer has search paths configured
         assert!(!discoverer.search_paths.is_empty());
-        
+
         Ok(())
     }
 
     #[test]
     fn test_cloud_kms_providers() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = CloudKmsDiscoverer::new()?;
-        
+
         // Verify discoverer has providers configured
         assert!(!discoverer.enabled_providers.is_empty());
-        
+
         Ok(())
     }
 
     #[test]
     fn test_network_hsm_ports() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = NetworkHsmDiscoverer::new()?;
-        
+
         // Verify discoverer has common ports configured
         assert!(!discoverer.common_ports.is_empty());
-        
+
         Ok(())
     }
 
     #[test]
     fn test_usb_hsm_vendor_ids() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = UsbHsmDiscoverer::new()?;
-        
+
         // Verify discoverer has vendor IDs configured
         assert!(!discoverer.hsm_vendor_ids.is_empty());
-        
+
         Ok(())
     }
 
     #[test]
     fn test_software_hsm_implementations_list() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = SoftwareHsmDiscoverer::new()?;
-        
+
         // Verify discoverer has implementations configured
         assert!(!discoverer.implementations.is_empty());
-        
+
         Ok(())
     }
 
     #[test]
     fn test_tpm_interface_types_list() -> Result<(), Box<dyn std::error::Error>> {
         let discoverer = TpmDiscoverer::new()?;
-        
+
         // Verify discoverer has interface types configured
         assert!(!discoverer.interface_types.is_empty());
-        
+
         Ok(())
     }
 
@@ -790,9 +789,7 @@ mod tests {
     #[test]
     fn test_network_scan_config_with_many_ranges() -> Result<(), Box<dyn std::error::Error>> {
         // Test with many IP ranges
-        let ranges: Vec<String> = (0..10)
-            .map(|i| format!("192.168.{}.0/24", i))
-            .collect();
+        let ranges: Vec<String> = (0..10).map(|i| format!("192.168.{}.0/24", i)).collect();
 
         let config = NetworkScanConfig {
             ip_ranges: ranges.clone(),

@@ -70,3 +70,6 @@ pub use metrics::StorageMetrics;
 pub use operations::{StorageRequest, StorageResponse};
 pub use replication::ReplicationStatus;
 pub use types::*;
+
+#[cfg(test)]
+mod tests;

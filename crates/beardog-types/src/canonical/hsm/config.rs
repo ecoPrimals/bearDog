@@ -9,7 +9,7 @@ use std::time::Duration;
 /// HSM provider types
 /// `HsmProviderType`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 /// Types of hsm provider
 pub enum HsmProviderType {
     /// Software-based HSM implementation
@@ -24,6 +24,9 @@ pub enum HsmProviderType {
     /// Cloud HSM service
     /// Cloud
     Cloud,
+    /// Mobile platform HSM (iOS Secure Enclave, Android StrongBox)
+    /// Mobile
+    Mobile,
     /// Custom HSM provider
     Custom {
         /// Custom HSM provider name
@@ -44,6 +47,7 @@ impl fmt::Display for HsmProviderType {
             Self::Hardware => write!(f, "Hardware"),
             Self::Network => write!(f, "Network"),
             Self::Cloud => write!(f, "Cloud"),
+            Self::Mobile => write!(f, "Mobile"),
             Self::Custom { name } => write!(f, "Custom({name})"),
         }
     }

@@ -108,10 +108,15 @@ pub struct ServingConfig {
 
 impl Default for ServingConfig {
     fn default() -> Self {
+        use beardog_types::constants::domains::network::config;
+        use beardog_config::domains::timeouts::TimeoutConfig;
+        
+        let timeout_config = TimeoutConfig::from_env();
+        
         Self {
             host: std::env::var("BEARDOG_AI_SERVING_HOST")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
+                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()), // Standard bind-to-all-interfaces
             port: std::env::var("BEARDOG_AI_SERVING_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
@@ -120,27 +125,12 @@ impl Default for ServingConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
-            request_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AI_REQUEST_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30)
-            ),
+            request_timeout: timeout_config.ai_request_timeout_duration(),
             enable_batching: true,
-            batch_timeout: Duration::from_millis(
-                std::env::var("BEARDOG_AI_BATCH_TIMEOUT_MS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(10)
-            ),
+            batch_timeout: timeout_config.ai_batch_timeout_duration(),
             max_batch_size: 32,
             enable_warming: true,
-            health_check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_AI_HEALTH_CHECK_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30)
-            ),
+            health_check_interval: timeout_config.health_check_duration(),
         }
     }
 }

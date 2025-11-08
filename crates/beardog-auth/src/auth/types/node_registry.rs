@@ -80,3 +80,87 @@ pub struct CrossNodeAuthEngine {
     /// Optional workflow engine
     pub workflow_engine: Option<Box<dyn WorkflowEngine + Send + Sync>>,
 }
+
+#[cfg(test)]
+impl Default for CrossNodeAuthEngine {
+    fn default() -> Self {
+        Self {
+            config: super::authorization::CrossNodeAuthConfig::default(),
+            active_authorizations: HashMap::new(),
+            spawned_beardogs: HashMap::new(),
+            genetics_registry: HashMap::new(),
+            node_registry: Box::new(test_helpers::MockNodeRegistry::default()),
+            proof_verifier: Box::new(test_helpers::MockProofVerifier),
+            workflow_engine: None,
+        }
+    }
+}
+
+// Test helper implementations
+#[cfg(test)]
+mod test_helpers {
+    use super::*;
+
+    #[derive(Default)]
+    pub struct MockNodeRegistry {
+        nodes: HashMap<String, NodeInfo>,
+    }
+
+    impl NodeRegistry for MockNodeRegistry {
+        fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError> {
+            self.nodes
+                .get(node_id)
+                .cloned()
+                .ok_or_else(|| BearDogError::not_found(format!("Node not found: {}", node_id)))
+        }
+
+        fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError> {
+            self.nodes.insert(node_info.node_id.clone(), node_info);
+            Ok(())
+        }
+
+        fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
+            self.get_node_info(node_id).map(|n| n.trust_level)
+        }
+
+        fn update_trust_level(
+            &mut self,
+            node_id: &str,
+            trust_level: f64,
+        ) -> Result<(), BearDogError> {
+            if let Some(node) = self.nodes.get_mut(node_id) {
+                node.trust_level = trust_level;
+                Ok(())
+            } else {
+                Err(BearDogError::not_found(format!(
+                    "Node not found: {}",
+                    node_id
+                )))
+            }
+        }
+    }
+
+    pub struct MockProofVerifier;
+
+    impl ProofVerifier for MockProofVerifier {
+        fn verify_authorization_proof(
+            &self,
+            _proof: &AuthorizationProof,
+        ) -> Result<bool, BearDogError> {
+            Ok(true)
+        }
+
+        fn generate_proof(
+            &self,
+            _authorization: &CrossNodeAuthorization,
+            _operation: &CrossNodeOperation,
+        ) -> Result<AuthorizationProof, BearDogError> {
+            Ok(AuthorizationProof {
+                authorization_id: "test-auth".to_string(),
+                operation: CrossNodeOperation::default(),
+                timestamp: Utc::now(),
+                proof_signature: "test-signature".to_string(),
+            })
+        }
+    }
+}

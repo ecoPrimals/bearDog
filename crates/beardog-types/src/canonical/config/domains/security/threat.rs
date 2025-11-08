@@ -24,16 +24,26 @@ pub struct ThreatResponseConfiguration {
     pub update_intelligence: bool,
 }
 
+impl ThreatResponseConfiguration {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::get_bool;
+        
+        Self {
+            enabled: get_bool(source, "BEARDOG_THREAT_RESPONSE_ENABLED", false),
+            max_response_level: source.get_or("BEARDOG_THREAT_RESPONSE_MAX_LEVEL", "medium"),
+            enable_isolation: get_bool(source, "BEARDOG_THREAT_RESPONSE_ISOLATION", false),
+            enable_blocking: get_bool(source, "BEARDOG_THREAT_RESPONSE_BLOCKING", false),
+            enable_enhanced_monitoring: get_bool(source, "BEARDOG_THREAT_RESPONSE_ENHANCED_MONITORING", true),
+            collect_forensics: get_bool(source, "BEARDOG_THREAT_RESPONSE_COLLECT_FORENSICS", true),
+            update_intelligence: get_bool(source, "BEARDOG_THREAT_RESPONSE_UPDATE_INTELLIGENCE", true),
+        }
+    }
+}
+
 impl Default for ThreatResponseConfiguration {
     fn default() -> Self {
-        Self {
-            enabled: false, // Disabled by default for safety
-            max_response_level: "medium".to_string(),
-            enable_isolation: false,
-            enable_blocking: false,
-            enable_enhanced_monitoring: true,
-            collect_forensics: true,
-            update_intelligence: true,
-        }
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }

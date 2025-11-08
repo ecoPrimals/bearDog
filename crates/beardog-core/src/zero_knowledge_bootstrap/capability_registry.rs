@@ -630,10 +630,7 @@ mod tests {
             .await?;
 
         // Verify update
-        let cap = registry
-            .get(&id)
-            .await?
-            .expect("capability should exist after update");
+        let cap = registry.get(&id).await?.unwrap();
         assert_eq!(cap.consecutive_failures, 0);
 
         Ok(())
@@ -681,17 +678,11 @@ mod tests {
 
         assert_eq!(stats.total_capabilities, 3);
         assert_eq!(
-            *stats
-                .by_type
-                .get(&ServiceCapabilityType::Compute)
-                .expect("compute type should be in stats"),
+            *stats.by_type.get(&ServiceCapabilityType::Compute).unwrap(),
             2
         );
         assert_eq!(
-            *stats
-                .by_type
-                .get(&ServiceCapabilityType::Storage)
-                .expect("storage type should be in stats"),
+            *stats.by_type.get(&ServiceCapabilityType::Storage).unwrap(),
             1
         );
 

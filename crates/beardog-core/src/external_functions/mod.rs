@@ -111,7 +111,8 @@ mod tests {
     async fn test_safety_checker() {
         use super::safety::{SafetyChecker, SafetyPolicy};
         use super::types::SecurityClearance;
-        use beardog_traits::unified::PolicyEngine;
+        // Note: PolicyEngine may need alternative implementation
+        // use beardog_types::canonical::providers_unified::traits::PolicyEngine;
 
         let mut checker = SafetyChecker::new(SecurityClearance::Internal);
 

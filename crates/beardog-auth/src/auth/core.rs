@@ -145,3 +145,225 @@ impl CrossNodeAuthEngine {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::auth::node_registry::InMemoryNodeRegistry;
+    use crate::auth::proof_verifier::DefaultProofVerifier;
+    use beardog_security::{ActionType, SubjectType};
+
+    #[test]
+    fn test_new_engine_with_config() {
+        let config = CrossNodeAuthConfig::default();
+        let node_registry = Box::new(InMemoryNodeRegistry::new());
+        let proof_verifier = Box::new(DefaultProofVerifier::new());
+
+        let engine = CrossNodeAuthEngine::new(node_registry, proof_verifier, config.clone());
+
+        assert_eq!(engine.config.verification_mode, config.verification_mode);
+        assert!(engine.is_initialized());
+    }
+
+    #[test]
+    fn test_with_default_config() {
+        let node_registry = Box::new(InMemoryNodeRegistry::new());
+        let proof_verifier = Box::new(DefaultProofVerifier::new());
+
+        let engine = CrossNodeAuthEngine::with_default_config(node_registry, proof_verifier);
+
+        assert_eq!(engine.config.max_proof_validity_minutes, 60);
+        assert!(engine.is_initialized());
+    }
+
+    #[test]
+    fn test_is_initialized_always_true() {
+        let engine = CrossNodeAuthEngine::default();
+        assert!(
+            engine.is_initialized(),
+            "Engine should be initialized upon creation"
+        );
+    }
+
+    #[test]
+    fn test_authorize_public_resource() {
+        let engine = CrossNodeAuthEngine::default();
+
+        let subject = Subject {
+            id: "test-subject".to_string(),
+            name: "Test Subject".to_string(),
+            subject_type: SubjectType::User,
+            roles: vec![],
+            clearance_level: None,
+            metadata: HashMap::new(),
+        };
+
+        let resource = Resource {
+            name: "public-resource".to_string(),
+            classification: ResourceClassification::Public,
+            metadata: HashMap::new(),
+        };
+
+        let action = Action {
+            name: "read-action".to_string(),
+            action_type: ActionType::Read,
+            metadata: HashMap::new(),
+        };
+
+        let result = engine.authorize(&subject, &resource, &action, "read");
+        assert!(result.is_ok());
+        assert!(
+            result.unwrap().authorized,
+            "Public resources should be accessible"
+        );
+    }
+
+    #[test]
+    fn test_authorize_confidential_resource_insufficient_trust() {
+        let engine = CrossNodeAuthEngine::default();
+
+        let subject = Subject {
+            id: "low-trust-subject".to_string(),
+            name: "Low Trust Subject".to_string(),
+            subject_type: SubjectType::User,
+            roles: vec![],
+            clearance_level: None,
+            metadata: HashMap::new(),
+        };
+
+        let resource = Resource {
+            name: "confidential-resource".to_string(),
+            classification: ResourceClassification::Confidential,
+            metadata: HashMap::new(),
+        };
+
+        let action = Action {
+            name: "read-action".to_string(),
+            action_type: ActionType::Read,
+            metadata: HashMap::new(),
+        };
+
+        let result = engine.authorize(&subject, &resource, &action, "read");
+        assert!(result.is_ok());
+        assert!(
+            !result.unwrap().authorized,
+            "Confidential resources require trust >= 0.6"
+        );
+    }
+
+    #[test]
+    fn test_get_node_authorizations_empty() {
+        let engine = CrossNodeAuthEngine::default();
+        let auths = engine.get_node_authorizations("nonexistent-node");
+
+        assert!(
+            auths.is_empty(),
+            "Should return empty list for node with no authorizations"
+        );
+    }
+
+    #[test]
+    fn test_get_authorization_metrics_initial() {
+        let engine = CrossNodeAuthEngine::default();
+        let metrics = engine.get_authorization_metrics();
+
+        assert_eq!(metrics.get("total_authorizations"), Some(&0));
+        assert_eq!(metrics.get("active_spawns"), Some(&0));
+        assert_eq!(metrics.get("registered_genetics"), Some(&0));
+        assert_eq!(metrics.get("active_authorizations"), Some(&0));
+        assert_eq!(metrics.get("expired_authorizations"), Some(&0));
+    }
+
+    #[test]
+    fn test_cleanup_expired_data_no_data() {
+        let mut engine = CrossNodeAuthEngine::default();
+        let result = engine.cleanup_expired_data();
+
+        assert!(result.is_ok(), "Cleanup should succeed even with no data");
+    }
+
+    #[test]
+    fn test_cleanup_expired_data_removes_expired_authorizations() {
+        let mut engine = CrossNodeAuthEngine::default();
+
+        // Add expired authorization
+        let expired_auth = CrossNodeAuthorization {
+            request_id: "expired-1".to_string(),
+            requester_node_id: "node-1".to_string(),
+            resource_owner_node_id: "node-2".to_string(),
+            resource_id: "resource-1".to_string(),
+            permissions: vec![],
+            conditions: vec![],
+            created_at: Utc::now() - Duration::hours(2),
+            expires_at: Utc::now() - Duration::hours(1),
+            signature: "sig".to_string(),
+            is_active: true,
+        };
+        engine
+            .active_authorizations
+            .insert("expired-1".to_string(), expired_auth);
+
+        // Add valid authorization
+        let valid_auth = CrossNodeAuthorization {
+            request_id: "valid-1".to_string(),
+            requester_node_id: "node-1".to_string(),
+            resource_owner_node_id: "node-2".to_string(),
+            resource_id: "resource-2".to_string(),
+            permissions: vec![],
+            conditions: vec![],
+            created_at: Utc::now(),
+            expires_at: Utc::now() + Duration::hours(1),
+            signature: "sig".to_string(),
+            is_active: true,
+        };
+        engine
+            .active_authorizations
+            .insert("valid-1".to_string(), valid_auth);
+
+        let result = engine.cleanup_expired_data();
+        assert!(result.is_ok());
+
+        assert!(
+            !engine.active_authorizations.contains_key("expired-1"),
+            "Expired auth should be removed"
+        );
+        assert!(
+            engine.active_authorizations.contains_key("valid-1"),
+            "Valid auth should remain"
+        );
+    }
+
+    #[test]
+    fn test_set_workflow_engine() {
+        use crate::auth::types::node_registry::WorkflowEngine;
+        use crate::auth::types::workflow::{CrossNodeWorkflowRequest, WorkflowStatus};
+
+        struct MockWorkflowEngine;
+        impl WorkflowEngine for MockWorkflowEngine {
+            fn submit_workflow(
+                &mut self,
+                _request: CrossNodeWorkflowRequest,
+            ) -> Result<String, BearDogError> {
+                Ok("workflow-id".to_string())
+            }
+            fn get_workflow_status(
+                &self,
+                _workflow_id: &str,
+            ) -> Result<WorkflowStatus, BearDogError> {
+                Ok(WorkflowStatus::Pending)
+            }
+        }
+
+        let mut engine = CrossNodeAuthEngine::default();
+        assert!(
+            engine.workflow_engine.is_none(),
+            "Should start without workflow engine"
+        );
+
+        engine.set_workflow_engine(Box::new(MockWorkflowEngine));
+        assert!(
+            engine.workflow_engine.is_some(),
+            "Should have workflow engine after setting"
+        );
+    }
+}

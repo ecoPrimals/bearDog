@@ -3,6 +3,8 @@
 use super::health::*;
 use std::time::Duration;
 
+use std::sync::Arc;
+
 #[cfg(test)]
 mod health_monitor_tests {
     use super::*;
@@ -10,9 +12,8 @@ mod health_monitor_tests {
     /// Test health monitor creation
     #[test]
     fn test_health_monitor_creation() {
-        let monitor = HealthMonitor::new(Duration::from_secs(1));
-        // Monitor should be created successfully
-        assert!(true);
+        let _monitor = HealthMonitor::new(Duration::from_secs(1));
+        // Test passes if monitor creation succeeds
     }
 
     /// Test health status creation - healthy
@@ -51,8 +52,7 @@ mod health_monitor_tests {
         tokio::time::sleep(Duration::from_millis(50)).await;
 
         monitor.stop_monitoring().await;
-        // Should stop without error
-        assert!(true);
+        // Test passes if stop_monitoring succeeds
     }
 
     /// Test updating health status
@@ -244,9 +244,6 @@ mod health_monitor_tests {
 
         monitor.stop_monitoring().await;
 
-        // Should have run at least 2 cycles
-        assert!(true);
+        // Test passes if monitoring cycles complete successfully
     }
 }
-
-use std::sync::Arc;

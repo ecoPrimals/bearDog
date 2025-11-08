@@ -13,11 +13,20 @@ categories = ['cryptography', 'authentication', 'web-programming', 'network-prog
 rust-version = "1.70"
 
 [[bench]]
-name = "hyperoptimized_benchmarks"
+name = "hsm_operations_benchmarks"
+harness = false
+
+[[bench]]
+name = "discovery_benchmarks"
+harness = false
+
+[[bench]]
+name = "production_workload_benchmarks"
 harness = false
 
 [dependencies]
 beardog-core = { path = "../crates/beardog-core" }
+beardog-errors = { path = "../crates/beardog-errors" }
 beardog-security = { workspace = true }
 beardog-types = { workspace = true }
 beardog-utils = { path = "../crates/beardog-utils" }

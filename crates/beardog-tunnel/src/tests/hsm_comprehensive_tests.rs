@@ -74,7 +74,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_simple_hsm_tier_enumeration() {
-        let tiers = vec![
+        let tiers = [
             SimpleHsmTier::Smartphone,
             SimpleHsmTier::Software,
             SimpleHsmTier::Hardware,
@@ -103,7 +103,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_hsm_capability_types_coverage() {
-        let capabilities = vec![
+        let capabilities = [
             HsmCapability::KeyGeneration,
             HsmCapability::Signing,
             HsmCapability::Encryption,
@@ -130,7 +130,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_hsm_tier_hierarchy() {
-        let tiers = vec![
+        let tiers = [
             HsmTier::Software,
             HsmTier::SmartCard,
             HsmTier::Hardware,
@@ -170,10 +170,10 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_key_type_enumeration() {
-        let key_types = vec![
-            KeyType::Aes { key_size: 256 },
-            KeyType::Rsa { key_size: 2048 },
-            KeyType::EccP256,
+        let key_types = [
+            KeyType::Aes,
+            KeyType::Rsa,
+            KeyType::EllipticCurve,
             KeyType::Ed25519,
             KeyType::X25519,
         ];
@@ -183,7 +183,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_algorithm_enumeration() {
-        let algorithms = vec![
+        let algorithms = [
             Algorithm::Aes256Gcm,
             Algorithm::ChaCha20Poly1305,
             Algorithm::EccP256,
@@ -334,7 +334,7 @@ mod hsm_comprehensive_tests {
         };
 
         // For high security, prefer hardware or cloud over software
-        let preferred_tiers = vec![HsmTier::Hardware, HsmTier::CloudHsm, HsmTier::Software];
+        let preferred_tiers = [HsmTier::Hardware, HsmTier::CloudHsm, HsmTier::Software];
 
         assert!(
             !preferred_tiers.is_empty(),
@@ -417,7 +417,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_security_level_variants() {
-        let levels = vec![
+        let levels = [
             SecurityLevel::Basic,
             SecurityLevel::Medium,
             SecurityLevel::High,
@@ -440,7 +440,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_hsm_capability_distinct_variants() {
-        let caps = vec![
+        let caps = [
             HsmCapability::KeyGeneration,
             HsmCapability::Signing,
             HsmCapability::Encryption,
@@ -462,20 +462,20 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_key_type_with_different_sizes() {
-        let aes128 = KeyType::Aes { key_size: 128 };
-        let aes256 = KeyType::Aes { key_size: 256 };
-        let rsa2048 = KeyType::Rsa { key_size: 2048 };
-        let rsa4096 = KeyType::Rsa { key_size: 4096 };
+        // Vendor-agnostic: KeyType variants are same, sizes stored in KeyGenerationSpec
+        let aes = KeyType::Aes;
+        let rsa = KeyType::Rsa;
 
-        assert_ne!(aes128, aes256, "Different key sizes should not be equal");
-        assert_ne!(rsa2048, rsa4096, "Different RSA sizes should not be equal");
+        // With vendor-agnostic KeyType, these are now equal (sizes stored separately)
+        assert_eq!(aes, KeyType::Aes, "AES key type should match");
+        assert_eq!(rsa, KeyType::Rsa, "RSA key type should match");
     }
 
     #[test]
     fn test_algorithm_variety() {
-        let symmetric = vec![Algorithm::Aes256Gcm, Algorithm::ChaCha20Poly1305];
-        let asymmetric = vec![Algorithm::RsaSha256, Algorithm::Ed25519];
-        let ecc = vec![
+        let symmetric = [Algorithm::Aes256Gcm, Algorithm::ChaCha20Poly1305];
+        let asymmetric = [Algorithm::RsaSha256, Algorithm::Ed25519];
+        let ecc = [
             Algorithm::EccP256,
             Algorithm::EccP384,
             Algorithm::EcdsaSha256,
@@ -520,7 +520,7 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_hsm_tier_coverage() {
-        let all_tiers = vec![
+        let all_tiers = [
             HsmTier::Software,
             HsmTier::SmartCard,
             HsmTier::Hardware,
@@ -595,16 +595,17 @@ mod hsm_comprehensive_tests {
 
     #[test]
     fn test_key_type_elliptic_curves() {
-        let p256 = KeyType::EccP256;
-        let p384 = KeyType::EccP384;
+        let p256 = KeyType::EllipticCurve;
+        let p384 = KeyType::EllipticCurve;
         let ed25519 = KeyType::Ed25519;
         let x25519 = KeyType::X25519;
 
-        // All should be distinct
-        assert_ne!(p256, p384);
-        assert_ne!(p256, ed25519);
-        assert_ne!(p256, x25519);
-        assert_ne!(ed25519, x25519);
+        // Vendor-agnostic: P256 and P384 are both EllipticCurve now
+        // Curve selection happens at key generation spec level, not type level
+        assert_eq!(p256, p384); // Both are EllipticCurve now
+        assert_ne!(p256, ed25519); // EllipticCurve != Ed25519
+        assert_ne!(p256, x25519); // EllipticCurve != X25519
+        assert_ne!(ed25519, x25519); // Ed25519 != X25519
     }
 
     // ============================================================================

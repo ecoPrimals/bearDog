@@ -415,49 +415,34 @@ impl Default for CoreAdapterConfig {
     }
 }
 
-impl Default for DiscoveryConfig {
-    fn default() -> Self {
+impl DiscoveryConfig {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
         use super::super::runtime_config::RuntimeNetworkConfig;
+        use crate::canonical::config::source::{get_parsed, get_bool};
 
         // Use RuntimeNetworkConfig for environment-driven endpoints
-        let default_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
+        let default_endpoint = source.get("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|| {
             let config = RuntimeNetworkConfig::from_env();
             config.discovery_endpoint
         });
 
         Self {
-            timeout: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_DISCOVERY_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(10),
-            ),
-            max_attempts: std::env::var("BEARDOG_ADAPTER_DISCOVERY_MAX_ATTEMPTS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(3),
-            discovery_interval: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_DISCOVERY_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(60),
-            ),
-            cache_enabled: std::env::var("BEARDOG_ADAPTER_CACHE_ENABLED")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(true),
-            cache_ttl: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_CACHE_TTL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(300),
-            ),
+            timeout: Duration::from_secs(get_parsed(source, "BEARDOG_ADAPTER_DISCOVERY_TIMEOUT_SECS", 10)),
+            max_attempts: get_parsed(source, "BEARDOG_ADAPTER_DISCOVERY_MAX_ATTEMPTS", 3),
+            discovery_interval: Duration::from_secs(get_parsed(source, "BEARDOG_ADAPTER_DISCOVERY_INTERVAL_SECS", 60)),
+            cache_enabled: get_bool(source, "BEARDOG_ADAPTER_CACHE_ENABLED", true),
+            cache_ttl: Duration::from_secs(get_parsed(source, "BEARDOG_ADAPTER_CACHE_TTL_SECS", 300)),
             endpoints: vec![default_endpoint],
-            predictive_enabled: std::env::var("BEARDOG_ADAPTER_PREDICTIVE_ENABLED")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(false),
+            predictive_enabled: get_bool(source, "BEARDOG_ADAPTER_PREDICTIVE_ENABLED", false),
         }
+    }
+}
+
+impl Default for DiscoveryConfig {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
     }
 }
 

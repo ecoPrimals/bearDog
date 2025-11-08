@@ -174,8 +174,53 @@ impl ProviderUtils {
         provider: &UniversalCapability,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<bool> {
-        // Implementation would check provider's security capabilities
-        Ok(true) // Placeholder
+        // Check if provider meets minimum security level
+        let provider_security_level = provider.metadata
+            .get("security_level")
+            .and_then(|v| v.parse::<u32>().ok())
+            .unwrap_or(0);
+
+        if provider_security_level < requirements.min_security_level {
+            debug!(
+                "Provider {} security level {} below requirement {}",
+                provider.provider_id, provider_security_level, requirements.min_security_level
+            );
+            return Ok(false);
+        }
+
+        // Check encryption requirement
+        if requirements.require_encryption {
+            let supports_encryption = provider.metadata
+                .get("supports_encryption")
+                .and_then(|v| v.parse::<bool>().ok())
+                .unwrap_or(false);
+            
+            if !supports_encryption {
+                debug!(
+                    "Provider {} does not support required encryption",
+                    provider.provider_id
+                );
+                return Ok(false);
+            }
+        }
+
+        // Check authentication requirement
+        if requirements.require_authentication {
+            let supports_auth = provider.metadata
+                .get("supports_authentication")
+                .and_then(|v| v.parse::<bool>().ok())
+                .unwrap_or(false);
+            
+            if !supports_auth {
+                debug!(
+                    "Provider {} does not support required authentication",
+                    provider.provider_id
+                );
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
     }
 
 
@@ -183,8 +228,35 @@ impl ProviderUtils {
         provider: &UniversalCapability,
         requirements: &AvailabilityRequirements,
     ) -> BearDogResult<bool> {
-        // Implementation would check provider's availability metrics
-        Ok(true) // Placeholder
+        // Check uptime percentage
+        let uptime = provider.metadata
+            .get("uptime_percentage")
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(99.9); // Default to high availability
+
+        if uptime < requirements.min_uptime_percentage {
+            debug!(
+                "Provider {} uptime {}% below requirement {}%",
+                provider.provider_id, uptime, requirements.min_uptime_percentage
+            );
+            return Ok(false);
+        }
+
+        // Check response time
+        let response_time = provider.metadata
+            .get("avg_response_time_ms")
+            .and_then(|v| v.parse::<u64>().ok())
+            .unwrap_or(100); // Default to 100ms
+
+        if response_time > requirements.max_response_time_ms {
+            debug!(
+                "Provider {} response time {}ms exceeds max {}ms",
+                provider.provider_id, response_time, requirements.max_response_time_ms
+            );
+            return Ok(false);
+        }
+
+        Ok(true)
     }
 
 
@@ -192,8 +264,55 @@ impl ProviderUtils {
         provider: &UniversalCapability,
         requirements: &PerformanceMetrics,
     ) -> BearDogResult<bool> {
-        // Implementation would check provider's performance capabilities
-        Ok(true) // Placeholder
+        // Check throughput if specified
+        if requirements.throughput > 0.0 {
+            let provider_throughput = provider.metadata
+                .get("throughput_ops_per_sec")
+                .and_then(|v| v.parse::<f64>().ok())
+                .unwrap_or(1000.0);
+
+            if provider_throughput < requirements.throughput {
+                debug!(
+                    "Provider {} throughput {} below requirement {}",
+                    provider.provider_id, provider_throughput, requirements.throughput
+                );
+                return Ok(false);
+            }
+        }
+
+        // Check error rate if specified
+        if requirements.error_rate > 0.0 {
+            let provider_error_rate = provider.metadata
+                .get("error_rate_percentage")
+                .and_then(|v| v.parse::<f64>().ok())
+                .unwrap_or(0.1);
+
+            if provider_error_rate > requirements.error_rate {
+                debug!(
+                    "Provider {} error rate {}% exceeds max {}%",
+                    provider.provider_id, provider_error_rate, requirements.error_rate
+                );
+                return Ok(false);
+            }
+        }
+
+        // Check latency if specified
+        if requirements.latency_ms > 0.0 {
+            let provider_latency = provider.metadata
+                .get("avg_latency_ms")
+                .and_then(|v| v.parse::<f64>().ok())
+                .unwrap_or(50.0);
+
+            if provider_latency > requirements.latency_ms {
+                debug!(
+                    "Provider {} latency {}ms exceeds max {}ms",
+                    provider.provider_id, provider_latency, requirements.latency_ms
+                );
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
     }
 
 
@@ -203,38 +322,134 @@ impl ProviderUtils {
     ) -> BearDogResult<f64> {
         let mut rank = 0.0;
 
-        // Base rank from provider metrics
-        rank += 0.5; // Base score
+        // Base rank from provider health status (0.0-0.3)
+        let health_score = match provider.metadata.get("health_status") {
+            Some(status) if status == "healthy" => 0.3,
+            Some(status) if status == "degraded" => 0.15,
+            _ => 0.1,
+        };
+        rank += health_score;
+
+        // Performance score (0.0-0.3)
+        let response_time = provider.metadata
+            .get("avg_response_time_ms")
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(100.0);
+        let perf_score = if response_time < 50.0 {
+            0.3
+        } else if response_time < 100.0 {
+            0.2
+        } else if response_time < 500.0 {
+            0.1
+        } else {
+            0.05
+        };
+        rank += perf_score;
+
+        // Availability score (0.0-0.2)
+        let uptime = provider.metadata
+            .get("uptime_percentage")
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(99.0);
+        let avail_score = if uptime >= 99.9 {
+            0.2
+        } else if uptime >= 99.0 {
+            0.15
+        } else if uptime >= 95.0 {
+            0.1
+        } else {
+            0.05
+        };
+        rank += avail_score;
 
         // Apply preferences if provided
         if let Some(prefs) = preferences {
+            // Preferred provider bonus (0.0-0.3)
             if prefs.preferred_providers.contains(&provider.provider_id) {
                 rank += 0.3;
             }
+            
+            // Cost optimization scoring (0.0-0.2)
             if prefs.cost_optimization {
-                rank += 0.1; // Placeholder for cost scoring
+                let cost = provider.metadata
+                    .get("cost_per_operation")
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .unwrap_or(1.0);
+                let cost_score = if cost < 0.1 {
+                    0.2
+                } else if cost < 0.5 {
+                    0.1
+                } else if cost < 1.0 {
+                    0.05
+                } else {
+                    0.0
+                };
+                rank += cost_score;
             }
         }
 
-        Ok(rank.min(1.0))
+        // Ensure rank is between 0 and 1
+        Ok(rank.min(1.0).max(0.0))
     }
 
 
     fn estimate_provider_performance(
         provider: &UniversalCapability,
     ) -> BearDogResult<PerformanceEstimate> {
+        // Extract performance metrics from provider metadata
+        let latency = provider.metadata
+            .get("avg_latency_ms")
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(50.0);
+
+        let throughput = provider.metadata
+            .get("throughput_ops_per_sec")
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(1000.0);
+
+        // Calculate confidence based on data availability
+        let mut confidence = 0.5; // Base confidence
+
+        // Increase confidence if we have actual metrics
+        if provider.metadata.contains_key("avg_latency_ms") {
+            confidence += 0.2;
+        }
+        if provider.metadata.contains_key("throughput_ops_per_sec") {
+            confidence += 0.2;
+        }
+        if provider.metadata.contains_key("uptime_percentage") {
+            confidence += 0.1;
+        }
+
         Ok(PerformanceEstimate {
-            estimated_latency_ms: 50.0,
-            estimated_throughput: 1000.0,
-            confidence_level: 0.8,
+            estimated_latency_ms: latency,
+            estimated_throughput: throughput,
+            confidence_level: confidence.min(1.0),
         })
     }
 
     /// Validates provider_health
     fn validate_provider_health(provider_id: &str) -> BearDogResult<bool> {
         debug!("🏥 Validating health for provider: {}", provider_id);
-        // Implementation would perform actual health check
-        Ok(true) // Placeholder
+        
+        // In a real implementation, this would:
+        // 1. Check if provider is registered and active
+        // 2. Perform a lightweight health check (ping/status endpoint)
+        // 3. Check recent error rates
+        // 4. Verify connectivity
+        
+        // For now, we assume providers in the system are healthy
+        // In production, this should be replaced with actual health check logic
+        // that queries the provider's health endpoint or checks recent metrics
+        
+        // Basic validation: ensure provider_id is not empty
+        if provider_id.is_empty() {
+            return Ok(false);
+        }
+
+        // TODO: Implement actual health check by calling provider's health endpoint
+        // This could involve HTTP requests, metrics checks, or other provider-specific logic
+        Ok(true)
     }
 }
 
@@ -273,12 +488,22 @@ impl ConnectionUtils {
     pub fn update_connection_health(connection: &mut CapabilityConnection) -> BearDogResult<()> {
         connection.last_health_check = std::time::SystemTime::now();
 
-        // Perform health check (placeholder)
-        connection.health_status = HealthStatus::Healthy;
+        // Perform health check based on connection metrics
+        let is_healthy = connection.metrics.error_count == 0 
+            && connection.metrics.average_latency_ms < 1000.0
+            && connection.metrics.responses_received > 0;
+
+        connection.health_status = if is_healthy {
+            HealthStatus::Healthy
+        } else if connection.metrics.error_count < 5 {
+            HealthStatus::Degraded
+        } else {
+            HealthStatus::Unhealthy
+        };
 
         debug!(
-            "💓 Updated health for connection: {}",
-            connection.connection_id
+            "💓 Updated health for connection: {} - status: {:?}",
+            connection.connection_id, connection.health_status
         );
         Ok(())
     }

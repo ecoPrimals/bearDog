@@ -439,10 +439,12 @@ mod edge_case_tests {
 
     #[test]
     fn test_very_large_number_env_var() {
-        let mut guard = EnvGuard::new();
-        guard.set("BEARDOG_METRICS_BUFFER_SIZE", "999999999");
+        use crate::canonical::config::source::TestConfigSource;
 
-        let config = MetricsCollectionConfig::default();
+        let source =
+            TestConfigSource::with_values(vec![("BEARDOG_METRICS_BUFFER_SIZE", "999999999")]);
+
+        let config = MetricsCollectionConfig::from_source(&source);
 
         // Should accept large valid numbers
         assert_eq!(config.buffer_size, 999_999_999);
@@ -484,12 +486,15 @@ mod edge_case_tests {
 
     #[test]
     fn test_zero_values() {
-        let mut guard = EnvGuard::new();
-        guard.set("BEARDOG_METRICS_BUFFER_SIZE", "0");
-        guard.set("BEARDOG_CONSENSUS_TIMEOUT_SECS", "0");
+        use crate::canonical::config::source::TestConfigSource;
 
-        let metrics_config = MetricsCollectionConfig::default();
-        let consensus_config = ConsensusConfiguration::default();
+        let source = TestConfigSource::with_values(vec![
+            ("BEARDOG_METRICS_BUFFER_SIZE", "0"),
+            ("BEARDOG_CONSENSUS_TIMEOUT_SECS", "0"),
+        ]);
+
+        let metrics_config = MetricsCollectionConfig::from_source(&source);
+        let consensus_config = ConsensusConfiguration::from_source(&source);
 
         // Zero values should be accepted if valid
         assert_eq!(metrics_config.buffer_size, 0);

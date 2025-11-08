@@ -49,3 +49,6 @@ pub mod vendor_agnostic_hsm;
 pub use infant_discovery::*;
 pub use universal_infant_discovery::*;
 pub use vendor_agnostic_hsm::*;
+
+#[cfg(test)]
+mod tests;

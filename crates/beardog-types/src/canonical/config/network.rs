@@ -486,7 +486,8 @@ pub enum LoadBalancingStrategy {
     since = "3.1.0",
     note = "Use super::domains::network::RateLimitConfig instead"
 )]
-pub type RateLimitConfig = super::domains::network::RateLimitConfig;
+// Re-export from domains::network (consolidated Nov 7, 2025)
+pub use super::domains::network::RateLimitConfig;
 
 // Compatibility aliases REMOVED:
 // - EndpointConfig was deprecated (3.2.0) - Use CanonicalNetworkConfig directly

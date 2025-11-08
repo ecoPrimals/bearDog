@@ -10,7 +10,7 @@ use super::types::{
 use crate::tunnel::hsm::types::*;
 use beardog_core::{HsmHealthStatus, HsmKey};
 use beardog_errors::BearDogError;
-use beardog_traits::unified::HsmProvider as UnifiedHsmProvider;
+use beardog_types::canonical::providers_unified::traits::UnifiedHsmProvider;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -135,21 +135,17 @@ impl AndroidStrongBoxHsm {
 
         // Set algorithm based on key type
         match &request.key_type {
-            KeyType::EccP256 => {
+            KeyType::EllipticCurve => {
                 params.set_algorithm("EC");
-                params.set_key_size(256);
+                params.set_key_size(256); // Default to P-256 for vendor-agnostic ECC
             }
-            KeyType::EccP384 => {
-                params.set_algorithm("EC");
-                params.set_key_size(384);
-            }
-            KeyType::Rsa { key_size } => {
+            KeyType::Rsa => {
                 params.set_algorithm("RSA");
-                params.set_key_size(*key_size);
+                params.set_key_size(2048); // Default to RSA-2048 for vendor-agnostic
             }
-            KeyType::Aes256 => {
+            KeyType::Aes => {
                 params.set_algorithm("AES");
-                params.set_key_size(256);
+                params.set_key_size(256); // Vendor-agnostic AES (defaults to 256-bit)
             }
             KeyType::Ed25519 | KeyType::ChaCha20 => {
                 return Err(BearDogError::UnsupportedKeyType {

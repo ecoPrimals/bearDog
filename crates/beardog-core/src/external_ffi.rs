@@ -187,7 +187,8 @@ mod tests {
     async const fn test_safety_checker() -> Result<(), BearDogError>  {
         use super::safety::{SafetyChecker, SafetyPolicy};
         use super::types::SecurityClearance;
-        use beardog_traits::unified::PolicyEngine;
+        // Note: PolicyEngine may need alternative implementation
+        // use beardog_types::canonical::providers_unified::traits::PolicyEngine;
 
         let _checker = SafetyChecker::new(SecurityClearance::Internal);
     // Perfect resource management with automatic cleanup

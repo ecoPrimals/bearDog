@@ -2,11 +2,13 @@ use std::sync::Arc;
 
 use beardog_errors::BearDogError;
 
+use super::openssl_crypto::OpenSslCryptoProvider;
 use super::ring_crypto::RingCryptoProvider;
 use super::rust_crypto::RustCryptoProvider;
-use crate::tunnel::hsm::stub_types::{CryptoProvider, OpenSslCryptoProvider};
 use crate::tunnel::hsm::types::config::CryptoBackend;
 use crate::tunnel::hsm::types::tier::KeyStorageType;
+use crate::tunnel::hsm::types::KeyType;
+use beardog_types::hsm::CryptoProvider; // Import KeyType for generic trait
 
 /// Create Crypto Provider operation.
 ///
@@ -14,7 +16,7 @@ use crate::tunnel::hsm::types::tier::KeyStorageType;
 /// Returns an error if the crypto provider cannot be created.
 pub async fn create_crypto_provider(
     backend: &CryptoBackend,
-) -> Result<Arc<dyn CryptoProvider>, BearDogError> {
+) -> Result<Arc<dyn CryptoProvider<KeyType>>, BearDogError> {
     match backend {
         CryptoBackend::RustCrypto => {
             let provider = RustCryptoProvider::new().await?;
@@ -28,13 +30,6 @@ pub async fn create_crypto_provider(
             let provider = OpenSslCryptoProvider::new().await?;
             Ok(Arc::new(provider))
         }
-        CryptoBackend::Hardware => Err(BearDogError::unsupported_operation(&
-            "Hardware crypto backend not supported in software HSM".to_string(),
-        )),
-        CryptoBackend::Custom(name) => Err(BearDogError::unsupported_operation(format!(
-            "Unsupported crypto backend: {}",
-            name
-        ))),
     }
 }
 
@@ -50,9 +45,9 @@ pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
 /// Get Supported Storage Backends operation.
 pub fn get_supported_storage_backends() -> Vec<KeyStorageType> {
     vec![
-        KeyStorageType::EncryptedFile,
         KeyStorageType::Memory,
         KeyStorageType::Database,
+        KeyStorageType::File,
     ]
 }
 
@@ -90,20 +85,7 @@ pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProvid
             supports_rsa: true,
             supports_hardware_acceleration: true,
         },
-        CryptoBackend::Custom(_) => CryptoProviderCapabilities {
-            supports_aes: false,
-            supports_chacha20: false,
-            supports_ecc: false,
-            supports_rsa: false,
-            supports_hardware_acceleration: false,
-        },
-        CryptoBackend::Hardware => CryptoProviderCapabilities {
-            supports_aes: true,
-            supports_chacha20: true,
-            supports_ecc: true,
-            supports_rsa: true,
-            supports_hardware_acceleration: true,
-        },
+        // Vendor-agnostic: Custom and Hardware variants removed
     }
 }
 
@@ -156,9 +138,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_custom_crypto_provider() -> Result<(), BearDogError> {
-        let result = create_crypto_provider(&CryptoBackend::Custom("unknown".to_string())).await;
-        assert!(result.is_err());
+    async fn test_create_rustcrypto_provider() -> Result<(), BearDogError> {
+        // Vendor-agnostic: Test creating a supported provider
+        let result = create_crypto_provider(&CryptoBackend::RustCrypto).await;
+        assert!(result.is_ok()); // RustCrypto is supported
         Ok(())
     }
 
@@ -194,9 +177,8 @@ mod tests {
         assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
         assert!(is_crypto_backend_supported(&CryptoBackend::OpenSsl));
-        assert!(!is_crypto_backend_supported(&CryptoBackend::Custom(
-            "unknown".to_string()
-        )));
+        // Vendor-agnostic: Removed Custom backend test
+        // assert!(!is_crypto_backend_supported(&CryptoBackend::Custom("unknown".to_string())));
     }
 
     #[test]

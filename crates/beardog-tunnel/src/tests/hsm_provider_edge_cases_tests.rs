@@ -4,7 +4,6 @@
 
 #[cfg(test)]
 mod hsm_provider_edge_cases {
-    use beardog_errors::BearDogError;
 
     #[test]
     fn test_provider_selection_with_no_providers() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +33,7 @@ mod hsm_provider_edge_cases {
             healthy: bool,
         }
 
-        let providers = vec![
+        let providers = [
             FailingProvider {
                 name: "provider1".to_string(),
                 healthy: false,
@@ -70,7 +69,7 @@ mod hsm_provider_edge_cases {
             Software = 2,
         }
 
-        let failover_sequence = vec![
+        let failover_sequence = [
             ProviderTier::Hardware,
             ProviderTier::Cloud,
             ProviderTier::Software,

@@ -121,7 +121,7 @@ pub struct InputLayerConfig {
 /// Output layer configuration
 ///
 /// Defines the final layer structure, activation, and loss function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct OutputLayerConfig {
     /// Number of output units
     pub units: usize,
@@ -264,7 +264,7 @@ pub struct PoolingLayerConfig {
 /// RNN layer configuration
 ///
 /// Configuration for recurrent neural network layers (LSTM, GRU, etc.).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RnnLayerConfig {
     /// Number of RNN units/cells
     pub units: u32,
@@ -585,7 +585,7 @@ pub struct NetworkOptimization {
 ///
 /// Prevents exploding gradients by limiting their magnitude during
 /// backpropagation, improving training stability.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GradientClipping {
     /// Method used for clipping gradients
     pub clip_type: ClipType,

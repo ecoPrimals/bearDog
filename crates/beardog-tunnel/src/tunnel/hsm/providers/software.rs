@@ -1,10 +1,20 @@
 //! Software HSM Provider
 //!
 //! Universal provider implementation for software-based HSM functionality.
+//!
+//! This module provides REAL cryptographic operations using the software HSM crypto providers.
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use tracing::info;
+use std::sync::Arc;
+use tracing::{debug, info};
+
+// Import real crypto providers
+use crate::tunnel::hsm::software_hsm::crypto_providers::{
+    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+};
+use crate::tunnel::hsm::types::KeyType;
+use beardog_types::hsm::CryptoProvider;
 
 /// Software Universal HSM Provider
 pub struct SoftwareUniversalProvider {
@@ -14,6 +24,10 @@ pub struct SoftwareUniversalProvider {
     crypto_provider: CryptoProviderType,
     /// Provider metadata
     metadata: HashMap<String, String>,
+    /// Real crypto provider implementation
+    crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
+    /// Key storage (maps key_id -> key_material)
+    keys: HashMap<String, Vec<u8>>,
 }
 
 /// Software-specific HSM capabilities
@@ -50,10 +64,37 @@ impl SoftwareUniversalProvider {
     /// # Errors
     /// Returns an error if initialization fails
     pub async fn new(provider_type: CryptoProviderType) -> Result<Self, BearDogError> {
+        // Create real crypto provider based on type
+        let crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync> = match &provider_type {
+            CryptoProviderType::RustCrypto => {
+                let provider = RustCryptoProvider::new().await?;
+                Arc::new(provider)
+            }
+            CryptoProviderType::OpenSsl => {
+                let provider = OpenSslCryptoProvider::new().await?;
+                Arc::new(provider)
+            }
+            CryptoProviderType::Ring => {
+                let provider = RingCryptoProvider::new()?;
+                Arc::new(provider)
+            }
+            CryptoProviderType::Custom(name) => {
+                return Err(BearDogError::unsupported_operation(format!(
+                    "Custom crypto provider '{}' not yet implemented",
+                    name
+                )));
+            }
+        };
+
+        // Initialize the crypto provider
+        crypto_impl.initialize().await?;
+
         let mut provider = Self {
             capabilities: None,
             crypto_provider: provider_type,
             metadata: HashMap::with_capacity(16),
+            crypto_impl,
+            keys: HashMap::with_capacity(64),
         };
 
         // Initialize metadata
@@ -62,6 +103,7 @@ impl SoftwareUniversalProvider {
         let capabilities = provider.discover_capabilities().await?;
         provider.capabilities = Some(capabilities);
 
+        info!("✅ Software HSM provider initialized with real crypto");
         Ok(provider)
     }
 
@@ -121,55 +163,156 @@ impl SoftwareUniversalProvider {
         self.capabilities.as_ref()
     }
 
-    /// Generate a key (placeholder implementation)
+    /// Generate a key (REAL IMPLEMENTATION)
     pub async fn generate_key(&mut self, key_id: &str, key_type: &str) -> Result<(), BearDogError> {
         info!(
-            "🔑 Generating software key: {} (type: {})",
+            "🔑 Generating REAL cryptographic key: {} (type: {})",
             key_id, key_type
         );
 
-        // In production, this would generate actual cryptographic keys
+        // Map string key type to KeyType enum
+        let key_type_enum = match key_type {
+            "AES-256" | "AES" => KeyType::Aes,
+            "ChaCha20" => KeyType::ChaCha20,
+            "Ed25519" => KeyType::Ed25519,
+            "X25519" => KeyType::X25519,
+            "ECC" | "ECDSA" => KeyType::EllipticCurve,
+            "RSA" | "RSA-2048" => KeyType::Rsa,
+            _ => KeyType::Generic,
+        };
+
+        // Generate REAL key material using crypto provider
+        let key_material = self
+            .crypto_impl
+            .generate_key_material(&key_type_enum)
+            .await?;
+
+        debug!(
+            "✅ Generated {} bytes of key material for key: {}",
+            key_material.len(),
+            key_id
+        );
+
+        // Store key material securely
+        self.keys.insert(key_id.to_string(), key_material);
         self.metadata
             .insert(format!("key_{}", key_id), key_type.to_string());
 
         Ok(())
     }
 
-    /// Encrypt data (placeholder implementation)
+    /// Encrypt data (REAL IMPLEMENTATION)
     pub async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("🔒 Encrypting with software key: {}", key_id);
+        info!("🔒 REAL encryption with software key: {}", key_id);
 
-        // In production, this would perform actual encryption
-        Ok(plaintext.to_vec())
+        // Retrieve key material
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+
+        // Perform REAL encryption using crypto provider
+        let ciphertext = self.crypto_impl.encrypt(key_material, plaintext).await?;
+
+        debug!(
+            "✅ Encrypted {} bytes -> {} bytes",
+            plaintext.len(),
+            ciphertext.len()
+        );
+
+        Ok(ciphertext)
     }
 
-    /// Decrypt data (placeholder implementation)
+    /// Decrypt data (REAL IMPLEMENTATION)
     pub async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("🔓 Decrypting with software key: {}", key_id);
+        info!("🔓 REAL decryption with software key: {}", key_id);
 
-        // In production, this would perform actual decryption
-        Ok(ciphertext.to_vec())
+        // Retrieve key material
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+
+        // Perform REAL decryption using crypto provider
+        let plaintext = self.crypto_impl.decrypt(key_material, ciphertext).await?;
+
+        debug!(
+            "✅ Decrypted {} bytes -> {} bytes",
+            ciphertext.len(),
+            plaintext.len()
+        );
+
+        Ok(plaintext)
     }
 
-    /// Sign data (placeholder implementation)
+    /// Sign data (REAL IMPLEMENTATION)
     pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("✍️ Signing with software key: {}", key_id);
+        info!("✍️ REAL signing with software key: {}", key_id);
 
-        // In production, this would generate actual signatures
-        Ok(data.to_vec())
+        // Retrieve key material
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+
+        // Perform REAL signing using crypto provider
+        let signature = self.crypto_impl.sign(key_material, data).await?;
+
+        debug!(
+            "✅ Signed {} bytes, signature: {} bytes",
+            data.len(),
+            signature.len()
+        );
+
+        Ok(signature)
     }
 
-    /// Verify signature (placeholder implementation)
+    /// Verify signature (REAL IMPLEMENTATION)
     pub async fn verify(
         &self,
         key_id: &str,
         data: &[u8],
         signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        info!("🔍 Verifying signature with software key: {}", key_id);
+        info!(
+            "🔍 REAL signature verification with software key: {}",
+            key_id
+        );
 
-        // In production, this would perform actual signature verification
-        Ok(data == signature)
+        // Retrieve key material (private key)
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+
+        // For Ed25519: derive public key from private key for verification
+        // Check key type from metadata
+        let key_type = self.metadata.get(&format!("key_{}", key_id));
+        let public_key = if key_type == Some(&"Ed25519".to_string()) {
+            // Ed25519: derive public key from private key
+            use ed25519_dalek::SigningKey;
+            let signing_key: [u8; 32] = key_material.clone().try_into().map_err(|_| {
+                BearDogError::crypto_error("Invalid Ed25519 private key length".to_string())
+            })?;
+            let sk = SigningKey::from_bytes(&signing_key);
+            sk.verifying_key().to_bytes().to_vec()
+        } else {
+            // For other key types, use the key material directly
+            key_material.clone()
+        };
+
+        // Perform REAL verification using crypto provider with public key
+        let valid = self
+            .crypto_impl
+            .verify(&public_key, data, signature)
+            .await?;
+
+        debug!(
+            "✅ Signature verification result: {}",
+            if valid { "VALID" } else { "INVALID" }
+        );
+
+        Ok(valid)
     }
 }
 

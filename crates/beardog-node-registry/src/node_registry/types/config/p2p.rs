@@ -27,12 +27,14 @@ use std::time::Duration;
 }
 impl Default for P2PConfig {
     fn default() -> Self {
+        use beardog_types::constants::domains::network::config;
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        
         Self {
             enabled: true,
             listen_address: std::env::var("BEARDOG_P2P_LISTEN_ADDRESS")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()),
             listen_port: std::env::var("BEARDOG_P2P_LISTEN_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

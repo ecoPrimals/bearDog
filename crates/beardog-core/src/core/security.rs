@@ -4,7 +4,13 @@
 //! and session management.
 
 use beardog_errors::BearDogError;
-use beardog_traits::unified::providers::{BearDogProvider, SecurityProvider};
+use beardog_types::canonical::providers_unified::traits::{
+    UnifiedProvider, UnifiedSecurityProvider,
+    AuthenticationRequest, AuthenticationResponse,
+    AuthorizationRequest, AuthorizationResponse,
+    SecurityContext, ProviderHealth, ProviderMetrics, ProviderCapability,
+    ProviderConfiguration,
+};
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
 use std::collections::HashMap;
 
@@ -34,86 +40,70 @@ impl CoreSecurityProvider {
     }
 }
 
-// Implement the unified provider traits
-impl BearDogProvider for CoreSecurityProvider {
-    type Error = BearDogError;
-    type Config = beardog_types::canonical::config::unified::UnifiedBearDogConfig;
-
-    fn provider_id(&self) -> &'static str {
-        "core_security"
+// Implement UnifiedProvider base trait
+impl UnifiedProvider for CoreSecurityProvider {
+    fn provider_info(&self) -> beardog_types::canonical::providers_unified::traits::ProviderInfo {
+        beardog_types::canonical::providers_unified::traits::ProviderInfo {
+            id: "core_security".to_string(),
+            name: "Core Security Provider".to_string(),
+            version: "1.0.0".to_string(),
+            provider_type: beardog_types::canonical::providers_unified::traits::ProviderType::Security,
+            supported_capabilities: vec!["authentication".to_string(), "authorization".to_string()],
+        }
     }
 
-    fn provider_version(&self) -> &'static str {
-        "1.0.0"
-    }
-
-    async fn health_check(
-        &self,
-    ) -> Result<beardog_types::canonical::providers_unified::traits::ProviderHealth, Self::Error>
-    {
-        Ok(
-            beardog_types::canonical::providers_unified::traits::ProviderHealth {
-                status: beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy,
-                timestamp: std::time::SystemTime::now(),
-                details: {
-                    let mut details = HashMap::new();
-                    details.insert("status".to_string(), "OK".to_string());
-                    details.insert("response_time_ms".to_string(), "5".to_string());
-                    details
-                },
-                resource_usage:
-                    beardog_types::canonical::providers_unified::traits::ResourceUsage {
-                        cpu_percent: 5.0,
-                        memory_bytes: 1024 * 1024,
-                        memory_percent: 2.0,
-                        network_io:
-                            beardog_types::canonical::providers_unified::traits::NetworkIoMetrics {
-                                bytes_sent: 0,
-                                bytes_received: 0,
-                                packets_sent: 0,
-                                packets_received: 0,
-                            },
-                        disk_io: HashMap::new(),
-                    },
-                last_error: None,
+    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
+        Ok(ProviderHealth {
+            status: beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy,
+            timestamp: std::time::SystemTime::now(),
+            details: {
+                let mut details = HashMap::new();
+                details.insert("status".to_string(), "OK".to_string());
+                details.insert("response_time_ms".to_string(), "5".to_string());
+                details
             },
-        )
-    }
-
-    async fn metrics(
-        &self,
-    ) -> Result<beardog_types::canonical::providers_unified::traits::ProviderMetrics, Self::Error>
-    {
-        Ok(
-            beardog_types::canonical::providers_unified::traits::ProviderMetrics {
-                timestamp: std::time::SystemTime::now(),
-                performance: {
-                    let mut perf = HashMap::new();
-                    perf.insert("requests_per_second".to_string(), 0.0);
-                    perf.insert("average_response_time_ms".to_string(), 5.0);
-                    perf.insert("error_rate".to_string(), 0.0);
-                    perf
+            resource_usage: beardog_types::canonical::providers_unified::traits::ResourceUsage {
+                cpu_percent: 5.0,
+                memory_bytes: 1024 * 1024,
+                memory_percent: 2.0,
+                network_io: beardog_types::canonical::providers_unified::traits::NetworkIoMetrics {
+                    bytes_sent: 0,
+                    bytes_received: 0,
+                    packets_sent: 0,
+                    packets_received: 0,
                 },
-                custom_metrics: Vec::new(),
-                system_metrics:
-                    beardog_types::canonical::providers_unified::traits::SystemMetrics {
-                        uptime_seconds: 0,
-                        total_requests: 0,
-                        successful_requests: 0,
-                        failed_requests: 0,
-                        avg_response_time_ms: 5.0,
-                        active_connections: 0,
-                        error_rate: 0.0,
-                    },
+                disk_io: HashMap::new(),
             },
-        )
+            last_error: None,
+        })
     }
 
-    fn capabilities(
-        &self,
-    ) -> Vec<beardog_types::canonical::providers_unified::traits::ProviderCapability> {
+    async fn metrics(&self) -> Result<ProviderMetrics, BearDogError> {
+        Ok(ProviderMetrics {
+            timestamp: std::time::SystemTime::now(),
+            performance: {
+                let mut perf = HashMap::new();
+                perf.insert("requests_per_second".to_string(), 0.0);
+                perf.insert("average_response_time_ms".to_string(), 5.0);
+                perf.insert("error_rate".to_string(), 0.0);
+                perf
+            },
+            custom_metrics: Vec::new(),
+            system_metrics: beardog_types::canonical::providers_unified::traits::SystemMetrics {
+                uptime_seconds: 0,
+                total_requests: 0,
+                successful_requests: 0,
+                failed_requests: 0,
+                avg_response_time_ms: 5.0,
+                active_connections: 0,
+                error_rate: 0.0,
+            },
+        })
+    }
+
+    fn capabilities(&self) -> Vec<ProviderCapability> {
         vec![
-            beardog_types::canonical::providers_unified::traits::ProviderCapability {
+            ProviderCapability {
                 name: "Authentication".to_string(),
                 description: "User authentication capability".to_string(),
                 parameters: vec![
@@ -127,7 +117,7 @@ impl BearDogProvider for CoreSecurityProvider {
                 ],
                 enabled: true,
             },
-            beardog_types::canonical::providers_unified::traits::ProviderCapability {
+            ProviderCapability {
                 name: "Authorization".to_string(),
                 description: "User authorization capability".to_string(),
                 parameters: vec![
@@ -143,46 +133,86 @@ impl BearDogProvider for CoreSecurityProvider {
             },
         ]
     }
+
+    async fn initialize(&mut self, _config: ProviderConfiguration) -> Result<(), BearDogError> {
+        Ok(())
+    }
+
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
+        Ok(())
+    }
 }
 
-// Mock security provider implementation
-impl SecurityProvider for CoreSecurityProvider {
-    type AuthResult = bool;
-    type Session = String;
-    type Credentials = String;
-
+// Implement UnifiedSecurityProvider trait
+impl UnifiedSecurityProvider for CoreSecurityProvider {
     async fn authenticate(
         &self,
-        _credentials: Self::Credentials,
-    ) -> Result<Self::AuthResult, Self::Error> {
-        Ok(true)
-    }
-
-    /// Creates session
-    async fn create_session(&self, user_id: &str) -> Result<Self::Session, Self::Error> {
-        Ok(format!("session_{user_id}"))
-    }
-
-    /// Validates session
-    async fn validate_session(&self, _session_id: &str) -> Result<bool, Self::Error> {
-        Ok(true)
-    }
-
-    async fn revoke_session(&self, _session_id: &str) -> Result<(), Self::Error> {
-        Ok(())
+        request: AuthenticationRequest,
+    ) -> Result<AuthenticationResponse, BearDogError> {
+        // Mock implementation - always succeeds
+        Ok(AuthenticationResponse {
+            success: true,
+            user_info: Some({
+                let mut info = HashMap::new();
+                info.insert("user_id".to_string(), request.user_id);
+                info
+            }),
+            token: Some("mock_token".to_string()),
+            expires_at: None,
+            error: None,
+        })
     }
 
     async fn authorize(
         &self,
-        _session_id: &str,
-        _resource: &str,
-        _action: &str,
-    ) -> Result<bool, Self::Error> {
+        request: AuthorizationRequest,
+    ) -> Result<AuthorizationResponse, BearDogError> {
+        // Mock implementation - always authorizes
+        Ok(AuthorizationResponse {
+            granted: true,
+            permissions: vec![request.operation],
+            expires_at: None,
+            denial_reason: None,
+        })
+    }
+
+    async fn encrypt(&self, data: &[u8], _key_id: &str) -> Result<Vec<u8>, BearDogError> {
+        // Mock implementation - returns data as-is (not secure, for demo only)
+        Ok(data.to_vec())
+    }
+
+    async fn decrypt(&self, data: &[u8], _key_id: &str) -> Result<Vec<u8>, BearDogError> {
+        // Mock implementation - returns data as-is (not secure, for demo only)
+        Ok(data.to_vec())
+    }
+
+    async fn sign(&self, data: &[u8], _key_id: &str) -> Result<Vec<u8>, BearDogError> {
+        // Mock implementation - returns simple hash
+        Ok(data.to_vec())
+    }
+
+    async fn verify(
+        &self,
+        _data: &[u8],
+        _signature: &[u8],
+        _key_id: &str,
+    ) -> Result<bool, BearDogError> {
+        // Mock implementation - always verifies
         Ok(true)
     }
 
-    /// Gets `security_requirements`
-    async fn get_security_requirements(&self, _resource: &str) -> Result<Vec<String>, Self::Error> {
-        Ok(vec!["authentication".to_string()])
+    async fn generate_random(&self, length: usize) -> Result<Vec<u8>, BearDogError> {
+        // Mock implementation - returns zeros (not secure, for demo only)
+        Ok(vec![0u8; length])
+    }
+
+    fn security_context(&self) -> SecurityContext {
+        SecurityContext {
+            security_level: "standard".to_string(),
+            encryption_algorithms: vec!["aes-256".to_string()],
+            signature_algorithms: vec!["ed25519".to_string()],
+            key_derivation_functions: vec!["hkdf".to_string()],
+            random_generators: vec!["platform_rng".to_string()],
+        }
     }
 }

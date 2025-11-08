@@ -2,10 +2,8 @@
 //!
 //! Core type definitions for the Software HSM implementation.
 
-// Re-export from stub_types for compatibility (trait and implementations need KeyType alignment)
-pub use crate::tunnel::hsm::stub_types::{
-    CryptoProvider, OpenSslCryptoProvider, RustCryptoProvider,
-};
+// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers and canonical trait
+pub use beardog_types::hsm::CryptoProvider; // Canonical trait
 pub use beardog_types::hsm::InMemoryStorageBackend;
 
 // Use proper KeyStoreConfig from beardog-types
@@ -462,43 +460,43 @@ impl DatabaseStorageBackend {
 impl StorageBackendTrait for DatabaseStorageBackend {
     async fn initialize(&self) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn retrieve(&self, _key_id: &str) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 
     async fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
         Err(BearDogError::unsupported_operation(
-            &"DatabaseStorageBackend not yet implemented".to_string(),
+            "DatabaseStorageBackend not yet implemented".to_string(),
         ))
     }
 }
@@ -639,7 +637,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(&format!("AES-256-GCM encryption failed: {}", e))
+            BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {}", e))
         })?;
 
         // Prepend nonce to ciphertext
@@ -664,7 +662,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let cipher = Aes256Gcm::new(key);
 
         cipher.decrypt(nonce, encrypted_data).map_err(|e| {
-            BearDogError::crypto_error(&format!("AES-256-GCM decryption failed: {}", e))
+            BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {}", e))
         })
     }
 }
@@ -691,15 +689,10 @@ mod tests {
         let key_material = ProtectedMemory::new(vec![0u8; 32], true);
         let metadata = KeyMetadata::new("test-key".to_string(), KeyType::Ed25519);
 
-        let key = SoftwareKey::new(
-            "test-key".to_string(),
-            KeyType::Aes { key_size: 256 },
-            key_material,
-            metadata,
-        );
+        let key = SoftwareKey::new("test-key".to_string(), KeyType::Aes, key_material, metadata);
 
         assert_eq!(key.id(), "test-key");
-        assert_eq!(key.key_type(), &KeyType::Aes { key_size: 256 });
+        assert_eq!(key.key_type(), &KeyType::Aes);
         Ok(())
     }
 

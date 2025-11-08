@@ -3,7 +3,7 @@
 //! Core trait definitions for the universal HSM system.
 
 use beardog_errors::BearDogError;
-use crate::tunnel::hsm::types::{KeyType, HsmKey, HsmCapability};
+use crate::tunnel::hsm::types::{KeyType, HsmCapability};
 use serde::{Serialize, Deserialize};
 
 /// Universal HSM Provider trait

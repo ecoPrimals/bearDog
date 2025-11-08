@@ -2,11 +2,13 @@
 
 use super::types::{ExternalFunction, FunctionParameter, FunctionValue, SecurityClearance};
 use beardog_errors::BearDogError;
-use beardog_traits::unified::security::PolicyContext;
-use beardog_traits::unified::{PolicyEngine, UnifiedTraitError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::debug;
+
+// Note: PolicyEngine, PolicyContext, and UnifiedTraitError traits are not yet
+// defined in the unified trait system. These would need to be added to
+// beardog-types/src/canonical/providers_unified/traits/ if the functionality is needed.
 
 /// A parameter with its associated value for safety validation
 ///
@@ -55,6 +57,7 @@ pub struct SafetyChecker {
     /// Current security clearance level
     security_clearance: SecurityClearance,
     /// Loaded safety policies by policy ID
+    #[allow(dead_code)] // Will be used when policy loading is implemented
     loaded_policies: HashMap<String, SafetyPolicy>,
 }
 
@@ -110,8 +113,54 @@ impl SafetyChecker {
 
         Ok(())
     }
+
+    /// Load a safety policy
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if policy validation fails
+    pub async fn load_policy(&mut self, policy: SafetyPolicy) -> Result<(), BearDogError> {
+        // Validate policy before loading
+        if policy.policy_id.is_empty() {
+            return Err(BearDogError::validation("Policy ID cannot be empty"));
+        }
+        if policy.function_patterns.is_empty() {
+            return Err(BearDogError::validation(
+                "Policy must have at least one function pattern",
+            ));
+        }
+
+        self.loaded_policies
+            .insert(policy.policy_id.clone(), policy);
+        Ok(())
+    }
+
+    /// List all loaded policy IDs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if policy retrieval fails
+    pub async fn list_policies(&self) -> Result<Vec<String>, BearDogError> {
+        Ok(self.loaded_policies.keys().cloned().collect())
+    }
+
+    /// Remove a policy by ID
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if policy doesn't exist
+    pub async fn remove_policy(&mut self, policy_id: &str) -> Result<(), BearDogError> {
+        if self.loaded_policies.remove(policy_id).is_none() {
+            return Err(BearDogError::validation("Policy not found"));
+        }
+        Ok(())
+    }
 }
 
+// PolicyEngine trait implementation commented out until traits are added to unified system
+// TODO: Re-enable when PolicyEngine, PolicyContext, and UnifiedTraitError are added to
+// beardog-types/src/canonical/providers_unified/traits/
+/*
 impl PolicyEngine for SafetyChecker {
     type Policy = SafetyPolicy;
     type Decision = SafetyDecision;
@@ -141,7 +190,6 @@ impl PolicyEngine for SafetyChecker {
         Ok(decision)
     }
 
-    /// Loads policy
     async fn load_policy(&mut self, policy: Self::Policy) -> Result<(), UnifiedTraitError> {
         self.loaded_policies
             .insert(policy.policy_id.clone(), policy);
@@ -152,15 +200,14 @@ impl PolicyEngine for SafetyChecker {
         Ok(self.loaded_policies.keys().cloned().collect())
     }
 
-    /// Removes policy
     async fn remove_policy(&mut self, policy_id: &str) -> Result<(), UnifiedTraitError> {
         self.loaded_policies.remove(policy_id);
         Ok(())
     }
 
-    /// Validates policy
     async fn validate_policy(&self, policy: &Self::Policy) -> Result<bool, UnifiedTraitError> {
         // Basic policy validation
         Ok(!policy.policy_id.is_empty() && !policy.function_patterns.is_empty())
     }
 }
+*/

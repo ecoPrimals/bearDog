@@ -16,15 +16,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use super::keys::SoftwareKeyStore;
 
-    /// RustCryptoProvider configuration and state.
-    ///
-    /// Provides comprehensive functionality for the beardog ecosystem.
-pub struct RustCryptoProvider;
-
-    /// OpenSslCryptoProvider configuration and state.
-    ///
-    /// Provides comprehensive functionality for the beardog ecosystem.
-pub struct OpenSslCryptoProvider;
+// ✅ RustCryptoProvider and OpenSslCryptoProvider moved to crypto_providers/
+// See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/crypto_providers/
+// Real implementations with actual cryptography are in that module
 
     /// RustSoftwareHsm configuration and state.
     ///

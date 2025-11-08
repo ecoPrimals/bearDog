@@ -168,13 +168,14 @@ impl SoftwareDiscoverer {
 
     /// Create BearDog Software HSM
     fn create_beardog_software_hsm(&self) -> DiscoveredHsm {
+        use beardog_types::constants::domains::network::config;
         let now = Utc::now();
         
         DiscoveredHsm {
             name: "beardog-software-hsm".to_string(),
             hsm_type: HsmType::Software,
             endpoint: HsmEndpoint {
-                host: "localhost".to_string(),
+                host: config::default_service_host(),
                 port: None,
                 protocol: "native".to_string(),
                 secure: true,

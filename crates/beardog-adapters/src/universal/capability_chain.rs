@@ -66,15 +66,22 @@ pub struct StepConfig {
     pub parameters: HashMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RetryConfig {
-    /// Number of max_attempts
-    pub max_attempts: u32,
-    /// Number of backoff_ms
-    pub backoff_ms: u64,
-    /// Whether exponential_backoff is enabled
-    pub exponential_backoff: bool,
-}
+// MIGRATED: Now using canonical RetryConfig from beardog-types
+// See: crates/beardog-types/src/canonical/config/domains/retry.rs
+//
+// Old definition (replaced Nov 8, 2025):
+// pub struct RetryConfig {
+//     pub max_attempts: u32,
+//     pub backoff_ms: u64,
+//     pub exponential_backoff: bool,
+// }
+//
+// New: Use CanonicalRetryConfig with better features:
+// - Validation
+// - Preset configurations (aggressive, conservative, etc.)
+// - Proper exponential backoff calculation
+// - Full documentation and tests
+pub use beardog_types::canonical::config::domains::retry::CanonicalRetryConfig as RetryConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRequirements {

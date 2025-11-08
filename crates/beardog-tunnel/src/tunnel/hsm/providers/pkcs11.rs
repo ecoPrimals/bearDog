@@ -10,10 +10,13 @@ pub struct Pkcs11UniversalProvider {
     /// HSM capabilities
     capabilities: Option<Pkcs11Capabilities>,
     /// PKCS#11 library path
+    #[allow(dead_code)] // Used when PKCS#11 library is loaded
     library_path: String,
     /// Slot ID
+    #[allow(dead_code)] // Used when PKCS#11 library is loaded
     slot_id: u64,
     /// Provider metadata
+    #[allow(dead_code)] // Used for provider information queries
     metadata: HashMap<String, String>,
 }
 
@@ -103,7 +106,11 @@ mod tests {
 
         for path in paths {
             let provider = Pkcs11UniversalProvider::new(path.to_string(), 0).await;
-            assert!(provider.is_ok(), "Failed to create provider with path: {}", path);
+            assert!(
+                provider.is_ok(),
+                "Failed to create provider with path: {}",
+                path
+            );
         }
 
         Ok(())
@@ -115,12 +122,10 @@ mod tests {
         let slots = vec![0, 1, 2, 10, 100, 65535];
 
         for slot in slots {
-            let provider = Pkcs11UniversalProvider::new(
-                "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-                slot,
-            )
-            .await?;
-            
+            let provider =
+                Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), slot)
+                    .await?;
+
             assert_eq!(provider.slot_id, slot);
         }
 
@@ -171,11 +176,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_provider_with_capabilities() -> Result<(), Box<dyn std::error::Error>> {
-        let mut provider = Pkcs11UniversalProvider::new(
-            "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-            0,
-        )
-        .await?;
+        let mut provider =
+            Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), 0).await?;
 
         // Set capabilities
         provider.capabilities = Some(Pkcs11Capabilities {
@@ -188,7 +190,7 @@ mod tests {
 
         // Verify capabilities are accessible
         assert!(provider.capabilities().is_some());
-        
+
         if let Some(caps) = provider.capabilities() {
             assert_eq!(caps.manufacturer_id, "SoftHSM");
             assert_eq!(caps.model, "SoftHSM v2");
@@ -234,18 +236,14 @@ mod tests {
 
         for i in 0..5 {
             let handle = tokio::spawn(async move {
-                Pkcs11UniversalProvider::new(
-                    "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-                    i,
-                )
-                .await
+                Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), i).await
             });
             handles.push(handle);
         }
 
         // All providers should initialize successfully
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
 
@@ -365,11 +363,9 @@ mod tests {
         let slots = vec![0, 1, u64::MAX];
 
         for slot in slots {
-            let provider = Pkcs11UniversalProvider::new(
-                "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-                slot,
-            )
-            .await?;
+            let provider =
+                Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), slot)
+                    .await?;
 
             assert_eq!(provider.slot_id, slot);
             assert_eq!(provider.get_security_level(), 3);
@@ -395,26 +391,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_multiple_providers_different_slots() -> Result<(), Box<dyn std::error::Error>>
-    {
+    async fn test_multiple_providers_different_slots() -> Result<(), Box<dyn std::error::Error>> {
         // Test multiple providers for different slots
-        let provider1 = Pkcs11UniversalProvider::new(
-            "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-            0,
-        )
-        .await?;
+        let provider1 =
+            Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), 0).await?;
 
-        let provider2 = Pkcs11UniversalProvider::new(
-            "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-            1,
-        )
-        .await?;
+        let provider2 =
+            Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), 1).await?;
 
-        let provider3 = Pkcs11UniversalProvider::new(
-            "/usr/lib/softhsm/libsofthsm2.so".to_string(),
-            2,
-        )
-        .await?;
+        let provider3 =
+            Pkcs11UniversalProvider::new("/usr/lib/softhsm/libsofthsm2.so".to_string(), 2).await?;
 
         assert_eq!(provider1.slot_id, 0);
         assert_eq!(provider2.slot_id, 1);

@@ -340,7 +340,7 @@ mod tests {
 
     #[test]
     fn test_memory_protection_levels() {
-        let levels = vec![
+        let levels = [
             MemoryProtectionLevel::None,
             MemoryProtectionLevel::Low,
             MemoryProtectionLevel::Medium,

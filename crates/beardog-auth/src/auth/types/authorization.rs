@@ -194,7 +194,7 @@ pub enum AuthMethod {
     MutualTls,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum VerificationMode {
     /// Active or enabled state
     Enabled,
@@ -243,6 +243,17 @@ pub struct CrossNodeOperation {
     pub requester_signature: String,
 }
 
+impl Default for CrossNodeOperation {
+    fn default() -> Self {
+        Self {
+            operation_type: OperationType::Read,
+            target_resource: String::new(),
+            parameters: HashMap::new(),
+            requester_signature: String::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthProof {
     pub proof_id: String,
@@ -273,4 +284,268 @@ pub struct ConsensusResult {
     pub final_score: f64,
     /// Collection of participating nodes
     pub participating_nodes: Vec<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ResourcePermission tests
+    #[test]
+    fn test_resource_permission_variants() {
+        let permissions = [
+            ResourcePermission::Read,
+            ResourcePermission::Write,
+            ResourcePermission::Delete,
+            ResourcePermission::Admin,
+            ResourcePermission::Execute,
+        ];
+
+        assert_eq!(permissions.len(), 5);
+    }
+
+    #[test]
+    fn test_permission_implies_admin_all() {
+        let admin = ResourcePermission::Admin;
+        assert!(admin.implies(&ResourcePermission::Read));
+        assert!(admin.implies(&ResourcePermission::Write));
+        assert!(admin.implies(&ResourcePermission::Delete));
+    }
+
+    #[test]
+    fn test_permission_security_levels() {
+        assert_eq!(ResourcePermission::Read.security_level(), 1);
+        assert_eq!(ResourcePermission::Admin.security_level(), 15);
+        assert!(
+            ResourcePermission::Admin.security_level() > ResourcePermission::Read.security_level()
+        );
+    }
+
+    // AccessCondition tests
+    #[test]
+    fn test_access_condition_time_window() {
+        let now = Utc::now();
+        let condition = AccessCondition::TimeWindow {
+            start: now,
+            end: now + chrono::Duration::hours(24),
+        };
+
+        match condition {
+            AccessCondition::TimeWindow { start, end } => {
+                assert!(end > start);
+            }
+            _ => panic!("Expected TimeWindow variant"),
+        }
+    }
+
+    #[test]
+    fn test_access_condition_ip_address() {
+        let condition = AccessCondition::IpAddress {
+            address: 0x7F000001, // 127.0.0.1
+            window_seconds: 3600,
+        };
+
+        match condition {
+            AccessCondition::IpAddress {
+                address,
+                window_seconds,
+            } => {
+                assert_eq!(address, 0x7F000001);
+                assert_eq!(window_seconds, 3600);
+            }
+            _ => panic!("Expected IpAddress variant"),
+        }
+    }
+
+    #[test]
+    fn test_access_condition_require_consensus() {
+        let condition = AccessCondition::RequireConsensus {
+            threshold: 0.75,
+            nodes: vec!["node1".to_string(), "node2".to_string()],
+        };
+
+        match condition {
+            AccessCondition::RequireConsensus { threshold, nodes } => {
+                assert_eq!(threshold, 0.75);
+                assert_eq!(nodes.len(), 2);
+            }
+            _ => panic!("Expected RequireConsensus variant"),
+        }
+    }
+
+    // AuthMethod tests
+    #[test]
+    fn test_auth_method_variants() {
+        let methods = [
+            AuthMethod::Signature,
+            AuthMethod::Certificate,
+            AuthMethod::BiometricHash,
+            AuthMethod::MutualTls,
+        ];
+
+        assert_eq!(methods.len(), 4);
+    }
+
+    // VerificationMode tests
+    #[test]
+    fn test_verification_mode_enabled() {
+        let mode = VerificationMode::Enabled;
+        assert!(matches!(mode, VerificationMode::Enabled));
+    }
+
+    #[test]
+    fn test_verification_mode_disabled() {
+        let mode = VerificationMode::Disabled;
+        assert!(matches!(mode, VerificationMode::Disabled));
+    }
+
+    // SpawningMode tests
+    #[test]
+    fn test_spawning_mode_enabled() {
+        let mode = SpawningMode::Enabled;
+        assert!(matches!(mode, SpawningMode::Enabled));
+    }
+
+    #[test]
+    fn test_spawning_mode_disabled() {
+        let mode = SpawningMode::Disabled;
+        assert!(matches!(mode, SpawningMode::Disabled));
+    }
+
+    // ApprovalMode tests
+    #[test]
+    fn test_approval_mode_automated() {
+        let mode = ApprovalMode::Automated;
+        assert!(matches!(mode, ApprovalMode::Automated));
+    }
+
+    #[test]
+    fn test_approval_mode_manual() {
+        let mode = ApprovalMode::Manual;
+        assert!(matches!(mode, ApprovalMode::Manual));
+    }
+
+    // OperationType tests
+    #[test]
+    fn test_operation_type_variants() {
+        let types = [
+            OperationType::Read,
+            OperationType::Write,
+            OperationType::Execute,
+            OperationType::Delete,
+        ];
+
+        assert_eq!(types.len(), 4);
+    }
+
+    // CrossNodeOperation tests
+    #[test]
+    fn test_cross_node_operation_default() {
+        let op = CrossNodeOperation::default();
+        assert!(matches!(op.operation_type, OperationType::Read));
+        assert!(op.target_resource.is_empty());
+        assert!(op.parameters.is_empty());
+        assert!(op.requester_signature.is_empty());
+    }
+
+    #[test]
+    fn test_cross_node_operation_creation() {
+        let mut params = HashMap::new();
+        params.insert("key1".to_string(), "value1".to_string());
+
+        let op = CrossNodeOperation {
+            operation_type: OperationType::Write,
+            target_resource: "resource-1".to_string(),
+            parameters: params.clone(),
+            requester_signature: "sig-data".to_string(),
+        };
+
+        assert!(matches!(op.operation_type, OperationType::Write));
+        assert_eq!(op.target_resource, "resource-1");
+        assert_eq!(op.parameters.len(), 1);
+        assert!(!op.requester_signature.is_empty());
+    }
+
+    // AuthProof tests
+    #[test]
+    fn test_auth_proof_creation() {
+        let proof = AuthProof {
+            proof_id: "proof-001".to_string(),
+            operation: CrossNodeOperation::default(),
+            timestamp: Utc::now(),
+            proof_signature: "signature".to_string(),
+        };
+
+        assert_eq!(proof.proof_id, "proof-001");
+        assert!(!proof.proof_signature.is_empty());
+    }
+
+    // AuthorizationProof tests
+    #[test]
+    fn test_authorization_proof_creation() {
+        let proof = AuthorizationProof {
+            authorization_id: "auth-001".to_string(),
+            operation: CrossNodeOperation::default(),
+            timestamp: Utc::now(),
+            proof_signature: "signature-data".to_string(),
+        };
+
+        assert_eq!(proof.authorization_id, "auth-001");
+        assert!(!proof.proof_signature.is_empty());
+    }
+
+    // ConsensusResult tests
+    #[test]
+    fn test_consensus_result_reached() {
+        let mut votes = HashMap::new();
+        votes.insert("node1".to_string(), true);
+        votes.insert("node2".to_string(), true);
+        votes.insert("node3".to_string(), false);
+
+        let result = ConsensusResult {
+            consensus_reached: true,
+            votes: votes.clone(),
+            final_score: 0.67,
+            participating_nodes: vec![
+                "node1".to_string(),
+                "node2".to_string(),
+                "node3".to_string(),
+            ],
+        };
+
+        assert!(result.consensus_reached);
+        assert_eq!(result.votes.len(), 3);
+        assert_eq!(result.participating_nodes.len(), 3);
+        assert!(result.final_score > 0.5);
+    }
+
+    #[test]
+    fn test_consensus_result_not_reached() {
+        let mut votes = HashMap::new();
+        votes.insert("node1".to_string(), false);
+        votes.insert("node2".to_string(), false);
+
+        let result = ConsensusResult {
+            consensus_reached: false,
+            votes,
+            final_score: 0.0,
+            participating_nodes: vec!["node1".to_string(), "node2".to_string()],
+        };
+
+        assert!(!result.consensus_reached);
+        assert_eq!(result.final_score, 0.0);
+    }
+
+    #[test]
+    fn test_consensus_result_serialization() {
+        let result = ConsensusResult {
+            consensus_reached: true,
+            votes: HashMap::new(),
+            final_score: 1.0,
+            participating_nodes: vec![],
+        };
+
+        let json = serde_json::to_string(&result);
+        assert!(json.is_ok(), "Should be able to serialize consensus result");
+    }
 }

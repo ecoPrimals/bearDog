@@ -8,10 +8,6 @@
 //!
 //! Part of Week 1 test expansion (October 17, 2025).
 
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
 use std::time::Duration;
 
 /// Mock connection state for testing

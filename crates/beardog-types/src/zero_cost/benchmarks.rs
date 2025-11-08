@@ -162,12 +162,12 @@ pub fn benchmark_simd_vs_scalar() -> ComparisonResult {
 
     // Scalar operation
     let scalar_operation = || {
-        let _hash = engine.fallback_hash(&test_input).unwrap();
+        let _hash = engine.fallback_hash(&test_input)?;
     };
 
     // SIMD operation
     let simd_operation = || {
-        let _hash = engine.simd_hash(&test_input).unwrap();
+        let _hash = engine.simd_hash(&test_input)?;
     };
 
     benchmark.compare(scalar_operation, simd_operation)
@@ -195,7 +195,7 @@ pub fn benchmark_lock_free_vs_mutex() -> ComparisonResult {
             .collect();
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join()?;
         }
 
         // Consume all items
@@ -211,18 +211,18 @@ pub fn benchmark_lock_free_vs_mutex() -> ComparisonResult {
                 thread::spawn(move || {
                     for j in 0..25 {
                         let value = i * 25 + j;
-                        buffer.lock().unwrap().push(value);
+                        buffer.lock()?.push(value);
                     }
                 })
             })
             .collect();
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join()?;
         }
 
         // Clear the buffer
-        mutex_buffer.lock().unwrap().clear();
+        mutex_buffer.lock()?.clear();
     };
 
     benchmark.compare(mutex_operation, lock_free_operation)

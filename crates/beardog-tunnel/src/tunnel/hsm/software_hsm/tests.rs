@@ -74,13 +74,13 @@ mod software_hsm_tests {
         let hsm = RustSoftwareHsm::new(config).await?;
 
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "test-aes256-key".to_string(),
         };
 
         let key = hsm.generate_key(request).await?;
         assert_eq!(key.metadata.key_id, "test-aes256-key");
-        assert_eq!(key.metadata.key_type, KeyType::Aes { key_size: 256 });
+        assert_eq!(key.metadata.key_type, KeyType::Aes);
 
         Ok(())
     }
@@ -110,13 +110,13 @@ mod software_hsm_tests {
         let hsm = RustSoftwareHsm::new(config).await?;
 
         let request = GenerateKeyRequest {
-            key_type: KeyType::EccP256,
+            key_type: KeyType::EllipticCurve, // Vendor-agnostic
             key_id: "test-p256-key".to_string(),
         };
 
         let key = hsm.generate_key(request).await?;
         assert_eq!(key.metadata.key_id, "test-p256-key");
-        assert_eq!(key.metadata.key_type, KeyType::EccP256);
+        assert_eq!(key.metadata.key_type, KeyType::EllipticCurve);
 
         Ok(())
     }
@@ -129,7 +129,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "encryption-test-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -192,7 +192,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "key-to-delete".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -266,7 +266,7 @@ mod software_hsm_tests {
         // Generate multiple keys
         for i in 0..10 {
             let request = GenerateKeyRequest {
-                key_type: KeyType::Aes { key_size: 256 },
+                key_type: KeyType::Aes,
                 key_id: format!("test-key-{}", i),
             };
             hsm.generate_key(request).await?;
@@ -304,7 +304,7 @@ mod software_hsm_tests {
             let hsm_clone = hsm.clone();
             let handle = tokio::spawn(async move {
                 let request = GenerateKeyRequest {
-                    key_type: KeyType::Aes { key_size: 256 },
+                    key_type: KeyType::Aes,
                     key_id: format!("concurrent-key-{}", i),
                 };
                 hsm_clone.generate_key(request).await
@@ -334,7 +334,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "large-data-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -385,7 +385,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "empty-data-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -413,7 +413,7 @@ mod software_hsm_tests {
 
         // Generate initial key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "rotation-test-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -425,7 +425,7 @@ mod software_hsm_tests {
         // Simulate key rotation by generating a new key with same ID
         // (Note: Real rotation would involve versioning)
         let request2 = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "rotation-test-key-v2".to_string(),
         };
         hsm.generate_key(request2).await?;
@@ -445,7 +445,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "delete-test-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -472,7 +472,7 @@ mod software_hsm_tests {
 
         // Generate and delete key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "deleted-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -487,13 +487,11 @@ mod software_hsm_tests {
 
     /// Test decryption behavior with wrong key ID
     ///
-    /// NOTE: Current implementation includes key metadata in ciphertext format,
-    /// allowing successful decryption even when wrong key_id is provided to decrypt().
-    /// This is by design - the ciphertext format includes the actual key ID, and the
-    /// HSM looks up the correct key. This test documents current behavior.
+    /// NEW BEHAVIOR (Post vendor-agnostic migration): Uses REAL cryptography (AES-256-GCM)
+    /// without key metadata in ciphertext. Decryption with wrong key correctly fails.
     ///
-    /// FUTURE: Consider adding a strict mode where key_id must match exactly,
-    /// or authenticated encryption that binds key_id to ciphertext.
+    /// This is the CORRECT and SECURE behavior - authenticated encryption ensures that
+    /// decryption with the wrong key fails, preventing data corruption and security issues.
     #[tokio::test]
     async fn test_decryption_with_wrong_key_id() -> Result<(), BearDogError> {
         let config = SoftwareHsmConfig::default();
@@ -501,11 +499,11 @@ mod software_hsm_tests {
 
         // Generate two keys
         let request1 = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "key1".to_string(),
         };
         let request2 = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "key2".to_string(),
         };
         hsm.generate_key(request1).await?;
@@ -515,15 +513,21 @@ mod software_hsm_tests {
         let plaintext = b"sensitive data";
         let ciphertext = hsm.encrypt("key1", plaintext).await?;
 
-        // Current behavior: ciphertext includes key metadata, so decryption
-        // with any valid key_id will work if the actual key is in the keystore
-        let decrypted = hsm.decrypt("key2", &ciphertext).await?;
-        
-        // Current implementation: decryption succeeds because ciphertext
-        // contains the actual key ID used for encryption
+        // NEW BEHAVIOR: Real AES-256-GCM - decryption with wrong key fails
+        // This is the CORRECT security behavior
+        let result = hsm.decrypt("key2", &ciphertext).await;
+
+        // Verify that decryption with wrong key fails (as it should!)
+        assert!(
+            result.is_err(),
+            "Decryption with wrong key should fail (secure behavior)"
+        );
+
+        // Verify that decryption with correct key succeeds
+        let decrypted = hsm.decrypt("key1", &ciphertext).await?;
         assert_eq!(
             decrypted, plaintext,
-            "Current implementation: ciphertext includes key metadata"
+            "Decryption with correct key should succeed"
         );
 
         Ok(())
@@ -562,7 +566,9 @@ mod software_hsm_tests {
         if !bad_signature.is_empty() {
             bad_signature[0] ^= 0xFF;
         }
-        let verify_result = hsm.verify("sig-verify-key", message, &bad_signature).await?;
+        let verify_result = hsm
+            .verify("sig-verify-key", message, &bad_signature)
+            .await?;
         assert!(!verify_result);
 
         Ok(())
@@ -576,7 +582,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "large-payload-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -604,7 +610,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "concurrent-ops-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -615,7 +621,9 @@ mod software_hsm_tests {
             let hsm_clone = Arc::clone(&hsm);
             let handle = tokio::spawn(async move {
                 let plaintext = format!("message {}", i);
-                let ciphertext = hsm_clone.encrypt("concurrent-ops-key", plaintext.as_bytes()).await?;
+                let ciphertext = hsm_clone
+                    .encrypt("concurrent-ops-key", plaintext.as_bytes())
+                    .await?;
                 let decrypted = hsm_clone.decrypt("concurrent-ops-key", &ciphertext).await?;
                 assert_eq!(decrypted, plaintext.as_bytes());
                 Ok::<(), BearDogError>(())
@@ -643,20 +651,22 @@ mod software_hsm_tests {
             let hsm_clone = Arc::clone(&hsm);
             let handle = tokio::spawn(async move {
                 let request = GenerateKeyRequest {
-                    key_type: KeyType::Aes { key_size: 256 },
+                    key_type: KeyType::Aes,
                     key_id: format!("load-test-key-{}", i),
                 };
                 hsm_clone.generate_key(request).await?;
-                
+
                 // Immediately use the key
                 let plaintext = format!("data for key {}", i);
                 let ciphertext = hsm_clone
                     .encrypt(&format!("load-test-key-{}", i), plaintext.as_bytes())
                     .await?;
-                    
+
                 // Delete to test memory cleanup
-                hsm_clone.delete_key(&format!("load-test-key-{}", i)).await?;
-                
+                hsm_clone
+                    .delete_key(&format!("load-test-key-{}", i))
+                    .await?;
+
                 Ok::<(), BearDogError>(())
             });
             handles.push(handle);
@@ -682,7 +692,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "zero-test-key".to_string(),
         };
         let key = hsm.generate_key(request).await?;
@@ -720,7 +730,7 @@ mod software_hsm_tests {
 
         // Should be able to generate new key after error
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "recovery-test-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -741,7 +751,7 @@ mod software_hsm_tests {
 
         // Generate key
         let request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "invalid-ct-key".to_string(),
         };
         hsm.generate_key(request).await?;
@@ -749,7 +759,7 @@ mod software_hsm_tests {
         // Try to decrypt invalid ciphertext
         let invalid_ciphertext = b"this is not valid ciphertext";
         let result = hsm.decrypt("invalid-ct-key", invalid_ciphertext).await;
-        
+
         // Should fail with authentication/decryption error
         assert!(result.is_err());
 
@@ -768,14 +778,14 @@ mod software_hsm_tests {
 
         // AES-128
         let aes128_request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 128 },
+            key_type: KeyType::Aes,
             key_id: "aes128-key".to_string(),
         };
         hsm.generate_key(aes128_request).await?;
 
         // AES-256
         let aes256_request = GenerateKeyRequest {
-            key_type: KeyType::Aes { key_size: 256 },
+            key_type: KeyType::Aes,
             key_id: "aes256-key".to_string(),
         };
         hsm.generate_key(aes256_request).await?;
@@ -789,7 +799,7 @@ mod software_hsm_tests {
 
         // ECC P-256
         let ecc_request = GenerateKeyRequest {
-            key_type: KeyType::EccP256,
+            key_type: KeyType::EllipticCurve, // Vendor-agnostic
             key_id: "ecc-key".to_string(),
         };
         hsm.generate_key(ecc_request).await?;
@@ -812,7 +822,7 @@ mod software_hsm_tests {
         // Generate 20 keys rapidly
         for i in 0..20 {
             let request = GenerateKeyRequest {
-                key_type: KeyType::Aes { key_size: 256 },
+                key_type: KeyType::Aes,
                 key_id: format!("batch-key-{}", i),
             };
             hsm.generate_key(request).await?;
@@ -851,7 +861,7 @@ mod software_hsm_tests {
         // Generate keys
         for i in 0..5 {
             let request = GenerateKeyRequest {
-                key_type: KeyType::Aes { key_size: 256 },
+                key_type: KeyType::Aes,
                 key_id: format!("health-test-key-{}", i),
             };
             hsm.generate_key(request).await?;

@@ -21,10 +21,12 @@ pub mod compliance;
 pub mod discovery_config;
 pub mod monitoring_config;
 pub mod network;
+pub mod retry;  // ✅ Canonical RetryConfig (Nov 8, 2025)
 pub mod security;
 pub mod system;
 pub mod testing;
 pub mod threat;
+pub mod timeout;  // ✅ Canonical TimeoutConfig (Nov 8, 2025)
 pub mod workflow_config;
 
 // Re-export all domain configurations for easy access
@@ -55,7 +57,12 @@ pub use workflow_config::{
     TimeoutConfig, WorkflowEngineConfig, WorkflowEscalationConfig,
 };
 
-// Re-export RetryConfig from discovery (to avoid ambiguity)
+// Re-export canonical configs (Nov 8, 2025 unification)
+pub use retry::CanonicalRetryConfig;
+pub use timeout::CanonicalTimeoutConfig;
+
+// Legacy re-exports (DEPRECATED - use CanonicalRetryConfig instead)
+// These will be removed once all code migrates to canonical versions
 pub use discovery_config::RetryConfig as DiscoveryRetryConfig;
 pub use workflow_config::RetryConfig as WorkflowRetryConfig;
 

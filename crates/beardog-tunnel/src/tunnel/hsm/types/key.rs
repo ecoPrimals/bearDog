@@ -1,35 +1,27 @@
 //! HSM Key Types
 //!
 //! Type definitions for cryptographic keys managed by the HSM.
+//!
+//! # Migration Note
+//!
+//! The vendor-specific `KeyType` enum defined here is **DEPRECATED** and being
+//! migrated to the canonical vendor-agnostic `KeyType` from `beardog-types::canonical`.
+//!
+//! **For new code**: Use `CanonicalKeyType` (re-exported below)
+//! **For old code**: This type remains for compatibility during migration
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Key type enumeration
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum KeyType {
-    /// AES encryption key
-    Aes { key_size: u32 },
-    /// RSA key pair
-    Rsa { key_size: u32 },
-    /// HMAC key
-    Hmac { key_size: u32 },
-    /// Key derivation key
-    KeyDerivation { key_size: u32 },
-    /// Elliptic curve P-256
-    EccP256,
-    /// Elliptic curve P-384
-    EccP384,
-    /// Elliptic curve P-521
-    EccP521,
-    /// Ed25519 signing key
-    Ed25519,
-    /// X25519 key exchange
-    X25519,
-    /// Custom key type
-    Custom(String),
-}
+// ✅ CANONICAL VENDOR-AGNOSTIC KeyType - USE THIS FOR NEW CODE
+pub use beardog_types::canonical::providers_unified::traits::security_traits::KeyType as CanonicalKeyType;
+
+// Re-export canonical as primary KeyType (for migration)
+pub use beardog_types::canonical::providers_unified::traits::security_traits::KeyType;
+
+// LegacyKeyType removed Nov 7, 2025 - migration complete
+// All code now uses CanonicalKeyType (re-exported as KeyType above)
 
 /// Universal key structure
 #[derive(Debug, Clone)]
@@ -261,17 +253,18 @@ mod tests {
 
     #[test]
     fn test_key_type_variants() {
-        let aes = KeyType::Aes { key_size: 256 };
-        let rsa = KeyType::Rsa { key_size: 2048 };
+        // Vendor-agnostic KeyType - no field access
+        let aes = KeyType::Aes;
+        let rsa = KeyType::Rsa;
         let ed25519 = KeyType::Ed25519;
 
         match aes {
-            KeyType::Aes { key_size } => assert_eq!(key_size, 256),
+            KeyType::Aes => {} // Key size stored separately in KeyGenerationSpec
             _ => panic!("Expected AES variant"),
         }
 
         match rsa {
-            KeyType::Rsa { key_size } => assert_eq!(key_size, 2048),
+            KeyType::Rsa => {} // Key size stored separately in KeyGenerationSpec
             _ => panic!("Expected RSA variant"),
         }
 

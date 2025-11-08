@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_error_statistics() -> Result<(), Box<dyn std::error::Error>> {
-        let mut errors = ErrorStatistics {
+        let errors = ErrorStatistics {
             total_errors: 100,
             errors_last_hour: 5,
             errors_last_day: 20,

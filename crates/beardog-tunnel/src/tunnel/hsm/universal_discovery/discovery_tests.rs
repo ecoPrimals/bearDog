@@ -17,17 +17,16 @@ mod discovery_tests {
     /// Test Discovery Engine initialization
     #[tokio::test]
     async fn test_discovery_engine_initialization() -> Result<(), BearDogError> {
-        let engine = DiscoveryEngine::new().await?;
-        // Engine created successfully
-        assert!(true);
+        let _engine = DiscoveryEngine::new().await?;
+        // Test passes if engine creation succeeds
         Ok(())
     }
 
     /// Test PKCS#11 discoverer creation
     #[test]
     fn test_pkcs11_discoverer_creation() -> Result<(), BearDogError> {
-        let discoverer = Pkcs11Discoverer::new()?;
-        assert!(true);
+        let _discoverer = Pkcs11Discoverer::new()?;
+        // Test passes if discoverer creation succeeds
         Ok(())
     }
 
@@ -44,8 +43,8 @@ mod discovery_tests {
     /// Test Cloud KMS discoverer creation
     #[test]
     fn test_cloud_kms_discoverer_creation() -> Result<(), BearDogError> {
-        let discoverer = CloudKmsDiscoverer::new()?;
-        assert!(true);
+        let _discoverer = CloudKmsDiscoverer::new()?;
+        // Test passes if discoverer creation succeeds
         Ok(())
     }
 
@@ -62,8 +61,8 @@ mod discovery_tests {
     /// Test Network HSM discoverer creation
     #[test]
     fn test_network_hsm_discoverer_creation() -> Result<(), BearDogError> {
-        let discoverer = NetworkHsmDiscoverer::new()?;
-        assert!(true);
+        let _discoverer = NetworkHsmDiscoverer::new()?;
+        // Test passes if discoverer creation succeeds
         Ok(())
     }
 
@@ -80,8 +79,8 @@ mod discovery_tests {
     /// Test USB HSM discoverer creation
     #[test]
     fn test_usb_hsm_discoverer_creation() -> Result<(), BearDogError> {
-        let discoverer = UsbHsmDiscoverer::new()?;
-        assert!(true);
+        let _discoverer = UsbHsmDiscoverer::new()?;
+        // Test passes if discoverer creation succeeds
         Ok(())
     }
 
@@ -108,7 +107,7 @@ mod discovery_tests {
         let discoverer = SoftwareHsmDiscoverer::new()?;
         let hsms = discoverer.discover()?;
         // Should find at least the BearDog native HSM
-        assert!(hsms.len() >= 1);
+        assert!(!hsms.is_empty());
         Ok(())
     }
 
@@ -177,7 +176,7 @@ mod discovery_tests {
         let _mobile_hsms = engine.discover_mobile_hsms()?;
 
         // Software HSM should always be found
-        assert!(software_hsms.len() >= 1);
+        assert!(!software_hsms.is_empty());
 
         Ok(())
     }
@@ -271,7 +270,7 @@ mod discovery_tests {
     /// Test TPM Interface Types
     #[test]
     fn test_tpm_interface_types() {
-        let interfaces = vec![
+        let interfaces = [
             TpmInterfaceType::Tpm12,
             TpmInterfaceType::Tpm20,
             TpmInterfaceType::FirmwareTpm,
@@ -284,7 +283,7 @@ mod discovery_tests {
     /// Test Software HSM Implementations
     #[test]
     fn test_software_hsm_implementations() {
-        let implementations = vec![
+        let implementations = [
             SoftwareHsmImplementation::BearDogNative,
             SoftwareHsmImplementation::OpenSsl,
         ];
@@ -295,7 +294,7 @@ mod discovery_tests {
     /// Test HsmHealthStatus enum variants
     #[test]
     fn test_hsm_health_status_variants() {
-        let statuses = vec![
+        let statuses = [
             HsmHealthStatus::Healthy,
             HsmHealthStatus::Warning,
             HsmHealthStatus::Critical,
@@ -309,7 +308,7 @@ mod discovery_tests {
     /// Test HumanEntropyMethod enum variants
     #[test]
     fn test_human_entropy_method_variants() {
-        let methods = vec![
+        let methods = [
             HumanEntropyMethod::MouseMovement,
             HumanEntropyMethod::KeystrokeDynamics,
             HumanEntropyMethod::TouchPatterns,
@@ -341,8 +340,8 @@ mod discovery_tests {
         let result2 = handle2.await.unwrap()?;
 
         // Both should find at least the software HSM
-        assert!(result1.len() >= 1);
-        assert!(result2.len() >= 1);
+        assert!(!result1.is_empty());
+        assert!(!result2.is_empty());
 
         Ok(())
     }

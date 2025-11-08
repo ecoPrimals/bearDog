@@ -4,7 +4,7 @@
 //! functionality for iPhone and iPad devices.
 
 use beardog_errors::BearDogError;
-use beardog_traits::unified::PlatformProvider;
+use beardog_types::canonical::providers_unified::traits::UnifiedProvider as PlatformProvider;
 use tracing::info;
 
 pub mod capability;

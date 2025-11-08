@@ -86,6 +86,27 @@ pub struct TrustDecayConfiguration {
     pub minimum_trust: f64,
 }
 
+impl TrustDecayConfiguration {
+    /// Create configuration from a config source (modern pattern)
+    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
+        use crate::canonical::config::source::{get_parsed, get_bool};
+        
+        Self {
+            enabled: get_bool(source, "BEARDOG_TRUST_DECAY_ENABLED", true),
+            decay_rate: get_parsed(source, "BEARDOG_TRUST_DECAY_RATE", 0.1),
+            decay_interval_seconds: get_parsed(source, "BEARDOG_TRUST_DECAY_INTERVAL_SECONDS", 3600),
+            minimum_trust: get_parsed(source, "BEARDOG_TRUST_MINIMUM_TRUST", 0.1),
+        }
+    }
+}
+
+impl Default for TrustDecayConfiguration {
+    fn default() -> Self {
+        use crate::canonical::config::source::EnvConfigSource;
+        Self::from_source(&EnvConfigSource::new())
+    }
+}
+
 /// Evaluation configuration for trust and security decisions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EvaluationConfiguration {

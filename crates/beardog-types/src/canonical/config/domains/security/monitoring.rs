@@ -96,4 +96,6 @@ pub struct SiemIntegrationConfiguration {
     since = "3.1.0",
     note = "Use super::super::network::RateLimitConfig instead"
 )]
-pub type RateLimitConfiguration = super::super::network::RateLimitConfig;
+// Re-export from network domain (consolidated Nov 7, 2025)
+pub use super::super::network::RateLimitConfig;
+pub use super::super::network::RateLimitConfiguration;

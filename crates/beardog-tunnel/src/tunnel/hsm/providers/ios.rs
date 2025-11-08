@@ -133,11 +133,23 @@ impl IosUniversalProvider {
 
             // Secure Enclave available on iPhone 5s and later, iPad with A7+ chips
             if model.contains("iPhone") || model.contains("iPad") || model.contains("Mac") {
-                // Detect chip type
-                if model.contains("M1") || model.contains("M2") || model.contains("M3") {
+                // Detect chip type - check for M-series first (more specific)
+                if model.contains("M1")
+                    || model.contains("M2")
+                    || model.contains("M3")
+                    || model.contains("M4")
+                {
                     self.device_metadata
                         .insert("chip_type".to_string(), "M-series".to_string());
+                } else if model.contains("A15")
+                    || model.contains("A16")
+                    || model.contains("A17")
+                    || model.contains("A18")
+                {
+                    self.device_metadata
+                        .insert("chip_type".to_string(), "A-series".to_string());
                 } else {
+                    // Default to A-series for other iPhones/iPads without explicit chip info
                     self.device_metadata
                         .insert("chip_type".to_string(), "A-series".to_string());
                 }
@@ -375,7 +387,7 @@ mod tests {
         // Chip detection may or may not populate metadata depending on platform
         // Just verify the test runs without panicking
         let _ = provider.device_metadata.get("chip_type");
-        
+
         Ok(())
     }
 
@@ -437,7 +449,10 @@ mod tests {
         assert_eq!(SecureEnclaveLevel::Full, SecureEnclaveLevel::Full);
 
         assert_ne!(SecureEnclaveLevel::None, SecureEnclaveLevel::Basic);
-        assert_ne!(SecureEnclaveLevel::Basic, SecureEnclaveLevel::WithBiometrics);
+        assert_ne!(
+            SecureEnclaveLevel::Basic,
+            SecureEnclaveLevel::WithBiometrics
+        );
         assert_ne!(SecureEnclaveLevel::WithBiometrics, SecureEnclaveLevel::Full);
         Ok(())
     }
@@ -522,7 +537,8 @@ mod tests {
             if caps.secure_enclave_level == SecureEnclaveLevel::WithBiometrics {
                 // If Secure Enclave has biometrics, biometric_type should be Some
                 assert!(
-                    caps.biometric_type.is_some() || caps.secure_enclave_level == SecureEnclaveLevel::WithBiometrics
+                    caps.biometric_type.is_some()
+                        || caps.secure_enclave_level == SecureEnclaveLevel::WithBiometrics
                 );
             }
         }
@@ -624,15 +640,13 @@ mod tests {
         let mut handles = vec![];
 
         for _ in 0..5 {
-            let handle = tokio::spawn(async {
-                IosUniversalProvider::new().await
-            });
+            let handle = tokio::spawn(async { IosUniversalProvider::new().await });
             handles.push(handle);
         }
 
         // All providers should initialize successfully
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
 
@@ -703,7 +717,11 @@ mod tests {
         let test_cases = vec![
             (SecureEnclaveLevel::None, None, 0),
             (SecureEnclaveLevel::Basic, None, 1),
-            (SecureEnclaveLevel::WithBiometrics, Some(BiometricType::TouchId), 2),
+            (
+                SecureEnclaveLevel::WithBiometrics,
+                Some(BiometricType::TouchId),
+                2,
+            ),
             (SecureEnclaveLevel::Full, Some(BiometricType::FaceId), 3),
         ];
 
@@ -720,13 +738,16 @@ mod tests {
             if caps.secure_enclave_level == SecureEnclaveLevel::WithBiometrics {
                 // WithBiometrics level should have a biometric type or be consistent
                 assert!(
-                    caps.biometric_type.is_some() || caps.secure_enclave_level == SecureEnclaveLevel::WithBiometrics
+                    caps.biometric_type.is_some()
+                        || caps.secure_enclave_level == SecureEnclaveLevel::WithBiometrics
                 );
             }
 
             if caps.secure_enclave_level == SecureEnclaveLevel::Full {
                 // Full level should have hardware backing
-                assert!(caps.hardware_backed || caps.secure_enclave_level == SecureEnclaveLevel::Full);
+                assert!(
+                    caps.hardware_backed || caps.secure_enclave_level == SecureEnclaveLevel::Full
+                );
             }
         }
 

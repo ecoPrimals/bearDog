@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_hsm_type_variants() {
-        let types = vec![
+        let types = [
             HsmType::Network,
             HsmType::Usb,
             HsmType::Pcie,

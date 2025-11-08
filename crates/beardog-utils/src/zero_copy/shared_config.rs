@@ -256,6 +256,11 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_concurrent_get_or_create() {
+        // Use a lock to ensure this test runs serially with other tests that might share state
+        use std::sync::Mutex;
+        static TEST_LOCK: Mutex<()> = Mutex::new(());
+        let _guard = TEST_LOCK.lock().unwrap();
+
         let manager = Arc::new(SharedConfigManager::new());
         let mut handles = vec![];
 

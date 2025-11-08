@@ -17,7 +17,7 @@ mod security_comprehensive_tests {
 
     #[test]
     fn test_memory_protection_level_enumeration() {
-        let levels = vec![
+        let levels = [
             MemoryProtectionLevel::None,
             MemoryProtectionLevel::Low,
             MemoryProtectionLevel::Medium,
@@ -64,7 +64,7 @@ mod security_comprehensive_tests {
 
     #[test]
     fn test_auth_method_enumeration() {
-        let methods = vec![
+        let methods = [
             AuthMethod::None,
             AuthMethod::Password,
             AuthMethod::Certificate,
@@ -92,7 +92,7 @@ mod security_comprehensive_tests {
 
     #[test]
     fn test_security_level_enumeration() {
-        let levels = vec![
+        let levels = [
             SecurityLevel::Low,
             SecurityLevel::Medium,
             SecurityLevel::High,
@@ -121,7 +121,7 @@ mod security_comprehensive_tests {
 
     #[test]
     fn test_crypto_backend_type_enumeration() {
-        let backends = vec![
+        let backends = [
             CryptoBackendType::RustCrypto,
             CryptoBackendType::Ring,
             CryptoBackendType::OpenSsl,

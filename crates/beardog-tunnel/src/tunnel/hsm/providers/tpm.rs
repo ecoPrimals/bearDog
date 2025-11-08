@@ -129,10 +129,7 @@ mod tests {
     #[test]
     fn test_tpm_version_security_levels() -> Result<(), Box<dyn std::error::Error>> {
         // Test security level for both versions
-        let versions_and_levels = vec![
-            (TpmVersion::V1_2, 2),
-            (TpmVersion::V2_0, 3),
-        ];
+        let versions_and_levels = vec![(TpmVersion::V1_2, 2), (TpmVersion::V2_0, 3)];
 
         for (version, expected_level) in versions_and_levels {
             let provider = TpmUniversalProvider {
@@ -205,7 +202,7 @@ mod tests {
 
         // Verify capabilities are accessible
         assert!(provider.capabilities().is_some());
-        
+
         if let Some(caps) = provider.capabilities() {
             assert_eq!(caps.manufacturer, "Infineon");
             assert_eq!(caps.vendor_string, "Infineon OPTIGA TPM");
@@ -255,7 +252,7 @@ mod tests {
 
         // All providers should initialize successfully
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await?;
             assert!(result.is_ok());
         }
 
@@ -318,13 +315,7 @@ mod tests {
     #[test]
     fn test_firmware_version_formats() -> Result<(), Box<dyn std::error::Error>> {
         // Test various firmware version formats
-        let versions = vec![
-            "7.85",
-            "3.62",
-            "1.2.3.4",
-            "2020.05.15",
-            "v1.0",
-        ];
+        let versions = vec!["7.85", "3.62", "1.2.3.4", "2020.05.15", "v1.0"];
 
         for version in versions {
             let caps = TpmCapabilities {
@@ -387,9 +378,7 @@ mod tests {
     #[test]
     fn test_capabilities_with_many_pcr_banks() -> Result<(), Box<dyn std::error::Error>> {
         // Test capabilities with many PCR banks
-        let banks: Vec<String> = (0..10)
-            .map(|i| format!("SHA{}", 256 + i * 128))
-            .collect();
+        let banks: Vec<String> = (0..10).map(|i| format!("SHA{}", 256 + i * 128)).collect();
 
         let caps = TpmCapabilities {
             manufacturer: "Test".to_string(),

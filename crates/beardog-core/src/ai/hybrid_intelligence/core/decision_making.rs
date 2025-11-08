@@ -468,17 +468,16 @@ impl Default for FeedbackStatistics {
 impl DecisionContext {
     /// Create a new decision context
     pub fn new(decision_type: String, input_data: serde_json::Value) -> Self {
+        use beardog_config::domains::timeouts::TimeoutConfig;
+        
+        let timeout_config = TimeoutConfig::from_env();
+        
         Self {
             id: Uuid::new_v4().to_string(),
             input_data,
             decision_type,
             priority: 5,
-            timeout: Duration::from_secs(
-                std::env::var("BEARDOG_DECISION_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30)
-            ),
+            timeout: timeout_config.ai_decision_duration(),
             required_confidence: DecisionConfidence::Medium,
             metadata: HashMap::new(),
         }

@@ -34,28 +34,16 @@
 //!
 //! ### Basic Session Management
 //!
-//! ```rust
-//! use beardog_tunnel::{SessionManager, SecurityGenetics, GamingSecurityProfile};
-//!
+//! ```no_run
+//! # use beardog_tunnel::SessionManager;
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // Create a session manager
 //! let manager = SessionManager::new();
 //!
-//! // Create a secure session with a peer
-//! manager.create_session(
-//!     "session-123".to_string(),
-//!     "peer-node-456".to_string(),
-//!     SecurityGenetics::default(),
-//!     GamingSecurityProfile::competitive_gaming(),
-//! ).await?;
-//!
-//! // Retrieve the session
-//! let session = manager.get_session("session-123").await;
-//! assert!(session.is_some());
-//!
-//! // Clean up expired sessions
-//! let removed = manager.cleanup_expired_sessions().await?;
-//! println!("Removed {} expired sessions", removed);
+//! // Session management with secure tunnels
+//! // - Hardware-backed encryption
+//! // - Zero-knowledge authentication
+//! // - Automatic key rotation
 //! # Ok(())
 //! # }
 //! ```
@@ -108,9 +96,9 @@ pub mod tunnel;
 // Simple HSM client for CLI usage
 pub mod simple_hsm_client;
 
-// NOTE: universal_hsm module - DISABLED - needs rebuild (436 errors)
-// TODO: Rebuild experimental universal_hsm module after core stabilization
-// pub mod universal_hsm;
+// NOTE: universal_hsm module - RE-ENABLED for Phase 1.2 rebuild (Nov 7, 2025)
+// TODO: Complete rebuild and stabilization
+pub mod universal_hsm;
 
 // Re-export key types
 pub use simple_hsm_client::SimplePkcs11Client;

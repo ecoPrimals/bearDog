@@ -395,7 +395,10 @@ impl Default for ApplicationConfig {
             environment: "development".to_string(),
             instance_id: uuid::Uuid::new_v4().to_string(),
             bind_address: env::var("BEARDOG_BIND_ADDRESS")
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+                .unwrap_or_else(|_| {
+                    use beardog_types::constants::domains::network::config;
+                    config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()
+                }),
             port: 8080,
             worker_threads: std::thread::available_parallelism()
                 .map(|n| n.get())

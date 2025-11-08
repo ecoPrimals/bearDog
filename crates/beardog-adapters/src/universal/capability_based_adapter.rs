@@ -301,7 +301,26 @@ impl UniversalCapabilityAdapter {
         Ok(())
     }
 
+    /// Get reference to capabilities (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to capabilities.
+    pub fn capabilities_ref(&self) -> Arc<RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>> {
+        Arc::clone(&self.capabilities)
+    }
+
+    /// Get reference to primals (cheap - just Arc clone)
+    /// 
+    /// **Performance**: This is a cheap operation (Arc reference count increment only).
+    /// Use this for read-only access to discovered primals.
+    pub fn primals_ref(&self) -> Arc<RwLock<HashMap<String, DiscoveredPrimal>>> {
+        Arc::clone(&self.primals)
+    }
+
     /// Get all available capabilities (replaces hardcoded capability lists)
+    /// 
+    /// **Performance Note**: This clones the entire HashMap. For read-only access,
+    /// prefer `capabilities_ref()` which is much cheaper.
     /// Gets available_capabilities
     /// Gets available_capabilities
     pub fn get_available_capabilities(
@@ -312,6 +331,9 @@ impl UniversalCapabilityAdapter {
     }
 
     /// Get discovered primals (replaces hardcoded primal lists)
+    /// 
+    /// **Performance Note**: This clones the entire HashMap. For read-only access,
+    /// prefer `primals_ref()` which is much cheaper.
     /// Gets discovered_primals
     /// Gets discovered_primals
     pub fn get_discovered_primals(&self) -> BearDogResult<HashMap<String, DiscoveredPrimal>> {
@@ -441,8 +463,56 @@ impl UniversalCapabilityAdapter {
 
     fn calculate_performance_score(&self, provider: &UniversalCapability) -> BearDogResult<f64> {
         // Calculate performance score based on metrics
-        // This would use real performance data in production
-        Ok(0.85) // Mock score
+        let mut score = 0.5; // Base score
+
+        // Response time factor (0.0-0.3)
+        if let Some(response_time_str) = provider.metadata.get("avg_response_time_ms") {
+            if let Ok(response_time) = response_time_str.parse::<f64>() {
+                if response_time < 50.0 {
+                    score += 0.3;
+                } else if response_time < 100.0 {
+                    score += 0.2;
+                } else if response_time < 500.0 {
+                    score += 0.1;
+                }
+            }
+        }
+
+        // Throughput factor (0.0-0.2)
+        if let Some(throughput_str) = provider.metadata.get("throughput_ops_per_sec") {
+            if let Ok(throughput) = throughput_str.parse::<f64>() {
+                if throughput > 1000.0 {
+                    score += 0.2;
+                } else if throughput > 500.0 {
+                    score += 0.1;
+                }
+            }
+        }
+
+        // Error rate factor (0.0-0.2, inverse - lower is better)
+        if let Some(error_rate_str) = provider.metadata.get("error_rate_percentage") {
+            if let Ok(error_rate) = error_rate_str.parse::<f64>() {
+                if error_rate < 0.1 {
+                    score += 0.2;
+                } else if error_rate < 1.0 {
+                    score += 0.1;
+                } else if error_rate < 5.0 {
+                    score += 0.05;
+                }
+            }
+        }
+
+        Ok(score.min(1.0))
+    }
+
+    /// Check if an endpoint URL represents a local service
+    /// Uses configuration constants instead of hardcoded values
+    fn is_local_endpoint(url: &str) -> bool {
+        use beardog_types::constants::domains::network::config::{LOCALHOST_IPV4, LOCALHOST_IPV6, LOCALHOST_NAME};
+        
+        url.contains(LOCALHOST_IPV4) 
+            || url.contains(LOCALHOST_IPV6)
+            || url.contains(LOCALHOST_NAME)
     }
 
     fn calculate_ranking_score(
@@ -464,9 +534,7 @@ impl UniversalCapabilityAdapter {
 
         // Locality preference
         if preferences.prefer_local_providers {
-            if provider.endpoint.url.contains("127.0.0.1")
-                || provider.endpoint.url.contains("localhost")
-            {
+            if Self::is_local_endpoint(&provider.endpoint.url) {
                 score += 0.2;
             }
         }
@@ -491,10 +559,7 @@ impl UniversalCapabilityAdapter {
         reasons.push(format!("Health status: {:?}", provider.health_status));
         reasons.push(format!("Endpoint: {}", provider.endpoint.url));
 
-        if preferences.prefer_local_providers
-            && (provider.endpoint.url.contains("127.0.0.1")
-                || provider.endpoint.url.contains("localhost"))
-        {
+        if preferences.prefer_local_providers && Self::is_local_endpoint(&provider.endpoint.url) {
             reasons.push("Local provider preference match".to_string());
         }
 
@@ -506,9 +571,10 @@ impl UniversalCapabilityAdapter {
         provider: &UniversalCapability,
     ) -> BearDogResult<PerformanceEstimate> {
         // Calculate performance estimates based on provider characteristics
-        let base_latency = match provider.endpoint.base_url.starts_with("https://localhost") {
-            true => 5,   // Local services are faster
-            false => 50, // Remote services have network overhead
+        let base_latency = if Self::is_local_endpoint(&provider.endpoint.base_url) {
+            5  // Local services are faster
+        } else {
+            50 // Remote services have network overhead
         };
 
         let throughput_multiplier = match provider.performance.success_rate {
@@ -615,11 +681,20 @@ impl UniversalCapabilityAdapter {
             connection.connection_id
         );
 
-        // Mock health check logic
-        if connection.metrics.errors_encountered > 10 {
+        // Health check logic based on connection metrics
+        let error_rate = if connection.metrics.total_requests > 0 {
+            (connection.metrics.errors_encountered as f64 / connection.metrics.total_requests as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        // Determine health status based on errors and response metrics
+        if connection.metrics.errors_encountered > 10 || error_rate > 10.0 {
             Ok(HealthStatus::Unhealthy)
-        } else if connection.metrics.errors_encountered > 5 {
+        } else if connection.metrics.errors_encountered > 5 || error_rate > 5.0 {
             Ok(HealthStatus::Degraded)
+        } else if connection.metrics.average_response_time_ms > 1000.0 {
+            Ok(HealthStatus::Degraded)  // High latency indicates degradation
         } else {
             Ok(HealthStatus::Healthy)
         }

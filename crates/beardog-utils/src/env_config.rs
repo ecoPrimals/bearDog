@@ -147,6 +147,11 @@ impl HsmConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    // Mutex to serialize tests that modify environment variables
+    // This prevents race conditions when tests run in parallel
+    static ENV_TEST_MUTEX: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_get_env_or_default() {
@@ -190,24 +195,59 @@ mod tests {
 
     #[test]
     fn test_discovery_config_defaults() {
-        // Clean up any lingering env vars from other tests
+        // Use a lock to ensure this test runs serially with other env-modifying tests
+        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+
+        // Save current env state
+        let saved_vars = [
+            (
+                "BEARDOG_DISCOVERY_ENDPOINT",
+                env::var("BEARDOG_DISCOVERY_ENDPOINT").ok(),
+            ),
+            (
+                "BEARDOG_DISCOVERY_TIMEOUT_SECS",
+                env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS").ok(),
+            ),
+            (
+                "BEARDOG_DISCOVERY_RETRY_ATTEMPTS",
+                env::var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS").ok(),
+            ),
+            (
+                "BEARDOG_DISCOVERY_URL",
+                env::var("BEARDOG_DISCOVERY_URL").ok(),
+            ),
+            ("BEARDOG_API_HOST", env::var("BEARDOG_API_HOST").ok()),
+            ("BEARDOG_API_PORT", env::var("BEARDOG_API_PORT").ok()),
+            (
+                "BEARDOG_TIMEOUT_SECONDS",
+                env::var("BEARDOG_TIMEOUT_SECONDS").ok(),
+            ),
+        ];
+
+        // Clear env vars for test
         env::remove_var("BEARDOG_DISCOVERY_ENDPOINT");
         env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
         env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS");
-        // Also clear RuntimeNetworkConfig environment variables
         env::remove_var("BEARDOG_DISCOVERY_URL");
         env::remove_var("BEARDOG_API_HOST");
         env::remove_var("BEARDOG_API_PORT");
+        env::remove_var("BEARDOG_TIMEOUT_SECONDS");
 
         let config = DiscoveryConfig::from_env();
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        // Note: If test_discovery_config_from_env_custom runs before this,
-        // it may pollute the environment. Run tests with --test-threads=1 if needed.
-        assert_eq!(config.endpoint, "http://localhost:8080/discover"); // Updated to match actual default
+        assert_eq!(config.endpoint, "http://localhost:8080/discover");
         assert_eq!(config.timeout_secs, 30);
         assert_eq!(config.retry_attempts, 3);
+
+        // Restore env vars
+        for (key, value) in saved_vars.iter() {
+            match value {
+                Some(val) => env::set_var(key, val),
+                None => env::remove_var(key),
+            }
+        }
     }
 
     // TEST_CATEGORY: unit
@@ -215,6 +255,20 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_hsm_config_defaults() {
+        // Lock mutex to prevent parallel test interference with env vars
+        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+
+        // Use a guard to ensure cleanup even if test fails
+        struct EnvGuard;
+        impl Drop for EnvGuard {
+            fn drop(&mut self) {
+                env::remove_var("BEARDOG_HSM_PROVIDER");
+                env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
+                env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
+            }
+        }
+        let _guard = EnvGuard;
+
         // Clean up any lingering env vars from other tests
         env::remove_var("BEARDOG_HSM_PROVIDER");
         env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
@@ -335,6 +389,14 @@ mod tests {
 
     #[test]
     fn test_discovery_config_from_env_custom() {
+        // Use a lock to ensure this test runs serially with other env-modifying tests
+        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+
+        // Save current env state
+        let old_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT").ok();
+        let old_timeout = env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS").ok();
+        let old_retry = env::var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS").ok();
+
         env::set_var("BEARDOG_DISCOVERY_ENDPOINT", "http://custom:9000/api");
         env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "60");
         env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", "5");
@@ -344,13 +406,37 @@ mod tests {
         assert_eq!(config.timeout_secs, 60);
         assert_eq!(config.retry_attempts, 5);
 
-        env::remove_var("BEARDOG_DISCOVERY_ENDPOINT");
-        env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS");
+        // Restore original env state
+        match old_endpoint {
+            Some(val) => env::set_var("BEARDOG_DISCOVERY_ENDPOINT", val),
+            None => env::remove_var("BEARDOG_DISCOVERY_ENDPOINT"),
+        }
+        match old_timeout {
+            Some(val) => env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", val),
+            None => env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS"),
+        }
+        match old_retry {
+            Some(val) => env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", val),
+            None => env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS"),
+        }
     }
 
     #[test]
     fn test_hsm_config_from_env_custom() {
+        // Lock mutex to prevent parallel test interference with env vars
+        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+
+        // Use a guard to ensure cleanup even if test fails
+        struct EnvGuard;
+        impl Drop for EnvGuard {
+            fn drop(&mut self) {
+                env::remove_var("BEARDOG_HSM_PROVIDER");
+                env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
+                env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
+            }
+        }
+        let _guard = EnvGuard;
+
         env::set_var("BEARDOG_HSM_PROVIDER", "hardware");
         env::set_var("BEARDOG_HSM_TIMEOUT_MS", "10000");
         env::set_var("BEARDOG_HSM_RETRY_ATTEMPTS", "5");
@@ -359,10 +445,6 @@ mod tests {
         assert_eq!(config.provider, "hardware");
         assert_eq!(config.timeout_ms, 10000);
         assert_eq!(config.retry_attempts, 5);
-
-        env::remove_var("BEARDOG_HSM_PROVIDER");
-        env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
-        env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
     }
 
     #[test]

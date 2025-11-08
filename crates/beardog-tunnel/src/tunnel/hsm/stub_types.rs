@@ -1,7 +1,7 @@
 //! Stub Types for beardog-tunnel
 //!
-//! These are temporary stub types to get the crate compiling.
-//! TODO: Replace with proper implementations during architectural refactoring.
+//! These were temporary stub types to get the crate compiling.
+//! ✅ MIGRATION COMPLETE: All types moved to beardog_types::hsm
 //!
 //! ## MIGRATION STATUS (October 15, 2025)
 //! ✅ DatabaseConfig -> Moved to beardog_types::hsm::DatabaseConfig
@@ -28,191 +28,17 @@
 //! **Note:** The stub TYPE elimination is 100% complete. This file remains for
 //! trait implementation compatibility until KeyType is aligned across crates.
 
-use beardog_errors::BearDogError;
+// ✅ OpenSSL crypto provider removed - use real implementations in software_hsm/crypto_providers/
+// See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/crypto_providers/openssl_crypto.rs
+// Or use Universal Crypto Provider: crates/beardog-tunnel/src/tunnel/hsm/crypto/
 
-/// OpenSSL crypto provider stub
-/// TODO: Implement proper OpenSSL provider
-#[derive(Debug, Clone)]
-pub struct OpenSslCryptoProvider {
-    /// Provider ID
-    pub id: String,
-}
+// ✅ CryptoProvider trait removed - use real trait in software_hsm/mod.rs
+// See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/mod.rs
+// Real trait defined with full production implementations
 
-impl Default for OpenSslCryptoProvider {
-    fn default() -> Self {
-        Self {
-            id: "openssl".to_string(),
-        }
-    }
-}
-
-impl OpenSslCryptoProvider {
-    /// Create new OpenSSL provider
-    pub async fn new() -> Result<Self, BearDogError> {
-        Ok(Self::default())
-    }
-}
-
-/// OpenSSL crypto provider async trait implementation
-#[async_trait::async_trait]
-impl CryptoProvider for OpenSslCryptoProvider {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    fn generate_key(
-        &self,
-        _key_type: crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0; 32])
-    }
-
-    async fn generate_key_material(
-        &self,
-        _key_type: &crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0; 32])
-    }
-
-    async fn encrypt(
-        &self,
-        _key_material: &[u8],
-        plaintext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(plaintext.to_vec())
-    }
-
-    async fn decrypt(
-        &self,
-        _key_material: &[u8],
-        ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(ciphertext.to_vec())
-    }
-
-    async fn sign(&self, _key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(data[..32.min(data.len())].to_vec())
-    }
-
-    async fn verify(
-        &self,
-        _key_material: &[u8],
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(true)
-    }
-}
-
-/// Crypto provider trait stub
-/// TODO: Implement proper crypto provider trait
-#[async_trait::async_trait]
-pub trait CryptoProvider: Send + Sync {
-    /// Initialize the provider
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    /// Generate key (sync method for compatibility)
-    fn generate_key(
-        &self,
-        key_type: crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        let _ = key_type;
-        Ok(vec![0; 32])
-    }
-
-    /// Generate key material
-    async fn generate_key_material(
-        &self,
-        key_type: &crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        let _ = key_type;
-        Ok(vec![0; 32])
-    }
-
-    /// Encrypt data
-    async fn encrypt(&self, key_material: &[u8], plaintext: &[u8])
-        -> Result<Vec<u8>, BearDogError>;
-
-    /// Decrypt data
-    async fn decrypt(
-        &self,
-        key_material: &[u8],
-        ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError>;
-
-    /// Sign data
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>;
-
-    /// Verify signature
-    async fn verify(
-        &self,
-        key_material: &[u8],
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, BearDogError>;
-
-    /// Derive key
-    async fn derive_key(
-        &self,
-        root_key: &[u8],
-        derivation_data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        let _ = (root_key, derivation_data);
-        Ok(vec![0; 32])
-    }
-}
-
-// NOTE: OpenSslCryptoProvider implementation is in software_hsm/crypto_providers/openssl_crypto.rs
-// Removed stub implementation to avoid conflict with async implementation
-
-/// Rust crypto provider stub
-#[derive(Debug, Clone, Default)]
-pub struct RustCryptoProvider;
-
-impl RustCryptoProvider {
-    /// Create new Rust crypto provider
-    pub async fn new() -> Result<Self, BearDogError> {
-        Ok(Self)
-    }
-}
-
-/// Rust crypto provider async trait implementation
-#[async_trait::async_trait]
-impl CryptoProvider for RustCryptoProvider {
-    async fn encrypt(
-        &self,
-        _key_material: &[u8],
-        plaintext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(plaintext.to_vec())
-    }
-    async fn decrypt(
-        &self,
-        _key_material: &[u8],
-        ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(ciphertext.to_vec())
-    }
-    async fn sign(&self, _key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(data.to_vec())
-    }
-    async fn verify(
-        &self,
-        _key_material: &[u8],
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(true)
-    }
-    fn generate_key(
-        &self,
-        _key_type: crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0; 32])
-    }
-}
+// ✅ RustCryptoProvider stub removed - use real implementation
+// See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/crypto_providers/rust_crypto.rs
+// Real implementation with actual AES-GCM, ChaCha20, Ed25519 cryptography
 
 // ✅ RustSoftwareHsm -> Moved to beardog_types::hsm::RustSoftwareHsm
 
@@ -236,66 +62,9 @@ impl CryptoProvider for RustCryptoProvider {
 
 // ✅ AuditEvent -> Moved to beardog_types::hsm::AuditEvent
 
-/// Stub Ring crypto provider
-/// TODO: Replace with actual crypto_providers implementation when re-enabled
-#[derive(Debug, Clone)]
-pub struct RingCryptoProvider;
-
-impl RingCryptoProvider {
-    pub fn new() -> Result<Self, BearDogError> {
-        Ok(Self)
-    }
-}
-
-#[async_trait::async_trait]
-impl CryptoProvider for RingCryptoProvider {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    fn generate_key(
-        &self,
-        _key_type: crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0; 32])
-    }
-
-    async fn generate_key_material(
-        &self,
-        _key_type: &crate::tunnel::hsm::types::KeyType,
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![0; 32])
-    }
-
-    async fn encrypt(
-        &self,
-        _key_material: &[u8],
-        plaintext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(plaintext.to_vec())
-    }
-
-    async fn decrypt(
-        &self,
-        _key_material: &[u8],
-        ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        Ok(ciphertext.to_vec())
-    }
-
-    async fn sign(&self, _key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(data[..32.min(data.len())].to_vec())
-    }
-
-    async fn verify(
-        &self,
-        _key_material: &[u8],
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(true)
-    }
-}
+// ✅ RingCryptoProvider stub removed - use real implementation
+// See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/crypto_providers/ring_crypto.rs
+// Real implementation with hardware-accelerated AES-256-GCM and Ed25519
 
 // ✅ InMemoryStorageBackend -> Moved to beardog_types::hsm::InMemoryStorageBackend
 // Note: StorageBackendTrait implementation remains in software_hsm/types.rs

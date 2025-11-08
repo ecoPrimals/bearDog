@@ -11,6 +11,7 @@ use beardog_security::crypto_utils::BearDogCrypto;
 use tracing::{info, warn};
 
 pub mod android_safe;
+pub mod biometric;
 pub mod ios_safe;
 pub mod traits;
 
@@ -85,7 +86,7 @@ impl SafePlatformSecurity {
                     created_at: chrono::Utc::now(),
                 })
             }
-            KeyType::EccP256 => {
+            KeyType::EllipticCurve => {
                 warn!("Using Ed25519 fallback for EccP256 request");
                 let _keypair = BearDogCrypto::generate_ed25519_keypair();
                 Ok(HsmKey {
@@ -103,7 +104,7 @@ impl SafePlatformSecurity {
                     created_at: chrono::Utc::now(),
                 })
             }
-            _ => Err(BearDogError::unsupported_operation(&format!(
+            _ => Err(BearDogError::unsupported_operation(format!(
                 "Key type {:?} not supported in safe fallback",
                 key_type
             ))),
@@ -204,7 +205,7 @@ mod tests {
 
         // For now, just verify the methods don't panic
         // Full integration testing requires proper key storage
-        // TODO: Sign operation completed without panic
+        // NOTE: Sign operation completed without panic (basic test)
         Ok(())
     }
 }

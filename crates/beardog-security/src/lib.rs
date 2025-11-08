@@ -47,6 +47,7 @@
 pub mod authorization_types;
 pub mod crypto_utils;
 pub mod encryption;
+pub mod key_rotation_manager;
 pub mod memory_key_manager;
 pub mod simd_crypto;
 // DISABLED: Module files are corrupted with syntax errors and need reconstruction
@@ -67,6 +68,7 @@ mod security_operations_comprehensive_tests;
 // Re-export main types and functions
 pub use authorization_types::*;
 pub use encryption::*;
+pub use key_rotation_manager::{KeyRotationManager, RotationStatistics};
 pub use memory_key_manager::*;
 
 use beardog_errors::BearDogError;

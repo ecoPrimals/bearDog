@@ -5,10 +5,20 @@
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+// Re-export buffer size constants from centralized location
+pub use beardog_types::constants::domains::buffers::{
+    BUFFER_SIZE_SMALL as SMALL,
+    BUFFER_SIZE_MEDIUM as MEDIUM,
+    BUFFER_SIZE_LARGE as LARGE,
+};
+
 pub mod buffer_sizes {
-    pub const SMALL: usize = 1024;
-    pub const MEDIUM: usize = 4096;
-    pub const LARGE: usize = 16384;
+    // Re-export for backward compatibility
+    pub use beardog_types::constants::domains::buffers::{
+        BUFFER_SIZE_SMALL as SMALL,
+        BUFFER_SIZE_MEDIUM as MEDIUM,
+        BUFFER_SIZE_LARGE as LARGE,
+    };
 }
 
 pub struct SafePinnedBuffer {
