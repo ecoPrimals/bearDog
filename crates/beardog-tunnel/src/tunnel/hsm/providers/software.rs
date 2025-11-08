@@ -69,7 +69,7 @@ impl SoftwareUniversalProvider {
     pub async fn new(provider_type: CryptoProviderType) -> Result<Self, BearDogError> {
         // Create real crypto provider based on type
         let crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync> = match &provider_type {
-            CryptoProviderType::RustCrypto => {
+            CryptoProviderType::Software => {
                 let provider = RustCryptoProvider::new().await?;
                 Arc::new(provider)
             }
@@ -81,11 +81,15 @@ impl SoftwareUniversalProvider {
                 let provider = RingCryptoProvider::new()?;
                 Arc::new(provider)
             }
-            CryptoProviderType::Custom(name) => {
-                return Err(BearDogError::unsupported_operation(format!(
-                    "Custom crypto provider '{}' not yet implemented",
-                    name
-                )));
+            CryptoProviderType::Hardware => {
+                return Err(BearDogError::unsupported_operation(
+                    "Hardware crypto provider not yet implemented in software module".to_string()
+                ));
+            }
+            CryptoProviderType::CloudKms => {
+                return Err(BearDogError::unsupported_operation(
+                    "Cloud KMS provider not yet implemented in software module".to_string()
+                ));
             }
         };
 
