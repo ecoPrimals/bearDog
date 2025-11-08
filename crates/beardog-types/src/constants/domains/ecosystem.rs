@@ -49,6 +49,9 @@ pub mod version {
     /// Software HSM version
     pub const SOFTWARE_HSM_VERSION: &str = "1.0.0";
     
+    /// Workflow system version
+    pub const WORKFLOW_SYSTEM_VERSION: &str = "3.1.0";
+    
     /// BearDog mission statement
     pub const MISSION: &str = "Democratizing enterprise-grade security for everyone";
 }

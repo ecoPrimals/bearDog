@@ -77,7 +77,8 @@ pub use workflows::{
     WorkflowStatus,
 };
 
-pub const WORKFLOW_SYSTEM_VERSION: &str = "3.1.0";
+// Re-export workflow version from centralized location
+pub use beardog_types::constants::domains::ecosystem::version::WORKFLOW_SYSTEM_VERSION;
 
 /// Canonical `BearDog` workflow system - modernized and unified
 #[derive(Debug)]
