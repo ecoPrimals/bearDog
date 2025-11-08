@@ -167,7 +167,9 @@ pub mod providers_unified; // ✅ MODERNIZED: Split into modular structure
 /// Rate limiting configuration - canonical implementation
 pub mod rate_limiting; // ✅ MODERNIZED: Split into modular structure
 /// Security Unified module
-pub mod security_unified; // ✅ MODERNIZED: Split into modular structure
+pub mod security_unified;
+/// Configuration trait interfaces for polymorphic usage
+pub mod traits; // ✅ NEW: Trait-based config interfaces (Nov 8, 2025) // ✅ MODERNIZED: Split into modular structure
 
 /// Utility functions for canonical types
 pub mod utils;
