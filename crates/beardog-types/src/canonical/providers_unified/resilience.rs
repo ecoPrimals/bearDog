@@ -2,7 +2,7 @@
 //
 // Provider resilience patterns including retry logic, circuit breakers, and fault tolerance.
 
-use crate::canonical::traits::RetryStrategy;
+use crate::canonical::traits::{RetryStrategy, TimeoutPolicy};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -216,6 +216,103 @@ impl Default for TimeoutConfig {
             operation_timeouts: std::collections::HashMap::new(),
             escalation_enabled: false,
         }
+    }
+}
+
+// Implement TimeoutPolicy trait for provider resilience timeout configuration
+impl TimeoutPolicy for TimeoutConfig {
+    fn connection_timeout(&self) -> Duration {
+        if !self.enabled {
+            return Duration::MAX; // Effectively no timeout when disabled
+        }
+        self.operation_timeouts
+            .get("connection")
+            .or_else(|| self.operation_timeouts.get("connect"))
+            .copied()
+            .unwrap_or(self.default_timeout)
+    }
+
+    fn operation_timeout(&self, operation: &str) -> Duration {
+        if !self.enabled {
+            return Duration::MAX; // Effectively no timeout when disabled
+        }
+        self.operation_timeouts
+            .get(operation)
+            .copied()
+            .unwrap_or(self.default_timeout)
+    }
+
+    fn should_timeout(&self, elapsed: Duration, operation: &str) -> bool {
+        if !self.enabled {
+            return false; // Never timeout when disabled
+        }
+        elapsed >= self.operation_timeout(operation)
+    }
+
+    fn global_timeout(&self) -> Option<Duration> {
+        if !self.enabled {
+            return None;
+        }
+        Some(self.default_timeout)
+    }
+
+    fn read_timeout(&self) -> Duration {
+        if !self.enabled {
+            return Duration::MAX;
+        }
+        self.operation_timeouts
+            .get("read")
+            .copied()
+            .unwrap_or(self.default_timeout)
+    }
+
+    fn write_timeout(&self) -> Duration {
+        if !self.enabled {
+            return Duration::MAX;
+        }
+        self.operation_timeouts
+            .get("write")
+            .copied()
+            .unwrap_or(self.default_timeout)
+    }
+
+    fn idle_timeout(&self) -> Option<Duration> {
+        if !self.enabled {
+            return None;
+        }
+        self.operation_timeouts.get("idle").copied()
+    }
+
+    fn remaining_time(&self, elapsed: Duration, operation: &str) -> Duration {
+        if !self.enabled {
+            return Duration::MAX;
+        }
+        let timeout = self.operation_timeout(operation);
+        timeout.saturating_sub(elapsed)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(()); // Always valid when disabled
+        }
+        if self.default_timeout.is_zero() {
+            return Err("Default timeout cannot be zero when enabled".to_string());
+        }
+        for (op, timeout) in &self.operation_timeouts {
+            if timeout.is_zero() {
+                return Err(format!("Timeout for operation '{}' cannot be zero", op));
+            }
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        if !self.enabled {
+            return true; // Disabled is valid for production
+        }
+        self.default_timeout >= Duration::from_secs(1) &&
+        self.default_timeout <= Duration::from_secs(300) &&
+        self.validate().is_ok()
     }
 }
 

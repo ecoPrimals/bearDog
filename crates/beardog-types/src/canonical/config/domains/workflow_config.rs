@@ -3,7 +3,7 @@
 //! This module contains all workflow-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
-use crate::canonical::traits::RetryStrategy;
+use crate::canonical::traits::{RetryStrategy, TimeoutPolicy};
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -148,6 +148,64 @@ pub struct TimeoutConfig {
 
     /// Read timeout
     pub read: Duration,
+}
+
+// Implement TimeoutPolicy trait for workflow timeout configuration
+impl TimeoutPolicy for TimeoutConfig {
+    fn connection_timeout(&self) -> Duration {
+        self.connection
+    }
+
+    fn operation_timeout(&self, operation: &str) -> Duration {
+        match operation {
+            "read" => self.read,
+            "connect" | "connection" => self.connection,
+            _ => self.default,
+        }
+    }
+
+    fn should_timeout(&self, elapsed: Duration, operation: &str) -> bool {
+        elapsed >= self.operation_timeout(operation)
+    }
+
+    fn global_timeout(&self) -> Option<Duration> {
+        Some(self.maximum)
+    }
+
+    fn read_timeout(&self) -> Duration {
+        self.read
+    }
+
+    fn write_timeout(&self) -> Duration {
+        self.default // Workflow config doesn't have separate write timeout
+    }
+
+    fn idle_timeout(&self) -> Option<Duration> {
+        None // Workflow config doesn't have idle timeout
+    }
+
+    fn remaining_time(&self, elapsed: Duration, operation: &str) -> Duration {
+        let timeout = self.operation_timeout(operation);
+        timeout.saturating_sub(elapsed)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if self.connection.is_zero() {
+            return Err("Connection timeout cannot be zero".to_string());
+        }
+        if self.maximum < self.default {
+            return Err("Maximum timeout must be >= default timeout".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        self.connection >= Duration::from_secs(1) &&
+        self.connection <= Duration::from_secs(60) &&
+        self.default >= Duration::from_secs(5) &&
+        self.maximum >= self.default &&
+        self.validate().is_ok()
+    }
 }
 
 /// Persistence configuration
