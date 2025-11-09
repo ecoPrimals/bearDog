@@ -2,9 +2,11 @@
 //!
 //! This module contains client-side network configuration structs and implementations.
 
+use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::Duration;
 
 /// Client configuration - consolidates client-side network settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,6 +116,60 @@ impl RetryConfiguration {
         }
 
         Ok(())
+    }
+}
+
+// Implement RetryStrategy trait for network client retry configuration
+impl RetryStrategy for RetryConfiguration {
+    fn max_attempts(&self) -> u32 {
+        self.max_attempts
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        if self.enable_exponential_backoff {
+            // Exponential backoff with multiplier
+            let delay_ms = (self.base_delay_ms as f64 
+                * self.backoff_multiplier.powi(attempt as i32)) as u64;
+            Duration::from_millis(delay_ms.min(self.max_delay_ms))
+        } else {
+            // Linear backoff
+            Duration::from_millis(self.base_delay_ms.min(self.max_delay_ms))
+        }
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    fn should_retry_error(&self, error: &(dyn std::error::Error + Send + Sync)) -> bool {
+        // Network-specific: Could check for HTTP status codes in error message
+        // For now, allow retries on most errors
+        let error_str = error.to_string().to_lowercase();
+        
+        // Don't retry on authentication/authorization errors
+        if error_str.contains("401") || error_str.contains("403") {
+            return false;
+        }
+        
+        // Don't retry on client errors (4xx except specific ones)
+        if error_str.contains("400") || error_str.contains("404") {
+            return false;
+        }
+        
+        // Retry on network errors, timeouts, and 5xx status codes
+        true
+    }
+
+    fn is_limit_reached(&self, attempts: u32) -> bool {
+        attempts >= self.max_attempts
+    }
+
+    fn total_delay(&self, attempts: u32) -> Duration {
+        let mut total = Duration::from_secs(0);
+        for attempt in 0..attempts {
+            total += self.delay_for_attempt(attempt);
+        }
+        total
     }
 }
 

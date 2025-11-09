@@ -1,9 +1,11 @@
 // Workflow configuration types for BearDog
 // Provides workflow definition, execution, and management types
 
+use crate::canonical::traits::RetryStrategy;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::Duration;
 
 /// Workflow definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -104,6 +106,41 @@ impl Default for RetryConfig {
             delay_seconds: 1,
             backoff_multiplier: 2.0,
         }
+    }
+}
+
+// Implement RetryStrategy trait for workflow retry configuration
+impl RetryStrategy for RetryConfig {
+    fn max_attempts(&self) -> u32 {
+        self.max_attempts
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        // Exponential backoff based on delay_seconds and multiplier
+        let delay_secs = self.delay_seconds as f64 
+            * self.backoff_multiplier.powi(attempt as i32);
+        Duration::from_secs(delay_secs as u64)
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    fn should_retry_error(&self, _error: &(dyn std::error::Error + Send + Sync)) -> bool {
+        // Workflow: retry on most errors (can be refined based on error type)
+        true
+    }
+
+    fn is_limit_reached(&self, attempts: u32) -> bool {
+        attempts >= self.max_attempts
+    }
+
+    fn total_delay(&self, attempts: u32) -> Duration {
+        let mut total = Duration::from_secs(0);
+        for attempt in 0..attempts {
+            total += self.delay_for_attempt(attempt);
+        }
+        total
     }
 }
 

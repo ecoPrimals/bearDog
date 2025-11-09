@@ -14,6 +14,7 @@
 //! - Vendor adapter configs
 
 use beardog_errors::{BearDogError, BearDogResult};
+use crate::canonical::traits::RetryStrategy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -518,6 +519,58 @@ impl Default for RetryConfig {
             exponential_backoff: true,
             jitter_factor: 0.1,
         }
+    }
+}
+
+// Implement RetryStrategy trait for adapter retry configuration
+impl RetryStrategy for RetryConfig {
+    fn max_attempts(&self) -> u32 {
+        self.max_attempts
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        if self.exponential_backoff {
+            // Exponential backoff with multiplier and optional jitter
+            let base_delay = self.initial_delay.as_millis() as f64 
+                * self.backoff_multiplier.powi(attempt as i32);
+            
+            let jitter = if self.jitter_factor > 0.0 {
+                use std::collections::hash_map::RandomState;
+                use std::hash::{BuildHasher, Hash, Hasher};
+                let mut hasher = RandomState::new().build_hasher();
+                attempt.hash(&mut hasher);
+                let random = (hasher.finish() % 1000) as f64 / 1000.0;
+                base_delay * self.jitter_factor * random
+            } else {
+                0.0
+            };
+            
+            Duration::from_millis(((base_delay + jitter) as u64).min(self.max_delay.as_millis() as u64))
+        } else {
+            // Linear backoff
+            self.initial_delay.min(self.max_delay)
+        }
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    fn should_retry_error(&self, _error: &(dyn std::error::Error + Send + Sync)) -> bool {
+        // Adapter: retry on most errors (domain-specific logic can be added)
+        true
+    }
+
+    fn is_limit_reached(&self, attempts: u32) -> bool {
+        attempts >= self.max_attempts
+    }
+
+    fn total_delay(&self, attempts: u32) -> Duration {
+        let mut total = Duration::from_secs(0);
+        for attempt in 0..attempts {
+            total += self.delay_for_attempt(attempt);
+        }
+        total
     }
 }
 
