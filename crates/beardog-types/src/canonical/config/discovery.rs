@@ -19,6 +19,7 @@
 //! This module consolidated service discovery configuration types from across the codebase.
 //! This functionality is now in `discovery_unified.rs` with enhanced features.
 
+use crate::canonical::traits::CacheStrategy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -621,6 +622,49 @@ impl Default for NetworkConfig {
             interface: None,
             tls: None,
         }
+    }
+}
+
+// Implement CacheStrategy trait for discovery cache configuration
+impl CacheStrategy for CacheConfig {
+    fn max_entries(&self) -> usize {
+        self.max_entries
+    }
+
+    fn ttl(&self) -> Duration {
+        self.ttl
+    }
+
+    fn eviction_policy(&self) -> crate::canonical::traits::cache::EvictionPolicy {
+        use crate::canonical::traits::cache::EvictionPolicy as TraitPolicy;
+        match self.eviction_policy {
+            EvictionPolicy::LRU => TraitPolicy::Lru,
+            EvictionPolicy::LFU => TraitPolicy::Lfu,
+            EvictionPolicy::FIFO => TraitPolicy::Fifo,
+            EvictionPolicy::TTL => TraitPolicy::Ttl,
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        true // Always enabled if config exists
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if self.max_entries == 0 {
+            return Err("max_entries must be > 0".to_string());
+        }
+        if self.ttl.is_zero() {
+            return Err("TTL cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        self.max_entries >= 100 &&
+        self.max_entries <= 100_000 &&
+        self.ttl >= Duration::from_secs(60) &&
+        self.ttl <= Duration::from_secs(3600) &&
+        self.validate().is_ok()
     }
 }
 
