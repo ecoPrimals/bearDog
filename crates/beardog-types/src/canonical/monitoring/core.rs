@@ -3,7 +3,7 @@
 // This module provides the foundational configuration types that are shared
 // across all monitoring domains.
 
-use crate::canonical::traits::RetryStrategy;
+use crate::canonical::traits::{MonitoringConfig, RetryStrategy};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -66,6 +66,77 @@ impl Default for CoreMonitoringConfig {
                     .unwrap_or(30),
             ),
         }
+    }
+}
+
+// Implement MonitoringConfig trait for core monitoring configuration
+impl MonitoringConfig for CoreMonitoringConfig {
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn metrics_endpoint(&self) -> &str {
+        // Core config doesn't store endpoint, use service name as identifier
+        &self.service_name
+    }
+
+    fn reporting_interval(&self) -> Duration {
+        self.flush_interval
+    }
+
+    fn detailed_metrics(&self) -> bool {
+        // Core monitoring includes all metrics
+        true
+    }
+
+    fn monitoring_level(&self) -> crate::canonical::traits::monitoring::MonitoringLevel {
+        use crate::canonical::traits::monitoring::MonitoringLevel;
+        // Determine level from sampling rate
+        if self.sampling_rate >= 1.0 {
+            MonitoringLevel::Standard
+        } else if self.sampling_rate >= 0.5 {
+            MonitoringLevel::Basic
+        } else {
+            MonitoringLevel::Minimal
+        }
+    }
+
+    fn health_checks_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn sample_rate(&self) -> f64 {
+        self.sampling_rate
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+        if self.service_name.is_empty() {
+            return Err("Service name cannot be empty".to_string());
+        }
+        if self.sampling_rate < 0.0 || self.sampling_rate > 1.0 {
+            return Err("Sampling rate must be between 0.0 and 1.0".to_string());
+        }
+        if self.buffer_size == 0 {
+            return Err("Buffer size must be > 0".to_string());
+        }
+        if self.flush_interval.is_zero() {
+            return Err("Flush interval cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        self.enabled &&
+        !self.service_name.is_empty() &&
+        self.sampling_rate >= 0.1 &&
+        self.sampling_rate <= 1.0 &&
+        self.flush_interval >= Duration::from_secs(10) &&
+        self.flush_interval <= Duration::from_secs(300) &&
+        self.buffer_size >= 100 &&
+        MonitoringConfig::validate(self).is_ok()
     }
 }
 
