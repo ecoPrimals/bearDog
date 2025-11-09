@@ -103,6 +103,7 @@
 //! - **Performance**: Fast access with appropriate eviction
 //! - **Configurability**: All parameters tunable
 
+use crate::canonical::traits::CacheStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -214,6 +215,68 @@ pub enum EvictionPolicy {
 }
 
 pub type CacheConfig = CanonicalCacheConfig;
+
+// Implement CacheStrategy trait for canonical cache configuration
+impl CacheStrategy for CanonicalCacheConfig {
+    fn max_entries(&self) -> usize {
+        if !self.enabled {
+            return 0;
+        }
+        // Estimate entries from MB: assume ~4KB per entry
+        let bytes = (self.max_size_mb * 1024 * 1024) as usize;
+        bytes / 4096
+    }
+
+    fn ttl(&self) -> Duration {
+        self.ttl
+    }
+
+    fn eviction_policy(&self) -> crate::canonical::traits::cache::EvictionPolicy {
+        use crate::canonical::traits::cache::EvictionPolicy as TraitPolicy;
+        match self.eviction_policy {
+            EvictionPolicy::Lru => TraitPolicy::Lru,
+            EvictionPolicy::Lfu => TraitPolicy::Lfu,
+            EvictionPolicy::Fifo => TraitPolicy::Fifo,
+            EvictionPolicy::Random => TraitPolicy::Random,
+        }
+    }
+
+    fn max_size_bytes(&self) -> Option<u64> {
+        if self.enabled && self.max_size_mb > 0 {
+            Some(self.max_size_mb * 1024 * 1024)
+        } else {
+            None
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+        if self.max_size_mb == 0 {
+            return Err("max_size_mb must be > 0 when caching is enabled".to_string());
+        }
+        if self.ttl.is_zero() {
+            return Err("TTL cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        if !self.enabled {
+            return true; // Disabled is valid for production
+        }
+        self.max_size_mb >= 64 && // At least 64MB
+        self.max_size_mb <= 16384 && // At most 16GB
+        self.ttl >= Duration::from_secs(60) && // At least 1 minute
+        self.ttl <= Duration::from_secs(86400) && // At most 1 day
+        self.validate().is_ok()
+    }
+}
 
 #[cfg(test)]
 mod tests {
