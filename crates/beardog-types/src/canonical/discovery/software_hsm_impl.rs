@@ -6,7 +6,7 @@
 use super::key_management_capability::{
     KeyManagementCapability, KeySpec, KmsCapabilities, KmsError, KmsHealthStatus,
 };
-pub type KeyId = String;
+use crate::canonical::types::ids::KeyId;
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
@@ -112,10 +112,10 @@ impl SecureSoftwareHsm {
     async fn get_key(&self, key_id: &KeyId) -> Result<KeyMaterial, KmsError> {
         let store = self.key_store.read().await;
         store
-            .get(key_id)
+            .get(key_id.as_str())
             .cloned()
             .ok_or_else(|| KmsError::KeyNotFound {
-                key_id: key_id.clone(),
+                key_id: key_id.as_str().to_string(),
             })
     }
 }
@@ -268,7 +268,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
         // Store securely
         self.store_key(key_id.clone(), material).await?;
 
-        Ok(key_id)
+        Ok(KeyId::new(key_id))
     }
 
     async fn sign(&self, data: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
@@ -389,8 +389,8 @@ impl KeyManagementCapability for SecureSoftwareHsm {
 
     async fn delete_key(&self, key_id: &KeyId) -> Result<(), KmsError> {
         let mut store = self.key_store.write().await;
-        store.remove(key_id).ok_or_else(|| KmsError::KeyNotFound {
-            key_id: key_id.clone(),
+        store.remove(key_id.as_str()).ok_or_else(|| KmsError::KeyNotFound {
+            key_id: key_id.as_str().to_string(),
         })?;
         // KeyMaterial is automatically zeroed on drop thanks to Zeroizing wrapper
         Ok(())
@@ -402,9 +402,9 @@ impl KeyManagementCapability for SecureSoftwareHsm {
         let store = self.key_store.read().await;
         let metadata: Vec<_> = store
             .iter()
-            .map(|(key_id, material)| {
+            .map(|(key_id_str, material)| {
                 super::key_management_capability::KeyMetadata {
-                    key_id: key_id.clone(),
+                    key_id: KeyId::new(key_id_str.clone()),
                     algorithm: match material.algorithm {
                         KeyAlgorithm::Aes256Gcm | KeyAlgorithm::ChaCha20Poly1305 => {
                             super::key_management_capability::KeyAlgorithm::ChaCha20Poly1305

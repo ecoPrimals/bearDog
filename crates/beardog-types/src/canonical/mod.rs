@@ -171,6 +171,9 @@ pub mod security_unified;
 /// Configuration trait interfaces for polymorphic usage
 pub mod traits; // ✅ NEW: Trait-based config interfaces (Nov 8, 2025) // ✅ MODERNIZED: Split into modular structure
 
+/// Type-safe ID newtypes for compile-time safety (Nov 9, 2025)
+pub mod types;
+
 /// Utility functions for canonical types
 pub mod utils;
 

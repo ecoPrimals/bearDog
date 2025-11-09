@@ -4,6 +4,7 @@
 
 use crate::canonical::capabilities::ServiceCapabilityType;
 use crate::canonical::discovery::service_discovery_capability::*;
+use crate::canonical::types::ids::ServiceInstanceId;
 
 #[cfg(test)]
 mod kubernetes_discovery_tests {
@@ -87,7 +88,7 @@ mod kubernetes_discovery_tests {
 
         if let Ok(discovery) = KubernetesDiscovery::try_create().await {
             let descriptor = ServiceDescriptor {
-                instance_id: "test-service".to_string(),
+                instance_id: ServiceInstanceId::new("test-service"),
                 endpoint: "http://test".to_string(),
                 capabilities: vec![],
                 metadata: std::collections::HashMap::new(),
@@ -219,7 +220,7 @@ mod service_descriptor_tests {
     #[test]
     fn test_service_descriptor_creation() {
         let descriptor = ServiceDescriptor {
-            instance_id: "service-1".to_string(),
+            instance_id: ServiceInstanceId::new("service-1"),
             endpoint: "http://localhost:8080".to_string(),
             capabilities: vec![ServiceCapabilityType::Storage],
             metadata: std::collections::HashMap::new(),
@@ -228,7 +229,7 @@ mod service_descriptor_tests {
             protocol: ServiceProtocol::Http,
         };
 
-        assert_eq!(descriptor.instance_id, "service-1");
+        assert_eq!(descriptor.instance_id.as_str(), "service-1");
         assert_eq!(descriptor.endpoint, "http://localhost:8080");
         assert_eq!(descriptor.priority, 10);
     }

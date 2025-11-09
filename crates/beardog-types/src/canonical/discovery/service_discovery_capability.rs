@@ -64,12 +64,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::canonical::capabilities::ServiceCapabilityType;
-
-/// Unique identifier for a registered service instance
-pub type ServiceInstanceId = String;
-
-/// Unique identifier for a service registration
-pub type RegistrationId = String;
+use crate::canonical::types::ids::{RegistrationId, ServiceInstanceId};
 
 /// Service Discovery Capability - Vendor-Agnostic Interface
 ///
@@ -609,7 +604,7 @@ impl ServiceDiscoveryCapability for KubernetesDiscovery {
 
         // Return a descriptor that can be resolved via DNS
         Ok(vec![ServiceDescriptor {
-            instance_id: format!("k8s-{}", name),
+            instance_id: ServiceInstanceId::new(format!("k8s-{}", name)),
             endpoint: format!("http://{}", full_name),
             capabilities: vec![],
             metadata: std::collections::HashMap::new(),
@@ -622,7 +617,7 @@ impl ServiceDiscoveryCapability for KubernetesDiscovery {
     async fn register_service(
         &self,
         _descriptor: ServiceDescriptor,
-    ) -> Result<String, DiscoveryError> {
+    ) -> Result<RegistrationId, DiscoveryError> {
         // K8s services are registered via kubectl/API, not programmatically by clients
         Err(DiscoveryError::BackendUnavailable {
             provider: "kubernetes".to_string(),
@@ -630,7 +625,7 @@ impl ServiceDiscoveryCapability for KubernetesDiscovery {
         })
     }
 
-    async fn unregister_service(&self, _service_id: &String) -> Result<(), DiscoveryError> {
+    async fn unregister_service(&self, _registration_id: &RegistrationId) -> Result<(), DiscoveryError> {
         // K8s services are unregistered via kubectl/API
         Err(DiscoveryError::BackendUnavailable {
             provider: "kubernetes".to_string(),
@@ -638,7 +633,7 @@ impl ServiceDiscoveryCapability for KubernetesDiscovery {
         })
     }
 
-    async fn renew_registration(&self, _registration_id: &String) -> Result<(), DiscoveryError> {
+    async fn renew_registration(&self, _registration_id: &RegistrationId) -> Result<(), DiscoveryError> {
         // K8s services don't need renewal - they persist until deleted
         Err(DiscoveryError::BackendUnavailable {
             provider: "kubernetes".to_string(),
@@ -834,7 +829,7 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
             let descriptors: Vec<ServiceDescriptor> = endpoints
                 .into_iter()
                 .map(|endpoint| ServiceDescriptor {
-                    instance_id: format!("dns-http://{}:{}", service_name, endpoint),
+                    instance_id: ServiceInstanceId::new(format!("dns-http://{}:{}", service_name, endpoint)),
                     endpoint,
                     capabilities: vec![], // Empty for generic discovery
                     metadata: HashMap::new(),
@@ -937,7 +932,7 @@ mod tests {
     #[test]
     fn test_service_descriptor_creation() {
         let descriptor = ServiceDescriptor {
-            instance_id: "test-123".to_string(),
+            instance_id: ServiceInstanceId::new("test-123"),
             endpoint: "http://localhost:8080".to_string(),
             capabilities: vec![ServiceCapabilityType::ServiceMesh],
             metadata: HashMap::new(),
@@ -946,7 +941,7 @@ mod tests {
             protocol: ServiceProtocol::Http,
         };
 
-        assert_eq!(descriptor.instance_id, "test-123");
+        assert_eq!(descriptor.instance_id.as_str(), "test-123");
         assert_eq!(descriptor.health, ServiceHealth::Healthy);
     }
 
