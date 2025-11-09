@@ -42,11 +42,9 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use crate::canonical::types::ids::KeyId;
 use std::fmt;
 use std::sync::Arc;
-
-/// Unique identifier for a cryptographic key
-pub type KeyId = String;
 
 /// Key Management Capability - Vendor-Agnostic Interface
 ///
