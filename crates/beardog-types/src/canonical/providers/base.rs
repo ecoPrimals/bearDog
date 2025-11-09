@@ -5,7 +5,7 @@
 // health monitoring, capabilities, and ecosystem integration.
 
 use beardog_errors::{BearDogError, BearDogResult};
-use crate::canonical::traits::TimeoutPolicy;
+use crate::canonical::traits::{CacheStrategy, TimeoutPolicy};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // Note: SystemTime available for future timestamp needs
@@ -792,6 +792,59 @@ impl Default for CachingConfiguration {
                 .unwrap_or(3600), // 1 hour default
             eviction_policy: EvictionPolicy::Lru,
         }
+    }
+}
+
+// Implement CacheStrategy trait for provider caching configuration
+impl CacheStrategy for CachingConfiguration {
+    fn max_entries(&self) -> usize {
+        if !self.enabled {
+            return 0;
+        }
+        self.max_size as usize
+    }
+
+    fn ttl(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.ttl)
+    }
+
+    fn eviction_policy(&self) -> crate::canonical::traits::cache::EvictionPolicy {
+        use crate::canonical::traits::cache::EvictionPolicy as TraitPolicy;
+        match self.eviction_policy {
+            EvictionPolicy::Lru => TraitPolicy::Lru,
+            EvictionPolicy::Lfu => TraitPolicy::Lfu,
+            EvictionPolicy::Fifo => TraitPolicy::Fifo,
+            EvictionPolicy::Random => TraitPolicy::Random,
+            EvictionPolicy::Custom(_) => TraitPolicy::Lru, // Fallback to LRU
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+        if self.max_size == 0 {
+            return Err("max_size must be > 0 when caching is enabled".to_string());
+        }
+        if self.ttl == 0 {
+            return Err("TTL cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        if !self.enabled {
+            return true;
+        }
+        self.max_size >= 100 && // At least 100 entries
+        self.max_size <= 1_000_000 && // At most 1M entries
+        self.ttl >= 60 && // At least 1 minute
+        self.ttl <= 86400 && // At most 1 day
+        self.validate().is_ok()
     }
 }
 
