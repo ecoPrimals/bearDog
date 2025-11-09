@@ -58,6 +58,53 @@ impl Default for PerformanceDomainConfig {
     }
 }
 
+// Implement CacheStrategy trait for performance domain cache configuration
+impl CacheStrategy for CacheConfig {
+    fn max_entries(&self) -> usize {
+        if !self.enabled {
+            return 0;
+        }
+        self.size
+    }
+
+    fn ttl(&self) -> Duration {
+        self.ttl
+    }
+
+    fn eviction_policy(&self) -> crate::canonical::traits::cache::EvictionPolicy {
+        // Performance domain uses simple LRU
+        crate::canonical::traits::cache::EvictionPolicy::Lru
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+        if self.size == 0 {
+            return Err("Cache size must be > 0 when enabled".to_string());
+        }
+        if self.ttl.is_zero() {
+            return Err("TTL cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        if !self.enabled {
+            return true;
+        }
+        self.size >= 100 &&
+        self.size <= 1_000_000 &&
+        self.ttl >= Duration::from_secs(60) &&
+        self.ttl <= Duration::from_secs(86400) &&
+        self.validate().is_ok()
+    }
+}
+
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
