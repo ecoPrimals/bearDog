@@ -2,6 +2,7 @@
 //
 // Provider resilience patterns including retry logic, circuit breakers, and fault tolerance.
 
+use crate::canonical::traits::RetryStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -85,6 +86,64 @@ pub enum BackoffStrategy {
     Exponential,
     /// Custom retry strategy
     Custom(String),
+}
+
+// Implement RetryStrategy trait for RetryConfig
+impl RetryStrategy for RetryConfig {
+    fn max_attempts(&self) -> u32 {
+        if self.enabled {
+            self.max_attempts.max(1) // Ensure at least 1 attempt if enabled
+        } else {
+            0 // No retries if disabled
+        }
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        if attempt == 0 {
+            return Duration::ZERO;
+        }
+
+        let base_delay = match self.backoff_strategy {
+            BackoffStrategy::Fixed => self.initial_delay,
+            BackoffStrategy::Linear => {
+                let delay_ms = (self.initial_delay.as_millis() as u64) * (attempt as u64);
+                Duration::from_millis(delay_ms)
+            }
+            BackoffStrategy::Exponential => {
+                let delay_ms = (self.initial_delay.as_millis() as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                Duration::from_millis(delay_ms)
+            }
+            BackoffStrategy::Custom(_) => {
+                // For custom strategies, use exponential as fallback
+                let delay_ms = (self.initial_delay.as_millis() as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                Duration::from_millis(delay_ms)
+            }
+        };
+
+        // Apply jitter if enabled
+        // Note: Jitter implementation requires random number generation
+        // For now, we use a simplified approach without external dependencies
+        let delay_with_jitter = if self.jitter_enabled {
+            // Simple jitter: add 10% variation based on attempt number
+            let jitter_percent = (attempt % 10) as f64 * 0.01; // 0-10% variation
+            let jitter_factor = 0.95 + jitter_percent; // 95-105% of delay
+            Duration::from_millis((base_delay.as_millis() as f64 * jitter_factor) as u64)
+        } else {
+            base_delay
+        };
+
+        // Cap at max_delay
+        delay_with_jitter.min(self.max_delay)
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        match self.backoff_strategy {
+            BackoffStrategy::Exponential => 2.0,
+            BackoffStrategy::Linear => 1.0,
+            BackoffStrategy::Fixed => 1.0,
+            BackoffStrategy::Custom(_) => 2.0, // Default for custom
+        }
+    }
 }
 
 /// Circuit breaker configuration
