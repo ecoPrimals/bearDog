@@ -21,7 +21,7 @@
 //! - [`RetryStrategy`] - Common interface for retry configurations ✅
 //! - [`TlsConfiguration`] - Common interface for TLS settings ✅
 //! - [`TimeoutPolicy`] - Common interface for timeout configurations ✅
-//! - [`CacheStrategy`] - Common interface for cache configurations (planned)
+//! - [`CacheStrategy`] - Common interface for cache configurations ✅
 //! - [`MonitoringConfig`] - Common interface for monitoring settings (planned)
 //!
 //! ## Example Usage
@@ -42,12 +42,14 @@
 //! // Would also work with NetworkRetryConfiguration, ResilienceRetryConfig, etc.
 //! ```
 
+pub mod cache;
 pub mod retry;
 pub mod tls;
 pub mod tls_impls;
 pub mod timeout;
 
 // Re-export main traits
+pub use cache::{CacheStrategy, EvictionPolicy};
 pub use retry::RetryStrategy;
 pub use tls::{TlsConfiguration, TlsVersion};
 pub use timeout::TimeoutPolicy;
