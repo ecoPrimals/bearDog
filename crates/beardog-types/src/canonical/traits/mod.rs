@@ -22,7 +22,7 @@
 //! - [`TlsConfiguration`] - Common interface for TLS settings ✅
 //! - [`TimeoutPolicy`] - Common interface for timeout configurations ✅
 //! - [`CacheStrategy`] - Common interface for cache configurations ✅
-//! - [`MonitoringConfig`] - Common interface for monitoring settings (planned)
+//! - [`MonitoringConfig`] - Common interface for monitoring settings ✅
 //!
 //! ## Example Usage
 //!
@@ -43,6 +43,7 @@
 //! ```
 
 pub mod cache;
+pub mod monitoring;
 pub mod retry;
 pub mod tls;
 pub mod tls_impls;
@@ -50,6 +51,7 @@ pub mod timeout;
 
 // Re-export main traits
 pub use cache::{CacheStrategy, EvictionPolicy};
+pub use monitoring::{MonitoringConfig, MonitoringLevel};
 pub use retry::RetryStrategy;
 pub use tls::{TlsConfiguration, TlsVersion};
 pub use timeout::TimeoutPolicy;
