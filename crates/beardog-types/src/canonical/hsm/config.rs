@@ -7,11 +7,32 @@ use std::fmt;
 use std::time::Duration;
 
 /// HSM provider types
-/// `HsmProviderType`
+/// HSM Provider Type - DEPRECATED, USE UNIFIED VERSION
 ///
+/// ⚠️ **DEPRECATED**: This enum has been superseded by the capability-based version
+/// in `hsm_unified::providers::HsmProviderType`.
+///
+/// **Migration Guide**:
+/// ```rust
+/// // Old (deprecated):
+/// use beardog_types::canonical::hsm::HsmProviderType;
+///
+/// // New (recommended):
+/// use beardog_types::canonical::hsm_unified::providers::HsmProviderType;
+/// ```
+///
+/// The new version includes:
+/// - Capability discovery support
+/// - Security capability tracking
+/// - Universal provider support
+/// - Modern patterns
+#[deprecated(
+    since = "4.0.0",
+    note = "Use hsm_unified::providers::HsmProviderType instead. See migration guide above."
+)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 /// Types of hsm provider
-pub enum HsmProviderType {
+pub enum LegacyHsmProviderType {
     /// Software-based HSM implementation
     /// Software
     Software,
@@ -34,13 +55,13 @@ pub enum HsmProviderType {
     },
 }
 
-impl Default for HsmProviderType {
+impl Default for LegacyHsmProviderType {
     fn default() -> Self {
         Self::Software
     }
 }
 
-impl fmt::Display for HsmProviderType {
+impl fmt::Display for LegacyHsmProviderType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Software => write!(f, "Software"),
@@ -52,6 +73,9 @@ impl fmt::Display for HsmProviderType {
         }
     }
 }
+
+// Re-export the modern, unified version as the canonical type
+pub use crate::canonical::hsm_unified::providers::HsmProviderType;
 
 /// HSM connection configuration
 /// `ConnectionConfig`
