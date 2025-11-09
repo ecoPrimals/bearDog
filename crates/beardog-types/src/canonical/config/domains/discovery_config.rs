@@ -20,6 +20,7 @@
 //! the large `consolidated_domains.rs` file for better maintainability.
 
 use beardog_errors::{BearDogError, BearDogResult};
+use crate::canonical::traits::CacheStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -414,6 +415,66 @@ impl Default for QuantumDiscoveryConfig {
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.01),
         }
+    }
+}
+
+// Implement CacheStrategy trait for discovery cache configuration
+impl CacheStrategy for DiscoveryCacheConfig {
+    fn max_entries(&self) -> usize {
+        if !self.enabled {
+            return 0;
+        }
+        self.size
+    }
+
+    fn ttl(&self) -> Duration {
+        self.ttl
+    }
+
+    fn eviction_policy(&self) -> crate::canonical::traits::cache::EvictionPolicy {
+        use crate::canonical::traits::cache::EvictionPolicy as TraitPolicy;
+        // Parse string policy
+        match self.eviction_policy.to_lowercase().as_str() {
+            "lru" => TraitPolicy::Lru,
+            "lfu" => TraitPolicy::Lfu,
+            "fifo" => TraitPolicy::Fifo,
+            "random" => TraitPolicy::Random,
+            "ttl" => TraitPolicy::Ttl,
+            _ => TraitPolicy::Lru, // Default fallback
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+        if self.size == 0 {
+            return Err("Cache size must be > 0 when enabled".to_string());
+        }
+        if self.ttl.is_zero() {
+            return Err("TTL cannot be zero".to_string());
+        }
+        // Validate eviction policy string
+        let policy_lower = self.eviction_policy.to_lowercase();
+        if !["lru", "lfu", "fifo", "random", "ttl"].contains(&policy_lower.as_str()) {
+            eprintln!("WARNING: Unknown eviction policy '{}', defaulting to LRU", self.eviction_policy);
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        if !self.enabled {
+            return true;
+        }
+        self.size >= 100 &&
+        self.size <= 100_000 &&
+        self.ttl >= Duration::from_secs(60) &&
+        self.ttl <= Duration::from_secs(3600) &&
+        self.validate().is_ok()
     }
 }
 
