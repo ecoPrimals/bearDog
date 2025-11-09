@@ -3,6 +3,7 @@
 // This module provides the foundational configuration types that are shared
 // across all monitoring domains.
 
+use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -379,5 +380,43 @@ impl Default for RetryPolicy {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(2.0),
         }
+    }
+}
+
+// Implement RetryStrategy trait for monitoring retry policy
+impl RetryStrategy for RetryPolicy {
+    fn max_attempts(&self) -> u32 {
+        self.max_retries
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        // Exponential backoff with multiplier
+        let delay_ms = self.initial_delay.as_millis() as f64 
+            * self.backoff_multiplier.powi(attempt as i32);
+        Duration::from_millis((delay_ms as u64).min(self.max_delay.as_millis() as u64))
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    fn should_retry_error(&self, _error: &(dyn std::error::Error + Send + Sync)) -> bool {
+        // Monitoring: only retry if enabled
+        self.enabled
+    }
+
+    fn is_limit_reached(&self, attempts: u32) -> bool {
+        !self.enabled || attempts >= self.max_retries
+    }
+
+    fn total_delay(&self, attempts: u32) -> Duration {
+        if !self.enabled {
+            return Duration::from_secs(0);
+        }
+        let mut total = Duration::from_secs(0);
+        for attempt in 0..attempts {
+            total += self.delay_for_attempt(attempt);
+        }
+        total
     }
 }

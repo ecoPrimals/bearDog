@@ -6,9 +6,9 @@
 
 ---
 
-## ✅ Completed Implementations (5 total)
+## ✅ Completed Implementations (6 total)
 
-### RetryStrategy Implementations (5/10 target)
+### RetryStrategy Implementations (6/10 target)
 
 1. ✅ **providers_unified::resilience::RetryConfig** (ALREADY DONE)
    - Location: `crates/beardog-types/src/canonical/providers_unified/resilience.rs`
@@ -38,13 +38,19 @@
    - Commit: November 9, 2025
    - Tests: Passing (127 tests)
 
+6. ✅ **config::domains::workflow_config::RetryConfig** (NEW)
+   - Location: `crates/beardog-types/src/canonical/config/domains/workflow_config.rs`
+   - Features: Exponential backoff, usize to u32 conversion
+   - Commit: November 9, 2025
+   - Tests: Passing
+
 ---
 
 ## 🔄 Remaining Implementations
 
-### RetryStrategy (5-7 more needed)
+### RetryStrategy (4-6 more needed)
 
-6. ⏳ **config::discovery::RetryConfig**
+7. ⏳ **config::discovery::RetryConfig** (SKIP - deprecated)
    - Location: `crates/beardog-types/src/canonical/config/discovery.rs:307`
    - Features: Has BackoffStrategy enum
    - Priority: High
@@ -101,10 +107,11 @@
 ## 📊 Progress Metrics
 
 ```
-Completed:          5/20  (25%)
-Remaining:          15/20 (75%)
-Estimated Time:     3-4 more hours
-Grade Impact:       +0.3 when complete
+Completed:          6/20  (30%)
+Remaining:          14/20 (70%)
+Estimated Time:     2.5-3.5 more hours
+Grade Impact:       +0.2 earned, +0.1 more needed for full +0.3
+Current Grade:      96.2 → 96.4 (estimated)
 ```
 
 ---

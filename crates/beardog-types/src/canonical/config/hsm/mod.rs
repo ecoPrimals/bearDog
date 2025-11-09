@@ -22,6 +22,7 @@
 // - **Extensible Design**: Easy addition of new HSM platforms
 // - **Security First**: Comprehensive security configuration options
 
+use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -197,6 +198,69 @@ impl Default for HsmRetryPolicy {
             retry_on_timeout: true,
             retry_on_connection_error: true,
         }
+    }
+}
+
+// Implement RetryStrategy trait for HSM retry policy
+impl RetryStrategy for HsmRetryPolicy {
+    fn max_attempts(&self) -> u32 {
+        self.max_retries
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        // Exponential backoff with HSM-specific multiplier
+        let delay_ms = self.initial_delay.as_millis() as f64 
+            * self.backoff_multiplier.powi(attempt as i32);
+        Duration::from_millis((delay_ms as u64).min(self.max_delay.as_millis() as u64))
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    fn should_retry_error(&self, error: &(dyn std::error::Error + Send + Sync)) -> bool {
+        // HSM-specific: only retry if enabled and based on error type
+        if !self.enabled {
+            return false;
+        }
+        
+        let error_str = error.to_string().to_lowercase();
+        
+        // Check for timeout errors
+        if self.retry_on_timeout && (error_str.contains("timeout") || error_str.contains("timed out")) {
+            return true;
+        }
+        
+        // Check for connection errors
+        if self.retry_on_connection_error && 
+           (error_str.contains("connection") || error_str.contains("network") || 
+            error_str.contains("unreachable") || error_str.contains("refused")) {
+            return true;
+        }
+        
+        // Don't retry on HSM authentication/authorization failures
+        if error_str.contains("auth") || error_str.contains("permission") || 
+           error_str.contains("forbidden") || error_str.contains("unauthorized") {
+            return false;
+        }
+        
+        // Retry on other HSM errors by default
+        true
+    }
+
+    fn is_limit_reached(&self, attempts: u32) -> bool {
+        !self.enabled || attempts >= self.max_retries
+    }
+
+    fn total_delay(&self, attempts: u32) -> Duration {
+        if !self.enabled {
+            return Duration::from_secs(0);
+        }
+        let mut total = Duration::from_secs(0);
+        for attempt in 0..attempts {
+            total += self.delay_for_attempt(attempt);
+        }
+        total
     }
 }
 
