@@ -484,6 +484,58 @@ pub enum BackoffStrategy {
     Custom(String),
 }
 
+// Implement RetryStrategy trait for RetryConfiguration
+impl crate::canonical::traits::RetryStrategy for RetryConfiguration {
+    fn max_attempts(&self) -> u32 {
+        self.max_retries.max(1) // Ensure at least 1 attempt
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> std::time::Duration {
+        if attempt == 0 {
+            return std::time::Duration::ZERO;
+        }
+
+        let base_delay = std::time::Duration::from_millis(self.base_delay_ms);
+        let max_delay = std::time::Duration::from_millis(self.max_delay_ms);
+
+        let calculated_delay = match self.backoff_strategy {
+            BackoffStrategy::Fixed => base_delay,
+            BackoffStrategy::Linear => {
+                let delay_ms = self.base_delay_ms * (attempt as u64);
+                std::time::Duration::from_millis(delay_ms)
+            }
+            BackoffStrategy::Exponential => {
+                let delay_ms = (self.base_delay_ms as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                std::time::Duration::from_millis(delay_ms)
+            }
+            BackoffStrategy::Jittered => {
+                // Jittered exponential backoff with deterministic jitter
+                let base = (self.base_delay_ms as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                let jitter_percent = (attempt % 10) as f64 * 0.01; // 0-10% variation
+                let jitter_factor = 0.95 + jitter_percent; // 95-105%
+                std::time::Duration::from_millis((base as f64 * jitter_factor) as u64)
+            }
+            BackoffStrategy::Custom(_) => {
+                // Fallback to exponential for custom strategies
+                let delay_ms = (self.base_delay_ms as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                std::time::Duration::from_millis(delay_ms)
+            }
+        };
+
+        // Cap at max_delay
+        calculated_delay.min(max_delay)
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        match self.backoff_strategy {
+            BackoffStrategy::Exponential | BackoffStrategy::Jittered => 2.0,
+            BackoffStrategy::Linear => 1.0,
+            BackoffStrategy::Fixed => 1.0,
+            BackoffStrategy::Custom(_) => 2.0,
+        }
+    }
+}
+
 /// Configuration schema for providers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigurationSchema {
