@@ -3,6 +3,7 @@
 // Unified timeout configuration for all BearDog operations.
 // Consolidates 8+ TimeoutConfig instances across the codebase.
 
+use crate::canonical::traits::TimeoutPolicy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -305,6 +306,66 @@ pub enum NetworkType {
 
 /// Type alias for backwards compatibility
 pub type TimeoutConfig = CanonicalTimeoutConfig;
+
+// Implement TimeoutPolicy trait for canonical timeout configuration
+impl TimeoutPolicy for CanonicalTimeoutConfig {
+    fn connection_timeout(&self) -> Duration {
+        self.connect_timeout
+    }
+
+    fn operation_timeout(&self, operation: &str) -> Duration {
+        // Map specific operations to appropriate timeouts
+        match operation {
+            "read" => self.read_timeout,
+            "write" => self.write_timeout,
+            "connect" => self.connect_timeout,
+            _ => self.operation_timeout,
+        }
+    }
+
+    fn should_timeout(&self, elapsed: Duration, operation: &str) -> bool {
+        elapsed >= self.operation_timeout(operation)
+    }
+
+    fn global_timeout(&self) -> Option<Duration> {
+        Some(self.operation_timeout)
+    }
+
+    fn read_timeout(&self) -> Duration {
+        self.read_timeout
+    }
+
+    fn write_timeout(&self) -> Duration {
+        self.write_timeout
+    }
+
+    fn idle_timeout(&self) -> Option<Duration> {
+        self.idle_timeout
+    }
+
+    fn remaining_time(&self, elapsed: Duration, operation: &str) -> Duration {
+        let timeout = self.operation_timeout(operation);
+        timeout.saturating_sub(elapsed)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if self.connect_timeout.is_zero() {
+            return Err("Connection timeout cannot be zero".to_string());
+        }
+        if self.operation_timeout < self.connect_timeout {
+            return Err("Operation timeout must be >= connection timeout".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        // Production-ready if all timeouts are reasonable
+        self.connect_timeout >= Duration::from_secs(1) &&
+        self.connect_timeout <= Duration::from_secs(30) &&
+        self.operation_timeout >= Duration::from_secs(5) &&
+        self.validate().is_ok()
+    }
+}
 
 #[cfg(test)]
 mod tests {
