@@ -1,6 +1,7 @@
 // Network configuration types for BearDog
 // Provides network-related configuration structures and utilities
 
+use crate::canonical::traits::TimeoutPolicy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -77,6 +78,64 @@ impl Default for TimeoutConfig {
             request_timeout: Duration::from_secs(60),
             keep_alive_timeout: Duration::from_secs(300),
         }
+    }
+}
+
+// Implement TimeoutPolicy trait for network timeout configuration
+impl TimeoutPolicy for TimeoutConfig {
+    fn connection_timeout(&self) -> Duration {
+        self.connection_timeout
+    }
+
+    fn operation_timeout(&self, operation: &str) -> Duration {
+        match operation {
+            "request" | "read" | "write" => self.request_timeout,
+            "connect" | "connection" => self.connection_timeout,
+            "keepalive" | "keep_alive" => self.keep_alive_timeout,
+            _ => self.request_timeout, // Default to request timeout
+        }
+    }
+
+    fn should_timeout(&self, elapsed: Duration, operation: &str) -> bool {
+        elapsed >= self.operation_timeout(operation)
+    }
+
+    fn global_timeout(&self) -> Option<Duration> {
+        Some(self.request_timeout)
+    }
+
+    fn read_timeout(&self) -> Duration {
+        self.request_timeout
+    }
+
+    fn write_timeout(&self) -> Duration {
+        self.request_timeout
+    }
+
+    fn idle_timeout(&self) -> Option<Duration> {
+        Some(self.keep_alive_timeout)
+    }
+
+    fn remaining_time(&self, elapsed: Duration, operation: &str) -> Duration {
+        let timeout = self.operation_timeout(operation);
+        timeout.saturating_sub(elapsed)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if self.connection_timeout.is_zero() {
+            return Err("Connection timeout cannot be zero".to_string());
+        }
+        if self.request_timeout.is_zero() {
+            return Err("Request timeout cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        self.connection_timeout >= Duration::from_secs(1) &&
+        self.connection_timeout <= Duration::from_secs(60) &&
+        self.request_timeout >= Duration::from_secs(5) &&
+        self.validate().is_ok()
     }
 }
 

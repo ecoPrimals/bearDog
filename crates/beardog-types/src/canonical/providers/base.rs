@@ -5,6 +5,7 @@
 // health monitoring, capabilities, and ecosystem integration.
 
 use beardog_errors::{BearDogError, BearDogResult};
+use crate::canonical::traits::TimeoutPolicy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // Note: SystemTime available for future timestamp needs
@@ -811,6 +812,74 @@ impl Default for TimeoutConfiguration {
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30), // 30 seconds default
         }
+    }
+}
+
+// Implement TimeoutPolicy trait for provider timeout configuration
+impl TimeoutPolicy for TimeoutConfiguration {
+    fn connection_timeout(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.connection_timeout)
+    }
+
+    fn operation_timeout(&self, operation: &str) -> std::time::Duration {
+        let timeout_secs = match operation {
+            "request" => self.request_timeout,
+            "connect" | "connection" => self.connection_timeout,
+            "read" => self.read_timeout,
+            "write" => self.write_timeout,
+            _ => self.request_timeout, // Default to request timeout
+        };
+        std::time::Duration::from_secs(timeout_secs)
+    }
+
+    fn should_timeout(&self, elapsed: std::time::Duration, operation: &str) -> bool {
+        elapsed >= self.operation_timeout(operation)
+    }
+
+    fn global_timeout(&self) -> Option<std::time::Duration> {
+        Some(std::time::Duration::from_secs(self.request_timeout))
+    }
+
+    fn read_timeout(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.read_timeout)
+    }
+
+    fn write_timeout(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.write_timeout)
+    }
+
+    fn idle_timeout(&self) -> Option<std::time::Duration> {
+        None // Provider config doesn't have idle timeout
+    }
+
+    fn remaining_time(&self, elapsed: std::time::Duration, operation: &str) -> std::time::Duration {
+        let timeout = self.operation_timeout(operation);
+        timeout.saturating_sub(elapsed)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if self.connection_timeout == 0 {
+            return Err("Connection timeout cannot be zero".to_string());
+        }
+        if self.request_timeout == 0 {
+            return Err("Request timeout cannot be zero".to_string());
+        }
+        if self.read_timeout == 0 {
+            return Err("Read timeout cannot be zero".to_string());
+        }
+        if self.write_timeout == 0 {
+            return Err("Write timeout cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        self.connection_timeout >= 1 &&
+        self.connection_timeout <= 60 &&
+        self.request_timeout >= 5 &&
+        self.read_timeout >= 5 &&
+        self.write_timeout >= 5 &&
+        self.validate().is_ok()
     }
 }
 
