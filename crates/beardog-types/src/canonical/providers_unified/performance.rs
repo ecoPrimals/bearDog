@@ -2,6 +2,7 @@
 //
 // Provider performance tuning, rate limiting, caching, and optimization settings.
 
+use crate::canonical::traits::CacheStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -110,6 +111,58 @@ impl Default for CachingConfig {
             ),
             eviction_policy: EvictionPolicy::Lru,
         }
+    }
+}
+
+// Implement CacheStrategy trait for provider unified caching configuration
+impl CacheStrategy for CachingConfig {
+    fn max_entries(&self) -> usize {
+        if !self.enabled {
+            return 0;
+        }
+        self.max_entries
+    }
+
+    fn ttl(&self) -> Duration {
+        self.ttl
+    }
+
+    fn eviction_policy(&self) -> crate::canonical::traits::cache::EvictionPolicy {
+        use crate::canonical::traits::cache::EvictionPolicy as TraitPolicy;
+        match self.eviction_policy {
+            EvictionPolicy::Lru => TraitPolicy::Lru,
+            EvictionPolicy::Lfu => TraitPolicy::Lfu,
+            EvictionPolicy::Fifo => TraitPolicy::Fifo,
+            EvictionPolicy::Random => TraitPolicy::Random,
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+        if self.max_entries == 0 {
+            return Err("max_entries must be > 0 when caching is enabled".to_string());
+        }
+        if self.ttl.is_zero() {
+            return Err("TTL cannot be zero".to_string());
+        }
+        Ok(())
+    }
+
+    fn is_production_ready(&self) -> bool {
+        if !self.enabled {
+            return true;
+        }
+        self.max_entries >= 100 && // At least 100 entries
+        self.max_entries <= 1_000_000 && // At most 1M entries
+        self.ttl >= Duration::from_secs(60) && // At least 1 minute
+        self.ttl <= Duration::from_secs(86400) && // At most 1 day
+        self.validate().is_ok()
     }
 }
 
