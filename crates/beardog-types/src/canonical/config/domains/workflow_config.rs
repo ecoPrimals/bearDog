@@ -3,6 +3,7 @@
 //! This module contains all workflow-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
+use crate::canonical::traits::RetryStrategy;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -459,6 +460,42 @@ impl Default for RetryConfig {
                     .unwrap_or(30),
             ),
         }
+    }
+}
+
+// Implement RetryStrategy trait for workflow retry configuration
+impl RetryStrategy for RetryConfig {
+    fn max_attempts(&self) -> u32 {
+        self.max_attempts as u32 // Convert from usize
+    }
+
+    fn delay_for_attempt(&self, attempt: u32) -> Duration {
+        // Exponential backoff
+        let delay_ms = self.initial_delay.as_millis() as f64 
+            * self.backoff_multiplier.powi(attempt as i32);
+        let delay = Duration::from_millis(delay_ms as u64);
+        delay.min(self.max_delay)
+    }
+
+    fn backoff_multiplier(&self) -> f64 {
+        self.backoff_multiplier
+    }
+
+    fn should_retry_error(&self, _error: &(dyn std::error::Error + Send + Sync)) -> bool {
+        // Workflow config: retry all errors by default
+        true
+    }
+
+    fn is_limit_reached(&self, attempts: u32) -> bool {
+        attempts >= self.max_attempts as u32
+    }
+
+    fn total_delay(&self, attempts: u32) -> Duration {
+        let mut total = Duration::from_secs(0);
+        for attempt in 0..attempts {
+            total += self.delay_for_attempt(attempt);
+        }
+        total
     }
 }
 
