@@ -95,35 +95,8 @@ impl TimeoutConfig {
     }
 }
 
-/// Discovery endpoint configuration
-#[derive(Debug, Clone)]
-pub struct DiscoveryConfig {
-    pub endpoint: String,
-    pub timeout_secs: u64,
-    pub retry_attempts: u32,
-}
-
-impl DiscoveryConfig {
-    /// Load from environment or use defaults
-    pub fn from_env() -> Self {
-        use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
-
-        // Use RuntimeNetworkConfig for environment-driven defaults
-        let runtime_config = RuntimeNetworkConfig::from_env();
-
-        Self {
-            endpoint: get_env_or_default(
-                "BEARDOG_DISCOVERY_ENDPOINT",
-                &runtime_config.discovery_endpoint,
-            ),
-            timeout_secs: get_env_as(
-                "BEARDOG_DISCOVERY_TIMEOUT_SECS",
-                runtime_config.timeout_seconds,
-            ),
-            retry_attempts: get_env_as("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", 3),
-        }
-    }
-}
+// Use canonical DiscoveryConfig instead of local definition
+pub use beardog_types::canonical::config::domains::discovery::DiscoveryConfig;
 
 /// HSM configuration
 #[derive(Debug, Clone)]
@@ -237,9 +210,11 @@ mod tests {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        assert_eq!(config.endpoint, "http://localhost:8080/discover");
-        assert_eq!(config.timeout_secs, 30);
-        assert_eq!(config.retry_attempts, 3);
+        // Canonical DiscoveryConfig uses endpoints: Vec<String>, timeout: Duration, max_attempts: u32
+        // Default timeout is 5 seconds (canonical default)
+        assert_eq!(config.timeout.as_secs(), 5);
+        assert_eq!(config.max_attempts, 3);
+        assert_eq!(config.max_concurrent, 10); // canonical default
 
         // Restore env vars
         for (key, value) in saved_vars.iter() {
@@ -399,12 +374,13 @@ mod tests {
 
         env::set_var("BEARDOG_DISCOVERY_ENDPOINT", "http://custom:9000/api");
         env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "60");
-        env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", "5");
+        env::set_var("BEARDOG_DISCOVERY_MAX_ATTEMPTS", "5");
 
         let config = DiscoveryConfig::from_env();
-        assert_eq!(config.endpoint, "http://custom:9000/api");
-        assert_eq!(config.timeout_secs, 60);
-        assert_eq!(config.retry_attempts, 5);
+        // Canonical DiscoveryConfig from_env() loads BEARDOG_DISCOVERY_ENDPOINT into endpoints vec
+        assert!(config.endpoints.iter().any(|e| e == "http://custom:9000/api"));
+        assert_eq!(config.timeout.as_secs(), 60);
+        assert_eq!(config.max_attempts, 5);
 
         // Restore original env state
         match old_endpoint {
@@ -473,15 +449,12 @@ mod tests {
 
     #[test]
     fn test_discovery_config_clone() {
-        let config1 = DiscoveryConfig {
-            endpoint: "http://test:8080".to_string(),
-            timeout_secs: 30,
-            retry_attempts: 3,
-        };
+        use std::time::Duration;
+        let config1 = DiscoveryConfig::with_endpoints(vec!["http://test:8080".to_string()]);
         let config2 = config1.clone();
-        assert_eq!(config1.endpoint, config2.endpoint);
-        assert_eq!(config1.timeout_secs, config2.timeout_secs);
-        assert_eq!(config1.retry_attempts, config2.retry_attempts);
+        assert_eq!(config1.endpoints, config2.endpoints);
+        assert_eq!(config1.timeout, config2.timeout);
+        assert_eq!(config1.max_attempts, config2.max_attempts);
     }
 
     #[test]
