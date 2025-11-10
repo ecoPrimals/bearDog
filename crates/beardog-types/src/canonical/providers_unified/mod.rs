@@ -27,8 +27,10 @@ pub mod connection;
 /// Core functionality
 /// Core functionality
 pub mod core;
-/// Discovery module
+/// Discovery module (deprecated - use service_discovery instead)
 pub mod discovery;
+/// Service discovery (canonical)
+pub mod service_discovery;
 /// Health module
 pub mod health;
 /// Load Balancing module

@@ -143,32 +143,17 @@ pub struct DiscoveredHsm {
     pub integration_status: IntegrationStatus,
 }
 
-/// Discovery configuration
-#[derive(Debug, Clone)]
-pub struct DiscoveryConfig {
-    /// Enable cloud HSM discovery
-    pub enable_cloud_discovery: bool,
-    /// Enable PKCS#11 discovery
-    pub enable_pkcs11_discovery: bool,
-    /// Enable smartphone discovery
-    pub enable_smartphone_discovery: bool,
-    /// Discovery timeout in seconds
-    pub discovery_timeout_seconds: u64,
-    /// Enable capability detection
-    pub enable_capability_detection: bool,
-}
+// Use canonical HSM discovery configuration
+pub use beardog_types::canonical::hsm::discovery::HsmDiscoveryConfig as DiscoveryConfig;
 
-impl Default for DiscoveryConfig {
-    fn default() -> Self {
-        Self {
-            enable_cloud_discovery: true,
-            enable_pkcs11_discovery: true,
-            enable_smartphone_discovery: true,
-            discovery_timeout_seconds: 30,
-            enable_capability_detection: true,
-        }
-    }
-}
+// NOTE: Original local DiscoveryConfig had these fields (now in HsmDiscoveryConfig):
+// - enable_cloud_discovery → enable_cloud_kms
+// - enable_pkcs11_discovery → enable_pkcs11_discovery
+// - enable_smartphone_discovery → enable_mobile_hsm
+// - discovery_timeout_seconds → base.timeout
+// - enable_capability_detection → enable_capability_detection
+
+// Removed: Local Default implementation (now using canonical HsmDiscoveryConfig)
 
 /// Universal HSM discovery engine
 #[derive(Clone)]
