@@ -89,6 +89,22 @@ Roadmaps and strategic documents:
 
 - **SOVEREIGN_SCIENCE_ROADMAP.md** - Long-term project roadmap
 
+### 🔄 Unification Initiative (`docs/unification/`)
+
+Documentation for the ongoing unification and consolidation initiative:
+
+#### Config Consolidation (`docs/unification/config-consolidation/`)
+- **README.md** - Central index for config consolidation docs ⭐
+- **DISCOVERY_CONFIG_CONSOLIDATION_COMPLETE.md** - Complete report (100% done!) 🎉
+- **CONFIG_CONSOLIDATION_SESSION_PROGRESS_NOV_10.md** - Session summary
+- **CONFIG_CONSOLIDATION_50_PERCENT_MILESTONE.md** - Halfway celebration
+- **CONFIG_CONSOLIDATION_PILOT_COMPLETE.md** - Pilot results
+- **CONFIG_CONSOLIDATION_ANALYSIS.md** - Initial analysis
+- **DISCOVERY_CONFIG_CONSOLIDATION_PLAN.md** - Execution plan
+- **CONFIG_CONSOLIDATION_SESSION_SUMMARY.md** - Decision rationale
+
+**Status**: ✅ DiscoveryConfig 8/8 instances consolidated (100% complete)
+
 ### 📦 Session Archives (`docs/sessions/`)
 
 Historical record of development sessions:
