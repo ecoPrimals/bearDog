@@ -28,49 +28,8 @@ pub struct UniversalCapabilityDiscovery {
     metrics: DiscoveryMetrics,
 }
 
-/// Discovery configuration
-#[derive(Debug, Clone)]
-pub struct DiscoveryConfig {
-    /// Discovery timeout in milliseconds
-    pub timeout_ms: u64,
-    /// Maximum concurrent discovery operations
-    /// Number of max_concurrent
-    pub max_concurrent: usize,
-    /// Number of cache_duration_ms
-    pub cache_duration_ms: u64,
-    /// Health check interval
-    /// Number of health_check_interval_ms
-    pub health_check_interval_ms: u64,
-    /// Discovery endpoints
-    /// Collection of discovery endpoints
-    pub discovery_endpoints: Vec<String>,
-    /// Enable automatic capability registration
-    /// Whether auto_register is enabled
-    pub auto_register: bool,
-}
-
-impl Default for DiscoveryConfig {
-    fn default() -> Self {
-        use beardog_types::canonical::config::network::NetworkConfig;
-        let network_config = NetworkConfig::default();
-        
-        Self {
-            timeout_ms: 5000,
-            max_concurrent: 10,
-            cache_duration_ms: 300_000, // 5 minutes
-            health_check_interval_ms: 60_000, // 1 minute
-            discovery_endpoints: vec![
-                std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| format!("https://discovery.ecosystem.internal:{}", 
-                        network_config.service_ports.api_port)),
-                std::env::var("BEARDOG_CAPABILITY_REGISTRY")
-                    .unwrap_or_else(|_| format!("https://capabilities.ecosystem.internal:{}", 
-                        network_config.service_ports.admin_port)),
-            ],
-            auto_register: true,
-        }
-    }
-}
+// Use canonical DiscoveryConfig
+pub use beardog_types::canonical::config::domains::discovery::DiscoveryConfig;
 
 /// Discovery metrics
 #[derive(Debug, Clone, Default)]
