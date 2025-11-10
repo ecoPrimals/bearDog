@@ -25,9 +25,21 @@ pub enum ProviderType {
     Cloud(CloudProvider),
 }
 
-/// Cloud HSM providers
+// Re-export canonical CloudProvider and CloudHsmService from beardog-types
+pub use beardog_types::canonical::hsm_unified::{CloudProvider, CloudHsmService};
+
+/// Legacy CloudProvider enum - DEPRECATED
+///
+/// This enum has been replaced by CloudHsmService in the canonical location.
+/// Use `beardog_types::canonical::hsm_unified::CloudHsmService` instead.
+#[deprecated(
+    since = "4.0.0",
+    note = "Use beardog_types::canonical::hsm_unified::CloudHsmService instead. \
+            This provides more granular service identification (e.g., CloudHsmService::AwsKms, CloudHsmService::AzureKeyVault). \
+            Import from: use beardog_types::canonical::hsm_unified::CloudHsmService;"
+)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CloudProvider {
+pub enum LegacyCloudProvider {
     /// AWS Key Management Service
     AwsKms,
     /// Azure Key Vault

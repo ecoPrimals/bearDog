@@ -16,9 +16,20 @@ use std::env;
 use std::path::Path;
 use tracing::{debug, info, warn};
 
-/// Cloud provider types
+// Re-export canonical CloudProvider from beardog-types
+pub use beardog_types::canonical::hsm_unified::CloudProvider;
+
+/// Legacy CloudProvider enum - DEPRECATED
+///
+/// This enum has been moved to the canonical location.
+/// Use `beardog_types::canonical::hsm_unified::CloudProvider` instead.
+#[deprecated(
+    since = "4.0.0",
+    note = "Use beardog_types::canonical::hsm_unified::CloudProvider instead. \
+            Import from: use beardog_types::canonical::hsm_unified::CloudProvider;"
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum CloudProvider {
+pub enum LegacyCloudProvider {
     /// Amazon Web Services
     Aws,
     /// Microsoft Azure

@@ -29,6 +29,8 @@ pub mod security;
 pub mod storage;
 /// System module
 pub mod system;
+/// Validation module
+pub mod validation;
 
 // Re-export commonly used constants for convenience
 pub use system::{defaults::*, limits::MAX_CONNECTIONS, versions::BEARDOG_VERSION};

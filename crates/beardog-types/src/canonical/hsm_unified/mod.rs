@@ -6,12 +6,16 @@
 use serde::{Deserialize, Serialize};
 
 // HSM module organization
+/// Cloud providers module
+pub mod cloud;
 /// Connection module
 pub mod connection;
 /// Core module
 /// Core functionality
 /// Core functionality
 pub mod core;
+/// Key management module
+pub mod key_management;
 /// Migration module
 pub mod migration;
 /// Mobile module
@@ -19,18 +23,23 @@ pub mod mobile;
 /// Monitoring module
 pub mod monitoring;
 pub mod performance;
+/// Platform module
+pub mod platform;
 /// Providers module
 pub mod providers;
 /// Security module
 pub mod security;
 
 // Re-export all types
+pub use cloud::*;
 pub use connection::*;
 pub use core::*;
+pub use key_management::*;
 pub use migration::*;
 pub use mobile::*;
 pub use monitoring::*;
 pub use performance::*;
+pub use platform::*;
 pub use providers::*;
 pub use security::*;
 

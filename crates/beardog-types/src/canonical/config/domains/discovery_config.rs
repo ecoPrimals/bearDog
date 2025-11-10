@@ -467,13 +467,15 @@ impl CacheStrategy for DiscoveryCacheConfig {
     }
 
     fn is_production_ready(&self) -> bool {
+        use crate::constants::domains::validation::{MIN_CACHE_SIZE, MAX_CACHE_TTL_SECS};
+        
         if !self.enabled {
             return true;
         }
-        self.size >= 100 &&
+        self.size >= MIN_CACHE_SIZE &&
         self.size <= 100_000 &&
         self.ttl >= Duration::from_secs(60) &&
-        self.ttl <= Duration::from_secs(3600) &&
+        self.ttl <= Duration::from_secs(MAX_CACHE_TTL_SECS) &&
         self.validate().is_ok()
     }
 }

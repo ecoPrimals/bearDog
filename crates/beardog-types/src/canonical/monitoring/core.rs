@@ -129,13 +129,17 @@ impl MonitoringConfig for CoreMonitoringConfig {
     }
 
     fn is_production_ready(&self) -> bool {
+        use crate::constants::domains::validation::{
+            MIN_CACHE_SIZE, MIN_FLUSH_INTERVAL_SECS, MAX_FLUSH_INTERVAL_SECS
+        };
+        
         self.enabled &&
         !self.service_name.is_empty() &&
         self.sampling_rate >= 0.1 &&
         self.sampling_rate <= 1.0 &&
-        self.flush_interval >= Duration::from_secs(10) &&
-        self.flush_interval <= Duration::from_secs(300) &&
-        self.buffer_size >= 100 &&
+        self.flush_interval >= Duration::from_secs(MIN_FLUSH_INTERVAL_SECS) &&
+        self.flush_interval <= Duration::from_secs(MAX_FLUSH_INTERVAL_SECS) &&
+        self.buffer_size >= MIN_CACHE_SIZE &&
         MonitoringConfig::validate(self).is_ok()
     }
 }
