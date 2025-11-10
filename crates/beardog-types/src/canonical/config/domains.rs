@@ -18,6 +18,7 @@ pub mod adapter;
 pub mod ai_config;
 pub mod bootstrap;
 pub mod compliance;
+pub mod discovery; // ✅ Canonical DiscoveryConfig (Nov 10, 2025)
 pub mod discovery_config; // ⚠️ DEPRECATED - Use discovery_unified (Nov 8, 2025)
 pub mod discovery_unified;
 pub mod monitoring_config;

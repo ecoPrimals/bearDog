@@ -3,7 +3,8 @@
 use beardog_errors::BearDogError;
 use beardog_types::{HsmKey, KeyType, HealthStatus};
 
-pub type Result<T, BearDogError>T> = Result<T, BearDogError>;
+// Type alias for convenience in this module
+type Result<T> = std::result::Result<T, BearDogError>;
 
 pub trait HsmProvider: Send + Sync {
 
