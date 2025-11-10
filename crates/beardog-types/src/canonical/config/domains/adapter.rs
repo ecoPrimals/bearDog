@@ -74,30 +74,8 @@ pub struct CoreAdapterConfig {
     pub metadata: HashMap<String, String>,
 }
 
-/// Discovery and capability detection configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct DiscoveryConfig {
-    /// Discovery timeout
-    pub timeout: Duration,
-
-    /// Maximum discovery attempts
-    pub max_attempts: u32,
-
-    /// Discovery interval
-    pub discovery_interval: Duration,
-
-    /// Enable capability caching
-    pub cache_enabled: bool,
-
-    /// Cache TTL
-    pub cache_ttl: Duration,
-
-    /// Discovery endpoints
-    pub endpoints: Vec<String>,
-
-    /// Enable predictive discovery
-    pub predictive_enabled: bool,
-}
+// Re-export canonical DiscoveryConfig instead of defining locally
+pub use super::discovery::DiscoveryConfig;
 
 /// Chain processing and workflow configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -416,36 +394,8 @@ impl Default for CoreAdapterConfig {
     }
 }
 
-impl DiscoveryConfig {
-    /// Create configuration from a config source (modern pattern)
-    pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
-        use super::super::runtime_config::RuntimeNetworkConfig;
-        use crate::canonical::config::source::{get_parsed, get_bool};
-
-        // Use RuntimeNetworkConfig for environment-driven endpoints
-        let default_endpoint = source.get("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|| {
-            let config = RuntimeNetworkConfig::from_env();
-            config.discovery_endpoint
-        });
-
-        Self {
-            timeout: Duration::from_secs(get_parsed(source, "BEARDOG_ADAPTER_DISCOVERY_TIMEOUT_SECS", 10)),
-            max_attempts: get_parsed(source, "BEARDOG_ADAPTER_DISCOVERY_MAX_ATTEMPTS", 3),
-            discovery_interval: Duration::from_secs(get_parsed(source, "BEARDOG_ADAPTER_DISCOVERY_INTERVAL_SECS", 60)),
-            cache_enabled: get_bool(source, "BEARDOG_ADAPTER_CACHE_ENABLED", true),
-            cache_ttl: Duration::from_secs(get_parsed(source, "BEARDOG_ADAPTER_CACHE_TTL_SECS", 300)),
-            endpoints: vec![default_endpoint],
-            predictive_enabled: get_bool(source, "BEARDOG_ADAPTER_PREDICTIVE_ENABLED", false),
-        }
-    }
-}
-
-impl Default for DiscoveryConfig {
-    fn default() -> Self {
-        use crate::canonical::config::source::EnvConfigSource;
-        Self::from_source(&EnvConfigSource::new())
-    }
-}
+// NOTE: DiscoveryConfig Default and from_source implementations removed
+// The canonical DiscoveryConfig already provides Default and from_env() methods
 
 impl Default for ChainConfig {
     fn default() -> Self {
@@ -930,10 +880,19 @@ pub mod migration {
         cache_enabled: bool,
     ) -> DiscoveryConfig {
         DiscoveryConfig {
-            endpoints,
+            enabled: true,
             timeout: Duration::from_millis(timeout_ms),
+            max_attempts: 3,
+            max_concurrent: 10,
+            discovery_interval: Duration::from_secs(60),
+            refresh_interval: Duration::from_secs(60),
             cache_enabled,
-            ..Default::default()
+            cache_ttl: Duration::from_secs(300),
+            endpoints,
+            health_check_interval: Duration::from_secs(60),
+            auto_register: true,
+            service_metadata: std::collections::HashMap::new(),
+            predictive_enabled: false,
         }
     }
 
