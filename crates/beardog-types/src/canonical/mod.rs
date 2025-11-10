@@ -174,6 +174,9 @@ pub mod traits; // ✅ NEW: Trait-based config interfaces (Nov 8, 2025) // ✅ M
 /// Type-safe ID newtypes for compile-time safety (Nov 9, 2025)
 pub mod types;
 
+// Re-export type-safe ID newtypes for easy access
+pub use types::{KeyId, RegistrationId, ServiceInstanceId};
+
 /// Utility functions for canonical types
 pub mod utils;
 

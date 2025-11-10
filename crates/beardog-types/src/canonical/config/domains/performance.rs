@@ -94,13 +94,15 @@ impl CacheStrategy for CacheConfig {
     }
 
     fn is_production_ready(&self) -> bool {
+        use crate::constants::domains::validation::{MIN_CACHE_SIZE, MAX_PERFORMANCE_TTL_SECS};
+        
         if !self.enabled {
             return true;
         }
-        self.size >= 100 &&
+        self.size >= MIN_CACHE_SIZE &&
         self.size <= 1_000_000 &&
         self.ttl >= Duration::from_secs(60) &&
-        self.ttl <= Duration::from_secs(86400) &&
+        self.ttl <= Duration::from_secs(MAX_PERFORMANCE_TTL_SECS) &&
         self.validate().is_ok()
     }
 }

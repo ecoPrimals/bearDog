@@ -56,9 +56,20 @@ pub struct ConsolidatedDiscoveryConfig {
     pub security: SecurityConfig,
 }
 
-/// Discovery Protocol Configuration
+// Re-export canonical DiscoveryProtocol from discovery_unified
+pub use super::domains::discovery_unified::DiscoveryProtocol;
+
+/// Legacy DiscoveryProtocol enum - DEPRECATED
+///
+/// This enum has been moved to discovery_unified for better organization.
+/// Use `beardog_types::canonical::config::domains::discovery_unified::DiscoveryProtocol` instead.
+#[deprecated(
+    since = "4.0.0",
+    note = "Use discovery_unified::DiscoveryProtocol instead. \
+            Import from: use beardog_types::canonical::config::domains::discovery_unified::DiscoveryProtocol;"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum DiscoveryProtocol {
+pub enum LegacyDiscoveryProtocol {
     /// HTTP-based service discovery with REST endpoints
     Http {
         endpoint: String,
@@ -99,34 +110,35 @@ pub enum DiscoveryProtocol {
     },
 }
 
-impl Hash for DiscoveryProtocol {
+#[allow(deprecated)]
+impl Hash for LegacyDiscoveryProtocol {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            DiscoveryProtocol::Http { endpoint, .. } => {
+            LegacyDiscoveryProtocol::Http { endpoint, .. } => {
                 "Http".hash(state);
                 endpoint.hash(state);
             }
-            DiscoveryProtocol::Dns { domain, servers, .. } => {
+            LegacyDiscoveryProtocol::Dns { domain, servers, .. } => {
                 "Dns".hash(state);
                 domain.hash(state);
                 servers.hash(state);
             }
-            DiscoveryProtocol::Mdns { service_type, interface, .. } => {
+            LegacyDiscoveryProtocol::Mdns { service_type, interface, .. } => {
                 "Mdns".hash(state);
                 service_type.hash(state);
                 interface.hash(state);
             }
-            DiscoveryProtocol::Consul { address, datacenter, .. } => {
+            LegacyDiscoveryProtocol::Consul { address, datacenter, .. } => {
                 "Consul".hash(state);
                 address.hash(state);
                 datacenter.hash(state);
             }
-            DiscoveryProtocol::Etcd { endpoints, key_prefix, .. } => {
+            LegacyDiscoveryProtocol::Etcd { endpoints, key_prefix, .. } => {
                 "Etcd".hash(state);
                 endpoints.hash(state);
                 key_prefix.hash(state);
             }
-            DiscoveryProtocol::Kubernetes { namespace, .. } => {
+            LegacyDiscoveryProtocol::Kubernetes { namespace, .. } => {
                 "Kubernetes".hash(state);
                 namespace.hash(state);
             }

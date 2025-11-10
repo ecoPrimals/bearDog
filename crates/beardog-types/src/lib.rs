@@ -705,6 +705,9 @@ pub use canonical::config::{
 // **REMOVED**: Legacy configuration compatibility layers
 // Use canonical::config::unified::SimplifiedBearDogConfig for all configuration
 
+// **TYPE-SAFE ID NEWTYPES** - Zero-cost compile-time type safety (Nov 9, 2025)
+pub use canonical::types::{KeyId, RegistrationId, ServiceInstanceId};
+
 // **CANONICAL PROVIDER SYSTEM** - Unified provider traits and types
 pub use canonical::providers_unified::traits::{
     ProviderHealth, ProviderInfo, ProviderMetrics, UnifiedAiProvider, UnifiedHsmProvider,
