@@ -32,35 +32,10 @@ pub struct UniversalHsmDiscovery {
     config: DiscoveryConfig,
 }
 
-/// Configuration for HSM discovery
-#[derive(Debug, Clone)]
-pub struct DiscoveryConfig {
-    pub enable_cloud_kms: bool,
-    pub enable_network_hsm: bool,
-    pub enable_usb_hsm: bool,
-    pub enable_software_hsm: bool,
-    pub enable_mobile_hsm: bool,
-    pub enable_tpm: bool,
-    pub discovery_timeout_seconds: u32,
-    pub enable_human_entropy_elevation: bool,
-    pub minimum_entropy_quality: f64,
-}
+// Use canonical HSM discovery configuration
+pub use beardog_types::canonical::hsm::discovery::HsmDiscoveryConfig as DiscoveryConfig;
 
-impl Default for DiscoveryConfig {
-    fn default() -> Self {
-        Self {
-            enable_cloud_kms: true,
-            enable_network_hsm: true,
-            enable_usb_hsm: true,
-            enable_software_hsm: true,
-            enable_mobile_hsm: true,
-            enable_tpm: true,
-            discovery_timeout_seconds: 30,
-            enable_human_entropy_elevation: true,
-            minimum_entropy_quality: 0.8,
-        }
-    }
-}
+// NOTE: This instance had all HSM discovery fields (perfect match with HsmDiscoveryConfig)
 
 /// A discovered HSM with its capabilities
 #[derive(Debug, Clone)]

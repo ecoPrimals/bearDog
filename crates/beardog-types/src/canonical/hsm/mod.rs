@@ -9,6 +9,8 @@ pub mod capabilities;
 /// Configuration management
 /// Configuration management
 pub mod config;
+/// Discovery configuration (HSM-specific)
+pub mod discovery;
 /// Keys module
 pub mod keys;
 pub mod platform_types;

@@ -65,17 +65,13 @@ pub struct PartnershipRecord {
 
 /// Configuration for partner discovery and negotiation
 ///
-/// Controls how biomes discover and establish initial contact with
-/// potential partnership candidates.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DiscoveryConfig {
-    /// Whether to automatically discover potential partners
-    pub auto_discovery: bool,
-    /// Maximum time to wait for discovery responses (in seconds)
-    pub discovery_timeout_secs: u64,
-    /// Maximum number of discovery attempts before giving up
-    pub max_discovery_attempts: u32,
-}
+// Use canonical biome discovery configuration
+pub use beardog_types::canonical::biome::discovery::BiomeDiscoveryConfig as DiscoveryConfig;
+
+// NOTE: Original fields mapped to canonical:
+// - auto_discovery → auto_discovery_partners
+// - discovery_timeout_secs → base.timeout
+// - max_discovery_attempts → base.max_attempts
 
 /// Represents the cryptographic identity and sovereignty proof of a Primal entity.
 ///
