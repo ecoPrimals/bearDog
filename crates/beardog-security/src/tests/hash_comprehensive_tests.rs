@@ -3,21 +3,21 @@
 //! Extensive test coverage for SHA-256 and SHA-512 hashing operations
 
 use crate::*;
-use beardog_errors::BearDogResult;
+
 
 #[cfg(test)]
 mod sha256_comprehensive {
     use super::*;
 
     #[test]
-    fn test_sha256_empty_input() -> BearDogResult<()> {
+    fn test_sha256_empty_input() -> Result<(), BearDogError> {
         let hash = compute_sha256_hash(b"")?;
         assert_eq!(hash.len(), 32);
         Ok(())
     }
 
     #[test]
-    fn test_sha256_single_byte_inputs() -> BearDogResult<()> {
+    fn test_sha256_single_byte_inputs() -> Result<(), BearDogError> {
         for byte in 0u8..=255u8 {
             let hash = compute_sha256_hash(&[byte])?;
             assert_eq!(hash.len(), 32);
@@ -27,7 +27,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_deterministic() -> BearDogResult<()> {
+    fn test_sha256_deterministic() -> Result<(), BearDogError> {
         let data = b"deterministic test";
         let hash1 = compute_sha256_hash(data)?;
         let hash2 = compute_sha256_hash(data)?;
@@ -39,7 +39,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_collision_resistance() -> BearDogResult<()> {
+    fn test_sha256_collision_resistance() -> Result<(), BearDogError> {
         // Test that similar inputs produce very different hashes
         let data1 = b"test";
         let data2 = b"test ";
@@ -56,7 +56,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_various_sizes() -> BearDogResult<()> {
+    fn test_sha256_various_sizes() -> Result<(), BearDogError> {
         let sizes = vec![0, 1, 10, 100, 256, 1000, 4096, 10000];
 
         for size in sizes {
@@ -79,7 +79,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_unicode_text() -> BearDogResult<()> {
+    fn test_sha256_unicode_text() -> Result<(), BearDogError> {
         let texts = vec![
             "Hello, World!",
             "你好世界",
@@ -103,7 +103,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_binary_patterns() -> BearDogResult<()> {
+    fn test_sha256_binary_patterns() -> Result<(), BearDogError> {
         let patterns = vec![
             vec![0x00; 32],
             vec![0xFF; 32],
@@ -124,7 +124,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_large_input() -> BearDogResult<()> {
+    fn test_sha256_large_input() -> Result<(), BearDogError> {
         let large_data = vec![0x42; 1024 * 1024]; // 1 MB
         let hash = compute_sha256_hash(&large_data)?;
         assert_eq!(hash.len(), 32);
@@ -135,7 +135,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_avalanche_effect() -> BearDogResult<()> {
+    fn test_sha256_avalanche_effect() -> Result<(), BearDogError> {
         // Small input change should cause large hash change
         let data1 = b"avalanche test";
         let mut data2 = data1.to_vec();
@@ -164,7 +164,7 @@ mod sha256_comprehensive {
     }
 
     #[test]
-    fn test_sha256_concurrent_hashing() -> BearDogResult<()> {
+    fn test_sha256_concurrent_hashing() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -205,14 +205,14 @@ mod sha512_comprehensive {
     use super::*;
 
     #[test]
-    fn test_sha512_empty_input() -> BearDogResult<()> {
+    fn test_sha512_empty_input() -> Result<(), BearDogError> {
         let hash = compute_sha512_hash(b"")?;
         assert_eq!(hash.len(), 64);
         Ok(())
     }
 
     #[test]
-    fn test_sha512_deterministic() -> BearDogResult<()> {
+    fn test_sha512_deterministic() -> Result<(), BearDogError> {
         let data = b"deterministic test";
         let hash1 = compute_sha512_hash(data)?;
         let hash2 = compute_sha512_hash(data)?;
@@ -222,7 +222,7 @@ mod sha512_comprehensive {
     }
 
     #[test]
-    fn test_sha512_vs_sha256_different() -> BearDogResult<()> {
+    fn test_sha512_vs_sha256_different() -> Result<(), BearDogError> {
         let data = b"test data";
         let hash256 = compute_sha256_hash(data)?;
         let hash512 = compute_sha512_hash(data)?;
@@ -237,7 +237,7 @@ mod sha512_comprehensive {
     }
 
     #[test]
-    fn test_sha512_large_input() -> BearDogResult<()> {
+    fn test_sha512_large_input() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -251,7 +251,7 @@ mod sha512_comprehensive {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
-    fn test_sha512_various_sizes() -> BearDogResult<()> {
+    fn test_sha512_various_sizes() -> Result<(), BearDogError> {
         let sizes = vec![0, 1, 10, 100, 512, 1000, 4096];
 
         for size in sizes {
@@ -279,7 +279,7 @@ mod hash_comparison_tests {
     use super::*;
 
     #[test]
-    fn test_same_input_different_algorithms() -> BearDogResult<()> {
+    fn test_same_input_different_algorithms() -> Result<(), BearDogError> {
         let data = b"compare algorithms";
 
         let hash256 = compute_sha256_hash(data)?;
@@ -297,7 +297,7 @@ mod hash_comparison_tests {
     }
 
     #[test]
-    fn test_hash_consistency_across_calls() -> BearDogResult<()> {
+    fn test_hash_consistency_across_calls() -> Result<(), BearDogError> {
         let data = b"consistency test";
 
         // Multiple calls to each algorithm
@@ -327,7 +327,7 @@ mod edge_cases {
     use super::*;
 
     #[test]
-    fn test_hash_null_bytes() -> BearDogResult<()> {
+    fn test_hash_null_bytes() -> Result<(), BearDogError> {
         let data = vec![0x00; 100];
         let hash256 = compute_sha256_hash(&data)?;
         let hash512 = compute_sha512_hash(&data)?;
@@ -341,7 +341,7 @@ mod edge_cases {
     }
 
     #[test]
-    fn test_hash_max_bytes() -> BearDogResult<()> {
+    fn test_hash_max_bytes() -> Result<(), BearDogError> {
         let data = vec![0xFF; 100];
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -358,7 +358,7 @@ mod edge_cases {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     #[test]
-    fn test_hash_alternating_pattern() -> BearDogResult<()> {
+    fn test_hash_alternating_pattern() -> Result<(), BearDogError> {
         let data: Vec<u8> = (0..100)
             .map(|i| if i % 2 == 0 { 0xAA } else { 0x55 })
             .collect();

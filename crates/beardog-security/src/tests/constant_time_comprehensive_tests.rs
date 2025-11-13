@@ -3,7 +3,7 @@
 //! Tests for timing-attack resistant operations
 
 use crate::*;
-use beardog_errors::BearDogResult;
+
 
 #[cfg(test)]
 mod constant_time_compare_tests {
@@ -253,7 +253,7 @@ mod key_derivation_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     #[test]
-    fn test_key_derivation_basic() -> BearDogResult<()> {
+    fn test_key_derivation_basic() -> Result<(), BearDogError> {
         let password = b"test_password";
         let salt = b"test_salt";
 
@@ -272,7 +272,7 @@ mod key_derivation_tests {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
-    fn test_key_derivation_deterministic() -> BearDogResult<()> {
+    fn test_key_derivation_deterministic() -> Result<(), BearDogError> {
         let password = b"test_password";
         let salt = b"test_salt";
 
@@ -288,7 +288,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_key_derivation_different_passwords() -> BearDogResult<()> {
+    fn test_key_derivation_different_passwords() -> Result<(), BearDogError> {
         let salt = b"test_salt";
 
         let key1 = derive_key_from_password(b"password1", salt, 1000)?;
@@ -307,7 +307,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_key_derivation_different_salts() -> BearDogResult<()> {
+    fn test_key_derivation_different_salts() -> Result<(), BearDogError> {
         let password = b"test_password";
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -322,7 +322,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_key_derivation_different_iterations() -> BearDogResult<()> {
+    fn test_key_derivation_different_iterations() -> Result<(), BearDogError> {
         let password = b"test_password";
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -344,7 +344,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_key_derivation_empty_password() -> BearDogResult<()> {
+    fn test_key_derivation_empty_password() -> Result<(), BearDogError> {
         let salt = b"test_salt";
 
         let key = derive_key_from_password(b"", salt, 1000)?;
@@ -359,7 +359,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_key_derivation_long_password() -> BearDogResult<()> {
+    fn test_key_derivation_long_password() -> Result<(), BearDogError> {
         let password = b"very_long_password_with_many_characters_for_testing_purposes_12345678";
         let salt = b"test_salt";
 
@@ -378,7 +378,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_key_derivation_binary_data() -> BearDogResult<()> {
+    fn test_key_derivation_binary_data() -> Result<(), BearDogError> {
         let password = &[0x00, 0xFF, 0xAA, 0x55, 0x12, 0x34, 0x56, 0x78];
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -396,7 +396,7 @@ mod key_derivation_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     #[test]
-    fn test_key_derivation_minimal_iterations() -> BearDogResult<()> {
+    fn test_key_derivation_minimal_iterations() -> Result<(), BearDogError> {
         let password = b"test_password";
         let salt = b"test_salt";
 

@@ -3,14 +3,14 @@
 //! High-value security tests covering core cryptographic operations
 //! including Ed25519 signatures, AES-256-GCM, ChaCha20-Poly1305, and BLAKE3.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[cfg(test)]
 mod ed25519_signature_tests {
     use super::*;
 
     #[test]
-    fn test_ed25519_keypair_generation() -> BearDogResult<()> {
+    fn test_ed25519_keypair_generation() -> Result<(), BearDogError> {
         // Test that we can generate a valid Ed25519 keypair
         let keypair = generate_ed25519_keypair()?;
 
@@ -21,7 +21,7 @@ mod ed25519_signature_tests {
     }
 
     #[test]
-    fn test_ed25519_signature_verification_valid() -> BearDogResult<()> {
+    fn test_ed25519_signature_verification_valid() -> Result<(), BearDogError> {
         // Test signing and verification with valid signature
         let keypair = generate_ed25519_keypair()?;
         let message = b"Test message for Ed25519 signature";
@@ -35,7 +35,7 @@ mod ed25519_signature_tests {
     }
 
     #[test]
-    fn test_ed25519_signature_verification_invalid_message() -> BearDogResult<()> {
+    fn test_ed25519_signature_verification_invalid_message() -> Result<(), BearDogError> {
         // Test that verification fails with wrong message
         let keypair = generate_ed25519_keypair()?;
         let message = b"Original message";
@@ -53,7 +53,7 @@ mod ed25519_signature_tests {
     }
 
     #[test]
-    fn test_ed25519_signature_verification_invalid_signature() -> BearDogResult<()> {
+    fn test_ed25519_signature_verification_invalid_signature() -> Result<(), BearDogError> {
         // Test that verification fails with tampered signature
         let keypair = generate_ed25519_keypair()?;
         let message = b"Test message";
@@ -70,7 +70,7 @@ mod ed25519_signature_tests {
     }
 
     #[test]
-    fn test_ed25519_multiple_signatures() -> BearDogResult<()> {
+    fn test_ed25519_multiple_signatures() -> Result<(), BearDogError> {
         // Test multiple signatures with same keypair
         let keypair = generate_ed25519_keypair()?;
         let messages = vec![
@@ -97,7 +97,7 @@ mod aes_gcm_encryption_tests {
     use super::*;
 
     #[test]
-    fn test_aes_256_gcm_encryption_decryption() -> BearDogResult<()> {
+    fn test_aes_256_gcm_encryption_decryption() -> Result<(), BearDogError> {
         // Test basic AES-256-GCM encryption and decryption
         let plaintext = b"Sensitive data to encrypt with AES-256-GCM";
         let key = generate_aes_256_key()?;
@@ -127,7 +127,7 @@ mod aes_gcm_encryption_tests {
     }
 
     #[test]
-    fn test_aes_256_gcm_wrong_key() -> BearDogResult<()> {
+    fn test_aes_256_gcm_wrong_key() -> Result<(), BearDogError> {
         // Test that decryption fails with wrong key
         let plaintext = b"Secret data";
         let key = generate_aes_256_key()?;
@@ -146,7 +146,7 @@ mod aes_gcm_encryption_tests {
     }
 
     #[test]
-    fn test_aes_256_gcm_wrong_nonce() -> BearDogResult<()> {
+    fn test_aes_256_gcm_wrong_nonce() -> Result<(), BearDogError> {
         // Test that decryption fails with wrong nonce
         let plaintext = b"Secret data";
         let key = generate_aes_256_key()?;
@@ -165,7 +165,7 @@ mod aes_gcm_encryption_tests {
     }
 
     #[test]
-    fn test_aes_256_gcm_tampered_ciphertext() -> BearDogResult<()> {
+    fn test_aes_256_gcm_tampered_ciphertext() -> Result<(), BearDogError> {
         // Test that decryption fails with tampered ciphertext
         let plaintext = b"Secret data";
         let key = generate_aes_256_key()?;
@@ -191,7 +191,7 @@ mod aes_gcm_encryption_tests {
     }
 
     #[test]
-    fn test_aes_256_gcm_empty_plaintext() -> BearDogResult<()> {
+    fn test_aes_256_gcm_empty_plaintext() -> Result<(), BearDogError> {
         // Test encryption/decryption of empty data
         let plaintext = b"";
         let key = generate_aes_256_key()?;
@@ -213,7 +213,7 @@ mod aes_gcm_encryption_tests {
     }
 
     #[test]
-    fn test_aes_256_gcm_large_plaintext() -> BearDogResult<()> {
+    fn test_aes_256_gcm_large_plaintext() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -242,7 +242,7 @@ mod chacha20_poly1305_tests {
     use super::*;
 
     #[test]
-    fn test_chacha20_poly1305_encryption_decryption() -> BearDogResult<()> {
+    fn test_chacha20_poly1305_encryption_decryption() -> Result<(), BearDogError> {
         // Test ChaCha20-Poly1305 encryption and decryption
         let plaintext = b"Data encrypted with ChaCha20-Poly1305";
         let key = generate_chacha20_key()?;
@@ -261,7 +261,7 @@ mod chacha20_poly1305_tests {
     }
 
     #[test]
-    fn test_chacha20_poly1305_authentication_failure() -> BearDogResult<()> {
+    fn test_chacha20_poly1305_authentication_failure() -> Result<(), BearDogError> {
         // Test that authentication tag prevents tampering
         let plaintext = b"Authenticated data";
         let key = generate_chacha20_key()?;
@@ -284,7 +284,7 @@ mod chacha20_poly1305_tests {
     }
 
     #[test]
-    fn test_chacha20_poly1305_with_aad() -> BearDogResult<()> {
+    fn test_chacha20_poly1305_with_aad() -> Result<(), BearDogError> {
         // Test encryption with additional authenticated data
         let plaintext = b"Secret payload";
         let aad = b"Public header data";
@@ -307,7 +307,7 @@ mod chacha20_poly1305_tests {
     }
 
     #[test]
-    fn test_chacha20_poly1305_wrong_aad() -> BearDogResult<()> {
+    fn test_chacha20_poly1305_wrong_aad() -> Result<(), BearDogError> {
         // Test that wrong AAD causes authentication failure
         let plaintext = b"Secret data";
         let aad = b"Correct AAD";
@@ -338,7 +338,7 @@ mod blake3_hashing_tests {
     use super::*;
 
     #[test]
-    fn test_blake3_hash_generation() -> BearDogResult<()> {
+    fn test_blake3_hash_generation() -> Result<(), BearDogError> {
         // Test BLAKE3 hash generation
         let data = b"Data to hash with BLAKE3";
 
@@ -350,7 +350,7 @@ mod blake3_hashing_tests {
     }
 
     #[test]
-    fn test_blake3_hash_deterministic() -> BearDogResult<()> {
+    fn test_blake3_hash_deterministic() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -366,7 +366,7 @@ mod blake3_hashing_tests {
     }
 
     #[test]
-    fn test_blake3_hash_different_inputs() -> BearDogResult<()> {
+    fn test_blake3_hash_different_inputs() -> Result<(), BearDogError> {
         // Test that different inputs produce different hashes
         let data1 = b"Input 1";
         let data2 = b"Input 2";
@@ -386,7 +386,7 @@ mod blake3_hashing_tests {
     }
 
     #[test]
-    fn test_blake3_hash_empty_input() -> BearDogResult<()> {
+    fn test_blake3_hash_empty_input() -> Result<(), BearDogError> {
         // Test hashing empty data
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -408,7 +408,7 @@ mod blake3_hashing_tests {
     }
 
     #[test]
-    fn test_blake3_hash_large_input() -> BearDogResult<()> {
+    fn test_blake3_hash_large_input() -> Result<(), BearDogError> {
         // Test hashing large data (10MB)
         let data = vec![0xAAu8; 10 * 1024 * 1024]; // 10MB
 
@@ -423,7 +423,7 @@ mod blake3_hashing_tests {
     // TEST_PRIORITY: normal
 
     #[test]
-    fn test_blake3_keyed_hash() -> BearDogResult<()> {
+    fn test_blake3_keyed_hash() -> Result<(), BearDogError> {
         // Test keyed hashing (HMAC-like)
         let data = b"Data to authenticate";
         let key = b"BLAKE3-secret-key-32bytes-here!!"; // Exactly 32 bytes
@@ -439,7 +439,7 @@ mod blake3_hashing_tests {
     // TEST_PRIORITY: normal
 
     #[test]
-    fn test_blake3_keyed_hash_different_keys() -> BearDogResult<()> {
+    fn test_blake3_keyed_hash_different_keys() -> Result<(), BearDogError> {
         // Test that different keys produce different MACs
         let data = b"Authenticated data";
         let key1 = b"Key-1-for-BLAKE3-authentication!"; // Exactly 32 bytes
@@ -465,7 +465,7 @@ mod key_derivation_tests {
     use super::*;
 
     #[test]
-    fn test_pbkdf2_key_derivation() -> BearDogResult<()> {
+    fn test_pbkdf2_key_derivation() -> Result<(), BearDogError> {
         // Test PBKDF2 key derivation
         let password = b"User password";
         let salt = b"Random salt value";
@@ -482,7 +482,7 @@ mod key_derivation_tests {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
-    fn test_pbkdf2_deterministic() -> BearDogResult<()> {
+    fn test_pbkdf2_deterministic() -> Result<(), BearDogError> {
         // Test that same inputs produce same key
         let password = b"password123";
         let salt = b"salt123";
@@ -500,7 +500,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_pbkdf2_different_salts() -> BearDogResult<()> {
+    fn test_pbkdf2_different_salts() -> Result<(), BearDogError> {
         // Test that different salts produce different keys
         let password = b"same password";
         let salt1 = b"salt 1";
@@ -519,7 +519,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_argon2_key_derivation() -> BearDogResult<()> {
+    fn test_argon2_key_derivation() -> Result<(), BearDogError> {
         // Test Argon2 key derivation (memory-hard)
         let password = b"User password for Argon2";
         let salt = b"Random salt for Argon2!!";
@@ -540,7 +540,7 @@ mod key_rotation_tests {
     use super::*;
 
     #[test]
-    fn test_key_rotation_workflow() -> BearDogResult<()> {
+    fn test_key_rotation_workflow() -> Result<(), BearDogError> {
         // Test complete key rotation workflow
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -575,7 +575,7 @@ mod key_rotation_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: critical
     #[test]
-    fn test_multi_key_decryption_capability() -> BearDogResult<()> {
+    fn test_multi_key_decryption_capability() -> Result<(), BearDogError> {
         // Test that we can try multiple keys until one works
         let keys = vec![
             generate_aes_256_key()?,
@@ -613,7 +613,7 @@ mod key_rotation_tests {
 // Helper functions (stubs - implement based on actual crypto_utils API)
 
 #[allow(dead_code)]
-fn generate_ed25519_keypair() -> BearDogResult<Ed25519Keypair> {
+fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;
     use rand::RngCore;
@@ -631,7 +631,7 @@ fn generate_ed25519_keypair() -> BearDogResult<Ed25519Keypair> {
 }
 
 #[allow(dead_code)]
-fn sign_ed25519(secret: &[u8], message: &[u8]) -> BearDogResult<Vec<u8>> {
+fn sign_ed25519(secret: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use ed25519_dalek::{Signer, SigningKey};
 
     if secret.len() != 32 {
@@ -655,7 +655,7 @@ fn verify_ed25519_signature(
     public: &[u8],
     message: &[u8],
     signature: &[u8],
-) -> BearDogResult<bool> {
+) -> Result<bool, BearDogError> {
     use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
     if public.len() != 32 {
@@ -687,7 +687,7 @@ fn verify_ed25519_signature(
 }
 
 #[allow(dead_code)]
-fn generate_aes_256_key() -> BearDogResult<Vec<u8>> {
+fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
     rand::thread_rng().fill_bytes(&mut key);
@@ -695,7 +695,7 @@ fn generate_aes_256_key() -> BearDogResult<Vec<u8>> {
 }
 
 #[allow(dead_code)]
-fn generate_aes_nonce() -> BearDogResult<Vec<u8>> {
+fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
     rand::thread_rng().fill_bytes(&mut nonce);
@@ -703,7 +703,7 @@ fn generate_aes_nonce() -> BearDogResult<Vec<u8>> {
 }
 
 #[allow(dead_code)]
-fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
 
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
@@ -715,7 +715,7 @@ fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> BearDogRes
 }
 
 #[allow(dead_code)]
-fn decrypt_aes_256_gcm(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+fn decrypt_aes_256_gcm(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
 
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
@@ -727,7 +727,7 @@ fn decrypt_aes_256_gcm(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> BearDogRe
 }
 
 #[allow(dead_code)]
-fn generate_chacha20_key() -> BearDogResult<Vec<u8>> {
+fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
     rand::thread_rng().fill_bytes(&mut key);
@@ -735,7 +735,7 @@ fn generate_chacha20_key() -> BearDogResult<Vec<u8>> {
 }
 
 #[allow(dead_code)]
-fn generate_chacha20_nonce() -> BearDogResult<Vec<u8>> {
+fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
     rand::thread_rng().fill_bytes(&mut nonce);
@@ -743,7 +743,7 @@ fn generate_chacha20_nonce() -> BearDogResult<Vec<u8>> {
 }
 
 #[allow(dead_code)]
-fn encrypt_chacha20_poly1305(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+fn encrypt_chacha20_poly1305(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
@@ -759,7 +759,7 @@ fn decrypt_chacha20_poly1305(
     key: &[u8],
     nonce: &[u8],
     ciphertext: &[u8],
-) -> BearDogResult<Vec<u8>> {
+) -> Result<Vec<u8>, BearDogError> {
     use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
@@ -776,7 +776,7 @@ fn encrypt_chacha20_poly1305_with_aad(
     nonce: &[u8],
     plaintext: &[u8],
     aad: &[u8],
-) -> BearDogResult<Vec<u8>> {
+) -> Result<Vec<u8>, BearDogError> {
     use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
@@ -797,7 +797,7 @@ fn decrypt_chacha20_poly1305_with_aad(
     nonce: &[u8],
     ciphertext: &[u8],
     aad: &[u8],
-) -> BearDogResult<Vec<u8>> {
+) -> Result<Vec<u8>, BearDogError> {
     use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
@@ -813,13 +813,13 @@ fn decrypt_chacha20_poly1305_with_aad(
 }
 
 #[allow(dead_code)]
-fn blake3_hash(data: &[u8]) -> BearDogResult<Vec<u8>> {
+fn blake3_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let hash = blake3::hash(data);
     Ok(hash.as_bytes().to_vec())
 }
 
 #[allow(dead_code)]
-fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     if key.len() != 32 {
         return Err(BearDogError::validation("BLAKE3 key must be 32 bytes"));
     }
@@ -831,7 +831,7 @@ fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
 }
 
 #[allow(dead_code)]
-fn derive_key_pbkdf2(password: &[u8], salt: &[u8], iterations: u32) -> BearDogResult<Vec<u8>> {
+fn derive_key_pbkdf2(password: &[u8], salt: &[u8], iterations: u32) -> Result<Vec<u8>, BearDogError> {
     use pbkdf2::pbkdf2_hmac_array;
     use sha2::Sha256;
 
@@ -840,7 +840,7 @@ fn derive_key_pbkdf2(password: &[u8], salt: &[u8], iterations: u32) -> BearDogRe
 }
 
 #[allow(dead_code)]
-fn derive_key_argon2(password: &[u8], salt: &[u8]) -> BearDogResult<Vec<u8>> {
+fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use argon2::password_hash::SaltString;
     use argon2::{Argon2, PasswordHasher};
 

@@ -323,7 +323,7 @@ pub struct KeyRotationEvent {
 }
 
 /// Reason for key rotation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KeyRotationReason {
     /// Scheduled automatic rotation
     Scheduled,
