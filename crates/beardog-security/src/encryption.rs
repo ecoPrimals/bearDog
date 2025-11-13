@@ -2,6 +2,10 @@
 //
 // Provides secure encryption and decryption capabilities using modern cryptographic algorithms.
 
+#[cfg(test)]
+#[path = "encryption_comprehensive_tests.rs"]
+mod encryption_comprehensive_tests;
+
 use crate::crypto_utils::BearDogCrypto;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};

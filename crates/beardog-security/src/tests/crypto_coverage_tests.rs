@@ -3,14 +3,14 @@
 //! Extensive test coverage for cryptographic operations
 
 use crate::*;
-use beardog_errors::BearDogResult;
+
 
 #[cfg(test)]
 mod sha256_tests {
     use super::*;
 
     #[test]
-    fn test_sha256_empty_input() -> BearDogResult<()> {
+    fn test_sha256_empty_input() -> Result<(), BearDogError> {
         let hash = compute_sha256_hash(b"")?;
         assert_eq!(hash.len(), 32);
         // Empty input should always produce same hash
@@ -20,7 +20,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_single_byte() -> BearDogResult<()> {
+    fn test_sha256_single_byte() -> Result<(), BearDogError> {
         let hash = compute_sha256_hash(b"a")?;
         assert_eq!(hash.len(), 32);
         assert_ne!(hash, vec![0u8; 32]);
@@ -28,7 +28,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_known_value() -> BearDogResult<()> {
+    fn test_sha256_known_value() -> Result<(), BearDogError> {
         let input = b"hello world";
         let hash = compute_sha256_hash(input)?;
         // Should be deterministic
@@ -38,7 +38,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_different_inputs() -> BearDogResult<()> {
+    fn test_sha256_different_inputs() -> Result<(), BearDogError> {
         let hash1 = compute_sha256_hash(b"input1")?;
         let hash2 = compute_sha256_hash(b"input2")?;
         assert_ne!(hash1, hash2);
@@ -46,7 +46,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_large_input() -> BearDogResult<()> {
+    fn test_sha256_large_input() -> Result<(), BearDogError> {
         let large_data = vec![0xAB; 1024 * 1024]; // 1 MB
         let hash = compute_sha256_hash(&large_data)?;
         assert_eq!(hash.len(), 32);
@@ -54,7 +54,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_binary_data() -> BearDogResult<()> {
+    fn test_sha256_binary_data() -> Result<(), BearDogError> {
         let binary = vec![0x00, 0xFF, 0xAA, 0x55, 0x12, 0x34];
         let hash = compute_sha256_hash(&binary)?;
         assert_eq!(hash.len(), 32);
@@ -62,7 +62,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_utf8_text() -> BearDogResult<()> {
+    fn test_sha256_utf8_text() -> Result<(), BearDogError> {
         let text = "Hello, 世界! 🌍";
         let hash = compute_sha256_hash(text.as_bytes())?;
         assert_eq!(hash.len(), 32);
@@ -70,7 +70,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_repeated_calls() -> BearDogResult<()> {
+    fn test_sha256_repeated_calls() -> Result<(), BearDogError> {
         let input = b"test data";
         for _ in 0..100 {
             let hash = compute_sha256_hash(input)?;
@@ -80,7 +80,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_avalanche_effect() -> BearDogResult<()> {
+    fn test_sha256_avalanche_effect() -> Result<(), BearDogError> {
         // Small input change should drastically change hash
         let hash1 = compute_sha256_hash(b"test")?;
         let hash2 = compute_sha256_hash(b"Test")?; // Capital T
@@ -99,7 +99,7 @@ mod sha256_tests {
     }
 
     #[test]
-    fn test_sha256_incremental_changes() -> BearDogResult<()> {
+    fn test_sha256_incremental_changes() -> Result<(), BearDogError> {
         let base = b"test";
         let hash_base = compute_sha256_hash(base)?;
 
@@ -118,14 +118,14 @@ mod sha512_tests {
     use super::*;
 
     #[test]
-    fn test_sha512_empty_input() -> BearDogResult<()> {
+    fn test_sha512_empty_input() -> Result<(), BearDogError> {
         let hash = compute_sha512_hash(b"")?;
         assert_eq!(hash.len(), 64);
         Ok(())
     }
 
     #[test]
-    fn test_sha512_consistency() -> BearDogResult<()> {
+    fn test_sha512_consistency() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -140,7 +140,7 @@ mod sha512_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     #[test]
-    fn test_sha512_different_from_sha256() -> BearDogResult<()> {
+    fn test_sha512_different_from_sha256() -> Result<(), BearDogError> {
         let input = b"same input";
         let sha256 = compute_sha256_hash(input)?;
         let sha512 = compute_sha512_hash(input)?;
@@ -157,7 +157,7 @@ mod sha512_tests {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
-    fn test_sha512_large_input() -> BearDogResult<()> {
+    fn test_sha512_large_input() -> Result<(), BearDogError> {
         let large = vec![0xFF; 10 * 1024 * 1024]; // 10 MB
         let hash = compute_sha512_hash(&large)?;
         assert_eq!(hash.len(), 64);
@@ -168,7 +168,7 @@ mod sha512_tests {
     }
 
     #[test]
-    fn test_sha512_all_byte_values() -> BearDogResult<()> {
+    fn test_sha512_all_byte_values() -> Result<(), BearDogError> {
         let all_bytes: Vec<u8> = (0..=255).collect();
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -191,7 +191,7 @@ mod random_generation_tests {
     // TEST_PRIORITY: normal
 
     #[test]
-    fn test_generate_random_bytes_length() -> BearDogResult<()> {
+    fn test_generate_random_bytes_length() -> Result<(), BearDogError> {
         let bytes = generate_secure_random_bytes(32)?;
         assert_eq!(bytes.len(), 32);
         Ok(())
@@ -201,7 +201,7 @@ mod random_generation_tests {
     // TEST_PRIORITY: normal
 
     #[test]
-    fn test_generate_random_bytes_different() -> BearDogResult<()> {
+    fn test_generate_random_bytes_different() -> Result<(), BearDogError> {
         let bytes1 = generate_secure_random_bytes(32)?;
         let bytes2 = generate_secure_random_bytes(32)?;
         // Extremely unlikely to be the same
@@ -210,7 +210,7 @@ mod random_generation_tests {
     }
 
     #[test]
-    fn test_generate_random_bytes_not_all_zeros() -> BearDogResult<()> {
+    fn test_generate_random_bytes_not_all_zeros() -> Result<(), BearDogError> {
         let bytes = generate_secure_random_bytes(100)?;
         // Should not be all zeros
         assert_ne!(bytes, vec![0u8; 100]);
@@ -221,7 +221,7 @@ mod random_generation_tests {
     }
 
     #[test]
-    fn test_generate_random_bytes_various_sizes() -> BearDogResult<()> {
+    fn test_generate_random_bytes_various_sizes() -> Result<(), BearDogError> {
         for size in [1, 8, 16, 32, 64, 128, 256, 512, 1024] {
             let bytes = generate_secure_random_bytes(size)?;
             assert_eq!(bytes.len(), size);
@@ -230,7 +230,7 @@ mod random_generation_tests {
     }
 
     #[test]
-    fn test_random_distribution_not_uniform_zeros() -> BearDogResult<()> {
+    fn test_random_distribution_not_uniform_zeros() -> Result<(), BearDogError> {
         let bytes = generate_secure_random_bytes(1000)?;
         let zero_count = bytes.iter().filter(|&&b| b == 0).count();
 
@@ -247,7 +247,7 @@ mod random_generation_tests {
     }
 
     #[test]
-    fn test_random_generation_rapid() -> BearDogResult<()> {
+    fn test_random_generation_rapid() -> Result<(), BearDogError> {
         // Generate many random values rapidly
         for _ in 0..100 {
             // TEST_CATEGORY: integration
@@ -259,7 +259,7 @@ mod random_generation_tests {
     }
 
     #[test]
-    fn test_random_bytes_uniqueness() -> BearDogResult<()> {
+    fn test_random_bytes_uniqueness() -> Result<(), BearDogError> {
         let mut seen = std::collections::HashSet::new();
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -282,7 +282,7 @@ mod key_derivation_tests {
     use super::*;
 
     #[test]
-    fn test_derive_key_basic() -> BearDogResult<()> {
+    fn test_derive_key_basic() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -303,7 +303,7 @@ mod key_derivation_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     #[test]
-    fn test_derive_key_consistency() -> BearDogResult<()> {
+    fn test_derive_key_consistency() -> Result<(), BearDogError> {
         let password = b"password";
         let salt = b"salt";
         let iterations = 1000;
@@ -322,7 +322,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_derive_key_different_salts() -> BearDogResult<()> {
+    fn test_derive_key_different_salts() -> Result<(), BearDogError> {
         let password = b"password";
         let salt1 = b"salt1";
         let salt2 = b"salt2";
@@ -342,7 +342,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_derive_key_different_passwords() -> BearDogResult<()> {
+    fn test_derive_key_different_passwords() -> Result<(), BearDogError> {
         let password1 = b"password1";
         let password2 = b"password2";
         let salt = b"salt";
@@ -359,7 +359,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_derive_key_more_iterations() -> BearDogResult<()> {
+    fn test_derive_key_more_iterations() -> Result<(), BearDogError> {
         let password = b"password";
         let salt = b"salt";
 
@@ -375,7 +375,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_derive_key_empty_password() -> BearDogResult<()> {
+    fn test_derive_key_empty_password() -> Result<(), BearDogError> {
         let password = b"";
         let salt = b"salt";
         // TEST_CATEGORY: integration
@@ -389,7 +389,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_derive_key_empty_salt() -> BearDogResult<()> {
+    fn test_derive_key_empty_salt() -> Result<(), BearDogError> {
         let password = b"password";
         let salt = b"";
         // TEST_CATEGORY: integration
@@ -403,7 +403,7 @@ mod key_derivation_tests {
     }
 
     #[test]
-    fn test_derive_key_zero_iterations() -> BearDogResult<()> {
+    fn test_derive_key_zero_iterations() -> Result<(), BearDogError> {
         let password = b"password";
         let salt = b"salt";
         // TEST_CATEGORY: integration
@@ -507,7 +507,7 @@ mod integration_tests {
     use super::*;
 
     #[test]
-    fn test_hash_and_compare_workflow() -> BearDogResult<()> {
+    fn test_hash_and_compare_workflow() -> Result<(), BearDogError> {
         // Simulate password storage workflow
         let password = b"user_password_123";
         let salt = generate_secure_random_bytes(32)?;
@@ -526,7 +526,7 @@ mod integration_tests {
     }
 
     #[test]
-    fn test_multiple_crypto_operations() -> BearDogResult<()> {
+    fn test_multiple_crypto_operations() -> Result<(), BearDogError> {
         // Perform multiple operations in sequence
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -556,7 +556,7 @@ mod integration_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     #[test]
-    fn test_deterministic_pipeline() -> BearDogResult<()> {
+    fn test_deterministic_pipeline() -> Result<(), BearDogError> {
         let password = b"password";
         let salt = b"fixed_salt";
 
