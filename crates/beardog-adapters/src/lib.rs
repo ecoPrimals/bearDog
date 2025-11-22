@@ -49,6 +49,11 @@ mod adapter_validation_extended_tests;
 #[path = "tests/adapter_operations_comprehensive_tests.rs"]
 mod adapter_operations_comprehensive_tests;
 
+// November 22, 2025: Adapter coverage expansion for 85% coverage goal
+#[cfg(test)]
+#[path = "tests/adapter_coverage_expansion_nov_22_tests.rs"]
+mod adapter_coverage_expansion_nov_22_tests;
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

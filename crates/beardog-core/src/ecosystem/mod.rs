@@ -71,3 +71,6 @@ pub use primal_types::{
 };
 pub use self_discovery::{DiscoveredService, HealthStatus, SelfDiscoveryManager, SelfIdentity};
 pub use service_registration::EcosystemRegistration;
+
+#[cfg(test)]
+mod tests;
