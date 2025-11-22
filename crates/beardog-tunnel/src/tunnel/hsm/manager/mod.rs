@@ -146,6 +146,7 @@ pub struct HsmProviderSelection {
 /// * [`HsmProvider`] - HSM provider trait
 /// * [`HsmTier`] - Security tiers
 /// * [`HsmManagerConfig`] - Configuration options
+#[allow(dead_code)] // Fields used in implementation
 pub struct HsmManager {
     hsm_providers: HashMap<String, Arc<dyn HsmProvider>>,
     config: HsmManagerConfig,
@@ -295,8 +296,8 @@ impl HsmManager {
     ///
     /// # See Also
     ///
-    /// * [`HsmPerformanceTracker`] - Detailed performance metrics
-    /// * [`get_provider_stats`](Self::get_provider_stats) - Per-provider statistics
+    /// * `HsmPerformanceTracker` - Detailed performance metrics
+    /// * Provider statistics available through performance tracking
     pub fn get_routing_metrics(&self) -> std::collections::HashMap<String, u64> {
         // Stub implementation
         std::collections::HashMap::new()

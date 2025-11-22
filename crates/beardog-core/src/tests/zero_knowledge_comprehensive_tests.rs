@@ -3,6 +3,7 @@
 //! Comprehensive test coverage for zero-knowledge bootstrap functionality
 //! Following patterns from beardog-security's `crypto_coverage_tests`
 
+use beardog_errors::BearDogError;
 use crate::zero_knowledge_bootstrap::self_discovery::SelfDiscoveryEngine;
 use crate::zero_knowledge_bootstrap::ZeroKnowledgeBootstrap;
 use beardog_errors::BearDogResult;
@@ -12,14 +13,14 @@ mod self_discovery_tests {
     use super::*;
 
     #[test]
-    fn test_self_discovery_engine_creation() -> BearDogResult<()> {
+    fn test_self_discovery_engine_creation() -> Result<(), BearDogError> {
         let engine = SelfDiscoveryEngine::new()?;
         assert!(format!("{engine:?}").contains("SelfDiscoveryEngine"));
         Ok(())
     }
 
     #[test]
-    fn test_discover_self_identity_succeeds() -> BearDogResult<()> {
+    fn test_discover_self_identity_succeeds() -> Result<(), BearDogError> {
         let mut engine = SelfDiscoveryEngine::new()?;
         let identity = engine.discover_self_identity()?;
 
@@ -33,7 +34,7 @@ mod self_discovery_tests {
     }
 
     #[test]
-    fn test_identity_has_unique_id() -> BearDogResult<()> {
+    fn test_identity_has_unique_id() -> Result<(), BearDogError> {
         let mut engine1 = SelfDiscoveryEngine::new()?;
         let mut engine2 = SelfDiscoveryEngine::new()?;
 
@@ -47,7 +48,7 @@ mod self_discovery_tests {
     }
 
     #[test]
-    fn test_identity_capabilities_not_empty() -> BearDogResult<()> {
+    fn test_identity_capabilities_not_empty() -> Result<(), BearDogError> {
         let mut engine = SelfDiscoveryEngine::new()?;
         let identity = engine.discover_self_identity()?;
 
@@ -61,7 +62,7 @@ mod self_discovery_tests {
     }
 
     #[test]
-    fn test_identity_endpoints_present() -> BearDogResult<()> {
+    fn test_identity_endpoints_present() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
@@ -81,7 +82,7 @@ mod self_discovery_tests {
     }
 
     #[test]
-    fn test_identity_metadata_present() -> BearDogResult<()> {
+    fn test_identity_metadata_present() -> Result<(), BearDogError> {
         let mut engine = SelfDiscoveryEngine::new()?;
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
@@ -96,7 +97,7 @@ mod self_discovery_tests {
     }
 
     #[test]
-    fn test_repeated_discovery_generates_unique_ids() -> BearDogResult<()> {
+    fn test_repeated_discovery_generates_unique_ids() -> Result<(), BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal

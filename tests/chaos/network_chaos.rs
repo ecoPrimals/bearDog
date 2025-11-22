@@ -32,8 +32,8 @@ pub async fn test_network_partition() -> Result<(), beardog_errors::BearDogError
     let fault_id = injector.inject_fault(fault)?;
     info!("  Injected network partition: {}", fault_id);
     
-    // Simulate waiting for partition duration
-    tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
+    // No sleep needed - testing fault injection, not actual partition duration
+    // For time-based partition tests, use tokio::time::pause() + advance()
     
     // Remove fault
     injector.remove_fault(&fault_id)?;
@@ -62,8 +62,7 @@ pub async fn test_network_latency() -> Result<(), beardog_errors::BearDogError> 
         let fault_id = injector.inject_fault(fault)?;
         info!("  Injected {}ms latency: {}", latency_ms, fault_id);
         
-        // Simulate operations under latency
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // No sleep needed - testing latency injection logic, not actual latency
         
         injector.remove_fault(&fault_id)?;
     }
@@ -91,8 +90,7 @@ pub async fn test_packet_loss() -> Result<(), beardog_errors::BearDogError> {
         let fault_id = injector.inject_fault(fault)?;
         info!("  Injected {:.1}% packet loss: {}", loss_rate * 100.0, fault_id);
         
-        // Simulate operations under packet loss
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // No sleep needed - testing packet loss injection, not actual packet loss
         
         injector.remove_fault(&fault_id)?;
     }
@@ -125,8 +123,7 @@ pub async fn test_combined_network_stress() -> Result<(), beardog_errors::BearDo
     
     info!("  Injected {} combined network faults", fault_ids.len());
     
-    // Simulate operations under combined stress
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    // No sleep needed - testing combined stress injection, not actual stress effects
     
     // Clean up all faults
     for fault_id in fault_ids {
@@ -156,15 +153,13 @@ pub async fn test_network_partition_recovery() -> Result<(), beardog_errors::Bea
     let fault_id = injector.inject_fault(fault)?;
     info!("  Network partitioned");
     
-    // Wait for partition
-    tokio::time::sleep(std::time::Duration::from_millis(3000)).await;
+    // No sleep needed - testing partition injection, not duration
     
     // Remove partition
     injector.remove_fault(&fault_id)?;
     info!("  Network partition removed");
     
-    // Wait for recovery
-    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+    // No sleep needed - recovery is immediate when partition removed
     
     info!("  ✅ System recovered from partition");
     

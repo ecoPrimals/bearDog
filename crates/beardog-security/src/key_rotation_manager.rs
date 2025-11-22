@@ -354,7 +354,10 @@ impl KeyRotationManager {
         key_id: &str,
         reason: KeyRotationReason,
     ) -> Result<String, BearDogError> {
-        info!("🔄 Starting rotation for key: {} (reason: {:?})", key_id, reason);
+        info!(
+            "🔄 Starting rotation for key: {} (reason: {:?})",
+            key_id, reason
+        );
 
         let old_metadata = self.get_key_metadata(key_id).await?;
         self.verify_rotation_allowed(&old_metadata)?;

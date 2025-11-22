@@ -5,6 +5,7 @@
 #[cfg(test)]
 mod validation_tests {
     use crate::canonical::config::unified::*;
+    use std::sync::Arc;
     // Removed unused import
 
     #[test]
@@ -16,7 +17,7 @@ mod validation_tests {
     #[test]
     fn test_network_settings_validation() {
         let settings = NetworkSettings {
-            bind_address: "127.0.0.1".to_string(),
+            bind_address: Arc::from("127.0.0.1"),
             port: 8080,
             max_connections: 1000,
             timeout_seconds: 30,
@@ -30,7 +31,7 @@ mod validation_tests {
     #[test]
     fn test_network_settings_invalid_port() {
         let settings = NetworkSettings {
-            bind_address: "0.0.0.0".to_string(),
+            bind_address: Arc::from("0.0.0.0"),
             port: 0, // Invalid port
             max_connections: 100,
             timeout_seconds: 30,
@@ -71,7 +72,7 @@ mod validation_tests {
             // TEST_CATEGORY: unit
             // TEST_DOMAIN: types
             // TEST_PRIORITY: normal
-            connection_string: "postgres://localhost/beardog".to_string(),
+            connection_string: Arc::from("postgres://localhost/beardog"),
             pool_size: 20,
             timeout_seconds: 10,
             enable_encryption: true,
@@ -89,7 +90,7 @@ mod validation_tests {
         let settings = MonitoringSettings {
             enable_metrics: true,
             metrics_interval_seconds: 60,
-            log_level: "info".to_string(),
+            log_level: Arc::from("info"),
             health_check_interval_seconds: 30,
         };
 

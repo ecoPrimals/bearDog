@@ -82,7 +82,7 @@ fn benchmark_api_request_handling(c: &mut Criterion) {
             std::thread::sleep(Duration::from_micros(50));
 
             // 3. Request parsing
-            let req = black_box(&request);
+            let _req = black_box(&request);
 
             // 4. HSM operation (signing)
             std::thread::sleep(Duration::from_micros(500));

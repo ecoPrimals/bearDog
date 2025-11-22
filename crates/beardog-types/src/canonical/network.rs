@@ -132,10 +132,10 @@ impl TimeoutPolicy for TimeoutConfig {
     }
 
     fn is_production_ready(&self) -> bool {
-        self.connection_timeout >= Duration::from_secs(1) &&
-        self.connection_timeout <= Duration::from_secs(60) &&
-        self.request_timeout >= Duration::from_secs(5) &&
-        self.validate().is_ok()
+        self.connection_timeout >= Duration::from_secs(1)
+            && self.connection_timeout <= Duration::from_secs(60)
+            && self.request_timeout >= Duration::from_secs(5)
+            && self.validate().is_ok()
     }
 }
 

@@ -71,7 +71,7 @@ pub async fn test_alert_triggering() -> Result<MonitoringMetrics, BearDogError> 
         simulate_metric_value("memory_usage", 60.0).await?;
         simulate_metric_value("error_rate", 1.0).await?;
         metrics.metrics_collected += 3;
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+        // No delay needed - metric collection is synchronous in tests
     }
 
     // Trigger CPU alert
@@ -251,22 +251,22 @@ pub async fn test_log_aggregation() -> Result<MonitoringMetrics, BearDogError> {
 // Helper functions
 
 async fn simulate_counter_metric(_name: &str, _value: usize) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+    // Simulate metric recording (instant in tests, would be async I/O in production)
     Ok(())
 }
 
 async fn simulate_gauge_metric(_name: &str, _value: usize) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+    // Simulate gauge update (instant in tests)
     Ok(())
 }
 
 async fn simulate_histogram_metric(_name: &str, _value: f64) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+    // Simulate histogram observation (instant in tests)
     Ok(())
 }
 
 async fn simulate_query_metric(name: &str) -> Result<f64, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate metric query (instant in tests)
     Ok(if name == "requests_total" {
         100.0
     } else {
@@ -275,7 +275,7 @@ async fn simulate_query_metric(name: &str) -> Result<f64, BearDogError> {
 }
 
 async fn simulate_metric_value(_name: &str, _value: f64) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+    // Simulate metric value recording (instant in tests)
     Ok(())
 }
 
@@ -288,23 +288,23 @@ async fn simulate_check_alert_threshold(
 }
 
 async fn simulate_component_health_check(component: &str) -> Result<bool, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate health check (instant in tests, would be network call in production)
     // Simulate cache being unhealthy
     Ok(component != "cache")
 }
 
 async fn simulate_system_health_check() -> Result<bool, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+    // Simulate overall health check (instant in tests)
     Ok(false) // System degraded due to cache
 }
 
 async fn simulate_component_recovery(_component: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    // Simulate recovery (instant in tests, would be orchestration in production)
     Ok(())
 }
 
 async fn simulate_start_trace(_name: &str) -> Result<String, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate trace start (instant in tests)
     Ok(format!("trace_{}", chrono::Utc::now().timestamp()))
 }
 
@@ -313,27 +313,27 @@ async fn simulate_add_span(
     _name: &str,
     _duration_ms: u64,
 ) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(3)).await;
+    // Simulate span recording (instant in tests)
     Ok(())
 }
 
 async fn simulate_end_trace(_trace_id: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate trace completion (instant in tests)
     Ok(())
 }
 
 async fn simulate_query_trace(_trace_id: &str) -> Result<String, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate trace query (instant in tests)
     Ok(format!("trace_data_{}", _trace_id))
 }
 
 async fn simulate_log_entry(_level: &str, _message: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
+    // Simulate log writing (instant in tests)
     Ok(())
 }
 
 async fn simulate_query_logs(level: &str) -> Result<Vec<String>, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate log query (instant in tests)
     let count = match level {
         "ERROR" => 2,
         "WARN" => 5,
@@ -343,7 +343,7 @@ async fn simulate_query_logs(level: &str) -> Result<Vec<String>, BearDogError> {
 }
 
 async fn simulate_search_logs(_query: &str) -> Result<Vec<String>, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate log search (instant in tests)
     Ok((0..20).map(|i| format!("log entry {}", i)).collect())
 }
 

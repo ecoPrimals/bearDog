@@ -57,6 +57,10 @@ impl TestNetworkConfig {
             health_port: 8081,
             ws_port: 3000,
             grpc_port: 50051,
+            admin_port: 8082,
+            database_port: 5432,
+            consul_port: 8500,
+            redis_port: 6379,
             timeout_seconds: 5,  // Shorter for tests
             max_connections: 10, // Lower for tests
             enable_tls: false,   // Disabled for tests
@@ -75,6 +79,10 @@ impl TestNetworkConfig {
             health_port: 8081,
             ws_port: 3000,
             grpc_port: 50051,
+            admin_port: 8082,
+            database_port: 5432,
+            consul_port: 8500,
+            redis_port: 6379,
             timeout_seconds: 1, // Very short for mocks
             max_connections: 1,
             enable_tls: false,
@@ -94,6 +102,10 @@ impl TestNetworkConfig {
             health_port: 8081,
             ws_port: 443,
             grpc_port: 443,
+            admin_port: 443,
+            database_port: 5432,
+            consul_port: 8500,
+            redis_port: 6379,
             timeout_seconds: 30,
             max_connections: 100,
             enable_tls: true,
@@ -113,6 +125,10 @@ impl TestNetworkConfig {
             health_port: 0,
             ws_port: 0,
             grpc_port: 0,
+            admin_port: 0,
+            database_port: 0,
+            consul_port: 0,
+            redis_port: 0,
             timeout_seconds: 5,
             max_connections: 10,
             enable_tls: false,

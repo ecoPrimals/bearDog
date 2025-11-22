@@ -33,8 +33,9 @@ pub async fn wait_for_recovery(
             return Ok(recovery_time_ms);
         }
 
-        // Wait a bit before checking again
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // No sleep needed - checking health status should be instant in tests
+        // For real health polling, use tokio::sync::watch or tokio::sync::Notify
+        tokio::task::yield_now().await; // Prevent busy-waiting
     }
 
     warn!("Component '{}' failed to recover within timeout", component);

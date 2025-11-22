@@ -103,8 +103,7 @@ mod tests {
         // Simulate old event
         let _old_event = AuditEvent::new(EventType::DataAccess).with_timestamp_nanos(1); // Very old
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
-        // Would check if retention period expired (simplified for test)
+        // Modern pattern: No sleep needed - just verify retention policy configuration
         assert!(retention_policy.duration_days() == 2555); // 7 years
     }
 }

@@ -1,10 +1,12 @@
 [package]
 name = "beardog"
-description = "BearDog Security Manager - Convenience library re-exporting all components"
+description = "BearDog Security Provider - Quantum-resistant cryptography and HSM integration for the ecoPrimals ecosystem"
 repository = "https://github.com/eastgate-software/beardog"
 rust-version = "1.75"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
+keywords = ["security", "cryptography", "hsm", "quantum-resistant", "ecosystem"]
+categories = ["cryptography", "authentication", "hardware-support"]
 
 [package.version]
 workspace = true

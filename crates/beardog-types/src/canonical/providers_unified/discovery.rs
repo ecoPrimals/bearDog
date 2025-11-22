@@ -10,4 +10,4 @@
 pub use crate::canonical::config::domains::discovery::DiscoveryConfig;
 
 // Re-export service registry specific types
-pub use super::service_discovery::{ServiceDiscoveryConfig, DiscoveryType};
+pub use super::service_discovery::{DiscoveryType, ServiceDiscoveryConfig};

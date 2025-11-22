@@ -47,19 +47,29 @@ fn main() -> Result<(), BearDogError> {
         println!("   Android Version:    {}", info.android_version);
         println!("   Security Patch:     {}", info.security_patch);
         println!("   HW Keystore:        v{}", info.hardware_keystore_version);
-        println!("   StrongBox:          {}", if info.strongbox_available { "✅ Available" } else { "❌ Not available" });
+        println!(
+            "   StrongBox:          {}",
+            if info.strongbox_available {
+                "✅ Available"
+            } else {
+                "❌ Not available"
+            }
+        );
         println!();
 
         // Test entropy generation (WORKING NOW!)
         println!("🎲 Testing Hardware Entropy Generation:");
         println!("   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        
+
         print!("   Generating 32 bytes... ");
         let entropy = strongbox.generate_entropy_native(32)?;
         println!("✅ Done!");
-        
+
         println!("   Entropy (hex): {}", hex::encode(&entropy[..16]));
-        println!("                  {} (showing first 16 bytes)", hex::encode(&entropy[16..]));
+        println!(
+            "                  {} (showing first 16 bytes)",
+            hex::encode(&entropy[16..])
+        );
         println!();
 
         // Test key generation (Phase 2 - will implement Binder IPC)
@@ -90,14 +100,14 @@ fn main() -> Result<(), BearDogError> {
         println!("║                 Test Complete!                            ║");
         println!("╚═══════════════════════════════════════════════════════════╝");
         println!();
-        
+
         println!("🎯 Status:");
         println!("   ✅ Phase 1: Device detection (WORKING!)");
         println!("   ✅ Phase 1: Entropy generation (WORKING!)");
         println!("   ⚙️  Phase 2: Key generation (needs Binder IPC)");
         println!("   ⚙️  Phase 2: Signing (needs Binder IPC)");
         println!();
-        
+
         println!("📚 Next Steps:");
         println!("   1. Implement direct Binder IPC to keystore2");
         println!("   2. Bypass Java framework entirely");
@@ -107,4 +117,3 @@ fn main() -> Result<(), BearDogError> {
 
     Ok(())
 }
-

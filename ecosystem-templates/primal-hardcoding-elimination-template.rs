@@ -1,345 +1,343 @@
-//! Primal Hardcoding Elimination Template
-//! 
-//! Template for migrating any primal from hardcoded connections to capability-based discovery.
-//! Each primal only knows itself and discovers others via the universal adapter.
-//! 
-//! USAGE:
-//! 1. Replace YOUR_PRIMAL_NAME with your actual primal name
-//! 2. Update capabilities to match what your primal provides
-//! 3. Update required/optional capabilities to match what your primal needs
-//! 4. Remove all hardcoded references to other primals
-//! 5. Use capability discovery for all external communication
+// Primal Hardcoding Elimination Template
+//
+// This template shows how to migrate from hardcoded primal names
+// to capability-based universal adapter discovery.
+//
+// PRINCIPLE: Each primal only knows itself and discovers others via capabilities.
 
-// MODERNIZATION NOTE: This file contains primal-specific references that should be migrated
-// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
-// Target: Replace with capability-based discovery for vendor/primal agnosticism
-use beardog_core::ecosystem::{
-    SelfDiscoveryManager, SelfIdentity, ServiceCapabilityType, UniversalIntegrationConfig,
-    DiscoveredService,
-};
+use beardog_adapters::UniversalPrimalAdapter;
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
-use tracing::{info, warn, error};
-use uuid::Uuid;
+use beardog_types::canonical::discovery::{
+    ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
+    UniversalCapabilityType,
+};
+use serde_json::json;
 
-/// YOUR_PRIMAL_NAME Core Implementation
-/// PRINCIPLE: Only knows itself - discovers ecosystem dynamically
-pub struct YourPrimalCore {
-    /// Self-discovery manager (replaces hardcoded connections)
-    discovery_manager: SelfDiscoveryManager,
-    /// Discovered service connections (populated dynamically)
-    discovered_services: HashMap<ServiceCapabilityType, Vec<DiscoveredService>>,
-}
+/// ❌ ANTI-PATTERN: Hardcoded primal name references
+/// 
+/// This violates primal sovereignty - each primal should only know itself
+mod anti_pattern {
+    use beardog_errors::BearDogError;
 
-impl YourPrimalCore {
-    /// Initialize YOUR_PRIMAL_NAME with self-discovery
-    pub async fn new() -> Result<Self, BearDogError> {
-        info!("🚀 Initializing YOUR_PRIMAL_NAME with capability-based discovery");
-        
-        // Step 1: Define YOUR_PRIMAL_NAME's self-identity
-        // IMPORTANT: Only define your own capabilities, never hardcode other primals
-        let identity = SelfIdentity::new(
-            "YOUR_PRIMAL_NAME",
-            vec![
-                // CUSTOMIZE: Replace with your actual capabilities
-                ServiceCapabilityType::Custom("YourCapability1".to_string()),
-                ServiceCapabilityType::Custom("YourCapability2".to_string()),
-                // Example capabilities:
-                // ServiceCapabilityType::Compute,
-                // ServiceCapabilityType::Storage,
-                // ServiceCapabilityType::ArtificialIntelligence,
-                // ServiceCapabilityType::Networking,
-            ],
-            std::env::var("YOUR_PRIMAL_ENDPOINT")
-                .unwrap_or_else(|_| {
-                    // Dynamic discovery endpoint - no hardcoded localhost
-                    std::env::var("BEARDOG_DISCOVERY_URL")
-                        .unwrap_or_else(|_| "http://discovery.ecosystem.local:8080/discovery".to_string())
-                }),
-        );
-        
-        // Step 2: Define what capabilities YOUR_PRIMAL_NAME needs from the ecosystem
-        let config = UniversalIntegrationConfig {
-            enable_capability_discovery: true,
-            required_capabilities: vec![
-                // CUSTOMIZE: Replace with capabilities your primal requires
-                // ServiceCapabilityType::Security, // If you need security
-                // ServiceCapabilityType::Storage,  // If you need storage
-            ],
-            optional_capabilities: vec![
-                // CUSTOMIZE: Replace with capabilities that enhance your primal
-                // ServiceCapabilityType::ArtificialIntelligence, // If AI would help
-                // ServiceCapabilityType::Networking, // If service mesh would help
-            ],
-            discovery_endpoints: vec![
-                "http://localhost:8080/discovery".to_string(),
-                std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| "http://ecosystem.local:8080/discovery".to_string()),
-            ],
-            custom_config: HashMap::new(),
-            enable_environment_discovery: true,
-        };
-        
-        // Step 3: Create discovery manager
-        let discovery_manager = SelfDiscoveryManager::new(identity, config).await?;
-        
-        // Step 4: Register your capabilities with the ecosystem
-        discovery_manager.register_self().await?;
-        
-        Ok(Self {
-            discovery_manager,
-            discovered_services: HashMap::new(),
-        })
+    pub struct BadSongbirdClient {
+        endpoint: String, // Hardcoded: "songbird.local:8080"
     }
-    
-    /// Discover and connect to required ecosystem services
-    /// This replaces hardcoded primal connections
-    pub async fn discover_ecosystem_services(&mut self) -> Result<(), BearDogError> {
-        info!("🔍 YOUR_PRIMAL_NAME discovering ecosystem services");
-        
-        // Discover required capabilities
-        let required_services = self.discovery_manager.discover_required_capabilities().await?;
-        for (capability, services) in required_services {
-            info!("✅ Found {} providers for required {:?}", services.len(), capability);
-            self.discovered_services.insert(capability, services);
+
+    impl BadSongbirdClient {
+        // ❌ WRONG: Hardcoded primal name in type
+        pub fn new() -> Self {
+            Self {
+                endpoint: "http://songbird.local:8080".to_string(), // ❌ Hardcoded endpoint
+            }
         }
-        
-        // Discover optional capabilities
-        let optional_services = self.discovery_manager.discover_optional_capabilities().await?;
-        for (capability, services) in optional_services {
-            info!("✅ Found {} providers for optional {:?}", services.len(), capability);
-            self.discovered_services.insert(capability, services);
+
+        // ❌ WRONG: Direct primal-specific method
+        pub async fn connect_to_songbird(&self) -> Result<(), BearDogError> {
+            // Hardcoded primal interaction
+            todo!("This creates 2^n connection complexity")
         }
-        
-        info!("✅ YOUR_PRIMAL_NAME ecosystem discovery complete");
-        Ok(())
     }
-    
-    /// Request capability from ecosystem (replaces hardcoded primal calls)
-    /// 
-    /// BEFORE (hardcoded):
-    /// ```rust
-    /// Universal compute capability_client.compute(data).await?;
-    /// ```
-    /// 
-    /// AFTER (capability-based):
-    /// ```rust
-    /// let result = self.request_capability(ServiceCapabilityType::Compute, request_data).await?;
-    /// ```
-    pub async fn request_capability(
-        &self,
-        capability: ServiceCapabilityType,
-        request_data: serde_json::Value,
-    ) -> Result<serde_json::Value, BearDogError> {
-        info!("📡 YOUR_PRIMAL_NAME requesting {:?} capability", capability);
-        
-        // Find providers for this capability
-        let providers = self.discovered_services.get(&capability)
-            .ok_or_else(|| BearDogError::validation(format!("No providers found for {:?}", capability)))?;
-            
-        if providers.is_empty() {
-            return Err(BearDogError::validation(format!("No available providers for {:?}", capability)));
-        }
-        
-        // Use first healthy provider (in production, implement load balancing/failover)
-        let provider = &providers[0];
-        info!("📞 Using provider: {} at {}", provider.name, provider.endpoint);
-        
-        // Make request via universal adapter (implementation depends on your HTTP client)
-        let response = self.make_capability_request(provider, request_data).await?;
-        
-        Ok(response)
-    }
-    
-    /// Make HTTP request to capability provider
-    async fn make_capability_request(
-        &self,
-        provider: &DiscoveredService,
-        request_data: serde_json::Value,
-    ) -> Result<serde_json::Value, BearDogError> {
-        // CUSTOMIZE: Implement HTTP request to provider endpoint
-        // This is where you'd use your HTTP client (reqwest, etc.)
-        
-        info!("🌐 Making request to {} at {}", provider.name, provider.endpoint);
-        
-        // Placeholder response
-        Ok(serde_json::json!({
-            "status": "success",
-            "provider": provider.name,
-            "message": "Capability request completed"
-        }))
+
+    // ❌ WRONG: Hardcoded primal references in business logic
+    pub async fn process_data(data: Vec<u8>) -> Result<String, BearDogError> {
+        let toadstool = "http://toadstool.local:8081"; // ❌ Hardcoded
+        let squirrel = "http://squirrel.local:8082"; // ❌ Hardcoded
+        let nestgate = "http://nestgate.local:8083"; // ❌ Hardcoded
+
+        // ❌ N^2 hardcoded integrations - doesn't scale
+        todo!("Send to toadstool, then squirrel, then nestgate")
     }
 }
 
-/// Example usage showing migration from hardcoded to capability-based
-pub mod migration_examples {
+/// ✅ CORRECT PATTERN: Capability-based universal adapter
+///
+/// Primal sovereignty: discover capabilities, not names
+mod correct_pattern {
     use super::*;
-    
-    /// Universal compute capability discovery compute calls
-    pub async fn migrate_compute_example(primal: &YourPrimalCore) -> Result<(), BearDogError> {
-        info!("📝 Example: Migrating from hardcoded compute calls");
-        
-        // BEFORE (hardcoded - DON'T DO THIS):
-        // Universal compute capability:8081");
-        // Universal compute capability_client.compute(data).await?;
-        
-        // AFTER (capability-based - DO THIS):
-        let compute_request = serde_json::json!({
-            "operation": "process_data",
-            "data": "example_data",
-            "priority": "normal"
-        });
-        
-        let result = primal.request_capability(
-            ServiceCapabilityType::Compute,
-            compute_request,
-        ).await?;
-        
-        info!("✅ Compute result: {}", result);
-        Ok(())
+
+    pub struct SovereignPrimalClient {
+        adapter: UniversalPrimalAdapter,
     }
-    
-    /// Universal AI capability discovery AI calls
-    pub async fn migrate_ai_example(primal: &YourPrimalCore) -> Result<(), BearDogError> {
-        info!("📝 Example: Migrating from hardcoded AI calls");
-        
-        // BEFORE (hardcoded - DON'T DO THIS):
-        // Universal AI capability:8082");
-        // Universal AI capability_client.analyze_threat(data).await?;
-        
-        // AFTER (capability-based - DO THIS):
-        let ai_request = serde_json::json!({
-            "operation": "analyze_threat",
-            "data": "threat_data",
-            "model": "security_model"
-        });
-        
-        let result = primal.request_capability(
-            ServiceCapabilityType::ArtificialIntelligence,
-            ai_request,
-        ).await?;
-        
-        info!("✅ AI analysis result: {}", result);
-        Ok(())
-    }
-    
-    /// Universal storage capability discovery storage calls
-    pub async fn migrate_storage_example(primal: &YourPrimalCore) -> Result<(), BearDogError> {
-        info!("📝 Example: Migrating from hardcoded storage calls");
-        
-        // BEFORE (hardcoded - DON'T DO THIS):
-        // Universal storage capability:8083");
-        // Universal storage capability_client.store_secure(data).await?;
-        
-        // AFTER (capability-based - DO THIS):
-        let storage_request = serde_json::json!({
-            "operation": "store_secure",
-            "data": "sensitive_data",
-            "encryption": "required"
-        });
-        
-        let result = primal.request_capability(
-            ServiceCapabilityType::Storage,
-            storage_request,
-        ).await?;
-        
-        info!("✅ Storage result: {}", result);
-        Ok(())
+
+    impl SovereignPrimalClient {
+        /// ✅ Correct: No hardcoded primal names, uses universal adapter
+        pub async fn new(adapter: UniversalPrimalAdapter) -> Result<Self, BearDogError> {
+            Ok(Self { adapter })
+        }
+
+        /// ✅ Correct: Request network capability (was: connect_to_songbird)
+        /// Discovery happens at runtime based on capability needs
+        pub async fn request_network_routing(
+            &self,
+            routing_config: serde_json::Value,
+        ) -> Result<serde_json::Value, BearDogError> {
+            // Discover primals with network routing capability
+            let network_capability = UniversalCapabilityType::Network {
+                functions: vec![NetworkFunction::TrafficRouting],
+            };
+
+            // Universal adapter finds ANY primal with this capability
+            // Could be songbird, could be a different network primal
+            self.adapter
+                .send_capability_request(network_capability, routing_config)
+                .map(|response| response.data)
+        }
+
+        /// ✅ Correct: Request compute capability (was: call toadstool directly)
+        pub async fn request_compute_analysis(
+            &self,
+            data: serde_json::Value,
+        ) -> Result<serde_json::Value, BearDogError> {
+            let compute_capability = UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::DataAnalysis],
+            };
+
+            self.adapter
+                .send_capability_request(compute_capability, data)
+                .map(|response| response.data)
+        }
+
+        /// ✅ Correct: Request AI capability (was: call squirrel directly)
+        pub async fn request_ai_inference(
+            &self,
+            model_input: serde_json::Value,
+        ) -> Result<serde_json::Value, BearDogError> {
+            let ai_capability = UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::MachineLearning],
+            };
+
+            self.adapter
+                .send_capability_request(ai_capability, model_input)
+                .map(|response| response.data)
+        }
+
+        /// ✅ Correct: Request storage capability (was: call nestgate directly)
+        pub async fn request_data_storage(
+            &self,
+            data: serde_json::Value,
+        ) -> Result<serde_json::Value, BearDogError> {
+            let storage_capability = UniversalCapabilityType::Storage {
+                characteristics: vec![StorageCharacteristic::HighDurability],
+            };
+
+            self.adapter
+                .send_capability_request(storage_capability, data)
+                .map(|response| response.data)
+        }
+
+        /// ✅ Correct: Capability-based workflow (O(1) discovery complexity)
+        pub async fn process_data_flow(
+            &self,
+            input_data: serde_json::Value,
+        ) -> Result<serde_json::Value, BearDogError> {
+            // Phase 1: Request compute analysis (capability-based)
+            let compute_capability = UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::DataAnalysis],
+            };
+            let analysis_result = self
+                .adapter
+                .send_capability_request(compute_capability, input_data)?;
+
+            // Phase 2: Request AI inference (capability-based)
+            let ai_capability = UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::MachineLearning],
+            };
+            let ai_result = self
+                .adapter
+                .send_capability_request(ai_capability, analysis_result.data)?;
+
+            // Phase 3: Store results (capability-based)
+            let storage_capability = UniversalCapabilityType::Storage {
+                characteristics: vec![
+                    StorageCharacteristic::HighDurability,
+                    StorageCharacteristic::LowLatency,
+                ],
+            };
+            let storage_result = self
+                .adapter
+                .send_capability_request(storage_capability, ai_result.data)?;
+
+            Ok(storage_result.data)
+        }
     }
 }
 
-/// Configuration migration helper
-pub mod config_migration {
+/// Migration Examples - Before and After
+mod migration_examples {
     use super::*;
-    
-    /// ✅ EXAMPLE: Convert legacy hardcoded primal names to capability-based config
-    /// This shows the correct migration pattern from sovereignty violations to pure discovery
-    pub fn migrate_legacy_config(
-        // ❌ OLD: Legacy hardcoded primal flags (violates sovereignty)
-        enable_compute_capability: bool,      // Was: enable_toadstool
-        enable_ai_capability: bool,           // Was: enable_squirrel
-        enable_storage_capability: bool,      // Was: enable_nestgate
-        enable_mesh_capability: bool,         // Was: enable_songbird
-    ) -> UniversalIntegrationConfig {
-        let mut required_capabilities = vec![];
-        let mut optional_capabilities = vec![];
-        
-        // ✅ NEW: Convert to capability requirements (achieves sovereignty)
-        if enable_compute_capability {
-            required_capabilities.push(ServiceCapabilityType::ComputeIntelligence);
+
+    /// Example 1: Network Service Discovery
+    pub mod network_example {
+        use super::*;
+
+        // ❌ BEFORE: Hardcoded songbird reference
+        pub async fn old_discover_services_wrong() -> Result<Vec<String>, BearDogError> {
+            // Hardcoded primal name
+            let songbird_endpoint = "http://songbird.local:8080/discover";
+            todo!("Call songbird directly")
         }
-        if enable_ai_capability {
-            required_capabilities.push(ServiceCapabilityType::DistributedIntelligence);
+
+        // ✅ AFTER: Capability-based discovery
+        pub async fn new_discover_services_correct(
+            adapter: &UniversalPrimalAdapter,
+        ) -> Result<Vec<String>, BearDogError> {
+            // Discover ANY primal with service discovery capability
+            let discovery_capability = UniversalCapabilityType::Network {
+                functions: vec![NetworkFunction::ServiceDiscovery],
+            };
+
+            let response = adapter.send_capability_request(discovery_capability, json!({}))?;
+
+            Ok(response
+                .data
+                .as_array()
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(String::from))
+                        .collect()
+                })
+                .unwrap_or_default())
         }
-        if enable_storage_capability {
-            required_capabilities.push(ServiceCapabilityType::DataStorage);
+    }
+
+    /// Example 2: Compute Request
+    pub mod compute_example {
+        use super::*;
+
+        // ❌ BEFORE: Hardcoded toadstool reference
+        pub async fn old_run_computation_wrong(
+            data: Vec<f64>,
+        ) -> Result<Vec<f64>, BearDogError> {
+            let toadstool = "http://toadstool.local:8081"; // ❌ Hardcoded
+            todo!("Call toadstool API directly")
         }
-        if enable_mesh_capability {
-            optional_capabilities.push(ServiceCapabilityType::ServiceMesh);
+
+        // ✅ AFTER: Capability-based compute
+        pub async fn new_run_computation_correct(
+            adapter: &UniversalPrimalAdapter,
+            data: Vec<f64>,
+        ) -> Result<Vec<f64>, BearDogError> {
+            // Request compute capability - could be ANY compute provider
+            let compute_capability = UniversalCapabilityType::Compute {
+                abilities: vec![
+                    ComputeAbility::DataAnalysis,
+                    ComputeAbility::ParallelProcessing,
+                ],
+            };
+
+            let payload = json!({ "data": data });
+            let response = adapter.send_capability_request(compute_capability, payload)?;
+
+            Ok(response
+                .data
+                .get("result")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_f64())
+                        .collect()
+                })
+                .unwrap_or_default())
         }
-        
-        UniversalIntegrationConfig {
-            enable_capability_discovery: true,
-            required_capabilities,
-            optional_capabilities,
-            discovery_endpoints: vec![
-                "http://localhost:8080/discovery".to_string(),
-            ],
-            custom_config: HashMap::new(),
-            enable_environment_discovery: true,
+    }
+
+    /// Example 3: Multi-Primal Workflow
+    pub mod workflow_example {
+        use super::*;
+
+        // ❌ BEFORE: Hardcoded primal sequence
+        pub async fn old_data_pipeline_wrong(
+            input: Vec<u8>,
+        ) -> Result<String, BearDogError> {
+            // Hardcoded primal dependency chain
+            let toadstool = "http://toadstool.local:8081";
+            let squirrel = "http://squirrel.local:8082";
+            let nestgate = "http://nestgate.local:8083";
+
+            // N^2 integration complexity
+            todo!("toadstool -> squirrel -> nestgate (hardcoded)")
+        }
+
+        // ✅ AFTER: Capability-based pipeline
+        pub async fn new_data_pipeline_correct(
+            adapter: &UniversalPrimalAdapter,
+            input: Vec<u8>,
+        ) -> Result<String, BearDogError> {
+            // Step 1: Data analysis capability (whoever provides it)
+            let analysis_cap = UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::DataAnalysis],
+            };
+            let analyzed = adapter.send_capability_request(analysis_cap, json!({ "data": input }))?;
+
+            // Step 2: AI inference capability (whoever provides it)
+            let ai_cap = UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::MachineLearning],
+            };
+            let inferred = adapter.send_capability_request(ai_cap, analyzed.data)?;
+
+            // Step 3: Storage capability (whoever provides it)
+            let storage_cap = UniversalCapabilityType::Storage {
+                characteristics: vec![StorageCharacteristic::HighDurability],
+            };
+            let stored = adapter.send_capability_request(storage_cap, inferred.data)?;
+
+            Ok(stored
+                .data
+                .get("storage_id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string())
         }
     }
 }
 
+/// Testing Patterns
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
+    /// ✅ Test with mock capability adapter (no hardcoded primals)
     #[tokio::test]
-    async fn test_primal_self_discovery() {
-        let primal = YourPrimalCore::new().await.unwrap();
-        
-        // Verify primal only knows itself
-        assert_eq!(primal.discovery_manager.identity().name, "YOUR_PRIMAL_NAME");
-        
-        // Verify no hardcoded knowledge of other primals
-        // (capabilities are discovered dynamically)
+    async fn test_capability_based_discovery() {
+        // Create mock discovery client
+        let discovery_client = create_mock_discovery_client();
+        let adapter = UniversalPrimalAdapter::new(Arc::new(discovery_client))
+            .await
+            .unwrap();
+
+        // Request capability - no hardcoded primal names
+        let compute_capability = UniversalCapabilityType::Compute {
+            abilities: vec![ComputeAbility::DataAnalysis],
+        };
+
+        let result = adapter
+            .send_capability_request(compute_capability, json!({"test": "data"}))
+            .expect("Should discover and connect to compute capability");
+
+        assert!(!result.service_id.is_empty());
+        // Don't assert on specific primal names - could be any compute provider
     }
-    
-    #[tokio::test]
-    async fn test_capability_discovery() {
-        let mut primal = YourPrimalCore::new().await.unwrap();
-        
-        // Discovery should work without hardcoded connections
-        // (In real implementation, this would connect to actual services)
-        let result = primal.discover_ecosystem_services().await;
-        
-        // Should not fail due to hardcoded dependencies
-        // May fail due to no discovery services available (expected in test)
+
+    fn create_mock_discovery_client() -> impl PrimalDiscoveryClient {
+        // Mock implementation that returns capability-based responses
+        MockDiscoveryClient::new()
     }
 }
 
-/// Migration checklist for eliminating primal hardcoding
-/// 
-/// ✅ CUSTOMIZE: Complete these steps for your primal
-/// 
-/// 1. [ ] Replace hardcoded primal names with ServiceCapabilityType
-/// 2. [ ] Replace hardcoded client constructors with capability discovery
-/// 3. [ ] Replace hardcoded method calls with request_capability()
-/// 4. [ ] Replace hardcoded configuration flags with UniversalIntegrationConfig
-/// 5. [ ] Add SelfDiscoveryManager to your primal's core
-/// 6. [ ] Update initialization to register self-capabilities
-/// 7. [ ] Update service calls to use discovered endpoints
-/// 8. [ ] Remove all hardcoded endpoint URLs
-/// 9. [ ] Remove all hardcoded primal type references
-/// 10. [ ] Test with dynamic service discovery
-/// 
-/// PRINCIPLE: Your primal should only know:
-/// - Its own identity and capabilities
-/// - What capabilities it needs from the ecosystem
-/// - How to discover and use those capabilities dynamically
-/// 
-/// Your primal should NEVER know:
-/// - Names of other primals
-/// - Endpoints of other primals  
-/// - Implementation details of other primals 
+/// Key Principles Summary
+///
+/// 1. ✅ NO hardcoded primal names in production code
+/// 2. ✅ Discover capabilities, not primals
+/// 3. ✅ Each primal only knows itself
+/// 4. ✅ Universal adapter handles all external communication
+/// 5. ✅ O(1) discovery complexity vs 2^n hardcoded connections
+/// 6. ✅ Truly pluggable ecosystem - any primal can provide any capability
+/// 7. ✅ Zero-knowledge infant deployment
+///
+/// Migration Checklist:
+/// - [ ] Replace all primal name references with capability types
+/// - [ ] Use UniversalPrimalAdapter for all external communication
+/// - [ ] Remove hardcoded endpoints (songbird.local, toadstool.local, etc.)
+/// - [ ] Test with mock adapter (capability-based, not name-based)
+/// - [ ] Validate zero-knowledge deployment
+/// - [ ] Update documentation to show capability patterns

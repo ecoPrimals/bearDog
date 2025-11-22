@@ -88,24 +88,62 @@ pub type ValidationResult<T> = Result<T, ValidationError>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValidationError {
     /// Value is below minimum threshold
-    BelowMinimum { value: String, minimum: String, field: String },
+    BelowMinimum {
+        value: String,
+        minimum: String,
+        field: String,
+    },
     /// Value exceeds maximum threshold
-    AboveMaximum { value: String, maximum: String, field: String },
+    AboveMaximum {
+        value: String,
+        maximum: String,
+        field: String,
+    },
     /// Value is outside valid range
-    OutOfRange { value: String, min: String, max: String, field: String },
+    OutOfRange {
+        value: String,
+        min: String,
+        max: String,
+        field: String,
+    },
 }
 
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::BelowMinimum { value, minimum, field } => {
-                write!(f, "Field '{}' value {} is below minimum {}", field, value, minimum)
+            Self::BelowMinimum {
+                value,
+                minimum,
+                field,
+            } => {
+                write!(
+                    f,
+                    "Field '{}' value {} is below minimum {}",
+                    field, value, minimum
+                )
             }
-            Self::AboveMaximum { value, maximum, field } => {
-                write!(f, "Field '{}' value {} exceeds maximum {}", field, value, maximum)
+            Self::AboveMaximum {
+                value,
+                maximum,
+                field,
+            } => {
+                write!(
+                    f,
+                    "Field '{}' value {} exceeds maximum {}",
+                    field, value, maximum
+                )
             }
-            Self::OutOfRange { value, min, max, field } => {
-                write!(f, "Field '{}' value {} is outside valid range [{}, {}]", field, value, min, max)
+            Self::OutOfRange {
+                value,
+                min,
+                max,
+                field,
+            } => {
+                write!(
+                    f,
+                    "Field '{}' value {} is outside valid range [{}, {}]",
+                    field, value, min, max
+                )
             }
         }
     }
@@ -120,41 +158,41 @@ mod tests {
     #[test]
     fn test_cache_size_constants() {
         assert_eq!(MIN_CACHE_SIZE, 100);
-        assert!(MIN_CACHE_SIZE > 0);
+        // Constant assertion removed - compiler optimizes away
     }
 
     #[test]
     fn test_ttl_constants() {
         assert_eq!(MAX_CACHE_TTL_SECS, 3600); // 1 hour
         assert_eq!(MAX_PERFORMANCE_TTL_SECS, 86400); // 24 hours
-        assert!(MAX_PERFORMANCE_TTL_SECS > MAX_CACHE_TTL_SECS);
+                                                     // Compile-time constant relationship verified at declaration
     }
 
     #[test]
     fn test_flush_interval_constants() {
         assert_eq!(MIN_FLUSH_INTERVAL_SECS, 10);
         assert_eq!(MAX_FLUSH_INTERVAL_SECS, 300); // 5 minutes
-        assert!(MAX_FLUSH_INTERVAL_SECS > MIN_FLUSH_INTERVAL_SECS);
+                                                  // Compile-time constant relationship verified at declaration
     }
 
     #[test]
     fn test_timeout_constants() {
         assert_eq!(MAX_CONNECTION_TIMEOUT_SECS, 60);
-        assert!(MAX_CONNECTION_TIMEOUT_SECS > 0);
+        // Constant assertion removed - compiler optimizes away
     }
 
     #[test]
     fn test_batch_size_constants() {
         assert_eq!(MIN_BATCH_SIZE, 1);
         assert_eq!(MAX_BATCH_SIZE, 10000);
-        assert!(MAX_BATCH_SIZE > MIN_BATCH_SIZE);
+        // Compile-time constant relationship verified at declaration
     }
 
     #[test]
     fn test_retry_constants() {
         assert_eq!(MIN_RETRY_ATTEMPTS, 1);
         assert_eq!(MAX_RETRY_ATTEMPTS, 10);
-        assert!(MAX_RETRY_ATTEMPTS > MIN_RETRY_ATTEMPTS);
+        // Compile-time constant relationship verified at declaration
     }
 
     #[test]
@@ -170,4 +208,3 @@ mod tests {
         assert!(display.contains("100"));
     }
 }
-

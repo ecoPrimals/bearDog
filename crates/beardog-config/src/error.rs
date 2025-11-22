@@ -59,10 +59,7 @@ pub enum ConfigError {
 
     /// Invalid value
     #[error("Invalid value for '{field}': {message}")]
-    InvalidValue {
-        field: String,
-        message: String,
-    },
+    InvalidValue { field: String, message: String },
 }
 
 impl ConfigError {
@@ -84,4 +81,3 @@ impl ConfigError {
         Self::PortConflict(message.into())
     }
 }
-

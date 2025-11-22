@@ -240,7 +240,7 @@ impl SoftwareKeyStore {
     /// # Errors
     /// Returns an error if initialization fails
     pub async fn new(
-        config: &crate::tunnel::hsm::software_hsm::KeyStoreConfig,
+        _config: &crate::tunnel::hsm::software_hsm::KeyStoreConfig,
     ) -> Result<Self, BearDogError> {
         Ok(Self {
             storage_backend: Arc::new(InMemoryStorageBackend),

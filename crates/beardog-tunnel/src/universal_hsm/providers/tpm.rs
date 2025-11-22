@@ -16,25 +16,44 @@ impl TpmHsmProvider {
 
     /// Initialize TPM connection
     ///
-    /// Stub implementation
+    /// Stub implementation - returns safe defaults
     pub async fn initialize(&self) -> Result<(), BearDogError> {
-        // TODO: Implement actual TPM initialization
+        // PHASE-2(TPM): Implement TPM initialization
+        // 
+        // Implementation Requirements:
+        // 1. Open TPM device (/dev/tpm0 or /dev/tpmrm0)
+        // 2. Send TPM2_Startup command
+        // 3. Verify TPM is operational
+        // 4. Query capabilities via TPM2_GetCapability
+        // 
+        // References:
+        // - TPM 2.0 spec Part 3 (Commands)
+        // - tpm2-tss library for Rust bindings
         Ok(())
     }
 
     /// Get TPM version
     ///
-    /// Stub implementation
+    /// Returns safe default (TPM 2.0)
     pub async fn get_version(&self) -> Result<String, BearDogError> {
-        // TODO: Implement actual version detection
+        // PHASE-2(TPM): Implement TPM version detection
+        // 
+        // Implementation: Query TPM2_GetCapability(TPM_CAP_TPM_PROPERTIES)
+        // to retrieve TPM_PT_FAMILY_INDICATOR
         Ok("2.0".to_string())
     }
 
     /// Check if TPM is available
     ///
-    /// Stub implementation
+    /// Returns false (safe default) - actual detection in Phase 2
     pub fn is_available(&self) -> bool {
-        // TODO: Implement actual availability check
+        // PHASE-2(TPM): Implement TPM availability check
+        // 
+        // Implementation:
+        // 1. Check if device path exists (std::fs::metadata)
+        // 2. Try to open device for reading
+        // 3. Send TPM2_GetCapability to verify operational
+        // 4. Check permissions (require root or tss group)
         false
     }
 }

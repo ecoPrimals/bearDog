@@ -26,7 +26,7 @@ impl HumanEntropyClassifier {
     pub async fn classify_entropy(&self, _hsm: &DiscoveredHsm) -> Result<f64, BearDogError> {
         info!("Classifying human entropy");
         
-        // TODO: Implement entropy classification
+        // PHASE-2(Entropy): Implement entropy classification
         Ok(0.8)
     }
 }

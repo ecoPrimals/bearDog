@@ -4,7 +4,6 @@
 
 use crate::*;
 
-
 #[cfg(test)]
 mod sha256_comprehensive {
     use super::*;

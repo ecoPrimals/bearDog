@@ -61,6 +61,59 @@ impl Default for HsmConfig {
 }
 
 impl HsmConfig {
+    /// Load HSM configuration from environment variables
+    ///
+    /// Reads configuration from environment variables:
+    /// - `BEARDOG_HSM_AUTO_DETECT`: Auto-detect HSMs (default: true)
+    /// - `BEARDOG_HSM_PREFER_HARDWARE`: Prefer hardware HSMs (default: true)
+    /// - `BEARDOG_HSM_ENABLE_SOFTHSM`: Enable SoftHSM2 (default: true)
+    /// - `BEARDOG_HSM_ENABLE_YUBIHSM`: Enable YubiHSM (default: false)
+    /// - `BEARDOG_HSM_ENABLE_TPM`: Enable TPM (default: false)
+    /// - `BEARDOG_HSM_ENABLE_STRONGBOX`: Enable StrongBox (default: false)
+    /// - `SOFTHSM2_CONF`: SoftHSM2 config file path
+    /// - `BEARDOG_YUBIHSM_CONNECTOR`: YubiHSM connector URL
+    #[must_use]
+    pub fn from_env() -> Self {
+        use std::env;
+
+        let defaults = Self::default();
+
+        Self {
+            auto_detect: env::var("BEARDOG_HSM_AUTO_DETECT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.auto_detect),
+            prefer_hardware: env::var("BEARDOG_HSM_PREFER_HARDWARE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.prefer_hardware),
+            enable_softhsm: env::var("BEARDOG_HSM_ENABLE_SOFTHSM")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.enable_softhsm),
+            enable_yubihsm: env::var("BEARDOG_HSM_ENABLE_YUBIHSM")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.enable_yubihsm),
+            enable_tpm: env::var("BEARDOG_HSM_ENABLE_TPM")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.enable_tpm),
+            enable_strongbox: env::var("BEARDOG_HSM_ENABLE_STRONGBOX")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.enable_strongbox),
+            softhsm_config: env::var("SOFTHSM2_CONF")
+                .ok()
+                .map(PathBuf::from)
+                .or(defaults.softhsm_config),
+            yubihsm_connector: env::var("BEARDOG_YUBIHSM_CONNECTOR")
+                .ok()
+                .or(defaults.yubihsm_connector),
+            provider_order: defaults.provider_order,
+        }
+    }
+
     /// Validate HSM configuration
     pub fn validate(&self) -> ConfigResult<()> {
         // Check that at least one provider is enabled
@@ -143,20 +196,24 @@ mod tests {
 
     #[test]
     fn test_no_providers_enabled() {
-        let mut config = HsmConfig::default();
-        config.auto_detect = false;
-        config.enable_softhsm = false;
+        let config = HsmConfig {
+            auto_detect: false,
+            enable_softhsm: false,
+            ..Default::default()
+        };
 
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_enabled_providers() {
-        let mut config = HsmConfig::default();
-        config.enable_softhsm = true;
-        config.enable_yubihsm = true;
-        config.enable_tpm = false;
-        config.enable_strongbox = false;
+        let config = HsmConfig {
+            enable_softhsm: true,
+            enable_yubihsm: true,
+            enable_tpm: false,
+            enable_strongbox: false,
+            ..Default::default()
+        };
 
         let providers = config.get_enabled_providers();
         assert_eq!(providers.len(), 2);
@@ -164,4 +221,3 @@ mod tests {
         assert!(providers.contains(&"yubihsm".to_string()));
     }
 }
-

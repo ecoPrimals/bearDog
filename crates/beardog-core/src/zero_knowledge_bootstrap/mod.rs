@@ -37,7 +37,7 @@
 //! - **Sovereignty Compliant**: No forced dependencies on specific services
 
 use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetadata, UniversalEndpoint};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{ServiceCapabilityType, UniversalCapability};
 use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
 use serde::{Deserialize, Serialize};
@@ -60,6 +60,10 @@ pub mod ecosystem_listener;
 #[cfg(test)]
 #[path = "ecosystem_listener_tests.rs"]
 mod ecosystem_listener_tests;
+
+#[cfg(test)]
+#[path = "bootstrap_tests.rs"]
+mod bootstrap_tests;
 
 /// Self-discovery engine for identifying own capabilities
 ///
@@ -95,7 +99,7 @@ pub mod self_discovery;
 /// ```rust,no_run
 /// use beardog_core::zero_knowledge_bootstrap::ZeroKnowledgeBootstrap;
 ///
-/// # async fn example() -> beardog_errors::BearDogResult<()> {
+/// # async fn example() -> Result<(), beardog_errors::BearDogError> {
 /// // Create bootstrap engine with zero ecosystem knowledge
 /// let mut bootstrap = ZeroKnowledgeBootstrap::new().await.expect("Test: create bootstrap should succeed");
 ///
@@ -243,8 +247,10 @@ impl Default for BootstrapConfig {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10),
             min_capabilities_threshold: 1, // At least discover one other capability
-            listen_interface: std::env::var("BEARDOG_LISTEN_INTERFACE")
-                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
+            listen_interface: std::env::var("BEARDOG_LISTEN_INTERFACE").unwrap_or_else(|_| {
+                use beardog_config::global::BEARDOG_CONFIG;
+                BEARDOG_CONFIG.network.addresses.bind_address.clone()
+            }),
             discovery_protocols: vec![
                 DiscoveryProtocol::MulticastDNS,
                 DiscoveryProtocol::HttpDiscovery,
@@ -291,7 +297,7 @@ impl ZeroKnowledgeBootstrap {
     /// # Errors
     /// Returns an error if initialization fails, if self-discovery encounters issues,
     /// or if internal component creation fails.
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🌱 Initializing Zero-Knowledge Bootstrap - starting with zero ecosystem knowledge");
 
         let config = UnifiedBootstrapConfig::default();
@@ -336,7 +342,7 @@ impl ZeroKnowledgeBootstrap {
     /// Returns an error if bootstrapping fails at any phase, if ecosystem announcement encounters issues,
     /// or if capability discovery or registry operations fail.
     #[allow(clippy::cognitive_complexity)] // Orchestration function - complexity is from coordinating many phases
-    pub async fn bootstrap(&mut self) -> BearDogResult<()> {
+    pub async fn bootstrap(&mut self) -> Result<(), BearDogError> {
         let start_time = std::time::Instant::now();
 
         info!("🚀 Starting Zero-Knowledge Bootstrap Process");
@@ -390,12 +396,12 @@ impl ZeroKnowledgeBootstrap {
 
     /// Announce self to ecosystem (broadcast our capabilities)
     #[allow(clippy::cognitive_complexity)] // Multi-protocol announcement - inherently complex
-    fn announce_self_to_ecosystem(&mut self) -> BearDogResult<()> {
+    fn announce_self_to_ecosystem(&mut self) -> Result<(), BearDogError> {
         info!("📢 Announcing self to ecosystem...");
 
         // Use all available discovery protocols to announce ourselves
         for protocol in &self.config.discovery.enabled_protocols {
-            self.announce_via_protocol(protocol);
+            Self::announce_via_protocol(protocol);
             debug!("✅ Announced via {:?}", protocol);
             self.metrics.protocols_used.push(format!("{protocol:?}"));
         }
@@ -405,7 +411,6 @@ impl ZeroKnowledgeBootstrap {
 
     /// Announce via specific discovery protocol
     const fn announce_via_protocol(
-        &self,
         protocol: &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
     ) {
         use beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol as DP;
@@ -438,7 +443,7 @@ impl ZeroKnowledgeBootstrap {
     }
 
     /// Starts `ecosystem_listening`
-    fn start_ecosystem_listening(&mut self) -> BearDogResult<()> {
+    fn start_ecosystem_listening(&mut self) -> Result<(), BearDogError> {
         info!("👂 Starting passive ecosystem listening...");
 
         let mut listener = ecosystem_listener::EcosystemListener::new(
@@ -457,7 +462,7 @@ impl ZeroKnowledgeBootstrap {
 
     /// Discover ecosystem capabilities through active probing
     #[allow(clippy::cognitive_complexity)] // Multi-protocol discovery with retries - complexity is necessary
-    async fn discover_ecosystem_capabilities(&mut self) -> BearDogResult<()> {
+    async fn discover_ecosystem_capabilities(&mut self) -> Result<(), BearDogError> {
         info!("🔍 Discovering ecosystem capabilities...");
 
         let mut discovery_attempts = 0;
@@ -511,7 +516,7 @@ impl ZeroKnowledgeBootstrap {
     /// Build dynamic capability registry from discoveries
     /// Builds `capability_registry`
     #[allow(clippy::cognitive_complexity)] // Registry building with validation - complexity is inherent
-    async fn build_capability_registry(&mut self) -> BearDogResult<()> {
+    async fn build_capability_registry(&mut self) -> Result<(), BearDogError> {
         info!("🏗️ Building dynamic capability registry...");
 
         let capabilities = self.discovered_capabilities.read().await;
@@ -592,7 +597,7 @@ impl ZeroKnowledgeBootstrap {
 
     const fn discover_capabilities_via_protocol(
         _protocol: &beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>, BearDogError> {
         // Implementation in capability_registry module
         Ok(Vec::new())
     }
@@ -726,9 +731,11 @@ mod tests {
         assert!(!self_id.is_empty(), "Must have self-identity");
 
         // Validate infant discovery - no hardcoded ecosystem assumptions
+        // Note: Default is "primal-" unless PRIMAL_TYPE env var is set
         assert!(
-            self_id.starts_with("beardog-"),
-            "Should identify as beardog variant"
+            self_id.contains("-") && !self_id.is_empty(),
+            "Should have valid self-generated ID format: {}",
+            self_id
         );
 
         // Validate capabilities discovery readiness

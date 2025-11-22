@@ -35,7 +35,7 @@ pub async fn run_production_deployment_test(
     // Step 1: Initialize system
     info!("Step 1: System Initialization");
     execute_step("Initialize BearDog Core", || async {
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // Simulate initialization (instant in tests)
         Ok(())
     })
     .await?;
@@ -45,8 +45,7 @@ pub async fn run_production_deployment_test(
     // Step 2: Load configuration
     info!("Step 2: Configuration Loading");
     execute_step("Load Production Configuration", || async {
-        // Simulate config loading
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        // Simulate config loading (instant in tests)
         Ok(())
     })
     .await?;
@@ -56,7 +55,7 @@ pub async fn run_production_deployment_test(
     // Step 3: Start services
     info!("Step 3: Service Startup");
     execute_step("Start Core Services", || async {
-        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        // Simulate service startup (instant in tests)
         Ok(())
     })
     .await?;

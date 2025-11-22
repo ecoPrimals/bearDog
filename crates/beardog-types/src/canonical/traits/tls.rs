@@ -15,7 +15,7 @@
 //! ## Example Usage
 //!
 //! ```rust
-//! use beardog_types::canonical::traits::TlsConfiguration;
+//! use beardog_types::canonical::traits::{TlsConfiguration, TlsVersion};
 //!
 //! fn setup_secure_connection<T: TlsConfiguration>(tls_config: &T) -> Result<(), String> {
 //!     if !tls_config.is_enabled() {
@@ -206,9 +206,7 @@ pub trait TlsConfiguration: Send + Sync {
     /// - Peer verification enabled
     /// - Certificate and key configured (if server)
     fn is_production_ready(&self) -> bool {
-        self.is_enabled()
-            && self.min_tls_version() >= TlsVersion::Tls12
-            && self.verify_peer()
+        self.is_enabled() && self.min_tls_version() >= TlsVersion::Tls12 && self.verify_peer()
     }
 }
 
@@ -353,7 +351,7 @@ mod tests {
     fn test_trait_defaults() {
         let config = MockTlsConfig {
             enabled: true,
-            verify: false, // Will be overridden by implementing trait
+            verify: false,                  // Will be overridden by implementing trait
             min_version: TlsVersion::Tls10, // Will be overridden
             cert: None,
             key: None,
@@ -366,4 +364,3 @@ mod tests {
         assert_eq!(config.cipher_suites(), None); // Trait default
     }
 }
-

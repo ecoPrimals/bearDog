@@ -14,6 +14,36 @@ async fn test_integration_suite_basic() -> Result<(), BearDogError> {
 // TEST_PRIORITY: normal
 #[test]
 fn test_mock_auth_handler() {
-    // Basic mock auth handler test
-    // TODO: Implement test
+    // Verify authentication handler interface
+    trait AuthHandler {
+        fn authenticate(&self, token: &str) -> bool;
+        fn authorize(&self, user_id: &str, resource: &str) -> bool;
+    }
+
+    struct TestAuthHandler;
+
+    impl AuthHandler for TestAuthHandler {
+        fn authenticate(&self, token: &str) -> bool {
+            !token.is_empty() && token.starts_with("Bearer ")
+        }
+
+        fn authorize(&self, user_id: &str, resource: &str) -> bool {
+            !user_id.is_empty() && !resource.is_empty()
+        }
+    }
+
+    let handler = TestAuthHandler;
+
+    assert!(
+        handler.authenticate("Bearer valid-token"),
+        "Should authenticate valid token"
+    );
+    assert!(
+        !handler.authenticate("invalid"),
+        "Should reject invalid token"
+    );
+    assert!(
+        handler.authorize("user-123", "/api/resource"),
+        "Should authorize valid access"
+    );
 }

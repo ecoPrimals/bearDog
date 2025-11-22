@@ -10,7 +10,7 @@ use crate::universal::capability_based_adapter::UniversalCapabilityAdapter;
 use beardog_core::ai::hybrid_intelligence::sovereign_rng::{
     HumanEntropyWeightInitializer, SovereignRng, SovereignRngConfig,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_genetics::genetics::entropy_hierarchy::{
     EntropyClass, EntropyHierarchyManager, HumanIdentity,
 };
@@ -206,7 +206,7 @@ impl UniversalEntropyCapabilityAdapter {
     pub async fn new(
         entropy_manager: Arc<EntropyHierarchyManager>,
         config: EntropyCapabilityConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self> {
         info!("🎲 Initializing Universal Entropy Capability Adapter");
         info!("🌐 Mission: Enable ecosystem-wide human-owned randomness");
         info!("📋 Configuration:");
@@ -251,7 +251,7 @@ impl UniversalEntropyCapabilityAdapter {
     pub fn register_capability(
         &self,
         adapter: &UniversalCapabilityAdapter,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         let entropy_capability = UniversalCapability {
             capability_id: "human_owned_entropy".to_string(),
             service_type: ServiceCapabilityType::Entropy,
@@ -288,7 +288,7 @@ impl UniversalEntropyCapabilityAdapter {
     pub fn handle_capability_request(
         &self,
         request: &CapabilityRequest,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         let request_id = Uuid::new_v4().to_string();
 
         debug!("🎲 Processing entropy capability request: {}", request_id);
@@ -324,7 +324,7 @@ impl UniversalEntropyCapabilityAdapter {
         &self,
         request: &CapabilityRequest,
         request_id: &str,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         // Parse entropy request from parameters
         let entropy_request: EntropyRequest =
             serde_json::from_value(serde_json::to_value(&request.parameters)?)?;
@@ -396,7 +396,7 @@ impl UniversalEntropyCapabilityAdapter {
         &self,
         request: &CapabilityRequest,
         request_id: &str,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         // Parse weight initialization request
         let weight_request: HumanEntropyWeightInitializer =
             serde_json::from_value(serde_json::to_value(&request.parameters)?)?;
@@ -432,7 +432,7 @@ impl UniversalEntropyCapabilityAdapter {
     }
 
     /// Validates ownership
-    fn validate_ownership(&self, request: &EntropyRequest) -> BearDogResult<bool> {
+    fn validate_ownership(&self, request: &EntropyRequest) -> Result<bool> {
         let ownership_registry = self.ownership_registry.read();
 
         if let Some(record) = ownership_registry.get(&request.human_identity_id) {
@@ -455,7 +455,7 @@ impl UniversalEntropyCapabilityAdapter {
         Ok(true)
     }
 
-    fn check_rate_limits(&self, request: &EntropyRequest) -> BearDogResult<bool> {
+    fn check_rate_limits(&self, request: &EntropyRequest) -> Result<bool> {
         let mut rate_limiter = self.rate_limiter.write();
         let now = chrono::Utc::now();
         let current_minute = now.timestamp() / 60;
@@ -513,7 +513,7 @@ impl UniversalEntropyCapabilityAdapter {
         &self,
         request: &EntropyRequest,
         bytes_generated: usize,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         let mut rate_limiter = self.rate_limiter.write();
 
         if let Some(rate_state) = rate_limiter.get_mut(&request.human_identity_id) {
@@ -534,7 +534,7 @@ impl UniversalEntropyCapabilityAdapter {
         request: &EntropyRequest,
         request_id: &str,
         bytes_generated: usize,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         let audit_record = serde_json::json!({
             "timestamp": chrono::Utc::now(),
             "request_id": request_id,
@@ -563,7 +563,7 @@ impl UniversalEntropyCapabilityAdapter {
         request: &HumanEntropyWeightInitializer,
         request_id: &str,
         weights: &Vec<Vec<f64>>,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         let audit_record = serde_json::json!({
             "timestamp": chrono::Utc::now(),
             "request_id": request_id,
@@ -587,7 +587,7 @@ impl UniversalEntropyCapabilityAdapter {
         &self,
         request: &CapabilityRequest,
         _request_id: &str,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         // Parse ownership validation request
         let validation_request: EntropyRequest =
             serde_json::from_value(serde_json::to_value(&request.parameters)?)?;
@@ -613,7 +613,7 @@ impl UniversalEntropyCapabilityAdapter {
         &self,
         request: &CapabilityRequest,
         _request_id: &str,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         // Parse session request parameters
         let requesting_primal: String = request
             .parameters

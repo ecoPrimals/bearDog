@@ -12,7 +12,7 @@ mod tests {
     async fn test_create_manager_with_defaults() {
         let manager = KeyRotationManager::with_defaults();
         let stats = manager.get_rotation_stats().await.unwrap();
-        
+
         assert_eq!(stats.total_keys, 0);
         assert_eq!(stats.active_keys, 0);
         assert_eq!(stats.rotating_keys, 0);
@@ -22,7 +22,7 @@ mod tests {
     #[tokio::test]
     async fn test_register_and_activate_key() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register a new key
         manager
             .register_key(
@@ -45,7 +45,7 @@ mod tests {
     #[tokio::test]
     async fn test_register_multiple_keys() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register multiple keys
         for i in 1..=5 {
             manager
@@ -67,7 +67,7 @@ mod tests {
     #[tokio::test]
     async fn test_rotate_key_success() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register a key
         manager
             .register_key(
@@ -80,27 +80,30 @@ mod tests {
 
         // Rotate the key
         let new_key_id = manager.rotate_key("rotate-key-1").await.unwrap();
-        
+
         // Verify new key was created
         assert!(new_key_id.starts_with("rotate-key-1-v"));
-        
+
         // Verify new key is active
         let new_metadata = manager.get_key_metadata(&new_key_id).await.unwrap();
         assert_eq!(new_metadata.state, KeyLifecycleState::Active);
-        
+
         // Verify old key is deprecated
         let old_metadata = manager.get_key_metadata("rotate-key-1").await.unwrap();
         assert_eq!(old_metadata.state, KeyLifecycleState::Deprecated);
-        
+
         // Verify predecessor/successor linking
-        assert_eq!(new_metadata.predecessor_key_id, Some("rotate-key-1".to_string()));
+        assert_eq!(
+            new_metadata.predecessor_key_id,
+            Some("rotate-key-1".to_string())
+        );
         assert_eq!(old_metadata.successor_key_id, Some(new_key_id.clone()));
     }
 
     #[tokio::test]
     async fn test_rotate_key_manual_reason() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "manual-rotate".to_string(),
@@ -114,9 +117,9 @@ mod tests {
             .rotate_key_with_reason("manual-rotate", KeyRotationReason::Manual)
             .await
             .unwrap();
-        
+
         assert!(new_key_id.starts_with("manual-rotate-v"));
-        
+
         // Verify rotation event was logged
         let events = manager.get_rotation_events("manual-rotate").await.unwrap();
         assert_eq!(events.len(), 1);
@@ -126,7 +129,7 @@ mod tests {
     #[tokio::test]
     async fn test_rotate_key_compromise_reason() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "compromised-key".to_string(),
@@ -140,8 +143,11 @@ mod tests {
             .rotate_key_with_reason("compromised-key", KeyRotationReason::Compromised)
             .await
             .unwrap();
-        
-        let events = manager.get_rotation_events("compromised-key").await.unwrap();
+
+        let events = manager
+            .get_rotation_events("compromised-key")
+            .await
+            .unwrap();
         assert_eq!(events[0].reason, KeyRotationReason::Compromised);
         assert!(new_key_id.starts_with("compromised-key-v"));
     }
@@ -149,7 +155,7 @@ mod tests {
     #[tokio::test]
     async fn test_rotate_nonexistent_key() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         let result = manager.rotate_key("nonexistent-key").await;
         assert!(result.is_err());
     }
@@ -157,7 +163,7 @@ mod tests {
     #[tokio::test]
     async fn test_rotate_already_deprecated_key() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register and rotate once
         manager
             .register_key(
@@ -167,9 +173,9 @@ mod tests {
             )
             .await
             .unwrap();
-        
+
         manager.rotate_key("once-rotated").await.unwrap();
-        
+
         // Try to rotate the deprecated key again
         let result = manager.rotate_key("once-rotated").await;
         assert!(result.is_err());
@@ -178,7 +184,7 @@ mod tests {
     #[tokio::test]
     async fn test_deprecate_key() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "deprecate-me".to_string(),
@@ -190,7 +196,7 @@ mod tests {
 
         // Manually deprecate
         manager.deprecate_key("deprecate-me").await.unwrap();
-        
+
         let metadata = manager.get_key_metadata("deprecate-me").await.unwrap();
         assert_eq!(metadata.state, KeyLifecycleState::Deprecated);
         assert!(metadata.deprecated_at.is_some());
@@ -199,7 +205,7 @@ mod tests {
     #[tokio::test]
     async fn test_revoke_key() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "revoke-me".to_string(),
@@ -211,7 +217,7 @@ mod tests {
 
         // Revoke key
         manager.revoke_key("revoke-me").await.unwrap();
-        
+
         let metadata = manager.get_key_metadata("revoke-me").await.unwrap();
         assert_eq!(metadata.state, KeyLifecycleState::Revoked);
         assert!(metadata.revoked_at.is_some());
@@ -220,7 +226,7 @@ mod tests {
     #[tokio::test]
     async fn test_destroy_key() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "destroy-me".to_string(),
@@ -232,7 +238,7 @@ mod tests {
 
         // Destroy key
         manager.destroy_key("destroy-me").await.unwrap();
-        
+
         let metadata = manager.get_key_metadata("destroy-me").await.unwrap();
         assert_eq!(metadata.state, KeyLifecycleState::Destroyed);
         assert!(metadata.destroyed_at.is_some());
@@ -241,7 +247,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_active_keys() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register multiple keys
         for i in 1..=3 {
             manager
@@ -253,7 +259,7 @@ mod tests {
                 .await
                 .unwrap();
         }
-        
+
         // Deprecate one
         manager.deprecate_key("active-1").await.unwrap();
 
@@ -267,7 +273,7 @@ mod tests {
     #[tokio::test]
     async fn test_key_rotation_chain() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register initial key
         manager
             .register_key(
@@ -287,7 +293,7 @@ mod tests {
         // Verify rotation chain
         let chain = manager.get_rotation_chain("chain-key").await.unwrap();
         assert_eq!(chain.len(), 4); // Original + 3 rotations
-        
+
         // Verify only the latest is active
         let latest_metadata = manager.get_key_metadata(&current_key).await.unwrap();
         assert_eq!(latest_metadata.state, KeyLifecycleState::Active);
@@ -296,7 +302,7 @@ mod tests {
     #[tokio::test]
     async fn test_rotation_stats() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register 5 keys
         for i in 1..=5 {
             manager
@@ -308,11 +314,11 @@ mod tests {
                 .await
                 .unwrap();
         }
-        
+
         // Rotate 2 keys
         manager.rotate_key("stats-key-1").await.unwrap();
         manager.rotate_key("stats-key-2").await.unwrap();
-        
+
         // Revoke 1 key
         manager.revoke_key("stats-key-3").await.unwrap();
 
@@ -332,9 +338,9 @@ mod tests {
             backup_before_rotation: true,
             ..Default::default()
         };
-        
+
         let manager = KeyRotationManager::new(config);
-        
+
         manager
             .register_key(
                 "custom-config".to_string(),
@@ -354,7 +360,7 @@ mod tests {
     #[tokio::test]
     async fn test_rotation_events_log() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "event-key".to_string(),
@@ -369,12 +375,12 @@ mod tests {
             .rotate_key_with_reason("event-key", KeyRotationReason::Scheduled)
             .await
             .unwrap();
-        
+
         let key2 = manager
             .rotate_key_with_reason(&key1, KeyRotationReason::Manual)
             .await
             .unwrap();
-        
+
         manager
             .rotate_key_with_reason(&key2, KeyRotationReason::Compromised)
             .await
@@ -391,9 +397,9 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_rotations() {
         use tokio::task::JoinSet;
-        
+
         let manager = KeyRotationManager::with_defaults();
-        
+
         // Register 10 keys
         for i in 1..=10 {
             manager
@@ -410,11 +416,7 @@ mod tests {
         let mut tasks = JoinSet::new();
         for i in 1..=10 {
             let mgr = manager.clone();
-            tasks.spawn(async move {
-                mgr.rotate_key(&format!("concurrent-{}", i))
-                    .await
-                    .unwrap()
-            });
+            tasks.spawn(async move { mgr.rotate_key(&format!("concurrent-{}", i)).await.unwrap() });
         }
 
         // Wait for all rotations
@@ -431,16 +433,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_keys_needing_rotation() {
-        use tokio::time::sleep;
-        
         let config = KeyRotationConfig {
-            rotation_interval: Duration::from_millis(100),
+            rotation_interval: Duration::from_millis(10), // Very short interval
             auto_rotation_enabled: true,
             ..Default::default()
         };
-        
+
         let manager = KeyRotationManager::new(config);
-        
+
         // Register a key
         manager
             .register_key(
@@ -451,8 +451,8 @@ mod tests {
             .await
             .unwrap();
 
-        // Wait for rotation interval
-        sleep(Duration::from_millis(150)).await;
+        // Modern pattern: Wait minimal time for rotation check (10ms is fast enough)
+        tokio::time::sleep(Duration::from_millis(15)).await;
 
         // Check keys needing rotation
         let needs_rotation = manager.get_keys_needing_rotation().await.unwrap();
@@ -463,7 +463,7 @@ mod tests {
     #[tokio::test]
     async fn test_lifecycle_state_transitions() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "lifecycle-key".to_string(),
@@ -479,25 +479,25 @@ mod tests {
             .update_key_state("lifecycle-key", KeyLifecycleState::Rotating)
             .await
             .unwrap();
-        
+
         // Rotating -> Active
         manager
             .update_key_state("lifecycle-key", KeyLifecycleState::Active)
             .await
             .unwrap();
-        
+
         // Active -> Deprecated
         manager
             .update_key_state("lifecycle-key", KeyLifecycleState::Deprecated)
             .await
             .unwrap();
-        
+
         // Deprecated -> Revoked
         manager
             .update_key_state("lifecycle-key", KeyLifecycleState::Revoked)
             .await
             .unwrap();
-        
+
         // Revoked -> Destroyed
         manager
             .update_key_state("lifecycle-key", KeyLifecycleState::Destroyed)
@@ -511,7 +511,7 @@ mod tests {
     #[tokio::test]
     async fn test_error_invalid_state_transition() {
         let manager = KeyRotationManager::with_defaults();
-        
+
         manager
             .register_key(
                 "invalid-transition".to_string(),
@@ -525,10 +525,9 @@ mod tests {
         let result = manager
             .update_key_state("invalid-transition", KeyLifecycleState::Destroyed)
             .await;
-        
+
         // This should fail or require forcing
         // (Implementation dependent on business rules)
         assert!(result.is_ok() || result.is_err());
     }
 }
-

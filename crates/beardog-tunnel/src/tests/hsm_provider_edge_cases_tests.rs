@@ -28,6 +28,7 @@ mod hsm_provider_edge_cases {
     fn test_provider_selection_with_all_providers_failing() -> Result<(), Box<dyn std::error::Error>>
     {
         // Test when all available providers fail health checks
+        #[allow(dead_code)]
         struct FailingProvider {
             name: String,
             healthy: bool,
@@ -283,7 +284,7 @@ mod hsm_provider_edge_cases {
         };
 
         // Request capability that's not supported
-        let requested_capability = "key_derivation";
+        let _requested_capability = "key_derivation";
         let is_supported = provider.supports_key_derivation;
 
         assert!(!is_supported, "Unsupported capability should be detected");
@@ -298,6 +299,7 @@ mod hsm_provider_edge_cases {
     #[test]
     fn test_provider_authentication_failure() -> Result<(), Box<dyn std::error::Error>> {
         // Test handling of authentication failures
+        #[allow(dead_code)]
         struct AuthAttempt {
             username: String,
             password: String,
@@ -332,6 +334,7 @@ mod hsm_provider_edge_cases {
     #[test]
     fn test_provider_network_partition() -> Result<(), Box<dyn std::error::Error>> {
         // Test handling of network partition scenarios
+        #[allow(dead_code)]
         struct NetworkStatus {
             connected: bool,
             partition_detected: bool,
@@ -356,7 +359,7 @@ mod hsm_provider_edge_cases {
         );
 
         // Provider should handle partition gracefully
-        let quorum_available =
+        let _quorum_available =
             partitioned_state.nodes_reachable >= (partitioned_state.total_nodes / 2 + 1);
 
         Ok(())

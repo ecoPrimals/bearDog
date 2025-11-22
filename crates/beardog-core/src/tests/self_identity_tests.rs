@@ -8,12 +8,14 @@ use std::collections::HashMap;
 
 #[test]
 fn test_self_identity_creation() {
+    use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+    
     let identity = SelfIdentity {
         id: "beardog-001".to_string(),
         name: "BearDog".to_string(),
         version: "3.0.0".to_string(),
         capabilities: vec![ServiceCapabilityType::Security],
-        endpoint: "http://localhost:8080".to_string(),
+        endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
         health_status: HealthStatus::Healthy,
         metadata: HashMap::new(),
     };
@@ -77,13 +79,14 @@ fn test_self_identity_multiple_capabilities() {
         ServiceCapabilityType::KeyManagement,
         ServiceCapabilityType::Storage,
     ];
-
+    use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+    
     let identity = SelfIdentity {
         id: "multi-cap".to_string(),
         name: "MultiCapability".to_string(),
         version: "1.0.0".to_string(),
         capabilities,
-        endpoint: "http://localhost:8080".to_string(),
+        endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
         health_status: HealthStatus::Healthy,
         metadata: HashMap::new(),
     };

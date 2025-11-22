@@ -11,6 +11,7 @@ use crate::tunnel::hsm::android_strongbox::safe_android_provider::{
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
 use crate::tunnel::hsm::types::Algorithm; // Use Algorithm instead of SigningAlgorithm
 use beardog_errors::BearDogError;
+use beardog_types::canonical::providers_unified::traits::UnifiedProvider as PlatformProvider;
 use beardog_utils::utils::safe_memory_enhanced::{GlobalBufferPools, SafePinnedBuffer};
 use chrono::{DateTime, Utc};
 use std::sync::Arc;
@@ -39,7 +40,7 @@ impl SafeAndroidKeystoreOps {
     }
 
 
-    fn detect_best_provider() -> Result<Box<dyn PlatformProvider, BearDogError>> {
+    fn detect_best_provider() -> Result<Box<dyn PlatformProvider>, BearDogError> {
         info!("🔍 Safe hardware detection starting");
 
         if let Some(strongbox) =
@@ -68,7 +69,8 @@ impl SafeAndroidKeystoreOps {
 
         let key_request = KeyGenerationRequest {
             key_id: key_id.to_string(),
-            key_type: key_type.clone(strongbox_required,
+            key_type: key_type.clone(),
+            strongbox_required,
             biometric_required: true,
         };
         let generated_key = self.provider.generate_key(&key_request)?;

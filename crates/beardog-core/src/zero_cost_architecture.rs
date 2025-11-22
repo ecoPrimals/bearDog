@@ -137,6 +137,10 @@ impl<C, S> ZeroCostBearDog<C, S> {
     }
 }
 
+/// Zero-cost builder pattern for constructing architecture components
+///
+/// Generic builder supporting cache and security configuration with
+/// compile-time type safety and zero runtime overhead.
 #[derive(Debug, Default)]
 pub struct ZeroCostBuilder<C, S> {
     cache: Option<C>,

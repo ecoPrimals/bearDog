@@ -164,7 +164,7 @@ impl CryptoProvider<KeyType> for OpenSslCryptoProvider {
 
     async fn verify(
         &self,
-        key_material: &[u8],
+        _key_material: &[u8],
         data: &[u8],
         signature: &[u8],
     ) -> Result<bool, BearDogError> {

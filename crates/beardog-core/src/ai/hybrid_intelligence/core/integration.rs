@@ -172,9 +172,13 @@ impl SystemConnector {
 
 impl Default for IntegrationConfig {
     fn default() -> Self {
+        // Use config-driven endpoint or fallback to secure default
+        let default_endpoint = std::env::var("BEARDOG_AI_INTEGRATION_ENDPOINT")
+            .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string());
+        
         Self {
             enabled: true,
-            endpoints: vec!["http://localhost:8080".to_string()],
+            endpoints: vec![default_endpoint],
             auth: HashMap::new(),
             timeout_seconds: 30,
         }

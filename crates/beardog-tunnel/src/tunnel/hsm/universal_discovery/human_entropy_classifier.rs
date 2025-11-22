@@ -17,7 +17,9 @@ pub struct HumanEntropyClassifier {
 
 /// Entropy quality assessor
 pub struct EntropyQualityAssessor {
+    #[allow(dead_code)] // Future implementation
     min_entropy_bits: f64,
+    #[allow(dead_code)] // Future implementation
     scoring_algorithms: Vec<EntropyQualityAlgorithm>,
 }
 

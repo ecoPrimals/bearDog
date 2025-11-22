@@ -29,6 +29,10 @@ use std::collections::HashMap;
 // Removed incorrect imports added by migration script
 // These types are defined in this file, not imported from elsewhere
 
+#[cfg(test)]
+#[path = "capabilities_tests.rs"]
+mod capabilities_tests;
+
 /// Capability Type - Types of capabilities in the BearDog ecosystem
 ///
 /// Defines all discoverable capabilities that can be provided by:
@@ -349,7 +353,20 @@ pub struct CircuitBreakerConfig {
 }
 
 impl Default for CircuitBreakerConfig {
+    /// Pure defaults without environment variable access
+    /// Concurrent-safe and suitable for testing
     fn default() -> Self {
+        Self {
+            failure_threshold: 5,
+            timeout_ms: 60000, // 60 seconds
+            success_threshold: 3,
+        }
+    }
+}
+
+impl CircuitBreakerConfig {
+    /// Load from environment or use defaults (production use)
+    pub fn from_env() -> Self {
         Self {
             failure_threshold: std::env::var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
                 .ok()

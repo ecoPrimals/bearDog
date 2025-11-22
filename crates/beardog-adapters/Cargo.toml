@@ -34,6 +34,9 @@ workspace = true
 [package.authors]
 workspace = true
 
+[dependencies.beardog-config]
+path = "../beardog-config"
+
 [dependencies.beardog-errors]
 path = "../beardog-errors"
 

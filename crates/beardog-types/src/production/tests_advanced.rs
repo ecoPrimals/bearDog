@@ -178,10 +178,10 @@ fn test_environment_level_all_variants() {
     ];
 
     for level in levels {
-        let cloned = level.clone();
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: types
-        // TEST_PRIORITY: normal
+        let cloned = level; // Copy type, no need for .clone()
+                            // TEST_CATEGORY: unit
+                            // TEST_DOMAIN: types
+                            // TEST_PRIORITY: normal
         assert_eq!(level, cloned);
     }
 }
@@ -201,7 +201,7 @@ fn test_operational_status_all_variants() {
     ];
 
     for status in statuses {
-        let cloned = status.clone();
+        let cloned = status; // Copy type, no need for .clone()
         assert_eq!(status, cloned);
     }
 }

@@ -57,7 +57,8 @@ impl Default for NetworkDiscoveryConfig {
             .map(|s| s.split(',').map(|e| e.trim().to_string()).collect())
             .unwrap_or_default();
         
-        // Load scan ports from env (comma-separated) or use defaults
+        // ✅ MIGRATED: Load scan ports from env (comma-separated) or use defaults
+        // Common HSM ports: HTTPS (443), Alt HTTPS (8443), custom HSM ports (9000, 9443)
         let scan_ports = env::var("BEARDOG_HSM_SCAN_PORTS")
             .ok()
             .and_then(|s| {
@@ -65,7 +66,15 @@ impl Default for NetworkDiscoveryConfig {
                     .map(|p| p.trim().parse().ok())
                     .collect::<Option<Vec<u16>>>()
             })
-            .unwrap_or_else(|| vec![443, 8443, 9000, 9443]); // Common HSM ports
+            .unwrap_or_else(|| {
+                use beardog_config::global::BEARDOG_CONFIG;
+                vec![
+                    443,  // Standard HTTPS (industry standard)
+                    8443, // Alt HTTPS (industry standard)
+                    9000, // Custom HSM port (configurable via BEARDOG_HSM_SCAN_PORTS)
+                    BEARDOG_CONFIG.network.discovery.port, // Discovery port from config
+                ]
+            });
         
         Self {
             probe_timeout: Duration::from_secs(probe_timeout_secs),
@@ -164,23 +173,24 @@ impl NetworkDiscoverer {
     async fn discover_via_mdns(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         debug!("Delegating mDNS/DNS-SD discovery to Songbird ecosystem");
 
-        // ✅ ARCHITECTURAL PATTERN: Ecosystem-based discovery
+        // ✅ ARCHITECTURAL PATTERN: Capability-based discovery
         //
-        // Instead of implementing mDNS directly, we use SongbirdHsmDiscovery
+        // Instead of implementing mDNS directly, we use UniversalPrimalAdapter
         // which handles all network protocols (mDNS, DNS-SD, Consul, etcd, etc.)
+        // through capability-based discovery (no hardcoded primal names).
         //
         // Benefits:
         // - No protocol duplication
-        // - Songbird handles network complexity
+        // - Universal adapter handles network complexity
         // - BearDog focuses on HSM abstraction
-        // - Single source of truth for service discovery
+        // - Capability-based (discovers ANY network primal, not just Songbird)
         //
-        // See: crates/beardog-core/src/ecosystem_integration/songbird_integration.rs
+        // See: crates/beardog-adapters/src/universal/primal_capability_adapter.rs
         //
-        // TODO: Wire to SongbirdHsmDiscovery once Songbird integration is complete
+        // PHASE-2: Wire to UniversalPrimalAdapter::discover_network_primals()
         // For now, return empty to maintain interface compatibility
         
-        debug!("mDNS discovery will be available via Songbird integration");
+        debug!("mDNS discovery will be available via UniversalPrimalAdapter");
         Ok(Vec::new())
     }
 

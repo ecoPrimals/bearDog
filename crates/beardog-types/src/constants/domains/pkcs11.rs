@@ -11,76 +11,83 @@
 /// PKCS#11 return codes
 pub mod return_codes {
     /// Success - the operation completed successfully
-    pub const CKR_OK: u32 = 0x00000000;
-    
+    pub const CKR_OK: u32 = 0x0000_0000;
+
     /// Operation was cancelled by user
-    pub const CKR_CANCEL: u32 = 0x00000001;
-    
+    pub const CKR_CANCEL: u32 = 0x0000_0001;
+
     /// Host memory allocation failed
-    pub const CKR_HOST_MEMORY: u32 = 0x00000002;
-    
+    pub const CKR_HOST_MEMORY: u32 = 0x0000_0002;
+
     /// Slot ID is invalid for this system
-    pub const CKR_SLOT_ID_INVALID: u32 = 0x00000003;
-    
+    pub const CKR_SLOT_ID_INVALID: u32 = 0x0000_0003;
+
     /// General unspecified error
-    pub const CKR_GENERAL_ERROR: u32 = 0x00000005;
-    
+    pub const CKR_GENERAL_ERROR: u32 = 0x0000_0005;
+
     /// Function failed for an unspecified reason
-    pub const CKR_FUNCTION_FAILED: u32 = 0x00000006;
-    
+    pub const CKR_FUNCTION_FAILED: u32 = 0x0000_0006;
+
     /// Invalid or bad arguments provided
-    pub const CKR_ARGUMENTS_BAD: u32 = 0x00000007;
-    
+    pub const CKR_ARGUMENTS_BAD: u32 = 0x0000_0007;
+
     /// No event is available
-    pub const CKR_NO_EVENT: u32 = 0x00000008;
-    
+    pub const CKR_NO_EVENT: u32 = 0x0000_0008;
+
     /// Module needs to create threads but cannot
-    pub const CKR_NEED_TO_CREATE_THREADS: u32 = 0x00000009;
-    
+    pub const CKR_NEED_TO_CREATE_THREADS: u32 = 0x0000_0009;
+
     /// Module cannot lock resources
-    pub const CKR_CANT_LOCK: u32 = 0x0000000A;
-    
+    pub const CKR_CANT_LOCK: u32 = 0x0000_000A;
+
     /// Attribute type is invalid
-    pub const CKR_ATTRIBUTE_TYPE_INVALID: u32 = 0x00000012;
-    
+    pub const CKR_ATTRIBUTE_TYPE_INVALID: u32 = 0x0000_0012;
+
     /// Attribute value is invalid
-    pub const CKR_ATTRIBUTE_VALUE_INVALID: u32 = 0x00000013;
-    
+    pub const CKR_ATTRIBUTE_VALUE_INVALID: u32 = 0x0000_0013;
+
     /// Operation is not valid in current state
-    pub const CKR_OPERATION_ACTIVE: u32 = 0x00000090;
-    
+    pub const CKR_OPERATION_ACTIVE: u32 = 0x0000_0090;
+
     /// No operation is currently active
-    pub const CKR_OPERATION_NOT_INITIALIZED: u32 = 0x00000091;
-    
+    pub const CKR_OPERATION_NOT_INITIALIZED: u32 = 0x0000_0091;
+
     /// User PIN is not yet set
-    pub const CKR_USER_PIN_NOT_INITIALIZED: u32 = 0x00000092;
-    
+    pub const CKR_USER_PIN_NOT_INITIALIZED: u32 = 0x0000_0092;
+
     /// User PIN is incorrect
-    pub const CKR_PIN_INCORRECT: u32 = 0x000000A0;
-    
+    pub const CKR_PIN_INCORRECT: u32 = 0x0000_00A0;
+
     /// User PIN is locked
-    pub const CKR_PIN_LOCKED: u32 = 0x000000A4;
-    
+    pub const CKR_PIN_LOCKED: u32 = 0x0000_00A4;
+
     /// User PIN has expired
-    pub const CKR_PIN_EXPIRED: u32 = 0x000000A3;
-    
+    pub const CKR_PIN_EXPIRED: u32 = 0x0000_00A3;
+
     /// Session handle is invalid
-    pub const CKR_SESSION_HANDLE_INVALID: u32 = 0x000000B3;
-    
+    pub const CKR_SESSION_HANDLE_INVALID: u32 = 0x0000_00B3;
+
     /// Object handle is invalid  
-    pub const CKR_OBJECT_HANDLE_INVALID: u32 = 0x00000082;
-    
+    pub const CKR_OBJECT_HANDLE_INVALID: u32 = 0x0000_0082;
+
     /// Token is not present in the slot
-    pub const CKR_TOKEN_NOT_PRESENT: u32 = 0x000000E0;
-    
+    pub const CKR_TOKEN_NOT_PRESENT: u32 = 0x0000_00E0;
+
     /// Token is write-protected
-    pub const CKR_TOKEN_WRITE_PROTECTED: u32 = 0x000000B6;
+    pub const CKR_TOKEN_WRITE_PROTECTED: u32 = 0x0000_00B6;
 }
 
 /// Helper function to get human-readable description of return code
 pub fn return_code_description(code: u32) -> &'static str {
-    use return_codes::*;
-    
+    use return_codes::{
+        CKR_ARGUMENTS_BAD, CKR_ATTRIBUTE_TYPE_INVALID, CKR_ATTRIBUTE_VALUE_INVALID, CKR_CANCEL,
+        CKR_CANT_LOCK, CKR_FUNCTION_FAILED, CKR_GENERAL_ERROR, CKR_HOST_MEMORY,
+        CKR_NEED_TO_CREATE_THREADS, CKR_NO_EVENT, CKR_OBJECT_HANDLE_INVALID, CKR_OK,
+        CKR_OPERATION_ACTIVE, CKR_OPERATION_NOT_INITIALIZED, CKR_PIN_EXPIRED, CKR_PIN_INCORRECT,
+        CKR_PIN_LOCKED, CKR_SESSION_HANDLE_INVALID, CKR_SLOT_ID_INVALID, CKR_TOKEN_NOT_PRESENT,
+        CKR_TOKEN_WRITE_PROTECTED, CKR_USER_PIN_NOT_INITIALIZED,
+    };
+
     match code {
         CKR_OK => "Success",
         CKR_CANCEL => "Operation cancelled",
@@ -109,40 +116,44 @@ pub fn return_code_description(code: u32) -> &'static str {
 }
 
 /// PKCS#11 object classes
+/// Note: These constants match the PKCS#11 specification exactly
+#[allow(clippy::unreadable_literal)]
 pub mod object_classes {
     /// Data object
     pub const CKO_DATA: u32 = 0x00000000;
-    
+
     /// Certificate object
     pub const CKO_CERTIFICATE: u32 = 0x00000001;
-    
+
     /// Public key object
     pub const CKO_PUBLIC_KEY: u32 = 0x00000002;
-    
+
     /// Private key object
     pub const CKO_PRIVATE_KEY: u32 = 0x00000003;
-    
+
     /// Secret key object
     pub const CKO_SECRET_KEY: u32 = 0x00000004;
 }
 
 /// PKCS#11 key types
+/// Note: These constants match the PKCS#11 specification exactly
+#[allow(clippy::unreadable_literal)]
 pub mod key_types {
     /// RSA key
     pub const CKK_RSA: u32 = 0x00000000;
-    
+
     /// DSA key
     pub const CKK_DSA: u32 = 0x00000001;
-    
+
     /// Diffie-Hellman key
     pub const CKK_DH: u32 = 0x00000002;
-    
+
     /// Elliptic Curve key
     pub const CKK_EC: u32 = 0x00000003;
-    
+
     /// AES key
     pub const CKK_AES: u32 = 0x0000001F;
-    
+
     /// Generic secret key
     pub const CKK_GENERIC_SECRET: u32 = 0x00000010;
 }
@@ -150,12 +161,17 @@ pub mod key_types {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_return_code_descriptions() {
         assert_eq!(return_code_description(return_codes::CKR_OK), "Success");
-        assert_eq!(return_code_description(return_codes::CKR_PIN_INCORRECT), "Incorrect PIN");
-        assert_eq!(return_code_description(0xFFFFFFFF), "Unknown error code");
+        assert_eq!(
+            return_code_description(return_codes::CKR_PIN_INCORRECT),
+            "Incorrect PIN"
+        );
+        #[allow(clippy::unreadable_literal)]
+        {
+            assert_eq!(return_code_description(0xFFFFFFFF), "Unknown error code");
+        }
     }
 }
-

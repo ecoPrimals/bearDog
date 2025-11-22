@@ -5,7 +5,7 @@
 use super::types::*;
 use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetrics, UniversalEndpoint};
 use crate::universal::types::{AdapterConfig, AdapterMetrics, CapabilityConnection};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     ServiceCapabilityType, UniversalCapability,
 };
@@ -36,12 +36,12 @@ pub struct UniversalCapabilityAdapter {
 
 impl UniversalCapabilityAdapter {
     /// Create new universal capability adapter
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self> {
         Self::with_config(AdapterConfig::default()).await
     }
 
     /// Create universal adapter with custom configuration
-    pub async fn with_config(config: AdapterConfig) -> BearDogResult<Self> {
+    pub async fn with_config(config: AdapterConfig) -> Result<Self> {
         info!("🔌 Initializing Universal Capability Adapter");
         info!("🎯 Mission: Replace ALL hardcoded integrations with dynamic discovery");
         info!("📋 Configuration:");
@@ -92,7 +92,7 @@ impl UniversalCapabilityAdapter {
     /// 
     /// **Performance Note**: This clones the entire HashMap. For read-only access,
     /// prefer `capabilities_ref()` which is much cheaper.
-    pub async fn get_available_capabilities(&self) -> BearDogResult<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>> {
+    pub async fn get_available_capabilities(&self) -> Result<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>> {
         let capabilities = self.capabilities.read().await;
         Ok(capabilities.clone())
     }
@@ -101,7 +101,7 @@ impl UniversalCapabilityAdapter {
     /// 
     /// **Performance Note**: This clones the entire HashMap. For read-only access,
     /// prefer `primals_ref()` which is much cheaper.
-    pub async fn get_discovered_primals(&self) -> BearDogResult<HashMap<String, DiscoveredPrimal>> {
+    pub async fn get_discovered_primals(&self) -> Result<HashMap<String, DiscoveredPrimal>> {
         let primals = self.primals.read().await;
         Ok(primals.clone())
     }
@@ -112,7 +112,7 @@ impl UniversalCapabilityAdapter {
     }
 
     /// Health check all active connections
-    pub async fn health_check_all_connections(&self) -> BearDogResult<HashMap<String, bool>> {
+    pub async fn health_check_all_connections(&self) -> Result<HashMap<String, bool>> {
         let connections = self.connections.read().await;
         let mut health_results = HashMap::new();
 
@@ -126,7 +126,7 @@ impl UniversalCapabilityAdapter {
     }
 
     /// Check health of a specific connection
-    async fn check_connection_health(&self, connection: &CapabilityConnection) -> BearDogResult<bool> {
+    async fn check_connection_health(&self, connection: &CapabilityConnection) -> Result<bool> {
         // Implementation would depend on the connection type
         // For now, return true as a placeholder
         Ok(true)
@@ -138,7 +138,7 @@ impl UniversalCapabilityAdapter {
     }
 
     /// Update configuration
-    pub async fn update_config(&mut self, new_config: AdapterConfig) -> BearDogResult<()> {
+    pub async fn update_config(&mut self, new_config: AdapterConfig) -> Result<()> {
         info!("🔄 Updating Universal Capability Adapter configuration");
         self.config = new_config;
         info!("✅ Configuration updated successfully");
@@ -146,7 +146,7 @@ impl UniversalCapabilityAdapter {
     }
 
     /// Shutdown the adapter and clean up resources
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<()> {
         info!("🛑 Shutting down Universal Capability Adapter");
         
         // Close all connections

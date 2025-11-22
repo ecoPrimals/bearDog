@@ -3,7 +3,7 @@
 //! This module contains the main benchmark suite and configuration
 //! for performance testing the unified BearDog architecture.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 // ✅ Updated to use unified provider system
 use beardog_types::canonical::providers_unified::consolidated_registry::ConsolidatedProviderRegistry;
 use beardog_types::canonical::providers_unified::traits::ConsolidatedProvider;
@@ -101,7 +101,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Run all benchmarks and return comprehensive results
-    pub async fn run_all_benchmarks(&mut self) -> BearDogResult<BenchmarkSuiteResults> {
+    pub async fn run_all_benchmarks(&mut self) -> Result<BenchmarkSuiteResults> {
         info!("🚀 Starting comprehensive performance benchmark suite");
         
         let start_time = Instant::now();
@@ -157,7 +157,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark provider registry operations
-    async fn benchmark_provider_registry(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_provider_registry(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking provider registry operations");
         
         let mut measurements = Vec::new();
@@ -202,7 +202,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark zero-cost capability dispatch
-    async fn benchmark_capability_dispatch(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_capability_dispatch(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking zero-cost capability dispatch");
         
         let mut measurements = Vec::new();
@@ -248,7 +248,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark configuration system operations
-    async fn benchmark_configuration(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_configuration(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking configuration system operations");
         
         let mut measurements = Vec::new();
@@ -278,7 +278,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark memory allocation patterns
-    async fn benchmark_memory_allocation(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_memory_allocation(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking memory allocation patterns");
         
         let mut measurements = Vec::new();
@@ -306,7 +306,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark network operations
-    async fn benchmark_network_operations(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_network_operations(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking network operations");
         
         let mut measurements = Vec::new();
@@ -334,7 +334,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark security operations
-    async fn benchmark_security_operations(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_security_operations(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking security operations");
         
         let mut measurements = Vec::new();
@@ -362,7 +362,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark AI/ML operations
-    async fn benchmark_ai_ml_operations(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_ai_ml_operations(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking AI/ML operations");
         
         let mut measurements = Vec::new();
@@ -390,7 +390,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Benchmark system integration
-    async fn benchmark_system_integration(&mut self) -> BearDogResult<BenchmarkResult> {
+    async fn benchmark_system_integration(&mut self) -> Result<BenchmarkResult> {
         debug!("Benchmarking system integration");
         
         let mut measurements = Vec::new();
@@ -422,7 +422,7 @@ impl PerformanceBenchmarkSuite {
         &self,
         category: &BenchmarkCategory,
         result: &BenchmarkResult,
-    ) -> BearDogResult<Option<Vec<PerformanceRecommendation>>> {
+    ) -> Result<Option<Vec<PerformanceRecommendation>>> {
         // This would contain logic to analyze results and generate recommendations
         // For now, return None as placeholder
         Ok(None)

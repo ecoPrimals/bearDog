@@ -57,16 +57,16 @@ impl KeyAlgorithm {
 pub struct SecureSoftwareHsm {
     /// Encrypted key store (keys are encrypted at rest)
     key_store: Arc<RwLock<HashMap<String, KeyMaterial>>>,
-    /// Master encryption key (derived from secure source)
+    /// Primary encryption key (derived from secure source, root of key hierarchy)
     #[allow(dead_code)]
-    master_key: Zeroizing<[u8; 32]>,
+    primary_key: Zeroizing<[u8; 32]>,
 }
 
 impl std::fmt::Debug for SecureSoftwareHsm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SecureSoftwareHsm")
             .field("key_store", &"<encrypted>")
-            .field("master_key", &"<redacted>")
+            .field("primary_key", &"<redacted>")
             .finish()
     }
 }
@@ -75,26 +75,26 @@ impl SecureSoftwareHsm {
     /// Create a new secure software HSM
     ///
     /// # Security
-    /// - Generates a fresh master key from OS entropy
-    /// - All stored keys are encrypted with the master key
-    /// - Master key is zeroed on drop
+    /// - Generates a fresh primary key from OS entropy
+    /// - All stored keys are encrypted with the primary key
+    /// - Primary key is zeroed on drop
     pub fn new() -> Result<Self, KmsError> {
-        let mut master_key = Zeroizing::new([0u8; 32]);
-        getrandom::getrandom(master_key.as_mut()).map_err(|e| KmsError::Other {
-            message: format!("Failed to generate master key: {}", e),
+        let mut primary_key = Zeroizing::new([0u8; 32]);
+        getrandom::getrandom(primary_key.as_mut()).map_err(|e| KmsError::Other {
+            message: format!("Failed to generate primary key: {}", e),
         })?;
 
         Ok(Self {
             key_store: Arc::new(RwLock::new(HashMap::new())),
-            master_key,
+            primary_key,
         })
     }
 
-    /// Derive a key-specific encryption key from master key
+    /// Derive a key-specific encryption key from primary key
     #[allow(dead_code)]
     #[allow(clippy::expect_used)] // HKDF expand cannot fail with correct length
     fn derive_key_encryption_key(&self, key_id: &str) -> Zeroizing<[u8; 32]> {
-        let hkdf = Hkdf::<Sha256>::new(None, &self.master_key[..]);
+        let hkdf = Hkdf::<Sha256>::new(None, &self.primary_key[..]);
         let mut okm = Zeroizing::new([0u8; 32]);
         hkdf.expand(key_id.as_bytes(), okm.as_mut())
             .expect("HKDF expand should never fail with valid length");
@@ -389,9 +389,11 @@ impl KeyManagementCapability for SecureSoftwareHsm {
 
     async fn delete_key(&self, key_id: &KeyId) -> Result<(), KmsError> {
         let mut store = self.key_store.write().await;
-        store.remove(key_id.as_str()).ok_or_else(|| KmsError::KeyNotFound {
-            key_id: key_id.as_str().to_string(),
-        })?;
+        store
+            .remove(key_id.as_str())
+            .ok_or_else(|| KmsError::KeyNotFound {
+                key_id: key_id.as_str().to_string(),
+            })?;
         // KeyMaterial is automatically zeroed on drop thanks to Zeroizing wrapper
         Ok(())
     }

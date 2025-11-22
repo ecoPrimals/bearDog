@@ -2,8 +2,8 @@
 //!
 //! Biome sovereignty-specific discovery configuration that extends the canonical base.
 
-use serde::{Deserialize, Serialize};
 use super::super::config::domains::discovery::DiscoveryConfig;
+use serde::{Deserialize, Serialize};
 
 /// Biome sovereignty discovery configuration
 ///
@@ -12,7 +12,7 @@ use super::super::config::domains::discovery::DiscoveryConfig;
 pub struct BiomeDiscoveryConfig {
     /// Base discovery configuration
     pub base: DiscoveryConfig,
-    
+
     /// Enable automatic discovery of potential partnership candidates
     ///
     /// When enabled, biomes will automatically discover and establish initial
@@ -38,4 +38,3 @@ impl BiomeDiscoveryConfig {
         }
     }
 }
-

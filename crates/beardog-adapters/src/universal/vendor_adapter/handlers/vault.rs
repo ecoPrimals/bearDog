@@ -283,8 +283,11 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_vault_handler_creation() -> Result<(), BearDogError> {
-        let vault_url = std::env::var("VAULT_ADDR")
-            .unwrap_or_else(|_| "http://127.0.0.1:8200".to_string());
+        // Use environment variable or fallback to localhost with default Vault port
+        let vault_url = std::env::var("VAULT_ADDR").unwrap_or_else(|_| {
+            std::env::var("BEARDOG_VAULT_URL")
+                .unwrap_or_else(|_| "http://127.0.0.1:8200".to_string())
+        });
         let handler = VaultCapabilityHandler::new(
             vault_url.clone(),
             "test-token")?;

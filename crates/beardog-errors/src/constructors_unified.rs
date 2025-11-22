@@ -188,9 +188,7 @@ pub fn validation_error_with_suggestion(
     suggestion: &str,
 ) -> BearDogError {
     BearDogError::Business {
-        message: format!(
-            "Validation failed for '{field}': {issue}\n💡 Suggestion: {suggestion}"
-        ),
+        message: format!("Validation failed for '{field}': {issue}\n💡 Suggestion: {suggestion}"),
         category: BusinessErrorCategory::Validation,
     }
 }
@@ -212,11 +210,7 @@ pub fn validation_error_with_suggestion(
 /// );
 /// ```
 #[must_use]
-pub fn network_error_with_context(
-    message: &str,
-    endpoint: &str,
-    operation: &str,
-) -> BearDogError {
+pub fn network_error_with_context(message: &str, endpoint: &str, operation: &str) -> BearDogError {
     BearDogError::System {
         message: format!(
             "Network operation '{operation}' failed: {message}\n\
@@ -275,11 +269,7 @@ pub fn configuration_error_with_docs(
 /// );
 /// ```
 #[must_use]
-pub fn crypto_error_with_details(
-    operation: &str,
-    details: &str,
-    hint: &str,
-) -> BearDogError {
+pub fn crypto_error_with_details(operation: &str, details: &str, hint: &str) -> BearDogError {
     BearDogError::Security {
         message: format!(
             "Cryptographic operation '{operation}' failed: {details}\n💡 Hint: {hint}"

@@ -7,7 +7,7 @@ use super::core::{
     PerformanceBenchmarkSuite, BenchmarkResult, BenchmarkCategory, MemoryStats, ComparisonResult, 
     StatisticalSignificance
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 // ✅ Updated to use unified provider system
 use beardog_types::canonical::providers_unified::consolidated_registry::ConsolidatedProviderRegistry;
 use beardog_types::canonical::providers_unified::traits::ConsolidatedProvider;
@@ -229,7 +229,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate provider registration for benchmarking
-    async fn simulate_provider_registration(&self) -> BearDogResult<()> {
+    async fn simulate_provider_registration(&self) -> Result<()> {
         // Simulate the work of registering a provider
         sleep(Duration::from_micros(50)).await; // Realistic registration time
         
@@ -242,7 +242,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate provider discovery for benchmarking
-    async fn simulate_provider_discovery(&self) -> BearDogResult<Vec<String>> {
+    async fn simulate_provider_discovery(&self) -> Result<Vec<String>> {
         // Simulate discovery work with canonical timeout
         let timeout = Duration::from_millis(REQUEST_TIMEOUT);
         
@@ -262,7 +262,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate provider health check for benchmarking
-    async fn simulate_provider_health_check(&self) -> BearDogResult<bool> {
+    async fn simulate_provider_health_check(&self) -> Result<bool> {
         // Simulate health check with retry timeout
         sleep(Duration::from_micros(25)).await; // Fast health check
         

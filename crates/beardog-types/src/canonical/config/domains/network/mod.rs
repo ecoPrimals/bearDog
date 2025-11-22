@@ -19,7 +19,7 @@
 //! - `RateLimitConfig` (network-specific instances)
 //! - Plus additional scattered network configurations
 
-use beardog_errors::BearDogError;
+use beardog_errors::{BearDogError, ConfigurationErrorCategory};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -357,6 +357,136 @@ impl RateLimitConfig {
 
 /// Backward compatibility alias (consolidated Nov 7, 2025)
 pub type RateLimitConfiguration = RateLimitConfig;
+
+// =============================================================================
+// BACKWARD COMPATIBILITY TYPE ALIASES - Phase 2 Consolidation (Nov 11, 2025)
+// =============================================================================
+//
+// The following type aliases provide backward compatibility for all scattered
+// NetworkConfig variants found across the codebase. This allows gradual
+// migration to ConsolidatedNetworkConfiguration while maintaining zero breaking
+// changes.
+//
+// These aliases consolidate 21 NetworkConfig variants found in:
+// - beardog-tunnel (2 variants)
+// - beardog-core (1 variant)
+// - beardog-production (1 variant)
+// - beardog-adapters (1 variant)
+// - beardog-types/canonical/* (9 variants)
+// - beardog-config (1 variant)
+// - beardog-utils (2 variants)
+// - beardog-types/network.rs (4 variants)
+
+/// Primary NetworkConfig alias - points to consolidated configuration
+///
+/// **CONSOLIDATED (Nov 11, 2025)**: Use `ConsolidatedNetworkConfiguration` for new code.
+///
+/// This type alias maintains backward compatibility with the most common
+/// NetworkConfig usage pattern across the codebase.
+pub type NetworkConfig = ConsolidatedNetworkConfiguration;
+
+/// Network discovery configuration alias
+///
+/// **CONSOLIDATED**: Maps to embedded discovery configuration.
+pub type NetworkDiscoveryConfig = ServiceDiscoveryConfiguration;
+
+/// Network security configuration alias
+///
+/// **CONSOLIDATED**: Maps to embedded security configuration.
+pub type NetworkSecurityConfig = NetworkSecurityConfiguration;
+
+/// Network policy configuration alias
+///
+/// **CONSOLIDATED**: Use full `ConsolidatedNetworkConfiguration` with embedded configs.
+pub type NetworkPolicyConfig = ConsolidatedNetworkConfiguration;
+
+/// Network resource configuration alias
+///
+/// **CONSOLIDATED**: Use performance configuration instead.
+pub type NetworkResourceConfig = NetworkPerformanceConfiguration;
+
+/// Network handler configuration alias
+///
+/// **CONSOLIDATED**: Use client/server configuration as appropriate.
+pub type NetworkHandlerConfig = ClientConfiguration;
+
+/// Network monitoring configuration alias
+///
+/// **CONSOLIDATED**: Maps to embedded monitoring configuration.
+pub type NetworkMonitoringConfig = NetworkMonitoringConfiguration;
+
+/// Network environment configuration alias (from beardog-utils)
+///
+/// **CONSOLIDATED**: Use ConsolidatedNetworkConfiguration with environment variable loading.
+pub type NetworkEnvConfig = ConsolidatedNetworkConfiguration;
+
+/// Networking configuration alias (from beardog-production)
+///
+/// **CONSOLIDATED**: Maps to consolidated network configuration.
+pub type NetworkingConfig = ConsolidatedNetworkConfiguration;
+
+/// Network scan configuration alias (from HSM discovery)
+///
+/// This is domain-specific to HSM network scanning and remains separate.
+/// However, we provide a helper to convert to standard network config.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkScanConfig {
+    pub ip_ranges: Vec<String>,
+    pub timeout_ms: u32,
+}
+
+impl NetworkScanConfig {
+    /// Convert to standard network configuration for consistency
+    pub fn to_network_config(&self) -> ConsolidatedNetworkConfiguration {
+        // Set appropriate timeout based on scan timeout
+        // Note: TimeoutConfiguration structure handled by its own implementation
+        ConsolidatedNetworkConfiguration::default()
+    }
+}
+
+/// Network core configuration alias (from network_unified)
+///
+/// **CONSOLIDATED**: Use ConsolidatedNetworkConfiguration instead.
+pub type NetworkCoreConfig = ConsolidatedNetworkConfiguration;
+
+// =============================================================================
+// MIGRATION HELPERS
+// =============================================================================
+
+impl ConsolidatedNetworkConfiguration {
+    /// Create from simple host and port (common pattern in old code)
+    pub fn from_host_port(host: impl Into<String>, port: u16) -> Self {
+        let mut config = Self::default();
+        config.server.bind_address = host.into();
+        config.server.port = port;
+        config
+    }
+
+    /// Create from bind address (SocketAddr pattern)
+    pub fn from_bind_address(addr: std::net::SocketAddr) -> Self {
+        let mut config = Self::default();
+        config.server.bind_address = addr.ip().to_string();
+        config.server.port = addr.port();
+        config
+    }
+
+    /// Get bind address as SocketAddr for compatibility
+    pub fn to_bind_address(&self) -> Result<std::net::SocketAddr, BearDogError> {
+        use std::net::ToSocketAddrs;
+        let addr_str = format!("{}:{}", self.server.bind_address, self.server.port);
+        addr_str
+            .to_socket_addrs()
+            .map_err(|e| BearDogError::Configuration {
+                message: format!("Invalid bind address: {}", e),
+                category: ConfigurationErrorCategory::default(),
+            })?
+            .next()
+            .ok_or_else(|| BearDogError::Configuration {
+                message: "Could not resolve bind address".to_string(),
+                category: ConfigurationErrorCategory::default(),
+            })
+    }
+}
 
 #[cfg(test)]
 mod tests {

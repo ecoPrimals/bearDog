@@ -209,9 +209,20 @@ impl RetryStrategy for HsmRetryPolicy {
 
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         // Exponential backoff with HSM-specific multiplier
-        let delay_ms = self.initial_delay.as_millis() as f64 
-            * self.backoff_multiplier.powi(attempt as i32);
-        Duration::from_millis((delay_ms as u64).min(self.max_delay.as_millis() as u64))
+        // Note: Precision loss is acceptable for delay calculations (not cryptographic)
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_possible_wrap,
+            clippy::cast_sign_loss
+        )]
+        let delay_ms = {
+            // Clamp to u64::MAX millis to avoid overflow (still ~584 million years)
+            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+            let max_ms = self.max_delay.as_millis().min(u64::MAX as u128) as u64;
+            let computed = initial_ms * self.backoff_multiplier.powi(attempt.min(30) as i32);
+            computed.min(max_ms as f64).max(0.0) as u64
+        };
+        Duration::from_millis(delay_ms)
     }
 
     fn backoff_multiplier(&self) -> f64 {
@@ -223,27 +234,35 @@ impl RetryStrategy for HsmRetryPolicy {
         if !self.enabled {
             return false;
         }
-        
+
         let error_str = error.to_string().to_lowercase();
-        
+
         // Check for timeout errors
-        if self.retry_on_timeout && (error_str.contains("timeout") || error_str.contains("timed out")) {
+        if self.retry_on_timeout
+            && (error_str.contains("timeout") || error_str.contains("timed out"))
+        {
             return true;
         }
-        
+
         // Check for connection errors
-        if self.retry_on_connection_error && 
-           (error_str.contains("connection") || error_str.contains("network") || 
-            error_str.contains("unreachable") || error_str.contains("refused")) {
+        if self.retry_on_connection_error
+            && (error_str.contains("connection")
+                || error_str.contains("network")
+                || error_str.contains("unreachable")
+                || error_str.contains("refused"))
+        {
             return true;
         }
-        
+
         // Don't retry on HSM authentication/authorization failures
-        if error_str.contains("auth") || error_str.contains("permission") || 
-           error_str.contains("forbidden") || error_str.contains("unauthorized") {
+        if error_str.contains("auth")
+            || error_str.contains("permission")
+            || error_str.contains("forbidden")
+            || error_str.contains("unauthorized")
+        {
             return false;
         }
-        
+
         // Retry on other HSM errors by default
         true
     }

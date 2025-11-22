@@ -160,37 +160,37 @@ pub async fn test_config_override_hierarchy() -> Result<ConfigE2EMetrics, BearDo
 // Helper functions
 
 async fn simulate_config_load(_config_type: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+    // Simulate config load (instant in tests, would be file I/O in production)
     Ok(())
 }
 
 async fn simulate_invalid_config_load(_config_type: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate invalid config load (instant in tests)
     Err(BearDogError::internal("Invalid configuration".to_string()))
 }
 
 async fn simulate_env_config_load(_env: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(15)).await;
+    // Simulate environment config load (instant in tests)
     Ok(())
 }
 
 async fn simulate_config_validation() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate validation (instant in tests)
     Ok(())
 }
 
 async fn simulate_config_apply() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate apply (instant in tests)
     Ok(())
 }
 
 async fn simulate_config_reload() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(15)).await;
+    // Simulate reload (instant in tests)
     Ok(())
 }
 
 async fn simulate_ongoing_operation(_iteration: usize) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate operation (instant in tests)
     Ok(())
 }
 

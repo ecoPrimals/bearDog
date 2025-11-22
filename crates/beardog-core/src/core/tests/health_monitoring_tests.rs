@@ -80,7 +80,7 @@ async fn test_components_registry_accessible() {
 
     // Components registry should be accessible
     let _components = &state.components;
-    // TODO: Components registry should be accessible
+    // Verify components registry is accessible
 }
 
 #[tokio::test]

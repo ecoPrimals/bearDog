@@ -219,8 +219,40 @@ impl EnvironmentConfig {
     }
 }
 
-impl Default for EnvironmentValidation {
-    fn default() -> Self {
+impl EnvironmentValidation {
+    /// Default validation interval in seconds (5 minutes)
+    pub const DEFAULT_VALIDATION_INTERVAL_SECS: u64 = 300;
+
+    /// Default minimum disk space in MB (1 GB)
+    pub const DEFAULT_MIN_DISK_SPACE_MB: u64 = 1024;
+
+    /// Default minimum memory in MB (512 MB)
+    pub const DEFAULT_MIN_MEMORY_MB: u64 = 512;
+
+    /// Create EnvironmentValidation with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            validate_on_startup: true,
+            validate_periodically: false,
+            validation_interval: Duration::from_secs(Self::DEFAULT_VALIDATION_INTERVAL_SECS),
+            required_environment_variables: vec!["PATH".to_string(), "HOME".to_string()],
+            required_files: vec![],
+            required_endpoints: vec![],
+            min_disk_space_mb: Some(Self::DEFAULT_MIN_DISK_SPACE_MB),
+            min_memory_mb: Some(Self::DEFAULT_MIN_MEMORY_MB),
+        }
+    }
+
+    /// Create EnvironmentValidation from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_ENV_VALIDATION_INTERVAL_SECS`: Validation interval (default: 300)
+    pub fn from_env() -> Self {
         Self {
             validate_on_startup: true,
             validate_periodically: false,
@@ -228,14 +260,20 @@ impl Default for EnvironmentValidation {
                 std::env::var("BEARDOG_ENV_VALIDATION_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(300),
+                    .unwrap_or(Self::DEFAULT_VALIDATION_INTERVAL_SECS),
             ),
             required_environment_variables: vec!["PATH".to_string(), "HOME".to_string()],
             required_files: vec![],
             required_endpoints: vec![],
-            min_disk_space_mb: Some(1024), // 1 GB
-            min_memory_mb: Some(512),      // 512 MB
+            min_disk_space_mb: Some(Self::DEFAULT_MIN_DISK_SPACE_MB),
+            min_memory_mb: Some(Self::DEFAULT_MIN_MEMORY_MB),
         }
+    }
+}
+
+impl Default for EnvironmentValidation {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 

@@ -27,7 +27,7 @@ impl SoftwareHsmCapabilityProber {
     pub async fn probe_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
         debug!("Probing software HSM capabilities");
         
-        // TODO: Implement actual software HSM capability detection
+        // PHASE-2(Software-HSM): Implement actual software HSM capability detection
         Ok(HsmCapabilities::default())
     }
 }

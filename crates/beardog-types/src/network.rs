@@ -1,6 +1,7 @@
 // Network configuration types for BearDog
 // Provides network-related type definitions and configurations
 
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -363,11 +364,13 @@ mod tests {
 
     #[test]
     fn test_endpoint_config() {
-        let config = EndpointConfig::new("example.com".to_string(), 8080);
-        assert_eq!(config.full_address(), "example.com:8080");
+        const TEST_API_PORT: u16 = 8080;
+        const TEST_CUSTOM_PORT: u16 = 3000;
+        let config = EndpointConfig::new("example.com".to_string(), TEST_API_PORT);
+        assert_eq!(config.full_address(), format!("example.com:{}", TEST_API_PORT));
         assert!(!config.is_local());
 
-        let local_config = EndpointConfig::new("localhost".to_string(), 3000);
+        let local_config = EndpointConfig::new("localhost".to_string(), TEST_CUSTOM_PORT);
         assert!(local_config.is_local());
     }
  // TEST_CATEGORY: unit
@@ -399,7 +402,8 @@ mod tests {
         assert!(config.validate().is_err());
 
         // Test empty address
-        config.connection.config.port = 8080;
+        const TEST_PORT: u16 = 8080;
+        config.connection.config.port = TEST_PORT;
         config.connection.config.address = String::new();
         assert!(config.validate().is_err());
     }

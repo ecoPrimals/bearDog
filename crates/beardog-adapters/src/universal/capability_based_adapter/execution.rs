@@ -4,7 +4,7 @@
 
 use super::types::*;
 use super::core::UniversalCapabilityAdapter;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::{AdapterRequest, AdapterResponse};
 use tracing::{debug, info};
 
@@ -14,7 +14,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection_id: &str,
         request: AdapterRequest,
-    ) -> BearDogResult<AdapterResponse> {
+    ) -> Result<AdapterResponse> {
         info!("⚡ Executing capability request via connection: {}", connection_id);
         
         // Verify connection exists

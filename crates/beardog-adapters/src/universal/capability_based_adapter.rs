@@ -10,7 +10,7 @@ use crate::universal::adapter_types::*;
 use crate::universal::capability_helpers::*;
 use crate::universal::capability_types::*;
 use crate::universal::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     AuthRequirements, CapabilityRequest, CapabilityResponse, EndpointSecurityConfig, HealthStatus,
     PerformanceMetrics, ServiceCapabilityType, UniversalCapability,
@@ -44,13 +44,13 @@ pub struct UniversalCapabilityAdapter {
 impl UniversalCapabilityAdapter {
     /// Create new universal capability adapter
     /// Creates a new instance
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         Self::with_config(AdapterConfig::default())
     }
 
     /// Create universal adapter with custom configuration
     /// Creates instance with config
-    pub fn with_config(config: AdapterConfig) -> BearDogResult<Self> {
+    pub fn with_config(config: AdapterConfig) -> Result<Self, BearDogError> {
         info!("🔌 Initializing Universal Capability Adapter");
         info!("🎯 Mission: Replace ALL hardcoded integrations with dynamic discovery");
         info!("📋 Configuration:");
@@ -82,7 +82,7 @@ impl UniversalCapabilityAdapter {
     pub fn discover_capability(
         &self,
         request: CapabilityDiscoveryRequest,
-    ) -> BearDogResult<CapabilityDiscoveryResult> {
+    ) -> Result<CapabilityDiscoveryResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         info!("🔍 Discovering capability: {:?}", request.capability_type);
@@ -164,7 +164,7 @@ impl UniversalCapabilityAdapter {
     pub fn connect_to_capability(
         &mut self,
         provider: &UniversalCapability,
-    ) -> BearDogResult<String> {
+    ) -> Result<String> {
         let connection_id = Uuid::new_v4().to_string();
 
         info!(
@@ -206,7 +206,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection_id: &str,
         request: CapabilityRequest,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         info!(
             "⚡ Executing capability request via connection: {}",
             connection_id
@@ -247,7 +247,7 @@ impl UniversalCapabilityAdapter {
     pub fn register_capability_provider(
         &mut self,
         capability: UniversalCapability,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         info!(
             "📝 Registering new capability provider: {}",
             capability.provider_id
@@ -325,7 +325,7 @@ impl UniversalCapabilityAdapter {
     /// Gets available_capabilities
     pub fn get_available_capabilities(
         &self,
-    ) -> BearDogResult<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>> {
+    ) -> Result<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>> {
         let capabilities = self.capabilities.read();
         Ok(capabilities.clone())
     }
@@ -336,7 +336,7 @@ impl UniversalCapabilityAdapter {
     /// prefer `primals_ref()` which is much cheaper.
     /// Gets discovered_primals
     /// Gets discovered_primals
-    pub fn get_discovered_primals(&self) -> BearDogResult<HashMap<String, DiscoveredPrimal>> {
+    pub fn get_discovered_primals(&self) -> Result<HashMap<String, DiscoveredPrimal>> {
         let primals = self.primals.read();
         Ok(primals.clone())
     }
@@ -350,7 +350,7 @@ impl UniversalCapabilityAdapter {
 
     pub fn health_check_all_connections(
         &self,
-    ) -> BearDogResult<HashMap<String, HealthStatus>> {
+    ) -> Result<HashMap<String, HealthStatus>> {
         info!("❤️ Performing health check on all connections...");
 
         let connections = self.connections.read();
@@ -374,7 +374,7 @@ impl UniversalCapabilityAdapter {
     fn find_capability_providers(
         &self,
         capability_type: &ServiceCapabilityType,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         let capabilities = self.capabilities.read();
 
         Ok(capabilities
@@ -387,7 +387,7 @@ impl UniversalCapabilityAdapter {
         &self,
         providers: &[UniversalCapability],
         requirements: &CapabilityRequirements,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         let mut filtered = Vec::new();
 
         for provider in providers {
@@ -403,7 +403,7 @@ impl UniversalCapabilityAdapter {
         &self,
         provider: &UniversalCapability,
         requirements: &CapabilityRequirements,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool> {
         // Check performance requirements
         let performance_score = self.calculate_performance_score(provider)?;
         if performance_score < requirements.min_performance_score {
@@ -425,7 +425,7 @@ impl UniversalCapabilityAdapter {
         &self,
         providers: &[UniversalCapability],
         preferences: &CapabilityPreferences,
-    ) -> BearDogResult<Vec<RankedCapabilityProvider>> {
+    ) -> Result<Vec<RankedCapabilityProvider>> {
         let mut ranked = Vec::new();
 
         for provider in providers {
@@ -455,13 +455,13 @@ impl UniversalCapabilityAdapter {
     fn validate_providers(
         &self,
         providers: &[RankedCapabilityProvider],
-    ) -> BearDogResult<Vec<RankedCapabilityProvider>> {
+    ) -> Result<Vec<RankedCapabilityProvider>> {
         // In a real implementation, this would perform connectivity tests
         // For now, we just return the top providers
         Ok(providers.to_vec())
     }
 
-    fn calculate_performance_score(&self, provider: &UniversalCapability) -> BearDogResult<f64> {
+    fn calculate_performance_score(&self, provider: &UniversalCapability) -> Result<f64> {
         // Calculate performance score based on metrics
         let mut score = 0.5; // Base score
 
@@ -519,7 +519,7 @@ impl UniversalCapabilityAdapter {
         &self,
         provider: &UniversalCapability,
         preferences: &CapabilityPreferences,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64> {
         let mut score = 0.0;
 
         // Base performance score
@@ -553,7 +553,7 @@ impl UniversalCapabilityAdapter {
         &self,
         provider: &UniversalCapability,
         preferences: &CapabilityPreferences,
-    ) -> BearDogResult<Vec<String>> {
+    ) -> Result<Vec<String>> {
         let mut reasons = Vec::new();
 
         reasons.push(format!("Health status: {:?}", provider.health_status));
@@ -569,7 +569,7 @@ impl UniversalCapabilityAdapter {
     fn estimate_performance(
         &self,
         provider: &UniversalCapability,
-    ) -> BearDogResult<PerformanceEstimate> {
+    ) -> Result<PerformanceEstimate> {
         // Calculate performance estimates based on provider characteristics
         let base_latency = if Self::is_local_endpoint(&provider.endpoint.base_url) {
             5  // Local services are faster
@@ -606,7 +606,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection: &CapabilityConnection,
         request: &CapabilityRequest,
-    ) -> BearDogResult<CapabilityResponse> {
+    ) -> Result<CapabilityResponse> {
         debug!(
             "⚡ Executing real capability request to {}",
             connection.provider_id
@@ -645,7 +645,7 @@ impl UniversalCapabilityAdapter {
         connection_id: &str,
         execution_time_ms: u64,
         success: bool,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         let mut connections = self.connections.write();
 
         if let Some(connection) = connections.get_mut(connection_id) {
@@ -672,7 +672,7 @@ impl UniversalCapabilityAdapter {
     fn check_connection_health(
         &self,
         connection: &CapabilityConnection,
-    ) -> BearDogResult<HealthStatus> {
+    ) -> Result<HealthStatus> {
         // Simulate health check
         // In production, this would make real health check requests
 
@@ -706,7 +706,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection: &CapabilityConnection,
         request: &CapabilityRequest,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>> {
         debug!("🌐 Executing HTTP request to {}", connection.endpoint);
 
         // Basic HTTP request implementation
@@ -725,7 +725,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection: &CapabilityConnection,
         request: &CapabilityRequest,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>> {
         debug!("📡 Executing gRPC request to {}", connection.endpoint);
 
         // Basic gRPC request implementation
@@ -740,7 +740,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection: &CapabilityConnection,
         request: &CapabilityRequest,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>> {
         debug!("🏠 Executing local request for {}", connection.provider_id);
 
         // Local capability execution
@@ -754,7 +754,7 @@ impl UniversalCapabilityAdapter {
         &self,
         connection: &CapabilityConnection,
         request: &CapabilityRequest,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>> {
         debug!("🔗 Executing IPC request to {}", connection.provider_id);
 
         // IPC communication implementation
@@ -876,133 +876,6 @@ impl CapabilityDiscoveryRequest {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    fn test_universal_adapter_creation() {
-        let adapter = UniversalCapabilityAdapter::new()
-            ?;
-
-        assert_eq!(adapter.metrics.capabilities_discovered, 0);
-        assert_eq!(adapter.metrics.primals_discovered, 0);
-    }
-
-    #[tokio::test]
-    fn test_capability_registration() {
-        let mut adapter = UniversalCapabilityAdapter::new()
-            // TEST_CATEGORY: unit
-            // TEST_DOMAIN: adapters
-            // TEST_PRIORITY: normal
-            ?;
-
-        let capability = UniversalCapability {
-            capability_type: ServiceCapabilityType::Security,
-            provider_id: "test-provider".to_string(),
-            endpoint: UniversalEndpoint {
-                // TEST_CATEGORY: unit
-                // TEST_DOMAIN: adapters
-                // TEST_PRIORITY: normal
-                url: "http://test:8080".to_string(),
-                protocols: vec!["HTTP".to_string()],
-                auth_requirements: AuthRequirements::default(),
-                security_config: EndpointSecurityConfig::default(),
-            },
-            metadata: HashMap::new(),
-            health_status: HealthStatus::Healthy,
-            performance_metrics: PerformanceMetrics::default(),
-        };
-
-        adapter
-            .register_capability_provider(capability)
-            ?;
-
-        let capabilities = adapter.get_available_capabilities()?;
-        assert!(capabilities.contains_key(&ServiceCapabilityType::Security));
-        assert_eq!(capabilities[&ServiceCapabilityType::Security].len(), 1);
-    }
-
-    #[tokio::test]
-    fn test_capability_discovery() {
-        let mut adapter = UniversalCapabilityAdapter::new()?;
-
-        // Register a test capability
-        let capability = UniversalCapability {
-            // TEST_CATEGORY: unit
-            // TEST_DOMAIN: adapters
-            // TEST_PRIORITY: normal
-            capability_type: ServiceCapabilityType::ComputeIntelligence,
-            provider_id: "compute-provider".to_string(),
-            endpoint: UniversalEndpoint {
-                url: "http://compute:8081".to_string(),
-                protocols: vec!["HTTP".to_string()],
-                auth_requirements: AuthRequirements::default(),
-                security_config: EndpointSecurityConfig::default(),
-            },
-            metadata: HashMap::new(),
-            health_status: HealthStatus::Healthy,
-            performance_metrics: PerformanceMetrics::default(),
-        };
-
-        adapter
-            .register_capability_provider(capability)
-            ?;
-
-        // Discover compute intelligence capability
-        let request = CapabilityDiscoveryRequest::compute_intelligence();
-        let result = adapter.discover_capability(request)?;
-
-        assert!(!result.discovered_providers.is_empty());
-        assert_eq!(
-            result.discovered_providers[0].provider.capability_type,
-            ServiceCapabilityType::ComputeIntelligence
-        );
-    }
-
-    #[tokio::test]
-    fn test_no_hardcoded_vendor_preferences() {
-        // Test that capability requests don't contain hardcoded vendor preferences
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: adapters
-        // TEST_PRIORITY: normal
-        let compute_request = CapabilityDiscoveryRequest::compute_intelligence();
-        let key_mgmt_request = CapabilityDiscoveryRequest::key_management();
-        let mesh_request = CapabilityDiscoveryRequest::service_mesh();
-
-        // All requests should have empty vendor preferences (true sovereignty)
-        assert!(compute_request.preferences.vendor_preferences.is_empty());
-        assert!(key_mgmt_request.preferences.vendor_preferences.is_empty());
-        assert!(mesh_request.preferences.vendor_preferences.is_empty());
-    }
-
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: adapters
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    fn test_connection_management() {
-        let mut adapter = UniversalCapabilityAdapter::new()?;
-
-        // Register and connect to a capability
-        let capability = UniversalCapability {
-            capability_type: ServiceCapabilityType::Security,
-            provider_id: "security-provider".to_string(),
-            endpoint: UniversalEndpoint {
-                url: "http://security:8080".to_string(),
-                protocols: vec!["HTTPS".to_string()],
-                auth_requirements: AuthRequirements::default(),
-                security_config: EndpointSecurityConfig::default(),
-            },
-            metadata: HashMap::new(),
-            health_status: HealthStatus::Healthy,
-            performance_metrics: PerformanceMetrics::default(),
-        };
-
-        let connection_id = adapter.connect_to_capability(&capability)?;
-        assert!(!connection_id.is_empty());
-
-        // Test health check
-        let health_statuses = adapter.health_check_all_connections()?;
-        assert!(health_statuses.contains_key(&connection_id));
+// Tests extracted to separate module for better organization
     }
 }

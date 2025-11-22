@@ -289,8 +289,9 @@ mod tests {
 
         let mut prev_uptime = std::time::Duration::from_secs(0);
 
+        // Modern pattern: Test monotonicity without artificial delays
         for _ in 0..5 {
-            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+            // Actual work between reads (lock acquisition is real work)
             let state = core.state.read().await;
             let current_uptime = state.start_time.elapsed();
 
@@ -299,6 +300,7 @@ mod tests {
                 "Uptime should increase monotonically"
             );
             prev_uptime = current_uptime;
+            drop(state); // Explicit drop for next iteration
         }
     }
 
@@ -312,10 +314,11 @@ mod tests {
 
         let _dev = Environment::Development;
         let _prod = Environment::Production;
-        let _staging = Environment::Staging;
+        let staging = Environment::Staging;
 
-        // All environments should be creatable
-        assert!(true);
+        // All environments should be creatable without panicking
+        // Verify we can format them
+        assert_eq!(format!("{:?}", staging), "Staging");
     }
 
     /// TEST_CATEGORY: integration
@@ -490,10 +493,10 @@ mod tests {
 
         let _healthy_str = format!("{:?}", healthy);
         let _degraded_str = format!("{:?}", degraded);
-        let _unhealthy_str = format!("{:?}", unhealthy);
+        let unhealthy_str = format!("{:?}", unhealthy);
 
-        // Should not panic
-        assert!(true);
+        // Should not panic and should contain status information
+        assert!(unhealthy_str.contains("Unhealthy"));
     }
 
     /// TEST_CATEGORY: integration
@@ -585,19 +588,19 @@ mod tests {
 
         let mut handles = vec![];
 
-        // Spawn readers
+        // Spawn readers - modern pattern: test actual concurrent access
         for _ in 0..10 {
             let core_clone = Arc::clone(&core);
             let handle = tokio::spawn(async move {
                 for _ in 0..10 {
                     let _state = core_clone.state.read().await;
-                    tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
+                    // No sleep needed - we're testing lock contention, not timing
                 }
             });
             handles.push(handle);
         }
 
-        // Spawn writers
+        // Spawn writers - modern pattern: test actual concurrent writes
         for _ in 0..3 {
             let core_clone = Arc::clone(&core);
             let handle = tokio::spawn(async move {
@@ -608,7 +611,7 @@ mod tests {
                     } else {
                         beardog_types::canonical::HealthStatus::Degraded
                     };
-                    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+                    // No sleep needed - testing write lock exclusivity
                 }
             });
             handles.push(handle);

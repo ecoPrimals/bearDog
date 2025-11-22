@@ -73,7 +73,7 @@ mod configuration_tests {
             auto_discovery_enabled: true,
             discovery_interval: Duration::from_secs(86400), // 1 day
             health_check_interval: Duration::from_secs(3600), // 1 hour
-            capability_refresh_interval: Duration::from_secs(604800), // 1 week
+            capability_refresh_interval: Duration::from_secs(604_800), // 1 week
             timeout: Duration::from_secs(30),
             tier_elevation_enabled: true,
             human_entropy_priority: true,

@@ -192,16 +192,19 @@ async fn test_capability_health_check() -> Result<(), Box<dyn std::error::Error>
     let config = beardog_core::Config::default();
     let bootstrap = ZeroKnowledgeBootstrap::new(config)?;
     
+    use beardog_config::domains::network_ports::DEFAULT_DISCOVERY_PORT;
+    let endpoint = format!("http://localhost:{}/health", DEFAULT_DISCOVERY_PORT);
+    
     let capability = ServiceCapability {
         service_type: ServiceCapabilityType::Health,
-        endpoint: "http://localhost:9090/health".to_string(),
+        endpoint: endpoint.clone(),
         capabilities: vec![Capability::HealthCheck],
         metadata: Default::default(),
     };
     
     // Act
     bootstrap.register_capability(capability.clone()).await?;
-    let health = bootstrap.check_capability_health(&capability.endpoint).await;
+    let health = bootstrap.check_capability_health(&endpoint).await;
     
     // Assert
     // Health check may fail if service not running, but should return a result

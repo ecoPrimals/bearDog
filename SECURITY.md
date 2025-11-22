@@ -23,7 +23,7 @@
 
 ### Ongoing Security Measures
 - Regular dependency auditing with `cargo audit`
-- Minimal use of `unsafe` code (46 instances, all documented)
+- Minimal use of `unsafe` code (126 instances, all documented and justified for SIMD/FFI/hardware integration)
 - Comprehensive error handling to prevent information disclosure
 - Configuration-based security parameters (no hardcoded secrets)
 

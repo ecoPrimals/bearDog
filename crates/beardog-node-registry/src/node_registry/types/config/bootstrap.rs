@@ -165,21 +165,23 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_bootstrap_node_config() {
-        let config = BootstrapNodeConfig::new("test_node".to_string(), "localhost".to_string(), 8080)
+        const TEST_PORT: u16 = 8080;
+        let config = BootstrapNodeConfig::new("test_node".to_string(), "localhost".to_string(), TEST_PORT)
             .with_capability("security".to_string())
             .with_trust_level(crate::node_registry::types::trust::TrustLevel::High);
         assert_eq!(config.address, "localhost");
-        assert_eq!(config.port, 8080);
+        assert_eq!(config.port, TEST_PORT);
         assert!(config.capabilities.contains(&"security".to_string()));
         assert_eq!(config.trust_level, crate::node_registry::types::trust::TrustLevel::High);
-        assert_eq!(config.full_address(), "localhost:8080");
+        assert_eq!(config.full_address(), format!("localhost:{}", TEST_PORT));
         assert!(config.validate().is_ok());}
 
 
     fn test_bootstrap_node_config_default() {
+        const TEST_PORT: u16 = 8080;
         let config = BootstrapNodeConfig::default();
         assert_eq!(config.node_id, "default_node");
-        assert_eq!(config.network_address, "localhost:8080");
+        assert_eq!(config.network_address, format!("localhost:{}", TEST_PORT));
     fn test_bootstrap_node_config_durations() {
         let config = BootstrapNodeConfig::default()
             .with_connection_timeout(60)
@@ -192,9 +194,10 @@ mod tests {
     fn test_bootstrap_node_config_validation() {
         let mut config = BootstrapNodeConfig::default();
         config.address = "".to_string();
+        const TEST_PORT: u16 = 8080;
         assert!(config.validate().is_err());
         config.address = "localhost".to_string();
         config.port = 0;
-        config.port = 8080;
+        config.port = TEST_PORT;
         config.connection_timeout_seconds = 0;
 } 

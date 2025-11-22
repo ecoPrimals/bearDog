@@ -40,27 +40,27 @@ pub enum CloudProvider {
     /// Amazon Web Services (AWS)
     /// Services: AWS KMS, AWS CloudHSM
     Aws,
-    
+
     /// Microsoft Azure
     /// Services: Azure Key Vault, Azure Managed HSM
     Azure,
-    
+
     /// Google Cloud Platform (GCP)
     /// Services: Google Cloud KMS, Google Cloud HSM
     Gcp,
-    
+
     /// Oracle Cloud Infrastructure (OCI)
     /// Services: Oracle Key Management, Oracle Cloud HSM
     Oci,
-    
+
     /// IBM Cloud
     /// Services: IBM Key Protect, IBM Cloud HSM
     Ibm,
-    
+
     /// Alibaba Cloud
     /// Services: Alibaba Cloud KMS
     Alibaba,
-    
+
     /// Custom/Other cloud provider
     Custom {
         /// Provider name
@@ -84,7 +84,7 @@ impl CloudProvider {
             Self::Custom { .. } => "Custom HSM",
         }
     }
-    
+
     /// Get common region prefixes for this provider
     ///
     /// Returns typical region identifier prefixes to help with region discovery.
@@ -100,7 +100,7 @@ impl CloudProvider {
             Self::Custom { .. } => &[],
         }
     }
-    
+
     /// Check if this provider is a major cloud platform
     ///
     /// Returns true for AWS, Azure, and GCP (the "big three").
@@ -108,7 +108,7 @@ impl CloudProvider {
     pub const fn is_major_platform(&self) -> bool {
         matches!(self, Self::Aws | Self::Azure | Self::Gcp)
     }
-    
+
     /// Get provider identifier string (lowercase)
     ///
     /// Useful for configuration keys, environment variables, etc.
@@ -124,7 +124,7 @@ impl CloudProvider {
             Self::Custom { .. } => "custom",
         }
     }
-    
+
     /// Parse provider from string identifier
     ///
     /// Accepts various string formats (case-insensitive).
@@ -164,26 +164,26 @@ pub enum CloudHsmService {
     AwsKms,
     /// AWS CloudHSM (dedicated hardware)
     AwsCloudHsm,
-    
+
     /// Azure Key Vault (standard)
     AzureKeyVault,
     /// Azure Managed HSM (dedicated hardware)
     AzureManagedHsm,
-    
+
     /// Google Cloud Key Management Service
     GcpKms,
     /// Google Cloud HSM (dedicated hardware)
     GcpCloudHsm,
-    
+
     /// Oracle Key Management
     OciKeyManagement,
-    
+
     /// IBM Key Protect
     IbmKeyProtect,
-    
+
     /// Alibaba Cloud KMS
     AlibabaKms,
-    
+
     /// Custom cloud HSM service
     Custom {
         /// Provider
@@ -207,7 +207,7 @@ impl CloudHsmService {
             Self::Custom { provider, .. } => provider.clone(),
         }
     }
-    
+
     /// Check if this is a dedicated HSM service (vs. shared/multi-tenant)
     #[must_use]
     pub const fn is_dedicated_hsm(&self) -> bool {
@@ -248,12 +248,30 @@ mod tests {
 
     #[test]
     fn test_cloud_provider_from_identifier() {
-        assert_eq!(CloudProvider::from_identifier("aws"), Some(CloudProvider::Aws));
-        assert_eq!(CloudProvider::from_identifier("AWS"), Some(CloudProvider::Aws));
-        assert_eq!(CloudProvider::from_identifier("amazon"), Some(CloudProvider::Aws));
-        assert_eq!(CloudProvider::from_identifier("azure"), Some(CloudProvider::Azure));
-        assert_eq!(CloudProvider::from_identifier("gcp"), Some(CloudProvider::Gcp));
-        assert_eq!(CloudProvider::from_identifier("google"), Some(CloudProvider::Gcp));
+        assert_eq!(
+            CloudProvider::from_identifier("aws"),
+            Some(CloudProvider::Aws)
+        );
+        assert_eq!(
+            CloudProvider::from_identifier("AWS"),
+            Some(CloudProvider::Aws)
+        );
+        assert_eq!(
+            CloudProvider::from_identifier("amazon"),
+            Some(CloudProvider::Aws)
+        );
+        assert_eq!(
+            CloudProvider::from_identifier("azure"),
+            Some(CloudProvider::Azure)
+        );
+        assert_eq!(
+            CloudProvider::from_identifier("gcp"),
+            Some(CloudProvider::Gcp)
+        );
+        assert_eq!(
+            CloudProvider::from_identifier("google"),
+            Some(CloudProvider::Gcp)
+        );
     }
 
     #[test]
@@ -268,7 +286,10 @@ mod tests {
     #[test]
     fn test_cloud_hsm_service_provider() {
         assert_eq!(CloudHsmService::AwsKms.provider(), CloudProvider::Aws);
-        assert_eq!(CloudHsmService::AzureKeyVault.provider(), CloudProvider::Azure);
+        assert_eq!(
+            CloudHsmService::AzureKeyVault.provider(),
+            CloudProvider::Azure
+        );
         assert_eq!(CloudHsmService::GcpKms.provider(), CloudProvider::Gcp);
     }
 
@@ -284,7 +305,9 @@ mod tests {
     fn test_display() {
         assert_eq!(format!("{}", CloudProvider::Aws), "AWS");
         assert_eq!(format!("{}", CloudHsmService::AwsKms), "AWS KMS");
-        assert_eq!(format!("{}", CloudHsmService::AzureKeyVault), "Azure Key Vault");
+        assert_eq!(
+            format!("{}", CloudHsmService::AzureKeyVault),
+            "Azure Key Vault"
+        );
     }
 }
-

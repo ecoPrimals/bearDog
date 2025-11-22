@@ -11,6 +11,7 @@ use tracing::{debug, info};
 
 /// Persistent audit storage implementation
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Fields used in future implementation
 pub struct PersistentAuditStorage {
     file_path: std::path::PathBuf,
     cache: Arc<RwLock<VecDeque<AuditLogEntry>>>,

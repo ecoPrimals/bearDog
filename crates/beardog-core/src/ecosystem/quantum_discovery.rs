@@ -4,7 +4,8 @@
 // discovery and selection, achieving unprecedented performance in complex
 // multi-dimensional capability spaces.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     CapabilityType, ServiceCapabilityType, UniversalCapability,
 };
@@ -320,7 +321,7 @@ impl QuantumDiscoveryEngine {
     pub fn quantum_discover_capabilities(
         &mut self,
         request_capabilities: Vec<CapabilityType>,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         info!("🔬 Initiating quantum capability discovery");
         debug!("Requested capabilities: {:?}", request_capabilities);
 
@@ -357,7 +358,7 @@ impl QuantumDiscoveryEngine {
         capability_a: CapabilityType,
         capability_b: CapabilityType,
         entanglement_type: EntanglementType,
-    ) -> BearDogResult<QuantumEntanglement> {
+    ) -> Result<QuantumEntanglement> {
         debug!(
             "🔗 Creating quantum entanglement: {:?} ↔ {:?}",
             capability_a, capability_b
@@ -397,7 +398,7 @@ impl QuantumDiscoveryEngine {
         &self,
         candidates: Vec<UniversalCapability>,
         optimization_criteria: Vec<OptimizationCriterion>,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         info!("🔥 Applying quantum annealing optimization");
 
         let mut temperature = self.config.annealing_temperature;
@@ -446,7 +447,7 @@ impl QuantumDiscoveryEngine {
     fn create_superposition_state(
         &mut self,
         capabilities: &[CapabilityType],
-    ) -> BearDogResult<Uuid> {
+    ) -> Result<Uuid> {
         let state_id = Uuid::new_v4();
 
         // Initialize amplitudes in equal superposition
@@ -471,7 +472,7 @@ impl QuantumDiscoveryEngine {
         Ok(state_id)
     }
 
-    fn apply_quantum_gates(&self, _state_id: &Uuid) -> BearDogResult<()> {
+    fn apply_quantum_gates(&self, _state_id: &Uuid) -> Result<(), BearDogError> {
         debug!("⚛️ Applying quantum gates for optimization");
 
         // Simulate quantum gate operations
@@ -484,7 +485,7 @@ impl QuantumDiscoveryEngine {
     fn perform_quantum_measurement(
         &mut self,
         state_id: &Uuid,
-    ) -> BearDogResult<QuantumMeasurement> {
+    ) -> Result<QuantumMeasurement> {
         debug!("📏 Performing quantum measurement");
 
         // Find the superposition state
@@ -517,7 +518,7 @@ impl QuantumDiscoveryEngine {
     fn quantum_measurement_to_capabilities(
         &self,
         measurement: &QuantumMeasurement,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         let mut capabilities = Vec::new();
 
         for (i, &measured) in measurement.results.iter().enumerate() {
@@ -539,7 +540,7 @@ impl QuantumDiscoveryEngine {
         &self,
         _capability_a: &CapabilityType,
         _capability_b: &CapabilityType,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64> {
         // Simulate entanglement strength calculation
         // In real implementation, this would analyze historical usage patterns,
         // performance correlations, and architectural dependencies
@@ -564,7 +565,7 @@ impl QuantumDiscoveryEngine {
         &self,
         _selection: &[UniversalCapability],
         _criteria: &[OptimizationCriterion],
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64> {
         // Simulate energy calculation for optimization
         Ok(rand::random::<f64>() * 100.0)
     }
@@ -572,7 +573,7 @@ impl QuantumDiscoveryEngine {
     fn generate_neighbor_solution(
         &self,
         current: &[UniversalCapability],
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         // Simple neighbor: randomly modify one capability
         let mut neighbor = current.to_vec();
         if !neighbor.is_empty() {

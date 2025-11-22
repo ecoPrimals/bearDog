@@ -9,6 +9,10 @@
 //! - **Environment loading** (`from_env()`) - Explicit environment variable reads
 //! - **Flexible construction** (`builder()`) - Testing without env var pollution
 
+use crate::domains::network_addresses::NetworkAddressesConfig;
+#[cfg(test)]
+use crate::domains::network_ports::DEFAULT_ADMIN_PORT;
+use crate::domains::network_ports::{NetworkPortsConfig, DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT};
 use crate::error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr};
@@ -16,6 +20,19 @@ use std::net::{IpAddr, Ipv4Addr};
 /// Network configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NetworkConfig {
+    /// Centralized port configuration (preferred)
+    ///
+    /// Use this for all new code. Individual component ports are maintained
+    /// for backward compatibility during migration.
+    #[serde(default)]
+    pub ports: NetworkPortsConfig,
+
+    /// Centralized address configuration (preferred)
+    ///
+    /// Use this for all new code. Replaces hardcoded IP addresses and hostnames.
+    #[serde(default)]
+    pub addresses: NetworkAddressesConfig,
+
     /// API server configuration
     #[serde(default)]
     pub api: ApiConfig,
@@ -33,6 +50,8 @@ impl NetworkConfig {
     /// Pure static defaults (no environment variable reads)
     pub fn const_defaults() -> Self {
         Self {
+            ports: NetworkPortsConfig::default(),
+            addresses: NetworkAddressesConfig::default(),
             api: ApiConfig::const_defaults(),
             discovery: ServiceDiscoveryConfig::const_defaults(),
             admin: AdminConfig::const_defaults(),
@@ -42,6 +61,8 @@ impl NetworkConfig {
     /// Load configuration from environment variables with fallback to defaults
     pub fn from_env() -> Self {
         Self {
+            ports: NetworkPortsConfig::from_env(),
+            addresses: NetworkAddressesConfig::from_env(),
             api: ApiConfig::from_env(),
             discovery: ServiceDiscoveryConfig::from_env(),
             admin: AdminConfig::from_env(),
@@ -50,6 +71,16 @@ impl NetworkConfig {
 
     /// Validate network configuration
     pub fn validate(&self) -> ConfigResult<()> {
+        // Validate centralized ports configuration
+        self.ports.validate().map_err(|e| {
+            ConfigError::validation(format!("Port configuration validation failed: {}", e))
+        })?;
+
+        // Validate centralized addresses configuration
+        self.addresses.validate().map_err(|e| {
+            ConfigError::validation(format!("Address configuration validation failed: {}", e))
+        })?;
+
         self.api.validate()?;
         self.discovery.validate()?;
         self.admin.validate()?;
@@ -110,7 +141,7 @@ impl ApiConfig {
     pub const fn const_defaults() -> Self {
         Self {
             bind_address: IpAddr::V4(Ipv4Addr::LOCALHOST),
-            port: 8080,
+            port: DEFAULT_API_PORT,
             tls_enabled: false,
             tls_cert_path: None,
             tls_key_path: None,
@@ -121,22 +152,22 @@ impl ApiConfig {
     /// Load configuration from environment variables with fallback to defaults
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             bind_address: std::env::var("BEARDOG_API_BIND_ADDRESS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.bind_address),
-            
+
             port: std::env::var("BEARDOG_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.port),
-            
+
             tls_enabled: defaults.tls_enabled,
             tls_cert_path: None,
             tls_key_path: None,
-            
+
             max_connections: std::env::var("BEARDOG_MAX_CONNECTIONS")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -229,7 +260,7 @@ impl ApiConfigBuilder {
 
     pub fn build(self) -> ApiConfig {
         let defaults = ApiConfig::const_defaults();
-        
+
         ApiConfig {
             bind_address: self.bind_address.unwrap_or(defaults.bind_address),
             port: self.port.unwrap_or(defaults.port),
@@ -261,9 +292,9 @@ impl ServiceDiscoveryConfig {
     /// Pure static defaults (no environment variable reads)
     pub fn const_defaults() -> Self {
         Self {
-            port: 9090,
+            port: DEFAULT_DISCOVERY_PORT,
             backends: vec!["dns-sd".to_string(), "static".to_string()],
-            multicast_address: "239.255.0.1:9090".to_string(),
+            multicast_address: format!("239.255.0.1:{}", DEFAULT_DISCOVERY_PORT),
             interval_secs: 60,
         }
     }
@@ -271,19 +302,19 @@ impl ServiceDiscoveryConfig {
     /// Load configuration from environment variables with fallback to defaults
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             port: std::env::var("BEARDOG_DISCOVERY_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.port),
-            
+
             backends: defaults.backends,
-            
+
             multicast_address: std::env::var("BEARDOG_MULTICAST_ADDRESS")
                 .ok()
                 .unwrap_or(defaults.multicast_address),
-            
+
             interval_secs: std::env::var("BEARDOG_DISCOVERY_INTERVAL_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -364,7 +395,7 @@ impl ServiceDiscoveryConfigBuilder {
 
     pub fn build(self) -> ServiceDiscoveryConfig {
         let defaults = ServiceDiscoveryConfig::const_defaults();
-        
+
         ServiceDiscoveryConfig {
             port: self.port.unwrap_or(defaults.port),
             backends: self.backends.unwrap_or(defaults.backends),
@@ -400,18 +431,18 @@ impl AdminConfig {
     /// Load configuration from environment variables with fallback to defaults
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             bind_address: std::env::var("BEARDOG_ADMIN_BIND_ADDRESS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.bind_address),
-            
+
             port: std::env::var("BEARDOG_ADMIN_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.port),
-            
+
             enabled: std::env::var("BEARDOG_ADMIN_ENABLED")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -473,7 +504,7 @@ impl AdminConfigBuilder {
 
     pub fn build(self) -> AdminConfig {
         let defaults = AdminConfig::const_defaults();
-        
+
         AdminConfig {
             bind_address: self.bind_address.unwrap_or(defaults.bind_address),
             port: self.port.unwrap_or(defaults.port),
@@ -489,9 +520,9 @@ mod tests {
     #[test]
     fn test_const_defaults() {
         let config = NetworkConfig::const_defaults();
-        assert_eq!(config.api.port, 8080);
-        assert_eq!(config.discovery.port, 9090);
-        assert_eq!(config.admin.port, 9091);
+        assert_eq!(config.api.port, DEFAULT_API_PORT);
+        assert_eq!(config.discovery.port, DEFAULT_DISCOVERY_PORT);
+        assert_eq!(config.admin.port, DEFAULT_ADMIN_PORT);
     }
 
     #[test]
@@ -510,19 +541,16 @@ mod tests {
     #[test]
     fn test_port_conflict_detection() {
         let mut config = NetworkConfig::default();
-        config.api.port = 8080;
-        config.discovery.port = 8080; // Conflict!
+        config.api.port = DEFAULT_API_PORT;
+        config.discovery.port = DEFAULT_API_PORT; // Conflict!
 
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_api_builder() {
-        let config = ApiConfig::builder()
-            .port(9000)
-            .max_connections(200)
-            .build();
-        
+        let config = ApiConfig::builder().port(9000).max_connections(200).build();
+
         assert_eq!(config.port, 9000);
         assert_eq!(config.max_connections, 200);
         assert_eq!(config.bind_address, IpAddr::V4(Ipv4Addr::LOCALHOST));
@@ -530,18 +558,14 @@ mod tests {
 
     #[test]
     fn test_invalid_port_zero() {
-        let config = ApiConfig::builder()
-            .port(0)
-            .build();
+        let config = ApiConfig::builder().port(0).build();
 
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_tls_without_cert() {
-        let config = ApiConfig::builder()
-            .tls_enabled(true)
-            .build();
+        let config = ApiConfig::builder().tls_enabled(true).build();
 
         assert!(config.validate().is_err());
     }
@@ -563,18 +587,15 @@ mod tests {
             .port(9999)
             .interval_secs(30)
             .build();
-        
+
         assert_eq!(config.port, 9999);
         assert_eq!(config.interval_secs, 30);
     }
 
     #[test]
     fn test_admin_builder() {
-        let config = AdminConfig::builder()
-            .port(7777)
-            .enabled(false)
-            .build();
-        
+        let config = AdminConfig::builder().port(7777).enabled(false).build();
+
         assert_eq!(config.port, 7777);
         assert!(!config.enabled);
     }

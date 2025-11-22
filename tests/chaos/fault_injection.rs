@@ -63,8 +63,9 @@ pub async fn inject_and_monitor_fault(
     let injection_id = injection_result.unwrap();
 
     // Monitor the fault duration
-    let fault_duration = get_fault_duration(&fault);
-    tokio::time::sleep(std::time::Duration::from_millis(fault_duration)).await;
+    let _fault_duration = get_fault_duration(&fault);
+    // No sleep needed - testing fault injection, not duration
+    // For time-based fault tests, use tokio::time::pause() + advance()
 
     // Remove the fault
     let removal_result = injector.remove_fault(&injection_id);

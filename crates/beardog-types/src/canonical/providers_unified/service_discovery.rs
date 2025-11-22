@@ -2,15 +2,15 @@
 //!
 //! Service-registry-specific discovery configuration that extends the canonical base.
 
-use serde::{Deserialize, Serialize};
 use super::super::config::domains::discovery::DiscoveryConfig;
+use serde::{Deserialize, Serialize};
 
 /// Service discovery configuration (wraps canonical base with registry-specific fields)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
     /// Base discovery configuration
     pub base: DiscoveryConfig,
-    
+
     /// Discovery type (service registry specific)
     pub discovery_type: DiscoveryType,
 }
@@ -44,4 +44,3 @@ impl Default for DiscoveryType {
         DiscoveryType::KeyValueRegistry
     }
 }
-

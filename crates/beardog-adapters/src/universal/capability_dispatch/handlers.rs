@@ -3,7 +3,7 @@
 //! This module provides specific handler implementations for different capability types,
 //! each optimized for zero-cost dispatch and using canonical BearDog systems.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::adapters::{CapabilityRequest, CapabilityResponse};
 use super::core::ResourceUsage;
 use serde::{Deserialize, Serialize};
@@ -82,7 +82,7 @@ impl Default for SecurityHandlerConfig {
 
 impl SecurityCapabilityHandler {
     /// Handle security capability request
-    pub async fn handle_security_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_security_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -122,7 +122,7 @@ impl SecurityCapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }
@@ -196,7 +196,7 @@ impl Default for StorageHandlerConfig {
 
 impl StorageCapabilityHandler {
     /// Handle storage capability request
-    pub async fn handle_storage_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_storage_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -226,7 +226,7 @@ impl StorageCapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }
@@ -315,7 +315,7 @@ impl Default for ComputeHandlerConfig {
 
 impl ComputeCapabilityHandler {
     /// Handle compute capability request
-    pub async fn handle_compute_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_compute_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -345,7 +345,7 @@ impl ComputeCapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }
@@ -416,7 +416,7 @@ impl Default for NetworkHandlerConfig {
 
 impl NetworkCapabilityHandler {
     /// Handle network capability request
-    pub async fn handle_network_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_network_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -446,7 +446,7 @@ impl NetworkCapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }
@@ -536,7 +536,7 @@ impl Default for AIHandlerConfig {
 
 impl AICapabilityHandler {
     /// Handle AI capability request
-    pub async fn handle_ai_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_ai_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -566,7 +566,7 @@ impl AICapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }
@@ -635,7 +635,7 @@ impl Default for MonitoringHandlerConfig {
 
 impl MonitoringCapabilityHandler {
     /// Handle monitoring capability request
-    pub async fn handle_monitoring_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_monitoring_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -665,7 +665,7 @@ impl MonitoringCapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }
@@ -706,7 +706,7 @@ pub enum CustomImplementation {
 
 impl CustomCapabilityHandler {
     /// Handle custom capability request
-    pub async fn handle_custom_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_custom_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Implementation would go here
         Ok(CapabilityResponse {
             success: true,
@@ -736,7 +736,7 @@ impl CustomCapabilityHandler {
     }
 
     /// Validate configuration
-    pub fn validate_config(&self) -> BearDogResult<()> {
+    pub fn validate_config(&self) -> Result<()> {
         if self.handler_id.is_empty() {
             return Err(BearDogError::Configuration("Handler ID cannot be empty".to_string()));
         }

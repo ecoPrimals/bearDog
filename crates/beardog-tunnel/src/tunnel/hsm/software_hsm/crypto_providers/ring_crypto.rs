@@ -245,7 +245,7 @@ mod tests {
         // For Ring Ed25519: the public key is separate from the private key
         // In this test, we need to extract/derive the public key from the keypair
         // Ring's Ed25519KeyPair can be used to get the public key bytes
-        let key_pair = Ed25519KeyPair::from_seed_unchecked(&private_key)
+        let _key_pair = Ed25519KeyPair::from_seed_unchecked(&private_key)
             .map_err(|e| BearDogError::internal(format!("Key pair creation failed: {e}")))?;
 
         // The peer_public_key_from_seed function or similar would give us the public key

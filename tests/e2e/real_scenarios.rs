@@ -258,7 +258,8 @@ pub async fn run_real_concurrency_test(
         let handle = tokio::spawn(async move {
             for _ in 0..10 {
                 let _state = core_clone.state.read().await;
-                tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                // No sleep needed - testing lock contention, not simulating work
+                tokio::task::yield_now().await; // Allow other tasks to run
             }
             info!("  Reader {} completed", i);
         });
@@ -274,7 +275,8 @@ pub async fn run_real_concurrency_test(
                     let mut state = core_clone.state.write().await;
                     state.overall_health = HealthStatus::Degraded;
                 }
-                tokio::time::sleep(std::time::Duration::from_millis(2)).await;
+                // No sleep needed - testing write contention
+                tokio::task::yield_now().await; // Allow interleaving
                 {
                     let mut state = core_clone.state.write().await;
                     state.overall_health = HealthStatus::Healthy;

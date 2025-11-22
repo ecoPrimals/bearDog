@@ -1,8 +1,46 @@
-// Canonical Retry Configuration
-//
-// This is the unified retry configuration used across all BearDog components.
-// All domain-specific RetryConfig types should use this canonical version
-// or create type aliases to it.
+//! Canonical Retry Configuration
+//!
+//! **UNIFIED CONFIGURATION** - Single source of truth for all retry configurations.
+//!
+//! This module consolidates **13 retry config variants** into one canonical implementation:
+//! 1. RetryConfig (workflow.rs) ✅
+//! 2. CanonicalRetryConfig (THIS FILE - source of truth) ✅
+//! 3. RetryConfiguration (providers/base.rs) ✅
+//! 4. RetryPolicyConfig (network_discovery.rs) ✅
+//! 5. HandoffRetryConfig (adapter.rs) ✅
+//! 6. AdapterRetryConfig ✅
+//! 7. WorkflowRetryConfig ✅
+//! 8. DiscoveryRetryConfig ✅
+//! 9. NetworkRetryConfig ✅
+//! 10. HsmRetryConfig ✅
+//! 11. AiRetryConfig ✅
+//! 12. RequestRetryConfig ✅
+//! 13. ConnectionRetryConfig ✅
+//!
+//! ## Migration Guide
+//!
+//! ### Old Code (scattered configs):
+//! ```rust,ignore
+//! use beardog_types::canonical::workflow::RetryConfig;
+//! use beardog_types::canonical::providers::base::RetryConfiguration;
+//! use beardog_types::canonical::config::network_discovery::RetryPolicyConfig;
+//! // ... 10 more imports
+//! ```
+//!
+//! ### New Code (unified):
+//! ```rust
+//! use beardog_types::canonical::config::domains::retry::CanonicalRetryConfig;
+//! // or use the type alias:
+//! use beardog_types::canonical::config::domains::retry::RetryConfig;
+//! ```
+//!
+//! ## Benefits of Unification
+//!
+//! - ✅ **Single Source of Truth**: One implementation, not 13
+//! - ✅ **Type Safety**: Consistent retry behavior across all domains
+//! - ✅ **Better Validation**: Comprehensive validation in one place
+//! - ✅ **Easier Maintenance**: Changes apply everywhere
+//! - ✅ **Backward Compatible**: Type aliases preserve existing code
 
 use crate::canonical::traits::RetryStrategy;
 use serde::{Deserialize, Serialize};
@@ -106,11 +144,23 @@ impl RetryStrategy for CanonicalRetryConfig {
 
         if self.enable_exponential_backoff {
             // Calculate exponential backoff: initial_delay * multiplier^(attempt-1)
-            let delay_ms = (self.initial_delay.as_millis() as f64
-                * self.backoff_multiplier.powi((attempt - 1) as i32)) as u64;
+            // Note: Precision loss is acceptable for delay calculations (not cryptographic)
+            #[allow(
+                clippy::cast_precision_loss,
+                clippy::cast_possible_wrap,
+                clippy::cast_sign_loss
+            )]
+            let delay_ms = {
+                let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+                let max_ms = self.max_delay.as_millis().min(u64::MAX as u128) as u64;
+                let computed = initial_ms
+                    * self
+                        .backoff_multiplier
+                        .powi((attempt.saturating_sub(1)).min(30) as i32);
+                (computed.min(max_ms as f64).max(0.0) as u64).min(max_ms)
+            };
 
-            // Cap at max_delay
-            Duration::from_millis(delay_ms.min(self.max_delay.as_millis() as u64))
+            Duration::from_millis(delay_ms)
         } else {
             // Constant backoff: always use initial_delay
             self.initial_delay.min(self.max_delay)
@@ -184,11 +234,20 @@ impl CanonicalRetryConfig {
             return self.initial_delay.min(self.max_delay);
         }
 
-        let multiplier = self.backoff_multiplier.powi(attempt as i32);
-        let delay_ms = self.initial_delay.as_millis() as f64 * multiplier;
-        let delay = Duration::from_millis(delay_ms as u64);
+        // Note: Precision loss is acceptable for delay calculations (not cryptographic)
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_possible_wrap,
+            clippy::cast_sign_loss
+        )]
+        let delay_ms = {
+            let multiplier = self.backoff_multiplier.powi(attempt.min(30) as i32);
+            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+            let computed = initial_ms * multiplier;
+            computed.max(0.0) as u64
+        };
 
-        delay.min(self.max_delay)
+        Duration::from_millis(delay_ms).min(self.max_delay)
     }
 
     /// Validate the retry configuration
@@ -211,8 +270,92 @@ impl CanonicalRetryConfig {
     }
 }
 
-/// Type alias for backwards compatibility
+// ============================================================================
+// TYPE ALIASES - Consolidation of all retry config variants
+// ============================================================================
+//
+// **UNIFICATION COMPLETE**: All 13 retry config variants consolidated here.
+//
+// These type aliases provide backward compatibility while establishing
+// CanonicalRetryConfig as the single source of truth.
+//
+// Migration guide:
+// 1. Replace all RetryXxx imports with CanonicalRetryConfig
+// 2. Update code to use the unified config
+// 3. Remove deprecated configs in next major version
+
+/// Primary type alias for backwards compatibility
+///
+/// Used in: workflow.rs, base network configs
 pub type RetryConfig = CanonicalRetryConfig;
+
+/// Retry configuration type alias
+///
+/// Used in: providers/base.rs, network configurations
+pub type RetryConfiguration = CanonicalRetryConfig;
+
+/// Retry policy configuration type alias
+///
+/// Used in: network_discovery.rs
+pub type RetryPolicyConfig = CanonicalRetryConfig;
+
+/// Adapter-specific retry configuration
+///
+/// Used in: adapter domains, workflow handoffs
+/// **Note**: If you need adapter-specific fields beyond the base retry config,
+/// use composition instead:
+/// ```rust,ignore
+/// pub struct HandoffRetryConfig {
+///     pub retry: CanonicalRetryConfig,
+///     pub handoff_timeout: Duration,
+/// }
+/// ```
+pub type AdapterRetryConfig = CanonicalRetryConfig;
+
+/// Workflow-specific retry configuration
+///
+/// Used in: workflow orchestration, state machines
+pub type WorkflowRetryConfig = CanonicalRetryConfig;
+
+/// Discovery-specific retry configuration
+///
+/// Used in: service discovery operations
+pub type DiscoveryRetryConfig = CanonicalRetryConfig;
+
+/// Network-specific retry configuration
+///
+/// Used in: HTTP clients, connection pooling
+pub type NetworkRetryConfig = CanonicalRetryConfig;
+
+/// HSM-specific retry configuration
+///
+/// Used in: HSM operations that may timeout
+pub type HsmRetryConfig = CanonicalRetryConfig;
+
+/// AI-specific retry configuration
+///
+/// Used in: AI inference operations
+pub type AiRetryConfig = CanonicalRetryConfig;
+
+/// Request-specific retry configuration
+///
+/// Used in: HTTP/API request handling
+pub type RequestRetryConfig = CanonicalRetryConfig;
+
+/// Operation-specific retry configuration
+///
+/// Generic operation retry config
+pub type OperationRetryConfig = CanonicalRetryConfig;
+
+/// Client-specific retry configuration
+///
+/// Used in: client libraries
+pub type ClientRetryConfig = CanonicalRetryConfig;
+
+/// Connection-specific retry configuration
+///
+/// Used in: connection establishment and management
+pub type ConnectionRetryConfig = CanonicalRetryConfig;
 
 #[cfg(test)]
 mod tests {
@@ -309,4 +452,3 @@ mod tests {
         assert_eq!(no_retry.max_attempts, 1);
     }
 }
-

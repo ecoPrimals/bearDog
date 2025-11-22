@@ -11,33 +11,53 @@ use uuid::Uuid;
 pub enum OptimizationRequest {
     /// Genetic algorithm optimization for evolving solutions
     GeneticAlgorithm {
+        /// Target for genetic optimization
         optimization_target: GeneticTarget,
+        /// Quality requirements for solutions
         quality_requirements: GeneticQualityRequirements,
     },
     /// Performance acceleration optimization for workloads
     PerformanceAcceleration {
+        /// Type of workload to optimize
         workload_type: WorkloadType,
+        /// Current performance metrics baseline
         current_metrics: PerformanceMetrics,
-        target_improvement: f64, // 0.0 to 1.0
+        /// Target improvement ratio (0.0 to 1.0)
+        target_improvement: f64,
     },
     /// Cryptographic algorithm optimization
     CryptographicOptimization {
+        /// Type of cryptographic algorithm
         algorithm_type: CryptoAlgorithmType,
+        /// Security requirements to maintain
         security_requirements: SecurityRequirements,
+        /// Performance constraints to meet
         performance_constraints: CryptoPerformanceConstraints,
     },
+    /// Gaming workload optimization
     GamingOptimization {
+        /// Type of game workload
         game_type: GameType,
+        /// Latency requirements
         latency_requirements: LatencyRequirements,
+        /// Throughput requirements
         throughput_requirements: ThroughputRequirements,
     },
+    /// Machine learning model optimization
     MLOptimization {
+        /// Type of ML model
         model_type: MLModelType,
+        /// Size of training dataset
         training_data_size: u64,
+        /// Target accuracy to achieve
         accuracy_target: f64,
     },
 }
 
+/// Genetic algorithm optimization targets and convergence criteria
+///
+/// Defines parameters for evolutionary optimization processes, including
+/// generation limits and convergence thresholds for termination.
 #[derive(Debug, Clone)]
 pub struct GeneticTarget {
     /// Number of `max_generations`
@@ -46,6 +66,10 @@ pub struct GeneticTarget {
     pub convergence_threshold: f64,
 }
 
+/// Performance metrics for monitoring and optimization
+///
+/// Tracks key performance indicators including throughput, resource utilization,
+/// and error rates across system operations.
 #[derive(Debug, Clone)]
 pub struct PerformanceMetrics {
     /// The throughput ops per sec value
@@ -60,13 +84,22 @@ pub struct PerformanceMetrics {
     pub error_rate: f64,
 }
 
+/// Security requirements for cryptographic operations
+///
+/// Defines security constraints including quantum resistance and performance
+/// priorities for balancing security with operational efficiency.
 #[derive(Debug, Clone)]
 pub struct SecurityRequirements {
     /// Whether `quantum_resistant` is enabled
     pub quantum_resistant: bool,
+    /// Whether performance should be prioritized over maximum security
     pub performance_priority: bool,
 }
 
+/// Performance constraints for cryptographic operations
+///
+/// Specifies minimum throughput and maximum memory usage requirements
+/// for cryptographic operation optimization.
 #[derive(Debug, Clone)]
 pub struct CryptoPerformanceConstraints {
     /// The min throughput value
@@ -75,6 +108,10 @@ pub struct CryptoPerformanceConstraints {
     pub max_memory_usage: u64,
 }
 
+/// Latency requirements for network and rendering operations
+///
+/// Defines maximum acceptable latency thresholds for network communication
+/// and rendering operations to ensure responsive performance.
 #[derive(Debug, Clone)]
 pub struct LatencyRequirements {
     /// The max network latency ms value
@@ -83,15 +120,25 @@ pub struct LatencyRequirements {
     pub max_render_latency_ms: f64,
 }
 
+/// Throughput requirements for network and concurrent operations
+///
+/// Specifies minimum bandwidth and concurrent capacity requirements
+/// for maintaining performance under load.
 #[derive(Debug, Clone)]
 pub struct ThroughputRequirements {
+    /// Minimum network bandwidth in megabits per second
     pub min_network_bandwidth_mbps: u64,
     /// Number of `concurrent_players`
     pub concurrent_players: u32,
 }
 
+/// Response from an optimization request
+///
+/// Contains the results of an optimization operation, including success status,
+/// improvement metrics, optimized parameters, and recommendations for further optimization.
 #[derive(Debug, Clone)]
 pub struct OptimizationResponse {
+    /// Unique identifier for the optimization request
     pub request_id: Uuid,
     /// The optimization type value
     pub optimization_type: String,
@@ -101,20 +148,27 @@ pub struct OptimizationResponse {
     pub improvement_factor: f64, // Actual improvement achieved
     /// Mapping of optimized parameters
     pub optimized_parameters: HashMap<String, serde_json::Value>,
+    /// Performance metrics after optimization
     pub performance_metrics: PerformanceMetrics,
     /// Collection of recommendations
     pub recommendations: Vec<OptimizationRecommendation>,
     /// The estimated duration value
     pub estimated_duration: Duration,
+    /// Confidence score (0.0-1.0) in the optimization results
     pub confidence_score: f64,
 }
 
+/// Recommendation for further optimization
+///
+/// Provides actionable recommendations with expected benefits and
+/// implementation effort estimates to guide optimization decisions.
 #[derive(Debug, Clone)]
 pub struct OptimizationRecommendation {
     /// The description value
     pub description: String,
     /// The expected benefit value
     pub expected_benefit: f64,
+    /// Level of effort required to implement this recommendation
     pub implementation_effort: EffortLevel,
     /// The priority value
     pub priority: RecommendationPriority,
@@ -147,6 +201,10 @@ pub trait UniversalOptimizationService: Send + Sync {
     fn check_optimization_health(&self) -> Result<HashMap<String, String>, BearDogError>;
 }
 
+/// Ecosystem-wide optimization service implementation
+///
+/// Coordinates optimization requests across the ecosystem using service
+/// discovery and fallback optimization strategies.
 pub struct EcosystemOptimizationService<D, L> {
     #[allow(dead_code)]
     discovery_service: D,
@@ -186,6 +244,10 @@ pub trait LocalOptimizer: Send + Sync {
     ) -> Result<OptimizationResult, BearDogError>;
 }
 
+/// Result of a local optimization operation
+///
+/// Contains the improvement factor achieved and associated performance
+/// metrics from a local optimization run.
 #[derive(Debug, Clone)]
 pub struct OptimizationResult {
     /// The improvement factor value
@@ -267,10 +329,15 @@ where
     }
 }
 
-// Missing type definitions needed for compilation
+/// Quality requirements for genetic algorithm optimization
+///
+/// Defines minimum fitness and diversity thresholds that solutions must meet
+/// during genetic evolution to ensure solution quality and population diversity.
 #[derive(Debug, Clone)]
 pub struct GeneticQualityRequirements {
+    /// Minimum fitness score required for solutions (0.0 to 1.0)
     pub min_fitness: f64,
+    /// Minimum diversity threshold to prevent premature convergence (0.0 to 1.0)
     pub diversity_threshold: f64,
 }
 

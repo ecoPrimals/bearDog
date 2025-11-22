@@ -92,8 +92,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     info!("Step 3: Encryption/Decryption");
 
     execute_step("Encrypt Sensitive Data", || async {
-        // Simulate encryption
-        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        // Simulate encryption (instant in tests, would be crypto I/O in production)
         Ok(())
     })
     .await?;
@@ -101,8 +100,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     metrics.successful_requests += 1;
 
     execute_step("Decrypt Sensitive Data", || async {
-        // Simulate decryption
-        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        // Simulate decryption (instant in tests)
         Ok(())
     })
     .await?;
@@ -113,7 +111,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     info!("Step 4: Key Management");
 
     execute_step("Key Generation", || async {
-        tokio::time::sleep(std::time::Duration::from_millis(30)).await;
+        // Simulate key generation (instant in tests)
         Ok(())
     })
     .await?;
@@ -121,7 +119,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     metrics.successful_requests += 1;
 
     execute_step("Key Rotation", || async {
-        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
+        // Simulate key rotation (instant in tests)
         Ok(())
     })
     .await?;
@@ -157,7 +155,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     info!("Step 6: Security Policy Validation");
 
     execute_step("Validate Security Policies", || async {
-        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        // Simulate policy validation (instant in tests)
         Ok(())
     })
     .await?;

@@ -3,7 +3,7 @@
 //! This module provides a safe interface to iOS Secure Enclave
 //! without using unsafe code directly.
 
-use super::traits::PlatformProvider;
+use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{
     HsmKey, KeyHealthStatus, KeyMaterial, KeyMetadata, KeyType, UniversalKey,
 };
@@ -308,7 +308,7 @@ impl SafeIosProvider {
     }
 }
 
-impl PlatformProvider for SafeIosProvider {
+impl PlatformSecurityProvider for SafeIosProvider {
     fn generate_key(&self, key_id: &str, key_type: &KeyType) -> Result<HsmKey, BearDogError> {
         self.generate_key_safe(key_id, key_type)
     }
@@ -329,7 +329,10 @@ impl PlatformProvider for SafeIosProvider {
 
 impl Default for SafeIosProvider {
     fn default() -> Self {
-        Self::new().expect("Failed to create Safe iOS Provider")
+        Self::new().unwrap_or_else(|_| Self {
+            capabilities: HashMap::new(),
+            secure_enclave_available: false,
+        })
     }
 }
 

@@ -141,6 +141,7 @@ pub struct UniversalComputeRequest {
     /// Optimization preferences
     /// The optimization value
     pub optimization: OptimizationType,
+    /// Optional timeout in milliseconds for the compute request
     pub timeout_ms: Option<u64>,
     /// Additional metadata
     /// Mapping of metadata

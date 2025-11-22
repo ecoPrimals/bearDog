@@ -6,7 +6,7 @@
 //! **Migration Note**: This replaces the monolithic `ai_config_original.rs` (1756 lines)
 //! with a clean modular structure following the 1000-line coding standard.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -140,7 +140,7 @@ impl Default for InferenceConfig {
 }
 
 impl BearDogConfig for ConsolidatedAiConfig {
-    fn validate(&self) -> BearDogResult<()> {
+    fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             if self.hybrid_intelligence.human_oversight_level < 0.0
                 || self.hybrid_intelligence.human_oversight_level > 1.0
@@ -162,28 +162,22 @@ impl BearDogConfig for ConsolidatedAiConfig {
         Ok(())
     }
 
-    fn merge(&self, other: &Self) -> BearDogResult<Self> {
-        let mut merged = self.clone();
+    fn merge(&self, other: &Self) -> Result<Self, BearDogError> {
+        // When other is enabled, it takes full precedence
+        // This is more idiomatic and reduces clones from 8 to 1
         if other.enabled {
-            merged.enabled = true;
-            merged.hybrid_intelligence = other.hybrid_intelligence.clone();
-            merged.training = other.training.clone();
-            merged.inference = other.inference.clone();
-            merged.neural_networks = other.neural_networks.clone();
-            merged.decision_engine = other.decision_engine.clone();
-            merged.model_management = other.model_management.clone();
-            merged.performance = other.performance.clone();
-            merged.security = other.security.clone();
+            Ok(other.clone())
+        } else {
+            Ok(self.clone())
         }
-        Ok(merged)
     }
 
-    fn from_env() -> BearDogResult<Self> {
+    fn from_env() -> Result<Self, BearDogError> {
         // AI config is typically loaded from files, not environment variables
         Ok(Self::default())
     }
 
-    fn to_toml(&self) -> BearDogResult<String> {
+    fn to_toml(&self) -> Result<String, BearDogError> {
         toml::to_string_pretty(self)
             .map_err(|e| BearDogError::validation(&format!("Failed to serialize to TOML: {}", e)))
     }

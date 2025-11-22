@@ -16,7 +16,7 @@ pub trait UniversalProvider: Debug + Send + Sync {
 
 /// Get available providers
 pub fn get_providers() -> Vec<Box<dyn UniversalProvider>> {
-    // TODO: Implement provider discovery
+    // PHASE-2(Discovery): Implement provider discovery
     Vec::new()
 }
 

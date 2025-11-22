@@ -9,6 +9,9 @@ keywords = [ "tunnel", "secure", "communication", "beardog", "networking",]
 categories = [ "network-programming", "security", "development-tools",]
 
 [dependencies]
+# BearDog internal crates
+beardog-config = { path = "../beardog-config" }
+
 tokio-tungstenite = "0.20"
 serde_json = "1.0"
 tracing = "0.1"

@@ -28,32 +28,38 @@ pub enum Ctap2Command {
 /// # Returns
 ///
 /// CBOR-encoded response from the device
+///
+/// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
+#[allow(dead_code)]
 pub async fn send_ctap2_command(
     _device: &hidapi::HidDevice,
     _command: Ctap2Command,
     _payload: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    // TODO: Implement CTAP2 protocol
+    // PHASE-2(CTAP2): Implement CTAP2 protocol operations
     // 1. Format command packet (command byte + CBOR payload)
     // 2. Send via HID
     // 3. Receive response
     // 4. Parse CTAP2 status code
     // 5. Return CBOR payload or error
-    
+
     Err(BearDogError::system(
-        "CTAP2 command sending not yet implemented (Phase 1 in progress)".to_string()
+        "CTAP2 command sending not yet implemented (Phase 1 in progress)".to_string(),
     ))
 }
 
 /// Query device information via CTAP2 GetInfo
+///
+/// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
+#[allow(dead_code)]
 pub async fn get_device_info(
     _device: &hidapi::HidDevice,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
-    // TODO: Send GetInfo command and parse response
+    // PHASE-2(CTAP2): Send GetInfo command and parse response
     Err(BearDogError::system(
-        "CTAP2 GetInfo not yet implemented (Phase 1 in progress)".to_string()
+        "CTAP2 GetInfo not yet implemented (Phase 1 in progress)".to_string(),
     ))
 }
 
@@ -61,26 +67,29 @@ pub async fn get_device_info(
 ///
 /// The hmac-secret extension allows deriving cryptographic material from the device.
 /// This is perfect for entropy generation.
+///
+/// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
+#[allow(dead_code)]
 pub async fn generate_entropy_via_hmac_secret(
     _device: &hidapi::HidDevice,
     _size: usize,
 ) -> Result<Vec<u8>, BearDogError> {
-    // TODO: Implement hmac-secret entropy generation
+    // PHASE-2(CTAP2): Implement hmac-secret entropy generation
     // 1. Create a credential with hmac-secret extension
     // 2. Get assertion with salt to derive key material
     // 3. Use derived material as entropy
     // 4. Optionally hash/expand to requested size
-    
+
     Err(BearDogError::system(
-        "hmac-secret entropy generation not yet implemented (Phase 1 in progress)".to_string()
+        "hmac-secret entropy generation not yet implemented (Phase 1 in progress)".to_string(),
     ))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_ctap2_command_codes() {
         assert_eq!(Ctap2Command::MakeCredential as u8, 0x01);
@@ -88,4 +97,3 @@ mod tests {
         assert_eq!(Ctap2Command::GetInfo as u8, 0x04);
     }
 }
-

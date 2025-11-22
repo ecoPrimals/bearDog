@@ -1,3 +1,4 @@
+//! Integration tests for beardog-core functionality
 #![allow(unused_variables, dead_code)]
 
 /*

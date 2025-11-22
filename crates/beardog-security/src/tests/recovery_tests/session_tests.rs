@@ -35,10 +35,10 @@ mod tests {
         // Test session validation
         assert!(session.validate().is_ok());
 
-        // Test session expiration
+        // Test session expiration - modern pattern: 1 nanosecond instantly expired
         let expiring_session =
             RecoverySession::new("user_expire", std::time::Duration::from_nanos(1));
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // No sleep needed - CPU cycles already passed 1 nanosecond
         assert!(expiring_session.is_expired());
         assert!(!expiring_session.is_active());
         assert!(expiring_session.validate().is_err());

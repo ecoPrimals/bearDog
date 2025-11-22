@@ -3,7 +3,7 @@
 //! This module provides the central BearDogCore struct that coordinates all
 //! ecosystem components and provides the main entry point for the system.
 
-use crate::types::{ComponentStatus, HealthStatus, SystemStatus, BearDogResult};
+use crate::types::{ComponentStatus, HealthStatus, SystemStatus};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use std::collections::HashMap;
@@ -83,7 +83,7 @@ impl BearDogCore {
     /// let core = BearDogCore::with_default_config()?;
     /// # Ok::<(), beardog_errors::BearDogError>(())
     /// ```
-    pub fn with_default_config() -> BearDogResult<Self> {
+    pub fn with_default_config() -> Result<Self> {
         let config = UnifiedBearDogConfig::development(); // Use development config as default
         Ok(Self::new(config))
     }
@@ -117,7 +117,7 @@ impl BearDogCore {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn start(&mut self) -> BearDogResult<()> {
+    pub async fn start(&mut self) -> Result<(), BearDogError> {
         if self.started {
             warn!("BearDog Core system is already started");
             return Ok(());
@@ -165,7 +165,7 @@ impl BearDogCore {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn stop(&mut self) -> BearDogResult<()> {
+    pub async fn stop(&mut self) -> Result<(), BearDogError> {
         if !self.started {
             warn!("BearDog Core system is not running");
             return Ok(());
@@ -232,7 +232,7 @@ impl BearDogCore {
     /// println!("System status: {:?}", status);
     /// # Ok::<(), beardog_errors::BearDogError>(())
     /// ```
-    pub fn get_status(&self) -> BearDogResult<SystemStatus> {
+    pub fn get_status(&self) -> Result<SystemStatus> {
         let status = self.status.read()
             .map_err(|e| BearDogError::system(format!("Failed to read status: {}", e)))?;
         Ok(status.clone())
@@ -245,7 +245,7 @@ impl BearDogCore {
     }
 
     /// Register a component
-    pub fn register_component(&self, name: String, status: ComponentStatus) -> BearDogResult<()> {
+    pub fn register_component(&self, name: String, status: ComponentStatus) -> Result<(), BearDogError> {
         let mut components = self.components.write()
             .map_err(|e| BearDogError::system(format!("Failed to write components: {}", e)))?;
         
@@ -256,7 +256,7 @@ impl BearDogCore {
     }
 
     /// Update component status
-    pub fn update_component_status(&self, name: &str, status: ComponentStatus) -> BearDogResult<()> {
+    pub fn update_component_status(&self, name: &str, status: ComponentStatus) -> Result<(), BearDogError> {
         let mut components = self.components.write()
             .map_err(|e| BearDogError::system(format!("Failed to write components: {}", e)))?;
         
@@ -271,13 +271,13 @@ impl BearDogCore {
     }
 
     /// Get health status
-    pub fn get_health(&self) -> BearDogResult<HealthStatus> {
+    pub fn get_health(&self) -> Result<HealthStatus> {
         let status = self.get_status()?;
         Ok(status.health)
     }
 
     // Private helper methods
-    async fn initialize_components(&self) -> BearDogResult<()> {
+    async fn initialize_components(&self) -> Result<(), BearDogError> {
         info!("Initializing system components");
         
         // Register core components
@@ -295,13 +295,13 @@ impl BearDogCore {
         Ok(())
     }
 
-    async fn start_health_monitoring(&self) -> BearDogResult<()> {
+    async fn start_health_monitoring(&self) -> Result<(), BearDogError> {
         info!("Starting health monitoring");
         // Health monitoring implementation would go here
         Ok(())
     }
 
-    async fn shutdown_components(&self) -> BearDogResult<()> {
+    async fn shutdown_components(&self) -> Result<(), BearDogError> {
         info!("Shutting down system components");
         
         let component_names: Vec<String> = {

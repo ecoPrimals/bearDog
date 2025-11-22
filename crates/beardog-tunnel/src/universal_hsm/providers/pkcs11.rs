@@ -16,17 +16,33 @@ impl Pkcs11HsmProvider {
 
     /// Initialize PKCS#11 connection
     ///
-    /// Stub implementation
+    /// Stub implementation - returns safe defaults
     pub async fn initialize(&self) -> Result<(), BearDogError> {
-        // TODO: Implement actual PKCS#11 initialization
+        // PHASE-2(PKCS11): Implement PKCS#11 initialization
+        // 
+        // Implementation Requirements:
+        // 1. Load PKCS#11 library via dlopen (cryptoki crate)
+        // 2. Call C_Initialize()
+        // 3. Call C_GetInfo() to verify library loaded
+        // 4. Store context for later operations
+        // 
+        // References:
+        // - PKCS#11 spec v2.40
+        // - cryptoki Rust crate for bindings
         Ok(())
     }
 
     /// Get slot list
     ///
-    /// Stub implementation
+    /// Returns empty list (safe default) - actual enumeration in Phase 2
     pub async fn get_slot_list(&self) -> Result<Vec<u32>, BearDogError> {
-        // TODO: Implement actual slot listing
+        // PHASE-2(PKCS11): Implement PKCS#11 slot enumeration
+        // 
+        // Implementation:
+        // 1. Call C_GetSlotList(CK_FALSE) to get slot count
+        // 2. Call C_GetSlotList(CK_TRUE) to get slots with tokens
+        // 3. For each slot, call C_GetSlotInfo() for details
+        // 4. Return slot IDs as Vec<u32>
         Ok(vec![])
     }
 }

@@ -658,7 +658,7 @@ mod software_hsm_tests {
 
                 // Immediately use the key
                 let plaintext = format!("data for key {}", i);
-                let ciphertext = hsm_clone
+                let _ciphertext = hsm_clone
                     .encrypt(&format!("load-test-key-{}", i), plaintext.as_bytes())
                     .await?;
 
@@ -695,7 +695,7 @@ mod software_hsm_tests {
             key_type: KeyType::Aes,
             key_id: "zero-test-key".to_string(),
         };
-        let key = hsm.generate_key(request).await?;
+        let _key = hsm.generate_key(request).await?;
 
         // Use key
         let _ciphertext = hsm.encrypt("zero-test-key", b"sensitive").await?;

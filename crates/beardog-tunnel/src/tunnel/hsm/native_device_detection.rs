@@ -18,6 +18,8 @@ pub struct DeviceInfo {
 
 /// Smartphone platform
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)] // iOS is the correct branding
+#[allow(non_camel_case_types)] // iOS is the correct branding
 pub enum SmartphonePlatform {
     Android,
     iOS,

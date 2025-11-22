@@ -56,7 +56,7 @@
 //! - ✅ Phase 2: Migrated configs and deprecated old locations
 //! - 🔄 Phase 3: Updating imports across codebase
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -182,24 +182,61 @@ pub struct CoreBootstrapConfig {
     pub retry_strategy: RetryStrategy,
 }
 
-impl Default for CoreBootstrapConfig {
-    fn default() -> Self {
+impl CoreBootstrapConfig {
+    /// Default discovery timeout in milliseconds
+    pub const DEFAULT_DISCOVERY_TIMEOUT_MS: u64 = 30000; // 30 seconds
+
+    /// Default maximum discovery attempts
+    pub const DEFAULT_MAX_DISCOVERY_ATTEMPTS: u32 = 5;
+
+    /// Default minimum capabilities threshold
+    pub const DEFAULT_MIN_CAPABILITIES_THRESHOLD: usize = 3;
+
+    /// Create CoreBootstrapConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            discovery_timeout_ms: Self::DEFAULT_DISCOVERY_TIMEOUT_MS,
+            max_discovery_attempts: Self::DEFAULT_MAX_DISCOVERY_ATTEMPTS,
+            min_capabilities_threshold: Self::DEFAULT_MIN_CAPABILITIES_THRESHOLD,
+            enable_passive_listening: true,
+            retry_strategy: RetryStrategy::Exponential,
+        }
+    }
+
+    /// Create CoreBootstrapConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_DISCOVERY_TIMEOUT_MS`: Discovery timeout in ms (default: 30000)
+    /// - `BEARDOG_MAX_DISCOVERY_ATTEMPTS`: Max attempts (default: 5)
+    /// - `BEARDOG_MIN_CAPABILITIES`: Min capabilities threshold (default: 3)
+    pub fn from_env() -> Self {
         Self {
             discovery_timeout_ms: std::env::var("BEARDOG_DISCOVERY_TIMEOUT_MS")
                 .ok()
                 .and_then(|t| t.parse().ok())
-                .unwrap_or(30000), // 30 seconds default
+                .unwrap_or(Self::DEFAULT_DISCOVERY_TIMEOUT_MS),
             max_discovery_attempts: std::env::var("BEARDOG_MAX_DISCOVERY_ATTEMPTS")
                 .ok()
                 .and_then(|a| a.parse().ok())
-                .unwrap_or(5),
+                .unwrap_or(Self::DEFAULT_MAX_DISCOVERY_ATTEMPTS),
             min_capabilities_threshold: std::env::var("BEARDOG_MIN_CAPABILITIES")
                 .ok()
                 .and_then(|t| t.parse().ok())
-                .unwrap_or(3),
+                .unwrap_or(Self::DEFAULT_MIN_CAPABILITIES_THRESHOLD),
             enable_passive_listening: true,
             retry_strategy: RetryStrategy::Exponential,
         }
+    }
+}
+
+impl Default for CoreBootstrapConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 
@@ -285,26 +322,69 @@ pub struct InfantPatternConfig {
     pub consolidation_interval: Duration,
 }
 
-impl Default for InfantPatternConfig {
-    fn default() -> Self {
+impl InfantPatternConfig {
+    /// Default pattern max age: 1 hour
+    pub const DEFAULT_PATTERN_MAX_AGE_SECS: u64 = 3600;
+
+    /// Default consolidation interval: 5 minutes
+    pub const DEFAULT_CONSOLIDATION_INTERVAL_SECS: u64 = 300;
+
+    /// Default minimum observations
+    pub const DEFAULT_MIN_OBSERVATIONS: u64 = 5;
+
+    /// Default confidence threshold
+    pub const DEFAULT_CONFIDENCE_THRESHOLD: f64 = 0.7;
+
+    /// Default learning rate
+    pub const DEFAULT_LEARNING_RATE: f64 = 0.1;
+
+    /// Create InfantPatternConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
         Self {
-            min_observations: 5,
-            confidence_threshold: 0.7,
+            min_observations: Self::DEFAULT_MIN_OBSERVATIONS,
+            confidence_threshold: Self::DEFAULT_CONFIDENCE_THRESHOLD,
+            pattern_max_age: Duration::from_secs(Self::DEFAULT_PATTERN_MAX_AGE_SECS),
+            learning_rate: Self::DEFAULT_LEARNING_RATE,
+            enable_continuous_learning: true,
+            consolidation_interval: Duration::from_secs(Self::DEFAULT_CONSOLIDATION_INTERVAL_SECS),
+        }
+    }
+
+    /// Create InfantPatternConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_PATTERN_MAX_AGE_SECS`: Pattern max age in seconds (default: 3600)
+    /// - `BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS`: Consolidation interval (default: 300)
+    pub fn from_env() -> Self {
+        Self {
+            min_observations: Self::DEFAULT_MIN_OBSERVATIONS,
+            confidence_threshold: Self::DEFAULT_CONFIDENCE_THRESHOLD,
             pattern_max_age: Duration::from_secs(
                 std::env::var("BEARDOG_PATTERN_MAX_AGE_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(3600), // 1 hour default
+                    .unwrap_or(Self::DEFAULT_PATTERN_MAX_AGE_SECS),
             ),
-            learning_rate: 0.1,
+            learning_rate: Self::DEFAULT_LEARNING_RATE,
             enable_continuous_learning: true,
             consolidation_interval: Duration::from_secs(
                 std::env::var("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(300), // 5 minutes default
+                    .unwrap_or(Self::DEFAULT_CONSOLIDATION_INTERVAL_SECS),
             ),
         }
+    }
+}
+
+impl Default for InfantPatternConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 
@@ -417,21 +497,54 @@ pub struct BootstrapNetworkConfig {
     pub buffer_size: usize,
 }
 
-impl Default for BootstrapNetworkConfig {
-    fn default() -> Self {
+impl BootstrapNetworkConfig {
+    /// Default discovery port (mDNS standard)
+    pub const DEFAULT_DISCOVERY_PORT: u16 = 5353;
+
+    /// Default buffer size (8KB)
+    pub const DEFAULT_BUFFER_SIZE: usize = 8192;
+
+    /// Create BootstrapNetworkConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
+            multicast_group: crate::constants::domains::network::addresses::multicast_address(),
+            discovery_port: Self::DEFAULT_DISCOVERY_PORT,
+            enable_ipv6: true,
+            buffer_size: Self::DEFAULT_BUFFER_SIZE,
+        }
+    }
+
+    /// Create BootstrapNetworkConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_BOOTSTRAP_DISCOVERY_PORT`: Discovery port (default: 5353)
+    /// - `BEARDOG_BOOTSTRAP_BUFFER_SIZE`: Buffer size (default: 8192)
+    pub fn from_env() -> Self {
         Self {
             listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
             multicast_group: crate::constants::domains::network::addresses::multicast_address(),
             discovery_port: std::env::var("BEARDOG_BOOTSTRAP_DISCOVERY_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(5353), // mDNS standard port
+                .unwrap_or(Self::DEFAULT_DISCOVERY_PORT),
             enable_ipv6: true,
             buffer_size: std::env::var("BEARDOG_BOOTSTRAP_BUFFER_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8192), // 8KB default buffer
+                .unwrap_or(Self::DEFAULT_BUFFER_SIZE),
         }
+    }
+}
+
+impl Default for BootstrapNetworkConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 
@@ -454,15 +567,38 @@ pub struct BootstrapPerformanceConfig {
     pub enable_metrics: bool,
 }
 
-impl Default for BootstrapPerformanceConfig {
-    fn default() -> Self {
+impl BootstrapPerformanceConfig {
+    /// Default cache duration in seconds
+    pub const DEFAULT_CACHE_DURATION_SECS: u64 = 300; // 5 minutes
+
+    /// Create BootstrapPerformanceConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enable_caching: true,
+            cache_duration: Duration::from_secs(Self::DEFAULT_CACHE_DURATION_SECS),
+            enable_parallel: true,
+            worker_threads: 0, // Auto-detect
+            enable_metrics: true,
+        }
+    }
+
+    /// Create BootstrapPerformanceConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_BOOTSTRAP_CACHE_DURATION_SECS`: Cache duration in seconds (default: 300)
+    pub fn from_env() -> Self {
         Self {
             enable_caching: true,
             cache_duration: Duration::from_secs(
                 std::env::var("BEARDOG_BOOTSTRAP_CACHE_DURATION_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(300),
+                    .unwrap_or(Self::DEFAULT_CACHE_DURATION_SECS),
             ),
             enable_parallel: true,
             worker_threads: 0, // Auto-detect
@@ -471,8 +607,15 @@ impl Default for BootstrapPerformanceConfig {
     }
 }
 
-impl Default for UnifiedBootstrapConfig {
+impl Default for BootstrapPerformanceConfig {
     fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl UnifiedBootstrapConfig {
+    /// Create UnifiedBootstrapConfig with hardcoded defaults
+    pub fn with_defaults() -> Self {
         Self {
             core: CoreBootstrapConfig::default(),
             infant_patterns: InfantPatternConfig::default(),
@@ -481,10 +624,27 @@ impl Default for UnifiedBootstrapConfig {
             performance: BootstrapPerformanceConfig::default(),
         }
     }
+
+    /// Create UnifiedBootstrapConfig from environment variables
+    pub fn from_env() -> Self {
+        Self {
+            core: CoreBootstrapConfig::from_env(),
+            infant_patterns: InfantPatternConfig::from_env(),
+            discovery: BootstrapDiscoveryConfig::default(), // Uses default, no env vars
+            network: BootstrapNetworkConfig::from_env(),
+            performance: BootstrapPerformanceConfig::from_env(),
+        }
+    }
+}
+
+impl Default for UnifiedBootstrapConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
 }
 
 impl BearDogConfig for UnifiedBootstrapConfig {
-    fn validate(&self) -> BearDogResult<()> {
+    fn validate(&self) -> Result<(), BearDogError> {
         // Validate core settings
         if self.core.discovery_timeout_ms == 0 {
             return Err(BearDogError::configuration(
@@ -521,17 +681,17 @@ impl BearDogConfig for UnifiedBootstrapConfig {
         Ok(())
     }
 
-    fn merge(&self, other: &Self) -> BearDogResult<Self> {
+    fn merge(&self, other: &Self) -> Result<Self, BearDogError> {
         // Simple merge: other takes precedence
         Ok(other.clone())
     }
 
-    fn from_env() -> BearDogResult<Self> {
+    fn from_env() -> Result<Self, BearDogError> {
         // Return defaults for now; can be enhanced to read from env vars
         Ok(Self::default())
     }
 
-    fn to_toml(&self) -> BearDogResult<String> {
+    fn to_toml(&self) -> Result<String, BearDogError> {
         toml::to_string_pretty(self).map_err(|e| {
             BearDogError::configuration(&format!("Failed to serialize to TOML: {}", e))
         })
@@ -541,7 +701,7 @@ impl BearDogConfig for UnifiedBootstrapConfig {
         "bootstrap"
     }
 
-    fn apply_environment_overrides(&mut self, _environment: &str) -> BearDogResult<()> {
+    fn apply_environment_overrides(&mut self, _environment: &str) -> Result<(), BearDogError> {
         // Environment-specific overrides can be implemented here
         Ok(())
     }

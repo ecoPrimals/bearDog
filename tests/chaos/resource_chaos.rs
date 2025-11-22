@@ -31,8 +31,7 @@ pub async fn test_memory_exhaustion() -> Result<(), beardog_errors::BearDogError
         let fault_id = injector.inject_fault(fault)?;
         info!("  Allocated {}MB: {}", memory_mb, fault_id);
         
-        // Simulate operations under memory pressure
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // No sleep needed - testing memory pressure injection, not actual effects
         
         injector.remove_fault(&fault_id)?;
     }
@@ -60,8 +59,7 @@ pub async fn test_cpu_exhaustion() -> Result<(), beardog_errors::BearDogError> {
         let fault_id = injector.inject_fault(fault)?;
         info!("  CPU load {}%: {}", cpu_percent, fault_id);
         
-        // Simulate operations under CPU load
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // No sleep needed - testing CPU load injection, not actual effects
         
         injector.remove_fault(&fault_id)?;
     }
@@ -85,8 +83,7 @@ pub async fn test_disk_exhaustion() -> Result<(), beardog_errors::BearDogError> 
     let fault_id = injector.inject_fault(fault)?;
     info!("  Disk space exhausted: {}", fault_id);
     
-    // Simulate operations with low disk space
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    // No sleep needed - testing disk exhaustion injection, not actual effects
     
     injector.remove_fault(&fault_id)?;
     
@@ -122,8 +119,7 @@ pub async fn test_combined_resource_stress() -> Result<(), beardog_errors::BearD
     
     info!("  Injected {} resource faults", fault_ids.len());
     
-    // Simulate operations under combined stress
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    // No sleep needed - testing combined resource stress injection, not effects
     
     // Clean up
     for fault_id in fault_ids {
@@ -149,8 +145,7 @@ pub async fn test_oom_scenario() -> Result<(), beardog_errors::BearDogError> {
     let fault_id = injector.inject_fault(fault)?;
     info!("  OOM condition triggered: {}", fault_id);
     
-    // System should handle OOM gracefully
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    // System should handle OOM gracefully - no sleep needed
     
     injector.remove_fault(&fault_id)?;
     

@@ -157,16 +157,24 @@ impl SecurityConfigBuilder {
 
     pub fn build(self) -> SecurityConfig {
         let defaults = SecurityConfig::default();
-        
+
         SecurityConfig {
             strict_mode: self.strict_mode.unwrap_or(defaults.strict_mode),
             require_mtls: self.require_mtls.unwrap_or(defaults.require_mtls),
             min_tls_version: self.min_tls_version.unwrap_or(defaults.min_tls_version),
-            allow_localhost_bypass: self.allow_localhost_bypass.unwrap_or(defaults.allow_localhost_bypass),
+            allow_localhost_bypass: self
+                .allow_localhost_bypass
+                .unwrap_or(defaults.allow_localhost_bypass),
             enable_audit_log: self.enable_audit_log.unwrap_or(defaults.enable_audit_log),
-            enable_rate_limiting: self.enable_rate_limiting.unwrap_or(defaults.enable_rate_limiting),
-            auto_block_suspicious_ips: self.auto_block_suspicious_ips.unwrap_or(defaults.auto_block_suspicious_ips),
-            require_authentication: self.require_authentication.unwrap_or(defaults.require_authentication),
+            enable_rate_limiting: self
+                .enable_rate_limiting
+                .unwrap_or(defaults.enable_rate_limiting),
+            auto_block_suspicious_ips: self
+                .auto_block_suspicious_ips
+                .unwrap_or(defaults.auto_block_suspicious_ips),
+            require_authentication: self
+                .require_authentication
+                .unwrap_or(defaults.require_authentication),
         }
     }
 }
@@ -185,9 +193,7 @@ mod tests {
 
     #[test]
     fn test_strict_mode() {
-        let config = SecurityConfig::builder()
-            .strict_mode(true)
-            .build();
+        let config = SecurityConfig::builder().strict_mode(true).build();
         assert!(config.validate().is_ok());
         assert!(config.strict_mode);
     }
@@ -199,7 +205,7 @@ mod tests {
             .min_tls_version("1.3".to_string())
             .enable_audit_log(false)
             .build();
-        
+
         assert!(config.require_mtls);
         assert_eq!(config.min_tls_version, "1.3");
         assert!(!config.enable_audit_log);
@@ -213,7 +219,7 @@ mod tests {
             .auto_block_suspicious_ips(true)
             .allow_localhost_bypass(false)
             .build();
-        
+
         assert!(config.strict_mode);
         assert!(config.require_mtls);
         assert!(config.auto_block_suspicious_ips);

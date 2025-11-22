@@ -102,9 +102,33 @@ impl Default for CanonicalLoadBalancingConfig {
     }
 }
 
+impl LoadBalancingAlgorithm {
+    /// Default load balancing algorithm
+    pub const DEFAULT: Self = Self::RoundRobin;
+
+    /// Create LoadBalancingAlgorithm with hardcoded defaults
+    pub fn with_defaults() -> Self {
+        Self::DEFAULT
+    }
+
+    /// Create LoadBalancingAlgorithm from environment variables
+    pub fn from_env() -> Self {
+        std::env::var("BEARDOG_LOAD_BALANCING_ALGORITHM")
+            .ok()
+            .and_then(|s| match s.to_lowercase().as_str() {
+                "roundrobin" | "round_robin" => Some(Self::RoundRobin),
+                "leastconnections" | "least_connections" => Some(Self::LeastConnections),
+                "weightedroundrobin" | "weighted_round_robin" => Some(Self::WeightedRoundRobin),
+                "random" => Some(Self::Random),
+                _ => None,
+            })
+            .unwrap_or(Self::DEFAULT)
+    }
+}
+
 impl Default for LoadBalancingAlgorithm {
     fn default() -> Self {
-        Self::RoundRobin
+        Self::with_defaults()
     }
 }
 

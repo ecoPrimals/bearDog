@@ -23,6 +23,7 @@
 //! - **Performance Optimized**: Zero-cost abstractions with efficient types
 //! - **Developer Experience**: Easy imports and intuitive naming
 
+use beardog_errors::BearDogError;
 use crate::canonical::config::UnifiedBearDogConfig;
 use beardog_errors::{BearDogError, EnhancedBearDogError};
 use serde_json::Map;
@@ -33,7 +34,7 @@ use std::collections::HashMap;
 // =============================================================================
 
 /// **Primary Result Type** - Standard `BearDog` result type
-pub type BearDogResult<T> = Result<T, BearDogError>;
+pub type Result<T> = Result<T, BearDogError>;
 
 /// **Enhanced Result Type** - Result with enhanced error context
 pub type EnhancedResult<T> = Result<T, EnhancedBearDogError>;
@@ -291,7 +292,7 @@ pub type TerminationOutcome = Result<(), BearDogError>;
 // - EnhancedMigratorResult<T> → MigrationResult<T>
 // - PanicResult<T> → MigrationResult<T>
 // - RefinedResult<T> → MigrationResult<T>
-// - ServiceMeshResult<T> → BearDogResult<T>
+// - ServiceMeshResult<T> → Result<T>
 // - InMemoryNodeRegistry → ProviderRegistry
 // - DefaultHsmProviderManager<P> → ProviderManager<P>
 //

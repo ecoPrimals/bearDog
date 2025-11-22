@@ -8,10 +8,10 @@ use uuid::Uuid;
 pub struct HumanEntropyInput {
     /// Biometric data (fingerprint, face, voice hash)
     pub biometric_data: Option<Vec<u8>>,
-    
+
     /// Behavioral data (typing patterns, touch dynamics)
     pub behavioral_data: Option<Vec<u8>>,
-    
+
     /// Environmental data (location, time, device state)
     pub environmental_data: Option<Vec<u8>>,
 }
@@ -21,16 +21,16 @@ pub struct HumanEntropyInput {
 pub struct HsmDeviceInfo {
     /// Type of HSM device
     pub device_type: HsmDeviceType,
-    
+
     /// Unique device identifier
     pub device_id: String,
-    
+
     /// Human-readable device name
     pub name: String,
-    
+
     /// Security level of the device
     pub security_level: SecurityLevel,
-    
+
     /// Whether device supports biometric authentication
     pub biometric_capable: bool,
 }
@@ -40,10 +40,10 @@ pub struct HsmDeviceInfo {
 pub enum HsmDeviceType {
     /// FIDO2/CTAP2 security key (SoloKeys, YubiKey, etc.)
     Fido2,
-    
+
     /// Android StrongBox (Titan M2, etc.)
     AndroidStrongBox,
-    
+
     /// iOS Secure Enclave
     IOSSecureEnclave,
 }
@@ -53,13 +53,13 @@ pub enum HsmDeviceType {
 pub enum SecurityLevel {
     /// Software-based security
     Software,
-    
+
     /// Trusted Execution Environment (TEE)
     Tee,
-    
+
     /// Hardware security module
     Hardware,
-    
+
     /// Dedicated security chip (StrongBox/Secure Enclave)
     StrongBox,
 }
@@ -69,11 +69,12 @@ pub enum SecurityLevel {
 enum HsmSource {
     /// FIDO2 device
     Fido2(usize), // Index in fido2_providers vec
-    
+
     /// Android StrongBox
     Android,
-    
+
     /// iOS Secure Enclave
+    #[allow(clippy::upper_case_acronyms)]
     IOS,
 }
 
@@ -82,13 +83,13 @@ enum HsmSource {
 pub struct EntropyGenerationRequest {
     /// Length of entropy to generate (bytes)
     pub length: usize,
-    
+
     /// Human input to mix with hardware entropy
     pub human_input: Option<HumanEntropyInput>,
-    
+
     /// Preferred device (None = auto-select best)
     pub preferred_device: Option<String>,
-    
+
     /// Minimum quality tier required
     pub min_quality_tier: u8,
 }
@@ -109,17 +110,16 @@ impl Default for EntropyGenerationRequest {
 pub struct EntropyGenerationResult {
     /// Unique seed identifier in entropy hierarchy
     pub seed_id: Uuid,
-    
+
     /// Quality tier achieved (1-3)
     pub quality_tier: u8,
-    
+
     /// Quality score (0.0-1.0)
     pub quality_score: f64,
-    
+
     /// Device used for generation
     pub device_used: String,
-    
+
     /// Timestamp of generation
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-

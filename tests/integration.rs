@@ -1,3 +1,7 @@
+// Integration test modules
+#[path = "integration/hsm_provider_tests.rs"]
+mod hsm_provider_tests;
+
 // Disabled - modules don't exist yet
 // pub mod core_initialization;
 // pub mod api_endpoints;

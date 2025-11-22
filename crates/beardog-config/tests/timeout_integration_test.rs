@@ -5,8 +5,8 @@
 //!
 //! All tests in this file can run in parallel without race conditions.
 
-use beardog_config::BearDogConfig;
 use beardog_config::domains::timeouts::TimeoutConfig;
+use beardog_config::BearDogConfig;
 use std::time::Duration;
 
 // ============================================================================
@@ -16,7 +16,7 @@ use std::time::Duration;
 #[test]
 fn test_timeout_const_defaults() {
     let config = TimeoutConfig::const_defaults();
-    
+
     assert_eq!(config.health_check_secs, 5);
     assert_eq!(config.hsm_operation_secs, 2);
     assert_eq!(config.hsm_probe_millis, 500);
@@ -26,7 +26,7 @@ fn test_timeout_const_defaults() {
 #[test]
 fn test_timeout_default_trait() {
     let config = TimeoutConfig::default();
-    
+
     // Default should equal const_defaults (no env var reads)
     assert_eq!(config, TimeoutConfig::const_defaults());
 }
@@ -37,10 +37,8 @@ fn test_timeout_default_trait() {
 
 #[test]
 fn test_timeout_builder_single_field() {
-    let config = TimeoutConfig::builder()
-        .health_check_secs(15)
-        .build();
-    
+    let config = TimeoutConfig::builder().health_check_secs(15).build();
+
     assert_eq!(config.health_check_secs, 15);
     // Other fields use defaults
     assert_eq!(config.hsm_operation_secs, 2);
@@ -55,7 +53,7 @@ fn test_timeout_builder_multiple_fields() {
         .hsm_operation_secs(3)
         .hsm_probe_millis(750)
         .build();
-    
+
     assert_eq!(config.health_check_secs, 8);
     assert_eq!(config.hsm_operation_secs, 3);
     assert_eq!(config.hsm_probe_millis, 750);
@@ -70,7 +68,7 @@ fn test_timeout_builder_all_fields() {
         .hsm_probe_millis(1000)
         .discovery_operation_secs(25)
         .build();
-    
+
     assert_eq!(config.health_check_secs, 12);
     assert_eq!(config.hsm_operation_secs, 5);
     assert_eq!(config.hsm_probe_millis, 1000);
@@ -89,10 +87,8 @@ fn test_timeout_validation_success() {
 
 #[test]
 fn test_timeout_validation_health_check_too_short() {
-    let config = TimeoutConfig::builder()
-        .health_check_secs(0)
-        .build();
-    
+    let config = TimeoutConfig::builder().health_check_secs(0).build();
+
     let result = config.validate();
     assert!(result.is_err(), "Should fail with health_check_secs = 0");
     assert!(result.unwrap_err().contains("Health check timeout"));
@@ -100,56 +96,44 @@ fn test_timeout_validation_health_check_too_short() {
 
 #[test]
 fn test_timeout_validation_health_check_too_long() {
-    let config = TimeoutConfig::builder()
-        .health_check_secs(31)
-        .build();
-    
+    let config = TimeoutConfig::builder().health_check_secs(31).build();
+
     let result = config.validate();
     assert!(result.is_err(), "Should fail with health_check_secs = 31");
 }
 
 #[test]
 fn test_timeout_validation_hsm_operation_too_short() {
-    let config = TimeoutConfig::builder()
-        .hsm_operation_secs(0)
-        .build();
-    
+    let config = TimeoutConfig::builder().hsm_operation_secs(0).build();
+
     assert!(config.validate().is_err());
 }
 
 #[test]
 fn test_timeout_validation_hsm_operation_too_long() {
-    let config = TimeoutConfig::builder()
-        .hsm_operation_secs(11)
-        .build();
-    
+    let config = TimeoutConfig::builder().hsm_operation_secs(11).build();
+
     assert!(config.validate().is_err());
 }
 
 #[test]
 fn test_timeout_validation_hsm_probe_too_short() {
-    let config = TimeoutConfig::builder()
-        .hsm_probe_millis(50)
-        .build();
-    
+    let config = TimeoutConfig::builder().hsm_probe_millis(50).build();
+
     assert!(config.validate().is_err());
 }
 
 #[test]
 fn test_timeout_validation_hsm_probe_too_long() {
-    let config = TimeoutConfig::builder()
-        .hsm_probe_millis(6000)
-        .build();
-    
+    let config = TimeoutConfig::builder().hsm_probe_millis(6000).build();
+
     assert!(config.validate().is_err());
 }
 
 #[test]
 fn test_timeout_validation_discovery_too_short() {
-    let config = TimeoutConfig::builder()
-        .discovery_operation_secs(0)
-        .build();
-    
+    let config = TimeoutConfig::builder().discovery_operation_secs(0).build();
+
     assert!(config.validate().is_err());
 }
 
@@ -158,7 +142,7 @@ fn test_timeout_validation_discovery_too_long() {
     let config = TimeoutConfig::builder()
         .discovery_operation_secs(61)
         .build();
-    
+
     assert!(config.validate().is_err());
 }
 
@@ -174,21 +158,27 @@ fn test_timeout_duration_conversions() {
         .hsm_probe_millis(750)
         .discovery_operation_secs(20)
         .build();
-    
+
     assert_eq!(config.health_check_duration(), Duration::from_secs(10));
     assert_eq!(config.hsm_operation_duration(), Duration::from_secs(3));
     assert_eq!(config.hsm_probe_duration(), Duration::from_millis(750));
-    assert_eq!(config.discovery_operation_duration(), Duration::from_secs(20));
+    assert_eq!(
+        config.discovery_operation_duration(),
+        Duration::from_secs(20)
+    );
 }
 
 #[test]
 fn test_timeout_default_duration_conversions() {
     let config = TimeoutConfig::default();
-    
+
     assert_eq!(config.health_check_duration(), Duration::from_secs(5));
     assert_eq!(config.hsm_operation_duration(), Duration::from_secs(2));
     assert_eq!(config.hsm_probe_duration(), Duration::from_millis(500));
-    assert_eq!(config.discovery_operation_duration(), Duration::from_secs(10));
+    assert_eq!(
+        config.discovery_operation_duration(),
+        Duration::from_secs(10)
+    );
 }
 
 // ============================================================================
@@ -201,14 +191,13 @@ fn test_timeout_serialization_roundtrip() {
         .health_check_secs(15)
         .hsm_operation_secs(4)
         .build();
-    
+
     // Serialize to TOML
     let toml_str = toml::to_string(&config).expect("Failed to serialize");
-    
+
     // Deserialize back
-    let deserialized: TimeoutConfig = toml::from_str(&toml_str)
-        .expect("Failed to deserialize");
-    
+    let deserialized: TimeoutConfig = toml::from_str(&toml_str).expect("Failed to deserialize");
+
     // Verify timeouts match
     assert_eq!(config, deserialized);
 }
@@ -216,13 +205,11 @@ fn test_timeout_serialization_roundtrip() {
 #[test]
 fn test_timeout_serialization_partial() {
     // Serialize config with some defaults
-    let config = TimeoutConfig::builder()
-        .health_check_secs(20)
-        .build();
-    
+    let config = TimeoutConfig::builder().health_check_secs(20).build();
+
     let toml_str = toml::to_string(&config).unwrap();
     let deserialized: TimeoutConfig = toml::from_str(&toml_str).unwrap();
-    
+
     assert_eq!(config, deserialized);
 }
 
@@ -238,8 +225,11 @@ fn test_timeout_development_profile() {
         .hsm_probe_millis(200)
         .discovery_operation_secs(5)
         .build();
-    
-    assert!(config.validate().is_ok(), "Development profile should be valid");
+
+    assert!(
+        config.validate().is_ok(),
+        "Development profile should be valid"
+    );
     assert_eq!(config.health_check_secs, 2);
 }
 
@@ -251,8 +241,11 @@ fn test_timeout_production_profile() {
         .hsm_probe_millis(1000)
         .discovery_operation_secs(30)
         .build();
-    
-    assert!(config.validate().is_ok(), "Production profile should be valid");
+
+    assert!(
+        config.validate().is_ok(),
+        "Production profile should be valid"
+    );
     assert_eq!(config.health_check_secs, 10);
 }
 
@@ -264,8 +257,11 @@ fn test_timeout_high_performance_profile() {
         .hsm_probe_millis(300)
         .discovery_operation_secs(5)
         .build();
-    
-    assert!(config.validate().is_ok(), "High-performance profile should be valid");
+
+    assert!(
+        config.validate().is_ok(),
+        "High-performance profile should be valid"
+    );
     assert_eq!(config.hsm_probe_millis, 300);
 }
 
@@ -276,7 +272,7 @@ fn test_timeout_high_performance_profile() {
 #[test]
 fn test_beardog_config_default_timeouts() {
     let config = BearDogConfig::default();
-    
+
     // Verify timeout defaults are present
     assert_eq!(config.timeouts.health_check_secs, 5);
     assert_eq!(config.timeouts.hsm_operation_secs, 2);
@@ -285,20 +281,21 @@ fn test_beardog_config_default_timeouts() {
 #[test]
 fn test_beardog_config_validation_with_timeouts() {
     let config = BearDogConfig::default();
-    
+
     // Should validate successfully with default timeouts
     assert!(config.validate().is_ok());
 }
 
 #[test]
 fn test_beardog_config_validation_fails_invalid_timeouts() {
-    let mut config = BearDogConfig::default();
-    
     // Set invalid timeout
-    config.timeouts = TimeoutConfig::builder()
-        .health_check_secs(0)  // Invalid!
-        .build();
-    
+    let config = BearDogConfig {
+        timeouts: TimeoutConfig::builder()
+            .health_check_secs(0)  // Invalid!
+            .build(),
+        ..Default::default()
+    };
+
     // Should fail validation
     assert!(config.validate().is_err());
 }
@@ -315,7 +312,7 @@ fn test_timeout_boundary_values_lower() {
         .hsm_probe_millis(100)
         .discovery_operation_secs(1)
         .build();
-    
+
     assert!(config.validate().is_ok());
 }
 
@@ -327,7 +324,7 @@ fn test_timeout_boundary_values_upper() {
         .hsm_probe_millis(5000)
         .discovery_operation_secs(60)
         .build();
-    
+
     assert!(config.validate().is_ok());
 }
 
@@ -340,7 +337,7 @@ fn test_timeout_builder_fluent_api() {
         .hsm_probe_millis(600)
         .discovery_operation_secs(15)
         .build();
-    
+
     assert_eq!(config.health_check_secs, 7);
     assert_eq!(config.hsm_operation_secs, 3);
     assert_eq!(config.hsm_probe_millis, 600);

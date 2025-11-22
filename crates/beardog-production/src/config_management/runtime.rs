@@ -3,13 +3,13 @@
 //! This module contains the runtime logic for loading and managing production configurations.
 
 use super::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
 impl ProductionConfigManager {
     /// Creates a new production configuration manager
-    pub fn new(environment: Environment) -> BearDogResult<Self> {
+    pub fn new(environment: Environment) -> Result<Self> {
         let config_sources = Self::determine_config_sources(&environment)?;
         let secrets_manager = SecretsManager::new(&environment)?;
         
@@ -22,7 +22,7 @@ impl ProductionConfigManager {
     }
 
     /// Loads complete production configuration
-    pub fn load_configuration(&mut self) -> BearDogResult<ProductionConfig> {
+    pub fn load_configuration(&mut self) -> Result<ProductionConfig> {
         info!("Loading production configuration for environment: {:?}", self.environment);
 
         let mut config = self.load_base_config()?;
@@ -35,7 +35,7 @@ impl ProductionConfigManager {
     }
 
     /// Loads base configuration from sources
-    fn load_base_config(&mut self) -> BearDogResult<ProductionConfig> {
+    fn load_base_config(&mut self) -> Result<ProductionConfig> {
         let mut config = ProductionConfig::default();
 
         for source in &self.config_sources {
@@ -59,7 +59,7 @@ impl ProductionConfigManager {
     }
 
     /// Loads configuration from file
-    fn load_from_file(&mut self, config: &mut ProductionConfig, path: &str) -> BearDogResult<()> {
+    fn load_from_file(&mut self, config: &mut ProductionConfig, path: &str) -> Result<()> {
         debug!("Loading configuration from file: {}", path);
         
         if !Path::new(path).exists() {
@@ -89,7 +89,7 @@ impl ProductionConfigManager {
     }
 
     /// Loads configuration from environment variables
-    fn load_from_environment(&self, config: &mut ProductionConfig) -> BearDogResult<()> {
+    fn load_from_environment(&self, config: &mut ProductionConfig) -> Result<()> {
         debug!("Loading configuration from environment variables");
 
         if let Ok(port) = env::var("BEARDOG_PORT") {
@@ -129,7 +129,7 @@ impl ProductionConfigManager {
         endpoint: &str,
         provider_type: &str,
         _auth_config: &HashMap<String, String>,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         info!("🔐 Loading configuration from universal secrets management: {} ({})", endpoint, provider_type);
         
         if self.has_secrets_capability(provider_type) {
@@ -147,7 +147,7 @@ impl ProductionConfigManager {
         _config: &mut ProductionConfig,
         namespace: &str,
         provider_type: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         info!("📦 Loading configuration from universal container secrets: {} ({})", namespace, provider_type);
         
         match provider_type {
@@ -163,7 +163,7 @@ impl ProductionConfigManager {
     }
 
     /// Injects secrets into configuration
-    fn inject_secrets(&mut self, config: &mut ProductionConfig) -> BearDogResult<()> {
+    fn inject_secrets(&mut self, config: &mut ProductionConfig) -> Result<()> {
         info!("Injecting secrets into configuration");
 
         if let Ok(password) = self.secrets_manager.get_secret("database/password") {
@@ -182,7 +182,7 @@ impl ProductionConfigManager {
     }
 
     /// Validates production configuration
-    fn validate_configuration(&self, config: &ProductionConfig) -> BearDogResult<()> {
+    fn validate_configuration(&self, config: &ProductionConfig) -> Result<()> {
         debug!("Validating production configuration");
 
         if config.application.port == 0 {
@@ -220,7 +220,7 @@ impl ProductionConfigManager {
     }
 
     /// Determines configuration sources based on environment
-    fn determine_config_sources(environment: &Environment) -> BearDogResult<Vec<ConfigSource>> {
+    fn determine_config_sources(environment: &Environment) -> Result<Vec<ConfigSource>> {
         let mut sources = vec![ConfigSource::Environment];
 
         let config_file = match environment {
@@ -261,7 +261,7 @@ impl ProductionConfigManager {
     }
 
     /// Applies environment-specific overrides
-    fn apply_environment_overrides(&self, _config: &mut ProductionConfig) -> BearDogResult<()> {
+    fn apply_environment_overrides(&self, _config: &mut ProductionConfig) -> Result<()> {
         Ok(())
     }
 
@@ -281,7 +281,7 @@ impl ProductionConfigManager {
 
 impl SecretsManager {
     /// Creates a new secrets manager
-    pub fn new(environment: &Environment) -> BearDogResult<Self> {
+    pub fn new(environment: &Environment) -> Result<Self> {
         let providers = Self::determine_providers(environment)?;
         
         Ok(Self {
@@ -292,7 +292,7 @@ impl SecretsManager {
     }
 
     /// Gets a secret by key
-    pub fn get_secret(&mut self, key: &str) -> BearDogResult<SecretValue> {
+    pub fn get_secret(&mut self, key: &str) -> Result<SecretValue> {
         // Check cache first
         if let Some(cached_value) = self.cache.get(key) {
             if let Some(expires_at) = cached_value.expires_at {
@@ -314,7 +314,7 @@ impl SecretsManager {
     }
 
     /// Gets secret from specific provider
-    fn get_secret_from_provider(&self, provider: &SecretsProvider, key: &str) -> BearDogResult<SecretValue> {
+    fn get_secret_from_provider(&self, provider: &SecretsProvider, key: &str) -> Result<SecretValue> {
         match provider {
             SecretsProvider::EnvironmentVariables => {
                 let env_key = format!("BEARDOG_SECRET_{}", key.replace('/', "_").to_uppercase());
@@ -348,7 +348,7 @@ impl SecretsManager {
     }
 
     /// Determines secrets providers based on environment
-    fn determine_providers(environment: &Environment) -> BearDogResult<Vec<SecretsProvider>> {
+    fn determine_providers(environment: &Environment) -> Result<Vec<SecretsProvider>> {
         let mut providers = vec![];
 
         // Always add environment variables as fallback
@@ -397,7 +397,7 @@ impl Default for ApplicationConfig {
             bind_address: env::var("BEARDOG_BIND_ADDRESS")
                 .unwrap_or_else(|_| {
                     use beardog_types::constants::domains::network::config;
-                    config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()
+                    config::default_service_host()
                 }),
             port: 8080,
             worker_threads: std::thread::available_parallelism()

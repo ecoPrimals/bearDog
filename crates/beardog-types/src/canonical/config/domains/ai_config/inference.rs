@@ -2,11 +2,12 @@
 //!
 //! Type-safe ML model inference and serving configuration with builder pattern.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-type Result<T> = BearDogResult<T>;
+type Result<T> = Result<T>;
 
 /// ML model inference configuration
 ///

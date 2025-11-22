@@ -93,12 +93,6 @@ impl CryptoRequirements {
                     hash: HashAlgorithm::Sha256,
                 }),
             ),
-            KeyType::EllipticCurve => (
-                CryptoOperation::Signing,
-                CryptoAlgorithm::Signature(SignatureAlgorithm::EcdsaP384 {
-                    hash: HashAlgorithm::Sha384,
-                }),
-            ),
             KeyType::Rsa => (
                 CryptoOperation::AsymmetricEncryption,
                 CryptoAlgorithm::Asymmetric(AsymmetricAlgorithm::RsaOaep {

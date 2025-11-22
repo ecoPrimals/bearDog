@@ -158,7 +158,7 @@ fn test_storage_operation_metrics_creation() {
     assert_eq!(metrics.total_operations, 1000);
     assert_eq!(metrics.successful_operations, 950);
     assert_eq!(metrics.failed_operations, 50);
-    assert_eq!(metrics.avg_duration_ms, 25.5);
+    assert!((metrics.avg_duration_ms - 25.5).abs() < f64::EPSILON);
 }
 
 #[test]

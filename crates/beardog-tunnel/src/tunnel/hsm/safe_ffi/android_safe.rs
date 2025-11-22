@@ -3,7 +3,7 @@
 //! This module provides a safe interface to Android security features
 //! without using unsafe code directly.
 
-use super::traits::PlatformProvider;
+use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
 use beardog_errors::BearDogError;
 use tracing::{info, warn};
@@ -80,7 +80,7 @@ impl SafeAndroidProvider {
     }
 }
 
-impl PlatformProvider for SafeAndroidProvider {
+impl PlatformSecurityProvider for SafeAndroidProvider {
     fn generate_key(&self, key_id: &str, key_type: &KeyType) -> Result<HsmKey, BearDogError> {
         self.generate_key_safe(key_id, key_type)
     }

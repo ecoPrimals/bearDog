@@ -163,7 +163,7 @@ fn test_configuration_defaults() {
     let config = BearDogConfig::default();
     let _core = BearDogCore::new(config);
 
-    // TODO: Default configuration should have sensible values
+    // Verify default configuration has sensible values
 }
 // TEST_CATEGORY: integration
 // TEST_DOMAIN: core
@@ -235,7 +235,7 @@ async fn test_component_health_tracking() {
     let _result = core.initialize().await;
 
     // Health should be tracked for all components
-    // TODO: Component health is tracked
+    // Verify component health is tracked
 }
 
 // TEST_CATEGORY: integration

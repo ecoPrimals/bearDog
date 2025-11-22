@@ -414,4 +414,3 @@ mod tests {
         assert_eq!(policy.idle_timeout(), None);
     }
 }
-

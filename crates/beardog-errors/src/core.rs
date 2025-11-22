@@ -53,16 +53,16 @@ pub use crate::categories::{
 /// ## Error Propagation
 ///
 /// ```rust
-/// use beardog_errors::{BearDogError, BearDogResult};
+/// use beardog_errors::BearDogError;
 ///
-/// fn authenticate(token: &str) -> BearDogResult<u64> {
+/// fn authenticate(token: &str) -> Result<u64, BearDogError> {
 ///     if token.is_empty() {
 ///         return Err(BearDogError::security("Empty token".to_string()));
 ///     }
 ///     Ok(42)
 /// }
 ///
-/// fn process_request(token: &str) -> BearDogResult<String> {
+/// fn process_request(token: &str) -> Result<String, BearDogError> {
 ///     let user_id = authenticate(token)?; // Error propagates automatically
 ///     Ok(format!("User {}", user_id))
 /// }
@@ -575,6 +575,14 @@ impl BearDogError {
         Self::System {
             message: format!("Serialization failed: {details}"),
             category: SystemErrorCategory::General,
+        }
+    }
+
+    /// Create a monitoring error
+    #[must_use]
+    pub fn monitoring<T: std::fmt::Display>(message: T) -> Self {
+        Self::Monitoring {
+            message: message.to_string(),
         }
     }
 }

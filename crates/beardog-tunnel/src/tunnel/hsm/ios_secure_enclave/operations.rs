@@ -53,7 +53,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn sign_with_biometric_auth(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+    pub fn sign_with_biometric_auth(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         info!("🔐 Signing data with Secure Enclave key: {}", self.key_id);
 
         let keys = self.enclave.keychain_keys.read();
@@ -96,7 +96,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn key_agreement(&self, peer_public_key: &[u8]) -> Result<Vec<u8>, BearDogError>>
+    pub fn key_agreement(&self, peer_public_key: &[u8]) -> Result<Vec<u8>, BearDogError>
     where
         A: KeyAgreementCapable,
     {

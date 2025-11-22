@@ -77,7 +77,7 @@ pub async fn test_sequential_faults() -> Result<(), beardog_errors::BearDogError
     // Inject faults sequentially
     for i in 0..5 {
         info!("  Injecting fault {}/5", i + 1);
-        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        // No sleep needed - testing sequential injection logic, not timing
     }
     
     controller.stop();
@@ -105,7 +105,7 @@ pub async fn test_concurrent_faults() -> Result<(), beardog_errors::BearDogError
     for i in 0..5 {
         let handle = tokio::spawn(async move {
             info!("  Concurrent fault {}", i + 1);
-            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            // No sleep needed - testing concurrent injection, not timing
         });
         handles.push(handle);
     }
@@ -137,7 +137,7 @@ pub async fn test_long_running_chaos() -> Result<(), beardog_errors::BearDogErro
     // Simulate long-running chaos
     for i in 0..10 {
         info!("  Long-running chaos iteration {}/10", i + 1);
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // No sleep needed - testing iteration logic, not duration
     }
     
     controller.stop();

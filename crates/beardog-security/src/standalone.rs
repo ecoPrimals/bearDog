@@ -19,7 +19,7 @@
 //! more restrictive policies to maintain security when unable to achieve
 //! distributed consensus with other security nodes.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::security::*;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,7 @@ impl StandaloneSecurityMode {
     pub async fn evaluate_security_request(
         &self,
         request: &SecurityRequest,
-    ) -> BearDogResult<SecurityDecision> {
+    ) -> Result<SecurityDecision> {
         info!("🔒 Evaluating security request in standalone mode");
         info!("   User: {}", request.user_id);
         info!("   Operation: {}", request.operation);
@@ -83,10 +83,7 @@ impl StandaloneSecurityMode {
                     request.operation
                 ),
                 retry_after: Some(Duration::from_secs(
-                    std::env::var("BEARDOG_FEDERATION_RETRY_SECS")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(60)
+                    self.policy.retry_config.federation_retry_secs
                 )),
                 security_level: SecurityLevel::Critical,
             });
@@ -99,10 +96,7 @@ impl StandaloneSecurityMode {
             return Ok(SecurityDecision::Deny {
                 reason: "Rate limit exceeded (standalone conservative policy)".to_string(),
                 retry_after: Some(Duration::from_secs(
-                    std::env::var("BEARDOG_RATE_LIMIT_RETRY_SECS")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(300)
+                    self.policy.retry_config.rate_limit_retry_secs
                 )),
                 security_level: SecurityLevel::Moderate,
             });
@@ -154,7 +148,7 @@ impl StandaloneSecurityMode {
     pub async fn reconcile_with_federation(
         &self,
         federation_coordinator: &dyn SecurityQuorumCoordinator,
-    ) -> BearDogResult<ReconciliationReport> {
+    ) -> Result<ReconciliationReport> {
         info!("🔄 Reconciling standalone decisions with federation");
         
         let standalone_decisions = self.audit_log.get_standalone_decisions().await?;
@@ -207,6 +201,31 @@ impl Default for StandaloneSecurityMode {
     }
 }
 
+/// Configuration for standalone security retry policies
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StandaloneRetryConfig {
+    /// Federation retry delay in seconds
+    pub federation_retry_secs: u64,
+    
+    /// Rate limit retry delay in seconds
+    pub rate_limit_retry_secs: u64,
+}
+
+impl Default for StandaloneRetryConfig {
+    fn default() -> Self {
+        Self {
+            federation_retry_secs: std::env::var("BEARDOG_FEDERATION_RETRY_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60),
+            rate_limit_retry_secs: std::env::var("BEARDOG_RATE_LIMIT_RETRY_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300),
+        }
+    }
+}
+
 /// Conservative security policy for standalone operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConservativeSecurityPolicy {
@@ -216,17 +235,20 @@ pub struct ConservativeSecurityPolicy {
     /// Rate limit (requests per minute)
     pub rate_limit: u32,
     
-    /// Allowed operations in standalone mode
-    pub allowed_operations: Vec<String>,
+    /// Allowed operations in standalone mode (Arc<str> for fast cloning in hot path)
+    pub allowed_operations: Vec<Arc<str>>,
     
-    /// Operations requiring federation
-    pub require_federation: Vec<String>,
+    /// Operations requiring federation (Arc<str> for fast cloning in hot path)
+    pub require_federation: Vec<Arc<str>>,
+    
+    /// Retry configuration
+    pub retry_config: StandaloneRetryConfig,
 }
 
 impl ConservativeSecurityPolicy {
     /// Check if operation requires federation
     pub fn requires_federation(&self, operation: &str) -> bool {
-        self.require_federation.iter().any(|op| operation.contains(op))
+        self.require_federation.iter().any(|op| operation.contains(op.as_ref()))
     }
 }
 
@@ -236,17 +258,18 @@ impl Default for ConservativeSecurityPolicy {
             threat_threshold: 0.3, // More conservative (vs 0.5 in network mode)
             rate_limit: 10,        // Stricter rate limit (vs 30 in network mode)
             allowed_operations: vec![
-                "read".to_string(),
-                "basic_auth".to_string(),
-                "health_check".to_string(),
+                Arc::from("read"),
+                Arc::from("basic_auth"),
+                Arc::from("health_check"),
             ],
             require_federation: vec![
-                "admin_operation".to_string(),
-                "sensitive_data_access".to_string(),
-                "configuration_change".to_string(),
-                "key_rotation".to_string(),
-                "permission_grant".to_string(),
+                Arc::from("admin_operation"),
+                Arc::from("sensitive_data_access"),
+                Arc::from("configuration_change"),
+                Arc::from("key_rotation"),
+                Arc::from("permission_grant"),
             ],
+            retry_config: StandaloneRetryConfig::default(),
         }
     }
 }
@@ -281,7 +304,7 @@ impl LocalThreatDatabase {
         db
     }
     
-    pub async fn check_threat(&self, request: &SecurityRequest) -> BearDogResult<f32> {
+    pub async fn check_threat(&self, request: &SecurityRequest) -> Result<f32> {
         let mut threat_score = 0.0;
         
         // IP-based checks
@@ -403,7 +426,7 @@ impl AuditLogger {
         self.decisions.write().await.push(entry);
     }
     
-    pub async fn get_standalone_decisions(&self) -> BearDogResult<Vec<AuditEntry>> {
+    pub async fn get_standalone_decisions(&self) -> Result<Vec<AuditEntry>> {
         Ok(self.decisions.read().await.clone())
     }
 }
@@ -433,7 +456,7 @@ pub struct StandaloneRateLimiter {
 }
 
 impl StandaloneRateLimiter {
-    pub async fn allow_request(&mut self, user_id: &str) -> BearDogResult<bool> {
+    pub async fn allow_request(&mut self, user_id: &str) -> Result<bool> {
         let now = Utc::now();
         
         // Clean old requests outside window
@@ -498,7 +521,7 @@ pub trait SecurityQuorumCoordinator: Send + Sync {
     async fn evaluate_historical_decision(
         &self,
         decision: &AuditEntry,
-    ) -> BearDogResult<AuditEntry>;
+    ) -> Result<AuditEntry>;
 }
 
 #[cfg(test)]

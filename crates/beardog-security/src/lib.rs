@@ -47,6 +47,7 @@
 pub mod authorization_types;
 pub mod crypto_utils;
 pub mod encryption;
+pub mod hsm;
 pub mod key_rotation_manager;
 pub mod memory_key_manager;
 pub mod simd_crypto;

@@ -14,31 +14,33 @@ pub mod config {
     /// Standard localhost name
     pub const LOCALHOST_NAME: &str = "localhost";
 
-    /// Default HTTP port
-    pub const DEFAULT_HTTP_PORT: u16 = 8080;
-    /// Default HTTPS port
-    pub const DEFAULT_HTTPS_PORT: u16 = 8443;
-    /// Default `PostgreSQL` port
+    // ✅ REMOVED DEPRECATED CONSTANTS - Use config system instead:
+    // - Use beardog_config::global::BEARDOG_CONFIG.network.api.port (not DEFAULT_HTTP_PORT)
+    // - Use ports::HTTPS_PORT for standard HTTPS port (not DEFAULT_HTTPS_PORT)
+    // - Use beardog_config::global::BEARDOG_CONFIG.network.api.bind_address (not DEFAULT_API_BIND)
+
+    /// Default `PostgreSQL` port (industry standard)
+    /// Note: This is a well-known industry port, not configuration
     pub const DEFAULT_POSTGRES_PORT: u16 = 5432;
-    /// Default Grafana port  
+
+    /// Default Grafana port (industry standard)
+    /// Note: This is a well-known industry port, not configuration
     pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 
-    /// Default API bind address (environment configurable)
-    pub const DEFAULT_API_BIND: &str = "0.0.0.0:8080";
-
     /// Get the default service host from environment or fallback
+    ///
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
     pub fn default_service_host() -> String {
-        std::env::var("BEARDOG_SERVICE_HOST")
-            .or_else(|_| std::env::var("BEARDOG_HOST"))
-            .unwrap_or_else(|_| LOCALHOST_NAME.to_string())
+        use beardog_config::global::BEARDOG_CONFIG;
+        BEARDOG_CONFIG.network.api.bind_address.to_string()
     }
 
     /// Get the default service port from environment or fallback
+    ///
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG instead of reading env vars directly
     pub fn default_service_port() -> u16 {
-        std::env::var("BEARDOG_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(DEFAULT_HTTP_PORT)
+        use beardog_config::global::BEARDOG_CONFIG;
+        BEARDOG_CONFIG.network.api.port
     }
 
     /// Get the default database URL from environment or fallback
@@ -103,53 +105,49 @@ pub mod defaults {
 
     /// Get default API port from environment or fallback to 8080
     ///
-    /// Checks `BEARDOG_API_PORT` environment variable first.
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG instead of reading env vars directly.
+    /// This eliminates duplicate environment variable logic and provides consistent configuration.
     #[must_use]
     pub fn default_api_port() -> u16 {
-        std::env::var("BEARDOG_API_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(FALLBACK_API_PORT)
+        use beardog_config::global::BEARDOG_CONFIG;
+        BEARDOG_CONFIG.network.api.port
     }
 
     /// Get default metrics port from environment or fallback to 9090
     ///
-    /// Checks `BEARDOG_METRICS_PORT` environment variable first.
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
     #[must_use]
     pub fn default_metrics_port() -> u16 {
-        std::env::var("BEARDOG_METRICS_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(FALLBACK_METRICS_PORT)
+        use beardog_config::global::BEARDOG_CONFIG;
+        BEARDOG_CONFIG.network.ports.metrics_port
     }
 
     /// Get default health check port from environment or fallback to 8081
     ///
-    /// Checks `BEARDOG_HEALTH_PORT` environment variable first.
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
+    /// Note: Health port now uses API port from config
     #[must_use]
     pub fn default_health_port() -> u16 {
-        std::env::var("BEARDOG_HEALTH_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(FALLBACK_HEALTH_PORT)
+        use beardog_config::global::BEARDOG_CONFIG;
+        BEARDOG_CONFIG.network.api.port
     }
 
     /// Get default admin port from environment or fallback to 8082
     ///
-    /// Checks `BEARDOG_ADMIN_PORT` environment variable first.
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
     #[must_use]
     pub fn default_admin_port() -> u16 {
-        std::env::var("BEARDOG_ADMIN_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(FALLBACK_ADMIN_PORT)
+        use beardog_config::global::BEARDOG_CONFIG;
+        BEARDOG_CONFIG.network.admin.port
     }
 
     /// Get default debug port from environment or fallback to 8083
     ///
-    /// Checks `BEARDOG_DEBUG_PORT` environment variable first.
+    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
+    /// Note: Debug port currently uses admin port + 1 pattern (configurable in future)
     #[must_use]
     pub fn default_debug_port() -> u16 {
+        // Debug port not yet in config, use env var fallback pattern
         std::env::var("BEARDOG_DEBUG_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
@@ -293,11 +291,8 @@ pub mod addresses {
         note = "Use default_bind_address() for environment-aware configuration"
     )]
     pub const DEFAULT_BIND_ADDRESS: &str = WILDCARD_IPV4;
-    #[deprecated(
-        since = "3.1.0",
-        note = "Use default_api_bind() for environment-aware configuration"
-    )]
-    pub const DEFAULT_API_BIND: &str = "0.0.0.0:8080";
+    // ✅ REMOVED: DEFAULT_API_BIND - Use default_api_bind() function instead
+    // ✅ REMOVED: DEFAULT_METRICS_BIND - Use default_metrics_bind() function instead
     #[deprecated(
         since = "3.1.0",
         note = "Use default_metrics_bind() for environment-aware configuration"
@@ -974,3 +969,7 @@ pub mod services {
     /// Configuration constant: service type health
     pub const SERVICE_TYPE_HEALTH: &str = "health";
 }
+
+#[cfg(test)]
+#[path = "network_tests.rs"]
+mod tests;

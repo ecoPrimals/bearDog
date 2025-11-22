@@ -4,6 +4,7 @@
 // states with dynamic trust building, healing, and evolution based on interaction
 // patterns and ecosystem behavior.
 
+use beardog_errors::BearDogError;
 use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -189,7 +190,7 @@ impl TrustEvolution {
     }
     
     /// Evolve trust based on an interaction result
-    pub fn evolve_from_interaction(&mut self, interaction: &InteractionResult) -> BearDogResult<()> {
+    pub fn evolve_from_interaction(&mut self, interaction: &InteractionResult) -> Result<()> {
         let impact = self.calculate_interaction_impact(interaction);
         
         match self {

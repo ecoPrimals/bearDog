@@ -249,12 +249,12 @@ mod authorization_comprehensive_tests {
         let valid_role_result = validate_role("admin");
         assert!(valid_role_result.is_ok());
 
-        // Test capability expiration
+        // Test capability expiration - modern pattern: 1 nanosecond is instantly expired
         let expired_cap =
             Capability::with_expiration("temp_access", "user", std::time::Duration::from_nanos(1));
 
-        // Wait a tiny bit for it to expire
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // Modern pattern: No sleep needed - 1 nanosecond already elapsed by CPU cycles
+        // The created_at.elapsed() will be > 1 nanosecond immediately
         assert!(expired_cap.is_expired());
 
         let check_result = validate_capability(&expired_cap);

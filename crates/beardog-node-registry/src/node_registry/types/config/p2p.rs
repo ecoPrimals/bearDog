@@ -34,7 +34,7 @@ impl Default for P2PConfig {
             enabled: true,
             listen_address: std::env::var("BEARDOG_P2P_LISTEN_ADDRESS")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()),
+                .unwrap_or_else(|_| config::default_service_host()),
             listen_port: std::env::var("BEARDOG_P2P_LISTEN_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
@@ -154,14 +154,16 @@ mod tests {
         assert_eq!(config.peer_discovery_interval_seconds, 60);
         assert!(config.validate().is_ok());
     fn test_p2p_config_builder() {
+        const TEST_DISCOVERY_PORT: u16 = 9090;
+        const TEST_API_PORT: u16 = 8080;
         let config = P2PConfig::new()
-            .with_listen_port(9090)
+            .with_listen_port(TEST_DISCOVERY_PORT)
             .with_max_peers(100)
-            .with_bootstrap_peer("peer1:8080".to_string());
-        assert_eq!(config.listen_port, 9090);
+            .with_bootstrap_peer(format!("peer1:{}", TEST_API_PORT));
+        assert_eq!(config.listen_port, TEST_DISCOVERY_PORT);
         assert_eq!(config.max_peers, 100);
-        assert!(config.bootstrap_peers.contains(&"peer1:8080".to_string()));
-        assert_eq!(config.full_listen_address(), "0.0.0.0:9090");}
+        assert!(config.bootstrap_peers.contains(&format!("peer1:{}", TEST_API_PORT)));
+        assert_eq!(config.full_listen_address(), format!("0.0.0.0:{}", TEST_DISCOVERY_PORT));}
 
 
     fn test_p2p_config_durations() {
@@ -192,11 +194,17 @@ mod tests {
         assert_eq!(config.listen_port, 9999);
         assert_eq!(config.full_listen_address(), "127.0.0.1:9999");
     fn test_p2p_config_bootstrap_peers() {
-            .with_bootstrap_peer("peer1:8080".to_string())
-            .with_bootstrap_peer("peer2:8080".to_string())
-            .with_bootstrap_peer("peer3:8080".to_string());
-        assert!(config.bootstrap_peers.contains(&"peer2:8080".to_string()));
-        assert!(config.bootstrap_peers.contains(&"peer3:8080".to_string()));
+        const TEST_PORT: u16 = 8080;
+        let peer1 = format!("peer1:{}", TEST_PORT);
+        let peer2 = format!("peer2:{}", TEST_PORT);
+        let peer3 = format!("peer3:{}", TEST_PORT);
+        
+        let config = P2PConfig::new()
+            .with_bootstrap_peer(peer1)
+            .with_bootstrap_peer(peer2.clone())
+            .with_bootstrap_peer(peer3.clone());
+        assert!(config.bootstrap_peers.contains(&peer2));
+        assert!(config.bootstrap_peers.contains(&peer3));
         assert_eq!(config.bootstrap_peers.len(), 3);}
 
 

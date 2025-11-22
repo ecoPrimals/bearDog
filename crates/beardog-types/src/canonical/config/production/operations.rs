@@ -83,45 +83,123 @@ pub struct ProcedureConfig {
 
 // Default impl removed - HealthCheckConfig now uses canonical HealthCheckConfiguration::default()
 
-impl Default for MaintenanceConfig {
-    fn default() -> Self {
+impl MaintenanceConfig {
+    /// Default maintenance window duration in seconds
+    pub const DEFAULT_WINDOW_DURATION_SECS: u64 = 3600;
+
+    /// Create MaintenanceConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enabled: false,
+            window_duration: Duration::from_secs(Self::DEFAULT_WINDOW_DURATION_SECS),
+        }
+    }
+
+    /// Create MaintenanceConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_MAINTENANCE_WINDOW_SECS`: Window duration (default: 3600)
+    pub fn from_env() -> Self {
         Self {
             enabled: false,
             window_duration: Duration::from_secs(
                 std::env::var("BEARDOG_MAINTENANCE_WINDOW_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(3600),
+                    .unwrap_or(Self::DEFAULT_WINDOW_DURATION_SECS),
             ),
         }
     }
 }
 
-impl Default for BackupConfig {
-    fn default() -> Self {
+impl BackupConfig {
+    /// Default backup interval in seconds (24 hours)
+    pub const DEFAULT_INTERVAL_SECS: u64 = 86400;
+
+    /// Create BackupConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enabled: true,
+            interval: Duration::from_secs(Self::DEFAULT_INTERVAL_SECS),
+        }
+    }
+
+    /// Create BackupConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_BACKUP_INTERVAL_SECS`: Backup interval (default: 86400)
+    pub fn from_env() -> Self {
         Self {
             enabled: true,
             interval: Duration::from_secs(
                 std::env::var("BEARDOG_BACKUP_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(86400),
+                    .unwrap_or(Self::DEFAULT_INTERVAL_SECS),
             ),
         }
     }
 }
 
-impl Default for DisasterRecoveryConfig {
-    fn default() -> Self {
+impl DisasterRecoveryConfig {
+    /// Default Recovery Time Objective in seconds (1 hour)
+    pub const DEFAULT_RTO_SECS: u64 = 3600;
+
+    /// Create DisasterRecoveryConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enabled: false,
+            rto: Duration::from_secs(Self::DEFAULT_RTO_SECS),
+        }
+    }
+
+    /// Create DisasterRecoveryConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_DR_RTO_SECS`: Recovery Time Objective (default: 3600)
+    pub fn from_env() -> Self {
         Self {
             enabled: false,
             rto: Duration::from_secs(
                 std::env::var("BEARDOG_DR_RTO_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(3600),
+                    .unwrap_or(Self::DEFAULT_RTO_SECS),
             ),
         }
+    }
+}
+
+impl Default for MaintenanceConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl Default for BackupConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl Default for DisasterRecoveryConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 

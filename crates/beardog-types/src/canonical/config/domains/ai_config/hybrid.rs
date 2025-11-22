@@ -2,12 +2,13 @@
 //!
 //! Modern, type-safe configuration for human-AI collaboration with builder pattern.
 
+use beardog_errors::BearDogError;
 use super::types::{ConfidenceThreshold, OversightLevel};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-type Result<T> = BearDogResult<T>;
+type Result<T> = Result<T>;
 
 /// Hybrid intelligence configuration for human-AI collaboration
 ///

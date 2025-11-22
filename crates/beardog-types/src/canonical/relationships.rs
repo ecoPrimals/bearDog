@@ -12,7 +12,8 @@
 // - TrustEvolution: Dynamic trust building and healing
 // - BiologicalRelationships: Mutualistic ecosystem interactions
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -131,7 +132,7 @@ impl EcosystemRelationshipRegistry {
         &mut self,
         entity_id: String,
         context: RelationshipContext,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         if self.relationships.len() >= self.config.max_relationships {
             return Err(BearDogError::system("Relationship registry at capacity".to_string()));
         }
@@ -155,7 +156,7 @@ impl EcosystemRelationshipRegistry {
         &mut self,
         entity_id: &str,
         interaction_result: InteractionResult,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         // Clone the relationship for health calculation to avoid borrowing issues
         let cloned_relationship = {
             let relationship = self.relationships.get_mut(entity_id)

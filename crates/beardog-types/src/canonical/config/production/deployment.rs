@@ -73,6 +73,50 @@ pub struct RollbackConfig {
     pub automatic: bool,
 }
 
+impl RolloutConfig {
+    /// Default rollout percentage (100%)
+    pub const DEFAULT_PERCENTAGE: f64 = 100.0;
+
+    /// Create RolloutConfig with hardcoded defaults
+    pub fn with_defaults() -> Self {
+        Self {
+            percentage: Self::DEFAULT_PERCENTAGE,
+        }
+    }
+
+    /// Create RolloutConfig from environment variables
+    pub fn from_env() -> Self {
+        Self {
+            percentage: std::env::var("BEARDOG_ROLLOUT_PERCENTAGE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_PERCENTAGE),
+        }
+    }
+}
+
+impl CanaryConfig {
+    /// Default canary percentage (10%)
+    pub const DEFAULT_PERCENTAGE: f64 = 10.0;
+
+    /// Create CanaryConfig with hardcoded defaults
+    pub fn with_defaults() -> Self {
+        Self {
+            percentage: Self::DEFAULT_PERCENTAGE,
+        }
+    }
+
+    /// Create CanaryConfig from environment variables
+    pub fn from_env() -> Self {
+        Self {
+            percentage: std::env::var("BEARDOG_CANARY_PERCENTAGE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_PERCENTAGE),
+        }
+    }
+}
+
 impl Default for DeploymentConfig {
     fn default() -> Self {
         Self {
@@ -87,13 +131,13 @@ impl Default for DeploymentConfig {
 
 impl Default for RolloutConfig {
     fn default() -> Self {
-        Self { percentage: 100.0 }
+        Self::with_defaults()
     }
 }
 
 impl Default for CanaryConfig {
     fn default() -> Self {
-        Self { percentage: 10.0 }
+        Self::with_defaults()
     }
 }
 

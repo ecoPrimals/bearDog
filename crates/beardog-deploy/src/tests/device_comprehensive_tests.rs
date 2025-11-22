@@ -144,12 +144,13 @@ mod tests {
 
     #[test]
     fn test_device_forward_command() {
-        let local_port = 8080;
-        let remote_port = 8080;
+        const TEST_PORT: u16 = 8080;
+        let local_port = TEST_PORT;
+        let remote_port = TEST_PORT;
         let command = format!("adb forward tcp:{} tcp:{}", local_port, remote_port);
 
         assert!(command.contains("forward"));
-        assert!(command.contains("8080"));
+        assert!(command.contains(&TEST_PORT.to_string()));
     }
 
     #[test]

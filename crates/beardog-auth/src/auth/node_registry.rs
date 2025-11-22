@@ -80,9 +80,10 @@ mod tests {
     use chrono::Utc;
 
     fn create_test_node_info(node_id: &str) -> NodeInfo {
+        const TEST_PORT: u16 = 8080;
         NodeInfo {
             node_id: node_id.to_string(),
-            address: "127.0.0.1:8080".to_string(),
+            address: format!("127.0.0.1:{}", TEST_PORT),
             capabilities: vec![NodeCapability::BasicOperations],
             trust_level: 0.8,
             last_seen: Utc::now(),
@@ -110,8 +111,9 @@ mod tests {
         assert!(retrieve_result.is_ok(), "Node retrieval should succeed");
 
         let retrieved = retrieve_result.unwrap();
+        const TEST_PORT: u16 = 8080;
         assert_eq!(retrieved.node_id, "node-1");
-        assert_eq!(retrieved.address, "127.0.0.1:8080");
+        assert_eq!(retrieved.address, format!("127.0.0.1:{}", TEST_PORT));
     }
 
     #[test]

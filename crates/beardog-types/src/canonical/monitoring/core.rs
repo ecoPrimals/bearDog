@@ -130,17 +130,17 @@ impl MonitoringConfig for CoreMonitoringConfig {
 
     fn is_production_ready(&self) -> bool {
         use crate::constants::domains::validation::{
-            MIN_CACHE_SIZE, MIN_FLUSH_INTERVAL_SECS, MAX_FLUSH_INTERVAL_SECS
+            MAX_FLUSH_INTERVAL_SECS, MIN_CACHE_SIZE, MIN_FLUSH_INTERVAL_SECS,
         };
-        
-        self.enabled &&
-        !self.service_name.is_empty() &&
-        self.sampling_rate >= 0.1 &&
-        self.sampling_rate <= 1.0 &&
-        self.flush_interval >= Duration::from_secs(MIN_FLUSH_INTERVAL_SECS) &&
-        self.flush_interval <= Duration::from_secs(MAX_FLUSH_INTERVAL_SECS) &&
-        self.buffer_size >= MIN_CACHE_SIZE &&
-        MonitoringConfig::validate(self).is_ok()
+
+        self.enabled
+            && !self.service_name.is_empty()
+            && self.sampling_rate >= 0.1
+            && self.sampling_rate <= 1.0
+            && self.flush_interval >= Duration::from_secs(MIN_FLUSH_INTERVAL_SECS)
+            && self.flush_interval <= Duration::from_secs(MAX_FLUSH_INTERVAL_SECS)
+            && self.buffer_size >= MIN_CACHE_SIZE
+            && MonitoringConfig::validate(self).is_ok()
     }
 }
 
@@ -466,9 +466,19 @@ impl RetryStrategy for RetryPolicy {
 
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         // Exponential backoff with multiplier
-        let delay_ms = self.initial_delay.as_millis() as f64 
-            * self.backoff_multiplier.powi(attempt as i32);
-        Duration::from_millis((delay_ms as u64).min(self.max_delay.as_millis() as u64))
+        // Note: Precision loss is acceptable for delay calculations (not cryptographic)
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_possible_wrap,
+            clippy::cast_sign_loss
+        )]
+        let delay_ms = {
+            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+            let max_ms = self.max_delay.as_millis().min(u64::MAX as u128) as u64;
+            let computed = initial_ms * self.backoff_multiplier.powi(attempt.min(30) as i32);
+            (computed.max(0.0) as u64).min(max_ms)
+        };
+        Duration::from_millis(delay_ms)
     }
 
     fn backoff_multiplier(&self) -> f64 {

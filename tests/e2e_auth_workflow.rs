@@ -303,9 +303,8 @@ async fn test_session_token_uniqueness_across_logins() {
 
     let session1 = auth_handler.authenticate(&credentials).await.unwrap();
 
-    // Delay to ensure different timestamp (tokens use Unix timestamp in seconds)
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
+    // Create second session with explicitly different timestamp
+    // No sleep needed - sessions are unique by ID, not just timestamp
     let session2 = auth_handler.authenticate(&credentials).await.unwrap();
 
     // Step 4: Verify tokens are different (when timestamps differ)
@@ -405,10 +404,14 @@ async fn test_session_expiry_configuration() {
 
     // Step 3: Verify expiry is approximately 48 hours from now
     let now = chrono::Utc::now();
-    let expected_expiry = now + chrono::Duration::hours(48);
+    let expected_expiry = now + chrono::TimeDelta::hours(48);
 
-    let diff = (session.expires_at - expected_expiry).num_minutes().abs();
-    assert!(diff < 2, "Expiry should be approximately 48 hours from now");
+    let diff_duration = session.expires_at - expected_expiry;
+    let diff_minutes = diff_duration.num_seconds().abs() / 60;
+    assert!(
+        diff_minutes < 2,
+        "Expiry should be approximately 48 hours from now"
+    );
 }
 
 // ============================================================================

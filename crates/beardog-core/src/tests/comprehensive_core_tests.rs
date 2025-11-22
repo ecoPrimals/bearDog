@@ -39,10 +39,17 @@ mod core_functionality_tests {
         let initial_time = state.start_time;
         drop(state);
 
-        // Simulate some operations (state changes)
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        // Perform actual state operations (no artificial delays needed)
+        // Multiple reads/writes to verify state consistency
+        for _ in 0..5 {
+            let state = core.state.read().await;
+            assert_eq!(
+                state.start_time, initial_time,
+                "Start time should not change during operations"
+            );
+        }
 
-        // Verify state persists
+        // Verify state persists after operations
         let state = core.state.read().await;
         assert_eq!(
             state.start_time, initial_time,
@@ -85,7 +92,7 @@ mod core_functionality_tests {
                 for _ in 0..10 {
                     let state = core_ref.state.read().await;
                     assert_eq!(state.overall_health, HealthStatus::Healthy);
-                    tokio::time::sleep(tokio::time::Duration::from_micros(i * 10)).await;
+                    // No artificial delay - test true concurrency
                 }
             });
             handles.push(handle);
@@ -190,23 +197,30 @@ mod core_functionality_tests {
         // Test that many readers don't block writers
         let core = std::sync::Arc::new(BearDogCore::with_default_config().unwrap());
 
+        // Use barrier for truly concurrent read/write test (no polling waits)
+        let barrier = Arc::new(tokio::sync::Barrier::new(11)); // 10 readers + 1 writer
+
         // Spawn readers that check state exists (not specific value due to concurrent writes)
         let mut read_handles = vec![];
         for _ in 0..10 {
             let core_ref = core.clone();
+            let barrier_ref = Arc::clone(&barrier);
             let handle = tokio::spawn(async move {
+                // Wait for all tasks to be ready (no artificial delays)
+                barrier_ref.wait().await;
+                
+                // Read truly concurrently with writer
                 let state = core_ref.state.read().await;
-                tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
                 // Just verify we can read state, don't assert specific value
                 let _health = state.overall_health;
             });
             read_handles.push(handle);
         }
 
-        // Wait for readers to start
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-
-        // Write in between reads
+        // Writer joins the barrier - all tasks start simultaneously
+        barrier.wait().await;
+        
+        // Write concurrently with reads (tests RwLock behavior)
         {
             let mut state = core.state.write().await;
             state.overall_health = HealthStatus::Degraded;
@@ -254,12 +268,15 @@ mod core_functionality_tests {
             state.start_time
         };
 
-        // Wait a bit
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-
-        // Verify start time unchanged
-        let state = core.state.read().await;
-        assert_eq!(state.start_time, original_start_time);
+        // Perform multiple operations to verify start_time invariant
+        // (no artificial delay - test the invariant directly)
+        for _ in 0..10 {
+            let state = core.state.read().await;
+            assert_eq!(
+                state.start_time, original_start_time,
+                "Start time must remain constant across operations"
+            );
+        }
     }
 
     /// TEST_CATEGORY: integration

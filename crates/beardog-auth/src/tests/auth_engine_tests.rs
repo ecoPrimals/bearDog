@@ -35,11 +35,12 @@ async fn test_cross_node_auth_engine_creation() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_node_registration() -> Result<(), BearDogError> {
+    const TEST_PORT: u16 = 8080;
     let mut node_registry = InMemoryNodeRegistry::new();
 
     let node_info = NodeInfo {
         node_id: "test-node".to_string(),
-        address: "127.0.0.1:8080".to_string(),
+        address: format!("127.0.0.1:{}", TEST_PORT),
         capabilities: vec![NodeCapability::StorageProvider],
         trust_level: 0.8,
         // TEST_CATEGORY: integration

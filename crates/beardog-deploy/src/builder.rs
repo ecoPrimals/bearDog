@@ -4,7 +4,7 @@
 // including library compilation, example app building, and toolchain configuration.
 // All operations maintain sovereignty compliance and zero hardcoded assumptions.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::{env, path::PathBuf, process::Stdio};
 use tokio::process::Command;
 use tracing::{debug, info};
@@ -48,7 +48,7 @@ impl RustBuilder {
     /// Returns error if any build step fails
     /// Builds `android_app`
     /// Builds `android_app`
-    pub async fn build_android_app(&self, release: bool, target: &str) -> BearDogResult<()> {
+    pub async fn build_android_app(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         info!("🔨 Building BearDog Android application...");
 
         // Setup build environment for target
@@ -212,7 +212,7 @@ impl RustBuilder {
     /// # Errors
     /// Returns error if library compilation fails
     /// Builds `android_library`
-    async fn build_android_library(&self, release: bool, target: &str) -> BearDogResult<()> {
+    async fn build_android_library(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         let mut cmd = Command::new("cargo");
         cmd.args(["build", "--lib", "--target", target])
             .current_dir(&self.project_root)
@@ -250,7 +250,7 @@ impl RustBuilder {
     /// # Errors
     /// Returns error if example app compilation fails
     /// Builds `example_app`
-    async fn build_example_app(&self, release: bool, target: &str) -> BearDogResult<()> {
+    async fn build_example_app(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         let android_dir = self.project_root.join("android");
 
         let mut cmd = Command::new("cargo");

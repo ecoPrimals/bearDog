@@ -67,10 +67,7 @@ pub enum MonitoringLevel {
 impl MonitoringLevel {
     /// Returns true if this level includes detailed metrics
     pub fn includes_detailed_metrics(&self) -> bool {
-        matches!(
-            self,
-            MonitoringLevel::Detailed | MonitoringLevel::Verbose
-        )
+        matches!(self, MonitoringLevel::Detailed | MonitoringLevel::Verbose)
     }
 
     /// Returns true if this level includes trace data
@@ -97,11 +94,11 @@ impl MonitoringLevel {
     /// Returns the typical reporting interval for this level
     pub fn typical_interval(&self) -> Duration {
         match self {
-            MonitoringLevel::Minimal => Duration::from_secs(300),   // 5 minutes
-            MonitoringLevel::Basic => Duration::from_secs(120),     // 2 minutes
-            MonitoringLevel::Standard => Duration::from_secs(60),   // 1 minute
-            MonitoringLevel::Detailed => Duration::from_secs(30),   // 30 seconds
-            MonitoringLevel::Verbose => Duration::from_secs(10),    // 10 seconds
+            MonitoringLevel::Minimal => Duration::from_secs(300), // 5 minutes
+            MonitoringLevel::Basic => Duration::from_secs(120),   // 2 minutes
+            MonitoringLevel::Standard => Duration::from_secs(60), // 1 minute
+            MonitoringLevel::Detailed => Duration::from_secs(30), // 30 seconds
+            MonitoringLevel::Verbose => Duration::from_secs(10),  // 10 seconds
         }
     }
 }
@@ -144,9 +141,9 @@ pub trait MonitoringConfig: Send + Sync {
     ///
     /// Returns the destination where metrics should be reported.
     /// This could be:
-    /// - HTTP endpoint: "http://metrics.example.com:9090/api/v1/metrics"
-    /// - Local file: "/var/log/beardog/metrics.log"
-    /// - Service name: "prometheus" (for service discovery)
+    /// - HTTP endpoint: `http://metrics.example.com:9090/api/v1/metrics`
+    /// - Local file: `/var/log/beardog/metrics.log`
+    /// - Service name: `prometheus` (for service discovery)
     ///
     /// ## Returns
     /// The metrics endpoint as a string slice
@@ -294,7 +291,7 @@ pub trait MonitoringConfig: Send + Sync {
 
         // Check sample rate
         let sample_rate = self.sample_rate();
-        if sample_rate < 0.0 || sample_rate > 1.0 {
+        if !(0.0..=1.0).contains(&sample_rate) {
             return Err(format!(
                 "Sample rate must be between 0.0 and 1.0, got {}",
                 sample_rate
@@ -490,7 +487,11 @@ mod tests {
             sample_rate: 0.1, // 10% sampling
         };
         let overhead = sampled.estimated_overhead();
-        assert!((overhead - 0.005).abs() < 0.0001, "Expected ~0.005, got {}", overhead); // 0.05 * 0.1
+        assert!(
+            (overhead - 0.005).abs() < 0.0001,
+            "Expected ~0.005, got {}",
+            overhead
+        ); // 0.05 * 0.1
     }
 
     #[test]
@@ -631,4 +632,3 @@ mod tests {
         assert!(!disabled.is_production_ready()); // But not production ready
     }
 }
-

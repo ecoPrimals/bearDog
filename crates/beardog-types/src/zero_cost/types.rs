@@ -326,13 +326,15 @@ mod tests {
 
     #[test]
     fn test_service_info_creation() {
+        const TEST_PORT: u16 = 8080;
+
         let mut metadata = std::collections::HashMap::new();
         metadata.insert("version".to_string(), "1.0".to_string());
 
         let service = ServiceInfo::new(
             "test-service",
             "127.0.0.1",
-            8080,
+            TEST_PORT,
             metadata,
             Some("/health".to_string()),
             vec!["read".to_string(), "write".to_string()],
@@ -340,7 +342,7 @@ mod tests {
 
         assert_eq!(service.name.as_ref(), "test-service");
         assert_eq!(service.endpoint.as_ref(), "127.0.0.1");
-        assert_eq!(service.port, 8080);
+        assert_eq!(service.port, TEST_PORT);
         assert_eq!(service.capabilities.len(), 2);
     }
 

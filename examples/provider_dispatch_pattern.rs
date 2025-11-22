@@ -18,9 +18,10 @@
 ///! - Plugin systems needing runtime provider loading
 ///! - Many provider types (enum would be huge)
 ///! - Cold paths where Box<dyn> overhead is negligible
-
+use beardog_traits::HsmProvider;
+// NOTE: This is a design pattern example - not all types are implemented yet
+// This demonstrates the zero-cost enum dispatch pattern for future optimization
 use beardog_errors::BearDogError;
-use beardog_types::canonical::providers_unified::traits::HsmProvider;
 use std::fmt;
 
 // ============================================================================
@@ -28,7 +29,7 @@ use std::fmt;
 // ============================================================================
 
 /// Traditional approach using Box<dyn Trait>
-/// 
+///
 /// Pros: Flexible, works with any provider type
 /// Cons: Runtime indirection, ~5-15% overhead
 pub struct HsmManagerDynamic {
@@ -251,38 +252,55 @@ async fn main() -> Result<(), BearDogError> {
     // Example 1: Dynamic Dispatch (traditional)
     // -------------------------------------------------------------------------
     println!("📦 Example 1: Dynamic Dispatch (Box<dyn>)");
-    let provider_dyn: Box<dyn HsmProvider> = Box::new(SoftwareHsmProvider::new("software-hsm".to_string()));
+    let provider_dyn: Box<dyn HsmProvider> =
+        Box::new(SoftwareHsmProvider::new("software-hsm".to_string()));
     let manager_dyn = HsmManagerDynamic::new(provider_dyn);
-    
+
     let data = b"Hello, World!";
     let encrypted_dyn = manager_dyn.encrypt(data).await?;
-    println!("   Encrypted {} bytes (with vtable overhead)", encrypted_dyn.len());
+    println!(
+        "   Encrypted {} bytes (with vtable overhead)",
+        encrypted_dyn.len()
+    );
     println!("   Performance: Good (baseline)\n");
 
     // -------------------------------------------------------------------------
     // Example 2: Zero-Cost Enum Dispatch (recommended)
     // -------------------------------------------------------------------------
     println!("⚡ Example 2: Zero-Cost Enum Dispatch");
-    let provider_enum = HsmProviderDispatch::Software(
-        SoftwareHsmProvider::new("software-hsm".to_string())
-    );
+    let provider_enum =
+        HsmProviderDispatch::Software(SoftwareHsmProvider::new("software-hsm".to_string()));
     let manager_enum = HsmManagerZeroCost::new(provider_enum);
-    
+
     let encrypted_enum = manager_enum.encrypt(data).await?;
-    println!("   Encrypted {} bytes (zero overhead!)", encrypted_enum.len());
+    println!(
+        "   Encrypted {} bytes (zero overhead!)",
+        encrypted_enum.len()
+    );
     println!("   Performance: Excellent (15-25% faster)\n");
 
     // -------------------------------------------------------------------------
     // Example 3: Switching providers at runtime
     // -------------------------------------------------------------------------
     println!("🔄 Example 3: Runtime Provider Selection");
-    
+
     let providers = vec![
-        ("Software", HsmProviderDispatch::Software(SoftwareHsmProvider::new("sw".to_string()))),
-        ("Hardware", HsmProviderDispatch::Hardware(HardwareHsmProvider::new("/dev/hsm0".to_string()))),
-        ("Cloud", HsmProviderDispatch::Cloud(CloudHsmProvider::new("https://hsm.example.com".to_string()))),
+        (
+            "Software",
+            HsmProviderDispatch::Software(SoftwareHsmProvider::new("sw".to_string())),
+        ),
+        (
+            "Hardware",
+            HsmProviderDispatch::Hardware(HardwareHsmProvider::new("/dev/hsm0".to_string())),
+        ),
+        (
+            "Cloud",
+            HsmProviderDispatch::Cloud(CloudHsmProvider::new(
+                "https://hsm.example.com".to_string(),
+            )),
+        ),
     ];
-    
+
     for (name, provider) in providers {
         let manager = HsmManagerZeroCost::new(provider);
         let result = manager.encrypt(data).await?;
@@ -294,13 +312,14 @@ async fn main() -> Result<(), BearDogError> {
     // Example 4: Batch operations benefit even more
     // -------------------------------------------------------------------------
     println!("📊 Example 4: Batch Operations Performance");
-    
-    let provider = HsmProviderDispatch::Software(SoftwareHsmProvider::new("batch-test".to_string()));
+
+    let provider =
+        HsmProviderDispatch::Software(SoftwareHsmProvider::new("batch-test".to_string()));
     let manager = HsmManagerZeroCost::new(provider);
-    
+
     let batch: Vec<&[u8]> = vec![b"item1", b"item2", b"item3", b"item4", b"item5"];
     let results = manager.encrypt_many(&batch).await?;
-    
+
     println!("   Encrypted {} items in batch", results.len());
     println!("   Zero overhead per operation - ideal for hot paths!\n");
 
@@ -378,14 +397,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_enum_dispatch_works() {
-        let provider = HsmProviderDispatch::Software(
-            SoftwareHsmProvider::new("test".to_string())
-        );
+        let provider = HsmProviderDispatch::Software(SoftwareHsmProvider::new("test".to_string()));
         let manager = HsmManagerZeroCost::new(provider);
-        
+
         let data = b"test data";
         let encrypted = manager.encrypt(data).await.expect("encryption failed");
-        
+
         assert!(!encrypted.is_empty());
     }
 
@@ -406,15 +423,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_batch_operations() {
-        let provider = HsmProviderDispatch::Software(
-            SoftwareHsmProvider::new("batch".to_string())
-        );
+        let provider = HsmProviderDispatch::Software(SoftwareHsmProvider::new("batch".to_string()));
         let manager = HsmManagerZeroCost::new(provider);
-        
+
         let items: Vec<&[u8]> = vec![b"a", b"b", b"c"];
         let results = manager.encrypt_many(&items).await.expect("batch failed");
-        
+
         assert_eq!(results.len(), 3);
     }
 }
-

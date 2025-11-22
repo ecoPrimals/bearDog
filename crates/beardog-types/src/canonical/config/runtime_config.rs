@@ -141,6 +141,30 @@ pub struct RuntimeNetworkConfig {
     /// Set via `BEARDOG_GRPC_PORT` (default: 50051).
     pub grpc_port: u16,
 
+    /// Admin/management port
+    ///
+    /// Port for administrative operations and management UI.
+    /// Set via `BEARDOG_ADMIN_PORT` (default: 8082).
+    pub admin_port: u16,
+
+    /// Database port (PostgreSQL)
+    ///
+    /// Port for PostgreSQL database connections.
+    /// Set via `BEARDOG_DATABASE_PORT` (default: 5432).
+    pub database_port: u16,
+
+    /// Service discovery port (Consul)
+    ///
+    /// Port for Consul service discovery.
+    /// Set via `BEARDOG_CONSUL_PORT` (default: 8500).
+    pub consul_port: u16,
+
+    /// Redis cache port
+    ///
+    /// Port for Redis caching and pub/sub.
+    /// Set via `BEARDOG_REDIS_PORT` (default: 6379).
+    pub redis_port: u16,
+
     /// Connection timeout in seconds
     ///
     /// Maximum time to wait for connection establishment.
@@ -163,6 +187,8 @@ pub struct RuntimeNetworkConfig {
 impl Default for RuntimeNetworkConfig {
     fn default() -> Self {
         // Constants must be declared before any other statements
+        use beardog_config::domains::network_ports::{DEFAULT_ADMIN_PORT, DEFAULT_DATABASE_PORT};
+
         const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
         const DEFAULT_MAX_CONNECTIONS: usize = 1000;
 
@@ -170,12 +196,16 @@ impl Default for RuntimeNetworkConfig {
         // Use NetworkConfig for consistent defaults where possible
         let network_defaults = super::network::NetworkConfig::default();
         let default_api_host = network_defaults.default_host.as_str();
-        // All port defaults come from NetworkConfig to avoid hardcoding
+
         let default_api_port = network_defaults.service_ports.api_port;
         let default_metrics_port = network_defaults.service_ports.metrics_port;
         let default_health_port = network_defaults.service_ports.health_port;
         let default_ws_port = network_defaults.service_ports.websocket_port;
         let default_grpc_port = 50051; // GRPC not in ServicePorts yet, use constant for now
+        let default_admin_port = DEFAULT_ADMIN_PORT;
+        let default_database_port = DEFAULT_DATABASE_PORT;
+        let default_consul_port = 8500; // Consul standard port (not in defaults yet)
+        let default_redis_port = 6379; // Redis standard port (not in defaults yet)
 
         Self {
             discovery_endpoint: env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
@@ -202,6 +232,22 @@ impl Default for RuntimeNetworkConfig {
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_grpc_port),
+            admin_port: env::var("BEARDOG_ADMIN_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(default_admin_port),
+            database_port: env::var("BEARDOG_DATABASE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(default_database_port),
+            consul_port: env::var("BEARDOG_CONSUL_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(default_consul_port),
+            redis_port: env::var("BEARDOG_REDIS_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(default_redis_port),
             timeout_seconds: env::var("BEARDOG_TIMEOUT_SECONDS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -491,9 +537,11 @@ mod tests {
 
     #[test]
     fn test_default_network_config() {
+        use beardog_config::domains::network_ports::{DEFAULT_API_PORT, DEFAULT_METRICS_PORT};
+
         let config = RuntimeNetworkConfig::default();
-        assert_eq!(config.api_port, 8080);
-        assert_eq!(config.metrics_port, 9090);
+        assert_eq!(config.api_port, DEFAULT_API_PORT);
+        assert_eq!(config.metrics_port, DEFAULT_METRICS_PORT);
         assert!(config.enable_tls);
     }
 
@@ -515,13 +563,18 @@ mod tests {
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
     fn test_api_url_without_tls() {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+
         let config = RuntimeNetworkConfig {
             api_host: "localhost".to_string(),
-            api_port: 8080,
+            api_port: DEFAULT_API_PORT,
             enable_tls: false,
             ..Default::default()
         };
-        assert_eq!(config.api_url(), "http://localhost:8080");
+        assert_eq!(
+            config.api_url(),
+            format!("http://localhost:{}", DEFAULT_API_PORT)
+        );
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
@@ -556,21 +609,37 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_url_helpers() {
+        use beardog_config::domains::network_ports::{
+            DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_HEALTH_PORT,
+        };
+
+        const WS_PORT: u16 = 3000;
+        const GRPC_PORT: u16 = 50051;
+
         let config = RuntimeNetworkConfig {
             api_host: "localhost".to_string(),
-            api_port: 8080,
-            metrics_port: 9090,
-            health_port: 8081,
-            ws_port: 3000,
-            grpc_port: 50051,
+            api_port: DEFAULT_API_PORT,
+            metrics_port: DEFAULT_DISCOVERY_PORT,
+            health_port: DEFAULT_HEALTH_PORT,
+            ws_port: WS_PORT,
+            grpc_port: GRPC_PORT,
             enable_tls: false,
             ..Default::default()
         };
 
-        assert_eq!(config.api_url(), "http://localhost:8080");
-        assert_eq!(config.metrics_url(), "http://localhost:9090/metrics");
-        assert_eq!(config.health_url(), "http://localhost:8081/health");
-        assert_eq!(config.ws_url(), "ws://localhost:3000");
-        assert_eq!(config.grpc_endpoint(), "localhost:50051");
+        assert_eq!(
+            config.api_url(),
+            format!("http://localhost:{}", DEFAULT_API_PORT)
+        );
+        assert_eq!(
+            config.metrics_url(),
+            format!("http://localhost:{}/metrics", DEFAULT_DISCOVERY_PORT)
+        );
+        assert_eq!(
+            config.health_url(),
+            format!("http://localhost:{}/health", DEFAULT_HEALTH_PORT)
+        );
+        assert_eq!(config.ws_url(), format!("ws://localhost:{}", WS_PORT));
+        assert_eq!(config.grpc_endpoint(), format!("localhost:{}", GRPC_PORT));
     }
 }

@@ -40,15 +40,16 @@
 //! }
 //! ```
 
-mod provider;
+pub mod constants; // Protocol constants
+pub mod ctap2; // CTAP2 protocol implementation
 pub mod discovery;
 pub mod multi_credential_provider; // NEW: Multi-credential operations
-pub mod types;
-pub mod ctap2; // CTAP2 protocol implementation
 mod operations;
+mod provider;
+pub mod types;
 
-pub use provider::Fido2HsmProvider;
-pub use multi_credential_provider::*;
+pub use constants::*;
 pub use discovery::*;
+pub use multi_credential_provider::*;
+pub use provider::Fido2HsmProvider;
 pub use types::*;
-

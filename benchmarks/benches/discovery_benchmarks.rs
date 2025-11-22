@@ -14,7 +14,7 @@
 //! - Measures caching effectiveness
 //! - Profiles memory allocation during discovery
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use pprof::criterion::{Output, PProfProfiler};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -25,10 +25,10 @@ use std::time::Duration;
 
 #[derive(Clone, Debug)]
 struct DiscoveredHsm {
-    id: String,
-    hsm_type: String,
-    endpoint: Option<String>,
-    capabilities: Vec<String>,
+    _id: String,
+    _hsm_type: String,
+    _endpoint: Option<String>,
+    _capabilities: Vec<String>,
 }
 
 #[derive(Clone, Debug)]

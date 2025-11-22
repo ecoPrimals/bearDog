@@ -213,7 +213,7 @@ impl Default for PrometheusExporterConfig {
             port: std::env::var("BEARDOG_PROMETHEUS_PORT")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(9090),
+                .unwrap_or(beardog_config::domains::network_ports::DEFAULT_METRICS_PORT),
             metrics_path: "/metrics".to_string(),
             push_gateway: None,
         }
@@ -245,7 +245,13 @@ impl Default for GrafanaExporterConfig {
             enabled: false,
             url: std::env::var("BEARDOG_GRAFANA_URL")
                 .or_else(|_| std::env::var("GRAFANA_URL"))
-                .unwrap_or_else(|_| format!("http://{}:3000", network_config.default_host)),
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://{}:{}",
+                        network_config.default_host,
+                        beardog_config::domains::network_ports::DEFAULT_GRAFANA_PORT
+                    )
+                }),
             api_key: None,
             dashboard_config: HashMap::new(),
         }

@@ -7,7 +7,7 @@
 use crate::ecosystem::primal_types::{
     DiscoveredPrimal, PrimalMetadata, PrimalMetrics, UniversalEndpoint,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     CapabilityType, ServiceCapabilityType, UniversalCapability,
 };
@@ -17,6 +17,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
+
+/// Placeholder URL for primals with no announced endpoints
+const UNKNOWN_ENDPOINT_URL: &str = "unknown";
 
 /// Ecosystem Listener for Zero-Knowledge Discovery
 ///
@@ -106,7 +109,7 @@ impl EcosystemListener {
         discovered_capabilities: Arc<
             RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>,
         >,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("👂 Initializing Ecosystem Listener");
         info!("🎯 Mission: Listen for other primals without hardcoded knowledge");
 
@@ -123,7 +126,7 @@ impl EcosystemListener {
     ///
     /// # Errors
     /// Returns an error if any listener fails to start or if the discovery protocols encounter initialization issues.
-    pub fn start_listening(&mut self) -> BearDogResult<()> {
+    pub fn start_listening(&mut self) -> Result<(), BearDogError> {
         let start_time = std::time::Instant::now();
 
         Self::log_listening_plan();
@@ -380,7 +383,7 @@ impl EcosystemListener {
     }
 
     #[allow(clippy::cognitive_complexity)]
-    async fn listen_mdns_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn listen_mdns_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🔍 Listening for mDNS primal announcements...");
 
         let announcements = Vec::new();
@@ -414,7 +417,7 @@ impl EcosystemListener {
 
     /// Poll HTTP discovery endpoints
     #[allow(clippy::cognitive_complexity)]
-    async fn poll_http_discovery() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn poll_http_discovery() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🌐 Polling HTTP discovery endpoints...");
 
         let mut announcements = Vec::new();
@@ -480,7 +483,7 @@ impl EcosystemListener {
     }
 
     #[allow(clippy::cognitive_complexity)]
-    async fn check_environment_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🔧 Checking environment for primal announcements...");
 
         let mut announcements = Vec::new();
@@ -562,7 +565,7 @@ impl EcosystemListener {
         discovered_capabilities: &Arc<
             RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>,
         >,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!(
             "📢 Processing primal announcement from: {}",
             announcement.primal_id
@@ -574,14 +577,14 @@ impl EcosystemListener {
             return Ok(());
         }
 
-        // Create discovered primal with fallback endpoint
+        // Get endpoint or create placeholder for announcement-only primals
         let endpoint = announcement.endpoints.first().cloned().unwrap_or_else(|| {
             warn!(
-                "⚠️ No endpoints provided for primal {}, using fallback",
+                "⚠️ No endpoints provided for primal {}, using placeholder (announcement-only mode)",
                 announcement.primal_id
             );
             UniversalEndpoint {
-                url: "unknown".to_string(),
+                url: UNKNOWN_ENDPOINT_URL.to_string(),
                 protocols: vec![],
                 auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
                 security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
@@ -718,7 +721,9 @@ impl Drop for EcosystemListener {
 
 impl EcosystemListener {
     /// Make HTTP discovery request to endpoint
-    async fn make_discovery_request(endpoint: &str) -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn make_discovery_request(
+        endpoint: &str,
+    ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("Making discovery request to: {}", endpoint);
 
         // Use tokio's HTTP client implementation instead of external dependency

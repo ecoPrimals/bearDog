@@ -6,6 +6,7 @@ use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Client configuration - consolidates client-side network settings
@@ -19,8 +20,12 @@ pub struct ClientConfiguration {
     pub max_redirects: u32,
     /// Enable connection pooling
     pub enable_connection_pooling: bool,
-    /// User agent string
-    pub user_agent: String,
+    /// User agent string (`Arc<str>` for fast cloning across requests)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub user_agent: Arc<str>,
     /// Default headers
     pub default_headers: HashMap<String, String>,
     /// Retry configuration
@@ -51,9 +56,12 @@ impl Default for ClientConfiguration {
             request_timeout_seconds: 60,
             max_redirects: 5,
             enable_connection_pooling: true,
-            user_agent: format!(
-                "BearDog/{}",
-                crate::constants::domains::system::versions::BEARDOG_VERSION
+            user_agent: Arc::from(
+                format!(
+                    "BearDog/{}",
+                    crate::constants::domains::system::versions::BEARDOG_VERSION
+                )
+                .as_str(),
             ),
             default_headers: HashMap::new(),
             retry: RetryConfiguration {
@@ -128,9 +136,20 @@ impl RetryStrategy for RetryConfiguration {
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         if self.enable_exponential_backoff {
             // Exponential backoff with multiplier
-            let delay_ms = (self.base_delay_ms as f64 
-                * self.backoff_multiplier.powi(attempt as i32)) as u64;
-            Duration::from_millis(delay_ms.min(self.max_delay_ms))
+            // Note: Precision loss is acceptable for delay calculations (not cryptographic)
+            #[allow(
+                clippy::cast_precision_loss,
+                clippy::cast_possible_wrap,
+                clippy::cast_sign_loss
+            )]
+            let delay_ms = {
+                let computed = (self.base_delay_ms as f64
+                    * self.backoff_multiplier.powi(attempt.min(30) as i32))
+                .min(self.max_delay_ms as f64)
+                .max(0.0) as u64;
+                computed.min(self.max_delay_ms)
+            };
+            Duration::from_millis(delay_ms)
         } else {
             // Linear backoff
             Duration::from_millis(self.base_delay_ms.min(self.max_delay_ms))
@@ -145,17 +164,17 @@ impl RetryStrategy for RetryConfiguration {
         // Network-specific: Could check for HTTP status codes in error message
         // For now, allow retries on most errors
         let error_str = error.to_string().to_lowercase();
-        
+
         // Don't retry on authentication/authorization errors
         if error_str.contains("401") || error_str.contains("403") {
             return false;
         }
-        
+
         // Don't retry on client errors (4xx except specific ones)
         if error_str.contains("400") || error_str.contains("404") {
             return false;
         }
-        
+
         // Retry on network errors, timeouts, and 5xx status codes
         true
     }
@@ -211,7 +230,7 @@ mod tests {
     #[test]
     fn test_client_validation() {
         let mut config = ClientConfiguration::default();
-        config.user_agent = String::new();
+        config.user_agent = Arc::from(String::new().as_str());
         assert!(config.validate().is_err());
     }
 }

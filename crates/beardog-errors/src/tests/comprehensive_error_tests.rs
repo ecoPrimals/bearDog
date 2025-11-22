@@ -114,20 +114,20 @@ mod error_conversion_tests {
 
     #[test]
     fn test_result_type() {
-        let result: BearDogResult<i32> = Ok(42);
+        let result: Result<i32, BearDogError> = Ok(42);
         assert!(result.is_ok());
         assert_eq!(result.ok(), Some(42));
     }
 
     #[test]
     fn test_result_error() {
-        let result: BearDogResult<i32> = Err(BearDogError::internal("Error".to_string()));
+        let result: Result<i32, BearDogError> = Err(BearDogError::internal("Error".to_string()));
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_result_propagation() -> BearDogResult<()> {
-        fn inner() -> BearDogResult<i32> {
+    fn test_result_propagation() -> Result<(), BearDogError> {
+        fn inner() -> Result<i32, BearDogError> {
             Ok(42)
         }
 
@@ -144,7 +144,7 @@ mod error_conversion_tests {
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
     fn test_error_propagation() {
-        fn inner() -> BearDogResult<i32> {
+        fn inner() -> Result<i32, BearDogError> {
             Err(BearDogError::internal("Inner error".to_string()))
             // TEST_CATEGORY: integration
             // TEST_DOMAIN: errors
@@ -419,7 +419,7 @@ mod error_send_sync_tests {
     #[test]
     fn test_result_is_send() {
         fn assert_send<T: Send>() {}
-        assert_send::<BearDogResult<i32>>();
+        assert_send::<Result<i32, BearDogError>>();
     }
 
     // TEST_CATEGORY: integration
@@ -431,7 +431,7 @@ mod error_send_sync_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        assert_sync::<BearDogResult<i32>>();
+        assert_sync::<Result<i32, BearDogError>>();
     }
 }
 // TEST_CATEGORY: integration

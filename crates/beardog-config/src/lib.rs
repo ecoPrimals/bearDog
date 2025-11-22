@@ -1,6 +1,6 @@
-//! # BearDog Configuration
+//! # `BearDog` Configuration
 //!
-//! Zero-hardcoding configuration system for BearDog with hierarchical loading:
+//! Zero-hardcoding configuration system for `BearDog` with hierarchical loading:
 //! 1. Command-line arguments (highest priority)
 //! 2. Environment variables
 //! 3. Configuration file
@@ -32,22 +32,28 @@ pub mod defaults;
 pub mod discovery;
 pub mod domains;
 pub mod error;
+pub mod global;
 pub mod hierarchy;
 pub mod loader;
 pub mod validation;
 
 pub use error::{ConfigError, ConfigResult};
+pub use global::{config, BEARDOG_CONFIG};
 pub use loader::ConfigLoader;
 
+// Re-export commonly used types
+pub use domains::network_addresses::NetworkAddressesConfig;
+pub use domains::network_ports::NetworkPortsConfig;
+
 use domains::{
-    crypto::CryptoConfig, hsm::HsmConfig, limits::LimitsConfig, monitoring::MonitoringConfig,
-    network::NetworkConfig, paths::PathConfig, security::SecurityConfig,
-    timeouts::TimeoutConfig,
+    capacity::CapacityConfig, crypto::CryptoConfig, hsm::HsmConfig, limits::LimitsConfig,
+    monitoring::MonitoringConfig, network::NetworkConfig, paths::PathConfig,
+    security::SecurityConfig, timeouts::TimeoutConfig,
 };
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-/// Master configuration for BearDog
+/// Primary configuration for BearDog
 ///
 /// This is the root configuration structure that contains all configurable
 /// aspects of BearDog. It can be loaded from files, environment variables,
@@ -105,10 +111,40 @@ pub struct BearDogConfig {
     /// Operation timeouts
     #[serde(default)]
     pub timeouts: TimeoutConfig,
+
+    /// Capacity limits (buffers, pools, caches)
+    #[serde(default)]
+    pub capacity: CapacityConfig,
 }
 
-
 impl BearDogConfig {
+    /// Load configuration from environment variables
+    ///
+    /// This method loads configuration from environment variables with fallback to defaults.
+    /// For most use cases, prefer using the global `BEARDOG_CONFIG` singleton instead.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beardog_config::BearDogConfig;
+    ///
+    /// let config = BearDogConfig::from_env();
+    /// ```
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            network: domains::network::NetworkConfig::from_env(),
+            paths: domains::paths::PathConfig::from_env(),
+            hsm: domains::hsm::HsmConfig::from_env(),
+            limits: domains::limits::LimitsConfig::from_env(),
+            crypto: domains::crypto::CryptoConfig::from_env(),
+            security: domains::security::SecurityConfig::from_env(),
+            monitoring: domains::monitoring::MonitoringConfig::from_env(),
+            timeouts: domains::timeouts::TimeoutConfig::from_env(),
+            capacity: domains::capacity::CapacityConfig::from_env(),
+        }
+    }
+
     /// Load configuration with full hierarchy
     ///
     /// Loads configuration in order of priority:
@@ -161,8 +197,7 @@ impl BearDogConfig {
         self.crypto.validate()?;
         self.security.validate()?;
         self.monitoring.validate()?;
-        self.timeouts.validate()
-            .map_err(|e| ConfigError::Validation(e))?;
+        self.timeouts.validate().map_err(ConfigError::Validation)?;
         Ok(())
     }
 
@@ -183,8 +218,7 @@ impl BearDogConfig {
         let content = toml::to_string_pretty(&config)
             .map_err(|e| ConfigError::Serialization(e.to_string()))?;
 
-        std::fs::write(path, content)
-            .map_err(ConfigError::Io)?;
+        std::fs::write(path, content).map_err(ConfigError::Io)?;
 
         Ok(())
     }
@@ -205,7 +239,10 @@ mod tests {
         let config = BearDogConfig::default();
 
         // Network defaults
-        assert_eq!(config.network.api.port, 8080);
+        assert_eq!(
+            config.network.api.port,
+            crate::domains::network_ports::DEFAULT_API_PORT
+        );
         assert_eq!(
             config.network.api.bind_address,
             std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)

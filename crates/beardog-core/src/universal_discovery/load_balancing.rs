@@ -39,6 +39,10 @@ impl Default for LoadBalancingConfig {
     }
 }
 
+/// Load balancing algorithms for service request distribution
+///
+/// Defines different strategies for distributing requests across available service instances,
+/// each optimized for different use cases and service characteristics.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum LoadBalancingAlgorithm {
     /// Round-robin distribution across services
@@ -57,10 +61,15 @@ pub enum LoadBalancingAlgorithm {
     ResourceBased,
 }
 
+/// Configuration for circuit breaker pattern in service discovery
+///
+/// Implements fault tolerance by automatically opening circuits to failing services
+/// and attempting recovery after a timeout period.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CircuitBreakerConfig {
     /// Number of `failure_threshold`
     pub failure_threshold: u32,
+    /// Time in seconds to wait before attempting recovery from open circuit state
     pub recovery_timeout_secs: u64,
     /// Maximum calls allowed in half-open state
     /// Number of `half_open_max_calls`

@@ -13,10 +13,10 @@
 //!
 //! ## Key Components
 //!
-//! - [`config`] - Configuration management
-//! - [`core`] - Core hybrid intelligence functionality
-//! - [`core_builder`] - Builder pattern for system construction
-//! - [`types`] - Type definitions and data structures
+//! - Configuration management
+//! - `core` - Core hybrid intelligence functionality
+//! - Core builder - Builder pattern for system construction
+//! - `types` - Type definitions and data structures
 //!
 //! ## Example
 //!

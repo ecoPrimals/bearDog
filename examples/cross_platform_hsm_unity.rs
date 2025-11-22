@@ -49,7 +49,11 @@
 //! cargo run --example cross_platform_hsm_unity --target aarch64-linux-android
 //! ```
 
-use beardog_traits::unified::{CredentialRequest, MultiCredentialHsmProvider};
+// Fixed: Use correct module path
+use beardog_security::hsm::fido2::multi_credential_provider::{
+    Fido2MultiCredentialProvider, Fido2ProviderConfig,
+};
+use beardog_traits::unified::{CredentialNode, CredentialRequest, MultiCredentialHsmProvider};
 use std::collections::HashMap;
 
 /// Generic function that works with ANY HSM provider
@@ -64,7 +68,10 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
     provider: &P,
     device_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n🔐 Testing Multi-Credential Operations on: {}", device_name);
+    println!(
+        "\n🔐 Testing Multi-Credential Operations on: {}",
+        device_name
+    );
     println!("═══════════════════════════════════════════════════════");
 
     // Get device capabilities
@@ -72,7 +79,10 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
     println!("\n📊 Device Capabilities:");
     println!("   Protocol: {:?}", caps.protocol);
     println!("   Max Credentials: {:?}", caps.max_credentials);
-    println!("   Hierarchical: {}", caps.supports_hierarchical_credentials);
+    println!(
+        "   Hierarchical: {}",
+        caps.supports_hierarchical_credentials
+    );
     println!("   Hardware Entropy: {}", caps.supports_hardware_entropy);
     println!("   Algorithms: {:?}", caps.supported_algorithms);
 
@@ -84,11 +94,7 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
     let admin_request = CredentialRequest {
         role: "admin".to_string(),
         display_name: Some(format!("{} Administrator", device_name)),
-        permissions: vec![
-            "read".to_string(),
-            "write".to_string(),
-            "admin".to_string(),
-        ],
+        permissions: vec!["read".to_string(), "write".to_string(), "admin".to_string()],
         require_user_presence: true,
         require_user_verification: false,
         parent_credential: None,
@@ -122,8 +128,17 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
 
             match provider.create_credential(operator_request).await {
                 Ok(operator_cred) => {
-                    println!("      ✅ Operator credential: {}", operator_cred.credential_id);
-                    println!("         Parent: {}", operator_cred.parent_credential_id.as_deref().unwrap_or("none"));
+                    println!(
+                        "      ✅ Operator credential: {}",
+                        operator_cred.credential_id
+                    );
+                    println!(
+                        "         Parent: {}",
+                        operator_cred
+                            .parent_credential_id
+                            .as_deref()
+                            .unwrap_or("none")
+                    );
 
                     // List all credentials
                     println!("\n📋 Listing all credentials...");
@@ -131,7 +146,12 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
                         Ok(creds) => {
                             println!("   Found {} credentials:", creds.len());
                             for (idx, cred) in creds.iter().enumerate() {
-                                println!("      {}. {} ({})", idx + 1, cred.role, cred.credential_id);
+                                println!(
+                                    "      {}. {} ({})",
+                                    idx + 1,
+                                    cred.role,
+                                    cred.credential_id
+                                );
                                 println!("         Permissions: {:?}", cred.permissions);
                                 if let Some(parent) = &cred.parent_credential_id {
                                     println!("         Parent: {}", parent);
@@ -146,7 +166,10 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
                         println!("\n🎲 Generating hardware entropy...");
                         match provider.generate_hardware_entropy(32).await {
                             Ok(entropy) => {
-                                println!("   ✅ Generated 32 bytes: {}", hex::encode(&entropy[..8]));
+                                println!(
+                                    "   ✅ Generated 32 bytes: {}",
+                                    hex::encode(&entropy[..8])
+                                );
                                 println!("      (This is TRUE random from hardware chip!)");
                             }
                             Err(e) => println!("   ⚠️  Phase 2: {}", e),
@@ -157,9 +180,12 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
                     println!("\n🌳 Credential Hierarchy:");
                     match provider.get_credential_hierarchy().await {
                         Ok(hierarchy) => {
-                            fn print_tree(node: &beardog_traits::unified::CredentialNode, depth: usize) {
+                            fn print_tree(node: &CredentialNode, depth: usize) {
                                 let indent = "  ".repeat(depth);
-                                println!("{}├─ {} ({})", indent, node.credential.role, node.credential.credential_id);
+                                println!(
+                                    "{}├─ {} ({})",
+                                    indent, node.credential.role, node.credential.credential_id
+                                );
                                 for child in &node.children {
                                     print_tree(child, depth + 1);
                                 }
@@ -208,10 +234,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     for device in devices {
                         if device.capabilities.resident_keys {
-                            let device_name = format!(
-                                "{} {}",
-                                device.manufacturer, device.product
-                            );
+                            let device_name = format!("{} {}", device.manufacturer, device.product);
 
                             println!("\n📱 Device: {}", device_name);
                             println!("   Path: {}", device.device_path.display());
@@ -306,4 +329,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

@@ -18,8 +18,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use pprof::criterion::{Output, PProfProfiler};
 use std::time::Duration;
 
-use beardog_errors::BearDogError;
-use beardog_types::hsm::KeyType as HsmKeyType;
+use beardog_types::zero_cost::types::KeyType as HsmKeyType;
 
 // ============================================================================
 // Test Data Generation
@@ -47,10 +46,7 @@ fn benchmark_key_generation(c: &mut Criterion) {
     let key_types = vec![
         ("AES-256", HsmKeyType::Aes256),
         ("RSA-2048", HsmKeyType::Rsa2048),
-        ("RSA-4096", HsmKeyType::Rsa4096),
         ("ECDSA-P256", HsmKeyType::EcdsaP256),
-        ("ECDSA-P384", HsmKeyType::EcdsaP384),
-        ("Ed25519", HsmKeyType::Ed25519),
     ];
 
     for (name, key_type) in key_types {

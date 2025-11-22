@@ -51,7 +51,7 @@
 //! ```
 
 use beardog_security::hsm::fido2::{discover_fido2_devices, Fido2MultiCredentialProvider};
-use beardog_traits::unified::{CredentialRequest, MultiCredentialHsmProvider};
+use beardog_traits::unified::{CredentialNode, CredentialRequest, MultiCredentialHsmProvider};
 use std::collections::HashMap;
 
 #[tokio::main]
@@ -75,7 +75,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("✅ Found {} device(s):", devices.len());
     for (idx, device) in devices.iter().enumerate() {
-        println!("   {}. {} by {} ({:04x}:{:04x})",
+        println!(
+            "   {}. {} by {} ({:04x}:{:04x})",
             idx + 1,
             device.product,
             device.manufacturer,
@@ -85,10 +86,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("      Path: {}", device.device_path.display());
         println!("      Protocol: {:?}", device.protocol_versions);
         println!("      Capabilities:");
-        println!("        - Resident Keys: {}", device.capabilities.resident_keys);
-        println!("        - User Verification: {}", device.capabilities.user_verification);
+        println!(
+            "        - Resident Keys: {}",
+            device.capabilities.resident_keys
+        );
+        println!(
+            "        - User Verification: {}",
+            device.capabilities.user_verification
+        );
         println!("        - HMAC Secret: {}", device.capabilities.hmac_secret);
-        println!("        - Max Credentials: {:?}", device.capabilities.max_resident_keys);
+        println!(
+            "        - Max Credentials: {:?}",
+            device.capabilities.max_resident_keys
+        );
         println!();
     }
 
@@ -98,7 +108,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .find(|d| d.capabilities.resident_keys)
         .ok_or("No devices support resident keys (multi-credential operations)")?;
 
-    println!("📱 Using device: {} ({})", device_info.product, device_info.manufacturer);
+    println!(
+        "📱 Using device: {} ({})",
+        device_info.product, device_info.manufacturer
+    );
     println!();
 
     // ========================================================================
@@ -112,7 +125,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Provider initialized!");
     println!("   Protocol: {:?}", caps.protocol);
     println!("   Max Credentials: {:?}", caps.max_credentials);
-    println!("   Hierarchical: {}", caps.supports_hierarchical_credentials);
+    println!(
+        "   Hierarchical: {}",
+        caps.supports_hierarchical_credentials
+    );
     println!("   Hardware Entropy: {}", caps.supports_hardware_entropy);
     println!("   Algorithms: {:?}", caps.supported_algorithms);
     println!();
@@ -173,7 +189,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(operator_cred) => {
                     println!("      ✅ Operator credential created!");
                     println!("         ID: {}", operator_cred.credential_id);
-                    println!("         Parent: {}", operator_cred.parent_credential_id.as_deref().unwrap_or("none"));
+                    println!(
+                        "         Parent: {}",
+                        operator_cred
+                            .parent_credential_id
+                            .as_deref()
+                            .unwrap_or("none")
+                    );
                     println!("         Permissions: {:?}", operator_cred.permissions);
                     println!();
 
@@ -186,7 +208,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         require_user_presence: false,
                         require_user_verification: false,
                         parent_credential: None,
-                        metadata: HashMap::from([("department".to_string(), "Compliance".to_string())]),
+                        metadata: HashMap::from([(
+                            "department".to_string(),
+                            "Compliance".to_string(),
+                        )]),
                         algorithm: Some("ES256".to_string()),
                     };
 
@@ -218,10 +243,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     match provider.get_credential_hierarchy().await {
                                         Ok(hierarchy) => {
                                             println!("✅ Hierarchy:");
-                                            fn print_tree(node: &beardog_traits::unified::CredentialNode, depth: usize) {
+                                            fn print_tree(node: &CredentialNode, depth: usize) {
                                                 let indent = "  ".repeat(depth);
-                                                println!("{}├─ {} ({})", indent, node.credential.role, node.credential.credential_id);
-                                                println!("{}│  Permissions: {:?}", indent, node.credential.permissions);
+                                                println!(
+                                                    "{}├─ {} ({})",
+                                                    indent,
+                                                    node.credential.role,
+                                                    node.credential.credential_id
+                                                );
+                                                println!(
+                                                    "{}│  Permissions: {:?}",
+                                                    indent, node.credential.permissions
+                                                );
                                                 for child in &node.children {
                                                     print_tree(child, depth + 1);
                                                 }
@@ -273,7 +306,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎲 Step 6: Hardware entropy generation...");
     if caps.supports_hardware_entropy {
         println!("   Device supports hardware RNG via hmac-secret extension");
-        println!("   Max entropy per request: {:?} bytes", caps.max_entropy_bytes);
+        println!(
+            "   Max entropy per request: {:?} bytes",
+            caps.max_entropy_bytes
+        );
         println!();
 
         match provider.generate_hardware_entropy(32).await {
@@ -324,4 +360,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

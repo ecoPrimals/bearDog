@@ -220,7 +220,7 @@ fn test_performance_metrics_default() {
 #[test]
 fn test_performance_metrics_clone() {
     let metrics1 = PerformanceMetrics::default();
-    let metrics2 = metrics1.clone();
+    let metrics2 = metrics1; // Copy type, no need for .clone()
 
     assert_eq!(metrics1.avg_response_time_ms, metrics2.avg_response_time_ms);
     assert_eq!(metrics1.p95_response_time_ms, metrics2.p95_response_time_ms);
@@ -311,7 +311,7 @@ fn test_production_flags_clone() {
         enable_caching: false,
     };
 
-    let flags2 = flags1.clone();
+    let flags2 = flags1; // Copy type, no need for .clone()
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types

@@ -87,6 +87,12 @@ pub mod ecosystem_integration;
 /// primal relationships, and capability registries.
 pub mod ecosystem_storage;
 
+/// Context-aware licensing and usage classification
+///
+/// Intelligent licensing system that detects enterprise usage patterns
+/// and adapts pricing based on actual deployment context and usage.
+pub mod context_aware_licensing;
+
 /// External function integrations
 ///
 /// Foreign Function Interface (FFI) system for integrating with external
@@ -128,6 +134,12 @@ pub mod zero_cost_architecture;
 ///
 /// This eliminates the 2^n hardcoding problem by using O(1) universal patterns.
 pub mod zero_knowledge_bootstrap;
+
+/// Migration system for sovereign entropy and ecosystem upgrades
+///
+/// Comprehensive migration framework for transitioning from traditional
+/// machine randomness to human-owned entropy across the entire ecosystem.
+pub mod migration;
 
 // Re-export key components
 pub use core::*;
@@ -179,9 +191,7 @@ mod tests {
     async fn test_async_functionality_available() {
         // Verify async runtime is available for core operations
         // This tests that tokio integration works
-        let result = tokio::time::sleep(std::time::Duration::from_micros(1)).await;
-        // If we reach here, async works
-        drop(result);
+        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
     }
 
     #[test]

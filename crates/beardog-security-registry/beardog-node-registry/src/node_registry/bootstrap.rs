@@ -173,9 +173,10 @@ mod tests {
 })?;
         let test_node = NodeInfo {
             node_id: "test_node_123".to_string(),
-            address: "http://127.0.0.1: NetworkConfig::default().port".to_string(),
+            address: format!("http://127.0.0.1:{}", 
+                beardog_types::constants::domains::network::defaults::default_api_port()),
             public_key: "test_public_key".to_string(),
-            capabilities: vec!["compute".to_string(),
+            capabilities: vec!["compute".to_string()],
             metadata: std::collections::HashMap::with_capacity(16),
         };
 

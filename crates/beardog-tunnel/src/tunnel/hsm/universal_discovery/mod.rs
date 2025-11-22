@@ -24,6 +24,7 @@ pub use tier_manager::TierManager;
 pub use universal_adapter::UniversalAdapter;
 
 /// Universal HSM Discovery Engine
+#[allow(dead_code)] // Fields used in implementation
 pub struct UniversalHsmDiscovery {
     discovered_hsms: HashMap<String, DiscoveredHsm>,
     capability_detector: capability_detector::CapabilityDetector,

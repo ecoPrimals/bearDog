@@ -1,27 +1,50 @@
+//! Security module for BearDog security registry
+//!
+//! Provides security entry management and token handling.
+
 use std::collections::HashMap;
 
+mod crypto_keys;
+
+// pub use crypto_keys::*; // Unused - commented out
+
+/// Security entry containing trust information
 #[derive(Debug, Clone)]
-    pub trust_level: TrustLevel,
+#[allow(dead_code)] // Used in future implementation
+pub struct SecurityEntry {
+    /// Trust level for this entry
+    pub trust_level: crate::TrustLevel,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(dead_code)] // Placeholder for future trust levels
-
-pub enum TrustLevel {
-    /// Represents basic variant
-    Basic,
-    /// State indicating enhanced
-    Enhanced,
-    /// Represents full variant
-    Full,
+/// Security tokens for authentication
+#[derive(Debug, Clone)]
+#[allow(dead_code)] // Used in future implementation
+pub struct SecurityTokens {
+    tokens: HashMap<String, String>,
 }
 
-impl Default for TrustLevel {
-    fn default() -> Self {
-        Self::Basic
+#[allow(dead_code)] // Used in future implementation
+impl SecurityTokens {
+    /// Creates a new security tokens instance
+    pub fn new() -> Self {
+        Self {
+            tokens: HashMap::new(),
+        }
+    }
+
+    /// Adds a token
+    pub fn add_token(&mut self, key: String, value: String) {
+        self.tokens.insert(key, value);
+    }
+
+    /// Gets a token
+    pub fn get_token(&self, key: &str) -> Option<&String> {
+        self.tokens.get(key)
     }
 }
 
-#[derive(Debug, Clone)]
-    tokens: HashMap<String, String>,
+impl Default for SecurityTokens {
+    fn default() -> Self {
+        Self::new()
+    }
 }

@@ -5,7 +5,7 @@
 
 use crate::ecosystem::primal_types::{DiscoveredPrimal, UniversalEndpoint};
 use crate::universal::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     HealthStatus, PerformanceMetrics, ServiceCapabilityType, UniversalCapability,
 };
@@ -92,7 +92,7 @@ impl ProviderUtils {
     pub fn filter_providers(
         providers: &[UniversalCapability],
         requirements: &CapabilityRequirements,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         let mut filtered = Vec::new();
 
         for provider in providers {
@@ -120,7 +120,7 @@ impl ProviderUtils {
     pub fn rank_providers(
         providers: &[UniversalCapability],
         preferences: &Option<CapabilityPreferences>,
-    ) -> BearDogResult<Vec<RankedCapabilityProvider>> {
+    ) -> Result<Vec<RankedCapabilityProvider>> {
         let mut ranked = Vec::new();
 
         for provider in providers {
@@ -151,7 +151,7 @@ impl ProviderUtils {
     /// Validates providers
     pub fn validate_providers(
         providers: &[RankedCapabilityProvider],
-    ) -> BearDogResult<Vec<RankedCapabilityProvider>> {
+    ) -> Result<Vec<RankedCapabilityProvider>> {
         let mut validated = Vec::new();
 
         for provider in providers {
@@ -173,7 +173,7 @@ impl ProviderUtils {
     fn meets_security_requirements(
         provider: &UniversalCapability,
         requirements: &SecurityRequirements,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool> {
         // Check if provider meets minimum security level
         let provider_security_level = provider.metadata
             .get("security_level")
@@ -227,7 +227,7 @@ impl ProviderUtils {
     fn meets_availability_requirements(
         provider: &UniversalCapability,
         requirements: &AvailabilityRequirements,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool> {
         // Check uptime percentage
         let uptime = provider.metadata
             .get("uptime_percentage")
@@ -263,7 +263,7 @@ impl ProviderUtils {
     fn meets_performance_requirements(
         provider: &UniversalCapability,
         requirements: &PerformanceMetrics,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool> {
         // Check throughput if specified
         if requirements.throughput > 0.0 {
             let provider_throughput = provider.metadata
@@ -319,7 +319,7 @@ impl ProviderUtils {
     fn calculate_provider_rank(
         provider: &UniversalCapability,
         preferences: &Option<CapabilityPreferences>,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64> {
         let mut rank = 0.0;
 
         // Base rank from provider health status (0.0-0.3)
@@ -395,7 +395,7 @@ impl ProviderUtils {
 
     fn estimate_provider_performance(
         provider: &UniversalCapability,
-    ) -> BearDogResult<PerformanceEstimate> {
+    ) -> Result<PerformanceEstimate> {
         // Extract performance metrics from provider metadata
         let latency = provider.metadata
             .get("avg_latency_ms")
@@ -429,26 +429,32 @@ impl ProviderUtils {
     }
 
     /// Validates provider_health
-    fn validate_provider_health(provider_id: &str) -> BearDogResult<bool> {
+    /// 
+    /// Returns true for non-empty provider IDs (safe default) - full health check in Phase 2
+    fn validate_provider_health(provider_id: &str) -> Result<bool> {
         debug!("🏥 Validating health for provider: {}", provider_id);
-        
-        // In a real implementation, this would:
-        // 1. Check if provider is registered and active
-        // 2. Perform a lightweight health check (ping/status endpoint)
-        // 3. Check recent error rates
-        // 4. Verify connectivity
-        
-        // For now, we assume providers in the system are healthy
-        // In production, this should be replaced with actual health check logic
-        // that queries the provider's health endpoint or checks recent metrics
         
         // Basic validation: ensure provider_id is not empty
         if provider_id.is_empty() {
             return Ok(false);
         }
 
-        // TODO: Implement actual health check by calling provider's health endpoint
-        // This could involve HTTP requests, metrics checks, or other provider-specific logic
+        // PHASE-2(Health): Implement comprehensive provider health check
+        // 
+        // Implementation Requirements:
+        // 1. Check if provider is registered and active in registry
+        // 2. Perform lightweight health check (ping/status endpoint)
+        // 3. Check recent error rates from metrics
+        // 4. Verify network connectivity
+        // 5. Check resource usage (CPU, memory, connections)
+        // 6. Verify last heartbeat timestamp
+        // 
+        // Integration Points:
+        // - beardog-monitoring: query HealthMetrics
+        // - Provider registry: check registration status
+        // - HTTP client: call /health endpoint if available
+        // 
+        // Return: true if healthy, false if degraded/unhealthy
         Ok(true)
     }
 }
@@ -464,7 +470,7 @@ impl ConnectionUtils {
         provider_id: String,
         capability_type: ServiceCapabilityType,
         endpoint: UniversalEndpoint,
-    ) -> BearDogResult<CapabilityConnection> {
+    ) -> Result<CapabilityConnection> {
         let connection_id = Uuid::new_v4().to_string();
         let now = std::time::SystemTime::now();
 
@@ -485,7 +491,7 @@ impl ConnectionUtils {
     /// Update connection health status
     /// Updates connection_health
     /// Updates connection_health
-    pub fn update_connection_health(connection: &mut CapabilityConnection) -> BearDogResult<()> {
+    pub fn update_connection_health(connection: &mut CapabilityConnection) -> Result<()> {
         connection.last_health_check = std::time::SystemTime::now();
 
         // Perform health check based on connection metrics

@@ -10,7 +10,7 @@
 //! - **Better CPU cache** utilization (enum vs function pointers)
 //! - **Compile-time optimization** (inlining and dead code elimination)
 //!
-//! ## Migration from Box<dyn>
+//! ## Migration from Box\<dyn\>
 //!
 //! **Before**:
 //! ```ignore

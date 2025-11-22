@@ -2,7 +2,7 @@
 //!
 //! This module provides capability dispatch functionality.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 /// Capability dispatcher
 pub struct CapabilityDispatcher {
@@ -17,7 +17,7 @@ impl CapabilityDispatcher {
     }
 
     /// Dispatches a capability request
-    pub fn dispatch(&self, _request: &str) -> BearDogResult<String> {
+    pub fn dispatch(&self, _request: &str) -> Result<String> {
         Ok("Dispatched successfully".to_string())
     }
 } 

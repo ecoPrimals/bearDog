@@ -703,7 +703,11 @@ fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
 }
 
 #[allow(dead_code)]
-fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+fn encrypt_aes_256_gcm(
+    key: &[u8],
+    nonce: &[u8],
+    plaintext: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
     use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
 
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
@@ -715,7 +719,11 @@ fn encrypt_aes_256_gcm(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec
 }
 
 #[allow(dead_code)]
-fn decrypt_aes_256_gcm(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+fn decrypt_aes_256_gcm(
+    key: &[u8],
+    nonce: &[u8],
+    ciphertext: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
     use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
 
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
@@ -743,7 +751,11 @@ fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
 }
 
 #[allow(dead_code)]
-fn encrypt_chacha20_poly1305(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+fn encrypt_chacha20_poly1305(
+    key: &[u8],
+    nonce: &[u8],
+    plaintext: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
     use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
@@ -831,7 +843,11 @@ fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 }
 
 #[allow(dead_code)]
-fn derive_key_pbkdf2(password: &[u8], salt: &[u8], iterations: u32) -> Result<Vec<u8>, BearDogError> {
+fn derive_key_pbkdf2(
+    password: &[u8],
+    salt: &[u8],
+    iterations: u32,
+) -> Result<Vec<u8>, BearDogError> {
     use pbkdf2::pbkdf2_hmac_array;
     use sha2::Sha256;
 

@@ -4,7 +4,7 @@
 //! knowledge and gradually learning about the ecosystem through observation
 //! and interaction, similar to how an infant learns about the world.
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::capabilities::CapabilityType as Capability;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -149,7 +149,7 @@ impl InfantPatternEngine {
         interaction_type: &str,
         context: HashMap<String, String>,
         success: bool,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         debug!(
             "👁️ Observing interaction: {} (success: {})",
             interaction_type, success
@@ -185,7 +185,7 @@ impl InfantPatternEngine {
         interaction_type: &str,
         context: HashMap<String, String>,
         success: bool,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let pattern_id = format!(
             "{}_{}",
             interaction_type,
@@ -330,7 +330,7 @@ impl InfantPatternEngine {
     }
 
     /// Clean up old patterns
-    pub async fn cleanup_old_patterns(&self) -> BearDogResult<u64> {
+    pub async fn cleanup_old_patterns(&self) -> Result<u64> {
         let mut patterns = self.patterns.write().await;
         let now = Instant::now();
         let mut removed_count = 0;

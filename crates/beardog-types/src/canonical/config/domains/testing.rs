@@ -27,7 +27,7 @@
 //! println!("Parallel execution: {}", test_config.parallel_execution);
 //! ```
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -151,7 +151,7 @@ impl CanonicalTestConfig {
     }
 
     /// Validate the configuration
-    pub fn validate(&self) -> BearDogResult<()> {
+    pub fn validate(&self) -> Result<(), BearDogError> {
         if self.max_threads == 0 {
             return Err(beardog_errors::BearDogError::validation(
                 "max_threads must be greater than 0",
@@ -212,14 +212,60 @@ pub struct CanonicalApiTestConfig {
     pub test_credentials: Option<TestCredentials>,
 }
 
-impl Default for CanonicalApiTestConfig {
-    fn default() -> Self {
+impl CanonicalApiTestConfig {
+    /// Default timeout in seconds
+    pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+
+    /// Default maximum concurrent requests
+    pub const DEFAULT_MAX_CONCURRENT: usize = 10;
+
+    /// Default maximum retry attempts
+    pub const DEFAULT_MAX_RETRIES: u32 = 3;
+
+    /// Default retry delay in milliseconds
+    pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
+
+    /// Create CanonicalApiTestConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+
         Self {
-            base_url: "http://localhost:8080".to_string(),
+            base_url: format!("http://localhost:{}", DEFAULT_API_PORT),
+            timeout_seconds: Self::DEFAULT_TIMEOUT_SECS,
+            contract_validation: true,
+            use_authentication: false,
+            api_key: None,
+            verify_tls: true,
+            max_concurrent_requests: Self::DEFAULT_MAX_CONCURRENT,
+            retry_failed_requests: false,
+            max_retries: Self::DEFAULT_MAX_RETRIES,
+            retry_delay_ms: Self::DEFAULT_RETRY_DELAY_MS,
+            cache_responses: false,
+            test_credentials: None,
+        }
+    }
+
+    /// Create CanonicalApiTestConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_API_TEST_TIMEOUT_SECS`: Timeout in seconds (default: 30)
+    /// - `BEARDOG_API_TEST_MAX_CONCURRENT`: Max concurrent requests (default: 10)
+    /// - `BEARDOG_API_TEST_MAX_RETRIES`: Max retry attempts (default: 3)
+    /// - `BEARDOG_API_TEST_RETRY_DELAY_MS`: Retry delay in ms (default: 1000)
+    pub fn from_env() -> Self {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+
+        Self {
+            base_url: format!("http://localhost:{}", DEFAULT_API_PORT),
             timeout_seconds: std::env::var("BEARDOG_API_TEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(30),
+                .unwrap_or(Self::DEFAULT_TIMEOUT_SECS),
             contract_validation: true,
             use_authentication: false,
             api_key: None,
@@ -227,23 +273,21 @@ impl Default for CanonicalApiTestConfig {
             max_concurrent_requests: std::env::var("BEARDOG_API_TEST_MAX_CONCURRENT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(10),
+                .unwrap_or(Self::DEFAULT_MAX_CONCURRENT),
             retry_failed_requests: false,
             max_retries: std::env::var("BEARDOG_API_TEST_MAX_RETRIES")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(3),
+                .unwrap_or(Self::DEFAULT_MAX_RETRIES),
             retry_delay_ms: std::env::var("BEARDOG_API_TEST_RETRY_DELAY_MS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(1000),
+                .unwrap_or(Self::DEFAULT_RETRY_DELAY_MS),
             cache_responses: false,
             test_credentials: None,
         }
     }
-}
 
-impl CanonicalApiTestConfig {
     /// Create a new API test configuration
     pub fn new(base_url: String) -> Self {
         Self {
@@ -254,8 +298,10 @@ impl CanonicalApiTestConfig {
 
     /// Create configuration for local testing
     pub fn local() -> Self {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+
         Self {
-            base_url: "http://localhost:8080".to_string(),
+            base_url: format!("http://localhost:{}", DEFAULT_API_PORT),
             verify_tls: false,
             ..Default::default()
         }
@@ -274,6 +320,12 @@ impl CanonicalApiTestConfig {
             retry_failed_requests: true,
             ..Default::default()
         }
+    }
+}
+
+impl Default for CanonicalApiTestConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 
@@ -469,8 +521,42 @@ pub struct CanonicalProductionTestConfig {
     pub rollback_on_failure: bool,
 }
 
-impl Default for CanonicalProductionTestConfig {
-    fn default() -> Self {
+impl CanonicalProductionTestConfig {
+    /// Default health check timeout in seconds
+    pub const DEFAULT_HEALTH_TIMEOUT_SECS: u64 = 30;
+
+    /// Default canary percentage
+    pub const DEFAULT_CANARY_PERCENTAGE: f64 = 5.0;
+
+    /// Create CanonicalProductionTestConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            environment: "production".to_string(),
+            smoke_tests_enabled: true,
+            health_checks_enabled: true,
+            security_validation_enabled: true,
+            performance_validation_enabled: true,
+            compliance_checks_enabled: true,
+            health_check_endpoint: "/health".to_string(),
+            health_check_timeout_seconds: Self::DEFAULT_HEALTH_TIMEOUT_SECS,
+            required_services: Vec::new(),
+            canary_testing_enabled: false,
+            canary_percentage: Self::DEFAULT_CANARY_PERCENTAGE,
+            rollback_on_failure: true,
+        }
+    }
+
+    /// Create CanonicalProductionTestConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS`: Health check timeout (default: 30)
+    /// - `BEARDOG_CANARY_PERCENTAGE`: Canary deployment percentage (default: 5.0)
+    pub fn from_env() -> Self {
         Self {
             environment: "production".to_string(),
             smoke_tests_enabled: true,
@@ -482,15 +568,21 @@ impl Default for CanonicalProductionTestConfig {
             health_check_timeout_seconds: std::env::var("BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(30),
+                .unwrap_or(Self::DEFAULT_HEALTH_TIMEOUT_SECS),
             required_services: Vec::new(),
             canary_testing_enabled: false,
             canary_percentage: std::env::var("BEARDOG_CANARY_PERCENTAGE")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(5.0),
+                .unwrap_or(Self::DEFAULT_CANARY_PERCENTAGE),
             rollback_on_failure: true,
         }
+    }
+}
+
+impl Default for CanonicalProductionTestConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 

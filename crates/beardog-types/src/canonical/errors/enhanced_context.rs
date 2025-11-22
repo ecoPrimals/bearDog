@@ -5,7 +5,8 @@
 //! This module provides enhanced error handling capabilities with detailed context,
 //! recovery suggestions, and operational guidance for production environments.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;

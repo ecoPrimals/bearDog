@@ -78,7 +78,7 @@ mod tests {
         );
         domain.add_anchor(expiring_anchor.clone()).unwrap();
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // Modern pattern: 1 nanosecond already elapsed by CPU cycles
         assert!(expiring_anchor.is_expired());
         assert!(!domain.is_anchor_valid(&expiring_anchor));
 

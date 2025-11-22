@@ -4,7 +4,7 @@
 
 use super::types::*;
 use super::core::UniversalCapabilityAdapter;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::UniversalCapability;
 use crate::universal::types::CapabilityConnection;
 use tracing::{debug, info};
@@ -15,7 +15,7 @@ impl UniversalCapabilityAdapter {
     pub async fn connect_to_capability(
         &self,
         capability: &UniversalCapability,
-    ) -> BearDogResult<String> {
+    ) -> Result<String> {
         let connection_id = Uuid::new_v4().to_string();
         info!("🔗 Connecting to capability: {}", capability.id);
         
@@ -38,7 +38,7 @@ impl UniversalCapabilityAdapter {
     pub async fn register_capability_provider(
         &self,
         capability: UniversalCapability,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         info!("📋 Registering capability provider: {}", capability.id);
         
         let mut capabilities = self.capabilities.write().await;

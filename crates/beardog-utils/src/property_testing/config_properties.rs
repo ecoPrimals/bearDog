@@ -203,9 +203,10 @@ mod tests {
         let framework = PropertyBasedTestFramework::default();
 
         // Test valid TOML
+        const TEST_PORT: u16 = 8080;
         let valid = TestCase {
             id: 1,
-            input_data: b"key = \"value\"\nport = 8080".to_vec(),
+            input_data: format!("key = \"value\"\nport = {}", TEST_PORT).into_bytes(),
             test_type: "configuration".to_string(),
             expected_properties: vec![],
         };
@@ -258,9 +259,10 @@ mod tests {
     fn test_type_validation() {
         let framework = PropertyBasedTestFramework::default();
 
+        const TEST_PORT: u16 = 8080;
         let test_case = TestCase {
             id: 1,
-            input_data: b"port = 8080\nhost = \"localhost\"".to_vec(),
+            input_data: format!("port = {}\nhost = \"localhost\"", TEST_PORT).into_bytes(),
             test_type: "configuration".to_string(),
             expected_properties: vec![],
         };

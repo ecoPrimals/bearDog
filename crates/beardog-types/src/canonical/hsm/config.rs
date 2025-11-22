@@ -1,6 +1,9 @@
 // Hardware Security Module configuration types
 // Provides structured configuration definitions for HSM providers and settings
 
+// Allow deprecated warnings in this module - LegacyHsmProviderType is intentionally kept for backward compatibility
+#![allow(deprecated)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -13,9 +16,9 @@ use std::time::Duration;
 /// in `hsm_unified::providers::HsmProviderType`.
 ///
 /// **Migration Guide**:
-/// ```rust
+/// ```rust,ignore
 /// // Old (deprecated):
-/// use beardog_types::canonical::hsm::HsmProviderType;
+/// use beardog_types::canonical::hsm::config::LegacyHsmProviderType;
 ///
 /// // New (recommended):
 /// use beardog_types::canonical::hsm_unified::providers::HsmProviderType;
@@ -26,6 +29,7 @@ use std::time::Duration;
 /// - Security capability tracking
 /// - Universal provider support
 /// - Modern patterns
+#[allow(deprecated)] // Allow internal uses for backward compatibility
 #[deprecated(
     since = "4.0.0",
     note = "Use hsm_unified::providers::HsmProviderType instead. See migration guide above."
@@ -34,19 +38,14 @@ use std::time::Duration;
 /// Types of hsm provider
 pub enum LegacyHsmProviderType {
     /// Software-based HSM implementation
-    /// Software
     Software,
     /// Hardware-based HSM
-    /// Hardware
     Hardware,
     /// Network-attached HSM
-    /// Network
     Network,
     /// Cloud HSM service
-    /// Cloud
     Cloud,
     /// Mobile platform HSM (iOS Secure Enclave, Android StrongBox)
-    /// Mobile
     Mobile,
     /// Custom HSM provider
     Custom {
@@ -55,12 +54,14 @@ pub enum LegacyHsmProviderType {
     },
 }
 
+#[allow(deprecated)] // Allow implementation for backward compatibility
 impl Default for LegacyHsmProviderType {
     fn default() -> Self {
         Self::Software
     }
 }
 
+#[allow(deprecated)] // Allow implementation for backward compatibility
 impl fmt::Display for LegacyHsmProviderType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

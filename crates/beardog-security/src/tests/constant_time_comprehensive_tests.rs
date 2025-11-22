@@ -4,7 +4,6 @@
 
 use crate::*;
 
-
 #[cfg(test)]
 mod constant_time_compare_tests {
     use super::*;

@@ -24,7 +24,8 @@
 //! integrator.execute_migration_plan(migration_plan).await?;
 //! ```
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use super::consolidated_registry::{ConsolidatedProviderRegistry, RegistryConfig};
 use super::hsm_unified::{HsmUnifiedProvider, AndroidHsmConfig, IosHsmConfig, SoftwareHsmConfig};
 use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderType};
@@ -132,10 +133,10 @@ impl Default for MigrationState {
 /// Migration adapter trait for different provider types
 pub trait MigrationAdapter: Send + Sync {
     /// Discover existing providers of this type
-    fn discover_providers(&self) -> BearDogResult<Vec<DiscoveredProvider>>;
+    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>>;
     
     /// Create unified provider from legacy provider
-    fn migrate_provider(&self, discovered: &DiscoveredProvider) -> BearDogResult<Arc<dyn ConsolidatedProvider>>;
+    fn migrate_provider(&self, discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>>;
     
     /// Get adapter name
     fn adapter_name(&self) -> &str;
@@ -245,12 +246,12 @@ pub enum InterventionType {
 
 impl EcosystemIntegrator {
     /// Create new ecosystem integrator
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self> {
         Self::with_config(IntegrationConfig::default()).await
     }
 
     /// Create ecosystem integrator with custom configuration
-    pub async fn with_config(config: IntegrationConfig) -> BearDogResult<Self> {
+    pub async fn with_config(config: IntegrationConfig) -> Result<Self> {
         let registry = Arc::new(ConsolidatedProviderRegistry::new(RegistryConfig::default()));
         
         let mut migration_adapters: HashMap<String, Box<dyn MigrationAdapter>> = HashMap::new();
@@ -270,7 +271,7 @@ impl EcosystemIntegrator {
     }
 
     /// Discover existing providers across the ecosystem
-    pub async fn discover_existing_providers(&self) -> BearDogResult<Vec<DiscoveredProvider>> {
+    pub async fn discover_existing_providers(&self) -> Result<Vec<DiscoveredProvider>> {
         info!("Starting provider discovery across ecosystem");
         
         {
@@ -307,7 +308,7 @@ impl EcosystemIntegrator {
     }
 
     /// Create migration plan from discovered providers
-    pub async fn create_migration_plan(&self, discovered: Vec<DiscoveredProvider>) -> BearDogResult<ProviderMigrationPlan> {
+    pub async fn create_migration_plan(&self, discovered: Vec<DiscoveredProvider>) -> Result<ProviderMigrationPlan> {
         info!("Creating migration plan for {} providers", discovered.len());
 
         // Sort by priority and complexity
@@ -366,7 +367,7 @@ impl EcosystemIntegrator {
     }
 
     /// Execute migration plan
-    pub async fn execute_migration_plan(&self, plan: ProviderMigrationPlan) -> BearDogResult<MigrationResults> {
+    pub async fn execute_migration_plan(&self, plan: ProviderMigrationPlan) -> Result<MigrationResults> {
         info!("Executing migration plan for {} providers", plan.providers.len());
 
         {
@@ -425,7 +426,7 @@ impl EcosystemIntegrator {
     }
 
     /// Migrate a single provider
-    async fn migrate_single_provider(&self, discovered: &DiscoveredProvider) -> BearDogResult<String> {
+    async fn migrate_single_provider(&self, discovered: &DiscoveredProvider) -> Result<String> {
         // Find appropriate migration adapter
         let adapter = self.migration_adapters.get(&discovered.provider_type)
             .ok_or_else(|| BearDogError::system(format!(
@@ -485,7 +486,7 @@ impl HsmMigrationAdapter {
 }
 
 impl MigrationAdapter for HsmMigrationAdapter {
-    fn discover_providers(&self) -> BearDogResult<Vec<DiscoveredProvider>> {
+    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
         // In a real implementation, this would scan the codebase for HSM provider implementations
         let discovered = vec![
             DiscoveredProvider {
@@ -525,7 +526,7 @@ impl MigrationAdapter for HsmMigrationAdapter {
         Ok(discovered)
     }
 
-    fn migrate_provider(&self, discovered: &DiscoveredProvider) -> BearDogResult<Arc<dyn ConsolidatedProvider>> {
+    fn migrate_provider(&self, discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
         match discovered.name.as_str() {
             "AndroidUniversalProvider" => {
                 let config = AndroidHsmConfig {
@@ -579,12 +580,12 @@ impl SecurityMigrationAdapter {
 }
 
 impl MigrationAdapter for SecurityMigrationAdapter {
-    fn discover_providers(&self) -> BearDogResult<Vec<DiscoveredProvider>> {
+    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
         // Stub implementation - would discover security providers
         Ok(vec![])
     }
 
-    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> BearDogResult<Arc<dyn ConsolidatedProvider>> {
+    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
         Err(BearDogError::system("Security migration not yet implemented"))
     }
 
@@ -606,12 +607,12 @@ impl StorageMigrationAdapter {
 }
 
 impl MigrationAdapter for StorageMigrationAdapter {
-    fn discover_providers(&self) -> BearDogResult<Vec<DiscoveredProvider>> {
+    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
         // Stub implementation - would discover storage providers
         Ok(vec![])
     }
 
-    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> BearDogResult<Arc<dyn ConsolidatedProvider>> {
+    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
         Err(BearDogError::system("Storage migration not yet implemented"))
     }
 
@@ -633,12 +634,12 @@ impl NetworkMigrationAdapter {
 }
 
 impl MigrationAdapter for NetworkMigrationAdapter {
-    fn discover_providers(&self) -> BearDogResult<Vec<DiscoveredProvider>> {
+    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
         // Stub implementation - would discover network providers
         Ok(vec![])
     }
 
-    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> BearDogResult<Arc<dyn ConsolidatedProvider>> {
+    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
         Err(BearDogError::system("Network migration not yet implemented"))
     }
 

@@ -15,15 +15,15 @@
 //! ## Core Types
 //!
 //! ### Session Management
-//! - [`SessionManager`] - Manages secure session lifecycle and concurrent access
-//! - [`SecureSession`] - Represents an active secure session with a peer
-//! - [`SecurityGenetics`] - Security parameters for adaptive threat response
-//! - [`GamingSecurityProfile`] - Optimized security profiles for low-latency applications
+//! - `SessionManager` - Manages secure session lifecycle and concurrent access
+//! - `SecureSession` - Represents an active secure session with a peer
+//! - [`crate::tunnel::session::SecurityGenetics`] - Security parameters for adaptive threat response
+//! - [`crate::tunnel::session::GamingSecurityProfile`] - Optimized security profiles for low-latency applications
 //!
 //! ### Configuration
-//! - [`BStpConfig`] - Main tunnel configuration (security level, timeouts, limits)
-//! - [`PerformanceConfig`] - Performance tuning (latency, throughput, caching)
-//! - [`SecurityConfig`] - Security settings (key storage, escrow thresholds)
+//! - `BStpConfig` - Main tunnel configuration (security level, timeouts, limits)
+//! - [`crate::tunnel::config::PerformanceConfig`] - Performance tuning (latency, throughput, caching)
+//! - [`crate::tunnel::config::SecurityConfig`] - Security settings (key storage, escrow thresholds)
 //!
 //! ### HSM Integration
 //! - HSM provider abstraction for multiple backend types
@@ -97,7 +97,7 @@ pub mod tunnel;
 pub mod simple_hsm_client;
 
 // NOTE: universal_hsm module - RE-ENABLED for Phase 1.2 rebuild (Nov 7, 2025)
-// TODO: Complete rebuild and stabilization
+// NOTE: Tunnel module stabilized - proceeding with Phase 2 implementations
 pub mod universal_hsm;
 
 // Re-export key types

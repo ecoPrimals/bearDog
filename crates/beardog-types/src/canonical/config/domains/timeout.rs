@@ -9,8 +9,14 @@ use std::time::Duration;
 
 /// Canonical timeout configuration for all BearDog operations
 ///
-/// This provides a comprehensive set of timeouts that can be used across
-/// networking, discovery, adapters, workflows, and other components.
+/// **UNIFIED CONFIGURATION** - Consolidates all timeout configurations:
+/// - Network-level timeouts (connect, read, write, operation, idle, keepalive)
+/// - Domain-specific timeouts (health_check, hsm, discovery, ai)
+///
+/// This replaces:
+/// - `UnifiedTimeoutConfig` (timeout_unified.rs) - now a type alias
+/// - `TimeoutConfiguration` - now a type alias
+/// - Various scattered timeout configs across crates
 ///
 /// # Examples
 ///
@@ -25,10 +31,20 @@ use std::time::Duration;
 ///     operation_timeout: Duration::from_secs(60),
 ///     idle_timeout: Some(Duration::from_secs(300)),
 ///     keepalive_timeout: Some(Duration::from_secs(60)),
+///     health_check_timeout: Duration::from_secs(5),
+///     hsm_operation_timeout: Duration::from_secs(2),
+///     hsm_probe_timeout: Duration::from_millis(500),
+///     discovery_timeout: Duration::from_secs(10),
+///     ai_decision_timeout: Duration::from_secs(30),
+///     ai_request_timeout: Duration::from_secs(30),
+///     ai_batch_timeout: Duration::from_millis(10),
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CanonicalTimeoutConfig {
+    // ========================================================================
+    // NETWORK-LEVEL TIMEOUTS
+    // ========================================================================
     /// Timeout for establishing a connection
     ///
     /// This is the maximum time to wait when connecting to a remote service.
@@ -98,6 +114,101 @@ pub struct CanonicalTimeoutConfig {
     /// - None: For short-lived connections
     #[serde(default, with = "humantime_serde_optional")]
     pub keepalive_timeout: Option<Duration>,
+
+    // ========================================================================
+    // DOMAIN-SPECIFIC TIMEOUTS
+    // ========================================================================
+    /// Health check timeout
+    ///
+    /// Maximum time for health check probes.
+    ///
+    /// **Default**: 5 seconds\
+    /// **Recommended range**: 1-30 seconds
+    #[serde(default = "default_health_check_timeout", with = "humantime_serde")]
+    pub health_check_timeout: Duration,
+
+    /// HSM operation timeout
+    ///
+    /// Timeout for typical HSM operations (sign, verify, encrypt, decrypt).
+    ///
+    /// **Default**: 2 seconds\
+    /// **Recommended range**: 1-10 seconds
+    #[serde(default = "default_hsm_operation_timeout", with = "humantime_serde")]
+    pub hsm_operation_timeout: Duration,
+
+    /// HSM probe timeout
+    ///
+    /// Fast probe for HSM availability check.
+    ///
+    /// **Default**: 500 milliseconds\
+    /// **Recommended range**: 100-5000 milliseconds
+    #[serde(default = "default_hsm_probe_timeout", with = "humantime_serde")]
+    pub hsm_probe_timeout: Duration,
+
+    /// Service discovery timeout
+    ///
+    /// Timeout for service discovery operations.
+    ///
+    /// **Default**: 10 seconds\
+    /// **Recommended range**: 1-60 seconds
+    #[serde(default = "default_discovery_timeout", with = "humantime_serde")]
+    pub discovery_timeout: Duration,
+
+    /// AI decision timeout
+    ///
+    /// Timeout for AI decision-making processes.
+    ///
+    /// **Default**: 30 seconds\
+    /// **Recommended range**: 5-300 seconds
+    #[serde(default = "default_ai_decision_timeout", with = "humantime_serde")]
+    pub ai_decision_timeout: Duration,
+
+    /// AI request timeout
+    ///
+    /// Timeout for AI inference requests.
+    ///
+    /// **Default**: 30 seconds\
+    /// **Recommended range**: 5-300 seconds
+    #[serde(default = "default_ai_request_timeout", with = "humantime_serde")]
+    pub ai_request_timeout: Duration,
+
+    /// AI batch timeout
+    ///
+    /// Timeout for AI batch processing.
+    ///
+    /// **Default**: 10 milliseconds\
+    /// **Recommended range**: 1-1000 milliseconds
+    #[serde(default = "default_ai_batch_timeout", with = "humantime_serde")]
+    pub ai_batch_timeout: Duration,
+}
+
+// Default functions for domain-specific timeouts
+fn default_health_check_timeout() -> Duration {
+    Duration::from_secs(5)
+}
+
+fn default_hsm_operation_timeout() -> Duration {
+    Duration::from_secs(2)
+}
+
+fn default_hsm_probe_timeout() -> Duration {
+    Duration::from_millis(500)
+}
+
+fn default_discovery_timeout() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_ai_decision_timeout() -> Duration {
+    Duration::from_secs(30)
+}
+
+fn default_ai_request_timeout() -> Duration {
+    Duration::from_secs(30)
+}
+
+fn default_ai_batch_timeout() -> Duration {
+    Duration::from_millis(10)
 }
 
 // Helper modules for Duration serialization
@@ -109,7 +220,16 @@ mod humantime_serde {
     where
         S: Serializer,
     {
-        serializer.serialize_u64(duration.as_millis() as u64)
+        // SAFETY: Duration::as_millis() returns u128, but in practice timeouts will never
+        // exceed u64::MAX milliseconds (~584 million years). We clamp to u64::MAX for safety.
+        // Using saturating cast ensures we don't wrap around on extreme values.
+        let millis = duration.as_millis();
+        let clamped = if millis > u64::MAX as u128 {
+            u64::MAX
+        } else {
+            millis as u64
+        };
+        serializer.serialize_u64(clamped)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
@@ -130,7 +250,16 @@ mod humantime_serde_optional {
         S: Serializer,
     {
         match duration {
-            Some(d) => serializer.serialize_some(&(d.as_millis() as u64)),
+            Some(d) => {
+                // SAFETY: See milliseconds_serializer for rationale
+                let millis = d.as_millis();
+                let clamped = if millis > u64::MAX as u128 {
+                    u64::MAX
+                } else {
+                    millis as u64
+                };
+                serializer.serialize_some(&clamped)
+            }
             None => serializer.serialize_none(),
         }
     }
@@ -149,20 +278,40 @@ impl Default for CanonicalTimeoutConfig {
     ///
     /// Suitable for most network operations in a LAN environment.
     ///
+    /// Network timeouts:
     /// - connect_timeout: 5 seconds
     /// - read_timeout: 30 seconds
     /// - write_timeout: 30 seconds
     /// - operation_timeout: 60 seconds
     /// - idle_timeout: 5 minutes
     /// - keepalive_timeout: 60 seconds
+    ///
+    /// Domain timeouts:
+    /// - health_check_timeout: 5 seconds
+    /// - hsm_operation_timeout: 2 seconds
+    /// - hsm_probe_timeout: 500 milliseconds
+    /// - discovery_timeout: 10 seconds
+    /// - ai_decision_timeout: 30 seconds
+    /// - ai_request_timeout: 30 seconds
+    /// - ai_batch_timeout: 10 milliseconds
     fn default() -> Self {
         Self {
+            // Network timeouts
             connect_timeout: Duration::from_secs(5),
             read_timeout: Duration::from_secs(30),
             write_timeout: Duration::from_secs(30),
             operation_timeout: Duration::from_secs(60),
             idle_timeout: Some(Duration::from_secs(300)),
             keepalive_timeout: Some(Duration::from_secs(60)),
+
+            // Domain timeouts
+            health_check_timeout: default_health_check_timeout(),
+            hsm_operation_timeout: default_hsm_operation_timeout(),
+            hsm_probe_timeout: default_hsm_probe_timeout(),
+            discovery_timeout: default_discovery_timeout(),
+            ai_decision_timeout: default_ai_decision_timeout(),
+            ai_request_timeout: default_ai_request_timeout(),
+            ai_batch_timeout: default_ai_batch_timeout(),
         }
     }
 }
@@ -174,12 +323,22 @@ impl CanonicalTimeoutConfig {
     /// detection is preferred over waiting.
     pub fn aggressive() -> Self {
         Self {
+            // Network timeouts
             connect_timeout: Duration::from_secs(1),
             read_timeout: Duration::from_secs(5),
             write_timeout: Duration::from_secs(5),
             operation_timeout: Duration::from_secs(10),
             idle_timeout: Some(Duration::from_secs(60)),
             keepalive_timeout: Some(Duration::from_secs(30)),
+
+            // Domain timeouts
+            health_check_timeout: Duration::from_secs(2),
+            hsm_operation_timeout: Duration::from_secs(1),
+            hsm_probe_timeout: Duration::from_millis(250),
+            discovery_timeout: Duration::from_secs(5),
+            ai_decision_timeout: Duration::from_secs(10),
+            ai_request_timeout: Duration::from_secs(10),
+            ai_batch_timeout: Duration::from_millis(5),
         }
     }
 
@@ -189,12 +348,22 @@ impl CanonicalTimeoutConfig {
     /// waiting longer is acceptable.
     pub fn conservative() -> Self {
         Self {
+            // Network timeouts
             connect_timeout: Duration::from_secs(30),
             read_timeout: Duration::from_secs(120),
             write_timeout: Duration::from_secs(120),
             operation_timeout: Duration::from_secs(300),
             idle_timeout: Some(Duration::from_secs(600)),
             keepalive_timeout: Some(Duration::from_secs(120)),
+
+            // Domain timeouts
+            health_check_timeout: Duration::from_secs(15),
+            hsm_operation_timeout: Duration::from_secs(5),
+            hsm_probe_timeout: Duration::from_millis(2000),
+            discovery_timeout: Duration::from_secs(30),
+            ai_decision_timeout: Duration::from_secs(120),
+            ai_request_timeout: Duration::from_secs(120),
+            ai_batch_timeout: Duration::from_millis(50),
         }
     }
 
@@ -204,12 +373,22 @@ impl CanonicalTimeoutConfig {
     /// indicates a problem.
     pub fn minimal() -> Self {
         Self {
+            // Network timeouts
             connect_timeout: Duration::from_millis(500),
             read_timeout: Duration::from_secs(1),
             write_timeout: Duration::from_secs(1),
             operation_timeout: Duration::from_secs(2),
             idle_timeout: Some(Duration::from_secs(30)),
             keepalive_timeout: None,
+
+            // Domain timeouts
+            health_check_timeout: Duration::from_secs(1),
+            hsm_operation_timeout: Duration::from_millis(500),
+            hsm_probe_timeout: Duration::from_millis(100),
+            discovery_timeout: Duration::from_secs(2),
+            ai_decision_timeout: Duration::from_secs(5),
+            ai_request_timeout: Duration::from_secs(5),
+            ai_batch_timeout: Duration::from_millis(1),
         }
     }
 
@@ -219,12 +398,22 @@ impl CanonicalTimeoutConfig {
     /// such as large file transfers or complex computations.
     pub fn long_running() -> Self {
         Self {
+            // Network timeouts
             connect_timeout: Duration::from_secs(10),
             read_timeout: Duration::from_secs(600),
             write_timeout: Duration::from_secs(600),
             operation_timeout: Duration::from_secs(1800),
             idle_timeout: None,
             keepalive_timeout: Some(Duration::from_secs(300)),
+
+            // Domain timeouts
+            health_check_timeout: Duration::from_secs(30),
+            hsm_operation_timeout: Duration::from_secs(10),
+            hsm_probe_timeout: Duration::from_millis(5000),
+            discovery_timeout: Duration::from_secs(60),
+            ai_decision_timeout: Duration::from_secs(300),
+            ai_request_timeout: Duration::from_secs(300),
+            ai_batch_timeout: Duration::from_millis(100),
         }
     }
 
@@ -360,10 +549,10 @@ impl TimeoutPolicy for CanonicalTimeoutConfig {
 
     fn is_production_ready(&self) -> bool {
         // Production-ready if all timeouts are reasonable
-        self.connect_timeout >= Duration::from_secs(1) &&
-        self.connect_timeout <= Duration::from_secs(30) &&
-        self.operation_timeout >= Duration::from_secs(5) &&
-        self.validate().is_ok()
+        self.connect_timeout >= Duration::from_secs(1)
+            && self.connect_timeout <= Duration::from_secs(30)
+            && self.operation_timeout >= Duration::from_secs(5)
+            && self.validate().is_ok()
     }
 }
 
@@ -431,7 +620,7 @@ mod tests {
         // Aggressive suitable for fast networks
         assert!(aggressive.is_suitable_for_network(NetworkType::Local));
         assert!(aggressive.is_suitable_for_network(NetworkType::Lan));
-        
+
         // Conservative suitable for slow networks
         assert!(conservative.is_suitable_for_network(NetworkType::Wan));
         assert!(conservative.is_suitable_for_network(NetworkType::Unreliable));
@@ -455,4 +644,3 @@ mod tests {
         assert_eq!(config, deserialized);
     }
 }
-

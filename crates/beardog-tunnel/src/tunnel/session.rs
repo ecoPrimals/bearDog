@@ -78,6 +78,12 @@ impl SecureSession {
     pub fn extend_session(&mut self, duration: Duration) {
         self.expires_at += duration;
     }
+
+    /// Gets remaining session time
+    #[must_use]
+    pub fn remaining_time(&self) -> Option<Duration> {
+        self.expires_at.duration_since(SystemTime::now()).ok()
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -343,5 +349,77 @@ mod tests {
 
         let count = manager.session_count().await;
         assert_eq!(count, 10);
+    }
+
+    #[tokio::test]
+    async fn test_session_remaining_time() {
+        let genetics = SecurityGenetics::default();
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        let session = SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+
+        // Should have remaining time
+        let remaining = session.remaining_time();
+        assert!(remaining.is_some());
+
+        // Should be close to 1 hour (3600 seconds)
+        let duration = remaining.unwrap();
+        assert!(duration.as_secs() > 3590 && duration.as_secs() <= 3600);
+    }
+
+    #[tokio::test]
+    async fn test_session_extension() {
+        let genetics = SecurityGenetics::default();
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        let mut session =
+            SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+
+        let initial_remaining = session.remaining_time().unwrap();
+
+        // Extend by 1 hour
+        session.extend_session(Duration::from_secs(3600));
+
+        let after_extension = session.remaining_time().unwrap();
+
+        // Should have approximately 1 more hour
+        assert!(after_extension > initial_remaining);
+        assert!(after_extension.as_secs() > 7000); // ~2 hours
+    }
+
+    #[tokio::test]
+    async fn test_expired_session_no_remaining_time() {
+        let genetics = SecurityGenetics::default();
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        let mut session =
+            SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+
+        // Set expiration to the past
+        session.expires_at = SystemTime::now() - Duration::from_secs(60);
+
+        // Should have no remaining time
+        assert!(session.remaining_time().is_none());
+        assert!(session.is_expired());
+    }
+
+    #[tokio::test]
+    async fn test_security_genetics_default_values() {
+        let genetics = SecurityGenetics::default();
+
+        assert_eq!(genetics.entropy_level, 0.8);
+        assert_eq!(genetics.mutation_rate, 0.05);
+        assert_eq!(genetics.adaptive_threshold, 0.7);
+    }
+
+    #[tokio::test]
+    async fn test_competitive_gaming_profile() {
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        assert_eq!(profile.latency_priority, 0.9);
+        assert_eq!(profile.security_level.level, 3);
+        assert_eq!(profile.security_level.authentication_strength, 85);
+        assert_eq!(profile.security_level.threat_detection_accuracy, 0.95);
+        assert_eq!(profile.security_level.performance_overhead, 0.15);
     }
 }

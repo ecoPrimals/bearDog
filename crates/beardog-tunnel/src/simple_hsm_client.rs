@@ -89,7 +89,7 @@ impl SimplePkcs11Client {
         for slot in slots {
             if let Ok(token_info) = pkcs11.get_token_info(slot) {
                 devices.push(SimpleHsmDevice {
-                    slot_id: slot.try_into().unwrap_or(0),
+                    slot_id: slot.into(),
                     label: token_info.label().trim().to_string(),
                     manufacturer: token_info.manufacturer_id().trim().to_string(),
                     model: token_info.model().trim().to_string(),

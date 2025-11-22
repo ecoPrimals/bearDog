@@ -2,6 +2,7 @@
 //!
 //! Consolidated configuration that brings together all AI/ML subsystems.
 
+use beardog_errors::BearDogError;
 use super::{HybridIntelligenceConfig, InferenceConfig, TrainingConfig};
 use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
@@ -124,7 +125,7 @@ impl ConsolidatedAiConfigBuilder {
     }
 
     /// Build the configuration
-    pub fn build(self) -> BearDogResult<ConsolidatedAiConfig> {
+    pub fn build(self) -> Result<ConsolidatedAiConfig> {
         Ok(ConsolidatedAiConfig {
             enabled: self.enabled,
             hybrid_intelligence: self.hybrid_intelligence.unwrap_or_default(),

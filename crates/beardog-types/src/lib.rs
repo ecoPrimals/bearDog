@@ -1,14 +1,19 @@
-// # 🏆 `BearDog` Types - Canonical Type System
-//
-// [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
-// [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](../../LICENSE)
-// [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/ecoPrimals/beardog)
-// [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/beardog-types)
-//
-// **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
-//
+//! # 🏆 `BearDog` Types - Canonical Type System
+//!
+//! [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
+//! [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](../../LICENSE)
+//! [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/ecoPrimals/beardog)
+//! [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/beardog-types)
+//!
+//! **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
+//!
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
+// Allow pedantic clippy lints for intentional type conversions and default trait usage
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::default_trait_access)]
 // ## 🎯 **PEDANTIC PERFECTION ACHIEVED** ✅
 //
 // This crate represents **ABSOLUTE SOFTWARE ENGINEERING EXCELLENCE** with:
@@ -440,11 +445,10 @@ pub mod constants;
 /// [`canonical::providers_unified::traits::UnifiedHsmProvider`] instead.
 pub mod zero_cost;
 
-/// 🔧 **CONFIGURATION** - Legacy configuration system
-///
-/// New code should use [`canonical::config`] instead.
 /// 🏭 **PRODUCTION** - Production-ready components
 ///
+/// Production types and configurations. New code should prefer
+/// the canonical modules where applicable.
 pub mod production;
 
 /// 🔐 **SECURITY** - Security type definitions
@@ -467,8 +471,6 @@ pub mod capabilities;
 ///
 pub mod metrics;
 
-/// 🔗 **PROVIDERS** - Provider abstraction types
-///
 /// 🏥 **HEALTH** - Health monitoring types
 ///
 /// Health check and system status types.

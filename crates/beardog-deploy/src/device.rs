@@ -4,7 +4,7 @@
 // device discovery, status monitoring, and deployment operations for Android and iOS devices.
 // All operations maintain sovereignty compliance and zero hardcoded assumptions.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Command;
@@ -153,7 +153,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if deployment fails.
-    pub fn deploy_app(&self, release: bool) -> BearDogResult<()> {
+    pub fn deploy_app(&self, release: bool) -> Result<(), BearDogError> {
         let build_type = if release { "release" } else { "debug" };
         info!("📲 Deploying {} build to device...", build_type);
 
@@ -211,7 +211,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if app launch fails.
-    pub fn run_app(&self, args: &[String]) -> BearDogResult<()> {
+    pub fn run_app(&self, args: &[String]) -> Result<(), BearDogError> {
         info!("🚀 Running app with args: {:?}", args);
 
         // Get first available device
@@ -264,7 +264,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if log streaming fails.
-    pub fn show_logs(&self, package: &str, follow: bool) -> BearDogResult<()> {
+    pub fn show_logs(&self, package: &str, follow: bool) -> Result<(), BearDogError> {
         let follow_msg = if follow { " (following)" } else { "" };
         info!("📊 Showing logs for package: {}{}", package, follow_msg);
 

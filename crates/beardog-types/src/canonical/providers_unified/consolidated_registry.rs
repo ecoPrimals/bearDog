@@ -19,7 +19,8 @@
 //! - **Performance Optimized**: Zero-cost provider resolution and dispatch
 //! - **Maintainability**: Single location for all provider management logic
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderHealth, ProviderType, HealthStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -40,10 +41,10 @@ pub trait ErasedProvider: Send + Sync + std::fmt::Debug + 'static {
     fn provider_version(&self) -> &str;
     
     /// Perform health check and return current status
-    async fn health_check(&self) -> BearDogResult<ProviderHealth>;
+    async fn health_check(&self) -> Result<ProviderHealth>;
     
     /// Shutdown the provider gracefully
-    async fn shutdown(&mut self) -> BearDogResult<()>;
+    async fn shutdown(&mut self) -> Result<()>;
 }
 
 /// **Concrete Implementation of Type-Erased Provider**
@@ -88,11 +89,11 @@ where
         self.provider.provider_version()
     }
     
-    async fn health_check(&self) -> BearDogResult<ProviderHealth> {
+    async fn health_check(&self) -> Result<ProviderHealth> {
         self.provider.health_check().await.map_err(|e| e.into())
     }
     
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         self.provider.shutdown().await.map_err(|e| e.into())
     }
 }
@@ -188,7 +189,7 @@ impl ConsolidatedProviderRegistry {
         provider: P,
         priority: i32,
         _tags: Vec<String>,
-    ) -> BearDogResult<String> 
+    ) -> Result<String> 
     where
         P: ConsolidatedProvider + 'static,
         P::Error: Into<BearDogError>,
@@ -247,7 +248,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Unregister a provider
-    pub async fn unregister_provider(&self, provider_id: &str) -> BearDogResult<()> {
+    pub async fn unregister_provider(&self, provider_id: &str) -> Result<()> {
         // Remove from providers
         let removed = {
             let mut providers_guard = self.providers.write()
@@ -287,7 +288,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Get provider by ID
-    pub async fn get_provider(&self, provider_id: &str) -> BearDogResult<Arc<dyn ErasedProvider>> {
+    pub async fn get_provider(&self, provider_id: &str) -> Result<Arc<dyn ErasedProvider>> {
         let providers_guard = self.providers.read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Provider registry lock poisoned on get, recovering");
@@ -300,7 +301,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Find providers by type
-    pub async fn find_providers_by_type(&self, provider_type: ProviderType) -> BearDogResult<Vec<Arc<dyn ErasedProvider>>> {
+    pub async fn find_providers_by_type(&self, provider_type: ProviderType) -> Result<Vec<Arc<dyn ErasedProvider>>> {
         let providers_guard = self.providers.read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Provider registry lock poisoned on find, recovering");
@@ -326,7 +327,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Find providers by tags
-    pub async fn find_providers_by_tags(&self, _tags: &[String]) -> BearDogResult<Vec<String>> {
+    pub async fn find_providers_by_tags(&self, _tags: &[String]) -> Result<Vec<String>> {
         // This would require storing registration data, simplified for now
         let providers_guard = self.providers.read()
             .unwrap_or_else(|poisoned| {
@@ -337,7 +338,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Get all registered provider IDs
-    pub async fn list_providers(&self) -> BearDogResult<Vec<String>> {
+    pub async fn list_providers(&self) -> Result<Vec<String>> {
         let providers_guard = self.providers.read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Provider registry lock poisoned on list, recovering");
@@ -347,7 +348,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Get provider metadata from cache
-    pub async fn get_provider_metadata(&self, provider_id: &str) -> BearDogResult<ProviderInfo> {
+    pub async fn get_provider_metadata(&self, provider_id: &str) -> Result<ProviderInfo> {
         let metadata_guard = self.metadata_cache.read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Metadata cache lock poisoned on get metadata, recovering");
@@ -360,7 +361,7 @@ impl ConsolidatedProviderRegistry {
     }
 
     /// Perform health check on all providers
-    pub async fn health_check_all(&self) -> BearDogResult<HashMap<String, ProviderHealth>> {
+    pub async fn health_check_all(&self) -> Result<HashMap<String, ProviderHealth>> {
         let providers_guard = self.providers.read()
             .unwrap_or_else(|poisoned| {
                 tracing::warn!("Provider registry lock poisoned on health check, recovering");
@@ -462,7 +463,7 @@ impl ProviderDiscovery {
     }
 
     /// Discover best provider for a specific type
-    pub async fn discover_best_provider(&self, provider_type: ProviderType) -> BearDogResult<Arc<dyn ErasedProvider>> {
+    pub async fn discover_best_provider(&self, provider_type: ProviderType) -> Result<Arc<dyn ErasedProvider>> {
         let provider_type_clone = provider_type.clone();
         let providers = self.registry.find_providers_by_type(provider_type).await?;
         

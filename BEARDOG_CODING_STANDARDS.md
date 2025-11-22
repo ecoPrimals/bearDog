@@ -15,9 +15,11 @@ BearDog maintains high coding standards as the security provider for the ecoPrim
 ## 🏗️ **Architecture Standards**
 
 ### **File Organization**
-- ✅ **File Size Limit**: Maximum 2000 lines per file (currently compliant - largest: 1,046 lines)
+- ✅ **File Size Limit**: Maximum 1000 lines per file for production code, 2000 lines for test files
+  - Current status: 2 test files exceed 1000 lines (workflow_config.rs: 1,292 lines, config_modernization_tests.rs: 1,079 lines)
+  - All production code files are under 1000 lines ✅
 - ✅ **Module Structure**: Logical separation of concerns with clear module boundaries
-- ✅ **Crate Organization**: 22 focused crates with single responsibilities
+- ✅ **Crate Organization**: 23 focused crates with single responsibilities
 
 ### **Type System Standards**
 - ✅ **Canonical Types**: Use `beardog-types::canonical::*` for all type definitions

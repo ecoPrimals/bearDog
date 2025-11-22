@@ -75,6 +75,12 @@ pub mod database;
 /// sovereignty, and key evolution.
 pub mod genetics;
 
+/// Configuration utilities and helpers
+///
+/// Utility functions for config loading, validation, and transformations.
+/// Includes serde helpers for `Arc<str>` serialization.
+pub mod utils;
+
 /// Hardware Security Module (HSM) configuration
 ///
 /// Settings for HSM integration including YubiKey, TPM, PKCS#11,
@@ -144,6 +150,8 @@ pub mod type_aliases;
 pub mod unified;
 
 // Comprehensive test modules
+#[cfg(test)]
+mod tests;
 #[cfg(test)]
 mod validation_comprehensive_tests;
 // unified_simple module REMOVED in Phase 2 (October 2025)

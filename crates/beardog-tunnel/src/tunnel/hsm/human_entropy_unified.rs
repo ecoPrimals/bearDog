@@ -17,9 +17,13 @@ pub struct UnifiedHumanEntropyClassifier {
 /// Tier elevation criteria
 #[derive(Debug, Clone)]
 pub struct TierElevationCriteria {
+    #[allow(dead_code)] // Future implementation
     pub min_quality_score: f64,
+    #[allow(dead_code)] // Future implementation
     pub require_biometric: bool,
+    #[allow(dead_code)] // Future implementation
     pub require_multiple_sources: bool,
+    #[allow(dead_code)] // Future implementation
     pub require_realtime: bool,
 }
 

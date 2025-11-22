@@ -4,7 +4,7 @@
 //! including load balancing, performance monitoring, and request routing.
 
 use super::core::{CapabilityHandlerDispatch, DispatchConfig, LoadBalancingStrategy, CapabilityMatch};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::adapters::{CapabilityRequest, CapabilityResponse, CapabilityType};
 use beardog_types::constants::domains::system::defaults::{DEFAULT_POOL_SIZE, DEFAULT_BUFFER_SIZE};
 use serde::{Deserialize, Serialize};
@@ -82,7 +82,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Register a capability handler with the router
-    pub fn register_handler(&self, handler: CapabilityHandlerDispatch, weight: f64) -> BearDogResult<()> {
+    pub fn register_handler(&self, handler: CapabilityHandlerDispatch, weight: f64) -> Result<()> {
         info!("Registering capability handler: {} (weight: {})", handler.get_handler_id(), weight);
         
         // Validate the handler configuration
@@ -98,7 +98,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Route a capability request to the appropriate handler
-    pub async fn route_request(&self, request: CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn route_request(&self, request: CapabilityRequest) -> Result<CapabilityResponse> {
         let start_time = Instant::now();
         
         // Acquire semaphore permit for request limiting
@@ -154,7 +154,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Find handlers that can process the given capability type
-    fn find_matching_handlers(&self, capability_type: &CapabilityType) -> BearDogResult<Vec<&CapabilityHandlerDispatch>> {
+    fn find_matching_handlers(&self, capability_type: &CapabilityType) -> Result<Vec<&CapabilityHandlerDispatch>> {
         let handlers = self.handlers.read()
             .map_err(|_| BearDogError::Internal("Failed to acquire read lock".to_string()))?;
         
@@ -173,7 +173,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Select the best handler based on load balancing strategy
-    fn select_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> BearDogResult<&CapabilityHandlerDispatch> {
+    fn select_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> Result<&CapabilityHandlerDispatch> {
         if handlers.is_empty() {
             return Err(BearDogError::NotFound("No handlers available".to_string()));
         }
@@ -218,7 +218,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Select handler with least current load
-    fn select_least_loaded_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> BearDogResult<&CapabilityHandlerDispatch> {
+    fn select_least_loaded_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> Result<&CapabilityHandlerDispatch> {
         let stats = self.statistics.read()
             .map_err(|_| BearDogError::Internal("Failed to acquire read lock".to_string()))?;
         
@@ -242,7 +242,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Select handler based on weights
-    fn select_weighted_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> BearDogResult<&CapabilityHandlerDispatch> {
+    fn select_weighted_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> Result<&CapabilityHandlerDispatch> {
         let handlers_guard = self.handlers.read()
             .map_err(|_| BearDogError::Internal("Failed to acquire read lock".to_string()))?;
         
@@ -268,7 +268,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Select handler based on resource utilization
-    fn select_resource_based_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> BearDogResult<&CapabilityHandlerDispatch> {
+    fn select_resource_based_handler(&self, handlers: &[&CapabilityHandlerDispatch]) -> Result<&CapabilityHandlerDispatch> {
         let mut best_handler = handlers[0];
         let mut best_score = f64::MIN;
         
@@ -312,14 +312,14 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Get router statistics
-    pub fn get_statistics(&self) -> BearDogResult<RouterStatistics> {
+    pub fn get_statistics(&self) -> Result<RouterStatistics> {
         let stats = self.statistics.read()
             .map_err(|_| BearDogError::Internal("Failed to acquire read lock".to_string()))?;
         Ok(stats.clone())
     }
 
     /// Get all registered handlers
-    pub fn get_handlers(&self) -> BearDogResult<Vec<String>> {
+    pub fn get_handlers(&self) -> Result<Vec<String>> {
         let handlers = self.handlers.read()
             .map_err(|_| BearDogError::Internal("Failed to acquire read lock".to_string()))?;
         
@@ -332,7 +332,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Remove a handler from the router
-    pub fn remove_handler(&self, handler_id: &str) -> BearDogResult<bool> {
+    pub fn remove_handler(&self, handler_id: &str) -> Result<bool> {
         let mut handlers = self.handlers.write()
             .map_err(|_| BearDogError::Internal("Failed to acquire write lock".to_string()))?;
         
@@ -350,7 +350,7 @@ impl ZeroCostCapabilityRouter {
     }
 
     /// Health check for the router
-    pub async fn health_check(&self) -> BearDogResult<RouterHealthStatus> {
+    pub async fn health_check(&self) -> Result<RouterHealthStatus> {
         let handlers = self.handlers.read()
             .map_err(|_| BearDogError::Internal("Failed to acquire read lock".to_string()))?;
         

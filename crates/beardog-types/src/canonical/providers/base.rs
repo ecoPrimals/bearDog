@@ -4,7 +4,8 @@
 // must implement. It establishes the fundamental interface for provider lifecycle,
 // health monitoring, capabilities, and ecosystem integration.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use crate::canonical::traits::{CacheStrategy, TimeoutPolicy};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -22,19 +23,19 @@ pub trait BaseProvider: Send + Sync {
     fn provider_info(&self) -> ProviderInfo;
 
     /// Perform a health check on the provider
-    fn health_check(&self) -> impl std::future::Future<Output = BearDogResult<ProviderHealth>> + Send;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<ProviderHealth>> + Send;
 
     /// Get provider performance metrics
-    fn metrics(&self) -> impl std::future::Future<Output = BearDogResult<PerformanceMetrics>> + Send;
+    fn metrics(&self) -> impl std::future::Future<Output = Result<PerformanceMetrics>> + Send;
 
     /// Get provider capabilities
     fn capabilities(&self) -> Vec<ProviderCapability>;
 
     /// Initialize the provider with configuration
-    fn initialize(&mut self, config: ProviderConfiguration) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
+    fn initialize(&mut self, config: ProviderConfiguration) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Shutdown the provider gracefully
-    fn shutdown(&mut self) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
+    fn shutdown(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Check if provider supports a specific capability
     fn supports_capability(&self, capability: &str) -> bool {
@@ -47,7 +48,7 @@ pub trait BaseProvider: Send + Sync {
     }
 
     /// Validate provider configuration
-    fn validate_configuration(&self, config: &ProviderConfiguration) -> BearDogResult<()> {
+    fn validate_configuration(&self, config: &ProviderConfiguration) -> Result<()> {
         // Default implementation - providers can override for custom validation
         if config.provider_id.is_empty() {
             return Err(BearDogError::business("Provider ID cannot be empty".to_string()));

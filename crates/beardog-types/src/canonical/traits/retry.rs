@@ -123,9 +123,7 @@ pub trait RetryStrategy: Send + Sync {
     ///
     /// The total time spent waiting for all retries up to this attempt.
     fn total_delay(&self, attempt: u32) -> Duration {
-        (1..=attempt)
-            .map(|n| self.delay_for_attempt(n))
-            .sum()
+        (1..=attempt).map(|n| self.delay_for_attempt(n)).sum()
     }
 }
 
@@ -181,7 +179,7 @@ mod tests {
             base_delay: Duration::from_secs(1),
         };
 
-        let error = std::io::Error::new(std::io::ErrorKind::Other, "test");
+        let error = std::io::Error::other("test");
         assert!(strategy.should_retry_error(&error));
     }
 
@@ -195,4 +193,3 @@ mod tests {
         assert_eq!(strategy.backoff_multiplier(), 2.0);
     }
 }
-

@@ -7,7 +7,7 @@ use super::capability_based_adapter::UniversalCapabilityAdapter;
 use super::capability_helpers::*;
 use super::types::*;
 use crate::ecosystem::primal_types::{DiscoveredPrimal, UniversalEndpoint};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{ServiceCapabilityType, UniversalCapability};
 use std::collections::HashMap;
 use tracing::{debug, error, info, warn};
@@ -16,13 +16,13 @@ use uuid::Uuid;
 impl UniversalCapabilityAdapter {
     /// Create new universal capability adapter
     /// Creates a new instance
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self> {
         Self::with_config(AdapterConfig::default())
     }
 
     /// Create universal adapter with custom configuration
     /// Creates instance with config
-    pub fn with_config(config: AdapterConfig) -> BearDogResult<Self> {
+    pub fn with_config(config: AdapterConfig) -> Result<Self> {
         info!("🔌 Initializing Universal Capability Adapter");
         info!("🎯 Mission: Replace ALL hardcoded integrations with dynamic discovery");
         info!("📋 Configuration:");
@@ -54,7 +54,7 @@ impl UniversalCapabilityAdapter {
     pub fn discover_capability(
         &self,
         request: CapabilityDiscoveryRequest,
-    ) -> BearDogResult<CapabilityDiscoveryResult> {
+    ) -> Result<CapabilityDiscoveryResult> {
         let start_time = std::time::Instant::now();
 
         info!("🔍 Discovering capability: {:?}", request.capability_type);
@@ -115,15 +115,19 @@ impl UniversalCapabilityAdapter {
     pub fn connect_to_capability(
         &self,
         provider: &RankedCapabilityProvider,
-    ) -> BearDogResult<String> {
+    ) -> Result<String> {
         info!("🔗 Connecting to provider: {}", provider.provider_id);
 
         // Create connection using helper utilities
+        // Use environment-aware endpoint discovery
+        let provider_domain = std::env::var("BEARDOG_PROVIDER_DOMAIN")
+            .unwrap_or_else(|_| "provider.local".to_string());
+        
         let connection = ConnectionUtils::create_connection(
             provider.provider_id.clone(),
             provider.capability_type.clone(),
             UniversalEndpoint {
-                url: format!("http://provider-{}.local", provider.provider_id),
+                url: format!("http://{}.{}", provider.provider_id, provider_domain),
                 protocol: "http".to_string(),
                 metadata: HashMap::new(),
             },
@@ -152,7 +156,7 @@ impl UniversalCapabilityAdapter {
     /// Get health status of all connections
     /// Gets connection_health
     /// Gets connection_health
-    pub fn get_connection_health(&self) -> BearDogResult<HashMap<String, String>> {
+    pub fn get_connection_health(&self) -> Result<HashMap<String, String>> {
         let connections = self.connections.read();
         let mut health_status = HashMap::new();
 
@@ -169,7 +173,7 @@ impl UniversalCapabilityAdapter {
         Ok(health_status)
     }
 
-    pub fn perform_health_checks(&mut self) -> BearDogResult<()> {
+    pub fn perform_health_checks(&mut self) -> Result<()> {
         let mut connections = self.connections.write();
 
         for connection in connections.values_mut() {
@@ -187,7 +191,7 @@ impl UniversalCapabilityAdapter {
     fn find_capability_providers(
         &self,
         capability_type: &ServiceCapabilityType,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         debug!("🔍 Finding providers for capability: {:?}", capability_type);
 
         // Read from capability cache
@@ -211,7 +215,7 @@ impl UniversalCapabilityAdapter {
     fn perform_capability_discovery(
         &self,
         capability_type: &ServiceCapabilityType,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         debug!("🕵️ Performing discovery for: {:?}", capability_type);
 
         // Real capability discovery implementation
@@ -259,7 +263,7 @@ impl UniversalCapabilityAdapter {
     fn discover_from_environment(
         &self,
         capability_type: &ServiceCapabilityType,
-    ) -> BearDogResult<Option<String>> {
+    ) -> Result<Option<String>> {
         let env_var = match capability_type {
             ServiceCapabilityType::ComputeIntelligence => "COMPUTE_SERVICE_ENDPOINT",
             ServiceCapabilityType::ServiceMesh => "MESH_SERVICE_ENDPOINT",
@@ -275,7 +279,7 @@ impl UniversalCapabilityAdapter {
     fn discover_from_service_mesh(
         &self,
         capability_type: &ServiceCapabilityType,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         // Service mesh discovery would integrate with Consul, etcd, Kubernetes, etc.
         // For now, return empty to indicate no mesh discovery available
         let _ = capability_type;
@@ -286,7 +290,7 @@ impl UniversalCapabilityAdapter {
     fn discover_local_fallbacks(
         &self,
         capability_type: &ServiceCapabilityType,
-    ) -> BearDogResult<Vec<UniversalCapability>> {
+    ) -> Result<Vec<UniversalCapability>> {
         use beardog_types::constants::domains::network::config;
         
         // Local fallback discovery using default ports and localhost
@@ -314,13 +318,32 @@ impl UniversalCapabilityAdapter {
 
     /// Gets default_port
     fn get_default_port(&self, capability_type: &ServiceCapabilityType) -> u16 {
-        match capability_type {
-            ServiceCapabilityType::ComputeIntelligence => 8081,
-            ServiceCapabilityType::ServiceMesh => 8082,
-            ServiceCapabilityType::DataStorage => 8083,
-            ServiceCapabilityType::DistributedIntelligence => 8084,
-            _ => 8080,
-        }
+        use beardog_types::constants::domains::network::defaults;
+        
+        // Check environment variables first, then fall back to capability-specific defaults
+        let env_var = match capability_type {
+            ServiceCapabilityType::ComputeIntelligence => "BEARDOG_COMPUTE_PORT",
+            ServiceCapabilityType::ServiceMesh => "BEARDOG_MESH_PORT",
+            ServiceCapabilityType::DataStorage => "BEARDOG_STORAGE_PORT",
+            ServiceCapabilityType::DistributedIntelligence => "BEARDOG_AI_PORT",
+            _ => "BEARDOG_API_PORT",
+        };
+        
+        // ✅ Environment-first: Try env var, then use config system
+        std::env::var(env_var)
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or_else(|| {
+                // Use config system for base port, then offset by capability
+                let base_port = defaults::default_api_port();
+                match capability_type {
+                    ServiceCapabilityType::ComputeIntelligence => base_port + 1,
+                    ServiceCapabilityType::ServiceMesh => base_port + 2,
+                    ServiceCapabilityType::DataStorage => base_port + 3,
+                    ServiceCapabilityType::DistributedIntelligence => base_port + 4,
+                    _ => base_port,
+                }
+            })
     }
 }
 

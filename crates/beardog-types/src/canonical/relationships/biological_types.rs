@@ -5,6 +5,7 @@
 // mutualism, commensalism, and facilitation.
 
 // Note: BearDogError and BearDogResult available for future extensions
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

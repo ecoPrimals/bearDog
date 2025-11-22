@@ -81,12 +81,12 @@ impl SoftwareUniversalProvider {
             }
             CryptoProviderType::Hardware => {
                 return Err(BearDogError::unsupported_operation(
-                    "Hardware crypto provider not yet implemented in software module".to_string()
+                    "Hardware crypto provider not yet implemented in software module".to_string(),
                 ));
             }
             CryptoProviderType::CloudKms => {
                 return Err(BearDogError::unsupported_operation(
-                    "Cloud KMS provider not yet implemented in software module".to_string()
+                    "Cloud KMS provider not yet implemented in software module".to_string(),
                 ));
             }
         };
@@ -347,7 +347,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
         let caps = provider.capabilities();
         assert!(caps.is_some());
 
@@ -361,14 +361,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_security_level() -> Result<(), Box<dyn std::error::Error>> {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
         assert_eq!(provider.get_security_level(), 1);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_vendor_info() -> Result<(), Box<dyn std::error::Error>> {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
 
         let info = provider.get_vendor_info();
         assert_eq!(info.name, "BearDog");
@@ -380,10 +380,7 @@ mod tests {
 
     #[test]
     fn test_crypto_provider_types() -> Result<(), Box<dyn std::error::Error>> {
-        assert_eq!(
-            CryptoProviderType::Software,
-            CryptoProviderType::Software
-        );
+        assert_eq!(CryptoProviderType::Software, CryptoProviderType::Software);
         assert_ne!(CryptoProviderType::Software, CryptoProviderType::OpenSsl);
 
         // Test variant coverage
@@ -394,7 +391,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_key_generation() -> Result<(), Box<dyn std::error::Error>> {
-        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
 
         let result = provider.generate_key("test-key", "AES-256").await;
         assert!(result.is_ok(), "Key generation should succeed for AES-256");
@@ -403,7 +400,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_encryption_decryption() -> Result<(), Box<dyn std::error::Error>> {
-        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
 
         provider.generate_key("test-key", "AES-256").await?;
 
@@ -417,7 +414,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_signing_verification() -> Result<(), Box<dyn std::error::Error>> {
-        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
 
         provider.generate_key("test-key", "Ed25519").await?;
 
@@ -431,7 +428,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_supported_algorithms() -> Result<(), Box<dyn std::error::Error>> {
-        let provider = SoftwareUniversalProvider::new(CryptoProviderType::RustCrypto).await?;
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
 
         if let Some(caps) = provider.capabilities() {
             assert!(caps

@@ -2,9 +2,9 @@
 //!
 //! Core trait definitions for the universal HSM system.
 
+use crate::tunnel::hsm::types::{HsmCapability, KeyType};
 use beardog_errors::BearDogError;
-use crate::tunnel::hsm::types::{KeyType, HsmCapability};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Universal HSM Provider trait
 ///
@@ -12,16 +12,16 @@ use serde::{Serialize, Deserialize};
 pub trait UniversalHsmProvider: Send + Sync {
     /// Get provider information
     fn get_provider_info(&self) -> ProviderInfo;
-    
+
     /// Generate a new key
     fn generate_key(&self, key_type: KeyType) -> Result<Vec<u8>, BearDogError>;
-    
+
     /// Sign data with a key
     fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
-    
+
     /// Verify a signature
     fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError>;
-    
+
     /// Get provider capabilities
     fn get_capabilities(&self) -> Vec<HsmCapability>;
 }
@@ -105,4 +105,3 @@ impl Default for ProviderInfo {
         }
     }
 }
-

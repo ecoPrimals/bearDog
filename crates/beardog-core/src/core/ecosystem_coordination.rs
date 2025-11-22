@@ -65,10 +65,22 @@ impl BearDogCore {
 
         // Service mesh initialization logic using universal adapter
         // Initialize with basic capabilities
+        // Use environment-aware endpoint discovery
+        let mesh_endpoint = std::env::var("MESH_SERVICE_ENDPOINT")
+            .or_else(|_| std::env::var("BEARDOG_MESH_ENDPOINT"))
+            .unwrap_or_else(|_| {
+                use beardog_types::constants::domains::network::config;
+                format!(
+                    "http://{}:{}",
+                    config::default_service_host(),
+                    config::default_service_port()
+                )
+            });
+        
         self.universal_adapter
             .register_capability(
                 CapabilityType::ServiceMesh,
-                Cow::Borrowed( http"://localhost:8080"),
+                Cow::Owned(mesh_endpoint),
             )
             .await?;
 
@@ -80,10 +92,22 @@ impl BearDogCore {
         info!(" Starting AI-first API server via universal  adapter" );
 
         // Register service mesh capability if not already registered
+        // Use environment-aware endpoint with API path
+        let api_endpoint = std::env::var("API_SERVICE_ENDPOINT")
+            .or_else(|_| std::env::var("BEARDOG_API_ENDPOINT"))
+            .unwrap_or_else(|_| {
+                use beardog_types::constants::domains::network::config;
+                format!(
+                    "http://{}:{}/api",
+                    config::default_service_host(),
+                    config::default_service_port()
+                )
+            });
+        
         self.universal_adapter
             .register_capability(
                 CapabilityType::ServiceMesh,
-                Cow::Borrowed( http"://localhost:8080/ api" ),
+                Cow::Owned(api_endpoint.clone()),
             )
             .await?;
 
@@ -94,6 +118,6 @@ impl BearDogCore {
             .await?;
     // Perfect resource management with automatic cleanup
 
-        info!(" AI-first API server started at: {}", endpoint);Ok(())
+        info!(" AI-first API server started at: {}", api_endpoint);Ok(())
     }
 }

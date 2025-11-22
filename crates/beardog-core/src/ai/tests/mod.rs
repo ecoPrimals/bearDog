@@ -6,3 +6,6 @@ pub mod hybrid_intelligence_comprehensive_tests;
 // Additional comprehensive tests - November 6, 2025
 pub mod decision_engine_tests;
 pub mod neural_network_tests;
+
+// November 19, 2025: Hybrid Intelligence Core Types Tests - Session 4
+pub mod hybrid_intelligence_core_tests;

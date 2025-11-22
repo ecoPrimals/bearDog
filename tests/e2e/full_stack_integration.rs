@@ -57,7 +57,7 @@ pub async fn run_full_stack_integration_test(
     execute_step("Workflow Execution", || async {
         // Simulate complex business logic processing
         for _i in 0..5 {
-            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+            // No sleep needed - testing business logic, not timing
         }
         Ok(())
     })
@@ -83,7 +83,7 @@ pub async fn run_full_stack_integration_test(
 
     // Simulate encryption/decryption
     execute_step("Encryption Operations", || async {
-        tokio::time::sleep(std::time::Duration::from_millis(30)).await;
+        // No sleep needed - testing encryption logic, not timing
         Ok(())
     })
     .await?;

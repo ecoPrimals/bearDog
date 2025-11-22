@@ -43,7 +43,7 @@ mod tests {
         let short_challenge =
             RecoveryChallenge::with_expiration("user_789", std::time::Duration::from_nanos(1));
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // Modern pattern: 1 nanosecond instantly expired - no sleep needed
         assert!(short_challenge.is_expired());
 
         // Test multi-factor challenge

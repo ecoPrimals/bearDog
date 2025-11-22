@@ -2,11 +2,12 @@
 //!
 //! This module provides compile-time and runtime validation through the type system.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroUsize;
 
-type Result<T> = BearDogResult<T>;
+type Result<T> = Result<T>;
 
 /// Human oversight level (0.0 = full automation, 1.0 = full human control)
 ///

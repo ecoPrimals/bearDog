@@ -69,14 +69,15 @@ impl Default for NetworkConfig {
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(5353),
             discovery_port_range: {
+                use beardog_config::global::BEARDOG_CONFIG;
                 let start = std::env::var("BEARDOG_DISCOVERY_PORT_START")
                     .ok()
                     .and_then(|p| p.parse().ok())
-                    .unwrap_or(8081);
+                    .unwrap_or_else(|| BEARDOG_CONFIG.network.discovery.port);
                 let end = std::env::var("BEARDOG_DISCOVERY_PORT_END")
                     .ok()
                     .and_then(|p| p.parse().ok())
-                    .unwrap_or(8090);
+                    .unwrap_or_else(|| BEARDOG_CONFIG.network.discovery.port + 9);
                 (start, end)
             },
             max_packet_size: std::env::var("BEARDOG_DISCOVERY_MAX_PACKET_SIZE")
@@ -131,7 +132,9 @@ pub struct TlsConfig {
 /// TLS version
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum TlsVersion {
+    /// TLS version 1.2 (RFC 5246)
     TlsV1_2,
+    /// TLS version 1.3 (RFC 8446) - recommended
     TlsV1_3,
 }
 
@@ -167,6 +170,10 @@ impl Default for CacheConfig {
     }
 }
 
+/// Security configuration for network service discovery
+///
+/// Defines authentication, authorization, and encryption settings for secure
+/// communication between services in the discovery system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     /// Enable authentication
@@ -303,6 +310,10 @@ impl NetworkUtils {
     }
 }
 
+/// Represents a network interface available for service discovery
+///
+/// Contains information about a physical or virtual network interface,
+/// including its name, assigned IP addresses, and operational status.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkInterface {
     /// Name of the network interface (e.g., "eth0", "wlan0")

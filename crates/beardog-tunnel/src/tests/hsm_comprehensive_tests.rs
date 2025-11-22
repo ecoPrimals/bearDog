@@ -10,6 +10,7 @@ use crate::tunnel::hsm::types::{Algorithm, HsmCapabilities, KeyType};
 use std::time::Duration;
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod hsm_comprehensive_tests {
     use super::*;
 

@@ -39,7 +39,7 @@ impl Default for PhonebookConfig {
             enabled: true,
             bind_address: std::env::var("BEARDOG_PHONEBOOK_BIND_ADDRESS")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()),
+                .unwrap_or_else(|_| config::default_service_host()),
             cache_size: std::env::var("BEARDOG_PHONEBOOK_CACHE_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())

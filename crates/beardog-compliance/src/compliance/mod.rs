@@ -7,5 +7,7 @@ pub use types::*;
 
 mod handlers;
 #[cfg(test)]
+mod handlers_tests;
+#[cfg(test)]
 mod tests;
 mod types;

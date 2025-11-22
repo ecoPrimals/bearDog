@@ -43,12 +43,11 @@
 //! }
 //! ```
 
-pub mod types;
 pub mod orchestrator;
+pub mod types;
 
 pub use orchestrator::HsmEntropyOrchestrator;
 pub use types::{
-    HsmDeviceInfo, HsmDeviceType, HumanEntropyInput,
-    EntropyGenerationRequest, EntropyGenerationResult,
+    EntropyGenerationRequest, EntropyGenerationResult, HsmDeviceInfo, HsmDeviceType,
+    HumanEntropyInput,
 };
-

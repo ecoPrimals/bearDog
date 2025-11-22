@@ -5,6 +5,9 @@ mod tests {}
 #[path = "tests/cli_comprehensive_tests.rs"]
 mod cli_comprehensive_tests;
 
+#[cfg(test)]
+mod cli_tests;
+
 #[test]
 fn test_cli_basic_functionality() {
     let module_name = "beardog-cli";

@@ -116,7 +116,7 @@ impl Default for ServingConfig {
         Self {
             host: std::env::var("BEARDOG_AI_SERVING_HOST")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string()), // Standard bind-to-all-interfaces
+                .unwrap_or_else(|_| config::default_service_host()), // Environment-aware bind address
             port: std::env::var("BEARDOG_AI_SERVING_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

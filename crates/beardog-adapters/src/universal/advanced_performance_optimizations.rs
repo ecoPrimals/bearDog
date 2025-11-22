@@ -34,7 +34,7 @@
 //! let results = processor.process_batch(&requests).await?;
 //! ```
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::adapters::{CapabilityRequest, CapabilityResponse, CapabilityType};
 use super::zero_cost_capability_dispatch::{CapabilityHandlerDispatch, ZeroCostCapabilityRouter};
 use serde::{Deserialize, Serialize};
@@ -481,7 +481,7 @@ impl SIMDProcessor {
         &self,
         requests: &[CapabilityRequest],
         router: &OptimizedCapabilityRouter,
-    ) -> BearDogResult<Vec<CapabilityResponse>> {
+    ) -> Result<Vec<CapabilityResponse>> {
         if requests.is_empty() {
             return Ok(Vec::new());
         }
@@ -504,7 +504,7 @@ impl SIMDProcessor {
         &self,
         chunk: &[CapabilityRequest],
         router: &OptimizedCapabilityRouter,
-    ) -> BearDogResult<Vec<CapabilityResponse>> {
+    ) -> Result<Vec<CapabilityResponse>> {
         // For demonstration, we'll use vectorized processing concepts
         // In a real implementation, this would use actual SIMD instructions
         
@@ -558,12 +558,12 @@ impl Default for SIMDProcessor {
 
 impl OptimizedCapabilityRouter {
     /// Create new optimized capability router
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self> {
         Self::with_config(OptimizationConfig::default()).await
     }
 
     /// Create optimized router with custom configuration
-    pub async fn with_config(config: OptimizationConfig) -> BearDogResult<Self> {
+    pub async fn with_config(config: OptimizationConfig) -> Result<Self> {
         info!("Creating optimized capability router with config: {:?}", config);
 
         let base_router = ZeroCostCapabilityRouter::new();
@@ -603,7 +603,7 @@ impl OptimizedCapabilityRouter {
     }
 
     /// Route request with advanced optimizations
-    pub async fn route_request_optimized(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn route_request_optimized(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         let start_time = std::time::Instant::now();
         self.stats.record_request_start();
 
@@ -631,7 +631,7 @@ impl OptimizedCapabilityRouter {
     }
 
     /// Process batch of requests with SIMD optimizations
-    pub async fn process_batch(&self, requests: &[CapabilityRequest]) -> BearDogResult<Vec<CapabilityResponse>> {
+    pub async fn process_batch(&self, requests: &[CapabilityRequest]) -> Result<Vec<CapabilityResponse>> {
         if self.config.enable_simd && requests.len() >= self.config.simd_batch_size {
             self.simd_processor.process_batch(requests, self).await
         } else {

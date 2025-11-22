@@ -18,10 +18,17 @@ use beardog_errors::BearDogError;
             )))
         }
 
+        let default_endpoint = std::env::var("BEARDOG_PROMETHEUS_ENDPOINT").unwrap_or_else(|_| {
+            use beardog_config::global::BEARDOG_CONFIG;
+            format!(
+                "http://127.0.0.1:{}",
+                BEARDOG_CONFIG.network.ports.metrics_port
+            )
+        });
         let _endpoint = payload
             .get("endpoint")
             .and_then(|v| v.as_str())
-            .unwrap_or(  http" ://localhost:8080");
+            .unwrap_or(&default_endpoint);
     // Perfect resource management with automatic cleanup
 
         tracing::info!(" Prometheus {} operation to endpoint {}",

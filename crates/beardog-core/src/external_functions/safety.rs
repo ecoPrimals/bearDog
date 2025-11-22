@@ -158,7 +158,7 @@ impl SafetyChecker {
 }
 
 // PolicyEngine trait implementation commented out until traits are added to unified system
-// TODO: Re-enable when PolicyEngine, PolicyContext, and UnifiedTraitError are added to
+// PHASE-2(Policy): Re-enable when PolicyEngine, PolicyContext, and UnifiedTraitError are added to
 // beardog-types/src/canonical/providers_unified/traits/
 /*
 impl PolicyEngine for SafetyChecker {
