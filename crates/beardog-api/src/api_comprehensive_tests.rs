@@ -411,7 +411,7 @@ fn test_status_response_different_statuses() {
 fn test_api_state_creation() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
-    let state = ApiState { core: core.clone() };
+    let _state = ApiState { core: core.clone() };
 
     assert!(Arc::strong_count(&core) >= 2); // core + state
 }

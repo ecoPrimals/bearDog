@@ -160,34 +160,37 @@ mod tests {
 
 
     fn test_registry_config_default() {
+        const TEST_DEFAULT_PORT: u16 = 8080;
         let config = RegistryConfig::default();
         assert_eq!(config.registry_id, "beardog-registry");
         assert_eq!(config.registry_name, "BearDog Node Registry");
-        assert_eq!(config.port, 8080);
+        assert_eq!(config.port, TEST_DEFAULT_PORT);
         assert_eq!(config.max_nodes, 10000);
         assert!(config.enable_federation);
         assert!(config.validate().is_ok());}
 
 
     fn test_registry_config_builder() {
+        const TEST_DISCOVERY_PORT: u16 = 9090;
         let config = RegistryConfig::new("test-registry".to_string(), "Test Registry".to_string())
-            .with_port(9090)
+            .with_port(TEST_DISCOVERY_PORT)
             .with_max_nodes(5000)
             .with_metadata("key".to_string(), "value".to_string());
         assert_eq!(config.registry_id, "test-registry");
         assert_eq!(config.registry_name, "Test Registry");
-        assert_eq!(config.port, 9090);
+        assert_eq!(config.port, TEST_DISCOVERY_PORT);
         assert_eq!(config.max_nodes, 5000);
         assert_eq!(config.metadata.get("key"), Some("value".to_string()));}
 
 
     fn test_config_validation() {
+        const TEST_PORT: u16 = 8080;
         let mut config = RegistryConfig::default();
         config.registry_id = "".to_string();
         assert!(config.validate().is_err());
         config.registry_id = "valid-id".to_string();
         config.port = 0;
-        config.port = 8080;
+        config.port = TEST_PORT;
         config.max_nodes = 0;}
 
 

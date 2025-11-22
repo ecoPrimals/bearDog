@@ -155,23 +155,59 @@ pub struct RateLimitingConfig {
     pub window_seconds: u32,
 }
 
-impl Default for RateLimitingConfig {
-    fn default() -> Self {
+impl RateLimitingConfig {
+    /// Default maximum requests per minute
+    pub const DEFAULT_MAX_REQUESTS_PER_MINUTE: u32 = 100;
+
+    /// Default burst capacity
+    pub const DEFAULT_BURST_CAPACITY: u32 = 10;
+
+    /// Default window in seconds
+    pub const DEFAULT_WINDOW_SECS: u32 = 60;
+
+    /// Create RateLimitingConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enabled: true,
+            max_requests_per_minute: Self::DEFAULT_MAX_REQUESTS_PER_MINUTE,
+            burst_capacity: Self::DEFAULT_BURST_CAPACITY,
+            window_seconds: Self::DEFAULT_WINDOW_SECS,
+        }
+    }
+
+    /// Create RateLimitingConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN`: Max requests per minute (default: 100)
+    /// - `BEARDOG_RATE_LIMIT_BURST_CAPACITY`: Burst capacity (default: 10)
+    /// - `BEARDOG_RATE_LIMIT_WINDOW_SECS`: Window in seconds (default: 60)
+    pub fn from_env() -> Self {
         Self {
             enabled: true,
             max_requests_per_minute: std::env::var("BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(100),
+                .unwrap_or(Self::DEFAULT_MAX_REQUESTS_PER_MINUTE),
             burst_capacity: std::env::var("BEARDOG_RATE_LIMIT_BURST_CAPACITY")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(10),
+                .unwrap_or(Self::DEFAULT_BURST_CAPACITY),
             window_seconds: std::env::var("BEARDOG_RATE_LIMIT_WINDOW_SECS")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(60),
+                .unwrap_or(Self::DEFAULT_WINDOW_SECS),
         }
+    }
+}
+
+impl Default for RateLimitingConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 

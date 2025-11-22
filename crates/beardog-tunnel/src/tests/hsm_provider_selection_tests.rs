@@ -590,6 +590,7 @@ mod hsm_selection_tests {
             }
         }
 
+        #[allow(dead_code)]
         fn with_failures() -> Self {
             Self {
                 available: true,
@@ -753,7 +754,7 @@ mod hsm_selection_tests {
         let sw_info = software_hsm.get_info().await?;
 
         // Simulate selection logic based on security level (highest wins)
-        let providers = vec![
+        let providers = [
             (hw_info.security_level, "hardware"),
             (cloud_info.security_level, "cloud"),
             (sw_info.security_level, "software"),

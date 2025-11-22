@@ -4,7 +4,7 @@
 // and instead discovers and interacts with primals through their capabilities.
 // Each primal only knows itself and discovers others through universal adapter patterns.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
     ComputeAbility, NetworkFunction, OrchestrationFeature, PerformanceRequirements,
     SecurityRequirements, SecurityService, StorageCharacteristic, UniversalCapabilityType,
@@ -112,14 +112,14 @@ pub trait PrimalDiscoveryClient: Send + Sync + std::fmt::Debug {
     fn discover_primals(
         &self,
         capabilities: Vec<UniversalCapabilityType>,
-    ) -> BearDogResult<Vec<UniversalServiceDescriptor>>;
+    ) -> Result<Vec<UniversalServiceDescriptor>>;
 
     /// Send request to primal with capability
     fn send_request(
         &self,
         service: &UniversalServiceDescriptor,
         request: PrimalRequest,
-    ) -> BearDogResult<PrimalResponse>;
+    ) -> Result<PrimalResponse>;
 }
 
 impl UniversalPrimalAdapter {
@@ -127,7 +127,7 @@ impl UniversalPrimalAdapter {
     /// Creates a new instance
     pub async fn new(
         discovery_client: Arc<dyn PrimalDiscoveryClient + Send + Sync>,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self> {
         info!("🌐 Initializing Universal Primal Adapter - Zero hardcoded primal names");
 
         let config = PrimalAdapterConfig::default();
@@ -141,7 +141,7 @@ impl UniversalPrimalAdapter {
     }
 
     /// Discover primals with compute capabilities (replaces toadstool hardcoding)
-    pub fn discover_compute_primals(&self) -> BearDogResult<Vec<UniversalServiceDescriptor>> {
+    pub fn discover_compute_primals(&self) -> Result<Vec<UniversalServiceDescriptor>> {
         info!("🧠 Discovering compute capability primals (was: toadstool hardcoding)");
 
         let compute_capabilities = vec![UniversalCapabilityType::Compute {
@@ -157,7 +157,7 @@ impl UniversalPrimalAdapter {
     }
 
     /// Discover primals with network capabilities (replaces songbird hardcoding)
-    pub fn discover_network_primals(&self) -> BearDogResult<Vec<UniversalServiceDescriptor>> {
+    pub fn discover_network_primals(&self) -> Result<Vec<UniversalServiceDescriptor>> {
         info!("🕊️ Discovering network capability primals (was: songbird hardcoding)");
 
         let network_capabilities = vec![UniversalCapabilityType::Network {
@@ -173,7 +173,7 @@ impl UniversalPrimalAdapter {
     }
 
     /// Discover primals with storage capabilities (replaces nestgate hardcoding)
-    pub fn discover_storage_primals(&self) -> BearDogResult<Vec<UniversalServiceDescriptor>> {
+    pub fn discover_storage_primals(&self) -> Result<Vec<UniversalServiceDescriptor>> {
         info!("🗄️ Discovering storage capability primals (was: nestgate hardcoding)");
 
         let storage_capabilities = vec![UniversalCapabilityType::Storage {
@@ -191,7 +191,7 @@ impl UniversalPrimalAdapter {
     /// Discover primals with orchestration capabilities (replaces biomeOS hardcoding)
     pub fn discover_orchestration_primals(
         &self,
-    ) -> BearDogResult<Vec<UniversalServiceDescriptor>> {
+    ) -> Result<Vec<UniversalServiceDescriptor>> {
         info!("🌱 Discovering orchestration capability primals (was: biomeOS hardcoding)");
 
         let orchestration_capabilities = vec![UniversalCapabilityType::Orchestration {
@@ -211,7 +211,7 @@ impl UniversalPrimalAdapter {
         &self,
         capability: UniversalCapabilityType,
         payload: serde_json::Value,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse> {
         info!("📤 Sending capability request: {:?}", capability);
 
         // Find primals with this capability
@@ -247,7 +247,7 @@ impl UniversalPrimalAdapter {
     pub fn request_compute_analysis(
         &self,
         data: serde_json::Value,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse> {
         let compute_capability = UniversalCapabilityType::Compute {
             abilities: vec![ComputeAbility::DataAnalysis],
         };
@@ -259,7 +259,7 @@ impl UniversalPrimalAdapter {
     pub fn request_network_routing(
         &self,
         routing_config: serde_json::Value,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse> {
         let network_capability = UniversalCapabilityType::Network {
             functions: vec![NetworkFunction::TrafficRouting],
         };
@@ -271,7 +271,7 @@ impl UniversalPrimalAdapter {
     pub fn request_data_storage(
         &self,
         storage_request: serde_json::Value,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse> {
         let storage_capability = UniversalCapabilityType::Storage {
             characteristics: vec![StorageCharacteristic::Persistent],
         };
@@ -283,7 +283,7 @@ impl UniversalPrimalAdapter {
     pub fn request_orchestration(
         &self,
         orchestration_request: serde_json::Value,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse> {
         let orchestration_capability = UniversalCapabilityType::Orchestration {
             features: vec![OrchestrationFeature::ServiceDeployment],
         };
@@ -317,7 +317,7 @@ impl PrimalDiscoveryClient for DefaultPrimalDiscoveryClient {
     fn discover_primals(
         &self,
         capabilities: Vec<UniversalCapabilityType>,
-    ) -> BearDogResult<Vec<UniversalServiceDescriptor>> {
+    ) -> Result<Vec<UniversalServiceDescriptor>> {
         debug!(
             "🔍 Discovering primals with capabilities: {:?}",
             capabilities
@@ -357,7 +357,7 @@ impl PrimalDiscoveryClient for DefaultPrimalDiscoveryClient {
         &self,
         service: &UniversalServiceDescriptor,
         request: PrimalRequest,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse> {
         debug!("📤 Sending request to primal: {}", service.service_id);
 
         // This would send actual HTTP/gRPC request to the primal

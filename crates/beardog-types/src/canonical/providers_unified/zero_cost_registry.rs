@@ -3,7 +3,8 @@
 //! This module provides a zero-cost alternative to the Arc<dyn> patterns in the
 //! consolidated provider registry, using compile-time generics for better performance.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -111,7 +112,7 @@ where
         provider_id: String,
         provider: S,
         info: ProviderInfo,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         // Compile-time dispatch - no vtable lookup overhead
         let mut providers = self.security_providers.write().await;
         let mut metadata = self.metadata_cache.write().await;
@@ -132,7 +133,7 @@ where
         provider_id: String,
         provider: H,
         info: ProviderInfo,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         // Compile-time dispatch - no Arc<dyn> overhead
         let mut providers = self.hsm_providers.write().await;
         let mut metadata = self.metadata_cache.write().await;
@@ -153,7 +154,7 @@ where
         provider_id: String,
         provider: M,
         info: ProviderInfo,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         // Compile-time dispatch - optimized by the compiler
         let mut providers = self.monitoring_providers.write().await;
         let mut metadata = self.metadata_cache.write().await;
@@ -169,7 +170,7 @@ where
     }
     
     /// Get a security provider with zero-cost dispatch
-    pub async fn get_security_provider(&self, provider_id: &str) -> BearDogResult<S> {
+    pub async fn get_security_provider(&self, provider_id: &str) -> Result<S> {
         let providers = self.security_providers.read().await;
         providers
             .get(provider_id)
@@ -178,7 +179,7 @@ where
     }
     
     /// Get an HSM provider with zero-cost dispatch
-    pub async fn get_hsm_provider(&self, provider_id: &str) -> BearDogResult<H> {
+    pub async fn get_hsm_provider(&self, provider_id: &str) -> Result<H> {
         let providers = self.hsm_providers.read().await;
         providers
             .get(provider_id)
@@ -187,7 +188,7 @@ where
     }
     
     /// Get a monitoring provider with zero-cost dispatch
-    pub async fn get_monitoring_provider(&self, provider_id: &str) -> BearDogResult<M> {
+    pub async fn get_monitoring_provider(&self, provider_id: &str) -> Result<M> {
         let providers = self.monitoring_providers.read().await;
         providers
             .get(provider_id)
@@ -214,7 +215,7 @@ where
     }
     
     /// Health check all providers with compile-time dispatch
-    pub async fn health_check_all(&self) -> BearDogResult<HashMap<String, ProviderHealth>> {
+    pub async fn health_check_all(&self) -> Result<HashMap<String, ProviderHealth>> {
         let mut health_results = HashMap::new();
         
         // Check security providers with zero-cost dispatch
@@ -314,7 +315,7 @@ where
     }
     
     /// Clear all providers (useful for testing)
-    pub async fn clear_all(&self) -> BearDogResult<()> {
+    pub async fn clear_all(&self) -> Result<()> {
         self.security_providers.write().await.clear();
         self.hsm_providers.write().await.clear();
         self.monitoring_providers.write().await.clear();
@@ -368,7 +369,7 @@ impl MockSecurityProvider {
 // For now, let's create a simplified mock that doesn't implement the full trait
 // This is just for demonstration of the zero-cost pattern
 impl MockSecurityProvider {
-    pub async fn mock_health_check(&self) -> BearDogResult<ProviderHealth> {
+    pub async fn mock_health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
             status: if self.initialized { 
                 HealthStatus::Healthy 
@@ -409,7 +410,7 @@ impl MockHsmProvider {
 }
 
 impl MockHsmProvider {
-    pub async fn mock_health_check(&self) -> BearDogResult<ProviderHealth> {
+    pub async fn mock_health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
             status: if self.initialized { 
                 HealthStatus::Healthy 
@@ -450,7 +451,7 @@ impl MockMonitoringProvider {
 }
 
 impl MockMonitoringProvider {
-    pub async fn mock_health_check(&self) -> BearDogResult<ProviderHealth> {
+    pub async fn mock_health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
             status: if self.initialized { 
                 HealthStatus::Healthy 

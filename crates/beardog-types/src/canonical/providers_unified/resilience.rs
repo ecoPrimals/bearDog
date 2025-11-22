@@ -2,6 +2,11 @@
 //
 // Provider resilience patterns including retry logic, circuit breakers, and fault tolerance.
 
+// Allow pedantic clippy lints for intentional type conversions
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_sign_loss)]
+
 use crate::canonical::traits::{RetryStrategy, TimeoutPolicy};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -110,12 +115,14 @@ impl RetryStrategy for RetryConfig {
                 Duration::from_millis(delay_ms)
             }
             BackoffStrategy::Exponential => {
-                let delay_ms = (self.initial_delay.as_millis() as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                let delay_ms = (self.initial_delay.as_millis() as f64
+                    * 2.0_f64.powi((attempt - 1) as i32)) as u64;
                 Duration::from_millis(delay_ms)
             }
             BackoffStrategy::Custom(_) => {
                 // For custom strategies, use exponential as fallback
-                let delay_ms = (self.initial_delay.as_millis() as f64 * 2.0_f64.powi((attempt - 1) as i32)) as u64;
+                let delay_ms = (self.initial_delay.as_millis() as f64
+                    * 2.0_f64.powi((attempt - 1) as i32)) as u64;
                 Duration::from_millis(delay_ms)
             }
         };
@@ -310,9 +317,9 @@ impl TimeoutPolicy for TimeoutConfig {
         if !self.enabled {
             return true; // Disabled is valid for production
         }
-        self.default_timeout >= Duration::from_secs(1) &&
-        self.default_timeout <= Duration::from_secs(300) &&
-        self.validate().is_ok()
+        self.default_timeout >= Duration::from_secs(1)
+            && self.default_timeout <= Duration::from_secs(300)
+            && self.validate().is_ok()
     }
 }
 

@@ -112,6 +112,73 @@ pub struct NetworkResourceConfig {
     pub tcp_nodelay: bool,
 }
 
+impl NetworkResourceConfig {
+    /// Default maximum connections
+    pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+
+    /// Default connection timeout in seconds
+    pub const DEFAULT_CONNECTION_TIMEOUT_SECS: u64 = 30;
+
+    /// Default read timeout in seconds
+    pub const DEFAULT_READ_TIMEOUT_SECS: u64 = 30;
+
+    /// Default write timeout in seconds
+    pub const DEFAULT_WRITE_TIMEOUT_SECS: u64 = 30;
+
+    /// Create NetworkResourceConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            max_connections: Self::DEFAULT_MAX_CONNECTIONS,
+            connection_timeout: Duration::from_secs(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
+            read_timeout: Duration::from_secs(Self::DEFAULT_READ_TIMEOUT_SECS),
+            write_timeout: Duration::from_secs(Self::DEFAULT_WRITE_TIMEOUT_SECS),
+            keep_alive: true,
+            tcp_nodelay: true,
+        }
+    }
+
+    /// Create NetworkResourceConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_PROD_MAX_CONNECTIONS`: Maximum connections (default: 1000)
+    /// - `BEARDOG_PROD_CONNECTION_TIMEOUT_SECS`: Connection timeout (default: 30)
+    /// - `BEARDOG_PROD_READ_TIMEOUT_SECS`: Read timeout (default: 30)
+    /// - `BEARDOG_PROD_WRITE_TIMEOUT_SECS`: Write timeout (default: 30)
+    pub fn from_env() -> Self {
+        Self {
+            max_connections: std::env::var("BEARDOG_PROD_MAX_CONNECTIONS")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(Self::DEFAULT_MAX_CONNECTIONS),
+            connection_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PROD_CONNECTION_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
+            ),
+            read_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PROD_READ_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(Self::DEFAULT_READ_TIMEOUT_SECS),
+            ),
+            write_timeout: Duration::from_secs(
+                std::env::var("BEARDOG_PROD_WRITE_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(Self::DEFAULT_WRITE_TIMEOUT_SECS),
+            ),
+            keep_alive: true,
+            tcp_nodelay: true,
+        }
+    }
+}
+
 /// Storage resource configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResourceConfig {
@@ -144,96 +211,176 @@ pub struct ConnectionConfig {
     pub health_check_interval: Duration,
 }
 
-impl Default for GcTuningConfig {
-    fn default() -> Self {
+impl StorageResourceConfig {
+    /// Default maximum disk usage percentage
+    pub const DEFAULT_MAX_DISK_USAGE_PERCENT: f64 = 80.0;
+
+    /// Default temp cleanup interval in seconds
+    pub const DEFAULT_TEMP_CLEANUP_INTERVAL_SECS: u64 = 3600;
+
+    /// Default log rotation size in MB
+    pub const DEFAULT_LOG_ROTATION_SIZE_MB: u64 = 100;
+
+    /// Default log retention in days
+    pub const DEFAULT_LOG_RETENTION_DAYS: u32 = 30;
+
+    /// Create StorageResourceConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            max_disk_usage_percent: Self::DEFAULT_MAX_DISK_USAGE_PERCENT,
+            temp_dir_cleanup_interval: Duration::from_secs(
+                Self::DEFAULT_TEMP_CLEANUP_INTERVAL_SECS,
+            ),
+            log_rotation_size_mb: Self::DEFAULT_LOG_ROTATION_SIZE_MB,
+            log_retention_days: Self::DEFAULT_LOG_RETENTION_DAYS,
+        }
+    }
+
+    /// Create StorageResourceConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_MAX_DISK_USAGE_PERCENT`: Max disk usage % (default: 80.0)
+    /// - `BEARDOG_TEMP_CLEANUP_INTERVAL_SECS`: Cleanup interval (default: 3600)
+    /// - `BEARDOG_LOG_ROTATION_SIZE_MB`: Log rotation size (default: 100)
+    /// - `BEARDOG_LOG_RETENTION_DAYS`: Log retention days (default: 30)
+    pub fn from_env() -> Self {
+        Self {
+            max_disk_usage_percent: std::env::var("BEARDOG_MAX_DISK_USAGE_PERCENT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_MAX_DISK_USAGE_PERCENT),
+            temp_dir_cleanup_interval: Duration::from_secs(
+                std::env::var("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|i| i.parse().ok())
+                    .unwrap_or(Self::DEFAULT_TEMP_CLEANUP_INTERVAL_SECS),
+            ),
+            log_rotation_size_mb: std::env::var("BEARDOG_LOG_ROTATION_SIZE_MB")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_LOG_ROTATION_SIZE_MB),
+            log_retention_days: std::env::var("BEARDOG_LOG_RETENTION_DAYS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_LOG_RETENTION_DAYS),
+        }
+    }
+}
+
+impl ConnectionConfig {
+    /// Default connection pool size
+    pub const DEFAULT_POOL_SIZE: usize = 10;
+
+    /// Default max idle connections
+    pub const DEFAULT_MAX_IDLE_CONNECTIONS: usize = 5;
+
+    /// Default connection lifetime in seconds
+    pub const DEFAULT_CONNECTION_LIFETIME_SECS: u64 = 1800;
+
+    /// Default health check interval in seconds
+    pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 60;
+
+    /// Create ConnectionConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            pool_size: Self::DEFAULT_POOL_SIZE,
+            max_idle_connections: Self::DEFAULT_MAX_IDLE_CONNECTIONS,
+            connection_lifetime: Duration::from_secs(Self::DEFAULT_CONNECTION_LIFETIME_SECS),
+            health_check_interval: Duration::from_secs(Self::DEFAULT_HEALTH_CHECK_INTERVAL_SECS),
+        }
+    }
+
+    /// Create ConnectionConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_CONNECTION_POOL_SIZE`: Pool size (default: 10)
+    /// - `BEARDOG_MAX_IDLE_CONNECTIONS`: Max idle connections (default: 5)
+    /// - `BEARDOG_CONNECTION_LIFETIME_SECS`: Connection lifetime (default: 1800)
+    /// - `BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS`: Health check interval (default: 60)
+    pub fn from_env() -> Self {
+        Self {
+            pool_size: std::env::var("BEARDOG_CONNECTION_POOL_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_POOL_SIZE),
+            max_idle_connections: std::env::var("BEARDOG_MAX_IDLE_CONNECTIONS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_MAX_IDLE_CONNECTIONS),
+            connection_lifetime: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_LIFETIME_SECS")
+                    .ok()
+                    .and_then(|l| l.parse().ok())
+                    .unwrap_or(Self::DEFAULT_CONNECTION_LIFETIME_SECS),
+            ),
+            health_check_interval: Duration::from_secs(
+                std::env::var("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(Self::DEFAULT_HEALTH_CHECK_INTERVAL_SECS),
+            ),
+        }
+    }
+}
+
+impl GcTuningConfig {
+    /// Create GcTuningConfig with hardcoded defaults
+    pub fn with_defaults() -> Self {
         Self {
             strategy: GcStrategy::Default,
             target_pause_ms: None,
             throughput_target_percent: None,
         }
     }
+
+    /// Create GcTuningConfig from environment variables
+    pub fn from_env() -> Self {
+        let target_pause_ms = std::env::var("BEARDOG_GC_TARGET_PAUSE_MS")
+            .ok()
+            .and_then(|s| s.parse().ok());
+        let throughput_target_percent = std::env::var("BEARDOG_GC_THROUGHPUT_TARGET_PERCENT")
+            .ok()
+            .and_then(|s| s.parse().ok());
+
+        Self {
+            strategy: GcStrategy::Default,
+            target_pause_ms,
+            throughput_target_percent,
+        }
+    }
+}
+
+impl Default for GcTuningConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
 }
 
 impl Default for NetworkResourceConfig {
     fn default() -> Self {
-        Self {
-            max_connections: std::env::var("BEARDOG_PROD_MAX_CONNECTIONS")
-                .ok()
-                .and_then(|c| c.parse().ok())
-                .unwrap_or(1000), // 1000 connections default
-            connection_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_PROD_CONNECTION_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30),
-            ),
-            read_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_PROD_READ_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30),
-            ),
-            write_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_PROD_WRITE_TIMEOUT_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30),
-            ),
-            keep_alive: true,
-            tcp_nodelay: true,
-        }
+        Self::with_defaults()
     }
 }
 
 impl Default for StorageResourceConfig {
     fn default() -> Self {
-        Self {
-            max_disk_usage_percent: std::env::var("BEARDOG_MAX_DISK_USAGE_PERCENT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(80.0),
-            temp_dir_cleanup_interval: Duration::from_secs(
-                std::env::var("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|i| i.parse().ok())
-                    .unwrap_or(3600), // 1 hour default
-            ),
-            log_rotation_size_mb: std::env::var("BEARDOG_LOG_ROTATION_SIZE_MB")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(100),
-            log_retention_days: std::env::var("BEARDOG_LOG_RETENTION_DAYS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(30),
-        }
+        Self::with_defaults()
     }
 }
 
 impl Default for ConnectionConfig {
     fn default() -> Self {
-        Self {
-            pool_size: std::env::var("BEARDOG_CONNECTION_POOL_SIZE")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(10),
-            max_idle_connections: std::env::var("BEARDOG_MAX_IDLE_CONNECTIONS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(5),
-            connection_lifetime: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_LIFETIME_SECS")
-                    .ok()
-                    .and_then(|l| l.parse().ok())
-                    .unwrap_or(1800), // 30 minutes default
-            ),
-            health_check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(60), // 1 minute default
-            ),
-        }
+        Self::with_defaults()
     }
 }
 

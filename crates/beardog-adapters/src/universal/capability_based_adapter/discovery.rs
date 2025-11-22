@@ -4,7 +4,7 @@
 
 use super::types::*;
 use super::core::UniversalCapabilityAdapter;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     CapabilityDiscoveryRequest, CapabilityDiscoveryResponse, ServiceCapabilityType, UniversalCapability,
 };
@@ -17,7 +17,7 @@ impl UniversalCapabilityAdapter {
         &self,
         capability_type: ServiceCapabilityType,
         requirements: Option<SecurityRequirements>,
-    ) -> BearDogResult<CapabilityDiscoveryResult> {
+    ) -> Result<CapabilityDiscoveryResult> {
         let request_id = Uuid::new_v4().to_string();
         info!("🔍 Starting capability discovery for: {:?}", capability_type);
         

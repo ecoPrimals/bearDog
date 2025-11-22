@@ -277,9 +277,9 @@ fn test_cache_multiple_entries() {
     let mut manager = CacheManager::new(config);
 
     // Add 10 entries
-    for i in 0..10 {
+    for i in 0_u8..10 {
         let key = format!("key{i}");
-        let data = vec![i as u8; 10];
+        let data = vec![i; 10];
         manager.put(key, data);
     }
 

@@ -152,10 +152,14 @@ impl StrongBoxMultiCredentialProvider {
         &self,
         request: &CredentialRequest,
     ) -> Result<(String, Vec<u8>), BearDogError> {
-        debug!("Generating Android StrongBox key for role: {}", request.role);
+        debug!(
+            "Generating Android StrongBox key for role: {}",
+            request.role
+        );
 
-        // TODO: Implement actual Android Keystore key generation via JNI
-        // This requires:
+        // PHASE-2(Android-JNI): Implement Android Keystore key generation
+        //
+        // Requirements:
         // 1. KeyGenParameterSpec.Builder with:
         //    - KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY
         //    - setIsStrongBoxBacked(true)
@@ -183,8 +187,9 @@ impl StrongBoxMultiCredentialProvider {
     ) -> Result<Vec<u8>, BearDogError> {
         debug!("Signing {} bytes with Android key: {}", data.len(), alias);
 
-        // TODO: Implement actual Android Keystore signing via JNI
-        // This requires:
+        // PHASE-2(Android-JNI): Implement Android Keystore signing
+        //
+        // Requirements:
         // 1. KeyStore.getInstance("AndroidKeyStore")
         // 2. keyStore.load(null)
         // 3. privateKey = keyStore.getKey(alias, null)
@@ -204,7 +209,7 @@ impl StrongBoxMultiCredentialProvider {
     async fn android_list_keys(&self) -> Result<Vec<String>, BearDogError> {
         debug!("Listing keys from Android Keystore");
 
-        // TODO: Implement actual keystore enumeration via JNI
+        // PHASE-2(Android-JNI): Implement keystore enumeration via JNI
         // KeyStore.getInstance("AndroidKeyStore").aliases()
 
         // For now, return in-memory cache
@@ -216,7 +221,7 @@ impl StrongBoxMultiCredentialProvider {
     async fn android_delete_key(&self, alias: &str) -> Result<(), BearDogError> {
         debug!("Deleting Android key: {}", alias);
 
-        // TODO: Implement actual keystore deletion via JNI
+        // PHASE-2(Android-JNI): Implement keystore deletion via JNI
         // KeyStore.getInstance("AndroidKeyStore").deleteEntry(alias)
 
         Err(BearDogError::system(
@@ -228,7 +233,7 @@ impl StrongBoxMultiCredentialProvider {
     async fn android_hardware_entropy(&self, size: usize) -> Result<Vec<u8>, BearDogError> {
         debug!("Generating {} bytes of entropy from Android hardware", size);
 
-        // TODO: Implement actual SecureRandom via JNI
+        // PHASE-2(Android-JNI): Implement SecureRandom via JNI
         // SecureRandom.getInstanceStrong() or
         // KeyGenerator with StrongBox-backed keys
 
@@ -302,7 +307,10 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
 
         // Store in cache
         let mut creds = self.credentials.write().await;
-        creds.insert(credential_info.credential_id.clone(), credential_info.clone());
+        creds.insert(
+            credential_info.credential_id.clone(),
+            credential_info.clone(),
+        );
 
         info!("✅ Created credential: {}", credential_info.credential_id);
         Ok(credential_info)
@@ -335,10 +343,9 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
         credential_id: &str,
     ) -> Result<CredentialInfo, Self::Error> {
         let creds = self.credentials.read().await;
-        creds
-            .get(credential_id)
-            .cloned()
-            .ok_or_else(|| BearDogError::system(format!("Credential '{}' not found", credential_id)))
+        creds.get(credential_id).cloned().ok_or_else(|| {
+            BearDogError::system(format!("Credential '{}' not found", credential_id))
+        })
     }
 
     async fn sign_with_credential(
@@ -354,7 +361,9 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
         );
 
         let alias = Self::credential_id_to_alias(credential_id);
-        let signature = self.android_sign(&alias, data, require_user_presence).await?;
+        let signature = self
+            .android_sign(&alias, data, require_user_presence)
+            .await?;
 
         // Update use count
         let mut creds = self.credentials.write().await;
@@ -442,15 +451,15 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
     fn get_multi_credential_capabilities(&self) -> MultiCredentialCapabilities {
         MultiCredentialCapabilities {
             max_credentials: self.device_info.max_keys, // Unlimited on Android
-            current_credentials: 0, // TODO: Query from keystore
+            current_credentials: 0, // PHASE-2(Android-JNI): Query actual count from keystore
             supports_hierarchical_credentials: true,
             supports_deterministic_derivation: true, // Via SecureRandom seeding
             supports_hardware_entropy: true,
             max_entropy_bytes: Some(65536), // Reasonable limit
             supported_algorithms: vec!["EC".to_string(), "RSA".to_string()],
-            supports_user_presence: true, // Via BiometricPrompt
+            supports_user_presence: true,     // Via BiometricPrompt
             supports_user_verification: true, // Via BiometricPrompt or PIN
-            supports_metadata: true, // Android keystore supports metadata
+            supports_metadata: true,          // Android keystore supports metadata
             protocol: HsmProtocol::AndroidStrongBox,
         }
     }
@@ -476,7 +485,7 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
         let entropy_hash = hasher.finalize().to_vec();
 
         // Create derivation path
-        let derivation_path = vec![0, 1, 2]; // TODO: BIP32-style
+        let derivation_path = vec![0, 1, 2]; // PHASE-2: Implement BIP32-style derivation
 
         // Create credential request for target device
         let target_request = CredentialRequest {
@@ -540,18 +549,30 @@ impl beardog_traits::unified::BearDogProvider for StrongBoxMultiCredentialProvid
     }
 
     async fn health_check(&self) -> Result<ProviderHealth, Self::Error> {
-        use std::time::SystemTime;
         use beardog_types::canonical::providers_unified::traits::{
-            HealthStatus, ResourceUsage, NetworkIoMetrics,
+            HealthStatus, NetworkIoMetrics, ResourceUsage,
         };
+        use std::time::SystemTime;
 
         Ok(ProviderHealth {
             status: HealthStatus::Healthy,
             timestamp: SystemTime::now(),
             details: HashMap::from([
-                ("device".to_string(), format!("{} {}", self.device_info.manufacturer, self.device_info.model)),
-                ("android_version".to_string(), self.device_info.android_version.clone()),
-                ("strongbox".to_string(), self.device_info.strongbox_available.to_string()),
+                (
+                    "device".to_string(),
+                    format!(
+                        "{} {}",
+                        self.device_info.manufacturer, self.device_info.model
+                    ),
+                ),
+                (
+                    "android_version".to_string(),
+                    self.device_info.android_version.clone(),
+                ),
+                (
+                    "strongbox".to_string(),
+                    self.device_info.strongbox_available.to_string(),
+                ),
             ]),
             resource_usage: ResourceUsage {
                 cpu_percent: 0.0,
@@ -570,22 +591,20 @@ impl beardog_traits::unified::BearDogProvider for StrongBoxMultiCredentialProvid
     }
 
     async fn metrics(&self) -> Result<ProviderMetrics, Self::Error> {
-        use std::time::SystemTime;
         use beardog_types::canonical::providers_unified::traits::CustomMetric;
+        use std::time::SystemTime;
 
         let creds = self.credentials.read().await;
         Ok(ProviderMetrics {
             timestamp: SystemTime::now(),
             performance: HashMap::new(),
-            custom_metrics: vec![
-                CustomMetric {
-                    name: "credentials_count".to_string(),
-                    value: creds.len() as f64,
-                    unit: "count".to_string(),
-                    description: "Number of credentials stored".to_string(),
-                    tags: HashMap::new(),
-                },
-            ],
+            custom_metrics: vec![CustomMetric {
+                name: "credentials_count".to_string(),
+                value: creds.len() as f64,
+                unit: "count".to_string(),
+                description: "Number of credentials stored".to_string(),
+                tags: HashMap::new(),
+            }],
             system_metrics: beardog_types::canonical::providers_unified::traits::SystemMetrics {
                 uptime_seconds: 0,
                 total_requests: 0,
@@ -628,4 +647,3 @@ mod tests {
         assert_eq!(provider.provider_id(), "android_strongbox_multi_credential");
     }
 }
-

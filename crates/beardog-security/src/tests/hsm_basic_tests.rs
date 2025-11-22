@@ -49,7 +49,9 @@ fn test_multiple_provider_initialization() {
     };
 
     let config2 = HsmConfig {
-        provider: HsmProviderType::Hardware,
+        provider: HsmProviderType::Hardware {
+            capabilities: Vec::new(),
+        },
         connection: ConnectionConfig::default(),
         security: SecurityConfig::default(),
         auth_method: AuthMethod::None,
@@ -62,7 +64,12 @@ fn test_multiple_provider_initialization() {
     // TEST_PRIORITY: normal
 
     assert_eq!(config1.provider, HsmProviderType::Software);
-    assert_eq!(config2.provider, HsmProviderType::Hardware);
+    assert_eq!(
+        config2.provider,
+        HsmProviderType::Hardware {
+            capabilities: Vec::new()
+        }
+    );
     assert_ne!(config1.provider, config2.provider);
     assert_ne!(config1.cache_size, config2.cache_size);
 }
@@ -170,9 +177,15 @@ fn test_provider_health_check_healthy() {
     // Test HSM provider type enumeration
     let provider_types = vec![
         HsmProviderType::Software,
-        HsmProviderType::Hardware,
-        HsmProviderType::Network,
-        HsmProviderType::Cloud,
+        HsmProviderType::Hardware {
+            capabilities: Vec::new(),
+        },
+        HsmProviderType::Network {
+            capabilities: Vec::new(),
+        },
+        HsmProviderType::Cloud {
+            capabilities: Vec::new(),
+        },
     ];
 
     // Verify all provider types are distinct
@@ -204,8 +217,18 @@ fn test_provider_health_check_unhealthy() {
     // Test configuration with different provider types for error scenarios
     let error_configs = vec![
         ("invalid_software", HsmProviderType::Software),
-        ("invalid_hardware", HsmProviderType::Hardware),
-        ("invalid_network", HsmProviderType::Network),
+        (
+            "invalid_hardware",
+            HsmProviderType::Hardware {
+                capabilities: Vec::new(),
+            },
+        ),
+        (
+            "invalid_network",
+            HsmProviderType::Network {
+                capabilities: Vec::new(),
+            },
+        ),
     ];
 
     for (label, provider_type) in error_configs {

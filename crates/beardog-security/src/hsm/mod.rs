@@ -36,11 +36,13 @@
 #[cfg(feature = "fido2")]
 pub mod fido2;
 
-#[cfg(feature = "tpm2")]
-pub mod tpm2;
+// TPM 2.0 support coming soon
+// #[cfg(feature = "tpm2")]
+// pub mod tpm2;
 
-#[cfg(feature = "openpgp")]
-pub mod openpgp;
+// OpenPGP Card support coming soon
+// #[cfg(feature = "openpgp")]
+// pub mod openpgp;
 
 #[cfg(target_os = "android")]
 pub mod android_strongbox;
@@ -59,4 +61,3 @@ pub use android_strongbox::*;
 /// Connects all available HSMs (FIDO2, Android StrongBox, iOS Secure Enclave)
 /// to BearDog's entropy hierarchy system for human-owned randomness.
 pub mod entropy_orchestrator;
-

@@ -52,3 +52,9 @@ pub use vendor_agnostic_hsm::*;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod infant_discovery_tests;
+
+#[cfg(test)]
+mod universal_infant_discovery_tests;

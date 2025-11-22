@@ -437,9 +437,10 @@ pub async fn create_service_discovery(
     // BearDog follows "Discover, Don't Implement" principle:
     // - Consul, etcd, mDNS, DNS-SD → Handled by Songbird primal
     // - BearDog receives discovered services via UniversalAdapter
-    // - See: crates/beardog-core/src/ecosystem_integration/songbird_integration.rs
+    // - See: crates/beardog-adapters/src/universal/primal_capability_adapter.rs
     //
-    // For network service discovery, use SongbirdHsmDiscovery instead of direct protocol implementation
+    // For network service discovery, use UniversalPrimalAdapter::discover_network_primals()
+    // instead of direct protocol implementation (capability-based, no hardcoded primal names)
 
     // Fallback to DNS + HTTP (always available)
     tracing::info!("Using DNS/HTTP fallback discovery");
@@ -625,7 +626,10 @@ impl ServiceDiscoveryCapability for KubernetesDiscovery {
         })
     }
 
-    async fn unregister_service(&self, _registration_id: &RegistrationId) -> Result<(), DiscoveryError> {
+    async fn unregister_service(
+        &self,
+        _registration_id: &RegistrationId,
+    ) -> Result<(), DiscoveryError> {
         // K8s services are unregistered via kubectl/API
         Err(DiscoveryError::BackendUnavailable {
             provider: "kubernetes".to_string(),
@@ -633,7 +637,10 @@ impl ServiceDiscoveryCapability for KubernetesDiscovery {
         })
     }
 
-    async fn renew_registration(&self, _registration_id: &RegistrationId) -> Result<(), DiscoveryError> {
+    async fn renew_registration(
+        &self,
+        _registration_id: &RegistrationId,
+    ) -> Result<(), DiscoveryError> {
         // K8s services don't need renewal - they persist until deleted
         Err(DiscoveryError::BackendUnavailable {
             provider: "kubernetes".to_string(),
@@ -685,7 +692,7 @@ pub struct ConsulDiscovery {
 
 impl ConsulDiscovery {
     pub async fn try_create() -> Result<Self, DiscoveryError> {
-        // TODO: Implement Consul client creation
+        // PHASE-2(Discovery): Implement Consul client creation
         Err(DiscoveryError::BackendUnavailable {
             provider: "consul".to_string(),
             reason: "Not implemented yet".to_string(),
@@ -701,7 +708,7 @@ pub struct EtcdDiscovery {
 
 impl EtcdDiscovery {
     pub async fn try_create() -> Result<Self, DiscoveryError> {
-        // TODO: Implement etcd client creation
+        // PHASE-2(Discovery): Implement etcd client creation
         Err(DiscoveryError::BackendUnavailable {
             provider: "etcd".to_string(),
             reason: "Not implemented yet".to_string(),
@@ -829,7 +836,10 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
             let descriptors: Vec<ServiceDescriptor> = endpoints
                 .into_iter()
                 .map(|endpoint| ServiceDescriptor {
-                    instance_id: ServiceInstanceId::new(format!("dns-http://{}:{}", service_name, endpoint)),
+                    instance_id: ServiceInstanceId::new(format!(
+                        "dns-http://{}:{}",
+                        service_name, endpoint
+                    )),
                     endpoint,
                     capabilities: vec![], // Empty for generic discovery
                     metadata: HashMap::new(),
@@ -931,9 +941,11 @@ mod tests {
 
     #[test]
     fn test_service_descriptor_creation() {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+
         let descriptor = ServiceDescriptor {
             instance_id: ServiceInstanceId::new("test-123"),
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
             capabilities: vec![ServiceCapabilityType::ServiceMesh],
             metadata: HashMap::new(),
             health: ServiceHealth::Healthy,

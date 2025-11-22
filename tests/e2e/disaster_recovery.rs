@@ -60,7 +60,7 @@ pub async fn run_disaster_recovery_test(
 
     execute_step("Inject Component Failure", || async {
         warn!("  💥 Simulating service failure");
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // Simulate failure (instant in tests)
         Ok(())
     })
     .await?;
@@ -72,7 +72,7 @@ pub async fn run_disaster_recovery_test(
 
     execute_step("Activate Failover", || async {
         info!("  🔄 Activating failover mechanisms");
-        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        // Simulate failover (instant in tests)
         Ok(())
     })
     .await?;
@@ -119,7 +119,7 @@ pub async fn run_disaster_recovery_test(
 
     execute_step("Initiate Recovery", || async {
         info!("  🔧 Starting recovery procedures");
-        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        // Simulate recovery initiation (instant in tests)
         Ok(())
     })
     .await?;
@@ -128,7 +128,7 @@ pub async fn run_disaster_recovery_test(
 
     execute_step("Restore Services", || async {
         info!("  🔄 Restoring services");
-        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        // Simulate service restoration (instant in tests)
         Ok(())
     })
     .await?;

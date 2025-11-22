@@ -23,7 +23,7 @@ impl TierManager {
     pub fn assign_tier(&self, _hsm: &DiscoveredHsm) -> Result<HsmTier, BearDogError> {
         info!("Assigning HSM tier");
         
-        // TODO: Implement tier assignment logic
+        // PHASE-2(Tier): Implement tier assignment logic
         Ok(HsmTier::Tier3)
     }
 }

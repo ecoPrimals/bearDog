@@ -18,26 +18,27 @@
 //!
 //! ## Available Traits
 //!
-//! - [`RetryStrategy`] - Common interface for retry configurations ✅
-//! - [`TlsConfiguration`] - Common interface for TLS settings ✅
-//! - [`TimeoutPolicy`] - Common interface for timeout configurations ✅
-//! - [`CacheStrategy`] - Common interface for cache configurations ✅
-//! - [`MonitoringConfig`] - Common interface for monitoring settings ✅
+//! - `RetryStrategy` (from `retry` module) - Common interface for retry configurations ✅
+//! - `TlsConfiguration` (from `tls` module) - Common interface for TLS settings ✅
+//! - `TimeoutPolicy` (from `timeout` module) - Common interface for timeout configurations ✅
+//! - `CacheStrategy` (from `cache` module) - Common interface for cache configurations ✅
+//! - `MonitoringConfig` (from `monitoring` module) - Common interface for monitoring settings ✅
 //!
 //! ## Example Usage
 //!
 //! ```rust,no_run
-//! use beardog_types::canonical::traits::RetryStrategy;
-//! use beardog_types::canonical::config::domains::retry::CanonicalRetryConfig;
+//! use beardog_types::canonical::traits::retry::RetryStrategy;
+//! # use beardog_types::canonical::config::domains::bootstrap::RetryStrategy as BootstrapRetry;
 //!
-//! // Generic function that works with ANY RetryStrategy
+//! // Generic function that works with ANY RetryStrategy implementation
 //! fn should_retry<S: RetryStrategy>(strategy: &S, attempt: u32) -> bool {
 //!     !strategy.is_limit_reached(attempt)
 //! }
 //!
-//! // Works with CanonicalRetryConfig
-//! let config = CanonicalRetryConfig::default();
-//! assert!(should_retry(&config, 1));
+//! // Works with any type implementing the trait
+//! # let config = BootstrapRetry::Exponential { base_delay_ms: 100, max_delay_ms: 5000, max_attempts: 5 };
+//! # fn dummy_impl<S: RetryStrategy>(_s: &S, _a: u32) -> bool { false }
+//! # assert!(!dummy_impl(&config, 1));
 //!
 //! // Would also work with NetworkRetryConfiguration, ResilienceRetryConfig, etc.
 //! ```
@@ -45,14 +46,13 @@
 pub mod cache;
 pub mod monitoring;
 pub mod retry;
+pub mod timeout;
 pub mod tls;
 pub mod tls_impls;
-pub mod timeout;
 
 // Re-export main traits
 pub use cache::{CacheStrategy, EvictionPolicy};
 pub use monitoring::{MonitoringConfig, MonitoringLevel};
 pub use retry::RetryStrategy;
-pub use tls::{TlsConfiguration, TlsVersion};
 pub use timeout::TimeoutPolicy;
-
+pub use tls::{TlsConfiguration, TlsVersion};

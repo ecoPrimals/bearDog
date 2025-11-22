@@ -26,28 +26,26 @@ mod tests {
         // Test key validity
         assert!(ephemeral_key.is_valid());
 
-        // Generate multiple keys - should be unique
+        // Generate multiple keys - should be unique due to cryptographic randomness
         let key1 = EphemeralKey::generate(expiration);
-        std::thread::sleep(std::time::Duration::from_micros(100)); // Ensure time difference
         let key2 = EphemeralKey::generate(expiration);
-        // Keys should be different due to timing
+        // Modern pattern: Keys should be cryptographically unique, not timing-dependent
         let keys_equal = key1.key_data() == key2.key_data();
-        assert!(!keys_equal, "Keys should be unique");
+        assert!(!keys_equal, "Keys should be cryptographically unique");
 
-        // Test expired key
+        // Test expired key - modern pattern: 1 nanosecond instantly expired
         let short_expiration = std::time::Duration::from_nanos(1);
         let expiring_key = EphemeralKey::generate(short_expiration);
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // No sleep needed - CPU cycles already passed 1 nanosecond
         assert!(expiring_key.is_expired());
         assert!(!expiring_key.is_valid());
 
-        // Test key rotation
+        // Test key rotation - modern pattern: rotation logic doesn't need timing
         let original_key = EphemeralKey::generate(expiration);
-        std::thread::sleep(std::time::Duration::from_micros(100)); // Ensure counter increments
         let rotated_key = original_key.rotate();
 
-        // Rotated key should be different
+        // Rotated key should be different due to rotation logic, not timing
         let keys_same = original_key.key_data() == rotated_key.key_data();
         assert!(!keys_same, "Rotated key should be different from original");
         assert!(!rotated_key.is_expired());

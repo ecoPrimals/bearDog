@@ -83,39 +83,152 @@ pub struct DashboardConfig {
     pub endpoint: String,
 }
 
-impl Default for ProductionMetricsConfig {
-    fn default() -> Self {
+impl ProductionMetricsConfig {
+    /// Default metrics endpoint
+    pub const DEFAULT_ENDPOINT: &'static str = "/metrics";
+
+    /// Create ProductionMetricsConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
         Self {
             enabled: true,
-            endpoint: "/metrics".to_string(),
+            endpoint: Self::DEFAULT_ENDPOINT.to_string(),
         }
+    }
+
+    /// Create ProductionMetricsConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_METRICS_ENDPOINT`: Metrics endpoint (default: "/metrics")
+    pub fn from_env() -> Self {
+        Self {
+            enabled: true,
+            endpoint: std::env::var("BEARDOG_METRICS_ENDPOINT")
+                .unwrap_or_else(|_| Self::DEFAULT_ENDPOINT.to_string()),
+        }
+    }
+}
+
+impl ProductionLoggingConfig {
+    /// Default log level
+    pub const DEFAULT_LEVEL: &'static str = "info";
+
+    /// Default log format
+    pub const DEFAULT_FORMAT: &'static str = "json";
+
+    /// Create ProductionLoggingConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            level: Self::DEFAULT_LEVEL.to_string(),
+            format: Self::DEFAULT_FORMAT.to_string(),
+        }
+    }
+
+    /// Create ProductionLoggingConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_LOG_LEVEL`: Log level (default: "info")
+    /// - `BEARDOG_LOG_FORMAT`: Log format (default: "json")
+    pub fn from_env() -> Self {
+        Self {
+            level: std::env::var("BEARDOG_LOG_LEVEL")
+                .unwrap_or_else(|_| Self::DEFAULT_LEVEL.to_string()),
+            format: std::env::var("BEARDOG_LOG_FORMAT")
+                .unwrap_or_else(|_| Self::DEFAULT_FORMAT.to_string()),
+        }
+    }
+}
+
+impl ProductionTracingConfig {
+    /// Default tracing endpoint
+    pub const DEFAULT_ENDPOINT: &'static str = "/traces";
+
+    /// Create ProductionTracingConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enabled: false,
+            endpoint: Self::DEFAULT_ENDPOINT.to_string(),
+        }
+    }
+
+    /// Create ProductionTracingConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_TRACING_ENDPOINT`: Tracing endpoint (default: "/traces")
+    pub fn from_env() -> Self {
+        Self {
+            enabled: false,
+            endpoint: std::env::var("BEARDOG_TRACING_ENDPOINT")
+                .unwrap_or_else(|_| Self::DEFAULT_ENDPOINT.to_string()),
+        }
+    }
+}
+
+impl DashboardConfig {
+    /// Default dashboard endpoint
+    pub const DEFAULT_ENDPOINT: &'static str = "/dashboard";
+
+    /// Create DashboardConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            enabled: false,
+            endpoint: Self::DEFAULT_ENDPOINT.to_string(),
+        }
+    }
+
+    /// Create DashboardConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `BEARDOG_DASHBOARD_ENDPOINT`: Dashboard endpoint (default: "/dashboard")
+    pub fn from_env() -> Self {
+        Self {
+            enabled: false,
+            endpoint: std::env::var("BEARDOG_DASHBOARD_ENDPOINT")
+                .unwrap_or_else(|_| Self::DEFAULT_ENDPOINT.to_string()),
+        }
+    }
+}
+
+impl Default for ProductionMetricsConfig {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 
 impl Default for ProductionLoggingConfig {
     fn default() -> Self {
-        Self {
-            level: "info".to_string(),
-            format: "json".to_string(),
-        }
+        Self::with_defaults()
     }
 }
 
 impl Default for ProductionTracingConfig {
     fn default() -> Self {
-        Self {
-            enabled: false,
-            endpoint: "/traces".to_string(),
-        }
+        Self::with_defaults()
     }
 }
 
 impl Default for DashboardConfig {
     fn default() -> Self {
-        Self {
-            enabled: false,
-            endpoint: "/dashboard".to_string(),
-        }
+        Self::with_defaults()
     }
 }
 

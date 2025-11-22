@@ -6,7 +6,7 @@
 //! This module contains all monitoring-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -560,7 +560,7 @@ impl Default for DashboardConfig {
 
 // BearDogConfig implementation for ConsolidatedMonitoringConfig
 impl BearDogConfig for ConsolidatedMonitoringConfig {
-    fn validate(&self) -> BearDogResult<()> {
+    fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             if self.metrics.interval.as_secs() == 0 {
                 return Err(BearDogError::validation(
@@ -591,7 +591,7 @@ impl BearDogConfig for ConsolidatedMonitoringConfig {
         Ok(())
     }
 
-    fn merge(&self, other: &Self) -> BearDogResult<Self> {
+    fn merge(&self, other: &Self) -> Result<Self, BearDogError> {
         Ok(Self {
             enabled: other.enabled,
             metrics: if other.enabled {
@@ -628,7 +628,7 @@ impl BearDogConfig for ConsolidatedMonitoringConfig {
         })
     }
 
-    fn from_env() -> BearDogResult<Self> {
+    fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
         if let Ok(enabled) = std::env::var("BEARDOG_MONITORING_ENABLED") {
@@ -649,7 +649,7 @@ impl BearDogConfig for ConsolidatedMonitoringConfig {
         Ok(config)
     }
 
-    fn to_toml(&self) -> BearDogResult<String> {
+    fn to_toml(&self) -> Result<String, BearDogError> {
         toml::to_string(self).map_err(|e| {
             BearDogError::system(format!(
                 "Failed to serialize monitoring config to TOML: {e}"

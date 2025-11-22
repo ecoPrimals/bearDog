@@ -2,47 +2,47 @@
 //!
 //! HSM-specific discovery configuration that extends the canonical base.
 
-use serde::{Deserialize, Serialize};
 use super::super::config::domains::discovery::DiscoveryConfig;
+use serde::{Deserialize, Serialize};
 
 /// HSM-specific discovery configuration
-/// 
+///
 /// Wraps the canonical DiscoveryConfig with HSM-specific hardware detection flags.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmDiscoveryConfig {
     /// Base discovery configuration
     pub base: DiscoveryConfig,
-    
+
     // HSM Hardware Type Discovery Flags
     /// Enable cloud KMS discovery (AWS KMS, Azure Key Vault, Google Cloud KMS)
     pub enable_cloud_kms: bool,
-    
+
     /// Enable network HSM discovery (HSMs accessible over network)
     pub enable_network_hsm: bool,
-    
+
     /// Enable USB HSM discovery (YubiKey, Nitrokey, etc.)
     pub enable_usb_hsm: bool,
-    
+
     /// Enable software HSM discovery (software-based cryptographic modules)
     pub enable_software_hsm: bool,
-    
+
     /// Enable mobile HSM discovery (Android StrongBox, iOS Secure Enclave)
     pub enable_mobile_hsm: bool,
-    
+
     /// Enable TPM discovery (Trusted Platform Module)
     pub enable_tpm: bool,
-    
+
     /// Enable PKCS#11 discovery
     pub enable_pkcs11_discovery: bool,
-    
+
     // Capability Detection
     /// Enable automatic capability detection for discovered HSMs
     pub enable_capability_detection: bool,
-    
+
     // Entropy & Quality
     /// Enable human entropy elevation (for hybrid entropy systems)
     pub enable_human_entropy_elevation: bool,
-    
+
     /// Minimum entropy quality threshold (0.0 - 1.0)
     pub minimum_entropy_quality: f64,
 }
@@ -70,20 +70,19 @@ impl HsmDiscoveryConfig {
     pub fn restrictive() -> Self {
         Self {
             enable_cloud_kms: false,
-            enable_network_hsm: true,  // Essential
-            enable_usb_hsm: true,      // Essential
+            enable_network_hsm: true, // Essential
+            enable_usb_hsm: true,     // Essential
             enable_software_hsm: false,
             enable_mobile_hsm: false,
-            enable_tpm: true,          // Essential
+            enable_tpm: true, // Essential
             enable_pkcs11_discovery: true,
-            minimum_entropy_quality: 0.9,  // Higher threshold
+            minimum_entropy_quality: 0.9, // Higher threshold
             ..Default::default()
         }
     }
-    
+
     /// Create a permissive configuration (all HSM types)
     pub fn permissive() -> Self {
         Self::default()
     }
 }
-

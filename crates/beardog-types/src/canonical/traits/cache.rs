@@ -216,7 +216,7 @@ pub trait CacheStrategy: Send + Sync {
         match self.eviction_policy() {
             EvictionPolicy::Lru | EvictionPolicy::Lfu => 0.8, // 80% for smart policies
             EvictionPolicy::Fifo | EvictionPolicy::Ttl => 0.7, // 70% for simpler policies
-            EvictionPolicy::Random => 0.6, // 60% for random eviction
+            EvictionPolicy::Random => 0.6,                    // 60% for random eviction
         }
     }
 
@@ -254,7 +254,10 @@ pub trait CacheStrategy: Send + Sync {
         }
 
         if ttl < Duration::from_secs(1) {
-            eprintln!("WARNING: Very short TTL ({:?}), cache may not be effective", ttl);
+            eprintln!(
+                "WARNING: Very short TTL ({:?}), cache may not be effective",
+                ttl
+            );
         }
 
         if ttl > Duration::from_secs(86400 * 365) {
@@ -302,7 +305,7 @@ pub trait CacheStrategy: Send + Sync {
 
         // Reasonable entry count
         let entries = self.max_entries();
-        if entries < 10 || entries > 10_000_000 {
+        if !(10..=10_000_000).contains(&entries) {
             return false; // Too small or unreasonably large
         }
 
@@ -357,7 +360,7 @@ mod tests {
         assert!(EvictionPolicy::Lfu.tracks_access());
         assert!(!EvictionPolicy::Fifo.tracks_access());
         assert!(!EvictionPolicy::Random.tracks_access());
-        
+
         assert!(EvictionPolicy::Ttl.is_time_based());
         assert!(!EvictionPolicy::Lru.is_time_based());
     }
@@ -400,10 +403,10 @@ mod tests {
 
         // Not old enough
         assert!(!strategy.should_evict(Duration::from_secs(3599), 100));
-        
+
         // Exactly at TTL
         assert!(strategy.should_evict(Duration::from_secs(3600), 100));
-        
+
         // Older than TTL
         assert!(strategy.should_evict(Duration::from_secs(7200), 100));
     }
@@ -534,4 +537,3 @@ mod tests {
         assert!(!not_prod3.is_production_ready());
     }
 }
-

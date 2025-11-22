@@ -4,30 +4,32 @@
 //! through usage to deletion, ensuring proper security and cleanup.
 
 use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
-use crate::tunnel::hsm::types::config::{CryptoBackendType, SoftwareHsmConfig};
-use crate::tunnel::hsm::types::tier::{KeyStorageType, MemoryProtectionLevel, StorageBackend};
+use crate::tunnel::hsm::types::config::{
+    CryptoBackendType, MemoryConfig, MemoryProtectionLevel, SoftwareHsmConfig,
+};
+use crate::tunnel::hsm::types::tier::KeyStorageType;
 use beardog_errors::BearDogError;
-
-type Result<T> = std::result::Result<T, BearDogError>;
 
 /// Helper function to create a test HSM configuration
 fn create_test_config() -> SoftwareHsmConfig {
     SoftwareHsmConfig {
-        storage: StorageBackend::InMemory,
-        memory_protection: MemoryProtectionLevel::High,
+        memory_config: MemoryConfig {
+            protection_level: MemoryProtectionLevel::High,
+            enable_encryption: true,
+            pool_size: 1024 * 1024,
+        },
+        crypto_backend: CryptoBackendType::RustCrypto,
         key_storage: KeyStorageType::Encrypted,
-        audit_logging: true,
-        max_keys: Some(1000),
+        encryption_at_rest: true,
+        memory_protection: crate::tunnel::hsm::types::tier::MemoryProtectionLevel::High,
     }
 }
 
 #[tokio::test]
-async fn test_key_generation_lifecycle() -> Result<()> {
+async fn test_key_generation_lifecycle() -> Result<(), BearDogError> {
     // Create HSM instance
     let config = create_test_config();
-    let hsm = RustSoftwareHsm::new(config.into())
-        .await
-        ?;
+    let hsm = RustSoftwareHsm::new(config).await?;
 
     // Verify HSM is operational
     assert!(hsm.is_initialized(), "HSM should be initialized");
@@ -36,16 +38,14 @@ async fn test_key_generation_lifecycle() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_multiple_key_generation() -> Result<()> {
+async fn test_multiple_key_generation() -> Result<(), BearDogError> {
     let config = create_test_config();
-    let hsm = RustSoftwareHsm::new(config.into())
-        .await
-        ?;
+    let hsm = RustSoftwareHsm::new(config).await?;
 
     // Generate multiple keys
     let key_ids = vec!["key1", "key2", "key3"];
 
-    for key_id in &key_ids {
+    for _key_id in &key_ids {
         // In a real implementation, we would generate keys here
         // For now, just verify HSM is operational
         assert!(hsm.is_initialized(), "HSM should remain initialized");
@@ -55,25 +55,26 @@ async fn test_multiple_key_generation() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_hsm_initialization() -> Result<()> {
+async fn test_hsm_initialization() -> Result<(), BearDogError> {
     let config = create_test_config();
-    
-    // Test with different configurations
-    let hsm1 = RustSoftwareHsm::new(config.clone().into()).await;
-    assert!(hsm1.is_ok(), "HSM creation should succeed with valid config");
 
-    let hsm2 = RustSoftwareHsm::new(config.into()).await;
+    // Test with different configurations
+    let hsm1 = RustSoftwareHsm::new(config.clone()).await;
+    assert!(
+        hsm1.is_ok(),
+        "HSM creation should succeed with valid config"
+    );
+
+    let hsm2 = RustSoftwareHsm::new(config).await;
     assert!(hsm2.is_ok(), "Multiple HSM instances should be creatable");
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_hsm_health_check() -> Result<()> {
+async fn test_hsm_health_check() -> Result<(), BearDogError> {
     let config = create_test_config();
-    let hsm = RustSoftwareHsm::new(config.into())
-        .await
-        ?;
+    let hsm = RustSoftwareHsm::new(config).await?;
 
     // Verify HSM health
     assert!(hsm.is_initialized(), "HSM should be healthy after creation");
@@ -82,11 +83,9 @@ async fn test_hsm_health_check() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_hsm_operations() -> Result<()> {
+async fn test_concurrent_hsm_operations() -> Result<(), BearDogError> {
     let config = create_test_config();
-    let hsm = RustSoftwareHsm::new(config.into())
-        .await
-        ?;
+    let hsm = RustSoftwareHsm::new(config).await?;
 
     // Simulate concurrent operations
     let handles: Vec<_> = (0..5)
@@ -102,7 +101,9 @@ async fn test_concurrent_hsm_operations() -> Result<()> {
 
     // Wait for all tasks
     for handle in handles {
-        handle.await??;
+        handle
+            .await
+            .map_err(|e| BearDogError::system(format!("Task join error: {}", e)))??;
     }
 
     assert!(hsm.is_initialized(), "HSM should remain operational");

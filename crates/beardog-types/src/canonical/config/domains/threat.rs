@@ -75,8 +75,8 @@ pub struct CanonicalThreatDetectionConfig {
 impl CanonicalThreatDetectionConfig {
     /// Create configuration from a config source (modern pattern)
     pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
-        use crate::canonical::config::source::{get_parsed, get_bool};
-        
+        use crate::canonical::config::source::{get_bool, get_parsed};
+
         Self {
             // Core Detection
             ml_enhancement: get_bool(source, "BEARDOG_THREAT_ML_ENHANCEMENT", true),
@@ -85,7 +85,11 @@ impl CanonicalThreatDetectionConfig {
 
             // Capacity
             max_active_threats: get_parsed(source, "BEARDOG_THREAT_MAX_ACTIVE", DEFAULT_QUEUE_SIZE),
-            max_concurrent_analyses: get_parsed(source, "BEARDOG_THREAT_MAX_CONCURRENT_ANALYSES", 10),
+            max_concurrent_analyses: get_parsed(
+                source,
+                "BEARDOG_THREAT_MAX_CONCURRENT_ANALYSES",
+                10,
+            ),
 
             // Sensitivity
             sensitivity: get_parsed(source, "BEARDOG_THREAT_SENSITIVITY", 0.7),
@@ -177,14 +181,18 @@ pub struct ThreatResponseConfig {
 impl ThreatResponseConfig {
     /// Create configuration from a config source (modern pattern)
     pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
-        use crate::canonical::config::source::{get_parsed, get_bool};
-        
+        use crate::canonical::config::source::{get_bool, get_parsed};
+
         Self {
             auto_block: get_bool(source, "BEARDOG_THREAT_AUTO_BLOCK", false),
             auto_quarantine: get_bool(source, "BEARDOG_THREAT_AUTO_QUARANTINE", true),
             enable_alerts: get_bool(source, "BEARDOG_THREAT_ENABLE_ALERTS", true),
             alert_threshold: get_parsed(source, "BEARDOG_THREAT_ALERT_THRESHOLD", 0.7),
-            max_actions_per_minute: get_parsed(source, "BEARDOG_THREAT_MAX_ACTIONS_PER_MINUTE", 100),
+            max_actions_per_minute: get_parsed(
+                source,
+                "BEARDOG_THREAT_MAX_ACTIONS_PER_MINUTE",
+                100,
+            ),
         }
     }
 }

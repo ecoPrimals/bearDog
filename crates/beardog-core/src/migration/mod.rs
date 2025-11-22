@@ -11,9 +11,9 @@
 //!
 //! ## Key Components
 //!
-//! - [`SovereignEntropyMigrationManager`] - Manages the migration process
-//! - [`MigrationPhase`] - Tracks current phase of migration
-//! - [`MigrationStatistics`] - Provides migration progress metrics
+//! - `SovereignEntropyMigrationManager` - Manages the migration process
+//! - `MigrationPhase` - Tracks current phase of migration
+//! - `MigrationStatistics` - Provides migration progress metrics
 //!
 //! ## Example
 //!
@@ -41,3 +41,6 @@ pub use sovereign_entropy_migration::{
     MigrationPhase, MigrationStatistics, SovereignEntropyMigrationConfig,
     SovereignEntropyMigrationManager,
 };
+
+#[cfg(test)]
+mod tests;

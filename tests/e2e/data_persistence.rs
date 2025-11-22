@@ -286,68 +286,68 @@ pub async fn test_incremental_backup() -> Result<DataPersistenceMetrics, BearDog
 // Helper functions
 
 async fn simulate_data_write(key: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate write (instant in tests, would be I/O in production)
     info!("  Written: {}", key);
     Ok(())
 }
 
 async fn simulate_data_read(key: &str) -> Result<String, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(3)).await;
+    // Simulate read (instant in tests)
     Ok(format!("data_{}", key))
 }
 
 async fn simulate_data_update(key: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate update (instant in tests)
     info!("  Updated: {}", key);
     Ok(())
 }
 
 async fn simulate_data_delete(key: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(3)).await;
+    // Simulate delete (instant in tests)
     info!("  Deleted: {}", key);
     Ok(())
 }
 
 async fn simulate_integrity_check(_key: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+    // Simulate integrity check (instant in tests)
     Ok(())
 }
 
 async fn simulate_begin_transaction() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate transaction start (instant in tests)
     info!("  Transaction started");
     Ok(())
 }
 
 async fn simulate_commit_transaction() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate commit (instant in tests)
     info!("  Transaction committed");
     Ok(())
 }
 
 async fn simulate_rollback_transaction() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(8)).await;
+    // Simulate rollback (instant in tests)
     info!("  Transaction rolled back");
     Ok(())
 }
 
 async fn simulate_create_backup() -> Result<String, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    // Simulate backup creation (instant in tests)
     Ok(format!("backup_{}", chrono::Utc::now().timestamp()))
 }
 
 async fn simulate_create_incremental_backup(_base_backup: &str) -> Result<String, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
+    // Simulate incremental backup (instant in tests)
     Ok(format!("incremental_{}", chrono::Utc::now().timestamp()))
 }
 
 async fn simulate_restore_backup(_backup_id: &str) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(40)).await;
+    // Simulate restore (instant in tests)
     Ok(())
 }
 
 async fn simulate_corruption_scan() -> Result<bool, BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+    // Simulate corruption scan (instant in tests)
     Ok(false) // No corruption detected
 }
 

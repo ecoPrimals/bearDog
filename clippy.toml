@@ -1,0 +1,17 @@
+# Clippy configuration for BearDog project
+#
+# These lints are intentionally allowed because they are pedantic and
+# commonly triggered by legitimate code patterns in this project.
+
+# Allow type conversion lints for mathematical operations and duration calculations
+# These are intentional and safe in context
+allow-precision-loss = true
+allow-sign-loss = true
+allow-wrap = true
+
+# Note: The above settings don't actually work in clippy.toml
+# The correct approach is documented below
+
+# To allow specific lints project-wide, add them to lib.rs or add
+# them to individual modules that need them.
+

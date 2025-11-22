@@ -62,33 +62,33 @@ impl MonitoringConfig {
     /// Load configuration from environment variables with fallback to defaults
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             log_level: std::env::var("BEARDOG_LOG_LEVEL")
                 .ok()
                 .unwrap_or(defaults.log_level),
-            
+
             log_format: std::env::var("BEARDOG_LOG_FORMAT")
                 .ok()
                 .unwrap_or(defaults.log_format),
-            
+
             structured_logging: defaults.structured_logging,
             enable_metrics: defaults.enable_metrics,
-            
+
             metrics_port: std::env::var("BEARDOG_METRICS_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.metrics_port),
-            
+
             enable_health_check: defaults.enable_health_check,
-            
+
             health_check_port: std::env::var("BEARDOG_HEALTH_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.health_check_port),
-            
+
             enable_performance_tracking: defaults.enable_performance_tracking,
-            
+
             tracing_sample_rate: std::env::var("BEARDOG_TRACING_SAMPLE_RATE")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -205,17 +205,25 @@ impl MonitoringConfigBuilder {
 
     pub fn build(self) -> MonitoringConfig {
         let defaults = MonitoringConfig::const_defaults();
-        
+
         MonitoringConfig {
             log_level: self.log_level.unwrap_or(defaults.log_level),
             log_format: self.log_format.unwrap_or(defaults.log_format),
-            structured_logging: self.structured_logging.unwrap_or(defaults.structured_logging),
+            structured_logging: self
+                .structured_logging
+                .unwrap_or(defaults.structured_logging),
             enable_metrics: self.enable_metrics.unwrap_or(defaults.enable_metrics),
             metrics_port: self.metrics_port.unwrap_or(defaults.metrics_port),
-            enable_health_check: self.enable_health_check.unwrap_or(defaults.enable_health_check),
+            enable_health_check: self
+                .enable_health_check
+                .unwrap_or(defaults.enable_health_check),
             health_check_port: self.health_check_port.unwrap_or(defaults.health_check_port),
-            enable_performance_tracking: self.enable_performance_tracking.unwrap_or(defaults.enable_performance_tracking),
-            tracing_sample_rate: self.tracing_sample_rate.unwrap_or(defaults.tracing_sample_rate),
+            enable_performance_tracking: self
+                .enable_performance_tracking
+                .unwrap_or(defaults.enable_performance_tracking),
+            tracing_sample_rate: self
+                .tracing_sample_rate
+                .unwrap_or(defaults.tracing_sample_rate),
         }
     }
 }
@@ -255,7 +263,7 @@ mod tests {
             .log_format("json".to_string())
             .metrics_port(8888)
             .build();
-        
+
         assert_eq!(config.log_level, "debug");
         assert_eq!(config.log_format, "json");
         assert_eq!(config.metrics_port, 8888);
@@ -271,7 +279,7 @@ mod tests {
             .enable_performance_tracking(true)
             .tracing_sample_rate(0.5)
             .build();
-        
+
         assert!(config.validate().is_ok());
         assert_eq!(config.log_level, "warn");
         assert!(config.enable_performance_tracking);

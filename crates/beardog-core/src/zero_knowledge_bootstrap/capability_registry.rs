@@ -15,7 +15,7 @@
 //! ```rust,ignore
 //! use beardog_core::zero_knowledge_bootstrap::capability_registry::CapabilityRegistry;
 //!
-//! # async fn example() -> beardog_errors::BearDogResult<()> {
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! let registry = CapabilityRegistry::new();
 //!
 //! // Register a discovered capability
@@ -29,7 +29,7 @@
 //! # }
 //! ```
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityType, UniversalCapability};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -225,14 +225,18 @@ impl CapabilityRegistry {
     /// ```rust,no_run
     /// # use beardog_core::zero_knowledge_bootstrap::capability_registry::CapabilityRegistry;
     /// # use beardog_types::canonical::capabilities::UniversalCapability;
-    /// # async fn example(registry: &CapabilityRegistry, capability: UniversalCapability) -> beardog_errors::BearDogResult<()> {
+    /// # use beardog_errors::BearDogError;
+    /// # async fn example(registry: &CapabilityRegistry, capability: UniversalCapability) -> Result<(), BearDogError> {
     /// let id = registry.register(capability).await?;
     /// println!("Registered capability: {}", id);
     /// # Ok(())
     /// # }
     /// ```
     #[allow(clippy::cognitive_complexity)] // Capability registration requires validation, storage, and index updates
-    pub async fn register(&self, capability: UniversalCapability) -> BearDogResult<CapabilityId> {
+    pub async fn register(
+        &self,
+        capability: UniversalCapability,
+    ) -> Result<CapabilityId, BearDogError> {
         let id = CapabilityId::new();
 
         debug!(
@@ -284,7 +288,8 @@ impl CapabilityRegistry {
     /// ```rust,no_run
     /// # use beardog_core::zero_knowledge_bootstrap::capability_registry::CapabilityRegistry;
     /// # use beardog_types::canonical::capabilities::ServiceCapabilityType;
-    /// # async fn example(registry: &CapabilityRegistry) -> beardog_errors::BearDogResult<()> {
+    /// # use beardog_errors::BearDogError;
+    /// # async fn example(registry: &CapabilityRegistry) -> Result<(), BearDogError> {
     /// let compute_caps = registry
     ///     .discover_by_type(ServiceCapabilityType::Compute)
     ///     .await?;
@@ -295,7 +300,7 @@ impl CapabilityRegistry {
     pub async fn discover_by_type(
         &self,
         capability_type: ServiceCapabilityType,
-    ) -> BearDogResult<Vec<RegisteredCapability>> {
+    ) -> Result<Vec<RegisteredCapability>, BearDogError> {
         debug!("Discovering capabilities of type: {:?}", capability_type);
 
         // Get capability IDs for this type
@@ -338,7 +343,10 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if internal storage access fails or if the lookup operation encounters issues.
-    pub async fn get(&self, id: &CapabilityId) -> BearDogResult<Option<RegisteredCapability>> {
+    pub async fn get(
+        &self,
+        id: &CapabilityId,
+    ) -> Result<Option<RegisteredCapability>, BearDogError> {
         Ok(self.capabilities.read().await.get(id).cloned())
     }
 
@@ -355,7 +363,7 @@ impl CapabilityRegistry {
         &self,
         id: &CapabilityId,
         status: HealthStatus,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut capabilities = self.capabilities.write().await;
 
         if let Some(registered) = capabilities.get_mut(id) {
@@ -395,7 +403,7 @@ impl CapabilityRegistry {
     /// # Errors
     /// Returns an error if the capability is not found or if the removal operation fails.
     #[allow(clippy::cognitive_complexity)] // Capability removal requires index cleanup and validation across multiple data structures
-    pub async fn remove(&self, id: &CapabilityId) -> BearDogResult<()> {
+    pub async fn remove(&self, id: &CapabilityId) -> Result<(), BearDogError> {
         debug!("Removing capability: {}", id);
 
         // Remove from main storage
@@ -427,7 +435,7 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if internal storage access fails or if the listing operation encounters issues.
-    pub async fn list_all(&self) -> BearDogResult<Vec<RegisteredCapability>> {
+    pub async fn list_all(&self) -> Result<Vec<RegisteredCapability>, BearDogError> {
         Ok(self.capabilities.read().await.values().cloned().collect())
     }
 
@@ -439,7 +447,7 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if statistics calculation fails or if internal storage access encounters issues.
-    pub async fn statistics(&self) -> BearDogResult<RegistryStatistics> {
+    pub async fn statistics(&self) -> Result<RegistryStatistics, BearDogError> {
         let capabilities = self.capabilities.read().await;
 
         let mut stats = RegistryStatistics {
@@ -484,7 +492,7 @@ impl CapabilityRegistry {
     /// # Errors
     /// Returns an error if the cleanup operation fails or if capability removal encounters issues.
     #[allow(clippy::cognitive_complexity)] // Health-based cleanup requires iterating, filtering, and coordinated removal
-    pub async fn cleanup_unhealthy(&self) -> BearDogResult<usize> {
+    pub async fn cleanup_unhealthy(&self) -> Result<usize, BearDogError> {
         let mut removed_count = 0;
         let capabilities = self.capabilities.read().await;
 
@@ -551,7 +559,10 @@ mod tests {
                 region: None,
             },
             endpoint: EndpointConfig {
-                base_url: "http://test.local:8080".to_string(),
+                base_url: {
+                    use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+                    format!("http://test.local:{}", DEFAULT_API_PORT)
+                },
                 api_version: Some("v1".to_string()),
                 timeout_ms: 5000,
                 max_retries: 3,

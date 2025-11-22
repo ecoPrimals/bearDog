@@ -209,8 +209,9 @@ mod tests {
 
 
     fn test_validate_env_vars() {
-
-        std::env::set_var("BEARDOG_PORT", "8080");
+        const TEST_PORT: &str = "8080"; // Test constant
+        
+        std::env::set_var("BEARDOG_PORT", TEST_PORT);
         std::env::set_var("BEARDOG_LOG_LEVEL", "info");
         let errors = validate_env_vars();
         assert!(errors.is_empty());

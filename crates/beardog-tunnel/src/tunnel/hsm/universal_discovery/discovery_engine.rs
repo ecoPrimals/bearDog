@@ -10,7 +10,7 @@ use super::{
 use crate::tunnel::hsm::types::HsmTier;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
 /// Main discovery engine coordinating all discoverers
@@ -32,19 +32,24 @@ pub struct Pkcs11Discoverer {
 }
 
 /// Cloud KMS discoverer
+#[allow(dead_code)] // Fields used in implementation
 pub struct CloudKmsDiscoverer {
     enabled_providers: Vec<String>,
 }
 
 /// Network HSM discoverer  
 pub struct NetworkHsmDiscoverer {
+    #[allow(dead_code)] // Future implementation
     common_ports: Vec<u16>,
+    #[allow(dead_code)] // Future implementation
     scan_config: NetworkScanConfig,
 }
 
 /// USB HSM discoverer
 pub struct UsbHsmDiscoverer {
+    #[allow(dead_code)] // Future implementation
     hsm_vendor_ids: Vec<u16>,
+    #[allow(dead_code)] // Future implementation
     enum_config: UsbEnumerationConfig,
 }
 
@@ -55,17 +60,21 @@ pub struct SoftwareHsmDiscoverer {
 
 /// Mobile HSM discoverer
 pub struct MobileHsmDiscoverer {
+    #[allow(dead_code)] // Future implementation
     android_discoverer: AndroidStrongBoxDiscoverer,
+    #[allow(dead_code)] // Future implementation
     ios_discoverer: IosSecureEnclaveDiscoverer,
 }
 
 /// TPM discoverer
 pub struct TpmDiscoverer {
+    #[allow(dead_code)] // Future implementation
     interface_types: Vec<TpmInterfaceType>,
 }
 
 /// Smart card discoverer
 pub struct SmartCardDiscoverer {
+    #[allow(dead_code)] // Future implementation
     readers: Vec<String>,
 }
 
@@ -240,7 +249,7 @@ impl Pkcs11Discoverer {
     }
 
     /// Checks if a file is a PKCS#11 library
-    fn is_pkcs11_library(&self, path: &PathBuf) -> bool {
+    fn is_pkcs11_library(&self, path: &Path) -> bool {
         if let Some(filename) = path.file_name() {
             let filename_str = filename.to_string_lossy();
             return self
@@ -712,9 +721,10 @@ mod tests {
 
     #[test]
     fn test_network_scan_config_clone() -> Result<(), Box<dyn std::error::Error>> {
+        const TEST_TIMEOUT_MS: u32 = 3000;
         let config1 = NetworkScanConfig {
             ip_ranges: vec!["192.168.1.0/24".to_string()],
-            timeout_ms: 3000,
+            timeout_ms: TEST_TIMEOUT_MS,
             parallel_scans: 5,
         };
 

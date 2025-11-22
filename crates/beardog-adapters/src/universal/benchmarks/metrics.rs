@@ -8,7 +8,7 @@ use super::core::{
     BenchmarkSummary, PerformanceRecommendation, RecommendationCategory, Priority, EffortLevel,
     ComparisonResult, StatisticalSignificance, MemoryStats
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 // ✅ Updated to use unified config system
 use beardog_types::canonical::config::UnifiedBearDogConfig;
 use beardog_types::constants::domains::system::defaults::{DEFAULT_POOL_SIZE, DEFAULT_BUFFER_SIZE};
@@ -324,7 +324,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate unified configuration loading for benchmarking
-    async fn simulate_config_loading(&self) -> BearDogResult<UnifiedBearDogConfig> {
+    async fn simulate_config_loading(&self) -> Result<UnifiedBearDogConfig> {
         // Simulate configuration loading with realistic timing
         sleep(Duration::from_micros(200)).await; // Fast unified loading
 
@@ -338,7 +338,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate end-to-end operation for benchmarking
-    async fn simulate_end_to_end_operation(&self) -> BearDogResult<String> {
+    async fn simulate_end_to_end_operation(&self) -> Result<String> {
         // Simulate a complete workflow: discovery -> capability matching -> execution
         
         // Step 1: Provider discovery

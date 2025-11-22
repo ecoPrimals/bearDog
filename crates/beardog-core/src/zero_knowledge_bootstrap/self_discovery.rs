@@ -6,7 +6,7 @@
 
 use crate::ecosystem::primal_types::{PrimalMetadata, UniversalEndpoint};
 use crate::zero_knowledge_bootstrap::SelfIdentity;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -74,7 +74,7 @@ impl SelfDiscoveryEngine {
     ///
     /// # Errors
     /// Returns an error if initialization of internal components or configuration fails.
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🌱 Initializing Self-Discovery Engine");
         info!("🎯 Mission: Discover own capabilities without hardcoded knowledge");
 
@@ -88,7 +88,7 @@ impl SelfDiscoveryEngine {
     /// # Errors
     /// Returns an error if self-identity discovery fails, if capability detection encounters issues,
     /// or if validation of self-knowledge fails.
-    pub fn discover_self_identity(&mut self) -> BearDogResult<SelfIdentity> {
+    pub fn discover_self_identity(&mut self) -> Result<SelfIdentity, BearDogError> {
         let start_time = std::time::Instant::now();
 
         self.log_discovery_plan();
@@ -119,12 +119,15 @@ impl SelfDiscoveryEngine {
     #[allow(clippy::cognitive_complexity)] // Multi-phase discovery orchestration - complexity is necessary
     fn execute_discovery_phases(
         &mut self,
-    ) -> BearDogResult<(
-        String,
-        Vec<SelfCapabilityDetection>,
-        Vec<UniversalEndpoint>,
-        PrimalMetadata,
-    )> {
+    ) -> Result<
+        (
+            String,
+            Vec<SelfCapabilityDetection>,
+            Vec<UniversalEndpoint>,
+            PrimalMetadata,
+        ),
+        BearDogError,
+    > {
         // Phase 1: Generate unique primal identity
         let primal_id = Self::generate_primal_id();
         info!("✅ Generated primal ID: {}", primal_id);
@@ -192,14 +195,24 @@ impl SelfDiscoveryEngine {
             .or_else(|_| std::env::var("COMPUTERNAME"))
             .unwrap_or_else(|_| "unknown".to_string());
 
-        // Create primal ID that's unique but not hardcoded
+        // Get primal type from environment or use "primal" as generic type
+        // This eliminates hardcoded "beardog" name - each primal discovers its own type
+        let primal_type = std::env::var("PRIMAL_TYPE")
+            .or_else(|_| std::env::var("SERVICE_TYPE"))
+            .unwrap_or_else(|_| "primal".to_string());
+
+        // Create primal ID that's unique and self-discovered
         let primal_id = format!(
-            "beardog-{}-{}",
+            "{}-{}-{}",
+            primal_type.to_lowercase(),
             hostname.chars().take(8).collect::<String>(),
             &uuid.to_string()[..8]
         );
 
-        debug!("🆔 Generated primal ID: {} (no hardcoded names)", primal_id);
+        debug!(
+            "🆔 Generated primal ID: {} (self-discovered type: {})",
+            primal_id, primal_type
+        );
         primal_id
     }
 
@@ -376,18 +389,12 @@ impl SelfDiscoveryEngine {
 
     /// Discover network endpoint
     fn discover_network_endpoint() -> UniversalEndpoint {
+        use beardog_config::global::BEARDOG_CONFIG;
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
-        // Get bind address from config or environment (0.0.0.0 is standard for binding)
-        use beardog_types::constants::domains::network::config;
+        // Get bind address from centralized config
         let host = std::env::var("BEARDOG_HOST")
             .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-            .unwrap_or_else(|_| {
-                config::DEFAULT_API_BIND
-                    .split(':')
-                    .next()
-                    .unwrap_or("0.0.0.0")
-                    .to_string()
-            });
+            .unwrap_or_else(|_| BEARDOG_CONFIG.network.addresses.bind_address.clone());
         let port = network_config.service_ports.api_port;
 
         UniversalEndpoint {
@@ -413,14 +420,10 @@ impl SelfDiscoveryEngine {
                     .unwrap_or(8443)
             });
 
-        // Get bind address from environment
-        use beardog_types::constants::domains::network::config;
+        // Get bind address from centralized config
         let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| {
-            config::DEFAULT_API_BIND
-                .split(':')
-                .next()
-                .unwrap_or("0.0.0.0")
-                .to_string()
+            use beardog_config::global::BEARDOG_CONFIG;
+            BEARDOG_CONFIG.network.addresses.bind_address.clone()
         });
 
         UniversalEndpoint {
@@ -455,8 +458,29 @@ impl SelfDiscoveryEngine {
         );
         custom_fields.insert("auto_detected".to_string(), "true".to_string());
 
+        // Get display name from environment or generate from primal ID
+        let display_name = std::env::var("PRIMAL_NAME")
+            .ok()
+            .or_else(|| std::env::var("SERVICE_NAME").ok())
+            .or_else(|| {
+                // Extract type and identifier from primal_id for display
+                primal_id.split('-').next().map(|s| {
+                    let id_prefix = primal_id.chars().take(8).collect::<String>();
+                    format!(
+                        "{}-{}",
+                        s.chars()
+                            .next()
+                            .unwrap_or('p')
+                            .to_uppercase()
+                            .collect::<String>()
+                            + &s[1..],
+                        id_prefix
+                    )
+                })
+            });
+
         PrimalMetadata {
-            display_name: Some(format!("BearDog-{}", &primal_id[..8])),
+            display_name,
             version,
             protocol_versions: vec!["1.0".to_string(), "2.0".to_string()],
             // SecurityAttestation starts empty for infant primals - attestations are acquired
@@ -474,7 +498,9 @@ impl SelfDiscoveryEngine {
     /// Validate self-knowledge
     /// Validates `self_knowledge`
     #[allow(clippy::cognitive_complexity)] // Thorough validation with multiple checks - complexity is necessary
-    fn validate_self_knowledge(capabilities: &[SelfCapabilityDetection]) -> BearDogResult<()> {
+    fn validate_self_knowledge(
+        capabilities: &[SelfCapabilityDetection],
+    ) -> Result<(), BearDogError> {
         info!("✅ Validating self-knowledge...");
 
         // Ensure we have at least one capability
@@ -512,113 +538,5 @@ impl SelfDiscoveryEngine {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_self_discovery_engine() -> Result<(), Box<dyn std::error::Error>> {
-        let mut engine = SelfDiscoveryEngine::new()?;
-
-        // Should create engine successfully
-        assert!(engine.discovered_capabilities.is_empty());
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-
-        // Should discover self-identity
-        let identity = engine.discover_self_identity()?;
-
-        // Should have unique primal ID
-        assert!(!identity.primal_id.is_empty());
-        assert!(identity.primal_id.starts_with("beardog-"));
-
-        // Should have discovered capabilities
-        assert!(!identity.capabilities.is_empty());
-
-        // Should have at least one endpoint
-        assert!(!identity.endpoints.is_empty());
-
-        // Should have metadata
-        assert!(identity.metadata.display_name.is_some());
-        assert!(!identity.metadata.version.is_empty());
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_zero_hardcoded_knowledge() -> Result<(), Box<dyn std::error::Error>> {
-        let mut engine = SelfDiscoveryEngine::new()?;
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: important
-        let identity = engine.discover_self_identity()?;
-
-        // Should not contain hardcoded primal names
-        // Validate primal sovereignty - each primal only knows itself
-        assert!(!identity.primal_id.is_empty(), "Must have self-identity");
-        assert!(
-            identity.primal_id.to_lowercase().contains("beardog"),
-            "Should identify as beardog variant, got: {}",
-            identity.primal_id
-        );
-        assert!(
-            !identity.capabilities.is_empty(),
-            "Must know own capabilities"
-        );
-
-        // Validate infant discovery - no hardcoded ecosystem knowledge
-        for capability in &identity.capabilities {
-            let cap_str = format!("{capability:?}");
-            assert!(
-                !cap_str.to_lowercase().contains("hardcoded"),
-                "Capabilities should be discovered dynamically"
-            );
-        }
-        // ✅ SOVEREIGNTY COMPLIANCE: No hardcoded primal assumptions
-        assert!(
-            !identity.primal_id.is_empty(),
-            "Primal ID should be discovered dynamically"
-        );
-
-        // Should not have hardcoded endpoints
-        for endpoint in &identity.endpoints {
-            // Validate endpoint sovereignty - no hardcoded service assumptions
-            assert!(!endpoint.url.is_empty(), "Must have endpoint URL");
-            assert!(
-                !endpoint.url.contains("hardcoded"),
-                "URL should be discovered/configured dynamically"
-            );
-
-            // Validate proper endpoint format
-            assert!(
-                endpoint.url.starts_with("http://") || endpoint.url.starts_with("https://"),
-                "Endpoint should be proper URL"
-            );
-        }
-
-        Ok(())
-    }
-
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: core
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    async fn test_capability_auto_detection() -> Result<(), Box<dyn std::error::Error>> {
-        let mut engine = SelfDiscoveryEngine::new()?;
-        let capabilities = engine.auto_detect_capabilities();
-
-        // Should detect at least security capability
-        assert!(capabilities
-            .iter()
-            .any(|c| matches!(c.capability_type, ServiceCapabilityType::Security)));
-
-        // All capabilities should have reasonable confidence
-        for cap in &capabilities {
-            assert!(cap.confidence_score > 0.0);
-            assert!(cap.confidence_score <= 1.0);
-            assert!(!cap.evidence.is_empty());
-        }
-
-        Ok(())
-    }
-}
+#[path = "self_discovery_tests.rs"]
+mod tests;

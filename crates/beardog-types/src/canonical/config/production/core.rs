@@ -100,20 +100,73 @@ impl Default for ProductionCoreConfig {
     }
 }
 
-impl Default for ProductionFeatureFlags {
-    fn default() -> Self {
+impl ProductionFeatureFlags {
+    /// Create ProductionFeatureFlags with hardcoded defaults
+    pub fn with_defaults() -> Self {
         Self {
             enable_advanced_monitoring: true,
             enable_distributed_tracing: true,
-            enable_performance_profiling: false, // Disabled by default for performance
+            enable_performance_profiling: false,
             enable_security_auditing: true,
-            enable_auto_scaling: false, // Requires careful configuration
+            enable_auto_scaling: false,
             enable_circuit_breakers: true,
             enable_rate_limiting: true,
             enable_caching: true,
             enable_compression: true,
             enable_encryption_at_rest: true,
         }
+    }
+
+    /// Create ProductionFeatureFlags from environment variables
+    pub fn from_env() -> Self {
+        Self {
+            enable_advanced_monitoring: std::env::var("BEARDOG_ENABLE_ADVANCED_MONITORING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_distributed_tracing: std::env::var("BEARDOG_ENABLE_DISTRIBUTED_TRACING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_performance_profiling: std::env::var("BEARDOG_ENABLE_PERFORMANCE_PROFILING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(false),
+            enable_security_auditing: std::env::var("BEARDOG_ENABLE_SECURITY_AUDITING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_auto_scaling: std::env::var("BEARDOG_ENABLE_AUTO_SCALING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(false),
+            enable_circuit_breakers: std::env::var("BEARDOG_ENABLE_CIRCUIT_BREAKERS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_rate_limiting: std::env::var("BEARDOG_ENABLE_RATE_LIMITING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_caching: std::env::var("BEARDOG_ENABLE_CACHING")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_compression: std::env::var("BEARDOG_ENABLE_COMPRESSION")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            enable_encryption_at_rest: std::env::var("BEARDOG_ENABLE_ENCRYPTION_AT_REST")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+        }
+    }
+}
+
+impl Default for ProductionFeatureFlags {
+    fn default() -> Self {
+        Self::with_defaults()
     }
 }
 

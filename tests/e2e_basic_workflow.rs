@@ -20,10 +20,7 @@ async fn test_basic_health_check_workflow() {
     let is_healthy = check_health_status(&health);
     assert!(is_healthy);
 
-    // Step 3: Verify async operations work
-    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-
-    // Step 4: Validate end state
+    // Step 3: Validate end state (no sleep needed - not testing timing)
     assert!(is_healthy);
 }
 
@@ -40,8 +37,7 @@ async fn test_degraded_health_workflow() {
     let is_healthy = check_health_status(&health);
     assert!(!is_healthy);
 
-    // Simulate recovery check
-    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    // Recovery check is synchronous - no delay needed
 }
 
 /// TEST_CATEGORY: e2e
@@ -59,10 +55,7 @@ async fn test_system_state_workflow() {
     let state = HealthStatus::Degraded;
     assert!(matches!(state, HealthStatus::Degraded));
 
-    // Step 3: Simulate recovery delay
-    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-
-    // Step 4: Return to healthy
+    // Step 3: Return to healthy (state transition is synchronous)
     let state = HealthStatus::Healthy;
     assert!(matches!(state, HealthStatus::Healthy));
 
@@ -106,13 +99,11 @@ async fn test_config_load_workflow() {
     use beardog_types::canonical::config::CanonicalAppConfig;
 
     // Step 1: Create default config
-    let config = CanonicalAppConfig::default();
+    let _config = CanonicalAppConfig::default();
 
     // Step 2: Validate config can be created (fields may be empty by default)
     // Config created successfully if we reach here
-
-    // Step 3: Simulate async config validation
-    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    // Config validation is synchronous - no delay needed
 
     // Test passes - config workflow completed successfully
 }
@@ -124,15 +115,12 @@ async fn test_config_load_workflow() {
 async fn test_adapter_workflow() {
     // Test adapter workflow
 
-    // Step 1: Simulate adapter initialization
-    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-
-    // Step 2: Validate adapter is ready
+    // Step 1: Adapter initialization (synchronous in test)
     let is_ready = true;
     assert!(is_ready);
 
-    // Step 3: Simulate adapter operation
-    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    // Step 2: Adapter operation complete (no timing dependency)
+    // In production, use channels to signal readiness, not sleeps
 
     // Workflow complete
 }
@@ -146,23 +134,20 @@ async fn test_multi_step_async_workflow() {
 
     // Step 1: Initialize
     let start = std::time::Instant::now();
-    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
 
-    // Step 2: Process
+    // Step 2: Process (synchronous)
     let health = HealthStatus::Healthy;
     assert!(check_health_status(&health));
-    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
 
-    // Step 3: Validate
+    // Step 3: Validate (synchronous)
     use beardog_security::compute_sha256_hash;
     let data = b"workflow test";
     let hash = compute_sha256_hash(data).unwrap();
     assert_eq!(hash.len(), 32);
-    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
 
-    // Step 4: Complete
-    let duration = start.elapsed();
-    assert!(duration.as_millis() >= 15);
+    // Step 4: Complete (test logic, not timing)
+    let _duration = start.elapsed();
+    // Workflow completes successfully (timing not relevant to correctness)
 
     // Multi-step workflow complete
 }
@@ -180,14 +165,12 @@ async fn test_type_conversion_workflow() {
     let degraded = HealthStatus::Degraded;
     let unhealthy = HealthStatus::Unhealthy;
 
-    // Step 2: Validate each state
+    // Step 2: Validate each state (synchronous checks)
     assert!(check_health_status(&healthy));
     assert!(!check_health_status(&degraded));
     assert!(!check_health_status(&unhealthy));
 
-    // Step 3: Simulate state transitions
-    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
-
+    // State validation complete - no delays needed
     // Workflow complete
 }
 

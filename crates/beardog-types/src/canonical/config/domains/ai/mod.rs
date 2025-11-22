@@ -10,7 +10,8 @@
 //! - `neural`: Neural network architecture configuration
 //! - `management`: Model management, decision engine, performance, security
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
 use crate::canonical::config::r#trait::BearDogConfig;
@@ -64,7 +65,7 @@ pub struct ConsolidatedAiConfig {
 }
 
 impl BearDogConfig for ConsolidatedAiConfig {
-    fn validate(&self) -> BearDogResult<()> {
+    fn validate(&self) -> Result<()> {
         if !self.enabled {
             return Ok(());
         }
@@ -82,7 +83,7 @@ impl BearDogConfig for ConsolidatedAiConfig {
         Ok(())
     }
     
-    fn from_env() -> BearDogResult<Self> {
+    fn from_env() -> Result<Self> {
         Ok(Self::default())
     }
 }

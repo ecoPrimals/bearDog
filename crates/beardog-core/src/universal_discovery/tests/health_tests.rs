@@ -75,7 +75,7 @@ fn test_health_statistics_default() {
     assert_eq!(stats.total_services, 0);
     assert_eq!(stats.healthy_services, 0);
     assert_eq!(stats.unhealthy_services, 0);
-    assert_eq!(stats.average_response_time_ms, 0.0);
+    assert!((stats.average_response_time_ms - 0.0).abs() < f64::EPSILON);
     assert_eq!(stats.total_health_checks, 0);
     assert_eq!(stats.total_failures, 0);
 }

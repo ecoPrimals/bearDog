@@ -122,7 +122,7 @@ fn test_health_check_updates_state() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
-    let _initial_status = ecosystem.get_status().status.clone();
+    let _initial_status = ecosystem.get_status().status; // Copy type, no need for .clone()
     let health_report = ecosystem.health_check().expect("Health check should work");
 
     // Status should match health report

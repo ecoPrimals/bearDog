@@ -42,6 +42,24 @@ impl Default for PathConfig {
 }
 
 impl PathConfig {
+    /// Load path configuration from environment variables
+    ///
+    /// Reads configuration from environment variables:
+    /// - `BEARDOG_CONFIG_DIR`: Configuration directory
+    /// - `BEARDOG_DATA_DIR`: Data directory
+    /// - `BEARDOG_LOG_DIR`: Log directory
+    /// - `BEARDOG_PKCS11_LIBRARY`: Specific PKCS#11 library path
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            config_dir: default_config_dir(),
+            data_dir: default_data_dir(),
+            log_dir: default_log_dir(),
+            pkcs11_library_paths: Vec::new(),
+            pkcs11_library: env::var("BEARDOG_PKCS11_LIBRARY").ok().map(PathBuf::from),
+        }
+    }
+
     /// Validate path configuration
     pub fn validate(&self) -> ConfigResult<()> {
         // Check if config_dir exists or can be created
@@ -53,9 +71,10 @@ impl PathConfig {
         // Validate PKCS#11 library if specified
         if let Some(ref lib) = self.pkcs11_library {
             if !lib.exists() {
-                return Err(ConfigError::PathNotFound(
-                    format!("PKCS#11 library not found: {}", lib.display())
-                ));
+                return Err(ConfigError::PathNotFound(format!(
+                    "PKCS#11 library not found: {}",
+                    lib.display()
+                )));
             }
         }
 
@@ -185,22 +204,25 @@ mod tests {
 
     #[test]
     fn test_get_pkcs11_library() {
-        let mut config = PathConfig::default();
-
         // Test explicit library
-        config.pkcs11_library = Some(PathBuf::from("/test/lib.so"));
+        let config = PathConfig {
+            pkcs11_library: Some(PathBuf::from("/test/lib.so")),
+            ..Default::default()
+        };
         assert_eq!(
             config.get_pkcs11_library(),
             Some(PathBuf::from("/test/lib.so"))
         );
 
         // Test configured paths
-        config.pkcs11_library = None;
-        config.pkcs11_library_paths = vec![PathBuf::from("/test/lib2.so")];
+        let config2 = PathConfig {
+            pkcs11_library: None,
+            pkcs11_library_paths: vec![PathBuf::from("/test/lib2.so")],
+            ..Default::default()
+        };
         assert_eq!(
-            config.get_pkcs11_library(),
+            config2.get_pkcs11_library(),
             Some(PathBuf::from("/test/lib2.so"))
         );
     }
 }
-

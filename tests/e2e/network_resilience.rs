@@ -26,8 +26,8 @@ pub async fn test_network_retry_backoff() -> Result<NetworkE2EMetrics, BearDogEr
     for attempt in 0..5 {
         metrics.connection_attempts += 1;
 
-        let backoff_ms = 2_u64.pow(attempt) * 100; // Exponential backoff
-        tokio::time::sleep(tokio::time::Duration::from_millis(backoff_ms)).await;
+        // Exponential backoff calculated (not waited - testing logic, not timing)
+        let _backoff_ms = 2_u64.pow(attempt) * 100;
 
         if attempt < 3 {
             // First 3 attempts fail
@@ -53,12 +53,20 @@ pub async fn test_network_timeout_handling() -> Result<NetworkE2EMetrics, BearDo
     let mut metrics = NetworkE2EMetrics::default();
 
     // Simulate operations with various timeout scenarios
+    // Use actual delays to test timeout behavior deterministically
     for i in 0..5 {
         metrics.connection_attempts += 1;
 
+        // Operation delays: first 2 fast (50ms), last 3 slow (150ms+)
+        let operation_delay = if i < 2 {
+            tokio::time::Duration::from_millis(50)
+        } else {
+            tokio::time::Duration::from_millis(150)
+        };
+
         let result = tokio::time::timeout(
-            tokio::time::Duration::from_millis(100),
-            simulate_slow_network_operation(i),
+            tokio::time::Duration::from_millis(100), // 100ms timeout
+            tokio::time::sleep(operation_delay),     // Actual operation delay
         )
         .await;
 
@@ -98,7 +106,7 @@ pub async fn test_network_partition_recovery() -> Result<NetworkE2EMetrics, Bear
         info!("Reconnection attempt {}", attempt + 1);
         metrics.retries += 1;
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+        // No delay needed - testing reconnection logic, not timing
 
         if simulate_reconnect_attempt().await.is_ok() {
             info!("✅ Successfully reconnected");
@@ -155,7 +163,7 @@ pub async fn test_circuit_breaker() -> Result<NetworkE2EMetrics, BearDogError> {
             consecutive_failures = 0;
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+        // No delay needed - testing circuit breaker logic, not timing
     }
 
     Ok(metrics)
@@ -187,7 +195,7 @@ pub async fn test_graceful_degradation() -> Result<NetworkE2EMetrics, BearDogErr
             }
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        // No delay needed - testing degradation handling, not timing
     }
 
     info!("✅ Graceful degradation handled successfully");
@@ -196,29 +204,23 @@ pub async fn test_graceful_degradation() -> Result<NetworkE2EMetrics, BearDogErr
 
 // Helper functions
 
-async fn simulate_slow_network_operation(iteration: usize) -> Result<(), BearDogError> {
-    let delay = if iteration < 3 { 50 } else { 150 }; // Some operations are slow
-    tokio::time::sleep(tokio::time::Duration::from_millis(delay)).await;
-    Ok(())
-}
-
 async fn simulate_network_connect() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+    // Simulate connection (instant in tests)
     Ok(())
 }
 
 async fn simulate_network_partition() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate partition (instant in tests)
     Ok(())
 }
 
 async fn simulate_reconnect_attempt() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
+    // Simulate reconnection attempt (instant in tests)
     Ok(())
 }
 
 async fn simulate_network_operation_with_load(load_level: usize) -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(load_level as u64 * 10)).await;
+    // Simulate load-dependent operation (instant in tests)
 
     // Fail at high load levels
     if load_level > 3 {
@@ -229,7 +231,7 @@ async fn simulate_network_operation_with_load(load_level: usize) -> Result<(), B
 }
 
 async fn simulate_degraded_operation() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate degraded operation (instant in tests)
     Ok(())
 }
 
@@ -251,7 +253,14 @@ mod tests {
         let result = test_network_timeout_handling().await;
         assert!(result.is_ok());
         let metrics = result.unwrap();
-        assert!(metrics.timeout_errors > 0);
+        // Should have at least 3 timeouts (operations 2, 3, 4 exceed 100ms)
+        assert!(
+            metrics.timeout_errors >= 3,
+            "Expected at least 3 timeout errors, got {}. Total attempts: {}, successful: {}",
+            metrics.timeout_errors,
+            metrics.connection_attempts,
+            metrics.successful_connections
+        );
     }
 
     #[tokio::test]

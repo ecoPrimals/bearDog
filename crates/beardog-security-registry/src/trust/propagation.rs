@@ -1,33 +1,28 @@
+//! Trust propagation functionality
 
-
-use super::TrustLevel;
-use super::{TrustConfig, TrustStore};
+use super::{TrustConfig, TrustLevel};
 use beardog_errors::BearDogError;
-use tracing::debug;
 
-#[derive(Debug, Clone)]
+/// Trust propagation handler
+#[derive(Debug)]
+pub struct TrustPropagation {
+    #[allow(dead_code)] // Future implementation
+    config: TrustConfig,
 }
 
 impl TrustPropagation {
+    /// Creates a new trust propagation handler
+    pub fn new(config: TrustConfig) -> Self {
+        Self { config }
+    }
 
-    #[inline]
-
-    #[must_use = "Trust propagation result should be checked"]
-/// Propagate Trust operation.
-    pub fn propagate_trust(&mut TrustStore,
-        from_node: &str,
-        to_node: &str,
-        trust_level: TrustLevel,
-    ) -> Result<(), BearDogError> {
-        debug!(
-            "📡 Propagating trust: {} -> {} ({:?})",
-            from_node, to_node, trust_level
-        );
-
+    /// Propagates trust to related entities
+    pub async fn propagate(&self, _entity: &str, _level: &TrustLevel) -> Result<(), BearDogError> {
         if !self.config.enable_propagation {
-            return Err(BearDogError::validation("Trust propagation is disabled"));
+            return Ok(());
         }
 
+        // Placeholder: actual propagation logic would go here
         Ok(())
     }
 }

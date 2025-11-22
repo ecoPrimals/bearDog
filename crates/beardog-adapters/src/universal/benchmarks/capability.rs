@@ -7,7 +7,7 @@ use super::core::{
     PerformanceBenchmarkSuite, BenchmarkResult, BenchmarkCategory, MemoryStats, ComparisonResult, 
     StatisticalSignificance
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use beardog_types::canonical::providers_unified::traits::{AdapterRequest};
 use beardog_types::canonical::config::domains::adapter::{AdapterType};
@@ -223,7 +223,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate zero-cost enum dispatch for benchmarking
-    async fn simulate_enum_dispatch(&self, request: &CapabilityRequest) -> BearDogResult<String> {
+    async fn simulate_enum_dispatch(&self, request: &CapabilityRequest) -> Result<String> {
         // Simulate zero-cost enum dispatch - no heap allocations
         let result = match request.capability_type {
             CapabilityType::Compute => {
@@ -264,7 +264,7 @@ impl PerformanceBenchmarkSuite {
     }
 
     /// Simulate capability matching for benchmarking
-    async fn simulate_capability_matching(&self, request: &CapabilityRequest) -> BearDogResult<Vec<String>> {
+    async fn simulate_capability_matching(&self, request: &CapabilityRequest) -> Result<Vec<String>> {
         // Simulate capability matching algorithm
         let mut matches = Vec::new();
 

@@ -15,12 +15,12 @@
 //!
 //! ## Key Components
 //!
-//! - [`ecosystem_genetic_spawner`] - Genetic spawning for new primals
-//! - [`integration_engine`] - Core integration orchestration
-//! - [`license_manager`] - License and agreement management
-//! - [`performance_optimizer`] - Cross-ecosystem performance optimization
-//! - [`types`] - Integration type definitions
-//! - [`universal_adapter`] - Universal service adaptation
+//! - `ecosystem_genetic_spawner` - Genetic spawning for new primals
+//! - `integration_engine` - Core integration orchestration
+//! - `license_manager` - License and agreement management
+//! - `performance_optimizer` - Cross-ecosystem performance optimization
+//! - `types` - Integration type definitions
+//! - `universal_adapter` - Universal service adaptation
 //!
 //! ## Example
 //!
@@ -51,8 +51,16 @@ pub mod performance_optimizer;
 /// Integration type definitions
 pub mod types;
 
-/// Songbird integration for network discovery
+/// Deprecated songbird integration (kept for backward compatibility, do not use)
+///
+/// **Use `UniversalPrimalAdapter` instead** - see `beardog_adapters::UniversalPrimalAdapter`
+#[deprecated(
+    since = "3.3.0",
+    note = "Use UniversalPrimalAdapter from beardog-adapters crate for capability-based discovery"
+)]
+#[allow(deprecated)]
 pub mod songbird_integration;
+
 /// Universal service adaptation
 pub mod universal_adapter;
 /// Universal compute client for distributed processing
@@ -60,12 +68,32 @@ pub mod universal_compute_client;
 
 pub use integration_engine::*;
 pub use license_manager::*;
+
+// Tests
+#[cfg(test)]
+mod integration_engine_tests;
+
+#[cfg(test)]
+mod license_manager_tests;
+
+#[cfg(test)]
+mod performance_optimizer_tests;
+
 // Avoid ambiguous re-exports by aliasing conflicting types
 pub use performance_optimizer::{
     CapabilityConnectionPool, ComputeCache, ConnectionMetrics as PerformanceConnectionMetrics,
     EcosystemPerformanceOptimizer, PoolConfig as PerformancePoolConfig,
 };
+
+// ⚠️ DEPRECATED: Do not use these exports - they hardcode primal names
+// Use UniversalPrimalAdapter from beardog-adapters crate instead
+#[deprecated(
+    since = "3.3.0",
+    note = "Use UniversalPrimalAdapter from beardog-adapters for capability-based primal discovery"
+)]
+#[allow(deprecated)]
 pub use songbird_integration::*;
+
 pub use types::*;
 pub use universal_adapter::*;
 pub use universal_compute_client::*;

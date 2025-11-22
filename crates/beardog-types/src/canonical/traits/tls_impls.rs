@@ -14,7 +14,9 @@ use std::path::Path;
 
 // Re-export the structs for convenience
 pub use crate::canonical::config::domains::network::security::TlsConfiguration as NetworkSecurityTls;
-pub use crate::canonical::providers_unified::connection::{TlsConfig as ProviderTlsConfig, TlsVersion as ProviderTlsVersion};
+pub use crate::canonical::providers_unified::connection::{
+    TlsConfig as ProviderTlsConfig, TlsVersion as ProviderTlsVersion,
+};
 
 /// Implementation for Network Security TLS Configuration
 impl TlsConfigTrait for NetworkSecurityTls {
@@ -144,7 +146,10 @@ mod tests {
             config.ca_path().map(|p| p.to_str().unwrap()),
             Some("/path/to/ca.pem")
         );
-        assert_eq!(config.cipher_suites().map(|s| s.len()), Some(1));
+        assert_eq!(
+            config.cipher_suites().map(<[std::string::String]>::len),
+            Some(1)
+        );
         assert!(config.is_production_ready());
     }
 
@@ -232,4 +237,3 @@ mod tests {
         assert!(secure_config.validate().is_ok());
     }
 }
-

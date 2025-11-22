@@ -3,7 +3,7 @@
 // Provides safe Rust interface to Android StrongBox hardware security module.
 // This implementation prioritizes safety and error handling over raw performance.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::KeyType;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -69,7 +69,7 @@ impl SafeAndroidStrongBoxWrapper {
     /// Initialize native Android handles safely
     /// Initializes componentialize_native_handles
     /// Initializes componentialize_native_handles
-    pub fn initialize_native_handles(&mut self) -> BearDogResult<()> {
+    pub fn initialize_native_handles(&mut self) -> Result<(), BearDogError> {
         info!("🔧 Initializing Android native handles");
 
         if !self.device_capabilities.strongbox_available {
@@ -81,7 +81,11 @@ impl SafeAndroidStrongBoxWrapper {
     }
 
     /// Generate hardware-backed key safely
-    pub fn safe_generate_key(&mut self, key_type: &KeyType, key_id: &str) -> BearDogResult<String> {
+    pub fn safe_generate_key(
+        &mut self,
+        key_type: &KeyType,
+        key_id: &str,
+    ) -> Result<String, BearDogError> {
         info!(
             "🔐 Safe key generation for: {} (type: {:?})",
             key_id, key_type
@@ -106,7 +110,7 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(generated_key_id)
     }
 
-    pub fn safe_sign(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub fn safe_sign(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         info!("🔏 Safe signing for key: {}", key_id);
 
         if !self.native_handle_initialized {
@@ -133,7 +137,12 @@ impl SafeAndroidStrongBoxWrapper {
     }
 
     /// Verify signature safely
-    pub fn safe_verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    pub fn safe_verify(
+        &self,
+        key_id: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, BearDogError> {
         debug!("🔍 Safe signature verification for key: {}", key_id);
 
         // Recreate expected signature

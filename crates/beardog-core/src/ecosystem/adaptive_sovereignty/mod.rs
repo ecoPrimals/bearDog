@@ -39,7 +39,8 @@ pub use learning_engine::{
     ActivationType, InteractionPattern, NeuralLayer, SovereigntyLearningEngine, SovereigntyPattern,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -222,7 +223,7 @@ pub struct AdaptiveMetrics {
 impl AdaptiveSovereigntySystem {
     /// Create new adaptive sovereignty system
     /// Creates a new instance
-    pub fn new(config: AdaptiveConfig) -> BearDogResult<Self> {
+    pub fn new(config: AdaptiveConfig) -> Result<Self> {
         info!("Initializing Adaptive Sovereignty System");
 
         let learning_engine = Arc::new(RwLock::new(SovereigntyLearningEngine::new()));
@@ -244,7 +245,7 @@ impl AdaptiveSovereigntySystem {
     /// Start adaptive evolution process
     /// Starts evolution
     /// Starts evolution
-    pub fn start_evolution(&mut self) -> BearDogResult<()> {
+    pub fn start_evolution(&mut self) -> Result<(), BearDogError> {
         info!("Starting adaptive sovereignty evolution");
 
         // Initialize learning engine
@@ -264,7 +265,7 @@ impl AdaptiveSovereigntySystem {
     }
 
     /// Execute one evolution cycle
-    fn evolution_cycle(&mut self) -> BearDogResult<()> {
+    fn evolution_cycle(&mut self) -> Result<(), BearDogError> {
         debug!("Executing evolution cycle");
 
         // Analyze current performance
@@ -299,7 +300,7 @@ impl AdaptiveSovereigntySystem {
         Ok(())
     }
 
-    fn analyze_performance(&self) -> BearDogResult<PerformanceAnalysis> {
+    fn analyze_performance(&self) -> Result<PerformanceAnalysis> {
         // Simplified performance analysis
         Ok(PerformanceAnalysis {
             overall_score: 0.85,
@@ -317,7 +318,7 @@ impl AdaptiveSovereigntySystem {
     fn generate_adaptation_strategies(
         &self,
         performance: &PerformanceAnalysis,
-    ) -> BearDogResult<Vec<AdaptationStrategy>> {
+    ) -> Result<Vec<AdaptationStrategy>> {
         let mut strategies = Vec::new();
 
         // Generate performance optimization strategy
@@ -349,7 +350,7 @@ impl AdaptiveSovereigntySystem {
     fn apply_adaptation_strategies(
         &mut self,
         strategies: &[AdaptationStrategy],
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         for strategy in strategies {
             debug!("Applying strategy: {:?}", strategy.strategy_type);
 
@@ -377,7 +378,7 @@ impl AdaptiveSovereigntySystem {
     fn apply_performance_optimization(
         &mut self,
         _strategy: &AdaptationStrategy,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("Applying performance optimization");
         self.metrics.successful_adaptations += 1;
         self.metrics.avg_performance_improvement += 0.05;
@@ -385,7 +386,7 @@ impl AdaptiveSovereigntySystem {
     }
 
     /// Apply security enhancement strategy
-    fn apply_security_enhancement(&mut self, _strategy: &AdaptationStrategy) -> BearDogResult<()> {
+    fn apply_security_enhancement(&mut self, _strategy: &AdaptationStrategy) -> Result<(), BearDogError> {
         info!("Applying security enhancement");
         self.metrics.successful_adaptations += 1;
         Ok(())
@@ -396,7 +397,7 @@ impl AdaptiveSovereigntySystem {
     fn update_sovereignty_genome(
         &self,
         performance: &PerformanceAnalysis,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut genome = self.sovereignty_genome.write();
 
         // Update fitness score

@@ -104,12 +104,12 @@ impl CryptoSovereigntyPolicy {
 
     pub fn derive_key(
         &self,
-        master: &KeyLocation,
+        root: &KeyLocation,
         context: &[u8],
     ) -> Result<KeyLocation, BearDogError> {
         // Simple key derivation for testing
-        let derived_id = format!("{}_{}", master.id(), context.len());
-        Ok(KeyLocation::new(&derived_id, master.storage()))
+        let derived_id = format!("{}_{}", root.id(), context.len());
+        Ok(KeyLocation::new(&derived_id, root.storage()))
     }
 
     pub fn validate_encryption_method(

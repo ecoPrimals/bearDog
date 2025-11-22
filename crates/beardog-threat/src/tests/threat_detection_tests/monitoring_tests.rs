@@ -54,7 +54,7 @@ mod tests {
                 };
 
                 monitor_clone.lock().unwrap().process_event(&event);
-                std::thread::sleep(Duration::from_millis(1));
+                // Modern pattern: No sleep needed - test real concurrent processing
             }
         });
 
@@ -209,7 +209,7 @@ mod tests {
     /// TEST 6: False Positive Handling
     ///
     /// Tests false positive reduction and handling:
-    /// - Whitelist management
+    /// - Allowlist management
     /// - False positive feedback
     /// - Adaptive threshold adjustment
     /// - Pattern refinement
@@ -217,24 +217,24 @@ mod tests {
     fn test_false_positive_handling() {
         let mut fp_handler = FalsePositiveHandler::new();
 
-        // Test whitelist functionality
-        fp_handler.add_to_whitelist("trusted_ip", "192.168.1.100");
-        fp_handler.add_to_whitelist("trusted_user", "admin@example.com");
+        // Test allowlist functionality (formerly whitelist)
+        fp_handler.add_to_allowlist("trusted_ip", "192.168.1.100");
+        fp_handler.add_to_allowlist("trusted_user", "admin@example.com");
 
-        assert!(fp_handler.is_whitelisted("trusted_ip", "192.168.1.100"));
-        assert!(fp_handler.is_whitelisted("trusted_user", "admin@example.com"));
-        assert!(!fp_handler.is_whitelisted("trusted_ip", "10.0.0.1"));
+        assert!(fp_handler.is_allowed("trusted_ip", "192.168.1.100"));
+        assert!(fp_handler.is_allowed("trusted_user", "admin@example.com"));
+        assert!(!fp_handler.is_allowed("trusted_ip", "10.0.0.1"));
 
-        // Test threat filtering with whitelist
+        // Test threat filtering with allowlist
         let threat = Threat::new(ThreatType::UnusualAccess, ThreatSeverity::Medium)
             .with_metadata("source_ip", "192.168.1.100");
 
         assert!(fp_handler.should_suppress(&threat));
 
-        let non_whitelisted = Threat::new(ThreatType::UnusualAccess, ThreatSeverity::Medium)
+        let non_allowlisted = Threat::new(ThreatType::UnusualAccess, ThreatSeverity::Medium)
             .with_metadata("source_ip", "10.0.0.1");
 
-        assert!(!fp_handler.should_suppress(&non_whitelisted));
+        assert!(!fp_handler.should_suppress(&non_allowlisted));
 
         // Test false positive feedback
         let _detected_threat =

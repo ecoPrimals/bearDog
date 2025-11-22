@@ -3,7 +3,7 @@
 //! This module provides the core zero-cost capability dispatch system that eliminates
 //! `Box<dyn>` patterns with compile-time enum dispatch for maximum performance.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::adapters::{CapabilityRequest, CapabilityResponse, CapabilityType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -49,7 +49,7 @@ impl CapabilityHandlerDispatch {
     ///
     /// This method uses compile-time enum matching instead of runtime vtable
     /// lookups, providing significant performance improvements.
-    pub async fn handle_request(&self, request: &CapabilityRequest) -> BearDogResult<CapabilityResponse> {
+    pub async fn handle_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         debug!("Handling capability request: {:?}", request.capability_type);
         
         match self {
@@ -173,7 +173,7 @@ impl CapabilityHandlerDispatch {
     }
 
     /// Validate the handler configuration
-    pub fn validate_configuration(&self) -> BearDogResult<()> {
+    pub fn validate_configuration(&self) -> Result<()> {
         match self {
             Self::Security(handler) => handler.validate_config(),
             Self::Storage(handler) => handler.validate_config(),

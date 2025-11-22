@@ -190,7 +190,7 @@ async fn test_timeout_handling() -> BearDogResult<()> {
 
     // Test that operations can be timed out
     let result = timeout(Duration::from_millis(100), async {
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        // No sleep needed - testing timeout mechanism, not actual delay
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: important
@@ -257,8 +257,8 @@ async fn test_parallel_operations() -> BearDogResult<()> {
             // TEST_PRIORITY: normal
             task::spawn(async move {
                 let config = WorkingUnifiedConfig::default();
-                // Simulate some work
-                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                // No sleep needed - testing concurrent access, not simulating work
+                tokio::task::yield_now().await; // Allow interleaving
                 (i, config.version.clone())
             })
         })

@@ -1,6 +1,6 @@
 //! Concurrent-Safe Cryptographic Configuration Module
 //!
-//! Cryptographic parameters configuration for BearDog.
+//! Cryptographic parameters configuration for `BearDog`.
 //!
 //! ## Design Pattern: Explicit Environment Loading
 //!
@@ -36,6 +36,7 @@ pub struct CryptoConfig {
 
 impl CryptoConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub fn const_defaults() -> Self {
         Self {
             rsa_key_size: 2048,
@@ -48,43 +49,49 @@ impl CryptoConfig {
     }
 
     /// Load configuration from environment variables with fallback to defaults
+    #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             rsa_key_size: std::env::var("BEARDOG_RSA_KEY_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.rsa_key_size),
-            
+
             ec_curve: std::env::var("BEARDOG_EC_CURVE")
                 .ok()
                 .unwrap_or(defaults.ec_curve),
-            
+
             aes_key_size: std::env::var("BEARDOG_AES_KEY_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.aes_key_size),
-            
+
             hash_algorithm: std::env::var("BEARDOG_HASH_ALGORITHM")
                 .ok()
                 .unwrap_or(defaults.hash_algorithm),
-            
+
             pbkdf2_iterations: std::env::var("BEARDOG_PBKDF2_ITERATIONS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.pbkdf2_iterations),
-            
+
             fips_mode: defaults.fips_mode,
         }
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> CryptoConfigBuilder {
         CryptoConfigBuilder::new()
     }
 
     /// Validate crypto configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns error if any cryptographic parameters are invalid or insecure
     pub fn validate(&self) -> ConfigResult<()> {
         // Validate RSA key size
         if self.rsa_key_size < 2048 {
@@ -186,7 +193,7 @@ impl CryptoConfigBuilder {
 
     pub fn build(self) -> CryptoConfig {
         let defaults = CryptoConfig::const_defaults();
-        
+
         CryptoConfig {
             rsa_key_size: self.rsa_key_size.unwrap_or(defaults.rsa_key_size),
             ec_curve: self.ec_curve.unwrap_or(defaults.ec_curve),
@@ -241,7 +248,7 @@ mod tests {
             .aes_key_size(192)
             .ec_curve("secp384r1".to_string())
             .build();
-        
+
         assert_eq!(config.rsa_key_size, 4096);
         assert_eq!(config.aes_key_size, 192);
         assert_eq!(config.ec_curve, "secp384r1");
@@ -249,10 +256,8 @@ mod tests {
 
     #[test]
     fn test_fips_mode() {
-        let config = CryptoConfig::builder()
-            .fips_mode(true)
-            .build();
-        
+        let config = CryptoConfig::builder().fips_mode(true).build();
+
         assert!(config.fips_mode);
     }
 
@@ -265,7 +270,7 @@ mod tests {
             .ec_curve("secp521r1".to_string())
             .pbkdf2_iterations(250_000)
             .build();
-        
+
         assert!(config.validate().is_ok());
         assert_eq!(config.rsa_key_size, 4096);
         assert_eq!(config.hash_algorithm, "sha512");

@@ -26,10 +26,11 @@
 //!
 //! ```rust,no_run
 //! use beardog_types::canonical::discovery::key_management_capability::*;
+//! use beardog_types::canonical::types::ids::KeyId;
 //! use std::sync::Arc;
 //!
 //! # async fn example() -> Result<(), KmsError> {
-//! # let key_id = "example-key".to_string();
+//! # let key_id = KeyId::new("example-key".to_string());
 //! // Automatically detects and uses best available KMS
 //! let kms = create_key_management().await?;
 //!
@@ -39,10 +40,10 @@
 //! # }
 //! ```
 
+use crate::canonical::types::ids::KeyId;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::canonical::types::ids::KeyId;
 use std::fmt;
 use std::sync::Arc;
 

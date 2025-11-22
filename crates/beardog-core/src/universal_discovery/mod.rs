@@ -279,8 +279,13 @@ pub enum DiscoveryEvent {
 
 impl Default for UniversalDiscoveryConfig {
     fn default() -> Self {
+        // ✅ Self-discovered service ID (no hardcoded primal name)
+        let primal_type = std::env::var("PRIMAL_TYPE")
+            .or_else(|_| std::env::var("SERVICE_TYPE"))
+            .unwrap_or_else(|_| "primal".to_string());
+
         Self {
-            service_id: format!("beardog-{}", Uuid::new_v4()),
+            service_id: format!("{}-{}", primal_type, Uuid::new_v4()),
             enabled_protocols: vec![
                 DiscoveryProtocol::Mdns {
                     service_type: "_http._tcp".to_string(),
@@ -289,18 +294,23 @@ impl Default for UniversalDiscoveryConfig {
                     continuous_monitoring: true,
                 },
                 DiscoveryProtocol::Http {
-                    endpoint: std::env::var("BEARDOG_CONSUL_ENDPOINT")
+                    endpoint: std::env::var("SERVICE_REGISTRY_ENDPOINT")
+                        .or_else(|_| std::env::var("DISCOVERY_SERVICE_ENDPOINT"))
+                        .or_else(|_| std::env::var("BEARDOG_CONSUL_ENDPOINT"))
                         .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
                         .unwrap_or_else(|_| {
-                            // Use network config for consistent localhost handling
+                            // ✅ Vendor-agnostic: Could be Consul, etcd, k8s, etc.
+                            // Use SERVICE_REGISTRY_* environment variables (not consul-specific)
                             let network_config = NetworkConfig::default();
-                            let consul_host = std::env::var("CONSUL_HOST")
+                            let registry_host = std::env::var("SERVICE_REGISTRY_HOST")
+                                .or_else(|_| std::env::var("CONSUL_HOST"))
                                 .unwrap_or_else(|_| network_config.default_host.clone());
-                            let consul_port = std::env::var("CONSUL_PORT")
+                            let registry_port = std::env::var("SERVICE_REGISTRY_PORT")
+                                .or_else(|_| std::env::var("CONSUL_PORT"))
                                 .ok()
                                 .and_then(|p| p.parse::<u16>().ok())
-                                .unwrap_or(8500);
-                            format!("http://{consul_host}:{consul_port}/v1/catalog/services")
+                                .unwrap_or(8500); // 8500 is common for service registries
+                            format!("http://{registry_host}:{registry_port}/v1/catalog/services")
                         }),
                     headers: HashMap::new(),
                 },

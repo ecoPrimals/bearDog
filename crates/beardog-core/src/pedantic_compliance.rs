@@ -99,7 +99,15 @@ impl PedanticComplianceSystem {
         let default = match key {
             "BEARDOG_ENVIRONMENT" => "development",
             "BEARDOG_LOG_LEVEL" => "info",
-            "BEARDOG_DISCOVERY_ENDPOINT" => "http://localhost: NetworkConfig::default().port",
+            "BEARDOG_DISCOVERY_ENDPOINT" => {
+                // Use config-driven default instead of hardcoded value
+                use beardog_types::constants::domains::network::config;
+                return Ok(format!(
+                    "http://{}:{}/discovery",
+                    config::default_service_host(),
+                    config::default_service_port()
+                ));
+            }
             "BEARDOG_TIMEOUT_SECONDS" => "30",
             "BEARDOG_MAX_CONNECTIONS" => "1000",
             _ => {

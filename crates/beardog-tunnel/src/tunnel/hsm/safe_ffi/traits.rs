@@ -9,7 +9,7 @@ pub use crate::tunnel::hsm::types::{HsmKey, KeyType};
 /// Platform-specific security provider trait
 ///
 /// NOTE: This is a local definition until beardog_traits::unified::PlatformProvider exists
-pub trait PlatformProvider: Send + Sync {
+pub trait PlatformSecurityProvider: Send + Sync {
     /// Generate a new key
     fn generate_key(&self, key_id: &str, key_type: &KeyType) -> Result<HsmKey, BearDogError>;
 
@@ -23,4 +23,10 @@ pub trait PlatformProvider: Send + Sync {
         data: &[u8],
         signature: &[u8],
     ) -> Result<bool, BearDogError>;
+}
+
+/// Biometric authentication provider trait
+pub trait BiometricAuthProvider: Send + Sync {
+    /// Authenticate using biometrics
+    fn authenticate(&self) -> Result<bool, BearDogError>;
 }

@@ -254,14 +254,16 @@ mod tests {
 
     #[test]
     fn test_hsm_connection_config() {
+        const TEST_PORT: u16 = 8080;
+        let url = format!("localhost:{}", TEST_PORT);
         let config = HsmConnectionConfig {
-            url: "localhost:8080".to_string(),
+            url: url.clone(),
             timeout: Duration::from_secs(30),
             max_retries: 3,
             use_tls: true,
         };
 
-        assert_eq!(config.url, "localhost:8080");
+        assert_eq!(config.url, url);
         assert!(config.use_tls);
         assert_eq!(config.max_retries, 3);
     }

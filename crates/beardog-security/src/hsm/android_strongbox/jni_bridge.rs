@@ -49,9 +49,15 @@ static mut JAVA_VM: Option<JavaVM> = None;
 pub fn init_jni(env: JNIEnv) -> Result<(), BearDogError> {
     INIT.call_once(|| {
         info!("🔧 Initializing JNI bridge for Android StrongBox");
-        
+
         match env.get_java_vm() {
             Ok(vm) => {
+                // SAFETY: This is safe because:
+                // 1. Protected by Once::call_once - written exactly once during initialization
+                // 2. All subsequent accesses in get_env() are read-only via &JAVA_VM
+                // 3. No data races possible - the write happens-before all reads (Once guarantee)
+                // 4. Standard pattern for JNI initialization in Rust (see jni-rs documentation)
+                // 5. JavaVM is thread-safe and can be shared across threads (JNI specification)
                 unsafe {
                     JAVA_VM = Some(vm);
                 }
@@ -62,19 +68,29 @@ pub fn init_jni(env: JNIEnv) -> Result<(), BearDogError> {
             }
         }
     });
-    
+
     Ok(())
 }
 
 /// Get JNI environment
+///
+/// # Safety
+///
+/// This function accesses the static JAVA_VM which must be initialized via init_jni()
+/// before calling this function. The function returns an error if not initialized.
 #[cfg(target_os = "android")]
 fn get_env() -> Result<JNIEnv<'static>, BearDogError> {
+    // SAFETY: This is safe because:
+    // 1. JAVA_VM is initialized once via init_jni() and never mutated afterward
+    // 2. The reference &JAVA_VM is read-only - no mutable access after initialization
+    // 3. JavaVM::attach_current_thread() is safe once VM is initialized (JNI guarantee)
+    // 4. We return an error if JAVA_VM is None (defensive programming)
+    // 5. JavaVM is designed to be accessed from multiple threads (JNI specification)
     unsafe {
         match &JAVA_VM {
-            Some(vm) => {
-                vm.attach_current_thread()
-                    .map_err(|e| BearDogError::system(format!("Failed to attach JNI thread: {}", e)))
-            }
+            Some(vm) => vm
+                .attach_current_thread()
+                .map_err(|e| BearDogError::system(format!("Failed to attach JNI thread: {}", e))),
             None => Err(BearDogError::system(
                 "JNI not initialized. Call init_jni() first.".to_string(),
             )),
@@ -124,11 +140,22 @@ pub fn strongbox_generate_key(
     require_user_auth: bool,
     auth_validity_duration: i32,
 ) -> Result<Vec<u8>, BearDogError> {
-    info!("🔑 Generating StrongBox key: alias={}, algorithm={}", alias, algorithm);
-    
+    info!(
+        "🔑 Generating StrongBox key: alias={}, algorithm={}",
+        alias, algorithm
+    );
+
     let env = get_env()?;
-    
-    // TODO: Implement actual JNI calls to Android Keystore
+
+    // PHASE-2(Android-JNI): Implement JNI calls to Android Keystore for key generation
+    //
+    // Implementation Plan:
+    // 1. Get KeyPairGenerator class via env.find_class("java/security/KeyPairGenerator")
+    // 2. Build KeyGenParameterSpec with StrongBox flag
+    // 3. Call getInstance("EC", "AndroidKeyStore")
+    // 4. Initialize with KeyGenParameterSpec
+    // 5. Generate key pair via generateKeyPair()
+    // 6. Extract and return public key bytes
     //
     // Java code equivalent:
     // ```java
@@ -151,13 +178,19 @@ pub fn strongbox_generate_key(
     //
     // return keyPair.getPublic().getEncoded();
     // ```
-    
-    debug!("  Purpose: sign={}, verify={}", purpose_sign, purpose_verify);
-    debug!("  User auth: required={}, duration={}s", require_user_auth, auth_validity_duration);
-    
+
+    debug!(
+        "  Purpose: sign={}, verify={}",
+        purpose_sign, purpose_verify
+    );
+    debug!(
+        "  User auth: required={}, duration={}s",
+        require_user_auth, auth_validity_duration
+    );
+
     // Placeholder: Return a fake public key for now
     warn!("⚠️  JNI bridge not yet fully implemented - returning placeholder");
-    
+
     Err(BearDogError::system(format!(
         "StrongBox key generation not yet implemented. Would create '{}' key with algorithm '{}'",
         alias, algorithm
@@ -180,16 +213,24 @@ pub fn strongbox_generate_key(
 ///
 /// Signature bytes
 #[cfg(target_os = "android")]
-pub fn strongbox_sign(
-    alias: &str,
-    data: &[u8],
-    algorithm: &str,
-) -> Result<Vec<u8>, BearDogError> {
-    info!("✍️  Signing with StrongBox key: alias={}, data_len={}", alias, data.len());
-    
+pub fn strongbox_sign(alias: &str, data: &[u8], algorithm: &str) -> Result<Vec<u8>, BearDogError> {
+    info!(
+        "✍️  Signing with StrongBox key: alias={}, data_len={}",
+        alias,
+        data.len()
+    );
+
     let env = get_env()?;
-    
-    // TODO: Implement actual JNI calls
+
+    // PHASE-2(Android-JNI): Implement JNI calls to Android Keystore for signing
+    //
+    // Implementation Plan:
+    // 1. Load KeyStore via getInstance("AndroidKeyStore")
+    // 2. Get private key by alias
+    // 3. Get Signature instance for algorithm
+    // 4. Init signature with private key
+    // 5. Update with data bytes
+    // 6. Return signature bytes
     //
     // Java code equivalent:
     // ```java
@@ -202,14 +243,15 @@ pub fn strongbox_sign(
     // signature.update(data);
     // return signature.sign();
     // ```
-    
+
     debug!("  Algorithm: {}", algorithm);
-    
+
     warn!("⚠️  JNI bridge not yet fully implemented - returning placeholder");
-    
+
     Err(BearDogError::system(format!(
         "StrongBox signing not yet implemented. Would sign {} bytes with key '{}'",
-        data.len(), alias
+        data.len(),
+        alias
     )))
 }
 
@@ -236,11 +278,23 @@ pub fn strongbox_verify(
     signature: &[u8],
     algorithm: &str,
 ) -> Result<bool, BearDogError> {
-    info!("✅ Verifying signature: alias={}, data_len={}", alias, data.len());
-    
+    info!(
+        "✅ Verifying signature: alias={}, data_len={}",
+        alias,
+        data.len()
+    );
+
     let env = get_env()?;
-    
-    // TODO: Implement actual JNI calls
+
+    // PHASE-2(Android-JNI): Implement JNI calls to Android Keystore for signature verification
+    //
+    // Implementation Plan:
+    // 1. Load KeyStore via getInstance("AndroidKeyStore")
+    // 2. Get public key from certificate
+    // 3. Get Signature instance for algorithm
+    // 4. Init signature with public key
+    // 5. Update with data bytes
+    // 6. Verify signature and return boolean
     //
     // Java code equivalent:
     // ```java
@@ -253,12 +307,12 @@ pub fn strongbox_verify(
     // signature.update(data);
     // return signature.verify(signatureBytes);
     // ```
-    
+
     debug!("  Algorithm: {}", algorithm);
     debug!("  Signature len: {}", signature.len());
-    
+
     warn!("⚠️  JNI bridge not yet fully implemented");
-    
+
     Err(BearDogError::system(
         "StrongBox verification not yet implemented".to_string(),
     ))
@@ -283,10 +337,17 @@ pub fn strongbox_verify(
 #[cfg(target_os = "android")]
 pub fn strongbox_generate_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
     info!("🎲 Generating {} bytes of hardware entropy", size);
-    
+
     let env = get_env()?;
-    
-    // TODO: Implement actual JNI calls
+
+    // PHASE-2(Android-JNI): Implement JNI calls to Android SecureRandom
+    //
+    // Implementation Plan:
+    // 1. Get SecureRandom class via env.find_class("java/security/SecureRandom")
+    // 2. Call static method getInstanceStrong()
+    // 3. Create byte array of requested size
+    // 4. Call nextBytes(byteArray)
+    // 5. Convert Java byte array to Rust Vec<u8>
     //
     // Java code equivalent:
     // ```java
@@ -295,9 +356,9 @@ pub fn strongbox_generate_entropy(size: usize) -> Result<Vec<u8>, BearDogError> 
     // secureRandom.nextBytes(randomBytes);
     // return randomBytes;
     // ```
-    
+
     warn!("⚠️  JNI bridge not yet fully implemented - returning placeholder");
-    
+
     Err(BearDogError::system(format!(
         "Hardware entropy generation not yet implemented. Would generate {} bytes from Titan M2",
         size
@@ -322,10 +383,16 @@ pub fn strongbox_generate_entropy(size: usize) -> Result<Vec<u8>, BearDogError> 
 #[cfg(target_os = "android")]
 pub fn strongbox_get_attestation(alias: &str) -> Result<Vec<Vec<u8>>, BearDogError> {
     info!("📜 Getting attestation for key: {}", alias);
-    
+
     let env = get_env()?;
-    
-    // TODO: Implement actual JNI calls
+
+    // PHASE-2(Android-JNI): Implement JNI calls to get attestation certificate chain
+    //
+    // Implementation Plan:
+    // 1. Load KeyStore via getInstance("AndroidKeyStore")
+    // 2. Get certificate chain for alias
+    // 3. Encode each certificate to DER format
+    // 4. Convert to Vec<Vec<u8>>
     //
     // Java code equivalent:
     // ```java
@@ -339,9 +406,9 @@ pub fn strongbox_get_attestation(alias: &str) -> Result<Vec<Vec<u8>>, BearDogErr
     // }
     // return result;
     // ```
-    
+
     warn!("⚠️  JNI bridge not yet fully implemented");
-    
+
     Err(BearDogError::system(
         "StrongBox attestation not yet implemented".to_string(),
     ))
@@ -357,17 +424,20 @@ pub fn strongbox_get_attestation(alias: &str) -> Result<Vec<Vec<u8>>, BearDogErr
 #[cfg(target_os = "android")]
 pub fn strongbox_get_device_info() -> Result<StrongBoxDeviceInfo, BearDogError> {
     info!("📱 Querying StrongBox device info");
-    
+
     let env = get_env()?;
-    
-    // TODO: Implement actual JNI calls to query:
-    // - Build.MANUFACTURER
-    // - Build.MODEL
-    // - Build.VERSION.SDK_INT
-    // - PackageManager.hasSystemFeature("android.hardware.strongbox_keystore")
-    
+
+    // PHASE-2(Android-JNI): Implement JNI calls to query device info
+    //
+    // Implementation Plan:
+    // 1. Query Build.MANUFACTURER via env.get_static_field
+    // 2. Query Build.MODEL
+    // 3. Query Build.VERSION.SDK_INT
+    // 4. Check PackageManager.hasSystemFeature("android.hardware.strongbox_keystore")
+    // 5. Query KeyChain.isBoundKeyAlgorithm for Titan M2 detection
+
     warn!("⚠️  JNI bridge not yet fully implemented - returning placeholder");
-    
+
     Ok(StrongBoxDeviceInfo {
         manufacturer: "Google".to_string(),
         model: "Pixel 8a".to_string(),
@@ -486,4 +556,3 @@ mod tests {
         // This would require actual Android device/emulator
     }
 }
-

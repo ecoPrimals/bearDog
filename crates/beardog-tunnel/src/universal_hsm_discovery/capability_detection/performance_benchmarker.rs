@@ -30,7 +30,7 @@ impl PerformanceBenchmarker {
     ) -> Result<PerformanceCapabilities, BearDogError> {
         debug!("⚡ Benchmarking HSM performance: {:?}", hsm_type);
         
-        // TODO: Implement actual performance benchmarking
+        // PHASE-2(Benchmarking): Implement actual performance benchmarking
         Ok(PerformanceCapabilities::default())
     }
 }

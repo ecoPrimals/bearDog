@@ -24,28 +24,22 @@
 //!
 //! ## 📚 **Usage Example**
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // Example of using multi-credential HSM provider
 //! use beardog_traits::unified::hsm_multi_credential::*;
 //!
-//! async fn setup_security_roles(hsm: &dyn MultiCredentialHsmProvider) {
+//! async fn setup_security_roles(hsm: impl MultiCredentialHsmProvider) {
 //!     // Create admin credential
-//!     let admin = hsm.create_credential(CredentialRequest {
-//!         role: "admin".into(),
-//!         permissions: vec!["read", "write", "admin"],
-//!         require_user_presence: true,
-//!         parent_credential: None,
-//!     }).await?;
+//!     let admin = hsm.create_credential(CredentialRequest::new("admin")).await;
 //!     
 //!     // Create operator credential (child of admin)
-//!     let operator = hsm.create_credential(CredentialRequest {
-//!         role: "operator".into(),
-//!         permissions: vec!["read", "write"],
-//!         require_user_presence: true,
-//!         parent_credential: Some(admin.credential_id.clone()),
-//!     }).await?;
+//!     let operator = hsm.create_credential(
+//!         CredentialRequest::new("operator")
+//!             .with_parent(admin.credential_id.clone())
+//!     ).await;
 //!     
 //!     // List all credentials on device
-//!     let creds = hsm.list_credentials().await?;
+//!     let creds = hsm.list_credentials().await;
 //!     println!("Device has {} credentials", creds.len());
 //! }
 //! ```
@@ -61,8 +55,6 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use super::HsmProvider;
 
 // ============================================================================
 // CORE TRAIT: MultiCredentialHsmProvider
@@ -438,6 +430,9 @@ pub trait CredentialIdConverter {
     fn to_universal_id(&self, protocol_id: &[u8]) -> String;
 
     /// Convert from universal ID to protocol-specific ID
+    ///
+    /// Note: Takes `&self` to allow stateful converters with device-specific mappings
+    #[allow(clippy::wrong_self_convention)]
     fn from_universal_id(&self, universal_id: &str) -> Result<Vec<u8>, BearDogError>;
 }
 
@@ -507,4 +502,3 @@ mod tests {
         assert_eq!(caps.protocol, HsmProtocol::Fido2);
     }
 }
-

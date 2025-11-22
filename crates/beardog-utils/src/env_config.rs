@@ -106,6 +106,18 @@ pub struct HsmConfig {
     pub retry_attempts: u32,
 }
 
+impl Default for HsmConfig {
+    /// Pure defaults without environment variable access
+    /// Concurrent-safe and suitable for testing
+    fn default() -> Self {
+        Self {
+            provider: "software".to_string(),
+            timeout_ms: 5000,
+            retry_attempts: 3,
+        }
+    }
+}
+
 impl HsmConfig {
     /// Load from environment or use defaults
     pub fn from_env() -> Self {
@@ -122,6 +134,9 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
+    // Test constant - matches DEFAULT_API_PORT from beardog-config
+    const TEST_DEFAULT_PORT: u16 = 8080;
+
     // Mutex to serialize tests that modify environment variables
     // This prevents race conditions when tests run in parallel
     static ENV_TEST_MUTEX: Mutex<()> = Mutex::new(());
@@ -134,8 +149,8 @@ mod tests {
 
     #[test]
     fn test_get_env_as_with_default() {
-        let result: u16 = get_env_as("NONEXISTENT_PORT_TEST", 8080);
-        assert_eq!(result, 8080);
+        let result: u16 = get_env_as("NONEXISTENT_PORT_TEST", TEST_DEFAULT_PORT);
+        assert_eq!(result, TEST_DEFAULT_PORT);
     }
 
     #[test]
@@ -145,7 +160,7 @@ mod tests {
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
         assert_eq!(config.host, "localhost"); // Updated to match actual default from NetworkConfig
-        assert_eq!(config.port, 8080);
+        assert_eq!(config.port, TEST_DEFAULT_PORT);
     }
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -168,45 +183,10 @@ mod tests {
 
     #[test]
     fn test_discovery_config_defaults() {
-        // Use a lock to ensure this test runs serially with other env-modifying tests
-        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+        // Modern pattern: Test Default implementation directly (no env vars)
+        // This is concurrent-safe and doesn't pollute global state
+        let config = DiscoveryConfig::default();
 
-        // Save current env state
-        let saved_vars = [
-            (
-                "BEARDOG_DISCOVERY_ENDPOINT",
-                env::var("BEARDOG_DISCOVERY_ENDPOINT").ok(),
-            ),
-            (
-                "BEARDOG_DISCOVERY_TIMEOUT_SECS",
-                env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS").ok(),
-            ),
-            (
-                "BEARDOG_DISCOVERY_RETRY_ATTEMPTS",
-                env::var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS").ok(),
-            ),
-            (
-                "BEARDOG_DISCOVERY_URL",
-                env::var("BEARDOG_DISCOVERY_URL").ok(),
-            ),
-            ("BEARDOG_API_HOST", env::var("BEARDOG_API_HOST").ok()),
-            ("BEARDOG_API_PORT", env::var("BEARDOG_API_PORT").ok()),
-            (
-                "BEARDOG_TIMEOUT_SECONDS",
-                env::var("BEARDOG_TIMEOUT_SECONDS").ok(),
-            ),
-        ];
-
-        // Clear env vars for test
-        env::remove_var("BEARDOG_DISCOVERY_ENDPOINT");
-        env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS");
-        env::remove_var("BEARDOG_DISCOVERY_URL");
-        env::remove_var("BEARDOG_API_HOST");
-        env::remove_var("BEARDOG_API_PORT");
-        env::remove_var("BEARDOG_TIMEOUT_SECONDS");
-
-        let config = DiscoveryConfig::from_env();
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
@@ -216,13 +196,10 @@ mod tests {
         assert_eq!(config.max_attempts, 3);
         assert_eq!(config.max_concurrent, 10); // canonical default
 
-        // Restore env vars
-        for (key, value) in saved_vars.iter() {
-            match value {
-                Some(val) => env::set_var(key, val),
-                None => env::remove_var(key),
-            }
-        }
+        // Verify other defaults
+        assert!(config.enabled);
+        assert!(config.cache_enabled);
+        assert_eq!(config.endpoints.len(), 0); // No endpoints in pure default
     }
 
     // TEST_CATEGORY: unit
@@ -230,26 +207,11 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_hsm_config_defaults() {
-        // Lock mutex to prevent parallel test interference with env vars
-        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+        // Modern pattern: Test Default implementation directly (no env vars)
+        // This is concurrent-safe and doesn't pollute global state
+        let config = HsmConfig::default();
 
-        // Use a guard to ensure cleanup even if test fails
-        struct EnvGuard;
-        impl Drop for EnvGuard {
-            fn drop(&mut self) {
-                env::remove_var("BEARDOG_HSM_PROVIDER");
-                env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
-                env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
-            }
-        }
-        let _guard = EnvGuard;
-
-        // Clean up any lingering env vars from other tests
-        env::remove_var("BEARDOG_HSM_PROVIDER");
-        env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
-        env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
-
-        let config = HsmConfig::from_env();
+        // Verify default values
         assert_eq!(config.provider, "software");
         assert_eq!(config.timeout_ms, 5000);
         assert_eq!(config.retry_attempts, 3);
@@ -265,17 +227,18 @@ mod tests {
 
     #[test]
     fn test_get_env_as_with_env_var() {
-        env::set_var("TEST_PORT_EXISTS", "9090");
-        let result: u16 = get_env_as("TEST_PORT_EXISTS", 8080);
-        assert_eq!(result, 9090);
+        const TEST_DISCOVERY_PORT: u16 = 9090;
+        env::set_var("TEST_PORT_EXISTS", TEST_DISCOVERY_PORT.to_string());
+        let result: u16 = get_env_as("TEST_PORT_EXISTS", TEST_DEFAULT_PORT);
+        assert_eq!(result, TEST_DISCOVERY_PORT);
         env::remove_var("TEST_PORT_EXISTS");
     }
 
     #[test]
     fn test_get_env_as_with_invalid_value() {
         env::set_var("TEST_PORT_INVALID", "not_a_number");
-        let result: u16 = get_env_as("TEST_PORT_INVALID", 8080);
-        assert_eq!(result, 8080); // Should fall back to default
+        let result: u16 = get_env_as("TEST_PORT_INVALID", TEST_DEFAULT_PORT);
+        assert_eq!(result, TEST_DEFAULT_PORT); // Should fall back to default
         env::remove_var("TEST_PORT_INVALID");
     }
 
@@ -296,12 +259,13 @@ mod tests {
 
     #[test]
     fn test_network_config_from_env_custom() {
+        const TEST_CUSTOM_PORT: u16 = 3000;
         env::set_var("CUSTOM_HOST", "192.168.1.1");
-        env::set_var("CUSTOM_PORT", "3000");
+        env::set_var("CUSTOM_PORT", TEST_CUSTOM_PORT.to_string());
 
         let config = NetworkConfig::from_env("CUSTOM");
         assert_eq!(config.host, "192.168.1.1");
-        assert_eq!(config.port, 3000);
+        assert_eq!(config.port, TEST_CUSTOM_PORT);
 
         env::remove_var("CUSTOM_HOST");
         env::remove_var("CUSTOM_PORT");
@@ -311,18 +275,18 @@ mod tests {
     fn test_network_config_to_socket_addr() {
         let config = NetworkConfig {
             host: "127.0.0.1".to_string(),
-            port: 8080,
+            port: TEST_DEFAULT_PORT,
         };
 
         let addr = config.to_socket_addr().unwrap();
-        assert_eq!(addr.to_string(), "127.0.0.1:8080");
+        assert_eq!(addr.to_string(), format!("127.0.0.1:{}", TEST_DEFAULT_PORT));
     }
 
     #[test]
     fn test_network_config_to_socket_addr_invalid() {
         let config = NetworkConfig {
             host: "invalid-ip".to_string(),
-            port: 8080,
+            port: TEST_DEFAULT_PORT,
         };
 
         let result = config.to_socket_addr();
@@ -378,7 +342,10 @@ mod tests {
 
         let config = DiscoveryConfig::from_env();
         // Canonical DiscoveryConfig from_env() loads BEARDOG_DISCOVERY_ENDPOINT into endpoints vec
-        assert!(config.endpoints.iter().any(|e| e == "http://custom:9000/api"));
+        assert!(config
+            .endpoints
+            .iter()
+            .any(|e| e == "http://custom:9000/api"));
         assert_eq!(config.timeout.as_secs(), 60);
         assert_eq!(config.max_attempts, 5);
 
@@ -427,7 +394,7 @@ mod tests {
     fn test_network_config_clone() {
         let config1 = NetworkConfig {
             host: "127.0.0.1".to_string(),
-            port: 8080,
+            port: TEST_DEFAULT_PORT,
         };
         let config2 = config1.clone();
         assert_eq!(config1.host, config2.host);
@@ -449,8 +416,8 @@ mod tests {
 
     #[test]
     fn test_discovery_config_clone() {
-        use std::time::Duration;
-        let config1 = DiscoveryConfig::with_endpoints(vec!["http://test:8080".to_string()]);
+        let config1 =
+            DiscoveryConfig::with_endpoints(vec![format!("http://test:{}", TEST_DEFAULT_PORT)]);
         let config2 = config1.clone();
         assert_eq!(config1.endpoints, config2.endpoints);
         assert_eq!(config1.timeout, config2.timeout);

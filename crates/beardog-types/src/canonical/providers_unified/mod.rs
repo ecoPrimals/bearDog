@@ -29,14 +29,14 @@ pub mod connection;
 pub mod core;
 /// Discovery module (deprecated - use service_discovery instead)
 pub mod discovery;
-/// Service discovery (canonical)
-pub mod service_discovery;
 /// Health module
 pub mod health;
 /// Load Balancing module
 pub mod load_balancing;
 /// Migration module
 pub mod migration;
+/// Service discovery (canonical)
+pub mod service_discovery;
 // pub mod trait_migration; // Temporarily disabled - migration utility only
 /// Monitoring module
 pub mod monitoring;

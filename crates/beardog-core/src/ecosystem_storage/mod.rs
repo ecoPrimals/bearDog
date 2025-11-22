@@ -15,14 +15,14 @@
 //!
 //! ## Module Organization
 //!
-//! - [`types`] - Core storage types and data structures
-//! - [`config`] - Storage configuration
-//! - [`manager`] - Storage management (main API)
-//! - [`backends`] - Storage backend implementations
-//! - [`cache`] - Caching layer
-//! - [`replication`] - Data replication
-//! - [`metrics`] - Metrics and monitoring
-//! - [`operations`] - Storage operations
+//! - `types` - Core storage types and data structures
+//! - Storage configuration
+//! - Storage management (main API)
+//! - Storage backend implementations
+//! - Caching layer
+//! - Data replication
+//! - Metrics and monitoring
+//! - Storage operations
 //!
 //! ## Example
 //!

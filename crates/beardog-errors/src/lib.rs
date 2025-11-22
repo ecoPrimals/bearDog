@@ -30,10 +30,10 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use beardog_errors::{BearDogError, BearDogResult};
+//! use beardog_errors::BearDogError;
 //!
 //! // Create domain-specific errors
-//! fn authenticate_user(token: &str) -> BearDogResult<u64> {
+//! fn authenticate_user(token: &str) -> Result<u64, BearDogError> {
 //!     if token.is_empty() {
 //!         return Err(BearDogError::security("Invalid authentication token".to_string()));
 //!     }
@@ -42,7 +42,7 @@
 //! }
 //!
 //! // Add context to external errors
-//! fn load_config(path: &str) -> BearDogResult<String> {
+//! fn load_config(path: &str) -> Result<String, BearDogError> {
 //!     std::fs::read_to_string(path)
 //!         .map_err(|e| BearDogError::system(format!("Failed to read config: {}", e)))?;
 //!     // ... parse config
@@ -50,7 +50,7 @@
 //! }
 //!
 //! // Error propagation with ?
-//! fn process_request(token: &str) -> BearDogResult<String> {
+//! fn process_request(token: &str) -> Result<String, BearDogError> {
 //!     let _user_id = authenticate_user(token)?;
 //!     let _config = load_config("/etc/beardog/config.toml")?;
 //!     Ok("success".to_string())
@@ -112,23 +112,24 @@ pub use categories::*;
 pub use constructors_unified::{
     authentication_error, authentication_error_with_hint, authorization_error,
     authorization_error_with_hint, configuration_error, configuration_error_with_docs,
-    crypto_error, crypto_error_with_details, io_error, network_error_with_context,
-    not_implemented, security_error, system_error, unsupported_operation, validation_error,
+    crypto_error, crypto_error_with_details, io_error, network_error_with_context, not_implemented,
+    security_error, system_error, unsupported_operation, validation_error,
     validation_error_with_suggestion,
 };
 pub use core::BearDogError;
 
-/// Convenient type alias for `Result<T, BearDogError>`
+/// Convenient type alias for `Result<T, BearDogError>` (DEPRECATED)
 ///
-/// This type alias provides a consistent return type across the `BearDog` ecosystem
-/// for operations that may fail with a `BearDogError`.
+/// **DEPRECATED**: Use idiomatic `Result<T, BearDogError>` instead.
+/// Type aliases for Result violate Rust API Guidelines.
 ///
-/// ## Usage
+/// ## Migration Example
 ///
 /// ```rust
-/// use beardog_errors::{BearDogResult, BearDogError};
+/// use beardog_errors::BearDogError;
 ///
-/// fn do_something(should_fail: bool) -> BearDogResult<String> {
+/// // ✅ NEW (Idiomatic Rust):
+/// fn do_something(should_fail: bool) -> Result<String, BearDogError> {
 ///     if should_fail {
 ///         return Err(BearDogError::business("Operation failed".to_string()));
 ///     }
@@ -136,7 +137,11 @@ pub use core::BearDogError;
 /// }
 /// ```
 ///
-/// This is equivalent to `Result<T, BearDogError>` but more concise.
+/// This type alias will be removed in version 4.0.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use Result<T, BearDogError> instead. See https://rust-lang.github.io/api-guidelines/future-proofing.html#c-result-alias"
+)]
 pub type BearDogResult<T> = Result<T, BearDogError>;
 
 use std::fmt::Display;
@@ -150,9 +155,9 @@ use std::fmt::Display;
 /// ## Example
 ///
 /// ```rust
-/// use beardog_errors::{ResultExt, BearDogResult};
+/// use beardog_errors::{ResultExt, BearDogError};
 ///
-/// fn read_user_data(path: &str) -> BearDogResult<Vec<u8>> {
+/// fn read_user_data(path: &str) -> Result<Vec<u8>, BearDogError> {
 ///     // Wrap std::fs errors with BearDog context
 ///     let data = std::fs::read(path)
 ///         .system_context("Failed to read user data file")?;
@@ -180,8 +185,8 @@ pub trait ResultExt<T, E> {
     /// # Example
     ///
     /// ```rust
-    /// # use beardog_errors::{ResultExt, BearDogResult};
-    /// fn verify_signature(data: &[u8], sig: &[u8]) -> BearDogResult<()> {
+    /// # use beardog_errors::{ResultExt, BearDogError};
+    /// fn verify_signature(data: &[u8], sig: &[u8]) -> Result<(), BearDogError> {
     ///     // Example: wrap external crypto error with context
     ///     if data.is_empty() || sig.is_empty() {
     ///         return Err(beardog_errors::BearDogError::security("Empty data or signature".to_string()));
@@ -204,8 +209,8 @@ pub trait ResultExt<T, E> {
     /// # Example
     ///
     /// ```rust
-    /// # use beardog_errors::{ResultExt, BearDogResult};
-    /// fn allocate_buffer(size: usize) -> BearDogResult<Vec<u8>> {
+    /// # use beardog_errors::{ResultExt, BearDogError};
+    /// fn allocate_buffer(size: usize) -> Result<Vec<u8>, BearDogError> {
     ///     // Example: simple buffer allocation
     ///     if size > 1_000_000 {
     ///         return Err(beardog_errors::BearDogError::system("Buffer too large".to_string()));
@@ -228,8 +233,8 @@ pub trait ResultExt<T, E> {
     /// # Example
     ///
     /// ```rust
-    /// # use beardog_errors::{ResultExt, BearDogResult};
-    /// fn validate_email(email: &str) -> BearDogResult<()> {
+    /// # use beardog_errors::{ResultExt, BearDogError};
+    /// fn validate_email(email: &str) -> Result<(), BearDogError> {
     ///     // Example: simple email validation
     ///     if !email.contains('@') {
     ///         return Err(beardog_errors::BearDogError::business("Invalid email address format".to_string()));
@@ -252,8 +257,8 @@ pub trait ResultExt<T, E> {
     /// # Example
     ///
     /// ```rust
-    /// # use beardog_errors::{ResultExt, BearDogResult};
-    /// fn fetch_data(url: &str) -> BearDogResult<String> {
+    /// # use beardog_errors::{ResultExt, BearDogError};
+    /// fn fetch_data(url: &str) -> Result<String, BearDogError> {
     ///     // Example: simple URL validation
     ///     if !url.starts_with("http") {
     ///         return Err(beardog_errors::BearDogError::network("Invalid URL".to_string()));

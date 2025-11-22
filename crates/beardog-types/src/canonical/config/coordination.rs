@@ -24,6 +24,7 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
 
@@ -75,8 +76,8 @@ pub enum CoordinationModel {
         expertise_mapping: ExpertiseMapping,
         context_evaluation: ContextEvaluation,
         authority_delegation: AuthorityDelegation,
-        /// Current context and authority assignments
-        current_assignments: HashMap<String, String>,
+    /// Current context and authority assignments
+    current_assignments: HashMap<Arc<str>, Arc<str>>,
     },
     
     /// Shared decision making with mutual cooperation
@@ -159,7 +160,7 @@ pub struct ExpertiseMapping {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExpertiseEntry {
     /// Participant identifier
-    pub participant_id: String,
+    pub participant_id: Arc<str>,
     /// Expertise level (0.0-1.0)
     /// The expertise level value
     pub expertise_level: f64,
@@ -188,7 +189,7 @@ pub struct RotationSchedule {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LeaderInfo {
     /// Leader identifier
-    pub leader_id: String,
+    pub leader_id: Arc<str>,
     /// When leadership started
     /// The started at value
     pub started_at: DateTime<Utc>,
@@ -196,8 +197,8 @@ pub struct LeaderInfo {
     /// The expected end value
     pub expected_end: DateTime<Utc>,
     /// The leadership reason value
-    pub leadership_reason: String,
-    pub performance_metrics: HashMap<String, f64>,
+    pub leadership_reason: Arc<str>,
+    pub performance_metrics: HashMap<Arc<str>, f64>,
 }
 
 /// Context evaluation system
@@ -239,10 +240,10 @@ pub struct ContextAssessment {
     pub context_score: f64,
     /// Individual factor scores
     /// Mapping of factor scores
-    pub factor_scores: HashMap<String, f64>,
+    pub factor_scores: HashMap<Arc<str>, f64>,
     /// Recommended coordination model
     /// The recommended model value
-    pub recommended_model: String,
+    pub recommended_model: Arc<str>,
     /// Confidence in recommendation
     pub confidence: f64,
     /// Assessment timestamp
@@ -254,7 +255,7 @@ pub struct ContextAssessment {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorityDelegation {
     /// Mapping of delegation rules
-    pub delegation_rules: HashMap<String, DelegationRule>,
+    pub delegation_rules: HashMap<Arc<str>, DelegationRule>,
     /// Current active delegations
     /// Collection of active delegations
     pub active_delegations: Vec<Delegation>,
@@ -267,7 +268,7 @@ pub struct AuthorityDelegation {
 pub struct DelegationRule {
     /// Type of authority being delegated
     /// The authority type value
-    pub authority_type: String,
+    pub authority_type: Arc<str>,
     /// Required expertise level
     /// The required expertise value
     pub required_expertise: f64,
@@ -282,16 +283,16 @@ pub struct DelegationRule {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Delegation {
     /// Unique delegation ID
-    pub delegation_id: String,
+    pub delegation_id: Arc<str>,
     /// Who delegated the authority
     /// The delegator value
-    pub delegator: String,
+    pub delegator: Arc<str>,
     /// Who received the authority
     /// The delegate value
-    pub delegate: String,
+    pub delegate: Arc<str>,
     /// Type of authority delegated
     /// The authority type value
-    pub authority_type: String,
+    pub authority_type: Arc<str>,
     /// When delegation started
     /// The started at value
     pub started_at: DateTime<Utc>,
@@ -330,10 +331,10 @@ pub struct DecisionProtocol {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecisionStep {
     /// Step identifier
-    pub step_id: String,
+    pub step_id: Arc<str>,
     /// Description of what happens in this step
     /// The description value
-    pub description: String,
+    pub description: Arc<str>,
     /// Required participants
     /// Collection of required participants
     pub required_participants: Vec<String>,
@@ -362,13 +363,13 @@ pub enum AdvancementRequirement {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CollaborationFramework {
     /// Framework identifier
-    pub framework_id: String,
+    pub framework_id: Arc<str>,
     /// Type of collaboration this framework supports
     /// The collaboration type value
-    pub collaboration_type: String,
+    pub collaboration_type: Arc<str>,
     /// Roles and responsibilities
     /// Mapping of roles
-    pub roles: HashMap<String, Role>,
+    pub roles: HashMap<Arc<str>, Role>,
     /// Communication protocols
     /// Collection of communication protocols
     pub communication_protocols: Vec<CommunicationProtocol>,
@@ -381,10 +382,10 @@ pub struct CollaborationFramework {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Role {
     /// Role identifier
-    pub role_id: String,
+    pub role_id: Arc<str>,
     /// Role description
     /// The description value
-    pub description: String,
+    pub description: Arc<str>,
     /// Responsibilities
     /// Collection of responsibilities
     pub responsibilities: Vec<String>,
@@ -399,10 +400,10 @@ pub struct Role {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommunicationProtocol {
     /// Protocol identifier
-    pub protocol_id: String,
+    pub protocol_id: Arc<str>,
     /// When this protocol is used
     /// The usage context value
-    pub usage_context: String,
+    pub usage_context: Arc<str>,
     /// Communication channels
     /// Collection of channels
     pub channels: Vec<String>,
@@ -427,10 +428,10 @@ pub struct ResponseRequirements {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SuccessMetric {
     /// Metric identifier
-    pub metric_id: String,
+    pub metric_id: Arc<str>,
     /// Description of what is measured
     /// The description value
-    pub description: String,
+    pub description: Arc<str>,
     /// Target value
     /// The target value value
     pub target_value: f64,
@@ -458,7 +459,7 @@ pub struct MutualAccountability {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountabilityAgreement {
     /// Agreement identifier
-    pub agreement_id: String,
+    pub agreement_id: Arc<str>,
     /// Participants in the agreement
     /// Collection of participants
     pub participants: Vec<String>,
@@ -490,13 +491,13 @@ pub struct CoordinationTransitionConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransitionTrigger {
     /// Trigger identifier
-    pub trigger_id: String,
+    pub trigger_id: Arc<str>,
     /// Condition that activates the trigger
     /// The condition value
     pub condition: TriggerCondition,
     /// Target coordination model
     /// The target model value
-    pub target_model: String,
+    pub target_model: Arc<str>,
     /// Priority of this trigger
     /// Number of priority
     pub priority: u32,
@@ -505,15 +506,15 @@ pub struct TransitionTrigger {
 /// Condition that can trigger a transition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TriggerCondition {
-    PerformanceThreshold { metric: String, threshold: f64 },
-    PerformanceThreshold { metric: String, threshold: f64 },
-    PerformanceThreshold { metric: String, threshold: f64 },
+    PerformanceThreshold { metric: Arc<str>, threshold: f64 },
+    PerformanceThreshold { metric: Arc<str>, threshold: f64 },
+    PerformanceThreshold { metric: Arc<str>, threshold: f64 },
     /// System load exceeds threshold
     LoadThreshold { threshold: f64 },
     /// Specific time-based condition
-    TimeCondition { condition: String },
+    TimeCondition { condition: Arc<str> },
     /// External event occurs
-    ExternalEvent { event_type: String },
+    ExternalEvent { event_type: Arc<str> },
     /// Participant availability changes
     AvailabilityChange { min_participants: u32 },
 }
@@ -521,7 +522,7 @@ pub enum TriggerCondition {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransitionStrategy {
     /// Strategy identifier
-    pub strategy_id: String,
+    pub strategy_id: Arc<str>,
     /// Steps to execute during transition
     /// Collection of transition steps
     pub transition_steps: Vec<TransitionStep>,
@@ -536,7 +537,7 @@ pub struct TransitionStrategy {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransitionStep {
     /// Step identifier
-    pub step_id: String,
+    pub step_id: Arc<str>,
     /// The action value
     pub action: TransitionAction,
     pub timeout: Duration,
@@ -547,16 +548,16 @@ pub struct TransitionStep {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TransitionAction {
     /// Notify participants of transition
-    NotifyParticipants { message: String },
-    NotifyParticipants { message: String },
-    NotifyParticipants { message: String },
+    NotifyParticipants { message: Arc<str> },
+    NotifyParticipants { message: Arc<str> },
+    NotifyParticipants { message: Arc<str> },
     /// Transfer authority/responsibility
-    TransferAuthority { from: String, to: String },
+    TransferAuthority { from: Arc<str>, to: Arc<str> },
     /// Update configuration
-    UpdateConfiguration { config_changes: HashMap<String, String> },
+    UpdateConfiguration { config_changes: HashMap<Arc<str>, Arc<str>> },
     /// Validate system state
-    ValidateState { validation_type: String },
-    WaitForCondition { condition: String },
+    ValidateState { validation_type: Arc<str> },
+    WaitForCondition { condition: Arc<str> },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -577,13 +578,13 @@ pub struct CoordinationHealthConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthMetric {
     /// Metric identifier
-    pub metric_id: String,
+    pub metric_id: Arc<str>,
     /// Description of the metric
     /// The description value
-    pub description: String,
+    pub description: Arc<str>,
     /// How to calculate the metric
     /// The calculation method value
-    pub calculation_method: String,
+    pub calculation_method: Arc<str>,
     /// The target value value
     pub target_value: f64,
     /// Current measured value
@@ -805,39 +806,39 @@ pub struct PerformanceThresholds {
 pub struct ContextChange {
     pub timestamp: DateTime<Utc>,
     /// The old context value
-    pub old_context: String,
+    pub old_context: Arc<str>,
     /// The new context value
-    pub new_context: String,
+    pub new_context: Arc<str>,
     /// The change reason value
-    pub change_reason: String,
+    pub change_reason: Arc<str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DelegationEvent {
     pub timestamp: DateTime<Utc>,
     /// The event type value
-    pub event_type: String,
-    pub delegation_id: String,
+    pub event_type: Arc<str>,
+    pub delegation_id: Arc<str>,
     /// The details value
-    pub details: String,
+    pub details: Arc<str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CollaborationSession {
-    pub session_id: String,
+    pub session_id: Arc<str>,
     /// Collection of participants
     pub participants: Vec<String>,
     /// The started at value
     pub started_at: DateTime<Utc>,
     /// Current status of the component
-    pub status: String,
+    pub status: Arc<str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EmergenceFactor {
-    pub factor_id: String,
+    pub factor_id: Arc<str>,
     /// The description value
-    pub description: String,
+    pub description: Arc<str>,
     /// The weight value
     pub weight: f64,
     /// The current value value
@@ -868,16 +869,16 @@ pub struct AdaptiveHierarchy {
 pub struct EmergenceEvent {
     pub timestamp: DateTime<Utc>,
     /// The event type value
-    pub event_type: String,
+    pub event_type: Arc<str>,
     /// Collection of participants
     pub participants: Vec<String>,
     /// The outcome value
-    pub outcome: String,
+    pub outcome: Arc<str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RollbackStrategy {
-    pub strategy_id: String,
+    pub strategy_id: Arc<str>,
     /// Collection of rollback steps
     pub rollback_steps: Vec<String>,
     pub validation_checks: Vec<String>,
@@ -885,29 +886,29 @@ pub struct RollbackStrategy {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ValidationCheck {
-    pub check_id: String,
+    pub check_id: Arc<str>,
     /// The check type value
-    pub check_type: String,
+    pub check_type: Arc<str>,
     /// Collection of success criteria
     pub success_criteria: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringMechanism {
-    pub mechanism_id: String,
+    pub mechanism_id: Arc<str>,
     /// The monitoring type value
-    pub monitoring_type: String,
+    pub monitoring_type: Arc<str>,
     /// The frequency value
     pub frequency: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FeedbackSystem {
-    pub system_id: String,
+    pub system_id: Arc<str>,
     /// The feedback type value
-    pub feedback_type: String,
+    pub feedback_type: Arc<str>,
     /// The collection method value
-    pub collection_method: String,
+    pub collection_method: Arc<str>,
 }
 
 /// Migration utility to evolve from primary/replica patterns to coordination models

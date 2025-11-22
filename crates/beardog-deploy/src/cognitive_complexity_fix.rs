@@ -7,7 +7,7 @@ use tracing::{debug, info, warn};
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-pub async fn check_prerequisites_optimized() -> Result<()> {
+pub async fn check_prerequisites_optimized() -> Result<(), BearDogError> {
     info!("🔍 Starting optimized prerequisite validation");
 
     validate_android_sdk()?;
@@ -21,7 +21,7 @@ pub async fn check_prerequisites_optimized() -> Result<()> {
 }
 
 /// Validates android_sdk
-fn validate_android_sdk() -> Result<()> {
+fn validate_android_sdk() -> Result<(), BearDogError> {
     debug!("📱 Validating Android SDK installation");
 
     if !is_android_sdk_installed()? {
@@ -41,7 +41,7 @@ fn validate_android_sdk() -> Result<()> {
 }
 
 /// Validates build_tools
-fn validate_build_tools() -> Result<()> {
+fn validate_build_tools() -> Result<(), BearDogError> {
     debug!("🔨 Validating Android build tools");
 
     if !are_build_tools_installed()? {
@@ -61,7 +61,7 @@ fn validate_build_tools() -> Result<()> {
 }
 
 /// Validates ndk_environment
-fn validate_ndk_environment() -> Result<()> {
+fn validate_ndk_environment() -> Result<(), BearDogError> {
     debug!("🛠️ Validating Android NDK environment");
 
     if !is_ndk_installed()? {
@@ -80,7 +80,7 @@ fn validate_ndk_environment() -> Result<()> {
 }
 
 /// Validates signing_configuration
-fn validate_signing_configuration() -> Result<()> {
+fn validate_signing_configuration() -> Result<(), BearDogError> {
     debug!("🔐 Validating signing configuration");
 
     if !is_keystore_configured()? {
@@ -107,67 +107,67 @@ fn is_device_compatible(_device: &Device) -> Result<bool> {
 }
 
 
-fn ensure_gradle_wrapper() -> Result<()> {
+fn ensure_gradle_wrapper() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 
-fn configure_gradle_properties() -> Result<()> {
+fn configure_gradle_properties() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 /// Validates gradle_version
-fn validate_gradle_version() -> Result<()> {
+fn validate_gradle_version() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 
-fn configure_kotlin_compiler() -> Result<()> {
+fn configure_kotlin_compiler() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 /// Sets valueup_kotlin_dependencies
-fn setup_kotlin_dependencies() -> Result<()> {
+fn setup_kotlin_dependencies() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 
-fn install_android_targets() -> Result<()> {
+fn install_android_targets() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 
-fn configure_cargo_android() -> Result<()> {
+fn configure_cargo_android() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 
-fn configure_release_signing() -> Result<()> {
+fn configure_release_signing() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 /// Validates signing_setup
-fn validate_signing_setup() -> Result<()> {
+fn validate_signing_setup() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 /// Runs build_verification
-fn run_build_verification() -> Result<()> {
+fn run_build_verification() -> Result<(), BearDogError> {
 
     Ok(())
 }
 
 /// Validates output_artifacts
-fn validate_output_artifacts() -> Result<()> {
+fn validate_output_artifacts() -> Result<(), BearDogError> {
 
     Ok(())
 }

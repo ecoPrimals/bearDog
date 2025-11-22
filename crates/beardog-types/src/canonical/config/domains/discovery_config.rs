@@ -19,8 +19,11 @@
 //! This module contained service discovery-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
-use beardog_errors::{BearDogError, BearDogResult};
+// Allow deprecated warnings in this module - these types are intentionally kept for backward compatibility
+#![allow(deprecated)]
+
 use crate::canonical::traits::CacheStrategy;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -50,6 +53,7 @@ use crate::canonical::config::r#trait::BearDogConfig;
 /// use beardog_types::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig;
 /// let config = UnifiedDiscoveryConfig::default();
 /// ```
+#[allow(deprecated)] // Allow internal uses for backward compatibility
 #[deprecated(
     since = "3.1.0",
     note = "Use discovery_unified::UnifiedDiscoveryConfig instead. See DISCOVERY_CONFIG_MIGRATION_GUIDE.md"
@@ -308,6 +312,7 @@ pub struct DiscoverySecurityConfig {
 ///     initial_delay: Duration::from_millis(100),
 ///     backoff_multiplier: 2.0,
 ///     max_delay: Duration::from_secs(30),
+///     enable_exponential_backoff: true,
 /// };
 /// // Retry delays: 100ms, 200ms, 400ms
 /// ```
@@ -322,6 +327,7 @@ pub struct DiscoverySecurityConfig {
 pub use crate::canonical::config::domains::retry::CanonicalRetryConfig as RetryConfig;
 
 // Default implementations
+#[allow(deprecated)] // Allow implementation for backward compatibility
 impl Default for ConsolidatedDiscoveryConfig {
     fn default() -> Self {
         Self {
@@ -461,22 +467,25 @@ impl CacheStrategy for DiscoveryCacheConfig {
         // Validate eviction policy string
         let policy_lower = self.eviction_policy.to_lowercase();
         if !["lru", "lfu", "fifo", "random", "ttl"].contains(&policy_lower.as_str()) {
-            eprintln!("WARNING: Unknown eviction policy '{}', defaulting to LRU", self.eviction_policy);
+            eprintln!(
+                "WARNING: Unknown eviction policy '{}', defaulting to LRU",
+                self.eviction_policy
+            );
         }
         Ok(())
     }
 
     fn is_production_ready(&self) -> bool {
-        use crate::constants::domains::validation::{MIN_CACHE_SIZE, MAX_CACHE_TTL_SECS};
-        
+        use crate::constants::domains::validation::{MAX_CACHE_TTL_SECS, MIN_CACHE_SIZE};
+
         if !self.enabled {
             return true;
         }
-        self.size >= MIN_CACHE_SIZE &&
-        self.size <= 100_000 &&
-        self.ttl >= Duration::from_secs(60) &&
-        self.ttl <= Duration::from_secs(MAX_CACHE_TTL_SECS) &&
-        self.validate().is_ok()
+        self.size >= MIN_CACHE_SIZE
+            && self.size <= 100_000
+            && self.ttl >= Duration::from_secs(60)
+            && self.ttl <= Duration::from_secs(MAX_CACHE_TTL_SECS)
+            && self.validate().is_ok()
     }
 }
 
@@ -530,8 +539,9 @@ impl Default for DiscoverySecurityConfig {
 // pub fn retry_config_from_env() -> RetryConfig { ... }
 
 // BearDogConfig implementation for ConsolidatedDiscoveryConfig
+#[allow(deprecated)] // Allow implementation for backward compatibility
 impl BearDogConfig for ConsolidatedDiscoveryConfig {
-    fn validate(&self) -> BearDogResult<()> {
+    fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             if self.registry.endpoints.is_empty() {
                 return Err(BearDogError::validation(
@@ -570,7 +580,7 @@ impl BearDogConfig for ConsolidatedDiscoveryConfig {
         Ok(())
     }
 
-    fn merge(&self, other: &Self) -> BearDogResult<Self> {
+    fn merge(&self, other: &Self) -> Result<Self, BearDogError> {
         Ok(Self {
             enabled: other.enabled,
             registry: if other.enabled {
@@ -601,7 +611,7 @@ impl BearDogConfig for ConsolidatedDiscoveryConfig {
         })
     }
 
-    fn from_env() -> BearDogResult<Self> {
+    fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
         if let Ok(enabled) = std::env::var("BEARDOG_DISCOVERY_ENABLED") {
@@ -635,7 +645,7 @@ impl BearDogConfig for ConsolidatedDiscoveryConfig {
         Ok(config)
     }
 
-    fn to_toml(&self) -> BearDogResult<String> {
+    fn to_toml(&self) -> Result<String, BearDogError> {
         toml::to_string(self).map_err(|e| {
             BearDogError::system(format!("Failed to serialize discovery config to TOML: {e}"))
         })

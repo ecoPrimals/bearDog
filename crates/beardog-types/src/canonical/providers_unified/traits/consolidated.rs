@@ -36,7 +36,7 @@
 //! └── WorkflowProvider
 //! ```
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -97,142 +97,142 @@ pub trait ConsolidatedProvider: Send + Sync + 'static {
 /// **SECURITY PROVIDER** - Unified security operations
 pub trait SecurityProvider: ConsolidatedProvider {
     /// Encrypt data using the provider's security capabilities
-    fn encrypt(&self, data: &[u8], key: &str) -> BearDogResult<Vec<u8>>;
+    fn encrypt(&self, data: &[u8], key: &str) -> Result<Vec<u8>, BearDogError>;
     
     /// Decrypt data using the provider's security capabilities  
-    fn decrypt(&self, encrypted_data: &[u8], key: &str) -> BearDogResult<Vec<u8>>;
+    fn decrypt(&self, encrypted_data: &[u8], key: &str) -> Result<Vec<u8>, BearDogError>;
     
     /// Generate a secure key
-    fn generate_key(&self, algorithm: &str, key_size: usize) -> BearDogResult<String>;
+    fn generate_key(&self, algorithm: &str, key_size: usize) -> Result<String, BearDogError>;
     
     /// Validate security credentials
-    fn validate_credentials(&self, credentials: &HashMap<String, String>) -> BearDogResult<bool>;
+    fn validate_credentials(&self, credentials: &HashMap<String, String>) -> Result<bool, BearDogError>;
 }
 
 /// **HSM PROVIDER** - Hardware Security Module operations
 pub trait HsmProvider: SecurityProvider {
     /// Generate a key in the HSM
-    fn hsm_generate_key(&self, algorithm: &str, key_size: usize) -> BearDogResult<String>;
+    fn hsm_generate_key(&self, algorithm: &str, key_size: usize) -> Result<String, BearDogError>;
     
     /// Sign data using HSM
-    fn hsm_sign(&self, data: &[u8], key_id: &str) -> BearDogResult<Vec<u8>>;
+    fn hsm_sign(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError>;
     
     /// Verify signature using HSM
-    fn hsm_verify(&self, data: &[u8], signature: &[u8], key_id: &str) -> BearDogResult<bool>;
+    fn hsm_verify(&self, data: &[u8], signature: &[u8], key_id: &str) -> Result<bool, BearDogError>;
     
     /// Get HSM status
-    fn hsm_status(&self) -> BearDogResult<HsmStatus>;
+    fn hsm_status(&self) -> Result<HsmStatus>;
 }
 
 /// **MONITORING PROVIDER** - System monitoring and observability
 pub trait MonitoringProvider: ConsolidatedProvider {
     /// Collect system metrics
-    fn collect_metrics(&self) -> BearDogResult<SystemMetrics>;
+    fn collect_metrics(&self) -> Result<SystemMetrics>;
     
     /// Send alert
-    fn send_alert(&self, alert: &Alert) -> BearDogResult<()>;
+    fn send_alert(&self, alert: &Alert) -> Result<(), BearDogError>;
     
     /// Get service health
-    fn get_health(&self) -> BearDogResult<ServiceHealth>;
+    fn get_health(&self) -> Result<ServiceHealth>;
     
     /// Record event
-    fn record_event(&self, event: &SystemEvent) -> BearDogResult<()>;
+    fn record_event(&self, event: &SystemEvent) -> Result<(), BearDogError>;
 }
 
 /// **CRYPTO PROVIDER** - Cryptographic operations
 pub trait CryptoProvider: SecurityProvider {
     /// Hash data
-    fn hash(&self, data: &[u8], algorithm: &str) -> BearDogResult<Vec<u8>>;
+    fn hash(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>, BearDogError>;
     
     /// Generate random bytes
-    fn generate_random(&self, length: usize) -> BearDogResult<Vec<u8>>;
+    fn generate_random(&self, length: usize) -> Result<Vec<u8>, BearDogError>;
     
     /// Create digital signature
-    fn sign(&self, data: &[u8], private_key: &str) -> BearDogResult<Vec<u8>>;
+    fn sign(&self, data: &[u8], private_key: &str) -> Result<Vec<u8>, BearDogError>;
     
     /// Verify digital signature
-    fn verify(&self, data: &[u8], signature: &[u8], public_key: &str) -> BearDogResult<bool>;
+    fn verify(&self, data: &[u8], signature: &[u8], public_key: &str) -> Result<bool, BearDogError>;
 }
 
 /// **STORAGE PROVIDER** - Data storage operations (replaces `DatabaseProvider`)
 pub trait StorageProvider: ConsolidatedProvider {
     /// Store data
-    fn store(&self, key: &str, data: &[u8]) -> BearDogResult<()>;
+    fn store(&self, key: &str, data: &[u8]) -> Result<(), BearDogError>;
     
     /// Retrieve data
-    fn retrieve(&self, key: &str) -> BearDogResult<Vec<u8>>;
+    fn retrieve(&self, key: &str) -> Result<Vec<u8>, BearDogError>;
     
     /// Delete data
-    fn delete(&self, key: &str) -> BearDogResult<()>;
+    fn delete(&self, key: &str) -> Result<(), BearDogError>;
     
     /// List keys
-    fn list_keys(&self, prefix: &str) -> BearDogResult<Vec<String>>;
+    fn list_keys(&self, prefix: &str) -> Result<Vec<String>, BearDogError>;
     
     /// Execute query
-    fn execute_query(&self, query: &str) -> BearDogResult<DatabaseResult>;
+    fn execute_query(&self, query: &str) -> Result<DatabaseResult>;
 }
 
 /// **NETWORK PROVIDER** - Network operations (replaces `CacheProvider`)
 pub trait NetworkProvider: ConsolidatedProvider {
     /// Send network request
-    fn send_request(&self, request: &HttpRequest) -> BearDogResult<HttpResponse>;
+    fn send_request(&self, request: &HttpRequest) -> Result<HttpResponse>;
     
     /// Cache data
-    fn cache_set(&self, key: &str, value: &[u8], ttl: Option<u64>) -> BearDogResult<()>;
+    fn cache_set(&self, key: &str, value: &[u8], ttl: Option<u64>) -> Result<(), BearDogError>;
     
     /// Retrieve cached data
-    fn cache_get(&self, key: &str) -> BearDogResult<Option<Vec<u8>>>;
+    fn cache_get(&self, key: &str) -> Result<Option<Vec<u8>>>;
     
     /// Remove from cache
-    fn cache_delete(&self, key: &str) -> BearDogResult<()>;
+    fn cache_delete(&self, key: &str) -> Result<(), BearDogError>;
     
     /// Get network status
-    fn network_status(&self) -> BearDogResult<NetworkStatus>;
+    fn network_status(&self) -> Result<NetworkStatus>;
 }
 
 /// **WORKFLOW PROVIDER** - Workflow orchestration
 pub trait WorkflowProvider: ConsolidatedProvider {
     /// Execute workflow
-    fn execute_workflow(&self, workflow: &WorkflowDefinition) -> BearDogResult<WorkflowResult>;
+    fn execute_workflow(&self, workflow: &WorkflowDefinition) -> Result<WorkflowResult>;
     
     /// Get workflow status
-    fn get_workflow_status(&self, workflow_id: &str) -> BearDogResult<WorkflowStatus>;
+    fn get_workflow_status(&self, workflow_id: &str) -> Result<WorkflowStatus>;
     
     /// Cancel workflow
-    fn cancel_workflow(&self, workflow_id: &str) -> BearDogResult<()>;
+    fn cancel_workflow(&self, workflow_id: &str) -> Result<(), BearDogError>;
     
     /// List active workflows
-    fn list_workflows(&self) -> BearDogResult<Vec<WorkflowInstance>>;
+    fn list_workflows(&self) -> Result<Vec<WorkflowInstance>, BearDogError>;
 }
 
 /// **ADAPTER PROVIDER** - Universal adapter operations
 pub trait AdapterProvider: ConsolidatedProvider {
     /// Discover available adapters
-    fn discover_adapters(&self) -> BearDogResult<Vec<AdapterInfo>>;
+    fn discover_adapters(&self) -> Result<Vec<AdapterInfo>, BearDogError>;
     
     /// Connect to adapter
-    fn connect_adapter(&self, adapter_id: &str) -> BearDogResult<AdapterConnection>;
+    fn connect_adapter(&self, adapter_id: &str) -> Result<AdapterConnection>;
     
     /// Execute adapter operation
-    fn execute_operation(&self, operation: &AdapterRequest) -> BearDogResult<AdapterResponse>;
+    fn execute_operation(&self, operation: &AdapterRequest) -> Result<AdapterResponse>;
     
     /// Get adapter capabilities
-    fn get_capabilities(&self, adapter_id: &str) -> BearDogResult<AdapterCapabilities>;
+    fn get_capabilities(&self, adapter_id: &str) -> Result<AdapterCapabilities>;
 }
 
 /// **GENETICS PROVIDER** - Genetic algorithm operations
 pub trait GeneticsProvider: ConsolidatedProvider {
     /// Initialize population
-    fn initialize_population(&self, size: usize) -> BearDogResult<Population>;
+    fn initialize_population(&self, size: usize) -> Result<Population>;
     
     /// Execute evolution step
-    fn evolve(&self, population: &Population) -> BearDogResult<Population>;
+    fn evolve(&self, population: &Population) -> Result<Population>;
     
     /// Evaluate fitness
-    fn evaluate_fitness(&self, individual: &Individual) -> BearDogResult<f64>;
+    fn evaluate_fitness(&self, individual: &Individual) -> Result<f64>;
     
     /// Get evolution statistics
-    fn get_statistics(&self) -> BearDogResult<EvolutionProgress>;
+    fn get_statistics(&self) -> Result<EvolutionProgress>;
 }
 
 // **SUPPORTING TYPES** - Data structures used by provider traits

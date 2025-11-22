@@ -473,7 +473,7 @@ impl AndroidHealthMonitor {
                 success_rate: 99.9,
                 memory_usage_mb: 50.0,
                 cpu_usage_percent: 5.0,
-                network_throughput_bps: 100000.0,
+                network_throughput_bps: 100_000.0,
                 latency_ms: 10.0,
                 throughput_mbps: 0.1,
                 uptime_seconds: 3600,

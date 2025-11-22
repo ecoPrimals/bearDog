@@ -4,7 +4,7 @@
 // true primal sovereignty - ensuring no hardcoded dependencies creep back in
 // and that the infant discovery pattern remains pure.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -313,7 +313,7 @@ impl SovereigntyMonitor {
     /// Start continuous sovereignty monitoring
     /// Starts monitoring
     /// Starts monitoring
-    pub fn start_monitoring(&mut self) -> BearDogResult<()> {
+    pub fn start_monitoring(&mut self) -> Result<()> {
         info!("🏛️ Starting Primal Sovereignty Monitoring System");
 
         // Start hardcoding detection monitor
@@ -346,7 +346,7 @@ impl SovereigntyMonitor {
         self.violations.read().await.clone()
     }
 
-    pub fn assess_sovereignty(&mut self) -> BearDogResult<SovereigntyStatus> {
+    pub fn assess_sovereignty(&mut self) -> Result<SovereigntyStatus> {
         let start_time = Instant::now();
         info!("🔍 Performing comprehensive sovereignty assessment");
 
@@ -424,7 +424,7 @@ impl SovereigntyMonitor {
 
     /// Start hardcoding detection monitor
     /// Starts hardcoding_monitor
-    fn start_hardcoding_monitor(&mut self) -> BearDogResult<()> {
+    fn start_hardcoding_monitor(&mut self) -> Result<()> {
         let task = MonitorTask {
             id: "hardcoding_detection".to_string(),
             task_type: MonitorTaskType::HardcodingDetection,
@@ -442,7 +442,7 @@ impl SovereigntyMonitor {
 
     /// Start capability discovery health monitor
     /// Starts capability_discovery_monitor
-    fn start_capability_discovery_monitor(&mut self) -> BearDogResult<()> {
+    fn start_capability_discovery_monitor(&mut self) -> Result<()> {
         let task = MonitorTask {
             id: "capability_discovery_health".to_string(),
             task_type: MonitorTaskType::CapabilityDiscoveryHealth,
@@ -459,7 +459,7 @@ impl SovereigntyMonitor {
     }
 
     /// Starts universal_adapter_monitor
-    fn start_universal_adapter_monitor(&mut self) -> BearDogResult<()> {
+    fn start_universal_adapter_monitor(&mut self) -> Result<()> {
         let task = MonitorTask {
             id: "universal_adapter_performance".to_string(),
             task_type: MonitorTaskType::UniversalAdapterPerformance,
@@ -477,7 +477,7 @@ impl SovereigntyMonitor {
 
     /// Start infant discovery pattern validation
     /// Starts infant_discovery_monitor
-    fn start_infant_discovery_monitor(&mut self) -> BearDogResult<()> {
+    fn start_infant_discovery_monitor(&mut self) -> Result<()> {
         let task = MonitorTask {
             id: "infant_discovery_validation".to_string(),
             task_type: MonitorTaskType::InfantDiscoveryValidation,
@@ -494,7 +494,7 @@ impl SovereigntyMonitor {
     }
 
     /// Detect hardcoding violations in codebase
-    fn detect_hardcoding_violations(&self) -> BearDogResult<HardcodingStatus> {
+    fn detect_hardcoding_violations(&self) -> Result<HardcodingStatus> {
         debug!("🔍 Scanning codebase for hardcoding violations");
 
         // This would integrate with the hardcoding eliminator tool
@@ -510,7 +510,7 @@ impl SovereigntyMonitor {
     }
 
     /// Assess capability discovery system health
-    fn assess_capability_discovery_health(&self) -> BearDogResult<CapabilityDiscoveryHealth> {
+    fn assess_capability_discovery_health(&self) -> Result<CapabilityDiscoveryHealth> {
         debug!("⚡ Assessing capability discovery health");
 
         // Simulate excellent health metrics showing successful implementation
@@ -524,7 +524,7 @@ impl SovereigntyMonitor {
         })
     }
 
-    fn assess_universal_adapter_performance(&self) -> BearDogResult<UniversalAdapterPerformance> {
+    fn assess_universal_adapter_performance(&self) -> Result<UniversalAdapterPerformance> {
         debug!("🚀 Assessing universal adapter performance");
 
         // Simulate excellent performance metrics
@@ -540,7 +540,7 @@ impl SovereigntyMonitor {
 
     /// Validate infant discovery pattern compliance
     /// Validates infant_discovery_pattern
-    fn validate_infant_discovery_pattern(&self) -> BearDogResult<bool> {
+    fn validate_infant_discovery_pattern(&self) -> Result<bool> {
         debug!("🍼 Validating infant discovery pattern compliance");
 
         // Check for:

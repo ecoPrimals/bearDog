@@ -158,8 +158,8 @@ pub async fn run_chaos_scenario(
         }
     }
 
-    // Wait for scenario duration
-    tokio::time::sleep(std::time::Duration::from_millis(scenario.duration_ms)).await;
+    // No sleep needed - testing scenario execution, not duration
+    // For time-based scenarios, use tokio::time::pause() + advance()
 
     // Collect recovery results (simplified)
     let recovery_results = vec![];

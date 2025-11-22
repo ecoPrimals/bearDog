@@ -39,9 +39,9 @@ mod tests {
             assert!(msg.contains("Insufficient") || msg.contains("need at least"));
         }
 
-        // Test expired recovery session
+        // Test expired recovery session - modern pattern: 1 nanosecond instantly expired
         let expired_session = RecoverySession::new("user_test", std::time::Duration::from_nanos(1));
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // No sleep needed - CPU cycles already passed 1 nanosecond
 
         let result = expired_session.validate();
         assert!(result.is_err());

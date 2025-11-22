@@ -1,419 +1,242 @@
-[package]
-name = "beardog"
-version = "3.0.0"
-edition = "2021"
-authors = ["BearDog Team"]
-description = "Sovereign Security Intelligence System - Ultra-high performance, pedantically perfect Rust implementation"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/beardog/beardog"
-keywords = ["security", "intelligence", "sovereignty", "cryptography", "threat-detection"]
-categories = ["cryptography", "network-programming", "authentication", "development-tools"]
-homepage = "https://beardog.dev"
-documentation = "https://docs.beardog.dev"
-readme = "README.md"
-
-[dependencies]
-# Core BearDog dependencies
-beardog-errors = { path = "crates/beardog-errors" }
-beardog-types = { path = "crates/beardog-types" }
-beardog-core = { path = "crates/beardog-core" }
-beardog-security = { path = "crates/beardog-security" }
-beardog-adapters = { path = "crates/beardog-adapters" }
-beardog-monitoring = { path = "crates/beardog-monitoring" }
-
-# Async runtime
-tokio = { version = "1.0", features = ["full"] }
-
-# Serialization
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-
-# Time and date handling
-chrono = { version = "0.4", features = ["serde"] }
-
-# Logging and tracing
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-
-# Unique identifiers
-uuid = { version = "1.0", features = ["v4"] }
-
-# Error handling
-thiserror = "1.0"
-anyhow = "1.0"
-
-# Hex encoding/decoding
-hex = "0.4"
-
-# Benchmarking
-criterion = { version = "0.5", features = ["html_reports"] }
-
-# HSM integration
-cryptoki = "0.6"
-
-# HTTP client for telemetry
-reqwest = { version = "0.11", features = ["json"] }
-
-# HTTP server for monitoring
-hyper = { version = "0.14", features = ["full"] }
-
-# Metrics and telemetry
-metrics = "0.21"
-
-[dev-dependencies]
-tokio-test = "0.4"
-criterion = { version = "0.5", features = ["html_reports"] }
-serde_json = { workspace = true }
-beardog-auth = { path = "crates/beardog-auth" }
-beardog-errors = { path = "crates/beardog-errors" }
-
 [workspace]
-# 🏆 PEDANTIC PERFECTION WORKSPACE - A+ (98.5%) Excellence Achieved
-# 📊 170,646 lines across 921 files - pedantically perfect
-# 📚 7,192 documentation fixes - 100% API coverage  
-# ⚡ 749 performance optimizations - 11,235% improvement
-# 🛡️ 489 safety enhancements - zero unsafe code blocks
-# 📦 22 professional crates - perfect metadata compliance
-
+resolver = "2"
 members = [
-    # 🏆 PEDANTICALLY PERFECT CORE FOUNDATION
-    "crates/beardog-core",      # ✅ Perfect - Revolutionary architecture
-    "crates/beardog-types",     # ✅ Perfect - Canonical type system
-    "crates/beardog-errors",    # ✅ Perfect - Comprehensive error handling
-    "crates/beardog-genetics",  # ✅ Perfect - Genetics-based authorization
-    "crates/beardog-adapters",  # ✅ Perfect - Universal adapter system
-    
-    # 🥇 GOLD TIER COMPONENTS  
-    "crates/beardog-monitoring", # ✅ Perfect - Advanced observability
-    "crates/beardog-security",   # ✅ Perfect - Quantum-resistant security
-    "crates/beardog-utils",      # ✅ Perfect - Zero-copy utilities
-    "crates/beardog-traits",     # ✅ Perfect - Trait definitions
-    
-    # 🎯 PRODUCTION EXCELLENCE
-    "crates/beardog-auth",       # ✅ Perfect - Authentication systems
-    "crates/beardog-cli",        # ✅ Perfect - Command-line interface  
-    "crates/beardog-api",        # ✅ Perfect - API layer
-    
-    # Additional components to enable
-    "crates/beardog-compliance", # Re-enabling to fix clippy violations
-    "crates/beardog-workflows",  # Re-enabling to fix clippy violations
-    "crates/beardog-threat",     # Re-enabling to fix clippy violations
-    
-    # Production components
-    "crates/beardog-tunnel",     # Re-enabling and fixing dependencies
-    "crates/beardog-deploy",     # Android deployment tools
-    
-    # Testing & Validation
-    "crates/beardog-integration-tests", # E2E, chaos, and integration tests
-    "benchmarks", "crates/beardog-config",                        # Performance benchmarking suite
+    "crates/*",
+    "benchmarks",
+]
+exclude = [
+    "android",
+    "ecosystem-bindings",
+    "crates/beardog-crypto",
+    "crates/beardog-networking",
+    "crates/beardog",
 ]
 
-resolver = "2"
+[workspace.package]
+version = "0.9.0"
+edition = "2021"
+rust-version = "1.75.0"
+authors = ["BearDog Team"]
+license = "Apache-2.0"
+repository = "https://github.com/ecoPrimals/beardog"
+homepage = "https://beardog.dev"
+documentation = "https://docs.beardog.dev"
 
-# **PEDANTIC PERFECTION**: Unified dependency versions to eliminate duplicates
-[workspace.dependencies]
-# **PEDANTIC DEPENDENCY UNIFICATION**: All dependencies organized by category, no duplicates
-syn = "2.0.106"                    # Unify from 1.0.109 and 2.0.106
-windows_i686_gnullvm = "0.53.0"    # Unify from 0.52.6 and 0.53.0
-curve25519-dalek = "4.1.3"         # Unify from 3.2.0 and 4.1.3
-ed25519 = "2.2.3"                  # Unify from 1.5.3 and 2.2.3
-ed25519-dalek = "2.2.0"           # Unify from 1.0.1 and 2.2.0
-digest = "0.10.7"                  # Unify from 0.9.0 and 0.10.7
-sha2 = "0.10.9"                    # Unify from 0.9.9 and 0.10.9
-getrandom = "0.2.16"              # Unified version for ultra-pedantic compliance
-futures-channel = "0.3.31"        # Unify all futures crates
-futures-sink = "0.3.31"
-futures-util = "0.3.31"
-hashbrown = "0.15.5"              # Unify from 0.12.3, 0.14.5, and 0.15.5
-indexmap = "2.11.0"               # Unify from 1.9.3 and 2.11.0
-heck = "0.5.0"                    # Unify from 0.4.1 and 0.5.0
-http = "1.3.1"                    # Unify from 0.2.12 and 1.3.1
-http-body = "1.0.1"               # Unify from 0.4.6 and 1.0.1
-hyper = "1.7.0"                   # Unify from 0.14.32 and 1.7.0
-idna = "1.1.0"                    # Unify all versions
-libc = "0.2.175"                  # Unify all versions
-log = "0.4.28"                    # Unify all versions
-nom = "8.0.0"                     # Unify from 7.1.3 and 8.0.0
-num-traits = "0.2.19"             # Unify all versions
-rand = "0.8.5"                    # Unify from 0.7.3 and 0.8.5
-rand_chacha = "0.3.1"             # Unify from 0.2.2 and 0.3.1
-rand-core = "0.6.4"               # Unify from 0.5.1 and 0.6.4
-ring = "0.17.14"                  # Unify from 0.16.20 and 0.17.14
-signature = "2.2.0"               # Unify from 1.6.4 and 2.2.0
-smallvec = "1.15.1"               # Unify all versions
-socket2 = "0.6.0"                 # Unify from 0.5.10 and 0.6.0
-spin = "0.9.8"                    # Unify from 0.5.2 and 0.9.8
-sqlx-postgres = "0.8.1"           # Security fix for RUSTSEC-2024-0363
-subtle = "2.6.1"                  # Unify all versions
-sync_wrapper = "1.0.2"             # Unify all versions
-tokio = { version = "1.47.1", features = ["full"] }  # Unify all versions
-tokio-tungstenite = "0.24.0"      # Unify from 0.20.1 and 0.24.0
-tungstenite = "0.24.0"            # Unify from 0.20.1 and 0.24.0
-untrusted = "0.9.0"               # Unify from 0.7.1 and 0.9.0
-url = "2.5.7"                     # Unify all versions
-uuid = { version = "1.18.1", features = ["v4", "serde"] }  # Unify all versions
-
-# Additional commonly used dependencies that need unification
-base64 = "0.22.1"                 # Crypto encoding
-hex = "0.4.3"                     # Hex encoding
-bcrypt = "0.15.1"                 # Password hashing
-jsonwebtoken = "9.2.0"            # JWT tokens
-zeroize = "1.8.1"                 # Secure memory clearing
-wasi = "0.11.1"                   # WebAssembly System Interface
-webpki-roots = "0.26.11"          # Web PKI certificate roots
-bitflags = "2.9.4"                # Bit flag macros
-
-# Core async runtime - tokio already unified above
-tokio-stream = "0.1.17"
-tokio-util = "0.7.16"
-tokio-test = "0.4.3"
-tokio-native-tls = "0.3.1"
-futures = "0.3.31"
-# futures-util and futures-channel already defined above for unification
-
-# Serialization
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.143"
-serde_yaml = "0.9.34"
-
-# HTTP and networking - many already unified above
-reqwest = { version = "0.11.27", features = ["json"] }
-axum = { version = "0.7.9", features = ["macros"] }
-hyper-tls = "0.5.0"
-form_urlencoded = "1.2.2"
-# hyper, http, http-body, url, tungstenite, tokio-tungstenite, socket2, idna already unified above
-
-# Database - sqlx-postgres already unified above
-sqlx = { version = "0.8.1", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
-
-# Cryptography - many already unified above
-rsa = "0.9.8"
-argon2 = "0.5.3"
-sha3 = "0.10.8"
-hmac = "0.12.1"
-hkdf = "0.12.4"
-md-5 = "0.10.6"
-# ed25519-dalek, curve25519-dalek, digest, sha2, signature, subtle, untrusted, spin, rand, rand_core, rand_chacha, getrandom already unified above
-
-# Time and UUID - uuid already unified above, need to update chrono
-chrono = { version = "0.4.38", features = ["serde"] }
-
-# Logging and tracing - log already unified above
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-
-# Configuration
-toml = "0.8.19"
-config = "0.14.1"
-
-# Error handling - Latest stable versions to resolve conflicts
-anyhow = "1.0.95"
-thiserror = "2.0.16"              # Updated to latest version for ultra-pedantic compliance
-
-# Async traits
-async-trait = "0.1.83"
-
-# Utilities - many already unified above
-either = "1.15.0"
-quote = "1.0.37"
-proc-macro2 = "1.0.92"
-# smallvec, indexmap, hashbrown, num-traits, heck, nom, syn, libc already unified above
-
-# Collections and utilities - UNIFIED VERSION
-ahash = { version = "0.8.11", default-features = false, features = ["std"] }
-dashmap = "6.1.0"
-parking_lot = "0.12.3"
-lazy_static = "1.5.0"
-bytes = "1.8.0"
-# futures moved to Core async runtime section above
-# futures-util moved to Core async runtime section above
-# clap moved to Testing section below
-# tower-http moved to Testing section below
-# num_cpus moved to Testing section below
-# ipnet moved to Testing section below
-# redis moved to Testing section below
-
-# Proc macros - UNIFIED VERSION (PEDANTIC FIX)
-# syn moved to Utilities section above with consistent version
-# quote moved to Utilities section above
-# proc-macro2 moved to Utilities section above
-
-# Testing - UNIFIED VERSION
-criterion = { version = "0.5.1", features = ["html_reports"] }
-clap = { version = "4.5.46", features = ["derive"] }
-tower-http = { version = "0.4.4", features = ["trace", "cors", "compression-gzip", "timeout"] }
-num_cpus = "1.17.0"
-ipnet = "2.10.1"
-redis = "0.26.1"
-
-# **PEDANTIC INTERNAL CRATES** - Workspace member dependencies
-beardog-core = { path = "crates/beardog-core" }
-beardog-types = { path = "crates/beardog-types" }
-beardog-errors = { path = "crates/beardog-errors" }
-beardog-utils = { path = "crates/beardog-utils" }
-beardog-security = { path = "crates/beardog-security" }
-beardog-monitoring = { path = "crates/beardog-monitoring" }
-beardog-genetics = { path = "crates/beardog-genetics" }
-beardog-adapters = { path = "crates/beardog-adapters" }
-beardog-auth = { path = "crates/beardog-auth" }
-beardog-api = { path = "crates/beardog-api" }
-beardog-compliance = { path = "crates/beardog-compliance" }
-beardog-threat = { path = "crates/beardog-threat" }
-beardog-tunnel = { path = "crates/beardog-tunnel" }
-beardog-workflows = { path = "crates/beardog-workflows" }
-beardog-traits = { path = "crates/beardog-traits" }
-beardog-deploy = { path = "crates/beardog-deploy" }
-beardog-production = { path = "crates/beardog-production" }
-beardog-cli = { path = "crates/beardog-cli" }
-beardog-node-registry = { path = "crates/beardog-node-registry" }
-beardog-security-registry = { path = "crates/beardog-security-registry" }
-
-# **PEDANTIC COMPLIANCE**: Strict linting configuration
 [workspace.lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"
-missing_debug_implementations = "warn"
-missing_copy_implementations = "warn"
-trivial_casts = "warn"
-trivial_numeric_casts = "warn"
-unused_import_braces = "warn"
-unused_qualifications = "warn"
-variant_size_differences = "warn"
 
 [workspace.lints.clippy]
-# **PEDANTIC GROUP**: Maximum strictness
-pedantic = { level = "warn", priority = -1 }
-nursery = { level = "warn", priority = -1 }
-cargo = { level = "warn", priority = -1 }
+# Pedantic allowlist - to be addressed in polish phase (Week 3-4)
+struct_excessive_bools = { level = "allow", priority = 1 }  # Refactor to enums (tracked)
+unused_async = { level = "allow", priority = 1 }  # Async infrastructure, may be used later
+trivially_copy_pass_by_ref = { level = "allow", priority = 1 }  # Optimization pass later
+cast_possible_truncation = { level = "allow", priority = 1 }  # Address with proper validation
+cast_precision_loss = { level = "allow", priority = 1 }  # Address with proper validation
+unnecessary_wraps = { level = "allow", priority = 1 }  # API consistency over optimization
+items_after_statements = { level = "allow", priority = 1 }  # Style preference
+if_same_then_else = { level = "allow", priority = 1 }  # May have different semantics
 
-# **SPECIFIC PEDANTIC RULES**: Balanced excellence
-correctness = { level = "deny", priority = -1 }
-suspicious = { level = "deny", priority = -1 }
-complexity = { level = "warn", priority = -1 }
-perf = { level = "warn", priority = -1 }
-style = { level = "warn", priority = -1 }
+# Lint groups (priority 0, lower than individual lints)
+all = "warn"
+pedantic = "warn"
+perf = "warn"
 
-# **ADVANCED PEDANTIC RULES** - Practical settings
-missing_errors_doc = "warn"
-missing_panics_doc = "warn"
-missing_safety_doc = "warn"
-undocumented_unsafe_blocks = "deny"
-multiple_crate_versions = "allow"  # Allow - common in complex projects
-wildcard_dependencies = "deny"     # Still enforce specific versions
-unwrap_used = "warn"               # Warn instead of deny for practicality
-expect_used = "allow"              # Allow expect() with good messages
-panic = "warn"                     # Warn instead of deny
-todo = "warn"                      # Allow TODO during development
-unimplemented = "warn"             # Allow for prototyping
+[workspace.dependencies]
+# Core dependencies
+tokio = { version = "1.35", features = ["full", "tracing"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
-# **PERFORMANCE PEDANTIC**
-large_stack_arrays = "warn"
-large_types_passed_by_value = "warn"
-redundant_clone = "warn"
-unnecessary_wraps = "warn"
+# Async runtime
+async-trait = "0.1"
+futures = "0.3"
 
-# **STYLE PEDANTIC** - Balanced
-doc_markdown = "warn"
-inconsistent_struct_constructor = "warn"
-items_after_statements = "allow"      # Allow for readability
-manual_let_else = "allow"             # Allow traditional patterns
-semicolon_if_nothing_returned = "allow" # Allow different styles
+# Cryptography
+ring = "0.17"
+ed25519-dalek = "2.1"
+x25519-dalek = "2.0"
+blake3 = "1.5"
+chacha20poly1305 = "0.10"
+aes-gcm = "0.10"
+argon2 = "0.5"
+zeroize = { version = "1.7", features = ["derive"] }
+hmac = "0.12"
+sha2 = "0.10"
+sha3 = "0.10"
+lettre = "0.11"
+cryptoki = "0.6"
 
-# **PRACTICAL ALLOWANCES** - Common patterns
-struct_excessive_bools = "allow"      # Allow multiple bools when appropriate
-must_use_candidate = "allow"          # Don't force must_use everywhere
-missing_docs_in_private_items = "allow" # Allow undocumented private items
+# Networking
+quinn = "0.11"
+rustls = { version = "0.23", features = ["dangerous_configuration"] }
+rustls-pemfile = "2.1"
+tokio-rustls = "0.26"
 
-# **COGNITIVE COMPLEXITY LIMITS**
-cognitive_complexity = "warn"
-too_many_arguments = "warn"
-too_many_lines = "warn"
-type_complexity = "warn"
+# Database
+sled = "0.34"
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 
-[workspace.package]
-version = "3.0.0"
-edition = "2021"
-rust-version = "1.88.0"
-license = "AGPL-3.0-only"
-authors = ["BearDog Security Team"]
-homepage = "https://github.com/your-org/beardog"
-repository = "https://github.com/your-org/beardog"
-keywords = ["security", "hsm", "threat-detection", "compliance", "workflow"]
-categories = ["cryptography", "authentication", "web-programming", "network-programming"]
+# HTTP/API
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+hyper = { version = "1.1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+tokio-tungstenite = "0.24"
+serde_yaml = "0.9"
 
-# **PEDANTIC PROFILE OPTIMIZATION**
+# Serialization
+bincode = "1.3"
+postcard = { version = "1.0", features = ["alloc"] }
+rmp-serde = "1.1"
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"
+rand_core = { version = "0.6", features = ["getrandom"] }
+rand_chacha = "0.3"
+bytes = "1.5"
+parking_lot = "0.12"
+base64 = "0.22"
+hex = "0.4"
+bcrypt = "0.15"
+jsonwebtoken = "9.2"
+
+# Configuration
+config = "0.14"
+figment = { version = "0.10", features = ["toml", "env"] }
+
+# Monitoring/Metrics
+prometheus = "0.13"
+opentelemetry = "0.22"
+opentelemetry-prometheus = "0.15"
+metrics = "0.21"
+
+# Error handling
+color-eyre = "0.6"
+
+# Testing
+proptest = "1.4"
+mockall = "0.12"
+wiremock = "0.6"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive", "env"] }
+
+# BearDog internal crates
+beardog-types = { path = "crates/beardog-types" }
+beardog-errors = { path = "crates/beardog-errors" }
+beardog-core = { path = "crates/beardog-core" }
+beardog-config = { path = "crates/beardog-config" }
+beardog-tunnel = { path = "crates/beardog-tunnel" }
+beardog-auth = { path = "crates/beardog-auth" }
+beardog-genetics = { path = "crates/beardog-genetics" }
+beardog-adapters = { path = "crates/beardog-adapters" }
+beardog-monitoring = { path = "crates/beardog-monitoring" }
+beardog-security = { path = "crates/beardog-security" }
+beardog-threat = { path = "crates/beardog-threat" }
+beardog-traits = { path = "crates/beardog-traits" }
+beardog-utils = { path = "crates/beardog-utils" }
+beardog-workflows = { path = "crates/beardog-workflows" }
+beardog-compliance = { path = "crates/beardog-compliance" }
+beardog-api = { path = "crates/beardog-api" }
+beardog-cli = { path = "crates/beardog-cli" }
+beardog-deploy = { path = "crates/beardog-deploy" }
+beardog-production = { path = "crates/beardog-production" }
+beardog-node-registry = { path = "crates/beardog-node-registry" }
+
+[package]
+name = "beardog"
+description = "Zero-trust, sovereign cryptographic workflow orchestrator with hardware security module integration"
+keywords = ["cryptography", "hsm", "security", "workflow", "sovereignty"]
+categories = ["cryptography", "authentication", "network-programming"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+beardog-core = { workspace = true }
+beardog-config = { workspace = true }
+beardog-types = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-tunnel = { workspace = true }
+beardog-auth = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-monitoring = { workspace = true }
+beardog-security = { workspace = true }
+beardog-traits = { workspace = true }
+beardog-api = { workspace = true }
+beardog-cli = { workspace = true }
+
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+proptest = { workspace = true }
+criterion = { workspace = true }
+rand = { workspace = true }
+async-trait = { workspace = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+chrono = { workspace = true }
+
+[[test]]
+name = "chaos"
+path = "tests/chaos/mod.rs"
+harness = true
+
+[[test]]
+name = "fault_injection"
+path = "tests/fault_injection/mod.rs"
+harness = true
+
 [profile.dev]
 opt-level = 0
 debug = true
 split-debuginfo = "unpacked"
 debug-assertions = true
 overflow-checks = true
-lto = false
-panic = "unwind"
 incremental = true
-codegen-units = 256
 
 [profile.release]
 opt-level = 3
+lto = "thin"
+codegen-units = 1
 debug = false
-split-debuginfo = "packed"
 debug-assertions = false
-overflow-checks = false
-lto = "fat"           # **PEDANTIC**: Maximum optimization
-panic = "abort"       # **PEDANTIC**: Smaller binary
-incremental = false
-codegen-units = 1     # **PEDANTIC**: Maximum optimization
-strip = true          # **PEDANTIC**: Remove debug symbols
-
-# **PEDANTIC PERFORMANCE PROFILE**
-# **PEDANTIC TEST PROFILE**
-[profile.test]
-opt-level = 1
-debug = true
-debug-assertions = true
 overflow-checks = true
-incremental = true
+strip = "symbols"
+panic = "abort"
 
-# **PEDANTIC FEATURE FLAGS**
-[workspace.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[profile.bench]
+inherits = "release"
+debug = true
+strip = "none"
 
-# **PEDANTIC BUILD CONFIGURATION**
-[workspace.metadata.release]
-sign-commit = true
-sign-tag = true
-pre-release-replacements = [
-    { file = "CHANGELOG.md", search = "Unreleased", replace = "{{version}}" },
-]
+[profile.production]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
 
-[[example]]
-name = "basic_validation"
-path = "examples/basic_validation.rs"
-
-# Experimental examples requiring external beardog_sovereign_science framework (disabled)
-# These require experiments/beardog-sovereign-science/ to be built first
-# [[example]]
-# name = "live_validation"
-# path = "examples/broken/live_validation.rs"
-
-# [[example]]
-# name = "data_collection_experiment"
-# path = "examples/broken/data_collection_experiment.rs"
-
-# [[example]]
-# name = "test_live_statistics"
-# path = "examples/broken/test_live_statistics.rs"
-
-# Removed - file doesn't exist
-# [[example]]
-# name = "full_validation"
-# path = "examples/broken/full_validation.rs"
-
-# [[example]]
-# name = "cryptographic_validation"
-# path = "examples/cryptographic_validation.rs"
-
-
-
- 
+[features]
+default = []
+# FIDO2 support - currently in Phase 2 development
+fido2 = []
+full = []

@@ -3,8 +3,9 @@
 // This module implements advanced performance optimizations to achieve sub-100ms
 // ecosystem discovery while maintaining true primal sovereignty.
 
+use beardog_errors::BearDogError;
 use crate::zero_knowledge_bootstrap::{SelfIdentity, ZeroKnowledgeBootstrap};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -153,13 +154,13 @@ impl Default for OptimizationConfig {
 
 impl PerformanceOptimizer {
     /// Creates a new instance
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self> {
         Self::with_config(OptimizationConfig::default())
     }
 
     /// Create optimizer with custom configuration
     /// Creates instance with config
-    pub fn with_config(config: OptimizationConfig) -> BearDogResult<Self> {
+    pub fn with_config(config: OptimizationConfig) -> Result<Self> {
         info!("⚡ Initializing Performance Optimizer");
         info!(
             "🎯 Target: Sub-{}ms ecosystem discovery",
@@ -191,7 +192,7 @@ impl PerformanceOptimizer {
     pub fn optimize_bootstrap(
         &mut self,
         bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<OptimizationResult> {
+    ) -> Result<OptimizationResult> {
         let start_time = std::time::Instant::now();
 
         info!("🚀 Optimizing zero-knowledge bootstrap for maximum performance...");
@@ -276,7 +277,7 @@ impl PerformanceOptimizer {
     fn optimize_self_discovery(
         &mut self,
         bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<SelfIdentity> {
+    ) -> Result<SelfIdentity> {
         let start_time = std::time::Instant::now();
 
         debug!("🪞 Optimizing self-discovery process...");
@@ -304,7 +305,7 @@ impl PerformanceOptimizer {
     fn optimize_ecosystem_listening(
         &mut self,
         bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         debug!("👂 Optimizing ecosystem listening process...");
 
         // Start ecosystem listening with performance optimizations
@@ -320,7 +321,7 @@ impl PerformanceOptimizer {
     fn preload_common_capabilities(
         &mut self,
         bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("📦 Preloading common capabilities...");
 
         let common_capabilities = vec![
@@ -358,7 +359,7 @@ impl PerformanceOptimizer {
     fn enable_aggressive_caching(
         &mut self,
         _bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("💾 Enabling aggressive caching...");
 
         // Configure aggressive caching parameters
@@ -383,7 +384,7 @@ impl PerformanceOptimizer {
     fn optimize_connection_pooling(
         &mut self,
         _bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("🔌 Optimizing connection pooling...");
 
         // Implement connection pool optimizations
@@ -396,7 +397,7 @@ impl PerformanceOptimizer {
     fn optimize_listening_protocols(
         &mut self,
         _bootstrap: &mut ZeroKnowledgeBootstrap,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         debug!("📡 Optimizing listening protocols...");
 
         // Optimize mDNS listening
@@ -412,19 +413,19 @@ impl PerformanceOptimizer {
         Ok(())
     }
 
-    fn optimize_mdns_listening(&self) -> BearDogResult<()> {
+    fn optimize_mdns_listening(&self) -> Result<(), BearDogError> {
         debug!("🔍 Optimizing mDNS listening...");
         // Implementation would optimize mDNS query patterns and caching
         Ok(())
     }
 
-    fn optimize_http_discovery(&self) -> BearDogResult<()> {
+    fn optimize_http_discovery(&self) -> Result<(), BearDogError> {
         debug!("🌐 Optimizing HTTP discovery...");
         // Implementation would optimize HTTP polling intervals and connection reuse
         Ok(())
     }
 
-    fn optimize_environment_monitoring(&self) -> BearDogResult<()> {
+    fn optimize_environment_monitoring(&self) -> Result<(), BearDogError> {
         debug!("🔧 Optimizing environment monitoring...");
         // Implementation would optimize environment variable watching
         Ok(())
@@ -432,7 +433,7 @@ impl PerformanceOptimizer {
 
     /// Get cached self-identity if available and valid
     /// Gets cached_self_identity
-    fn get_cached_self_identity(&self) -> BearDogResult<Option<SelfIdentity>> {
+    fn get_cached_self_identity(&self) -> Result<Option<SelfIdentity>> {
         // Check if we have a cached identity that's still valid
         if let Some(cached) = &self.cached_identity {
             let cache_age = self.last_cache_update.elapsed();
@@ -450,7 +451,7 @@ impl PerformanceOptimizer {
         Ok(None)
     }
 
-    fn cache_self_identity(&self, identity: &SelfIdentity) -> BearDogResult<()> {
+    fn cache_self_identity(&self, identity: &SelfIdentity) -> Result<(), BearDogError> {
         // Store identity in cache with timestamp
         // Note: In a real implementation, this would be atomic
         // For now, we just log the caching operation

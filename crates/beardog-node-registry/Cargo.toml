@@ -1,10 +1,12 @@
 [package]
 name = "beardog-node-registry"
-description = "BearDog node-registry module"
+description = "Decentralized node registry for BearDog ecosystem coordination and service discovery"
 repository = "https://github.com/eastgate-software/beardog"
 rust-version = "1.75"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
+keywords = ["security", "distributed", "registry", "p2p", "coordination"]
+categories = ["cryptography", "network-programming", "web-programming"]
 
 [package.version]
 workspace = true
@@ -17,6 +19,9 @@ workspace = true
 
 [package.authors]
 workspace = true
+
+[dependencies.beardog-config]
+path = "../beardog-config"
 
 [dependencies.beardog-errors]
 workspace = true

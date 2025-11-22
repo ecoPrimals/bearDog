@@ -111,7 +111,7 @@ mod tests {
 
         let ciphertext = service.encrypt(plaintext, &key1).unwrap();
         let result = service.decrypt(&ciphertext, &key2);
-        
+
         // Should fail authentication
         assert!(result.is_err());
     }
@@ -123,7 +123,7 @@ mod tests {
         let plaintext = b"test data";
 
         let mut ciphertext = service.encrypt(plaintext, &key).unwrap();
-        
+
         // Corrupt the ciphertext
         if ciphertext.len() > 20 {
             ciphertext[20] ^= 0xFF;
@@ -265,10 +265,10 @@ mod tests {
             key_size: 16, // Non-standard
         };
         let service = EncryptionService::new(config);
-        
+
         let key = vec![0u8; 16];
         let result = service.encrypt(b"test", &key);
-        
+
         // Should fail because AES-256-GCM requires 32-byte key
         assert!(result.is_err());
     }
@@ -285,7 +285,7 @@ mod tests {
         for i in 0..10 {
             let service = Arc::clone(&service);
             let key = Arc::clone(&key);
-            
+
             let handle = thread::spawn(move || {
                 let plaintext = format!("message {}", i);
                 let ciphertext = service.encrypt(plaintext.as_bytes(), &key).unwrap();
@@ -308,7 +308,7 @@ mod tests {
         let plaintext = b"test";
 
         let ciphertext = service.encrypt(plaintext, &key)?;
-        
+
         // AES-256-GCM: nonce (12 bytes) + ciphertext + auth tag (16 bytes)
         // Minimum size should be 12 + 4 + 16 = 32 bytes
         assert!(ciphertext.len() >= 12 + plaintext.len() + 16);
@@ -332,4 +332,3 @@ mod tests {
         Ok(())
     }
 }
-

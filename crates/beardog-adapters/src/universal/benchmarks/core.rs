@@ -3,7 +3,7 @@
 //! This module provides the foundational types and configuration for the unified
 //! BearDog benchmarking system, using canonical imports and modern patterns.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 // ✅ Updated to use unified provider system
 use beardog_types::canonical::providers_unified::consolidated_registry::ConsolidatedProviderRegistry;
 use beardog_types::canonical::providers_unified::traits::ConsolidatedProvider;

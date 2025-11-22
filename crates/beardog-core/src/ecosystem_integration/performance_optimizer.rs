@@ -241,9 +241,9 @@ impl EcosystemPerformanceOptimizer {
     #[must_use]
     pub fn new(config: EcosystemOptimizerConfig) -> Self {
         use beardog_config::domains::timeouts::TimeoutConfig;
-        
+
         let timeout_config = TimeoutConfig::from_env();
-        
+
         let pool_config = PoolConfig {
             max_pool_size: config.max_connections,
             min_pool_size: 5,
@@ -434,7 +434,34 @@ pub enum ConnectionHealthStatus {
 }
 
 impl Default for EcosystemOptimizerConfig {
+    /// Default configuration with production-ready values
+    ///
+    /// Does NOT read from environment - use explicit configuration or builder pattern.
+    /// This ensures tests are deterministic and concurrent-safe (no global state races).
     fn default() -> Self {
+        Self {
+            max_connections: 100,
+            connection_timeout: Duration::from_secs(30),
+            cache_ttl: Duration::from_secs(300),
+            rate_limit: 1000,
+            health_check_interval: Duration::from_secs(60),
+        }
+    }
+}
+
+impl EcosystemOptimizerConfig {
+    /// Create configuration from environment variables (for runtime configuration)
+    ///
+    /// This is the modern Rust pattern - explicit configuration loading, not implicit.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use beardog_core::ecosystem_integration::performance_optimizer::EcosystemOptimizerConfig;
+    ///
+    /// let config = EcosystemOptimizerConfig::from_env();
+    /// ```
+    #[must_use]
+    pub fn from_env() -> Self {
         Self {
             max_connections: std::env::var("BEARDOG_OPTIMIZER_MAX_CONNECTIONS")
                 .ok()
@@ -455,7 +482,7 @@ impl Default for EcosystemOptimizerConfig {
             rate_limit: std::env::var("BEARDOG_OPTIMIZER_RATE_LIMIT")
                 .ok()
                 .and_then(|r| r.parse().ok())
-                .unwrap_or(1000), // 1000 requests default
+                .unwrap_or(1000),
             health_check_interval: Duration::from_secs(
                 std::env::var("BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS")
                     .ok()

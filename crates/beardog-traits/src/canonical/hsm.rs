@@ -7,16 +7,18 @@ use super::base::BaseProvider;
 use beardog_errors::BearDogError;
 
 // Local definition of HsmTier since it's not available in beardog_types
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
 pub enum HsmTier {
-    /// Represents hardware variant
-    Hardware,
-    /// Represents software variant
+    /// Represents software variant (lowest priority)
     Software,
-    /// Represents cloud variant
+    /// Represents TPM variant (medium priority)
+    Tpm,
+    /// Represents cloud variant (medium-high priority)
     Cloud,
-    /// Represents hybrid variant
+    /// Represents hybrid variant (high priority)
     Hybrid,
+    /// Represents hardware variant (highest priority)
+    Hardware,
 }
 use beardog_types::canonical::hsm::{HsmKey, KeyMetadata};
 

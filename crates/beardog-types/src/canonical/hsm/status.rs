@@ -229,9 +229,9 @@ impl HsmStatus {
     }
 
     /// Record an error
-    pub fn record_error(&mut self, error: String) {
+    pub fn record_error(&mut self, error: impl Into<String>) {
         self.errors.total_errors += 1;
-        self.errors.recent_errors.push(error);
+        self.errors.recent_errors.push(error.into());
         self.errors.last_error = Some(SystemTime::now());
 
         // Keep only last 10 errors
@@ -272,11 +272,11 @@ impl<T> HsmOperationResult<T> {
 
     /// Create a failed result
     #[must_use]
-    pub fn failure(error: String) -> Self {
+    pub fn failure(error: impl Into<String>) -> Self {
         Self {
             success: false,
             data: None,
-            error: Some(error),
+            error: Some(error.into()),
             processing_time_ms: 0,
             metadata: HashMap::new(),
         }
@@ -293,8 +293,8 @@ impl<T> HsmOperationResult<T> {
     /// Add metadata
     #[must_use]
     /// Creates instance with metadata
-    pub fn with_metadata(mut self, key: String, value: String) -> Self {
-        self.metadata.insert(key, value);
+    pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.metadata.insert(key.into(), value.into());
         self
     }
 }

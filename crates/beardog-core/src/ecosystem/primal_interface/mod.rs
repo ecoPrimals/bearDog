@@ -13,10 +13,10 @@
 //!
 //! ## Key Components
 //!
-//! - [`api_endpoints`] - API endpoint definitions and handlers
-//! - [`ecosystem_integration`] - Ecosystem service integration
-//! - [`hsm_management`] - HSM management and key operations
-//! - [`trait_impl`] - Implementation of core primal traits
+//! - API endpoint definitions and handlers
+//! - [`ecosystem_integration`](crate::ecosystem_integration) - Ecosystem service integration
+//! - HSM management and key operations
+//! - Implementation of core primal traits
 //!
 //! ## Example
 //!

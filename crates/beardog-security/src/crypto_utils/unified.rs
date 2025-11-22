@@ -418,53 +418,8 @@ pub struct CryptoPerformanceMetrics {
 // RE-EXPORTS FOR COMPATIBILITY - Maintain existing API
 // =============================================================================
 
-/// Legacy compatibility - re-export main crypto struct
+/// Re-export main crypto struct
 pub use UnifiedBearDogCrypto as BearDogCrypto;
-
-/// Legacy compatibility - re-export crypto utils functions
-pub mod legacy {
-    use super::*;
-
-    pub fn secure_random_bytes(size: usize) -> Vec<u8> {
-        UnifiedBearDogCrypto::secure_random_bytes(size)
-    }
-
-    pub fn generate_salt() -> Vec<u8> {
-        UnifiedBearDogCrypto::generate_salt()
-    }
-
-    pub fn generate_nonce(size: usize) -> Vec<u8> {
-        UnifiedBearDogCrypto::generate_nonce(size)
-    }
-
-    pub fn sha256_hash(data: &[u8]) -> String {
-        UnifiedBearDogCrypto::sha256_hash(data)
-    }
-
-    pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<String, BearDogError> {
-        UnifiedBearDogCrypto::hmac_sha256(key, data)
-    }
-
-    pub fn verify_hmac_sha256(key: &[u8], data: &[u8], signature: &str) -> Result<bool, BearDogError> {
-        UnifiedBearDogCrypto::verify_hmac_sha256(key, data, signature)
-    }
-
-    pub fn pbkdf2_hmac_sha256(password: &[u8], salt: &[u8], iterations: u32, key_length: usize) -> Result<Vec<u8>, BearDogError> {
-        UnifiedBearDogCrypto::pbkdf2_hmac_sha256(password, salt, iterations, key_length)
-    }
-
-    pub fn generate_password(length: usize) -> String {
-        UnifiedBearDogCrypto::generate_password(length)
-    }
-
-    pub fn bytes_to_hex(bytes: &[u8]) -> String {
-        UnifiedBearDogCrypto::bytes_to_hex(bytes)
-    }
-
-    pub fn hex_to_bytes(hex_string: &str) -> Result<Vec<u8>, BearDogError> {
-        UnifiedBearDogCrypto::hex_to_bytes(hex_string)
-    }
-}
 
 #[cfg(test)]
 mod tests {

@@ -13,23 +13,17 @@
 // - **Monitoring**: Metrics, logging, health check constants
 
 // Domain-specific constant modules
-/// Buffers module
 pub mod buffers;
-/// Ecosystem module
+pub mod config;
 pub mod ecosystem;
-/// Math module
+pub mod limits; // NEW - Nov 11, 2025
 pub mod math;
-/// Network module
 pub mod network;
-/// PKCS#11 module
 pub mod pkcs11;
-/// Security module
 pub mod security;
-/// Storage module
 pub mod storage;
-/// System module
 pub mod system;
-/// Validation module
+pub mod timeouts; // NEW - Nov 11, 2025
 pub mod validation;
 
 // Re-export commonly used constants for convenience

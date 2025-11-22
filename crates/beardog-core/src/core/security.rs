@@ -4,14 +4,12 @@
 //! and session management.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::providers_unified::traits::{
-    UnifiedProvider, UnifiedSecurityProvider,
-    AuthenticationRequest, AuthenticationResponse,
-    AuthorizationRequest, AuthorizationResponse,
-    SecurityContext, ProviderHealth, ProviderMetrics, ProviderCapability,
-    ProviderConfiguration,
-};
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
+use beardog_types::canonical::providers_unified::traits::{
+    AuthenticationRequest, AuthenticationResponse, AuthorizationRequest, AuthorizationResponse,
+    ProviderCapability, ProviderConfiguration, ProviderHealth, ProviderMetrics, SecurityContext,
+    UnifiedProvider, UnifiedSecurityProvider,
+};
 use std::collections::HashMap;
 
 ///
@@ -47,7 +45,8 @@ impl UnifiedProvider for CoreSecurityProvider {
             id: "core_security".to_string(),
             name: "Core Security Provider".to_string(),
             version: "1.0.0".to_string(),
-            provider_type: beardog_types::canonical::providers_unified::traits::ProviderType::Security,
+            provider_type:
+                beardog_types::canonical::providers_unified::traits::ProviderType::Security,
             supported_capabilities: vec!["authentication".to_string(), "authorization".to_string()],
         }
     }

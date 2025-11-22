@@ -77,10 +77,12 @@ fn test_ecosystem_registration_deserialization() {
 
 #[test]
 fn test_ecosystem_registration_multiple_endpoints() {
+    use beardog_config::domains::network_ports::{DEFAULT_API_PORT, DEFAULT_HTTPS_PORT, DEFAULT_DISCOVERY_PORT};
+    
     let mut endpoints = HashMap::new();
-    endpoints.insert("http".to_string(), "http://localhost:8080".to_string());
-    endpoints.insert("https".to_string(), "https://localhost:8443".to_string());
-    endpoints.insert("grpc".to_string(), "grpc://localhost:9090".to_string());
+    endpoints.insert("http".to_string(), format!("http://localhost:{}", DEFAULT_API_PORT));
+    endpoints.insert("https".to_string(), format!("https://localhost:{}", DEFAULT_HTTPS_PORT));
+    endpoints.insert("grpc".to_string(), format!("grpc://localhost:{}", DEFAULT_DISCOVERY_PORT));
 
     let registration = EcosystemRegistration {
         service_id: "multi-endpoint".to_string(),

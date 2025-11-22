@@ -62,6 +62,10 @@ pub enum HealthCheckMethod {
     Custom(String),
 }
 
+/// Configuration for service health monitoring
+///
+/// Defines how health checks should be performed, including check intervals,
+/// failure thresholds, and success criteria for service health determination.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHealthConfig {
     /// Health check method to use
@@ -76,6 +80,10 @@ pub struct ServiceHealthConfig {
     pub success_threshold: u32,
 }
 
+/// Statistics tracking the health status of monitored services
+///
+/// Provides aggregate metrics about service health across the discovery system,
+/// including counts of healthy, unhealthy, and total monitored services.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct HealthStatistics {
     /// Total number of services being monitored

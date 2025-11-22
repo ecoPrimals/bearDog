@@ -42,7 +42,8 @@ pub async fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogEr
             warn!("  Request {}: BLOCKED", i + 1);
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(90)).await;
+        // No sleep needed - testing logic, not actual timing
+        // For real time-based rate limiting tests, use tokio::time::pause()
     }
 
     // Try to exceed rate limit
@@ -60,7 +61,7 @@ pub async fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogEr
             warn!("  Excess request {} BLOCKED (rate limit hit)", i + 1);
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        // No sleep needed - testing rate limit logic, not timing
     }
 
     info!("✅ Rate limit enforcement complete");
@@ -85,18 +86,17 @@ pub async fn test_throttling_backoff() -> Result<RateLimitMetrics, BearDogError>
             if throttle_delay > 0 {
                 info!("  Request throttled, delay: {}ms", throttle_delay);
                 metrics.throttle_delays += 1;
-                tokio::time::sleep(tokio::time::Duration::from_millis(throttle_delay as u64)).await;
+                // No sleep needed - testing throttle detection logic, not actual delays
+                // For real throttling tests, use tokio::time::pause() + advance()
             }
 
             simulate_api_request_fast().await?;
             metrics.requests_allowed += 1;
 
-            // Small delay between requests
-            tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+            // No sleep needed - testing burst logic, not request timing
         }
 
-        // Cool down between bursts
-        tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+        // No sleep needed - testing burst handling logic, not timing
     }
 
     info!("✅ Throttling backoff complete");
@@ -133,7 +133,7 @@ pub async fn test_quota_management() -> Result<RateLimitMetrics, BearDogError> {
             warn!("  Quota exceeded: {}/{}", current_usage, daily_quota);
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+        // No sleep needed - testing quota logic, not timing
     }
 
     info!("✅ Quota management complete");
@@ -166,8 +166,9 @@ pub async fn test_burst_handling() -> Result<RateLimitMetrics, BearDogError> {
     }
 
     // Wait for token refill
-    info!("Waiting for token bucket refill");
-    tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+    info!("Simulating token bucket refill");
+    // No sleep needed - token_bucket_check uses static counter, not time-based refill
+    // For real time-based token bucket tests, use tokio::time::pause() + advance()
 
     // Send more requests (should succeed with refilled tokens)
     info!("Sending requests after refill");
@@ -214,7 +215,7 @@ pub async fn test_per_user_rate_limiting() -> Result<RateLimitMetrics, BearDogEr
                 warn!("  User {} request {} BLOCKED", user, i + 1);
             }
 
-            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+            // No sleep needed - testing per-user rate limit logic, not timing
         }
     }
 
@@ -275,7 +276,7 @@ async fn simulate_user_rate_limit_check(_user: &str, limit: usize) -> Result<boo
 }
 
 async fn simulate_api_request_fast() -> Result<(), BearDogError> {
-    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
+    // Simulate API request (instant in tests, would be I/O in production)
     Ok(())
 }
 

@@ -63,7 +63,7 @@ impl ConfigLoader {
         self.config.limits = LimitsConfig::from_env();
         self.config.monitoring = MonitoringConfig::from_env();
         // Note: hsm and paths don't have from_env() yet (they use platform discovery)
-        
+
         self
     }
 
@@ -79,4 +79,3 @@ impl Default for ConfigLoader {
         Self::new()
     }
 }
-

@@ -28,15 +28,23 @@ impl ThreatResponseConfiguration {
     /// Create configuration from a config source (modern pattern)
     pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
         use crate::canonical::config::source::get_bool;
-        
+
         Self {
             enabled: get_bool(source, "BEARDOG_THREAT_RESPONSE_ENABLED", false),
             max_response_level: source.get_or("BEARDOG_THREAT_RESPONSE_MAX_LEVEL", "medium"),
             enable_isolation: get_bool(source, "BEARDOG_THREAT_RESPONSE_ISOLATION", false),
             enable_blocking: get_bool(source, "BEARDOG_THREAT_RESPONSE_BLOCKING", false),
-            enable_enhanced_monitoring: get_bool(source, "BEARDOG_THREAT_RESPONSE_ENHANCED_MONITORING", true),
+            enable_enhanced_monitoring: get_bool(
+                source,
+                "BEARDOG_THREAT_RESPONSE_ENHANCED_MONITORING",
+                true,
+            ),
             collect_forensics: get_bool(source, "BEARDOG_THREAT_RESPONSE_COLLECT_FORENSICS", true),
-            update_intelligence: get_bool(source, "BEARDOG_THREAT_RESPONSE_UPDATE_INTELLIGENCE", true),
+            update_intelligence: get_bool(
+                source,
+                "BEARDOG_THREAT_RESPONSE_UPDATE_INTELLIGENCE",
+                true,
+            ),
         }
     }
 }

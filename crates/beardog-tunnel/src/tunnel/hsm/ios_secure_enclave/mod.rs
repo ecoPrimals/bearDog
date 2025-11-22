@@ -10,13 +10,13 @@ use tracing::info;
 pub mod capability;
 pub mod operations;
 pub mod safe_secure_enclave;
-pub mod safe_secure_enclave_replacement;
+// pub mod safe_secure_enclave_replacement; // NOTE: File has syntax errors, disabled temporarily
 pub mod types;
 
 pub use capability::*;
 pub use operations::*;
 pub use safe_secure_enclave::*;
-pub use safe_secure_enclave_replacement::*;
+// pub use safe_secure_enclave_replacement::*; // Disabled
 pub use types::*;
 
 pub use beardog_types::constants::domains::security::hsm::{

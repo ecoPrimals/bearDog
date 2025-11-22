@@ -6,6 +6,7 @@ use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
 /// TPM Universal HSM Provider
+#[allow(dead_code)] // Fields used in implementation
 pub struct TpmUniversalProvider {
     /// HSM capabilities
     capabilities: Option<TpmCapabilities>,

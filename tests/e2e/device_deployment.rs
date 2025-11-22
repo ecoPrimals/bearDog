@@ -149,7 +149,7 @@ async fn detect_android_devices() -> Result<usize, BearDogError> {
     debug!("Detecting Android devices via adb");
 
     let output = std::process::Command::new("adb")
-        .args(&["devices", "-l"])
+        .args(["devices", "-l"])
         .output()
         .map_err(|e| BearDogError::system(format!("adb devices failed: {}", e)))?;
 
@@ -177,7 +177,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
 
     // Get API level
     let api_output = std::process::Command::new("adb")
-        .args(&["shell", "getprop", "ro.build.version.sdk"])
+        .args(["shell", "getprop", "ro.build.version.sdk"])
         .output()
         .map_err(|e| BearDogError::system(format!("Failed to get API level: {}", e)))?;
 
@@ -188,7 +188,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
 
     // Get model
     let model_output = std::process::Command::new("adb")
-        .args(&["shell", "getprop", "ro.product.model"])
+        .args(["shell", "getprop", "ro.product.model"])
         .output()
         .map_err(|e| BearDogError::system(format!("Failed to get model: {}", e)))?;
 
@@ -198,7 +198,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
 
     // Get manufacturer
     let manufacturer_output = std::process::Command::new("adb")
-        .args(&["shell", "getprop", "ro.product.manufacturer"])
+        .args(["shell", "getprop", "ro.product.manufacturer"])
         .output()
         .map_err(|e| BearDogError::system(format!("Failed to get manufacturer: {}", e)))?;
 
@@ -219,7 +219,7 @@ async fn check_device_capabilities() -> Result<DeviceCapabilities, BearDogError>
 
     // Check for StrongBox
     let feature_output = std::process::Command::new("adb")
-        .args(&["shell", "pm", "list", "features"])
+        .args(["shell", "pm", "list", "features"])
         .output()
         .map_err(|e| BearDogError::system(format!("Failed to list features: {}", e)))?;
 
@@ -239,7 +239,7 @@ async fn test_log_access() -> Result<bool, BearDogError> {
     debug!("Testing log access");
 
     let output = std::process::Command::new("adb")
-        .args(&["logcat", "-d", "-t", "1"]) // Dump mode, last 1 line
+        .args(["logcat", "-d", "-t", "1"]) // Dump mode, last 1 line
         .output()
         .map_err(|e| BearDogError::system(format!("Failed to access logs: {}", e)))?;
 
@@ -278,7 +278,7 @@ pub async fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
 
 async fn check_adb_server() -> Result<bool, BearDogError> {
     let output = std::process::Command::new("adb")
-        .args(&["start-server"])
+        .args(["start-server"])
         .output()
         .map_err(|e| BearDogError::system(format!("Failed to start adb server: {}", e)))?;
 

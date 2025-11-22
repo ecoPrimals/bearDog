@@ -47,35 +47,35 @@ fn main() -> Result<(), BearDogError> {
 
     println!("🚀 Integration Status:");
     println!("   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
+
     #[cfg(target_os = "android")]
     {
         println!("   ✅ Compiled for Android");
         println!("   ✅ JNI bridge available");
         println!("   ⚙️  Phase 2: Implement JNI calls");
     }
-    
+
     #[cfg(not(target_os = "android"))]
     {
         println!("   ⚠️  Not compiled for Android");
         println!("   ⚠️  JNI bridge unavailable");
         println!("   💡 Run on Android device to enable");
     }
-    
+
     println!();
 
     println!("╔═══════════════════════════════════════════════════════════╗");
     println!("║              Detection Complete!                          ║");
     println!("╚═══════════════════════════════════════════════════════════╝");
     println!();
-    
+
     println!("📊 Summary:");
     println!("   - Device: Pixel 8a with GrapheneOS");
     println!("   - StrongBox: Level 300 (Full support)");
     println!("   - Titan M2: Available");
     println!("   - Status: ✅ Ready for implementation");
     println!();
-    
+
     println!("🎯 Next Steps:");
     println!("   1. Complete JNI bridge implementation");
     println!("   2. Test key generation");
@@ -86,4 +86,3 @@ fn main() -> Result<(), BearDogError> {
 
     Ok(())
 }
-

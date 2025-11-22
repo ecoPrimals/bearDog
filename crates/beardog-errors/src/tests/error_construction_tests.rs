@@ -2,7 +2,7 @@
 //!
 //! Tests all error constructor methods and basic error handling.
 
-use crate::{BearDogError, BearDogResult};
+use crate::BearDogError;
 
 #[test]
 fn test_security_error_construction() {
@@ -196,7 +196,7 @@ fn test_error_serialization() {
 // TEST_DOMAIN: errors
 // TEST_PRIORITY: important
 fn test_result_type_ok() {
-    fn returns_ok() -> BearDogResult<String> {
+    fn returns_ok() -> Result<String, BearDogError> {
         Ok("success".to_string())
     }
 
@@ -210,7 +210,7 @@ fn test_result_type_ok() {
 // TEST_PRIORITY: important
 #[test]
 fn test_result_type_err() {
-    fn returns_err() -> BearDogResult<String> {
+    fn returns_err() -> Result<String, BearDogError> {
         Err(BearDogError::security("Failed".to_string()))
     }
     // TEST_CATEGORY: integration
@@ -226,14 +226,14 @@ fn test_result_type_err() {
 // TEST_DOMAIN: errors
 // TEST_PRIORITY: important
 fn test_error_propagation() {
-    fn inner_function() -> BearDogResult<i32> {
+    fn inner_function() -> Result<i32, BearDogError> {
         Err(BearDogError::security("Inner error".to_string()))
     }
 
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
-    fn outer_function() -> BearDogResult<String> {
+    fn outer_function() -> Result<String, BearDogError> {
         let _value = inner_function()?;
         Ok("success".to_string())
     }
@@ -340,7 +340,7 @@ fn test_error_in_option_chain() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
-    fn may_fail(should_fail: bool) -> BearDogResult<Option<String>> {
+    fn may_fail(should_fail: bool) -> Result<Option<String>, BearDogError> {
         if should_fail {
             return Err(BearDogError::security("Failed".to_string()));
         }
@@ -389,14 +389,14 @@ fn test_all_constructor_methods_exist() {
 
 #[test]
 fn test_error_from_result_chain() {
-    fn step1() -> BearDogResult<i32> {
+    fn step1() -> Result<i32, BearDogError> {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
         Ok(42)
     }
 
-    fn step2(value: i32) -> BearDogResult<String> {
+    fn step2(value: i32) -> Result<String, BearDogError> {
         if value == 42 {
             Ok("success".to_string())
         } else {
@@ -404,7 +404,7 @@ fn test_error_from_result_chain() {
         }
     }
 
-    fn pipeline() -> BearDogResult<String> {
+    fn pipeline() -> Result<String, BearDogError> {
         let value = step1()?;
         step2(value)
     }

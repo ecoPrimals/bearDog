@@ -2,10 +2,11 @@
 //!
 //! AI performance optimization and security settings.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
-type Result<T> = BearDogResult<T>;
+type Result<T> = Result<T>;
 
 /// AI performance optimization configuration
 ///

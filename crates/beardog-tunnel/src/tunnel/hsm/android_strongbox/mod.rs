@@ -8,7 +8,8 @@ use tracing::info;
 
 pub mod safe_device_detection;
 pub mod types;
-// TODO: Fix corruption in safe_keystore_replacement.rs before re-enabling
+// NOTE: safe_keystore_replacement has file corruption - re-disabled pending cleanup
+// PHASE-2: Reconstruct file from safe_native_wrapper (which provides same functionality)
 // pub mod safe_keystore_replacement;
 pub mod core;
 pub mod safe_android_provider;

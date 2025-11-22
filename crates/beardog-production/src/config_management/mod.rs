@@ -10,7 +10,7 @@
 //! - **Secure by Default**: Production-ready security configurations
 //! - **Multi-Source**: Environment, files, secrets managers, container orchestration
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::config::production::environment::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

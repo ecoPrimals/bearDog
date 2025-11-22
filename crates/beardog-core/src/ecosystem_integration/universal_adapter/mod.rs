@@ -15,8 +15,8 @@
 //!
 //! ## Module Organization
 //!
-//! - [`types`] - Core types, enums, and data structures
-//! - [`config`] - Configuration structures and defaults
+//! - `types` - Core types, enums, and data structures
+//! - Configuration structures and defaults
 // - `core` - Core adapter implementation
 // - `production` - Production-ready adapter with enhanced features
 // - `connection` - Connection management and pooling

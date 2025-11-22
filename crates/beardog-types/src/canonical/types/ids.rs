@@ -96,7 +96,7 @@ impl KeyId {
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
     }
-    
+
     /// Checks if the ID contains a substring
     pub fn contains(&self, pat: &str) -> bool {
         self.0.contains(pat)
@@ -262,7 +262,7 @@ mod tests {
     fn test_different_types_are_not_interchangeable() {
         let key_id = KeyId::new("id-123");
         let _instance_id = ServiceInstanceId::new("id-123");
-        
+
         // This test verifies that the types are distinct
         // If you try to assign instance_id to a KeyId variable, it won't compile
         assert_eq!(key_id.as_str(), "id-123");
@@ -273,7 +273,7 @@ mod tests {
         let key_id = KeyId::new("serialize-test");
         let json = serde_json::to_string(&key_id).unwrap();
         assert_eq!(json, "\"serialize-test\"");
-        
+
         let deserialized: KeyId = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized, key_id);
     }
@@ -281,18 +281,176 @@ mod tests {
     #[test]
     fn test_hash_and_eq() {
         use std::collections::HashSet;
-        
+
         let id1 = KeyId::new("same-id");
         let id2 = KeyId::new("same-id");
         let id3 = KeyId::new("different-id");
-        
+
         assert_eq!(id1, id2);
         assert_ne!(id1, id3);
-        
+
         let mut set = HashSet::new();
         set.insert(id1.clone());
         assert!(set.contains(&id2));
         assert!(!set.contains(&id3));
     }
-}
 
+    #[test]
+    fn test_key_id_into_inner() {
+        let key_id = KeyId::new("extract-me");
+        let inner = key_id.into_inner();
+        assert_eq!(inner, "extract-me");
+    }
+
+    #[test]
+    fn test_key_id_as_bytes() {
+        let key_id = KeyId::new("bytes-test");
+        let bytes = key_id.as_bytes();
+        assert_eq!(bytes, b"bytes-test");
+    }
+
+    #[test]
+    fn test_key_id_contains() {
+        let key_id = KeyId::new("hsm-key-ed25519-2024");
+        assert!(key_id.contains("ed25519"));
+        assert!(key_id.contains("hsm"));
+        assert!(!key_id.contains("rsa"));
+    }
+
+    #[test]
+    fn test_key_id_as_ref() {
+        let key_id = KeyId::new("ref-test");
+        let as_ref: &str = key_id.as_ref();
+        assert_eq!(as_ref, "ref-test");
+    }
+
+    #[test]
+    fn test_key_id_borrow() {
+        use std::collections::HashMap;
+
+        let key_id = KeyId::new("borrow-test");
+        let mut map = HashMap::new();
+        map.insert(key_id.clone(), "value");
+
+        // Borrow trait allows using &str to query HashMap<KeyId, _>
+        assert_eq!(map.get("borrow-test" as &str), Some(&"value"));
+    }
+
+    #[test]
+    fn test_key_id_clone() {
+        let key_id1 = KeyId::new("clone-test");
+        let key_id2 = key_id1.clone();
+        assert_eq!(key_id1, key_id2);
+    }
+
+    #[test]
+    fn test_key_id_debug_format() {
+        let key_id = KeyId::new("debug-test");
+        let debug_str = format!("{:?}", key_id);
+        assert!(debug_str.contains("debug-test"));
+    }
+
+    #[test]
+    fn test_service_instance_id_into_inner() {
+        let instance = ServiceInstanceId::new("instance-extract");
+        let inner = instance.into_inner();
+        assert_eq!(inner, "instance-extract");
+    }
+
+    #[test]
+    fn test_service_instance_id_conversions() {
+        let instance1: ServiceInstanceId = "instance-from-str".into();
+        let instance2: ServiceInstanceId = String::from("instance-from-string").into();
+
+        assert_eq!(instance1.as_str(), "instance-from-str");
+        assert_eq!(instance2.as_str(), "instance-from-string");
+    }
+
+    #[test]
+    fn test_service_instance_id_as_ref() {
+        let instance = ServiceInstanceId::new("instance-ref");
+        let as_ref: &str = instance.as_ref();
+        assert_eq!(as_ref, "instance-ref");
+    }
+
+    #[test]
+    fn test_service_instance_id_display() {
+        let instance = ServiceInstanceId::new("display-test");
+        assert_eq!(format!("{}", instance), "display-test");
+    }
+
+    #[test]
+    fn test_registration_id_into_inner() {
+        let reg = RegistrationId::new("reg-extract");
+        let inner = reg.into_inner();
+        assert_eq!(inner, "reg-extract");
+    }
+
+    #[test]
+    fn test_registration_id_conversions() {
+        let reg1: RegistrationId = "reg-from-str".into();
+        let reg2: RegistrationId = String::from("reg-from-string").into();
+
+        assert_eq!(reg1.as_str(), "reg-from-str");
+        assert_eq!(reg2.as_str(), "reg-from-string");
+    }
+
+    #[test]
+    fn test_registration_id_as_ref() {
+        let reg = RegistrationId::new("reg-ref");
+        let as_ref: &str = reg.as_ref();
+        assert_eq!(as_ref, "reg-ref");
+    }
+
+    #[test]
+    fn test_registration_id_display() {
+        let reg = RegistrationId::new("reg-display");
+        assert_eq!(format!("{}", reg), "reg-display");
+    }
+
+    #[test]
+    fn test_empty_ids() {
+        let key_id = KeyId::new("");
+        let instance_id = ServiceInstanceId::new("");
+        let reg_id = RegistrationId::new("");
+
+        assert_eq!(key_id.as_str(), "");
+        assert_eq!(instance_id.as_str(), "");
+        assert_eq!(reg_id.as_str(), "");
+    }
+
+    #[test]
+    fn test_special_characters_in_ids() {
+        let key_id = KeyId::new("key-with-dashes-and_underscores.123");
+        assert!(key_id.contains("dashes"));
+        assert!(key_id.contains("underscores"));
+        assert!(key_id.contains(".123"));
+    }
+
+    #[test]
+    fn test_unicode_in_ids() {
+        let key_id = KeyId::new("key-with-emoji-🔑");
+        assert!(key_id.contains("emoji"));
+        assert_eq!(key_id.as_str(), "key-with-emoji-🔑");
+    }
+
+    #[test]
+    fn test_all_id_types_equality() {
+        let key1 = KeyId::new("test-id");
+        let key2 = KeyId::new("test-id");
+        let key3 = KeyId::new("different-id");
+
+        assert_eq!(key1, key2);
+        assert_ne!(key1, key3);
+
+        let inst1 = ServiceInstanceId::new("test-id");
+        let inst2 = ServiceInstanceId::new("test-id");
+
+        assert_eq!(inst1, inst2);
+
+        let reg1 = RegistrationId::new("test-id");
+        let reg2 = RegistrationId::new("test-id");
+
+        assert_eq!(reg1, reg2);
+    }
+}

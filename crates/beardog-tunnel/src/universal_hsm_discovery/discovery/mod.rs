@@ -185,7 +185,7 @@ mod tests {
     async fn test_discovery() -> Result<(), BearDogError> {
         let engine = DiscoveryEngine::new()?;
         let hsms = engine.discover_all().await?;
-        assert!(hsms.is_empty()); // TODO: should find some when implemented
+        assert!(hsms.is_empty()); // PHASE-2(Discovery): Will find HSMs when probers implemented
         Ok(())
     }
 }

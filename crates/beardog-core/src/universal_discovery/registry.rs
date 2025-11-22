@@ -43,6 +43,10 @@ impl Default for ServiceRegistryConfig {
     }
 }
 
+/// Extended service information with additional metadata and health status
+///
+/// Combines basic service information with network address, tags, metadata,
+/// and current health status for comprehensive service tracking.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExtendedServiceInfo {
     /// The service info value

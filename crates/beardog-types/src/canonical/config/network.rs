@@ -190,63 +190,70 @@ pub struct ServicePorts {
 
 impl Default for ServicePorts {
     fn default() -> Self {
+        use beardog_config::domains::network_ports::{
+            DEFAULT_ADMIN_PORT, DEFAULT_AI_PORT, DEFAULT_API_PORT, DEFAULT_COMPUTE_PORT,
+            DEFAULT_DATABASE_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_GRAFANA_PORT,
+            DEFAULT_HEALTH_PORT, DEFAULT_JAEGER_PORT, DEFAULT_MESH_PORT, DEFAULT_METRICS_PORT,
+            DEFAULT_SECURITY_PORT, DEFAULT_STORAGE_PORT, DEFAULT_WEBSOCKET_PORT,
+        };
+
         Self {
             api_port: std::env::var("BEARDOG_API_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(DEFAULT_API_PORT),
             admin_port: std::env::var("BEARDOG_ADMIN_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8081),
+                .unwrap_or(DEFAULT_ADMIN_PORT),
             metrics_port: std::env::var("BEARDOG_METRICS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(9090),
+                .unwrap_or(DEFAULT_METRICS_PORT),
             websocket_port: std::env::var("BEARDOG_WS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8082),
+                .unwrap_or(DEFAULT_WEBSOCKET_PORT),
             health_port: std::env::var("BEARDOG_HEALTH_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8083),
+                .unwrap_or(DEFAULT_HEALTH_PORT),
             compute_port: std::env::var("BEARDOG_COMPUTE_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8001),
+                .unwrap_or(DEFAULT_COMPUTE_PORT),
             mesh_port: std::env::var("BEARDOG_MESH_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8002),
+                .unwrap_or(DEFAULT_MESH_PORT),
             ai_port: std::env::var("BEARDOG_AI_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8003),
+                .unwrap_or(DEFAULT_AI_PORT),
             storage_port: std::env::var("BEARDOG_STORAGE_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8004),
+                .unwrap_or(DEFAULT_STORAGE_PORT),
             security_port: std::env::var("BEARDOG_SECURITY_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8005),
+                .unwrap_or(DEFAULT_SECURITY_PORT),
             database_port: std::env::var("BEARDOG_DATABASE_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(5432),
+                .unwrap_or(DEFAULT_DATABASE_PORT),
             grafana_port: std::env::var("BEARDOG_GRAFANA_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(3000),
+                .unwrap_or(DEFAULT_GRAFANA_PORT),
             jaeger_port: std::env::var("BEARDOG_JAEGER_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(14268),
+                .unwrap_or(DEFAULT_JAEGER_PORT),
             discovery_port: std::env::var("BEARDOG_DISCOVERY_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(DEFAULT_DISCOVERY_PORT),
         }
     }
 }

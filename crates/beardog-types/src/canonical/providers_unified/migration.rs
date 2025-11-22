@@ -205,20 +205,5 @@ impl From<CacheStats> for super::traits::ProviderMetrics {
     }
 }
 
-/// Migration helper functions
-pub mod helpers {
-    use super::{CacheStats, ServiceHealth};
-    use crate::canonical::providers_unified::traits;
-
-    /// Convert legacy provider health to unified health
-    #[must_use]
-    pub fn migrate_health_status(legacy: ServiceHealth) -> traits::ProviderHealth {
-        legacy.into()
-    }
-
-    /// Convert legacy cache stats to unified metrics
-    #[must_use]
-    pub fn migrate_cache_stats(legacy: CacheStats) -> traits::ProviderMetrics {
-        legacy.into()
-    }
-}
+// Migration helpers removed Nov 11, 2025 - Zero active usage confirmed
+// Migration is complete - all consumers use unified traits directly

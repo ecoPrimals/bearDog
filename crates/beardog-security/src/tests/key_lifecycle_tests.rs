@@ -29,15 +29,15 @@ fn test_key_generation_uniqueness() {
     }
 }
 
-/// Test key derivation from master key
+/// Test key derivation from root key
 #[test]
 fn test_key_derivation() {
-    let master_key = b"master_secret_key";
+    let root_key = b"root_secret_key";
     let salt1 = b"context_1";
     let salt2 = b"context_2";
 
-    let derived1 = derive_key_from_password(master_key, salt1, 1000).unwrap();
-    let derived2 = derive_key_from_password(master_key, salt2, 1000).unwrap();
+    let derived1 = derive_key_from_password(root_key, salt1, 1000).unwrap();
+    let derived2 = derive_key_from_password(root_key, salt2, 1000).unwrap();
 
     assert_ne!(
         derived1, derived2,

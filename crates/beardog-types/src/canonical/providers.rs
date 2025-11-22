@@ -21,7 +21,8 @@
 // - **Type Safety**: Strongly typed with comprehensive error handling
 // - **Ecosystem Integration**: Built for ecosystem relationship patterns
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -308,7 +309,7 @@ impl ProviderRegistry {
         &mut self,
         provider_info: ProviderInfo,
         capabilities: Vec<ProviderCapability>,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
                     if self.providers.len() >= self.config.max_providers {
                 return Err(BearDogError::system("Provider registry at capacity".to_string()));
             }
@@ -352,7 +353,7 @@ impl ProviderRegistry {
         &mut self,
         provider_id: &str,
         health: ProviderHealth,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
                     let provider = self.providers.get_mut(provider_id)
                 .ok_or_else(|| BearDogError::business("Provider not found".to_string()))?;
             
@@ -366,7 +367,7 @@ impl ProviderRegistry {
         &mut self,
         provider_id: &str,
         relationship: ProviderRelationship,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         self.relationships
             .entry(provider_id.to_string())
             .or_insert_with(Vec::new)

@@ -33,6 +33,7 @@ use std::fmt::Debug;
 /// Core functionality
 pub mod core;
 pub mod genetics;
+pub mod hsm_multi_credential;
 pub mod identity;
 pub mod monitoring;
 pub mod network;
@@ -44,6 +45,7 @@ pub mod workflow; // NEW: Unified provider trait system
 // Re-export unified traits
 pub use core::*;
 pub use genetics::*;
+pub use hsm_multi_credential::*;
 pub use security::*;
 
 // **NEW**: Re-export unified provider traits (these replace all scattered provider traits)

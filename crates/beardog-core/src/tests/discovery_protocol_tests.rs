@@ -11,17 +11,20 @@ mod discovery_protocol_tests {
 
     #[test]
     fn test_http_protocol_creation() {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+        
         let mut headers = HashMap::new();
         headers.insert("Authorization".to_string(), "Bearer token123".to_string());
         
+        let endpoint = format!("http://localhost:{}/discovery", DEFAULT_API_PORT);
         let protocol = DiscoveryProtocol::Http {
-            endpoint: "http://localhost:8080/discovery".to_string(),
+            endpoint: endpoint.clone(),
             headers: headers.clone(),
         };
 
         match protocol {
-            DiscoveryProtocol::Http { endpoint, headers: h } => {
-                assert_eq!(endpoint, "http://localhost:8080/discovery");
+            DiscoveryProtocol::Http { endpoint: ep, headers: h } => {
+                assert_eq!(ep, endpoint);
                 assert_eq!(h.get("Authorization"), Some(&"Bearer token123".to_string()));
             }
             _ => panic!("Expected HTTP protocol"),
@@ -44,20 +47,23 @@ mod discovery_protocol_tests {
 
     #[test]
     fn test_http_protocol_serialization() {
+        use beardog_config::domains::network_ports::DEFAULT_DISCOVERY_PORT;
+        
+        let endpoint = format!("http://localhost:{}", DEFAULT_DISCOVERY_PORT);
         let protocol = DiscoveryProtocol::Http {
-            endpoint: "http://localhost:9090".to_string(),
+            endpoint: endpoint.clone(),
             headers: HashMap::new(),
         };
 
         let json = serde_json::to_string(&protocol).expect("Serialization failed");
         let deserialized: DiscoveryProtocol = serde_json::from_str(&json).expect("Deserialization failed");
- // TEST_CATEGORY: integration
- // TEST_DOMAIN: core
- // TEST_PRIORITY: normal
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
         match deserialized {
-            DiscoveryProtocol::Http { endpoint, .. } => {
-                assert_eq!(endpoint, "http://localhost:9090");
+            DiscoveryProtocol::Http { endpoint: ep, .. } => {
+                assert_eq!(ep, endpoint);
             }
             _ => panic!("Deserialization produced wrong variant"),
         }
@@ -254,13 +260,16 @@ mod discovery_protocol_tests {
 
     #[test]
     fn test_protocol_equality() {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+        
+        let endpoint = format!("http://localhost:{}", DEFAULT_API_PORT);
         let http1 = DiscoveryProtocol::Http {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: endpoint.clone(),
             headers: HashMap::new(),
         };
 
         let http2 = DiscoveryProtocol::Http {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: endpoint.clone(),
             // TEST_CATEGORY: integration
             // TEST_DOMAIN: core
             // TEST_PRIORITY: normal
@@ -272,13 +281,15 @@ mod discovery_protocol_tests {
 
     #[test]
     fn test_protocol_inequality() {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+        
         let http = DiscoveryProtocol::Http {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
             headers: HashMap::new(),
         };
- // TEST_CATEGORY: integration
- // TEST_DOMAIN: core
- // TEST_PRIORITY: normal
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
         let dns = DiscoveryProtocol::Dns {
             domain: "localhost".to_string(),
@@ -294,14 +305,15 @@ mod discovery_protocol_tests {
 
     #[test]
     fn test_protocol_hashable() {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
         use std::collections::HashSet;
- // TEST_CATEGORY: integration
- // TEST_DOMAIN: core
- // TEST_PRIORITY: normal
+// TEST_CATEGORY: integration
+// TEST_DOMAIN: core
+// TEST_PRIORITY: normal
 
         let protocols = vec![
             DiscoveryProtocol::Http {
-                endpoint: "http://localhost:8080".to_string(),
+                endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
                 headers: HashMap::new(),
             },
             DiscoveryProtocol::Dns {

@@ -61,11 +61,11 @@ mod tests {
         assert!(result.is_err(), "International export should be restricted");
 
         // Test key derivation sovereignty
-        let master_key = KeyLocation::new("master", KeyStorage::LocalOnly);
-        let derived_key = crypto_policy.derive_key(&master_key, b"context").unwrap();
+        let root_key = KeyLocation::new("root", KeyStorage::LocalOnly);
+        let derived_key = crypto_policy.derive_key(&root_key, b"context").unwrap();
 
         assert_eq!(derived_key.storage(), KeyStorage::LocalOnly);
-        assert_ne!(derived_key.id(), master_key.id());
+        assert_ne!(derived_key.id(), root_key.id());
 
         // Test encryption method validation
         let valid_encryption = EncryptionMethod::new(Algorithm::AES256, 256);

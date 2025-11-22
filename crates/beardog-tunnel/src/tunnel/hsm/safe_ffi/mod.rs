@@ -15,7 +15,8 @@ pub mod biometric;
 pub mod ios_safe;
 pub mod traits;
 
-pub use traits::*;
+// Export traits but be careful about HsmKey re-export
+pub use traits::{BiometricAuthProvider, PlatformSecurityProvider};
 
 /// Safe platform security provider
 ///

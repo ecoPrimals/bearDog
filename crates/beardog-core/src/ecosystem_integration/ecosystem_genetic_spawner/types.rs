@@ -431,6 +431,7 @@ pub enum NodeHealthStatus {
     Initializing,
     /// Node is operating normally with all systems functional
     Healthy,
+    /// Node is operational but experiencing reduced performance or partial failures
     Degraded,
     /// Node has critical issues requiring immediate attention
     Critical,

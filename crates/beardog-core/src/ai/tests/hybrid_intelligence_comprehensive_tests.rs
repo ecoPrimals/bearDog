@@ -246,13 +246,13 @@ fn test_config_human_feedback_weight() {
 fn test_decision_engine_initialization() {
     let _config = HybridIntelligenceConfig::default();
 
-    // TODO: Add real decision engine initialization test
+    // PHASE-2(AI-Testing): Add real decision engine initialization test
 }
 
 #[test]
 fn test_decision_with_high_confidence() {
     // High confidence decisions should be automated
-    // TODO: Add real high confidence decision test
+    // PHASE-2(AI-Testing): Add real high confidence decision test
 }
 // TEST_CATEGORY: integration
 // TEST_DOMAIN: core
@@ -264,7 +264,7 @@ fn test_decision_with_low_confidence() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    // TODO: Add real low confidence decision test
+    // PHASE-2(AI-Testing): Add real low confidence decision test
 }
 
 // TEST_CATEGORY: integration
@@ -276,7 +276,7 @@ fn test_decision_timeout_handling() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    // TODO: Add real timeout handling test
+    // PHASE-2(AI-Testing): Add real timeout handling test
 }
 
 // TEST_CATEGORY: integration
@@ -285,7 +285,7 @@ fn test_decision_timeout_handling() {
 #[test]
 fn test_decision_fallback_strategy() {
     // Should have fallback when AI unavailable
-    // TODO: Add real fallback strategy test
+    // PHASE-2(AI-Testing): Add real fallback strategy test
 }
 
 // ============================================================================

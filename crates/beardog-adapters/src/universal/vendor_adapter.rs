@@ -2,7 +2,7 @@
 //!
 //! This module provides vendor-specific adapter functionality for the BearDog ecosystem.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -99,7 +99,7 @@ impl VendorAdapter {
     }
 
     /// Processes a vendor request
-    pub async fn process_request(&mut self, request: VendorRequest) -> BearDogResult<VendorResponse> {
+    pub async fn process_request(&mut self, request: VendorRequest) -> Result<VendorResponse> {
         self.metrics.total_requests += 1;
 
         let response = match request.operation.as_str() {
@@ -180,7 +180,7 @@ pub struct UniversalVendorAdapter {
 
 impl UniversalVendorAdapter {
     /// Creates a new universal vendor adapter
-    pub fn new(config: UniversalAdapterConfig) -> BearDogResult<Self> {
+    pub fn new(config: UniversalAdapterConfig) -> Result<Self> {
         Ok(Self {
             adapters: HashMap::new(),
             config,
@@ -198,7 +198,7 @@ impl UniversalVendorAdapter {
         &mut self,
         vendor_id: &str,
         request: VendorRequest,
-    ) -> BearDogResult<VendorResponse> {
+    ) -> Result<VendorResponse> {
         match self.adapters.get_mut(vendor_id) {
             Some(adapter) => adapter.process_request(request).await,
             None => Err(BearDogError::system(format!("Vendor not found: {}", vendor_id))),

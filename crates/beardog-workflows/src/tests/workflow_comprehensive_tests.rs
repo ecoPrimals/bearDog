@@ -213,13 +213,13 @@ mod workflow_error_handling_tests {
     #[test]
     #[ignore = "Placeholder: Implement when error propagation is ready"]
     fn test_workflow_error_propagation() {
-        // TODO: Error propagation through workflow
+        // PHASE-2(Testing): Error propagation through workflow
     }
 
     #[test]
     #[ignore = "Placeholder: Implement when retry logic is ready"]
     fn test_workflow_retry_logic() {
-        // TODO: Retry logic for failed steps
+        // PHASE-2(Testing): Retry logic for failed steps
     }
 
     #[test]
@@ -228,7 +228,7 @@ mod workflow_error_handling_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: workflows
         // TEST_PRIORITY: important
-        // TODO: Recovery from errors
+        // PHASE-2(Testing): Recovery from errors
     }
 }
 // TEST_CATEGORY: integration
@@ -243,7 +243,7 @@ mod workflow_integration_tests {
     #[test]
     #[ignore = "Placeholder: Implement when security integration is ready"]
     fn test_workflow_with_security() {
-        // TODO: Integration with security module
+        // PHASE-2(Testing): Integration with security module
     }
 
     // TEST_CATEGORY: integration
@@ -255,7 +255,7 @@ mod workflow_integration_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: workflows
         // TEST_PRIORITY: normal
-        // TODO: Integration with monitoring
+        // PHASE-2(Testing): Integration with monitoring
     }
 
     // TEST_CATEGORY: integration
@@ -264,6 +264,6 @@ mod workflow_integration_tests {
     #[test]
     #[ignore = "Placeholder: Implement when end-to-end workflow is ready"]
     fn test_workflow_end_to_end() {
-        // TODO: End-to-end workflow execution
+        // PHASE-2(Testing): End-to-end workflow execution
     }
 }

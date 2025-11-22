@@ -1,9 +1,5 @@
-//! Domain Configuration Tests
+//! Tests for Canonical Config Domains
 //!
-//! Comprehensive test suite for all configuration domains
+//! This module contains comprehensive tests for all configuration domains.
 
-#[cfg(test)]
-mod environment_variable_tests;
-
-#[cfg(test)]
-mod discovery_tests;
+mod config_modernization_tests;

@@ -1,5 +1,6 @@
 // Comprehensive tests for zero-cost type abstractions
 
+use beardog_errors::BearDogError;
 use super::*;
 use beardog_errors::BearDogResult;
 

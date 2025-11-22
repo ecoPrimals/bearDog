@@ -2,7 +2,8 @@
 //
 // Neural network-based learning system for adaptive sovereignty patterns
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
@@ -151,7 +152,7 @@ impl SovereigntyLearningEngine {
     }
 
     /// Train the neural network
-    pub fn train(&mut self) -> BearDogResult<()> {
+    pub fn train(&mut self) -> Result<(), BearDogError> {
         info!("Starting sovereignty learning engine training");
 
         if self.training_data.is_empty() {
@@ -190,12 +191,12 @@ impl SovereigntyLearningEngine {
     }
 
     /// Predict sovereignty pattern
-    pub fn predict(&self, features: &[f64]) -> BearDogResult<Vec<f64>> {
+    pub fn predict(&self, features: &[f64]) -> Result<Vec<f64>> {
         self.forward_pass(features)
     }
 
     /// Forward pass through neural network
-    fn forward_pass(&self, input: &[f64]) -> BearDogResult<Vec<f64>> {
+    fn forward_pass(&self, input: &[f64]) -> Result<Vec<f64>> {
         let mut current_input = input.to_vec();
 
         for layer in &self.neural_layers {
@@ -206,7 +207,7 @@ impl SovereigntyLearningEngine {
     }
 
     /// Forward pass through a single layer
-    fn layer_forward(&self, input: &[f64], layer: &NeuralLayer) -> BearDogResult<Vec<f64>> {
+    fn layer_forward(&self, input: &[f64], layer: &NeuralLayer) -> Result<Vec<f64>> {
         let mut output = Vec::new();
 
         for (i, bias) in layer.biases.iter().enumerate() {
@@ -249,7 +250,7 @@ impl SovereigntyLearningEngine {
         _input: &[f64],
         _expected: &[f64],
         _prediction: &[f64],
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         // Simplified weight update - in a real implementation this would
         // calculate gradients and update weights accordingly
         for layer in &mut self.neural_layers {
@@ -263,7 +264,7 @@ impl SovereigntyLearningEngine {
     }
 
     /// Extract learned pattern
-    pub fn extract_pattern(&mut self, pattern_id: String) -> BearDogResult<SovereigntyPattern> {
+    pub fn extract_pattern(&mut self, pattern_id: String) -> Result<SovereigntyPattern> {
         let pattern = SovereigntyPattern {
             pattern_id: pattern_id.clone(),
             description: "Learned sovereignty pattern".to_string(),

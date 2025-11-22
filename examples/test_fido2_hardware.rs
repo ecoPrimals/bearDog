@@ -39,7 +39,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  Product:      {}", device.product);
                     println!("  Manufacturer: {}", device.manufacturer);
                     println!("  Path:         {:?}", device.device_path);
-                    println!("  VID:PID:      {:04X}:{:04X}", device.vendor_id, device.product_id);
+                    println!(
+                        "  VID:PID:      {:04X}:{:04X}",
+                        device.vendor_id, device.product_id
+                    );
 
                     if let Some(serial) = &device.serial {
                         println!("  Serial:       {}", serial);
@@ -56,11 +59,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     println!("\n  Capabilities:");
-                    println!("    Resident Keys:     {}", device.capabilities.resident_keys);
-                    println!("    User Presence:     {}", device.capabilities.user_presence);
-                    println!("    User Verification: {}", device.capabilities.user_verification);
+                    println!(
+                        "    Resident Keys:     {}",
+                        device.capabilities.resident_keys
+                    );
+                    println!(
+                        "    User Presence:     {}",
+                        device.capabilities.user_presence
+                    );
+                    println!(
+                        "    User Verification: {}",
+                        device.capabilities.user_verification
+                    );
                     println!("    HMAC-Secret:       {}", device.capabilities.hmac_secret);
-                    println!("    Max Message Size:  {} bytes", device.capabilities.max_msg_size);
+                    println!(
+                        "    Max Message Size:  {} bytes",
+                        device.capabilities.max_msg_size
+                    );
 
                     println!();
                 }
@@ -85,4 +100,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

@@ -74,7 +74,9 @@ where
             return Ok(());
         }
 
-        tokio::time::sleep(check_interval).await;
+        // For tests requiring timing control, use tokio::time::pause() + advance()
+        // In production, this would be tokio::time::sleep(check_interval).await
+        tokio::task::yield_now().await; // Yield to prevent busy-waiting
     }
 
     Err(BearDogError::internal(
@@ -89,8 +91,7 @@ pub async fn simulate_api_request(
 ) -> Result<SimulatedResponse, BearDogError> {
     info!("Simulating API request to: {}", endpoint);
 
-    // Simulate network latency
-    tokio::time::sleep(Duration::from_millis(10)).await;
+    // Simulate network latency (instant in tests, would be I/O in production)
 
     Ok(SimulatedResponse {
         status_code: 200,
@@ -111,8 +112,7 @@ pub struct SimulatedResponse {
 pub async fn verify_data_integrity(_data_id: &str) -> Result<bool, BearDogError> {
     info!("Verifying data integrity");
 
-    // Simulate data verification
-    tokio::time::sleep(Duration::from_millis(5)).await;
+    // Simulate data verification (instant in tests)
 
     Ok(true)
 }
@@ -138,8 +138,7 @@ pub async fn create_test_data(
 pub async fn cleanup_test_data(_data_ids: &[String]) -> Result<(), BearDogError> {
     info!("Cleaning up test data");
 
-    // Simulate cleanup
-    tokio::time::sleep(Duration::from_millis(5)).await;
+    // Simulate cleanup (instant in tests)
 
     Ok(())
 }
@@ -303,7 +302,8 @@ pub async fn test_real_concurrent_access(core: &Arc<BearDogCore>) -> Result<(), 
         let handle = tokio::spawn(async move {
             for _ in 0..10 {
                 let _state = core_clone.state.read().await;
-                tokio::time::sleep(Duration::from_millis(1)).await;
+                // No sleep needed - testing lock contention, not simulating work
+                tokio::task::yield_now().await; // Allow other tasks to run
             }
             info!("  Reader {} completed", i);
         });

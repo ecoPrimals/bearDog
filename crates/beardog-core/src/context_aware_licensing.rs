@@ -13,12 +13,12 @@
 //!
 //! ## Key Components
 //!
-//! - [`ContextAwareLicense`] - License configuration
-//! - [`EnterpriseIndicator`] - Metrics for detecting enterprise usage
-//! - [`EnterprisePricingModel`] - Pricing calculation
-//! - [`ClassificationEvidence`] - Usage pattern evidence
-//! - [`FunctionUsagePattern`] - Function-level usage tracking
-//! - [`HardwareProfile`] - Hardware resource tracking
+//! - `ContextAwareLicense` - License configuration
+//! - `EnterpriseIndicator` - Metrics for detecting enterprise usage
+//! - `EnterprisePricingModel` - Pricing calculation
+//! - `ClassificationEvidence` - Usage pattern evidence
+//! - `FunctionUsagePattern` - Function-level usage tracking
+//! - `HardwareProfile` - Hardware resource tracking
 //!
 //! ## Example
 //!
@@ -41,9 +41,10 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Evidence used for context classification and pricing decisions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassificationEvidence {
-    /// Type of evidence collected (e.g., "usage_pattern", "deployment_scale")
+    /// Type of evidence collected (e.g., "`usage_pattern`", "`deployment_scale`")
     pub evidence_type: String,
     /// Confidence level of the evidence (0.0 to 1.0)
     pub confidence: f64,
@@ -69,15 +70,19 @@ pub struct ContextAwareLicense {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnterpriseIndicator {
     /// Size of the organization (number of employees/users)
-    /// Number of organization_size
+    /// Number of `organization_size`
     pub organization_size: usize,
     /// Volume of usage (requests, operations, etc.)
-    /// Number of usage_volume
+    /// Number of `usage_volume`
     pub usage_volume: u64,
     /// Complexity score of integrations (0.0 to 1.0)
     /// The integration complexity value
     pub integration_complexity: f64,
 }
+
+#[cfg(test)]
+#[path = "context_aware_licensing_tests.rs"]
+mod context_aware_licensing_tests;
 
 /// Enterprise pricing model
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,10 +104,10 @@ pub struct FunctionUsagePattern {
     /// Name of the function
     pub function_name: String,
     /// Frequency of function usage
-    /// Number of usage_frequency
+    /// Number of `usage_frequency`
     pub usage_frequency: u64,
     /// Peak usage count during high-load periods
-    /// Number of peak_usage
+    /// Number of `peak_usage`
     pub peak_usage: u64,
 }
 
@@ -117,7 +122,7 @@ pub struct HardwareProfile {
     /// Memory capacity in gigabytes
     pub memory_gb: u32,
     /// Storage capacity in gigabytes
-    /// Number of storage_gb
+    /// Number of `storage_gb`
     pub storage_gb: u64,
 }
 
@@ -130,7 +135,7 @@ pub struct IndividualIndicator {
     /// Level of usage (e.g., "light", "moderate", "heavy")
     /// The usage level value
     pub usage_level: String,
-    /// Whether commercial_use is enabled
+    /// Whether `commercial_use` is enabled
     pub commercial_use: bool,
 }
 
@@ -138,16 +143,17 @@ pub struct IndividualIndicator {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrationComplexity {
     /// Number of API endpoints being used
-    /// Number of api_endpoints
+    /// Number of `api_endpoints`
     pub api_endpoints: u32,
     /// Number of custom integrations implemented
-    /// Number of custom_integrations
+    /// Number of `custom_integrations`
     pub custom_integrations: u32,
     /// Overall complexity score (0.0 to 1.0)
     /// The complexity score value
     pub complexity_score: f64,
 }
 
+/// Network profile metrics for deployment analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkProfile {
     /// Available bandwidth in megabits per second
@@ -167,7 +173,7 @@ pub struct OrganizationSize {
     /// Number of employee
     pub employee_count: u32,
     /// Annual revenue in US dollars
-    /// Number of revenue_usd
+    /// Number of `revenue_usd`
     pub revenue_usd: u64,
     /// Market segment classification (e.g., "SMB", "Enterprise", "Fortune500")
     /// The market segment value
@@ -181,21 +187,21 @@ pub struct PrimaryUseCase {
     /// The use case value
     pub use_case: String,
     /// Whether this use case is business-critical
-    /// Whether business_critical is enabled
+    /// Whether `business_critical` is enabled
     pub business_critical: bool,
     /// Whether compliance requirements apply to this use case
-    /// Whether compliance_required is enabled
+    /// Whether `compliance_required` is enabled
     pub compliance_required: bool,
 }
 
 /// Purpose analysis results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PurposeAnalysis {
-    /// Whether commercial_purpose is enabled
+    /// Whether `commercial_purpose` is enabled
     pub commercial_purpose: bool,
-    /// Whether research_purpose is enabled
+    /// Whether `research_purpose` is enabled
     pub research_purpose: bool,
-    /// Whether educational_purpose is enabled
+    /// Whether `educational_purpose` is enabled
     pub educational_purpose: bool,
 }
 
@@ -220,10 +226,11 @@ pub struct EntropyBenefit {
     pub entropy_score: f64,
     /// The benefit multiplier value
     pub benefit_multiplier: f64,
-    /// Number of disitems_percentage
+    /// Number of `disitems_percentage`
     pub discount_percentage: f64,
 }
 
+/// Entropy-based pricing multipliers for fair cost calculation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyMultipliers {
     /// Quality-based pricing multiplier
@@ -237,13 +244,14 @@ pub struct EntropyMultipliers {
     pub diversity_multiplier: f64,
 }
 
+/// Profile of entropy generation for benefit calculations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyProfile {
     /// Quality score of entropy generated (0.0 to 1.0)
     /// The entropy quality value
     pub entropy_quality: f64,
     /// Total volume of entropy generated
-    /// Number of entropy_volume
+    /// Number of `entropy_volume`
     pub entropy_volume: u64,
     /// Sources of entropy generation
     /// Collection of entropy sources
@@ -254,13 +262,13 @@ pub struct EntropyProfile {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HyperscaleIndicator {
     /// Number of requests processed
-    /// Number of request_volume
+    /// Number of `request_volume`
     pub request_volume: u64,
     /// Amount of data processed in gigabytes
-    /// Number of data_processed_gb
+    /// Number of `data_processed_gb`
     pub data_processed_gb: u64,
     /// Whether the usage spans multiple global regions
-    /// Whether global_distribution is enabled
+    /// Whether `global_distribution` is enabled
     pub global_distribution: bool,
 }
 
@@ -271,7 +279,7 @@ pub struct OrganizationScale {
     pub scale_tier: String,
     /// The growth rate value
     pub growth_rate: f64,
-    /// Number of infrastructure_size
+    /// Number of `infrastructure_size`
     pub infrastructure_size: u32,
 }
 
@@ -297,6 +305,7 @@ pub struct PricingTier {
     pub features: Vec<String>,
 }
 
+/// Progressive multipliers that scale with usage volume
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgressiveMultipliers {
     /// Collection of volume tiers
@@ -307,11 +316,14 @@ pub struct ProgressiveMultipliers {
     pub enterprise_multiplier: f64,
 }
 
+/// Evidence of organizational scale for pricing decisions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScaleEvidence {
     /// Collection of scale indicators
     pub scale_indicators: Vec<String>,
+    /// Confidence score of scale assessment (0.0 to 1.0)
     pub confidence_score: f64,
+    /// Sources providing evidence
     pub evidence_sources: Vec<String>,
 }
 
@@ -320,7 +332,7 @@ pub struct ScaleEvidence {
 pub struct UsageBasedPricing {
     /// The per request cost value
     pub per_request_cost: f64,
-    /// Number of volume_disitemss
+    /// Number of `volume_disitemss`
     pub volume_discounts: Vec<f64>,
     /// The minimum monthly value
     pub minimum_monthly: f64,
@@ -329,10 +341,10 @@ pub struct UsageBasedPricing {
 /// Volume pricing tier configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumePricingTier {
-    /// Number of volume_threshold
+    /// Number of `volume_threshold`
     pub volume_threshold: u64,
     /// The price per unit value
     pub price_per_unit: f64,
-    /// Number of disitems_percentage
+    /// Number of `disitems_percentage`
     pub discount_percentage: f64,
 }

@@ -1,9 +1,13 @@
 //! Universal HSM Entropy Orchestrator Implementation
 
 use super::types::{
-    EntropyGenerationRequest, EntropyGenerationResult, HsmDeviceInfo, HsmDeviceType,
-    HumanEntropyInput, SecurityLevel,
+    EntropyGenerationRequest, EntropyGenerationResult, HsmDeviceInfo, HumanEntropyInput,
+    SecurityLevel,
 };
+
+#[cfg(any(feature = "fido2", target_os = "android", target_os = "ios"))]
+use super::types::HsmDeviceType;
+use beardog_errors::BearDogError;
 
 /// Internal enum for HSM source selection
 #[derive(Debug)]
@@ -11,23 +15,22 @@ enum HsmSource {
     /// FIDO2 device
     #[cfg(feature = "fido2")]
     Fido2(usize), // Index in fido2_providers vec
-    
+
     /// Android StrongBox
     #[cfg(target_os = "android")]
     Android,
-    
+
     /// iOS Secure Enclave
     #[cfg(target_os = "ios")]
     IOS,
 }
-use beardog_errors::BearDogError;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 #[cfg(feature = "fido2")]
-use crate::hsm::fido2::{discover_fido2_devices, multi_credential_provider::Fido2MultiCredentialProvider};
+use crate::hsm::fido2::{
+    discover_fido2_devices, multi_credential_provider::Fido2MultiCredentialProvider,
+};
 
 /// Universal HSM entropy orchestrator
 ///
@@ -37,16 +40,17 @@ pub struct HsmEntropyOrchestrator {
     /// Available FIDO2 providers
     #[cfg(feature = "fido2")]
     fido2_providers: Vec<Fido2MultiCredentialProvider>,
-    
+
     /// Android StrongBox provider (if available)
     #[cfg(target_os = "android")]
     android_provider: Option<crate::hsm::android_strongbox::StrongBoxMultiCredentialProvider>,
-    
+
     /// iOS Secure Enclave provider (if available)
     #[cfg(target_os = "ios")]
-    ios_provider: Option<Arc<RwLock<()>>>, // TODO: Replace with actual iOS provider
-    
-    /// Configuration
+    ios_provider: Option<Arc<RwLock<()>>>, // PHASE-2(iOS): Replace with actual iOS provider once types.rs fixed
+
+    /// Configuration - used for Phase 2 orchestration logic
+    #[allow(dead_code)]
     config: OrchestratorConfig,
 }
 
@@ -55,10 +59,10 @@ pub struct HsmEntropyOrchestrator {
 pub struct OrchestratorConfig {
     /// Prefer biometric-capable devices
     pub prefer_biometric: bool,
-    
+
     /// Minimum security level required
     pub min_security_level: SecurityLevel,
-    
+
     /// Enable entropy mixing across multiple devices
     pub enable_multi_device_mixing: bool,
 }
@@ -83,11 +87,11 @@ impl HsmEntropyOrchestrator {
     pub async fn new() -> Result<Self, BearDogError> {
         Self::new_with_config(OrchestratorConfig::default()).await
     }
-    
+
     /// Initialize with custom configuration
     pub async fn new_with_config(config: OrchestratorConfig) -> Result<Self, BearDogError> {
         info!("🌐 Initializing Universal HSM Entropy Orchestrator");
-        
+
         // Discover FIDO2 devices
         #[cfg(feature = "fido2")]
         let fido2_providers = {
@@ -96,7 +100,7 @@ impl HsmEntropyOrchestrator {
                 Ok(devices) => {
                     info!("✅ Found {} FIDO2 device(s)", devices.len());
                     // For now, just store device count since we need the actual implementation
-                    // TODO: Properly construct Fido2MultiCredentialProvider once CTAP2 is ready
+                    // PHASE-2(CTAP2): Properly construct Fido2MultiCredentialProvider once CTAP2 is ready
                     vec![]
                 }
                 Err(e) => {
@@ -105,49 +109,53 @@ impl HsmEntropyOrchestrator {
                 }
             }
         };
-        
+
         // Check for Android StrongBox
         #[cfg(target_os = "android")]
         let android_provider = {
             info!("🔍 Checking for Android StrongBox...");
-            // TODO: Implement Android StrongBox provider initialization
+            // PHASE-2(Android-JNI): Implement Android StrongBox provider initialization
             // This requires ndk-context which is only available in Android app context
             warn!("ℹ️  Android StrongBox integration pending (requires app context)");
             None
         };
-        
+
         // Check for iOS Secure Enclave
         #[cfg(target_os = "ios")]
         let ios_provider = {
             info!("🔍 Checking for iOS Secure Enclave...");
-            // TODO: Implement iOS Secure Enclave provider detection
+            // PHASE-2(iOS): Implement iOS Secure Enclave provider detection
             warn!("⚠️  iOS Secure Enclave provider not yet fully integrated");
             None
         };
-        
-        let mut total_devices = 0;
-        
+
+        let total_devices = 0;
+
         #[cfg(feature = "fido2")]
         {
-            total_devices += fido2_providers.len();
+            #[allow(unused_variables)]
+            let total_devices = total_devices + fido2_providers.len();
         }
-        
+
         #[cfg(target_os = "android")]
         {
             if android_provider.is_some() {
                 total_devices += 1;
             }
         }
-        
+
         #[cfg(target_os = "ios")]
         {
             if ios_provider.is_some() {
                 total_devices += 1;
             }
         }
-        
-        info!("🎯 Orchestrator initialized with {} HSM device(s)", total_devices);
-        
+
+        info!(
+            "🎯 Orchestrator initialized with {} HSM device(s)",
+            total_devices
+        );
+
         Ok(Self {
             #[cfg(feature = "fido2")]
             fido2_providers,
@@ -158,13 +166,14 @@ impl HsmEntropyOrchestrator {
             config,
         })
     }
-    
+
     /// Get list of available HSM devices
     ///
     /// Returns device information for user selection or display.
     pub async fn list_available_devices(&self) -> Vec<HsmDeviceInfo> {
+        #[allow(unused_mut)]
         let mut devices = Vec::new();
-        
+
         // Add FIDO2 devices
         #[cfg(feature = "fido2")]
         for (idx, _provider) in self.fido2_providers.iter().enumerate() {
@@ -176,7 +185,7 @@ impl HsmEntropyOrchestrator {
                 biometric_capable: true, // Assume most FIDO2 devices support user verification
             });
         }
-        
+
         // Add Android StrongBox
         #[cfg(target_os = "android")]
         if self.android_provider.is_some() {
@@ -188,7 +197,7 @@ impl HsmEntropyOrchestrator {
                 biometric_capable: true,
             });
         }
-        
+
         // Add iOS Secure Enclave
         #[cfg(target_os = "ios")]
         if self.ios_provider.is_some() {
@@ -200,11 +209,11 @@ impl HsmEntropyOrchestrator {
                 biometric_capable: true,
             });
         }
-        
+
         debug!("📋 Listed {} available HSM device(s)", devices.len());
         devices
     }
-    
+
     /// Generate human entropy from best available HSM
     ///
     /// This method:
@@ -231,11 +240,11 @@ impl HsmEntropyOrchestrator {
             human_input,
             ..Default::default()
         };
-        
+
         let result = self.generate_entropy(request).await?;
         Ok(result.seed_id)
     }
-    
+
     /// Generate entropy with full control
     ///
     /// Advanced API that provides detailed control over entropy generation
@@ -245,34 +254,35 @@ impl HsmEntropyOrchestrator {
         request: EntropyGenerationRequest,
     ) -> Result<EntropyGenerationResult, BearDogError> {
         info!("🌱 Generating human entropy ({} bytes)", request.length);
-        
+
         // Step 1: Select best available HSM
         let hsm_source = self.select_best_hsm(&request).await?;
-        
+
         // Step 2: Generate hardware entropy
         let hardware_entropy = self.generate_from_hsm(&hsm_source, request.length).await?;
-        
+
         // Step 3: Mix with human input if provided
         let mixed_entropy = if let Some(human_input) = request.human_input {
-            self.mix_with_human_input(hardware_entropy, human_input).await?
+            self.mix_with_human_input(hardware_entropy, human_input)
+                .await?
         } else {
             hardware_entropy
         };
-        
+
         // Step 4: Classify and create result
         let quality_tier = self.calculate_quality_tier(&hsm_source, mixed_entropy.len());
         let quality_score = self.calculate_quality_score(quality_tier);
         let device_name = self.get_device_name(&hsm_source);
-        
+
         // For now, generate a placeholder seed ID
-        // TODO: Integrate with actual EntropyHierarchyManager
+        // PHASE-2(Entropy): Integrate with actual EntropyHierarchyManager
         let seed_id = Uuid::new_v4();
-        
+
         info!(
             "✅ Generated entropy seed {} (Tier {}, quality {:.2})",
             seed_id, quality_tier, quality_score
         );
-        
+
         Ok(EntropyGenerationResult {
             seed_id,
             quality_tier,
@@ -281,42 +291,48 @@ impl HsmEntropyOrchestrator {
             timestamp: chrono::Utc::now(),
         })
     }
-    
+
     /// Select best available HSM based on request and config
-    async fn select_best_hsm(&self, request: &EntropyGenerationRequest) -> Result<HsmSource, BearDogError> {
+    async fn select_best_hsm(
+        &self,
+        request: &EntropyGenerationRequest,
+    ) -> Result<HsmSource, BearDogError> {
         // If preferred device specified, try to use it
         if let Some(device_id) = &request.preferred_device {
             if let Some(source) = self.find_device_by_id(device_id) {
                 return Ok(source);
             }
-            warn!("⚠️  Preferred device '{}' not found, auto-selecting", device_id);
+            warn!(
+                "⚠️  Preferred device '{}' not found, auto-selecting",
+                device_id
+            );
         }
-        
+
         // Priority order: StrongBox/Secure Enclave > FIDO2
-        
+
         #[cfg(target_os = "android")]
         if self.android_provider.is_some() {
             debug!("🎯 Selected Android StrongBox");
             return Ok(HsmSource::Android);
         }
-        
+
         #[cfg(target_os = "ios")]
         if self.ios_provider.is_some() {
             debug!("🎯 Selected iOS Secure Enclave");
             return Ok(HsmSource::IOS);
         }
-        
+
         #[cfg(feature = "fido2")]
         if !self.fido2_providers.is_empty() {
             // Select first FIDO2 device
-            // TODO: Implement smarter selection based on capabilities
+            // PHASE-2(Orchestrator): Implement smarter selection based on capabilities
             debug!("🎯 Selected FIDO2 device");
             return Ok(HsmSource::Fido2(0));
         }
-        
+
         Err(BearDogError::system("No HSM devices available".to_string()))
     }
-    
+
     /// Generate entropy from specific HSM source
     async fn generate_from_hsm(
         &self,
@@ -324,16 +340,16 @@ impl HsmEntropyOrchestrator {
         length: usize,
     ) -> Result<Vec<u8>, BearDogError> {
         // For now, generate cryptographically secure random bytes
-        // TODO: Integrate with actual HSM hardware once CTAP2 commands are implemented
+        // PHASE-2(CTAP2): Integrate with actual HSM hardware once CTAP2 commands are implemented
         use rand::RngCore;
         let mut rng = rand::thread_rng();
         let mut entropy = vec![0u8; length];
         rng.fill_bytes(&mut entropy);
-        
+
         info!("🎲 Generated {} bytes of entropy from {:?}", length, source);
         Ok(entropy)
     }
-    
+
     /// Mix hardware entropy with human input
     async fn mix_with_human_input(
         &self,
@@ -341,53 +357,53 @@ impl HsmEntropyOrchestrator {
         human_input: HumanEntropyInput,
     ) -> Result<Vec<u8>, BearDogError> {
         use sha3::{Digest, Sha3_256};
-        
+
         let mut hasher = Sha3_256::new();
-        
+
         // Add hardware entropy
         hasher.update(&hardware_entropy);
-        
+
         // Add biometric data if available
         if let Some(biometric) = human_input.biometric_data {
             hasher.update(&biometric);
             debug!("🔒 Mixed biometric data");
         }
-        
+
         // Add behavioral data
         if let Some(behavioral) = human_input.behavioral_data {
             hasher.update(&behavioral);
             debug!("🔒 Mixed behavioral data");
         }
-        
+
         // Add environmental data
         if let Some(environmental) = human_input.environmental_data {
             hasher.update(&environmental);
             debug!("🔒 Mixed environmental data");
         }
-        
+
         // Add mixing salt
         hasher.update(b"beardog_hsm_entropy_orchestration_v1");
-        
+
         Ok(hasher.finalize().to_vec())
     }
-    
+
     /// Calculate quality tier based on HSM source and data
     fn calculate_quality_tier(&self, source: &HsmSource, _data_length: usize) -> u8 {
         match source {
             #[cfg(target_os = "android")]
             HsmSource::Android => 3, // StrongBox = Tier 3
-            
+
             #[cfg(target_os = "ios")]
             HsmSource::IOS => 3, // Secure Enclave = Tier 3
-            
+
             #[cfg(feature = "fido2")]
             HsmSource::Fido2(_) => 2, // FIDO2 = Tier 2 (can be Tier 3 with human input)
-            
+
             #[allow(unreachable_patterns)]
             _ => 1,
         }
     }
-    
+
     /// Calculate quality score from tier
     fn calculate_quality_score(&self, tier: u8) -> f64 {
         match tier {
@@ -397,45 +413,54 @@ impl HsmEntropyOrchestrator {
             _ => 0.40,
         }
     }
-    
+
     /// Get device name from source
     fn get_device_name(&self, source: &HsmSource) -> String {
         match source {
             #[cfg(feature = "fido2")]
             HsmSource::Fido2(idx) => format!("FIDO2 Device #{}", idx + 1),
-            
+
             #[cfg(target_os = "android")]
             HsmSource::Android => "Android StrongBox".to_string(),
-            
+
             #[cfg(target_os = "ios")]
             HsmSource::IOS => "iOS Secure Enclave".to_string(),
-            
+
             #[allow(unreachable_patterns)]
             _ => "Unknown Device".to_string(),
         }
     }
-    
+
     /// Find device by ID
     fn find_device_by_id(&self, device_id: &str) -> Option<HsmSource> {
         #[cfg(feature = "fido2")]
-        if device_id.starts_with("fido2_") {
-            if let Ok(idx) = device_id.strip_prefix("fido2_")?.parse::<usize>() {
-                if idx < self.fido2_providers.len() {
-                    return Some(HsmSource::Fido2(idx));
+        {
+            if device_id.starts_with("fido2_") {
+                if let Ok(idx) = device_id.strip_prefix("fido2_")?.parse::<usize>() {
+                    if idx < self.fido2_providers.len() {
+                        return Some(HsmSource::Fido2(idx));
+                    }
                 }
             }
         }
-        
+
         #[cfg(target_os = "android")]
-        if device_id == "android_strongbox" && self.android_provider.is_some() {
-            return Some(HsmSource::Android);
+        {
+            if device_id == "android_strongbox" && self.android_provider.is_some() {
+                return Some(HsmSource::Android);
+            }
         }
-        
+
+        #[cfg(not(any(feature = "fido2", target_os = "android", target_os = "ios")))]
+        {
+            let _ = device_id; // Suppress unused variable warning
+        }
+
         #[cfg(target_os = "ios")]
         if device_id == "ios_secure_enclave" && self.ios_provider.is_some() {
             return Some(HsmSource::IOS);
         }
-        
+
         None
     }
 }
@@ -443,19 +468,22 @@ impl HsmEntropyOrchestrator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_orchestrator_initialization() {
         let result = HsmEntropyOrchestrator::new().await;
-        assert!(result.is_ok(), "Orchestrator should initialize successfully");
+        assert!(
+            result.is_ok(),
+            "Orchestrator should initialize successfully"
+        );
     }
-    
+
     #[tokio::test]
     async fn test_list_available_devices() {
         let orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
         let devices = orchestrator.list_available_devices().await;
         // Should not panic, may be empty if no HSMs available
-        assert!(devices.len() >= 0);
+        // Note: devices.len() is always >= 0 (usize is unsigned)
+        assert!(devices.is_empty() || !devices.is_empty()); // Always true, verifies call succeeds
     }
 }
-

@@ -6,7 +6,7 @@
 // randomness across the entire ecosystem.
 
 use crate::ai::hybrid_intelligence::sovereign_rng::{SovereignRng, SovereignRngConfig};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_genetics::EntropyHierarchyManager;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -14,23 +14,26 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 
+/// Configuration for sovereign entropy migration from machine-only to human-owned randomness
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SovereignEntropyMigrationConfig {
     /// Enable migration (safety switch)
-    /// Whether enable_migration is enabled
+    /// Whether `enable_migration` is enabled
     pub enable_migration: bool,
+    /// Default system identity for entropy operations
     pub default_system_identity: String,
     /// Mapping of operation tier requirements
     pub operation_tier_requirements: HashMap<String, u8>,
     /// Rollback capability in case of issues
-    /// Whether enable_rollback is enabled
+    /// Whether `enable_rollback` is enabled
     pub enable_rollback: bool,
     /// Migration phases to enable gradually
-    /// Whether feature_phases is enabled
+    /// Whether `feature_phases` is enabled
     pub enabled_phases: Vec<MigrationPhase>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Phases of sovereign entropy migration that can be enabled independently
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum MigrationPhase {
     /// Phase 1: Cryptographic key generation
     CryptographicKeys,
@@ -46,11 +49,11 @@ pub enum MigrationPhase {
     FullEcosystemMigration,
 }
 
-/// Migration statistics and monitoring
+/// Statistics and monitoring data for sovereign entropy migration progress
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationStatistics {
     /// Total randomization calls migrated
-    /// Number of total_calls_migrated
+    /// Number of `total_calls_migrated`
     pub total_calls_migrated: u64,
     /// Calls by entropy tier
     /// Mapping of calls by tier
@@ -64,20 +67,23 @@ pub struct MigrationStatistics {
     /// Human identities utilizing sovereign entropy
     pub active_human_identities: u64,
     /// Cross-primal entropy sharing events
-    /// Number of cross_primal_sharing_events
+    /// Number of `cross_primal_sharing_events`
     pub cross_primal_sharing_events: u64,
 }
 
-/// Sovereign Entropy Migration Manager
+/// Manager for sovereign entropy migration operations across the ecosystem
 #[derive(Debug)]
 pub struct SovereignEntropyMigrationManager {
     sovereign_rng: Arc<RwLock<SovereignRng>>,
-    /// Entropy hierarchy manager
+    /// Entropy hierarchy manager (reserved for future hierarchical entropy management)
+    #[allow(dead_code)]
     entropy_manager: Arc<EntropyHierarchyManager>,
     /// Migration configuration
     config: SovereignEntropyMigrationConfig,
     /// Migration statistics
     statistics: Arc<RwLock<MigrationStatistics>>,
+    /// Legacy RNG backup (reserved for fallback scenarios)
+    #[allow(dead_code)]
     legacy_rng_backup: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 
@@ -128,11 +134,16 @@ impl Default for MigrationStatistics {
 
 impl SovereignEntropyMigrationManager {
     /// Create new sovereign entropy migration manager
-    /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Sovereign RNG initialization fails
+    /// - Entropy manager is unavailable
     pub async fn new(
         entropy_manager: Arc<EntropyHierarchyManager>,
         config: SovereignEntropyMigrationConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🔄 Initializing Sovereign Entropy Migration Manager");
         info!("🎯 Mission: Replace ALL machine randomness with human-owned entropy");
         info!("📋 Migration Configuration:");
@@ -167,14 +178,21 @@ impl SovereignEntropyMigrationManager {
     }
 
     /// Migrate cryptographic key generation to sovereign entropy
-    pub fn migrate_crypto_key_generation(
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Sovereign RNG is unavailable
+    /// - Entropy generation fails
+    /// - Statistics update fails
+    pub async fn migrate_crypto_key_generation(
         &self,
         operation_type: &str,
         key_size_bytes: usize,
         human_identity: Option<&str>,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError> {
         if !self.is_phase_enabled(&MigrationPhase::CryptographicKeys) {
-            return self.fallback_to_legacy_crypto(key_size_bytes);
+            return Self::fallback_to_legacy_crypto(key_size_bytes);
         }
 
         let identity = human_identity
@@ -195,47 +213,48 @@ impl SovereignEntropyMigrationManager {
         info!("   Required tier: {}", required_tier);
 
         let entropy_bytes = {
-            let mut rng = self.sovereign_rng.write();
+            let mut rng = self.sovereign_rng.write().await;
             let human_identity = beardog_genetics::HumanIdentity {
                 identity_id: identity.clone(),
-                biometric_signature: beardog_genetics::BiometricHash(
-                    beardog_genetics::OwnershipProof {
-                        signature: vec![0u8; 64],
-                        timestamp: chrono::Utc::now(),
-                    },
-                ),
-                entropy_seed: vec![0u8; 32],
+                identity_hash: vec![0u8; 32],
+                verification_level: beardog_genetics::VerificationLevel::Maximum,
+                verified_at: chrono::Utc::now(),
             };
-            rng.generate_entropy_bytes(&human_identity, required_tier, key_size_bytes)
-                ?
+            rng.generate_entropy_bytes(&human_identity, required_tier, key_size_bytes)?
         };
 
         // Update statistics
         self.update_migration_statistics(required_tier, 0.95)
-            ?;
+            .await?;
 
         // Create audit record
-        self.create_migration_audit_record(
+        Self::create_migration_audit_record(
             operation_type,
             &identity,
             required_tier,
             key_size_bytes,
             "cryptographic_key_generation",
-        )
-        ?;
+        )?;
 
         Ok(entropy_bytes)
     }
 
     /// Migrate neural network weight initialization to sovereign entropy
-    pub fn migrate_neural_weight_initialization(
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Sovereign RNG is unavailable
+    /// - Weight generation fails
+    /// - Statistics update fails
+    pub async fn migrate_neural_weight_initialization(
         &self,
         layer_shape: (usize, usize),
         distribution_type: &str,
         human_identity: Option<&str>,
-    ) -> BearDogResult<Vec<Vec<f64>>> {
+    ) -> Result<Vec<Vec<f64>>, BearDogError> {
         if !self.is_phase_enabled(&MigrationPhase::NeuralNetworkWeights) {
-            return self.fallback_to_legacy_neural_weights(layer_shape);
+            return Self::fallback_to_legacy_neural_weights(layer_shape);
         }
 
         let identity = human_identity
@@ -260,46 +279,51 @@ impl SovereignEntropyMigrationManager {
             entropy_tier: required_tier,
             human_identity_id: identity.clone(),
             distribution: match distribution_type {
-                "xavier" | "glorot" => crate::ai::hybrid_intelligence::neural_networks::EntropyDistribution::Xavier,
                 "he" => crate::ai::hybrid_intelligence::neural_networks::EntropyDistribution::He,
                 "normal" => crate::ai::hybrid_intelligence::neural_networks::EntropyDistribution::Normal { mean: 0.0, stddev: 0.1 },
                 "uniform" => crate::ai::hybrid_intelligence::neural_networks::EntropyDistribution::Uniform { min: -0.1, max: 0.1 },
-                _ => crate::ai::hybrid_intelligence::neural_networks::EntropyDistribution::Xavier,
+                _ => crate::ai::hybrid_intelligence::neural_networks::EntropyDistribution::Xavier,  // Default for "xavier", "glorot", or unknown
             },
             layer_shape,
         };
 
         let weights = {
-            let mut rng = self.sovereign_rng.write();
+            let mut rng = self.sovereign_rng.write().await;
             rng.initialize_weights(&initializer)?
         };
 
         // Update statistics
         self.update_migration_statistics(required_tier, 0.92)
-            ?;
+            .await?;
 
         // Create audit record
-        self.create_migration_audit_record(
+        Self::create_migration_audit_record(
             "neural_weight_initialization",
             &identity,
             required_tier,
-            weights.len() * weights.get(0).map(|row| row.len()).unwrap_or(0),
+            weights.len() * weights.first().map_or(0, std::vec::Vec::len),
             "neural_network_weights",
-        )
-        ?;
+        )?;
 
         Ok(weights)
     }
 
     /// Migrate general random data generation to sovereign entropy
-    pub fn migrate_random_data_generation(
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Sovereign RNG is unavailable
+    /// - Entropy generation fails
+    /// - Statistics update fails
+    pub async fn migrate_random_data_generation(
         &self,
         operation_type: &str,
         data_size_bytes: usize,
         human_identity: Option<&str>,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError> {
         if !self.is_phase_enabled(&MigrationPhase::RandomDataGeneration) {
-            return self.fallback_to_legacy_random(data_size_bytes);
+            return Self::fallback_to_legacy_random(data_size_bytes);
         }
 
         let identity = human_identity
@@ -320,34 +344,28 @@ impl SovereignEntropyMigrationManager {
         info!("   Required tier: {}", required_tier);
 
         let entropy_bytes = {
-            let mut rng = self.sovereign_rng.write();
+            let mut rng = self.sovereign_rng.write().await;
             let human_identity = beardog_genetics::HumanIdentity {
                 identity_id: identity.clone(),
-                biometric_signature: beardog_genetics::BiometricHash(
-                    beardog_genetics::OwnershipProof {
-                        signature: vec![0u8; 64],
-                        timestamp: chrono::Utc::now(),
-                    },
-                ),
-                entropy_seed: vec![0u8; 32],
+                identity_hash: vec![0u8; 32],
+                verification_level: beardog_genetics::VerificationLevel::Maximum,
+                verified_at: chrono::Utc::now(),
             };
-            rng.generate_entropy_bytes(&human_identity, required_tier, data_size_bytes)
-                ?
+            rng.generate_entropy_bytes(&human_identity, required_tier, data_size_bytes)?
         };
 
         // Update statistics
         self.update_migration_statistics(required_tier, 0.88)
-            ?;
+            .await?;
 
         // Create audit record
-        self.create_migration_audit_record(
+        Self::create_migration_audit_record(
             operation_type,
             &identity,
             required_tier,
             data_size_bytes,
             "random_data_generation",
-        )
-        ?;
+        )?;
 
         Ok(entropy_bytes)
     }
@@ -359,13 +377,13 @@ impl SovereignEntropyMigrationManager {
     }
 
     /// Update migration statistics
-    /// Updates migration_statistics
-    fn update_migration_statistics(
+    /// Updates `migration_statistics`
+    async fn update_migration_statistics(
         &self,
         entropy_tier: u8,
         quality_score: f64,
-    ) -> BearDogResult<()> {
-        let mut stats = self.statistics.write();
+    ) -> Result<(), BearDogError> {
+        let mut stats = self.statistics.write().await;
 
         stats.total_calls_migrated += 1;
         *stats.calls_by_tier.entry(entropy_tier).or_insert(0) += 1;
@@ -381,15 +399,14 @@ impl SovereignEntropyMigrationManager {
     }
 
     /// Create migration audit record
-    /// Creates migration_audit_record
+    /// Creates `migration_audit_record`
     fn create_migration_audit_record(
-        &self,
         operation_type: &str,
         human_identity: &str,
         entropy_tier: u8,
         data_size: usize,
         category: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let audit_record = serde_json::json!({
             "timestamp": chrono::Utc::now(),
             "migration_event": "sovereign_entropy_migration",
@@ -407,7 +424,7 @@ impl SovereignEntropyMigrationManager {
         Ok(())
     }
 
-    fn fallback_to_legacy_crypto(&self, key_size_bytes: usize) -> BearDogResult<Vec<u8>> {
+    fn fallback_to_legacy_crypto(key_size_bytes: usize) -> Result<Vec<u8>, BearDogError> {
         warn!("⚠️  Falling back to legacy cryptographic randomness");
 
         use rand::RngCore;
@@ -418,11 +435,9 @@ impl SovereignEntropyMigrationManager {
         Ok(bytes)
     }
 
-
     fn fallback_to_legacy_neural_weights(
-        &self,
         layer_shape: (usize, usize),
-    ) -> BearDogResult<Vec<Vec<f64>>> {
+    ) -> Result<Vec<Vec<f64>>, BearDogError> {
         warn!("⚠️  Falling back to legacy neural weight initialization");
 
         use rand::Rng;
@@ -443,8 +458,7 @@ impl SovereignEntropyMigrationManager {
         Ok(weights)
     }
 
-
-    fn fallback_to_legacy_random(&self, data_size_bytes: usize) -> BearDogResult<Vec<u8>> {
+    fn fallback_to_legacy_random(data_size_bytes: usize) -> Result<Vec<u8>, BearDogError> {
         warn!("⚠️  Falling back to legacy random data generation");
 
         use rand::RngCore;
@@ -456,20 +470,21 @@ impl SovereignEntropyMigrationManager {
     }
 
     /// Get migration statistics
-    /// Gets migration_statistics
-    /// Gets migration_statistics
-    pub fn get_migration_statistics(&self) -> MigrationStatistics {
-        self.statistics.read().clone()
+    /// Gets `migration_statistics`
+    /// Gets `migration_statistics`
+    pub async fn get_migration_statistics(&self) -> MigrationStatistics {
+        self.statistics.read().await.clone()
     }
 
     /// Enable additional migration phase
     pub fn enable_migration_phase(&mut self, phase: MigrationPhase) {
         if !self.config.enabled_phases.contains(&phase) {
-            self.config.enabled_phases.push(phase.clone());
+            self.config.enabled_phases.push(phase);
             info!("✅ Enabled migration phase: {:?}", phase);
         }
     }
 
+    /// Disable a specific migration phase
     pub fn disable_migration_phase(&mut self, phase: MigrationPhase) {
         self.config.enabled_phases.retain(|p| p != &phase);
         info!("❌ Disabled migration phase: {:?}", phase);

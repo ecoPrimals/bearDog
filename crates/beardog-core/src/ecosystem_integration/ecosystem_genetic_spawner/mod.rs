@@ -13,9 +13,9 @@
 //!
 //! ## Key Components
 //!
-//! - [`spawner`] - Core spawning engine
-//! - [`traits`] - Genetic traits and interfaces
-//! - [`types`] - Type definitions for genetic patterns
+//! - Core spawning engine
+//! - `traits` - Genetic traits and interfaces
+//! - `types` - Type definitions for genetic patterns
 //!
 //! ## Example
 //!

@@ -8,8 +8,7 @@ pub mod software_hsm;
 #[cfg(target_os = "android")]
 pub mod android_strongbox;
 
-// TEMPORARILY DISABLED: iOS Secure Enclave module has syntax errors
-// TODO: Re-enable after fixing types.rs and related files
+// iOS Secure Enclave support (has file corruption in types.rs - needs reconstruction)
 // #[cfg(target_os = "ios")]
 // pub mod ios_secure_enclave;
 
@@ -28,11 +27,11 @@ pub mod universal_discovery;
 // Crypto system
 pub mod crypto; // NEW: Universal Crypto Provider System
 pub mod crypto_dispatch;
-// NOTE: provider_dispatch needs API updates to match simplified UniversalHsmProvider trait
-// TODO: Refactor provider_dispatch to match UniversalHsmProvider::sign/verify/get_capabilities (4-8h)
-// TODO: The old trait had many methods (sign_data, verify_signature, health_check, etc.)
-// TODO: The new trait has only: sign, verify, generate_key, get_capabilities, get_provider_info
-// DEFER: This is a performance optimization layer - core HSM functionality works without it
+// NOTE: provider_dispatch is a performance optimization layer
+// DEFERRED(Phase-2): Refactor provider_dispatch to match simplified UniversalHsmProvider trait
+// The old trait had many methods (sign_data, verify_signature, health_check, etc.)
+// The new trait has only: sign, verify, generate_key, get_capabilities, get_provider_info
+// Core HSM functionality works without it - defer to Phase 2 optimization
 // pub mod provider_dispatch;
 pub mod zero_cost_provider;
 
@@ -112,3 +111,10 @@ pub struct SecurityRequirements {
     pub min_security_level: SecurityLevel,
     pub require_hardware: bool,
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+#[cfg(test)]
+mod tests;

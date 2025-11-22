@@ -29,6 +29,7 @@ use std::time::Duration;
 ///
 /// ```rust
 /// use beardog_types::canonical::config::domains::discovery::DiscoveryConfig;
+/// use std::time::Duration;
 ///
 /// let config = DiscoveryConfig::default();
 /// assert_eq!(config.timeout, Duration::from_secs(5));
@@ -46,55 +47,52 @@ pub struct DiscoveryConfig {
     // ═══════════════════════════════════════════════════════
     // Core Discovery
     // ═══════════════════════════════════════════════════════
-    
     /// Enable discovery feature
     ///
     /// Set to `false` to completely disable discovery.
     pub enabled: bool,
-    
+
     /// Discovery operation timeout
     ///
     /// Maximum time to wait for a single discovery operation to complete.
     pub timeout: Duration,
-    
+
     /// Maximum discovery attempts
     ///
     /// Number of times to retry a failed discovery before giving up.
     pub max_attempts: u32,
-    
+
     /// Maximum concurrent discovery operations
     ///
     /// Limits parallelism to prevent resource exhaustion.
     pub max_concurrent: usize,
-    
+
     /// Discovery interval
     ///
     /// How often to perform discovery sweeps (e.g., for new services).
     pub discovery_interval: Duration,
-    
+
     /// Discovery refresh interval
     ///
     /// How often to refresh known services to check health.
     pub refresh_interval: Duration,
-    
+
     // ═══════════════════════════════════════════════════════
     // Caching
     // ═══════════════════════════════════════════════════════
-    
     /// Enable discovery result caching
     ///
     /// Caching improves performance by avoiding redundant discoveries.
     pub cache_enabled: bool,
-    
+
     /// Cache time-to-live (TTL)
     ///
     /// How long to keep discovery results in cache before invalidating.
     pub cache_ttl: Duration,
-    
+
     // ═══════════════════════════════════════════════════════
     // Endpoints
     // ═══════════════════════════════════════════════════════
-    
     /// Discovery service endpoints
     ///
     /// List of discovery servers, registries, or broadcast addresses.
@@ -103,35 +101,32 @@ pub struct DiscoveryConfig {
     /// - `https://capabilities.ecosystem.internal:443` (Custom registry)
     /// - `udp://239.255.255.250:1900` (SSDP multicast)
     pub endpoints: Vec<String>,
-    
+
     // ═══════════════════════════════════════════════════════
     // Health & Registration
     // ═══════════════════════════════════════════════════════
-    
     /// Health check interval
     ///
     /// How often to check if discovered services are still alive.
     pub health_check_interval: Duration,
-    
+
     /// Enable automatic registration
     ///
     /// If `true`, automatically register this service with discovery servers.
     pub auto_register: bool,
-    
+
     // ═══════════════════════════════════════════════════════
     // Metadata
     // ═══════════════════════════════════════════════════════
-    
     /// Service metadata for registration
     ///
     /// Key-value pairs attached to this service when registering.
     /// Examples: version, region, capabilities, tags.
     pub service_metadata: HashMap<String, String>,
-    
+
     // ═══════════════════════════════════════════════════════
     // Features
     // ═══════════════════════════════════════════════════════
-    
     /// Enable predictive discovery
     ///
     /// Use ML/heuristics to predict which services will be needed and pre-discover them.
@@ -168,7 +163,7 @@ impl DiscoveryConfig {
             ..Default::default()
         }
     }
-    
+
     /// Create a new discovery configuration with custom endpoints
     ///
     /// All other fields use defaults.
@@ -178,7 +173,7 @@ impl DiscoveryConfig {
             ..Default::default()
         }
     }
-    
+
     /// Create a minimal configuration for testing
     ///
     /// - Disabled caching
@@ -201,7 +196,7 @@ impl DiscoveryConfig {
             predictive_enabled: false,
         }
     }
-    
+
     /// Load from environment variables
     ///
     /// Supported env vars:
@@ -215,39 +210,44 @@ impl DiscoveryConfig {
     /// Falls back to defaults for any missing vars.
     pub fn from_env() -> Self {
         let mut config = Self::default();
-        
+
         // Enabled
         if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_ENABLED") {
             config.enabled = val.to_lowercase() == "true";
         }
-        
+
         // Timeout
         if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
             if let Ok(secs) = val.parse::<u64>() {
                 config.timeout = Duration::from_secs(secs);
             }
         }
-        
+
         // Max attempts
         if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_MAX_ATTEMPTS") {
             if let Ok(attempts) = val.parse::<u32>() {
                 config.max_attempts = attempts;
             }
         }
-        
+
+        // Cache enabled
+        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_CACHE_ENABLED") {
+            config.cache_enabled = val.to_lowercase() == "true";
+        }
+
         // Endpoints
         let mut endpoints = vec![];
-        
+
         // Single endpoint
         if let Ok(endpoint) = std::env::var("BEARDOG_DISCOVERY_ENDPOINT") {
             endpoints.push(endpoint);
         }
-        
+
         // Capability registry
         if let Ok(endpoint) = std::env::var("BEARDOG_CAPABILITY_REGISTRY") {
             endpoints.push(endpoint);
         }
-        
+
         // Comma-separated list
         if let Ok(list) = std::env::var("BEARDOG_DISCOVERY_ENDPOINTS") {
             for endpoint in list.split(',') {
@@ -257,11 +257,11 @@ impl DiscoveryConfig {
                 }
             }
         }
-        
+
         if !endpoints.is_empty() {
             config.endpoints = endpoints;
         }
-        
+
         config
     }
 }
@@ -269,7 +269,7 @@ impl DiscoveryConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_default_config() {
         let config = DiscoveryConfig::default();
@@ -280,21 +280,21 @@ mod tests {
         assert!(config.cache_enabled);
         assert!(config.auto_register);
     }
-    
+
     #[test]
     fn test_with_timeout() {
         let config = DiscoveryConfig::with_timeout(Duration::from_secs(10));
         assert_eq!(config.timeout, Duration::from_secs(10));
         assert_eq!(config.max_attempts, 3); // Other fields still default
     }
-    
+
     #[test]
     fn test_with_endpoints() {
         let endpoints = vec!["http://test:8500".to_string()];
         let config = DiscoveryConfig::with_endpoints(endpoints.clone());
         assert_eq!(config.endpoints, endpoints);
     }
-    
+
     #[test]
     fn test_for_testing() {
         let config = DiscoveryConfig::for_testing();
@@ -305,4 +305,3 @@ mod tests {
         assert!(!config.auto_register);
     }
 }
-

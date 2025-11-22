@@ -41,7 +41,7 @@ mod validation_tests {
     #[test]
     fn test_environment_level_clone() {
         let original = EnvironmentLevel::Production;
-        let cloned = original.clone();
+        let cloned = original; // Copy type, no need for .clone()
         assert_eq!(original, cloned);
     }
 
@@ -171,7 +171,7 @@ mod validation_tests {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
-        let cloned = original.clone();
+        let cloned = original; // Copy type, no need for .clone()
 
         assert_eq!(
             original.enable_advanced_monitoring,

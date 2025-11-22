@@ -8,7 +8,7 @@ fn test_load_balancing_config_default() {
 
     assert!(!config.enable_sticky_sessions);
     assert_eq!(config.session_timeout_secs, 1800);
-    assert_eq!(config.health_weight_factor, 0.7);
+    assert!((config.health_weight_factor - 0.7).abs() < f64::EPSILON);
     assert!(config.enable_adaptive);
 }
 
@@ -204,7 +204,7 @@ fn test_adaptive_load_balancing() {
     };
 
     assert!(config.enable_adaptive);
-    assert_eq!(config.health_weight_factor, 0.85);
+    assert!((config.health_weight_factor - 0.85).abs() < f64::EPSILON);
 }
 
 #[test]

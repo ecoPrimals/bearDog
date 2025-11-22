@@ -15,4 +15,3 @@ pub mod ids;
 
 // Re-export commonly used types
 pub use ids::{KeyId, RegistrationId, ServiceInstanceId};
-

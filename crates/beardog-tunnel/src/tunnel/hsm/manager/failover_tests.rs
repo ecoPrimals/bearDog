@@ -6,6 +6,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod failover_tests {
     use super::*;
 

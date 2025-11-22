@@ -173,37 +173,37 @@ pub async fn test_hsm_attestation() -> Result<HsmE2EMetrics, BearDogError> {
 
 async fn simulate_key_generation(provider: &str) -> Result<(), BearDogError> {
     info!("Generating key with provider: {}", provider);
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate key generation (instant in tests, would be HSM I/O in production)
     Ok(())
 }
 
 async fn simulate_key_generation_with_attestation(provider: &str) -> Result<(), BearDogError> {
     info!("Generating key with attestation: {}", provider);
-    tokio::time::sleep(tokio::time::Duration::from_millis(15)).await;
+    // Simulate attested key generation (instant in tests)
     Ok(())
 }
 
 async fn simulate_signing(provider: &str, _data: &[u8]) -> Result<(), BearDogError> {
     info!("Signing data with provider: {}", provider);
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate signing operation (instant in tests)
     Ok(())
 }
 
 async fn simulate_verification(provider: &str, _data: &[u8]) -> Result<(), BearDogError> {
     info!("Verifying signature with provider: {}", provider);
-    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+    // Simulate verification (instant in tests)
     Ok(())
 }
 
 async fn simulate_key_rotation(provider: &str) -> Result<(), BearDogError> {
     info!("Rotating key with provider: {}", provider);
-    tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+    // Simulate key rotation (instant in tests)
     Ok(())
 }
 
 async fn simulate_attestation_verification(provider: &str) -> Result<(), BearDogError> {
     info!("Verifying attestation for provider: {}", provider);
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Simulate attestation verification (instant in tests)
     Ok(())
 }
 

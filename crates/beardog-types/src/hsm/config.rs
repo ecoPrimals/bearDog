@@ -354,4 +354,201 @@ mod tests {
         assert!(config.enable_hardware_acceleration);
         assert!(config.enable_audit_logging);
     }
+
+    // Additional comprehensive tests
+    #[test]
+    fn test_database_config_sqlite() {
+        let config = DatabaseConfig::sqlite("/tmp/beardog.db");
+        assert!(config.url.starts_with("sqlite://"));
+        assert!(config.url.contains("/tmp/beardog.db"));
+        assert_eq!(config.max_connections, 10);
+        assert_eq!(config.min_connections, 1);
+    }
+
+    #[test]
+    fn test_database_config_memory() {
+        let config = DatabaseConfig::memory();
+        assert_eq!(config.url, "sqlite::memory:");
+        assert_eq!(config.max_connections, 10);
+        assert!(config.enable_query_logging);
+        assert!(!config.enable_encryption);
+    }
+
+    #[test]
+    fn test_database_config_connection_timeout() {
+        let config = DatabaseConfig::default();
+        let timeout = config.connection_timeout();
+        assert_eq!(timeout.as_secs(), 30);
+    }
+
+    #[test]
+    fn test_database_config_max_query_timeout() {
+        let config = DatabaseConfig::default();
+        let timeout = config.max_query_timeout();
+        assert_eq!(timeout.as_secs(), 300);
+    }
+
+    #[test]
+    fn test_database_config_clone() {
+        let config1 = DatabaseConfig::default();
+        let config2 = config1.clone();
+        assert_eq!(config1.url, config2.url);
+        assert_eq!(config1.max_connections, config2.max_connections);
+    }
+
+    #[test]
+    fn test_key_storage_type_variants() {
+        let types = [
+            KeyStorageType::Memory,
+            KeyStorageType::FileSystem,
+            KeyStorageType::Database,
+            KeyStorageType::Hardware,
+            KeyStorageType::CloudKms,
+        ];
+        assert_eq!(types.len(), 5);
+    }
+
+    #[test]
+    fn test_key_storage_type_equality() {
+        assert_eq!(KeyStorageType::Memory, KeyStorageType::Memory);
+        assert_ne!(KeyStorageType::Memory, KeyStorageType::FileSystem);
+        assert_eq!(KeyStorageType::Hardware, KeyStorageType::Hardware);
+    }
+
+    #[test]
+    fn test_keystore_config_filesystem() {
+        let config = KeyStoreConfig::filesystem("/var/lib/beardog");
+        assert_eq!(config.storage_type, KeyStorageType::FileSystem);
+        assert!(config.encrypted);
+        assert!(config.enable_backup);
+        assert_eq!(config.cache_size, 1024);
+        assert_eq!(config.backup_interval_secs, 3600);
+        assert_eq!(config.max_key_age_days, 365);
+        assert_eq!(config.rotation_interval_days, 90);
+    }
+
+    #[test]
+    fn test_keystore_config_database() {
+        let config = KeyStoreConfig::database("/var/lib/beardog/db");
+        assert_eq!(config.storage_type, KeyStorageType::Database);
+        assert!(config.encrypted);
+        assert_eq!(config.cache_size, 2048);
+        assert_eq!(config.backup_interval_secs, 1800);
+    }
+
+    #[test]
+    fn test_keystore_config_backup_interval() {
+        let config = KeyStoreConfig::default();
+        let interval = config.backup_interval();
+        assert_eq!(interval.as_secs(), 3600);
+    }
+
+    #[test]
+    fn test_keystore_config_clone() {
+        let config1 = KeyStoreConfig::default();
+        let config2 = config1.clone();
+        assert_eq!(config1.storage_type, config2.storage_type);
+        assert_eq!(config1.encrypted, config2.encrypted);
+    }
+
+    #[test]
+    fn test_hsm_config_clone() {
+        let config1 = HsmConfig::default();
+        let config2 = config1.clone();
+        assert_eq!(config1.provider_type, config2.provider_type);
+        assert_eq!(
+            config1.enable_hardware_acceleration,
+            config2.enable_hardware_acceleration
+        );
+    }
+
+    #[test]
+    fn test_hsm_config_custom() {
+        let config = HsmConfig {
+            database: DatabaseConfig::postgres("postgresql://localhost/hsm"),
+            keystore: KeyStoreConfig::filesystem("/secure/keys"),
+            provider_type: "hardware".to_string(),
+            enable_hardware_acceleration: true,
+            enable_audit_logging: true,
+        };
+
+        assert_eq!(config.provider_type, "hardware");
+        assert!(config.enable_hardware_acceleration);
+    }
+
+    // Serialization tests
+    #[test]
+    fn test_database_config_serialization() {
+        let config = DatabaseConfig::default();
+        let json = serde_json::to_string(&config);
+        assert!(json.is_ok());
+
+        let json_str = json.unwrap();
+        let deserialized: Result<DatabaseConfig, _> = serde_json::from_str(&json_str);
+        assert!(deserialized.is_ok());
+    }
+
+    #[test]
+    fn test_keystore_config_serialization() {
+        let config = KeyStoreConfig::default();
+        let json = serde_json::to_string(&config);
+        assert!(json.is_ok());
+
+        let json_str = json.unwrap();
+        let deserialized: Result<KeyStoreConfig, _> = serde_json::from_str(&json_str);
+        assert!(deserialized.is_ok());
+    }
+
+    #[test]
+    fn test_hsm_config_serialization() {
+        let config = HsmConfig::default();
+        let json = serde_json::to_string(&config);
+        assert!(json.is_ok());
+
+        let json_str = json.unwrap();
+        let deserialized: Result<HsmConfig, _> = serde_json::from_str(&json_str);
+        assert!(deserialized.is_ok());
+    }
+
+    #[test]
+    fn test_key_storage_type_serialization() {
+        let storage_type = KeyStorageType::Hardware;
+        let json = serde_json::to_string(&storage_type);
+        assert!(json.is_ok());
+
+        let json_str = json.unwrap();
+        let deserialized: Result<KeyStorageType, _> = serde_json::from_str(&json_str);
+        assert!(deserialized.is_ok());
+        assert_eq!(deserialized.unwrap(), KeyStorageType::Hardware);
+    }
+
+    // Default function tests
+    #[test]
+    fn test_default_functions() {
+        assert_eq!(default_max_connections(), 50);
+        assert_eq!(default_min_connections(), 5);
+        assert_eq!(default_connection_timeout_secs(), 30);
+        assert_eq!(default_max_query_timeout_secs(), 300);
+        assert_eq!(default_cache_size(), 1024);
+        assert_eq!(default_backup_interval_secs(), 3600);
+        assert_eq!(default_rotation_interval_days(), 90);
+        assert!(default_true());
+    }
+
+    // Integration tests
+    #[test]
+    fn test_complete_hsm_configuration() {
+        let hsm_config = HsmConfig {
+            database: DatabaseConfig::postgres("postgresql://localhost:5432/hsm_db"),
+            keystore: KeyStoreConfig::filesystem("/var/lib/beardog/keys"),
+            provider_type: "yubihsm".to_string(),
+            enable_hardware_acceleration: true,
+            enable_audit_logging: true,
+        };
+
+        assert!(hsm_config.database.url.contains("postgresql"));
+        assert_eq!(hsm_config.keystore.storage_type, KeyStorageType::FileSystem);
+        assert_eq!(hsm_config.provider_type, "yubihsm");
+        assert!(hsm_config.enable_hardware_acceleration);
+    }
 }

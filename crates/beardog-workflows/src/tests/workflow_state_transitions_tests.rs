@@ -216,9 +216,9 @@ fn test_workflow_state_cloning() -> Result<(), BearDogError> {
 
 #[test]
 fn test_workflow_timestamp_ordering() -> Result<(), BearDogError> {
+    // Test that SystemTime ordering works correctly
     let created = SystemTime::now();
-    std::thread::sleep(std::time::Duration::from_millis(10));
-    let updated = SystemTime::now();
+    let updated = SystemTime::now(); // Will be >= created (monotonic time)
 
     let state = WorkflowState {
         workflow_id: Uuid::new_v4().to_string(),

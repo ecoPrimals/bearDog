@@ -52,7 +52,7 @@ impl LimitsConfig {
             max_retries: 3,
             retry_delay_ms: 1000,
             max_concurrent_operations: 100,
-            rate_limit_per_sec: 0, // Unlimited
+            rate_limit_per_sec: 0,              // Unlimited
             max_request_body_bytes: 10_485_760, // 10 MB
             cache_size: 1000,
             cache_ttl_secs: 300, // 5 minutes
@@ -62,45 +62,45 @@ impl LimitsConfig {
     /// Load configuration from environment variables with fallback to defaults
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             operation_timeout_secs: std::env::var("BEARDOG_OPERATION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.operation_timeout_secs),
-            
+
             connection_timeout_secs: std::env::var("BEARDOG_CONNECTION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.connection_timeout_secs),
-            
+
             max_retries: std::env::var("BEARDOG_MAX_RETRIES")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.max_retries),
-            
+
             retry_delay_ms: std::env::var("BEARDOG_RETRY_DELAY_MS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.retry_delay_ms),
-            
+
             max_concurrent_operations: std::env::var("BEARDOG_MAX_CONCURRENT_OPERATIONS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.max_concurrent_operations),
-            
+
             rate_limit_per_sec: defaults.rate_limit_per_sec,
-            
+
             max_request_body_bytes: std::env::var("BEARDOG_MAX_REQUEST_BODY_BYTES")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.max_request_body_bytes),
-            
+
             cache_size: std::env::var("BEARDOG_CACHE_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.cache_size),
-            
+
             cache_ttl_secs: std::env::var("BEARDOG_CACHE_TTL_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -226,15 +226,25 @@ impl LimitsConfigBuilder {
 
     pub fn build(self) -> LimitsConfig {
         let defaults = LimitsConfig::const_defaults();
-        
+
         LimitsConfig {
-            operation_timeout_secs: self.operation_timeout_secs.unwrap_or(defaults.operation_timeout_secs),
-            connection_timeout_secs: self.connection_timeout_secs.unwrap_or(defaults.connection_timeout_secs),
+            operation_timeout_secs: self
+                .operation_timeout_secs
+                .unwrap_or(defaults.operation_timeout_secs),
+            connection_timeout_secs: self
+                .connection_timeout_secs
+                .unwrap_or(defaults.connection_timeout_secs),
             max_retries: self.max_retries.unwrap_or(defaults.max_retries),
             retry_delay_ms: self.retry_delay_ms.unwrap_or(defaults.retry_delay_ms),
-            max_concurrent_operations: self.max_concurrent_operations.unwrap_or(defaults.max_concurrent_operations),
-            rate_limit_per_sec: self.rate_limit_per_sec.unwrap_or(defaults.rate_limit_per_sec),
-            max_request_body_bytes: self.max_request_body_bytes.unwrap_or(defaults.max_request_body_bytes),
+            max_concurrent_operations: self
+                .max_concurrent_operations
+                .unwrap_or(defaults.max_concurrent_operations),
+            rate_limit_per_sec: self
+                .rate_limit_per_sec
+                .unwrap_or(defaults.rate_limit_per_sec),
+            max_request_body_bytes: self
+                .max_request_body_bytes
+                .unwrap_or(defaults.max_request_body_bytes),
             cache_size: self.cache_size.unwrap_or(defaults.cache_size),
             cache_ttl_secs: self.cache_ttl_secs.unwrap_or(defaults.cache_ttl_secs),
         }
@@ -255,17 +265,13 @@ mod tests {
 
     #[test]
     fn test_invalid_timeout() {
-        let config = LimitsConfig::builder()
-            .operation_timeout_secs(0)
-            .build();
+        let config = LimitsConfig::builder().operation_timeout_secs(0).build();
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_invalid_concurrent_ops() {
-        let config = LimitsConfig::builder()
-            .max_concurrent_operations(0)
-            .build();
+        let config = LimitsConfig::builder().max_concurrent_operations(0).build();
         assert!(config.validate().is_err());
     }
 
@@ -276,7 +282,7 @@ mod tests {
             .max_retries(5)
             .cache_size(2000)
             .build();
-        
+
         assert_eq!(config.operation_timeout_secs, 60);
         assert_eq!(config.max_retries, 5);
         assert_eq!(config.cache_size, 2000);
@@ -289,7 +295,7 @@ mod tests {
             .rate_limit_per_sec(1000)
             .max_request_body_bytes(104_857_600) // 100 MB
             .build();
-        
+
         assert!(config.validate().is_ok());
         assert_eq!(config.max_concurrent_operations, 500);
     }

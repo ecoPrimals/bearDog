@@ -8,7 +8,7 @@
 //!
 //! Part of Week 1 test expansion (October 17, 2025).
 
-use std::time::Duration;
+// Duration not used - removed
 
 /// Mock connection state for testing
 #[derive(Debug, Clone, PartialEq)]
@@ -192,9 +192,7 @@ fn test_connection_with_authentication_timeout() -> Result<(), Box<dyn std::erro
 
     conn.connect()?;
 
-    // Simulate authentication timeout
-    std::thread::sleep(Duration::from_millis(1));
-
+    // Test authentication immediately (no artificial delay needed)
     let result = conn.authenticate();
     assert!(result.is_ok(), "Authentication should succeed");
 

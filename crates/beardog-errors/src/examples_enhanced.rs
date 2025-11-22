@@ -2,16 +2,16 @@
 // Demonstrates real-world usage of enhanced error constructors with remediation hints
 
 use crate::{
-    authentication_error_with_hint, authorization_error_with_hint,
-    configuration_error_with_docs, crypto_error_with_details, network_error_with_context,
-    validation_error_with_suggestion, BearDogError, BearDogResult,
+    authentication_error_with_hint, authorization_error_with_hint, configuration_error_with_docs,
+    crypto_error_with_details, network_error_with_context, validation_error_with_suggestion,
+    BearDogError,
 };
 
 /// Example: Authentication with helpful hints
 ///
 /// This shows how to use enhanced authentication errors that provide
 /// actionable guidance to users when authentication fails.
-pub fn example_authentication_with_hint() -> BearDogResult<()> {
+pub fn example_authentication_with_hint() -> Result<(), BearDogError> {
     // Simulate JWT verification failure
     Err(authentication_error_with_hint(
         "JWT token signature verification failed",
@@ -23,7 +23,7 @@ pub fn example_authentication_with_hint() -> BearDogResult<()> {
 ///
 /// This shows how to use enhanced authorization errors that tell users
 /// exactly what permissions or roles they need.
-pub fn example_authorization_with_hint() -> BearDogResult<()> {
+pub fn example_authorization_with_hint() -> Result<(), BearDogError> {
     // Simulate permission denied
     Err(authorization_error_with_hint(
         "/api/admin/users",
@@ -36,12 +36,12 @@ pub fn example_authorization_with_hint() -> BearDogResult<()> {
 ///
 /// This shows how to use enhanced validation errors that provide
 /// helpful suggestions for fixing invalid input.
-pub fn example_validation_with_suggestion() -> BearDogResult<()> {
+pub fn example_validation_with_suggestion() -> Result<(), BearDogError> {
     // Simulate email validation failure
     Err(validation_error_with_suggestion(
         "email",
         "Must be a valid email address",
-        "Use format: user@domain.com or check for typos in the domain name"
+        "Use format: user@domain.com or check for typos in the domain name",
     ))
 }
 
@@ -49,12 +49,12 @@ pub fn example_validation_with_suggestion() -> BearDogResult<()> {
 ///
 /// This shows how to use enhanced network errors that provide
 /// complete context for debugging connection issues.
-pub fn example_network_with_context() -> BearDogResult<()> {
+pub fn example_network_with_context() -> Result<(), BearDogError> {
     // Simulate network timeout
     Err(network_error_with_context(
         "Connection timeout after 30s",
         "tcp://consul.service.local:8500",
-        "service_discovery_init"
+        "service_discovery_init",
     ))
 }
 
@@ -62,12 +62,12 @@ pub fn example_network_with_context() -> BearDogResult<()> {
 ///
 /// This shows how to use enhanced configuration errors that point
 /// users to relevant documentation for troubleshooting.
-pub fn example_configuration_with_docs() -> BearDogResult<()> {
+pub fn example_configuration_with_docs() -> Result<(), BearDogError> {
     // Simulate HSM configuration error
     Err(configuration_error_with_docs(
         "HSM provider 'yubico' not found in configuration",
         "hsm",
-        "https://docs.beardog.dev/hsm/providers#supported-providers"
+        "https://docs.beardog.dev/hsm/providers#supported-providers",
     ))
 }
 
@@ -75,12 +75,12 @@ pub fn example_configuration_with_docs() -> BearDogResult<()> {
 ///
 /// This shows how to use enhanced crypto errors that provide
 /// detailed information about what went wrong and how to fix it.
-pub fn example_crypto_with_details() -> BearDogResult<()> {
+pub fn example_crypto_with_details() -> Result<(), BearDogError> {
     // Simulate key size mismatch
     Err(crypto_error_with_details(
         "AES-256-GCM encryption",
         "Key size is 128 bits, expected 256 bits",
-        "Ensure you're using generate_key_256() or check key derivation function"
+        "Ensure you're using generate_key_256() or check key derivation function",
     ))
 }
 
@@ -92,12 +92,12 @@ pub fn example_crypto_with_details() -> BearDogResult<()> {
 ///
 /// This shows how an API endpoint might use enhanced errors to provide
 /// better user experience when authentication or authorization fails.
-pub fn api_endpoint_example(token: &str, resource_id: &str) -> BearDogResult<String> {
+pub fn api_endpoint_example(token: &str, resource_id: &str) -> Result<String, BearDogError> {
     // 1. Authenticate user
     if token.is_empty() {
         return Err(authentication_error_with_hint(
             "Missing authentication token",
-            "Include 'Authorization: Bearer <token>' header or use API key authentication"
+            "Include 'Authorization: Bearer <token>' header or use API key authentication",
         ));
     }
 
@@ -105,7 +105,7 @@ pub fn api_endpoint_example(token: &str, resource_id: &str) -> BearDogResult<Str
     if !token.starts_with("Bearer ") {
         return Err(authentication_error_with_hint(
             "Invalid token format",
-            "Token must be in format: 'Bearer <jwt_token>'. Example: 'Bearer eyJhbGc...'"
+            "Token must be in format: 'Bearer <jwt_token>'. Example: 'Bearer eyJhbGc...'",
         ));
     }
 
@@ -125,13 +125,13 @@ pub fn api_endpoint_example(token: &str, resource_id: &str) -> BearDogResult<Str
 ///
 /// This shows how configuration loading might use enhanced errors to guide
 /// users to documentation when configuration is invalid.
-pub fn load_hsm_config(config_path: &str) -> BearDogResult<String> {
+pub fn load_hsm_config(config_path: &str) -> Result<String, BearDogError> {
     // Simulate configuration parsing
     if config_path.contains("invalid") {
         return Err(configuration_error_with_docs(
             "Missing required field 'provider_type' in HSM configuration",
             "hsm",
-            "https://docs.beardog.dev/configuration/hsm#required-fields"
+            "https://docs.beardog.dev/configuration/hsm#required-fields",
         ));
     }
 
@@ -142,13 +142,13 @@ pub fn load_hsm_config(config_path: &str) -> BearDogResult<String> {
 ///
 /// This shows how network operations might use enhanced errors to provide
 /// full context for debugging connection issues.
-pub fn discover_service(service_name: &str, consul_addr: &str) -> BearDogResult<String> {
+pub fn discover_service(service_name: &str, consul_addr: &str) -> Result<String, BearDogError> {
     // Simulate service discovery
     if consul_addr.contains("unreachable") {
         return Err(network_error_with_context(
             "Connection refused",
             consul_addr,
-            &format!("discover_service({})", service_name)
+            &format!("discover_service({})", service_name),
         ));
     }
 
@@ -159,7 +159,7 @@ pub fn discover_service(service_name: &str, consul_addr: &str) -> BearDogResult<
 ///
 /// This shows how crypto operations might use enhanced errors to provide
 /// detailed information about what went wrong.
-pub fn encrypt_data(data: &[u8], key_size: usize) -> BearDogResult<Vec<u8>> {
+pub fn encrypt_data(data: &[u8], key_size: usize) -> Result<Vec<u8>, BearDogError> {
     // Simulate key size validation
     if key_size != 256 {
         return Err(crypto_error_with_details(
@@ -176,13 +176,13 @@ pub fn encrypt_data(data: &[u8], key_size: usize) -> BearDogResult<Vec<u8>> {
 ///
 /// This shows how input validation might use enhanced errors to provide
 /// helpful suggestions for fixing invalid input.
-pub fn validate_email(email: &str) -> BearDogResult<()> {
+pub fn validate_email(email: &str) -> Result<(), BearDogError> {
     // Simulate email validation
     if !email.contains('@') {
         return Err(validation_error_with_suggestion(
             "email",
             "Must contain '@' symbol",
-            "Correct format is: username@domain.com (e.g., user@example.com)"
+            "Correct format is: username@domain.com (e.g., user@example.com)",
         ));
     }
 
@@ -190,7 +190,7 @@ pub fn validate_email(email: &str) -> BearDogResult<()> {
         return Err(validation_error_with_suggestion(
             "email",
             "Must contain domain extension (e.g., .com, .org)",
-            "Add a domain extension like '@example.com' or '@company.org'"
+            "Add a domain extension like '@example.com' or '@company.org'",
         ));
     }
 
@@ -359,4 +359,3 @@ mod tests {
         assert!(result.is_ok());
     }
 }
-

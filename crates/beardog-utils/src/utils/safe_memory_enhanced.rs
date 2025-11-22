@@ -7,17 +7,13 @@ use tokio::sync::Mutex;
 
 // Re-export buffer size constants from centralized location
 pub use beardog_types::constants::domains::buffers::{
-    BUFFER_SIZE_SMALL as SMALL,
-    BUFFER_SIZE_MEDIUM as MEDIUM,
-    BUFFER_SIZE_LARGE as LARGE,
+    BUFFER_SIZE_LARGE as LARGE, BUFFER_SIZE_MEDIUM as MEDIUM, BUFFER_SIZE_SMALL as SMALL,
 };
 
 pub mod buffer_sizes {
     // Re-export for backward compatibility
     pub use beardog_types::constants::domains::buffers::{
-        BUFFER_SIZE_SMALL as SMALL,
-        BUFFER_SIZE_MEDIUM as MEDIUM,
-        BUFFER_SIZE_LARGE as LARGE,
+        BUFFER_SIZE_LARGE as LARGE, BUFFER_SIZE_MEDIUM as MEDIUM, BUFFER_SIZE_SMALL as SMALL,
     };
 }
 

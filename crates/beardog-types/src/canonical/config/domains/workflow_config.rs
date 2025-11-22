@@ -4,9 +4,10 @@
 //! the large `consolidated_domains.rs` file for better maintainability.
 
 use crate::canonical::traits::{RetryStrategy, TimeoutPolicy};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 use crate::canonical::config::r#trait::BearDogConfig;
@@ -35,8 +36,12 @@ pub struct ConsolidatedWorkflowConfig {
 /// Workflow engine configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WorkflowEngineConfig {
-    /// Engine type
-    pub engine_type: String,
+    /// Engine type (`Arc<str>` for fast cloning in hot path)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub engine_type: Arc<str>,
 
     /// Worker pool size
     pub worker_pool_size: usize,
@@ -67,14 +72,26 @@ pub struct WorkflowEscalationConfig {
 /// Escalation rule
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EscalationRule {
-    /// Rule name
-    pub name: String,
+    /// Rule name (`Arc<str>` for fast cloning across workflow evaluations)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub name: Arc<str>,
 
-    /// Condition
-    pub condition: String,
+    /// Condition expression (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub condition: Arc<str>,
 
-    /// Escalation target
-    pub target: String,
+    /// Escalation target identifier (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub target: Arc<str>,
 
     /// Timeout
     pub timeout: Duration,
@@ -105,14 +122,26 @@ pub use super::network::RateLimitConfig;
 /// Scheduling configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SchedulingConfig {
-    /// Scheduler type
-    pub scheduler_type: String,
+    /// Scheduler type (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub scheduler_type: Arc<str>,
 
-    /// Default schedule
-    pub default_schedule: String,
+    /// Default schedule (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub default_schedule: Arc<str>,
 
-    /// Time zone
-    pub timezone: String,
+    /// Time zone (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub timezone: Arc<str>,
 
     /// Concurrent execution limit
     pub max_concurrent: usize,
@@ -121,8 +150,12 @@ pub struct SchedulingConfig {
 /// Queue configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QueueConfig {
-    /// Queue type
-    pub queue_type: String,
+    /// Queue type (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub queue_type: Arc<str>,
 
     /// Queue capacity
     pub capacity: usize,
@@ -200,11 +233,11 @@ impl TimeoutPolicy for TimeoutConfig {
     }
 
     fn is_production_ready(&self) -> bool {
-        self.connection >= Duration::from_secs(1) &&
-        self.connection <= Duration::from_secs(60) &&
-        self.default >= Duration::from_secs(5) &&
-        self.maximum >= self.default &&
-        self.validate().is_ok()
+        self.connection >= Duration::from_secs(1)
+            && self.connection <= Duration::from_secs(60)
+            && self.default >= Duration::from_secs(5)
+            && self.maximum >= self.default
+            && self.validate().is_ok()
     }
 }
 
@@ -214,8 +247,12 @@ pub struct PersistenceConfig {
     /// Enable persistence
     pub enabled: bool,
 
-    /// Storage backend
-    pub backend: String,
+    /// Storage backend type (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub backend: Arc<str>,
 
     /// Connection configuration
     pub connection: ConnectionConfig,
@@ -230,8 +267,12 @@ pub struct PersistenceConfig {
 /// Connection configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ConnectionConfig {
-    /// Connection URL
-    pub url: String,
+    /// Connection URL (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub url: Arc<str>,
 
     /// Connection pool size
     pub pool_size: usize,
@@ -262,8 +303,12 @@ pub struct ArchiveConfig {
     /// Enable archiving
     pub enabled: bool,
 
-    /// Archive storage
-    pub storage: String,
+    /// Archive storage type (`Arc<str>` for fast cloning)
+    #[serde(
+        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
+        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
+    )]
+    pub storage: Arc<str>,
 
     /// Compression
     pub compression: bool,
@@ -307,7 +352,11 @@ impl WorkflowEngineConfig {
         use crate::canonical::config::source::get_parsed;
 
         Self {
-            engine_type: source.get_or("BEARDOG_WORKFLOW_ENGINE_TYPE", "tokio"),
+            engine_type: Arc::from(
+                source
+                    .get_or("BEARDOG_WORKFLOW_ENGINE_TYPE", "tokio")
+                    .as_str(),
+            ),
             worker_pool_size: get_parsed(source, "BEARDOG_WORKFLOW_WORKER_POOL_SIZE", 10),
             queue: QueueConfig::default(),
             timeouts: TimeoutConfig::default(),
@@ -366,9 +415,17 @@ impl SchedulingConfig {
         use crate::canonical::config::source::get_parsed;
 
         Self {
-            scheduler_type: source.get_or("BEARDOG_WORKFLOW_SCHEDULER_TYPE", "cron"),
-            default_schedule: source.get_or("BEARDOG_WORKFLOW_DEFAULT_SCHEDULE", "0 0 * * *"),
-            timezone: source.get_or("BEARDOG_WORKFLOW_TIMEZONE", "UTC"),
+            scheduler_type: Arc::from(
+                source
+                    .get_or("BEARDOG_WORKFLOW_SCHEDULER_TYPE", "cron")
+                    .as_str(),
+            ),
+            default_schedule: Arc::from(
+                source
+                    .get_or("BEARDOG_WORKFLOW_DEFAULT_SCHEDULE", "0 0 * * *")
+                    .as_str(),
+            ),
+            timezone: Arc::from(source.get_or("BEARDOG_WORKFLOW_TIMEZONE", "UTC").as_str()),
             max_concurrent: get_parsed(source, "BEARDOG_WORKFLOW_MAX_CONCURRENT", 5),
         }
     }
@@ -384,7 +441,7 @@ impl Default for SchedulingConfig {
 impl Default for QueueConfig {
     fn default() -> Self {
         Self {
-            queue_type: "memory".to_string(),
+            queue_type: Arc::from("memory"),
             capacity: std::env::var("BEARDOG_WORKFLOW_QUEUE_CAPACITY")
                 .ok()
                 .and_then(|c| c.parse().ok())
@@ -435,7 +492,7 @@ impl Default for PersistenceConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            backend: "sqlite".to_string(),
+            backend: Arc::from("sqlite"),
             connection: ConnectionConfig::default(),
             retention: RetentionConfig::default(),
             archive: ArchiveConfig::default(),
@@ -446,8 +503,11 @@ impl Default for PersistenceConfig {
 impl Default for ConnectionConfig {
     fn default() -> Self {
         Self {
-            url: std::env::var("BEARDOG_WORKFLOW_DB_URL")
-                .unwrap_or_else(|_| "sqlite://workflows.db".to_string()),
+            url: Arc::from(
+                std::env::var("BEARDOG_WORKFLOW_DB_URL")
+                    .unwrap_or_else(|_| "sqlite://workflows.db".to_string())
+                    .as_str(),
+            ),
             pool_size: std::env::var("BEARDOG_WORKFLOW_DB_POOL_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -487,7 +547,7 @@ impl Default for ArchiveConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            storage: "filesystem".to_string(),
+            storage: Arc::from("filesystem"),
             compression: true,
             encryption: false,
         }
@@ -529,9 +589,18 @@ impl RetryStrategy for RetryConfig {
 
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         // Exponential backoff
-        let delay_ms = self.initial_delay.as_millis() as f64 
-            * self.backoff_multiplier.powi(attempt as i32);
-        let delay = Duration::from_millis(delay_ms as u64);
+        // Note: Precision loss is acceptable for delay calculations (not cryptographic)
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_possible_wrap,
+            clippy::cast_sign_loss
+        )]
+        let delay_ms = {
+            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+            let computed = initial_ms * self.backoff_multiplier.powi(attempt.min(30) as i32);
+            computed.max(0.0) as u64
+        };
+        let delay = Duration::from_millis(delay_ms);
         delay.min(self.max_delay)
     }
 
@@ -559,7 +628,7 @@ impl RetryStrategy for RetryConfig {
 
 // BearDogConfig implementation for ConsolidatedWorkflowConfig
 impl BearDogConfig for ConsolidatedWorkflowConfig {
-    fn validate(&self) -> BearDogResult<()> {
+    fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             if self.engine.worker_pool_size == 0 {
                 return Err(BearDogError::validation(
@@ -594,7 +663,7 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
         Ok(())
     }
 
-    fn merge(&self, other: &Self) -> BearDogResult<Self> {
+    fn merge(&self, other: &Self) -> Result<Self, BearDogError> {
         Ok(Self {
             enabled: other.enabled,
             engine: if other.enabled {
@@ -620,7 +689,7 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
         })
     }
 
-    fn from_env() -> BearDogResult<Self> {
+    fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
         if let Ok(enabled) = std::env::var("BEARDOG_WORKFLOW_ENABLED") {
@@ -644,14 +713,14 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
         }
 
         if let Ok(backend) = std::env::var("BEARDOG_WORKFLOW_PERSISTENCE_BACKEND") {
-            config.persistence.backend = backend;
+            config.persistence.backend = Arc::from(backend.as_str());
         }
 
         config.validate()?;
         Ok(config)
     }
 
-    fn to_toml(&self) -> BearDogResult<String> {
+    fn to_toml(&self) -> Result<String, BearDogError> {
         toml::to_string(self).map_err(|e| {
             BearDogError::system(format!("Failed to serialize workflow config to TOML: {e}"))
         })
@@ -659,5 +728,571 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
 
     fn domain() -> &'static str {
         "workflows"
+    }
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::canonical::config::r#trait::BearDogConfig;
+    use crate::canonical::traits::TimeoutPolicy;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    // ============================================================================
+    // ConsolidatedWorkflowConfig Tests
+    // ============================================================================
+
+    #[test]
+    fn test_consolidated_workflow_config_default() {
+        let config = ConsolidatedWorkflowConfig::default();
+
+        assert!(config.enabled);
+        assert_eq!(config.engine.worker_pool_size, 10);
+        assert!(config.persistence.enabled);
+        assert_eq!(config.scheduling.max_concurrent, 5);
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_clone() {
+        let config = ConsolidatedWorkflowConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config, cloned);
+        assert_eq!(config.enabled, cloned.enabled);
+        assert_eq!(
+            config.engine.worker_pool_size,
+            cloned.engine.worker_pool_size
+        );
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_serialization() {
+        let config = ConsolidatedWorkflowConfig::default();
+
+        // Test serialization to TOML
+        let toml_result = config.to_toml();
+        assert!(toml_result.is_ok());
+
+        let toml_str = toml_result.unwrap();
+        assert!(!toml_str.is_empty());
+        assert!(toml_str.contains("enabled"));
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_domain() {
+        assert_eq!(ConsolidatedWorkflowConfig::domain(), "workflows");
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_validation() {
+        let config = ConsolidatedWorkflowConfig::default();
+        let result = config.validate();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_validation_fails_zero_workers() {
+        let mut config = ConsolidatedWorkflowConfig::default();
+        config.engine.worker_pool_size = 0;
+
+        let result = config.validate();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_validation_fails_zero_capacity() {
+        let mut config = ConsolidatedWorkflowConfig::default();
+        config.engine.queue.capacity = 0;
+
+        let result = config.validate();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_from_env() {
+        // Set environment variables
+        std::env::set_var("BEARDOG_WORKFLOW_ENABLED", "true");
+        std::env::set_var("BEARDOG_WORKFLOW_WORKER_POOL_SIZE", "20");
+        std::env::set_var("BEARDOG_WORKFLOW_QUEUE_CAPACITY", "2000");
+
+        let result = ConsolidatedWorkflowConfig::from_env();
+        assert!(result.is_ok());
+
+        let config = result.unwrap();
+        assert!(config.enabled);
+        assert_eq!(config.engine.worker_pool_size, 20);
+        assert_eq!(config.engine.queue.capacity, 2000);
+
+        // Cleanup
+        std::env::remove_var("BEARDOG_WORKFLOW_ENABLED");
+        std::env::remove_var("BEARDOG_WORKFLOW_WORKER_POOL_SIZE");
+        std::env::remove_var("BEARDOG_WORKFLOW_QUEUE_CAPACITY");
+    }
+
+    #[test]
+    fn test_consolidated_workflow_config_merge() {
+        let config1 = ConsolidatedWorkflowConfig::default();
+        let mut config2 = ConsolidatedWorkflowConfig::default();
+        config2.engine.worker_pool_size = 20;
+        config2.enabled = true;
+
+        let merged = config1.merge(&config2);
+        assert!(merged.is_ok());
+
+        let result = merged.unwrap();
+        assert_eq!(result.engine.worker_pool_size, 20);
+    }
+
+    // ============================================================================
+    // WorkflowEngineConfig Tests
+    // ============================================================================
+
+    #[test]
+    fn test_workflow_engine_config_default() {
+        let config = WorkflowEngineConfig::default();
+
+        assert_eq!(config.engine_type.as_ref(), "tokio");
+        assert_eq!(config.worker_pool_size, 10);
+        assert_eq!(config.queue.capacity, 1000);
+    }
+
+    #[test]
+    fn test_workflow_engine_config_clone() {
+        let config = WorkflowEngineConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config, cloned);
+        assert_eq!(config.engine_type, cloned.engine_type);
+    }
+
+    #[test]
+    fn test_workflow_engine_config_custom_values() {
+        let config = WorkflowEngineConfig {
+            engine_type: Arc::from("sync"),
+            worker_pool_size: 25,
+            queue: QueueConfig::default(),
+            timeouts: TimeoutConfig::default(),
+        };
+
+        assert_eq!(config.engine_type.as_ref(), "sync");
+        assert_eq!(config.worker_pool_size, 25);
+    }
+
+    // ============================================================================
+    // QueueConfig Tests
+    // ============================================================================
+
+    #[test]
+    fn test_queue_config_default() {
+        let config = QueueConfig::default();
+
+        assert_eq!(config.queue_type.as_ref(), "memory");
+        assert_eq!(config.capacity, 1000);
+        assert_eq!(config.message_ttl, Duration::from_secs(3600));
+    }
+
+    #[test]
+    fn test_queue_config_clone() {
+        let config = QueueConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config, cloned);
+    }
+
+    #[test]
+    fn test_queue_config_custom_capacity() {
+        let mut config = QueueConfig::default();
+        config.capacity = 5000;
+
+        assert_eq!(config.capacity, 5000);
+    }
+
+    #[test]
+    fn test_queue_config_dead_letter_queue() {
+        let mut config = QueueConfig::default();
+        config.dead_letter_queue = Some("dlq-workflows".to_string());
+
+        assert!(config.dead_letter_queue.is_some());
+        assert_eq!(config.dead_letter_queue.unwrap(), "dlq-workflows");
+    }
+
+    // ============================================================================
+    // TimeoutConfig Tests (with TimeoutPolicy trait)
+    // ============================================================================
+
+    #[test]
+    fn test_timeout_config_default() {
+        let config = TimeoutConfig::default();
+
+        assert_eq!(config.default, Duration::from_secs(30));
+        assert_eq!(config.maximum, Duration::from_secs(300));
+        assert_eq!(config.connection, Duration::from_secs(10));
+        assert_eq!(config.read, Duration::from_secs(30));
+    }
+
+    #[test]
+    fn test_timeout_config_clone() {
+        let config = TimeoutConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config, cloned);
+    }
+
+    #[test]
+    fn test_timeout_config_timeout_policy_connection() {
+        let config = TimeoutConfig::default();
+        assert_eq!(config.connection_timeout(), Duration::from_secs(10));
+    }
+
+    #[test]
+    fn test_timeout_config_timeout_policy_operation() {
+        let config = TimeoutConfig::default();
+
+        assert_eq!(config.operation_timeout("read"), Duration::from_secs(30));
+        assert_eq!(config.operation_timeout("connect"), Duration::from_secs(10));
+        assert_eq!(
+            config.operation_timeout("connection"),
+            Duration::from_secs(10)
+        );
+        assert_eq!(config.operation_timeout("other"), Duration::from_secs(30));
+    }
+
+    #[test]
+    fn test_timeout_config_should_timeout() {
+        let config = TimeoutConfig::default();
+
+        assert!(!config.should_timeout(Duration::from_secs(5), "read"));
+        assert!(config.should_timeout(Duration::from_secs(35), "read"));
+        assert!(config.should_timeout(Duration::from_secs(15), "connection"));
+    }
+
+    #[test]
+    fn test_timeout_config_global_timeout() {
+        let config = TimeoutConfig::default();
+
+        let global = config.global_timeout();
+        assert!(global.is_some());
+        assert_eq!(global.unwrap(), Duration::from_secs(300));
+    }
+
+    #[test]
+    fn test_timeout_config_read_timeout() {
+        let config = TimeoutConfig::default();
+        assert_eq!(config.read_timeout(), Duration::from_secs(30));
+    }
+
+    #[test]
+    fn test_timeout_config_write_timeout() {
+        let config = TimeoutConfig::default();
+        assert_eq!(config.write_timeout(), Duration::from_secs(30));
+    }
+
+    #[test]
+    fn test_timeout_config_idle_timeout() {
+        let config = TimeoutConfig::default();
+        assert!(config.idle_timeout().is_none());
+    }
+
+    #[test]
+    fn test_timeout_config_remaining_time() {
+        let config = TimeoutConfig::default();
+
+        let remaining = config.remaining_time(Duration::from_secs(10), "read");
+        assert_eq!(remaining, Duration::from_secs(20));
+
+        let remaining_overtime = config.remaining_time(Duration::from_secs(35), "read");
+        assert_eq!(remaining_overtime, Duration::ZERO);
+    }
+
+    #[test]
+    fn test_timeout_config_validate_success() {
+        let config = TimeoutConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_timeout_config_validate_fails_zero_connection() {
+        let config = TimeoutConfig {
+            default: Duration::from_secs(30),
+            maximum: Duration::from_secs(300),
+            connection: Duration::ZERO,
+            read: Duration::from_secs(30),
+        };
+
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_timeout_config_validate_fails_maximum_less_than_default() {
+        let config = TimeoutConfig {
+            default: Duration::from_secs(100),
+            maximum: Duration::from_secs(50),
+            connection: Duration::from_secs(10),
+            read: Duration::from_secs(30),
+        };
+
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_timeout_config_is_production_ready() {
+        let config = TimeoutConfig::default();
+        assert!(config.is_production_ready());
+    }
+
+    #[test]
+    fn test_timeout_config_not_production_ready_connection_too_short() {
+        let config = TimeoutConfig {
+            default: Duration::from_secs(30),
+            maximum: Duration::from_secs(300),
+            connection: Duration::from_millis(500),
+            read: Duration::from_secs(30),
+        };
+
+        assert!(!config.is_production_ready());
+    }
+
+    #[test]
+    fn test_timeout_config_not_production_ready_connection_too_long() {
+        let config = TimeoutConfig {
+            default: Duration::from_secs(30),
+            maximum: Duration::from_secs(300),
+            connection: Duration::from_secs(120),
+            read: Duration::from_secs(30),
+        };
+
+        assert!(!config.is_production_ready());
+    }
+
+    // ============================================================================
+    // SchedulingConfig Tests
+    // ============================================================================
+
+    #[test]
+    fn test_scheduling_config_default() {
+        let config = SchedulingConfig::default();
+
+        assert_eq!(config.scheduler_type.as_ref(), "cron");
+        assert_eq!(config.max_concurrent, 5);
+        assert_eq!(config.timezone.as_ref(), "UTC");
+    }
+
+    #[test]
+    fn test_scheduling_config_clone() {
+        let config = SchedulingConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config, cloned);
+    }
+
+    #[test]
+    fn test_scheduling_config_custom_values() {
+        let config = SchedulingConfig {
+            scheduler_type: Arc::from("interval"),
+            default_schedule: Arc::from("@hourly"),
+            timezone: Arc::from("America/New_York"),
+            max_concurrent: 10,
+        };
+
+        assert_eq!(config.scheduler_type.as_ref(), "interval");
+        assert_eq!(config.max_concurrent, 10);
+        assert_eq!(config.timezone.as_ref(), "America/New_York");
+    }
+
+    // ============================================================================
+    // WorkflowEscalationConfig Tests
+    // ============================================================================
+
+    #[test]
+    fn test_escalation_config_default() {
+        let config = WorkflowEscalationConfig::default();
+
+        assert!(!config.enabled);
+        assert!(config.rules.is_empty());
+        assert_eq!(config.default_timeout, Duration::from_secs(300));
+    }
+
+    #[test]
+    fn test_escalation_config_clone() {
+        let config = WorkflowEscalationConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config, cloned);
+    }
+
+    #[test]
+    fn test_escalation_rule_creation() {
+        let rule = EscalationRule {
+            name: Arc::from("high-priority"),
+            condition: Arc::from("priority > 8"),
+            target: Arc::from("manager-on-call"),
+            timeout: Duration::from_secs(600),
+        };
+
+        assert_eq!(rule.name.as_ref(), "high-priority");
+        assert_eq!(rule.condition.as_ref(), "priority > 8");
+        assert_eq!(rule.target.as_ref(), "manager-on-call");
+    }
+
+    #[test]
+    fn test_notification_config_default() {
+        let config = NotificationConfig::default();
+
+        assert_eq!(config.channels, vec!["email".to_string()]);
+        assert!(config.templates.is_empty());
+    }
+
+    // ============================================================================
+    // PersistenceConfig Tests
+    // ============================================================================
+
+    #[test]
+    fn test_persistence_config_default() {
+        let config = PersistenceConfig::default();
+
+        assert!(config.enabled);
+        assert_eq!(config.backend.as_ref(), "sqlite");
+    }
+
+    #[test]
+    fn test_persistence_config_clone() {
+        let config = PersistenceConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config.enabled, cloned.enabled);
+        assert_eq!(config.backend, cloned.backend);
+    }
+
+    #[test]
+    fn test_persistence_config_custom_backend() {
+        let mut config = PersistenceConfig::default();
+        config.backend = Arc::from("postgresql");
+
+        assert_eq!(config.backend.as_ref(), "postgresql");
+    }
+
+    // ============================================================================
+    // Environment Variable Integration Tests
+    // ============================================================================
+
+    #[test]
+    fn test_from_env_workflow_enabled() {
+        std::env::set_var("BEARDOG_WORKFLOW_ENABLED", "false");
+
+        let config = ConsolidatedWorkflowConfig::from_env().unwrap();
+        assert!(!config.enabled);
+
+        std::env::remove_var("BEARDOG_WORKFLOW_ENABLED");
+    }
+
+    #[test]
+    fn test_from_env_max_concurrent() {
+        std::env::set_var("BEARDOG_WORKFLOW_MAX_CONCURRENT", "15");
+
+        let config = ConsolidatedWorkflowConfig::from_env().unwrap();
+        assert_eq!(config.scheduling.max_concurrent, 15);
+
+        std::env::remove_var("BEARDOG_WORKFLOW_MAX_CONCURRENT");
+    }
+
+    #[test]
+    fn test_from_env_persistence_enabled() {
+        std::env::set_var("BEARDOG_WORKFLOW_PERSISTENCE_ENABLED", "false");
+
+        let config = ConsolidatedWorkflowConfig::from_env().unwrap();
+        assert!(!config.persistence.enabled);
+
+        std::env::remove_var("BEARDOG_WORKFLOW_PERSISTENCE_ENABLED");
+    }
+
+    #[test]
+    fn test_from_env_persistence_backend() {
+        std::env::set_var("BEARDOG_WORKFLOW_PERSISTENCE_BACKEND", "mongodb");
+
+        let config = ConsolidatedWorkflowConfig::from_env().unwrap();
+        assert_eq!(config.persistence.backend.as_ref(), "mongodb");
+
+        std::env::remove_var("BEARDOG_WORKFLOW_PERSISTENCE_BACKEND");
+    }
+
+    #[test]
+    fn test_from_env_invalid_values_use_defaults() {
+        std::env::set_var("BEARDOG_WORKFLOW_WORKER_POOL_SIZE", "invalid");
+        std::env::set_var("BEARDOG_WORKFLOW_QUEUE_CAPACITY", "not_a_number");
+
+        let config = ConsolidatedWorkflowConfig::from_env().unwrap();
+        assert_eq!(config.engine.worker_pool_size, 10); // Falls back to default
+        assert_eq!(config.engine.queue.capacity, 1000); // Falls back to default
+
+        std::env::remove_var("BEARDOG_WORKFLOW_WORKER_POOL_SIZE");
+        std::env::remove_var("BEARDOG_WORKFLOW_QUEUE_CAPACITY");
+    }
+
+    // ============================================================================
+    // Integration Tests
+    // ============================================================================
+
+    #[test]
+    fn test_full_config_lifecycle() {
+        // Create config
+        let config = ConsolidatedWorkflowConfig::default();
+
+        // Validate
+        assert!(config.validate().is_ok());
+
+        // Serialize to TOML
+        let toml_result = config.to_toml();
+        assert!(toml_result.is_ok());
+
+        // Clone
+        let cloned = config.clone();
+        assert_eq!(config, cloned);
+    }
+
+    #[test]
+    fn test_merge_preserves_enabled_settings() {
+        let mut config1 = ConsolidatedWorkflowConfig::default();
+        config1.enabled = true;
+        config1.escalation.enabled = false;
+
+        let mut config2 = ConsolidatedWorkflowConfig::default();
+        config2.enabled = true;
+        config2.escalation.enabled = true;
+
+        let merged = config1.merge(&config2).unwrap();
+        assert!(merged.escalation.enabled);
+    }
+
+    #[test]
+    fn test_timeout_policy_comprehensive() {
+        let config = TimeoutConfig::default();
+
+        // Test all timeout methods
+        assert!(config.connection_timeout() > Duration::ZERO);
+        assert!(config.read_timeout() > Duration::ZERO);
+        assert!(config.write_timeout() > Duration::ZERO);
+        assert!(config.global_timeout().is_some());
+        assert!(config.idle_timeout().is_none());
+
+        // Test validation
+        assert!(config.validate().is_ok());
+        assert!(config.is_production_ready());
+    }
+
+    #[test]
+    fn test_arc_str_usage_for_zero_copy() {
+        let config = WorkflowEngineConfig::default();
+
+        // Arc<str> should allow cheap cloning
+        let engine_type_1 = Arc::clone(&config.engine_type);
+        let engine_type_2 = Arc::clone(&config.engine_type);
+
+        // Should point to same allocation
+        assert!(Arc::ptr_eq(&engine_type_1, &engine_type_2));
     }
 }

@@ -118,6 +118,93 @@ pub struct TimeoutConfig {
     /// Default: 3600 seconds (1 hour)
     /// Environment: `BEARDOG_MAX_CONNECTION_AGE_SECS`
     pub max_connection_age_secs: u64,
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Network Timeouts (Phase 3 - November 21, 2025)
+    // ═══════════════════════════════════════════════════════════════════
+    /// Connection establishment timeout in seconds
+    ///
+    /// Default: 30 seconds
+    /// Environment: `BEARDOG_CONNECTION_TIMEOUT_SECS`
+    pub connection_timeout_secs: u64,
+
+    /// Network handshake timeout in seconds
+    ///
+    /// Default: 10 seconds
+    /// Environment: `BEARDOG_HANDSHAKE_TIMEOUT_SECS`
+    pub handshake_timeout_secs: u64,
+
+    /// TLS handshake timeout in seconds
+    ///
+    /// Default: 30 seconds
+    /// Environment: `BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS`
+    pub tls_handshake_timeout_secs: u64,
+
+    /// Keep-alive timeout in seconds
+    ///
+    /// Default: 60 seconds
+    /// Environment: `BEARDOG_KEEP_ALIVE_TIMEOUT_SECS`
+    pub keep_alive_timeout_secs: u64,
+
+    /// Idle connection timeout in seconds
+    ///
+    /// Default: 300 seconds (5 minutes)
+    /// Environment: `BEARDOG_IDLE_CONNECTION_TIMEOUT_SECS`
+    pub idle_connection_timeout_secs: u64,
+
+    /// Read operation timeout in seconds
+    ///
+    /// Default: 60 seconds
+    /// Environment: `BEARDOG_READ_TIMEOUT_SECS`
+    pub read_timeout_secs: u64,
+
+    /// Write operation timeout in seconds
+    ///
+    /// Default: 30 seconds
+    /// Environment: `BEARDOG_WRITE_TIMEOUT_SECS`
+    pub write_timeout_secs: u64,
+
+    /// HTTP request timeout in seconds
+    ///
+    /// Default: 30 seconds
+    /// Environment: `BEARDOG_HTTP_REQUEST_TIMEOUT_SECS`
+    pub http_request_timeout_secs: u64,
+
+    /// HTTP response timeout in seconds
+    ///
+    /// Default: 30 seconds
+    /// Environment: `BEARDOG_HTTP_RESPONSE_TIMEOUT_SECS`
+    pub http_response_timeout_secs: u64,
+
+    /// DNS resolution timeout in seconds
+    ///
+    /// Default: 5 seconds
+    /// Environment: `BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS`
+    pub dns_resolution_timeout_secs: u64,
+
+    /// Retry timeout in milliseconds
+    ///
+    /// Default: 100 milliseconds
+    /// Environment: `BEARDOG_RETRY_TIMEOUT_MILLIS`
+    pub retry_timeout_millis: u64,
+
+    /// Backoff timeout in milliseconds
+    ///
+    /// Default: 500 milliseconds
+    /// Environment: `BEARDOG_BACKOFF_TIMEOUT_MILLIS`
+    pub backoff_timeout_millis: u64,
+
+    /// Ping timeout in seconds
+    ///
+    /// Default: 1 second
+    /// Environment: `BEARDOG_PING_TIMEOUT_SECS`
+    pub ping_timeout_secs: u64,
+
+    /// Heartbeat timeout in seconds
+    ///
+    /// Default: 30 seconds
+    /// Environment: `BEARDOG_HEARTBEAT_TIMEOUT_SECS`
+    pub heartbeat_timeout_secs: u64,
 }
 
 impl TimeoutConfig {
@@ -145,6 +232,21 @@ impl TimeoutConfig {
             ai_batch_timeout_millis: 10,
             pool_idle_timeout_secs: 300,
             max_connection_age_secs: 3600,
+            // Network timeouts (Phase 3)
+            connection_timeout_secs: 30,
+            handshake_timeout_secs: 10,
+            tls_handshake_timeout_secs: 30,
+            keep_alive_timeout_secs: 60,
+            idle_connection_timeout_secs: 300,
+            read_timeout_secs: 60,
+            write_timeout_secs: 30,
+            http_request_timeout_secs: 30,
+            http_response_timeout_secs: 30,
+            dns_resolution_timeout_secs: 5,
+            retry_timeout_millis: 100,
+            backoff_timeout_millis: 500,
+            ping_timeout_secs: 1,
+            heartbeat_timeout_secs: 30,
         }
     }
 
@@ -164,52 +266,123 @@ impl TimeoutConfig {
     /// ```
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
-        
+
         Self {
             health_check_secs: std::env::var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.health_check_secs),
-            
+
             hsm_operation_secs: std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.hsm_operation_secs),
-            
+
             hsm_probe_millis: std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.hsm_probe_millis),
-            
+
             discovery_operation_secs: std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.discovery_operation_secs),
-            
+
             ai_decision_secs: std::env::var("BEARDOG_DECISION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.ai_decision_secs),
-            
+
             ai_request_timeout_secs: std::env::var("BEARDOG_AI_REQUEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.ai_request_timeout_secs),
-            
+
             ai_batch_timeout_millis: std::env::var("BEARDOG_AI_BATCH_TIMEOUT_MS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.ai_batch_timeout_millis),
-            
+
             pool_idle_timeout_secs: std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.pool_idle_timeout_secs),
-            
+
             max_connection_age_secs: std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.max_connection_age_secs),
+
+            // Network timeouts (Phase 3)
+            connection_timeout_secs: std::env::var("BEARDOG_CONNECTION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.connection_timeout_secs),
+
+            handshake_timeout_secs: std::env::var("BEARDOG_HANDSHAKE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.handshake_timeout_secs),
+
+            tls_handshake_timeout_secs: std::env::var("BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.tls_handshake_timeout_secs),
+
+            keep_alive_timeout_secs: std::env::var("BEARDOG_KEEP_ALIVE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.keep_alive_timeout_secs),
+
+            idle_connection_timeout_secs: std::env::var("BEARDOG_IDLE_CONNECTION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.idle_connection_timeout_secs),
+
+            read_timeout_secs: std::env::var("BEARDOG_READ_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.read_timeout_secs),
+
+            write_timeout_secs: std::env::var("BEARDOG_WRITE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.write_timeout_secs),
+
+            http_request_timeout_secs: std::env::var("BEARDOG_HTTP_REQUEST_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.http_request_timeout_secs),
+
+            http_response_timeout_secs: std::env::var("BEARDOG_HTTP_RESPONSE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.http_response_timeout_secs),
+
+            dns_resolution_timeout_secs: std::env::var("BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.dns_resolution_timeout_secs),
+
+            retry_timeout_millis: std::env::var("BEARDOG_RETRY_TIMEOUT_MILLIS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.retry_timeout_millis),
+
+            backoff_timeout_millis: std::env::var("BEARDOG_BACKOFF_TIMEOUT_MILLIS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.backoff_timeout_millis),
+
+            ping_timeout_secs: std::env::var("BEARDOG_PING_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.ping_timeout_secs),
+
+            heartbeat_timeout_secs: std::env::var("BEARDOG_HEARTBEAT_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(defaults.heartbeat_timeout_secs),
         }
     }
 
@@ -293,63 +466,63 @@ impl TimeoutConfig {
                 self.health_check_secs
             ));
         }
-        
+
         if !(1..=10).contains(&self.hsm_operation_secs) {
             return Err(format!(
                 "HSM operation timeout must be between 1 and 10 seconds, got {}",
                 self.hsm_operation_secs
             ));
         }
-        
+
         if !(100..=5000).contains(&self.hsm_probe_millis) {
             return Err(format!(
                 "HSM probe timeout must be between 100 and 5000 milliseconds, got {}",
                 self.hsm_probe_millis
             ));
         }
-        
+
         if !(1..=60).contains(&self.discovery_operation_secs) {
             return Err(format!(
                 "Discovery timeout must be between 1 and 60 seconds, got {}",
                 self.discovery_operation_secs
             ));
         }
-        
+
         if !(5..=300).contains(&self.ai_decision_secs) {
             return Err(format!(
                 "AI decision timeout must be between 5 and 300 seconds, got {}",
                 self.ai_decision_secs
             ));
         }
-        
+
         if !(5..=300).contains(&self.ai_request_timeout_secs) {
             return Err(format!(
                 "AI request timeout must be between 5 and 300 seconds, got {}",
                 self.ai_request_timeout_secs
             ));
         }
-        
+
         if !(1..=1000).contains(&self.ai_batch_timeout_millis) {
             return Err(format!(
                 "AI batch timeout must be between 1 and 1000 milliseconds, got {}",
                 self.ai_batch_timeout_millis
             ));
         }
-        
+
         if !(60..=3600).contains(&self.pool_idle_timeout_secs) {
             return Err(format!(
                 "Pool idle timeout must be between 60 and 3600 seconds, got {}",
                 self.pool_idle_timeout_secs
             ));
         }
-        
+
         if !(300..=86400).contains(&self.max_connection_age_secs) {
             return Err(format!(
                 "Max connection age must be between 300 and 86400 seconds, got {}",
                 self.max_connection_age_secs
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -456,7 +629,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.hsm_operation_secs.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS") {
                 if let Ok(secs) = val.parse() {
@@ -464,7 +637,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.hsm_probe_millis.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS") {
                 if let Ok(millis) = val.parse() {
@@ -472,7 +645,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.discovery_operation_secs.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
                 if let Ok(secs) = val.parse() {
@@ -480,7 +653,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.ai_decision_secs.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_DECISION_TIMEOUT_SECS") {
                 if let Ok(secs) = val.parse() {
@@ -488,7 +661,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.ai_request_timeout_secs.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_AI_REQUEST_TIMEOUT_SECS") {
                 if let Ok(secs) = val.parse() {
@@ -496,7 +669,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.ai_batch_timeout_millis.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_AI_BATCH_TIMEOUT_MS") {
                 if let Ok(millis) = val.parse() {
@@ -504,7 +677,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.pool_idle_timeout_secs.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS") {
                 if let Ok(secs) = val.parse() {
@@ -512,7 +685,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         if self.max_connection_age_secs.is_none() {
             if let Ok(val) = std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS") {
                 if let Ok(secs) = val.parse() {
@@ -520,7 +693,7 @@ impl TimeoutConfigBuilder {
                 }
             }
         }
-        
+
         self
     }
 
@@ -529,22 +702,44 @@ impl TimeoutConfigBuilder {
     /// Unset fields will use static defaults.
     pub fn build(self) -> TimeoutConfig {
         let defaults = TimeoutConfig::const_defaults();
-        
+
         TimeoutConfig {
             health_check_secs: self.health_check_secs.unwrap_or(defaults.health_check_secs),
-            hsm_operation_secs: self.hsm_operation_secs.unwrap_or(defaults.hsm_operation_secs),
+            hsm_operation_secs: self
+                .hsm_operation_secs
+                .unwrap_or(defaults.hsm_operation_secs),
             hsm_probe_millis: self.hsm_probe_millis.unwrap_or(defaults.hsm_probe_millis),
-            discovery_operation_secs: self.discovery_operation_secs
+            discovery_operation_secs: self
+                .discovery_operation_secs
                 .unwrap_or(defaults.discovery_operation_secs),
             ai_decision_secs: self.ai_decision_secs.unwrap_or(defaults.ai_decision_secs),
-            ai_request_timeout_secs: self.ai_request_timeout_secs
+            ai_request_timeout_secs: self
+                .ai_request_timeout_secs
                 .unwrap_or(defaults.ai_request_timeout_secs),
-            ai_batch_timeout_millis: self.ai_batch_timeout_millis
+            ai_batch_timeout_millis: self
+                .ai_batch_timeout_millis
                 .unwrap_or(defaults.ai_batch_timeout_millis),
-            pool_idle_timeout_secs: self.pool_idle_timeout_secs
+            pool_idle_timeout_secs: self
+                .pool_idle_timeout_secs
                 .unwrap_or(defaults.pool_idle_timeout_secs),
-            max_connection_age_secs: self.max_connection_age_secs
+            max_connection_age_secs: self
+                .max_connection_age_secs
                 .unwrap_or(defaults.max_connection_age_secs),
+            // Network timeouts (Phase 3) - use defaults
+            connection_timeout_secs: defaults.connection_timeout_secs,
+            handshake_timeout_secs: defaults.handshake_timeout_secs,
+            tls_handshake_timeout_secs: defaults.tls_handshake_timeout_secs,
+            keep_alive_timeout_secs: defaults.keep_alive_timeout_secs,
+            idle_connection_timeout_secs: defaults.idle_connection_timeout_secs,
+            read_timeout_secs: defaults.read_timeout_secs,
+            write_timeout_secs: defaults.write_timeout_secs,
+            http_request_timeout_secs: defaults.http_request_timeout_secs,
+            http_response_timeout_secs: defaults.http_response_timeout_secs,
+            dns_resolution_timeout_secs: defaults.dns_resolution_timeout_secs,
+            retry_timeout_millis: defaults.retry_timeout_millis,
+            backoff_timeout_millis: defaults.backoff_timeout_millis,
+            ping_timeout_secs: defaults.ping_timeout_secs,
+            heartbeat_timeout_secs: defaults.heartbeat_timeout_secs,
         }
     }
 }
@@ -575,7 +770,7 @@ mod tests {
             .health_check_secs(15)
             .hsm_operation_secs(3)
             .build();
-        
+
         assert_eq!(config.health_check_secs, 15);
         assert_eq!(config.hsm_operation_secs, 3);
         // Unset fields use defaults
@@ -591,7 +786,7 @@ mod tests {
             .hsm_probe_millis(750)
             .discovery_operation_secs(20)
             .build();
-        
+
         assert_eq!(config.health_check_secs, 8);
         assert_eq!(config.hsm_operation_secs, 4);
         assert_eq!(config.hsm_probe_millis, 750);
@@ -604,7 +799,10 @@ mod tests {
         assert_eq!(config.health_check_duration(), Duration::from_secs(5));
         assert_eq!(config.hsm_operation_duration(), Duration::from_secs(2));
         assert_eq!(config.hsm_probe_duration(), Duration::from_millis(500));
-        assert_eq!(config.discovery_operation_duration(), Duration::from_secs(10));
+        assert_eq!(
+            config.discovery_operation_duration(),
+            Duration::from_secs(10)
+        );
     }
 
     #[test]
@@ -615,53 +813,39 @@ mod tests {
 
     #[test]
     fn test_validation_health_check_too_short() {
-        let config = TimeoutConfig::builder()
-            .health_check_secs(0)
-            .build();
+        let config = TimeoutConfig::builder().health_check_secs(0).build();
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_validation_health_check_too_long() {
-        let config = TimeoutConfig::builder()
-            .health_check_secs(31)
-            .build();
+        let config = TimeoutConfig::builder().health_check_secs(31).build();
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_validation_hsm_operation_out_of_range() {
-        let config = TimeoutConfig::builder()
-            .hsm_operation_secs(0)
-            .build();
+        let config = TimeoutConfig::builder().hsm_operation_secs(0).build();
         assert!(config.validate().is_err());
-        
-        let config = TimeoutConfig::builder()
-            .hsm_operation_secs(11)
-            .build();
+
+        let config = TimeoutConfig::builder().hsm_operation_secs(11).build();
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_validation_hsm_probe_out_of_range() {
-        let config = TimeoutConfig::builder()
-            .hsm_probe_millis(50)
-            .build();
+        let config = TimeoutConfig::builder().hsm_probe_millis(50).build();
         assert!(config.validate().is_err());
-        
-        let config = TimeoutConfig::builder()
-            .hsm_probe_millis(6000)
-            .build();
+
+        let config = TimeoutConfig::builder().hsm_probe_millis(6000).build();
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_validation_discovery_out_of_range() {
-        let config = TimeoutConfig::builder()
-            .discovery_operation_secs(0)
-            .build();
+        let config = TimeoutConfig::builder().discovery_operation_secs(0).build();
         assert!(config.validate().is_err());
-        
+
         let config = TimeoutConfig::builder()
             .discovery_operation_secs(61)
             .build();
@@ -684,7 +868,7 @@ mod tests {
             .hsm_probe_millis(1000)
             .discovery_operation_secs(30)
             .build();
-        
+
         assert!(config.validate().is_ok());
     }
 }

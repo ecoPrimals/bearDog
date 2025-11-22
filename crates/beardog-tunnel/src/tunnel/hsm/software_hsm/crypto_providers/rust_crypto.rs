@@ -107,9 +107,7 @@ impl CryptoProvider<KeyType> for RustCryptoProvider {
 
         let cipher = ChaCha20Poly1305::new(&key.into());
         let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
-        let nonce = nonce_bytes
-            .try_into()
-            .map_err(|_| BearDogError::crypto_error("Invalid nonce length".to_string()))?;
+        let nonce = nonce_bytes.into();
 
         let plaintext = cipher
             .decrypt(nonce, encrypted_data)

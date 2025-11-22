@@ -102,7 +102,7 @@ fn test_environment_level_variants() {
 #[test]
 fn test_environment_level_clone() {
     let level1 = EnvironmentLevel::Production;
-    let level2 = level1.clone();
+    let level2 = level1; // Copy type, no need for .clone()
 
     assert_eq!(level1, level2);
 }
@@ -393,7 +393,7 @@ fn test_performance_metrics_clone() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
-    let metrics2 = metrics1.clone();
+    let metrics2 = metrics1; // Copy type, no need for .clone()
 
     assert_eq!(metrics1.avg_response_time_ms, metrics2.avg_response_time_ms);
     assert_eq!(metrics1.requests_per_second, metrics2.requests_per_second);

@@ -8,6 +8,7 @@ use crate::tunnel::hsm::types::config::{
 };
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod security_comprehensive_tests {
     use super::*;
 

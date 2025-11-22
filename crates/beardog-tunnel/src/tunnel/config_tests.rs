@@ -179,7 +179,7 @@ fn test_performance_config_reasonable_limits() {
     assert!(config.max_decryption_latency < Duration::from_millis(1));
     assert!(config.max_session_setup_time < Duration::from_secs(1));
     assert!(config.memory_limit_mb < 10000); // Less than 10GB
-    assert!(config.max_concurrent_sessions < 100000);
+    assert!(config.max_concurrent_sessions < 100_000);
     assert!(config.cpu_threshold <= 100.0);
     assert!(config.memory_threshold <= 100.0);
     assert!(config.compression_level <= 9);

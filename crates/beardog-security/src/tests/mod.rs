@@ -36,6 +36,10 @@ mod crypto_utils_comprehensive_tests;
 #[cfg(test)]
 mod access_control_expanded_tests;
 
+// November 21, 2025: HSM Provider Failover Tests (Sprint 1 - Coverage Expansion)
+#[cfg(test)]
+mod hsm_provider_failover_tests;
+
 // Day 2: HSM Operations Comprehensive Tests - October 17, 2025
 // Split into 3 modules on October 24, 2025 (file size compliance: 1291→~400 lines each)
 #[cfg(test)]
@@ -153,3 +157,7 @@ mod memory_key_manager_comprehensive_tests;
 // October 31, 2025 - Week 2 Test Expansion: SIMD Crypto Tests
 #[cfg(test)]
 mod simd_crypto_comprehensive_tests;
+
+// November 19, 2025: Comprehensive HSM error path tests (modern concurrent patterns)
+#[cfg(test)]
+mod hsm_error_path_comprehensive_tests;

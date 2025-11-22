@@ -4,7 +4,8 @@
 // replacing binary allowlist/blocklist patterns with a nuanced spectrum of 
 // relationship levels that reflect biological ecosystem dynamics.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -331,7 +332,7 @@ impl MembershipRegistry {
         &mut self,
         entity_id: String,
         membership: EcosystemMembership,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         // Validate membership based on configuration
         if !self.config.auto_promotion_enabled {
             match membership {
@@ -358,7 +359,7 @@ impl MembershipRegistry {
         new_membership: EcosystemMembership,
         reason: String,
         approved_by: Option<String>,
-    ) -> BearDogResult<()> {
+    ) -> Result<()> {
         let old_membership = self.memberships.get(&entity_id)
             .ok_or_else(|| BearDogError::business("Entity not found in registry".to_string()))?
             .clone();

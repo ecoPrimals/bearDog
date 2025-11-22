@@ -3,7 +3,7 @@
 // Enables complex multi-hop scenarios without hardcoding primal names.
 // Replaces hardcoded primal chains with dynamic capability chaining.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     CapabilityRequest, CapabilityResponse, ServiceCapabilityType, UniversalCapability,
 };
@@ -287,7 +287,7 @@ impl CapabilityChain {
         &mut self,
         initial_data: serde_json::Value,
         universal_adapter: &crate::universal::capability_based_adapter::UniversalCapabilityAdapter,
-    ) -> BearDogResult<ChainExecutionResult> {
+    ) -> Result<ChainExecutionResult> {
         let chain_id = Uuid::new_v4();
         let start_time = std::time::Instant::now();
 
@@ -387,7 +387,7 @@ impl CapabilityChain {
         step: &CapabilityStep,
         input_data: serde_json::Value,
         universal_adapter: &crate::universal::capability_based_adapter::UniversalCapabilityAdapter,
-    ) -> BearDogResult<StepResult> {
+    ) -> Result<StepResult> {
         let step_start = std::time::Instant::now();
 
         debug!(
@@ -468,7 +468,7 @@ impl CapabilityChain {
 /// Example usage demonstrating the elimination of hardcoded primal connections
 pub async fn demonstrate_network_effects_without_hardcoding(
     universal_adapter: &crate::universal::capability_based_adapter::UniversalCapabilityAdapter,
-) -> BearDogResult<()> {
+) -> Result<()> {
     info!("🌐 Demonstrating network effects WITHOUT hardcoded primal names");
     info!("📋 Scenario: AI analysis of storage data via compute and mesh routing");
     info!("❌ OLD WAY: storage->compute->ai (hardcoded primal names)");

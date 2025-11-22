@@ -1,10 +1,10 @@
+use beardog_errors::BearDogError;
 mod android;
 mod builder;
 mod device;
 mod error;
 
 use crate::{android::AndroidDeployment, builder::RustBuilder, device::DeviceManager};
-use beardog_errors::BearDogResult;
 use clap::{Parser, Subcommand};
 use console::{style, Term};
 use std::path::PathBuf;
@@ -73,7 +73,7 @@ struct DeployConfig {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     let cli = Cli::parse();
 
     let log_level = if cli.verbose {
@@ -142,7 +142,7 @@ fn check_command(
     android_deployment: &AndroidDeployment,
     device_manager: &DeviceManager,
     device_only: bool,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     println!("🔍 Checking deployment prerequisites...");
 
     if !device_only {
@@ -160,7 +160,7 @@ async fn build_command(
     android_deployment: &AndroidDeployment,
     release: bool,
     target: &str,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     android_deployment.verify_environment()?;
     builder.build_android_app(release, target).await?;
     Ok(())
@@ -173,7 +173,7 @@ async fn deploy_command(
     device_manager: &DeviceManager,
     release: bool,
     skip_build: bool,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     if !skip_build {
         build_command(
             builder,
@@ -189,12 +189,16 @@ async fn deploy_command(
 }
 
 /// Runs command
-fn run_command(device_manager: &DeviceManager, args: &[String]) -> BearDogResult<()> {
+fn run_command(device_manager: &DeviceManager, args: &[String]) -> Result<(), BearDogError> {
     device_manager.run_app(args)?;
     Ok(())
 }
 
-fn logs_command(device_manager: &DeviceManager, package: &str, follow: bool) -> BearDogResult<()> {
+fn logs_command(
+    device_manager: &DeviceManager,
+    package: &str,
+    follow: bool,
+) -> Result<(), BearDogError> {
     device_manager.show_logs(package, follow)?;
     Ok(())
 }
@@ -204,7 +208,7 @@ async fn full_command(
     android_deployment: &AndroidDeployment,
     device_manager: &DeviceManager,
     release: bool,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     println!("🚀 Running full deployment pipeline...");
 
     check_command(android_deployment, device_manager, false)?;

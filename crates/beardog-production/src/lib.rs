@@ -38,7 +38,7 @@ mod production_comprehensive_tests;
 
 /// Production configuration and utilities
 ///
-//! Provides production-ready configuration and deployment utilities.
+/// Provides production-ready configuration and deployment utilities.
 pub mod config {
     /// Check if the system is production ready
     ///

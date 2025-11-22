@@ -229,7 +229,7 @@ impl BearDogCore {
     ///
     /// Convenience method that creates a `BearDogCore` instance using default
     /// development-friendly settings. For production use, prefer creating a
-    /// custom configuration with [`UnifiedBearDogConfig::production()`].
+    /// custom configuration with production-specific settings.
     ///
     /// # Returns
     ///

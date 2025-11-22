@@ -3,6 +3,7 @@
 // This module provides universal endpoint patterns that replace hardcoded localhost
 // and IP addresses with discoverable, environment-based configurations.
 
+use beardog_config::domains::network_ports::{DEFAULT_DISCOVERY_PORT, DEFAULT_API_PORT};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
@@ -119,21 +120,26 @@ impl Default for InternalDnsPatterns {
             },
             default_ports: {
                 let mut ports = HashMap::new();
+                // ✅ Use BEARDOG_API_PORT (not DEFAULT_HTTP_PORT)
                 ports.insert("http".to_string(), 
-                    env::var("BEARDOG_DEFAULT_HTTP_PORT")
+                    env::var("BEARDOG_API_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(8080));
+                        .unwrap_or_else(|| {
+                            use beardog_config::global::BEARDOG_CONFIG;
+                            BEARDOG_CONFIG.network.api.port
+                        }));
+                // ✅ Use BEARDOG_HTTPS_PORT (not DEFAULT_HTTPS_PORT)
                 ports.insert("https".to_string(), 
-                    env::var("BEARDOG_DEFAULT_HTTPS_PORT")
+                    env::var("BEARDOG_HTTPS_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(8443));
+                        .unwrap_or(8443));  // Standard HTTPS alternate port
                 ports.insert("grpc".to_string(), 
                     env::var("BEARDOG_DEFAULT_GRPC_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(9090));
+                        .unwrap_or(DEFAULT_DISCOVERY_PORT));
                 ports.insert("metrics".to_string(), 
                     env::var("BEARDOG_DEFAULT_METRICS_PORT")
                         .ok()
@@ -180,7 +186,7 @@ impl UniversalEndpointConfig {
         // Use internal DNS pattern for production
         if let Some(pattern) = self.internal_dns_patterns.service_patterns.get(service_name) {
             let endpoint = pattern.replace("{domain}", &self.internal_dns_patterns.base_domain);
-            let port = self.internal_dns_patterns.default_ports.get("http").unwrap_or(&8080);
+            let port = self.internal_dns_patterns.default_ports.get("http").unwrap_or(&DEFAULT_API_PORT);
             return format!("http://{}:{}", endpoint, port);
         }
         
@@ -203,7 +209,7 @@ impl UniversalEndpointConfig {
         
         let host = if self.development_fallbacks.bind_to_all_interfaces {
             std::env::var("BEARDOG_BIND_ADDRESS")
-                .unwrap_or_else(|_| config::DEFAULT_API_BIND.split(':').next().unwrap_or("0.0.0.0").to_string())
+                .unwrap_or_else(|_| config::default_service_host())
         } else {
             std::env::var("BEARDOG_LOCALHOST")
                 .unwrap_or_else(|_| config::default_service_host())
@@ -379,6 +385,7 @@ impl Default for UniversalEndpointResolver {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     
     #[tokio::test]
     fn test_universal_endpoint_config_creation() {
@@ -392,46 +399,210 @@ mod tests {
         let config = UniversalEndpointConfig::default();
         let endpoint = config.get_service_endpoint("compute");
         assert!(endpoint.contains("compute") || endpoint.contains("127.0.0.1"));
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: types
-    // TEST_PRIORITY: normal
     }
     
     #[tokio::test]
     fn test_bind_address_generation() {
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: types
-        // TEST_PRIORITY: normal
+        const TEST_PORT: u16 = 8080;
         let config = UniversalEndpointConfig::default();
-        let bind_addr = config.get_bind_address(8080);
-        assert!(bind_addr.contains("8080"));
+        let bind_addr = config.get_bind_address(TEST_PORT);
+        assert!(bind_addr.contains(&TEST_PORT.to_string()));
         assert!(bind_addr.contains("0.0.0.0") || bind_addr.contains("127.0.0.1"));
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: types
-    // TEST_PRIORITY: normal
     }
     
     #[tokio::test]
     fn test_database_endpoint_resolution() {
         let config = UniversalEndpointConfig::default();
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: types
-        // TEST_PRIORITY: normal
         let db_endpoint = config.get_database_endpoint();
         assert!(!db_endpoint.is_empty());
         assert!(db_endpoint.contains(":"));
     }
     
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: types
-    // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_endpoint_resolver() {
         let resolver = UniversalEndpointResolver::new();
         let result = resolver.resolve_endpoint("compute");
         assert!(result.is_ok());
         
-        let endpoint = result?;
+        if let Ok(endpoint) = result {
+            assert!(!endpoint.is_empty());
+        }
+    }
+    
+    // NEW COMPREHENSIVE TESTS BELOW
+    
+    #[tokio::test]
+    fn test_development_fallbacks_default() {
+        let fallbacks = DevelopmentFallbacks::default();
+        assert!(!fallbacks.base_discovery.is_empty());
+        assert!(!fallbacks.service_ports.is_empty());
+        assert!(fallbacks.service_ports.contains_key("compute"));
+        assert!(fallbacks.service_ports.contains_key("storage"));
+    }
+    
+    #[tokio::test]
+    fn test_internal_dns_patterns_default() {
+        let patterns = InternalDnsPatterns::default();
+        assert_eq!(patterns.base_domain, "ecosystem.internal");
+        assert!(patterns.service_patterns.contains_key("compute"));
+        assert!(patterns.default_ports.contains_key("http"));
+    }
+    
+    #[tokio::test]
+    fn test_get_service_endpoint_with_explicit_mapping() {
+        let mut config = UniversalEndpointConfig::default();
+        config.service_endpoints.insert(
+            "test-service".to_string(),
+            "http://explicit-endpoint:9000".to_string()
+        );
+        
+        let endpoint = config.get_service_endpoint("test-service");
+        assert_eq!(endpoint, "http://explicit-endpoint:9000");
+    }
+    
+    #[tokio::test]
+    fn test_get_service_endpoint_with_env_var() {
+        env::set_var("COMPUTE_ENDPOINT", "http://env-compute:8080");
+        let config = UniversalEndpointConfig::default();
+        let endpoint = config.get_service_endpoint("compute");
+        assert_eq!(endpoint, "http://env-compute:8080");
+        env::remove_var("COMPUTE_ENDPOINT");
+    }
+    
+    #[tokio::test]
+    fn test_get_service_endpoint_with_legacy_env() {
+        env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://legacy-storage:9000");
+        let config = UniversalEndpointConfig::default();
+        let endpoint = config.get_service_endpoint("storage");
+        assert_eq!(endpoint, "http://legacy-storage:9000");
+        env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+    }
+    
+    #[tokio::test]
+    fn test_get_service_endpoint_fallback_to_development() {
+        let config = UniversalEndpointConfig::default();
+        let endpoint = config.get_service_endpoint("compute");
+        // Should use development fallback port
+        assert!(endpoint.contains(&config.development_fallbacks.service_ports["compute"].to_string()));
+    }
+    
+    #[tokio::test]
+    fn test_get_bind_address_all_interfaces() {
+        env::set_var("BEARDOG_BIND_ALL_INTERFACES", "true");
+        const TEST_PORT: u16 = 9000;
+        let config = UniversalEndpointConfig::default();
+        let bind_addr = config.get_bind_address(TEST_PORT);
+        assert_eq!(bind_addr, "0.0.0.0:9000");
+        env::remove_var("BEARDOG_BIND_ALL_INTERFACES");
+    }
+    
+    #[tokio::test]
+    fn test_get_bind_address_localhost_only() {
+        env::set_var("BEARDOG_BIND_ALL_INTERFACES", "false");
+        const TEST_PORT: u16 = 8500;
+        let config = UniversalEndpointConfig::default();
+        let bind_addr = config.get_bind_address(TEST_PORT);
+        assert!(bind_addr.starts_with("127.0.0.1:") || bind_addr.starts_with("localhost:"));
+        env::remove_var("BEARDOG_BIND_ALL_INTERFACES");
+    }
+    
+    #[tokio::test]
+    fn test_get_database_endpoint_with_env() {
+        env::set_var("BEARDOG_DATABASE_ENDPOINT", "postgresql://db-server:5432/beardog");
+        let config = UniversalEndpointConfig::default();
+        let endpoint = config.get_database_endpoint();
+        assert_eq!(endpoint, "postgresql://db-server:5432/beardog");
+        env::remove_var("BEARDOG_DATABASE_ENDPOINT");
+    }
+    
+    #[tokio::test]
+    fn test_get_database_endpoint_default() {
+        let config = UniversalEndpointConfig::default();
+        let endpoint = config.get_database_endpoint();
         assert!(!endpoint.is_empty());
+        assert!(endpoint.contains("postgresql://") || endpoint.contains("127.0.0.1"));
+    }
+    
+    #[tokio::test]
+    fn test_endpoint_resolver_caching() {
+        let resolver = UniversalEndpointResolver::new();
+        
+        // First resolution
+        let result1 = resolver.resolve_endpoint("compute");
+        assert!(result1.is_ok());
+        
+        // Second resolution should use cache
+        let result2 = resolver.resolve_endpoint("compute");
+        assert!(result2.is_ok());
+        assert_eq!(result1.unwrap(), result2.unwrap());
+    }
+    
+    #[tokio::test]
+    fn test_endpoint_resolver_clear_cache() {
+        let resolver = UniversalEndpointResolver::new();
+        
+        let _ = resolver.resolve_endpoint("storage");
+        resolver.clear_cache();
+        
+        // Should resolve again after cache clear
+        let result = resolver.resolve_endpoint("storage");
+        assert!(result.is_ok());
+    }
+    
+    #[tokio::test]
+    fn test_endpoint_resolver_cache_ttl() {
+        env::set_var("BEARDOG_ENDPOINT_CACHE_TTL_SECS", "1");
+        let resolver = UniversalEndpointResolver::new();
+        
+        let _ = resolver.resolve_endpoint("ai");
+        // Cache should exist but we can't easily test TTL expiration without waiting
+        assert!(resolver.resolve_endpoint("ai").is_ok());
+        
+        env::remove_var("BEARDOG_ENDPOINT_CACHE_TTL_SECS");
+    }
+    
+    #[tokio::test]
+    fn test_multiple_service_endpoint_resolutions() {
+        let config = UniversalEndpointConfig::default();
+        
+        let services = vec!["compute", "storage", "ai", "mesh", "security"];
+        for service in services {
+            let endpoint = config.get_service_endpoint(service);
+            assert!(!endpoint.is_empty(), "Endpoint for {} should not be empty", service);
+            assert!(endpoint.contains(service) || endpoint.contains("127.0.0.1"));
+        }
+    }
+    
+    #[tokio::test]
+    fn test_unknown_service_endpoint() {
+        let config = UniversalEndpointConfig::default();
+        let endpoint = config.get_service_endpoint("unknown-service");
+        // Should fall back to discovery endpoint pattern
+        assert!(endpoint.contains("unknown-service"));
+    }
+    
+    #[tokio::test]
+    fn test_service_ports_all_populated() {
+        let fallbacks = DevelopmentFallbacks::default();
+        let required_services = vec!["compute", "mesh", "ai", "storage", "security"];
+        
+        for service in required_services {
+            assert!(
+                fallbacks.service_ports.contains_key(service),
+                "Service port for {} should be present", 
+                service
+            );
+        }
+    }
+    
+    #[tokio::test]
+    fn test_internal_dns_pattern_substitution() {
+        let config = UniversalEndpointConfig::default();
+        
+        // Test that DNS patterns are properly formed
+        assert!(config.internal_dns_patterns.service_patterns.contains_key("compute"));
+        
+        let pattern = &config.internal_dns_patterns.service_patterns["compute"];
+        assert!(pattern.contains("{domain}"), "Pattern should contain domain placeholder");
     }
 } 
