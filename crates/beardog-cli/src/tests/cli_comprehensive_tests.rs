@@ -1,5 +1,14 @@
 #[cfg(test)]
 mod cli_comprehensive_tests {
+    #![allow(
+        unused_imports,
+        unused_variables,
+        dead_code,
+        unused_comparisons,
+        clippy::all,
+        clippy::expect_used,
+        clippy::unwrap_used
+    )]
     use std::path::PathBuf;
     use tempfile::TempDir;
     use tokio::fs;
@@ -256,9 +265,15 @@ mod cli_comprehensive_tests {
     }
 
     #[test]
+    #[allow(clippy::nonminimal_bool)]
     fn test_debug_build_detection() {
         let is_debug = cfg!(debug_assertions);
-        assert!(is_debug || !is_debug, "Build type should be detectable");
+        // Build type is always detectable (either debug or release)
+        assert!(
+            is_debug || !is_debug,
+            "Build type detected: {}",
+            if is_debug { "debug" } else { "release" }
+        );
     }
 
     #[tokio::test]

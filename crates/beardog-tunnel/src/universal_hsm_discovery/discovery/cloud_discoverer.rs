@@ -223,10 +223,10 @@ impl CloudDiscoverer {
         let now = Utc::now();
         
         DiscoveredHsm {
-            name: format!("aws-kms-{}", region),
+            name: format!("aws-kms-{region}"),
             hsm_type: HsmType::Cloud,
             endpoint: HsmEndpoint {
-                host: format!("kms.{}.amazonaws.com", region),
+                host: format!("kms.{region}.amazonaws.com"),
                 port: Some(443),
                 protocol: "https".to_string(),
                 secure: true,
@@ -255,7 +255,7 @@ impl CloudDiscoverer {
                 name: format!("aws-cloudhsm-{}-{}", region, &cluster_id[..8.min(cluster_id.len())]),
                 hsm_type: HsmType::Cloud,
                 endpoint: HsmEndpoint {
-                    host: format!("cloudhsmv2.{}.amazonaws.com", region),
+                    host: format!("cloudhsmv2.{region}.amazonaws.com"),
                     port: Some(443),
                     protocol: "https".to_string(),
                     secure: true,
@@ -336,10 +336,10 @@ impl CloudDiscoverer {
         let now = Utc::now();
         
         DiscoveredHsm {
-            name: format!("azure-keyvault-{}", vault_name),
+            name: format!("azure-keyvault-{vault_name}"),
             hsm_type: HsmType::Cloud,
             endpoint: HsmEndpoint {
-                host: format!("{}.vault.azure.net", vault_name),
+                host: format!("{vault_name}.vault.azure.net"),
                 port: Some(443),
                 protocol: "https".to_string(),
                 secure: true,
@@ -359,10 +359,10 @@ impl CloudDiscoverer {
         let now = Utc::now();
         
         DiscoveredHsm {
-            name: format!("azure-managedhsm-{}", hsm_name),
+            name: format!("azure-managedhsm-{hsm_name}"),
             hsm_type: HsmType::Cloud,
             endpoint: HsmEndpoint {
-                host: format!("{}.managedhsm.azure.net", hsm_name),
+                host: format!("{hsm_name}.managedhsm.azure.net"),
                 port: Some(443),
                 protocol: "https".to_string(),
                 secure: true,

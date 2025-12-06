@@ -1,4 +1,12 @@
 //! # HSM Operations Benchmarks
+
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 //!
 //! Comprehensive benchmarks for production-critical HSM operations including:
 //! - Key generation (RSA, ECDSA, AES)
@@ -227,6 +235,7 @@ fn benchmark_signing(c: &mut Criterion) {
 // ============================================================================
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 enum CryptoProviderDispatch {
     RustCrypto,
     Ring,

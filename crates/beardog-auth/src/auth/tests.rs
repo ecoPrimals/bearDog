@@ -146,7 +146,7 @@ mod auth_tests {
         hash: &str,
     ) -> Result<bool, Box<dyn std::error::Error>> {
         let parsed_hash =
-            PasswordHash::new(hash).map_err(|e| format!("Password hash error: {}", e))?;
+            PasswordHash::new(hash).map_err(|e| format!("Password hash error: {e}"))?;
         Ok(Argon2::default()
             .verify_password(password.as_bytes(), &parsed_hash)
             .is_ok())

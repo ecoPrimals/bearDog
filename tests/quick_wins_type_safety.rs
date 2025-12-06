@@ -15,9 +15,9 @@ use beardog_types::canonical::config::unified::{Environment, LogLevel, UnifiedBe
 
 /// Tests that all Environment enum variants are distinct
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_environment_enum_variants() {
     // Given: all Environment variants
@@ -41,9 +41,9 @@ fn test_environment_enum_variants() {
 
 /// Tests that Environment has a correct default value
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_environment_default() {
     // When: creating default Environment
@@ -55,9 +55,9 @@ fn test_environment_default() {
 
 /// Tests that Environment can be serialized to JSON
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_environment_serializable() {
     // Given: a Production environment
@@ -72,9 +72,9 @@ fn test_environment_serializable() {
 
 /// Tests that Environment variants can be compared for equality
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_environment_equality() {
     // Given: multiple Environment instances
@@ -101,9 +101,9 @@ fn test_environment_equality() {
 
 /// Tests that all LogLevel enum variants are distinct
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_log_level_enum_variants() {
     // Given: all LogLevel variants
@@ -120,9 +120,9 @@ fn test_log_level_enum_variants() {
 
 /// Tests that LogLevel has a correct default value
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_log_level_default() {
     // When: creating default LogLevel
@@ -134,9 +134,9 @@ fn test_log_level_default() {
 
 /// Tests that LogLevel can be serialized to JSON
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_log_level_serializable() {
     // Given: an Info log level
@@ -151,9 +151,9 @@ fn test_log_level_serializable() {
 
 /// Tests that LogLevel can be cloned correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_log_level_clone() {
     // Given: a log level
@@ -177,9 +177,9 @@ fn test_log_level_clone() {
 
 /// Tests that UnifiedBearDogConfig implements Clone trait
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_implements_clone() {
     // Given: a default config
@@ -197,9 +197,9 @@ fn test_config_implements_clone() {
 
 /// Tests that UnifiedBearDogConfig implements Debug trait
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_config_implements_debug() {
     // Given: a default config
@@ -214,9 +214,9 @@ fn test_config_implements_debug() {
 
 /// Tests that UnifiedBearDogConfig implements Default trait
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_implements_default() {
     // When: creating default config

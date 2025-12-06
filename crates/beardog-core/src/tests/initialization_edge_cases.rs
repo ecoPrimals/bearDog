@@ -2,6 +2,7 @@
 //!
 //! Tests edge cases and error conditions during system initialization
 
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod tests {
     use beardog_types::canonical::config::runtime_config::RuntimeConfig;

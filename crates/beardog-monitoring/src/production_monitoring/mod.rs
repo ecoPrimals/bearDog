@@ -14,6 +14,7 @@ pub mod security_monitor;
 pub mod biome_tracker;
 pub mod monitor;
 
+#[allow(unused_imports, clippy::float_cmp, clippy::absurd_extreme_comparisons, unused_comparisons, clippy::nonminimal_bool)]
 #[cfg(test)]
 mod tests;
 

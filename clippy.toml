@@ -1,17 +1,37 @@
-# Clippy configuration for BearDog project
+# BearDog Clippy Configuration
+# See: https://doc.rust-lang.org/clippy/
+
+msrv = "1.75.0"
+
+# Disallowed methods - methods that should not be used in production code
+# NOTE: unwrap() methods are commonly used in test code for assertions
+# We rely on code review and the test suite to catch unsafe unwraps in production code
+# For critical production crates, add #![deny(clippy::unwrap_used)] to lib.rs
+disallowed-methods = [
+    # Unwrap methods commented out to allow test ergonomics
+    # Production code safety enforced through:
+    # 1. Code review
+    # 2. Comprehensive test coverage
+    # 3. Optional per-crate #![deny(clippy::unwrap_used)] in lib.rs
+    
+    # { path = "core::option::Option::unwrap", reason = "use ? operator, ok_or(), or expect() with descriptive message" },
+    # { path = "core::result::Result::unwrap", reason = "use ? operator or expect() with descriptive message" },
+    # { path = "core::result::Result::unwrap_err", reason = "avoid panicking on Ok values" },
+]
+
+# Allow unwrap in test code
+allow-unwrap-in-tests = true
+
+# Code quality thresholds
+warn-on-all-wildcard-imports = false  # We have legitimate uses
+too-many-arguments-threshold = 7
+type-complexity-threshold = 250
+
+# NOTE: Pedantic lints are enabled via command-line or in-code attributes
+# Use: cargo clippy -- -W clippy::pedantic
+# Or add to lib.rs: #![warn(clippy::pedantic)]
 #
-# These lints are intentionally allowed because they are pedantic and
-# commonly triggered by legitimate code patterns in this project.
-
-# Allow type conversion lints for mathematical operations and duration calculations
-# These are intentional and safe in context
-allow-precision-loss = true
-allow-sign-loss = true
-allow-wrap = true
-
-# Note: The above settings don't actually work in clippy.toml
-# The correct approach is documented below
-
-# To allow specific lints project-wide, add them to lib.rs or add
-# them to individual modules that need them.
-
+# We don't enable them here in clippy.toml because:
+# 1. Clippy's config file only supports a limited set of options
+# 2. Lint levels are better controlled via command-line or code attributes
+# 3. This keeps the config file simple and compatible across Clippy versions

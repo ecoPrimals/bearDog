@@ -1,6 +1,14 @@
 //! Comprehensive tests for zero_copy module
 //! Focus: Caching, shared references, capability validation
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 use super::*;
 
 #[test]

@@ -307,8 +307,8 @@ mod tests {
         for i in 0..5 {
             manager
                 .create_session(
-                    format!("session-{}", i),
-                    format!("peer-{}", i),
+                    format!("session-{i}"),
+                    format!("peer-{i}"),
                     SecurityGenetics::default(),
                     GamingSecurityProfile::competitive_gaming(),
                 )
@@ -330,8 +330,8 @@ mod tests {
             let mgr = Arc::clone(&manager);
             let handle = tokio::spawn(async move {
                 mgr.create_session(
-                    format!("session-{}", i),
-                    format!("peer-{}", i),
+                    format!("session-{i}"),
+                    format!("peer-{i}"),
                     SecurityGenetics::default(),
                     GamingSecurityProfile::competitive_gaming(),
                 )

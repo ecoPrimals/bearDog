@@ -55,11 +55,7 @@ fn test_validation_rules() {
                 rule.name
             );
         }
-        // Verify required flag is meaningful
-        assert!(
-            rule.required || !rule.required,
-            "Rule '{}' should have a valid required flag",
-            rule.name
-        );
+        // Verify required flag is accessible (boolean field always has a value)
+        let _ = rule.required; // Access verified
     }
 }

@@ -240,14 +240,14 @@ impl EcosystemPerformanceOptimizer {
     /// Creates a new instance
     #[must_use]
     pub fn new(config: EcosystemOptimizerConfig) -> Self {
-        use beardog_config::domains::timeouts::TimeoutConfig;
+        use beardog_config::domains::timeouts_new::TimeoutConfig;
 
         let timeout_config = TimeoutConfig::from_env();
 
         let pool_config = PoolConfig {
             max_pool_size: config.max_connections,
             min_pool_size: 5,
-            idle_timeout: timeout_config.pool_idle_timeout_duration(),
+            idle_timeout: timeout_config.pool_idle_duration(),
             max_connection_age: timeout_config.max_connection_age_duration(),
         };
 

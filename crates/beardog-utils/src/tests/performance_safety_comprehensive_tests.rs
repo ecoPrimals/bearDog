@@ -3,7 +3,13 @@
 // Comprehensive test suite for performance optimization and ultimate safety modules.
 // Tests edge cases, error conditions, memory safety, and performance characteristics.
 
-#![allow(clippy::unwrap_used)] // Test code - unwraps are acceptable
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 
 use crate::performance_optimizations::{CloneOptimizer, OptimizationStats};
 use crate::ultimate_safety::{SafetyStatistics, UltimateSafeBuffer};

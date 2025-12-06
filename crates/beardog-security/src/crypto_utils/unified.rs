@@ -227,7 +227,7 @@ impl UnifiedBearDogCrypto {
     /// Compute HMAC-SHA256
     pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<String, BearDogError> {
         let mut mac = HmacSha256::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto(&format!("Invalid HMAC key: {}", e)))?;
+            .map_err(|e| BearDogError::crypto(&format!("Invalid HMAC key: {e}")))?;
         mac.update(data);
         Ok(Self::bytes_to_hex(&mac.finalize().into_bytes()))
     }
@@ -278,13 +278,13 @@ impl UnifiedBearDogCrypto {
         argon2
             .hash_password(password.as_bytes(), &salt)
             .map(|hash| hash.to_string())
-            .map_err(|e| BearDogError::crypto(&format!("Argon2 hashing failed: {}", e)))
+            .map_err(|e| BearDogError::crypto(&format!("Argon2 hashing failed: {e}")))
     }
 
     /// Verify password using Argon2
     pub fn verify_password_argon2(password: &str, hash: &str) -> Result<bool, BearDogError> {
         let parsed_hash = PasswordHash::new(hash)
-            .map_err(|e| BearDogError::crypto(&format!("Invalid password hash: {}", e)))?;
+            .map_err(|e| BearDogError::crypto(&format!("Invalid password hash: {e}")))?;
         
         match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
             Ok(()) => Ok(true),
@@ -304,7 +304,7 @@ impl UnifiedBearDogCrypto {
     /// Convert hexadecimal string to bytes
     pub fn hex_to_bytes(hex_string: &str) -> Result<Vec<u8>, BearDogError> {
         hex::decode(hex_string)
-            .map_err(|e| BearDogError::validation(&format!("Invalid hex string: {}", e)))
+            .map_err(|e| BearDogError::validation(&format!("Invalid hex string: {e}")))
     }
 
     /// Constant-time comparison to prevent timing attacks

@@ -4,7 +4,7 @@
 // primary/replica patterns with biological symbiosis models based on mutual benefit
 // and collaborative coordination.
 
-// Note: BearDogError and BearDogResult available for future extensions
+// Note: BearDogError available for future extensions (use Result<T, BearDogError>)
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

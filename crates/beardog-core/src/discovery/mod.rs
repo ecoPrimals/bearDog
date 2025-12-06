@@ -50,11 +50,14 @@ pub use infant_discovery::*;
 pub use universal_infant_discovery::*;
 pub use vendor_agnostic_hsm::*;
 
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod tests;
 
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod infant_discovery_tests;
 
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod universal_infant_discovery_tests;

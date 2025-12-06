@@ -257,3 +257,211 @@ pub struct SystemMetrics {
     pub analytics: AnalyticsSummary,
     pub timestamp: std::time::SystemTime,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    // === UnifiedMetricsConfig Tests ===
+
+    #[test]
+    fn test_unified_metrics_config_default() {
+        let config = UnifiedMetricsConfig::default();
+        assert_eq!(config.broadcast_buffer_size, 1000);
+    }
+
+    #[test]
+    fn test_unified_metrics_config_clone() {
+        let config = UnifiedMetricsConfig::default();
+        let cloned = config.clone();
+        assert_eq!(config.broadcast_buffer_size, cloned.broadcast_buffer_size);
+    }
+
+    // === MetricCategory Tests ===
+
+    #[test]
+    fn test_metric_category_variants() {
+        let perf = MetricCategory::Performance;
+        let sec = MetricCategory::Security;
+        let eco = MetricCategory::Ecosystem;
+        let custom = MetricCategory::Custom;
+
+        assert!(matches!(perf, MetricCategory::Performance));
+        assert!(matches!(sec, MetricCategory::Security));
+        assert!(matches!(eco, MetricCategory::Ecosystem));
+        assert!(matches!(custom, MetricCategory::Custom));
+    }
+
+    #[test]
+    fn test_metric_category_clone() {
+        let category = MetricCategory::Performance;
+        let cloned = category.clone();
+        assert!(matches!(cloned, MetricCategory::Performance));
+    }
+
+    // === MetricValue Tests ===
+
+    #[test]
+    fn test_metric_value_counter() {
+        let value = MetricValue::Counter(100);
+        if let MetricValue::Counter(v) = value {
+            assert_eq!(v, 100);
+        } else {
+            panic!("Expected Counter");
+        }
+    }
+
+    #[test]
+    fn test_metric_value_gauge() {
+        let value = MetricValue::Gauge(50.5);
+        if let MetricValue::Gauge(v) = value {
+            assert_eq!(v, 50.5);
+        } else {
+            panic!("Expected Gauge");
+        }
+    }
+
+    #[test]
+    fn test_metric_value_histogram() {
+        let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let value = MetricValue::Histogram(values.clone());
+        if let MetricValue::Histogram(v) = value {
+            assert_eq!(v.len(), 5);
+        } else {
+            panic!("Expected Histogram");
+        }
+    }
+
+    #[test]
+    fn test_metric_value_summary() {
+        let value = MetricValue::Summary {
+            sum: 100.0,
+            count: 10,
+        };
+        if let MetricValue::Summary { sum, count } = value {
+            assert_eq!(sum, 100.0);
+            assert_eq!(count, 10);
+        } else {
+            panic!("Expected Summary");
+        }
+    }
+
+    #[test]
+    fn test_metric_value_serialization() {
+        let value = MetricValue::Counter(42);
+        let serialized = serde_json::to_string(&value).expect("serialize");
+        let deserialized: MetricValue = serde_json::from_str(&serialized).expect("deserialize");
+        if let MetricValue::Counter(v) = deserialized {
+            assert_eq!(v, 42);
+        } else {
+            panic!("Expected Counter");
+        }
+    }
+
+    // === MetricEvent Tests ===
+
+    #[test]
+    fn test_metric_event_creation() {
+        let event = MetricEvent {
+            category: MetricCategory::Performance,
+            name: "cpu_usage".to_string(),
+            value: MetricValue::Gauge(75.5),
+            labels: HashMap::new(),
+            timestamp: std::time::SystemTime::now(),
+        };
+        assert_eq!(event.name, "cpu_usage");
+        assert!(matches!(event.category, MetricCategory::Performance));
+    }
+
+    #[test]
+    fn test_metric_event_with_labels() {
+        let mut labels = HashMap::new();
+        labels.insert("host".to_string(), "server-1".to_string());
+        labels.insert("env".to_string(), "production".to_string());
+
+        let event = MetricEvent {
+            category: MetricCategory::Security,
+            name: "auth_failures".to_string(),
+            value: MetricValue::Counter(5),
+            labels,
+            timestamp: std::time::SystemTime::now(),
+        };
+        assert_eq!(event.labels.len(), 2);
+        assert_eq!(event.labels.get("host"), Some(&"server-1".to_string()));
+    }
+
+    #[test]
+    fn test_metric_event_clone() {
+        let event = MetricEvent {
+            category: MetricCategory::Ecosystem,
+            name: "test_metric".to_string(),
+            value: MetricValue::Counter(1),
+            labels: HashMap::new(),
+            timestamp: std::time::SystemTime::now(),
+        };
+        let cloned = event.clone();
+        assert_eq!(event.name, cloned.name);
+    }
+
+    // === UnifiedMetricsSystem Tests ===
+
+    #[test]
+    fn test_unified_metrics_system_creation() {
+        let config = UnifiedMetricsConfig::default();
+        let result = UnifiedMetricsSystem::new(config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_unified_metrics_system_start() {
+        let config = UnifiedMetricsConfig::default();
+        let system = UnifiedMetricsSystem::new(config).expect("system");
+        let result = system.start();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_unified_metrics_system_record_event() {
+        let config = UnifiedMetricsConfig::default();
+        let system = UnifiedMetricsSystem::new(config).expect("system");
+
+        let event = MetricEvent {
+            category: MetricCategory::Performance,
+            name: "request_latency".to_string(),
+            value: MetricValue::Gauge(125.0),
+            labels: HashMap::new(),
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        let result = system.record_event(event);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_unified_metrics_system_record_custom_event() {
+        let config = UnifiedMetricsConfig::default();
+        let system = UnifiedMetricsSystem::new(config).expect("system");
+
+        let event = MetricEvent {
+            category: MetricCategory::Custom,
+            name: "custom_metric".to_string(),
+            value: MetricValue::Counter(1),
+            labels: HashMap::new(),
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        let result = system.record_event(event);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_unified_metrics_system_get_metrics() {
+        let config = UnifiedMetricsConfig::default();
+        let system = UnifiedMetricsSystem::new(config).expect("system");
+        system.start().expect("start");
+
+        let result = system.get_system_metrics();
+        assert!(result.is_ok());
+    }
+}

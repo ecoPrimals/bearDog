@@ -1,8 +1,16 @@
 //! Behavioral Analysis Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: threat-detection/behavioral
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: threat-detection/behavioral
+//! `TEST_PRIORITY`: critical
+
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 
 use super::types::*;
 

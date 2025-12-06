@@ -48,7 +48,7 @@ pub use domains::network_ports::NetworkPortsConfig;
 use domains::{
     capacity::CapacityConfig, crypto::CryptoConfig, hsm::HsmConfig, limits::LimitsConfig,
     monitoring::MonitoringConfig, network::NetworkConfig, paths::PathConfig,
-    security::SecurityConfig, timeouts::TimeoutConfig,
+    security::SecurityConfig, timeouts_new::TimeoutConfig,
 };
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -140,7 +140,7 @@ impl BearDogConfig {
             crypto: domains::crypto::CryptoConfig::from_env(),
             security: domains::security::SecurityConfig::from_env(),
             monitoring: domains::monitoring::MonitoringConfig::from_env(),
-            timeouts: domains::timeouts::TimeoutConfig::from_env(),
+            timeouts: domains::timeouts_new::TimeoutConfig::from_env(),
             capacity: domains::capacity::CapacityConfig::from_env(),
         }
     }

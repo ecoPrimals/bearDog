@@ -18,9 +18,9 @@ use beardog_security::{compute_sha256_hash, crypto_utils::BearDogCrypto};
 
 /// Tests password hashing for authentication using SHA-256
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_password_hashing_for_auth() {
     // Given: a password
@@ -37,9 +37,9 @@ fn test_password_hashing_for_auth() {
 
 /// Tests that the same password produces the same hash (deterministic)
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_hash_consistency_for_auth() {
     // Given: the same password hashed twice
@@ -55,9 +55,9 @@ fn test_hash_consistency_for_auth() {
 
 /// Tests that different passwords produce different hashes
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_different_passwords_different_hashes() {
     // Given: two different passwords
@@ -81,9 +81,9 @@ fn test_different_passwords_different_hashes() {
 
 /// Tests secure random number generation for session tokens
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_generate_secure_random_for_session_token() {
     // When: generating two random tokens
@@ -98,9 +98,9 @@ fn test_generate_secure_random_for_session_token() {
 
 /// Tests that generated session tokens have sufficient entropy (uniqueness)
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_session_token_entropy() {
     // Given: multiple generated tokens
@@ -122,9 +122,9 @@ fn test_session_token_entropy() {
 
 /// Tests encryption of session data using AES-GCM
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_encrypt_session_data() {
     // Given: session data and encryption key
@@ -147,9 +147,9 @@ fn test_encrypt_session_data() {
 
 /// Tests decryption of session data using AES-GCM
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_decrypt_session_data() {
     // Given: encrypted session data
@@ -168,9 +168,9 @@ fn test_decrypt_session_data() {
 
 /// Tests that decryption fails with the wrong key
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_session_encryption_with_wrong_key_fails() {
     // Given: data encrypted with one key
@@ -192,9 +192,9 @@ fn test_session_encryption_with_wrong_key_fails() {
 
 /// Tests HMAC generation for token verification
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_hmac_for_token_verification() {
     // Given: token data and secret key
@@ -211,9 +211,9 @@ fn test_hmac_for_token_verification() {
 
 /// Tests that HMAC detects token tampering
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_hmac_detects_token_tampering() {
     // Given: original and tampered tokens
@@ -235,9 +235,9 @@ fn test_hmac_detects_token_tampering() {
 
 /// Tests key derivation from password using PBKDF2
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_derive_key_from_password() {
     // Given: a password and salt
@@ -255,9 +255,9 @@ fn test_derive_key_from_password() {
 
 /// Tests that the same password and salt produce the same derived key
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_same_password_same_salt_same_key() {
     // Given: same password and salt
@@ -274,9 +274,9 @@ fn test_same_password_same_salt_same_key() {
 
 /// Tests that different salts produce different derived keys
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_different_salt_different_key() {
     // Given: same password but different salts
@@ -298,9 +298,9 @@ fn test_different_salt_different_key() {
 
 /// Tests generation of MFA tokens (6-digit simulation)
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_generate_mfa_token() {
     // When: generating a 6-digit MFA token
@@ -322,9 +322,9 @@ fn test_generate_mfa_token() {
 
 /// Tests encrypting multiple session fields independently
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_encrypt_multiple_session_fields() {
     // Given: multiple session components
@@ -363,9 +363,9 @@ fn test_encrypt_multiple_session_fields() {
 
 /// Tests that encryption fails with invalid key size
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_encryption_with_invalid_key_size() {
     // Given: a key that's too short
@@ -381,9 +381,9 @@ fn test_encryption_with_invalid_key_size() {
 
 /// Tests that decryption fails with wrong nonce
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_decryption_with_wrong_nonce() {
     // Given: encrypted data with correct nonce
@@ -405,9 +405,9 @@ fn test_decryption_with_wrong_nonce() {
 
 /// Tests batch encryption of multiple sessions
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_batch_session_encryption() {
     // Given: encryption key
@@ -428,9 +428,9 @@ fn test_batch_session_encryption() {
 
 /// Tests concurrent hash generation for multiple passwords
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_concurrent_hash_generation() {
     // Given: multiple passwords to hash
@@ -466,9 +466,9 @@ fn test_concurrent_hash_generation() {
 
 /// Tests that ciphertext does not leak plaintext information
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_zero_plaintext_leakage() {
     // Given: sensitive plaintext data
@@ -488,9 +488,9 @@ fn test_zero_plaintext_leakage() {
 
 /// Tests that nonces are unique across encryptions
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_nonce_uniqueness() {
     // Given: same data encrypted multiple times

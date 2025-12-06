@@ -400,7 +400,7 @@ mod tests {
             let tracker_clone = Arc::clone(&tracker);
             let handle = tokio::spawn(async move {
                 tracker_clone
-                    .record_operation(format!("provider-{}", i), true, 10.0)
+                    .record_operation(format!("provider-{i}"), true, 10.0)
                     .await;
             });
             handles.push(handle);
@@ -584,7 +584,7 @@ mod tests {
 
         for i in 1..=5 {
             tracker
-                .record_operation(format!("provider-{}", i), true, i as f64)
+                .record_operation(format!("provider-{i}"), true, i as f64)
                 .await;
         }
 
@@ -592,7 +592,7 @@ mod tests {
         assert_eq!(all_metrics.len(), 5);
 
         for i in 1..=5 {
-            let key = format!("provider-{}", i);
+            let key = format!("provider-{i}");
             assert!(all_metrics.contains_key(&key));
         }
     }

@@ -304,8 +304,9 @@ fn test_circuit_breaker_reset() {
 
     assert!(circuit.is_open());
 
-    // Simulate cooldown
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    // ✅ MODERNIZED: Minimal sleep for time-based cooldown (50ms threshold + 6ms buffer)
+    // Circuit breaker checks elapsed time in attempt_reset(), so minimal sleep required
+    std::thread::sleep(std::time::Duration::from_millis(56));
     circuit.attempt_reset();
 
     // TEST_CATEGORY: integration

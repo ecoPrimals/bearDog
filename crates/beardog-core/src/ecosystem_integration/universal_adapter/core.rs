@@ -104,7 +104,12 @@ impl UniversalAdapter {
             request_id: request.request_id,
             status: super::types::ResponseStatus::Success,
             headers: HashMap::new(),
-            payload: Some(serde_json::json!({"connected": true})),
+            payload: Some({
+                use serde_json::{Map, Value};
+                let mut payload = Map::new();
+                payload.insert("connected".to_string(), Value::Bool(true));
+                Value::Object(payload)
+            }),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
             duration_ms: 100, // Mock duration
@@ -130,7 +135,12 @@ impl UniversalAdapter {
             request_id: request.request_id,
             status: super::types::ResponseStatus::Success,
             headers: HashMap::new(),
-            payload: Some(serde_json::json!({"disconnected": true})),
+            payload: Some({
+                use serde_json::{Map, Value};
+                let mut payload = Map::new();
+                payload.insert("disconnected".to_string(), Value::Bool(true));
+                Value::Object(payload)
+            }),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
             duration_ms: 50, // Mock duration
@@ -168,12 +178,24 @@ impl UniversalAdapter {
     ) -> Result<AdapterResponse, BearDogError> {
         debug!("Handling health check request");
 
-        let health_status = serde_json::json!({
-            "status": "healthy",
-            "adapter_id": self.config.adapter_id,
-            "connections": self.connections.read().await.len(),
-            "endpoints": self.endpoints.read().await.len()
-        });
+        let health_status = {
+            use serde_json::{Map, Value};
+            let mut status = Map::new();
+            status.insert("status".to_string(), Value::String("healthy".to_string()));
+            status.insert(
+                "adapter_id".to_string(),
+                Value::String(self.config.adapter_id.clone()),
+            );
+            status.insert(
+                "connections".to_string(),
+                Value::Number(self.connections.read().await.len().into()),
+            );
+            status.insert(
+                "endpoints".to_string(),
+                Value::Number(self.endpoints.read().await.len().into()),
+            );
+            Value::Object(status)
+        };
 
         Ok(AdapterResponse {
             request_id: request.request_id,

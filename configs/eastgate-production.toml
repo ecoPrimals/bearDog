@@ -83,3 +83,26 @@ multi_device_mixing = true       # Enable mixing from multiple devices
 cross_platform_sync = false      # Not yet implemented
 network_distribution = false     # Not yet implemented
 
+[genetics]
+# Genetic crypto and key evolution
+entropy_collection_enabled = true        # Enable genetic entropy collection
+genetic_spawning_enabled = true          # Enable genetic algorithm spawning
+ecosystem_evolution_enabled = true       # Enable ecosystem evolution
+human_entropy_validation = true          # Validate human entropy quality
+authorization_genetics_enabled = true    # Enable genetic authorization
+
+# Advanced genetic algorithms
+enable_genetic_key_evolution = true      # Enable genetic key evolution (Phase 2)
+genetic_key_rotation_enabled = true      # Enable automatic key rotation
+genetic_mutation_rate = 0.05             # Mutation rate for genetic algorithms
+genetic_crossover_rate = 0.8             # Crossover rate for evolution
+genetic_population_size = 100            # Population size for evolution
+genetic_max_generations = 1000           # Maximum generations for optimization
+genetic_fitness_threshold = 0.95         # Fitness threshold for convergence
+
+# Ecosystem genetic spawning
+enable_ecosystem_spawning = true         # Enable ecosystem-aware spawning
+coordination_mutation_rate = 0.1         # Coordination evolution rate
+inter_primal_evolution_rate = 0.05       # Inter-primal evolution rate
+max_ecosystem_size = 100                 # Maximum ecosystem size
+

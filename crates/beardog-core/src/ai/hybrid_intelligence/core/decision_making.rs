@@ -468,7 +468,7 @@ impl Default for FeedbackStatistics {
 impl DecisionContext {
     /// Create a new decision context
     pub fn new(decision_type: String, input_data: serde_json::Value) -> Self {
-        use beardog_config::domains::timeouts::TimeoutConfig;
+        use beardog_config::domains::timeouts_new::TimeoutConfig;
         
         let timeout_config = TimeoutConfig::from_env();
         

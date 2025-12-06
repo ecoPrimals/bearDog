@@ -1,8 +1,8 @@
 //! Threat Detection Comprehensive Test Suite
 //!
-//! TEST_CATEGORY: unit + integration
-//! TEST_DOMAIN: threat-detection
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit + integration
+//! `TEST_DOMAIN`: threat-detection
+//! `TEST_PRIORITY`: critical
 //!
 //! This module provides comprehensive testing for threat detection mechanisms.
 //! Originally consolidated from a single 1,986-line file, now split into focused modules.

@@ -398,11 +398,25 @@ impl UniversalComputeClient {
         let response = UniversalComputeResponse {
             request_id: request.request_id.clone(),
             success: true,
-            result: Some(serde_json::json!({
-                "computation_result": "Processed successfully through capability-based routing",
-                "provider_type": "dynamic_discovery",
-                "operation": request.operation_type
-            })),
+            result: Some({
+                use serde_json::{Map, Value};
+                let mut result = Map::new();
+                result.insert(
+                    "computation_result".to_string(),
+                    Value::String(
+                        "Processed successfully through capability-based routing".to_string(),
+                    ),
+                );
+                result.insert(
+                    "provider_type".to_string(),
+                    Value::String("dynamic_discovery".to_string()),
+                );
+                result.insert(
+                    "operation".to_string(),
+                    Value::String(request.operation_type.clone()),
+                );
+                Value::Object(result)
+            }),
             error_message: None,
             processing_time_ms: processing_time,
             provider_info: ComputeProviderInfo {

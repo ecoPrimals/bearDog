@@ -19,6 +19,7 @@ use std::sync::{Arc, RwLock, Weak};
 use std::time::{Duration, Instant};
 use tracing::{debug, trace};
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests_comprehensive;
 
@@ -270,6 +271,7 @@ impl<T> ZeroCopyBuilder<T> {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

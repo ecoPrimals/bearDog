@@ -41,6 +41,7 @@ async-trait = "0.1"
 tokio-test = "0.4"
 futures = "0.3"
 rand = "0.8"
+serial_test = "3.0"
 
 [features]
 zero-cost-architecture = []

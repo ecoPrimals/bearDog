@@ -201,3 +201,158 @@ impl Default for SovereigntyManager {
         })
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::float_cmp)] // Float comparison is acceptable in test assertions
+#[allow(clippy::unwrap_used, clippy::expect_used)]
+mod tests {
+    use super::*;
+
+    // === PrimalSovereigntyConfig Tests ===
+
+    #[test]
+    fn test_sovereignty_config_default() {
+        let config = PrimalSovereigntyConfig::default();
+        assert!(config.primal_id.is_empty());
+        assert!(!config.enable_sovereignty_monitoring);
+        assert_eq!(config.sovereignty_threshold, 0.0);
+    }
+
+    #[test]
+    fn test_sovereignty_config_clone() {
+        let config = PrimalSovereigntyConfig {
+            primal_id: "test-primal".to_string(),
+            enable_sovereignty_monitoring: true,
+            sovereignty_threshold: 0.8,
+        };
+        let cloned = config.clone();
+        assert_eq!(config.primal_id, cloned.primal_id);
+        assert_eq!(
+            config.enable_sovereignty_monitoring,
+            cloned.enable_sovereignty_monitoring
+        );
+    }
+
+    #[test]
+    fn test_sovereignty_config_custom() {
+        let config = PrimalSovereigntyConfig {
+            primal_id: "custom-primal-123".to_string(),
+            enable_sovereignty_monitoring: true,
+            sovereignty_threshold: 0.95,
+        };
+        assert_eq!(config.primal_id, "custom-primal-123");
+        assert!(config.enable_sovereignty_monitoring);
+        assert_eq!(config.sovereignty_threshold, 0.95);
+    }
+
+    // === SovereigntyState Tests ===
+
+    #[test]
+    fn test_sovereignty_state_default() {
+        let state = SovereigntyState::default();
+        assert!(state.primal_id.starts_with("primal-"));
+        assert!(state.is_active);
+        assert_eq!(state.sovereignty_score, 1.0);
+    }
+
+    #[test]
+    fn test_sovereignty_state_clone() {
+        let state = SovereigntyState::default();
+        let cloned = state.clone();
+        assert_eq!(state.primal_id, cloned.primal_id);
+        assert_eq!(state.is_active, cloned.is_active);
+        assert_eq!(state.sovereignty_score, cloned.sovereignty_score);
+    }
+
+    #[test]
+    fn test_sovereignty_state_custom() {
+        let state = SovereigntyState {
+            primal_id: "custom-id".to_string(),
+            genesis_timestamp: Utc::now(),
+            is_active: false,
+            sovereignty_score: 0.5,
+            last_validation: Utc::now(),
+        };
+        assert_eq!(state.primal_id, "custom-id");
+        assert!(!state.is_active);
+        assert_eq!(state.sovereignty_score, 0.5);
+    }
+
+    // === SovereigntyManager Tests ===
+
+    #[test]
+    fn test_sovereignty_manager_creation() {
+        let config = PrimalSovereigntyConfig::default();
+        let result = SovereigntyManager::new(config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_sovereignty_manager_default() {
+        let manager = SovereigntyManager::default();
+        let status = manager.get_sovereignty_status();
+        assert!(status.is_active);
+        assert_eq!(status.sovereignty_score, 1.0);
+    }
+
+    #[test]
+    fn test_sovereignty_manager_validate_sovereignty() {
+        let config = PrimalSovereigntyConfig {
+            primal_id: "test-primal".to_string(),
+            enable_sovereignty_monitoring: true,
+            sovereignty_threshold: 0.5,
+        };
+        let mut manager = SovereigntyManager::new(config).expect("manager");
+        let result = manager.validate_sovereignty();
+        assert!(result.is_ok());
+        // Default state has score 1.0, threshold 0.5, should be valid
+        assert!(result.expect("valid"));
+    }
+
+    #[test]
+    fn test_sovereignty_manager_get_status() {
+        let manager = SovereigntyManager::default();
+        let status = manager.get_sovereignty_status();
+        assert!(status.primal_id.starts_with("primal-"));
+        assert!(status.is_active);
+    }
+
+    #[test]
+    fn test_sovereignty_manager_spawn_offspring() {
+        let manager = SovereigntyManager::default();
+        let genetics = GeneticSpawningEngine::new();
+        let spawn_request = SpawnRequest::default();
+        let result = manager.spawn_genetic_offspring(&genetics, spawn_request);
+        assert!(result.is_ok());
+    }
+
+    // === SovereigntyStatus Tests ===
+
+    #[test]
+    fn test_sovereignty_status_clone() {
+        let status = SovereigntyStatus {
+            primal_id: "status-test".to_string(),
+            genesis_timestamp: Utc::now(),
+            is_active: true,
+            sovereignty_score: 0.9,
+            last_validation: Utc::now(),
+        };
+        let cloned = status.clone();
+        assert_eq!(status.primal_id, cloned.primal_id);
+        assert_eq!(status.sovereignty_score, cloned.sovereignty_score);
+    }
+
+    #[test]
+    fn test_sovereignty_status_debug() {
+        let status = SovereigntyStatus {
+            primal_id: "debug-test".to_string(),
+            genesis_timestamp: Utc::now(),
+            is_active: true,
+            sovereignty_score: 1.0,
+            last_validation: Utc::now(),
+        };
+        let debug_str = format!("{status:?}");
+        assert!(debug_str.contains("SovereigntyStatus"));
+        assert!(debug_str.contains("debug-test"));
+    }
+}

@@ -55,10 +55,11 @@ impl UniversalHsmManager {
     /// Returns `Err(BearDogError)` if status retrieval fails.
     pub fn get_ecosystem_status(&self) -> Result<serde_json::Value, BearDogError> {
         // Placeholder implementation
-        Ok(serde_json::json!({
-            "status": "healthy",
-            "hsm_available": true
-        }))
+        use serde_json::{Map, Value};
+        let mut status = Map::new();
+        status.insert("status".to_string(), Value::String("healthy".to_string()));
+        status.insert("hsm_available".to_string(), Value::Bool(true));
+        Ok(Value::Object(status))
     }
 }
 

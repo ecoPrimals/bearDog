@@ -215,8 +215,19 @@ impl UniversalServiceMeshClient {
             }
         });
 
+        // ✅ MODERN IDIOMATIC: Use config for default discovery ports
+        use beardog_config::domains::network_ports;
         let discovery_ports = std::env::var("ECOSYSTEM_DISCOVERY_PORTS")
-            .unwrap_or_else(|_| "8080,8081,8082,8083".to_string());
+            .unwrap_or_else(|_| {
+                // Use configuration constants instead of hardcoded values
+                format!(
+                    "{},{},{},{}",
+                    network_ports::DEFAULT_API_PORT,
+                    network_ports::DEFAULT_HEALTH_PORT,
+                    network_ports::DEFAULT_WEBSOCKET_PORT,
+                    network_ports::DEFAULT_ADMIN_PORT
+                )
+            });
         
         for port in discovery_ports.split(',') {
             if let Ok(port_num) = port.trim().parse::<u16>() {
@@ -273,8 +284,14 @@ impl UniversalServiceMeshClient {
             .unwrap_or_else(|_| "default".to_string());
 
         // Universal service endpoint pattern (works with k8s, docker swarm, nomad, etc.)
-        let orchestration_endpoint = format!("{}.{}.svc.cluster.local:8080", service_name, namespace);
-        Ok(vec![format!("http://{}", orchestration_endpoint)])
+        // Port is configurable via environment (Zero Hardcoding Specification compliance)
+        let service_port = std::env::var("BEARDOG_ORCHESTRATION_SERVICE_PORT")
+            .ok()
+            .and_then(|p| p.parse::<u16>().ok())
+            .unwrap_or(8080); // Standard HTTP port as fallback
+        
+        let orchestration_endpoint = format!("{}.{}.svc.cluster.local:{}", service_name, namespace, service_port);
+        Ok(vec![format!("http://{orchestration_endpoint}")])
     }
 
     /// Parses srv_record
@@ -294,7 +311,7 @@ impl UniversalServiceMeshClient {
     fn probe_service_mesh_capability(&self, endpoint: &str) -> Result<ServiceMeshCapability, BearDogError> {
         debug!("🔍 Probing service mesh capability at: {}", endpoint);
 
-        let capability_url = format!("{}/ecosystem/capabilities", endpoint);
+        let capability_url = format!("{endpoint}/ecosystem/capabilities");
         let response = self
             .client
             .get(&capability_url)
@@ -310,7 +327,7 @@ impl UniversalServiceMeshClient {
         let capability_data: serde_json::Value = response
             .json()
             .map_err(|e| BearDogError::ParseError {
-                message: format!("Failed to parse capability response: {}", e),
+                message: format!("Failed to parse capability response: {e}"),
 
         let primal_id = capability_data
             .get("primal_id")
@@ -334,7 +351,7 @@ impl UniversalServiceMeshClient {
 
         if !capabilities.iter().any(|cap| cap.contains("service_mesh") || cap.contains("routing")) {
             return Err(BearDogError::Capability {
-                message: format!("Primal {} does not offer service mesh capabilities", primal_id),
+                message: format!("Primal {primal_id} does not offer service mesh capabilities"),
         Ok(ServiceMeshCapability {
             primal_id,
             endpoint: endpoint.to_string(),            // Will be calculated based on performance
@@ -384,10 +401,10 @@ impl UniversalServiceMeshClient {
             let mesh_guard = self.active_mesh.read();
             mesh_guard.clone().ok_or_else(|| BearDogError::State {
                 message: "No active service mesh available for registration".to_string();
-        let registration_request = self.create_registration_request(format!("Registration request failed: {}", e),
-            let error_text = response.text(format!("Registration failed: {}", error_text),
+        let registration_request = self.create_registration_request(format!("Registration request failed: {e}"),
+            let error_text = response.text(format!("Registration failed: {error_text}"),
         let registration_response: serde_json::Value = response
-                message: format!("Failed to parse registration response: {}", e),
+                message: format!("Failed to parse registration response: {e}"),
         let registration = BearDogRegistration {
             registration_id: registration_response
                 .get("registration_id")
@@ -449,12 +466,12 @@ impl UniversalServiceMeshClient {
             request.request_id, request.target_service_type, active_mesh.primal_id
         );
         let routing_url = format!("{}/ecosystem/route", active_mesh.endpoint);
-        let start_time = std::time::Instant::now(format!("Service request failed: {}", e),
+        let start_time = std::time::Instant::now(format!("Service request failed: {e}"),
         let processing_time = start_time.elapsed();
             return Err(BearDogError::ServiceError {
-                message: format!("Service request failed: {}", error_text),
+                message: format!("Service request failed: {error_text}"),
         let response_data: serde_json::Value = response
-                message: format!("Failed to parse service response: {}", e),
+                message: format!("Failed to parse service response: {e}"),
         Ok(UniversalServiceResponse {
             request_id: request.request_id.clone(),
             payload: response_data.get("payload").cloned().unwrap_or(serde_json::Value::Null),
@@ -469,7 +486,7 @@ impl UniversalServiceMeshClient {
     pub fn discover_services(&self, service_type: Option<&str>) -> Result<Vec<DiscoveredService>, BearDogError> {
                 message: "No active service mesh available for service discovery".to_string(),
                 message: format!("Service discovery failed with status: {}", response.status(serde_json::Value = response
-                message: format!("Failed to parse services response: {}", e),
+                message: format!("Failed to parse services response: {e}"),
         let services = services_data
             .get("services")
                 message: "Invalid services response format".to_string(),

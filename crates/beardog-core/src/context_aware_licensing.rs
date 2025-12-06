@@ -80,6 +80,14 @@ pub struct EnterpriseIndicator {
     pub integration_complexity: f64,
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 #[path = "context_aware_licensing_tests.rs"]
 mod context_aware_licensing_tests;

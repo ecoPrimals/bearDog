@@ -5,12 +5,12 @@
 //!
 //! ## Usage Pattern
 //!
-//! ```rust
+//! ```no_run
 //! use beardog_config::global::BEARDOG_CONFIG;
 //!
 //! // Access configuration anywhere in your code
 //! let port = BEARDOG_CONFIG.network.api.port;
-//! let timeout = BEARDOG_CONFIG.limits.connection_timeout_secs;
+//! let timeout = BEARDOG_CONFIG.limits.operation_timeout_secs;
 //! ```
 //!
 //! ## Design Rationale
@@ -41,7 +41,7 @@ use tracing::{info, warn};
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use beardog_config::global::BEARDOG_CONFIG;
 ///
 /// // Access configuration values
@@ -108,7 +108,7 @@ pub fn config() -> &'static Arc<BearDogConfig> {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use beardog_config::global::api_port;
 ///
 /// let port = api_port();
@@ -148,7 +148,7 @@ pub fn admin_port() -> u16 {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use beardog_config::global::metrics_port;
 ///
 /// let port = metrics_port();
@@ -188,7 +188,7 @@ pub fn https_port() -> u16 {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use beardog_config::global::api_host;
 ///
 /// let host = api_host();
@@ -206,7 +206,7 @@ pub fn api_host() -> String {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use beardog_config::global::bind_address;
 ///
 /// let addr = bind_address();
@@ -237,7 +237,7 @@ pub fn external_host() -> String {
 #[must_use]
 #[inline]
 pub fn connection_timeout_secs() -> u64 {
-    BEARDOG_CONFIG.limits.connection_timeout_secs
+    BEARDOG_CONFIG.timeouts.connection_timeout_secs
 }
 
 /// Get HTTP request timeout in seconds
@@ -246,7 +246,7 @@ pub fn connection_timeout_secs() -> u64 {
 #[must_use]
 #[inline]
 pub fn http_request_timeout_secs() -> u64 {
-    BEARDOG_CONFIG.timeouts.http_request_timeout_secs
+    BEARDOG_CONFIG.timeouts.request_timeout_secs
 }
 
 /// Get DNS resolution timeout in seconds

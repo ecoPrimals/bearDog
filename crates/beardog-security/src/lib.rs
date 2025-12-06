@@ -10,8 +10,12 @@
 //! - **Zero Unsafe Code**: All operations are memory-safe
 
 #![deny(unsafe_code)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! - **SIMD Acceleration**: Hardware-accelerated cryptographic operations
 //! - **Secure Key Management**: Safe key storage and lifecycle management
 //!

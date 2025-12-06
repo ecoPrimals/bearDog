@@ -136,7 +136,7 @@ impl MemoryHsmStorage {
 
         let stored_key = storage
             .get_mut(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
 
         // Update last accessed
         stored_key.last_accessed = Utc::now();
@@ -171,7 +171,7 @@ impl MemoryHsmStorage {
 
         let removed = storage
             .remove(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
 
         // Update stats
         let mut stats = self.stats.write().await;

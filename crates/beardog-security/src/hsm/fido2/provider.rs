@@ -45,7 +45,7 @@ impl Fido2HsmProvider {
         #[cfg(feature = "fido2")]
         {
             let hid_api = Arc::new(Mutex::new(HidApi::new().map_err(|e| {
-                BearDogError::system(format!("Failed to initialize HID API: {}", e))
+                BearDogError::system(format!("Failed to initialize HID API: {e}"))
             })?));
 
             Ok(Self {

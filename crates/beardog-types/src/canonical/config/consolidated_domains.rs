@@ -10,7 +10,7 @@
 //! - `domains::ai_config` - AI/ML configurations ✅
 //! - `domains::monitoring_config` - Monitoring configurations ✅  
 //! - `domains::discovery_config` - Discovery configurations ✅
-//! - `domains::workflow_config` - Workflow configurations ✅
+//! - `domains::workflow` - Workflow configurations (modular) ✅
 //! - `domains::security_config` - Security configurations ✅
 //!
 //! ## Migration Complete

@@ -293,6 +293,7 @@ pub fn transform_string(input: &str, uppercase: bool) -> Cow<str> {
     }
 }
 
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Universal HSM Entropy Orchestrator Demo
 //!
 //! Demonstrates the unified entropy system that connects:

@@ -108,6 +108,7 @@ impl<T: Clone> Default for RequestCache<T> {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,13 +165,14 @@ mod tests {
 
     #[test]
     fn test_cache_expiration() {
-        let cache = RequestCache::new(Duration::from_millis(50));
+        // Use minimal TTL for fast testing - 1ms is sufficient
+        let cache = RequestCache::new(Duration::from_millis(1));
 
         cache.insert("key1".to_string(), "value1".to_string());
         assert_eq!(cache.get("key1"), Some("value1".to_string()));
 
-        // Wait for TTL to expire
-        std::thread::sleep(Duration::from_millis(60));
+        // Wait for TTL to expire - use minimal sleep (2ms > 1ms TTL)
+        std::thread::sleep(Duration::from_millis(2));
 
         // Should return None after expiration
         assert_eq!(cache.get("key1"), None);
@@ -180,15 +182,16 @@ mod tests {
 
     #[test]
     fn test_cache_cleanup_expired() {
-        let cache = RequestCache::new(Duration::from_millis(50));
+        // Use minimal TTL for fast testing
+        let cache = RequestCache::new(Duration::from_millis(1));
 
         cache.insert("key1".to_string(), "value1".to_string());
         cache.insert("key2".to_string(), "value2".to_string());
 
         assert_eq!(cache.len(), 2);
 
-        // Wait for TTL to expire
-        std::thread::sleep(Duration::from_millis(60));
+        // Wait for TTL to expire - minimal sleep
+        std::thread::sleep(Duration::from_millis(2));
 
         // Cleanup expired entries
         cache.cleanup_expired();
@@ -295,23 +298,25 @@ mod tests {
 
     #[test]
     fn test_cache_mixed_expiration() {
-        let cache = RequestCache::new(Duration::from_millis(100));
+        // Use TTL with sufficient margin for testing (50ms)
+        let cache = RequestCache::new(Duration::from_millis(50));
 
         // Insert first batch
         cache.insert("short1".to_string(), "value1".to_string());
         cache.insert("short2".to_string(), "value2".to_string());
 
-        // Wait a bit
-        std::thread::sleep(Duration::from_millis(60));
+        // Wait until first batch is near expiration (40ms into TTL)
+        std::thread::sleep(Duration::from_millis(40));
 
-        // Insert second batch (will have longer TTL remaining)
+        // Insert second batch (will have full TTL remaining)
         cache.insert("long1".to_string(), "value3".to_string());
         cache.insert("long2".to_string(), "value4".to_string());
 
         assert_eq!(cache.len(), 4);
 
-        // Wait for first batch to expire
-        std::thread::sleep(Duration::from_millis(50));
+        // Wait for first batch to expire (20ms more = 60ms total > 50ms TTL for first batch)
+        // Second batch still has ~30ms remaining
+        std::thread::sleep(Duration::from_millis(20));
 
         cache.cleanup_expired();
 

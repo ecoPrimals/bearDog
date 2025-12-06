@@ -408,22 +408,26 @@ impl SelfDiscoveryEngine {
     /// Discover service mesh endpoint
     fn discover_mesh_endpoint() -> UniversalEndpoint {
         let _network_config = beardog_types::canonical::config::network::NetworkConfig::default();
-        // Use mesh port from environment or default to 8443 (standard HTTPS alternate)
+
+        // ✅ MODERN IDIOMATIC: Use config system for mesh port
+        // Priority: ENV → Admin Port → Default Mesh Port (8002)
+        use beardog_config::domains::network_ports;
         let mesh_port = std::env::var("BEARDOG_MESH_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or_else(|| {
-                // Try admin port, otherwise use 8443 as standard mesh port
+            .or_else(|| {
+                // Try admin port as fallback
                 std::env::var("BEARDOG_ADMIN_PORT")
                     .ok()
                     .and_then(|p| p.parse().ok())
-                    .unwrap_or(8443)
-            });
+            })
+            .unwrap_or(network_ports::DEFAULT_MESH_PORT);
 
+        // ✅ MODERN IDIOMATIC: Use reference instead of clone for efficiency
         // Get bind address from centralized config
         let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| {
             use beardog_config::global::BEARDOG_CONFIG;
-            BEARDOG_CONFIG.network.addresses.bind_address.clone()
+            BEARDOG_CONFIG.network.addresses.bind_address.to_string()
         });
 
         UniversalEndpoint {
@@ -537,6 +541,14 @@ impl SelfDiscoveryEngine {
     }
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 #[path = "self_discovery_tests.rs"]
 mod tests;

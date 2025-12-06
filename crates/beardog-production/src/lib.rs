@@ -28,6 +28,13 @@
 //! - **Error Resilience**: Robust error handling and recovery
 //! - **Monitoring**: Comprehensive metrics and logging
 //!
+
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! ## Safety
 //!
 //! All production utilities maintain memory safety with zero unsafe code.

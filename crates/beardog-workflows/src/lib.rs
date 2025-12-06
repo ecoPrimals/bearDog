@@ -2,6 +2,14 @@
 //!
 //! Comprehensive workflow orchestration and process management for `BearDog` applications,
 //! providing stateful workflow execution with audit logging and error recovery.
+
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
+
 //!
 //! ## Features
 //!

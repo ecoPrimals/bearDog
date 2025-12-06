@@ -1,3 +1,15 @@
+#![allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    clippy::field_reassign_with_default,
+    clippy::manual_range_contains,
+    unused_variables,
+    dead_code
+)]
+
 // Backend tests for ecosystem storage
 //
 // Tests for storage backend traits, implementations, and backend info.
@@ -76,10 +88,10 @@ impl StorageBackend for MockStorageBackend {
             metadata: HashMap::new(),
             timestamp: Utc::now(),
             duration_ms: 5,
-            error_message: if !found {
-                Some("Key not found".to_string())
-            } else {
+            error_message: if found {
                 None
+            } else {
+                Some("Key not found".to_string())
             },
             storage_location: Some(format!("mock://{}", request.key)),
         })
@@ -104,10 +116,10 @@ impl StorageBackend for MockStorageBackend {
             metadata: HashMap::new(),
             timestamp: Utc::now(),
             duration_ms: 5,
-            error_message: if !removed {
-                Some("Key not found".to_string())
-            } else {
+            error_message: if removed {
                 None
+            } else {
+                Some("Key not found".to_string())
             },
             storage_location: Some(format!("mock://{}", request.key)),
         })

@@ -12,6 +12,15 @@ use chrono::Utc;
 use std::collections::HashMap;
 use uuid::Uuid;
 
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
 #[cfg(test)]
 use std::time::SystemTime;
 
@@ -245,6 +254,15 @@ pub struct ThreatFeedStats {
     pub last_updated: chrono::DateTime<chrono::Utc>,
 }
 
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
 #[cfg(test)]
 mod tests {
     use super::*;

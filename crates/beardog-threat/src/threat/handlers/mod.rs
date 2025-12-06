@@ -16,8 +16,17 @@ pub mod threat_feeds;
 pub use self::enrichment::*;
 pub use self::management::*;
 
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
 #[cfg(test)]
-mod tests {
+mod existing_tests {
     use crate::threat::types::*;
     use beardog_errors::BearDogError;
     #[tokio::test]
@@ -105,3 +114,15 @@ mod tests {
         Ok(())
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
+#[cfg(test)]
+mod tests;

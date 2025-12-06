@@ -63,5 +63,41 @@ version = "0.4"
 [dependencies.sha3]
 version = "0.10"
 
+[dependencies.base64]
+version = "0.21"
+
+[dependencies.rand]
+version = "0.8"
+
+[dependencies.aes-gcm]
+version = "0.10"
+
+# Pure Rust platform integrations (replacing external commands)
+[dependencies.adb_client]
+version = "0.8"
+optional = true  # Pure Rust ADB protocol implementation
+
+[dependencies.nusb]
+version = "0.1"
+optional = true  # Pure Rust USB library, no C dependencies
+
+[dependencies.beardog-genetics]
+path = "../beardog-genetics"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.async-trait]
+version = "0.1"
+
 [dev-dependencies]
+tokio = { version = "1.42", features = ["full"] }
+assert_cmd = "2.0"
+predicates = "3.0"
 tempfile = "3.8"
+serde_json = "1.0"
+
+[features]
+default = ["pure-rust"]
+pure-rust = ["adb_client", "nusb"]  # Use pure Rust implementations
+system-commands = []  # Fallback to system commands (current temporary implementation)

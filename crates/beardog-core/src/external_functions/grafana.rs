@@ -65,7 +65,7 @@ use beardog_errors::BearDogError;
                     {
                         "id": "beardog-main",
                         "title": "BearDog Main Dashboard",
-                        "url": format!("{}/d/beardog-main", endpoint)
+                        "url": format!("{endpoint}/d/beardog-main")
                     }
                 ],
                 "message": "Dashboard listing simulated successfully"

@@ -2,6 +2,9 @@
 //!
 //! Tests for configuration validation, defaults, and error cases.
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 use beardog_types::canonical::config::RuntimeConfig;
 
 #[cfg(test)]

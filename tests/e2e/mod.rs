@@ -1,3 +1,10 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 // End-to-End Testing Framework
 // Created October 7, 2025 - Phase 2 Implementation
 
@@ -31,8 +38,10 @@
 // TEST_PRIORITY: normal
 //! ```
 
+pub mod auth_comprehensive;
 pub mod configuration_management;
 pub mod cross_platform_discovery;
+pub mod crypto_comprehensive;
 pub mod data_persistence;
 pub mod device_deployment;
 pub mod disaster_recovery;

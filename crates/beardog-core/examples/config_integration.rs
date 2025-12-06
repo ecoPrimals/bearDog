@@ -77,19 +77,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Display limits
     println!("\n⏱️  Limits:");
-    println!(
-        "  Operation Timeout: {}s",
-        config.limits.operation_timeout_secs
-    );
-    println!(
-        "  Connection Timeout: {}s",
-        config.limits.connection_timeout_secs
-    );
     println!("  Max Retries: {}", config.limits.max_retries);
-    println!(
-        "  Max Concurrent Ops: {}",
-        config.limits.max_concurrent_operations
-    );
+    println!("  Max Connections: {}", config.limits.max_connections);
+    println!("  Buffer Size: {}", config.limits.buffer_size);
 
     // Display monitoring
     println!("\n📊 Monitoring:");

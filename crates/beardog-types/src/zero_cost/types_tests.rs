@@ -2,7 +2,6 @@
 
 use beardog_errors::BearDogError;
 use super::*;
-use beardog_errors::BearDogResult;
 
 #[cfg(test)]
 mod zero_cost_types_tests {

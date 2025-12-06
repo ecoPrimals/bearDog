@@ -3,11 +3,18 @@
 //! High-value integration tests for common workflows,
 //! component interaction, and happy path scenarios.
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: core
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: core
+
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(
+    clippy::field_reassign_with_default,
+    clippy::needless_borrows_for_generic_args
+)]
+#![allow(dead_code, unused_variables, unused_assignments)]
 
 use beardog_core::BearDogConfig;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::config::domains::testing::CanonicalTestConfig;
 use beardog_types::canonical::{HealthStatus, WorkflowStatus};
 
@@ -87,7 +94,7 @@ fn test_config_rapid_creation() {
 #[test]
 fn test_config_in_result() {
     // Test config in Result context
-    fn get_config() -> BearDogResult<BearDogConfig> {
+    fn get_config() -> Result<BearDogConfig, BearDogError> {
         Ok(BearDogConfig::default())
     }
 
@@ -120,7 +127,7 @@ fn test_error_with_config_validation() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    fn validate_config_env(env: &str) -> BearDogResult<()> {
+    fn validate_config_env(env: &str) -> Result<(), BearDogError> {
         if env.is_empty() {
             return Err(BearDogError::validation("Environment cannot be empty"));
         }
@@ -139,7 +146,7 @@ fn test_error_recovery_with_default() {
     // Test error recovery using defaults
     fn load_config_or_default() -> BearDogConfig {
         // Simulate load failure
-        let result: BearDogResult<BearDogConfig> =
+        let result: Result<BearDogConfig, BearDogError> =
             Err(BearDogError::not_found("Config not found".to_string()));
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
@@ -158,11 +165,11 @@ fn test_error_chain_through_functions() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     // Test error propagates through function chain
-    fn step1() -> BearDogResult<i32> {
+    fn step1() -> Result<i32, BearDogError> {
         Ok(42)
     }
 
-    fn step2(value: i32) -> BearDogResult<i32> {
+    fn step2(value: i32) -> Result<i32, BearDogError> {
         if value > 0 {
             Ok(value * 2)
         } else {
@@ -173,7 +180,7 @@ fn test_error_chain_through_functions() {
         }
     }
 
-    fn process() -> BearDogResult<i32> {
+    fn process() -> Result<i32, BearDogError> {
         let v = step1()?;
         step2(v)
     }
@@ -192,7 +199,7 @@ fn test_error_chain_through_functions() {
 #[test]
 fn test_error_with_health_status() {
     // Test error handling with health status
-    fn check_health(status: HealthStatus) -> BearDogResult<()> {
+    fn check_health(status: HealthStatus) -> Result<(), BearDogError> {
         match status {
             HealthStatus::Unhealthy => {
                 Err(BearDogError::unavailable("System unhealthy".to_string()))
@@ -211,7 +218,7 @@ fn test_error_with_health_status() {
 #[test]
 fn test_error_multiple_recovery_attempts() {
     // Test multiple recovery attempts
-    fn try_operation(attempt: u32) -> BearDogResult<String> {
+    fn try_operation(attempt: u32) -> Result<String, BearDogError> {
         if attempt < 3 {
             Err(BearDogError::system("Not ready".to_string()))
         } else {
@@ -239,7 +246,7 @@ fn test_error_multiple_recovery_attempts() {
 #[test]
 fn test_error_collection_handling() {
     // Test error handling in collections
-    fn process_values(values: Vec<i32>) -> BearDogResult<Vec<i32>> {
+    fn process_values(values: Vec<i32>) -> Result<Vec<i32>, BearDogError> {
         values
             .into_iter()
             .map(|v| {
@@ -262,11 +269,11 @@ fn test_error_collection_handling() {
 #[test]
 fn test_error_nested_results() {
     // Test nested Result unwrapping
-    fn outer_operation() -> BearDogResult<String> {
+    fn outer_operation() -> Result<String, BearDogError> {
         inner_operation()
     }
 
-    fn inner_operation() -> BearDogResult<String> {
+    fn inner_operation() -> Result<String, BearDogError> {
         Ok("success".to_string())
     }
 
@@ -281,7 +288,7 @@ fn test_error_nested_results() {
 #[test]
 fn test_error_with_logging_context() {
     // Test error with context information
-    fn operation_with_context(id: &str) -> BearDogResult<()> {
+    fn operation_with_context(id: &str) -> Result<(), BearDogError> {
         if id.is_empty() {
             return Err(BearDogError::validation("ID cannot be empty"));
         }
@@ -442,7 +449,7 @@ fn test_simple_workflow_execution() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    fn execute_workflow() -> BearDogResult<WorkflowStatus> {
+    fn execute_workflow() -> Result<WorkflowStatus, BearDogError> {
         // Simulate workflow steps
         Ok(WorkflowStatus::Completed)
     }
@@ -472,7 +479,7 @@ fn test_workflow_with_config() {
 #[test]
 fn test_workflow_error_handling() {
     // Test workflow error handling
-    fn risky_workflow() -> BearDogResult<WorkflowStatus> {
+    fn risky_workflow() -> Result<WorkflowStatus, BearDogError> {
         // Simulate failure
         Err(BearDogError::workflow("Step 2 failed".to_string()))
         // TEST_CATEGORY: unit
@@ -592,7 +599,7 @@ fn test_system_error_recovery() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: important
-    fn system_operation() -> BearDogResult<()> {
+    fn system_operation() -> Result<(), BearDogError> {
         // Simulate successful operation
         Ok(())
     }

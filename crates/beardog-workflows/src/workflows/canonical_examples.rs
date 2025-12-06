@@ -322,11 +322,23 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
             workflow = workflow.set_status(ExampleWorkflowStatus::Processing);
             sleep(Duration::from_millis(100)).await; // Simulate work
 
-            let processed_data = serde_json::json!({
-                "processed_by": processor_name,
-                "processed_at": chrono::Utc::now(),
-                "original_data": workflow.data
-            });
+            let processed_data = {
+                use serde_json::{Map, Value};
+                let mut data = Map::new();
+                data.insert(
+                    "processed_by".to_string(),
+                    Value::String(processor_name.to_string()),
+                );
+                data.insert(
+                    "processed_at".to_string(),
+                    Value::String(chrono::Utc::now().to_rfc3339()),
+                );
+                data.insert(
+                    "original_data".to_string(),
+                    workflow.data.clone().unwrap_or(Value::Null),
+                );
+                Value::Object(data)
+            };
 
             workflow = workflow
                 .with_data(processed_data)
@@ -490,11 +502,14 @@ pub async fn run_comprehensive_example() -> Result<(), BearDogError> {
     let mut service = WorkflowService::new(repository, processor);
     service.add_observer(observer);
 
-    let workflow =
-        ExampleWorkflow::new("example-001", "Example Workflow").with_data(serde_json::json!({
-            "input": "test data",
-            "priority": "high"
-        }));
+    let workflow_data = {
+        use serde_json::{Map, Value};
+        let mut data = Map::new();
+        data.insert("input".to_string(), Value::String("test data".to_string()));
+        data.insert("priority".to_string(), Value::String("high".to_string()));
+        Value::Object(data)
+    };
+    let workflow = ExampleWorkflow::new("example-001", "Example Workflow").with_data(workflow_data);
 
     info!("🔄 Created workflow: {}", workflow.id().as_str());
 

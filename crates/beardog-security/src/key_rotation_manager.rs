@@ -289,7 +289,7 @@ impl KeyRotationManager {
         metadata
             .get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Key {} not found", key_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))
     }
 
     /// Get all keys in a specific state
@@ -459,7 +459,7 @@ impl KeyRotationManager {
             debug!("Updated key {} state to {:?}", key_id, new_state);
             Ok(())
         } else {
-            Err(BearDogError::not_found(format!("Key {} not found", key_id)))
+            Err(BearDogError::not_found(format!("Key {key_id} not found")))
         }
     }
 

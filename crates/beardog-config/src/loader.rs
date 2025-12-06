@@ -11,7 +11,7 @@
 
 use crate::domains::{
     crypto::CryptoConfig, limits::LimitsConfig, monitoring::MonitoringConfig,
-    network::NetworkConfig, security::SecurityConfig, timeouts::TimeoutConfig,
+    network::NetworkConfig, security::SecurityConfig, timeouts_new::TimeoutConfig,
 };
 use crate::error::ConfigResult;
 use crate::BearDogConfig;
@@ -79,3 +79,7 @@ impl Default for ConfigLoader {
         Self::new()
     }
 }
+
+#[cfg(test)]
+#[path = "loader_tests.rs"]
+mod loader_tests;

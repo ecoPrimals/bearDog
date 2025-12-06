@@ -120,7 +120,10 @@ impl Default for InternalDnsPatterns {
             },
             default_ports: {
                 let mut ports = HashMap::new();
-                // ✅ Use BEARDOG_API_PORT (not DEFAULT_HTTP_PORT)
+                // ✅ MODERN IDIOMATIC: Use config constants instead of hardcoded values
+                use beardog_config::domains::network_ports;
+                
+                // HTTP port from config
                 ports.insert("http".to_string(), 
                     env::var("BEARDOG_API_PORT")
                         .ok()
@@ -129,27 +132,34 @@ impl Default for InternalDnsPatterns {
                             use beardog_config::global::BEARDOG_CONFIG;
                             BEARDOG_CONFIG.network.api.port
                         }));
-                // ✅ Use BEARDOG_HTTPS_PORT (not DEFAULT_HTTPS_PORT)
+                
+                // HTTPS port from config
                 ports.insert("https".to_string(), 
                     env::var("BEARDOG_HTTPS_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(8443));  // Standard HTTPS alternate port
+                        .unwrap_or(network_ports::DEFAULT_HTTPS_PORT));
+                
+                // gRPC port from config
                 ports.insert("grpc".to_string(), 
                     env::var("BEARDOG_DEFAULT_GRPC_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
                         .unwrap_or(DEFAULT_DISCOVERY_PORT));
+                
+                // Metrics port from config
                 ports.insert("metrics".to_string(), 
                     env::var("BEARDOG_DEFAULT_METRICS_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(9091));
+                        .unwrap_or(network_ports::DEFAULT_METRICS_PORT));
+                
+                // Health port from config
                 ports.insert("health".to_string(), 
                     env::var("BEARDOG_DEFAULT_HEALTH_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(8081));
+                        .unwrap_or(network_ports::DEFAULT_HEALTH_PORT));
                 ports
             },
         }

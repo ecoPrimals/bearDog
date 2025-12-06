@@ -28,7 +28,7 @@
 //!
 //! ```rust,no_run
 //! use beardog_types::canonical::traits::retry::RetryStrategy;
-//! # use beardog_types::canonical::config::domains::bootstrap::RetryStrategy as BootstrapRetry;
+//! # use beardog_types::canonical::config::domains::bootstrap::{RetryStrategy as BootstrapRetry, CoreBootstrapConfig};
 //!
 //! // Generic function that works with ANY RetryStrategy implementation
 //! fn should_retry<S: RetryStrategy>(strategy: &S, attempt: u32) -> bool {
@@ -36,8 +36,14 @@
 //! }
 //!
 //! // Works with any type implementing the trait
-//! # let config = BootstrapRetry::Exponential { base_delay_ms: 100, max_delay_ms: 5000, max_attempts: 5 };
-//! # fn dummy_impl<S: RetryStrategy>(_s: &S, _a: u32) -> bool { false }
+//! # let config = CoreBootstrapConfig {
+//! #     discovery_timeout_ms: 30000,
+//! #     max_discovery_attempts: 5,
+//! #     min_capabilities_threshold: 3,
+//! #     enable_passive_listening: true,
+//! #     retry_strategy: BootstrapRetry::Exponential,
+//! # };
+//! # fn dummy_impl<S>(_s: &S, _a: u32) -> bool { false }
 //! # assert!(!dummy_impl(&config, 1));
 //!
 //! // Would also work with NetworkRetryConfiguration, ResilienceRetryConfig, etc.

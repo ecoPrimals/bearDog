@@ -26,7 +26,7 @@ pub async fn discover_fido2_devices() -> Result<Vec<Fido2DeviceInfo>, BearDogErr
 
         // Initialize HID API
         let api = HidApi::new()
-            .map_err(|e| BearDogError::system(format!("Failed to initialize HID API: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to initialize HID API: {e}")))?;
 
         // Enumerate HID devices
         for device_info in api.device_list() {

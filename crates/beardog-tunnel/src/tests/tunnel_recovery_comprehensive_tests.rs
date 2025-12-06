@@ -10,6 +10,8 @@
 //! - Timeout and retry logic
 //! - State synchronization after reconnect
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use beardog_errors::BearDogError;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;

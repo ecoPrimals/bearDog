@@ -1,8 +1,8 @@
 //! Compliance Sovereignty Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/sovereignty/compliance
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/sovereignty/compliance
+//! `TEST_PRIORITY`: critical
 
 use super::types::*;
 

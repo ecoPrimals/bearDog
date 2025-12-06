@@ -5,9 +5,9 @@
 
 use beardog_types::canonical::HealthStatus;
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_basic_health_check_workflow() {
     // This is a real E2E test that validates the basic health check workflow
@@ -24,9 +24,9 @@ async fn test_basic_health_check_workflow() {
     assert!(is_healthy);
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: core  
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: core  
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_degraded_health_workflow() {
     // Test workflow with degraded health
@@ -40,9 +40,9 @@ async fn test_degraded_health_workflow() {
     // Recovery check is synchronous - no delay needed
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_system_state_workflow() {
     // Test health status workflow
@@ -62,9 +62,9 @@ async fn test_system_state_workflow() {
     // Workflow complete
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: critical
 #[tokio::test]
 async fn test_security_hash_workflow() {
     // Test complete security hashing workflow
@@ -90,9 +90,9 @@ async fn test_security_hash_workflow() {
     // Workflow complete
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_config_load_workflow() {
     // Test configuration loading workflow
@@ -108,9 +108,9 @@ async fn test_config_load_workflow() {
     // Test passes - config workflow completed successfully
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: adapters
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: adapters
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_adapter_workflow() {
     // Test adapter workflow
@@ -125,9 +125,9 @@ async fn test_adapter_workflow() {
     // Workflow complete
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_multi_step_async_workflow() {
     // Test multi-step async workflow
@@ -152,9 +152,9 @@ async fn test_multi_step_async_workflow() {
     // Multi-step workflow complete
 }
 
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: medium
 #[tokio::test]
 async fn test_type_conversion_workflow() {
     // Test type conversion workflow

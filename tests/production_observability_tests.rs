@@ -2,10 +2,14 @@
 //!
 //! Tests for the production monitoring and observability systems
 
-use beardog_errors::BearDogResult;
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::needless_borrows_for_generic_args)]
+
+#[allow(unused_imports)]
+use beardog_errors::BearDogError;
 
 #[tokio::test]
-async fn test_observability_config_defaults() -> BearDogResult<()> {
+async fn test_observability_config_defaults() -> Result<(), BearDogError> {
     // Test that we can create basic observability configuration
     // This validates the configuration structure exists and has sensible defaults
 
@@ -20,7 +24,7 @@ async fn test_observability_config_defaults() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_metrics_collection_concept() -> BearDogResult<()> {
+async fn test_metrics_collection_concept() -> Result<(), BearDogError> {
     // Test the concept of metrics collection
     // This validates that metrics can be collected and stored
 
@@ -52,7 +56,7 @@ async fn test_metrics_collection_concept() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_health_check_concepts() -> BearDogResult<()> {
+async fn test_health_check_concepts() -> Result<(), BearDogError> {
     // Test health check concepts
     use beardog_types::canonical::{ComponentStatus, HealthStatus};
 
@@ -77,7 +81,7 @@ async fn test_health_check_concepts() -> BearDogResult<()> {
 // TEST_PRIORITY: normal
 
 #[tokio::test]
-async fn test_alert_threshold_concepts() -> BearDogResult<()> {
+async fn test_alert_threshold_concepts() -> Result<(), BearDogError> {
     // Test alert threshold concepts
 
     #[derive(Debug)]
@@ -115,7 +119,7 @@ async fn test_alert_threshold_concepts() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_sla_monitoring_concepts() -> BearDogResult<()> {
+async fn test_sla_monitoring_concepts() -> Result<(), BearDogError> {
     // Test SLA monitoring concepts
 
     #[derive(Debug)]
@@ -167,7 +171,7 @@ fn test_monitoring_data_structures() {
 }
 
 #[tokio::test]
-async fn test_concurrent_metrics_access() -> BearDogResult<()> {
+async fn test_concurrent_metrics_access() -> Result<(), BearDogError> {
     // Test concurrent access to metrics
 
     use std::collections::HashMap;
@@ -228,7 +232,7 @@ fn test_performance_tracking_calculations() {
 }
 
 #[tokio::test]
-async fn test_error_rate_monitoring() -> BearDogResult<()> {
+async fn test_error_rate_monitoring() -> Result<(), BearDogError> {
     // Test error rate calculation and monitoring
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core

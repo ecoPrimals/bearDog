@@ -2,6 +2,8 @@
 //!
 //! Tests all error constructor methods and basic error handling.
 
+#![allow(clippy::disallowed_methods)] // unwrap/unwrap_err acceptable in test code
+
 use crate::BearDogError;
 
 #[test]

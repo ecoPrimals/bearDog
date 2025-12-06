@@ -5,6 +5,8 @@
 // This module provides functionality for the BearDog ecosystem.
 
 
+use beardog_config::domains::network_hosts::DEFAULT_HOST;
+use beardog_config::domains::network_ports::DEFAULT_VAULT_PORT;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::Utc;
@@ -283,10 +285,14 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     fn test_vault_handler_creation() -> Result<(), BearDogError> {
-        // Use environment variable or fallback to localhost with default Vault port
+        // Configuration hierarchy: VAULT_ADDR → BEARDOG_VAULT_URL → default (no hardcoding)
+        // This follows the Zero Hardcoding Specification by always checking environment first
         let vault_url = std::env::var("VAULT_ADDR").unwrap_or_else(|_| {
             std::env::var("BEARDOG_VAULT_URL")
-                .unwrap_or_else(|_| "http://127.0.0.1:8200".to_string())
+                .unwrap_or_else(|_| {
+                    // Default constructed from config constants (not hardcoded)
+                    format!("http://{}:{}", DEFAULT_HOST, DEFAULT_VAULT_PORT) // Vault's standard port
+                })
         });
         let handler = VaultCapabilityHandler::new(
             vault_url.clone(),

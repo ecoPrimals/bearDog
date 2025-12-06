@@ -528,9 +528,9 @@ fn test_hsm_session_timeout_and_renewal() {
 fn test_hsm_key_derivation_chain() {
     // Test key derivation from master key
 
-    let _master_key_id = "master-key";
-    let master_key_exists = true;
-    assert!(master_key_exists, "Master key should exist");
+    let _primary_key_id = "primary-key";
+    let primary_key_exists = true;
+    assert!(primary_key_exists, "Primary key should exist");
 
     // Derive child keys
     let child_key_1 = "child-1";

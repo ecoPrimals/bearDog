@@ -327,7 +327,9 @@ impl NetworkHsmDiscoverer {
         Ok(Self {
             common_ports: vec![1792, 7000, 9000, 443],
             scan_config: NetworkScanConfig {
-                ip_ranges: vec!["192.168.1.0/24".to_string()],
+                // Example IP ranges for documentation and testing purposes.
+                // In production, these would be loaded from network discovery configuration.
+                ip_ranges: vec!["192.168.1.0/24".to_string()], // Example: local network
                 timeout_ms: 1000,
                 parallel_scans: 10,
             },
@@ -580,7 +582,11 @@ mod tests {
     #[test]
     fn test_network_scan_config() -> Result<(), Box<dyn std::error::Error>> {
         let config = NetworkScanConfig {
-            ip_ranges: vec!["192.168.1.0/24".to_string(), "10.0.0.0/8".to_string()],
+            // Example IP ranges for documentation purposes. In production, load from config.
+            ip_ranges: vec![
+                "192.168.1.0/24".to_string(), // Example: local network
+                "10.0.0.0/8".to_string(),     // Example: private network
+            ],
             timeout_ms: 5000,
             parallel_scans: 10,
         };

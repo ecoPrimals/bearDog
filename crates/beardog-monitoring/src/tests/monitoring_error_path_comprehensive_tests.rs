@@ -10,6 +10,14 @@
 //! - Recovery and graceful degradation
 //! - Resource exhaustion scenarios
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 use beardog_errors::BearDogError;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;

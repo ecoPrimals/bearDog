@@ -71,11 +71,23 @@ impl ComplianceHandler {
             } else {
                 AuditOutcome::Failure
             },
-            details: serde_json::json!({
-                "event_id": event.id,
-                "violations_count": violations.len(),
-                "score": overall_score
-            }),
+            details: {
+                use serde_json::{Map, Value};
+                let mut details = Map::new();
+                details.insert("event_id".to_string(), Value::String(event.id.clone()));
+                details.insert(
+                    "violations_count".to_string(),
+                    Value::Number(violations.len().into()),
+                );
+                details.insert(
+                    "score".to_string(),
+                    Value::Number(
+                        serde_json::Number::from_f64(overall_score)
+                            .unwrap_or_else(|| serde_json::Number::from(0)),
+                    ),
+                );
+                Value::Object(details)
+            },
         });
 
         Ok(ComplianceResult {

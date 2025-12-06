@@ -1,8 +1,8 @@
 //! Comprehensive Quantum Cryptography Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security
+//! `TEST_PRIORITY`: high
 //!
 //! Comprehensive test coverage for quantum-resistant cryptographic operations.
 //! Part of Week 1 test expansion (Oct 31, 2025).

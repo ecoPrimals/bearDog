@@ -13,6 +13,13 @@
 //!
 //! ## Example
 //!
+
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! ```rust
 //! use beardog_monitoring::security_sentinel::{SecuritySentinel, SecuritySentinelConfig};
 //! use std::collections::HashMap;
@@ -60,5 +67,12 @@ pub mod security_sentinel_example;
 pub use monitoring::*;
 pub use security_sentinel::SecuritySentinel;
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::nonminimal_bool
+)]
 #[cfg(test)]
 mod tests;

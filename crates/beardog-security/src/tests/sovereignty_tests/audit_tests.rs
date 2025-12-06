@@ -1,8 +1,8 @@
 //! Sovereignty Audit Trail Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/sovereignty/audit
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/sovereignty/audit
+//! `TEST_PRIORITY`: critical
 
 use super::types::*;
 

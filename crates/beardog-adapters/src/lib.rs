@@ -10,6 +10,12 @@
 //! - **Capability-Based Discovery**: Services discovered by capability, not name
 
 #![deny(unsafe_code)]
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! - **Zero Vendor Lock-in**: Pluggable providers (AWS, Azure, GCP, Vault)
 //! - **Automatic Failover**: Graceful degradation when providers unavailable
 //! - **Response Caching**: Efficient request deduplication
@@ -49,10 +55,24 @@ mod adapter_validation_extended_tests;
 #[path = "tests/adapter_operations_comprehensive_tests.rs"]
 mod adapter_operations_comprehensive_tests;
 
+// November 22, 2025: Error path and configuration validation coverage expansion
+#[cfg(test)]
+#[path = "tests/adapter_error_paths_tests.rs"]
+mod adapter_error_paths_tests;
+
+#[cfg(test)]
+#[path = "tests/configuration_validation_tests.rs"]
+mod configuration_validation_tests;
+
 // November 22, 2025: Adapter coverage expansion for 85% coverage goal
 #[cfg(test)]
 #[path = "tests/adapter_coverage_expansion_nov_22_tests.rs"]
 mod adapter_coverage_expansion_nov_22_tests;
+
+// November 27, 2025: Coverage Sprint Phase 1 - Additional lib.rs coverage
+#[cfg(test)]
+#[path = "tests/lib_nov_27_coverage_tests.rs"]
+mod lib_nov_27_coverage_tests;
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -246,9 +266,14 @@ impl UniversalAdapter {
                 Err(e) => {
                     last_error = Some(e);
                     if attempt < self.config.retry_attempts - 1 {
-                        // Exponential backoff: 100ms, 200ms, 400ms, etc.
-                        let delay = Duration::from_millis(100 * (1 << attempt));
-                        tokio::time::sleep(delay).await;
+                        // Modern: Exponential backoff with jitter to prevent thundering herd
+                        let base_delay_ms = 100u64 * (1u64 << attempt);
+                        // Add jitter: ±20% randomness
+                        let jitter = (base_delay_ms / 5) as i64;
+                        let jittered_ms = (base_delay_ms as i64
+                            + (rand::random::<i64>() % (jitter * 2) - jitter))
+                            .max(0) as u64;
+                        tokio::time::sleep(Duration::from_millis(jittered_ms)).await;
                     }
                 }
             }
@@ -289,12 +314,9 @@ impl UniversalAdapter {
         &self,
         request: &CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {
-        // Simulate some processing time
-        let sleep_millis = std::env::var("BEARDOG_ADAPTER_RETRY_SLEEP_MS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(10);
-        tokio::time::sleep(Duration::from_millis(sleep_millis)).await;
+        // Modern: Yield to simulate async work (no arbitrary sleep in tests)
+        // In production, this would be actual async I/O
+        tokio::task::yield_now().await;
 
         // Simulate occasional failures for testing retry logic
         if request.operation == "fail_test" {
@@ -303,14 +325,28 @@ impl UniversalAdapter {
             });
         }
 
+        let response_data = {
+            use serde_json::{Map, Value};
+            let mut data = Map::new();
+            data.insert("result".to_string(), Value::String("executed".to_string()));
+            data.insert(
+                "capability".to_string(),
+                Value::String(request.capability.clone()),
+            );
+            data.insert(
+                "operation".to_string(),
+                Value::String(request.operation.clone()),
+            );
+            data.insert(
+                "parameters".to_string(),
+                serde_json::to_value(&request.parameters).unwrap_or(Value::Null),
+            );
+            Value::Object(data)
+        };
+
         Ok(CapabilityResponse {
             success: true,
-            data: Some(serde_json::json!({
-                "result": "executed",
-                "capability": request.capability,
-                "operation": request.operation,
-                "parameters": request.parameters
-            })),
+            data: Some(response_data),
             error: None,
             metadata: {
                 let mut meta = HashMap::new();

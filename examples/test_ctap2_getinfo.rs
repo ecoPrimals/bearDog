@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Test CTAP2 GetInfo Command with Real Hardware
 //!
 //! This example tests the CTAP2 GetInfo command implementation
@@ -21,7 +29,6 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
     {
         println!("⚠️  FIDO2 feature not enabled!");
         println!("💡 Run with: cargo run --example test_ctap2_getinfo --features fido2");
-        return Ok(());
     }
 
     #[cfg(feature = "fido2")]

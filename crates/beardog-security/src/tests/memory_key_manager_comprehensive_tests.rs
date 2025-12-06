@@ -1,8 +1,8 @@
 //! Comprehensive Memory Key Manager Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/key_management
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/key_management
+//! `TEST_PRIORITY`: critical
 //!
 //! Comprehensive test coverage for the MemoryKeyManager including:
 //! - Key generation and storage

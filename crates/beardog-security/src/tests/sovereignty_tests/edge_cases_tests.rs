@@ -1,8 +1,8 @@
 //! Sovereignty Edge Cases Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/sovereignty/edge-cases
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/sovereignty/edge-cases
+//! `TEST_PRIORITY`: critical
 
 use super::types::*;
 

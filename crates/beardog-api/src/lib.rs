@@ -2,6 +2,10 @@
 //!
 //! `RESTful` API endpoints for the `BearDog` security platform, providing HTTP/HTTPS access
 //! to security operations, health monitoring, and system management.
+
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 //!
 //! ## Features
 //!

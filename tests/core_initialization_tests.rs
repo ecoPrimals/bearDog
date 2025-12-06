@@ -15,9 +15,9 @@ use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogCo
 
 /// Tests that BearDogCore can be created with default configuration
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_core_new_with_default_config() {
     // Given: a default configuration
@@ -31,9 +31,9 @@ fn test_core_new_with_default_config() {
 
 /// Tests that BearDogCore can be created using convenience factory method
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_core_with_default_config_factory() {
     // When: using factory method
@@ -50,9 +50,9 @@ fn test_core_with_default_config_factory() {
 
 /// Tests that core can be created with different configuration variants
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_core_configuration_variants() {
     // Given: multiple default configurations
@@ -71,9 +71,9 @@ fn test_core_configuration_variants() {
 
 /// Tests that core initialization succeeds
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: critical
 #[tokio::test]
 async fn test_core_initialize() {
     // Given: a core instance
@@ -91,9 +91,9 @@ async fn test_core_initialize() {
 
 /// Tests that HSM management can be initialized
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: critical
 #[tokio::test]
 async fn test_core_hsm_initialization() {
     // Given: an initialized core
@@ -112,9 +112,9 @@ async fn test_core_hsm_initialization() {
 
 /// Tests that AI service registration succeeds
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_core_ai_service_registration() {
     // Given: an initialized core
@@ -133,9 +133,9 @@ async fn test_core_ai_service_registration() {
 
 /// Tests that multiple initialization calls are handled gracefully
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_core_multiple_initialization() {
     // Given: a core instance
@@ -156,9 +156,9 @@ async fn test_core_multiple_initialization() {
 
 /// Tests complete initialization sequence with all components
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: critical
 #[tokio::test]
 async fn test_core_full_initialization_sequence() {
     // Given: a core instance
@@ -187,9 +187,9 @@ async fn test_core_full_initialization_sequence() {
 
 /// Tests that config field is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_core_config_access() {
     // Given: a core instance
@@ -203,9 +203,9 @@ fn test_core_config_access() {
 
 /// Tests that state field is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_core_state_access() {
     // Given: a core instance
@@ -219,9 +219,9 @@ fn test_core_state_access() {
 
 /// Tests that monitor field is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_core_monitor_access() {
     // Given: a core instance
@@ -235,9 +235,9 @@ fn test_core_monitor_access() {
 
 /// Tests that security provider field is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_core_security_provider_access() {
     // Given: a core instance
@@ -251,9 +251,9 @@ fn test_core_security_provider_access() {
 
 /// Tests that genetic optimizer field is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_core_genetic_optimizer_access() {
     // Given: a core instance
@@ -267,9 +267,9 @@ fn test_core_genetic_optimizer_access() {
 
 /// Tests that universal adapter field is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_core_universal_adapter_access() {
     // Given: a core instance

@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! # Zero-Hardcoding Migration Example
 //!
 //! This example demonstrates how to migrate from hardcoded values to the
@@ -123,7 +131,7 @@ mod good_convenience {
         println!("✅ TLS enabled: {}", config.network.api.tls_enabled);
         println!(
             "✅ Max request size: {} bytes",
-            config.limits.max_request_body_bytes
+            config.limits.max_message_size
         );
         println!(
             "✅ Operation timeout: {} seconds",

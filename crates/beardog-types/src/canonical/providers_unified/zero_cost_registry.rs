@@ -348,15 +348,25 @@ impl Default for ZeroCostRegistryConfig {
     }
 }
 
-// Example implementations for common provider scenarios
+// =============================================================================
+// Test-Only Mock Implementations
+// =============================================================================
+//
+// These mock providers are for TESTING ONLY. Production code should use
+// real provider implementations from:
+// - beardog-security for SecurityProvider
+// - beardog-tunnel for HsmProvider  
+// - beardog-monitoring for MonitoringProvider
 
-/// **MOCK SECURITY PROVIDER** - Zero-cost implementation
+/// **MOCK SECURITY PROVIDER** - Test-only zero-cost implementation
+#[cfg(any(test, feature = "test-utils"))]
 #[derive(Debug, Clone)]
 pub struct MockSecurityProvider {
     pub provider_id: String,
     pub initialized: bool,
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl MockSecurityProvider {
     pub fn new(provider_id: String) -> Self {
         Self {
@@ -368,6 +378,7 @@ impl MockSecurityProvider {
 
 // For now, let's create a simplified mock that doesn't implement the full trait
 // This is just for demonstration of the zero-cost pattern
+#[cfg(any(test, feature = "test-utils"))]
 impl MockSecurityProvider {
     pub async fn mock_health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
@@ -393,13 +404,15 @@ impl MockSecurityProvider {
     }
 }
 
-/// **MOCK HSM PROVIDER** - Zero-cost implementation
+/// **MOCK HSM PROVIDER** - Test-only zero-cost implementation
+#[cfg(any(test, feature = "test-utils"))]
 #[derive(Debug, Clone)]
 pub struct MockHsmProvider {
     pub provider_id: String,
     pub initialized: bool,
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl MockHsmProvider {
     pub fn new(provider_id: String) -> Self {
         Self {
@@ -409,6 +422,7 @@ impl MockHsmProvider {
     }
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl MockHsmProvider {
     pub async fn mock_health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
@@ -434,13 +448,15 @@ impl MockHsmProvider {
     }
 }
 
-/// **MOCK MONITORING PROVIDER** - Zero-cost implementation
+/// **MOCK MONITORING PROVIDER** - Test-only zero-cost implementation
+#[cfg(any(test, feature = "test-utils"))]
 #[derive(Debug, Clone)]
 pub struct MockMonitoringProvider {
     pub provider_id: String,
     pub initialized: bool,
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl MockMonitoringProvider {
     pub fn new(provider_id: String) -> Self {
         Self {
@@ -450,6 +466,7 @@ impl MockMonitoringProvider {
     }
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl MockMonitoringProvider {
     pub async fn mock_health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
@@ -475,15 +492,17 @@ impl MockMonitoringProvider {
     }
 }
 
-// Type alias for common zero-cost registry configuration
+// Type alias for test-only zero-cost registry configuration
+#[cfg(any(test, feature = "test-utils"))]
 pub type StandardZeroCostRegistry = ZeroCostProviderRegistry<
     MockSecurityProvider,
     MockHsmProvider,
     MockMonitoringProvider,
 >;
 
+#[cfg(any(test, feature = "test-utils"))]
 impl StandardZeroCostRegistry {
-    /// Create a standard zero-cost provider registry with mock implementations
+    /// Create a standard zero-cost provider registry with mock implementations (test-only)
     pub fn standard() -> Self {
         Self::new(ZeroCostRegistryConfig::default())
     }
@@ -569,6 +588,25 @@ mod tests {
     async fn test_zero_cost_health_checks() {
         let registry = StandardZeroCostRegistry::standard();
         
+        // Register providers and perform health checks
+        let mut security_provider = MockSecurityProvider::new("test-security".to_string());
+        security_provider.initialized = true;
+        
+        let info = ProviderInfo {
+            provider_id: "test-security".to_string(),
+            provider_type: "security".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: vec![],
+            metadata: std::collections::HashMap::new(),
+        };
+        
+        registry.register_security_provider("test-security".to_string(), security_provider, info).await?;
+        
+        let health_results = registry.health_check_all().await?;
+        assert_eq!(health_results.len(), 1);
+        assert!(health_results.contains_key("test-security"));
+    }
+} 
         // Register providers and perform health checks
         let mut security_provider = MockSecurityProvider::new("test-security".to_string());
         security_provider.initialized = true;

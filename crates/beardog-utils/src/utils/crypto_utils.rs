@@ -275,6 +275,7 @@ pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, BearDogError> {
     Ok(bytes)
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

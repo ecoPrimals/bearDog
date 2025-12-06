@@ -538,6 +538,14 @@ pub struct RegistryStatistics {
     pub by_health_status: HashMap<HealthStatus, usize>,
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -561,7 +569,7 @@ mod tests {
             endpoint: EndpointConfig {
                 base_url: {
                     use beardog_config::domains::network_ports::DEFAULT_API_PORT;
-                    format!("http://test.local:{}", DEFAULT_API_PORT)
+                    format!("http://test.local:{DEFAULT_API_PORT}")
                 },
                 api_version: Some("v1".to_string()),
                 timeout_ms: 5000,

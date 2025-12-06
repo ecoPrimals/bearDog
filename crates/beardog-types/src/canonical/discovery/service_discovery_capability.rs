@@ -433,14 +433,14 @@ pub async fn create_service_discovery(
         return Ok(Arc::new(discovery));
     }
 
-    // ✅ ARCHITECTURAL DECISION: Service discovery delegated to Songbird ecosystem
+    // ✅ ARCHITECTURAL DECISION: Service discovery delegated via capability discovery
     // BearDog follows "Discover, Don't Implement" principle:
-    // - Consul, etcd, mDNS, DNS-SD → Handled by Songbird primal
+    // - Consul, etcd, mDNS, DNS-SD → Handled by primals with ServiceDiscovery capability
     // - BearDog receives discovered services via UniversalAdapter
     // - See: crates/beardog-adapters/src/universal/primal_capability_adapter.rs
     //
     // For network service discovery, use UniversalPrimalAdapter::discover_network_primals()
-    // instead of direct protocol implementation (capability-based, no hardcoded primal names)
+    // instead of direct protocol implementation (capability-based, primal-agnostic)
 
     // Fallback to DNS + HTTP (always available)
     tracing::info!("Using DNS/HTTP fallback discovery");
@@ -553,10 +553,18 @@ impl KubernetesDiscovery {
         } else {
             // Out-of-cluster: parse from kubeconfig (simplified - real impl would parse YAML)
             // For now, use environment variable override
-            std::env::var("BEARDOG_K8S_API_SERVER").or_else(|_| {
-                // Default to common dev cluster address
-                Ok("https://127.0.0.1:6443".to_string())
-            })
+            std::env::var("BEARDOG_K8S_API_SERVER")
+                .or_else(|_| {
+                    std::env::var("KUBERNETES_SERVICE_HOST").map(|host| {
+                        let port = std::env::var("KUBERNETES_SERVICE_PORT")
+                            .unwrap_or_else(|_| "6443".to_string());
+                        format!("https://{}:{}", host, port)
+                    })
+                })
+                .or_else(|_| {
+                    // Default to internal K8s DNS
+                    Ok("https://kubernetes.default.svc.cluster.local:443".to_string())
+                })
         }
     }
 
@@ -770,7 +778,11 @@ impl DnsHttpDiscovery {
         // Real implementation would use DNS A/AAAA lookups
         // For now, check if it's already an IP or localhost
         if name == "localhost" || name == "127.0.0.1" {
-            return Ok(vec!["http://127.0.0.1:8080".to_string()]);
+            let default_port = std::env::var("BEARDOG_DEFAULT_SERVICE_PORT")
+                .unwrap_or_else(|_| "8080".to_string());
+            let host =
+                std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+            return Ok(vec![format!("http://{}:{}", host, default_port)]);
         }
 
         Ok(Vec::new())

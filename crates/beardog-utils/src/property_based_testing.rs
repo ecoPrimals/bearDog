@@ -25,6 +25,8 @@
 //!
 //! **Removal Timeline**: v3.3.0 (Q1 2026)
 
+#![allow(unused_imports, unused_variables, dead_code, clippy::all)]
+
 #[deprecated(
     since = "3.0.2",
     note = "Use beardog_utils::property_testing module instead"

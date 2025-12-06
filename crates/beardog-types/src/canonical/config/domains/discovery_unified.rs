@@ -43,6 +43,7 @@
 //!
 //! ```rust
 //! use beardog_types::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig;
+//! use std::sync::Arc;
 //!
 //! // Load with defaults
 //! let default_config = UnifiedDiscoveryConfig::default();
@@ -51,7 +52,7 @@
 //! // Custom configuration
 //! let mut custom_config = UnifiedDiscoveryConfig::default();
 //! custom_config.enabled = true;
-//! custom_config.service_id = "my-service".to_string();
+//! custom_config.service_id = Arc::from("my-service");
 //! ```
 
 use serde::{Deserialize, Serialize};
@@ -434,11 +435,21 @@ impl UnifiedDiscoveryConfig {
 
     /// Create an aggressive discovery configuration (fast timeouts, aggressive retries)
     pub fn aggressive() -> Self {
+        use std::env;
+        let discovery_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .or_else(|_| env::var("DISCOVERY_ENDPOINT"))
+            .unwrap_or_else(|_| {
+                let host = env::var("DISCOVERY_HOST")
+                    .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
+                let port = env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                format!("http://{}:{}", host, port)
+            });
+
         Self {
             enabled: true,
             service_id: Arc::from("beardog-discovery-aggressive"),
             enabled_protocols: vec![DiscoveryProtocol::Http {
-                endpoint: "http://localhost:8500".to_string(),
+                endpoint: discovery_endpoint.clone(),
                 timeout_ms: 1000,
             }],
             registry: ServiceRegistryConfig {
@@ -461,11 +472,21 @@ impl UnifiedDiscoveryConfig {
 
     /// Create a conservative discovery configuration (long timeouts, fewer retries)
     pub fn conservative() -> Self {
+        use std::env;
+        let discovery_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .or_else(|_| env::var("DISCOVERY_ENDPOINT"))
+            .unwrap_or_else(|_| {
+                let host = env::var("DISCOVERY_HOST")
+                    .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
+                let port = env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                format!("http://{}:{}", host, port)
+            });
+
         Self {
             enabled: true,
             service_id: Arc::from("beardog-discovery-conservative"),
             enabled_protocols: vec![DiscoveryProtocol::Http {
-                endpoint: "http://localhost:8500".to_string(),
+                endpoint: discovery_endpoint.clone(),
                 timeout_ms: 30000,
             }],
             registry: ServiceRegistryConfig {
@@ -586,11 +607,21 @@ impl CircuitBreakerConfig {
 
 impl Default for UnifiedDiscoveryConfig {
     fn default() -> Self {
+        use std::env;
+        let discovery_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .or_else(|_| env::var("DISCOVERY_ENDPOINT"))
+            .unwrap_or_else(|_| {
+                let host = env::var("DISCOVERY_HOST")
+                    .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
+                let port = env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                format!("http://{}:{}", host, port)
+            });
+
         Self {
             enabled: true,
             service_id: Arc::from("beardog-discovery"),
             enabled_protocols: vec![DiscoveryProtocol::Http {
-                endpoint: "http://localhost:8500".to_string(),
+                endpoint: discovery_endpoint,
                 timeout_ms: 5000,
             }],
             registry: ServiceRegistryConfig::default(),
@@ -605,9 +636,19 @@ impl Default for UnifiedDiscoveryConfig {
 
 impl Default for ServiceRegistryConfig {
     fn default() -> Self {
+        use std::env;
+        let registry_endpoint = env::var("BEARDOG_SERVICE_REGISTRY_ENDPOINT")
+            .or_else(|_| env::var("CONSUL_HTTP_ADDR"))
+            .unwrap_or_else(|_| {
+                let host = env::var("REGISTRY_HOST")
+                    .unwrap_or_else(|_| "consul.ecosystem.internal".to_string());
+                let port = env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
+                format!("http://{}:{}", host, port)
+            });
+
         Self {
             backend: Arc::from("consul"),
-            endpoints: vec![Arc::from("http://localhost:8500")],
+            endpoints: vec![Arc::from(registry_endpoint.as_str())],
             service_ttl: Duration::from_secs(300), // 5 minutes
             health_check_interval: Duration::from_secs(30),
             cleanup_interval: Duration::from_secs(60),
@@ -619,9 +660,11 @@ impl Default for ServiceRegistryConfig {
 
 impl Default for NetworkDiscoveryConfig {
     fn default() -> Self {
+        use beardog_config::domains::network_ports::{DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT};
+
         Self {
             protocols: vec![Arc::from("http"), Arc::from("grpc")],
-            ports: vec![8080, 9090],
+            ports: vec![DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT],
             timeout: Duration::from_secs(5),
             retry: CanonicalRetryConfig::default(),
             max_packet_size: 1500,

@@ -234,7 +234,7 @@ impl BearDogCore {
     /// ```
     pub fn get_status(&self) -> Result<SystemStatus> {
         let status = self.status.read()
-            .map_err(|e| BearDogError::system(format!("Failed to read status: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to read status: {e}")))?;
         Ok(status.clone())
     }
 
@@ -247,7 +247,7 @@ impl BearDogCore {
     /// Register a component
     pub fn register_component(&self, name: String, status: ComponentStatus) -> Result<(), BearDogError> {
         let mut components = self.components.write()
-            .map_err(|e| BearDogError::system(format!("Failed to write components: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to write components: {e}")))?;
         
         components.insert(name.clone(), status);
         info!("Registered component: {}", name);
@@ -258,7 +258,7 @@ impl BearDogCore {
     /// Update component status
     pub fn update_component_status(&self, name: &str, status: ComponentStatus) -> Result<(), BearDogError> {
         let mut components = self.components.write()
-            .map_err(|e| BearDogError::system(format!("Failed to write components: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to write components: {e}")))?;
         
         if let Some(current_status) = components.get_mut(name) {
             *current_status = status.clone();
@@ -306,7 +306,7 @@ impl BearDogCore {
         
         let component_names: Vec<String> = {
             let components = self.components.read()
-                .map_err(|e| BearDogError::system(format!("Failed to read components: {}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Failed to read components: {e}")))?;
             components.keys().cloned().collect()
         };
 

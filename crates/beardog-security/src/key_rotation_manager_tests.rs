@@ -451,8 +451,9 @@ mod tests {
             .await
             .unwrap();
 
-        // Modern pattern: Wait minimal time for rotation check (10ms is fast enough)
-        tokio::time::sleep(Duration::from_millis(15)).await;
+        // ✅ MODERNIZED: Minimal sleep for time-based rotation check (15ms→11ms, 27% reduction)
+        // Key rotation policy is time-based (10ms threshold), need to exceed it
+        tokio::time::sleep(Duration::from_millis(11)).await;
 
         // Check keys needing rotation
         let needs_rotation = manager.get_keys_needing_rotation().await.unwrap();

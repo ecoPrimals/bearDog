@@ -279,10 +279,347 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: workflows
     // TEST_PRIORITY: normal
     #[test]
     fn test_traits_exist() {}
+
+    #[test]
+    fn test_default_workflow_status_is_terminal() {
+        assert!(!DefaultWorkflowStatus::Pending.is_terminal());
+        assert!(!DefaultWorkflowStatus::Running.is_terminal());
+        assert!(DefaultWorkflowStatus::Completed.is_terminal());
+        assert!(DefaultWorkflowStatus::Failed.is_terminal());
+        assert!(DefaultWorkflowStatus::Cancelled.is_terminal());
+    }
+
+    #[test]
+    fn test_default_workflow_status_is_active() {
+        assert!(!DefaultWorkflowStatus::Pending.is_active());
+        assert!(DefaultWorkflowStatus::Running.is_active());
+        assert!(!DefaultWorkflowStatus::Completed.is_active());
+        assert!(!DefaultWorkflowStatus::Failed.is_active());
+        assert!(!DefaultWorkflowStatus::Cancelled.is_active());
+    }
+
+    #[test]
+    fn test_default_workflow_status_clone() {
+        let status = DefaultWorkflowStatus::Running;
+        let cloned = status;
+        assert_eq!(status, cloned);
+    }
+
+    #[test]
+    fn test_default_workflow_status_copy() {
+        let status = DefaultWorkflowStatus::Completed;
+        let copied = status;
+        assert_eq!(status, copied);
+    }
+
+    #[test]
+    fn test_default_workflow_status_debug() {
+        let status = DefaultWorkflowStatus::Running;
+        let debug_str = format!("{:?}", status);
+        assert!(debug_str.contains("Running"));
+    }
+
+    #[test]
+    fn test_default_workflow_status_all_variants() {
+        let statuses = [
+            DefaultWorkflowStatus::Pending,
+            DefaultWorkflowStatus::Running,
+            DefaultWorkflowStatus::Completed,
+            DefaultWorkflowStatus::Failed,
+            DefaultWorkflowStatus::Cancelled,
+        ];
+        assert_eq!(statuses.len(), 5);
+    }
+
+    #[test]
+    fn test_default_workflow_status_equality() {
+        assert_eq!(
+            DefaultWorkflowStatus::Pending,
+            DefaultWorkflowStatus::Pending
+        );
+        assert_ne!(
+            DefaultWorkflowStatus::Pending,
+            DefaultWorkflowStatus::Running
+        );
+        assert_ne!(
+            DefaultWorkflowStatus::Running,
+            DefaultWorkflowStatus::Completed
+        );
+    }
+
+    #[test]
+    fn test_default_workflow_status_terminal_states() {
+        let terminal_states = vec![
+            DefaultWorkflowStatus::Completed,
+            DefaultWorkflowStatus::Failed,
+            DefaultWorkflowStatus::Cancelled,
+        ];
+
+        for status in terminal_states {
+            assert!(status.is_terminal(), "{:?} should be terminal", status);
+            assert!(!status.is_active(), "{:?} should not be active", status);
+        }
+    }
+
+    #[test]
+    fn test_default_workflow_status_non_terminal_states() {
+        let non_terminal_states = vec![
+            DefaultWorkflowStatus::Pending,
+            DefaultWorkflowStatus::Running,
+        ];
+
+        for status in non_terminal_states {
+            assert!(!status.is_terminal(), "{:?} should not be terminal", status);
+        }
+    }
+
+    #[test]
+    fn test_default_workflow_status_active_only_running() {
+        // Only Running should be active
+        assert!(DefaultWorkflowStatus::Running.is_active());
+
+        // All others should not be active
+        assert!(!DefaultWorkflowStatus::Pending.is_active());
+        assert!(!DefaultWorkflowStatus::Completed.is_active());
+        assert!(!DefaultWorkflowStatus::Failed.is_active());
+        assert!(!DefaultWorkflowStatus::Cancelled.is_active());
+    }
+
+    // Mock implementations for trait testing
+    #[derive(Debug, Clone)]
+    struct MockWorkflowId(String);
+
+    impl std::fmt::Display for MockWorkflowId {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    impl WorkflowId for MockWorkflowId {
+        fn as_str(&self) -> &str {
+            &self.0
+        }
+    }
+
+    #[test]
+    fn test_workflow_id_trait() {
+        let id = MockWorkflowId("test-id-123".to_string());
+        assert_eq!(id.as_str(), "test-id-123");
+        assert_eq!(format!("{}", id), "test-id-123");
+    }
+
+    #[test]
+    fn test_workflow_id_clone() {
+        let id = MockWorkflowId("clone-test".to_string());
+        let cloned = id.clone();
+        assert_eq!(id.as_str(), cloned.as_str());
+    }
+
+    #[derive(Debug, Clone)]
+    struct MockWorkflow {
+        id: MockWorkflowId,
+        status: DefaultWorkflowStatus,
+        created: chrono::DateTime<chrono::Utc>,
+    }
+
+    impl Workflow for MockWorkflow {
+        type Id = MockWorkflowId;
+        type Status = DefaultWorkflowStatus;
+
+        fn id(&self) -> &Self::Id {
+            &self.id
+        }
+
+        fn status(&self) -> &Self::Status {
+            &self.status
+        }
+
+        fn created_at(&self) -> chrono::DateTime<chrono::Utc> {
+            self.created
+        }
+    }
+
+    #[test]
+    fn test_workflow_trait() {
+        let now = chrono::Utc::now();
+        let workflow = MockWorkflow {
+            id: MockWorkflowId("wf-001".to_string()),
+            status: DefaultWorkflowStatus::Running,
+            created: now,
+        };
+
+        assert_eq!(workflow.id().as_str(), "wf-001");
+        assert_eq!(*workflow.status(), DefaultWorkflowStatus::Running);
+        assert_eq!(workflow.created_at(), now);
+    }
+
+    #[test]
+    fn test_workflow_with_different_statuses() {
+        let now = chrono::Utc::now();
+        let statuses = [
+            DefaultWorkflowStatus::Pending,
+            DefaultWorkflowStatus::Running,
+            DefaultWorkflowStatus::Completed,
+        ];
+
+        for (i, status) in statuses.iter().enumerate() {
+            let workflow = MockWorkflow {
+                id: MockWorkflowId(format!("wf-{}", i)),
+                status: *status,
+                created: now,
+            };
+            assert_eq!(workflow.status(), status);
+        }
+    }
+
+    #[test]
+    fn test_workflow_status_trait_methods() {
+        // Test that WorkflowStatus trait methods work correctly
+        let status = DefaultWorkflowStatus::Running;
+        assert!(status.is_active());
+        assert!(!status.is_terminal());
+
+        let completed = DefaultWorkflowStatus::Completed;
+        assert!(!completed.is_active());
+        assert!(completed.is_terminal());
+    }
+
+    #[test]
+    fn test_workflow_clone() {
+        let workflow = MockWorkflow {
+            id: MockWorkflowId("clone-wf".to_string()),
+            status: DefaultWorkflowStatus::Completed,
+            created: chrono::Utc::now(),
+        };
+
+        let cloned = workflow.clone();
+        assert_eq!(cloned.id().as_str(), workflow.id().as_str());
+        assert_eq!(*cloned.status(), *workflow.status());
+    }
+
+    #[test]
+    fn test_workflow_debug() {
+        let workflow = MockWorkflow {
+            id: MockWorkflowId("debug-wf".to_string()),
+            status: DefaultWorkflowStatus::Failed,
+            created: chrono::Utc::now(),
+        };
+
+        let debug_str = format!("{:?}", workflow);
+        assert!(debug_str.contains("MockWorkflow"));
+    }
+
+    #[test]
+    fn test_workflow_lifecycle_statuses() {
+        let now = chrono::Utc::now();
+
+        // Start pending
+        let mut workflow = MockWorkflow {
+            id: MockWorkflowId("lifecycle-test".to_string()),
+            status: DefaultWorkflowStatus::Pending,
+            created: now,
+        };
+        assert!(!workflow.status().is_active());
+        assert!(!workflow.status().is_terminal());
+
+        // Move to running
+        workflow.status = DefaultWorkflowStatus::Running;
+        assert!(workflow.status().is_active());
+        assert!(!workflow.status().is_terminal());
+
+        // Complete
+        workflow.status = DefaultWorkflowStatus::Completed;
+        assert!(!workflow.status().is_active());
+        assert!(workflow.status().is_terminal());
+    }
+
+    #[test]
+    fn test_workflow_failure_path() {
+        let now = chrono::Utc::now();
+        let mut workflow = MockWorkflow {
+            id: MockWorkflowId("failure-test".to_string()),
+            status: DefaultWorkflowStatus::Running,
+            created: now,
+        };
+
+        // Initially running
+        assert!(workflow.status().is_active());
+
+        // Fail
+        workflow.status = DefaultWorkflowStatus::Failed;
+        assert!(!workflow.status().is_active());
+        assert!(workflow.status().is_terminal());
+    }
+
+    #[test]
+    fn test_workflow_cancellation() {
+        let now = chrono::Utc::now();
+        let mut workflow = MockWorkflow {
+            id: MockWorkflowId("cancel-test".to_string()),
+            status: DefaultWorkflowStatus::Pending,
+            created: now,
+        };
+
+        // Cancel from pending
+        workflow.status = DefaultWorkflowStatus::Cancelled;
+        assert!(!workflow.status().is_active());
+        assert!(workflow.status().is_terminal());
+    }
+
+    #[test]
+    fn test_workflow_id_empty_string() {
+        let id = MockWorkflowId(String::new());
+        assert_eq!(id.as_str(), "");
+        assert_eq!(format!("{}", id), "");
+    }
+
+    #[test]
+    fn test_workflow_id_special_characters() {
+        let id = MockWorkflowId("test-id_123.456@abc".to_string());
+        assert_eq!(id.as_str(), "test-id_123.456@abc");
+    }
+
+    #[test]
+    fn test_workflow_status_match_patterns() {
+        // Test that match patterns work correctly
+        let status = DefaultWorkflowStatus::Running;
+
+        let result = match status {
+            DefaultWorkflowStatus::Pending => "pending",
+            DefaultWorkflowStatus::Running => "running",
+            DefaultWorkflowStatus::Completed => "completed",
+            DefaultWorkflowStatus::Failed => "failed",
+            DefaultWorkflowStatus::Cancelled => "cancelled",
+        };
+
+        assert_eq!(result, "running");
+    }
+
+    #[test]
+    fn test_workflow_created_at_ordering() {
+        // ✅ MODERNIZED: Removed sleep - chrono::Utc::now() is monotonic
+        let time1 = chrono::Utc::now();
+        let time2 = chrono::Utc::now();
+
+        let wf1 = MockWorkflow {
+            id: MockWorkflowId("wf1".to_string()),
+            status: DefaultWorkflowStatus::Running,
+            created: time1,
+        };
+
+        let wf2 = MockWorkflow {
+            id: MockWorkflowId("wf2".to_string()),
+            status: DefaultWorkflowStatus::Running,
+            created: time2,
+        };
+
+        assert!(wf1.created_at() <= wf2.created_at());
+    }
 }

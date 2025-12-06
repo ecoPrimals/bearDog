@@ -57,10 +57,26 @@ pub mod capability_registry;
 /// Listens for announcements from other primals in the ecosystem,
 /// implementing the "infant learning" pattern of observation and discovery.
 pub mod ecosystem_listener;
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 #[path = "ecosystem_listener_tests.rs"]
 mod ecosystem_listener_tests;
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 #[path = "bootstrap_tests.rs"]
 mod bootstrap_tests;
@@ -492,8 +508,9 @@ impl ZeroKnowledgeBootstrap {
                 break;
             }
 
-            // Wait before next attempt
-            tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+            // Modern: Yield before next attempt (no arbitrary delay)
+            // If actual backoff needed, use exponential strategy
+            tokio::task::yield_now().await;
         }
 
         self.metrics.discovery_attempts = discovery_attempts;
@@ -690,6 +707,14 @@ pub struct EcosystemState {
     pub ecosystem_health: f64,
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -733,7 +758,7 @@ mod tests {
         // Validate infant discovery - no hardcoded ecosystem assumptions
         // Note: Default is "primal-" unless PRIMAL_TYPE env var is set
         assert!(
-            self_id.contains("-") && !self_id.is_empty(),
+            self_id.contains('-') && !self_id.is_empty(),
             "Should have valid self-generated ID format: {}",
             self_id
         );

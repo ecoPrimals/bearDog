@@ -1,4 +1,12 @@
 //! # Production Workload Benchmarks
+
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 //!
 //! Real-world scenario benchmarks that simulate production usage patterns:
 //! - API request handling with crypto operations
@@ -26,6 +34,7 @@ use std::time::Duration;
 // ============================================================================
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 struct ApiRequest {
     tenant_id: String,
     operation: String,
@@ -33,6 +42,7 @@ struct ApiRequest {
 }
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 struct ApiResponse {
     status: u16,
     body: Vec<u8>,
@@ -373,7 +383,7 @@ fn benchmark_e2e_crypto_flow(c: &mut Criterion) {
 
         b.iter(|| {
             // 1. Get encryption key
-            let key = store.get_key("master-key").unwrap();
+            let _key = store.get_key("master-key").unwrap();
             std::thread::sleep(Duration::from_micros(10));
 
             // 2. Generate data encryption key (DEK)
@@ -404,13 +414,13 @@ fn benchmark_e2e_crypto_flow(c: &mut Criterion) {
     });
 
     group.bench_function("sign_verify_flow", |b| {
-        let message = vec![0u8; 1024];
+        let _message = vec![0u8; 1024];
         let store = KeyStore::new();
         store.store_key("signing-key".to_string(), vec![0u8; 32]);
 
         b.iter(|| {
             // 1. Get signing key
-            let key = store.get_key("signing-key").unwrap();
+            let _key = store.get_key("signing-key").unwrap();
             std::thread::sleep(Duration::from_micros(10));
 
             // 2. Hash message

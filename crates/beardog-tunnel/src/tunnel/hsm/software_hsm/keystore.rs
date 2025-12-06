@@ -85,7 +85,7 @@ impl SoftwareKeyStore {
 
         keys.get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))
     }
 
     /// Delete a key

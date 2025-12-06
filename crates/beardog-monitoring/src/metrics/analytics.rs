@@ -70,3 +70,14 @@ impl Default for AnalyticsConfig {
         }
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::nonminimal_bool
+)]
+#[cfg(test)]
+#[path = "analytics_tests.rs"]
+mod analytics_tests;

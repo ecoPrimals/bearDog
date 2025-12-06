@@ -3,6 +3,9 @@
 //! These tests supplement the existing comprehensive tests with additional
 //! edge cases, error paths, and concurrent scenarios.
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 #[cfg(test)]
 mod capability_registry_additional_tests {
     use crate::zero_knowledge_bootstrap::capability_registry::*;

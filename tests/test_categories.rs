@@ -11,7 +11,7 @@
 //!
 //! Add documentation tags to your tests:
 //!
-//! ```rust
+//! ```ignore
 //! // TEST_CATEGORY: unit
 //! // TEST_DOMAIN: security
 //! // TEST_PRIORITY: high

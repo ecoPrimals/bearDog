@@ -7,8 +7,12 @@
 //!
 //! **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
 //!
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 // Allow pedantic clippy lints for intentional type conversions and default trait usage
 #![allow(clippy::cast_precision_loss)]
 #![allow(clippy::cast_possible_wrap)]
@@ -423,26 +427,16 @@ pub use beardog_errors::BearDogError;
 /// - [`canonical::crypto`] - Cryptographic operations
 pub mod canonical;
 
-/// HSM (Hardware Security Module) types and configurations  
-/// Production-ready types for database, key store, and crypto provider configuration
+// Core types with HSM support
 pub mod hsm;
 
-/// 📊 **CONSTANTS** - Domain-organized constant definitions
-///
-/// ambiguous re-exports and name conflicts.
-///
-/// ## Domain Organization
-/// - [`constants::domains::system`] - System-level constants
-/// - [`constants::domains::network`] - Network configuration constants
-/// - [`constants::domains::security`] - Security-related constants
+// Mathematical and system constants
 pub mod constants;
 
-///
-/// Some types are deprecated in favor of unified alternatives.
-///
-/// ## Migration Note
-/// The `zero_cost::hsm` module has been removed. Use
-/// [`canonical::providers_unified::traits::UnifiedHsmProvider`] instead.
+// Modern trait patterns for idiomatic type conversions and ergonomics
+pub mod modern_traits;
+
+// Zero-cost abstractions and types
 pub mod zero_cost;
 
 /// 🏭 **PRODUCTION** - Production-ready components

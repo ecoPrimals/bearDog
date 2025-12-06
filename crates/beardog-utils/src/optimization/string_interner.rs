@@ -169,6 +169,7 @@ pub fn intern_string(s: &str) -> Result<Arc<str>, BearDogError> {
     global_interner().intern(s)
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

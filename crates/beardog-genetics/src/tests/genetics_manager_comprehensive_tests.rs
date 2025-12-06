@@ -1,4 +1,4 @@
-//! Comprehensive tests for GeneticsManager
+//! Comprehensive tests for `GeneticsManager`
 //!
 //! Tests all core functionality of the genetics system including:
 //! - Manager initialization and configuration
@@ -7,6 +7,8 @@
 //! - Ecosystem evolution
 //! - Human entropy validation
 //! - Edge cases and error handling
+
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use crate::{GeneticsConfig, GeneticsManager};
 

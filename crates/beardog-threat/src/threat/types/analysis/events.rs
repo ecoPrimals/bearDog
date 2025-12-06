@@ -155,7 +155,10 @@ impl SecurityEvent {
             event_type: event_type.to_string(),
             timestamp: Utc::now(),
             source_ip,
-            destination_ip: "0.0.0.0".to_string(),
+            // Sample/example data for testing and documentation purposes.
+            // In production, these values come from actual threat intelligence feeds and network monitoring.
+            // "0.0.0.0" represents a wildcard/any destination in threat analysis patterns.
+            destination_ip: "0.0.0.0".to_string(), // Example: any destination
         }
     }
 }

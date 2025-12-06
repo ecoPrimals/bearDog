@@ -1,10 +1,4 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+// Commands module placeholder
+// This will be expanded when AI commands are needed
 
 pub mod ai;
-
-pub use ai::{execute_ai_command, AiCommand};

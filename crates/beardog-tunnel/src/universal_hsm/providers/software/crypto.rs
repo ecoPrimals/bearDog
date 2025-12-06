@@ -24,7 +24,7 @@ impl SoftwareCryptoProvider {
         let mut bytes = vec![0u8; len];
         rand::thread_rng()
             .try_fill_bytes(&mut bytes)
-            .map_err(|e| BearDogError::security(format!("Failed to generate random bytes: {}", e), e.into()))?;
+            .map_err(|e| BearDogError::security(format!("Failed to generate random bytes: {e}"), e.into()))?;
         Ok(bytes)
     }
 

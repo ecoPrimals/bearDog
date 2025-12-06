@@ -409,8 +409,7 @@ mod compliance_handler_tests {
         for _ in 0..3 {
             let event = create_test_event(ComplianceEventType::DataAccess);
             let _ = handler.evaluate_compliance(&event);
-            // Small delay to ensure timestamp ordering
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            // ✅ MODERNIZED: Removed sleep - timestamps are monotonic regardless
         }
 
         // Audit trail should maintain order
@@ -452,5 +451,232 @@ mod compliance_handler_tests {
                 "Next assessment should be after last assessment"
             );
         }
+    }
+
+    // ============================================================================
+    // Additional Coverage Tests - Added for 90% coverage target
+    // ============================================================================
+
+    #[test]
+    fn test_pci_dss_standard_evaluation() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::PciDss],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::FinancialTransaction);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+        assert!(result.score <= 100.0);
+    }
+
+    #[test]
+    fn test_pci_standard_evaluation() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::Pci],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::DataAccess);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+    }
+
+    #[test]
+    fn test_soc2_standard_evaluation() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::Soc2],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::SystemAccess);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+        assert!(result.score <= 100.0);
+    }
+
+    #[test]
+    fn test_ccpa_standard_evaluation() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::Ccpa],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::DataAccess);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+    }
+
+    #[test]
+    fn test_custom_standard_evaluation() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::Custom("CustomStandard".to_string())],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::DataAccess);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+    }
+
+    #[test]
+    fn test_sox_with_financial_transaction() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::Sox],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::FinancialTransaction);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+    }
+
+    #[test]
+    fn test_all_standards_together() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![
+                ComplianceStandard::Gdpr,
+                ComplianceStandard::Sox,
+                ComplianceStandard::PciDss,
+                ComplianceStandard::Pci,
+                ComplianceStandard::Hipaa,
+                ComplianceStandard::Iso27001,
+                ComplianceStandard::Soc2,
+                ComplianceStandard::Ccpa,
+                ComplianceStandard::Custom("Test".to_string()),
+            ],
+            ..Default::default()
+        };
+        let mut handler = ComplianceHandler::new(config);
+        let event = create_test_event(ComplianceEventType::DataAccess);
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(result.score >= 0.0);
+        assert!(result.score <= 100.0);
+    }
+
+    #[test]
+    fn test_evaluate_standard_directly_gdpr() {
+        let handler = ComplianceHandler::default();
+        let event = create_test_event(ComplianceEventType::DataAccess);
+
+        let result = handler.evaluate_standard(&event, &ComplianceStandard::Gdpr);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_evaluate_standard_directly_sox() {
+        let handler = ComplianceHandler::default();
+        let event = create_test_event(ComplianceEventType::FinancialTransaction);
+
+        let result = handler.evaluate_standard(&event, &ComplianceStandard::Sox);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_evaluate_standard_directly_pci_dss() {
+        let handler = ComplianceHandler::default();
+        let event = create_test_event(ComplianceEventType::FinancialTransaction);
+
+        let result = handler.evaluate_standard(&event, &ComplianceStandard::PciDss);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_evaluate_standard_directly_hipaa() {
+        let handler = ComplianceHandler::default();
+        let event = create_test_event(ComplianceEventType::DataAccess);
+
+        let result = handler.evaluate_standard(&event, &ComplianceStandard::Hipaa);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_evaluate_standard_directly_iso27001() {
+        let handler = ComplianceHandler::default();
+        let event = create_test_event(ComplianceEventType::SystemAccess);
+
+        let result = handler.evaluate_standard(&event, &ComplianceStandard::Iso27001);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_generate_recommendations_data_modification_event() {
+        let config = create_test_config();
+        let mut handler = ComplianceHandler::new(config);
+
+        // Use DataModification event type to hit different recommendation branches
+        let event = ComplianceEvent {
+            id: Uuid::new_v4().to_string(),
+            event_type: ComplianceEventType::DataModification,
+            standard: ComplianceStandard::Gdpr,
+            description: "Test data modification".to_string(),
+            severity: ComplianceSeverity::Low,
+            timestamp: Utc::now(),
+            metadata: serde_json::json!({}),
+        };
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(!result.recommendations.is_empty());
+    }
+
+    #[test]
+    fn test_generate_recommendations_config_change_event() {
+        let config = create_test_config();
+        let mut handler = ComplianceHandler::new(config);
+
+        // Use ConfigurationChange to hit the catch-all branch
+        let event = ComplianceEvent {
+            id: Uuid::new_v4().to_string(),
+            event_type: ComplianceEventType::ConfigurationChange,
+            standard: ComplianceStandard::Gdpr,
+            description: "Test config change".to_string(),
+            severity: ComplianceSeverity::Low,
+            timestamp: Utc::now(),
+            metadata: serde_json::json!({}),
+        };
+
+        let result = handler.evaluate_compliance(&event).unwrap();
+        assert!(!result.recommendations.is_empty());
+    }
+
+    #[test]
+    fn test_metrics_standards_compliance_map() {
+        let config = ComplianceConfig {
+            enabled_standards: vec![ComplianceStandard::Gdpr, ComplianceStandard::Hipaa],
+            ..Default::default()
+        };
+        let handler = ComplianceHandler::new(config);
+
+        let metrics = handler.generate_metrics();
+
+        assert!(metrics
+            .standards_compliance
+            .contains_key(&ComplianceStandard::Gdpr));
+        assert!(metrics
+            .standards_compliance
+            .contains_key(&ComplianceStandard::Hipaa));
+        assert_eq!(metrics.overall_score, 95.0);
+    }
+
+    #[test]
+    fn test_audit_trail_size_in_metrics() {
+        let config = create_test_config();
+        let mut handler = ComplianceHandler::new(config);
+
+        // Evaluate several events
+        for _ in 0..5 {
+            let event = create_test_event(ComplianceEventType::DataAccess);
+            let _ = handler.evaluate_compliance(&event);
+        }
+
+        let metrics = handler.generate_metrics();
+        assert_eq!(metrics.audit_trail_size, 5);
     }
 }

@@ -11,6 +11,9 @@ use crate::{
 ///
 /// This shows how to use enhanced authentication errors that provide
 /// actionable guidance to users when authentication fails.
+///
+/// # Errors
+/// Returns an error demonstrating JWT authentication failure with remediation hints.
 pub fn example_authentication_with_hint() -> Result<(), BearDogError> {
     // Simulate JWT verification failure
     Err(authentication_error_with_hint(
@@ -23,6 +26,9 @@ pub fn example_authentication_with_hint() -> Result<(), BearDogError> {
 ///
 /// This shows how to use enhanced authorization errors that tell users
 /// exactly what permissions or roles they need.
+///
+/// # Errors
+/// Returns an error demonstrating authorization failure with required permissions.
 pub fn example_authorization_with_hint() -> Result<(), BearDogError> {
     // Simulate permission denied
     Err(authorization_error_with_hint(
@@ -36,6 +42,9 @@ pub fn example_authorization_with_hint() -> Result<(), BearDogError> {
 ///
 /// This shows how to use enhanced validation errors that provide
 /// helpful suggestions for fixing invalid input.
+///
+/// # Errors
+/// Returns an error demonstrating validation failure with correction suggestions.
 pub fn example_validation_with_suggestion() -> Result<(), BearDogError> {
     // Simulate email validation failure
     Err(validation_error_with_suggestion(
@@ -49,6 +58,9 @@ pub fn example_validation_with_suggestion() -> Result<(), BearDogError> {
 ///
 /// This shows how to use enhanced network errors that provide
 /// complete context for debugging connection issues.
+///
+/// # Errors
+/// Returns an error demonstrating network timeout with connection details.
 pub fn example_network_with_context() -> Result<(), BearDogError> {
     // Simulate network timeout
     Err(network_error_with_context(
@@ -62,6 +74,9 @@ pub fn example_network_with_context() -> Result<(), BearDogError> {
 ///
 /// This shows how to use enhanced configuration errors that point
 /// users to relevant documentation for troubleshooting.
+///
+/// # Errors
+/// Returns an error demonstrating configuration issue with documentation link.
 pub fn example_configuration_with_docs() -> Result<(), BearDogError> {
     // Simulate HSM configuration error
     Err(configuration_error_with_docs(
@@ -75,6 +90,9 @@ pub fn example_configuration_with_docs() -> Result<(), BearDogError> {
 ///
 /// This shows how to use enhanced crypto errors that provide
 /// detailed information about what went wrong and how to fix it.
+///
+/// # Errors
+/// Returns an error demonstrating cryptographic key size mismatch with resolution guidance.
 pub fn example_crypto_with_details() -> Result<(), BearDogError> {
     // Simulate key size mismatch
     Err(crypto_error_with_details(
@@ -198,6 +216,7 @@ pub fn validate_email(email: &str) -> Result<(), BearDogError> {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)] // unwrap_err() is acceptable in test code
 mod tests {
     use super::*;
 

@@ -135,7 +135,7 @@ use uuid::Uuid;
         debug!("🏥 Performing discovery backend health checks");
         let mut health_status = HashMap::with_capacity(16);
         for (index, backend) in self.backends.iter().enumerate() {
-            let backend_name = format!("backend_{}", index);
+            let backend_name = format!("backend_{index}");
             match backend.health_check() {
                 Ok(healthy) => {
                     health_status.insert(backend_name, healthy);

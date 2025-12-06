@@ -377,21 +377,39 @@ impl HsmProvider for RustSoftwareHsm {
     }
 
     /// Import an existing key
+    ///
+    /// Infers key type from key material size:
+    /// - 16 bytes = AES-128
+    /// - 32 bytes = AES-256 (default symmetric)
+    /// - 64 bytes = Ed25519 keypair
     async fn import_key(&self, key_data: &[u8], key_id: &str) -> Result<HsmKey, BearDogError> {
         info!("📥 Importing key: {}", key_id);
+
+        // Infer key type from key material size
+        let key_type = match key_data.len() {
+            16 => KeyType::Aes,     // AES-128
+            32 => KeyType::Aes,     // AES-256 (symmetric encryption)
+            64 => KeyType::Ed25519, // Ed25519 keypair
+            _ => KeyType::Aes,      // Default to symmetric for unknown sizes
+        };
+        info!(
+            "   Key type inferred: {:?} (size: {} bytes)",
+            key_type,
+            key_data.len()
+        );
 
         // Protect key material
         let protected_bytes = self.memory_protector.protect(key_data).await?;
         let protected_material = ProtectedMemory::new(protected_bytes, true);
 
         // Create key metadata
-        let key_metadata = KeyMetadata::new(key_id.to_string(), KeyType::Ed25519);
+        let key_metadata = KeyMetadata::new(key_id.to_string(), key_type.clone());
 
         // Create software key
         let software_key = SoftwareKey {
             id: key_id.to_string(),
             key_material: protected_material,
-            key_type: KeyType::Ed25519,
+            key_type: key_type.clone(),
             created_at: Utc::now(),
             metadata: key_metadata.clone(),
         };
@@ -409,7 +427,7 @@ impl HsmProvider for RustSoftwareHsm {
         let hsm_key = HsmKey {
             id: key_id.to_string(),
             hsm_type: "SoftwareHsm".to_string(),
-            key_type: KeyType::Ed25519,
+            key_type,
             metadata: key_metadata,
             key_material: KeyMaterial::Encrypted {
                 encrypted_data: key_data.to_vec(),

@@ -3,7 +3,19 @@
 //! Tests the core integration engine that coordinates ecosystem service integration.
 
 #[cfg(test)]
-mod integration_engine_tests {
+mod tests {
+    #![allow(
+        unused_imports,
+        clippy::float_cmp,
+        clippy::useless_vec,
+        clippy::needless_range_loop,
+        clippy::uninlined_format_args,
+        clippy::field_reassign_with_default,
+        clippy::manual_range_contains,
+        unused_variables,
+        dead_code
+    )]
+
     use super::super::integration_engine::*;
     use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
@@ -109,10 +121,10 @@ mod integration_engine_tests {
         let engine = IntegrationEngine::new(config);
 
         // HSM should be None initially
-        match engine.universal_hsm {
-            None => assert!(true, "HSM correctly None"),
-            Some(_) => panic!("HSM should be None initially"),
-        }
+        assert!(
+            engine.universal_hsm.is_none(),
+            "HSM should be None initially"
+        );
     }
 }
 

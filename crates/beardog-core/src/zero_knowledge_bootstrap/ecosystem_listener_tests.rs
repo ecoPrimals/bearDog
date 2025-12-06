@@ -3,7 +3,19 @@
 //! Tests for zero-knowledge ecosystem discovery and listening functionality
 
 #[cfg(test)]
-mod ecosystem_listener_tests {
+mod tests {
+    #![allow(
+        unused_imports,
+        clippy::float_cmp,
+        clippy::useless_vec,
+        clippy::needless_range_loop,
+        clippy::uninlined_format_args,
+        clippy::field_reassign_with_default,
+        clippy::manual_range_contains,
+        unused_variables,
+        dead_code
+    )]
+
     use super::super::ecosystem_listener::*;
 
     #[test]
@@ -181,18 +193,20 @@ mod ecosystem_listener_tests {
 
     #[test]
     fn test_ecosystem_listener_struct_accessible() {
-        // Verify EcosystemListener type is accessible
-        // This tests that the struct can be referenced
+        // Verify EcosystemListener type is accessible and can be used as a type parameter
         use std::marker::PhantomData;
-        let _marker: PhantomData<EcosystemListener> = PhantomData;
+        // Using PhantomData demonstrates the type is accessible at compile time
+        let _ = std::mem::size_of::<PhantomData<EcosystemListener>>();
     }
 
     #[test]
     fn test_metrics_copy_semantics() {
-        // Test that metrics implements Copy
+        // Test that metrics implements Copy by using both copies
         let metrics = EcosystemListenerMetrics::default();
-        let _copy1 = metrics;
-        let _copy2 = metrics; // Should work due to Copy
+        let copy1 = metrics;
+        let copy2 = metrics; // Should work due to Copy
+                             // Verify they're equal
+        assert_eq!(copy1.announcements_received, copy2.announcements_received);
     }
 
     #[test]
@@ -346,7 +360,8 @@ mod ecosystem_listener_tests {
     #[tokio::test]
     async fn test_async_ecosystem_operations() {
         // Test that ecosystem listener can work in async context
-        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
+        // ✅ MODERNIZED: Removed sleep - use yield for cooperative scheduling
+        tokio::task::yield_now().await;
         let metrics = EcosystemListenerMetrics::default();
         assert_eq!(metrics.announcements_received, 0);
     }
@@ -355,17 +370,23 @@ mod ecosystem_listener_tests {
     async fn test_concurrent_metric_access() {
         // Test thread-safe metric access pattern
         use std::sync::Arc;
-        use tokio::sync::RwLock;
+        use tokio::sync::{oneshot, RwLock};
 
         let metrics = Arc::new(RwLock::new(EcosystemListenerMetrics::default()));
         let metrics_clone = Arc::clone(&metrics);
 
+        // ✅ MODERNIZED: Use channel for synchronization instead of sleep
+        let (tx, rx) = oneshot::channel();
+
         tokio::spawn(async move {
             let mut m = metrics_clone.write().await;
             m.announcements_received += 1;
+            drop(m); // Release lock before signaling
+            let _ = tx.send(()); // Signal completion
         });
 
-        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        // Wait for task to complete (properly synchronized)
+        let _ = rx.await;
         let m = metrics.read().await;
         assert_eq!(m.announcements_received, 1);
     }

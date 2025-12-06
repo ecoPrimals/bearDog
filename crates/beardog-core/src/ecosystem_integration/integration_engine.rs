@@ -104,14 +104,21 @@ impl IntegrationEngine {
         info!("✅ Phase 4: Ecosystem Integration completed successfully");
 
         // Log ecosystem integration status
-        debug!(
-            "Ecosystem integration status: {}",
-            serde_json::json!({
-                "status": "healthy",
-                "timestamp": chrono::Utc::now().to_rfc3339(),
-                "ecosystem_integrated": self.ecosystem_integrated
-            })
-        );
+        let status_json = {
+            use serde_json::{Map, Value};
+            let mut status = Map::new();
+            status.insert("status".to_string(), Value::String("healthy".to_string()));
+            status.insert(
+                "timestamp".to_string(),
+                Value::String(chrono::Utc::now().to_rfc3339()),
+            );
+            status.insert(
+                "ecosystem_integrated".to_string(),
+                Value::Bool(self.ecosystem_integrated),
+            );
+            Value::Object(status)
+        };
+        debug!("Ecosystem integration status: {}", status_json);
 
         // Log HSM integration status
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
@@ -267,5 +274,94 @@ impl IntegrationEngine {
         // Capability discovery health check implementation
         // This is a placeholder for future health check logic
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_integration_engine_default() {
+        let engine = IntegrationEngine::default();
+        assert!(!engine.ecosystem_integrated);
+        assert!(engine.universal_hsm.is_none());
+    }
+
+    #[test]
+    fn test_integration_engine_new() {
+        let config = IntegrationConfig::default();
+        let engine = IntegrationEngine::new(config);
+        assert!(!engine.ecosystem_integrated);
+        assert!(engine.universal_hsm.is_none());
+    }
+
+    #[test]
+    fn test_integration_engine_from_config() {
+        let config = IntegrationConfig::default();
+        let engine = IntegrationEngine::from_config(config);
+        assert!(!engine.ecosystem_integrated);
+        assert!(engine.universal_hsm.is_none());
+    }
+
+    #[test]
+    fn test_initialize_universal_hsm() {
+        let mut engine = IntegrationEngine::default();
+        let result = engine.initialize_universal_hsm();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_integrate_without_hsm_fails() {
+        let mut engine = IntegrationEngine::default();
+        // Should fail because HSM not initialized
+        let result = engine.integrate_with_ecosystem();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("HSM"));
+    }
+
+    #[test]
+    fn test_check_integration_health() {
+        let engine = IntegrationEngine::default();
+        let result = engine.check_integration_health();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_comprehensive_integration_health_check() {
+        let engine = IntegrationEngine::default();
+        let result = engine.comprehensive_integration_health_check();
+        assert!(result.is_ok());
+
+        let health = result.unwrap();
+        assert!(health.is_object());
+
+        let obj = health.as_object().unwrap();
+        assert!(obj.contains_key("universal_adapter"));
+        assert!(obj.contains_key("capability_discovery"));
+        assert!(obj.contains_key("service_mesh"));
+    }
+
+    #[test]
+    fn test_discover_services_without_hsm() {
+        let engine = IntegrationEngine::default();
+        let result = engine.discover_ecosystem_services();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_discovered_services_count_without_hsm() {
+        let engine = IntegrationEngine::default();
+        let result = engine.get_discovered_services_count();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+    }
+
+    #[test]
+    fn test_integration_engine_clone() {
+        let engine = IntegrationEngine::default();
+        let cloned = engine.clone();
+        assert_eq!(engine.ecosystem_integrated, cloned.ecosystem_integrated);
     }
 }

@@ -220,4 +220,191 @@ mod tests {
         assert!(providers.contains(&"softhsm".to_string()));
         assert!(providers.contains(&"yubihsm".to_string()));
     }
+
+    #[test]
+    fn test_from_env_creates_valid_config() {
+        let config = HsmConfig::from_env();
+
+        // Should have defaults
+        assert!(config.auto_detect);
+        assert!(config.prefer_hardware);
+        assert!(config.enable_softhsm);
+    }
+
+    #[test]
+    fn test_clone_hsm_config() {
+        let config = HsmConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config.auto_detect, cloned.auto_detect);
+        assert_eq!(config.prefer_hardware, cloned.prefer_hardware);
+    }
+
+    #[test]
+    fn test_debug_format() {
+        let config = HsmConfig::default();
+        let debug_str = format!("{:?}", config);
+
+        assert!(debug_str.contains("HsmConfig"));
+        assert!(debug_str.contains("auto_detect"));
+    }
+
+    #[test]
+    fn test_serialization_roundtrip() {
+        let config = HsmConfig::default();
+
+        let json = serde_json::to_string(&config).expect("Should serialize");
+        let deserialized: HsmConfig = serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(config.auto_detect, deserialized.auto_detect);
+        assert_eq!(config.prefer_hardware, deserialized.prefer_hardware);
+    }
+
+    #[test]
+    fn test_auto_detect_allows_no_explicit_providers() {
+        let config = HsmConfig {
+            auto_detect: true,
+            enable_softhsm: false,
+            enable_yubihsm: false,
+            enable_tpm: false,
+            enable_strongbox: false,
+            ..Default::default()
+        };
+
+        // Should be valid because auto_detect is true
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_provider_order_default() {
+        let config = HsmConfig::default();
+
+        assert_eq!(config.provider_order.len(), 4);
+        assert_eq!(config.provider_order[0], "strongbox");
+        assert_eq!(config.provider_order[1], "tpm");
+        assert_eq!(config.provider_order[2], "yubihsm");
+        assert_eq!(config.provider_order[3], "softhsm");
+    }
+
+    #[test]
+    fn test_get_enabled_providers_respects_order() {
+        let config = HsmConfig {
+            enable_softhsm: true,
+            enable_yubihsm: true,
+            enable_tpm: true,
+            enable_strongbox: true,
+            ..Default::default()
+        };
+
+        let providers = config.get_enabled_providers();
+        assert_eq!(providers.len(), 4);
+        // Should be in provider_order
+        assert_eq!(providers[0], "strongbox");
+        assert_eq!(providers[1], "tpm");
+        assert_eq!(providers[2], "yubihsm");
+        assert_eq!(providers[3], "softhsm");
+    }
+
+    #[test]
+    fn test_get_enabled_providers_empty_when_none() {
+        let config = HsmConfig {
+            enable_softhsm: false,
+            enable_yubihsm: false,
+            enable_tpm: false,
+            enable_strongbox: false,
+            ..Default::default()
+        };
+
+        let providers = config.get_enabled_providers();
+        assert_eq!(providers.len(), 0);
+    }
+
+    #[test]
+    fn test_yubihsm_connector_validation_http() {
+        let config = HsmConfig {
+            yubihsm_connector: Some(std::env::var("YUBIHSM_CONNECTOR_URL").unwrap_or_else(|_| {
+                "http://yubihsm-connector.ecosystem.internal:12345".to_string()
+            })),
+            ..Default::default()
+        };
+
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_yubihsm_connector_validation_https() {
+        let config = HsmConfig {
+            yubihsm_connector: Some("https://yubihsm.example.com".to_string()),
+            ..Default::default()
+        };
+
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_yubihsm_connector_validation_invalid() {
+        let config = HsmConfig {
+            yubihsm_connector: Some("invalid-url".to_string()),
+            ..Default::default()
+        };
+
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_custom_softhsm_config() {
+        let config = HsmConfig {
+            softhsm_config: Some(PathBuf::from("/custom/softhsm2.conf")),
+            ..Default::default()
+        };
+
+        assert!(config.softhsm_config.is_some());
+    }
+
+    #[test]
+    fn test_prefer_hardware_setting() {
+        let mut config = HsmConfig::default();
+        assert!(config.prefer_hardware);
+
+        config.prefer_hardware = false;
+        assert!(!config.prefer_hardware);
+    }
+
+    #[test]
+    fn test_enable_tpm() {
+        let config = HsmConfig {
+            enable_tpm: true,
+            ..Default::default()
+        };
+
+        let providers = config.get_enabled_providers();
+        assert!(providers.contains(&"tpm".to_string()));
+    }
+
+    #[test]
+    fn test_enable_strongbox() {
+        let config = HsmConfig {
+            enable_strongbox: true,
+            ..Default::default()
+        };
+
+        let providers = config.get_enabled_providers();
+        assert!(providers.contains(&"strongbox".to_string()));
+    }
+
+    #[test]
+    fn test_all_providers_disabled_but_auto_detect() {
+        let config = HsmConfig {
+            auto_detect: true,
+            enable_softhsm: false,
+            enable_yubihsm: false,
+            enable_tpm: false,
+            enable_strongbox: false,
+            ..Default::default()
+        };
+
+        assert!(config.validate().is_ok());
+        let providers = config.get_enabled_providers();
+        assert_eq!(providers.len(), 0);
+    }
 }

@@ -1,8 +1,8 @@
 //! Handler Comprehensive Test Suite
 //!
-//! TEST_CATEGORY: unit + integration
-//! TEST_DOMAIN: core/handlers
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit + integration
+//! `TEST_DOMAIN`: core/handlers
+//! `TEST_PRIORITY`: critical
 //!
 //! This module provides comprehensive testing for handler mechanisms.
 //! Originally consolidated from a single 1,355-line file, now split into focused modules.

@@ -3,11 +3,14 @@
 //! Comprehensive edge case and error path testing for discovery functionality.
 //! Added November 22, 2025 for coverage expansion.
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 use super::super::{infant_discovery, universal_infant_discovery};
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_with_empty_network() {
     // Discovery should handle empty network gracefully
@@ -18,9 +21,9 @@ async fn test_discovery_with_empty_network() {
     assert_eq!(peer_count, 0, "Should handle empty network");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_with_network_timeout() {
     // Discovery should timeout gracefully
@@ -34,9 +37,9 @@ async fn test_discovery_with_network_timeout() {
     assert!(elapsed > timeout, "Should detect timeout");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_discovery_with_invalid_peer_address() {
     // Discovery should validate peer addresses
@@ -54,9 +57,9 @@ fn test_discovery_with_invalid_peer_address() {
     }
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_with_unreachable_peer() {
     // Discovery should handle unreachable peers
@@ -66,9 +69,9 @@ async fn test_discovery_with_unreachable_peer() {
     assert!(unreachable_peer.contains(':'), "Should have port separator");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_discovery_with_slow_response() {
     // Discovery should handle slow peer responses
@@ -81,9 +84,9 @@ async fn test_discovery_with_slow_response() {
     assert!(is_slow, "Should detect slow responses");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_discovery_with_malformed_response() {
     // Discovery should handle malformed peer responses
@@ -101,9 +104,9 @@ fn test_discovery_with_malformed_response() {
     }
 }
 
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_with_concurrent_requests() {
     // Discovery should handle multiple concurrent requests
@@ -116,9 +119,9 @@ async fn test_discovery_with_concurrent_requests() {
     assert!(permit.is_ok(), "Should handle concurrent access");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_discovery_protocol_version_mismatch() {
     // Discovery should handle protocol version mismatches
@@ -132,9 +135,9 @@ fn test_discovery_protocol_version_mismatch() {
     assert!(!versions_compatible, "Should detect version mismatch");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_with_connection_refused() {
     // Discovery should handle connection refused errors
@@ -147,9 +150,9 @@ async fn test_discovery_with_connection_refused() {
     }
 }
 
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_retry_logic() {
     // Discovery should retry failed attempts
@@ -165,9 +168,9 @@ async fn test_discovery_retry_logic() {
     assert!(retry_delay_ms >= base_delay_ms, "Should use exponential backoff");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_discovery_peer_filtering() {
     // Discovery should filter invalid peers
@@ -183,9 +186,9 @@ fn test_discovery_peer_filtering() {
     assert_eq!(valid_peers.len(), 3, "Should have 3 valid peers");
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_discovery_cache_invalidation() {
     // Discovery should invalidate stale cache entries
@@ -201,9 +204,9 @@ fn test_discovery_cache_invalidation() {
     assert!(is_stale, "Should invalidate stale cache");
 }
 
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_discovery_load_balancing() {
     // Discovery should distribute load across peers
@@ -226,9 +229,9 @@ async fn test_discovery_load_balancing() {
     }
 }
 
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_discovery_security_validation() {
     // Discovery should validate peer security credentials
@@ -245,9 +248,9 @@ fn test_discovery_security_validation() {
     assert!(trusted_peer, "Should accept trusted peers");
 }
 
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: discovery
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_discovery_circuit_breaker() {
     // Discovery should implement circuit breaker pattern

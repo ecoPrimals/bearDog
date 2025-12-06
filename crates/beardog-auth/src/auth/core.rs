@@ -57,6 +57,7 @@ impl CrossNodeAuthEngine {
         _action: &Action,
         _requested_permission: &str,
     ) -> Result<AuthorizationResult, BearDogError> {
+        // Get trust level from registry, defaulting to 0.0 for unknown nodes
         let trust_level = self
             .node_registry
             .get_trust_level(&subject.id)

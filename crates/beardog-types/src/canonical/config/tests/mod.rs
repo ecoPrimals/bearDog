@@ -2,4 +2,5 @@
 //!
 //! This module contains comprehensive tests for all configuration domains.
 
-mod config_modernization_tests;
+// Modular test organization (split from 1,079-line config_modernization_tests.rs)
+mod modernization;

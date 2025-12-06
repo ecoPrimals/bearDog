@@ -131,7 +131,7 @@ impl SimpleEcosystemManager {
                                 let config = NetworkConfig::default();
                                 format!("http://universal-discovery:{}", config.service_ports.api_port)
                             });
-                        base_endpoint + &format!("/capability/{}", service_name)
+                        base_endpoint + &format!("/capability/{service_name}")
                     })
             });
 

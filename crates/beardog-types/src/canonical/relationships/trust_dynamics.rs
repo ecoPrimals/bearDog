@@ -5,7 +5,6 @@
 // patterns and ecosystem behavior.
 
 use beardog_errors::BearDogError;
-use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::time::{Duration, SystemTime};

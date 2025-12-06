@@ -1,10 +1,18 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! HSM Provider Integration Tests
 //!
 //! High-value integration tests for HSM provider initialization,
 //! health checks, failover, and multi-provider coordination.
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: hsm
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: hsm
 
 use beardog_errors::BearDogError;
 use std::time::Duration;

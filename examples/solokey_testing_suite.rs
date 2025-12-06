@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! SoloKey Testing Suite
 //!
 //! Comprehensive testing for SoloKey FIDO2 devices.

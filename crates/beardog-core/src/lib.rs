@@ -10,8 +10,12 @@
 //! - Sovereign cryptographic key management
 
 #![deny(unsafe_code)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration
 //! - Zero-copy memory optimization
@@ -145,6 +149,14 @@ pub mod migration;
 pub use core::*;
 pub use types::BearDogConfig;
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -158,6 +170,7 @@ mod tests {
     #[test]
     fn test_beardog_config_import() {
         // Verify BearDogConfig is exported correctly
+        #[allow(clippy::no_effect_underscore_binding)]
         let _type_marker = std::marker::PhantomData::<BearDogConfig>;
     }
 

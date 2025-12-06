@@ -102,7 +102,8 @@ pub struct ConsolidatedDiscoveryConfig {
 ///
 /// let config = ServiceRegistryConfig {
 ///     backend: "etcd".to_string(),
-///     endpoints: vec!["http://localhost:2379".to_string()],
+///     endpoints: vec![std::env::var("ETCD_ENDPOINT")
+///         .unwrap_or_else(|_| "http://etcd.ecosystem.internal:2379".to_string())],
 ///     service_ttl: Duration::from_secs(30),
 ///     health_check_interval: Duration::from_secs(5),
 ///     cleanup_interval: Duration::from_secs(60),

@@ -122,7 +122,7 @@ impl MobileHsmCapabilityProber {
             tamper_resistant: true,
             isolation_level: "hardware".to_string(),
             vendor: "Apple".to_string(),
-            model: format!("Secure Enclave {}", enclave_version),
+            model: format!("Secure Enclave {enclave_version}"),
             ..Default::default()
         })
     }

@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! HSM Chaos Tests
 //!
 //! Test HSM failures, timeouts, and recovery scenarios

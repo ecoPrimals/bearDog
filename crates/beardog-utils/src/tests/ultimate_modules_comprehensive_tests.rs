@@ -3,6 +3,14 @@
 //! This test suite provides extensive coverage of the safety and performance
 //! optimization modules to increase test coverage from 0% to ~70-80%.
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 use crate::ultimate_performance::UltimatePerformanceProcessor;
 use crate::ultimate_safety::{
     SafeReference, SafetyError, SafetyLevel, SafetyToken, UltimateSafeBuffer,

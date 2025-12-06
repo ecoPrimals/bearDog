@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Test FIDO2 Device Discovery
 //!
 //! This example discovers FIDO2/CTAP2 security keys connected to the system.
@@ -5,8 +13,10 @@
 //! Usage:
 //!     cargo run --example test_fido2_hardware --features fido2
 
+#[cfg(feature = "fido2")]
 use beardog_security::hsm::fido2::discovery::discover_fido2_devices;
 
+#[cfg(feature = "fido2")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
@@ -99,4 +109,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[cfg(not(feature = "fido2"))]
+fn main() {
+    eprintln!("This example requires the 'fido2' feature.");
+    eprintln!("Run with: cargo run --example test_fido2_hardware --features fido2");
+    std::process::exit(1);
 }

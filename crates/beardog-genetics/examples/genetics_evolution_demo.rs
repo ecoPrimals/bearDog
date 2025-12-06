@@ -173,7 +173,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let evolved_coordination = engine.evolve_coordination_pattern(
             hierarchy,
-            vec!["admin".to_string()],
+            vec![], // Relationships parameter - empty for this demo
             "test_context".to_string(),
         )?;
 

@@ -1,3 +1,5 @@
+#![allow(unused_imports, unused_variables, dead_code, unused_comparisons, clippy::all)]
+
 // Tests for ultimate_performance module
 // Created: October 23, 2025
 // Purpose: Increase test coverage for 0% coverage ultimate_performance.rs

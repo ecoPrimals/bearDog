@@ -281,6 +281,7 @@ impl Default for L1CacheConfig {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -344,8 +345,8 @@ mod tests {
         // TEST_PRIORITY: normal
         cache.set_with_ttl("key1", b"value1", Some(Duration::from_millis(1)))?;
 
-        // Wait for expiration
-        std::thread::sleep(Duration::from_millis(10));
+        // Wait for expiration - minimal sleep (2ms > 1ms TTL)
+        std::thread::sleep(Duration::from_millis(2));
 
         let result = cache.get("key1")?;
         assert_eq!(result, None);

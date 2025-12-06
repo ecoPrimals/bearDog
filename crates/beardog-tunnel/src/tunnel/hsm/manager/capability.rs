@@ -132,7 +132,7 @@ impl DefaultHsmCapabilityDetector {
         capabilities
             .get(provider_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {}", provider_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {provider_id}")))
     }
 
     /// Register provider capabilities

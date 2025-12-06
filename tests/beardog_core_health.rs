@@ -15,9 +15,9 @@ use beardog_types::canonical::HealthStatus;
 
 /// Tests that default configuration can be created
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_config_default_creation() {
     // When: creating default config
@@ -29,9 +29,9 @@ async fn test_config_default_creation() {
 
 /// Tests that configuration can be cloned
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_config_clone() {
     // Given: a default config
@@ -51,9 +51,9 @@ async fn test_config_clone() {
 
 /// Tests that Healthy status can be created and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_health_status_healthy() {
     // Given: a Healthy status
@@ -65,9 +65,9 @@ async fn test_health_status_healthy() {
 
 /// Tests that Degraded status can be created and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_health_status_degraded() {
     // Given: a Degraded status
@@ -83,9 +83,9 @@ async fn test_health_status_degraded() {
 
 /// Tests that Unhealthy status can be created and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[tokio::test]
 async fn test_health_status_unhealthy() {
     // Given: an Unhealthy status
@@ -101,9 +101,9 @@ async fn test_health_status_unhealthy() {
 
 /// Tests that different health statuses are not equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_health_status_comparison() {
     // Then: different statuses should not be equal
@@ -128,9 +128,9 @@ async fn test_health_status_comparison() {
 
 /// Tests that health status can be cloned/copied
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_health_status_clone() {
     // Given: a Healthy status
@@ -149,9 +149,9 @@ async fn test_health_status_clone() {
 
 /// Tests system error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_system_sync() {
     // Given: a system error
@@ -166,9 +166,9 @@ fn test_error_system_sync() {
 
 /// Tests validation error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_validation_sync() {
     // Given: a validation error
@@ -183,9 +183,9 @@ fn test_error_validation_sync() {
 
 /// Tests security error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_error_security_sync() {
     // Given: a security error
@@ -200,9 +200,9 @@ fn test_error_security_sync() {
 
 /// Tests network error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_network_sync() {
     // Given: a network error
@@ -217,9 +217,9 @@ fn test_error_network_sync() {
 
 /// Tests configuration error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_configuration_sync() {
     // Given: a configuration error
@@ -234,9 +234,9 @@ fn test_error_configuration_sync() {
 
 /// Tests not_found error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_not_found_sync() {
     // Given: a not found error
@@ -251,9 +251,9 @@ fn test_error_not_found_sync() {
 
 /// Tests unauthorized error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_error_unauthorized_sync() {
     // Given: an unauthorized error
@@ -268,9 +268,9 @@ fn test_error_unauthorized_sync() {
 
 /// Tests invalid_input error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_invalid_input_sync() {
     // Given: an invalid input error
@@ -285,9 +285,9 @@ fn test_error_invalid_input_sync() {
 
 /// Tests unavailable error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_unavailable_sync() {
     // Given: an unavailable error
@@ -302,9 +302,9 @@ fn test_error_unavailable_sync() {
 
 /// Tests internal error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_internal_sync() {
     // Given: an internal error
@@ -319,9 +319,9 @@ fn test_error_internal_sync() {
 
 /// Tests business error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_business_sync() {
     // Given: a business error
@@ -336,9 +336,9 @@ fn test_error_business_sync() {
 
 /// Tests API error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_api_sync() {
     // Given: an API error
@@ -353,9 +353,9 @@ fn test_error_api_sync() {
 
 /// Tests workflow error in sync context
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_workflow_sync() {
     // Given: a workflow error

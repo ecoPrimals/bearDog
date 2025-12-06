@@ -1,16 +1,21 @@
-//! Comprehensive Unit Tests for BearDog API
+//! Comprehensive Unit Tests for `BearDog` API
 //!
 //! Created: October 27, 2025
-//! Purpose: Expand test coverage for beardog-api core functionality
+//! Purpose: Expand test coverage for `beardog-api` core functionality
 //!
 //! Tests cover:
-//! - ApiResponse generic wrapper
-//! - HealthResponse and StatusResponse
+//! - `ApiResponse` generic wrapper
+//! - `HealthResponse` and `StatusResponse`
 //! - API state management
 //! - Router creation
 //! - Endpoint behavior
 //! - Serialization/deserialization
 //! - Error handling
+
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::default_trait_access)]
+#![allow(clippy::useless_vec)]
 
 use super::*;
 

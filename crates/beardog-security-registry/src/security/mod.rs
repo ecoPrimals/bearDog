@@ -6,6 +6,9 @@ use std::collections::HashMap;
 
 mod crypto_keys;
 
+#[cfg(test)]
+mod tests;
+
 // pub use crypto_keys::*; // Unused - commented out
 
 /// Security entry containing trust information

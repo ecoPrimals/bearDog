@@ -56,3 +56,61 @@ impl Default for ExportConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_export_config_default() {
+        let config = ExportConfig::default();
+        assert!(config.enable_prometheus);
+        assert!(!config.enable_grafana);
+        assert_eq!(config.export_interval_secs, 60);
+        assert_eq!(config.batch_size, 1000);
+    }
+
+    #[test]
+    fn test_export_config_clone() {
+        let config = ExportConfig::default();
+        let cloned = config.clone();
+        assert_eq!(config.enable_prometheus, cloned.enable_prometheus);
+        assert_eq!(config.batch_size, cloned.batch_size);
+    }
+
+    #[test]
+    fn test_export_config_custom() {
+        let config = ExportConfig {
+            enable_prometheus: false,
+            enable_grafana: true,
+            export_interval_secs: 30,
+            batch_size: 500,
+        };
+        assert!(!config.enable_prometheus);
+        assert!(config.enable_grafana);
+        assert_eq!(config.export_interval_secs, 30);
+    }
+
+    #[test]
+    fn test_export_engine_creation() {
+        let config = ExportConfig::default();
+        let engine = ExportEngine::new(config);
+        assert!(engine.is_ok());
+    }
+
+    #[test]
+    fn test_export_engine_start() {
+        let config = ExportConfig::default();
+        let engine = ExportEngine::new(config).expect("engine");
+        let result = engine.start();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_export_engine_debug() {
+        let config = ExportConfig::default();
+        let engine = ExportEngine::new(config).expect("engine");
+        let debug_str = format!("{:?}", engine);
+        assert!(debug_str.contains("ExportEngine"));
+    }
+}

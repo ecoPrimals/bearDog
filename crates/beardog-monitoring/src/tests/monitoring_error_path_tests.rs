@@ -3,6 +3,14 @@
 //! Tests focusing on error handling, edge cases, and failure scenarios
 //! in monitoring, metrics, health checks, and alerting systems.
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 #[cfg(test)]
 mod monitoring_error_tests {
     use beardog_errors::BearDogError;

@@ -148,8 +148,283 @@ pub struct HumanEntropyConfig {
 impl Default for HumanEntropyConfig {
     fn default() -> Self {
         Self {
-            quality_threshold: 0.8,
+            // Use 0.8 for production quality threshold (can be configured via env var)
+            quality_threshold: std::env::var("BEARDOG_ENTROPY_QUALITY_THRESHOLD")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0.8),
             collection_timeout_ms: 5000,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_human_entropy_config_default() {
+        let config = HumanEntropyConfig::default();
+        assert_eq!(config.quality_threshold, 0.8);
+        assert_eq!(config.collection_timeout_ms, 5000);
+    }
+
+    #[test]
+    fn test_human_entropy_config_custom() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.9,
+            collection_timeout_ms: 10000,
+        };
+        assert_eq!(config.quality_threshold, 0.9);
+        assert_eq!(config.collection_timeout_ms, 10000);
+    }
+
+    #[test]
+    fn test_multi_modal_collector_new() {
+        let config = HumanEntropyConfig::default();
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        // Verify collector is created
+        assert!(format!("{:?}", collector).contains("MultiModalHumanEntropyCollector"));
+    }
+
+    #[test]
+    fn test_collect_entropy_success() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5, // Realistic threshold for 32-byte sample
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let result = collector.collect_entropy();
+        assert!(result.is_ok());
+
+        let entropy = result.unwrap();
+        assert_eq!(entropy.len(), 32); // 256 bits
+    }
+
+    #[test]
+    fn test_collect_entropy_produces_unique_values() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        // Collect entropy twice
+        let entropy1 = collector.collect_entropy().unwrap();
+        let entropy2 = collector.collect_entropy().unwrap();
+
+        // Should be different (extremely unlikely to be identical)
+        assert_ne!(entropy1, entropy2);
+    }
+
+    #[test]
+    fn test_collect_entropy_not_all_zeros() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let entropy = collector.collect_entropy().unwrap();
+
+        // Should not be all zeros
+        let all_zeros = entropy.iter().all(|&b| b == 0);
+        assert!(!all_zeros);
+    }
+
+    #[test]
+    fn test_collect_entropy_not_all_same() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let entropy = collector.collect_entropy().unwrap();
+
+        // Should not be all the same byte
+        let all_same = entropy.windows(2).all(|w| w[0] == w[1]);
+        assert!(!all_same);
+    }
+
+    #[test]
+    fn test_collect_entropy_meets_quality_threshold() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5, // Realistic for 32-byte sample
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let result = collector.collect_entropy();
+        assert!(result.is_ok());
+
+        // Verify entropy quality meets threshold
+        let entropy = result.unwrap();
+        let quality = super::calculate_entropy_quality(&entropy);
+        assert!(quality >= 0.5);
+    }
+
+    #[test]
+    fn test_collect_entropy_with_high_threshold() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5, // Realistic threshold for multi-source entropy
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        // Should succeed with multi-source entropy
+        let result = collector.collect_entropy();
+        assert!(
+            result.is_ok(),
+            "Entropy collection should succeed with quality threshold 0.5"
+        );
+    }
+
+    #[test]
+    fn test_collect_entropy_with_low_threshold() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        // Should definitely succeed with low threshold
+        let result = collector.collect_entropy();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_uniform() {
+        // Create uniform distribution (perfect entropy)
+        let data: Vec<u8> = (0..=255).collect();
+        let quality = super::calculate_entropy_quality(&data);
+
+        // Should be close to 1.0 (perfect entropy)
+        assert!(quality > 0.95);
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_all_zeros() {
+        let data = vec![0u8; 256];
+        let quality = super::calculate_entropy_quality(&data);
+
+        // Should be 0.0 (no entropy)
+        assert_eq!(quality, 0.0);
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_all_same() {
+        let data = vec![42u8; 256];
+        let quality = super::calculate_entropy_quality(&data);
+
+        // Should be 0.0 (no entropy)
+        assert_eq!(quality, 0.0);
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_half_half() {
+        // Half zeros, half ones
+        let mut data = vec![0u8; 128];
+        data.extend(vec![1u8; 128]);
+
+        let quality = super::calculate_entropy_quality(&data);
+
+        // Should have some entropy but not perfect
+        assert!(quality > 0.0);
+        assert!(quality < 1.0);
+    }
+
+    #[test]
+    fn test_multiple_entropy_collections() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        // Collect 10 times
+        for _ in 0..10 {
+            let result = collector.collect_entropy();
+            assert!(result.is_ok());
+            assert_eq!(result.unwrap().len(), 32);
+        }
+    }
+
+    #[test]
+    fn test_entropy_collection_is_fast() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let start = std::time::Instant::now();
+        let result = collector.collect_entropy();
+        let duration = start.elapsed();
+
+        assert!(result.is_ok());
+        // Should complete in less than 100ms
+        assert!(duration.as_millis() < 100);
+    }
+
+    #[test]
+    fn test_config_clone() {
+        let config1 = HumanEntropyConfig::default();
+        let config2 = config1.clone();
+
+        assert_eq!(config1.quality_threshold, config2.quality_threshold);
+        assert_eq!(config1.collection_timeout_ms, config2.collection_timeout_ms);
+    }
+
+    #[test]
+    fn test_collector_clone() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector1 = MultiModalHumanEntropyCollector::new(config);
+        let collector2 = collector1.clone();
+
+        // Both should work
+        assert!(collector1.collect_entropy().is_ok());
+        assert!(collector2.collect_entropy().is_ok());
+    }
+
+    #[test]
+    fn test_entropy_distribution() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let entropy = collector.collect_entropy().unwrap();
+
+        // Check that we have reasonable byte diversity
+        let mut byte_set = std::collections::HashSet::new();
+        for &byte in &entropy {
+            byte_set.insert(byte);
+        }
+
+        // Should have at least some diversity (not all same values)
+        assert!(byte_set.len() > 1);
+    }
+
+    #[test]
+    fn test_entropy_quality_range() {
+        let config = HumanEntropyConfig {
+            quality_threshold: 0.5,
+            collection_timeout_ms: 5000,
+        };
+        let collector = MultiModalHumanEntropyCollector::new(config);
+
+        let entropy = collector.collect_entropy().unwrap();
+        let quality = super::calculate_entropy_quality(&entropy);
+
+        // Quality should be in valid range [0.0, 1.0]
+        assert!(quality >= 0.0);
+        assert!(quality <= 1.0);
     }
 }

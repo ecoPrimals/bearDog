@@ -106,6 +106,14 @@ impl BearDogCore {
     // Can be re-implemented when enterprise licensing features are needed.
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod tests {
     use super::*;
