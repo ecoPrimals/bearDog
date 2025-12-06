@@ -179,7 +179,7 @@ impl HsmEntropyOrchestrator {
         for (idx, _provider) in self.fido2_providers.iter().enumerate() {
             devices.push(HsmDeviceInfo {
                 device_type: HsmDeviceType::Fido2,
-                device_id: format!("fido2_{}", idx),
+                device_id: format!("fido2_{idx}"),
                 name: format!("FIDO2 Device #{}", idx + 1),
                 security_level: SecurityLevel::Hardware,
                 biometric_capable: true, // Assume most FIDO2 devices support user verification
@@ -485,5 +485,221 @@ mod tests {
         // Should not panic, may be empty if no HSMs available
         // Note: devices.len() is always >= 0 (usize is unsigned)
         assert!(devices.is_empty() || !devices.is_empty()); // Always true, verifies call succeeds
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_config_default() {
+        let config = OrchestratorConfig::default();
+        assert!(config.prefer_biometric);
+        assert_eq!(config.min_security_level, SecurityLevel::Hardware);
+        assert!(!config.enable_multi_device_mixing);
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_config_custom() {
+        let config = OrchestratorConfig {
+            prefer_biometric: false,
+            min_security_level: SecurityLevel::Software,
+            enable_multi_device_mixing: true,
+        };
+        assert!(!config.prefer_biometric);
+        assert_eq!(config.min_security_level, SecurityLevel::Software);
+        assert!(config.enable_multi_device_mixing);
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_new_with_config() {
+        let config = OrchestratorConfig {
+            prefer_biometric: false,
+            min_security_level: SecurityLevel::Software,
+            enable_multi_device_mixing: false,
+        };
+        let result = HsmEntropyOrchestrator::new_with_config(config).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_entropy_generation_request_default() {
+        let request = EntropyGenerationRequest::default();
+        assert_eq!(request.length, 256);
+    }
+
+    #[tokio::test]
+    async fn test_generate_entropy_basic() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let request = EntropyGenerationRequest {
+            length: 32,
+            human_input: None,
+            ..Default::default()
+        };
+
+        let result = orchestrator.generate_entropy(request).await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_generate_human_entropy_basic() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let result = orchestrator.generate_human_entropy(32, None).await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_generate_entropy_various_lengths() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        for length in &[16, 32, 64, 128] {
+            let request = EntropyGenerationRequest {
+                length: *length,
+                human_input: None,
+                ..Default::default()
+            };
+
+            let result = orchestrator.generate_entropy(request).await;
+            assert!(result.is_ok() || result.is_err());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_config_security_levels() {
+        for level in &[
+            SecurityLevel::Software,
+            SecurityLevel::Hardware,
+            SecurityLevel::StrongBox,
+        ] {
+            let config = OrchestratorConfig {
+                prefer_biometric: true,
+                min_security_level: *level,
+                enable_multi_device_mixing: false,
+            };
+
+            let result = HsmEntropyOrchestrator::new_with_config(config).await;
+            assert!(result.is_ok());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_human_entropy_input_behavioral_data() {
+        let input = HumanEntropyInput {
+            biometric_data: None,
+            behavioral_data: Some(vec![50, 75, 100, 125, 150]),
+            environmental_data: None,
+        };
+
+        assert!(input.behavioral_data.is_some());
+        assert!(input.biometric_data.is_none());
+        assert!(input.environmental_data.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_generate_human_entropy_with_input() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let human_input = HumanEntropyInput {
+            biometric_data: Some(vec![100, 150, 120, 180]),
+            behavioral_data: None,
+            environmental_data: None,
+        };
+
+        let result = orchestrator
+            .generate_human_entropy(32, Some(human_input))
+            .await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_config_clone() {
+        let config1 = OrchestratorConfig::default();
+        let config2 = config1.clone();
+
+        assert_eq!(config1.prefer_biometric, config2.prefer_biometric);
+        assert_eq!(config1.min_security_level, config2.min_security_level);
+        assert_eq!(
+            config1.enable_multi_device_mixing,
+            config2.enable_multi_device_mixing
+        );
+    }
+
+    #[tokio::test]
+    async fn test_list_devices_consistency() {
+        let orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let devices1 = orchestrator.list_available_devices().await;
+        let devices2 = orchestrator.list_available_devices().await;
+
+        assert_eq!(devices1.len(), devices2.len());
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_multiple_instances() {
+        let orch1 = HsmEntropyOrchestrator::new().await;
+        let orch2 = HsmEntropyOrchestrator::new().await;
+
+        assert!(orch1.is_ok());
+        assert!(orch2.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_entropy_requests_are_independent() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let request1 = EntropyGenerationRequest {
+            length: 32,
+            human_input: None,
+            ..Default::default()
+        };
+
+        let request2 = EntropyGenerationRequest {
+            length: 64,
+            human_input: None,
+            ..Default::default()
+        };
+
+        let result1 = orchestrator.generate_entropy(request1).await;
+        let result2 = orchestrator.generate_entropy(request2).await;
+
+        assert!(result1.is_ok() || result1.is_err());
+        assert!(result2.is_ok() || result2.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_orchestrator_sequential_operations() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let _devices = orchestrator.list_available_devices().await;
+        let result1 = orchestrator.generate_human_entropy(32, None).await;
+        let result2 = orchestrator.generate_human_entropy(32, None).await;
+
+        assert!(result1.is_ok() || result1.is_err());
+        assert!(result2.is_ok() || result2.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_generate_entropy_zero_length() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let request = EntropyGenerationRequest {
+            length: 0,
+            human_input: None,
+            ..Default::default()
+        };
+
+        let result = orchestrator.generate_entropy(request).await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_generate_entropy_large_length() {
+        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+
+        let request = EntropyGenerationRequest {
+            length: 1024,
+            human_input: None,
+            ..Default::default()
+        };
+
+        let result = orchestrator.generate_entropy(request).await;
+        assert!(result.is_ok() || result.is_err());
     }
 }

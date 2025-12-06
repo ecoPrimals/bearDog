@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Data Persistence E2E Tests
 //!
 //! End-to-end tests for data persistence, transactions, backup, and recovery

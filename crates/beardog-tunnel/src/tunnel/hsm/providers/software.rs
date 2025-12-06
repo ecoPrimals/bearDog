@@ -201,7 +201,7 @@ impl SoftwareUniversalProvider {
         // Store key material securely
         self.keys.insert(key_id.to_string(), key_material);
         self.metadata
-            .insert(format!("key_{}", key_id), key_type.to_string());
+            .insert(format!("key_{key_id}"), key_type.to_string());
 
         Ok(())
     }
@@ -214,7 +214,7 @@ impl SoftwareUniversalProvider {
         let key_material = self
             .keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
 
         // Perform REAL encryption using crypto provider
         let ciphertext = self.crypto_impl.encrypt(key_material, plaintext).await?;
@@ -236,7 +236,7 @@ impl SoftwareUniversalProvider {
         let key_material = self
             .keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
 
         // Perform REAL decryption using crypto provider
         let plaintext = self.crypto_impl.decrypt(key_material, ciphertext).await?;
@@ -258,7 +258,7 @@ impl SoftwareUniversalProvider {
         let key_material = self
             .keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
 
         // Perform REAL signing using crypto provider
         let signature = self.crypto_impl.sign(key_material, data).await?;
@@ -288,11 +288,11 @@ impl SoftwareUniversalProvider {
         let key_material = self
             .keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
 
         // For Ed25519: derive public key from private key for verification
         // Check key type from metadata
-        let key_type = self.metadata.get(&format!("key_{}", key_id));
+        let key_type = self.metadata.get(&format!("key_{key_id}"));
         let public_key = if key_type == Some(&"Ed25519".to_string()) {
             // Ed25519: derive public key from private key
             use ed25519_dalek::SigningKey;

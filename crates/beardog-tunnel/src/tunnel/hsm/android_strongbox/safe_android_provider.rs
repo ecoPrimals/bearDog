@@ -318,7 +318,7 @@ impl SafeAndroidKeystore {
         let keys = self.keys.blocking_read();
         let metadata = keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(&format!("Key {} not found", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
 
         // Mock signature based on algorithm
         let signature_size = match metadata.algorithm {
@@ -347,7 +347,7 @@ impl SafeAndroidKeystore {
         let keys = self.keys.blocking_read();
         let metadata = keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(&format!("Key {} not found", key_id)))?;
+            .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
 
         // Check signature size
         let expected_size = match metadata.algorithm {

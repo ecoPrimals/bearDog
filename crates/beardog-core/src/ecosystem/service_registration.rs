@@ -187,6 +187,14 @@ impl BearDogCore {
     }
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,5 +218,114 @@ mod tests {
         assert_eq!(registration.service_id, deserialized.service_id);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_ecosystem_registration_with_endpoints() {
+        let mut endpoints = HashMap::new();
+        endpoints.insert("http".to_string(), "http://localhost:8080".to_string());
+        endpoints.insert("grpc".to_string(), "grpc://localhost:9090".to_string());
+
+        let registration = EcosystemRegistration {
+            service_id: "test-service".to_string(),
+            service_name: "Test Service".to_string(),
+            version: "2.0.0".to_string(),
+            endpoints,
+            capabilities: vec!["compute".to_string(), "ai".to_string()],
+            health_status: HealthStatus::Healthy,
+        };
+
+        assert_eq!(registration.endpoints.len(), 2);
+        assert!(registration.endpoints.contains_key("http"));
+        assert!(registration.endpoints.contains_key("grpc"));
+        assert_eq!(registration.capabilities.len(), 2);
+    }
+
+    #[test]
+    fn test_ecosystem_registration_clone() {
+        let registration = EcosystemRegistration {
+            service_id: "original".to_string(),
+            service_name: "Original Service".to_string(),
+            version: "1.0.0".to_string(),
+            endpoints: HashMap::new(),
+            capabilities: vec!["cap1".to_string()],
+            health_status: HealthStatus::Healthy,
+        };
+
+        let cloned = registration.clone();
+        assert_eq!(registration.service_id, cloned.service_id);
+        assert_eq!(registration.service_name, cloned.service_name);
+    }
+
+    #[test]
+    fn test_ecosystem_registration_debug() {
+        let registration = EcosystemRegistration {
+            service_id: "debug-test".to_string(),
+            service_name: "Debug Test".to_string(),
+            version: "1.0.0".to_string(),
+            endpoints: HashMap::new(),
+            capabilities: vec![],
+            health_status: HealthStatus::Healthy,
+        };
+
+        let debug_str = format!("{:?}", registration);
+        assert!(debug_str.contains("debug-test"));
+        assert!(debug_str.contains("Debug Test"));
+    }
+
+    #[test]
+    fn test_registration_with_multiple_capabilities() {
+        let registration = EcosystemRegistration {
+            service_id: "multi-cap".to_string(),
+            service_name: "Multi Capability Service".to_string(),
+            version: "3.0.0".to_string(),
+            endpoints: HashMap::new(),
+            capabilities: vec![
+                "security".to_string(),
+                "hsm".to_string(),
+                "crypto".to_string(),
+                "monitoring".to_string(),
+                "workflows".to_string(),
+            ],
+            health_status: HealthStatus::Healthy,
+        };
+
+        assert_eq!(registration.capabilities.len(), 5);
+        assert!(registration.capabilities.contains(&"security".to_string()));
+        assert!(registration.capabilities.contains(&"hsm".to_string()));
+    }
+
+    #[test]
+    fn test_registration_health_status_variants() {
+        let healthy = EcosystemRegistration {
+            service_id: "healthy".to_string(),
+            service_name: "Healthy Service".to_string(),
+            version: "1.0.0".to_string(),
+            endpoints: HashMap::new(),
+            capabilities: vec![],
+            health_status: HealthStatus::Healthy,
+        };
+
+        let degraded = EcosystemRegistration {
+            service_id: "degraded".to_string(),
+            service_name: "Degraded Service".to_string(),
+            version: "1.0.0".to_string(),
+            endpoints: HashMap::new(),
+            capabilities: vec![],
+            health_status: HealthStatus::Degraded,
+        };
+
+        let unhealthy = EcosystemRegistration {
+            service_id: "unhealthy".to_string(),
+            service_name: "Unhealthy Service".to_string(),
+            version: "1.0.0".to_string(),
+            endpoints: HashMap::new(),
+            capabilities: vec![],
+            health_status: HealthStatus::Unhealthy,
+        };
+
+        assert!(matches!(healthy.health_status, HealthStatus::Healthy));
+        assert!(matches!(degraded.health_status, HealthStatus::Degraded));
+        assert!(matches!(unhealthy.health_status, HealthStatus::Unhealthy));
     }
 }

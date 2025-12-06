@@ -1,6 +1,14 @@
 //! Comprehensive tests for AI optimization modules
 //! Focus: ResourcePredictor, OptimizationHistory, and their interactions
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 use super::history::OptimizationHistory;
 use super::predictor::ResourcePredictor;
 use super::types::{OptimizationAction, OptimizationType};

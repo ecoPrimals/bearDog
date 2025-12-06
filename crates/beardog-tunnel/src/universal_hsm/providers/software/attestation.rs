@@ -31,7 +31,7 @@ impl SoftwareAttestation {
         rand::thread_rng()
             .try_fill_bytes(&mut id_bytes)
             .map_err(|e| BearDogError::security(
-                format!("Failed to generate instance ID: {}", e),
+                format!("Failed to generate instance ID: {e}"),
                 e.into()
             ))?;
         
@@ -75,7 +75,7 @@ impl SoftwareAttestation {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| BearDogError::system(
-                format!("Failed to get timestamp: {}", e),
+                format!("Failed to get timestamp: {e}"),
                 e.into()
             ))?
             .as_secs();

@@ -1,3 +1,10 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 // Security Flow E2E Test
 // Created October 7, 2025
 

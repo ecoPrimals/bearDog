@@ -8,6 +8,9 @@
 //! - Primal announcement and registration
 //! - Network effects and primal-to-primal communication
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 use crate::zero_knowledge_bootstrap::self_discovery::SelfDiscoveryEngine;
 use crate::zero_knowledge_bootstrap::ZeroKnowledgeBootstrap;
 

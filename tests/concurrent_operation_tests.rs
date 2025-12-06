@@ -17,9 +17,9 @@ mod concurrent_operation_tests_tests {
 
     /// Tests edge cases in concurrent operations
     ///
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_edge_cases() -> Result<(), BearDogError> {
         // Given: concurrent operation test setup

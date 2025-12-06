@@ -3,6 +3,9 @@
 //! This module contains comprehensive tests for the zero-knowledge bootstrap
 //! system, including infant learning patterns, self-discovery, and ecosystem state.
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 use super::*;
 
     #[tokio::test]
@@ -258,7 +261,7 @@ use super::*;
             primal_id: "test-primal-123".to_string(),
             capabilities: vec![ServiceCapabilityType::KeyManagement],
             endpoints: vec![UniversalEndpoint {
-                url: format!("http://localhost:{}", DEFAULT_API_PORT),
+                url: format!("http://localhost:{DEFAULT_API_PORT}"),
                 protocols: vec!["http".to_string()],
                 auth_requirements: AuthRequirements::default(),
                 security_config: EndpointSecurityConfig::default(),

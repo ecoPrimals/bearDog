@@ -2,6 +2,9 @@
 //
 // Comprehensive tests for tunnel configuration types
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::field_reassign_with_default, clippy::default_trait_access)]
+
 use super::config::*;
 use std::time::Duration;
 

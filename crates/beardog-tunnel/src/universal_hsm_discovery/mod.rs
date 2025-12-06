@@ -390,7 +390,7 @@ impl UniversalHsmDiscovery {
                     .to_string();
 
                 pkcs11_hsms.push(DiscoveredHsm {
-                    name: format!("pkcs11-{}", name),
+                    name: format!("pkcs11-{name}"),
                     tier: HsmTier::Hardware,
                     capabilities: vec![
                         "sign".to_string(),
@@ -521,7 +521,7 @@ impl UniversalHsmDiscovery {
         let hsms = self.discovered_hsms.read().await;
         hsms.get(name)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("HSM not found: {}", name)))
+            .ok_or_else(|| BearDogError::not_found(format!("HSM not found: {name}")))
     }
 
     /// List all discovered HSMs

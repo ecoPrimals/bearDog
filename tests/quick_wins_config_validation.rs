@@ -14,9 +14,9 @@ use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
 /// Tests that default config can be created successfully
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_default_config_exists() {
     // When: creating default config
@@ -28,9 +28,9 @@ fn test_default_config_exists() {
 
 /// Tests that config can be loaded from environment
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_load_from_environment() {
     // When: loading config from environment
@@ -49,9 +49,9 @@ fn test_config_load_from_environment() {
 
 /// Tests that config can be serialized and deserialized
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_serialization() {
     // Given: a default config
@@ -76,9 +76,9 @@ fn test_config_serialization() {
 
 /// Tests that app config section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_app_config_accessible() {
     // Given: a default config
@@ -91,9 +91,9 @@ fn test_app_config_accessible() {
 
 /// Tests that network config section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_network_config_accessible() {
     // Given: a default config
@@ -106,9 +106,9 @@ fn test_network_config_accessible() {
 
 /// Tests that security config section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_security_config_accessible() {
     // Given: a default config
@@ -121,9 +121,9 @@ fn test_security_config_accessible() {
 
 /// Tests that HSM config section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_hsm_config_accessible() {
     // Given: a default config
@@ -136,9 +136,9 @@ fn test_hsm_config_accessible() {
 
 /// Tests that database config section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_database_config_accessible() {
     // Given: a default config
@@ -151,9 +151,9 @@ fn test_database_config_accessible() {
 
 /// Tests that metadata section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_metadata_accessible() {
     // Given: a default config
@@ -166,9 +166,9 @@ fn test_metadata_accessible() {
 
 /// Tests that genetics config section is accessible
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_genetics_config_present() {
     // Given: a default config
@@ -185,9 +185,9 @@ fn test_genetics_config_present() {
 
 /// Tests that environment field has a valid default value
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_environment_has_default() {
     // Given: a default config
@@ -202,9 +202,9 @@ fn test_environment_has_default() {
 
 /// Tests that config can be cloned correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_clone_works() {
     // Given: a config
@@ -222,9 +222,9 @@ fn test_config_clone_works() {
 
 /// Tests that config implements Debug trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_config_debug_format() {
     // Given: a config
@@ -242,9 +242,9 @@ fn test_config_debug_format() {
 
 /// Tests that multiple config instances can be created
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_multiple_config_instances() {
     // When: creating multiple configs

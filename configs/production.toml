@@ -94,6 +94,15 @@ enable_performance_evolution = true
 mutation_rate = 0.01
 population_size = 100
 
+# Genetic crypto features (Phase 2)
+entropy_collection_enabled = true
+genetic_spawning_enabled = true
+ecosystem_evolution_enabled = true
+human_entropy_validation = true
+authorization_genetics_enabled = true
+enable_genetic_key_evolution = true      # Enable genetic key evolution
+genetic_key_rotation_enabled = true       # Enable automatic key rotation
+
 [workflows]
 enabled = true
 max_concurrent_workflows = 1000

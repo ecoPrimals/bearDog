@@ -1,8 +1,8 @@
 //! Comprehensive SIMD Crypto Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/simd_crypto
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/simd_crypto
+//! `TEST_PRIORITY`: high
 //!
 //! Comprehensive test coverage for Safe SIMD cryptographic operations including:
 //! - Hash operations (SHA-256)

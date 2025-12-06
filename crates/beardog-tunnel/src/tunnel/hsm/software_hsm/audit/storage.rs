@@ -72,7 +72,7 @@ impl PersistentAuditStorage {
         file.read_to_string(&mut contents)
             .await
             .map_err(|e| BearDogError::System {
-                message: format!("Failed to read audit file: {}", e),
+                message: format!("Failed to read audit file: {e}"),
                 category: beardog_errors::SystemErrorCategory::FileSystem,
             })?;
 
@@ -99,7 +99,7 @@ impl PersistentAuditStorage {
 
         // Persist to file
         let json = serde_json::to_string(entry).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to serialize audit entry: {}", e))
+            BearDogError::serialization(&format!("Failed to serialize audit entry: {e}"))
         })?;
 
         let mut file = OpenOptions::new()
@@ -108,26 +108,26 @@ impl PersistentAuditStorage {
             .open(&self.file_path)
             .await
             .map_err(|e| BearDogError::System {
-                message: format!("Failed to open audit file: {}", e),
+                message: format!("Failed to open audit file: {e}"),
                 category: beardog_errors::SystemErrorCategory::FileSystem,
             })?;
 
         file.write_all(json.as_bytes())
             .await
             .map_err(|e| BearDogError::System {
-                message: format!("Failed to write audit entry: {}", e),
+                message: format!("Failed to write audit entry: {e}"),
                 category: beardog_errors::SystemErrorCategory::FileSystem,
             })?;
 
         file.write_all(b"\n")
             .await
             .map_err(|e| BearDogError::System {
-                message: format!("Failed to write newline: {}", e),
+                message: format!("Failed to write newline: {e}"),
                 category: beardog_errors::SystemErrorCategory::FileSystem,
             })?;
 
         file.flush().await.map_err(|e| BearDogError::System {
-            message: format!("Failed to flush audit file: {}", e),
+            message: format!("Failed to flush audit file: {e}"),
             category: beardog_errors::SystemErrorCategory::FileSystem,
         })?;
 

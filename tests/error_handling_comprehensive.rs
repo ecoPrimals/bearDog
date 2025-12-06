@@ -4,7 +4,7 @@
 //! including error construction, propagation, recovery, and transformation patterns.
 //! Tests cover validation, configuration, network, internal, and not-found error types.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 // ============================================================================
 // Basic Error Construction Tests
@@ -12,9 +12,9 @@ use beardog_errors::{BearDogError, BearDogResult};
 
 /// Tests that BearDogError::validation creates errors with correct messages
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_validation() {
     // Given: a validation error message
@@ -27,9 +27,9 @@ fn test_error_validation() {
 
 /// Tests that BearDogError::configuration creates errors with correct messages
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_configuration() {
     // Given: a configuration error message
@@ -42,9 +42,9 @@ fn test_error_configuration() {
 
 /// Tests that BearDogError::not_found creates errors with resource identifiers
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_not_found() {
     // Given: a not found error with resource ID
@@ -57,9 +57,9 @@ fn test_error_not_found() {
 
 /// Tests that BearDogError::network creates errors for network failures
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_network() {
     // Given: a network error message
@@ -72,9 +72,9 @@ fn test_error_network() {
 
 /// Tests that BearDogError::internal creates errors for internal failures
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_internal() {
     // Given: an internal error message
@@ -87,9 +87,9 @@ fn test_error_internal() {
 
 /// Tests that BearDogError::invalid_input creates errors for input validation
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_invalid_input() {
     // Given: an invalid input error message
@@ -106,13 +106,13 @@ fn test_error_invalid_input() {
 
 /// Tests error chaining through validation logic
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_chain_validation() {
     // Helper function that validates input
-    fn validate_input(input: &str) -> BearDogResult<()> {
+    fn validate_input(input: &str) -> Result<(), BearDogError> {
         if input.is_empty() {
             return Err(BearDogError::validation("Input cannot be empty"));
         }
@@ -132,13 +132,13 @@ fn test_error_chain_validation() {
 
 /// Tests error chaining with not_found errors
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_chain_not_found() {
     // Helper function that finds resources
-    fn find_resource(id: &str) -> BearDogResult<String> {
+    fn find_resource(id: &str) -> Result<String, BearDogError> {
         if id == "missing" {
             return Err(BearDogError::not_found(format!(
                 "Resource '{}' not found",
@@ -161,22 +161,22 @@ fn test_error_chain_not_found() {
 
 /// Tests error propagation through multiple function levels
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_propagation() {
     // Helper functions simulating a 3-level call chain
-    fn level_3() -> BearDogResult<()> {
+    fn level_3() -> Result<(), BearDogError> {
         Err(BearDogError::internal("Deep error".to_string()))
     }
 
-    fn level_2() -> BearDogResult<()> {
+    fn level_2() -> Result<(), BearDogError> {
         level_3()?;
         Ok(())
     }
 
-    fn level_1() -> BearDogResult<()> {
+    fn level_1() -> Result<(), BearDogError> {
         level_2()?;
         Ok(())
     }
@@ -193,13 +193,13 @@ fn test_error_propagation() {
 
 /// Tests error recovery patterns with unwrap_or
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_recovery() {
     // Helper function that may fail
-    fn risky_operation(should_fail: bool) -> BearDogResult<i32> {
+    fn risky_operation(should_fail: bool) -> Result<i32, BearDogError> {
         if should_fail {
             Err(BearDogError::internal("Operation failed".to_string()))
         } else {
@@ -226,13 +226,13 @@ fn test_error_recovery() {
 
 /// Tests error mapping and transformation patterns
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_map() {
     // Helper function that fails
-    fn operation() -> BearDogResult<i32> {
+    fn operation() -> Result<i32, BearDogError> {
         Err(BearDogError::internal("Failed".to_string()))
     }
 
@@ -249,19 +249,19 @@ fn test_error_map() {
 
 /// Tests error recovery with or_else for fallback logic
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_or_else() {
     // Helper functions for primary and fallback sources
-    fn primary_source() -> BearDogResult<String> {
+    fn primary_source() -> Result<String, BearDogError> {
         Err(BearDogError::not_found(
             "Primary source not found".to_string(),
         ))
     }
 
-    fn fallback_source() -> BearDogResult<String> {
+    fn fallback_source() -> Result<String, BearDogError> {
         Ok("Fallback data".to_string())
     }
 
@@ -278,9 +278,9 @@ fn test_error_or_else() {
 
 /// Tests that error context is preserved through formatting
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_context_preservation() {
     // Given: an error with specific context
@@ -294,13 +294,13 @@ fn test_error_context_preservation() {
 
 /// Tests handling multiple validation errors for complex input
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_multiple_validation_errors() {
     // Helper function that validates user input with multiple rules
-    fn validate_user_input(name: &str, email: &str, age: i32) -> BearDogResult<()> {
+    fn validate_user_input(name: &str, email: &str, age: i32) -> Result<(), BearDogError> {
         if name.is_empty() {
             return Err(BearDogError::validation("Name is required"));
         }
@@ -340,9 +340,9 @@ fn test_multiple_validation_errors() {
 
 /// Tests debug formatting of errors
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_debug_format() {
     // Given: an internal error
@@ -356,18 +356,18 @@ fn test_error_debug_format() {
 }
 
 // ============================================================================
-// BearDogResult Type Tests
+// Result<T, BearDogError> Type Tests
 // ============================================================================
 
-/// Tests that BearDogResult type works correctly for success and failure cases
+/// Tests that Result<T, BearDogError> type works correctly for success and failure cases
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_result_type_basic() {
-    // Helper function that returns BearDogResult
-    fn returns_result(succeed: bool) -> BearDogResult<String> {
+    // Helper function that returns Result<T, BearDogError>
+    fn returns_result(succeed: bool) -> Result<String, BearDogError> {
         if succeed {
             Ok("Success".to_string())
         } else {
@@ -389,9 +389,9 @@ fn test_result_type_basic() {
 
 /// Tests all error construction variants
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_construction_variants() {
     // When: constructing all error variants
@@ -411,17 +411,17 @@ fn test_error_construction_variants() {
 
 /// Tests complex error chains with multiple steps and validation
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_chain_complex() {
     // Multi-step chain with validation at each step
-    fn step_1() -> BearDogResult<i32> {
+    fn step_1() -> Result<i32, BearDogError> {
         Ok(1)
     }
 
-    fn step_2(val: i32) -> BearDogResult<i32> {
+    fn step_2(val: i32) -> Result<i32, BearDogError> {
         if val > 0 {
             Ok(val * 2)
         } else {
@@ -429,7 +429,7 @@ fn test_error_chain_complex() {
         }
     }
 
-    fn step_3(val: i32) -> BearDogResult<i32> {
+    fn step_3(val: i32) -> Result<i32, BearDogError> {
         if val < 100 {
             Ok(val + 10)
         } else {
@@ -437,7 +437,7 @@ fn test_error_chain_complex() {
         }
     }
 
-    fn full_chain() -> BearDogResult<i32> {
+    fn full_chain() -> Result<i32, BearDogError> {
         let v1 = step_1()?;
         let v2 = step_2(v1)?;
         let v3 = step_3(v2)?;
@@ -453,9 +453,9 @@ fn test_error_chain_complex() {
 
 /// Tests converting Option to Result with proper error handling
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_option_to_result_conversion() {
     // Helper function returning Option
@@ -468,7 +468,7 @@ fn test_option_to_result_conversion() {
     }
 
     // Helper function converting Option to Result
-    fn get_item(id: u32) -> BearDogResult<String> {
+    fn get_item(id: u32) -> Result<String, BearDogError> {
         find_item(id).ok_or_else(|| BearDogError::not_found(format!("Item '{}' not found", id)))
     }
 
@@ -485,13 +485,13 @@ fn test_option_to_result_conversion() {
 
 /// Tests early return pattern with the ? operator
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_early_return() {
     // Helper function with early returns
-    fn process_data(data: &str) -> BearDogResult<usize> {
+    fn process_data(data: &str) -> Result<usize, BearDogError> {
         if data.is_empty() {
             return Err(BearDogError::validation("Data cannot be empty"));
         }
@@ -514,13 +514,13 @@ fn test_error_early_return() {
 
 /// Tests error handling in iterator chains and loops
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_in_iterator() {
     // Helper function that parses multiple numbers
-    fn parse_numbers(strings: &[&str]) -> BearDogResult<Vec<i32>> {
+    fn parse_numbers(strings: &[&str]) -> Result<Vec<i32>, BearDogError> {
         let mut numbers = Vec::new();
         for s in strings {
             let num = s

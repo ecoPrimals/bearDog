@@ -30,6 +30,7 @@ impl Default for MetricCollectionConfig {
         Self {
             config_id: "default_collection".to_string()]
 mod tests {
+#[allow(unused_imports, clippy::float_cmp, clippy::absurd_extreme_comparisons, unused_comparisons, clippy::nonminimal_bool)]
     #[cfg(test)]
     use super::*;
     // TEST_CATEGORY: unit

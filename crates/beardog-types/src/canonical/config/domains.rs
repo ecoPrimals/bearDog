@@ -31,7 +31,7 @@ pub mod testing;
 pub mod threat;
 pub mod timeout; // ⚠️  DEPRECATED - Use timeout_unified (Nov 8, 2025)
 pub mod timeout_unified; // ✅ Unified TimeoutConfig (Nov 8, 2025)
-pub mod workflow_config;
+pub mod workflow; // ✅ Modular Workflow Config (Nov 22, 2025)
 
 // Re-export all domain configurations for easy access
 pub use ai_config::*;
@@ -66,11 +66,12 @@ pub use threat::{
     CanonicalThreatDetectionConfig, SensitivityLevel, ThreatConfig, ThreatDetectionConfig,
     ThreatResponseConfig, UnifiedThreatConfig,
 };
-pub use workflow_config::{
+pub use workflow::{
     ArchiveConfig, ConnectionConfig, ConsolidatedWorkflowConfig, EscalationRule,
     NotificationConfig, PersistenceConfig, QueueConfig,
-    /* RateLimitConfig - use network::RateLimitConfig */ RetentionConfig, SchedulingConfig,
-    TimeoutConfig, WorkflowEngineConfig, WorkflowEscalationConfig,
+    /* RateLimitConfig - use network::RateLimitConfig */ RetentionConfig,
+    RetryConfig as WorkflowRetryConfig, SchedulingConfig, TimeoutConfig, WorkflowEngineConfig,
+    WorkflowEscalationConfig,
 };
 
 // Re-export canonical configs (Nov 8, 2025 unification)
@@ -80,7 +81,6 @@ pub use timeout::CanonicalTimeoutConfig;
 // Legacy re-exports (DEPRECATED - use CanonicalRetryConfig instead)
 // These will be removed once all code migrates to canonical versions
 pub use discovery_config::RetryConfig as DiscoveryRetryConfig;
-pub use workflow_config::RetryConfig as WorkflowRetryConfig;
 
 // All domain modules have been extracted and are complete
 

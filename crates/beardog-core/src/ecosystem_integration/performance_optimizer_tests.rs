@@ -4,6 +4,8 @@
 // caching, metrics, and rate limiting.
 
 use super::performance_optimizer::*;
+use beardog_config::domains::network_hosts::DEFAULT_HOST;
+use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -152,7 +154,7 @@ async fn test_add_connection() {
     let result = pool
         .add_connection(
             "test-capability".to_string(),
-            format!("http://localhost:{}", DEFAULT_API_PORT),
+            format!("http://{}:{}", DEFAULT_HOST, DEFAULT_API_PORT),
         )
         .await;
 
@@ -172,7 +174,7 @@ async fn test_get_connection() {
     use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
     // Add a connection
-    let endpoint = format!("http://localhost:{}", DEFAULT_API_PORT);
+    let endpoint = format!("http://{}:{}", DEFAULT_HOST, DEFAULT_API_PORT);
     pool.add_connection("test-capability".to_string(), endpoint.clone())
         .await
         .unwrap();
@@ -215,7 +217,7 @@ async fn test_multiple_connections() {
     // Add multiple connections (using sequential ports for testing)
     pool.add_connection(
         "cap1".to_string(),
-        format!("http://localhost:{}", DEFAULT_HEALTH_PORT),
+        format!("http://{}:{}", DEFAULT_HOST, DEFAULT_HEALTH_PORT),
     )
     .await
     .unwrap();
@@ -252,7 +254,7 @@ async fn test_pooled_connection_creation() {
 
     let conn = PooledConnection {
         id: "test-id".to_string(),
-        endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
+        endpoint: format!("http://{}:{}", DEFAULT_HOST, DEFAULT_API_PORT),
         created_at: std::time::Instant::now(),
         last_used: std::time::Instant::now(),
         metrics: ConnectionMetrics::default(),
@@ -260,7 +262,10 @@ async fn test_pooled_connection_creation() {
     };
 
     assert_eq!(conn.id, "test-id");
-    assert_eq!(conn.endpoint, "http://localhost:8080");
+    assert_eq!(
+        conn.endpoint,
+        format!("http://{}:{}", DEFAULT_HOST, DEFAULT_API_PORT)
+    );
     assert_eq!(conn.state, ConnectionState::Active);
 }
 
@@ -519,20 +524,26 @@ async fn test_connection_pool_lifecycle() {
     let pool = CapabilityConnectionPool::new(config);
 
     // Add connection
-    pool.add_connection("test".to_string(), "http://localhost:8080".to_string())
-        .await
-        .unwrap();
+    pool.add_connection(
+        "test".to_string(),
+        format!("http://{}:{}", DEFAULT_HOST, DEFAULT_API_PORT),
+    )
+    .await
+    .unwrap();
 
     // Get connection
     let conn = pool.get_connection("test").await.unwrap();
-    assert_eq!(conn, "http://localhost:8080");
+    assert_eq!(
+        conn,
+        format!("http://{}:{}", DEFAULT_HOST, DEFAULT_API_PORT)
+    );
 
     // Update connection (add another with same capability - last one wins)
-    pool.add_connection("test".to_string(), "http://localhost:8081".to_string())
+    pool.add_connection("test".to_string(), format!("http://{}:8081", DEFAULT_HOST))
         .await
         .unwrap();
     let updated = pool.get_connection("test").await.unwrap();
-    assert_eq!(updated, "http://localhost:8081");
+    assert_eq!(updated, format!("http://{}:8081", DEFAULT_HOST));
 }
 
 // ========================================================================

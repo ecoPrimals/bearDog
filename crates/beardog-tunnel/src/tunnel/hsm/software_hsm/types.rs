@@ -258,7 +258,7 @@ impl SoftwareKeyStore {
         cache
             .get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))
     }
 
     /// Store key in cache
@@ -399,7 +399,7 @@ impl StorageBackendTrait for FileStorageBackend {
     async fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
         let file_path = format!("{}/{}.key", self.path, key_id);
         std::fs::read(&file_path)
-            .map_err(|e| BearDogError::not_found(format!("Key not found: {}", e)))
+            .map_err(|e| BearDogError::not_found(format!("Key not found: {e}")))
     }
 
     async fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
@@ -569,7 +569,7 @@ impl StorageBackendTrait for MemoryStorageBackend {
         storage
             .get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))
     }
 
     async fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
@@ -637,7 +637,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {}", e))
+            BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {e}"))
         })?;
 
         // Prepend nonce to ciphertext
@@ -661,9 +661,9 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let key = Key::<Aes256Gcm>::from_slice(&self.root_key);
         let cipher = Aes256Gcm::new(key);
 
-        cipher.decrypt(nonce, encrypted_data).map_err(|e| {
-            BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {}", e))
-        })
+        cipher
+            .decrypt(nonce, encrypted_data)
+            .map_err(|e| BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {e}")))
     }
 }
 

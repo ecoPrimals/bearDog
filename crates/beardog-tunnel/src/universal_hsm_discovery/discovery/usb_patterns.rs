@@ -15,7 +15,7 @@ pub async fn detect_usb_device(u16,
     product_id: u16,
     device_name: &str,
 ) -> Result<Option<UsbDeviceInfo>, BearDogError>> {
-    with_operation_context(&format!("detect_usb_{}", device_name), || async {
+    with_operation_context(&format!("detect_usb_{device_name}"), || async {
         debug!("Scanning for USB device: {} ({:04x}:{:04x})", device_name, vendor_id, product_id);
 
         Ok(Some(UsbDeviceInfo {

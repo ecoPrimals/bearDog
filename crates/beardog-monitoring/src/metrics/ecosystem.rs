@@ -72,3 +72,14 @@ impl Default for EcosystemConfig {
         }
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::nonminimal_bool
+)]
+#[cfg(test)]
+#[path = "ecosystem_tests.rs"]
+mod ecosystem_tests;

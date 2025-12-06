@@ -14,7 +14,7 @@ async fn test_memory_pressure_resilience() {
             // TEST_DOMAIN: core
             // TEST_PRIORITY: normal
             let _data = vec![0u8; 1024 * 100]; // 100KB per task
-            sleep(Duration::from_millis(10));
+            sleep(Duration::from_millis(10)).await;
             format!("task_{i}")
         });
         handles.push(handle);

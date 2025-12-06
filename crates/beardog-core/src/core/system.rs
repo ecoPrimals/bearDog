@@ -312,8 +312,8 @@ impl BearDogCore {
                 .insert("hsm".to_string(), ComponentStatus::Starting);
         }
 
-        // Brief initialization delay for async component startup
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // Modern: Yield to allow async component startup (no arbitrary delay)
+        tokio::task::yield_now().await;
 
         {
             let mut state = self.state.write().await;
@@ -344,8 +344,8 @@ impl BearDogCore {
                 .insert("ai_coordination".to_string(), ComponentStatus::Starting);
         }
 
-        // Simulate capability-based AI service registration
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // Modern: Yield to allow async component registration (no arbitrary delay)
+        tokio::task::yield_now().await;
 
         {
             let mut state = self.state.write().await;

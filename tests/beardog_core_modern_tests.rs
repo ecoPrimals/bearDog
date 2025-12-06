@@ -1,13 +1,17 @@
-//! Modern BearDog Core Tests
+//! Modern `BearDog` Core Tests
 //!
 //! Canonical tests for beardog-core functionality using current architecture.
 
-use beardog_errors::{BearDogError, BearDogResult};
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::unnecessary_literal_unwrap)] // Test code intentionally tests these patterns
+#![allow(clippy::unnecessary_lazy_evaluations)] // Testing error recovery patterns
+
+use beardog_errors::BearDogError;
 use beardog_types::canonical::config::WorkingUnifiedConfig;
 use beardog_types::canonical::crypto::EncryptionConfig;
 
 #[test]
-fn test_encryption_config_creation() -> BearDogResult<()> {
+fn test_encryption_config_creation() -> Result<(), BearDogError> {
     use beardog_types::canonical::crypto::{CryptoAlgorithm, EncryptionMode};
 
     let config = EncryptionConfig::default();
@@ -62,7 +66,7 @@ fn test_security_error_types() {
 // TEST_PRIORITY: normal
 
 #[tokio::test]
-async fn test_async_error_handling() -> BearDogResult<()> {
+async fn test_async_error_handling() -> Result<(), BearDogError> {
     // Test async error handling patterns
     let result: Result<(), BearDogError> =
         Err(BearDogError::system("Test system error".to_string()));
@@ -130,7 +134,7 @@ fn test_key_config_defaults() {
 // TEST_PRIORITY: normal
 
 #[tokio::test]
-async fn test_concurrent_config_access() -> BearDogResult<()> {
+async fn test_concurrent_config_access() -> Result<(), BearDogError> {
     use beardog_types::canonical::crypto::CryptoAlgorithm;
     use tokio::task;
 
@@ -185,7 +189,7 @@ fn test_error_conversion_patterns() {
 // TEST_PRIORITY: normal
 
 #[tokio::test]
-async fn test_timeout_handling() -> BearDogResult<()> {
+async fn test_timeout_handling() -> Result<(), BearDogError> {
     use tokio::time::{timeout, Duration};
 
     // Test that operations can be timed out
@@ -207,7 +211,7 @@ async fn test_timeout_handling() -> BearDogResult<()> {
 // TEST_PRIORITY: normal
 
 #[test]
-fn test_config_serialization() -> BearDogResult<()> {
+fn test_config_serialization() -> Result<(), BearDogError> {
     let config = EncryptionConfig::default();
 
     // Test that config can be serialized
@@ -247,7 +251,7 @@ fn test_multiple_error_types() {
 }
 
 #[tokio::test]
-async fn test_parallel_operations() -> BearDogResult<()> {
+async fn test_parallel_operations() -> Result<(), BearDogError> {
     use tokio::task;
 
     let tasks: Vec<_> = (0..5)
@@ -295,15 +299,16 @@ fn test_crypto_config_completeness() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: normal
 #[test]
-fn test_result_combinators() -> BearDogResult<()> {
-    // Test Result combinators work with BearDogResult
-    let success: BearDogResult<i32> = Ok(42);
+fn test_result_combinators() -> Result<(), BearDogError> {
+    // Test Result combinators work with Result<T, BearDogError>
+    let success: Result<i32, BearDogError> = Ok(42);
     let doubled = success.map(|x| x * 2)?;
     assert_eq!(doubled, 84);
 
-    let error: BearDogResult<i32> = Err(BearDogError::system("Test".to_string()));
-    let result = error.or_else(|_| -> BearDogResult<i32> { Ok(99) })?;
-    assert_eq!(result, 99);
+    // Test recovery from error using or_else pattern
+    let result = BearDogError::system("Test".to_string());
+    let recovered = Err::<i32, _>(result).or_else(|_| Ok::<i32, BearDogError>(99))?;
+    assert_eq!(recovered, 99);
 
     Ok(())
 }

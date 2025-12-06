@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! # 🌍 **Cross-Platform HSM Unity Demo**
 //!
 //! ## **The Ultimate Proof**: Same Code, Different Planets
@@ -49,13 +57,19 @@
 //! cargo run --example cross_platform_hsm_unity --target aarch64-linux-android
 //! ```
 
-// Fixed: Use correct module path
+// Feature-gated imports - only compile with fido2 feature
+#[cfg(feature = "fido2")]
 use beardog_security::hsm::fido2::multi_credential_provider::{
     Fido2MultiCredentialProvider, Fido2ProviderConfig,
 };
+
+#[cfg(feature = "fido2")]
 use beardog_traits::unified::{CredentialNode, CredentialRequest, MultiCredentialHsmProvider};
+
+#[cfg(feature = "fido2")]
 use std::collections::HashMap;
 
+#[cfg(feature = "fido2")]
 /// Generic function that works with ANY HSM provider
 ///
 /// This function is vendor-agnostic and works identically with:
@@ -207,6 +221,7 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
     Ok(())
 }
 
+#[cfg(feature = "fido2")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 BearDog Cross-Platform HSM Unity Demo");
@@ -328,4 +343,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("💡 This is the power of trait-based design!");
 
     Ok(())
+}
+
+#[cfg(not(feature = "fido2"))]
+fn main() {
+    eprintln!("This example requires the 'fido2' feature.");
+    eprintln!("Run with: cargo run --example cross_platform_hsm_unity --features fido2");
+    std::process::exit(1);
 }

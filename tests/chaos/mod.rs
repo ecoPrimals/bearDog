@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Chaos Testing Framework for BearDog
 //!
 //! This module provides comprehensive chaos testing capabilities to validate

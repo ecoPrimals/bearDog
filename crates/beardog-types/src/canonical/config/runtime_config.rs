@@ -205,7 +205,7 @@ impl Default for RuntimeNetworkConfig {
         let default_admin_port = DEFAULT_ADMIN_PORT;
         let default_database_port = DEFAULT_DATABASE_PORT;
         let default_consul_port = 8500; // Consul standard port (not in defaults yet)
-        let default_redis_port = 6379; // Redis standard port (not in defaults yet)
+        let default_redis_port = 6379; // Redis standard port (aligns with industry standard)
 
         Self {
             discovery_endpoint: env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {

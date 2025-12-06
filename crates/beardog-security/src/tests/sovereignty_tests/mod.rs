@@ -1,8 +1,8 @@
 //! Sovereignty Comprehensive Test Suite
 //!
-//! TEST_CATEGORY: unit + integration
-//! TEST_DOMAIN: security/sovereignty
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit + integration
+//! `TEST_DOMAIN`: security/sovereignty
+//! `TEST_PRIORITY`: critical
 //!
 //! This module provides comprehensive testing for sovereignty mechanisms.
 //! Originally consolidated from a single 1,574-line file, now split into focused modules.

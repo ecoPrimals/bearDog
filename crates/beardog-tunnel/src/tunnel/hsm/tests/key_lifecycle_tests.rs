@@ -87,13 +87,14 @@ async fn test_concurrent_hsm_operations() -> Result<(), BearDogError> {
     let config = create_test_config();
     let hsm = RustSoftwareHsm::new(config).await?;
 
+    // ✅ MODERNIZED: Removed sleep - concurrent operations don't need artificial delays
     // Simulate concurrent operations
     let handles: Vec<_> = (0..5)
         .map(|i| {
             let _id = format!("concurrent_key_{}", i);
             tokio::spawn(async move {
                 // In a real implementation, we would perform operations here
-                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                tokio::task::yield_now().await; // Cooperative scheduling
                 Ok::<_, BearDogError>(())
             })
         })

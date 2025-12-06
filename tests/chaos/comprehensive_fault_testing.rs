@@ -1,3 +1,5 @@
+#![allow(unused_imports, unused_variables, dead_code, unused_comparisons, clippy::all)]
+
 // Comprehensive Fault Testing Suite
 // Created October 7, 2025 - Phase 1 Completion
 

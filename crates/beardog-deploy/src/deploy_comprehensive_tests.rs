@@ -8,6 +8,8 @@
 //! - DeploymentManager lifecycle
 //! - Configuration validation
 //! - Serialization/deserialization
+
+#![allow(clippy::disallowed_methods)] // unwrap/unwrap_err acceptable in test code
 //! - Edge cases and error scenarios
 
 use super::*;

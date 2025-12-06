@@ -111,7 +111,7 @@ impl UnifiedProvider for CoreSecurityProvider {
                         param_type: "string".to_string(),
                         description: "Authentication method".to_string(),
                         required: true,
-                        default_value: Some(serde_json::json!("bearer")),
+                        default_value: Some(serde_json::Value::String("bearer".to_string())),
                     },
                 ],
                 enabled: true,
@@ -125,7 +125,7 @@ impl UnifiedProvider for CoreSecurityProvider {
                         param_type: "string".to_string(),
                         description: "Authorization scope".to_string(),
                         required: false,
-                        default_value: Some(serde_json::json!("default")),
+                        default_value: Some(serde_json::Value::String("default".to_string())),
                     },
                 ],
                 enabled: true,
@@ -215,3 +215,15 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         }
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
+#[cfg(test)]
+#[path = "security_tests.rs"]
+mod security_tests;

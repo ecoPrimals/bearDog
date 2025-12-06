@@ -56,7 +56,7 @@ impl SoftwareMemoryManager {
         rand::thread_rng()
             .try_fill_bytes(&mut memory)
             .map_err(|e| BearDogError::security(
-                format!("Failed to securely initialize memory: {}", e),
+                format!("Failed to securely initialize memory: {e}"),
                 e.into()
             ))?;
         
@@ -73,20 +73,18 @@ impl SoftwareMemoryManager {
     /// sensitive data from persisting in memory after deallocation.
     ///
     /// # Security
-    /// This function uses volatile writes to prevent the compiler from
-    /// optimizing away the zeroing operation.
+    /// This function uses the `zeroize` crate which provides compiler-guaranteed
+    /// zeroing that cannot be optimized away. 100% safe and secure!
     ///
     /// # Errors
     /// Returns an error if the operation fails (currently infallible)
     pub fn free_secure(&self, mut memory: Vec<u8>) -> Result<(), BearDogError> {
         let size = memory.len();
         
-        // Zero the memory using volatile writes to prevent optimization
-        for byte in &mut memory {
-            unsafe {
-                std::ptr::write_volatile(byte, 0);
-            }
-        }
+        // Zero the memory safely using zeroize crate
+        // This is guaranteed to zero memory and cannot be optimized away
+        use zeroize::Zeroize;
+        memory.zeroize();
         
         // Update statistics
         self.stats.allocated_bytes.fetch_sub(size, Ordering::SeqCst);

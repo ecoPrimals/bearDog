@@ -51,15 +51,8 @@ pub mod performance_optimizer;
 /// Integration type definitions
 pub mod types;
 
-/// Deprecated songbird integration (kept for backward compatibility, do not use)
-///
-/// **Use `UniversalPrimalAdapter` instead** - see `beardog_adapters::UniversalPrimalAdapter`
-#[deprecated(
-    since = "3.3.0",
-    note = "Use UniversalPrimalAdapter from beardog-adapters crate for capability-based discovery"
-)]
-#[allow(deprecated)]
-pub mod songbird_integration;
+/// Secure cross-primal messaging (capability-based, zero hardcoding)
+pub mod secure_cross_primal_messaging;
 
 /// Universal service adaptation
 pub mod universal_adapter;
@@ -70,14 +63,49 @@ pub use integration_engine::*;
 pub use license_manager::*;
 
 // Tests
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod integration_engine_tests;
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod license_manager_tests;
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod performance_optimizer_tests;
+
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
+#[cfg(test)]
+mod tests;
 
 // Avoid ambiguous re-exports by aliasing conflicting types
 pub use performance_optimizer::{
@@ -85,15 +113,7 @@ pub use performance_optimizer::{
     EcosystemPerformanceOptimizer, PoolConfig as PerformancePoolConfig,
 };
 
-// ⚠️ DEPRECATED: Do not use these exports - they hardcode primal names
-// Use UniversalPrimalAdapter from beardog-adapters crate instead
-#[deprecated(
-    since = "3.3.0",
-    note = "Use UniversalPrimalAdapter from beardog-adapters for capability-based primal discovery"
-)]
-#[allow(deprecated)]
-pub use songbird_integration::*;
-
+pub use secure_cross_primal_messaging::*;
 pub use types::*;
 pub use universal_adapter::*;
 pub use universal_compute_client::*;

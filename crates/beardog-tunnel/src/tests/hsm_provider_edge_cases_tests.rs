@@ -229,10 +229,8 @@ mod hsm_provider_edge_cases {
             Recovered,
         }
 
-        let mut state = ProviderState::Healthy;
-
-        // Simulate corruption
-        state = ProviderState::Corrupted;
+        // Simulate corruption - start from corrupted state
+        let mut state = ProviderState::Corrupted;
         assert_eq!(state, ProviderState::Corrupted);
 
         // Initiate recovery

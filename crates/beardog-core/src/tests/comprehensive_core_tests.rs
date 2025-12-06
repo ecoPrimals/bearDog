@@ -2,15 +2,18 @@
 //!
 //! Tests for core `BearDog` functionality and primitives
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 #[cfg(test)]
 mod core_functionality_tests {
     use crate::core::system::BearDogCore;
     use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
     use beardog_types::canonical::HealthStatus;
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: critical
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: critical
     #[tokio::test]
     async fn test_core_initialization() {
         // Test that core initializes with default config
@@ -24,9 +27,9 @@ mod core_functionality_tests {
         assert!(state.components.is_empty() || !state.components.is_empty());
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_lifecycle() {
         // Test full lifecycle: create -> use -> verify state
@@ -57,9 +60,9 @@ mod core_functionality_tests {
         );
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_cleanup() {
         // Test that core cleans up resources properly
@@ -75,9 +78,9 @@ mod core_functionality_tests {
         assert!(true, "Core cleanup completed without panic");
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: critical
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: critical
     #[tokio::test]
     async fn test_core_concurrent_state_access() {
         // Test concurrent read/write access to core state
@@ -104,9 +107,9 @@ mod core_functionality_tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_state_transitions() {
         // Test state transitions through different health states
@@ -143,9 +146,9 @@ mod core_functionality_tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_multiple_config_types() {
         // Test core with different configuration types
@@ -161,9 +164,9 @@ mod core_functionality_tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_rapid_state_changes() {
         // Test rapid state changes
@@ -189,9 +192,9 @@ mod core_functionality_tests {
         assert_eq!(state.overall_health, HealthStatus::Healthy);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: medium
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: medium
     #[tokio::test]
     async fn test_core_state_read_write_balance() {
         // Test that many readers don't block writers
@@ -242,9 +245,9 @@ mod core_functionality_tests {
         assert_eq!(state.overall_health, HealthStatus::Healthy);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_initialization_with_development_config() {
         // Test initialization with development configuration
@@ -255,9 +258,9 @@ mod core_functionality_tests {
         assert_eq!(state.overall_health, HealthStatus::Healthy);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: medium
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: medium
     #[tokio::test]
     async fn test_core_start_time_immutability() {
         // Verify start time cannot be changed
@@ -279,9 +282,9 @@ mod core_functionality_tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_state_management() {
         // Test state management operations
@@ -310,9 +313,9 @@ mod core_functionality_tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_error_handling() {
         // Test that core handles invalid configurations gracefully
@@ -327,9 +330,9 @@ mod core_functionality_tests {
         );
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_multiple_instances() {
         // Test that multiple core instances can coexist
@@ -361,9 +364,9 @@ mod messaging_tests {
         timestamp: u64,
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_message_creation() {
         let msg = TestMessage {
@@ -377,9 +380,9 @@ mod messaging_tests {
         assert_eq!(msg.timestamp, 1_234_567_890);
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_message_serialization() {
         let msg = TestMessage {
@@ -396,9 +399,9 @@ mod messaging_tests {
         assert!(json.contains("Serialize me"));
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_message_deserialization() {
         let json = r#"{"id":"deser-001","content":"Deserialize me","timestamp":1111111111}"#;
@@ -412,9 +415,9 @@ mod messaging_tests {
         assert_eq!(msg.timestamp, 1_111_111_111);
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_message_validation() {
         // Test valid message
@@ -441,9 +444,9 @@ mod messaging_tests {
         assert!(invalid_msg.id.is_empty(), "Invalid message detected");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_message_routing() {
         // Test message routing logic
@@ -470,9 +473,9 @@ mod messaging_tests {
         );
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_message_encryption() {
         // Test that message content can be transformed (simulating encryption)
@@ -504,9 +507,9 @@ mod messaging_tests {
         );
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: messaging
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: messaging
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_message_signing() {
         // Test that messages can include signature-like data
@@ -559,9 +562,9 @@ mod identity_tests {
         }
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: identity
-    /// TEST_PRIORITY: critical
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: identity
+    /// `TEST_PRIORITY`: critical
     #[test]
     fn test_identity_creation() {
         // Test creating a primal identity
@@ -572,9 +575,9 @@ mod identity_tests {
         assert!(!identity.id().is_empty(), "Identity ID should not be empty");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: identity
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: identity
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_identity_validation() {
         // Test that valid identities pass validation
@@ -588,9 +591,9 @@ mod identity_tests {
         assert!(identity.primal_type().len() > 0, "Type should have length");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: identity
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: identity
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_identity_verification() {
         // Test identity verification logic
@@ -604,9 +607,9 @@ mod identity_tests {
         assert_eq!(identity1.id(), identity1.id(), "ID should be stable");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: identity
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: identity
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_identity_serialization() {
         // Test that identities can be serialized
@@ -619,9 +622,9 @@ mod identity_tests {
         assert!(json.contains("serialize-001"), "JSON should contain ID");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: identity
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: identity
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_identity_comparison() {
         // Test identity comparison
@@ -659,9 +662,9 @@ mod coordination_tests {
         Unknown,
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_node_registration() {
         // Test node registration logic
@@ -680,9 +683,9 @@ mod coordination_tests {
         assert_eq!(registry.get("node-001").unwrap().status, NodeStatus::Active);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_node_discovery() {
         // Test node discovery process
@@ -708,9 +711,9 @@ mod coordination_tests {
             .all(|n| n.status == NodeStatus::Active));
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_node_health_check() {
         // Test node health checking
@@ -732,9 +735,9 @@ mod coordination_tests {
         assert!(healthy_node.last_seen > unhealthy_node.last_seen);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_leader_election() {
         // Test leader election algorithm
@@ -763,9 +766,9 @@ mod coordination_tests {
         assert_eq!(leader.last_seen, 5200);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_consensus_protocol() {
         // Test basic consensus logic
@@ -783,9 +786,9 @@ mod coordination_tests {
         assert_eq!(*winner.1, 2);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_node_failure_detection() {
         // Test failure detection based on last_seen
@@ -829,9 +832,9 @@ mod storage_tests {
         encrypted: bool,
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_storage_write() {
         let mut storage: HashMap<String, StorageEntry> = HashMap::new();
@@ -848,9 +851,9 @@ mod storage_tests {
         assert_eq!(storage.get("test-key-001").unwrap().value, b"test data");
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_storage_read() {
         let mut storage: HashMap<String, StorageEntry> = HashMap::new();
@@ -868,9 +871,9 @@ mod storage_tests {
         assert_eq!(read_entry.unwrap().value, b"read data");
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_storage_delete() {
         let mut storage: HashMap<String, StorageEntry> = HashMap::new();
@@ -888,9 +891,9 @@ mod storage_tests {
         assert!(!storage.contains_key("delete-key-001"));
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_storage_list() {
         let mut storage: HashMap<String, StorageEntry> = HashMap::new();
@@ -910,9 +913,9 @@ mod storage_tests {
         assert!(keys.contains(&"key-4".to_string()));
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_storage_encryption() {
         let mut storage: HashMap<String, StorageEntry> = HashMap::new();
@@ -936,9 +939,9 @@ mod storage_tests {
         assert!(!storage.get("plain-key-001").unwrap().encrypted);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_storage_transaction() {
         let mut storage: HashMap<String, StorageEntry> = HashMap::new();

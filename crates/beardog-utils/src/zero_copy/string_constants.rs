@@ -93,6 +93,7 @@ pub mod components {
     Arc::new(s.to_string())
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;}

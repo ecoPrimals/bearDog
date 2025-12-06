@@ -55,6 +55,7 @@ pub mod neural_network;
 pub mod predictor;
 pub mod types;
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests_comprehensive;
 

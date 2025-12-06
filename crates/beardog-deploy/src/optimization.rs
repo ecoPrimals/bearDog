@@ -186,3 +186,203 @@ impl DeploymentOptimizationConfig {
         flags
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // === OptimizationSettings Tests ===
+
+    #[test]
+    fn test_optimization_settings_default() {
+        let settings = OptimizationSettings::default();
+        assert!(!settings.lto);
+        assert!(settings.strip_symbols);
+    }
+
+    #[test]
+    fn test_optimization_settings_clone() {
+        let settings = OptimizationSettings {
+            lto: true,
+            strip_symbols: false,
+        };
+        let cloned = settings.clone();
+        assert_eq!(settings.lto, cloned.lto);
+    }
+
+    #[test]
+    fn test_optimization_settings_serialization() {
+        let settings = OptimizationSettings {
+            lto: true,
+            strip_symbols: true,
+        };
+        let serialized = serde_json::to_string(&settings).expect("serialize");
+        let deserialized: OptimizationSettings =
+            serde_json::from_str(&serialized).expect("deserialize");
+        assert_eq!(settings.lto, deserialized.lto);
+    }
+
+    // === BuildFeatures Tests ===
+
+    #[test]
+    fn test_build_features_default() {
+        let features = BuildFeatures::default();
+        assert!(features.parallel_builds);
+        assert!(features.incremental_builds);
+    }
+
+    #[test]
+    fn test_build_features_clone() {
+        let features = BuildFeatures::default();
+        let cloned = features.clone();
+        assert_eq!(features.parallel_builds, cloned.parallel_builds);
+    }
+
+    #[test]
+    fn test_build_features_serialization() {
+        let features = BuildFeatures::default();
+        let serialized = serde_json::to_string(&features).expect("serialize");
+        let deserialized: BuildFeatures = serde_json::from_str(&serialized).expect("deserialize");
+        assert_eq!(features.parallel_builds, deserialized.parallel_builds);
+    }
+
+    // === OptimizationLevel Tests ===
+
+    #[test]
+    fn test_optimization_level_serialization() {
+        let level = OptimizationLevel::ReleaseMaxOpt;
+        let serialized = serde_json::to_string(&level).expect("serialize");
+        let deserialized: OptimizationLevel =
+            serde_json::from_str(&serialized).expect("deserialize");
+        assert!(matches!(deserialized, OptimizationLevel::ReleaseMaxOpt));
+    }
+
+    #[test]
+    fn test_optimization_level_variants() {
+        let debug = OptimizationLevel::Debug;
+        let release = OptimizationLevel::Release;
+        let lto = OptimizationLevel::ReleaseLto;
+        let max = OptimizationLevel::ReleaseMaxOpt;
+
+        assert!(matches!(debug, OptimizationLevel::Debug));
+        assert!(matches!(release, OptimizationLevel::Release));
+        assert!(matches!(lto, OptimizationLevel::ReleaseLto));
+        assert!(matches!(max, OptimizationLevel::ReleaseMaxOpt));
+    }
+
+    // === DeploymentOptimizationConfig Tests ===
+
+    #[test]
+    fn test_config_default() {
+        let config = DeploymentOptimizationConfig::default();
+        assert!(config.target_cpu_optimization.is_none());
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::Release
+        ));
+    }
+
+    #[test]
+    fn test_config_development() {
+        let config = DeploymentOptimizationConfig::development();
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::Debug
+        ));
+        assert!(!config.features.optimization.lto);
+        assert!(!config.features.optimization.strip_symbols);
+    }
+
+    #[test]
+    fn test_config_production() {
+        let config = DeploymentOptimizationConfig::production();
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::ReleaseMaxOpt
+        ));
+        assert!(config.features.optimization.lto);
+        assert!(config.features.optimization.strip_symbols);
+        assert_eq!(config.target_cpu_optimization, Some("native".to_owned()));
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = DeploymentOptimizationConfig::default();
+        let serialized = serde_json::to_string(&config).expect("serialize");
+        let deserialized: DeploymentOptimizationConfig =
+            serde_json::from_str(&serialized).expect("deserialize");
+        assert!(matches!(
+            deserialized.optimization_level,
+            OptimizationLevel::Release
+        ));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_debug() {
+        let config = DeploymentOptimizationConfig::development();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C opt-level=0".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_release() {
+        let config = DeploymentOptimizationConfig::default();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C opt-level=3".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_release_lto() {
+        let config = DeploymentOptimizationConfig {
+            features: BuildFeatures::default(),
+            target_cpu_optimization: None,
+            optimization_level: OptimizationLevel::ReleaseLto,
+        };
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C opt-level=3".to_string()));
+        assert!(flags.contains(&"-C lto=thin".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_with_lto() {
+        let config = DeploymentOptimizationConfig::production();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C lto=fat".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_with_strip() {
+        let config = DeploymentOptimizationConfig::production();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C strip=symbols".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_with_target_cpu() {
+        let config = DeploymentOptimizationConfig::production();
+        let flags = config.get_rustc_flags();
+        assert!(flags.iter().any(|f| f.contains("target-cpu=native")));
+    }
+
+    #[test]
+    fn test_get_cargo_flags_debug() {
+        let config = DeploymentOptimizationConfig::development();
+        let flags = config.get_cargo_flags();
+        // Debug mode doesn't add --release
+        assert!(!flags.contains(&"--release".to_string()));
+    }
+
+    #[test]
+    fn test_get_cargo_flags_release() {
+        let config = DeploymentOptimizationConfig::default();
+        let flags = config.get_cargo_flags();
+        assert!(flags.contains(&"--release".to_string()));
+    }
+
+    #[test]
+    fn test_get_cargo_flags_incremental() {
+        let config = DeploymentOptimizationConfig::development();
+        let flags = config.get_cargo_flags();
+        assert!(flags.contains(&"--incremental".to_string()));
+    }
+}

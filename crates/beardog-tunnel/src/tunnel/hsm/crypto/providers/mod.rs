@@ -4,5 +4,8 @@
 
 pub mod rustcrypto;
 
+#[cfg(test)]
+mod rustcrypto_tests;
+
 // Re-exports
 pub use rustcrypto::RustCryptoProvider;

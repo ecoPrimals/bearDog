@@ -1,8 +1,8 @@
 //! Comprehensive Security Orchestration Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/orchestration
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/orchestration
+//! `TEST_PRIORITY`: high
 //!
 //! This module provides comprehensive test coverage for security orchestration including:
 //! - Security orchestration lifecycle

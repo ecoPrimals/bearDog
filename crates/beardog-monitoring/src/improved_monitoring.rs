@@ -434,6 +434,7 @@ pub struct AlertProcessingResult {
     pub incident_created: bool,
     /// Whether suppressed is enabled
     pub suppressed: bool,
+#[allow(unused_imports, clippy::float_cmp, clippy::absurd_extreme_comparisons, unused_comparisons, clippy::nonminimal_bool)]
 #[cfg(test)]
 mod tests {
     use super::*;

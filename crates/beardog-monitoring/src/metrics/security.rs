@@ -73,3 +73,14 @@ impl Default for SecurityMetricsConfig {
         }
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::nonminimal_bool
+)]
+#[cfg(test)]
+#[path = "security_tests.rs"]
+mod security_tests;

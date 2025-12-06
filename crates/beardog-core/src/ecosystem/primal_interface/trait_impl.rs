@@ -212,30 +212,48 @@ impl PrimalTrait for BearDogCore {
         match request.operation_type.as_str() {
             "security_operation" => {
                 // Handle security-specific operations
+                let data = {
+                    use serde_json::{Map, Value};
+                    let mut data = Map::new();
+                    data.insert(
+                        "operation".to_string(),
+                        Value::String("security_operation".to_string()),
+                    );
+                    data.insert("result".to_string(), Value::String("success".to_string()));
+                    Value::Object(data)
+                };
                 Ok(PrimalResponse {
                     id: uuid::Uuid::new_v4().to_string(),
                     request_id: request.request_id,
-                    status: "completed ".to_string(),
+                    status: "completed".to_string(),
                     success: true,
-                    data: serde_json::json!({
-                        "operation": "security_operation",
-                        "result": "success "
-                    }),
+                    data,
                     metadata: std::collections::HashMap::new(),
                     timestamp: chrono::Utc::now(),
                 })
             }
             "health_check" => {
                 let _health = self.health_check().await?;
+                let data = {
+                    use serde_json::{Map, Value};
+                    let mut data = Map::new();
+                    data.insert(
+                        "health_status".to_string(),
+                        Value::String("healthy".to_string()),
+                    );
+                    data.insert(
+                        "timestamp".to_string(),
+                        serde_json::to_value(chrono::Utc::now())
+                            .unwrap_or(Value::String(chrono::Utc::now().to_rfc3339())),
+                    );
+                    Value::Object(data)
+                };
                 Ok(PrimalResponse {
                     id: uuid::Uuid::new_v4().to_string(),
                     request_id: request.request_id,
-                    status: "completed ".to_string(),
+                    status: "completed".to_string(),
                     success: true,
-                    data: serde_json::json!({
-                        "health_status": "healthy",
-                        "timestamp": chrono::Utc::now()
-                    }),
+                    data,
                     metadata: std::collections::HashMap::new(),
                     timestamp: chrono::Utc::now(),
                 })

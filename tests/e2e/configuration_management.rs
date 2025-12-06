@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Configuration Management E2E Tests
 //!
 //! End-to-end tests for configuration loading, validation, and hot-reloading

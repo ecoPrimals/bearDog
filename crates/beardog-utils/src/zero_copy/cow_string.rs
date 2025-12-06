@@ -169,6 +169,7 @@ pub fn is_common_value(s: &str) -> bool {
     CommonString::parse_common_string(s).is_some()
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

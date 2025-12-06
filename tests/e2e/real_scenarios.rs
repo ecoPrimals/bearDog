@@ -1,3 +1,10 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 // Real E2E Scenarios - Using Actual BearDog Components
 // Created November 1, 2025 - Corrected Implementation
 

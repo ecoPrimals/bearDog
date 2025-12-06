@@ -3,8 +3,15 @@
 //! High-value integration tests for configuration validation,
 //! environment-specific behavior, and edge cases.
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: config
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: config
+
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(
+    clippy::field_reassign_with_default,
+    clippy::needless_borrows_for_generic_args
+)]
+#![allow(dead_code)] // Test helpers may not all be used
 
 use beardog_core::BearDogConfig;
 

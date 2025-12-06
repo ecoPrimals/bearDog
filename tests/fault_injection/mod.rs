@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Fault Injection Testing Framework for BearDog
 //!
 //! This module provides systematic fault injection capabilities to test

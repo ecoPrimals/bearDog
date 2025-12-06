@@ -347,10 +347,17 @@ impl GeneticsProviderUtils {
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
         // Placeholder implementation
-        Ok(serde_json::json!({
-            "type": "basic_genetics_provider",
-            "status": "initialized"
-        }))
+        use serde_json::{Map, Value};
+        let mut result = Map::new();
+        result.insert(
+            "type".to_string(),
+            Value::String("basic_genetics_provider".to_string()),
+        );
+        result.insert(
+            "status".to_string(),
+            Value::String("initialized".to_string()),
+        );
+        Ok(Value::Object(result))
     }
 
     /// Create a biome genetics handler
@@ -384,10 +391,14 @@ impl GeneticsProviderUtils {
             let mut validations = Vec::new();
 
             if params.signature_length < 32 {
-                validations.push(serde_json::json!({
-                    "type": "warning ",
-                    "message": "Signature length below recommended minimum"
-                }));
+                use serde_json::{Map, Value};
+                let mut warning = Map::new();
+                warning.insert("type".to_string(), Value::String("warning".to_string()));
+                warning.insert(
+                    "message".to_string(),
+                    Value::String("Signature length below recommended minimum".to_string()),
+                );
+                validations.push(Value::Object(warning));
             }
 
             Ok(validations)
@@ -405,10 +416,14 @@ impl EvolutionEngineUtils {
     pub fn create_basic_engine(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
-        Ok(serde_json::json!({
-            "type": "basic_evolution_engine",
-            "generation": 0
-        }))
+        use serde_json::{Map, Value};
+        let mut result = Map::new();
+        result.insert(
+            "type".to_string(),
+            Value::String("basic_evolution_engine".to_string()),
+        );
+        result.insert("generation".to_string(), Value::Number(0.into()));
+        Ok(Value::Object(result))
     }
 
     /// Create biome genetics data

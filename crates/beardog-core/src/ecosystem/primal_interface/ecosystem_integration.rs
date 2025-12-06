@@ -44,17 +44,44 @@ impl BearDogCore {
         }
 
         // Create coordination context
-        let coordination_context = serde_json::json!({
-            "operation_id": operation_id.to_string(),
-            "coordinator": "beardog ",
-            "services": {
-                "compute": available_services.contains(&CapabilityType::ComputeIntelligence),
-                "ai": available_services.contains(&CapabilityType::DistributedIntelligence),
-                "storage": available_services.contains(&CapabilityType::DataStorage),
-                "mesh": available_services.contains(&CapabilityType::ServiceMesh)
-            },
-            "coordination_strategy": "best_effort_with_fallbacks"
-        });
+        let coordination_context = {
+            use serde_json::{Map, Value};
+
+            let mut services = Map::new();
+            services.insert(
+                "compute".to_string(),
+                Value::Bool(available_services.contains(&CapabilityType::ComputeIntelligence)),
+            );
+            services.insert(
+                "ai".to_string(),
+                Value::Bool(available_services.contains(&CapabilityType::DistributedIntelligence)),
+            );
+            services.insert(
+                "storage".to_string(),
+                Value::Bool(available_services.contains(&CapabilityType::DataStorage)),
+            );
+            services.insert(
+                "mesh".to_string(),
+                Value::Bool(available_services.contains(&CapabilityType::ServiceMesh)),
+            );
+
+            let mut context = Map::new();
+            context.insert(
+                "operation_id".to_string(),
+                Value::String(operation_id.to_string()),
+            );
+            context.insert(
+                "coordinator".to_string(),
+                Value::String("beardog".to_string()),
+            );
+            context.insert("services".to_string(), Value::Object(services));
+            context.insert(
+                "coordination_strategy".to_string(),
+                Value::String("best_effort_with_fallbacks".to_string()),
+            );
+
+            Value::Object(context)
+        };
 
         info!("🎯 Coordination context: {}", coordination_context);
 
@@ -97,12 +124,25 @@ impl BearDogCore {
         );
 
         // For now, return success with service list
-        Ok(serde_json::json!({
-            "operation_id": operation_id.to_string(),
-            "status": "completed ",
-            "services_used": available_services.len(),
-            "timestamp": chrono::Utc::now().to_rfc3339()
-        }))
+        let result = {
+            use serde_json::{Map, Value};
+            let mut result = Map::new();
+            result.insert(
+                "operation_id".to_string(),
+                Value::String(operation_id.to_string()),
+            );
+            result.insert("status".to_string(), Value::String("completed".to_string()));
+            result.insert(
+                "services_used".to_string(),
+                Value::Number(available_services.len().into()),
+            );
+            result.insert(
+                "timestamp".to_string(),
+                Value::String(chrono::Utc::now().to_rfc3339()),
+            );
+            Value::Object(result)
+        };
+        Ok(result)
     }
 
     #[allow(dead_code)]

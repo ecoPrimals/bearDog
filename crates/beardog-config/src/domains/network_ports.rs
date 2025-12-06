@@ -12,7 +12,7 @@
 //!
 //! # Usage
 //!
-//! ```rust
+//! ```no_run
 //! use beardog_config::global::BEARDOG_CONFIG;
 //!
 //! // Access ports from global config
@@ -95,11 +95,14 @@ pub const DEFAULT_ADMIN_PORT: u16 = 9091;
 /// Default HTTPS API port (8443)
 pub const DEFAULT_HTTPS_PORT: u16 = 8443;
 
-/// Default metrics port (9100)
+/// Default metrics port (9100 - Prometheus standard)
 pub const DEFAULT_METRICS_PORT: u16 = 9100;
 
 /// Default health check port (8081)
 pub const DEFAULT_HEALTH_PORT: u16 = 8081;
+
+/// Default Vault server port (8200 - Vault standard)
+pub const DEFAULT_VAULT_PORT: u16 = 8200;
 
 /// Default WebSocket port (8082)
 pub const DEFAULT_WEBSOCKET_PORT: u16 = 8082;
@@ -208,7 +211,7 @@ impl NetworkPortsConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```no_run
     /// use beardog_config::NetworkPortsConfig;
     ///
     /// let ports = NetworkPortsConfig::from_env();

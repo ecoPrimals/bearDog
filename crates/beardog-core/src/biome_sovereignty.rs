@@ -286,3 +286,15 @@ impl Default for EntropyPreferences {
         Self::HumanOnly
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
+#[cfg(test)]
+#[path = "biome_sovereignty_tests.rs"]
+mod biome_sovereignty_tests;

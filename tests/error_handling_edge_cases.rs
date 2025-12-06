@@ -4,7 +4,7 @@
 //! focusing on boundary conditions, unusual inputs, and extreme scenarios that
 //! might not be covered in standard tests.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 // ============================================================================
 // Empty and Null-Like Input Edge Cases
@@ -12,9 +12,9 @@ use beardog_errors::{BearDogError, BearDogResult};
 
 /// Tests error construction with empty message strings
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_empty_error_message() {
     // When: creating an error with empty message
@@ -30,9 +30,9 @@ fn test_empty_error_message() {
 
 /// Tests error construction with whitespace-only messages
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_whitespace_only_message() {
     // When: creating errors with various whitespace patterns
@@ -48,9 +48,9 @@ fn test_whitespace_only_message() {
 
 /// Tests error construction with very long messages
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_very_long_error_message() {
     // Given: a very long error message (10KB)
@@ -66,9 +66,9 @@ fn test_very_long_error_message() {
 
 /// Tests error construction with special characters
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_special_characters_in_message() {
     // Given: messages with special characters
@@ -96,71 +96,71 @@ fn test_special_characters_in_message() {
 
 /// Tests deeply nested error propagation
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_deeply_nested_error_propagation() {
     // Helper function with 20 levels of nesting
-    fn level_20() -> BearDogResult<i32> {
+    fn level_20() -> Result<i32, BearDogError> {
         Err(BearDogError::internal("Deep error at level 20".to_string()))
     }
 
-    fn level_19() -> BearDogResult<i32> {
+    fn level_19() -> Result<i32, BearDogError> {
         level_20()
     }
-    fn level_18() -> BearDogResult<i32> {
+    fn level_18() -> Result<i32, BearDogError> {
         level_19()
     }
-    fn level_17() -> BearDogResult<i32> {
+    fn level_17() -> Result<i32, BearDogError> {
         level_18()
     }
-    fn level_16() -> BearDogResult<i32> {
+    fn level_16() -> Result<i32, BearDogError> {
         level_17()
     }
-    fn level_15() -> BearDogResult<i32> {
+    fn level_15() -> Result<i32, BearDogError> {
         level_16()
     }
-    fn level_14() -> BearDogResult<i32> {
+    fn level_14() -> Result<i32, BearDogError> {
         level_15()
     }
-    fn level_13() -> BearDogResult<i32> {
+    fn level_13() -> Result<i32, BearDogError> {
         level_14()
     }
-    fn level_12() -> BearDogResult<i32> {
+    fn level_12() -> Result<i32, BearDogError> {
         level_13()
     }
-    fn level_11() -> BearDogResult<i32> {
+    fn level_11() -> Result<i32, BearDogError> {
         level_12()
     }
-    fn level_10() -> BearDogResult<i32> {
+    fn level_10() -> Result<i32, BearDogError> {
         level_11()
     }
-    fn level_9() -> BearDogResult<i32> {
+    fn level_9() -> Result<i32, BearDogError> {
         level_10()
     }
-    fn level_8() -> BearDogResult<i32> {
+    fn level_8() -> Result<i32, BearDogError> {
         level_9()
     }
-    fn level_7() -> BearDogResult<i32> {
+    fn level_7() -> Result<i32, BearDogError> {
         level_8()
     }
-    fn level_6() -> BearDogResult<i32> {
+    fn level_6() -> Result<i32, BearDogError> {
         level_7()
     }
-    fn level_5() -> BearDogResult<i32> {
+    fn level_5() -> Result<i32, BearDogError> {
         level_6()
     }
-    fn level_4() -> BearDogResult<i32> {
+    fn level_4() -> Result<i32, BearDogError> {
         level_5()
     }
-    fn level_3() -> BearDogResult<i32> {
+    fn level_3() -> Result<i32, BearDogError> {
         level_4()
     }
-    fn level_2() -> BearDogResult<i32> {
+    fn level_2() -> Result<i32, BearDogError> {
         level_3()
     }
-    fn level_1() -> BearDogResult<i32> {
+    fn level_1() -> Result<i32, BearDogError> {
         level_2()
     }
 
@@ -173,16 +173,16 @@ fn test_deeply_nested_error_propagation() {
 
 /// Tests error handling with zero-sized types
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_result_with_unit_type() {
     // When: using Result with unit type
-    let result: BearDogResult<()> = Ok(());
+    let result: Result<(), BearDogError> = Ok(());
     assert!(result.is_ok());
 
-    let result: BearDogResult<()> = Err(BearDogError::validation("Unit error"));
+    let result: Result<(), BearDogError> = Err(BearDogError::validation("Unit error"));
     assert!(result.is_err());
 }
 
@@ -192,9 +192,9 @@ fn test_result_with_unit_type() {
 
 /// Tests error creation in tight loop (stress test)
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_rapid_error_creation() {
     // When: creating thousands of errors rapidly
@@ -208,13 +208,13 @@ fn test_rapid_error_creation() {
 
 /// Tests error handling with maximum recursion depth
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_with_recursive_validation() {
     // Helper function that validates recursively
-    fn validate_recursive(depth: u32) -> BearDogResult<()> {
+    fn validate_recursive(depth: u32) -> Result<(), BearDogError> {
         if depth == 0 {
             return Err(BearDogError::validation("Max depth reached"));
         }
@@ -238,9 +238,9 @@ fn test_error_with_recursive_validation() {
 
 /// Tests error handling with maximum usize value
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_with_max_numeric_values() {
     // When: creating errors with boundary numeric values
@@ -256,13 +256,13 @@ fn test_error_with_max_numeric_values() {
 
 /// Tests error with zero-length string operations
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_with_empty_strings() {
     // Helper function that processes strings
-    fn process_string(s: &str) -> BearDogResult<usize> {
+    fn process_string(s: &str) -> Result<usize, BearDogError> {
         if s.is_empty() {
             return Err(BearDogError::validation("String cannot be empty"));
         }
@@ -288,21 +288,21 @@ fn test_error_with_empty_strings() {
 
 /// Tests chaining multiple error transformations
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_multiple_error_transformations() {
     // Helper function chain
-    fn step_1() -> BearDogResult<i32> {
+    fn step_1() -> Result<i32, BearDogError> {
         Err(BearDogError::internal("Step 1 failed".to_string()))
     }
 
-    fn step_2() -> BearDogResult<i32> {
+    fn step_2() -> Result<i32, BearDogError> {
         step_1().map_err(|_| BearDogError::validation("Step 2 fallback failed"))
     }
 
-    fn step_3() -> BearDogResult<i32> {
+    fn step_3() -> Result<i32, BearDogError> {
         step_2().map_err(|_| BearDogError::network("Step 3 fallback failed".to_string()))
     }
 
@@ -315,14 +315,14 @@ fn test_multiple_error_transformations() {
 
 /// Tests error handling with unusual type conversions
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_with_type_conversions() {
     // When: converting between different error-returning types
-    let result1: BearDogResult<String> = Err(BearDogError::validation("Type error"));
-    let result2: BearDogResult<i32> = result1.map(|_| 42);
+    let result1: Result<String, BearDogError> = Err(BearDogError::validation("Type error"));
+    let result2: Result<i32, BearDogError> = result1.map(|_| 42);
 
     // Then: error should be preserved through transformation
     assert!(result2.is_err());
@@ -334,13 +334,13 @@ fn test_error_with_type_conversions() {
 
 /// Tests async error handling with immediate return
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_async_error_immediate() {
     // Helper async function
-    async fn async_operation() -> BearDogResult<()> {
+    async fn async_operation() -> Result<(), BearDogError> {
         Err(BearDogError::internal("Async error".to_string()))
     }
 
@@ -353,21 +353,21 @@ async fn test_async_error_immediate() {
 
 /// Tests async error propagation through multiple awaits
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_async_error_propagation() {
     // Helper async functions
-    async fn async_step_3() -> BearDogResult<i32> {
+    async fn async_step_3() -> Result<i32, BearDogError> {
         Err(BearDogError::network("Network error".to_string()))
     }
 
-    async fn async_step_2() -> BearDogResult<i32> {
+    async fn async_step_2() -> Result<i32, BearDogError> {
         async_step_3().await
     }
 
-    async fn async_step_1() -> BearDogResult<i32> {
+    async fn async_step_1() -> Result<i32, BearDogError> {
         async_step_2().await
     }
 
@@ -380,13 +380,13 @@ async fn test_async_error_propagation() {
 
 /// Tests concurrent async error handling
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[tokio::test]
 async fn test_concurrent_async_errors() {
     // Helper async function that may fail
-    async fn async_task(id: u32) -> BearDogResult<u32> {
+    async fn async_task(id: u32) -> Result<u32, BearDogError> {
         if id % 2 == 0 {
             Ok(id)
         } else {
@@ -423,9 +423,9 @@ async fn test_concurrent_async_errors() {
 
 /// Tests error handling doesn't leak memory with repeated operations
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_no_memory_leak_on_error_creation() {
     // When: creating and dropping many errors
@@ -439,13 +439,13 @@ fn test_no_memory_leak_on_error_creation() {
 
 /// Tests error with very nested Result/Option combinations
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_nested_result_option_edge_case() {
     // When: dealing with nested Result<Option<Result<T>>>
-    fn complex_operation() -> BearDogResult<Option<BearDogResult<i32>>> {
+    fn complex_operation() -> Result<Option<Result<i32, BearDogError>>, BearDogError> {
         Ok(Some(Err(BearDogError::validation("Nested error"))))
     }
 
@@ -466,9 +466,9 @@ fn test_nested_result_option_edge_case() {
 
 /// Tests that all error variants can be created and formatted
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_all_error_variants_edge_cases() {
     // When: creating all error types with edge case inputs

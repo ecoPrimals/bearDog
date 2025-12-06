@@ -2,6 +2,9 @@
 //!
 //! Tests for concurrency, thread-safety, and concurrent access patterns
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 #[cfg(test)]
 mod tests {
     use std::sync::{Arc, Mutex, RwLock};
@@ -13,9 +16,9 @@ mod tests {
         data: String,
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_concurrent_reads() {
         // Test concurrent read access
@@ -43,9 +46,9 @@ mod tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_concurrent_writes() {
         // Test concurrent write access
@@ -72,9 +75,9 @@ mod tests {
         assert_eq!(*final_count, 10);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_lock_management() {
         // Test lock acquisition and release
@@ -95,9 +98,9 @@ mod tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_deadlock_prevention() {
         // Test proper lock ordering to prevent deadlocks
@@ -122,9 +125,9 @@ mod tests {
         handle.join().unwrap();
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_thread_safety() {
         // Test thread-safe data structure
@@ -151,9 +154,9 @@ mod tests {
         assert_eq!(final_vec.len(), 5);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_arc_clone_behavior() {
         // Test Arc reference counting
@@ -173,9 +176,9 @@ mod tests {
         assert_eq!(Arc::strong_count(&data), 1);
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_configuration_types() {
         // Test that different configuration types work
@@ -205,9 +208,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: performance
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: performance
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_state_read_latency() {
         // Test that state reads have low latency
@@ -227,9 +230,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_state_write_isolation() {
         // Test that writes don't interfere with reads in other scopes
@@ -263,9 +266,9 @@ mod tests {
         }
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_health_status_equality() {
         // Test HealthStatus equality comparisons
@@ -279,9 +282,9 @@ mod tests {
         assert_ne!(HealthStatus::Degraded, HealthStatus::Unhealthy);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_uptime_monotonic() {
         // Test that uptime increases monotonically
@@ -304,9 +307,9 @@ mod tests {
         }
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_config_environment_values() {
         // Test environment enum values
@@ -321,9 +324,9 @@ mod tests {
         assert_eq!(format!("{:?}", staging), "Staging");
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_component_state_tracking() {
         // Test that component state is tracked
@@ -336,9 +339,9 @@ mod tests {
         assert!(state.components.is_empty() || !state.components.is_empty());
     }
 
-    /// TEST_CATEGORY: performance
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: low
+    /// `TEST_CATEGORY`: performance
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: low
     #[test]
     fn test_config_creation_speed() {
         // Test that config creation is fast
@@ -359,9 +362,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_concurrent_readers() {
         // Test multiple concurrent readers don't block
@@ -386,9 +389,9 @@ mod tests {
         }
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_start_time_persistence() {
         // Test that start_time persists across reads
@@ -406,9 +409,9 @@ mod tests {
         }
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_health_transitions() {
         // Test health status transitions
@@ -451,9 +454,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: performance
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: performance
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_write_performance() {
         // Test write performance
@@ -480,9 +483,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[test]
     fn test_health_status_debug() {
         // Test that HealthStatus can be debugged
@@ -499,9 +502,9 @@ mod tests {
         assert!(unhealthy_str.contains("Unhealthy"));
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_state_drop_behavior() {
         // Test that dropping state guard releases lock
@@ -517,9 +520,9 @@ mod tests {
         assert!(true, "Lock successfully reacquired");
     }
 
-    /// TEST_CATEGORY: unit
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: unit
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[test]
     fn test_config_default_values() {
         // Test that default config has reasonable values
@@ -530,9 +533,9 @@ mod tests {
         assert_eq!(config.metadata.environment, Environment::Development);
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: normal
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: normal
     #[tokio::test]
     async fn test_core_multiple_instances() {
         // Test that multiple core instances can coexist
@@ -554,9 +557,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: performance
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: low
+    /// `TEST_CATEGORY`: performance
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: low
     #[tokio::test]
     async fn test_core_initialization_speed() {
         // Test that core initialization is reasonably fast
@@ -577,9 +580,9 @@ mod tests {
         );
     }
 
-    /// TEST_CATEGORY: integration
-    /// TEST_DOMAIN: core
-    /// TEST_PRIORITY: high
+    /// `TEST_CATEGORY`: integration
+    /// `TEST_DOMAIN`: core
+    /// `TEST_PRIORITY`: high
     #[tokio::test]
     async fn test_core_state_consistency_under_load() {
         // Test state consistency with mixed reads/writes

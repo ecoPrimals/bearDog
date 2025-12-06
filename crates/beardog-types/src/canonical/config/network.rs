@@ -21,7 +21,7 @@
 //!
 //! // Access service ports
 //! assert_eq!(config.service_ports.api_port, 8080);
-//! assert_eq!(config.service_ports.admin_port, 8081);
+//! assert_eq!(config.service_ports.admin_port, 9091);
 //!
 //! // Build service URLs
 //! let health_url = config.get_service_url("health", "/status");
@@ -119,8 +119,8 @@ pub fn default_service_host() -> String {
 /// # Default Ports
 ///
 /// * `api_port` - 8080 (main API)
-/// * `admin_port` - 8081 (admin interface)
-/// * `metrics_port` - 9090 (Prometheus metrics)
+/// * `admin_port` - 9091 (admin interface)
+/// * `metrics_port` - 9100 (Prometheus metrics)
 /// * `websocket_port` - 8082 (WebSocket connections)
 /// * `health_port` - 8083 (health checks)
 /// * `compute_port` - 8001 (compute service)
@@ -140,7 +140,7 @@ pub fn default_service_host() -> String {
 ///
 /// let ports = ServicePorts::default();
 /// assert_eq!(ports.api_port, 8080);
-/// assert_eq!(ports.metrics_port, 9090);
+/// assert_eq!(ports.metrics_port, 9100);
 /// ```
 ///
 /// # Environment Configuration

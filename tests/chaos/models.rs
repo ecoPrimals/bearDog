@@ -1,3 +1,5 @@
+#![allow(unused_imports, unused_variables, dead_code, unused_comparisons, clippy::all)]
+
 // Chaos Testing Data Models
 // Migrated October 7, 2025 - Updated for modular architecture
 

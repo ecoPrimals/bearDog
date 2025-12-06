@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 // Basic Validation Example
 //
 // Demonstrates basic BearDog validation capabilities

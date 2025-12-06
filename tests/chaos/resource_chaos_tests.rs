@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Resource Exhaustion Chaos Tests
 //!
 //! Test system behavior under resource pressure

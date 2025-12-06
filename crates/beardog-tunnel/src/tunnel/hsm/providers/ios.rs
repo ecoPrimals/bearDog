@@ -128,37 +128,68 @@ impl IosUniversalProvider {
     /// Simulate Secure Enclave detection based on device model
     fn simulate_secure_enclave_detection(&mut self) -> bool {
         if let Ok(model) = std::env::var("IOS_MODEL") {
-            self.device_metadata
-                .insert("device_model".to_string(), model.clone());
-
-            // Secure Enclave available on iPhone 5s and later, iPad with A7+ chips
-            if model.contains("iPhone") || model.contains("iPad") || model.contains("Mac") {
-                // Detect chip type - check for M-series first (more specific)
-                if model.contains("M1")
-                    || model.contains("M2")
-                    || model.contains("M3")
-                    || model.contains("M4")
-                {
-                    self.device_metadata
-                        .insert("chip_type".to_string(), "M-series".to_string());
-                } else if model.contains("A15")
-                    || model.contains("A16")
-                    || model.contains("A17")
-                    || model.contains("A18")
-                {
-                    self.device_metadata
-                        .insert("chip_type".to_string(), "A-series".to_string());
-                } else {
-                    // Default to A-series for other iPhones/iPads without explicit chip info
-                    self.device_metadata
-                        .insert("chip_type".to_string(), "A-series".to_string());
-                }
-                return true;
-            }
+            return self.detect_from_model(&model);
         }
 
         // Default: assume Secure Enclave on modern iOS
         true
+    }
+
+    /// Detect capabilities from a device model string (capability-based, not hardcoded)
+    ///
+    /// This method performs chip detection based on model identifier patterns.
+    /// It's designed to be testable and doesn't rely on environment variables.
+    fn detect_from_model(&mut self, model: &str) -> bool {
+        self.device_metadata
+            .insert("device_model".to_string(), model.to_string());
+
+        // Secure Enclave available on iPhone 5s and later, iPad with A7+ chips
+        let is_apple_device =
+            model.contains("iPhone") || model.contains("iPad") || model.contains("Mac");
+
+        if is_apple_device {
+            let chip_type = Self::detect_chip_type(model);
+            self.device_metadata
+                .insert("chip_type".to_string(), chip_type.to_string());
+            return true;
+        }
+
+        false
+    }
+
+    /// Detect chip type from model string using capability-based pattern matching
+    ///
+    /// Returns chip series based on model identifier patterns.
+    /// This is agnostic to specific chip versions - it detects the series.
+    fn detect_chip_type(model: &str) -> &'static str {
+        // M-series chips (Apple Silicon for Mac/iPad Pro)
+        // Check with various formats: "M1", "M2", "(M3)", etc.
+        let m_series_patterns = ["M1", "M2", "M3", "M4", "M5"];
+        for pattern in m_series_patterns {
+            if model.contains(pattern) {
+                return "M-series";
+            }
+        }
+
+        // A-series chips (iPhone/iPad)
+        // Modern A-series: A14 through A20+
+        let a_series_modern = ["A14", "A15", "A16", "A17", "A18", "A19", "A20"];
+        for pattern in a_series_modern {
+            if model.contains(pattern) {
+                return "A-series";
+            }
+        }
+
+        // Legacy A-series (A7-A13)
+        let a_series_legacy = ["A7", "A8", "A9", "A10", "A11", "A12", "A13"];
+        for pattern in a_series_legacy {
+            if model.contains(pattern) {
+                return "A-series";
+            }
+        }
+
+        // Default to A-series for Apple devices without explicit chip info
+        "A-series"
     }
 
     /// Discover iOS HSM capabilities
@@ -457,13 +488,26 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
-    async fn test_chip_type_detection_all_variants() -> Result<(), Box<dyn std::error::Error>> {
+    #[test]
+    fn test_chip_type_detection_all_variants() -> Result<(), Box<dyn std::error::Error>> {
+        // Test chip detection using direct method (deterministic, no env var dependencies)
         let chip_tests = vec![
+            // M-series variants
             ("iPhone 15 Pro (M3)", "M-series"),
-            ("iPhone 14 (A16)", "A-series"),
             ("iPad Pro (M2)", "M-series"),
+            ("MacBook Pro M1", "M-series"),
+            ("iPad Air M4", "M-series"),
+            // A-series variants
+            ("iPhone 14 (A16)", "A-series"),
             ("iPhone SE (A15)", "A-series"),
+            ("iPhone 13 Pro A15 Bionic", "A-series"),
+            ("iPad A14", "A-series"),
+            // Legacy A-series
+            ("iPhone 11 A13", "A-series"),
+            ("iPhone X A11", "A-series"),
+            // Default fallback (no chip specified)
+            ("iPhone 15", "A-series"),
+            ("iPad mini", "A-series"),
         ];
 
         for (model, expected_chip) in chip_tests {
@@ -474,18 +518,52 @@ mod tests {
                 device_metadata: HashMap::new(),
             };
 
-            std::env::set_var("IOS_MODEL", model);
-            provider.simulate_secure_enclave_detection();
+            // Use direct method instead of env var (deterministic)
+            provider.detect_from_model(model);
 
             assert_eq!(
                 provider.device_metadata.get("chip_type"),
                 Some(&expected_chip.to_string()),
-                "Failed for model: {}",
-                model
+                "Chip detection failed for model: '{}' - expected '{}', got {:?}",
+                model,
+                expected_chip,
+                provider.device_metadata.get("chip_type")
             );
-            std::env::remove_var("IOS_MODEL");
         }
         Ok(())
+    }
+
+    #[test]
+    fn test_chip_type_detection_static_function() {
+        // Direct unit test for the static chip detection function
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("iPhone 15 Pro (M3)"),
+            "M-series"
+        );
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("iPad Pro M2"),
+            "M-series"
+        );
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("MacBook Air M1"),
+            "M-series"
+        );
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("iPhone 14 A16"),
+            "A-series"
+        );
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("iPhone SE A15"),
+            "A-series"
+        );
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("iPhone 6s A9"),
+            "A-series"
+        );
+        assert_eq!(
+            IosUniversalProvider::detect_chip_type("iPhone 15"),
+            "A-series"
+        ); // default
     }
 
     #[test]

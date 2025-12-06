@@ -28,6 +28,13 @@
 //!
 //! ## Architecture
 //!
+
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! The auth system is built on decentralized principles:
 //! - **No Central Authority**: Users control their own identity
 //! - **Cryptographic Proofs**: Mathematical verification of identity

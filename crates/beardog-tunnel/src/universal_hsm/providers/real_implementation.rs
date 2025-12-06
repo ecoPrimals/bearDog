@@ -86,7 +86,7 @@ impl ProductionSoftwareHsm {
             metadata: self.create_key_metadata(&key_id)?,
             health: beardog_types::canonical::hsm::keys::KeyHealth::default(),
             created_at: Utc::now(),
-            key_name: format!("Production Key {}", key_id),
+            key_name: format!("Production Key {key_id}"),
             usage_count: 0,
             key_material: beardog_types::canonical::hsm::keys::KeyMaterial::PrivateKey(vec![]),
             hsm_type: Some("production_software".to_string()),
@@ -136,7 +136,7 @@ impl ProductionSoftwareHsm {
         // System time entropy
         let time_entropy = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map_err(|e| BearDogError::system(format!("Time entropy error: {}", e)))?
+            .map_err(|e| BearDogError::system(format!("Time entropy error: {e}")))?
             .as_nanos()
             .to_be_bytes();
         entropy_sources.extend_from_slice(&time_entropy);

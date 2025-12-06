@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Monitoring & Observability E2E Tests
 //!
 //! End-to-end tests for metrics collection, alerting, health checks, and log aggregation

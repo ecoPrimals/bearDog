@@ -4,7 +4,6 @@
 
 use beardog_errors::BearDogError;
 use super::{HybridIntelligenceConfig, InferenceConfig, TrainingConfig};
-use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
 
 /// Consolidated AI configuration - unifies all AI/ML related configs

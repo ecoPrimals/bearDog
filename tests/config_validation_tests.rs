@@ -1,8 +1,14 @@
 //! Configuration Validation Tests
 //!
-//! This module contains unit tests for BearDog configuration validation,
+//! This module contains unit tests for `BearDog` configuration validation,
 //! including default values, custom settings, and cloning behavior.
-//! Also includes tests for HealthStatus and ServiceCapabilityType enums.
+//! Also includes tests for `HealthStatus` and `ServiceCapabilityType` enums.
+
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(
+    clippy::field_reassign_with_default,
+    clippy::needless_borrows_for_generic_args
+)]
 
 use beardog_core::BearDogConfig;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
@@ -14,9 +20,9 @@ use beardog_types::canonical::HealthStatus;
 
 /// Tests that BearDogConfig::default() creates a valid configuration with non-empty fields
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_default() {
     // Given: nothing (testing default constructor)
@@ -35,9 +41,9 @@ fn test_config_default() {
 
 /// Tests that the default environment is set to "development"
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_environment_default() {
     // When: creating a default config
@@ -49,9 +55,9 @@ fn test_config_environment_default() {
 
 /// Tests that the default version is "3.0.0"
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_version_default() {
     // When: creating a default config
@@ -63,9 +69,9 @@ fn test_config_version_default() {
 
 /// Tests that each config instance gets a unique node_id
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_config_node_id_unique() {
     // When: creating two separate config instances
@@ -81,9 +87,9 @@ fn test_config_node_id_unique() {
 
 /// Tests that the node_id follows UUID v4 format (36 chars with dashes)
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_config_node_id_format() {
     // When: creating a default config
@@ -100,9 +106,9 @@ fn test_config_node_id_format() {
 
 /// Tests that environment can be set to a custom value
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_config_custom_environment() {
     // Given: a default config
@@ -117,9 +123,9 @@ fn test_config_custom_environment() {
 
 /// Tests that version can be set to a custom value
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_config_custom_version() {
     // Given: a default config
@@ -134,9 +140,9 @@ fn test_config_custom_version() {
 
 /// Tests that BearDogConfig can be cloned and maintains all field values
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: config
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: config
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_config_clone() {
     // Given: a default config
@@ -160,9 +166,9 @@ fn test_config_clone() {
 
 /// Tests that HealthStatus::Healthy can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_health_status_healthy() {
     let status = HealthStatus::Healthy;
@@ -171,9 +177,9 @@ fn test_health_status_healthy() {
 
 /// Tests that HealthStatus::Degraded can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_health_status_degraded() {
     let status = HealthStatus::Degraded;
@@ -182,9 +188,9 @@ fn test_health_status_degraded() {
 
 /// Tests that HealthStatus::Unhealthy can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_health_status_unhealthy() {
     let status = HealthStatus::Unhealthy;
@@ -197,9 +203,9 @@ fn test_health_status_unhealthy() {
 
 /// Tests that ServiceCapabilityType::KeyManagement can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: capabilities
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: capabilities
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_service_capability_key_management() {
     let cap = ServiceCapabilityType::KeyManagement;
@@ -208,9 +214,9 @@ fn test_service_capability_key_management() {
 
 /// Tests that ServiceCapabilityType::HardwareSecurityModule can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: capabilities
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: capabilities
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_service_capability_hsm() {
     let cap = ServiceCapabilityType::HardwareSecurityModule;
@@ -219,9 +225,9 @@ fn test_service_capability_hsm() {
 
 /// Tests that ServiceCapabilityType::DatabaseService can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: capabilities
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: capabilities
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_service_capability_database() {
     let cap = ServiceCapabilityType::DatabaseService;
@@ -230,9 +236,9 @@ fn test_service_capability_database() {
 
 /// Tests that ServiceCapabilityType::Authentication can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: capabilities
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: capabilities
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_service_capability_authentication() {
     let cap = ServiceCapabilityType::Authentication;
@@ -241,9 +247,9 @@ fn test_service_capability_authentication() {
 
 /// Tests that ServiceCapabilityType::CloudStorage can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: capabilities
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: capabilities
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_service_capability_cloud_storage() {
     let cap = ServiceCapabilityType::CloudStorage;

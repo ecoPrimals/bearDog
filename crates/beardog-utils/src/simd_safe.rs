@@ -247,6 +247,7 @@ impl Default for SafeSimdProcessor {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -312,5 +313,280 @@ mod tests {
         assert!(processor.safe_simd_hash(&small_data).is_ok());
         assert!(processor.safe_simd_hash(&medium_data).is_ok());
         assert!(processor.safe_simd_hash(&large_data).is_ok());
+    }
+
+    #[test]
+    fn test_empty_input_hash() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        let empty_data = b"";
+
+        let hash = processor.safe_simd_hash(empty_data)?;
+        assert_eq!(hash.len(), 32);
+        // Empty input should produce consistent hash
+        let hash2 = processor.safe_simd_hash(empty_data)?;
+        assert_eq!(hash, hash2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_single_byte_hash() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        let data = b"x";
+
+        let hash = processor.safe_simd_hash(data)?;
+        assert_eq!(hash.len(), 32);
+        Ok(())
+    }
+
+    #[test]
+    fn test_scalar_path_small_input() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        // Small input (< 16 bytes) should trigger scalar path
+        let data = b"tiny";
+
+        let hash = processor.safe_simd_hash(data)?;
+        assert_eq!(hash.len(), 32);
+
+        // Different small inputs should produce different hashes
+        let data2 = b"small";
+        let hash2 = processor.safe_simd_hash(data2)?;
+        assert_ne!(hash, hash2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_sse_path_medium_input() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        // Medium input (16-31 bytes) to potentially trigger SSE4.2 path
+        let data = b"medium_size_data_16bytes";
+
+        let hash = processor.safe_simd_hash(data)?;
+        assert_eq!(hash.len(), 32);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avx2_path_large_input() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        // Large input (>= 32 bytes) to potentially trigger AVX2 path
+        let data = b"large_data_that_is_definitely_over_32_bytes_long_for_avx2";
+
+        let hash = processor.safe_simd_hash(data)?;
+        assert_eq!(hash.len(), 32);
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash_determinism() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        let data = b"determinism_test_data_12345";
+
+        // Hash should be deterministic across multiple calls
+        let hash1 = processor.safe_simd_hash(data)?;
+        let hash2 = processor.safe_simd_hash(data)?;
+        let hash3 = processor.safe_simd_hash(data)?;
+
+        assert_eq!(hash1, hash2);
+        assert_eq!(hash2, hash3);
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash_sensitivity() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+        let data1 = b"test_data_version_1";
+        let data2 = b"test_data_version_2";
+
+        let hash1 = processor.safe_simd_hash(data1)?;
+        let hash2 = processor.safe_simd_hash(data2)?;
+
+        // Different inputs should produce different hashes
+        assert_ne!(hash1, hash2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_compare_arrays_equal() {
+        let processor = SafeSimdProcessor::new();
+        let data = vec![42u8; 100];
+
+        assert!(processor.safe_compare_arrays(&data, &data));
+    }
+
+    #[test]
+    fn test_compare_arrays_different_lengths() {
+        let processor = SafeSimdProcessor::new();
+        let data1 = vec![1u8; 50];
+        let data2 = vec![1u8; 51];
+
+        // Different lengths should return false immediately
+        assert!(!processor.safe_compare_arrays(&data1, &data2));
+    }
+
+    #[test]
+    fn test_compare_arrays_empty() {
+        let processor = SafeSimdProcessor::new();
+        let empty1: Vec<u8> = vec![];
+        let empty2: Vec<u8> = vec![];
+
+        // Empty arrays should be equal
+        assert!(processor.safe_compare_arrays(&empty1, &empty2));
+    }
+
+    #[test]
+    fn test_compare_arrays_single_byte() {
+        let processor = SafeSimdProcessor::new();
+        let data1 = vec![5u8];
+        let data2 = vec![5u8];
+        let data3 = vec![6u8];
+
+        assert!(processor.safe_compare_arrays(&data1, &data2));
+        assert!(!processor.safe_compare_arrays(&data1, &data3));
+    }
+
+    #[test]
+    fn test_compare_arrays_small() {
+        let processor = SafeSimdProcessor::new();
+        // Small arrays (< 16 bytes) - should use constant-time compare
+        let data1 = vec![1, 2, 3, 4, 5];
+        let data2 = vec![1, 2, 3, 4, 5];
+        let data3 = vec![1, 2, 3, 4, 6];
+
+        assert!(processor.safe_compare_arrays(&data1, &data2));
+        assert!(!processor.safe_compare_arrays(&data1, &data3));
+    }
+
+    #[test]
+    fn test_compare_arrays_medium() {
+        let processor = SafeSimdProcessor::new();
+        // Medium arrays (16-31 bytes) - may use SSE4.2 path
+        let data1 = vec![7u8; 20];
+        let data2 = vec![7u8; 20];
+        let mut data3 = vec![7u8; 20];
+        data3[10] = 8;
+
+        assert!(processor.safe_compare_arrays(&data1, &data2));
+        assert!(!processor.safe_compare_arrays(&data1, &data3));
+    }
+
+    #[test]
+    fn test_compare_arrays_large() {
+        let processor = SafeSimdProcessor::new();
+        // Large arrays (>= 32 bytes) - may use AVX2 path
+        let data1 = vec![9u8; 100];
+        let data2 = vec![9u8; 100];
+        let mut data3 = vec![9u8; 100];
+        data3[50] = 10;
+
+        assert!(processor.safe_compare_arrays(&data1, &data2));
+        assert!(!processor.safe_compare_arrays(&data1, &data3));
+    }
+
+    #[test]
+    fn test_compare_arrays_first_byte_different() {
+        let processor = SafeSimdProcessor::new();
+        let data1 = vec![1u8; 64];
+        let mut data2 = vec![1u8; 64];
+        data2[0] = 2;
+
+        assert!(!processor.safe_compare_arrays(&data1, &data2));
+    }
+
+    #[test]
+    fn test_compare_arrays_last_byte_different() {
+        let processor = SafeSimdProcessor::new();
+        let data1 = vec![1u8; 64];
+        let mut data2 = vec![1u8; 64];
+        data2[63] = 2;
+
+        // Should still detect difference (constant-time)
+        assert!(!processor.safe_compare_arrays(&data1, &data2));
+    }
+
+    #[test]
+    fn test_simd_capabilities() {
+        let processor = SafeSimdProcessor::new();
+        let caps = &processor.capabilities;
+
+        // Capabilities should be set
+        assert!(caps.vector_width == 16 || caps.vector_width == 32);
+
+        // If AVX2 available, vector width should be 32
+        if caps.avx2_available {
+            assert_eq!(caps.vector_width, 32);
+        }
+    }
+
+    #[test]
+    fn test_capabilities_default() {
+        let caps = SimdCapabilities::default();
+
+        // Vector width should be valid
+        assert!(caps.vector_width == 16 || caps.vector_width == 32);
+    }
+
+    #[test]
+    fn test_processor_clone() {
+        let processor1 = SafeSimdProcessor::new();
+        let processor2 = processor1.clone();
+
+        // Cloned processors should have same capabilities
+        assert_eq!(
+            processor1.capabilities.vector_width,
+            processor2.capabilities.vector_width
+        );
+    }
+
+    #[test]
+    fn test_capabilities_clone() {
+        let caps1 = SimdCapabilities::default();
+        let caps2 = caps1.clone();
+
+        assert_eq!(caps1.avx2_available, caps2.avx2_available);
+        assert_eq!(caps1.sse42_available, caps2.sse42_available);
+        assert_eq!(caps1.vector_width, caps2.vector_width);
+    }
+
+    #[test]
+    fn test_hash_different_sizes() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = SafeSimdProcessor::new();
+
+        // Test various sizes to ensure all code paths work
+        for size in [0, 1, 7, 15, 16, 31, 32, 63, 64, 127, 256] {
+            let data = vec![0xABu8; size];
+            let hash = processor.safe_simd_hash(&data)?;
+            assert_eq!(hash.len(), 32, "Hash length should be 32 for size {}", size);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_compare_various_sizes() {
+        let processor = SafeSimdProcessor::new();
+
+        // Test comparisons at various sizes
+        for size in [0, 1, 7, 15, 16, 31, 32, 63, 64, 100] {
+            let data1 = vec![42u8; size];
+            let data2 = vec![42u8; size];
+            assert!(
+                processor.safe_compare_arrays(&data1, &data2),
+                "Equal arrays of size {} should compare equal",
+                size
+            );
+        }
+    }
+
+    #[test]
+    fn test_processor_debug() {
+        let processor = SafeSimdProcessor::new();
+        let debug_str = format!("{:?}", processor);
+        assert!(debug_str.contains("SafeSimdProcessor"));
+    }
+
+    #[test]
+    fn test_capabilities_debug() {
+        let caps = SimdCapabilities::default();
+        let debug_str = format!("{:?}", caps);
+        assert!(debug_str.contains("SimdCapabilities"));
     }
 }

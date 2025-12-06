@@ -105,3 +105,16 @@ impl ThreatDetectionEngine {
         self.ml_models.insert(model.id.clone(), model);
     }
 }
+
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
+#[cfg(test)]
+#[path = "ml_integration_tests.rs"]
+mod ml_integration_tests;

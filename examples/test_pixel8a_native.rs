@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Pixel 8a Pure Rust Native Test
 //!
 //! Tests the PURE RUST implementation (NO JNI!) for maximum performance.
@@ -18,13 +26,6 @@ fn main() -> Result<(), BearDogError> {
     println!("║   Pixel 8a Pure Rust Native Test (ZERO JNI!)            ║");
     println!("╚═══════════════════════════════════════════════════════════╝");
     println!();
-
-    #[cfg(not(target_os = "android"))]
-    {
-        println!("⚠️  This test only runs on Android devices!");
-        println!("   Build with: cargo ndk -t aarch64-linux-android build");
-        return Ok(());
-    }
 
     #[cfg(target_os = "android")]
     {
@@ -113,7 +114,14 @@ fn main() -> Result<(), BearDogError> {
         println!("   2. Bypass Java framework entirely");
         println!("   3. Achieve true zero-cost hardware access");
         println!();
+
+        Ok(())
     }
 
-    Ok(())
+    #[cfg(not(target_os = "android"))]
+    {
+        println!("⚠️  This test only runs on Android devices!");
+        println!("   Build with: cargo ndk -t aarch64-linux-android build");
+        Ok(())
+    }
 }

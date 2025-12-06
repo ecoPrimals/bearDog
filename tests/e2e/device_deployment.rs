@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Device Deployment E2E Tests
 //!
 //! End-to-end tests validating complete device deployment workflows
@@ -17,9 +25,9 @@ use tracing::{debug, info, warn};
 /// 4. App deployment (if APK available)
 /// 5. Log retrieval
 ///
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: device_deployment
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: device_deployment
+/// `TEST_PRIORITY`: high
 /// TEST_REQUIRES: adb, android_device
 pub async fn run_device_deployment_test(
     _config: &E2ETestConfig,
@@ -248,9 +256,9 @@ async fn test_log_access() -> Result<bool, BearDogError> {
 
 /// Test device connectivity
 ///
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: device_deployment
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: device_deployment
+/// `TEST_PRIORITY`: normal
 pub async fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
     info!("🔌 Testing device connectivity");
 
@@ -290,6 +298,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[allow(clippy::overly_complex_bool_expr)]
     async fn test_adb_check() {
         // This test should pass whether or not adb is installed
         let available = check_adb_available().await;

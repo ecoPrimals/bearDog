@@ -314,7 +314,10 @@ impl ExternalPrimalClient {
                         stats.last_updated = SystemTime::now({}", attempts, e);
                     last_error = Some(e);
                     if attempts < self.config.max_retry_attempts {
-                        tokio::time::sleep(self.config.retry_delay).await;
+                        // Modern: Exponential backoff instead of fixed delay
+                        let backoff_ms = 100u64 * (1u64 << attempts.min(6)); // Cap at ~6 seconds
+                        let backoff = std::time::Duration::from_millis(backoff_ms);
+                        tokio::time::sleep(backoff.min(self.config.retry_delay)).await;
 
             stats.errors_encountered += 1;
             stats.success_rate = stats.responses_received as f64 / stats.requests_sent as f64;

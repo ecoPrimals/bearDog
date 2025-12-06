@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Pixel 8a StrongBox Detection Test
 //!
 //! This example detects and reports on Pixel 8a StrongBox capabilities.

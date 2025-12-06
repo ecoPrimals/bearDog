@@ -1,3 +1,10 @@
+//! # BearDog CLI
+//!
+//! Command-line interface for the BearDog ecosystem.
+
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 #[cfg(test)]
 mod tests {}
 

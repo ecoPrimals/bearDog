@@ -1,8 +1,8 @@
 //! Trust Management Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security/sovereignty/trust
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security/sovereignty/trust
+//! `TEST_PRIORITY`: critical
 
 use super::types::*;
 

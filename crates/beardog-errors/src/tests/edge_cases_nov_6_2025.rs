@@ -3,6 +3,7 @@
 //! Comprehensive edge case and boundary condition tests to improve code coverage.
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)] // unwrap() is acceptable in test code
 mod error_edge_cases {
     use crate::*;
 

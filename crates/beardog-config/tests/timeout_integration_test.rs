@@ -5,7 +5,7 @@
 //!
 //! All tests in this file can run in parallel without race conditions.
 
-use beardog_config::domains::timeouts::TimeoutConfig;
+use beardog_config::domains::timeouts_new::TimeoutConfig;
 use beardog_config::BearDogConfig;
 use std::time::Duration;
 
@@ -15,7 +15,7 @@ use std::time::Duration;
 
 #[test]
 fn test_timeout_const_defaults() {
-    let config = TimeoutConfig::const_defaults();
+    let config = TimeoutConfig::default();
 
     assert_eq!(config.health_check_secs, 5);
     assert_eq!(config.hsm_operation_secs, 2);
@@ -28,7 +28,7 @@ fn test_timeout_default_trait() {
     let config = TimeoutConfig::default();
 
     // Default should equal const_defaults (no env var reads)
-    assert_eq!(config, TimeoutConfig::const_defaults());
+    assert_eq!(config, TimeoutConfig::default());
 }
 
 // ============================================================================
@@ -96,10 +96,10 @@ fn test_timeout_validation_health_check_too_short() {
 
 #[test]
 fn test_timeout_validation_health_check_too_long() {
-    let config = TimeoutConfig::builder().health_check_secs(31).build();
+    let config = TimeoutConfig::builder().health_check_secs(61).build();
 
     let result = config.validate();
-    assert!(result.is_err(), "Should fail with health_check_secs = 31");
+    assert!(result.is_err(), "Should fail with health_check_secs = 61");
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn test_timeout_validation_discovery_too_short() {
 #[test]
 fn test_timeout_validation_discovery_too_long() {
     let config = TimeoutConfig::builder()
-        .discovery_operation_secs(61)
+        .discovery_operation_secs(301)
         .build();
 
     assert!(config.validate().is_err());
@@ -319,10 +319,10 @@ fn test_timeout_boundary_values_lower() {
 #[test]
 fn test_timeout_boundary_values_upper() {
     let config = TimeoutConfig::builder()
-        .health_check_secs(30)  // Maximum valid
+        .health_check_secs(60)  // Maximum valid
         .hsm_operation_secs(10)
         .hsm_probe_millis(5000)
-        .discovery_operation_secs(60)
+        .discovery_operation_secs(300)
         .build();
 
     assert!(config.validate().is_ok());

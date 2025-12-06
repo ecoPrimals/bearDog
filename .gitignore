@@ -109,9 +109,10 @@ local-config.toml
 # LOGS AND TEMPORARY FILES
 # ============================================================================
 
-# Log files
+# Log files (archived to parent)
 *.log
 *.log.*
+*.txt.log
 logs/
 !logs/.gitkeep
 
@@ -126,6 +127,11 @@ logs/
 *_BACKUP.md
 TEMP_*.md
 CLEANUP_*.md
+
+# Old quick scripts (archived to parent)
+QUICK_*.sh
+VERIFY_*.sh
+deploy-to-*.sh
 
 # ============================================================================
 # SECURITY SENSITIVE FILES
@@ -193,11 +199,16 @@ data/
 # TESTING AND COVERAGE
 # ============================================================================
 
-# Test coverage reports
+# Test coverage reports (archived to parent)
 tarpaulin-report.html
+tarpaulin-report.json
 cobertura.xml
 lcov.info
 coverage/
+coverage-*/
+coverage*.json
+*.profraw
+*.profdata
 test-results/
 junit.xml
 
@@ -303,7 +314,7 @@ ios/build/
 # ARCHIVE AND LEGACY
 # ============================================================================
 
-# Archive directories (keep structure, ignore contents)
+# Archive directories (moved to parent ../archive/)
 archive/
 !archive/.gitkeep
 
@@ -318,6 +329,12 @@ archive/
 # Legacy migration artifacts
 migration_*.json
 legacy_*.toml
+
+# Old session marker files
+*_CERTIFICATE_*.txt
+*_REPORT_CARD_*.txt
+*_READY_TO_DEPLOY_*.txt
+ROOT_DOCS_UPDATED_*.txt
 
 # ============================================================================
 # GENERATED AND PROCESSED FILES

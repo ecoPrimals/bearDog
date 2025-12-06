@@ -7,7 +7,7 @@
 //! Coverage: Provider types (3 tests), Key management (3 tests), Capabilities (1 test),
 //!           Selection logic (1 test), Error handling (1 test), Key rotation (1 test)
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 // ============================================================================
 // HSM Provider Type Tests
@@ -15,9 +15,9 @@ use beardog_errors::{BearDogError, BearDogResult};
 
 /// Tests that HSM provider types can be created and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_hsm_provider_types() {
     // Define HSM provider types
@@ -53,11 +53,11 @@ fn test_hsm_provider_types() {
 
 /// Tests that crypto algorithm types can be created and matched
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
-fn test_key_type_concepts() -> BearDogResult<()> {
+fn test_key_type_concepts() -> Result<(), BearDogError> {
     use beardog_types::canonical::crypto::CryptoAlgorithm;
 
     // Given: different crypto algorithms
@@ -79,9 +79,9 @@ fn test_key_type_concepts() -> BearDogResult<()> {
 
 /// Tests that crypto algorithm selection logic works correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_crypto_algorithm_selection() {
     use beardog_types::canonical::crypto::CryptoAlgorithm;
@@ -107,11 +107,11 @@ fn test_crypto_algorithm_selection() {
 
 /// Tests that key metadata structure can be created
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[tokio::test]
-async fn test_key_metadata_structure() -> BearDogResult<()> {
+async fn test_key_metadata_structure() -> Result<(), BearDogError> {
     use beardog_types::canonical::KeyMetadata;
 
     // When: creating default key metadata
@@ -128,11 +128,11 @@ async fn test_key_metadata_structure() -> BearDogResult<()> {
 
 /// Tests that key generation produces valid key material
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[tokio::test]
-async fn test_key_generation_concepts() -> BearDogResult<()> {
+async fn test_key_generation_concepts() -> Result<(), BearDogError> {
     // Given: simulated key generation
     let key_material: Vec<u8> = (0..32).map(|i| (i * 7 + 13) as u8).collect();
 
@@ -148,11 +148,11 @@ async fn test_key_generation_concepts() -> BearDogResult<()> {
 
 /// Tests that key storage and retrieval works correctly
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[tokio::test]
-async fn test_key_storage_concepts() -> BearDogResult<()> {
+async fn test_key_storage_concepts() -> Result<(), BearDogError> {
     use std::collections::HashMap;
     use std::sync::Arc;
     use tokio::sync::RwLock;
@@ -199,9 +199,9 @@ async fn test_key_storage_concepts() -> BearDogResult<()> {
 
 /// Tests that HSM capabilities can be detected and distinguished
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_hsm_capability_detection() {
     // Define HSM capabilities structure
@@ -254,9 +254,9 @@ fn test_hsm_capability_detection() {
 
 /// Tests that HSM provider selection logic works correctly for different platforms
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_provider_selection_logic() {
     // Helper function for provider selection
@@ -301,11 +301,11 @@ fn test_provider_selection_logic() {
 
 /// Tests that HSM errors are handled correctly
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: critical
 #[tokio::test]
-async fn test_hsm_error_handling() -> BearDogResult<()> {
+async fn test_hsm_error_handling() -> Result<(), BearDogError> {
     // Helper function simulating HSM operation
     fn simulate_hsm_operation(should_fail: bool) -> Result<String, BearDogError> {
         if should_fail {
@@ -341,9 +341,9 @@ async fn test_hsm_error_handling() -> BearDogResult<()> {
 
 /// Tests that key rotation concepts work correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: security
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: security
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_key_rotation_concepts() {
     // Define key version structure

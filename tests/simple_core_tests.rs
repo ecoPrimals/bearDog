@@ -8,9 +8,9 @@ use beardog_types::canonical::config::WorkingUnifiedConfig;
 
 /// Tests that BearDogError::configuration creates errors with correct messages
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_basic_error_types() {
     // Given: a configuration error message
@@ -22,9 +22,9 @@ fn test_basic_error_types() {
 
 /// Tests that ServiceCapabilityType variants can be instantiated and matched
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_trust_levels() {
     // Given: a Compute capability type
@@ -36,9 +36,9 @@ fn test_trust_levels() {
 
 /// Tests that WorkingUnifiedConfig can be created with defaults
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_configuration_defaults() {
     // When: creating a default configuration
@@ -51,9 +51,9 @@ fn test_configuration_defaults() {
 
 /// Tests that BearDogError::internal creates errors that display correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_conversion() {
     // Given: an internal error
@@ -68,9 +68,9 @@ fn test_error_conversion() {
 
 /// Tests that basic capability types can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_basic_types() {
     // When: creating a Compute capability type

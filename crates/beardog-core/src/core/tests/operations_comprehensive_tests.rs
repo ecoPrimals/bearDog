@@ -3,6 +3,9 @@
 //! Tests for core system operations, lifecycle management, and operational state transitions.
 //! Created: October 25, 2025 (Week 2 Test Expansion - Day 2)
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 #[cfg(test)]
 mod core_operations_tests {
     use crate::core::system::BearDogCore;

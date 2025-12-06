@@ -3,6 +3,9 @@
 //! Comprehensive test coverage for core BearDog operations
 //! Added October 29, 2025 - Part of Week 1 test coverage initiative
 
+
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code)]
+
 use std::time::Duration;
 
 #[cfg(test)]

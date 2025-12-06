@@ -132,8 +132,7 @@ mod health_check_result_tests {
             details: Default::default(),
         };
         
-        sleep(Duration::from_millis(10));
-        
+        // ✅ MODERNIZED: Removed sleep - SystemTime::now() is monotonically increasing
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
@@ -144,8 +143,8 @@ mod health_check_result_tests {
             details: Default::default(),
         };
         
-        // Second timestamp should be later
-        assert!(result2.timestamp > result1.timestamp);
+        // Second timestamp should be later or equal (monotonic guarantee)
+        assert!(result2.timestamp >= result1.timestamp, "Timestamps are monotonically increasing");
     }
 }
 

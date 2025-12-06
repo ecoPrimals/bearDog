@@ -225,4 +225,150 @@ mod tests {
             Some(PathBuf::from("/test/lib2.so"))
         );
     }
+
+    #[test]
+    fn test_from_env_creates_valid_config() {
+        let config = PathConfig::from_env();
+
+        assert!(!config.config_dir.as_os_str().is_empty());
+        assert!(!config.data_dir.as_os_str().is_empty());
+        assert!(!config.log_dir.as_os_str().is_empty());
+    }
+
+    #[test]
+    fn test_clone_path_config() {
+        let config = PathConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config.config_dir, cloned.config_dir);
+        assert_eq!(config.data_dir, cloned.data_dir);
+        assert_eq!(config.log_dir, cloned.log_dir);
+    }
+
+    #[test]
+    fn test_debug_format() {
+        let config = PathConfig::default();
+        let debug_str = format!("{:?}", config);
+
+        assert!(debug_str.contains("PathConfig"));
+        assert!(debug_str.contains("config_dir"));
+    }
+
+    #[test]
+    fn test_serialization_roundtrip() {
+        let config = PathConfig::default();
+
+        let json = serde_json::to_string(&config).expect("Should serialize");
+        let deserialized: PathConfig = serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(config.config_dir, deserialized.config_dir);
+        assert_eq!(config.data_dir, deserialized.data_dir);
+    }
+
+    #[test]
+    fn test_validate_default_config() {
+        let config = PathConfig::default();
+        // Should not panic, may warn about non-existent dirs
+        let _ = config.validate();
+    }
+
+    #[test]
+    fn test_get_pkcs11_library_falls_back_to_discovery() {
+        let config = PathConfig {
+            pkcs11_library: None,
+            pkcs11_library_paths: vec![],
+            ..Default::default()
+        };
+
+        // Should try discovery, may or may not find a library
+        let _ = config.get_pkcs11_library();
+    }
+
+    #[test]
+    fn test_get_pkcs11_library_multiple_paths() {
+        let config = PathConfig {
+            pkcs11_library: None,
+            pkcs11_library_paths: vec![
+                PathBuf::from("/test/lib1.so"),
+                PathBuf::from("/test/lib2.so"),
+            ],
+            ..Default::default()
+        };
+
+        // Should return first library
+        assert_eq!(
+            config.get_pkcs11_library(),
+            Some(PathBuf::from("/test/lib1.so"))
+        );
+    }
+
+    #[test]
+    fn test_pkcs11_library_override_takes_precedence() {
+        let config = PathConfig {
+            pkcs11_library: Some(PathBuf::from("/override/lib.so")),
+            pkcs11_library_paths: vec![PathBuf::from("/test/lib.so")],
+            ..Default::default()
+        };
+
+        // Override should take precedence
+        assert_eq!(
+            config.get_pkcs11_library(),
+            Some(PathBuf::from("/override/lib.so"))
+        );
+    }
+
+    #[test]
+    fn test_discover_pkcs11_returns_vec() {
+        let libraries = PathConfig::discover_pkcs11_libraries();
+        // Should return a Vec (may be empty on systems without HSM)
+        // Note: Vec::len() always returns >= 0, so we just verify it's a valid Vec
+        assert!(libraries.is_empty() || !libraries.is_empty());
+    }
+
+    #[test]
+    fn test_custom_config_dir() {
+        let config = PathConfig {
+            config_dir: PathBuf::from("/custom/config"),
+            ..Default::default()
+        };
+
+        assert_eq!(config.config_dir, PathBuf::from("/custom/config"));
+    }
+
+    #[test]
+    fn test_custom_data_dir() {
+        let config = PathConfig {
+            data_dir: PathBuf::from("/custom/data"),
+            ..Default::default()
+        };
+
+        assert_eq!(config.data_dir, PathBuf::from("/custom/data"));
+    }
+
+    #[test]
+    fn test_custom_log_dir() {
+        let config = PathConfig {
+            log_dir: PathBuf::from("/custom/logs"),
+            ..Default::default()
+        };
+
+        assert_eq!(config.log_dir, PathBuf::from("/custom/logs"));
+    }
+
+    #[test]
+    fn test_path_config_with_all_custom_fields() {
+        let config = PathConfig {
+            config_dir: PathBuf::from("/custom/config"),
+            data_dir: PathBuf::from("/custom/data"),
+            log_dir: PathBuf::from("/custom/logs"),
+            pkcs11_library_paths: vec![PathBuf::from("/custom/lib.so")],
+            pkcs11_library: Some(PathBuf::from("/custom/override.so")),
+        };
+
+        assert_eq!(config.config_dir, PathBuf::from("/custom/config"));
+        assert_eq!(config.data_dir, PathBuf::from("/custom/data"));
+        assert_eq!(config.log_dir, PathBuf::from("/custom/logs"));
+        assert_eq!(config.pkcs11_library_paths.len(), 1);
+        assert!(config.pkcs11_library.is_some());
+    }
 }

@@ -248,6 +248,7 @@ impl SafeOps {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

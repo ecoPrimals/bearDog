@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Cross-Platform HSM Discovery E2E Tests
 //!
 //! End-to-end tests validating complete cross-platform HSM discovery workflows
@@ -16,9 +24,9 @@ use tracing::{debug, info};
 /// 3. Cloud HSM discovery (AWS, Azure, GCP)
 /// 4. Software HSM fallback
 ///
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: hsm_discovery
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: hsm_discovery
+/// `TEST_PRIORITY`: critical
 pub async fn run_cross_platform_discovery_test(
     _config: &E2ETestConfig,
 ) -> Result<E2EMetrics, BearDogError> {
@@ -266,9 +274,9 @@ async fn discover_software_hsm() -> Result<bool, BearDogError> {
 
 /// Test HSM discovery with configuration
 ///
-/// TEST_CATEGORY: e2e
-/// TEST_DOMAIN: hsm_discovery
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: e2e
+/// `TEST_DOMAIN`: hsm_discovery
+/// `TEST_PRIORITY`: high
 pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogError> {
     info!("🔧 Testing HSM discovery with environment configuration");
 

@@ -267,25 +267,25 @@ mod software_hsm_tests {
         for i in 0..10 {
             let request = GenerateKeyRequest {
                 key_type: KeyType::Aes,
-                key_id: format!("test-key-{}", i),
+                key_id: format!("test-key-{i}"),
             };
             hsm.generate_key(request).await?;
         }
 
         // Verify all keys exist
         for i in 0..10 {
-            let key_info = hsm.get_key_info(&format!("test-key-{}", i)).await?;
-            assert_eq!(key_info.key_id, format!("test-key-{}", i));
+            let key_info = hsm.get_key_info(&format!("test-key-{i}")).await?;
+            assert_eq!(key_info.key_id, format!("test-key-{i}"));
         }
 
         // Delete all keys
         for i in 0..10 {
-            hsm.delete_key(&format!("test-key-{}", i)).await?;
+            hsm.delete_key(&format!("test-key-{i}")).await?;
         }
 
         // Verify all keys are gone
         for i in 0..10 {
-            let result = hsm.get_key_info(&format!("test-key-{}", i)).await;
+            let result = hsm.get_key_info(&format!("test-key-{i}")).await;
             assert!(result.is_err());
         }
 
@@ -305,7 +305,7 @@ mod software_hsm_tests {
             let handle = tokio::spawn(async move {
                 let request = GenerateKeyRequest {
                     key_type: KeyType::Aes,
-                    key_id: format!("concurrent-key-{}", i),
+                    key_id: format!("concurrent-key-{i}"),
                 };
                 hsm_clone.generate_key(request).await
             });
@@ -319,8 +319,8 @@ mod software_hsm_tests {
 
         // Verify all keys exist
         for i in 0..5 {
-            let key_info = hsm.get_key_info(&format!("concurrent-key-{}", i)).await?;
-            assert_eq!(key_info.key_id, format!("concurrent-key-{}", i));
+            let key_info = hsm.get_key_info(&format!("concurrent-key-{i}")).await?;
+            assert_eq!(key_info.key_id, format!("concurrent-key-{i}"));
         }
 
         Ok(())
@@ -620,7 +620,7 @@ mod software_hsm_tests {
         for i in 0..20 {
             let hsm_clone = Arc::clone(&hsm);
             let handle = tokio::spawn(async move {
-                let plaintext = format!("message {}", i);
+                let plaintext = format!("message {i}");
                 let ciphertext = hsm_clone
                     .encrypt("concurrent-ops-key", plaintext.as_bytes())
                     .await?;
@@ -652,20 +652,18 @@ mod software_hsm_tests {
             let handle = tokio::spawn(async move {
                 let request = GenerateKeyRequest {
                     key_type: KeyType::Aes,
-                    key_id: format!("load-test-key-{}", i),
+                    key_id: format!("load-test-key-{i}"),
                 };
                 hsm_clone.generate_key(request).await?;
 
                 // Immediately use the key
-                let plaintext = format!("data for key {}", i);
+                let plaintext = format!("data for key {i}");
                 let _ciphertext = hsm_clone
-                    .encrypt(&format!("load-test-key-{}", i), plaintext.as_bytes())
+                    .encrypt(&format!("load-test-key-{i}"), plaintext.as_bytes())
                     .await?;
 
                 // Delete to test memory cleanup
-                hsm_clone
-                    .delete_key(&format!("load-test-key-{}", i))
-                    .await?;
+                hsm_clone.delete_key(&format!("load-test-key-{i}")).await?;
 
                 Ok::<(), BearDogError>(())
             });
@@ -823,25 +821,25 @@ mod software_hsm_tests {
         for i in 0..20 {
             let request = GenerateKeyRequest {
                 key_type: KeyType::Aes,
-                key_id: format!("batch-key-{}", i),
+                key_id: format!("batch-key-{i}"),
             };
             hsm.generate_key(request).await?;
         }
 
         // Verify all keys exist
         for i in 0..20 {
-            let key_info = hsm.get_key_info(&format!("batch-key-{}", i)).await?;
-            assert_eq!(key_info.key_id, format!("batch-key-{}", i));
+            let key_info = hsm.get_key_info(&format!("batch-key-{i}")).await?;
+            assert_eq!(key_info.key_id, format!("batch-key-{i}"));
         }
 
         // Delete all keys in batch
         for i in 0..20 {
-            hsm.delete_key(&format!("batch-key-{}", i)).await?;
+            hsm.delete_key(&format!("batch-key-{i}")).await?;
         }
 
         // Verify all keys deleted
         for i in 0..20 {
-            let result = hsm.get_key_info(&format!("batch-key-{}", i)).await;
+            let result = hsm.get_key_info(&format!("batch-key-{i}")).await;
             assert!(result.is_err());
         }
 
@@ -862,7 +860,7 @@ mod software_hsm_tests {
         for i in 0..5 {
             let request = GenerateKeyRequest {
                 key_type: KeyType::Aes,
-                key_id: format!("health-test-key-{}", i),
+                key_id: format!("health-test-key-{i}"),
             };
             hsm.generate_key(request).await?;
         }
@@ -874,7 +872,7 @@ mod software_hsm_tests {
         // Perform crypto operations
         for i in 0..5 {
             let _ = hsm
-                .encrypt(&format!("health-test-key-{}", i), b"test data")
+                .encrypt(&format!("health-test-key-{i}"), b"test data")
                 .await?;
         }
 
@@ -884,7 +882,7 @@ mod software_hsm_tests {
 
         // Delete keys
         for i in 0..5 {
-            hsm.delete_key(&format!("health-test-key-{}", i)).await?;
+            hsm.delete_key(&format!("health-test-key-{i}")).await?;
         }
 
         // Final health check

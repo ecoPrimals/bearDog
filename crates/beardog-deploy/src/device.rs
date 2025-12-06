@@ -168,8 +168,7 @@ impl DeviceManager {
         if !std::path::Path::new(apk_path).exists() {
             error!("APK not found at: {}", apk_path);
             return Err(BearDogError::system(format!(
-                "APK not found at: {}. Build the app first using 'cargo build --release'",
-                apk_path
+                "APK not found at: {apk_path}. Build the app first using 'cargo build --release'"
             )));
         }
 
@@ -197,10 +196,7 @@ impl DeviceManager {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             error!("Deployment failed: {}", stderr);
-            return Err(BearDogError::system(format!(
-                "Deployment failed: {}",
-                stderr
-            )));
+            return Err(BearDogError::system(format!("Deployment failed: {stderr}")));
         }
 
         info!("✅ App deployed successfully to {}", device_id);
@@ -226,7 +222,7 @@ impl DeviceManager {
         // Assuming package name is com.beardog.app (should be configurable)
         let package_name =
             std::env::var("BEARDOG_PACKAGE_NAME").unwrap_or_else(|_| "com.beardog.app".to_string());
-        let main_activity = format!("{}/MainActivity", package_name);
+        let main_activity = format!("{package_name}/MainActivity");
 
         let mut command = Command::new("adb");
         command
@@ -245,7 +241,7 @@ impl DeviceManager {
 
         let output = command
             .output()
-            .map_err(|e| BearDogError::system(format!("Failed to launch app: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to launch app: {e}")))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);

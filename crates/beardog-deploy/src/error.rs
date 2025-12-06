@@ -84,3 +84,88 @@ impl DeploymentErrorHandler {
         BearDogError::system(format!("Prerequisites Not Met: {}", message.into()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ndk_not_found() {
+        let error = DeploymentErrorHandler::ndk_not_found("NDK r21 not found");
+        let msg = format!("{}", error);
+        assert!(msg.contains("NDK Error"));
+        assert!(msg.contains("NDK r21 not found"));
+    }
+
+    #[test]
+    fn test_rust_toolchain() {
+        let error =
+            DeploymentErrorHandler::rust_toolchain("stable-aarch64-linux-android not installed");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Rust Toolchain Error"));
+    }
+
+    #[test]
+    fn test_android_build_env() {
+        let error = DeploymentErrorHandler::android_build_env("ANDROID_HOME not set");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Android Build Environment Error"));
+    }
+
+    #[test]
+    fn test_ios_build_env() {
+        let error = DeploymentErrorHandler::ios_build_env("Xcode not found");
+        let msg = format!("{}", error);
+        assert!(msg.contains("iOS Build Environment Error"));
+    }
+
+    #[test]
+    fn test_device_not_found() {
+        let error = DeploymentErrorHandler::device_not_found();
+        let msg = format!("{}", error);
+        assert!(msg.contains("No suitable devices found"));
+    }
+
+    #[test]
+    fn test_multiple_devices() {
+        let error = DeploymentErrorHandler::multiple_devices();
+        let msg = format!("{}", error);
+        assert!(msg.contains("Multiple devices found"));
+    }
+
+    #[test]
+    fn test_build_failed() {
+        let error = DeploymentErrorHandler::build_failed("cargo build failed");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Build Failed"));
+    }
+
+    #[test]
+    fn test_deployment_failed() {
+        let error = DeploymentErrorHandler::deployment_failed("APK installation failed");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Deployment Failed"));
+    }
+
+    #[test]
+    fn test_device_command_failed() {
+        let error = DeploymentErrorHandler::device_command_failed("adb shell failed");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Device Command Failed"));
+    }
+
+    #[test]
+    fn test_unsupported_target() {
+        let error = DeploymentErrorHandler::unsupported_target("riscv64");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Unsupported target architecture"));
+        assert!(msg.contains("riscv64"));
+    }
+
+    #[test]
+    fn test_prerequisites_not_met() {
+        let error = DeploymentErrorHandler::prerequisites_not_met("cmake required");
+        let msg = format!("{}", error);
+        assert!(msg.contains("Prerequisites Not Met"));
+    }
+}

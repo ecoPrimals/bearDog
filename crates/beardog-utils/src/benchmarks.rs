@@ -425,6 +425,7 @@ macro_rules! benchmark {
     };
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -502,6 +503,162 @@ mod tests {
             result.performance_grade,
             PerformanceGrade::Excellent | PerformanceGrade::Good
         ));
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_benchmark_config_default() {
+        let config = BenchmarkConfig::default();
+        assert_eq!(config.warmup_iterations, 1000); // Actual default from code
+        assert_eq!(config.measurement_iterations, 10000); // Actual default from code
+        assert_eq!(config.max_time, Duration::from_secs(30)); // Actual default from code
+        assert!(config.enable_memory_profiling); // Actual default from code
+        assert!(config.enable_latency_analysis); // Actual default from code
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_latency_percentiles() {
+        let percentiles = LatencyPercentiles {
+            p50: Duration::from_millis(1),
+            p90: Duration::from_millis(2),
+            p95: Duration::from_millis(3),
+            p99: Duration::from_millis(5),
+            p99_9: Duration::from_millis(10),
+        };
+
+        assert!(percentiles.p50 < percentiles.p90);
+        assert!(percentiles.p90 < percentiles.p95);
+        assert!(percentiles.p95 < percentiles.p99);
+        assert!(percentiles.p99 < percentiles.p99_9);
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_memory_stats() {
+        let stats = MemoryStats {
+            peak_memory: 1024 * 1024, // 1MB
+            total_allocations: 100,
+            allocation_rate: 10.0,
+            avg_allocation_size: 10240,
+        };
+
+        assert_eq!(stats.peak_memory, 1024 * 1024);
+        assert_eq!(stats.total_allocations, 100);
+        assert!(stats.allocation_rate > 0.0);
+        assert!(stats.avg_allocation_size > 0);
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_performance_grade_ordering() {
+        assert!(PerformanceGrade::Excellent != PerformanceGrade::Good);
+        assert!(PerformanceGrade::Good != PerformanceGrade::Average);
+        assert!(PerformanceGrade::Average != PerformanceGrade::Poor);
+        assert!(PerformanceGrade::Poor != PerformanceGrade::Critical);
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_suite_stats() {
+        let suite = BenchmarkSuite::new(BenchmarkConfig::default());
+        let stats = &suite.suite_stats;
+
+        assert_eq!(stats.total_benchmarks, 0);
+        assert_eq!(stats.passed_benchmarks, 0);
+        assert_eq!(stats.failed_benchmarks, 0);
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_benchmark_result_serialization() -> Result<(), Box<dyn std::error::Error>> {
+        let result = BenchmarkResult {
+            name: "test".to_string(),
+            total_time: Duration::from_secs(1),
+            iterations: 100,
+            ops_per_second: 100.0,
+            avg_latency: Duration::from_millis(10),
+            latency_percentiles: LatencyPercentiles {
+                p50: Duration::from_millis(5),
+                p90: Duration::from_millis(10),
+                p95: Duration::from_millis(15),
+                p99: Duration::from_millis(20),
+                p99_9: Duration::from_millis(30),
+            },
+            memory_stats: MemoryStats {
+                peak_memory: 1024,
+                total_allocations: 10,
+                allocation_rate: 1.0,
+                avg_allocation_size: 102,
+            },
+            performance_grade: PerformanceGrade::Good,
+        };
+
+        let serialized = serde_json::to_string(&result)?;
+        let deserialized: BenchmarkResult = serde_json::from_str(&serialized)?;
+
+        assert_eq!(result.name, deserialized.name);
+        assert_eq!(result.iterations, deserialized.iterations);
+        assert_eq!(result.performance_grade, deserialized.performance_grade);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_multiple_benchmarks() -> Result<(), Box<dyn std::error::Error>> {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 5,
+            measurement_iterations: 50,
+            ..BenchmarkConfig::default()
+        });
+
+        suite.benchmark("test1", || {
+            std::hint::black_box(1 + 1);
+        })?;
+
+        suite.benchmark("test2", || {
+            std::hint::black_box(2 * 2);
+        })?;
+
+        assert!(suite.get_result("test1").is_some());
+        assert!(suite.get_result("test2").is_some());
+        assert!(suite.get_result("nonexistent").is_none());
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_report() -> Result<(), Box<dyn std::error::Error>> {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 5,
+            measurement_iterations: 100,
+            ..BenchmarkConfig::default()
+        });
+
+        suite.benchmark("test_op", || {
+            std::hint::black_box(42);
+        })?;
+
+        let report = suite.generate_report();
+        assert!(report.suite_stats.total_benchmarks > 0);
+        assert!(!report.benchmarks.is_empty());
         Ok(())
     }
 }

@@ -31,10 +31,10 @@ use std::sync::Arc;
 /// use beardog_types::canonical::config::security::authentication::CanonicalAuthenticationConfig;
 ///
 /// let config = CanonicalAuthenticationConfig {
-///     jwt_secret: "your-secret-key".to_string(),
+///     jwt_secret: "your-secret-key".to_string().into(),
 ///     jwt_expiration_seconds: 3600,
-///     jwt_issuer: "beardog".to_string(),
-///     jwt_audience: "beardog-api".to_string(),
+///     jwt_issuer: "beardog".to_string().into(),
+///     jwt_audience: "beardog-api".to_string().into(),
 ///     enable_jwt_refresh: true,
 ///     jwt_refresh_expiration_seconds: 86400,
 ///     ..Default::default()
@@ -48,9 +48,9 @@ use std::sync::Arc;
 ///
 /// let config = CanonicalAuthenticationConfig {
 ///     enable_oauth: true,
-///     oauth_client_id: "your-client-id".to_string(),
-///     oauth_client_secret: "your-client-secret".to_string(),
-///     oauth_redirect_uri: "https://api.example.com/oauth/callback".to_string(),
+///     oauth_client_id: "your-client-id".to_string().into(),
+///     oauth_client_secret: "your-client-secret".to_string().into(),
+///     oauth_redirect_uri: "https://api.example.com/oauth/callback".to_string().into(),
 ///     oauth_scopes: vec!["email".to_string(), "profile".to_string()],
 ///     ..Default::default()
 /// };
@@ -425,12 +425,12 @@ impl CanonicalAuthenticationConfig {
 /// use beardog_types::canonical::config::security::authentication::IdentityProviderConfig;
 ///
 /// let google = IdentityProviderConfig {
-///     provider_type: "google".to_string(),
-///     client_id: "your-client-id.apps.googleusercontent.com".to_string(),
-///     client_secret: std::env::var("GOOGLE_CLIENT_SECRET").unwrap_or_default(),
-///     auth_endpoint: "https://accounts.google.com/o/oauth2/v2/auth".to_string(),
-///     token_endpoint: "https://oauth2.googleapis.com/token".to_string(),
-///     userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo".to_string(),
+///     provider_type: "google".to_string().into(),
+///     client_id: "your-client-id.apps.googleusercontent.com".to_string().into(),
+///     client_secret: std::env::var("GOOGLE_CLIENT_SECRET").unwrap_or_default().into(),
+///     auth_endpoint: "https://accounts.google.com/o/oauth2/v2/auth".to_string().into(),
+///     token_endpoint: "https://oauth2.googleapis.com/token".to_string().into(),
+///     userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo".to_string().into(),
 ///     scopes: vec!["openid".to_string(), "email".to_string(), "profile".to_string()],
 ///     enabled: true,
 /// };
@@ -442,12 +442,12 @@ impl CanonicalAuthenticationConfig {
 /// use beardog_types::canonical::config::security::authentication::IdentityProviderConfig;
 ///
 /// let github = IdentityProviderConfig {
-///     provider_type: "github".to_string(),
-///     client_id: "your-github-client-id".to_string(),
-///     client_secret: std::env::var("GITHUB_CLIENT_SECRET").unwrap_or_default(),
-///     auth_endpoint: "https://github.com/login/oauth/authorize".to_string(),
-///     token_endpoint: "https://github.com/login/oauth/access_token".to_string(),
-///     userinfo_endpoint: "https://api.github.com/user".to_string(),
+///     provider_type: "github".to_string().into(),
+///     client_id: "your-github-client-id".to_string().into(),
+///     client_secret: std::env::var("GITHUB_CLIENT_SECRET").unwrap_or_default().into(),
+///     auth_endpoint: "https://github.com/login/oauth/authorize".to_string().into(),
+///     token_endpoint: "https://github.com/login/oauth/access_token".to_string().into(),
+///     userinfo_endpoint: "https://api.github.com/user".to_string().into(),
 ///     scopes: vec!["user:email".to_string()],
 ///     enabled: true,
 /// };

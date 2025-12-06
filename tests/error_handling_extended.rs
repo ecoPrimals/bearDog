@@ -10,7 +10,15 @@
 //! - Error Recovery (6 tests) - Recovery and retry patterns
 //! - Helper Functions (1 test) - Utility functions
 
-use beardog_errors::{BearDogError, BearDogResult};
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::unnecessary_literal_unwrap
+)]
+#![allow(clippy::needless_borrows_for_generic_args, clippy::useless_format)]
+#![allow(dead_code)] // Test helpers may not all be used
+
+use beardog_errors::BearDogError;
 
 // ============================================================================
 // Error Construction Tests (10 tests)
@@ -18,9 +26,9 @@ use beardog_errors::{BearDogError, BearDogResult};
 
 /// Tests validation error with detailed field context
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_validation_with_context() {
     // Given: a validation error with detailed context
@@ -40,9 +48,9 @@ fn test_error_validation_with_context() {
 
 /// Tests configuration error with detailed range information
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_configuration_with_details() {
     // Given: a configuration error with specific details
@@ -62,9 +70,9 @@ fn test_error_configuration_with_details() {
 
 /// Tests not_found error with resource ID and type
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_not_found_with_id() {
     // Given: a not found error with resource ID
@@ -88,9 +96,9 @@ fn test_error_not_found_with_id() {
 
 /// Tests network error with endpoint information
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_network_with_endpoint() {
     // Given: a network error with endpoint
@@ -108,9 +116,9 @@ fn test_error_network_with_endpoint() {
 
 /// Tests internal error with state information
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_internal_with_state_info() {
     // Given: an internal error with state info
@@ -127,9 +135,9 @@ fn test_error_internal_with_state_info() {
 
 /// Tests security error with specific reason
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_error_security_with_reason() {
     // Given: a security error with reason
@@ -146,9 +154,9 @@ fn test_error_security_with_reason() {
 
 /// Tests system error with timeout information
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_system_with_timeout_info() {
     // Given: a system error with timeout
@@ -169,9 +177,9 @@ fn test_error_system_with_timeout_info() {
 
 /// Tests unavailable error with service name
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_unavailable_with_service() {
     // Given: an unavailable error for a service
@@ -189,9 +197,9 @@ fn test_error_unavailable_with_service() {
 
 /// Tests invalid_input error with field name
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_invalid_input_with_field() {
     // Given: an invalid input error with field
@@ -207,9 +215,9 @@ fn test_error_invalid_input_with_field() {
 
 /// Tests debug formatting produces non-empty output
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_debug_format() {
     // Given: an error
@@ -229,17 +237,17 @@ fn test_error_debug_format() {
 
 /// Tests simple error propagation through Result chain
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_propagation_simple() {
     // Helper functions
-    fn inner_fn() -> BearDogResult<()> {
+    fn inner_fn() -> Result<(), BearDogError> {
         Err(BearDogError::validation("Inner error"))
     }
 
-    fn outer_fn() -> BearDogResult<()> {
+    fn outer_fn() -> Result<(), BearDogError> {
         inner_fn()?;
         Ok(())
     }
@@ -253,22 +261,22 @@ fn test_error_propagation_simple() {
 
 /// Tests error propagation with context preservation
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_propagation_with_context() {
     // Helper functions with context
-    fn inner_fn() -> BearDogResult<String> {
+    fn inner_fn() -> Result<String, BearDogError> {
         Err(BearDogError::not_found("Resource not found".to_string()))
     }
 
-    fn middle_fn() -> BearDogResult<String> {
+    fn middle_fn() -> Result<String, BearDogError> {
         inner_fn()?;
         Ok("success".to_string())
     }
 
-    fn outer_fn() -> BearDogResult<String> {
+    fn outer_fn() -> Result<String, BearDogError> {
         middle_fn()?;
         Ok("complete".to_string())
     }
@@ -289,13 +297,13 @@ fn test_error_propagation_with_context() {
 
 /// Tests error propagation across async/sync boundaries
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_propagation_async_sync_boundary() {
     // Sync function that returns error
-    fn sync_fn() -> BearDogResult<()> {
+    fn sync_fn() -> Result<(), BearDogError> {
         Err(BearDogError::validation("Sync error"))
     }
 
@@ -308,13 +316,13 @@ fn test_error_propagation_async_sync_boundary() {
 
 /// Tests error propagation through match expressions
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_propagation_through_match() {
     // Helper function with match-based validation
-    fn process(value: i32) -> BearDogResult<i32> {
+    fn process(value: i32) -> Result<i32, BearDogError> {
         match value {
             0 => Err(BearDogError::invalid_input("Value cannot be zero")),
             n if n < 0 => Err(BearDogError::invalid_input("Value must be positive")),
@@ -330,9 +338,9 @@ fn test_error_propagation_through_match() {
 
 /// Tests error transformation with map_err
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_propagation_with_map_err() {
     // Helper functions with error transformation
@@ -340,7 +348,7 @@ fn test_error_propagation_with_map_err() {
         Err("string error".to_string())
     }
 
-    fn outer() -> BearDogResult<()> {
+    fn outer() -> Result<(), BearDogError> {
         inner().map_err(BearDogError::internal)?;
         Ok(())
     }
@@ -354,25 +362,25 @@ fn test_error_propagation_with_map_err() {
 
 /// Tests early return with ? operator
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_early_return() {
     // Helper functions for multi-step operation
-    fn step1() -> BearDogResult<()> {
+    fn step1() -> Result<(), BearDogError> {
         Ok(())
     }
 
-    fn step2() -> BearDogResult<()> {
+    fn step2() -> Result<(), BearDogError> {
         Err(BearDogError::validation("Step 2 failed"))
     }
 
-    fn step3() -> BearDogResult<String> {
+    fn step3() -> Result<String, BearDogError> {
         Ok("complete".to_string())
     }
 
-    fn multi_step() -> BearDogResult<String> {
+    fn multi_step() -> Result<String, BearDogError> {
         step1()?;
         step2()?;
         step3()
@@ -391,13 +399,13 @@ fn test_error_early_return() {
 
 /// Tests error handling in iterator chains
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_in_iterator_chain() {
     // Helper function processing items
-    fn process_items(items: Vec<i32>) -> BearDogResult<Vec<i32>> {
+    fn process_items(items: Vec<i32>) -> Result<Vec<i32>, BearDogError> {
         items
             .into_iter()
             .map(|n| {
@@ -423,17 +431,17 @@ fn test_error_in_iterator_chain() {
 
 /// Tests nested Result handling
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_in_nested_results() {
     // Helper functions with nested Results
-    fn inner() -> BearDogResult<String> {
+    fn inner() -> Result<String, BearDogError> {
         Err(BearDogError::validation("Inner validation failed"))
     }
 
-    fn outer() -> BearDogResult<BearDogResult<String>> {
+    fn outer() -> Result<Result<String, BearDogError>, BearDogError> {
         Ok(inner())
     }
 
@@ -449,13 +457,13 @@ fn test_error_in_nested_results() {
 
 /// Tests error creation with ok_or_else
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_with_ok_or_else() {
     // Helper function converting Option to Result
-    fn get_value(should_exist: bool) -> BearDogResult<String> {
+    fn get_value(should_exist: bool) -> Result<String, BearDogError> {
         if should_exist {
             Some("value".to_string())
         } else {
@@ -471,17 +479,17 @@ fn test_error_with_ok_or_else() {
 
 /// Tests error handling with and_then chains
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_and_then_chain() {
     // Helper functions for chained operations
-    fn get_value() -> BearDogResult<i32> {
+    fn get_value() -> Result<i32, BearDogError> {
         Ok(10)
     }
 
-    fn validate(v: i32) -> BearDogResult<i32> {
+    fn validate(v: i32) -> Result<i32, BearDogError> {
         if v > 0 {
             Ok(v)
         } else {
@@ -489,11 +497,11 @@ fn test_error_and_then_chain() {
         }
     }
 
-    fn transform(v: i32) -> BearDogResult<i32> {
+    fn transform(v: i32) -> Result<i32, BearDogError> {
         Ok(v * 2)
     }
 
-    fn process() -> BearDogResult<i32> {
+    fn process() -> Result<i32, BearDogError> {
         get_value().and_then(validate).and_then(transform)
     }
 
@@ -511,13 +519,13 @@ fn test_error_and_then_chain() {
 
 /// Tests error recovery with unwrap_or
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_recovery_with_unwrap_or() {
     // Helper function that fails
-    fn may_fail() -> BearDogResult<i32> {
+    fn may_fail() -> Result<i32, BearDogError> {
         Err(BearDogError::validation("Failed"))
     }
 
@@ -530,13 +538,13 @@ fn test_error_recovery_with_unwrap_or() {
 
 /// Tests error recovery with unwrap_or_else
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_recovery_with_unwrap_or_else() {
     // Helper function that fails
-    fn may_fail() -> BearDogResult<String> {
+    fn may_fail() -> Result<String, BearDogError> {
         Err(BearDogError::not_found("Not found".to_string()))
     }
 
@@ -549,13 +557,13 @@ fn test_error_recovery_with_unwrap_or_else() {
 
 /// Tests error recovery with unwrap_or_default
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_recovery_with_unwrap_or_default() {
     // Helper function that fails
-    fn may_fail() -> BearDogResult<Vec<i32>> {
+    fn may_fail() -> Result<Vec<i32>, BearDogError> {
         Err(BearDogError::internal("Failed".to_string()))
     }
 
@@ -568,13 +576,13 @@ fn test_error_recovery_with_unwrap_or_default() {
 
 /// Tests error recovery with match expression
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_recovery_with_match() {
     // Helper function that fails
-    fn may_fail() -> BearDogResult<i32> {
+    fn may_fail() -> Result<i32, BearDogError> {
         Err(BearDogError::validation("Failed"))
     }
 
@@ -587,13 +595,13 @@ fn test_error_recovery_with_match() {
 
 /// Tests error recovery by converting to Option
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_recovery_with_ok() {
     // Helper function that fails
-    fn may_fail() -> BearDogResult<i32> {
+    fn may_fail() -> Result<i32, BearDogError> {
         Err(BearDogError::validation("Failed"))
     }
 
@@ -606,9 +614,9 @@ fn test_error_recovery_with_ok() {
 
 /// Tests retry pattern for error recovery
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_recovery_retry_pattern() {
     use std::sync::atomic::{AtomicU32, Ordering};
@@ -618,7 +626,7 @@ fn test_error_recovery_retry_pattern() {
     let attempt_count = Arc::new(AtomicU32::new(0));
     let attempt_count_clone = Arc::clone(&attempt_count);
 
-    let operation = || -> BearDogResult<String> {
+    let operation = || -> Result<String, BearDogError> {
         let count = attempt_count_clone.fetch_add(1, Ordering::SeqCst);
         if count < 2 {
             Err(BearDogError::system("Timeout".to_string()))
@@ -662,9 +670,9 @@ mod error_helpers {
 
 /// Tests error helper utilities
 ///
-/// TEST_CATEGORY: integration
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: integration
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_helpers() {
     // When: using helper functions

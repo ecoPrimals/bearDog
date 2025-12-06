@@ -2,7 +2,7 @@
 // Focus: Bootstrap process, discovery, configuration, metrics
 
 #[cfg(test)]
-mod bootstrap_tests {
+mod tests {
     use super::super::{BootstrapMetrics, DiscoveryProtocol};
 
     // Note: SelfIdentity tests omitted due to complex external dependencies
@@ -48,7 +48,7 @@ mod bootstrap_tests {
     fn test_bootstrap_metrics_success_rate_calculation() {
         let total_attempts = 100;
         let successful = 75;
-        let success_rate = successful as f64 / total_attempts as f64;
+        let success_rate = f64::from(successful) / f64::from(total_attempts);
 
         let metrics = BootstrapMetrics {
             bootstrap_duration_ms: 5000,
@@ -128,10 +128,11 @@ mod bootstrap_tests {
 
     #[test]
     fn test_bootstrap_metrics_protocol_tracking() {
-        let mut protocols = Vec::new();
-        protocols.push("multicast-dns".to_string());
-        protocols.push("http".to_string());
-        protocols.push("service-mesh".to_string());
+        let protocols = vec![
+            "multicast-dns".to_string(),
+            "http".to_string(),
+            "service-mesh".to_string(),
+        ];
 
         let metrics = BootstrapMetrics {
             bootstrap_duration_ms: 3000,

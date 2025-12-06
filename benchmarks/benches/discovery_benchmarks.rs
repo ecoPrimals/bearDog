@@ -1,4 +1,12 @@
 //! # HSM Discovery Benchmarks
+
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 //!
 //! Comprehensive benchmarks for HSM discovery operations including:
 //! - Network endpoint probing (HTTP/TCP)
@@ -25,10 +33,10 @@ use std::time::Duration;
 
 #[derive(Clone, Debug)]
 struct DiscoveredHsm {
-    _id: String,
-    _hsm_type: String,
-    _endpoint: Option<String>,
-    _capabilities: Vec<String>,
+    id: String,
+    hsm_type: String,
+    endpoint: Option<String>,
+    capabilities: Vec<String>,
 }
 
 #[derive(Clone, Debug)]

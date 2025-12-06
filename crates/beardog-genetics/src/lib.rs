@@ -10,6 +10,9 @@
 //! - **Genetic Spawning**: Dynamic primal generation and evolution
 
 #![deny(unsafe_code)]
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 //! - **Ecosystem Evolution**: Binary pattern elimination and relationship evolution
 //! - **Biometric Entropy**: Human-owned entropy without corporate control
 //!

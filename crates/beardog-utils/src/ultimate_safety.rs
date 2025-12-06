@@ -478,6 +478,7 @@ impl std::fmt::Display for SafetyError {
 
 impl std::error::Error for SafetyError {}
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

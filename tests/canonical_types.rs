@@ -13,9 +13,9 @@ use beardog_types::canonical::{ComponentStatus, HealthStatus};
 
 /// Tests that HealthStatus::Healthy can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_healthy() {
     // Given: a Healthy status
@@ -27,9 +27,9 @@ fn test_health_healthy() {
 
 /// Tests that HealthStatus::Degraded can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_degraded() {
     // Given: a Degraded status
@@ -41,9 +41,9 @@ fn test_health_degraded() {
 
 /// Tests that HealthStatus::Unhealthy can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_unhealthy() {
     // Given: an Unhealthy status
@@ -55,9 +55,9 @@ fn test_health_unhealthy() {
 
 /// Tests that different HealthStatus values are not equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_health_ne() {
     // Then: different health statuses should not be equal
@@ -70,9 +70,9 @@ fn test_health_ne() {
 
 /// Tests that HealthStatus can be cloned/copied
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_health_clone() {
     // Given: a Healthy status
@@ -91,9 +91,9 @@ fn test_health_clone() {
 
 /// Tests that ComponentStatus::Starting can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_starting() {
     // Given: a Starting status
@@ -105,9 +105,9 @@ fn test_component_starting() {
 
 /// Tests that ComponentStatus::Running can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_running() {
     // Given: a Running status
@@ -119,9 +119,9 @@ fn test_component_running() {
 
 /// Tests that ComponentStatus::Stopping can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_stopping() {
     // Given: a Stopping status
@@ -133,9 +133,9 @@ fn test_component_stopping() {
 
 /// Tests that ComponentStatus::Active can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_active() {
     // Given: an Active status
@@ -147,9 +147,9 @@ fn test_component_active() {
 
 /// Tests that ComponentStatus::Inactive can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_inactive() {
     // Given: an Inactive status
@@ -161,9 +161,9 @@ fn test_component_inactive() {
 
 /// Tests that different ComponentStatus values are not equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_component_ne() {
     // Then: different component statuses should not be equal
@@ -176,9 +176,9 @@ fn test_component_ne() {
 
 /// Tests that ComponentStatus can be cloned
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: types
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: types
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_component_clone() {
     // Given: a Running status

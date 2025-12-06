@@ -8,6 +8,11 @@
 //! - System Commands
 //! - Hybrid Intelligence System initialization
 
+#![allow(clippy::float_cmp, clippy::field_reassign_with_default)]
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::doc_markdown, clippy::len_zero)]
+#![allow(clippy::default_trait_access, clippy::used_underscore_binding)]
+
 use crate::ai::hybrid_intelligence::{
     core::{
         DecisionContext, HybridIntelligenceSystem, IntelligenceEvent, IntelligenceEventType,
@@ -266,17 +271,15 @@ fn test_intelligence_event_with_data() {
 
 #[test]
 fn test_intelligence_event_types() {
-    let event_types = vec![
-        IntelligenceEventType::ModelTrained,
-        IntelligenceEventType::PredictionMade,
-        IntelligenceEventType::DecisionMade,
-        IntelligenceEventType::LearningUpdate,
-        IntelligenceEventType::OptimizationCompleted,
-        IntelligenceEventType::AnomalyDetected,
-        IntelligenceEventType::PerformanceThresholdCrossed,
-    ];
-
-    assert_eq!(event_types.len(), 7);
+    // Verify all event type variants exist and can be instantiated
+    let _ = IntelligenceEventType::ModelTrained;
+    let _ = IntelligenceEventType::PredictionMade;
+    let _ = IntelligenceEventType::DecisionMade;
+    let _ = IntelligenceEventType::LearningUpdate;
+    let _ = IntelligenceEventType::OptimizationCompleted;
+    let _ = IntelligenceEventType::AnomalyDetected;
+    let _ = IntelligenceEventType::PerformanceThresholdCrossed;
+    // 7 variants verified above
 }
 
 #[test]
@@ -405,15 +408,13 @@ fn test_intelligence_metrics_serialization() {
 
 #[test]
 fn test_system_command_variants() {
-    let commands = vec![
-        SystemCommand::Start,
-        SystemCommand::Stop,
-        SystemCommand::Restart,
-        SystemCommand::GetStatus,
-        SystemCommand::Reset,
-    ];
-
-    assert_eq!(commands.len(), 5);
+    // Verify all command variants exist and can be instantiated
+    let _ = SystemCommand::Start;
+    let _ = SystemCommand::Stop;
+    let _ = SystemCommand::Restart;
+    let _ = SystemCommand::GetStatus;
+    let _ = SystemCommand::Reset;
+    // 5 variants verified above
 }
 
 #[test]

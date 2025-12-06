@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Rate Limiting & Throttling E2E Tests
 //!
 //! End-to-end tests for API rate limiting, throttling, and quota management

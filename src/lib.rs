@@ -221,6 +221,27 @@ impl BearDogFramework {
         &self.stats
     }
 
+    /// Get framework configuration (zero-copy access)
+    ///
+    /// Returns a borrowed reference to the configuration, avoiding unnecessary clones.
+    /// This is the idiomatic Rust pattern for read-only access to owned data.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use beardog::BearDogFramework;
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let framework = BearDogFramework::new().await.unwrap();
+    /// let config = framework.config();
+    /// println!("Confidence level: {}", config.confidence_level);
+    /// # }
+    /// ```
+    #[must_use]
+    pub const fn config(&self) -> &FrameworkConfig {
+        &self.config
+    }
+
     /// Reset performance statistics
     pub fn reset_stats(&mut self) {
         self.stats = FrameworkStats::default();
@@ -229,6 +250,13 @@ impl BearDogFramework {
 }
 
 /// Result type for `BearDog` operations
+///
+/// Deprecated: Use `Result<T, BearDogError>` directly instead.
+/// See <https://rust-lang.github.io/api-guidelines/future-proofing.html#c-result-alias>
+#[deprecated(
+    since = "3.1.0",
+    note = "Use Result<T, BearDogError> instead. See https://rust-lang.github.io/api-guidelines/future-proofing.html#c-result-alias"
+)]
 pub type BearDogResult<T> = Result<T, BearDogError>;
 
 // Re-exports would go here when the root crate includes ecosystem dependencies
@@ -279,5 +307,22 @@ mod tests {
         assert_eq!(config.confidence_level, 0.99);
         assert_eq!(config.sample_size, 2000);
         assert_eq!(config.timeout, Duration::from_secs(60));
+    }
+
+    #[tokio::test]
+    async fn test_zero_copy_config_access() {
+        let framework = BearDogFramework::new().await.unwrap();
+
+        // Zero-copy config access - no clones!
+        let config_ref1 = framework.config();
+        let config_ref2 = framework.config();
+
+        // Both references point to the same data (zero copy)
+        assert_eq!(config_ref1.confidence_level, 0.95);
+        assert_eq!(config_ref2.confidence_level, 0.95);
+
+        // Verify it's the default config
+        assert_eq!(config_ref1.sample_size, 1000);
+        assert_eq!(config_ref1.timeout, Duration::from_secs(30));
     }
 }

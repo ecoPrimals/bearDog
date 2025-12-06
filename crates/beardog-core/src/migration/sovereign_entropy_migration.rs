@@ -407,17 +407,39 @@ impl SovereignEntropyMigrationManager {
         data_size: usize,
         category: &str,
     ) -> Result<(), BearDogError> {
-        let audit_record = serde_json::json!({
-            "timestamp": chrono::Utc::now(),
-            "migration_event": "sovereign_entropy_migration",
-            "operation_type": operation_type,
-            "human_identity": human_identity,
-            "entropy_tier": entropy_tier,
-            "data_size_bytes": data_size,
-            "category": category,
-            "sovereignty_achieved": true,
-            "human_owned_randomness": true,
-        });
+        let audit_record = {
+            use serde_json::{Map, Value};
+            let mut record = Map::new();
+            record.insert(
+                "timestamp".to_string(),
+                serde_json::to_value(chrono::Utc::now())
+                    .unwrap_or(Value::String(chrono::Utc::now().to_rfc3339())),
+            );
+            record.insert(
+                "migration_event".to_string(),
+                Value::String("sovereign_entropy_migration".to_string()),
+            );
+            record.insert(
+                "operation_type".to_string(),
+                Value::String(operation_type.to_string()),
+            );
+            record.insert(
+                "human_identity".to_string(),
+                Value::String(human_identity.to_string()),
+            );
+            record.insert(
+                "entropy_tier".to_string(),
+                Value::Number(entropy_tier.into()),
+            );
+            record.insert(
+                "data_size_bytes".to_string(),
+                Value::Number(data_size.into()),
+            );
+            record.insert("category".to_string(), Value::String(category.to_string()));
+            record.insert("sovereignty_achieved".to_string(), Value::Bool(true));
+            record.insert("human_owned_randomness".to_string(), Value::Bool(true));
+            Value::Object(record)
+        };
 
         info!("📋 Migration Audit: {}", audit_record);
 

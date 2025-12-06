@@ -3,6 +3,8 @@
 //! Created: October 27, 2025
 //! Purpose: Expand test coverage for beardog-threat core functionality
 
+#![allow(unused_imports, unused_variables, dead_code, clippy::all)]
+
 use crate::threat::types::incidents::{IncidentStatus, SecurityIncident};
 use crate::threat::types::{DetectionMethod, ThreatSeverity, ThreatStatus, ThreatType};
 

@@ -8,7 +8,7 @@ use crate::ecosystem_integration::{
     ProductionConfig, ProductionUniversalAdapter, UniversalAdapterConfig,
 };
 use beardog_errors::BearDogError;
-use serde_json::json;
+// json! macro no longer used - using explicit JSON construction
 use tracing::info;
 
 impl BearDogCore {
@@ -28,17 +28,31 @@ impl BearDogCore {
     pub(crate) fn start_ai_first_api_server() -> Result<(), BearDogError> {
         info!("🤖 Starting AI-first API server via universal adapter");
 
-        let _payload = json!({
-            "type": "ai_first",
-            "capabilities": ["routing", "load_balancing", "versioning"]
-        });
+        let _payload = {
+            use serde_json::{Map, Value};
+            let mut payload = Map::new();
+            payload.insert("type".to_string(), Value::String("ai_first".to_string()));
+            payload.insert(
+                "capabilities".to_string(),
+                Value::Array(vec![
+                    Value::String("routing".to_string()),
+                    Value::String("load_balancing".to_string()),
+                    Value::String("versioning".to_string()),
+                ]),
+            );
+            Value::Object(payload)
+        };
 
         // Create proper config for ProductionUniversalAdapter
         let config = UniversalAdapterConfig::default();
         let production_config = ProductionConfig::default();
         let adapter = ProductionUniversalAdapter::new(config, production_config);
 
-        adapter.execute_on_system("api_gateway", "start_server", json!({}))?;
+        adapter.execute_on_system(
+            "api_gateway",
+            "start_server",
+            serde_json::Value::Object(serde_json::Map::new()),
+        )?;
         Ok(())
     }
 
@@ -58,16 +72,30 @@ impl BearDogCore {
     pub(crate) fn start_universal_api_gateway() -> Result<(), BearDogError> {
         info!("🌐 Starting universal API gateway via adapter");
 
-        let _payload = json!({
-            "features": ["universal_routing", "service_mesh", "versioning"]
-        });
+        let _payload = {
+            use serde_json::{Map, Value};
+            let mut payload = Map::new();
+            payload.insert(
+                "features".to_string(),
+                Value::Array(vec![
+                    Value::String("universal_routing".to_string()),
+                    Value::String("service_mesh".to_string()),
+                    Value::String("versioning".to_string()),
+                ]),
+            );
+            Value::Object(payload)
+        };
 
         // Create proper config for ProductionUniversalAdapter
         let config = UniversalAdapterConfig::default();
         let production_config = ProductionConfig::default();
         let adapter = ProductionUniversalAdapter::new(config, production_config);
 
-        adapter.execute_on_system("service_mesh", "initialize_gateway", json!({}))?;
+        adapter.execute_on_system(
+            "service_mesh",
+            "initialize_gateway",
+            serde_json::Value::Object(serde_json::Map::new()),
+        )?;
         Ok(())
     }
 
@@ -87,16 +115,30 @@ impl BearDogCore {
     pub(crate) fn initialize_service_mesh() -> Result<(), BearDogError> {
         info!("🕸️ Initializing service mesh via universal adapter");
 
-        let _payload = json!({
-            "capabilities": ["discovery", "routing", "load_balancing"]
-        });
+        let _payload = {
+            use serde_json::{Map, Value};
+            let mut payload = Map::new();
+            payload.insert(
+                "capabilities".to_string(),
+                Value::Array(vec![
+                    Value::String("discovery".to_string()),
+                    Value::String("routing".to_string()),
+                    Value::String("load_balancing".to_string()),
+                ]),
+            );
+            Value::Object(payload)
+        };
 
         // Create proper config for ProductionUniversalAdapter
         let config = UniversalAdapterConfig::default();
         let production_config = ProductionConfig::default();
         let adapter = ProductionUniversalAdapter::new(config, production_config);
 
-        adapter.execute_on_system("service_mesh", "initialize", json!({}))?;
+        adapter.execute_on_system(
+            "service_mesh",
+            "initialize",
+            serde_json::Value::Object(serde_json::Map::new()),
+        )?;
         Ok(())
     }
 }

@@ -1,8 +1,8 @@
 //! Compliance Validation Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: compliance
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: compliance
+//! `TEST_PRIORITY`: critical
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;

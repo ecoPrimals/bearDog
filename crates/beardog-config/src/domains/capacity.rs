@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 pub struct CapacityConfig {
     /// Default channel buffer size for async channels
     ///
-    /// Used when creating tokio::sync::mpsc channels throughout the system.
+    /// Used when creating `tokio::sync::mpsc` channels throughout the system.
     /// Larger values reduce backpressure but increase memory usage.
     ///
     /// Default: 1000
@@ -112,6 +112,7 @@ impl CapacityConfig {
     ///
     /// Production deployments should tune these values via environment
     /// variables or configuration files based on actual load patterns.
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             default_channel_buffer: 1000,

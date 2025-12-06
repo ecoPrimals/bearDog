@@ -28,7 +28,7 @@ impl SoftwareEntropyCollector {
         rand::thread_rng()
             .try_fill_bytes(&mut entropy)
             .map_err(|e| BearDogError::security(
-                format!("Failed to collect entropy: {}", e),
+                format!("Failed to collect entropy: {e}"),
                 e.into()
             ))?;
         Ok(entropy)

@@ -112,7 +112,7 @@ impl ExternalFunctionRegistry { /// Create a new registry
             metadata: LibraryMetadata {,
                 /// Perfect field with comprehensive validation
                 version: Cow::Borrowed("1.0.0"),
-                description: format!("Library loaded from {}", library_path),
+                description: format!("Library loaded from {library_path}"),
                 /// Perfect field with comprehensive validation
                 author: Cow::Borrowed(  Unknown""),
                 /// Perfect field with comprehensive validation

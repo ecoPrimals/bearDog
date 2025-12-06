@@ -184,7 +184,7 @@ fn test_migration_phase_serialization() {
 #[test]
 fn test_migration_phase_clone() {
     let phase = MigrationPhase::NeuralNetworkWeights;
-    let cloned = phase.clone();
+    let cloned = phase; // Copy trait, no need to clone
 
     assert_eq!(phase, cloned);
 }
@@ -233,9 +233,11 @@ fn test_migration_statistics_with_data() {
 
 #[test]
 fn test_migration_statistics_serialization() {
-    let mut stats = MigrationStatistics::default();
-    stats.total_calls_migrated = 100;
-    stats.success_rate = 0.95;
+    let stats = MigrationStatistics {
+        total_calls_migrated: 100,
+        success_rate: 0.95,
+        ..Default::default()
+    };
 
     let serialized = serde_json::to_string(&stats).expect("Should serialize");
     let deserialized: MigrationStatistics =
@@ -329,9 +331,11 @@ fn test_migration_workflow_simulation() {
     assert_eq!(key_gen_tier, Some(&3), "Key generation requires tier 3");
 
     // Phase 4: Initialize statistics tracking
-    let mut stats = MigrationStatistics::default();
-    stats.total_calls_migrated = 100;
-    stats.success_rate = 0.98;
+    let stats = MigrationStatistics {
+        total_calls_migrated: 100,
+        success_rate: 0.98,
+        ..Default::default()
+    };
 
     assert!(stats.success_rate > 0.95, "High success rate expected");
 }

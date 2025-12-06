@@ -13,6 +13,9 @@ pub mod provider;
 pub mod providers;
 pub mod requirements;
 
+#[cfg(test)]
+mod algorithms_tests;
+
 // Re-exports for convenience
 pub use algorithms::*;
 pub use capabilities::*;

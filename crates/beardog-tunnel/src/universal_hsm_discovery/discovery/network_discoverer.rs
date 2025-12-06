@@ -165,13 +165,14 @@ impl NetworkDiscoverer {
     /// Discover HSMs via mDNS/DNS-SD
     ///
     /// # Architecture Note
-    /// Per "Discover, Don't Implement" principle, this delegates to Songbird primal
-    /// for actual network protocol implementation (mDNS, DNS-SD, Consul, etcd, etc.).
+    /// Per "Discover, Don't Implement" principle, this delegates to any primal
+    /// with `ServiceDiscovery` capability for network protocol implementation
+    /// (mDNS, DNS-SD, Consul, etcd, etc.).
     ///
     /// # Errors
     /// Returns an error if discovery fails
     async fn discover_via_mdns(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        debug!("Delegating mDNS/DNS-SD discovery to Songbird ecosystem");
+        debug!("Delegating mDNS/DNS-SD discovery to ecosystem via capability discovery");
 
         // ✅ ARCHITECTURAL PATTERN: Capability-based discovery
         //
@@ -183,13 +184,14 @@ impl NetworkDiscoverer {
         // - No protocol duplication
         // - Universal adapter handles network complexity
         // - BearDog focuses on HSM abstraction
-        // - Capability-based (discovers ANY network primal, not just Songbird)
+        // - Capability-based (discovers ANY primal with ServiceDiscovery capability)
+        // - Primal-agnostic: works with any ecosystem member providing this capability
         //
         // See: crates/beardog-adapters/src/universal/primal_capability_adapter.rs
         //
         // PHASE-2: Wire to UniversalPrimalAdapter::discover_network_primals()
         // For now, return empty to maintain interface compatibility
-        
+
         debug!("mDNS discovery will be available via UniversalPrimalAdapter");
         Ok(Vec::new())
     }
@@ -216,7 +218,7 @@ impl NetworkDiscoverer {
         // Alternatives:
         // - Use known endpoints (self.discover_known_endpoints())
         // - Use mDNS/DNS-SD (service advertisement, not scanning)
-        // - Use Songbird's service registry (ecosystem discovery)
+        // - Use ecosystem service registry via capability discovery
         //
         // If network scanning is required, it should:
         // - Be explicitly enabled in config
@@ -249,7 +251,7 @@ impl NetworkDiscoverer {
             .timeout(self.config.probe_timeout)
             .danger_accept_invalid_certs(false) // Security: validate certs
             .build()
-            .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {e}")))?;
 
         // Try health endpoint first
         match tokio::time::timeout(
@@ -602,4 +604,6 @@ mod tests {
         assert_eq!(discoverer.config().known_endpoints.len(), 2);
     }
 }
+
+
 

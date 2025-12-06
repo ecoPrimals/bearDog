@@ -252,7 +252,7 @@ pub async fn ctaphid_init(device: &hidapi::HidDevice) -> Result<u32, BearDogErro
     // Send packet
     device
         .write(&packet)
-        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT write failed: {e}")))?;
 
     debug!("📤 Sent CTAPHID_INIT");
 
@@ -260,7 +260,7 @@ pub async fn ctaphid_init(device: &hidapi::HidDevice) -> Result<u32, BearDogErro
     let mut response = vec![0u8; 64];
     let bytes_read = device
         .read_timeout(&mut response, 5000)
-        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
 
     if bytes_read == 0 {
         return Err(BearDogError::system("CTAPHID_INIT timeout".to_string()));
@@ -357,7 +357,7 @@ pub async fn send_ctap2_command(
     // Send the packet
     device
         .write(&hid_packet)
-        .map_err(|e| BearDogError::system(format!("HID write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("HID write failed: {e}")))?;
 
     debug!("✅ Sent {} bytes to device", hid_packet.len());
 
@@ -373,7 +373,7 @@ pub async fn send_ctap2_command(
                 &mut response_buf,
                 HID_READ_TIMEOUT_MS.try_into().unwrap_or(1000),
             )
-            .map_err(|e| BearDogError::system(format!("HID read failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("HID read failed: {e}")))?;
 
         if bytes_read == 0 {
             debug!(
@@ -489,7 +489,7 @@ pub async fn ctap2_get_info(device: &hidapi::HidDevice) -> Result<Ctap2DeviceInf
 
     // Parse CBOR response
     let cbor_value: CborValue = ciborium::from_reader(&response_bytes[..])
-        .map_err(|e| BearDogError::system(format!("CBOR parse error: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("CBOR parse error: {e}")))?;
 
     // GetInfo response is a CBOR map
     let map = match cbor_value {

@@ -1,3 +1,5 @@
+#![allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, clippy::field_reassign_with_default, clippy::manual_range_contains, unused_variables, dead_code, clippy::clone_on_copy, clippy::single_char_pattern, clippy::no_effect_underscore_binding, clippy::module_inception, clippy::assertions_on_constants, clippy::absurd_extreme_comparisons, unused_comparisons, clippy::nonminimal_bool)]
+
 use super::*;
 use std::collections::HashMap;
 

@@ -17,7 +17,7 @@ use std::env;
 
 /// Helper to check if hardware tests should run
 fn should_run_hardware_tests() -> bool {
-    env::var("BEARDOG_HARDWARE_TESTS").is_ok() || cfg!(feature = "hardware-tests")
+    env::var("BEARDOG_HARDWARE_TESTS").is_ok()
 }
 
 /// Get the default PKCS#11 library path

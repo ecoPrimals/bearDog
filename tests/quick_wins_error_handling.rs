@@ -14,9 +14,9 @@ use beardog_errors::BearDogError;
 
 /// Tests that validation errors can be created with correct type
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_beardog_error_creation() {
     // Given: a validation error message
@@ -31,9 +31,9 @@ fn test_beardog_error_creation() {
 
 /// Tests that system errors can be created with correct type
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_beardog_error_system() {
     // Given: a system error message
@@ -48,9 +48,9 @@ fn test_beardog_error_system() {
 
 /// Tests that business errors can be created with correct type
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_beardog_error_business() {
     // Given: a business error message
@@ -69,9 +69,9 @@ fn test_beardog_error_business() {
 
 /// Tests that errors propagate correctly through Result chains
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_result_error_propagation() -> Result<(), BearDogError> {
     // Helper function that may fail
@@ -101,9 +101,9 @@ fn test_result_error_propagation() -> Result<(), BearDogError> {
 
 /// Tests that errors implement Display trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_display() {
     // Given: an error
@@ -121,9 +121,9 @@ fn test_error_display() {
 
 /// Tests that errors implement Debug trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_debug() {
     // Given: an error
@@ -142,9 +142,9 @@ fn test_error_debug() {
 
 /// Tests that errors can be converted to strings
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_from_string() {
     // Given: an error
@@ -162,9 +162,9 @@ fn test_error_from_string() {
 
 /// Tests that multiple error types can be created and stored
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_multiple_error_types() {
     // Given: different error types

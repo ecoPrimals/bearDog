@@ -229,7 +229,18 @@ impl EcosystemListener {
         let task = tokio::spawn(async move {
             info!("🔍 mDNS listener active - discovering primals via multicast DNS");
 
+            // Modern interval-based polling (replaces sleep in loop)
+            let poll_interval = std::env::var("BEARDOG_MDNS_POLL_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse::<u64>().ok())
+                .unwrap_or(5);
+
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(poll_interval));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             loop {
+                interval.tick().await;
+
                 // Listen for mDNS announcements
                 match Self::listen_mdns_announcements().await {
                     Ok(announcements) => {
@@ -249,13 +260,6 @@ impl EcosystemListener {
                         debug!("mDNS listening error (expected): {}", e);
                     }
                 }
-
-                // Wait before next poll (configurable via BEARDOG_MDNS_POLL_INTERVAL_SECS, default: 5s)
-                let poll_interval = std::env::var("BEARDOG_MDNS_POLL_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|v| v.parse::<u64>().ok())
-                    .unwrap_or(5);
-                tokio::time::sleep(tokio::time::Duration::from_secs(poll_interval)).await;
             }
         });
 
@@ -271,7 +275,18 @@ impl EcosystemListener {
         let task = tokio::spawn(async move {
             info!("🌐 HTTP discovery listener active - polling discovery endpoints");
 
+            // Modern interval-based polling (replaces sleep in loop)
+            let poll_interval = std::env::var("BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse::<u64>().ok())
+                .unwrap_or(10);
+
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(poll_interval));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             loop {
+                interval.tick().await;
+
                 // Poll HTTP discovery endpoints
                 match Self::poll_http_discovery().await {
                     Ok(announcements) => {
@@ -291,13 +306,6 @@ impl EcosystemListener {
                         debug!("HTTP discovery error (expected): {}", e);
                     }
                 }
-
-                // Wait before next poll (configurable via BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS, default: 10s)
-                let poll_interval = std::env::var("BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|v| v.parse::<u64>().ok())
-                    .unwrap_or(10);
-                tokio::time::sleep(tokio::time::Duration::from_secs(poll_interval)).await;
             }
         });
 
@@ -313,7 +321,19 @@ impl EcosystemListener {
         let task = tokio::spawn(async move {
             info!("🔧 Environment listener active - monitoring environment variables");
 
+            // Modern interval-based polling (replaces sleep in loop)
+            let check_interval = std::env::var("BEARDOG_ENV_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse::<u64>().ok())
+                .unwrap_or(15);
+
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(check_interval));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             loop {
+                interval.tick().await;
+
                 // Check environment variables for primal announcements
                 match Self::check_environment_announcements().await {
                     Ok(announcements) => {
@@ -333,13 +353,6 @@ impl EcosystemListener {
                         debug!("Environment discovery error (expected): {}", e);
                     }
                 }
-
-                // Wait before next check (configurable via BEARDOG_ENV_CHECK_INTERVAL_SECS, default: 15s)
-                let check_interval = std::env::var("BEARDOG_ENV_CHECK_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|v| v.parse::<u64>().ok())
-                    .unwrap_or(15);
-                tokio::time::sleep(tokio::time::Duration::from_secs(check_interval)).await;
             }
         });
 
@@ -355,7 +368,19 @@ impl EcosystemListener {
         let task = tokio::spawn(async move {
             info!("🕸️ Service mesh listener active - discovering via service mesh");
 
+            // Modern interval-based polling (replaces sleep in loop)
+            let discovery_interval = std::env::var("BEARDOG_MESH_DISCOVERY_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse::<u64>().ok())
+                .unwrap_or(20);
+
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(discovery_interval));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             loop {
+                interval.tick().await;
+
                 // Check service mesh for primal announcements
                 let announcements = Self::discover_service_mesh_primals();
                 for announcement in announcements {
@@ -369,13 +394,6 @@ impl EcosystemListener {
                         warn!("Failed to process service mesh announcement: {}", e);
                     }
                 }
-
-                // Wait before next discovery (configurable via BEARDOG_MESH_DISCOVERY_INTERVAL_SECS, default: 20s)
-                let discovery_interval = std::env::var("BEARDOG_MESH_DISCOVERY_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|v| v.parse::<u64>().ok())
-                    .unwrap_or(20);
-                tokio::time::sleep(tokio::time::Duration::from_secs(discovery_interval)).await;
             }
         });
 
@@ -559,6 +577,7 @@ impl EcosystemListener {
     /// Process primal announcement
     /// Processes `primal_announcement`
     #[allow(clippy::cognitive_complexity)]
+    #[allow(clippy::too_many_lines)]
     async fn process_primal_announcement(
         announcement: PrimalAnnouncement,
         discovered_primals: &Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
@@ -754,6 +773,14 @@ impl EcosystemListener {
     }
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
 #[cfg(test)]
 mod tests {
     use super::*;

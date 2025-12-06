@@ -21,6 +21,9 @@
 //! - **User Authentication**: Biometric/PIN binding
 //! - **Hardware Entropy**: True random numbers from hardware RNG
 
+// Allow unsafe code for JNI bindings to Android Java APIs
+#![allow(unsafe_code)]
+
 use beardog_errors::BearDogError;
 use tracing::{debug, info, warn};
 
@@ -36,65 +39,54 @@ use std::sync::Once;
 // ============================================================================
 
 #[cfg(target_os = "android")]
-static INIT: Once = Once::new();
+use std::sync::OnceLock;
 
 #[cfg(target_os = "android")]
-static mut JAVA_VM: Option<JavaVM> = None;
+static JAVA_VM: OnceLock<JavaVM> = OnceLock::new();
 
 /// Initialize JNI environment
 ///
 /// This must be called once before using any JNI functions.
 /// On Android, this is typically called from the native activity initialization.
+///
+/// Now 100% safe using OnceLock - no unsafe code required!
 #[cfg(target_os = "android")]
 pub fn init_jni(env: JNIEnv) -> Result<(), BearDogError> {
-    INIT.call_once(|| {
-        info!("🔧 Initializing JNI bridge for Android StrongBox");
+    info!("🔧 Initializing JNI bridge for Android StrongBox");
 
-        match env.get_java_vm() {
-            Ok(vm) => {
-                // SAFETY: This is safe because:
-                // 1. Protected by Once::call_once - written exactly once during initialization
-                // 2. All subsequent accesses in get_env() are read-only via &JAVA_VM
-                // 3. No data races possible - the write happens-before all reads (Once guarantee)
-                // 4. Standard pattern for JNI initialization in Rust (see jni-rs documentation)
-                // 5. JavaVM is thread-safe and can be shared across threads (JNI specification)
-                unsafe {
-                    JAVA_VM = Some(vm);
-                }
-                info!("✅ JNI bridge initialized successfully");
-            }
-            Err(e) => {
-                warn!("❌ Failed to get JavaVM: {}", e);
+    match env.get_java_vm() {
+        Ok(vm) => {
+            // Safe! OnceLock handles all synchronization
+            // Only the first call succeeds, subsequent calls are ignored
+            if JAVA_VM.set(vm).is_ok() {
+                info!("✅ JNI bridge initialized successfully (100% safe with OnceLock)");
+            } else {
+                info!("ℹ️  JNI already initialized");
             }
         }
-    });
+        Err(e) => {
+            warn!("❌ Failed to get JavaVM: {}", e);
+            return Err(BearDogError::system(format!("Failed to get JavaVM: {e}")));
+        }
+    }
 
     Ok(())
 }
 
 /// Get JNI environment
 ///
-/// # Safety
-///
-/// This function accesses the static JAVA_VM which must be initialized via init_jni()
-/// before calling this function. The function returns an error if not initialized.
+/// This function is now 100% safe using OnceLock!
+/// No unsafe code required - the Rust compiler guarantees thread safety.
 #[cfg(target_os = "android")]
 fn get_env() -> Result<JNIEnv<'static>, BearDogError> {
-    // SAFETY: This is safe because:
-    // 1. JAVA_VM is initialized once via init_jni() and never mutated afterward
-    // 2. The reference &JAVA_VM is read-only - no mutable access after initialization
-    // 3. JavaVM::attach_current_thread() is safe once VM is initialized (JNI guarantee)
-    // 4. We return an error if JAVA_VM is None (defensive programming)
-    // 5. JavaVM is designed to be accessed from multiple threads (JNI specification)
-    unsafe {
-        match &JAVA_VM {
-            Some(vm) => vm
-                .attach_current_thread()
-                .map_err(|e| BearDogError::system(format!("Failed to attach JNI thread: {}", e))),
-            None => Err(BearDogError::system(
-                "JNI not initialized. Call init_jni() first.".to_string(),
-            )),
-        }
+    // Safe! OnceLock provides thread-safe access
+    match JAVA_VM.get() {
+        Some(vm) => vm
+            .attach_current_thread()
+            .map_err(|e| BearDogError::system(format!("Failed to attach JNI thread: {e}"))),
+        None => Err(BearDogError::system(
+            "JNI not initialized. Call init_jni() first.".to_string(),
+        )),
     }
 }
 

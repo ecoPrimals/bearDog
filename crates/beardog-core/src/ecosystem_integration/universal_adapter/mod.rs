@@ -51,3 +51,6 @@ pub use types::*;
 
 // Re-export canonical connection pool config
 pub use beardog_types::canonical::config::domains::network::ConnectionPoolConfig;
+
+#[cfg(test)]
+mod tests;

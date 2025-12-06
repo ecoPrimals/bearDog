@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 // Comprehensive tests for AI optimization modules
 //
 // This test suite provides extensive coverage for AI-powered optimization.

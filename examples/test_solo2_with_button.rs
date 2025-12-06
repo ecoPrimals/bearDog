@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 //! Solo 2 Button Press Test
 //!
 //! This test will prompt you to press the button and see if GetInfo responds.

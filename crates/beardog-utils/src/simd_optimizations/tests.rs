@@ -1,5 +1,13 @@
 //! Tests for SIMD optimizations
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 use super::*;
 use beardog_errors::BearDogError;
 

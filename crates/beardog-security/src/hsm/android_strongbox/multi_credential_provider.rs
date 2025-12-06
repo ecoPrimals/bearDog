@@ -343,9 +343,10 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
         credential_id: &str,
     ) -> Result<CredentialInfo, Self::Error> {
         let creds = self.credentials.read().await;
-        creds.get(credential_id).cloned().ok_or_else(|| {
-            BearDogError::system(format!("Credential '{}' not found", credential_id))
-        })
+        creds
+            .get(credential_id)
+            .cloned()
+            .ok_or_else(|| BearDogError::system(format!("Credential '{credential_id}' not found")))
     }
 
     async fn sign_with_credential(

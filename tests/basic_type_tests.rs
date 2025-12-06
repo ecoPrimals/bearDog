@@ -7,9 +7,9 @@ use beardog_types::canonical::{ComponentStatus, HealthStatus};
 
 /// Tests that HealthStatus::Healthy can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_status_healthy() {
     let status = HealthStatus::Healthy;
@@ -18,9 +18,9 @@ fn test_health_status_healthy() {
 
 /// Tests that HealthStatus::Degraded can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_status_degraded() {
     let status = HealthStatus::Degraded;
@@ -29,9 +29,9 @@ fn test_health_status_degraded() {
 
 /// Tests that HealthStatus::Unhealthy can be instantiated and compared
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_status_unhealthy() {
     let status = HealthStatus::Unhealthy;
@@ -40,9 +40,9 @@ fn test_health_status_unhealthy() {
 
 /// Tests that identical HealthStatus values are equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_health_status_equality() {
     let s1 = HealthStatus::Healthy;
@@ -52,9 +52,9 @@ fn test_health_status_equality() {
 
 /// Tests that different HealthStatus values are not equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_health_status_inequality() {
     let s1 = HealthStatus::Healthy;
@@ -64,9 +64,9 @@ fn test_health_status_inequality() {
 
 /// Tests that HealthStatus implements Copy trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_health_status_clone() {
     let status = HealthStatus::Healthy;
@@ -76,9 +76,9 @@ fn test_health_status_clone() {
 
 /// Tests that ComponentStatus::Starting can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_status_starting() {
     let status = ComponentStatus::Starting;
@@ -87,9 +87,9 @@ fn test_component_status_starting() {
 
 /// Tests that ComponentStatus::Running can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_status_running() {
     let status = ComponentStatus::Running;
@@ -98,9 +98,9 @@ fn test_component_status_running() {
 
 /// Tests that ComponentStatus::Stopping can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_status_stopping() {
     let status = ComponentStatus::Stopping;
@@ -109,9 +109,9 @@ fn test_component_status_stopping() {
 
 /// Tests that ComponentStatus::Active can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_status_active() {
     let status = ComponentStatus::Active;
@@ -120,9 +120,9 @@ fn test_component_status_active() {
 
 /// Tests that ComponentStatus::Inactive can be instantiated
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_component_status_inactive() {
     let status = ComponentStatus::Inactive;
@@ -131,9 +131,9 @@ fn test_component_status_inactive() {
 
 /// Tests that identical ComponentStatus values are equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_component_status_equality() {
     let s1 = ComponentStatus::Running;
@@ -143,9 +143,9 @@ fn test_component_status_equality() {
 
 /// Tests that different ComponentStatus values are not equal
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_component_status_inequality() {
     let s1 = ComponentStatus::Running;
@@ -155,9 +155,9 @@ fn test_component_status_inequality() {
 
 /// Tests that ComponentStatus implements Clone trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_component_status_clone() {
     let status = ComponentStatus::Running;
@@ -167,9 +167,9 @@ fn test_component_status_clone() {
 
 /// Tests that HealthStatus implements Debug trait
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: low
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: low
 #[test]
 fn test_health_status_debug() {
     let status = HealthStatus::Healthy;
@@ -179,9 +179,9 @@ fn test_health_status_debug() {
 
 /// Tests that ComponentStatus implements Debug trait
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: low
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: low
 #[test]
 fn test_component_status_debug() {
     let status = ComponentStatus::Running;
@@ -191,9 +191,9 @@ fn test_component_status_debug() {
 
 /// Tests that HealthStatus can be stored in collections
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_health_status_in_vec() {
     let statuses = [
@@ -206,9 +206,9 @@ fn test_health_status_in_vec() {
 
 /// Tests that ComponentStatus can be stored in collections
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_component_status_in_vec() {
     let statuses = [
@@ -221,9 +221,9 @@ fn test_component_status_in_vec() {
 
 /// Tests that HealthStatus can be used in Option types
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_health_status_in_option() {
     let maybe_status: Option<HealthStatus> = Some(HealthStatus::Healthy);
@@ -232,9 +232,9 @@ fn test_health_status_in_option() {
 
 /// Tests that ComponentStatus can be used in Option types
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: medium
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: medium
 #[test]
 fn test_component_status_in_option() {
     let maybe_status: Option<ComponentStatus> = Some(ComponentStatus::Running);
@@ -243,13 +243,14 @@ fn test_component_status_in_option() {
 
 /// Tests component status lifecycle transitions
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_status_transitions() {
     // Given: a component starting
     let mut status = ComponentStatus::Starting;
+    assert_eq!(status, ComponentStatus::Starting);
 
     // When: transitioning to running
     status = ComponentStatus::Running;
@@ -262,13 +263,14 @@ fn test_status_transitions() {
 
 /// Tests health status degradation sequence
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: core
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: core
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_health_degradation() {
     // Given: a healthy system
     let mut health = HealthStatus::Healthy;
+    assert_eq!(health, HealthStatus::Healthy);
 
     // When: health degrades
     health = HealthStatus::Degraded;

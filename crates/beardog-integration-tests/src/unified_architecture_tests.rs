@@ -20,7 +20,6 @@
 //! - **Migration Integration**: Compatibility during migration
 //! - **End-to-End Integration**: Complete workflow validation
 
-use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::providers_unified::{
     consolidated_registry::{ConsolidatedProviderRegistry, RegistryConfig},
     ecosystem_integration::{EcosystemIntegrator, IntegrationConfig},
@@ -146,12 +145,12 @@ pub enum TestCategory {
 
 impl UnifiedArchitectureTestSuite {
     /// Create new test suite
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self> {
         Self::with_config(TestConfig::default()).await
     }
 
     /// Create test suite with custom configuration
-    pub async fn with_config(config: TestConfig) -> BearDogResult<Self> {
+    pub async fn with_config(config: TestConfig) -> Result<Self> {
         info!("Initializing unified architecture test suite");
 
         let registry = Arc::new(ConsolidatedProviderRegistry::new(RegistryConfig::default()));
@@ -345,7 +344,7 @@ impl UnifiedArchitectureTestSuite {
 
     // Individual test implementations
 
-    async fn test_provider_registration(&self) -> BearDogResult<()> {
+    async fn test_provider_registration(&self) -> Result<()> {
         debug!("Testing provider registration");
 
         // Create test HSM provider
@@ -367,7 +366,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_provider_discovery(&self) -> BearDogResult<()> {
+    async fn test_provider_discovery(&self) -> Result<()> {
         debug!("Testing provider discovery");
 
         // Register multiple providers
@@ -385,7 +384,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_provider_health_monitoring(&self) -> BearDogResult<()> {
+    async fn test_provider_health_monitoring(&self) -> Result<()> {
         debug!("Testing provider health monitoring");
 
         // Register provider
@@ -400,7 +399,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_concurrent_provider_operations(&self) -> BearDogResult<()> {
+    async fn test_concurrent_provider_operations(&self) -> Result<()> {
         debug!("Testing concurrent provider operations");
 
         // Create multiple concurrent registration tasks
@@ -434,7 +433,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_zero_cost_dispatch(&mut self) -> BearDogResult<()> {
+    async fn test_zero_cost_dispatch(&mut self) -> Result<()> {
         debug!("Testing zero-cost enum dispatch");
 
         // Add security handler to router
@@ -462,7 +461,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_capability_matching(&self) -> BearDogResult<()> {
+    async fn test_capability_matching(&self) -> Result<()> {
         debug!("Testing capability matching accuracy");
 
         // Test capability matching logic
@@ -483,7 +482,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_handler_priority_resolution(&mut self) -> BearDogResult<()> {
+    async fn test_handler_priority_resolution(&mut self) -> Result<()> {
         debug!("Testing handler priority resolution");
 
         // Add multiple handlers with different priorities
@@ -520,7 +519,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_error_handling_fallback(&mut self) -> BearDogResult<()> {
+    async fn test_error_handling_fallback(&mut self) -> Result<()> {
         debug!("Testing error handling and fallback");
 
         // Create request for unsupported capability
@@ -537,7 +536,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_configuration_loading(&self) -> BearDogResult<()> {
+    async fn test_configuration_loading(&self) -> Result<()> {
         debug!("Testing configuration loading");
 
         // Test would load actual configuration
@@ -545,7 +544,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_environment_overrides(&self) -> BearDogResult<()> {
+    async fn test_environment_overrides(&self) -> Result<()> {
         debug!("Testing environment overrides");
 
         // Test would verify environment variable overrides
@@ -553,7 +552,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_configuration_validation(&self) -> BearDogResult<()> {
+    async fn test_configuration_validation(&self) -> Result<()> {
         debug!("Testing configuration validation");
 
         // Test would verify configuration validation logic
@@ -561,7 +560,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_registry_dispatch_integration(&self) -> BearDogResult<()> {
+    async fn test_registry_dispatch_integration(&self) -> Result<()> {
         debug!("Testing provider registry + capability dispatch integration");
 
         // Test integration between registry and dispatch systems
@@ -569,7 +568,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_end_to_end_workflow(&self) -> BearDogResult<()> {
+    async fn test_end_to_end_workflow(&self) -> Result<()> {
         debug!("Testing end-to-end workflow");
 
         // Test complete workflow from request to response
@@ -577,14 +576,14 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_error_propagation(&self) -> BearDogResult<()> {
+    async fn test_error_propagation(&self) -> Result<()> {
         debug!("Testing error propagation across components");
 
         // Test that errors propagate correctly through the system
         Ok(())
     }
 
-    async fn test_throughput_under_load(&self) -> BearDogResult<()> {
+    async fn test_throughput_under_load(&self) -> Result<()> {
         debug!("Testing throughput under load");
 
         if !self.config.enable_load_tests {
@@ -616,7 +615,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_memory_efficiency(&self) -> BearDogResult<()> {
+    async fn test_memory_efficiency(&self) -> Result<()> {
         debug!("Testing memory efficiency");
 
         // Test memory usage patterns
@@ -624,14 +623,14 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_latency_consistency(&self) -> BearDogResult<()> {
+    async fn test_latency_consistency(&self) -> Result<()> {
         debug!("Testing latency consistency");
 
         // Test latency consistency under various conditions
         Ok(())
     }
 
-    async fn test_ecosystem_integration(&self) -> BearDogResult<()> {
+    async fn test_ecosystem_integration(&self) -> Result<()> {
         debug!("Testing ecosystem integration");
 
         // Test ecosystem integrator functionality
@@ -643,7 +642,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_provider_migration(&self) -> BearDogResult<()> {
+    async fn test_provider_migration(&self) -> Result<()> {
         debug!("Testing provider migration");
 
         // Test provider migration functionality
@@ -656,7 +655,7 @@ impl UnifiedArchitectureTestSuite {
         Ok(())
     }
 
-    async fn test_backward_compatibility(&self) -> BearDogResult<()> {
+    async fn test_backward_compatibility(&self) -> Result<()> {
         debug!("Testing backward compatibility");
 
         // Test backward compatibility during migration
@@ -672,7 +671,7 @@ impl UnifiedArchitectureTestSuite {
         test_fn: F,
     ) where
         F: FnOnce() -> Fut,
-        Fut: std::future::Future<Output = BearDogResult<()>>,
+        Fut: std::future::Future<Output = Result<()>>,
     {
         results.total_tests += 1;
         

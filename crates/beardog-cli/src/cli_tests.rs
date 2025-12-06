@@ -1,10 +1,11 @@
-// CLI Tests for BearDog
-// Focus: Command parsing, validation, error handling
+//! CLI Tests for `BearDog`
+//! Focus: Command parsing, validation, error handling
 
 #[cfg(test)]
-mod cli_tests {
-    use super::*;
-
+mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used)]
+    #![allow(clippy::field_reassign_with_default, clippy::default_trait_access)]
+    #![allow(clippy::unnecessary_literal_unwrap)]
     // These tests focus on testable logic extracted from main.rs
     // Full integration tests would require mocking PKCS#11 hardware
 
@@ -113,8 +114,7 @@ mod cli_tests {
     #[test]
     fn test_default_library_path() {
         let library: Option<String> = None;
-        let lib_path =
-            library.unwrap_or_else(|| "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so".to_string());
+        let lib_path = library.unwrap_or("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so".to_string());
 
         assert_eq!(lib_path, "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so");
     }
@@ -122,8 +122,7 @@ mod cli_tests {
     #[test]
     fn test_custom_library_path() {
         let library: Option<String> = Some("/custom/path/pkcs11.so".to_string());
-        let lib_path =
-            library.unwrap_or_else(|| "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so".to_string());
+        let lib_path = library.unwrap_or("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so".to_string());
 
         assert_eq!(lib_path, "/custom/path/pkcs11.so");
     }

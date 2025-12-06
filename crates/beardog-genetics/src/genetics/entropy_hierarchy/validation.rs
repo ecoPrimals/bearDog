@@ -179,25 +179,66 @@ impl EntropyValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Duration;
 
-    #[test]
-    fn test_entropy_validator_creation() {
-        let config = EntropyHierarchyConfig::default();
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: genetics
-        // TEST_PRIORITY: normal
-        let _validator = EntropyValidator::new(config);
+    fn create_test_config() -> EntropyHierarchyConfig {
+        EntropyHierarchyConfig {
+            min_human_quality: 0.7,
+            min_machine_quality: 0.5,
+            max_entropy_age_hours: 24,
+            require_biometric_verification: true,
+            require_ownership_proof: true,
+        }
+    }
+
+    fn create_test_human_identity() -> HumanIdentity {
+        use super::super::types::VerificationLevel;
+        HumanIdentity {
+            identity_id: "test-human-123".to_string(),
+            identity_hash: vec![1, 2, 3, 4],
+            verification_level: VerificationLevel::Enhanced,
+            verified_at: Utc::now(),
+        }
+    }
+
+    fn create_test_machine_source() -> super::super::types::MachineEntropySource {
+        use super::super::types::{MachineEntropySource, MachineSourceType};
+        use std::collections::HashMap;
+
+        MachineEntropySource {
+            source_type: MachineSourceType::CSPRNG {
+                algorithm: "ChaCha20".to_string(),
+                seed_source: "OS-RNG".to_string(),
+            },
+            algorithm: "ChaCha20".to_string(),
+            seed_source: "OS-RNG".to_string(),
+            quality_metrics: HashMap::new(),
+        }
     }
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: genetics
     // TEST_PRIORITY: normal
     #[test]
-    fn test_entropy_quality_validation() -> Result<(), Box<dyn std::error::Error>> {
-        let config = EntropyHierarchyConfig::default();
+    fn test_entropy_validator_creation() {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config.clone());
+        assert_eq!(validator.config.min_human_quality, config.min_human_quality);
+        assert_eq!(
+            validator.config.min_machine_quality,
+            config.min_machine_quality
+        );
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_quality_human_lived_experience_high() -> Result<(), BearDogError> {
+        let config = create_test_config();
         let validator = EntropyValidator::new(config);
 
-        let high_quality_entropy = EntropyClass::HumanLivedExperience {
+        let entropy = EntropyClass::HumanLivedExperience {
             quality_score: 0.9,
             capture_timestamp: Utc::now(),
             biometric_signature: BiometricHash {
@@ -211,7 +252,589 @@ mod tests {
             },
         };
 
-        assert!(validator.validate_entropy_quality(&high_quality_entropy)?);
+        assert!(validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_quality_human_lived_experience_low() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.5,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        assert!(!validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_quality_human_supervised_machine_high() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.8,
+            machine_source: create_test_machine_source(),
+            human_validator: create_test_human_identity(),
+            validation_timestamp: Utc::now(),
+        };
+
+        assert!(validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_quality_human_supervised_machine_low() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.3,
+            machine_source: create_test_machine_source(),
+            human_validator: create_test_human_identity(),
+            validation_timestamp: Utc::now(),
+        };
+
+        assert!(!validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_quality_store_bought_machine_high() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::StoreBoughtMachine {
+            quality_score: 0.6,
+            source_type: create_test_machine_source(),
+            generation_timestamp: Utc::now(),
+            reproducibility_index: 0.2,
+        };
+
+        assert!(validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_quality_store_bought_machine_low() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::StoreBoughtMachine {
+            quality_score: 0.2,
+            source_type: create_test_machine_source(),
+            generation_timestamp: Utc::now(),
+            reproducibility_index: 0.8,
+        };
+
+        assert!(!validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_ownership_proof() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let owner_identity = create_test_human_identity();
+        let entropy_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
+
+        let proof = validator.generate_ownership_proof(&owner_identity, &entropy_data)?;
+
+        assert!(!proof.proof_data.is_empty());
+        assert!(!proof.signature.is_empty());
+        assert_eq!(proof.proof_data.len(), 32); // SHA3-256 output
+        assert_eq!(proof.signature.len(), 32); // SHA3-256 output
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_ownership_proof_different_data() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let owner_identity = create_test_human_identity();
+        let entropy_data_1 = vec![1, 2, 3, 4];
+        let entropy_data_2 = vec![5, 6, 7, 8];
+
+        let proof_1 = validator.generate_ownership_proof(&owner_identity, &entropy_data_1)?;
+        let proof_2 = validator.generate_ownership_proof(&owner_identity, &entropy_data_2)?;
+
+        // Different entropy data should produce different proofs
+        assert_ne!(proof_1.proof_data, proof_2.proof_data);
+        assert_ne!(proof_1.signature, proof_2.signature);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_biometric_hash() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let biometric_data = vec![1, 2, 3, 4, 5];
+        let ownership_proof = vec![6, 7, 8, 9, 10];
+
+        let biometric_hash =
+            validator.generate_biometric_hash(&biometric_data, &ownership_proof)?;
+
+        assert!(!biometric_hash.hash.is_empty());
+        assert_eq!(biometric_hash.hash.len(), 32); // SHA3-256 output
+        assert_eq!(biometric_hash.ownership_proof, ownership_proof);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_biometric_hash_different_data() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let biometric_data_1 = vec![1, 2, 3, 4];
+        let biometric_data_2 = vec![5, 6, 7, 8];
+        let ownership_proof = vec![9, 10, 11, 12];
+
+        let hash_1 = validator.generate_biometric_hash(&biometric_data_1, &ownership_proof)?;
+        let hash_2 = validator.generate_biometric_hash(&biometric_data_2, &ownership_proof)?;
+
+        // Different biometric data should produce different hashes
+        assert_ne!(hash_1.hash, hash_2.hash);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_fresh_human_lived_experience() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        assert!(validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_old_human_lived_experience() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let old_timestamp = Utc::now() - Duration::hours(48);
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: old_timestamp,
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        assert!(!validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_fresh_human_supervised_machine() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.8,
+            machine_source: create_test_machine_source(),
+            human_validator: create_test_human_identity(),
+            validation_timestamp: Utc::now(),
+        };
+
+        assert!(validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_old_human_supervised_machine() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let old_timestamp = Utc::now() - Duration::hours(30);
+        let entropy = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.8,
+            machine_source: create_test_machine_source(),
+            human_validator: create_test_human_identity(),
+            validation_timestamp: old_timestamp,
+        };
+
+        assert!(!validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_fresh_store_bought_machine() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let entropy = EntropyClass::StoreBoughtMachine {
+            quality_score: 0.6,
+            source_type: create_test_machine_source(),
+            generation_timestamp: Utc::now(),
+            reproducibility_index: 0.3,
+        };
+
+        assert!(validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_old_store_bought_machine() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        let old_timestamp = Utc::now() - Duration::hours(100);
+        let entropy = EntropyClass::StoreBoughtMachine {
+            quality_score: 0.6,
+            source_type: create_test_machine_source(),
+            generation_timestamp: old_timestamp,
+            reproducibility_index: 0.3,
+        };
+
+        assert!(!validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_entropy_age_at_threshold() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+
+        // Exactly at max age (24 hours)
+        let threshold_timestamp = Utc::now() - Duration::hours(24);
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: threshold_timestamp,
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        assert!(validator.validate_entropy_age(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_create_ownership_proof_data() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let owner_identity = create_test_human_identity();
+        let entropy_data = vec![1, 2, 3, 4, 5];
+
+        let proof_data = validator.create_ownership_proof_data(&owner_identity, &entropy_data)?;
+
+        assert!(!proof_data.is_empty());
+        assert_eq!(proof_data.len(), 32); // SHA3-256 output
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_create_ownership_proof_data_deterministic() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let owner_identity = create_test_human_identity();
+        let entropy_data = vec![1, 2, 3, 4, 5];
+
+        let proof_data_1 = validator.create_ownership_proof_data(&owner_identity, &entropy_data)?;
+        // Note: Due to timestamp in proof data, this test won't be truly deterministic
+        // But we can verify the format is consistent
+        assert_eq!(proof_data_1.len(), 32);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_sign_ownership_proof() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let owner_identity = create_test_human_identity();
+        let proof_data = vec![1, 2, 3, 4];
+
+        let signature = validator.sign_ownership_proof(&proof_data, &owner_identity)?;
+
+        assert!(!signature.is_empty());
+        assert_eq!(signature.len(), 32); // SHA3-256 output
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_sign_ownership_proof_different_data() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let owner_identity = create_test_human_identity();
+        let proof_data_1 = vec![1, 2, 3, 4];
+        let proof_data_2 = vec![5, 6, 7, 8];
+
+        let signature_1 = validator.sign_ownership_proof(&proof_data_1, &owner_identity)?;
+        let signature_2 = validator.sign_ownership_proof(&proof_data_2, &owner_identity)?;
+
+        // Different proof data should produce different signatures
+        assert_ne!(signature_1, signature_2);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_entropy_commitment() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let entropy_data = vec![1, 2, 3, 4, 5];
+
+        let commitment = validator.generate_entropy_commitment(&entropy_data)?;
+
+        assert!(!commitment.is_empty());
+        assert_eq!(commitment.len(), 32); // SHA3-256 output
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_entropy_commitment_different_data() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let entropy_data_1 = vec![1, 2, 3, 4];
+        let entropy_data_2 = vec![5, 6, 7, 8];
+
+        let commitment_1 = validator.generate_entropy_commitment(&entropy_data_1)?;
+        let commitment_2 = validator.generate_entropy_commitment(&entropy_data_2)?;
+
+        assert_ne!(commitment_1, commitment_2);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_temporal_proof() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        let temporal_proof = validator.generate_temporal_proof(&entropy)?;
+
+        assert!(!temporal_proof.is_empty());
+        assert_eq!(temporal_proof.len(), 32); // SHA3-256 output
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_uniqueness_proof() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let entropy_data = vec![1, 2, 3, 4, 5];
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        let uniqueness_proof = validator.generate_uniqueness_proof(&entropy_data, &entropy)?;
+
+        assert!(!uniqueness_proof.is_empty());
+        assert_eq!(uniqueness_proof.len(), 32); // SHA3-256 output
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_uniqueness_proof_different_data() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config);
+        let entropy_data_1 = vec![1, 2, 3, 4];
+        let entropy_data_2 = vec![5, 6, 7, 8];
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        let uniqueness_proof_1 = validator.generate_uniqueness_proof(&entropy_data_1, &entropy)?;
+        let uniqueness_proof_2 = validator.generate_uniqueness_proof(&entropy_data_2, &entropy)?;
+
+        assert_ne!(uniqueness_proof_1, uniqueness_proof_2);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_quality_at_exact_threshold() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config.clone());
+
+        // Test at exact threshold for human entropy
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: config.min_human_quality,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        assert!(validator.validate_entropy_quality(&entropy)?);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: genetics
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_validate_quality_just_below_threshold() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let validator = EntropyValidator::new(config.clone());
+
+        // Test just below threshold for human entropy
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: config.min_human_quality - 0.01,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        assert!(!validator.validate_entropy_quality(&entropy)?);
         Ok(())
     }
 }

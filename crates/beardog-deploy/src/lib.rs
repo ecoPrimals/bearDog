@@ -3,6 +3,14 @@
 // This crate provides comprehensive deployment capabilities for the BearDog ecosystem,
 // including platform-specific deployment strategies, environment validation, and
 // optimization features for production deployments.
+
+// Production code must use proper error handling - deny panicking methods
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+// Allow expect in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
+
 //
 // # Features
 //
@@ -28,10 +36,13 @@ use serde::{Deserialize, Serialize};
 pub mod android;
 pub mod builder;
 pub mod device;
+
 /// Error types and handling
 /// Error types and handling
 pub mod error;
 pub mod optimization;
+#[cfg(test)]
+mod tests;
 
 pub use android::*;
 pub use builder::*;
@@ -41,18 +52,6 @@ pub use error::*;
 // October 27, 2025: Comprehensive test expansion
 #[cfg(test)]
 mod deploy_comprehensive_tests;
-
-#[cfg(test)]
-#[path = "tests/device_comprehensive_tests.rs"]
-mod device_comprehensive_tests;
-
-#[cfg(test)]
-#[path = "tests/android_comprehensive_tests.rs"]
-mod android_comprehensive_tests;
-
-#[cfg(test)]
-#[path = "tests/build_comprehensive_tests.rs"]
-mod build_comprehensive_tests;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {

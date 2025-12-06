@@ -2,6 +2,8 @@
 // Created: October 23, 2025
 // Purpose: Increase test coverage for 0% coverage ultimate_performance.rs
 
+#![allow(unused_imports, unused_variables, dead_code, clippy::all)]
+
 use crate::ultimate_performance::*;
 
 #[test]

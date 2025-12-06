@@ -22,14 +22,13 @@ impl SharedConfigManager {
     }
 
     /// Get or create shared configuration
-    /// Gets `or_create`
-    /// Gets `or_create`
+    /// Uses double-checked locking pattern for concurrent safety
     pub fn get_or_create<T, F>(&self, key: &str, factory: F) -> Arc<T>
     where
         T: Send + Sync + 'static,
         F: FnOnce() -> T,
     {
-        // Try to get existing config
+        // Fast path: Try to get existing config with read lock
         {
             let configs = self.configs.read().unwrap_or_else(|poisoned| {
                 tracing::warn!("Shared config lock poisoned on read, recovering");
@@ -42,15 +41,22 @@ impl SharedConfigManager {
             }
         }
 
-        // Create new config
-        let config = Arc::new(factory());
-        {
-            let mut configs = self.configs.write().unwrap_or_else(|poisoned| {
-                tracing::warn!("Shared config lock poisoned on write, recovering");
-                poisoned.into_inner()
-            });
-            configs.insert(key.to_string(), config.clone());
+        // Slow path: Need to create - acquire write lock
+        let mut configs = self.configs.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Shared config lock poisoned on write, recovering");
+            poisoned.into_inner()
+        });
+
+        // Double-check: Another thread might have inserted while we waited for write lock
+        if let Some(config) = configs.get(key) {
+            if let Ok(typed_config) = config.clone().downcast::<T>() {
+                return typed_config;
+            }
         }
+
+        // Now create and insert while holding write lock (prevents race)
+        let config = Arc::new(factory());
+        configs.insert(key.to_string(), config.clone());
         config
     }
 
@@ -123,6 +129,7 @@ where
     global_shared_config().get_or_create(key, factory)
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

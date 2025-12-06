@@ -2,6 +2,14 @@
 //!
 //! Tests for metrics collection, health checks, and alerting
 
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 #[cfg(test)]
 mod metrics_collection_tests {
     #[test]

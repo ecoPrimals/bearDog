@@ -3,6 +3,9 @@ pub mod openssl_crypto;
 pub mod ring_crypto;
 pub mod rust_crypto;
 
+#[cfg(test)]
+mod comprehensive_tests;
+
 pub use factory::{
     create_crypto_provider, get_crypto_backend_by_name, get_crypto_provider_capabilities,
     get_recommended_crypto_backend, get_supported_crypto_backends, get_supported_storage_backends,

@@ -194,7 +194,7 @@ impl DefaultAuditLogger {
         details.insert("description".to_string(), description.to_string());
 
         self.log_detailed_operation(
-            format!("security_{}", event_type),
+            format!("security_{event_type}"),
             None,
             None,
             true,
@@ -227,9 +227,8 @@ impl DefaultAuditLogger {
     async fn export_as_json(&self) -> Result<Vec<u8>, BearDogError> {
         let filter = AuditLogFilter::default();
         let entries = self.storage.get_entries(&filter).await?;
-        let json = serde_json::to_string_pretty(&entries).map_err(|e| {
-            BearDogError::serialization(&format!("JSON serialization failed: {}", e))
-        })?;
+        let json = serde_json::to_string_pretty(&entries)
+            .map_err(|e| BearDogError::serialization(&format!("JSON serialization failed: {e}")))?;
         Ok(json.into_bytes())
     }
 

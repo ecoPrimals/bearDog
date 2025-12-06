@@ -69,7 +69,7 @@ impl DiscoveryEngine {
     /// - Platform HSMs (local hardware: TPM, Secure Enclave, StrongBox)
     /// - Mobile HSMs (Android/iOS security modules)
     /// - Cloud HSMs (AWS KMS, Azure Key Vault, GCP KMS)
-    /// - Network HSMs (mDNS, known endpoints, via Songbird)
+    /// - Network HSMs (mDNS, known endpoints, via ecosystem discovery)
     /// - USB HSMs (YubiKey, Nitrokey, etc.)
     /// - Software HSM (always available fallback)
     ///
@@ -116,7 +116,7 @@ impl DiscoveryEngine {
             }
         }
 
-        // 4. Network HSMs (mDNS, Songbird, known endpoints)
+        // 4. Network HSMs (mDNS, ecosystem discovery, known endpoints)
         match self.network_discoverer.discover().await {
             Ok(mut hsms) => {
                 info!("✓ Network discovery: {} HSMs found", hsms.len());

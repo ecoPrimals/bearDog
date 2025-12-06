@@ -68,12 +68,19 @@ impl ProductionUniversalAdapter {
 
         // For now, return a success response
         // In production, this would route to the appropriate system
-        Ok(serde_json::json!({
-            "system": system,
-            "operation": operation,
-            "status": "success ",
-            "message": format!("Operation {} completed on {}", operation, system)
-        }))
+        use serde_json::{Map, Value};
+        let mut response = Map::new();
+        response.insert("system".to_string(), Value::String(system.to_string()));
+        response.insert(
+            "operation".to_string(),
+            Value::String(operation.to_string()),
+        );
+        response.insert("status".to_string(), Value::String("success".to_string()));
+        response.insert(
+            "message".to_string(),
+            Value::String(format!("Operation {operation} completed on {system}")),
+        );
+        Ok(Value::Object(response))
     }
 
     /// Performs health check on all systems
@@ -83,15 +90,34 @@ impl ProductionUniversalAdapter {
     pub fn health_check_all(&self) -> Result<serde_json::Value, BearDogError> {
         info!("Performing health check on all systems");
 
-        Ok(serde_json::json!({
-            "overall_status": "healthy",
-            "systems": {
-                "hsm": "healthy",
-                "service_mesh": "healthy",
-                "api_gateway": "healthy",
-                "service_registry": "healthy"
-            },
-            "timestamp": chrono::Utc::now().to_rfc3339()
-        }))
+        use serde_json::{Map, Value};
+
+        let mut systems = Map::new();
+        systems.insert("hsm".to_string(), Value::String("healthy".to_string()));
+        systems.insert(
+            "service_mesh".to_string(),
+            Value::String("healthy".to_string()),
+        );
+        systems.insert(
+            "api_gateway".to_string(),
+            Value::String("healthy".to_string()),
+        );
+        systems.insert(
+            "service_registry".to_string(),
+            Value::String("healthy".to_string()),
+        );
+
+        let mut response = Map::new();
+        response.insert(
+            "overall_status".to_string(),
+            Value::String("healthy".to_string()),
+        );
+        response.insert("systems".to_string(), Value::Object(systems));
+        response.insert(
+            "timestamp".to_string(),
+            Value::String(chrono::Utc::now().to_rfc3339()),
+        );
+
+        Ok(Value::Object(response))
     }
 }

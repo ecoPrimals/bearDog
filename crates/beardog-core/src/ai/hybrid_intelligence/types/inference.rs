@@ -109,7 +109,7 @@ pub struct ServingConfig {
 impl Default for ServingConfig {
     fn default() -> Self {
         use beardog_types::constants::domains::network::config;
-        use beardog_config::domains::timeouts::TimeoutConfig;
+        use beardog_config::domains::timeouts_new::TimeoutConfig;
         
         let timeout_config = TimeoutConfig::from_env();
         

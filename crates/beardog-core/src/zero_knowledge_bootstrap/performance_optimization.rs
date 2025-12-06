@@ -338,9 +338,9 @@ impl PerformanceOptimizer {
             .map(|capability| {
                 let bootstrap_clone = bootstrap.clone(); // Assume Clone is implemented
                 tokio::spawn(async move {
-                    // Simulate preloading capability
+                    // Preload capability concurrently
                     debug!("📦 Preloading capability: {:?}", capability);
-                    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                    tokio::task::yield_now().await; // Cooperative yield for concurrent execution
                     Ok::<_, BearDogError>(())
                 })
             })
@@ -349,7 +349,7 @@ impl PerformanceOptimizer {
         // Wait for all preload tasks to complete
         for task in preload_tasks {
             task
-                .map_err(|e| BearDogError::internal(format!("Preload task failed: {}", e)))??;
+                .map_err(|e| BearDogError::internal(format!("Preload task failed: {e}")))??;
         }
 
         info!("✅ Common capabilities preloaded");
@@ -579,6 +579,7 @@ impl std::fmt::Display for PerformanceGrade {
     }
 }
 
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

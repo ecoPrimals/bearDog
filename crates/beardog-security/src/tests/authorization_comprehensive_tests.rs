@@ -1,8 +1,8 @@
 //! Comprehensive Authorization Tests
 //!
-//! TEST_CATEGORY: unit
-//! TEST_DOMAIN: security
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: unit
+//! `TEST_DOMAIN`: security
+//! `TEST_PRIORITY`: critical
 //!
 //! This module provides comprehensive testing for authorization mechanisms:
 //! - Permission checking

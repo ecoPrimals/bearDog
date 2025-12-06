@@ -13,9 +13,9 @@ use beardog_errors::BearDogError;
 
 /// Tests that system errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_system_error_creation() {
     // Given: a system error message
@@ -30,9 +30,9 @@ fn test_system_error_creation() {
 
 /// Tests that security errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_security_error_creation() {
     // Given: a security error message
@@ -47,9 +47,9 @@ fn test_security_error_creation() {
 
 /// Tests that validation errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_validation_error_creation() {
     // Given: a validation error message
@@ -64,9 +64,9 @@ fn test_validation_error_creation() {
 
 /// Tests that network errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_network_error_creation() {
     // Given: a network error message
@@ -81,9 +81,9 @@ fn test_network_error_creation() {
 
 /// Tests that configuration errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_configuration_error_creation() {
     // Given: a configuration error message
@@ -98,9 +98,9 @@ fn test_configuration_error_creation() {
 
 /// Tests that not_found errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_not_found_error_creation() {
     // Given: a not found error message
@@ -115,9 +115,9 @@ fn test_not_found_error_creation() {
 
 /// Tests that unauthorized errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_unauthorized_error_creation() {
     // Given: an unauthorized error message
@@ -132,9 +132,9 @@ fn test_unauthorized_error_creation() {
 
 /// Tests that invalid_input errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_invalid_input_error_creation() {
     // Given: an invalid input error message
@@ -149,9 +149,9 @@ fn test_invalid_input_error_creation() {
 
 /// Tests that unavailable errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_unavailable_error_creation() {
     // Given: an unavailable error message
@@ -166,9 +166,9 @@ fn test_unavailable_error_creation() {
 
 /// Tests that internal errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_internal_error_creation() {
     // Given: an internal error message
@@ -183,9 +183,9 @@ fn test_internal_error_creation() {
 
 /// Tests that business errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_business_error_creation() {
     // Given: a business error message
@@ -204,9 +204,9 @@ fn test_business_error_creation() {
 
 /// Tests that API errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_api_error_creation() {
     // Given: an API error message
@@ -221,9 +221,9 @@ fn test_api_error_creation() {
 
 /// Tests that workflow errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_workflow_error_creation() {
     // Given: a workflow error message
@@ -238,9 +238,9 @@ fn test_workflow_error_creation() {
 
 /// Tests that genetics errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_genetics_error_creation() {
     // Given: a genetics error message
@@ -255,9 +255,9 @@ fn test_genetics_error_creation() {
 
 /// Tests that initialization errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_initialization_error_creation() {
     // Given: an initialization error message
@@ -272,9 +272,9 @@ fn test_initialization_error_creation() {
 
 /// Tests that HSM errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: critical
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: critical
 #[test]
 fn test_hsm_error_creation() {
     // Given: an HSM error message
@@ -289,9 +289,9 @@ fn test_hsm_error_creation() {
 
 /// Tests that testing errors can be created with correct message
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_testing_error_creation() {
     // Given: a testing error message
@@ -310,9 +310,9 @@ fn test_testing_error_creation() {
 
 /// Tests that errors implement Display trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_display() {
     // Given: an error
@@ -330,9 +330,9 @@ fn test_error_display() {
 
 /// Tests that errors implement Debug trait correctly
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_error_debug() {
     // Given: an error
@@ -351,9 +351,9 @@ fn test_error_debug() {
 
 /// Tests that Result<(), BearDogError> can return Ok
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_result_ok() -> Result<(), BearDogError> {
     // When: returning Ok
@@ -364,9 +364,9 @@ fn test_result_ok() -> Result<(), BearDogError> {
 
 /// Tests that Result can be used with values
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_result_with_value() -> Result<(), BearDogError> {
     // Given: a value
@@ -380,9 +380,9 @@ fn test_result_with_value() -> Result<(), BearDogError> {
 
 /// Tests that Result can contain errors
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: high
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: high
 #[test]
 fn test_error_in_result() {
     // Given: a Result containing an error
@@ -394,9 +394,9 @@ fn test_error_in_result() {
 
 /// Tests that multiple errors can be created and stored
 ///
-/// TEST_CATEGORY: unit
-/// TEST_DOMAIN: errors
-/// TEST_PRIORITY: normal
+/// `TEST_CATEGORY`: unit
+/// `TEST_DOMAIN`: errors
+/// `TEST_PRIORITY`: normal
 #[test]
 fn test_multiple_errors() {
     // Given: multiple errors of different types

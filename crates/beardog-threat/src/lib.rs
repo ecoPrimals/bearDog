@@ -14,6 +14,9 @@
 //!
 //! ## Example
 //!
+
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
 //! ```rust
 //! use beardog_threat::ThreatDetectionEngine;
 //! use beardog_types::canonical::config::domains::threat::CanonicalThreatDetectionConfig;
@@ -41,10 +44,28 @@
 //! All threat detection operations maintain memory safety with zero unsafe code.
 
 // October 27, 2025: Comprehensive test expansion
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
 #[cfg(test)]
 mod threat_comprehensive_tests;
 
 // October 31, 2025: Week 3 Test Expansion
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
 #[cfg(test)]
 mod tests;
 

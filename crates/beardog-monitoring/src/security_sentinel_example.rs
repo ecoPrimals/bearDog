@@ -56,6 +56,13 @@ pub async fn demonstrate_security_sentinel() -> Result<(), BearDogError> {
     Ok(())
 }
 
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::nonminimal_bool
+)]
 #[cfg(test)]
 mod tests {
     use super::*;

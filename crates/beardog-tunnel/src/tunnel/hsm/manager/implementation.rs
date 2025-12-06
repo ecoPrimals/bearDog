@@ -114,7 +114,7 @@ impl DefaultHsmManager {
         self.hsm_providers
             .get(id)
             .map(|p| p.as_ref())
-            .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {}", id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {id}")))
     }
 
     /// List all registered providers

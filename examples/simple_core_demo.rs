@@ -1,3 +1,11 @@
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
+
 use beardog_core::BearDogCore;
 use beardog_errors::BearDogError;
 

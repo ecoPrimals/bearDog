@@ -104,7 +104,7 @@ impl Fido2MultiCredentialProvider {
     /// Convert universal string ID back to FIDO2 credential ID (bytes)
     fn string_to_credential_id(id: &str) -> Result<Vec<u8>, BearDogError> {
         base64_url::decode(id)
-            .map_err(|e| BearDogError::system(format!("Invalid credential ID format: {}", e)))
+            .map_err(|e| BearDogError::system(format!("Invalid credential ID format: {e}")))
     }
 
     /// Send CTAP2 MakeCredential command
@@ -305,9 +305,10 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
         credential_id: &str,
     ) -> Result<CredentialInfo, Self::Error> {
         let creds = self.credentials.read().await;
-        creds.get(credential_id).cloned().ok_or_else(|| {
-            BearDogError::system(format!("Credential '{}' not found", credential_id))
-        })
+        creds
+            .get(credential_id)
+            .cloned()
+            .ok_or_else(|| BearDogError::system(format!("Credential '{credential_id}' not found")))
     }
 
     async fn sign_with_credential(
