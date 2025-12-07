@@ -18,3 +18,7 @@ pub mod session_management_errors;
 // December 1, 2025: Substantive integration tests for production paths
 #[cfg(test)]
 pub mod key_lifecycle_integration_tests;
+
+// December 6, 2025: Phase 2 Advanced HSM Provider Coverage Tests
+#[cfg(test)]
+pub mod hsm_advanced_coverage_tests;
