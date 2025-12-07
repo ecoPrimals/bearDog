@@ -60,9 +60,9 @@ mod error_path_tests {
         let result: Result<i32, BearDogError> = Ok(21);
         let chained = result.and_then(|x| Ok(x * 2));
         assert_eq!(chained.unwrap(), 42);
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: errors
-    // TEST_PRIORITY: normal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: normal
     }
 
     #[test]
@@ -81,9 +81,9 @@ mod error_path_tests {
         let result = none.ok_or_else(|| BearDogError::invalid_input("Not found"));
         assert!(result.is_err());
     }
- // TEST_CATEGORY: integration
- // TEST_DOMAIN: errors
- // TEST_PRIORITY: normal
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_collect_results_success() {
@@ -131,9 +131,9 @@ mod error_path_tests {
         let error = BearDogError::invalid_input(&long_msg);
         let display = format!("{}", error);
         assert!(!display.is_empty());
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: errors
-    // TEST_PRIORITY: important
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 
     #[test]

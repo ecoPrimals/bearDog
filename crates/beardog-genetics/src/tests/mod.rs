@@ -29,3 +29,7 @@ mod population_evolution_integration_tests;
 // December 6, 2025: Phase 2 Advanced Test Coverage - Edge cases and error paths
 #[cfg(test)]
 mod genetics_advanced_coverage_tests;
+
+// December 7, 2025: Algorithm edge cases comprehensive tests (coverage expansion)
+#[cfg(test)]
+mod algorithm_edge_cases_tests;

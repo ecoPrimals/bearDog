@@ -14,11 +14,11 @@
 
 #![allow(clippy::unwrap_used)] // Test code
 
+use beardog_errors::BearDogError;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{Barrier, RwLock, Semaphore};
-use beardog_errors::BearDogError;
 
 // ============================================================================
 // Mock Components for Testing
@@ -53,16 +53,22 @@ impl MockConnection {
 
     async fn request(&self) -> Result<String, BearDogError> {
         self.call_count.fetch_add(1, Ordering::SeqCst);
-        
+
         if !self.is_alive.load(Ordering::SeqCst) {
-            return Err(BearDogError::unavailable(format!("Connection {} is dead", self.id)));
+            return Err(BearDogError::unavailable(format!(
+                "Connection {} is dead",
+                self.id
+            )));
         }
 
         let failure_rate = self.failure_rate.load(Ordering::SeqCst);
         if failure_rate > 0 {
             let rand_val = (self.call_count.load(Ordering::SeqCst) * 17) % 100;
             if rand_val < failure_rate as usize {
-                return Err(BearDogError::network(format!("Simulated failure from {}", self.id)));
+                return Err(BearDogError::network(format!(
+                    "Simulated failure from {}",
+                    self.id
+                )));
             }
         }
 
@@ -188,7 +194,7 @@ async fn test_concurrent_failover_with_circuit_breaker() {
         "Should have >90% success with failover, got {}",
         successes
     );
-    
+
     // Circuit breaker should open, forcing use of secondary
     assert!(
         from_secondary > 80,
@@ -218,7 +224,7 @@ async fn test_connection_pool_under_concurrent_load() {
             tokio::spawn(async move {
                 // Acquire connection from pool
                 let _permit = semaphore.acquire().await.unwrap();
-                
+
                 // Track concurrency
                 let current = active_count.fetch_add(1, Ordering::SeqCst) + 1;
                 let mut max = max_concurrent.load(Ordering::SeqCst);
@@ -311,13 +317,11 @@ async fn test_network_partition_detection_concurrent() {
 
     // Now revive and test recovery
     connection.revive();
-    
+
     let recovery_handles: Vec<_> = (0..100)
         .map(|_| {
             let connection = connection.clone();
-            tokio::spawn(async move {
-                connection.request().await
-            })
+            tokio::spawn(async move { connection.request().await })
         })
         .collect();
 
@@ -340,7 +344,7 @@ async fn test_concurrent_retry_coordination() {
     let connection = MockConnection::with_failure_rate("flaky", 70);
     let max_retries = 5;
     let concurrent_clients = 50;
-    
+
     let total_requests = Arc::new(AtomicUsize::new(0));
     let total_retries = Arc::new(AtomicUsize::new(0));
     let total_successes = Arc::new(AtomicUsize::new(0));
@@ -355,7 +359,7 @@ async fn test_concurrent_retry_coordination() {
             tokio::spawn(async move {
                 for retry in 0..max_retries {
                     total_requests.fetch_add(1, Ordering::SeqCst);
-                    
+
                     match connection.request().await {
                         Ok(_) => {
                             total_successes.fetch_add(1, Ordering::SeqCst);
@@ -370,7 +374,9 @@ async fn test_concurrent_retry_coordination() {
                         Err(e) => return Err(e),
                     }
                 }
-                Err(BearDogError::unavailable("Max retries exceeded".to_string()))
+                Err(BearDogError::unavailable(
+                    "Max retries exceeded".to_string(),
+                ))
             })
         })
         .collect();
@@ -392,14 +398,14 @@ async fn test_concurrent_retry_coordination() {
         "Should have >25% final success with retries, got {}",
         final_successes
     );
-    
+
     // Should have retried many times
     assert!(
         retries > concurrent_clients,
         "Should have many retries, got {}",
         retries
     );
-    
+
     // Total requests should be more than clients due to retries
     assert!(
         requests > concurrent_clients as usize,
@@ -420,7 +426,7 @@ async fn test_load_balancer_concurrent_distribution() {
         MockConnection::new("server2"),
         MockConnection::new("server3"),
     ];
-    
+
     let connections = Arc::new(connections);
     let next_index = Arc::new(AtomicUsize::new(0));
     let concurrent_requests = 300;
@@ -448,10 +454,7 @@ async fn test_load_balancer_concurrent_distribution() {
     assert_eq!(total_success, concurrent_requests, "All should succeed");
 
     // Check distribution
-    let counts: Vec<_> = connections
-        .iter()
-        .map(|c| c.get_call_count())
-        .collect();
+    let counts: Vec<_> = connections.iter().map(|c| c.get_call_count()).collect();
 
     // Each server should handle roughly equal load
     let expected_per_server = concurrent_requests / connections.len();
@@ -481,10 +484,7 @@ async fn test_timeout_handling_concurrent() {
 
             tokio::spawn(async move {
                 // Apply aggressive timeout
-                tokio::time::timeout(
-                    Duration::from_millis(100),
-                    connection.request()
-                ).await
+                tokio::time::timeout(Duration::from_millis(100), connection.request()).await
             })
         })
         .collect();
@@ -495,7 +495,7 @@ async fn test_timeout_handling_concurrent() {
     for handle in handles {
         match handle.await.unwrap() {
             Ok(Ok(_)) => successes += 1,
-            Ok(Err(_)) => {},
+            Ok(Err(_)) => {}
             Err(_) => timeouts += 1,
         }
     }
@@ -506,7 +506,7 @@ async fn test_timeout_handling_concurrent() {
         "Fast connections should not timeout, got {} timeouts",
         timeouts
     );
-    
+
     assert_eq!(
         successes, concurrent_requests,
         "All requests should succeed, got {}",
@@ -591,14 +591,14 @@ async fn test_connection_recovery_after_mass_failure() {
 
     // Should have failures during outage
     assert!(during > 0, "Should have failures during outage");
-    
+
     // Should have successes after recovery
     assert!(
         after > 50,
         "Should recover and succeed, got {} after recovery",
         after
     );
-    
+
     // Overall success rate should be decent after recovery
     assert!(
         final_successes > 50,
@@ -730,4 +730,3 @@ async fn test_extreme_concurrent_load_stress() {
 // - No arbitrary sleeps (only for simulating delays)
 // - Proper tokio::time::timeout usage
 // - Multi-threaded test execution
-
