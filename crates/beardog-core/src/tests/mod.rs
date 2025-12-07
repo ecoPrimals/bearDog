@@ -46,6 +46,11 @@ mod startup_error_handling_tests;
 #[cfg(test)]
 mod error_path_comprehensive_tests;
 
+// December 7, 2025: Error recovery path tests - Phase 2 coverage expansion
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
+#[cfg(test)]
+mod error_recovery_path_tests;
+
 // October 22, 2025: Core Edge Cases (High-Value Test Coverage Expansion)
 #[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
