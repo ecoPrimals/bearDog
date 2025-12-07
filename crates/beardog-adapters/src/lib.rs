@@ -270,6 +270,8 @@ impl UniversalAdapter {
                         let base_delay_ms = 100u64 * (1u64 << attempt);
                         // Add jitter: ±20% randomness
                         let jitter = (base_delay_ms / 5) as i64;
+                        // Exponential backoff with jitter (modern pattern - THIS IS ACCEPTABLE)
+                        // This is a retry mechanism, not an arbitrary delay
                         let jittered_ms = (base_delay_ms as i64
                             + (rand::random::<i64>() % (jitter * 2) - jitter))
                             .max(0) as u64;
