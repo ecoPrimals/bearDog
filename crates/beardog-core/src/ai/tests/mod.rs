@@ -10,3 +10,6 @@ pub mod neural_network_tests;
 
 /// November 19, 2025: Hybrid Intelligence Core Types Tests - Session 4
 pub mod hybrid_intelligence_core_tests;
+
+/// December 6, 2025: Phase 2 Advanced Test Coverage - Edge cases and error paths
+pub mod hybrid_intelligence_advanced_tests;

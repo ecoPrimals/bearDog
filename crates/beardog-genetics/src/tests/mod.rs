@@ -25,3 +25,7 @@ mod algorithm_error_paths_tests;
 // December 1, 2025: Substantive population evolution integration tests
 #[cfg(test)]
 mod population_evolution_integration_tests;
+
+// December 6, 2025: Phase 2 Advanced Test Coverage - Edge cases and error paths
+#[cfg(test)]
+mod genetics_advanced_coverage_tests;

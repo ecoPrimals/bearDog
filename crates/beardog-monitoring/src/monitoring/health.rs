@@ -50,8 +50,14 @@ impl HealthChecker for HealthCheckerType {
     }
 }
 
+/// Mock database health checker for testing
+///
+/// By default, returns instant responses for fast tests.
+/// Use `with_simulated_latency()` to explicitly test timeout/latency scenarios.
 #[derive(Debug)]
-pub struct DatabaseHealthChecker {}
+pub struct DatabaseHealthChecker {
+    simulated_latency: Option<Duration>,
+}
 
 impl Default for DatabaseHealthChecker {
     fn default() -> Self {
@@ -60,11 +66,29 @@ impl Default for DatabaseHealthChecker {
 }
 
 impl DatabaseHealthChecker {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new database health checker with instant responses
     #[must_use]
     pub const fn new() -> Self {
-        Self {}
+        Self {
+            simulated_latency: None,
+        }
+    }
+
+    /// Creates a health checker with simulated latency for timeout testing
+    ///
+    /// # Example
+    /// ```
+    /// use std::time::Duration;
+    /// use beardog_monitoring::monitoring::health::DatabaseHealthChecker;
+    /// let slow_checker = DatabaseHealthChecker::with_simulated_latency(
+    ///     Duration::from_millis(50)
+    /// );
+    /// ```
+    #[must_use]
+    pub const fn with_simulated_latency(latency: Duration) -> Self {
+        Self {
+            simulated_latency: Some(latency),
+        }
     }
 }
 
@@ -72,7 +96,10 @@ impl HealthChecker for DatabaseHealthChecker {
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        // Only sleep if explicitly configured for latency testing
+        if let Some(latency) = self.simulated_latency {
+            tokio::time::sleep(latency).await;
+        }
 
         Ok(ComponentHealth {
             name: "Database".to_string(),
@@ -99,8 +126,14 @@ impl HealthChecker for DatabaseHealthChecker {
     }
 }
 
+/// Mock cache health checker for testing
+///
+/// By default, returns instant responses for fast tests.
+/// Use `with_simulated_latency()` to explicitly test timeout/latency scenarios.
 #[derive(Debug)]
-pub struct CacheHealthChecker {}
+pub struct CacheHealthChecker {
+    simulated_latency: Option<Duration>,
+}
 
 impl Default for CacheHealthChecker {
     fn default() -> Self {
@@ -109,11 +142,20 @@ impl Default for CacheHealthChecker {
 }
 
 impl CacheHealthChecker {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new cache health checker with instant responses
     #[must_use]
     pub const fn new() -> Self {
-        Self {}
+        Self {
+            simulated_latency: None,
+        }
+    }
+
+    /// Creates a health checker with simulated latency for timeout testing
+    #[must_use]
+    pub const fn with_simulated_latency(latency: Duration) -> Self {
+        Self {
+            simulated_latency: Some(latency),
+        }
     }
 }
 
@@ -121,7 +163,10 @@ impl HealthChecker for CacheHealthChecker {
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
-        tokio::time::sleep(Duration::from_millis(5)).await;
+        // Only sleep if explicitly configured for latency testing
+        if let Some(latency) = self.simulated_latency {
+            tokio::time::sleep(latency).await;
+        }
 
         Ok(ComponentHealth {
             name: "Cache".to_string(),
@@ -148,27 +193,42 @@ impl HealthChecker for CacheHealthChecker {
     }
 }
 
+/// Mock external API health checker for testing
+///
+/// By default, returns instant responses for fast tests.
+/// Use `with_simulated_latency()` to explicitly test timeout/latency scenarios.
 #[derive(Debug)]
 pub struct ExternalApiHealthChecker {
     /// The api endpoint value
     pub api_endpoint: String,
+    simulated_latency: Option<Duration>,
 }
 
 impl Default for ExternalApiHealthChecker {
     fn default() -> Self {
         Self {
             api_endpoint: "https://api.example.com/health".to_string(),
+            simulated_latency: None,
         }
     }
 }
 
 impl ExternalApiHealthChecker {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new external API health checker with instant responses
     #[must_use]
     pub fn new(api_endpoint: &str) -> Self {
         Self {
             api_endpoint: api_endpoint.to_string(),
+            simulated_latency: None,
+        }
+    }
+
+    /// Creates a health checker with simulated latency for timeout testing
+    #[must_use]
+    pub fn with_simulated_latency(api_endpoint: &str, latency: Duration) -> Self {
+        Self {
+            api_endpoint: api_endpoint.to_string(),
+            simulated_latency: Some(latency),
         }
     }
 }
@@ -177,7 +237,10 @@ impl HealthChecker for ExternalApiHealthChecker {
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        // Only sleep if explicitly configured for latency testing
+        if let Some(latency) = self.simulated_latency {
+            tokio::time::sleep(latency).await;
+        }
 
         Ok(ComponentHealth {
             name: "External API".to_string(),
@@ -197,8 +260,14 @@ impl HealthChecker for ExternalApiHealthChecker {
     }
 }
 
+/// Mock HSM health checker for testing
+///
+/// By default, returns instant responses for fast tests.
+/// Use `with_simulated_latency()` to explicitly test timeout/latency scenarios.
 #[derive(Debug)]
-pub struct HsmHealthChecker {}
+pub struct HsmHealthChecker {
+    simulated_latency: Option<Duration>,
+}
 
 impl Default for HsmHealthChecker {
     fn default() -> Self {
@@ -207,11 +276,20 @@ impl Default for HsmHealthChecker {
 }
 
 impl HsmHealthChecker {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new HSM health checker with instant responses
     #[must_use]
     pub const fn new() -> Self {
-        Self {}
+        Self {
+            simulated_latency: None,
+        }
+    }
+
+    /// Creates a health checker with simulated latency for timeout testing
+    #[must_use]
+    pub const fn with_simulated_latency(latency: Duration) -> Self {
+        Self {
+            simulated_latency: Some(latency),
+        }
     }
 }
 
@@ -219,7 +297,10 @@ impl HealthChecker for HsmHealthChecker {
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        // Only sleep if explicitly configured for latency testing
+        if let Some(latency) = self.simulated_latency {
+            tokio::time::sleep(latency).await;
+        }
 
         Ok(ComponentHealth {
             name: "HSM".to_string(),
@@ -354,7 +435,12 @@ mod tests {
         assert_eq!(health.name, "Database");
         assert_eq!(health.status, HealthStatus::Healthy);
         assert!(health.message.is_some());
-        assert!(health.check_duration_ms >= 10); // Min sleep is 10ms
+        // Fast mock: duration should be minimal (< 10ms for instant response)
+        assert!(
+            health.check_duration_ms < 10,
+            "Fast mock should complete quickly, got {}ms",
+            health.check_duration_ms
+        );
         assert!(health.metadata.contains_key("type"));
         assert!(health.metadata.contains_key("host"));
         assert_eq!(health.metadata.get("type").unwrap(), "PostgreSQL");
@@ -411,7 +497,12 @@ mod tests {
         assert_eq!(health.name, "Cache");
         assert_eq!(health.status, HealthStatus::Healthy);
         assert!(health.message.is_some());
-        assert!(health.check_duration_ms >= 5); // Min sleep is 5ms
+        // Fast mock: duration should be minimal (< 10ms for instant response)
+        assert!(
+            health.check_duration_ms < 10,
+            "Fast mock should complete quickly, got {}ms",
+            health.check_duration_ms
+        );
         assert!(health.metadata.contains_key("type"));
         assert!(health.metadata.contains_key("host"));
         assert_eq!(health.metadata.get("type").unwrap(), "Redis");
@@ -466,7 +557,12 @@ mod tests {
         assert_eq!(health.name, "External API");
         assert_eq!(health.status, HealthStatus::Healthy);
         assert!(health.message.is_some());
-        assert!(health.check_duration_ms >= 50); // Min sleep is 50ms
+        // Fast mock: duration should be minimal (< 10ms for instant response)
+        assert!(
+            health.check_duration_ms < 10,
+            "Fast mock should complete quickly, got {}ms",
+            health.check_duration_ms
+        );
         assert!(health.metadata.contains_key("endpoint"));
         assert!(health.metadata.contains_key("method"));
         assert_eq!(
@@ -514,7 +610,12 @@ mod tests {
         assert_eq!(health.status, HealthStatus::Healthy);
         assert!(health.message.is_some());
         assert_eq!(health.message.unwrap(), "HSM operational");
-        assert!(health.check_duration_ms >= 20); // Min sleep is 20ms
+        // Fast mock: duration should be minimal (< 10ms for instant response)
+        assert!(
+            health.check_duration_ms < 10,
+            "Fast mock should complete quickly, got {}ms",
+            health.check_duration_ms
+        );
         assert!(health.metadata.contains_key("type"));
         assert_eq!(health.metadata.get("type").unwrap(), "HSM");
     }
@@ -838,8 +939,12 @@ mod tests {
 
         assert!(result.is_ok());
         let health = result.unwrap();
-        // HSM check sleeps for 20ms, duration should be at least that
-        assert!(health.check_duration_ms >= 20);
+        // Fast mock: duration should be minimal (< 10ms for instant response)
+        assert!(
+            health.check_duration_ms < 10,
+            "Fast mock should complete quickly, got {}ms",
+            health.check_duration_ms
+        );
         // But should be reasonable (< 1 second)
         assert!(health.check_duration_ms < 1000);
     }
@@ -877,9 +982,7 @@ mod tests {
         let checker1 = HsmHealthChecker::new();
         let result1 = checker1.check_health().await.unwrap();
 
-        // Small delay
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
+        // No artificial delay - timestamps should be sequential but immediate
         let checker2 = HsmHealthChecker::new();
         let result2 = checker2.check_health().await.unwrap();
 
