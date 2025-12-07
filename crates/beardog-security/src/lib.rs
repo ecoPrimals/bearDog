@@ -697,7 +697,8 @@ mod lib_tests {
     #[tokio::test]
     async fn test_async_security() {
         // Verify async operations work
-        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
+        // Modern: Just yield to verify async runtime works
+        tokio::task::yield_now().await;
     }
 
     #[tokio::test]

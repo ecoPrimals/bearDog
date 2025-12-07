@@ -104,7 +104,8 @@ mod lib_tests {
     #[tokio::test]
     async fn test_async_auth_available() {
         // Verify async runtime is available for auth operations
-        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
+        // Modern: Just yield to verify async runtime works
+        tokio::task::yield_now().await;
     }
 
     #[test]
@@ -155,7 +156,8 @@ mod lib_tests {
     #[tokio::test]
     async fn test_async_proof_verification() {
         // Verify async proof verification patterns work
-        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        // Modern: Just yield to verify async runtime works
+        tokio::task::yield_now().await;
         // Async proof verification would happen here
     }
 
