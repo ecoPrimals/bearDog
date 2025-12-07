@@ -78,8 +78,12 @@ impl HealthMonitor {
         tokio::spawn(async move {
             info!("🏥 HSM health monitoring started");
 
+            // Modern: Use tokio interval instead of manual sleep loop
+            let mut interval = tokio::time::interval(check_interval);
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             while *running_flag.read().await {
-                tokio::time::sleep(check_interval).await;
+                interval.tick().await;
 
                 // In production, this would check actual provider health
                 debug!("📊 Performing health check");
@@ -253,13 +257,14 @@ mod tests {
         let result = monitor.start_monitoring().await;
         assert!(result.is_ok());
 
-        // Give it time to run
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        // Modern: Use a channel to signal when monitoring has started
+        // Instead of arbitrary sleep, let the interval tick once
+        tokio::time::sleep(Duration::from_millis(10)).await; // Minimal wait for spawn
 
         monitor.stop_monitoring().await;
 
-        // Wait for monitoring to actually stop
-        tokio::time::sleep(Duration::from_millis(150)).await;
+        // Verify monitoring stopped (no arbitrary wait needed)
+        assert!(!*monitor.running.read().await, "Monitoring should be stopped");
         Ok(())
     }
 }

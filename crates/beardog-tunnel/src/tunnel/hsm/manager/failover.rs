@@ -154,9 +154,10 @@ impl FailoverManager {
                     debug!("🔄 Failover: Attempt {} failed, retrying...", attempts);
                     drop(breaker);
 
-                    // Small delay before retry
-                    tokio::time::sleep(std::time::Duration::from_millis(100 * attempts as u64))
-                        .await;
+                    // Exponential backoff for retries (modern pattern)
+                    let backoff_ms = 100u64 * (1u64 << (attempts - 1).min(4)); // Cap at 1.6 seconds
+                    let backoff = std::time::Duration::from_millis(backoff_ms);
+                    tokio::time::sleep(backoff).await;
                 }
             }
         }
