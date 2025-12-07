@@ -135,11 +135,28 @@ impl EcosystemDiscoveryAdapter {
         // Start listener if not already running
         self.ensure_listener_started().await?;
 
-        // Wait briefly for initial discovery results (non-blocking)
+        // Wait for initial discovery with proper timeout
+        // Modern approach: Use tokio::select with timeout instead of sleep + check
         let discovery_timeout = Duration::from_secs(2);
-        tokio::time::sleep(discovery_timeout).await;
+        
+        // Poll for results with timeout (no arbitrary sleep)
+        let start = tokio::time::Instant::now();
+        let mut interval = tokio::time::interval(Duration::from_millis(50));
+        
+        while start.elapsed() < discovery_timeout {
+            interval.tick().await;
+            
+            let primal_count = self.discovered_primals.read().await.len();
+            let capability_count = self.discovered_capabilities.read().await.len();
+            
+            // If we've discovered anything, we can return early
+            if primal_count > 0 || capability_count > 0 {
+                info!("✅ Discovered {} primals, {} capabilities", primal_count, capability_count);
+                break;
+            }
+        }
 
-        // Check what we discovered
+        // Final check after timeout
         let primal_count = self.discovered_primals.read().await.len();
         let capability_count = self.discovered_capabilities.read().await.len();
 

@@ -155,8 +155,8 @@ impl UniversalAdapter {
     ) -> Result<AdapterResponse, BearDogError> {
         debug!("Handling generic request to: {}", request.endpoint);
 
-        // Mock processing
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        // Mock processing - instant response (no artificial delay)
+        // In production, this would be actual I/O which has real latency
 
         // Create response
         Ok(AdapterResponse {
