@@ -105,6 +105,7 @@ impl Default for LimitsConfig {
 
 impl LimitsConfig {
     /// Create a new limits configuration from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::default()
     }
@@ -176,6 +177,7 @@ impl LimitsConfig {
     }
 
     /// Get the actual thread pool size (automatic if set to 0)
+    #[must_use]
     pub fn effective_thread_pool_size(&self) -> usize {
         if self.thread_pool_size == 0 {
             // Use sensible default based on available CPUs
