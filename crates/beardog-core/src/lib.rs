@@ -203,8 +203,8 @@ mod tests {
     #[tokio::test]
     async fn test_async_functionality_available() {
         // Verify async runtime is available for core operations
-        // This tests that tokio integration works
-        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
+        // Modern: Just yield to verify tokio integration works
+        tokio::task::yield_now().await;
     }
 
     #[test]

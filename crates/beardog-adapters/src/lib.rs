@@ -428,6 +428,7 @@ mod lib_main_tests {
     #[tokio::test]
     async fn test_async_adapters() {
         // Verify async operations work
-        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
+        // Modern: Just yield to verify async runtime works
+        tokio::task::yield_now().await;
     }
 }
