@@ -150,6 +150,7 @@ impl CapacityConfig {
     /// export BEARDOG_MAX_CONNECTIONS=200
     /// export BEARDOG_CACHE_MAX_ENTRIES=50000
     /// ```
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|key| std::env::var(key).ok())
     }

@@ -152,6 +152,7 @@ impl HsmConfig {
     }
 
     /// Get enabled providers in order of preference
+    #[must_use]
     pub fn get_enabled_providers(&self) -> Vec<String> {
         let mut providers = Vec::new();
 
