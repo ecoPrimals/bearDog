@@ -264,7 +264,10 @@ mod tests {
         monitor.stop_monitoring().await;
 
         // Verify monitoring stopped (no arbitrary wait needed)
-        assert!(!*monitor.running.read().await, "Monitoring should be stopped");
+        assert!(
+            !*monitor.running.read().await,
+            "Monitoring should be stopped"
+        );
         Ok(())
     }
 }

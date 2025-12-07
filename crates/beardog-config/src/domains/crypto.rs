@@ -157,40 +157,48 @@ pub struct CryptoConfigBuilder {
 }
 
 impl CryptoConfigBuilder {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[must_use]
     pub fn rsa_key_size(mut self, size: u32) -> Self {
         self.rsa_key_size = Some(size);
         self
     }
 
+    #[must_use]
     pub fn ec_curve(mut self, curve: String) -> Self {
         self.ec_curve = Some(curve);
         self
     }
 
+    #[must_use]
     pub fn aes_key_size(mut self, size: u32) -> Self {
         self.aes_key_size = Some(size);
         self
     }
 
+    #[must_use]
     pub fn hash_algorithm(mut self, algorithm: String) -> Self {
         self.hash_algorithm = Some(algorithm);
         self
     }
 
+    #[must_use]
     pub fn pbkdf2_iterations(mut self, iterations: u32) -> Self {
         self.pbkdf2_iterations = Some(iterations);
         self
     }
 
+    #[must_use]
     pub fn fips_mode(mut self, enabled: bool) -> Self {
         self.fips_mode = Some(enabled);
         self
     }
 
+    #[must_use]
     pub fn build(self) -> CryptoConfig {
         let defaults = CryptoConfig::const_defaults();
 
