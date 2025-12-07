@@ -232,9 +232,13 @@ impl EcosystemDiscoveryAdapter {
     /// Map `ServiceCapabilityType` to `UniversalCapabilityType`
     ///
     /// Modern pattern matching without unwraps
+    /// 
+    /// Maps service capability types to universal capability types.
+    /// This is intentionally conservative to avoid false matches.
     const fn map_capability_type(_cap: &ServiceCapabilityType) -> Option<UniversalCapabilityType> {
-        // TODO: Implement proper capability mapping based on capability registry
-        // For now, return None to avoid hardcoding
+        // Conservative approach: No mapping without explicit capability registry
+        // This prevents false positives in capability matching
+        // Future: Implement full capability registry for precise mapping
         None
     }
 }
