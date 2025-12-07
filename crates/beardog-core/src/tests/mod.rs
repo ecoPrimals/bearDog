@@ -51,6 +51,11 @@ mod error_path_comprehensive_tests;
 #[cfg(test)]
 mod error_recovery_path_tests;
 
+// December 7, 2025: Integration engine coverage tests - Phase 3 expansion
+#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
+#[cfg(test)]
+mod integration_engine_coverage_tests;
+
 // October 22, 2025: Core Edge Cases (High-Value Test Coverage Expansion)
 #[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
