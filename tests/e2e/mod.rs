@@ -52,6 +52,8 @@ pub mod monitoring_observability;
 pub mod network_resilience;
 // December 6, 2025: Phase 2 - Advanced network resilience tests
 pub mod network_resilience_advanced_tests;
+// December 7, 2025: Modern concurrent network resilience tests
+pub mod network_resilience_concurrent_tests;
 pub mod production_deployment;
 pub mod rate_limiting;
 pub mod real_scenarios;
