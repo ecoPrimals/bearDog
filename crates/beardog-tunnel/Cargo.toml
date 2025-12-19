@@ -24,6 +24,7 @@ p256 = { version = "0.13", features = ["ecdsa", "pem"] }
 ecdsa = "0.16"
 rand = "0.8"
 sha2 = "0.10"
+sha3 = "0.10"  # For entropy mixing (evolved from mock)
 blake3 = "1.0"
 argon2 = "0.5"
 openssl = "0.10"
@@ -37,6 +38,10 @@ zeroize = "1.7"
 parking_lot = "0.12"
 async-trait = "0.1"
 
+# Solo V2 USB security key support
+ctap-hid-fido2 = { version = "3.5", optional = true }
+hidapi = { version = "2.4", optional = true }
+
 [dev-dependencies]
 tokio-test = "0.4"
 futures = "0.3"
@@ -47,6 +52,9 @@ serial_test = "3.0"
 zero-cost-architecture = []
 universal-discovery = []
 primal-sovereignty = []
+solo-v2 = ["ctap-hid-fido2", "hidapi"]
+usb-discovery = ["hidapi"]
+ctap2 = ["ctap-hid-fido2"]
 ecosystem = []
 default = []
 android_native = []

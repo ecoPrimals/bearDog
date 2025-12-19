@@ -6,6 +6,10 @@ path = "tests/chaos_engineering.rs"
 name = "e2e_comprehensive"
 path = "tests/e2e_comprehensive.rs"
 
+[[test]]
+name = "concurrency_stress_tests"
+path = "tests/concurrency_stress_tests.rs"
+
 [package]
 name = "beardog-integration-tests"
 version = "3.0.0"
@@ -41,6 +45,9 @@ path = "../beardog-genetics"
 
 [dependencies.beardog-auth]
 path = "../beardog-auth"
+
+[dependencies.beardog-utils]
+path = "../beardog-utils"
 
 [dependencies.tokio]
 workspace = true

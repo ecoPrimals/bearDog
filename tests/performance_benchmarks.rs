@@ -244,8 +244,7 @@ pub mod benchmarks {
     }
 
     pub fn vec_push() {
-        let mut vec = Vec::new();
-        vec.push(42);
+        let _vec = [42];
     }
 
     pub fn json_parse() {

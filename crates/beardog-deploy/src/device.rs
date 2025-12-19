@@ -191,7 +191,7 @@ impl DeviceManager {
             .arg("-r") // Replace existing
             .arg(apk_path)
             .output()
-            .map_err(|e| BearDogError::system(format!("Failed to execute adb install: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to execute adb install: {e}")))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -246,10 +246,7 @@ impl DeviceManager {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             error!("App launch failed: {}", stderr);
-            return Err(BearDogError::system(format!(
-                "App launch failed: {}",
-                stderr
-            )));
+            return Err(BearDogError::system(format!("App launch failed: {stderr}")));
         }
 
         info!("✅ App started successfully on {}", device_id);
@@ -297,13 +294,13 @@ impl DeviceManager {
         // Execute logcat
         let mut child = command
             .spawn()
-            .map_err(|e| BearDogError::system(format!("Failed to start logcat: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to start logcat: {e}")))?;
 
         // Wait for process if not following, otherwise let it run
         if !follow {
             let status = child
                 .wait()
-                .map_err(|e| BearDogError::system(format!("Logcat failed: {}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Logcat failed: {e}")))?;
 
             if !status.success() {
                 return Err(BearDogError::system("Logcat exited with error".to_string()));
@@ -333,8 +330,7 @@ impl DeviceManager {
             .map_err(|e| {
                 error!("Failed to execute adb: {}", e);
                 BearDogError::system(format!(
-                    "Failed to execute adb: {}. Ensure adb is installed and in PATH",
-                    e
+                    "Failed to execute adb: {e}. Ensure adb is installed and in PATH"
                 ))
             })?;
 
@@ -342,8 +338,7 @@ impl DeviceManager {
             let stderr = String::from_utf8_lossy(&output.stderr);
             error!("adb command failed: {}", stderr);
             return Err(BearDogError::system(format!(
-                "adb command failed: {}",
-                stderr
+                "adb command failed: {stderr}"
             )));
         }
 
@@ -388,7 +383,7 @@ impl DeviceManager {
 
                 devices.push(DeviceInfo {
                     id: device_id.clone(),
-                    name: format!("{} ({})", model, device_id),
+                    name: format!("{model} ({device_id})"),
                     device_type: if strongbox_available {
                         DeviceType::AndroidStrongBox
                     } else {
@@ -414,7 +409,7 @@ impl DeviceManager {
             .arg("getprop")
             .arg(property)
             .output()
-            .map_err(|e| BearDogError::system(format!("Failed to get device property: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to get device property: {e}")))?;
 
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
@@ -487,8 +482,7 @@ impl DeviceManager {
         if !std::path::Path::new(apk_path).exists() {
             error!("APK not found at: {}", apk_path);
             return Err(BearDogError::system(format!(
-                "APK not found at: {}",
-                apk_path
+                "APK not found at: {apk_path}"
             )));
         }
 
@@ -502,15 +496,14 @@ impl DeviceManager {
             .arg("-t") // Allow test packages
             .arg(apk_path)
             .output()
-            .map_err(|e| BearDogError::system(format!("Failed to execute adb install: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to execute adb install: {e}")))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
             error!("Deployment failed: {} {}", stdout, stderr);
             return Err(BearDogError::system(format!(
-                "Deployment failed: {} {}",
-                stdout, stderr
+                "Deployment failed: {stdout} {stderr}"
             )));
         }
 
@@ -521,8 +514,7 @@ impl DeviceManager {
         } else {
             error!("Deployment output: {}", output_text);
             Err(BearDogError::system(format!(
-                "Deployment may have failed: {}",
-                output_text
+                "Deployment may have failed: {output_text}"
             )))
         }
     }

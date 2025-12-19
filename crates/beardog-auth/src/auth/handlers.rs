@@ -247,7 +247,7 @@ impl AuthenticationHandler {
 
         let parsed_hash = PasswordHash::new(DUMMY_HASH)
             .unwrap_or_else(|e| {
-                panic!("CRITICAL: Invalid DUMMY_HASH constant in timing attack mitigation - this should never fail: {}", e)
+                panic!("CRITICAL: Invalid DUMMY_HASH constant in timing attack mitigation - this should never fail: {e}")
             });
         Argon2::default()
             .verify_password(b"dummy", &parsed_hash)

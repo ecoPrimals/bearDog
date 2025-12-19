@@ -27,6 +27,39 @@ pub struct BearDogGenetics {
     pub security_clearance: SecurityClearance,
     /// Collection of specializations
     pub specializations: Vec<NodeSpecialization>,
+
+    // ============================================================================
+    // SELF-ENFORCING CONSTRAINTS (Phase 1)
+    // ============================================================================
+    /// Cryptographically enforced constraints (optional for backward compatibility)
+    ///
+    /// When present, these constraints are cryptographically signed and bound to the key.
+    /// They cannot be removed or modified without invalidating the key.
+    ///
+    /// Example: A collaboration key that cannot delete raw data:
+    /// ```rust,ignore
+    /// constraints: Some(KeyConstraints {
+    ///     data_access: DataAccessConstraint {
+    ///         immutable_paths: vec!["raw_data/*".to_string()],
+    ///         ..Default::default()
+    ///     },
+    ///     ..Default::default()
+    /// })
+    /// ```
+    #[serde(default)]
+    pub constraints: Option<beardog_types::genetics_constraints::KeyConstraints>,
+
+    /// Cryptographic signature of the constraints (proves constraints haven't been tampered with)
+    ///
+    /// This is an Ed25519 signature over the serialized constraints, signed by the key's
+    /// private key. When verifying operations, we first verify this signature to ensure
+    /// the constraints are authentic and haven't been modified.
+    #[serde(default)]
+    pub constraint_signature: Option<Vec<u8>>,
+
+    /// Public key for constraint verification (optional, can be derived from crypto_chromosomes)
+    #[serde(default)]
+    pub public_key: Option<Vec<u8>>,
 }
 
 impl Default for BearDogGenetics {
@@ -43,8 +76,181 @@ impl Default for BearDogGenetics {
             fitness_score: 0.5,
             security_clearance: SecurityClearance::Basic,
             specializations: vec![NodeSpecialization::GeneralPurpose],
+            constraints: None, // No constraints by default (backward compatible)
+            constraint_signature: None,
+            public_key: None,
         }
     }
+}
+
+// ============================================================================
+// SELF-ENFORCING CONSTRAINT INTEGRATION (Phase 1)
+// ============================================================================
+
+impl BearDogGenetics {
+    /// Generate a new key with cryptographically enforced constraints
+    ///
+    /// This creates a key where the constraints are cryptographically signed and cannot
+    /// be removed or modified without invalidating the key.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use beardog_auth::auth::BearDogGenetics;
+    /// use beardog_genetics::genetics::constraints::{KeyConstraints, DataAccessConstraint};
+    ///
+    /// let constraints = KeyConstraints {
+    ///     data_access: DataAccessConstraint {
+    ///         immutable_paths: vec!["raw_data/*".to_string()],
+    ///         ..Default::default()
+    ///     },
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let key = BearDogGenetics::generate_with_constraints(
+    ///     &[0u8; 32], // entropy
+    ///     constraints,
+    ///     vec![],     // no parents
+    /// )?;
+    ///
+    /// // Try to delete protected data - will be BLOCKED
+    /// let result = key.verify_operation(&KeyOperation::Delete {
+    ///     path: "raw_data/temperature.nc".to_string(),
+    /// });
+    /// assert!(result.is_err());
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if key generation or signing fails
+    pub fn generate_with_constraints(
+        entropy: &[u8],
+        constraints: beardog_types::genetics_constraints::KeyConstraints,
+        parent_genetics: Vec<&Self>,
+    ) -> Result<Self, beardog_errors::BearDogError> {
+        use ed25519_dalek::{Signer, SigningKey};
+        use sha3::{Digest, Sha3_256};
+        use uuid::Uuid;
+
+        // 1. Generate key pair from entropy
+        let mut hasher = Sha3_256::new();
+        hasher.update(entropy);
+        hasher.update(b"BearDog-KeyGeneration-v1");
+        let seed = hasher.finalize();
+
+        let mut seed_array = [0u8; 32];
+        seed_array.copy_from_slice(&seed[..32]);
+
+        let signing_key = SigningKey::from_bytes(&seed_array);
+        let verifying_key = signing_key.verifying_key();
+
+        // 2. Serialize and sign the constraints
+        let constraint_hash = constraints.hash()?;
+        let signature = signing_key.sign(&constraint_hash);
+
+        // 3. Inherit capabilities from parents
+        let mut capabilities = Vec::new();
+        let mut generation = 1;
+        let mut parent_ids = Vec::new();
+
+        for parent in &parent_genetics {
+            // Inherit capabilities
+            for cap in &parent.capabilities {
+                if !capabilities.contains(cap) {
+                    capabilities.push(cap.clone());
+                }
+            }
+            // Track lineage
+            parent_ids.push(parent.id.clone());
+            // Increment generation
+            generation = generation.max(parent.generation + 1);
+        }
+
+        // 4. Build genetics with embedded constraints
+        Ok(Self {
+            id: Uuid::new_v4().to_string(),
+            crypto_chromosomes: vec![],
+            security_traits: SecurityTraits::default(),
+            capabilities,
+            spawn_restrictions: vec![],
+            generation,
+            parent_genetics: if parent_ids.is_empty() {
+                None
+            } else {
+                Some(parent_ids)
+            },
+            mutations: vec![],
+            fitness_score: 0.8,                          // Initial fitness
+            security_clearance: SecurityClearance::High, // Constrained keys get high clearance
+            specializations: vec![NodeSpecialization::GeneralPurpose],
+            constraints: Some(constraints),
+            constraint_signature: Some(signature.to_bytes().to_vec()),
+            public_key: Some(verifying_key.to_bytes().to_vec()),
+        })
+    }
+
+    // Other methods moved to genetics_impl.rs
+}
+
+// Note: The rest of the implementation below was moved to genetics_impl.rs
+// for better organization. This comment section can be removed in cleanup.
+
+impl BearDogGenetics {
+    // Placeholder to prevent compilation errors - real impl in genetics_impl.rs
+    /*
+        let genetics = Self {
+            id: format!("key-{}", uuid::Uuid::new_v4()),
+            crypto_chromosomes: vec![],
+            security_traits: SecurityTraits::default(),
+            capabilities: vec![],
+            spawn_restrictions: vec![],
+            generation: parent_genetics.first().map_or(0, |p| p.generation + 1),
+            parent_genetics: if parent_genetics.is_empty() {
+                None
+            } else {
+                Some(parent_genetics.iter().map(|p| p.id.clone()).collect())
+            },
+            mutations: vec![],
+            fitness_score: 0.8,
+            security_clearance: SecurityClearance::Medium,
+            specializations: vec![NodeSpecialization::GeneralPurpose],
+            constraints: Some(constraints),
+            constraint_signature: Some(signature.to_bytes().to_vec()),
+            public_key: Some(signing_key.verifying_key().to_bytes().to_vec()),
+        };
+
+        Ok(genetics)
+    }
+
+    /// Verify that an operation is allowed by this key's constraints
+    ///
+    /// This is the core enforcement method. It:
+    /// 1. Verifies the constraint signature (detects tampering)
+    /// 2. Checks if the operation violates any constraints
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Constraints have been tampered with
+    /// - Operation violates any constraint
+    /// - Key has expired
+    /// - Required co-signers are missing
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use beardog_genetics::genetics::constraints::KeyOperation;
+    ///
+    /// let delete_op = KeyOperation::Delete {
+    ///     path: "protected/data.txt".to_string(),
+    /// };
+    ///
+    /// match key.verify_operation(&delete_op) {
+    ///     Ok(()) => println!("Operation allowed"),
+    ///     Err(e) => println!("Operation blocked: {}", e),
+    /// }
+    /// ```
+    */ // End placeholder - real impl in genetics_impl.rs
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -275,6 +481,9 @@ mod tests {
             fitness_score: 0.85,
             security_clearance: SecurityClearance::High,
             specializations: vec![NodeSpecialization::HighPerformanceCrypto],
+            constraints: None,
+            constraint_signature: None,
+            public_key: None,
         };
 
         assert_eq!(genetics.id, "gen-001");

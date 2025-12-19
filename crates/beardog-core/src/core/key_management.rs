@@ -104,6 +104,7 @@ impl KeyStore {
     ///
     /// # Arguments
     /// * `storage_dir` - Optional directory for persistent key storage
+    #[must_use]
     pub fn new(storage_dir: Option<PathBuf>) -> Self {
         Self {
             inner: Arc::new(RwLock::new(KeyStoreInner {
@@ -126,6 +127,9 @@ impl KeyStore {
     ///
     /// # Returns
     /// Public key bytes
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn generate_signing_key(
         &self,
         key_id: String,
@@ -172,6 +176,9 @@ impl KeyStore {
     /// * `usage` - Key usage flags
     /// * `storage` - Storage location
     /// * `description` - Optional description
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn generate_symmetric_key(
         &self,
         key_id: String,
@@ -209,6 +216,9 @@ impl KeyStore {
     }
 
     /// Import an existing Ed25519 signing key
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn import_signing_key(
         &self,
         key_id: String,
@@ -256,6 +266,9 @@ impl KeyStore {
     }
 
     /// Import a public key for verification
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn import_public_key(
         &self,
         key_id: String,
@@ -278,7 +291,7 @@ impl KeyStore {
                         BearDogError::security("Failed to parse Ed25519 public key".to_string())
                     })?)
                     .map_err(|e| {
-                        BearDogError::security(format!("Invalid Ed25519 public key: {}", e))
+                        BearDogError::security(format!("Invalid Ed25519 public key: {e}"))
                     })?;
 
                 let metadata = KeyMetadata {
@@ -297,33 +310,41 @@ impl KeyStore {
                 Ok(())
             }
             _ => Err(BearDogError::security(format!(
-                "Unsupported key type for public key import: {:?}",
-                key_type
+                "Unsupported key type for public key import: {key_type:?}"
             ))),
         }
     }
 
     /// Get a signing key by ID
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn get_signing_key(&self, key_id: &str) -> Result<SigningKey, BearDogError> {
         let inner = self.inner.read().await;
         inner
             .signing_keys
             .get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::security(format!("Signing key not found: {}", key_id)))
+            .ok_or_else(|| BearDogError::security(format!("Signing key not found: {key_id}")))
     }
 
     /// Get a verifying key by ID
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn get_verifying_key(&self, key_id: &str) -> Result<VerifyingKey, BearDogError> {
         let inner = self.inner.read().await;
         inner
             .verifying_keys
             .get(key_id)
-            .cloned()
-            .ok_or_else(|| BearDogError::security(format!("Verifying key not found: {}", key_id)))
+            .copied()
+            .ok_or_else(|| BearDogError::security(format!("Verifying key not found: {key_id}")))
     }
 
     /// Get a symmetric key by ID
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn get_symmetric_key(
         &self,
         key_id: &str,
@@ -333,26 +354,35 @@ impl KeyStore {
             .symmetric_keys
             .get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::security(format!("Symmetric key not found: {}", key_id)))
+            .ok_or_else(|| BearDogError::security(format!("Symmetric key not found: {key_id}")))
     }
 
     /// Get key metadata
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn get_metadata(&self, key_id: &str) -> Result<KeyMetadata, BearDogError> {
         let inner = self.inner.read().await;
         inner
             .metadata
             .get(key_id)
             .cloned()
-            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {}", key_id)))
+            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))
     }
 
     /// List all key IDs
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         let inner = self.inner.read().await;
         Ok(inner.metadata.keys().cloned().collect())
     }
 
     /// Delete a key
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         let mut inner = self.inner.write().await;
         let metadata = inner.metadata.remove(key_id);
@@ -383,11 +413,11 @@ impl KeyStore {
         let signing_key = inner
             .signing_keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::security(format!("Signing key not found: {}", key_id)))?;
+            .ok_or_else(|| BearDogError::security(format!("Signing key not found: {key_id}")))?;
         let metadata = inner
             .metadata
             .get(key_id)
-            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {}", key_id)))?
+            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))?
             .clone();
 
         let key_bytes = signing_key.to_bytes();
@@ -395,23 +425,23 @@ impl KeyStore {
 
         // Create storage directory if it doesn't exist
         fs::create_dir_all(storage_dir).await.map_err(|e| {
-            BearDogError::security(format!("Failed to create key storage directory: {}", e))
+            BearDogError::security(format!("Failed to create key storage directory: {e}"))
         })?;
 
         // Write key file
-        let key_path = storage_dir.join(format!("{}.key", key_id));
+        let key_path = storage_dir.join(format!("{key_id}.key"));
         fs::write(&key_path, &key_bytes)
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to write signing key: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("Failed to write signing key: {e}")))?;
 
         // Write metadata file
-        let metadata_path = storage_dir.join(format!("{}.meta.json", key_id));
+        let metadata_path = storage_dir.join(format!("{key_id}.meta.json"));
         let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            BearDogError::security(format!("Failed to serialize key metadata: {}", e))
+            BearDogError::security(format!("Failed to serialize key metadata: {e}"))
         })?;
         fs::write(&metadata_path, metadata_json)
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to write key metadata: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("Failed to write key metadata: {e}")))?;
 
         Ok(())
     }
@@ -423,13 +453,14 @@ impl KeyStore {
         })?;
 
         let inner = self.inner.read().await;
-        let symmetric_key = inner.symmetric_keys.get(key_id).ok_or_else(|| {
-            BearDogError::security(format!("Symmetric key not found: {}", key_id))
-        })?;
+        let symmetric_key = inner
+            .symmetric_keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::security(format!("Symmetric key not found: {key_id}")))?;
         let metadata = inner
             .metadata
             .get(key_id)
-            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {}", key_id)))?
+            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))?
             .clone();
 
         let key_bytes = symmetric_key.clone();
@@ -437,23 +468,23 @@ impl KeyStore {
 
         // Create storage directory if it doesn't exist
         fs::create_dir_all(storage_dir).await.map_err(|e| {
-            BearDogError::security(format!("Failed to create key storage directory: {}", e))
+            BearDogError::security(format!("Failed to create key storage directory: {e}"))
         })?;
 
         // Write key file
-        let key_path = storage_dir.join(format!("{}.key", key_id));
+        let key_path = storage_dir.join(format!("{key_id}.key"));
         fs::write(&key_path, &*key_bytes)
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to write symmetric key: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("Failed to write symmetric key: {e}")))?;
 
         // Write metadata file
-        let metadata_path = storage_dir.join(format!("{}.meta.json", key_id));
+        let metadata_path = storage_dir.join(format!("{key_id}.meta.json"));
         let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            BearDogError::security(format!("Failed to serialize key metadata: {}", e))
+            BearDogError::security(format!("Failed to serialize key metadata: {e}"))
         })?;
         fs::write(&metadata_path, metadata_json)
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to write key metadata: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("Failed to write key metadata: {e}")))?;
 
         Ok(())
     }
@@ -461,18 +492,18 @@ impl KeyStore {
     /// Delete persisted key from file
     async fn delete_persisted_key(&self, key_id: &str) -> Result<(), BearDogError> {
         if let Some(storage_dir) = &self.storage_dir {
-            let key_path = storage_dir.join(format!("{}.key", key_id));
-            let metadata_path = storage_dir.join(format!("{}.meta.json", key_id));
+            let key_path = storage_dir.join(format!("{key_id}.key"));
+            let metadata_path = storage_dir.join(format!("{key_id}.meta.json"));
 
             if key_path.exists() {
                 fs::remove_file(&key_path).await.map_err(|e| {
-                    BearDogError::security(format!("Failed to delete key file: {}", e))
+                    BearDogError::security(format!("Failed to delete key file: {e}"))
                 })?;
             }
 
             if metadata_path.exists() {
                 fs::remove_file(&metadata_path).await.map_err(|e| {
-                    BearDogError::security(format!("Failed to delete metadata file: {}", e))
+                    BearDogError::security(format!("Failed to delete metadata file: {e}"))
                 })?;
             }
         }
@@ -481,6 +512,10 @@ impl KeyStore {
     }
 
     /// Load keys from persistent storage
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn load_from_storage(&self) -> Result<usize, BearDogError> {
         let storage_dir = self.storage_dir.as_ref().ok_or_else(|| {
             BearDogError::security("Key storage directory not configured".to_string())
@@ -491,7 +526,7 @@ impl KeyStore {
         }
 
         let mut entries = fs::read_dir(storage_dir).await.map_err(|e| {
-            BearDogError::security(format!("Failed to read key storage directory: {}", e))
+            BearDogError::security(format!("Failed to read key storage directory: {e}"))
         })?;
 
         let mut loaded_count = 0;
@@ -499,7 +534,7 @@ impl KeyStore {
         while let Some(entry) = entries
             .next_entry()
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to read directory entry: {}", e)))?
+            .map_err(|e| BearDogError::security(format!("Failed to read directory entry: {e}")))?
         {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("key") {
@@ -508,24 +543,24 @@ impl KeyStore {
                     .and_then(|s| s.to_str())
                     .ok_or_else(|| BearDogError::security("Invalid key filename".to_string()))?;
 
-                let metadata_path = storage_dir.join(format!("{}.meta.json", key_id));
+                let metadata_path = storage_dir.join(format!("{key_id}.meta.json"));
                 if !metadata_path.exists() {
                     continue; // Skip if metadata is missing
                 }
 
                 // Load metadata
                 let metadata_json = fs::read_to_string(&metadata_path).await.map_err(|e| {
-                    BearDogError::security(format!("Failed to read key metadata: {}", e))
+                    BearDogError::security(format!("Failed to read key metadata: {e}"))
                 })?;
                 let metadata: KeyMetadata = serde_json::from_str(&metadata_json).map_err(|e| {
-                    BearDogError::security(format!("Failed to parse key metadata: {}", e))
+                    BearDogError::security(format!("Failed to parse key metadata: {e}"))
                 })?;
 
                 // Load key based on type
                 match metadata.key_type {
                     KeyType::Ed25519 => {
                         let key_bytes = fs::read(&path).await.map_err(|e| {
-                            BearDogError::security(format!("Failed to read signing key: {}", e))
+                            BearDogError::security(format!("Failed to read signing key: {e}"))
                         })?;
                         self.import_signing_key(
                             key_id.to_string(),
@@ -539,7 +574,7 @@ impl KeyStore {
                     }
                     KeyType::Aes256Gcm => {
                         let key_bytes = Zeroizing::new(fs::read(&path).await.map_err(|e| {
-                            BearDogError::security(format!("Failed to read symmetric key: {}", e))
+                            BearDogError::security(format!("Failed to read symmetric key: {e}"))
                         })?);
 
                         let mut inner = self.inner.write().await;

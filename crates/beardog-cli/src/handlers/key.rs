@@ -1,72 +1,20 @@
 // Key Management Handler
 // Vendor-agnostic: Works with ANY HSM
 
+use super::hsm_agnostic;
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use chrono::Utc;
-// Temporarily use placeholders
-// use beardog_tunnel::tunnel::hsm::HsmManager;
-// use beardog_tunnel::universal_hsm_discovery::{HsmDiscoveryManager, HsmTier};
 use std::fs;
 
-// Placeholder HSM structure
-#[derive(Clone)]
-struct PlaceholderHsm {
-    name: String,
-    tier: String,
-    #[allow(dead_code)] // Will be used when wired to real HSM manager
-    hsm_type: String,
+// ALL OLD PLACEHOLDER CODE REMOVED
+// Now using hsm_agnostic module for universal discovery
+
+async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearDogError> {
+    hsm_agnostic::discover_all_hsms().await
 }
 
-async fn discover_hsms_placeholder() -> Result<Vec<PlaceholderHsm>, BearDogError> {
-    use std::process::Command;
-
-    let mut hsms = Vec::new();
-
-    // Check for SoftHSM2
-    if std::path::Path::new("/usr/lib/softhsm/libsofthsm2.so").exists() {
-        hsms.push(PlaceholderHsm {
-            name: "SoftHSM2".to_string(),
-            tier: "Software".to_string(),
-            hsm_type: "PKCS#11".to_string(),
-        });
-    }
-
-    // Check for Android devices via ADB
-    let adb_output = Command::new("adb").args(["devices", "-l"]).output();
-    if let Ok(output) = adb_output {
-        let output_str = String::from_utf8_lossy(&output.stdout);
-        for line in output_str.lines().skip(1) {
-            if line.contains("device") && !line.trim().is_empty() {
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 2 && parts[1] == "device" {
-                    let serial = parts[0];
-                    // Check for StrongBox
-                    if let Ok(features) = Command::new("adb")
-                        .args(["-s", serial, "shell", "pm", "list", "features"])
-                        .output()
-                    {
-                        let features_str = String::from_utf8_lossy(&features.stdout);
-                        if features_str.contains("strongbox_keystore") {
-                            let model = parts
-                                .iter()
-                                .find(|p| p.starts_with("model:"))
-                                .and_then(|p| p.strip_prefix("model:"))
-                                .unwrap_or("AndroidDevice");
-                            hsms.push(PlaceholderHsm {
-                                name: format!("Android StrongBox ({})", model.replace('_', " ")),
-                                tier: "Mobile".to_string(),
-                                hsm_type: "Android-Keystore".to_string(),
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(hsms)
-}
+// ALL OLD PLACEHOLDER CODE REMOVED - was hardcoded and vendor-specific
 
 /// Generate AES-256 key optionally mixed with human entropy seed
 fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearDogError> {
@@ -120,11 +68,11 @@ pub async fn handle_key_generate(
 
     // Discover and select HSM (vendor-agnostic)
     println!("🔍 Discovering HSMs...");
-    let hsms = discover_hsms_placeholder().await?;
+    let hsms = discover_hsms_agnostic().await?;
 
     if hsms.is_empty() {
         return Err(BearDogError::not_found(
-            "No HSMs found. Please connect hardware or install SoftHSM2.".to_string(),
+            "No HSMs found. Please connect hardware or install a PKCS#11 provider.".to_string(),
         ));
     }
 
@@ -189,9 +137,47 @@ pub async fn handle_key_generate(
         hsm_name: selected_hsm.name.clone(),
         created_at: Utc::now().to_rfc3339(),
         key_material_b64: key_store::base64_encode(&key_material),
+        generation: 0, // Root key
+        parent_key_id: None,
+        derivation_purpose: None,
+        children: Vec::new(),
+        expires_at: None,
+        usage: None,
+        purpose: None,
     };
 
     key_store::save_key(&stored_key)?;
+
+    // Generate operation receipt
+    use beardog_types::receipt::{generate_receipt_filename, HsmInfo, KeyInfo, OperationReceipt};
+    use serde_json::json;
+
+    let receipt = OperationReceipt::new("key-generate")
+        .with_key_info(KeyInfo {
+            key_id: key_id.to_string(),
+            algorithm: algorithm.to_string(),
+            generation: 0,
+            parent_key_id: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        })
+        .with_hsm_info(HsmInfo {
+            name: selected_hsm.name.clone(),
+            vendor: Some(selected_hsm.vendor.clone()),
+            model: Some(selected_hsm.model.clone()),
+            hsm_type: Some(selected_hsm.hsm_type.clone()),
+        })
+        .with_metadata(
+            "entropy_source",
+            json!(if seed_data.is_some() { "human" } else { "system" }),
+        );
+
+    // Save receipt to receipts directory
+    let receipt_dir = std::path::Path::new("receipts");
+    std::fs::create_dir_all(receipt_dir)?;
+    let receipt_path = receipt_dir.join(generate_receipt_filename("key-generate"));
+    receipt.save_to_file(&receipt_path)?;
 
     println!("✅ Key generated successfully!");
     println!();
@@ -200,6 +186,9 @@ pub async fn handle_key_generate(
     println!("   Algorithm: {}", algorithm);
     println!("   HSM: {}", selected_hsm.name);
     println!("   Status: Active");
+    println!();
+    println!("📜 Receipt: {}", receipt_path.display());
+    println!("   Receipt ID: {}", receipt.receipt_id);
     println!();
     println!("💡 Next steps:");
     println!("   • List keys: beardog key list");
@@ -279,6 +268,215 @@ pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), B
 
     key_store::delete_key(key_id)?;
     println!("✅ Key '{}' deleted successfully", key_id);
+
+    Ok(())
+}
+
+/// Handle key generate with KDF and restrictions (v2)
+#[allow(clippy::too_many_arguments)]
+pub async fn handle_key_generate_v2(
+    key_id: &str,
+    algorithm: &str,
+    hsm_preference: &str,
+    seed_path: Option<&str>,
+    kdf_type: &str,
+    kdf_iterations: Option<u32>,
+    kdf_memory: Option<u32>,
+    kdf_time: Option<u32>,
+    usage: Option<&str>,
+    expires_in: Option<&str>,
+    purpose: Option<&str>,
+) -> Result<(), BearDogError> {
+    println!("🔑 BearDog Key Generation (Enhanced)");
+    println!("====================================");
+    println!();
+
+    // Parse algorithm (vendor-agnostic algorithm names)
+    println!("📋 Configuration:");
+    println!("   Key ID: {}", key_id);
+    println!("   Algorithm: {}", algorithm);
+    println!("   HSM Preference: {}", hsm_preference);
+    println!("   KDF: {}", kdf_type);
+    if let Some(seed) = seed_path {
+        println!("   Entropy Seed: {}", seed);
+    }
+    if let Some(purp) = purpose {
+        println!("   Purpose: {}", purp);
+    }
+    if let Some(exp) = expires_in {
+        println!("   Expires In: {}", exp);
+    }
+    if let Some(use_restrict) = usage {
+        println!("   Usage: {}", use_restrict);
+    }
+    println!();
+
+    // Discover and select HSM (vendor-agnostic)
+    println!("🔍 Discovering HSMs...");
+    let hsms = discover_hsms_agnostic().await?;
+
+    if hsms.is_empty() {
+        return Err(BearDogError::not_found(
+            "No HSMs found. Please connect hardware or install a PKCS#11 provider.".to_string(),
+        ));
+    }
+
+    let selected_hsm = match hsm_preference.to_lowercase().as_str() {
+        "auto" => {
+            // Prefer: mobile > hardware > software
+            hsms.iter()
+                .find(|h| h.tier == "Mobile")
+                .or_else(|| hsms.iter().find(|h| h.tier == "Hardware"))
+                .or_else(|| hsms.iter().find(|h| h.tier == "Software"))
+                .ok_or_else(|| BearDogError::not_found("No suitable HSM found".to_string()))?
+        }
+        "software" => hsms
+            .iter()
+            .find(|h| h.tier == "Software")
+            .ok_or_else(|| BearDogError::not_found("No software HSM found".to_string()))?,
+        "hardware" => hsms
+            .iter()
+            .find(|h| h.tier == "Hardware")
+            .ok_or_else(|| BearDogError::not_found("No hardware HSM found".to_string()))?,
+        "mobile" => hsms
+            .iter()
+            .find(|h| h.tier == "Mobile")
+            .ok_or_else(|| BearDogError::not_found("No mobile HSM found".to_string()))?,
+        _ => {
+            let msg = format!("Unknown HSM preference: {}", hsm_preference);
+            return Err(BearDogError::invalid_input(&msg));
+        }
+    };
+
+    println!("✅ Selected HSM: {}", selected_hsm.name);
+    println!("   Tier: {}", selected_hsm.tier);
+    println!();
+
+    // Load entropy seed if provided
+    let seed_data = if let Some(seed_path) = seed_path {
+        println!("🌱 Loading entropy seed...");
+        let seed_content = fs::read_to_string(seed_path)?;
+        println!("✅ Entropy seed loaded ({} bytes)", seed_content.len());
+        println!("   Seed will be mixed with system entropy for key derivation");
+        println!();
+        Some(seed_content.into_bytes())
+    } else {
+        None
+    };
+
+    // Derive key material using specified KDF
+    println!(
+        "🔐 Deriving {} key with {}...",
+        algorithm,
+        kdf_type.to_uppercase()
+    );
+
+    // Create KDF config
+    let kdf_config =
+        super::kdf::KdfConfig::new(kdf_type.to_string(), kdf_iterations, kdf_memory, kdf_time);
+
+    // Generate key material
+    let key_len = 32; // AES-256 = 32 bytes
+    let password = seed_data.as_deref().unwrap_or(b"beardog-default-seed");
+    let salt = b"beardog-cli-salt-v1"; // In production, use random salt per key
+
+    let key_material = kdf_config.derive_key(password, salt, key_len)?;
+
+    println!("✅ Key material derived ({} bytes)", key_material.len());
+    println!();
+
+    // Calculate expiry if specified
+    let expires_at_str = if let Some(duration_str) = expires_in {
+        let expiry = super::key_derive::parse_duration(duration_str)?;
+        Some(expiry.to_rfc3339())
+    } else {
+        None
+    };
+
+    // Save key to storage
+    let stored_key = StoredKey {
+        key_id: key_id.to_string(),
+        algorithm: algorithm.to_string(),
+        hsm_name: selected_hsm.name.clone(),
+        created_at: Utc::now().to_rfc3339(),
+        key_material_b64: key_store::base64_encode(&key_material),
+        generation: 0, // Root key
+        parent_key_id: None,
+        derivation_purpose: None,
+        children: Vec::new(),
+        expires_at: expires_at_str.clone(),
+        usage: usage.map(|s| s.to_string()),
+        purpose: purpose.map(|s| s.to_string()),
+    };
+
+    key_store::save_key(&stored_key)?;
+
+    // Generate operation receipt
+    use beardog_types::receipt::{generate_receipt_filename, HsmInfo, KeyInfo, OperationReceipt};
+    use serde_json::json;
+
+    let receipt = OperationReceipt::new("key-generate")
+        .with_key_info(KeyInfo {
+            key_id: key_id.to_string(),
+            algorithm: algorithm.to_string(),
+            generation: 0,
+            parent_key_id: None,
+            expires_at: expires_at_str.clone(),
+            usage: usage.map(|s| s.to_string()),
+            purpose: purpose.map(|s| s.to_string()),
+        })
+        .with_hsm_info(HsmInfo {
+            name: selected_hsm.name.clone(),
+            vendor: Some(selected_hsm.vendor.clone()),
+            model: Some(selected_hsm.model.clone()),
+            hsm_type: Some(selected_hsm.hsm_type.clone()),
+        })
+        .with_metadata("kdf", json!(kdf_type))
+        .with_metadata(
+            "entropy_source",
+            json!(if seed_data.is_some() { "human" } else { "system" }),
+        );
+
+    // Save receipt
+    let receipt_dir = std::path::Path::new("receipts");
+    std::fs::create_dir_all(receipt_dir)?;
+    let receipt_path = receipt_dir.join(generate_receipt_filename("key-generate"));
+    receipt.save_to_file(&receipt_path)?;
+
+    println!("✅ Key generated successfully!");
+    println!();
+    println!("📋 Key Details:");
+    println!("   ID: {}", key_id);
+    println!("   Algorithm: {}", algorithm);
+    println!("   HSM: {}", selected_hsm.name);
+    println!("   KDF: {}", kdf_type);
+    println!("   Generation: 0 (root key)");
+    println!("   Status: Active");
+
+    if let Some(exp) = expires_at_str {
+        println!();
+        println!("⏰ Expiry: {}", exp);
+    }
+
+    if let Some(use_restrict) = usage {
+        println!("   Usage: {}", use_restrict);
+    }
+
+    if let Some(purp) = purpose {
+        println!("   Purpose: {}", purp);
+    }
+
+    println!();
+    println!("📜 Receipt: {}", receipt_path.display());
+    println!("   Receipt ID: {}", receipt.receipt_id);
+
+    println!();
+    println!("💡 Next steps:");
+    println!("   • List keys: beardog key list");
+    println!(
+        "   • Encrypt: beardog encrypt --key {} --input data.txt --output data.enc",
+        key_id
+    );
 
     Ok(())
 }

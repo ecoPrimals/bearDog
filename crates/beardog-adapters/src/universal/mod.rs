@@ -6,6 +6,7 @@
 pub mod adapter_types;
 pub mod capability_based_adapter;
 pub mod primal_capability_adapter;
+pub mod primal_runtime_discovery;
 pub mod capability_adapter;
 pub mod extensible_adapter;
 pub mod adapter_impl;

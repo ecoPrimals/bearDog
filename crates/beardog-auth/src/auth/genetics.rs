@@ -34,6 +34,9 @@ impl CrossNodeAuthEngine {
             fitness_score: 0.8,
             security_clearance: SecurityClearance::Medium,
             specializations: vec![],
+            constraints: None, // No constraints for combined genetics (can be added separately)
+            constraint_signature: None,
+            public_key: None,
         })
     }
 
@@ -44,8 +47,7 @@ impl CrossNodeAuthEngine {
             Ok(())
         } else {
             Err(BearDogError::not_found(format!(
-                "Spawn not found: {}",
-                spawn_id
+                "Spawn not found: {spawn_id}"
             )))
         }
     }
@@ -73,6 +75,9 @@ mod tests {
             fitness_score: 0.9,
             security_clearance: SecurityClearance::High,
             specializations: vec![],
+            public_key: Some(vec![]),
+            constraints: None,
+            constraint_signature: None,
         };
 
         let result = engine.register_genetics(genetics.clone());

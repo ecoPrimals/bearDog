@@ -75,8 +75,7 @@ impl UnifiedHsmProvider {
 
         if !providers.contains_key(&id) {
             return Err(BearDogError::not_found(format!(
-                "Provider '{}' not found",
-                id
+                "Provider '{id}' not found"
             )));
         }
 
@@ -92,7 +91,7 @@ impl UnifiedHsmProvider {
         providers
             .get(id)
             .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Provider '{}' not found", id)))
+            .ok_or_else(|| BearDogError::not_found(format!("Provider '{id}' not found")))
     }
 
     /// Gets the default provider

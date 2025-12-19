@@ -10,6 +10,7 @@ pub mod network_addresses;
 pub mod network_hosts;
 pub mod network_ports;
 pub mod paths;
+pub mod port_discovery;
 pub mod security;
 
 // Migrated to modern timeouts_new module (Week 3 modernization complete)

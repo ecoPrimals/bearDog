@@ -427,8 +427,27 @@ pub use beardog_errors::BearDogError;
 /// - [`canonical::crypto`] - Cryptographic operations
 pub mod canonical;
 
+pub mod adapter_certificates;
+/// 🔒 **CONSTRAINTS** - Universal constraint evaluation system
+///
+/// Philosophy: Users define their own rules. We provide the framework, not the limits.
+///
+/// This module provides a constraint-agnostic architecture where users can create
+/// novel constraints for scenarios we can't predict:
+/// - Proximity-based constraints
+/// - Environmental sensor constraints
+/// - Network connectivity constraints
+/// - Biometric authentication constraints
+/// - Composite logical constraints (AND/OR/NOT)
+pub mod constraints;
+pub mod genetics_constraints;
+pub mod genetics_constraints_helpers;
+
 // Core types with HSM support
 pub mod hsm;
+
+// 📜 Universal operation receipt system for verifiable audit trails
+pub mod receipt;
 
 // Mathematical and system constants
 pub mod constants;
@@ -691,6 +710,9 @@ mod lib_main_tests {
 /// 🔄 **WORKFLOWS** - Workflow orchestration types
 ///
 pub mod workflow;
+
+/// Crypto service types (protocol-agnostic)
+pub mod crypto_service;
 
 // **MODERNIZED CONFIGURATION EXPORTS** - Canonical unified configuration system
 // NEW: Use unified configuration exports (from unified.rs)

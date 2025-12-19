@@ -1,0 +1,33 @@
+# BearDog Root Documentation - December 19, 2025
+
+## Current Structure: 11 Essential Files
+
+This directory contains only essential, permanent documentation.
+All session-specific documents are archived in archive/session-*/
+
+### Essential Documentation (Root)
+- START_HERE.md              ⭐ Begin here
+- README.md                  📖 Project overview
+- STATUS.md                  📊 Current status
+- ROOT_DOCS_INDEX.md         📚 Complete index
+- ARCHITECTURE.md            🏗️ System design
+- SECURITY.md                🔐 Security policies
+- CHANGELOG.md               📝 Version history
+- TOADSTOOL_QUICK_START.md   🍄 ToadStool guide
+- MULTI_PROTOCOL_GUIDE.md    🌐 Complete API guide
+- NEXT_STEPS_GUIDE.md        🚀 Future roadmap
+- UNSAFE_CODE_EVOLUTION_PATH.md ⚡ Safety strategy
+
+### Session Archives
+- archive/session-dec-19-2025/  Latest session (22 documents)
+- archive/dec-18-2025/          Previous session
+- archive/session-dec-18-2025/  Historical sessions
+
+### Quick Access
+New to BearDog? → START_HERE.md
+Current status? → STATUS.md  
+All documentation? → ROOT_DOCS_INDEX.md
+Dec 19 audit? → archive/session-dec-19-2025/
+
+Last cleanup: December 19, 2025
+Status: ✅ Clean and organized

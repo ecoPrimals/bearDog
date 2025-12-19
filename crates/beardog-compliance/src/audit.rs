@@ -93,6 +93,32 @@ impl AuditEvent {
         }
     }
 
+    /// Create audit event with explicit timestamp (for testing)
+    /// Creates instance with specific timestamp
+    #[must_use]
+    #[cfg(test)]
+    pub fn new_with_timestamp(
+        event_type: AuditEventType,
+        resource: String,
+        action: String,
+        result: String,
+        timestamp: chrono::DateTime<chrono::Utc>,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            event_type,
+            user_id: None,
+            resource,
+            action,
+            result,
+            timestamp,
+            source_ip: None,
+            user_agent: None,
+            compliance_tags: Vec::new(),
+            metadata: HashMap::new(),
+        }
+    }
+
     /// Add user context to event
     /// Creates instance with user
     #[must_use]

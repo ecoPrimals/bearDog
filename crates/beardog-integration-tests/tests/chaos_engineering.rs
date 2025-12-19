@@ -1,3 +1,14 @@
+//! Chaos Engineering Tests
+//!
+//! These tests intentionally use sleep() to simulate:
+//! - Variable network latency
+//! - Slow operations
+//! - Resource contention
+//! - System delays
+//!
+//! **NOTE**: Sleep usage in chaos tests is LEGITIMATE and INTENTIONAL.
+//! We're testing how the system behaves under realistic delay conditions.
+
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
@@ -14,7 +25,10 @@ async fn test_memory_pressure_resilience() {
             // TEST_DOMAIN: core
             // TEST_PRIORITY: normal
             let _data = vec![0u8; 1024 * 100]; // 100KB per task
+
+            // LEGITIMATE: Chaos test - simulate operation delay under memory pressure
             sleep(Duration::from_millis(10)).await;
+
             format!("task_{i}")
         });
         handles.push(handle);
@@ -58,23 +72,23 @@ async fn test_concurrent_operation_resilience() {
         let handle = tokio::spawn(async move {
             match i % 4 {
                 0 => {
-                    // Crypto operation
+                    // LEGITIMATE: Chaos test - simulate crypto operation latency
                     let data = format!("crypto_data_{i}");
                     sleep(Duration::from_millis(5)).await;
                     data.len()
                 }
                 1 => {
-                    // Database operation
+                    // LEGITIMATE: Chaos test - simulate database operation latency
                     sleep(Duration::from_millis(10)).await;
                     42
                 }
                 2 => {
-                    // Network operation
+                    // LEGITIMATE: Chaos test - simulate network operation latency
                     sleep(Duration::from_millis(8)).await;
                     i * 2
                 }
                 _ => {
-                    // Lightweight operation
+                    // LEGITIMATE: Chaos test - simulate lightweight operation
                     sleep(Duration::from_millis(3)).await;
                     i + 100
                 }
@@ -122,7 +136,7 @@ async fn test_network_fault_tolerance() {
         let _operation_start = Instant::now();
 
         let result = tokio::spawn(async move {
-            // Simulate network operation
+            // LEGITIMATE: Chaos test - simulate variable network latency
             let delay = if i % 3 == 0 { 50 } else { 5 }; // Some operations are slow
             sleep(Duration::from_millis(delay)).await;
 
@@ -140,6 +154,7 @@ async fn test_network_fault_tolerance() {
             Err(_) => println!("❌ Task panic"),
         }
 
+        // LEGITIMATE: Chaos test - simulate inter-operation delay
         sleep(Duration::from_millis(10)).await;
     }
 

@@ -4,6 +4,10 @@
 
 use super::core::TimeoutConfig;
 
+#[cfg(test)]
+#[path = "validation_comprehensive_tests.rs"]
+mod validation_comprehensive_tests;
+
 /// Validate timeout configuration
 ///
 /// Checks all timeout values are within acceptable operational ranges.

@@ -46,6 +46,7 @@
 - 6 other security specs
 
 #### **🔌 Integration**
+- [BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION.md](current/integration/BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION.md) - ⭐ **NEW** - Security primal specification
 - [UNIVERSAL_ADAPTER_SPECIFICATION.md](current/integration/UNIVERSAL_ADAPTER_SPECIFICATION.md) - Multi-provider integration
 - [BEARDOG_ECOSYSTEM_INTEGRATION.md](current/integration/BEARDOG_ECOSYSTEM_INTEGRATION.md) - Ecosystem coordination
 - [SONGBIRD_INTEGRATION_SPECIFICATION.md](current/integration/SONGBIRD_INTEGRATION_SPECIFICATION.md) - Network integration

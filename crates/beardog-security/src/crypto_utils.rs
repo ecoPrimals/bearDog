@@ -329,7 +329,7 @@ impl BearDogCrypto {
         if prefix.is_empty() {
             Ok(base64_key)
         } else {
-            Ok(format!("{}_{}", prefix, base64_key))
+            Ok(format!("{prefix}_{base64_key}"))
         }
     }
 

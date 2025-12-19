@@ -201,7 +201,7 @@ impl HsmManager {
             failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
             capability_detector: Arc::new(DefaultHsmCapabilityDetector::new()
                 .unwrap_or_else(|e| {
-                    panic!("CRITICAL: DefaultHsmCapabilityDetector::new() failed - this should never happen as it only creates a HashMap: {}", e)
+                    panic!("CRITICAL: DefaultHsmCapabilityDetector::new() failed - this should never happen as it only creates a HashMap: {e}")
                 })),
             performance_tracker: Arc::new(HsmPerformanceTracker::default()),
             operation_router: Arc::new(RwLock::new(HsmOperationRouter::default())),
@@ -263,7 +263,7 @@ impl HsmManager {
         tier: HsmTier,
         provider: Arc<dyn HsmProvider>,
     ) -> Result<(), BearDogError> {
-        let tier_key = format!("{:?}", tier);
+        let tier_key = format!("{tier:?}");
         self.hsm_providers.insert(tier_key, provider);
         Ok(())
     }

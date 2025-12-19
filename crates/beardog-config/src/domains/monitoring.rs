@@ -229,6 +229,10 @@ impl MonitoringConfigBuilder {
 }
 
 #[cfg(test)]
+#[path = "monitoring_comprehensive_tests.rs"]
+mod monitoring_comprehensive_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

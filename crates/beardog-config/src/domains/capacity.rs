@@ -256,6 +256,10 @@ impl Default for CapacityConfig {
 }
 
 #[cfg(test)]
+#[path = "capacity_comprehensive_tests.rs"]
+mod capacity_comprehensive_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

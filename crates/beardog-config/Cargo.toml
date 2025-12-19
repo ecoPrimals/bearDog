@@ -42,6 +42,7 @@ tokio = { version = "1.0", optional = true, features = ["fs"] }
 [dev-dependencies]
 tempfile = "3.8"
 tokio = { version = "1.0", features = ["full", "test-util"] }
+serial_test = "3.2"
 
 [features]
 default = []

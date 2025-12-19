@@ -310,14 +310,56 @@ impl PrimalDiscoveryService for EcosystemDiscoveryAdapter {
 impl EcosystemDiscoveryAdapter {
     /// Check if primal has the requested capability
     ///
-    /// Zero-copy capability checking
+    /// Implements agnostic, capability-based matching between Universal and Service capability types.
+    /// This function enables runtime capability discovery without hardcoding primal names or types.
+    ///
+    /// # Arguments
+    /// * `primal` - The discovered primal to check
+    /// * `requested` - The universal capability type requested
+    ///
+    /// # Returns
+    /// `true` if the primal provides the requested capability, `false` otherwise
+    ///
+    /// # Design
+    /// Maps between UniversalCapabilityType (higher-level, domain-focused) and
+    /// ServiceCapabilityType (lower-level, operation-focused) to enable flexible
+    /// capability matching across different abstraction levels.
     fn primal_has_capability(
         primal: &DiscoveredPrimal,
-        _requested: &UniversalCapabilityType,
+        requested: &UniversalCapabilityType,
     ) -> bool {
-        // TODO: Implement proper capability matching
-        // For now, return true if primal has any capabilities
-        !primal.capabilities.is_empty()
+        use beardog_types::canonical::capabilities::CapabilityType;
+
+        // Map UniversalCapabilityType to ServiceCapabilityType for comparison
+        // This enables agnostic capability matching without hardcoding
+        let required_service_capabilities: Vec<CapabilityType> = match requested {
+            UniversalCapabilityType::Compute { .. } => vec![
+                CapabilityType::ComputeIntelligence,
+                CapabilityType::DistributedIntelligence,
+            ],
+            UniversalCapabilityType::Storage { .. } => vec![CapabilityType::DataStorage],
+            UniversalCapabilityType::Network { .. } => {
+                vec![CapabilityType::ServiceMesh, CapabilityType::Networking]
+            }
+            UniversalCapabilityType::Security { .. } => vec![
+                CapabilityType::Security,
+                CapabilityType::Authentication,
+                CapabilityType::KeyManagement,
+            ],
+            UniversalCapabilityType::Orchestration { .. } => vec![
+                CapabilityType::ContainerOrchestration,
+                CapabilityType::WorkflowOrchestration,
+            ],
+        };
+
+        // Check if primal has ANY of the required capabilities
+        // This OR-based matching allows flexible capability discovery
+        required_service_capabilities.iter().any(|required| {
+            primal
+                .capabilities
+                .iter()
+                .any(|provided| provided == required)
+        })
     }
 }
 

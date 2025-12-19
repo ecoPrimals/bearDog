@@ -18,14 +18,14 @@ impl CryptoAlgorithm {
     pub fn as_symmetric(&self) -> Result<SymmetricAlgorithm, String> {
         match self {
             CryptoAlgorithm::Symmetric(alg) => Ok(alg.clone()),
-            _ => Err(format!("Expected symmetric algorithm, got: {:?}", self)),
+            _ => Err(format!("Expected symmetric algorithm, got: {self:?}")),
         }
     }
 
     pub fn as_signature(&self) -> Result<SignatureAlgorithm, String> {
         match self {
             CryptoAlgorithm::Signature(alg) => Ok(alg.clone()),
-            _ => Err(format!("Expected signature algorithm, got: {:?}", self)),
+            _ => Err(format!("Expected signature algorithm, got: {self:?}")),
         }
     }
 }
@@ -33,11 +33,11 @@ impl CryptoAlgorithm {
 impl std::fmt::Display for CryptoAlgorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CryptoAlgorithm::Symmetric(alg) => write!(f, "{}", alg),
-            CryptoAlgorithm::Asymmetric(alg) => write!(f, "{}", alg),
-            CryptoAlgorithm::Signature(alg) => write!(f, "{}", alg),
-            CryptoAlgorithm::Hash(alg) => write!(f, "{}", alg),
-            CryptoAlgorithm::Kdf(alg) => write!(f, "{}", alg),
+            CryptoAlgorithm::Symmetric(alg) => write!(f, "{alg}"),
+            CryptoAlgorithm::Asymmetric(alg) => write!(f, "{alg}"),
+            CryptoAlgorithm::Signature(alg) => write!(f, "{alg}"),
+            CryptoAlgorithm::Hash(alg) => write!(f, "{alg}"),
+            CryptoAlgorithm::Kdf(alg) => write!(f, "{alg}"),
         }
     }
 }
@@ -56,12 +56,12 @@ pub enum SymmetricAlgorithm {
 impl std::fmt::Display for SymmetricAlgorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Aes { mode, key_size } => write!(f, "AES-{}-{}", key_size, mode),
+            Self::Aes { mode, key_size } => write!(f, "AES-{key_size}-{mode}"),
             Self::ChaCha20Poly1305 => write!(f, "ChaCha20-Poly1305"),
-            Self::ChaCha20 { key_size } => write!(f, "ChaCha20-{}", key_size),
+            Self::ChaCha20 { key_size } => write!(f, "ChaCha20-{key_size}"),
             Self::Aes256Gcm => write!(f, "AES-256-GCM"),
             Self::Aes128Gcm => write!(f, "AES-128-GCM"),
-            Self::Custom { name, .. } => write!(f, "Custom({})", name),
+            Self::Custom { name, .. } => write!(f, "Custom({name})"),
         }
     }
 }
@@ -99,11 +99,11 @@ pub enum AsymmetricAlgorithm {
 impl std::fmt::Display for AsymmetricAlgorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::RsaOaep { key_size, hash } => write!(f, "RSA-OAEP-{}-{}", key_size, hash),
-            Self::RsaPkcs1v15 { key_size } => write!(f, "RSA-PKCS1v15-{}", key_size),
+            Self::RsaOaep { key_size, hash } => write!(f, "RSA-OAEP-{key_size}-{hash}"),
+            Self::RsaPkcs1v15 { key_size } => write!(f, "RSA-PKCS1v15-{key_size}"),
             Self::EciesP256 => write!(f, "ECIES-P256"),
             Self::EciesP384 => write!(f, "ECIES-P384"),
-            Self::Custom { name, .. } => write!(f, "Custom({})", name),
+            Self::Custom { name, .. } => write!(f, "Custom({name})"),
         }
     }
 }
@@ -123,11 +123,11 @@ impl std::fmt::Display for SignatureAlgorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Ed25519 => write!(f, "Ed25519"),
-            Self::EcdsaP256 { hash } => write!(f, "ECDSA-P256-{}", hash),
-            Self::EcdsaP384 { hash } => write!(f, "ECDSA-P384-{}", hash),
-            Self::RsaPss { key_size, hash } => write!(f, "RSA-PSS-{}-{}", key_size, hash),
-            Self::RsaPkcs1v15 { key_size, hash } => write!(f, "RSA-PKCS1v15-{}-{}", key_size, hash),
-            Self::Custom { name, .. } => write!(f, "Custom({})", name),
+            Self::EcdsaP256 { hash } => write!(f, "ECDSA-P256-{hash}"),
+            Self::EcdsaP384 { hash } => write!(f, "ECDSA-P384-{hash}"),
+            Self::RsaPss { key_size, hash } => write!(f, "RSA-PSS-{key_size}-{hash}"),
+            Self::RsaPkcs1v15 { key_size, hash } => write!(f, "RSA-PKCS1v15-{key_size}-{hash}"),
+            Self::Custom { name, .. } => write!(f, "Custom({name})"),
         }
     }
 }
@@ -156,10 +156,10 @@ impl std::fmt::Display for HashAlgorithm {
             Self::Sha3_256 => write!(f, "SHA3-256"),
             Self::Sha3_384 => write!(f, "SHA3-384"),
             Self::Sha3_512 => write!(f, "SHA3-512"),
-            Self::Blake2b { output_size } => write!(f, "BLAKE2b-{}", output_size),
-            Self::Blake2s { output_size } => write!(f, "BLAKE2s-{}", output_size),
+            Self::Blake2b { output_size } => write!(f, "BLAKE2b-{output_size}"),
+            Self::Blake2s { output_size } => write!(f, "BLAKE2s-{output_size}"),
             Self::Blake3 => write!(f, "BLAKE3"),
-            Self::Custom { name, .. } => write!(f, "Custom({})", name),
+            Self::Custom { name, .. } => write!(f, "Custom({name})"),
         }
     }
 }
@@ -194,10 +194,10 @@ impl std::fmt::Display for KdfAlgorithm {
             Self::HkdfSha256 => write!(f, "HKDF-SHA256"),
             Self::HkdfSha384 => write!(f, "HKDF-SHA384"),
             Self::HkdfSha512 => write!(f, "HKDF-SHA512"),
-            Self::Pbkdf2 { hash, iterations } => write!(f, "PBKDF2-{}-{}", hash, iterations),
-            Self::Scrypt { n, r, p } => write!(f, "Scrypt-{}-{}-{}", n, r, p),
-            Self::Argon2 { variant } => write!(f, "Argon2-{:?}", variant),
-            Self::Custom { name, .. } => write!(f, "Custom({})", name),
+            Self::Pbkdf2 { hash, iterations } => write!(f, "PBKDF2-{hash}-{iterations}"),
+            Self::Scrypt { n, r, p } => write!(f, "Scrypt-{n}-{r}-{p}"),
+            Self::Argon2 { variant } => write!(f, "Argon2-{variant:?}"),
+            Self::Custom { name, .. } => write!(f, "Custom({name})"),
         }
     }
 }

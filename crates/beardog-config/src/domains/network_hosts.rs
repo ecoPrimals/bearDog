@@ -61,31 +61,75 @@ pub const DEFAULT_LOOPBACK_IPV6: &str = "::1";
 pub const DEFAULT_BIND_HOST_IPV6: &str = "::";
 
 // ============================================================================
-// Common Service Hosts
+// Service Discovery Hints (NOT hardcoded requirements)
 // ============================================================================
+//
+// These are DISCOVERY HINTS for development/fallback only.
+// Production systems MUST use runtime discovery via:
+// - mDNS/DNS-SD for local networks
+// - Service mesh/registry for production
+// - Environment variables for explicit configuration
+//
+// See: runtime_network_discovery.rs for capability-based discovery
 
-/// Default PostgreSQL host
-pub const DEFAULT_POSTGRES_HOST: &str = "localhost";
-
-/// Default Redis host
-pub const DEFAULT_REDIS_HOST: &str = "localhost";
-
-/// Default Grafana host
-pub const DEFAULT_GRAFANA_HOST: &str = "localhost";
-
-/// Default Jaeger host
-pub const DEFAULT_JAEGER_HOST: &str = "localhost";
-
-/// Default external API host (for production)
+/// PostgreSQL discovery hint
 ///
-/// Override with BEARDOG_EXTERNAL_HOST environment variable
-pub const DEFAULT_EXTERNAL_HOST: &str = "localhost";
+/// NOT a hardcoded requirement. Use service discovery:
+/// - Environment: `DATABASE_URL` or `POSTGRES_HOST`
+/// - Discovery: Query service mesh/registry
+/// - Fallback: localhost (development only)
+pub const POSTGRES_DISCOVERY_HINT: &str = "localhost";
+
+/// Redis discovery hint
+///
+/// NOT a hardcoded requirement. Use service discovery:
+/// - Environment: `REDIS_URL` or `REDIS_HOST`
+/// - Discovery: Query service mesh/registry via capability
+/// - Fallback: localhost (development only)
+pub const REDIS_DISCOVERY_HINT: &str = "localhost";
+
+/// Grafana discovery hint
+///
+/// NOT a hardcoded requirement. Use service discovery:
+/// - Environment: `GRAFANA_URL`
+/// - Discovery: Query monitoring services
+/// - Fallback: localhost (development only)
+pub const GRAFANA_DISCOVERY_HINT: &str = "localhost";
+
+/// Jaeger discovery hint
+///
+/// NOT a hardcoded requirement. Use service discovery:
+/// - Environment: `JAEGER_ENDPOINT`
+/// - Discovery: Query tracing services
+/// - Fallback: localhost (development only)
+pub const JAEGER_DISCOVERY_HINT: &str = "localhost";
+
+/// External API discovery hint (for production)
+///
+/// NEVER hardcode production endpoints. Use:
+/// - Environment: `BEARDOG_EXTERNAL_HOST`
+/// - Discovery: DNS, service mesh, or capability registry
+/// - Fallback: localhost (DEVELOPMENT ONLY - will fail in production)
+pub const EXTERNAL_DISCOVERY_HINT: &str = "localhost";
 
 // ============================================================================
 // Network Hosts Configuration
 // ============================================================================
 
 /// Network hosts configuration
+///
+/// **Design Philosophy**: Runtime Discovery Over Hardcoding
+///
+/// This configuration provides:
+/// 1. **Environment Variables**: Explicit configuration (highest priority)
+/// 2. **Discovery Hints**: Suggestions for discovery systems
+/// 3. **Development Fallbacks**: localhost for local development
+///
+/// **Production Usage**:
+/// - MUST use environment variables or service discovery
+/// - NEVER rely on default values in production
+/// - Use mDNS/DNS-SD for local network discovery
+/// - Use service mesh/registry for production discovery
 ///
 /// All network hosts/IPs used by BearDog components. Configurable via
 /// environment variables or config file, with secure defaults as fallback.
@@ -158,19 +202,42 @@ fn default_discovery_host() -> String {
 }
 
 fn default_database_host() -> String {
-    env::var("BEARDOG_DATABASE_HOST").unwrap_or_else(|_| DEFAULT_POSTGRES_HOST.to_string())
+    env::var("BEARDOG_DATABASE_HOST")
+        .or_else(|_| env::var("DATABASE_URL").map(|url| extract_host_from_url(&url)))
+        .unwrap_or_else(|_| POSTGRES_DISCOVERY_HINT.to_string())
 }
 
 fn default_redis_host() -> String {
-    env::var("BEARDOG_REDIS_HOST").unwrap_or_else(|_| DEFAULT_REDIS_HOST.to_string())
+    env::var("BEARDOG_REDIS_HOST")
+        .or_else(|_| env::var("REDIS_URL").map(|url| extract_host_from_url(&url)))
+        .unwrap_or_else(|_| REDIS_DISCOVERY_HINT.to_string())
 }
 
 fn default_metrics_host() -> String {
-    env::var("BEARDOG_METRICS_HOST").unwrap_or_else(|_| DEFAULT_GRAFANA_HOST.to_string())
+    env::var("BEARDOG_METRICS_HOST")
+        .or_else(|_| env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
+        .unwrap_or_else(|_| GRAFANA_DISCOVERY_HINT.to_string())
 }
 
 fn default_external_host() -> String {
-    env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| DEFAULT_EXTERNAL_HOST.to_string())
+    env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| EXTERNAL_DISCOVERY_HINT.to_string())
+}
+
+/// Extract host from URL (simple extraction, not full parsing)
+fn extract_host_from_url(url: &str) -> String {
+    // Simple extraction: remove protocol and path
+    url.trim_start_matches("http://")
+        .trim_start_matches("https://")
+        .trim_start_matches("redis://")
+        .trim_start_matches("postgres://")
+        .trim_start_matches("postgresql://")
+        .split('/')
+        .next()
+        .unwrap_or(url)
+        .split(':')
+        .next()
+        .unwrap_or(url)
+        .to_string()
 }
 
 // ============================================================================
@@ -256,12 +323,12 @@ impl NetworkHostsConfig {
 
         for (name, host) in hosts {
             if host.is_empty() {
-                return Err(format!("{} cannot be empty", name));
+                return Err(format!("{name} cannot be empty"));
             }
 
             // Basic validation: no whitespace, no control characters
             if host.chars().any(|c| c.is_whitespace() || c.is_control()) {
-                return Err(format!("{} contains invalid characters: {}", name, host));
+                return Err(format!("{name} contains invalid characters: {host}"));
             }
         }
 
@@ -292,9 +359,9 @@ mod tests {
         assert_eq!(config.api_host, DEFAULT_BIND_HOST);
         assert_eq!(config.client_host, DEFAULT_HOST);
         assert_eq!(config.discovery_host, DEFAULT_HOST);
-        assert_eq!(config.database_host, DEFAULT_POSTGRES_HOST);
-        assert_eq!(config.redis_host, DEFAULT_REDIS_HOST);
-        assert_eq!(config.metrics_host, DEFAULT_GRAFANA_HOST);
+        assert_eq!(config.database_host, POSTGRES_DISCOVERY_HINT);
+        assert_eq!(config.redis_host, REDIS_DISCOVERY_HINT);
+        assert_eq!(config.metrics_host, GRAFANA_DISCOVERY_HINT);
     }
 
     #[test]
@@ -378,10 +445,10 @@ mod tests {
 
     #[test]
     fn test_service_host_constants() {
-        assert_eq!(DEFAULT_POSTGRES_HOST, "localhost");
-        assert_eq!(DEFAULT_REDIS_HOST, "localhost");
-        assert_eq!(DEFAULT_GRAFANA_HOST, "localhost");
-        assert_eq!(DEFAULT_JAEGER_HOST, "localhost");
+        assert_eq!(POSTGRES_DISCOVERY_HINT, "localhost");
+        assert_eq!(REDIS_DISCOVERY_HINT, "localhost");
+        assert_eq!(GRAFANA_DISCOVERY_HINT, "localhost");
+        assert_eq!(JAEGER_DISCOVERY_HINT, "localhost");
     }
 
     #[test]

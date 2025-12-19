@@ -62,8 +62,7 @@ pub async fn initialize_mobile_hsm_manager(
         Err(e) => {
             if setup.require_mobile_for_critical {
                 return Err(BearDogError::unavailable(format!(
-                    "Mobile HSM required but unavailable: {}",
-                    e
+                    "Mobile HSM required but unavailable: {e}"
                 )));
             } else {
                 warn!("⚠️ Mobile HSM unavailable, using software-only mode: {}", e);
@@ -83,8 +82,7 @@ pub async fn initialize_mobile_hsm_manager(
         }
         Err(e) => {
             return Err(BearDogError::initialization(format!(
-                "Failed to initialize software HSM: {}",
-                e
+                "Failed to initialize software HSM: {e}"
             )));
         }
     }

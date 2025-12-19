@@ -6,7 +6,7 @@
 use crate::ecosystem_integration::{PrimalDiscoveryService, SecureCrossPrimalMessenger};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
-    ComputeAbility, NetworkFunction, SecurityRequirements, SecurityService, StorageCharacteristic,
+    ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
     UniversalCapabilityType, UniversalServiceDescriptor,
 };
 use std::sync::Arc;

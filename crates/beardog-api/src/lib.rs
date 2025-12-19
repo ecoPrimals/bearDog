@@ -5,6 +5,9 @@
 
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
+// Allow expect/unwrap in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 
 //!
 //! ## Features
@@ -56,6 +59,16 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tracing::info;
+
+pub mod discovery;
+pub mod endpoints;
+pub mod jsonrpc;
+pub mod startup;
+pub mod tarpc_service;
+
+pub use discovery::{ServiceAdvertisement, ServiceAdvertiser};
+pub use startup::{BearDogApiConfig, BearDogApiServer, BearDogApiServerBuilder};
+pub use tarpc_service::{serve_tarpc, BearDogCryptoRpc, BearDogCryptoRpcServer};
 
 /// Get current memory usage (simplified implementation)
 fn get_memory_usage() -> u64 {
@@ -111,9 +124,20 @@ pub struct StatusResponse {
 }
 
 /// API state container
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ApiState {
     pub core: Arc<BearDogCore>,
+    /// Protocol-agnostic crypto service (Phase 1 complete!)
+    pub crypto_service: Arc<dyn beardog_core::crypto_service::CryptoService>,
+}
+
+impl std::fmt::Debug for ApiState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ApiState")
+            .field("core", &"BearDogCore")
+            .field("crypto_service", &"CryptoService")
+            .finish()
+    }
 }
 
 /// Health check endpoint
@@ -141,14 +165,69 @@ pub async fn system_status(
     Ok(Json(ApiResponse::success(response)))
 }
 
-/// Create API router with all endpoints
-/// Creates router
+/// Create API router with all capability-based endpoints
+///
+/// # Architecture
+///
+/// BearDog exposes capabilities via HTTP API:
+/// - `/api/v1/capabilities` - Advertise what we can do
+/// - `/api/v1/crypto/*` - Crypto operations by capability
+/// - `/health` - Service health
+///
+/// Other primals discover BearDog via:
+/// 1. mDNS service discovery (_beardog._tcp.local)
+/// 2. HTTP capability query
+/// 3. Dynamic routing based on advertised capabilities
+///
+/// # Panics
+///
+/// Will panic if crypto service initialization fails (should never happen with valid config).
+/// This is an acceptable panic as it indicates a critical system misconfiguration at startup.
 pub fn create_router(core: Arc<BearDogCore>) -> Router {
-    let state = ApiState { core };
+    // Create crypto service (Phase 1 trait implementation!)
+    // Note: Constructor is currently infallible with default config, but returns Result
+    // for future-proofing when HSM initialization may fail
+    let crypto_service = beardog_core::crypto_service::BearDogCryptoService::new(
+        beardog_core::crypto_service::CryptoServiceConfig::default(),
+    )
+    .unwrap_or_else(|e| {
+        tracing::error!("Fatal: Failed to create crypto service: {}", e);
+        panic!("Crypto service initialization failed - cannot start API server")
+    });
 
+    let state = ApiState {
+        core,
+        crypto_service: Arc::new(crypto_service),
+    };
+
+    // Build router with all endpoints
     Router::new()
+        // Health and status (monitoring)
         .route("/health", get(health_check))
         .route("/status", get(system_status))
+        // Capability discovery
+        .route("/api/v1/capabilities", get(endpoints::get_capabilities))
+        .route("/api/v1/capability/:id", get(endpoints::get_capability_by_id))
+        // Generic crypto operations (for cross-primal integration)
+        .route("/api/v1/encrypt", axum::routing::post(endpoints::encrypt))
+        .route("/api/v1/decrypt", axum::routing::post(endpoints::decrypt))
+        // Algorithm-specific crypto operations (HTTP)
+        .route("/api/v1/crypto/aes-gcm/encrypt", axum::routing::post(endpoints::aes_gcm_encrypt))
+        .route("/api/v1/crypto/aes-gcm/decrypt", axum::routing::post(endpoints::aes_gcm_decrypt))
+        .route("/api/v1/crypto/ed25519/sign", axum::routing::post(endpoints::ed25519_sign))
+        .route("/api/v1/crypto/ed25519/verify", axum::routing::post(endpoints::ed25519_verify))
+        // JSON-RPC endpoint (Phase 3!)
+        .route("/rpc", axum::routing::post(jsonrpc::jsonrpc_handler))
+        // Protocol discovery endpoints (Phase 5!)
+        .route("/api/v1/protocols", get(endpoints::protocols::get_protocols))
+        .route("/api/v1/protocols/:protocol", get(endpoints::protocols::get_protocol))
+        .route("/api/v1/protocols/escalation/guide", get(endpoints::protocols::get_escalation_guide))
+        .route("/api/v1/protocols/comparison", get(endpoints::protocols::get_protocol_comparison))
+        // Key management endpoints (for Songbird integration)
+        .route("/api/v1/keys/generate", axum::routing::post(endpoints::generate_key))
+        .route("/api/v1/keys/info", axum::routing::post(endpoints::get_key_info))
+        .route("/api/v1/keys/delete", axum::routing::post(endpoints::delete_key))
+        // CORS and state
         .layer(CorsLayer::permissive())
         .with_state(state)
 }

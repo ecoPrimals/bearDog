@@ -184,6 +184,10 @@ fn default_log_dir() -> PathBuf {
 }
 
 #[cfg(test)]
+#[path = "paths_comprehensive_tests.rs"]
+mod paths_comprehensive_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

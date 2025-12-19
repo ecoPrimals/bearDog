@@ -449,7 +449,7 @@ impl UnifiedDiscoveryConfig {
             enabled: true,
             service_id: Arc::from("beardog-discovery-aggressive"),
             enabled_protocols: vec![DiscoveryProtocol::Http {
-                endpoint: discovery_endpoint.clone(),
+                endpoint: discovery_endpoint,
                 timeout_ms: 1000,
             }],
             registry: ServiceRegistryConfig {
@@ -486,7 +486,7 @@ impl UnifiedDiscoveryConfig {
             enabled: true,
             service_id: Arc::from("beardog-discovery-conservative"),
             enabled_protocols: vec![DiscoveryProtocol::Http {
-                endpoint: discovery_endpoint.clone(),
+                endpoint: discovery_endpoint,
                 timeout_ms: 30000,
             }],
             registry: ServiceRegistryConfig {

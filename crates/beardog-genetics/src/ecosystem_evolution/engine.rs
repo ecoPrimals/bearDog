@@ -147,7 +147,7 @@ impl EcosystemGeneticEngine {
             HierarchicalPattern::ClientServer { server, clients } => {
                 debug!("Evolving client-server to distributed coordination");
                 let mut weights = HashMap::new();
-                weights.insert(server.clone(), 1.0);
+                weights.insert(server, 1.0);
                 for client in clients {
                     weights.insert(client, 0.5);
                 }

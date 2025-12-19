@@ -262,7 +262,7 @@ impl PropertyBasedTestFramework {
         const TEST_PORT: u16 = 8080;
         let test_configs = [
             b"key = \"value\"".to_vec(),
-            format!("port = {}\nhost = \"localhost\"", TEST_PORT).into_bytes(),
+            format!("port = {TEST_PORT}\nhost = \"localhost\"").into_bytes(),
             b"invalid_toml = [unclosed".to_vec(),
             b"# Comment only".to_vec(),
             b"".to_vec(), // Empty config

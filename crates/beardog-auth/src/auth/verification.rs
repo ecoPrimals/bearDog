@@ -2,9 +2,65 @@
 
 use super::types::*;
 use beardog_errors::BearDogError;
+use beardog_types::genetics_constraints::KeyOperation;
 use chrono::Utc;
+use tracing::{debug, info};
 
 impl CrossNodeAuthEngine {
+    /// Verify an operation against a genetic key's constraints
+    ///
+    /// This is a convenience method that:
+    /// 1. Checks if the key has expired
+    /// 2. Verifies constraint integrity (detects tampering)
+    /// 3. Checks if the operation is allowed by the key's constraints
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let delete_op = KeyOperation::Delete {
+    ///     path: "raw_data/temperature.nc".to_string(),
+    /// };
+    ///
+    /// if let Err(e) = auth_engine.verify_genetic_operation(&key, &delete_op) {
+    ///     return Err(e); // Operation blocked by constraints
+    /// }
+    ///
+    /// // Proceed with operation
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Key has expired
+    /// - Constraints have been tampered with
+    /// - Operation violates constraints
+    pub fn verify_genetic_operation(
+        &self,
+        key: &BearDogGenetics,
+        operation: &KeyOperation,
+    ) -> Result<(), BearDogError> {
+        // Check expiration first
+        if key.is_expired() {
+            info!("Operation blocked: Key {} has expired", key.id);
+            return Err(BearDogError::unauthorized(format!(
+                "Key {} has expired and cannot be used",
+                key.id
+            )));
+        }
+
+        // Verify operation against constraints
+        key.verify_operation(operation)?;
+
+        debug!(
+            "Operation {:?} verified for key {} with constraints: {}",
+            operation,
+            key.id,
+            key.constraint_description()
+        );
+
+        Ok(())
+    }
+
     /// Verify authorization proof
     pub fn verify_authorization_proof(
         &self,
@@ -34,8 +90,7 @@ impl CrossNodeAuthEngine {
             Ok(())
         } else {
             Err(BearDogError::not_found(format!(
-                "Authorization not found: {}",
-                auth_id
+                "Authorization not found: {auth_id}"
             )))
         }
     }
@@ -221,5 +276,158 @@ mod tests {
 
         let result = engine.revoke_authorization("nonexistent");
         assert!(result.is_err(), "Revoking nonexistent auth should error");
+    }
+
+    // ========================================================================
+    // GENETIC KEY CONSTRAINT VERIFICATION TESTS
+    // ========================================================================
+
+    #[test]
+    fn test_verify_genetic_operation_allows_compliant() {
+        use beardog_types::genetics_constraints::{DataAccessConstraint, KeyConstraints};
+
+        let engine = CrossNodeAuthEngine::default();
+
+        // Create key with constraints
+        let constraints = KeyConstraints {
+            data_access: DataAccessConstraint {
+                immutable_paths: vec!["protected/*".to_string()],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let entropy = vec![1u8; 32];
+        let key =
+            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+
+        // Allowed operation
+        let delete_unprotected = KeyOperation::Delete {
+            path: "temp/cache.dat".to_string(),
+        };
+
+        let result = engine.verify_genetic_operation(&key, &delete_unprotected);
+        assert!(result.is_ok(), "Compliant operation should be allowed");
+    }
+
+    #[test]
+    fn test_verify_genetic_operation_blocks_violation() {
+        use beardog_types::genetics_constraints::{DataAccessConstraint, KeyConstraints};
+
+        let engine = CrossNodeAuthEngine::default();
+
+        // Create key with constraints
+        let constraints = KeyConstraints {
+            data_access: DataAccessConstraint {
+                immutable_paths: vec!["protected/*".to_string()],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let entropy = vec![1u8; 32];
+        let key =
+            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+
+        // Violating operation
+        let delete_protected = KeyOperation::Delete {
+            path: "protected/data.csv".to_string(),
+        };
+
+        let result = engine.verify_genetic_operation(&key, &delete_protected);
+        assert!(result.is_err(), "Constraint violation should be blocked");
+        assert!(
+            result.unwrap_err().to_string().contains("protected"),
+            "Error should mention protected path"
+        );
+    }
+
+    #[test]
+    fn test_verify_genetic_operation_blocks_expired() {
+        use beardog_types::genetics_constraints::{KeyConstraints, LifetimeConstraint};
+
+        let engine = CrossNodeAuthEngine::default();
+
+        // Create expired key
+        let constraints = KeyConstraints {
+            lifetime: LifetimeConstraint {
+                expires_at: Utc::now() - Duration::hours(1), // Expired 1 hour ago
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let entropy = vec![1u8; 32];
+        let key =
+            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+
+        // Any operation should fail
+        let read_op = KeyOperation::Read {
+            path: "data.csv".to_string(),
+            project: None,
+        };
+
+        let result = engine.verify_genetic_operation(&key, &read_op);
+        assert!(result.is_err(), "Expired key should be rejected");
+        assert!(
+            result.unwrap_err().to_string().contains("expired"),
+            "Error should mention expiration"
+        );
+    }
+
+    #[test]
+    fn test_verify_genetic_operation_detects_tampering() {
+        use beardog_types::genetics_constraints::{DataAccessConstraint, KeyConstraints};
+
+        let engine = CrossNodeAuthEngine::default();
+
+        // Create key with constraints
+        let constraints = KeyConstraints {
+            data_access: DataAccessConstraint {
+                immutable_paths: vec!["protected/*".to_string()],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let entropy = vec![1u8; 32];
+        let mut key =
+            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+
+        // Tamper with constraints
+        if let Some(ref mut constraints) = key.constraints {
+            constraints.data_access.immutable_paths.clear(); // Remove protection
+        }
+
+        // Any operation should fail due to tampering
+        let delete_op = KeyOperation::Delete {
+            path: "protected/data.csv".to_string(),
+        };
+
+        let result = engine.verify_genetic_operation(&key, &delete_op);
+        assert!(result.is_err(), "Tampered key should be rejected");
+        assert!(
+            result.unwrap_err().to_string().contains("tampered"),
+            "Error should mention tampering"
+        );
+    }
+
+    #[test]
+    fn test_verify_genetic_operation_with_no_constraints() {
+        let engine = CrossNodeAuthEngine::default();
+
+        // Key without constraints (backward compatibility)
+        let key = BearDogGenetics::default();
+
+        // Any operation should be allowed
+        let delete_op = KeyOperation::Delete {
+            path: "any/file.dat".to_string(),
+        };
+
+        let result = engine.verify_genetic_operation(&key, &delete_op);
+        assert!(
+            result.is_ok(),
+            "Operations should be allowed for keys without constraints"
+        );
     }
 }

@@ -71,6 +71,13 @@ pub mod buffer_pools_safe;
 pub mod concurrent_safe;
 pub mod memory_pools_safe;
 pub mod simd_safe;
+
+/// Testing utilities for truly concurrent, deterministic tests
+///
+/// Provides mock time sources, event synchronization, and barriers
+/// to eliminate `sleep()`-based testing patterns.
+#[cfg(test)]
+pub mod testing;
 pub mod ultimate_performance;
 pub mod ultimate_safety;
 pub mod zero_copy_safe;

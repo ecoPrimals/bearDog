@@ -73,12 +73,12 @@ impl NetworkConfig {
     pub fn validate(&self) -> ConfigResult<()> {
         // Validate centralized ports configuration
         self.ports.validate().map_err(|e| {
-            ConfigError::validation(format!("Port configuration validation failed: {}", e))
+            ConfigError::validation(format!("Port configuration validation failed: {e}"))
         })?;
 
         // Validate centralized addresses configuration
         self.addresses.validate().map_err(|e| {
-            ConfigError::validation(format!("Address configuration validation failed: {}", e))
+            ConfigError::validation(format!("Address configuration validation failed: {e}"))
         })?;
 
         self.api.validate()?;
@@ -294,7 +294,7 @@ impl ServiceDiscoveryConfig {
         Self {
             port: DEFAULT_DISCOVERY_PORT,
             backends: vec!["dns-sd".to_string(), "static".to_string()],
-            multicast_address: format!("239.255.0.1:{}", DEFAULT_DISCOVERY_PORT),
+            multicast_address: format!("239.255.0.1:{DEFAULT_DISCOVERY_PORT}"),
             interval_secs: 60,
         }
     }
@@ -512,6 +512,10 @@ impl AdminConfigBuilder {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "network_coverage_extension.rs"]
+mod network_coverage_extension;
 
 #[cfg(test)]
 mod tests {

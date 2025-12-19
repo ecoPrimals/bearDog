@@ -24,6 +24,17 @@ workspace = true
 [package.authors]
 workspace = true
 
+[dependencies]
+argon2.workspace = true
+beardog-security = { version = "0.1.0", path = "../beardog-security" }
+chacha20poly1305 = "0.10"
+hkdf = "0.12.4"
+openssl = "0.10.75"
+pbkdf2 = "0.12.2"
+rpassword = "7.3"
+sha2.workspace = true
+whoami = "1.6.1"
+
 [dependencies.beardog-core]
 workspace = true
 
@@ -62,6 +73,9 @@ version = "0.4"
 
 [dependencies.sha3]
 version = "0.10"
+
+[dependencies.hostname]
+version = "0.4"
 
 [dependencies.base64]
 version = "0.21"

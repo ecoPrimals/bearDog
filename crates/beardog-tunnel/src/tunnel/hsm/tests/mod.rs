@@ -22,3 +22,7 @@ pub mod key_lifecycle_integration_tests;
 // December 6, 2025: Phase 2 Advanced HSM Provider Coverage Tests
 #[cfg(test)]
 pub mod hsm_advanced_coverage_tests;
+
+// December 16, 2025: Comprehensive edge case coverage (78% → 90%)
+#[cfg(test)]
+pub mod crypto_edge_cases_comprehensive;

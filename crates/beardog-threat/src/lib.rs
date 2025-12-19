@@ -17,6 +17,9 @@
 
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
+// Allow expect/unwrap in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! ```rust
 //! use beardog_threat::ThreatDetectionEngine;
 //! use beardog_types::canonical::config::domains::threat::CanonicalThreatDetectionConfig;

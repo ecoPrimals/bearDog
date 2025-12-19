@@ -4,6 +4,7 @@
 
 pub mod authorization;
 pub mod genetics;
+pub mod genetics_impl;
 pub mod node_registry;
 pub mod spawning;
 pub mod workflow;

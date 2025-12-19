@@ -6,10 +6,48 @@
 //! `TEST_CATEGORY`: integration
 //! `TEST_PRIORITY`: high
 //! COVERAGE_TARGET: src/lib.rs
+//!
+//! ✅ FULLY CONCURRENT (Dec 8, 2025): NO serial markers, NO env var races
+//! - All tests use explicit configuration
+//! - Zero global state mutation
+//! - Can run in parallel safely
+//! - Production-ready concurrency patterns
 
 use beardog::{BearDogError, BearDogFramework, FrameworkConfig, ServiceInfo};
-use serial_test::serial;
 use std::time::Duration;
+
+/// Create test config with explicit endpoints - NO env vars
+fn test_config_with_endpoints(compute: &str, storage: &str) -> FrameworkConfig {
+    FrameworkConfig {
+        confidence_level: 0.95,
+        sample_size: 1000,
+        timeout: Duration::from_secs(30),
+        compute_endpoint: Some(compute.to_string()),
+        storage_endpoint: Some(storage.to_string()),
+    }
+}
+
+/// Create test config with missing compute endpoint
+fn test_config_missing_compute() -> FrameworkConfig {
+    FrameworkConfig {
+        confidence_level: 0.95,
+        sample_size: 1000,
+        timeout: Duration::from_secs(30),
+        compute_endpoint: None,
+        storage_endpoint: Some("http://localhost:8081".to_string()),
+    }
+}
+
+/// Create test config with missing storage endpoint
+fn test_config_missing_storage() -> FrameworkConfig {
+    FrameworkConfig {
+        confidence_level: 0.95,
+        sample_size: 1000,
+        timeout: Duration::from_secs(30),
+        compute_endpoint: Some("http://localhost:8080".to_string()),
+        storage_endpoint: None,
+    }
+}
 
 // ============================================================================
 // Framework Creation Tests
@@ -32,6 +70,8 @@ async fn test_framework_with_custom_config() {
         confidence_level: 0.99,
         sample_size: 5000,
         timeout: Duration::from_secs(120),
+        compute_endpoint: Some("http://test:8080".to_string()),
+        storage_endpoint: Some("http://test:8081".to_string()),
     };
 
     let result = BearDogFramework::with_config(config.clone()).await;
@@ -66,12 +106,10 @@ async fn test_framework_config_cloning() {
 // ============================================================================
 
 #[tokio::test]
-#[serial]
 async fn test_discover_services_with_valid_config() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://localhost:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://localhost:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://localhost:8080", "http://localhost:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
     let result = framework.discover_services().await;
 
     // Either discovers services or gracefully handles when services aren't available
@@ -90,17 +128,15 @@ async fn test_discover_services_with_valid_config() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_discover_services_missing_compute_endpoint() {
-    std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://localhost:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_missing_compute();
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
     let result = framework.discover_services().await;
 
     assert!(
         result.is_err(),
-        "Should fail when BEARDOG_COMPUTE_ENDPOINT is not set"
+        "Should fail when compute_endpoint is not configured"
     );
     if let Err(BearDogError::Configuration(msg)) = result {
         assert!(
@@ -114,17 +150,10 @@ async fn test_discover_services_missing_compute_endpoint() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_discover_services_missing_storage_endpoint() {
-    // Set both endpoints initially so framework can be created
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://localhost:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://localhost:8081");
-
-    // Create framework with both endpoints set
-    // Remove storage endpoint BEFORE creating framework
-    std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_missing_storage();
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
 
     // This should now fail with storage endpoint error during discovery
     let result = framework.discover_services().await;
@@ -146,12 +175,10 @@ async fn test_discover_services_missing_storage_endpoint() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_service_info_structure() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
     let services = framework.discover_services().await.unwrap();
 
     for service in &services {
@@ -162,12 +189,10 @@ async fn test_service_info_structure() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_service_capabilities() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
     let services = framework.discover_services().await.unwrap();
 
     let compute = services.iter().find(|s| s.name == "compute-service");
@@ -241,12 +266,10 @@ async fn test_get_stats() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_reset_stats() {
-    let mut framework = BearDogFramework::new().await.unwrap();
-
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
 
     framework.discover_services().await.unwrap();
     framework.demonstrate_zero_copy_performance().await.unwrap();
@@ -263,12 +286,10 @@ async fn test_reset_stats() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_stats_persistence_across_operations() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
 
     framework.discover_services().await.unwrap();
     let services_count = framework.stats.services_discovered;
@@ -334,6 +355,8 @@ fn test_config_extreme_confidence_values() {
         confidence_level: 0.01,
         sample_size: 1,
         timeout: Duration::from_millis(1),
+        compute_endpoint: None,
+        storage_endpoint: None,
     };
     assert!(config_low.confidence_level > 0.0);
 
@@ -341,6 +364,8 @@ fn test_config_extreme_confidence_values() {
         confidence_level: 0.9999,
         sample_size: 1_000_000,
         timeout: Duration::from_secs(3600),
+        compute_endpoint: None,
+        storage_endpoint: None,
     };
     assert!(config_high.confidence_level < 1.0);
 }
@@ -351,6 +376,8 @@ fn test_config_zero_timeout() {
         confidence_level: 0.95,
         sample_size: 1000,
         timeout: Duration::from_secs(0),
+        compute_endpoint: None,
+        storage_endpoint: None,
     };
     assert_eq!(config.timeout, Duration::from_secs(0));
 }
@@ -393,13 +420,12 @@ fn test_service_info_debug() {
 // ============================================================================
 
 #[tokio::test]
-#[serial]
 async fn test_full_workflow_success() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
 
     // Create framework
-    let mut framework = BearDogFramework::new().await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
     assert_eq!(framework.stats.services_discovered, 0);
 
     // Discover services
@@ -415,12 +441,10 @@ async fn test_full_workflow_success() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_framework_reusability() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
 
     // Multiple discoveries
     framework.discover_services().await.unwrap();
@@ -434,12 +458,10 @@ async fn test_framework_reusability() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_stats_after_reset() {
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
-
-    let mut framework = BearDogFramework::new().await.unwrap();
+    // ✅ Concurrent-safe: config passed explicitly, no env vars
+    let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
+    let mut framework = BearDogFramework::with_config(config).await.unwrap();
 
     framework.discover_services().await.unwrap();
     framework.reset_stats();

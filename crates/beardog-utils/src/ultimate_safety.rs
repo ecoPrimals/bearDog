@@ -446,8 +446,7 @@ impl std::fmt::Display for SafetyError {
             } => {
                 write!(
                     f,
-                    "Buffer overflow prevented: attempted {} bytes, only {} available",
-                    attempted_size, available_space
+                    "Buffer overflow prevented: attempted {attempted_size} bytes, only {available_space} available"
                 )
             }
             SafetyError::ReadBeyondBounds {
@@ -456,12 +455,11 @@ impl std::fmt::Display for SafetyError {
             } => {
                 write!(
                     f,
-                    "Read beyond bounds prevented: attempted {} bytes, only {} available",
-                    attempted_read, available_data
+                    "Read beyond bounds prevented: attempted {attempted_read} bytes, only {available_data} available"
                 )
             }
             SafetyError::IntegrityViolation { description } => {
-                write!(f, "Integrity violation: {}", description)
+                write!(f, "Integrity violation: {description}")
             }
             SafetyError::InvalidReference => {
                 write!(f, "Invalid reference access prevented")

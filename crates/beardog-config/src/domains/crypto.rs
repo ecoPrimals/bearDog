@@ -145,7 +145,7 @@ impl Default for CryptoConfig {
     }
 }
 
-/// Builder for CryptoConfig
+/// Builder for `CryptoConfig`
 #[derive(Debug, Default)]
 pub struct CryptoConfigBuilder {
     rsa_key_size: Option<u32>,
@@ -212,6 +212,10 @@ impl CryptoConfigBuilder {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "crypto_comprehensive_tests.rs"]
+mod crypto_comprehensive_tests;
 
 #[cfg(test)]
 mod tests {

@@ -48,7 +48,7 @@ print_literal = { level = "allow", priority = 1 }  # Allowed in CLIs
 vec_init_then_push = { level = "allow", priority = 1 }  # Performance is acceptable for clarity
 unnecessary_literal_unwrap = { level = "allow", priority = 1 }  # Test code pattern
 assertions_on_constants = { level = "allow", priority = 1 }  # Test scaffolding
-doc_tests = { level = "allow", priority = 1 }  # Doc tests handled separately
+# doc_tests = { level = "allow", priority = 1 }  # NOTE: This lint doesn't exist in clippy - removed Dec 10, 2025
 
 # Lint groups (priority 0, lower than individual lints)
 all = "warn"
@@ -217,6 +217,9 @@ serde_json = { workspace = true }
 hex = { workspace = true }
 chrono = { workspace = true }
 serial_test = "3.2"
+beardog-adapters = { path = "crates/beardog-adapters" }
+beardog-genetics = { path = "crates/beardog-genetics" }
+ed25519-dalek = { workspace = true }
 
 [[test]]
 name = "chaos"
@@ -261,4 +264,6 @@ panic = "abort"
 default = []
 # FIDO2 support - currently in Phase 2 development
 fido2 = ["beardog-security/fido2", "dep:hidapi"]
-full = []
+# mDNS discovery support for primal-to-primal runtime discovery
+mdns = ["beardog-core/mdns"]
+full = ["fido2", "mdns"]

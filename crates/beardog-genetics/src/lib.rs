@@ -12,6 +12,9 @@
 #![deny(unsafe_code)]
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
+// Allow expect/unwrap in tests - test panics are appropriate failure modes
+#![cfg_attr(test, allow(clippy::expect_used))]
+#![cfg_attr(test, allow(clippy::unwrap_used))]
 
 //! - **Ecosystem Evolution**: Binary pattern elimination and relationship evolution
 //! - **Biometric Entropy**: Human-owned entropy without corporate control
@@ -46,14 +49,25 @@
 use serde::{Deserialize, Serialize};
 
 // Core genetics modules
+pub mod constraints;
 pub mod ecosystem_evolution;
 pub mod genetics;
+
+// Re-export constraint types
+pub use constraints::{
+    BehavioralConstraint, ConstraintEnforcer, ConstraintEvolutionEngine, ConstraintViolationError,
+    DataAccessConstraint, EvolutionTrigger, KeyConstraints, KeyOperation, LifetimeConstraint,
+    ScopeConstraint, SignedConstraints,
+};
 
 // Re-export key types from genetics module
 pub use genetics::entropy_hierarchy::{
     BiometricHash, EntropyClass, EntropyHierarchyConfig, EntropyHierarchyManager, EntropySeed,
     FusionAlgorithm, HumanEntropySource, HumanEntropyType, HumanIdentity, MachineEntropySource,
     MachineSourceType, MixingStrategy, OwnershipProof, SeedMetadata, VerificationLevel,
+};
+pub use genetics::key_exchange::{
+    DelegatedKey, GeneticKeyExchange, KeyExchangeConfig, KeyExchangeResult, KeyLineage,
 };
 pub use genetics::spawning::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
 

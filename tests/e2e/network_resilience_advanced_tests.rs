@@ -294,7 +294,7 @@ async fn test_circuit_breaker_opens_on_threshold() {
 #[tokio::test]
 async fn test_circuit_breaker_half_open_transition() {
     let mut metrics = AdvancedNetworkMetrics::default();
-    let mut circuit_state = CircuitState::Open;
+    let circuit_state = CircuitState::Open;
 
     // Circuit is open
     metrics.circuit_opens += 1;
@@ -303,7 +303,7 @@ async fn test_circuit_breaker_half_open_transition() {
     sleep(Duration::from_millis(10)).await;
 
     // Transition to half-open
-    circuit_state = CircuitState::HalfOpen;
+    let circuit_state = CircuitState::HalfOpen;
 
     // Allow one test request
     metrics.total_attempts += 1;
@@ -312,7 +312,7 @@ async fn test_circuit_breaker_half_open_transition() {
     metrics.successful_connections += 1;
 
     // Close circuit
-    circuit_state = CircuitState::Closed;
+    let circuit_state = CircuitState::Closed;
     metrics.circuit_closes += 1;
 
     assert_eq!(circuit_state, CircuitState::Closed);
@@ -322,7 +322,7 @@ async fn test_circuit_breaker_half_open_transition() {
 #[tokio::test]
 async fn test_circuit_breaker_reopen_on_half_open_failure() {
     let mut metrics = AdvancedNetworkMetrics::default();
-    let mut circuit_state = CircuitState::HalfOpen;
+    let circuit_state = CircuitState::HalfOpen;
 
     // Test request in half-open state
     metrics.total_attempts += 1;
@@ -331,7 +331,7 @@ async fn test_circuit_breaker_reopen_on_half_open_failure() {
     metrics.failed_connections += 1;
 
     // Reopen circuit
-    circuit_state = CircuitState::Open;
+    let circuit_state = CircuitState::Open;
     metrics.circuit_opens += 1;
 
     assert_eq!(circuit_state, CircuitState::Open);
@@ -603,12 +603,12 @@ async fn test_recovery_from_persistent_error() {
 
 #[tokio::test]
 async fn test_recovery_state_reset() {
-    let mut consecutive_failures = 5;
-    let mut consecutive_successes = 0;
+    let consecutive_failures = 5;
+    let consecutive_successes = 0;
 
     // Success should reset failure counter
-    consecutive_successes += 1;
-    consecutive_failures = 0;
+    let consecutive_successes = consecutive_successes + 1;
+    let consecutive_failures = 0;
 
     assert_eq!(consecutive_failures, 0);
     assert_eq!(consecutive_successes, 1);

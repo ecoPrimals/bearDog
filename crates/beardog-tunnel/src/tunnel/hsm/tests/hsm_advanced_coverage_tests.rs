@@ -168,7 +168,7 @@ async fn test_generate_all_key_types() -> Result<(), BearDogError> {
     let config = SoftwareHsmConfig::default();
     let hsm = RustSoftwareHsm::new(config).await?;
 
-    let key_types = vec![KeyType::Aes, KeyType::Ed25519, KeyType::X25519];
+    let key_types = [KeyType::Aes, KeyType::Ed25519, KeyType::X25519];
 
     for (i, key_type) in key_types.iter().enumerate() {
         let request = GenerateKeyRequest {
@@ -208,7 +208,7 @@ async fn test_generate_key_with_special_characters() -> Result<(), BearDogError>
     let config = SoftwareHsmConfig::default();
     let hsm = RustSoftwareHsm::new(config).await?;
 
-    let special_ids = vec![
+    let special_ids = [
         "key-with-dashes",
         "key_with_underscores",
         "key.with.dots",
@@ -259,7 +259,7 @@ async fn test_concurrent_key_generation() -> Result<(), BearDogError> {
 
     // All should succeed
     for handle in handles {
-        let result = handle.await.expect("Task should complete");
+        let result = handle.await.unwrap(); // Test failure if task panics
         assert!(result.is_ok(), "Concurrent key generation should succeed");
     }
 
@@ -282,7 +282,7 @@ async fn test_concurrent_health_checks() -> Result<(), BearDogError> {
 
     // All should succeed
     for handle in handles {
-        let result = handle.await.expect("Task should complete");
+        let result = handle.await.unwrap(); // Test failure if task panics
         assert!(result.is_ok(), "Concurrent health checks should succeed");
         assert!(result.unwrap().is_healthy);
     }
@@ -318,7 +318,7 @@ async fn test_concurrent_key_derivations() -> Result<(), BearDogError> {
 
     // All should succeed
     for handle in handles {
-        let result = handle.await.expect("Task should complete");
+        let result = handle.await.unwrap(); // Test failure if task panics
         assert!(result.is_ok(), "Concurrent derivations should succeed");
     }
 
@@ -380,7 +380,7 @@ async fn test_rustcrypto_backend_specific() -> Result<(), BearDogError> {
     let hsm = RustSoftwareHsm::new(config).await?;
 
     // Generate each key type with RustCrypto backend
-    let key_types = vec![KeyType::Aes, KeyType::Ed25519, KeyType::X25519];
+    let key_types = [KeyType::Aes, KeyType::Ed25519, KeyType::X25519];
 
     for (i, key_type) in key_types.iter().enumerate() {
         let request = GenerateKeyRequest {

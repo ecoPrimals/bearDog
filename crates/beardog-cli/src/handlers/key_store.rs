@@ -17,6 +17,31 @@ pub struct StoredKey {
     /// Base64-encoded key material (simplified for testing)
     /// In production, this would be an HSM reference/handle
     pub key_material_b64: String,
+
+    // Lineage tracking
+    /// Generation number (0 = root, 1 = derived, etc.)
+    #[serde(default)]
+    pub generation: u32,
+    /// Parent key ID if this is a derived key
+    #[serde(default)]
+    pub parent_key_id: Option<String>,
+    /// Purpose of derivation
+    #[serde(default)]
+    pub derivation_purpose: Option<String>,
+    /// Child key IDs derived from this key
+    #[serde(default)]
+    pub children: Vec<String>,
+
+    // Usage restrictions
+    /// Expiry timestamp
+    #[serde(default)]
+    pub expires_at: Option<String>,
+    /// Usage restrictions (e.g., "encrypt-only", "decrypt-only")
+    #[serde(default)]
+    pub usage: Option<String>,
+    /// Purpose/description of the key
+    #[serde(default)]
+    pub purpose: Option<String>,
 }
 
 /// Get the keys directory path

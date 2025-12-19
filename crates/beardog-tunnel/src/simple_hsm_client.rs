@@ -48,14 +48,14 @@ impl SimplePkcs11Client {
 
         pkcs11.initialize(CInitializeArgs::OsThreads).map_err(|e| {
             system_error(
-                &format!("Failed to initialize PKCS#11: {}", e),
+                &format!("Failed to initialize PKCS#11: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
 
         *self.pkcs11.lock().map_err(|e| {
             system_error(
-                &format!("Mutex lock poisoned: {}", e),
+                &format!("Mutex lock poisoned: {e}"),
                 SystemErrorCategory::General,
             )
         })? = Some(pkcs11);
@@ -66,7 +66,7 @@ impl SimplePkcs11Client {
     pub fn list_devices(&self) -> Result<Vec<SimpleHsmDevice>, BearDogError> {
         let pkcs11_guard = self.pkcs11.lock().map_err(|e| {
             system_error(
-                &format!("Mutex lock poisoned: {}", e),
+                &format!("Mutex lock poisoned: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
@@ -79,7 +79,7 @@ impl SimplePkcs11Client {
 
         let slots = pkcs11.get_slots_with_token().map_err(|e| {
             system_error(
-                &format!("Failed to get slots: {}", e),
+                &format!("Failed to get slots: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
@@ -106,7 +106,7 @@ impl SimplePkcs11Client {
     pub fn collect_entropy(&self, slot_id: u64, size: usize) -> Result<Vec<u8>, BearDogError> {
         let pkcs11_guard = self.pkcs11.lock().map_err(|e| {
             system_error(
-                &format!("Mutex lock poisoned: {}", e),
+                &format!("Mutex lock poisoned: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
@@ -116,14 +116,14 @@ impl SimplePkcs11Client {
 
         let slot = cryptoki::slot::Slot::try_from(slot_id).map_err(|e| {
             system_error(
-                &format!("Invalid slot ID: {}", e),
+                &format!("Invalid slot ID: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
 
         let session = pkcs11.open_ro_session(slot).map_err(|e| {
             system_error(
-                &format!("Failed to open session on slot {}: {}", slot_id, e),
+                &format!("Failed to open session on slot {slot_id}: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
@@ -134,7 +134,7 @@ impl SimplePkcs11Client {
             .generate_random_slice(&mut random_data)
             .map_err(|e| {
                 system_error(
-                    &format!("Failed to generate random data: {}", e),
+                    &format!("Failed to generate random data: {e}"),
                     SystemErrorCategory::General,
                 )
             })?;
@@ -146,7 +146,7 @@ impl SimplePkcs11Client {
     pub fn finalize(&self) -> Result<(), BearDogError> {
         let mut pkcs11_guard = self.pkcs11.lock().map_err(|e| {
             system_error(
-                &format!("Mutex lock poisoned: {}", e),
+                &format!("Mutex lock poisoned: {e}"),
                 SystemErrorCategory::General,
             )
         })?;
