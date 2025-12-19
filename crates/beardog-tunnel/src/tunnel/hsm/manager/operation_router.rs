@@ -168,7 +168,7 @@ impl HsmOperationRouter {
             provider_id: provider_id.clone(),
             priority: if is_hardware_preferred { 1 } else { 2 },
             estimated_latency_ms: estimated_latency,
-            reason: format!("Routed {:?} to {}", operation_type, provider_id),
+            reason: format!("Routed {operation_type:?} to {provider_id}"),
         })
     }
 

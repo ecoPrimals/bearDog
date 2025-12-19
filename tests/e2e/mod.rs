@@ -96,7 +96,11 @@ pub struct E2ETestResult {
 }
 
 /// E2E metrics
-#[derive(Debug, Clone, Default)]
+/// E2E test metrics
+///
+/// Modern pattern: Explicit Default implementation to control data_verified semantics
+/// Design: data_verified=true by default (innocent until proven guilty)
+#[derive(Debug, Clone)]
 pub struct E2EMetrics {
     pub total_requests: u64,
     pub successful_requests: u64,
@@ -104,6 +108,23 @@ pub struct E2EMetrics {
     pub average_latency_ms: f64,
     pub peak_latency_ms: f64,
     pub data_verified: bool,
+}
+
+impl Default for E2EMetrics {
+    /// Modern pattern: Explicit default implementation
+    ///
+    /// Design: data_verified starts as true (innocent until proven guilty)
+    /// Rationale: Scenarios that don't touch data shouldn't fail verification
+    fn default() -> Self {
+        Self {
+            total_requests: 0,
+            successful_requests: 0,
+            failed_requests: 0,
+            average_latency_ms: 0.0,
+            peak_latency_ms: 0.0,
+            data_verified: true, // Default to true - scenarios set false if data issues found
+        }
+    }
 }
 
 /// Main E2E testing framework

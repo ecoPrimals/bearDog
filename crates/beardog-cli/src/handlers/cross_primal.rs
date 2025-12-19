@@ -6,7 +6,13 @@
 //! ## Principle: "Discover, Don't Hardcode"
 //!
 //! This handler discovers primals by capability, NOT by hardcoded names.
-//! Works with ANY primal advertising the required capabilities (songbird, or others).
+//! BearDog knows ONLY itself. At runtime, it discovers ANY primal advertising
+//! the required capabilities (networking, compute, storage, etc) through:
+//! - mDNS/DNS-SD service discovery
+//! - Capability announcements
+//! - Universal adapter pattern
+//!
+//! **No primal names are hardcoded.** Discovery is purely capability-based.
 
 use crate::ecosystem_discovery_adapter::EcosystemDiscoveryAdapter;
 use base64::{engine::general_purpose::STANDARD, Engine};

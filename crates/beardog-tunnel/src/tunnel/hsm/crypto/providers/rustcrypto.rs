@@ -154,8 +154,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                     .await
             }
             _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support: {}",
-                algorithm
+                "RustCrypto doesn't support: {algorithm}"
             ))),
         }
     }
@@ -187,8 +186,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                     .await
             }
             _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support: {}",
-                algorithm
+                "RustCrypto doesn't support: {algorithm}"
             ))),
         }
     }
@@ -201,8 +199,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         _options: &EncryptionOptions,
     ) -> Result<EncryptedData, BearDogError> {
         Err(BearDogError::unsupported_operation(format!(
-            "RustCrypto asymmetric encryption not yet implemented: {}",
-            algorithm
+            "RustCrypto asymmetric encryption not yet implemented: {algorithm}"
         )))
     }
 
@@ -214,8 +211,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         _options: &DecryptionOptions,
     ) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(format!(
-            "RustCrypto asymmetric decryption not yet implemented: {}",
-            algorithm
+            "RustCrypto asymmetric decryption not yet implemented: {algorithm}"
         )))
     }
 
@@ -232,8 +228,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 self.sign_ecdsa_p256(private_key, message).await
             }
             _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support signing with: {}",
-                algorithm
+                "RustCrypto doesn't support signing with: {algorithm}"
             ))),
         }
     }
@@ -254,8 +249,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 self.verify_ecdsa_p256(public_key, message, signature).await
             }
             _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support verification with: {}",
-                algorithm
+                "RustCrypto doesn't support verification with: {algorithm}"
             ))),
         }
     }
@@ -267,8 +261,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
             HashAlgorithm::Sha512 => Ok(self.hash_sha512(data)),
             HashAlgorithm::Blake3 => Ok(self.hash_blake3(data)),
             _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support hashing with: {}",
-                algorithm
+                "RustCrypto doesn't support hashing with: {algorithm}"
             ))),
         }
     }
@@ -292,8 +285,7 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 self.derive_hkdf_sha512(input_key, salt, info, output_length)
             }
             _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support KDF with: {}",
-                algorithm
+                "RustCrypto doesn't support KDF with: {algorithm}"
             ))),
         }
     }

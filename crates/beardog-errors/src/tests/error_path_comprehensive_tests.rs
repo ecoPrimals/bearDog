@@ -18,14 +18,26 @@ mod error_path_tests {
     fn test_result_ok_handling() {
         let result: Result<i32, BearDogError> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        // Extract value without unwrap on literal
+        if let Ok(value) = result {
+            assert_eq!(value, 42);
+        } else {
+            panic!("Expected Ok, got Err");
+        }
     }
 
     #[test]
     fn test_result_err_handling() {
         let result: Result<i32, BearDogError> = Err(BearDogError::invalid_input("Test"));
         assert!(result.is_err());
-        assert_eq!(result.unwrap_or(0), 0);
+        // Test error fallback without unwrap_or on literal
+        match result {
+            Ok(_) => panic!("Expected Err, got Ok"),
+            Err(e) => {
+                // Business error with validation category
+                assert_eq!(e.to_string(), "Business error: Test");
+            }
+        }
     }
 
     #[test]
@@ -58,7 +70,7 @@ mod error_path_tests {
     // TEST_PRIORITY: normal
     fn test_result_and_then() {
         let result: Result<i32, BearDogError> = Ok(21);
-        let chained = result.and_then(|x| Ok(x * 2));
+        let chained = result.map(|x| x * 2);
         assert_eq!(chained.unwrap(), 42);
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors

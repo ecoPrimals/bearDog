@@ -168,8 +168,7 @@ impl LimitsConfig {
 
         if self.thread_pool_size > DEFAULT_MAX_THREADS {
             return Err(ConfigError::validation(format!(
-                "Thread pool size cannot exceed {}",
-                DEFAULT_MAX_THREADS
+                "Thread pool size cannot exceed {DEFAULT_MAX_THREADS}"
             )));
         }
 
@@ -290,6 +289,10 @@ where
         .and_then(|s| s.parse().ok())
         .unwrap_or(default)
 }
+
+#[cfg(test)]
+#[path = "limits_comprehensive_tests.rs"]
+mod limits_comprehensive_tests;
 
 #[cfg(test)]
 mod tests {

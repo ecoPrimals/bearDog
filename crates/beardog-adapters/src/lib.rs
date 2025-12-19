@@ -16,24 +16,16 @@
 // Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
-//! - **Zero Vendor Lock-in**: Pluggable providers (AWS, Azure, GCP, Vault)
-//! - **Automatic Failover**: Graceful degradation when providers unavailable
-//! - **Response Caching**: Efficient request deduplication
-//!
-//! ## Example
-//!
-//! ```rust
-//! use beardog_adapters::{UniversalAdapter, AdapterConfig};
-//!
-//! let config = AdapterConfig::default();
-//! let adapter = UniversalAdapter::new(config);
-//! // Adapter automatically discovers and connects to available providers
-//! ```
-//!
-//! ## Sovereignty
-//!
-//! This crate implements sovereign computing principles - no hardcoded
-//! provider dependencies, all services discovered dynamically.
+
+// Adapter Certificate System - Cryptographic Locking
+pub mod certificates;
+
+// Re-export certificate types for convenience
+pub use certificates::{
+    issuance::CertificateIssuer,
+    types::{AdapterUnlockCertificate, CommercialClassification},
+    verification::CertificateVerifier,
+};
 
 // October 26, 2025: Week 2 Day 4 - Integration Tests
 #[cfg(test)]

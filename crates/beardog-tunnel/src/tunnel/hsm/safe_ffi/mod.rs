@@ -106,8 +106,7 @@ impl SafePlatformSecurity {
                 })
             }
             _ => Err(BearDogError::unsupported_operation(format!(
-                "Key type {:?} not supported in safe fallback",
-                key_type
+                "Key type {key_type:?} not supported in safe fallback"
             ))),
         }
     }

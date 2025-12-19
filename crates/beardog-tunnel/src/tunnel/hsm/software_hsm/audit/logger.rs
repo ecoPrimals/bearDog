@@ -218,8 +218,7 @@ impl DefaultAuditLogger {
             "json" => self.export_as_json().await,
             "csv" => self.export_as_csv().await,
             _ => Err(BearDogError::invalid_input(&format!(
-                "Unsupported export format: {}",
-                format
+                "Unsupported export format: {format}"
             ))),
         }
     }

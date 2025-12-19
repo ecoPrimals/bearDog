@@ -8,6 +8,10 @@ pub mod software_hsm;
 #[cfg(target_os = "android")]
 pub mod android_strongbox;
 
+// Solo V2 USB security key support
+#[cfg(feature = "solo-v2")]
+pub mod solo_v2;
+
 // iOS Secure Enclave support (has file corruption in types.rs - needs reconstruction)
 // #[cfg(target_os = "ios")]
 // pub mod ios_secure_enclave;
@@ -23,6 +27,12 @@ pub mod types;
 // Platform abstractions
 pub mod safe_ffi;
 pub mod universal_discovery;
+
+// Re-export discovery types for CLI usage
+pub use universal_discovery::{
+    DiscoveredHsm, DiscoveryEngine, HsmConnectionInfo, HsmHealthStatus as DiscoveryHsmHealthStatus,
+    HsmInterfaceType, UniversalHsmCapabilities,
+};
 
 // Crypto system
 pub mod crypto; // NEW: Universal Crypto Provider System

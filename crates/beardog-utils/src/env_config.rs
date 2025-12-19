@@ -28,10 +28,9 @@ where
 pub fn get_env_required(key: &str) -> String {
     env::var(key).unwrap_or_else(|_| {
         panic!(
-            "Required environment variable {} is not set. \
+            "Required environment variable {key} is not set. \
              Please set it in your .env file or environment. \
-             See .env.example for reference.",
-            key
+             See .env.example for reference."
         )
     })
 }
@@ -51,8 +50,8 @@ impl NetworkConfig {
         // Use RuntimeNetworkConfig for defaults instead of hardcoded values
         let runtime_config = RuntimeNetworkConfig::from_env();
 
-        let host_key = format!("{}_HOST", prefix);
-        let port_key = format!("{}_PORT", prefix);
+        let host_key = format!("{prefix}_HOST");
+        let port_key = format!("{prefix}_PORT");
 
         Self {
             host: get_env_or_default(&host_key, &runtime_config.api_host),
@@ -83,9 +82,9 @@ pub struct TimeoutConfig {
 impl TimeoutConfig {
     /// Create from environment variables with prefix
     pub fn from_env(prefix: &str) -> Self {
-        let connect_key = format!("{}_CONNECT_TIMEOUT_MS", prefix);
-        let request_key = format!("{}_REQUEST_TIMEOUT_MS", prefix);
-        let idle_key = format!("{}_IDLE_TIMEOUT_MS", prefix);
+        let connect_key = format!("{prefix}_CONNECT_TIMEOUT_MS");
+        let request_key = format!("{prefix}_REQUEST_TIMEOUT_MS");
+        let idle_key = format!("{prefix}_IDLE_TIMEOUT_MS");
 
         Self {
             connect_timeout: Duration::from_millis(get_env_as(&connect_key, 5000)),

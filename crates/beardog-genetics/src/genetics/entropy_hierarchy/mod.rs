@@ -14,7 +14,7 @@ pub use engine::*;
 pub use monitoring::*;
 pub use sources::*;
 pub use types::*;
-pub use validation::*;
+pub use validation::{EntropyValidator, LiveFeedConfig, LiveFeedValidationResult, LiveFeedValidator};
 
 // Note: BearDogError, Deserialize, and Serialize imports removed as they are unused in this module
 // They can be re-added when needed for future implementations

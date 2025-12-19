@@ -42,3 +42,14 @@ mod monitoring_comprehensive_tests;
 )]
 #[cfg(test)]
 mod monitoring_error_path_comprehensive_tests;
+
+// December 10, 2025: Real-world scenario tests for health checking
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::nonminimal_bool
+)]
+#[cfg(test)]
+mod health_checker_comprehensive_tests;

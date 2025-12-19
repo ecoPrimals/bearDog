@@ -21,6 +21,8 @@ mod tests;
 
 // Core submodules
 pub mod adapter;
+pub mod auth_services; // Phase 2: JWT, OAuth2, RBAC
+pub mod key_management; // Phase 2: HSM key persistence, public key management
 pub mod monitoring;
 pub mod security;
 pub mod state;

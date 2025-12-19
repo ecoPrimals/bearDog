@@ -303,9 +303,8 @@ async fn test_session_token_uniqueness_across_logins() {
 
     let session1 = auth_handler.authenticate(&credentials).await.unwrap();
 
-    // Add a small delay to ensure different timestamp
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-
+    // ✅ MODERNIZED: No sleep needed - system clock provides unique timestamps
+    // If timestamps collide, that indicates a bug in the auth system that should be fixed
     let session2 = auth_handler.authenticate(&credentials).await.unwrap();
 
     // Step 4: Verify sessions exist (tokens may be same in mock implementation)

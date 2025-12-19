@@ -53,6 +53,10 @@ pub struct FrameworkConfig {
     pub sample_size: usize,
     /// Timeout for operations
     pub timeout: Duration,
+    /// Compute service endpoint (if None, reads from env)
+    pub compute_endpoint: Option<String>,
+    /// Storage service endpoint (if None, reads from env)
+    pub storage_endpoint: Option<String>,
 }
 
 /// Performance statistics for the framework
@@ -104,6 +108,8 @@ impl Default for FrameworkConfig {
             confidence_level: 0.95,
             sample_size: 1000,
             timeout: Duration::from_secs(30),
+            compute_endpoint: None, // Read from env by default
+            storage_endpoint: None, // Read from env by default
         }
     }
 }
@@ -137,25 +143,35 @@ impl BearDogFramework {
     pub async fn discover_services(&mut self) -> Result<Vec<ServiceInfo>, BearDogError> {
         info!("🔍 Discovering services with universal capability-based discovery");
 
-        // Modern idiomatic approach: explicit configuration requirement
-        // No hardcoded fallbacks - fail explicitly with helpful error messages
-        let compute_endpoint = std::env::var("BEARDOG_COMPUTE_ENDPOINT").map_err(|_| {
-            BearDogError::Configuration(
-                "BEARDOG_COMPUTE_ENDPOINT must be configured. \
-                 Set environment variable or add to config file. \
-                 Example: export BEARDOG_COMPUTE_ENDPOINT=http://compute.example.com:8080"
-                    .to_string(),
-            )
-        })?;
+        // Modern concurrent-safe approach: config takes precedence over env vars
+        // This allows tests to run concurrently without env var races
+        let compute_endpoint = self
+            .config
+            .compute_endpoint
+            .clone()
+            .or_else(|| std::env::var("BEARDOG_COMPUTE_ENDPOINT").ok())
+            .ok_or_else(|| {
+                BearDogError::Configuration(
+                    "BEARDOG_COMPUTE_ENDPOINT must be configured. \
+                     Set in FrameworkConfig or environment variable. \
+                     Example: export BEARDOG_COMPUTE_ENDPOINT=http://compute.example.com:8080"
+                        .to_string(),
+                )
+            })?;
 
-        let storage_endpoint = std::env::var("BEARDOG_STORAGE_ENDPOINT").map_err(|_| {
-            BearDogError::Configuration(
-                "BEARDOG_STORAGE_ENDPOINT must be configured. \
-                 Set environment variable or add to config file. \
-                 Example: export BEARDOG_STORAGE_ENDPOINT=http://storage.example.com:8080"
-                    .to_string(),
-            )
-        })?;
+        let storage_endpoint = self
+            .config
+            .storage_endpoint
+            .clone()
+            .or_else(|| std::env::var("BEARDOG_STORAGE_ENDPOINT").ok())
+            .ok_or_else(|| {
+                BearDogError::Configuration(
+                    "BEARDOG_STORAGE_ENDPOINT must be configured. \
+                     Set in FrameworkConfig or environment variable. \
+                     Example: export BEARDOG_STORAGE_ENDPOINT=http://storage.example.com:8080"
+                        .to_string(),
+                )
+            })?;
 
         let compute_service = ServiceInfo {
             name: "compute-service".to_string(),
@@ -263,6 +279,10 @@ pub type BearDogResult<T> = Result<T, BearDogError>;
 // For now, the root crate provides a simplified framework interface
 
 #[cfg(test)]
+#[path = "lib_coverage_extension.rs"]
+mod lib_coverage_extension;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -274,8 +294,10 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn test_service_discovery() {
         // Set required environment variables for test
+        // Using serial execution to avoid env var conflicts with other tests
         std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test-compute:8080");
         std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test-storage:8081");
 
@@ -302,6 +324,8 @@ mod tests {
             confidence_level: 0.99,
             sample_size: 2000,
             timeout: Duration::from_secs(60),
+            compute_endpoint: None,
+            storage_endpoint: None,
         };
 
         assert_eq!(config.confidence_level, 0.99);

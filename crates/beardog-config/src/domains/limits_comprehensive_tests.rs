@@ -10,6 +10,10 @@ mod tests {
         DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_RETRIES, DEFAULT_MAX_THREADS, DEFAULT_MIN_THREADS,
         DEFAULT_OPERATION_TIMEOUT_SECS, DEFAULT_QUEUE_SIZE,
     };
+    use std::sync::Mutex;
+
+    // Mutex to protect environment variable access in concurrent tests
+    static ENV_MUTEX: Mutex<()> = Mutex::new(());
 
     // ============================================================================
     // Constant Verification Tests
@@ -200,49 +204,56 @@ mod tests {
 
     #[test]
     fn test_low_resource_config() {
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 2048;
-        config.max_connections = 10;
-        config.queue_size = 100;
-        config.thread_pool_size = 2;
+        let config = LimitsConfig {
+            buffer_size: 2048,
+            max_connections: 10,
+            queue_size: 100,
+            thread_pool_size: 2,
+            ..Default::default()
+        };
 
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_high_throughput_config() {
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 65536;
-        config.max_connections = 1000;
-        config.queue_size = 10000;
-        config.thread_pool_size = 32;
+        let config = LimitsConfig {
+            buffer_size: 65536,
+            max_connections: 1000,
+            queue_size: 10000,
+            thread_pool_size: 32,
+            ..Default::default()
+        };
 
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_embedded_config() {
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 1024;
-        config.max_connections = 5;
-        config.max_retries = 1;
-        config.queue_size = 50;
-        config.thread_pool_size = 2;
+        let config = LimitsConfig {
+            buffer_size: 1024,
+            max_connections: 5,
+            max_retries: 1,
+            queue_size: 50,
+            thread_pool_size: 2,
+            ..Default::default()
+        };
 
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_production_config() {
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 32768;
-        config.max_connections = 500;
-        config.max_retries = 5;
-        config.backoff_ms = 200;
-        config.max_message_size = 10 * 1024 * 1024;
-        config.queue_size = 5000;
-        config.thread_pool_size = 16;
-        config.operation_timeout_secs = 60;
+        let config = LimitsConfig {
+            buffer_size: 32768,
+            max_connections: 500,
+            max_retries: 5,
+            backoff_ms: 200,
+            max_message_size: 10 * 1024 * 1024,
+            queue_size: 5000,
+            thread_pool_size: 16,
+            operation_timeout_secs: 60,
+        };
 
         assert!(config.validate().is_ok());
     }
@@ -281,8 +292,10 @@ mod tests {
 
         let config1 = LimitsConfig::default();
         let config2 = LimitsConfig::default();
-        let mut config3 = LimitsConfig::default();
-        config3.buffer_size = 16384;
+        let config3 = LimitsConfig {
+            buffer_size: 16384,
+            ..Default::default()
+        };
 
         assert_eq!(config1, config2);
         assert_ne!(config1, config3);
@@ -311,9 +324,11 @@ mod tests {
     #[test]
     fn test_serialization_with_custom_values() {
         std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 16384;
-        config.max_connections = 500;
+        let config = LimitsConfig {
+            buffer_size: 16384,
+            max_connections: 500,
+            ..Default::default()
+        };
 
         let json = serde_json::to_string(&config).expect("Should serialize");
         let deserialized: LimitsConfig = serde_json::from_str(&json).expect("Should deserialize");
@@ -330,8 +345,10 @@ mod tests {
 
     #[test]
     fn test_boundary_max_connections() {
-        let mut config = LimitsConfig::default();
-        config.max_connections = 10000;
+        let config = LimitsConfig {
+            max_connections: 10000,
+            ..Default::default()
+        };
 
         // No max connections limit in actual validation
         assert!(config.validate().is_ok());
@@ -339,8 +356,10 @@ mod tests {
 
     #[test]
     fn test_boundary_max_retries() {
-        let mut config = LimitsConfig::default();
-        config.max_retries = 100;
+        let config = LimitsConfig {
+            max_retries: 100,
+            ..Default::default()
+        };
 
         // No max retries limit in actual validation
         assert!(config.validate().is_ok());
@@ -348,24 +367,28 @@ mod tests {
 
     #[test]
     fn test_minimal_valid_config() {
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 1024; // Min
-        config.max_connections = 1;
-        config.max_retries = 0;
-        config.queue_size = 1;
-        config.thread_pool_size = 2; // Min
+        let config = LimitsConfig {
+            buffer_size: 1024, // Min
+            max_connections: 1,
+            max_retries: 0,
+            queue_size: 1,
+            thread_pool_size: 2, // Min
+            ..Default::default()
+        };
 
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_maximal_valid_config() {
-        let mut config = LimitsConfig::default();
-        config.buffer_size = 1024 * 1024; // Max
-        config.max_connections = 10000; // Max
-        config.max_retries = 100; // Max
-        config.queue_size = 100000;
-        config.thread_pool_size = 128; // Max
+        let config = LimitsConfig {
+            buffer_size: 1024 * 1024, // Max
+            max_connections: 10000,   // Max
+            max_retries: 100,         // Max
+            queue_size: 100000,
+            thread_pool_size: 128, // Max
+            ..Default::default()
+        };
 
         assert!(config.validate().is_ok());
     }
@@ -376,10 +399,11 @@ mod tests {
 
     #[test]
     fn test_validation_error_messages() {
-        let mut config = LimitsConfig::default();
-
         // Test buffer size error message
-        config.buffer_size = 0;
+        let config = LimitsConfig {
+            buffer_size: 0,
+            ..Default::default()
+        };
         let err = config.validate().unwrap_err();
         assert!(err.to_string().contains("Buffer size"));
         assert!(err.to_string().contains("greater than 0"));
@@ -401,6 +425,7 @@ mod tests {
 
     #[test]
     fn test_from_env_with_overrides() {
+        let _lock = ENV_MUTEX.lock().unwrap();
         std::env::remove_var("BEARDOG_BUFFER_SIZE");
         std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
 

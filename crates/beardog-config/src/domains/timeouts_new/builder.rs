@@ -5,6 +5,10 @@
 use super::core::TimeoutConfig;
 use super::defaults::default_timeouts;
 
+#[cfg(test)]
+#[path = "builder_comprehensive_tests.rs"]
+mod builder_comprehensive_tests;
+
 /// Builder for TimeoutConfig
 ///
 /// Provides a fluent interface for constructing timeout configurations

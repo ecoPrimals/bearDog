@@ -236,7 +236,19 @@ impl PooledBuffer {
 
         match &mut self.block {
             Some(block) => &mut block.data,
-            None => unreachable!("Block should be Some after initialization above"),
+            None => {
+                // Safety: We just initialized the block above, so this should never happen
+                // However, we handle it gracefully instead of panicking
+                tracing::error!("CRITICAL: MemoryBuffer block is None after initialization attempt");
+                // Re-initialize and try again
+                let pool_ref = MemoryPool::minimal_default();
+                self.block = Some(MemoryBlock {
+                    data: vec![],
+                    pool: pool_ref,
+                });
+                // Now it must be Some
+                self.block.as_mut().map(|b| &mut b.data).expect("Block initialization failed twice - this is a critical bug")
+            }
         }
     }
 

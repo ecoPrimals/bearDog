@@ -26,6 +26,14 @@ pub enum HsmCapability {
     HardwareStorage,
     /// Biometric authentication
     BiometricAuth,
+    /// User presence verification (touch/button)
+    UserPresence,
+    /// User verification (PIN/biometric)
+    UserVerification,
+    /// Resident key storage on device
+    ResidentKeys,
+    /// Hardware-backed security
+    HardwareBacked,
 }
 
 /// HSM capability requirements

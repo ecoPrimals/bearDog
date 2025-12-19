@@ -235,8 +235,9 @@ mod tests {
             source_protocol: "test".to_string(),
         };
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
-        let later = std::time::SystemTime::now();
+        // ✅ CONCURRENT: Create distinct timestamp without sleep
+        // Add 10ms to ensure ordering without waiting
+        let later = now + std::time::Duration::from_millis(10);
 
         let announcement2 = PrimalAnnouncement {
             primal_id: "b".to_string(),

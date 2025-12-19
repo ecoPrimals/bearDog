@@ -112,6 +112,12 @@ pub mod universal_hsm;
 pub use simple_hsm_client::SimplePkcs11Client;
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
 
+// Re-export HSM discovery for CLI usage
+pub use tunnel::hsm::{
+    DiscoveredHsm, DiscoveryEngine, DiscoveryHsmHealthStatus, HsmConnectionInfo, HsmInterfaceType,
+    UniversalHsmCapabilities,
+};
+
 pub use beardog_errors::BearDogError;
 
 #[cfg(test)]

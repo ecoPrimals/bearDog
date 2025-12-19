@@ -674,20 +674,20 @@ fn test_audit_engine_get_events_in_range() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    // Add events with different timestamps
-    std::thread::sleep(std::time::Duration::from_millis(10));
-    engine.add_event(AuditEvent::new(
+    // Add events with different timestamps using explicit timing (no sleeps!)
+    let timestamp1 = now + Duration::milliseconds(10);
+    engine.add_event(AuditEvent::new_with_timestamp(
         AuditEventType::DataAccess,
         "resource1".to_string(),
         "read".to_string(),
         "success".to_string(),
+        timestamp1,
     ));
 
-    std::thread::sleep(std::time::Duration::from_millis(10));
-    let middle = Utc::now();
+    let middle = now + Duration::milliseconds(20);
 
-    std::thread::sleep(std::time::Duration::from_millis(10));
-    engine.add_event(AuditEvent::new(
+    let timestamp2 = now + Duration::milliseconds(30);
+    engine.add_event(AuditEvent::new_with_timestamp(
         AuditEventType::DataAccess,
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
@@ -695,6 +695,7 @@ fn test_audit_engine_get_events_in_range() {
         "resource2".to_string(),
         "read".to_string(),
         "success".to_string(),
+        timestamp2,
     ));
 
     let future = Utc::now() + Duration::seconds(10);
@@ -785,8 +786,10 @@ fn test_audit_engine_generate_compliance_report_empty() {
 fn test_audit_engine_cleanup_old_events() {
     let mut engine = AuditEngine::new(100);
 
-    // Add old events
-    engine.add_event(AuditEvent::new(
+    let old_timestamp = Utc::now() - Duration::milliseconds(100);
+
+    // Add old events with explicit timestamp (no sleep needed!)
+    engine.add_event(AuditEvent::new_with_timestamp(
         AuditEventType::DataAccess,
         "old".to_string(),
         "read".to_string(),
@@ -794,18 +797,19 @@ fn test_audit_engine_cleanup_old_events() {
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
         "success".to_string(),
+        old_timestamp,
     ));
 
-    std::thread::sleep(std::time::Duration::from_millis(100));
     let cutoff = Utc::now();
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    let new_timestamp = cutoff + Duration::milliseconds(100);
 
-    // Add new events
-    engine.add_event(AuditEvent::new(
+    // Add new events with explicit timestamp (no sleep needed!)
+    engine.add_event(AuditEvent::new_with_timestamp(
         AuditEventType::DataAccess,
         "new".to_string(),
         "read".to_string(),
         "success".to_string(),
+        new_timestamp,
     ));
 
     engine.cleanup_old_events(cutoff);

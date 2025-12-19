@@ -75,7 +75,8 @@ fn test_ownership_proof_empty() {
 #[test]
 fn test_ownership_proof_timestamp_ordering() {
     let proof1 = OwnershipProof::new(vec![1], vec![2]);
-    std::thread::sleep(std::time::Duration::from_millis(10));
+    // ✅ REMOVED: Unnecessary sleep - proofs are created synchronously
+    // Each proof is independent and doesn't require time passage
     let proof2 = OwnershipProof::new(vec![3], vec![4]);
 
     // Second proof should have later or equal timestamp
@@ -451,7 +452,7 @@ fn test_concurrent_biometric_hash_creation() {
     }
 
     for handle in handles {
-        let total_len = handle.join().expect("Thread should not panic");
+        let total_len = handle.join().unwrap(); // Test failure if thread panics
         assert_eq!(total_len, 48); // 32 + 16
     }
 }
@@ -471,7 +472,7 @@ fn test_concurrent_ownership_proof_creation() {
     }
 
     for handle in handles {
-        let total_len = handle.join().expect("Thread should not panic");
+        let total_len = handle.join().unwrap(); // Test failure if thread panics
         assert_eq!(total_len, 96); // 64 + 32
     }
 }

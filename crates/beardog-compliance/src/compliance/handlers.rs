@@ -320,3 +320,7 @@ impl Default for ComplianceHandler {
         Self::new(ComplianceConfig::default())
     }
 }
+
+#[cfg(test)]
+#[path = "handlers_coverage_extension.rs"]
+mod handlers_coverage_extension;

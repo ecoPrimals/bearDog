@@ -190,10 +190,11 @@ mod tests {
         let manager = BiomeSovereigntyManager::new("timestamp-test".to_string());
 
         let status1 = manager.get_sovereignty_status();
-        // Minimal sleep to ensure distinct timestamp (1ms is sufficient)
-        thread::sleep(Duration::from_millis(1));
+        // ✅ REMOVED: Unnecessary sleep - SystemTime::now() is monotonic
+        // Test verifies timestamps are ordered, not that time passes
         let status2 = manager.get_sovereignty_status();
 
+        // Timestamps should be ordered (>= allows for fast execution)
         assert!(status2.last_updated >= status1.last_updated);
     }
 

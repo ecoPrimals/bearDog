@@ -1,6 +1,8 @@
 // BearDog CLI - Main Entry Point
 // Vendor-agnostic, primal-agnostic, algorithm-agnostic, transport-agnostic
 
+#![allow(dead_code)] // CLI handlers not all wired up yet
+
 use beardog_errors::BearDogError;
 use clap::{Parser, Subcommand};
 
@@ -34,6 +36,31 @@ enum Commands {
 
     /// Decryption operations
     Decrypt(DecryptArgs),
+
+    /// Streaming encryption for large files (100GB+)
+    #[command(name = "stream-encrypt")]
+    StreamEncrypt {
+        /// Key ID to use for encryption
+        #[arg(long)]
+        key: String,
+        /// Input file path
+        #[arg(short, long)]
+        input: String,
+        /// Output file path
+        #[arg(short, long)]
+        output: String,
+    },
+
+    /// Streaming decryption for large files (100GB+)
+    #[command(name = "stream-decrypt")]
+    StreamDecrypt {
+        /// Input file path (encrypted)
+        #[arg(short, long)]
+        input: String,
+        /// Output file path (decrypted)
+        #[arg(short, long)]
+        output: String,
+    },
 
     /// HSM operations
     #[command(subcommand)]
@@ -108,6 +135,34 @@ enum KeyCommands {
         /// Use entropy seed (optional)
         #[arg(long)]
         seed: Option<String>,
+
+        /// Key derivation function (pbkdf2, argon2, hkdf)
+        #[arg(long, default_value = "argon2")]
+        kdf: String,
+
+        /// KDF iterations (for PBKDF2, default: 100000)
+        #[arg(long)]
+        kdf_iterations: Option<u32>,
+
+        /// KDF memory cost in KiB (for Argon2, default: 65536)
+        #[arg(long)]
+        kdf_memory: Option<u32>,
+
+        /// KDF time cost (for Argon2, default: 3)
+        #[arg(long)]
+        kdf_time: Option<u32>,
+
+        /// Expiry duration (e.g., "24h", "30d", "1y")
+        #[arg(long)]
+        expires_in: Option<String>,
+
+        /// Key purpose/description
+        #[arg(long)]
+        purpose: Option<String>,
+
+        /// Usage restrictions (encrypt-only, decrypt-only, sign-only, all)
+        #[arg(long, default_value = "all")]
+        usage: String,
     },
 
     /// List available keys
@@ -138,6 +193,153 @@ enum KeyCommands {
         #[arg(long)]
         yes: bool,
     },
+
+    /// Export a key to a file (for inter-primal sharing)
+    Export {
+        /// Key identifier to export
+        #[arg(long)]
+        key_id: String,
+
+        /// Output file path
+        #[arg(long)]
+        output: String,
+
+        /// Encrypt the exported key with a password (recommended)
+        #[arg(long)]
+        encrypt: bool,
+    },
+
+    /// Import a key from a file (from another primal/tower)
+    Import {
+        /// Input file path
+        #[arg(long)]
+        input: String,
+
+        /// Key identifier for the imported key (optional, uses file's key_id if not provided)
+        #[arg(long)]
+        key_id: Option<String>,
+
+        /// Decrypt the imported key with a password
+        #[arg(long)]
+        decrypt: bool,
+    },
+
+    /// Derive a new key from an existing master key
+    Derive {
+        /// Master key identifier to derive from
+        #[arg(long)]
+        master_key: String,
+
+        /// Purpose/context for the derived key (used in derivation)
+        #[arg(long)]
+        purpose: String,
+
+        /// Output key identifier for the derived key
+        #[arg(long)]
+        output: String,
+
+        /// Expiry duration (e.g., "24h", "30d", "1y")
+        #[arg(long)]
+        expires_in: Option<String>,
+    },
+
+    /// Mix two keys cryptographically for shared access
+    Mix {
+        /// First key identifier
+        #[arg(long)]
+        key1: String,
+
+        /// Second key identifier
+        #[arg(long)]
+        key2: String,
+
+        /// Output key identifier for mixed key
+        #[arg(long)]
+        output: String,
+
+        /// Threshold scheme (e.g., "2-of-2", "1-of-2")
+        #[arg(long, default_value = "2-of-2")]
+        threshold: String,
+
+        /// Expiry duration (e.g., "24h", "30d", "1y")
+        #[arg(long)]
+        expires_in: Option<String>,
+    },
+
+    /// Show key lineage (parent-child relationships)
+    Lineage {
+        /// Key identifier to show lineage for
+        #[arg(long)]
+        key_id: String,
+
+        /// Output in JSON format (machine-readable)
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Delegate key with time and resource constraints
+    Delegate {
+        /// Master key to delegate from
+        #[arg(long)]
+        master_key: String,
+
+        /// Delegate to (identity or key ID)
+        #[arg(long)]
+        delegate_to: String,
+
+        /// Output delegated key identifier
+        #[arg(long)]
+        output: String,
+
+        /// Time range (e.g., "9:00-17:00")
+        #[arg(long)]
+        time_range: Option<String>,
+
+        /// Allowed weekdays (e.g., "mon-fri" or "mon,wed,fri")
+        #[arg(long)]
+        weekdays: Option<String>,
+
+        /// CPU quota (0-100%)
+        #[arg(long)]
+        cpu_quota: Option<u8>,
+
+        /// Memory quota (e.g., "8GB", "512MB")
+        #[arg(long)]
+        memory_quota: Option<String>,
+
+        /// Expiry duration (required, e.g., "30d")
+        #[arg(long)]
+        expires_in: String,
+    },
+
+    /// Revoke a key (sovereign revocation)
+    Revoke {
+        /// Key identifier to revoke
+        #[arg(long)]
+        key_id: String,
+
+        /// Reason for revocation
+        #[arg(long)]
+        reason: Option<String>,
+
+        /// Effective-at timestamp (ISO 8601 format, e.g., "2025-12-20T00:00:00Z")
+        #[arg(long)]
+        effective_at: Option<String>,
+
+        /// Cascade revocation to child keys
+        #[arg(long)]
+        cascade: bool,
+    },
+
+    /// Check if a key is revoked
+    CheckRevocation {
+        /// Key identifier to check
+        #[arg(long)]
+        key_id: String,
+    },
+
+    /// List all revoked keys
+    ListRevocations,
 }
 
 // ============================================================================
@@ -253,9 +455,28 @@ async fn main() -> Result<(), BearDogError> {
                 algorithm,
                 hsm,
                 seed,
+                kdf,
+                kdf_iterations,
+                kdf_memory,
+                kdf_time,
+                usage,
+                expires_in,
+                purpose,
             } => {
-                handlers::key::handle_key_generate(&key_id, &algorithm, &hsm, seed.as_deref())
-                    .await?;
+                handlers::key::handle_key_generate_v2(
+                    &key_id,
+                    &algorithm,
+                    &hsm,
+                    seed.as_deref(),
+                    &kdf,
+                    kdf_iterations,
+                    kdf_memory,
+                    kdf_time,
+                    Some(usage.as_str()), // usage is String with default
+                    expires_in.as_deref(),
+                    purpose.as_deref(),
+                )
+                .await?;
             }
             KeyCommands::List { hsm, verbose } => {
                 handlers::key::handle_key_list(hsm.as_deref(), verbose).await?;
@@ -266,6 +487,95 @@ async fn main() -> Result<(), BearDogError> {
             KeyCommands::Delete { key_id, yes } => {
                 handlers::key::handle_key_delete(&key_id, yes).await?;
             }
+            KeyCommands::Export {
+                key_id,
+                output,
+                encrypt,
+            } => {
+                handlers::key_export::handle_key_export(&key_id, &output, encrypt).await?;
+            }
+            KeyCommands::Import {
+                input,
+                key_id,
+                decrypt,
+            } => {
+                handlers::key_export::handle_key_import(&input, key_id.as_deref(), decrypt).await?;
+            }
+            KeyCommands::Derive {
+                master_key,
+                purpose,
+                output,
+                expires_in,
+            } => {
+                handlers::key_derive::handle_key_derive(
+                    &master_key,
+                    &purpose,
+                    &output,
+                    expires_in.as_deref(),
+                )
+                .await?;
+            }
+            KeyCommands::Mix {
+                key1,
+                key2,
+                output,
+                threshold,
+                expires_in,
+            } => {
+                handlers::key_mix::handle_key_mix(
+                    &key1,
+                    &key2,
+                    &output,
+                    &threshold,
+                    expires_in.as_deref(),
+                )
+                .await?;
+            }
+            KeyCommands::Lineage { key_id, json } => {
+                handlers::key_lineage::handle_key_lineage(&key_id, json).await?;
+            }
+            KeyCommands::Delegate {
+                master_key,
+                delegate_to,
+                output,
+                time_range,
+                weekdays,
+                cpu_quota,
+                memory_quota,
+                expires_in,
+            } => {
+                handlers::key_delegate::handle_key_delegate(
+                    &master_key,
+                    &delegate_to,
+                    &output,
+                    time_range.as_deref(),
+                    weekdays.as_deref(),
+                    cpu_quota,
+                    memory_quota.as_deref(),
+                    &expires_in,
+                )
+                .await?;
+            }
+            KeyCommands::Revoke {
+                key_id,
+                reason,
+                effective_at,
+                cascade,
+            } => {
+                handlers::key_revoke::handle_key_revoke(
+                    &key_id,
+                    reason.as_deref(),
+                    effective_at.as_deref(),
+                    cascade,
+                )
+                .await?;
+            }
+            KeyCommands::CheckRevocation { key_id } => {
+                handlers::key_revoke::handle_key_check_revocation(&key_id).await?;
+            }
+            KeyCommands::ListRevocations => {
+                handlers::key_revoke::handle_key_list_revocations().await?;
+            }
         },
         Commands::Encrypt(args) => {
             handlers::encrypt::handle_encrypt(&args.key, &args.input, &args.output, args.genetic)
@@ -273,6 +583,12 @@ async fn main() -> Result<(), BearDogError> {
         }
         Commands::Decrypt(args) => {
             handlers::decrypt::handle_decrypt(&args.key, &args.input, &args.output).await?;
+        }
+        Commands::StreamEncrypt { key, input, output } => {
+            handlers::streaming::handle_streaming_encrypt(&key, &input, &output).await?;
+        }
+        Commands::StreamDecrypt { input, output } => {
+            handlers::streaming::handle_streaming_decrypt(&input, &output).await?;
         }
         Commands::Hsm(hsm_cmd) => match hsm_cmd {
             HsmCommands::Discover { verbose } => {

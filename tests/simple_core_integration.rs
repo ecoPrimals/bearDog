@@ -88,18 +88,27 @@ fn test_health_status_equality() {
 #[test]
 fn test_config_environment_values() {
     // Test different environment configurations
-    let mut config = BearDogConfig::default();
-
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    config.environment = "development".to_string();
+
+    // Modern idiomatic pattern: Use struct initialization instead of mutation
+    let config = BearDogConfig {
+        environment: "development".to_string(),
+        ..Default::default()
+    };
     assert_eq!(config.environment, "development");
 
-    config.environment = "staging".to_string();
+    let config = BearDogConfig {
+        environment: "staging".to_string(),
+        ..Default::default()
+    };
     assert_eq!(config.environment, "staging");
 
-    config.environment = "production".to_string();
+    let config = BearDogConfig {
+        environment: "production".to_string(),
+        ..Default::default()
+    };
     assert_eq!(config.environment, "production");
 }
 

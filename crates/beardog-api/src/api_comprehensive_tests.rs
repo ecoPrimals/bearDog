@@ -416,7 +416,16 @@ fn test_status_response_different_statuses() {
 fn test_api_state_creation() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
-    let _state = ApiState { core: core.clone() };
+
+    let crypto_service = beardog_core::crypto_service::BearDogCryptoService::new(
+        beardog_core::crypto_service::CryptoServiceConfig::default(),
+    )
+    .expect("Failed to create crypto service");
+
+    let _state = ApiState {
+        core: core.clone(),
+        crypto_service: Arc::new(crypto_service),
+    };
 
     assert!(Arc::strong_count(&core) >= 2); // core + state
 }
@@ -428,7 +437,16 @@ fn test_api_state_creation() {
 fn test_api_state_clone() {
     let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config));
-    let state1 = ApiState { core: core.clone() };
+
+    let crypto_service = beardog_core::crypto_service::BearDogCryptoService::new(
+        beardog_core::crypto_service::CryptoServiceConfig::default(),
+    )
+    .expect("Failed to create crypto service");
+
+    let state1 = ApiState {
+        core: core.clone(),
+        crypto_service: Arc::new(crypto_service),
+    };
     let state2 = state1.clone();
 
     // Both states should share the same Arc
@@ -442,7 +460,16 @@ fn test_api_state_debug_format() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    let state = ApiState { core };
+
+    let crypto_service = beardog_core::crypto_service::BearDogCryptoService::new(
+        beardog_core::crypto_service::CryptoServiceConfig::default(),
+    )
+    .expect("Failed to create crypto service");
+
+    let state = ApiState {
+        core,
+        crypto_service: Arc::new(crypto_service),
+    };
 
     let debug_str = format!("{:?}", state);
     assert!(debug_str.contains("ApiState"));

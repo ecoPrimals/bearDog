@@ -21,6 +21,7 @@ pub mod compliance;
 pub mod database;
 pub mod discovery; // ✅ Canonical DiscoveryConfig (Nov 10, 2025)
 pub mod discovery_config; // ⚠️ DEPRECATED - Use discovery_unified (Nov 8, 2025)
+pub mod discovery_modules; // Domain-driven refactored components (Dec 18, 2025)
 pub mod discovery_unified;
 pub mod monitoring_config;
 pub mod network;

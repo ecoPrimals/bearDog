@@ -11,15 +11,27 @@ documentation = "https://docs.rs/beardog"
 keywords = [ "api", "rest", "beardog", "web", "services",]
 categories = [ "web-programming", "api-bindings", "development-tools",]
 
+[features]
+default = []
+mdns = []
+
 [dependencies]
+base64 = "0.22"
+gethostname = "0.5"
 serde_json = "1.0"
 tracing = "0.1"
+# tarpc for high-performance binary RPC (Phase 4)
+tarpc = { version = "0.34", features = ["full"] }
+futures = "0.3"
 
 [package.authors]
 workspace = true
 
 [dependencies.beardog-core]
 path = "../beardog-core"
+
+[dependencies.beardog-config]
+path = "../beardog-config"
 
 [dependencies.beardog-errors]
 path = "../beardog-errors"
@@ -67,3 +79,8 @@ features = [ "v4", "serde",]
 [dependencies.reqwest]
 version = "0.11"
 features = [ "json",]
+
+[dev-dependencies]
+ed25519-dalek = "2.1"
+sha2 = "0.10"
+hkdf = "0.12"

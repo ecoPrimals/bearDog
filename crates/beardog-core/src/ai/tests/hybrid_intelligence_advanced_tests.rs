@@ -14,11 +14,8 @@
 #![allow(clippy::unwrap_used)] // Allow in tests
 
 use crate::ai::hybrid_intelligence::{
-    config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm},
-    core::{
-        DecisionResult, HybridIntelligenceBuilder, HybridIntelligenceSystem, IntelligenceEvent,
-        IntelligenceMetrics, PredictionResult, SystemCommand,
-    },
+    config::{HybridIntelligenceConfig, IntelligenceMode},
+    core::{HybridIntelligenceBuilder, SystemCommand},
     core_types::IntelligenceCapability,
 };
 use beardog_errors::BearDogError;
@@ -94,13 +91,12 @@ async fn test_decision_confidence_boundaries() {
         context.insert("complexity".to_string(), serde_json::json!(complexity));
 
         let result = system.make_decision(context).await;
-        assert!(result.is_ok(), "Decision should succeed for {}", complexity);
+        assert!(result.is_ok(), "Decision should succeed for {complexity}");
 
         let decision = result.unwrap();
         assert!(
             decision.confidence >= expected_min - 0.3, // Allow some variance
-            "Confidence for {} should be reasonable",
-            complexity
+            "Confidence for {complexity} should be reasonable"
         );
     }
 }
@@ -151,7 +147,7 @@ async fn test_predict_with_large_input() {
         .build()
         .expect("should build system");
 
-    let input_data: Vec<f64> = (0..1000).map(|i| i as f64).collect(); // 1000 features
+    let input_data: Vec<f64> = (0..1000).map(f64::from).collect(); // 1000 features
     let result = system.predict(input_data, None).await;
 
     assert!(result.is_ok(), "Large input prediction should work");
@@ -200,7 +196,7 @@ async fn test_predict_with_custom_model_id() {
 
 #[tokio::test]
 async fn test_mode_switch_human_to_hybrid() {
-    let system = HybridIntelligenceBuilder::new()
+    let _system = HybridIntelligenceBuilder::new()
         .build()
         .expect("should build system");
 
@@ -220,7 +216,7 @@ async fn test_mode_switch_human_to_hybrid() {
 
 #[tokio::test]
 async fn test_mode_switch_autonomous_to_human() {
-    let system = HybridIntelligenceBuilder::new()
+    let _system = HybridIntelligenceBuilder::new()
         .build()
         .expect("should build system");
 
@@ -243,7 +239,7 @@ async fn test_mode_switch_autonomous_to_human() {
 
 #[tokio::test]
 async fn test_add_capability_predictive_analytics() {
-    let system = HybridIntelligenceBuilder::new()
+    let _system = HybridIntelligenceBuilder::new()
         .build()
         .expect("should build system");
 
@@ -260,7 +256,7 @@ async fn test_add_capability_predictive_analytics() {
 
 #[tokio::test]
 async fn test_remove_capability() {
-    let system = HybridIntelligenceBuilder::new()
+    let _system = HybridIntelligenceBuilder::new()
         .build()
         .expect("should build system");
 
@@ -277,7 +273,7 @@ async fn test_remove_capability() {
 
 #[tokio::test]
 async fn test_multiple_capabilities() {
-    let system = HybridIntelligenceBuilder::new()
+    let _system = HybridIntelligenceBuilder::new()
         .capability(IntelligenceCapability::PredictiveAnalytics)
         .capability(IntelligenceCapability::AnomalyDetection)
         .capability(IntelligenceCapability::PatternRecognition)
@@ -462,7 +458,7 @@ async fn test_concurrent_predictions() {
     for i in 0..10 {
         let sys = Arc::clone(&system);
         let handle = tokio::spawn(async move {
-            let input = vec![i as f64, (i + 1) as f64];
+            let input = vec![f64::from(i), f64::from(i + 1)];
             sys.predict(input, None).await
         });
         handles.push(handle);
@@ -516,7 +512,8 @@ async fn test_mixed_concurrent_operations() {
     // 5 predictions
     for i in 0..5 {
         let sys = Arc::clone(&system);
-        let handle = tokio::spawn(async move { sys.predict(vec![i as f64], None).await.is_ok() });
+        let handle =
+            tokio::spawn(async move { sys.predict(vec![f64::from(i)], None).await.is_ok() });
         handles.push(handle);
     }
 

@@ -103,6 +103,11 @@ pub mod context_aware_licensing;
 /// libraries, native code, and system-level operations with safety guarantees.
 pub mod external_functions;
 
+/// mDNS-based primal discovery (feature-gated)
+#[cfg(feature = "mdns")]
+pub mod primal_discovery_mdns;
+pub mod primal_self_knowledge;
+pub mod primal_self_knowledge_validation;
 /// Primal sovereignty implementation
 ///
 /// Core implementation of primal sovereignty patterns, ensuring human control
@@ -144,6 +149,16 @@ pub mod zero_knowledge_bootstrap;
 /// Comprehensive migration framework for transitioning from traditional
 /// machine randomness to human-owned entropy across the entire ecosystem.
 pub mod migration;
+
+/// Protocol-agnostic crypto service
+///
+/// Core cryptographic service trait that can be exposed via HTTP, JSON-RPC, tarpc,
+/// or any future protocol without protocol-specific dependencies.
+pub mod crypto_service;
+#[cfg(test)]
+mod crypto_service_chacha_tests;
+#[cfg(test)]
+mod crypto_service_comprehensive_tests;
 
 // Re-export key components
 pub use core::*;

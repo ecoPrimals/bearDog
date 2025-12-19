@@ -180,6 +180,10 @@ impl SecurityConfigBuilder {
 }
 
 #[cfg(test)]
+#[path = "security_comprehensive_tests.rs"]
+mod security_comprehensive_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

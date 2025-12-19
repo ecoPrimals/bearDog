@@ -101,10 +101,7 @@ impl SoftwareKeyStore {
             debug!("Key deleted successfully: {}", key_id);
             Ok(())
         } else {
-            Err(BearDogError::not_found(format!(
-                "Key not found: {}",
-                key_id
-            )))
+            Err(BearDogError::not_found(format!("Key not found: {key_id}")))
         }
     }
 

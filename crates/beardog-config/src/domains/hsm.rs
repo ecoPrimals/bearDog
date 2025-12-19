@@ -5,6 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// HSM configuration for hardware and software providers
+///
+/// **Note**: Contains multiple boolean flags for fine-grained HSM control.
+/// Each flag enables/disables a specific HSM provider type.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmConfig {
     /// Auto-detect available HSMs
@@ -15,11 +19,11 @@ pub struct HsmConfig {
     #[serde(default = "default_true")]
     pub prefer_hardware: bool,
 
-    /// Enable SoftHSM2 provider
+    /// Enable `SoftHSM2` provider
     #[serde(default = "default_true")]
     pub enable_softhsm: bool,
 
-    /// Enable YubiHSM provider
+    /// Enable `YubiHSM` provider
     #[serde(default)]
     pub enable_yubihsm: bool,
 
@@ -27,15 +31,15 @@ pub struct HsmConfig {
     #[serde(default)]
     pub enable_tpm: bool,
 
-    /// Enable Android StrongBox (if on Android)
+    /// Enable Android `StrongBox` (if on Android)
     #[serde(default)]
     pub enable_strongbox: bool,
 
-    /// SoftHSM2 configuration file path
+    /// `SoftHSM2` configuration file path
     #[serde(skip_serializing_if = "Option::is_none")]
     pub softhsm_config: Option<PathBuf>,
 
-    /// YubiHSM connector URL
+    /// `YubiHSM` connector URL
     #[serde(skip_serializing_if = "Option::is_none")]
     pub yubihsm_connector: Option<String>,
 
@@ -182,6 +186,10 @@ fn default_provider_order() -> Vec<String> {
         "softhsm".to_string(),
     ]
 }
+
+#[cfg(test)]
+#[path = "hsm_comprehensive_tests.rs"]
+mod hsm_comprehensive_tests;
 
 #[cfg(test)]
 mod tests {

@@ -35,6 +35,7 @@ pub mod error;
 pub mod global;
 pub mod hierarchy;
 pub mod loader;
+pub mod runtime_network_discovery;
 pub mod validation;
 
 pub use error::{ConfigError, ConfigResult};

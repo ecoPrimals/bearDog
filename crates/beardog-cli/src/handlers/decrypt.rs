@@ -15,26 +15,51 @@ pub async fn handle_decrypt(
     input_path: &str,
     output_path: &str,
 ) -> Result<(), BearDogError> {
-    println!("🔓 BearDog Decryption");
-    println!("====================");
-    println!();
+    // Check for stdin/stdout mode
+    let use_stdin = input_path == "-";
+    let use_stdout = output_path == "-";
+
+    if !use_stdin && !use_stdout {
+        println!("🔓 BearDog Decryption");
+        println!("====================");
+        println!();
+    }
 
     // Step 1: Load key metadata (vendor-agnostic)
-    println!("🔑 Loading key: {}", key_id);
+    if !use_stdin && !use_stdout {
+        println!("🔑 Loading key: {}", key_id);
+    }
     let stored_key = key_store::load_key(key_id)?;
-    println!("✅ Key loaded");
-    println!("   Algorithm: {}", stored_key.algorithm);
-    println!("   HSM: {}", stored_key.hsm_name);
-    println!();
+    if !use_stdin && !use_stdout {
+        println!("✅ Key loaded");
+        println!("   Algorithm: {}", stored_key.algorithm);
+        println!("   HSM: {}", stored_key.hsm_name);
+        println!();
+    }
 
-    // Step 2: Read encrypted file
-    println!("📂 Reading encrypted file: {}", input_path);
-    let ciphertext = fs::read(input_path)?;
-    println!("   Size: {} bytes", ciphertext.len());
-    println!();
+    // Step 2: Read encrypted input (file or stdin)
+    let ciphertext = if use_stdin {
+        // Read from stdin
+        use std::io::{self, Read};
+        let mut buffer = Vec::new();
+        io::stdin().read_to_end(&mut buffer)?;
+        buffer
+    } else {
+        if !use_stdout {
+            println!("📂 Reading encrypted file: {}", input_path);
+        }
+        let data = fs::read(input_path)?;
+        if !use_stdout {
+            println!("   Size: {} bytes", data.len());
+            println!();
+        }
+        data
+    };
 
     // Step 3: Initialize HSM provider and decrypt
-    println!("🔓 Decrypting...");
+    if !use_stdin && !use_stdout {
+        println!("🔓 Decrypting...");
+    }
 
     // Initialize Software HSM with default config (vendor-agnostic crypto provider)
     let config = SoftwareHsmConfig::default();
@@ -47,15 +72,24 @@ pub async fn handle_decrypt(
     // Decrypt using real HSM provider
     let plaintext = software_hsm.decrypt(key_id, &ciphertext).await?;
 
-    println!("✅ Decryption complete");
-    println!("   Input: {} bytes", ciphertext.len());
-    println!("   Output: {} bytes", plaintext.len());
-    println!();
+    if !use_stdin && !use_stdout {
+        println!("✅ Decryption complete");
+        println!("   Input: {} bytes", ciphertext.len());
+        println!("   Output: {} bytes", plaintext.len());
+        println!();
+    }
 
-    // Step 4: Write output file
-    println!("💾 Writing decrypted file: {}", output_path);
-    fs::write(output_path, plaintext)?;
-    println!("✅ Saved successfully");
+    // Step 4: Write output (file or stdout)
+    if use_stdout {
+        // Write to stdout
+        use std::io::{self, Write};
+        io::stdout().write_all(&plaintext)?;
+        io::stdout().flush()?;
+    } else {
+        println!("💾 Writing decrypted file: {}", output_path);
+        fs::write(output_path, plaintext)?;
+        println!("✅ Saved successfully");
+    }
 
     Ok(())
 }

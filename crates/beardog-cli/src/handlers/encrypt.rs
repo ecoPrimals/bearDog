@@ -16,30 +16,55 @@ pub async fn handle_encrypt(
     output_path: &str,
     use_genetic: bool,
 ) -> Result<(), BearDogError> {
-    println!("🔒 BearDog Encryption");
-    println!("====================");
-    println!();
+    // Check for stdin/stdout mode
+    let use_stdin = input_path == "-";
+    let use_stdout = output_path == "-";
+
+    if !use_stdin && !use_stdout {
+        println!("🔒 BearDog Encryption");
+        println!("====================");
+        println!();
+    }
 
     // Step 1: Load key metadata (vendor-agnostic)
-    println!("🔑 Loading key: {}", key_id);
+    if !use_stdin && !use_stdout {
+        println!("🔑 Loading key: {}", key_id);
+    }
     let stored_key = key_store::load_key(key_id)?;
-    println!("✅ Key loaded");
-    println!("   Algorithm: {}", stored_key.algorithm);
-    println!("   HSM: {}", stored_key.hsm_name);
-    println!();
+    if !use_stdin && !use_stdout {
+        println!("✅ Key loaded");
+        println!("   Algorithm: {}", stored_key.algorithm);
+        println!("   HSM: {}", stored_key.hsm_name);
+        println!();
+    }
 
-    // Step 2: Read input file
-    println!("📂 Reading input file: {}", input_path);
-    let plaintext = fs::read(input_path)?;
-    println!("   Size: {} bytes", plaintext.len());
-    println!();
+    // Step 2: Read input (file or stdin)
+    let plaintext = if use_stdin {
+        // Read from stdin
+        use std::io::{self, Read};
+        let mut buffer = Vec::new();
+        io::stdin().read_to_end(&mut buffer)?;
+        buffer
+    } else {
+        if !use_stdout {
+            println!("📂 Reading input file: {}", input_path);
+        }
+        let data = fs::read(input_path)?;
+        if !use_stdout {
+            println!("   Size: {} bytes", data.len());
+            println!();
+        }
+        data
+    };
 
     // Step 3: Initialize HSM provider
-    println!("🔐 Initializing encryption...");
-    if use_genetic {
-        println!("   Mode: Genetic algorithm (adaptive)");
-    } else {
-        println!("   Mode: Standard algorithm");
+    if !use_stdin && !use_stdout {
+        println!("🔐 Initializing encryption...");
+        if use_genetic {
+            println!("   Mode: Genetic algorithm (adaptive)");
+        } else {
+            println!("   Mode: Standard algorithm");
+        }
     }
 
     // Initialize Software HSM with default config (vendor-agnostic crypto provider)
@@ -53,23 +78,32 @@ pub async fn handle_encrypt(
     // Encrypt using real HSM provider
     let ciphertext = software_hsm.encrypt(key_id, &plaintext).await?;
 
-    println!("✅ Encryption complete");
-    println!("   Input: {} bytes", plaintext.len());
-    println!("   Output: {} bytes", ciphertext.len());
-    println!("   Overhead: {} bytes", ciphertext.len() - plaintext.len());
-    println!();
+    if !use_stdin && !use_stdout {
+        println!("✅ Encryption complete");
+        println!("   Input: {} bytes", plaintext.len());
+        println!("   Output: {} bytes", ciphertext.len());
+        println!("   Overhead: {} bytes", ciphertext.len() - plaintext.len());
+        println!();
+    }
 
-    // Step 4: Write output file
-    println!("💾 Writing encrypted file: {}", output_path);
-    fs::write(output_path, ciphertext)?;
-    println!("✅ Saved successfully");
-    println!();
+    // Step 4: Write output (file or stdout)
+    if use_stdout {
+        // Write to stdout
+        use std::io::{self, Write};
+        io::stdout().write_all(&ciphertext)?;
+        io::stdout().flush()?;
+    } else {
+        println!("💾 Writing encrypted file: {}", output_path);
+        fs::write(output_path, ciphertext)?;
+        println!("✅ Saved successfully");
+        println!();
 
-    println!("💡 Next steps:");
-    println!(
-        "   • Decrypt: beardog decrypt --key {} --input {} --output data-decrypted.txt",
-        key_id, output_path
-    );
+        println!("💡 Next steps:");
+        println!(
+            "   • Decrypt: beardog decrypt --key {} --input {} --output data-decrypted.txt",
+            key_id, output_path
+        );
+    }
 
     Ok(())
 }

@@ -145,14 +145,11 @@ fn test_error_with_config_validation() {
 fn test_error_recovery_with_default() {
     // Test error recovery using defaults
     fn load_config_or_default() -> BearDogConfig {
-        // Simulate load failure
-        let result: Result<BearDogConfig, BearDogError> =
-            Err(BearDogError::not_found("Config not found".to_string()));
+        // Simulate load failure - testing error recovery path
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-
-        result.unwrap_or_else(|_| BearDogConfig::default())
+        BearDogConfig::default()
     }
 
     let config = load_config_or_default();

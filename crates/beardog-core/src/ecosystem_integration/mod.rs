@@ -105,6 +105,10 @@ mod performance_optimizer_tests;
     dead_code
 )]
 #[cfg(test)]
+#[path = "event_system_comprehensive_tests.rs"]
+mod event_system_comprehensive_tests;
+
+#[cfg(test)]
 mod tests;
 
 // Avoid ambiguous re-exports by aliasing conflicting types

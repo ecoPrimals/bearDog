@@ -237,13 +237,10 @@ impl NetworkPortsConfig {
 
         for (name, port) in ports {
             if port < 1024 {
-                return Err(format!(
-                    "{} ({}) should be non-privileged (>1024)",
-                    name, port
-                ));
+                return Err(format!("{name} ({port}) should be non-privileged (>1024)"));
             }
             if port == 0 {
-                return Err(format!("{} cannot be 0", name));
+                return Err(format!("{name} cannot be 0"));
             }
         }
 
@@ -252,7 +249,7 @@ impl NetworkPortsConfig {
         for (i, &port1) in port_values.iter().enumerate() {
             for &port2 in port_values.iter().skip(i + 1) {
                 if port1 == port2 {
-                    return Err(format!("Port conflict detected: {}", port1));
+                    return Err(format!("Port conflict detected: {port1}"));
                 }
             }
         }

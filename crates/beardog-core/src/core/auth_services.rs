@@ -1,8 +1,8 @@
 //! Advanced Authentication and Authorization Services (Phase 2)
 //!
-//! Implements JWT token generation, OAuth2 integration, and RBAC/ABAC authorization.
+//! Implements JWT token generation, `OAuth2` integration, and RBAC/ABAC authorization.
 //! This module provides production-grade authentication and authorization capabilities
-//! for the BearDog ecosystem.
+//! for the `BearDog` ecosystem.
 
 use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
@@ -50,6 +50,7 @@ impl JwtTokenManager {
     /// * `issuer` - Token issuer identifier
     /// * `audience` - Token audience identifier
     /// * `expiry_hours` - Default token expiry in hours
+    #[must_use]
     pub fn new(secret: &[u8], issuer: String, audience: String, expiry_hours: i64) -> Self {
         Self {
             encoding_key: EncodingKey::from_secret(secret),
@@ -68,6 +69,9 @@ impl JwtTokenManager {
     ///
     /// # Returns
     /// Signed JWT token string
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub fn generate_token(
         &self,
         user_id: &str,
@@ -86,7 +90,7 @@ impl JwtTokenManager {
         };
 
         encode(&Header::default(), &claims, &self.encoding_key)
-            .map_err(|e| BearDogError::security(format!("JWT token generation failed: {}", e)))
+            .map_err(|e| BearDogError::security(format!("JWT token generation failed: {e}")))
     }
 
     /// Validate and decode a JWT token
@@ -96,6 +100,9 @@ impl JwtTokenManager {
     ///
     /// # Returns
     /// Decoded JWT claims if valid
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub fn validate_token(&self, token: &str) -> Result<JwtClaims, BearDogError> {
         let mut validation = Validation::new(Algorithm::HS256);
         validation.set_issuer(&[&self.issuer]);
@@ -103,10 +110,11 @@ impl JwtTokenManager {
 
         decode::<JwtClaims>(token, &self.decoding_key, &validation)
             .map(|data| data.claims)
-            .map_err(|e| BearDogError::security(format!("JWT token validation failed: {}", e)))
+            .map_err(|e| BearDogError::security(format!("JWT token validation failed: {e}")))
     }
 
     /// Extract user ID from token without full validation (for logging/debugging)
+    #[must_use]
     pub fn extract_user_id(&self, token: &str) -> Option<String> {
         let mut validation = Validation::new(Algorithm::HS256);
         validation.insecure_disable_signature_validation();
@@ -175,6 +183,7 @@ pub struct RbacPolicy {
 
 impl RbacPolicy {
     /// Create a new RBAC policy with default role-permission mappings
+    #[must_use]
     pub fn new() -> Self {
         let mut role_permissions = HashMap::new();
 
@@ -227,6 +236,9 @@ impl RbacPolicy {
     }
 
     /// Assign a role to a user
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn assign_role(&self, user_id: &str, role: Role) -> Result<(), BearDogError> {
         let mut user_roles = self.user_roles.write().await;
         user_roles
@@ -237,6 +249,9 @@ impl RbacPolicy {
     }
 
     /// Remove a role from a user
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn remove_role(&self, user_id: &str, role: &Role) -> Result<(), BearDogError> {
         let mut user_roles = self.user_roles.write().await;
         if let Some(roles) = user_roles.get_mut(user_id) {
@@ -246,6 +261,9 @@ impl RbacPolicy {
     }
 
     /// Check if a user has permission for an operation
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn has_permission(
         &self,
         user_id: &str,
@@ -267,6 +285,9 @@ impl RbacPolicy {
     }
 
     /// Get all permissions for a user
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn get_user_permissions(
         &self,
         user_id: &str,
@@ -286,6 +307,9 @@ impl RbacPolicy {
     }
 
     /// Get all roles for a user
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn get_user_roles(&self, user_id: &str) -> Result<HashSet<Role>, BearDogError> {
         let user_roles = self.user_roles.read().await;
         Ok(user_roles.get(user_id).cloned().unwrap_or_default())
@@ -302,24 +326,24 @@ impl Default for RbacPolicy {
 // OAuth2 Integration
 // ============================================================================
 
-/// OAuth2 provider configuration
+/// `OAuth2` provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuth2Config {
-    /// OAuth2 client identifier provided by the authorization server
+    /// `OAuth2` client identifier provided by the authorization server
     pub client_id: String,
-    /// OAuth2 client secret for authenticating with the authorization server
+    /// `OAuth2` client secret for authenticating with the authorization server
     pub client_secret: String,
-    /// Authorization endpoint URL for initiating OAuth2 flow
+    /// Authorization endpoint URL for initiating `OAuth2` flow
     pub auth_url: String,
     /// Token endpoint URL for exchanging authorization codes for access tokens
     pub token_url: String,
     /// Redirect URI where the authorization server sends responses
     pub redirect_uri: String,
-    /// List of OAuth2 scopes to request (e.g., "read", "write")
+    /// List of `OAuth2` scopes to request (e.g., "read", "write")
     pub scopes: Vec<String>,
 }
 
-/// OAuth2 token response from authorization server
+/// `OAuth2` token response from authorization server
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuth2TokenResponse {
     /// The access token issued by the authorization server
@@ -334,14 +358,15 @@ pub struct OAuth2TokenResponse {
     pub scope: Option<String>,
 }
 
-/// OAuth2 client for external authentication
+/// `OAuth2` client for external authentication
 pub struct OAuth2Client {
     config: OAuth2Config,
     http_client: reqwest::Client,
 }
 
 impl OAuth2Client {
-    /// Create a new OAuth2 client
+    /// Create a new `OAuth2` client
+    #[must_use]
     pub fn new(config: OAuth2Config) -> Self {
         Self {
             config,
@@ -350,6 +375,7 @@ impl OAuth2Client {
     }
 
     /// Generate authorization URL for user to authenticate
+    #[must_use]
     pub fn get_authorization_url(&self, state: &str) -> String {
         let scopes = self.config.scopes.join(" ");
         format!(
@@ -363,6 +389,9 @@ impl OAuth2Client {
     }
 
     /// Exchange authorization code for access token
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn exchange_code(&self, code: &str) -> Result<OAuth2TokenResponse, BearDogError> {
         let params = [
             ("grant_type", "authorization_code"),
@@ -378,7 +407,7 @@ impl OAuth2Client {
             .form(&params)
             .send()
             .await
-            .map_err(|e| BearDogError::security(format!("OAuth2 token exchange failed: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("OAuth2 token exchange failed: {e}")))?;
 
         if !response.status().is_success() {
             return Err(BearDogError::security(format!(
@@ -390,10 +419,13 @@ impl OAuth2Client {
         response
             .json::<OAuth2TokenResponse>()
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to parse OAuth2 response: {}", e)))
+            .map_err(|e| BearDogError::security(format!("Failed to parse OAuth2 response: {e}")))
     }
 
     /// Refresh an access token using a refresh token
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn refresh_token(
         &self,
         refresh_token: &str,
@@ -411,7 +443,7 @@ impl OAuth2Client {
             .form(&params)
             .send()
             .await
-            .map_err(|e| BearDogError::security(format!("OAuth2 token refresh failed: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("OAuth2 token refresh failed: {e}")))?;
 
         if !response.status().is_success() {
             return Err(BearDogError::security(format!(
@@ -423,7 +455,7 @@ impl OAuth2Client {
         response
             .json::<OAuth2TokenResponse>()
             .await
-            .map_err(|e| BearDogError::security(format!("Failed to parse OAuth2 response: {}", e)))
+            .map_err(|e| BearDogError::security(format!("Failed to parse OAuth2 response: {e}")))
     }
 }
 
@@ -443,6 +475,7 @@ pub struct AuthManager {
 
 impl AuthManager {
     /// Create a new auth manager
+    #[must_use]
     pub fn new(jwt_secret: &[u8], issuer: String, audience: String) -> Self {
         Self {
             jwt_manager: JwtTokenManager::new(jwt_secret, issuer, audience, 24), // 24h default
@@ -451,12 +484,15 @@ impl AuthManager {
         }
     }
 
-    /// Register an OAuth2 provider
+    /// Register an `OAuth2` provider
     pub fn register_oauth2_provider(&mut self, name: String, config: OAuth2Config) {
         self.oauth2_clients.insert(name, OAuth2Client::new(config));
     }
 
     /// Generate a JWT token with role-based claims
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn authenticate_user(&self, user_id: &str) -> Result<String, BearDogError> {
         let roles = self.rbac_policy.get_user_roles(user_id).await?;
         let permissions = self.rbac_policy.get_user_permissions(user_id).await?;
@@ -465,12 +501,12 @@ impl AuthManager {
         custom_claims.insert(
             "roles".to_string(),
             serde_json::to_value(&roles)
-                .map_err(|e| BearDogError::security(format!("Failed to serialize roles: {}", e)))?,
+                .map_err(|e| BearDogError::security(format!("Failed to serialize roles: {e}")))?,
         );
         custom_claims.insert(
             "permissions".to_string(),
             serde_json::to_value(&permissions).map_err(|e| {
-                BearDogError::security(format!("Failed to serialize permissions: {}", e))
+                BearDogError::security(format!("Failed to serialize permissions: {e}"))
             })?,
         );
 
@@ -478,6 +514,9 @@ impl AuthManager {
     }
 
     /// Validate token and check permission
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub async fn authorize_operation(
         &self,
         token: &str,
@@ -489,17 +528,20 @@ impl AuthManager {
             .await
     }
 
-    /// Get OAuth2 client by provider name
+    /// Get `OAuth2` client by provider name
+    #[must_use]
     pub fn get_oauth2_client(&self, provider: &str) -> Option<&OAuth2Client> {
         self.oauth2_clients.get(provider)
     }
 
     /// Access JWT manager
+    #[must_use]
     pub fn jwt(&self) -> &JwtTokenManager {
         &self.jwt_manager
     }
 
     /// Access RBAC policy
+    #[must_use]
     pub fn rbac(&self) -> &RbacPolicy {
         &self.rbac_policy
     }
