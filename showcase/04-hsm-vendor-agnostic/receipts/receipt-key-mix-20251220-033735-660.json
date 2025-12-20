@@ -1,0 +1,21 @@
+{
+  "receipt_id": "baf31a28-7d60-46ac-bd1b-797cb6f02e43",
+  "operation": "key-mix",
+  "timestamp": "2025-12-20T03:37:35.660241442+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "temp-mix-ab-1766201845",
+    "algorithm": "AES-256-GCM",
+    "generation": 1,
+    "parent_key_id": "party-a-1766201845+party-b-1766201845",
+    "usage": "all",
+    "purpose": "Mixed key from party-a-1766201845 and party-b-1766201845 (threshold: 2)"
+  },
+  "metadata": {
+    "key1_id": "party-a-1766201845",
+    "key2_id": "party-b-1766201845",
+    "threshold": "2"
+  }
+}

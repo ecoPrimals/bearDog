@@ -1,0 +1,2 @@
+This is test data encrypted with HSM A (Software HSM).
+The same key will be used with HSM B to prove switching works!

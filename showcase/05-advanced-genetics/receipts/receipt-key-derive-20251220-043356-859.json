@@ -1,0 +1,20 @@
+{
+  "receipt_id": "99a4b80b-33a7-4ce7-bcd3-0de96c4c88c8",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:33:56.859618316+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "dept-engineering-1766205233",
+    "algorithm": "AES-256-GCM",
+    "generation": 1,
+    "parent_key_id": "root-ceo-1766205233",
+    "expires_at": "2026-12-20T04:33:56.859202154+00:00",
+    "purpose": "engineering-department"
+  },
+  "metadata": {
+    "master_key_id": "root-ceo-1766205233",
+    "derivation_purpose": "engineering-department"
+  }
+}

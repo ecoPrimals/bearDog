@@ -1,0 +1,20 @@
+{
+  "receipt_id": "8f1684c5-a034-4259-b6ce-189c33df9fff",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:34:00.923202217+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "carol-frontend-1766205233",
+    "algorithm": "AES-256-GCM",
+    "generation": 3,
+    "parent_key_id": "team-frontend-1766205233",
+    "expires_at": "2026-03-20T04:34:00.923097981+00:00",
+    "purpose": "carol-developer"
+  },
+  "metadata": {
+    "master_key_id": "team-frontend-1766205233",
+    "derivation_purpose": "carol-developer"
+  }
+}

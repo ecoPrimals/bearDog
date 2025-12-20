@@ -1,0 +1,20 @@
+{
+  "receipt_id": "9981ce3d-4701-4b53-9563-e274f5a9b2bc",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:34:24.004999512+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "alice-backend-1766205256",
+    "algorithm": "AES-256-GCM",
+    "generation": 3,
+    "parent_key_id": "team-backend-1766205256",
+    "expires_at": "2026-03-20T04:34:24.004852903+00:00",
+    "purpose": "alice-developer"
+  },
+  "metadata": {
+    "master_key_id": "team-backend-1766205256",
+    "derivation_purpose": "alice-developer"
+  }
+}

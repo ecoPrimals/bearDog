@@ -1,0 +1,20 @@
+{
+  "receipt_id": "115260db-b3b4-4cce-ad79-88f6bf98e786",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:34:00.918947295+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "bob-backend-1766205233",
+    "algorithm": "AES-256-GCM",
+    "generation": 3,
+    "parent_key_id": "team-backend-1766205233",
+    "expires_at": "2026-03-20T04:34:00.915710963+00:00",
+    "purpose": "bob-developer"
+  },
+  "metadata": {
+    "master_key_id": "team-backend-1766205233",
+    "derivation_purpose": "bob-developer"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "receipt_id": "1405418c-50f8-447e-905b-bbaead5477c3",
+  "operation": "key-mix",
+  "timestamp": "2025-12-20T03:37:35.668762558+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "multi-hsm-mixed-1766201845",
+    "algorithm": "AES-256-GCM",
+    "generation": 2,
+    "parent_key_id": "temp-mix-ab-1766201845+party-c-1766201845",
+    "usage": "all",
+    "purpose": "Mixed key from temp-mix-ab-1766201845 and party-c-1766201845 (threshold: 2)"
+  },
+  "metadata": {
+    "threshold": "2",
+    "key2_id": "party-c-1766201845",
+    "key1_id": "temp-mix-ab-1766201845"
+  }
+}

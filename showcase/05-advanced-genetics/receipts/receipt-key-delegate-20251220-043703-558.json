@@ -1,0 +1,23 @@
+{
+  "receipt_id": "e5de0275-cc56-4ba7-ae5b-230f1bb8fa1e",
+  "operation": "key-delegate",
+  "timestamp": "2025-12-20T04:37:03.557985251+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "api-tier1-1766205418",
+    "algorithm": "AES-256-GCM",
+    "generation": 1,
+    "parent_key_id": "key-api-limited-1766205418",
+    "expires_at": "2025-12-27T04:37:03.557642339+00:00",
+    "purpose": "Delegated to api-client-tier1"
+  },
+  "metadata": {
+    "master_key_id": "key-api-limited-1766205418",
+    "delegated_to": "api-client-tier1",
+    "cpu_quota": 50,
+    "expires_at": "2025-12-27T04:37:03.557642339+00:00",
+    "memory_quota": 536870912
+  }
+}

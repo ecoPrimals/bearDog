@@ -66,6 +66,13 @@ pub use genetics::entropy_hierarchy::{
     FusionAlgorithm, HumanEntropySource, HumanEntropyType, HumanIdentity, MachineEntropySource,
     MachineSourceType, MixingStrategy, OwnershipProof, SeedMetadata, VerificationLevel,
 };
+
+// Re-export human entropy collection types
+pub use genetics::human_entropy::{
+    HumanEntropyConfig, InteractionCaptureConfig, InteractionCaptureResult,
+    InteractionEntropyCollector, InteractionEvent, InteractionMetrics, InteractionType,
+    MultiModalHumanEntropyCollector,
+};
 pub use genetics::key_exchange::{
     DelegatedKey, GeneticKeyExchange, KeyExchangeConfig, KeyExchangeResult, KeyLineage,
 };

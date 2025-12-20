@@ -287,9 +287,9 @@ mod tests {
     #[test]
     fn test_receipt_serialization() {
         use serde_json::json;
-        
-        let receipt = OperationReceipt::new("key-generate")
-            .with_metadata("test_key", json!("test_value"));
+
+        let receipt =
+            OperationReceipt::new("key-generate").with_metadata("test_key", json!("test_value"));
 
         let json = serde_json::to_string(&receipt).unwrap();
         let deserialized: OperationReceipt = serde_json::from_str(&json).unwrap();
@@ -298,4 +298,3 @@ mod tests {
         assert_eq!(receipt.operation, deserialized.operation);
     }
 }
-

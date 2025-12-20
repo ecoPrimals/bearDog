@@ -1,0 +1,20 @@
+{
+  "receipt_id": "ae31564d-f9b8-455b-ae64-31b447c63a7f",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:34:21.986698391+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "team-frontend-1766205256",
+    "algorithm": "AES-256-GCM",
+    "generation": 2,
+    "parent_key_id": "dept-engineering-1766205256",
+    "expires_at": "2026-06-18T04:34:21.975049560+00:00",
+    "purpose": "frontend-team"
+  },
+  "metadata": {
+    "derivation_purpose": "frontend-team",
+    "master_key_id": "dept-engineering-1766205256"
+  }
+}

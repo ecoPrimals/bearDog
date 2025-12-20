@@ -1,0 +1,21 @@
+{
+  "receipt_id": "81522e89-1b7b-45a9-9a69-15ba8af8f2db",
+  "operation": "key-mix",
+  "timestamp": "2025-12-20T04:28:46.391583283+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "temp-mix-ab-1766204923",
+    "algorithm": "AES-256-GCM",
+    "generation": 2,
+    "parent_key_id": "share-3of5-member1-1766204923+share-3of5-member2-1766204923",
+    "usage": "all",
+    "purpose": "Mixed key from share-3of5-member1-1766204923 and share-3of5-member2-1766204923 (threshold: 2)"
+  },
+  "metadata": {
+    "threshold": "2",
+    "key2_id": "share-3of5-member2-1766204923",
+    "key1_id": "share-3of5-member1-1766204923"
+  }
+}

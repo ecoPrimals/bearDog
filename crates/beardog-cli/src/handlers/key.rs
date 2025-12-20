@@ -170,7 +170,11 @@ pub async fn handle_key_generate(
         })
         .with_metadata(
             "entropy_source",
-            json!(if seed_data.is_some() { "human" } else { "system" }),
+            json!(if seed_data.is_some() {
+                "human"
+            } else {
+                "system"
+            }),
         );
 
     // Save receipt to receipts directory
@@ -434,7 +438,11 @@ pub async fn handle_key_generate_v2(
         .with_metadata("kdf", json!(kdf_type))
         .with_metadata(
             "entropy_source",
-            json!(if seed_data.is_some() { "human" } else { "system" }),
+            json!(if seed_data.is_some() {
+                "human"
+            } else {
+                "system"
+            }),
         );
 
     // Save receipt

@@ -1,0 +1,21 @@
+{
+  "receipt_id": "b36afaf3-c170-4929-af3b-2f5e94576b98",
+  "operation": "key-mix",
+  "timestamp": "2025-12-20T00:51:33.306736213+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "songbird-channel-mixed-1766191889",
+    "algorithm": "AES-256-GCM",
+    "generation": 1,
+    "parent_key_id": "songbird-tower-a-1766191889+songbird-tower-b-1766191889",
+    "usage": "all",
+    "purpose": "Mixed key from songbird-tower-a-1766191889 and songbird-tower-b-1766191889 (threshold: 2)"
+  },
+  "metadata": {
+    "key2_id": "songbird-tower-b-1766191889",
+    "threshold": "2",
+    "key1_id": "songbird-tower-a-1766191889"
+  }
+}
