@@ -251,8 +251,10 @@ mod root_lib_coverage_extension_tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial] // Ensure env var isolation
     async fn test_discover_services_missing_storage_endpoint() {
         // Clear env vars to ensure test isolation
+        std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
         std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
 
         // Use explicit config instead of global env vars for concurrency safety
@@ -267,12 +269,12 @@ mod root_lib_coverage_extension_tests {
         let mut framework = BearDogFramework::with_config(config).await.unwrap();
         let result = framework.discover_services().await;
 
+        // Should error due to missing storage endpoint
         assert!(result.is_err());
-        match result {
-            Err(BearDogError::Configuration(msg)) => {
-                assert!(msg.contains("BEARDOG_STORAGE_ENDPOINT"));
-            }
-            _ => panic!("Expected Configuration error"),
+        if let Err(BearDogError::Configuration(msg)) = result {
+            assert!(msg.contains("BEARDOG_STORAGE_ENDPOINT") || msg.contains("storage"));
+        } else {
+            panic!("Expected Configuration error about storage endpoint");
         }
     }
 

@@ -649,7 +649,10 @@ mod tests {
             .await?;
 
         // Verify update
-        let cap = registry.get(&id).await?.unwrap();
+        let cap = registry
+            .get(&id)
+            .await?
+            .ok_or_else(|| BearDogError::internal("Value not found in collection".to_string()))?;
         assert_eq!(cap.consecutive_failures, 0);
 
         Ok(())
@@ -697,11 +700,21 @@ mod tests {
 
         assert_eq!(stats.total_capabilities, 3);
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Compute).unwrap(),
+            *stats
+                .by_type
+                .get(&ServiceCapabilityType::Compute)
+                .ok_or_else(|| BearDogError::internal(
+                    "Value not found in collection".to_string()
+                ))?,
             2
         );
         assert_eq!(
-            *stats.by_type.get(&ServiceCapabilityType::Storage).unwrap(),
+            *stats
+                .by_type
+                .get(&ServiceCapabilityType::Storage)
+                .ok_or_else(|| BearDogError::internal(
+                    "Value not found in collection".to_string()
+                ))?,
             1
         );
 
