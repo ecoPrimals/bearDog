@@ -317,6 +317,8 @@ ios/build/
 # Archive directories (moved to parent ../archive/)
 archive/
 !archive/.gitkeep
+# EXCEPT: docs/archive is for documentation archives (not build artifacts)
+!docs/archive/
 
 # Backup files
 *.bak
