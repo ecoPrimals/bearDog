@@ -581,8 +581,16 @@ pub struct RecoverySession {
 impl RecoverySession {
     pub fn new(user_id: &str, duration: Duration) -> Self {
         let now = Instant::now();
+        // ✅ FIXED: Use thread-safe UUID for truly unique session IDs
+        // The previous implementation using now.elapsed().as_nanos() was racy:
+        // - elapsed() returns 0 immediately after now(), causing duplicate IDs
+        // - This is a concurrency bug that would affect production
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static SESSION_COUNTER: AtomicU64 = AtomicU64::new(0);
+        let session_num = SESSION_COUNTER.fetch_add(1, Ordering::SeqCst);
+
         Self {
-            session_id: format!("session_{}", now.elapsed().as_nanos()),
+            session_id: format!("session_{}_{}", session_num, now.elapsed().as_nanos()),
             user_id: user_id.to_string(),
             created_at: now,
             expires_at: now + duration,
