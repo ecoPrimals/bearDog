@@ -1,0 +1,24 @@
+{
+  "receipt_id": "ddcf05b0-f5d7-454f-8345-f35bfc104449",
+  "operation": "key-generate",
+  "timestamp": "2025-12-20T03:00:35.205965365+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "songbird-channel-001-1766199633",
+    "algorithm": "AES-256-GCM",
+    "generation": 0,
+    "usage": "encrypt-only"
+  },
+  "hsm_info": {
+    "name": "BearDog Native Software HSM",
+    "vendor": "BearDog",
+    "model": "Native Software HSM",
+    "hsm_type": "Software"
+  },
+  "metadata": {
+    "kdf": "argon2",
+    "entropy_source": "system"
+  }
+}

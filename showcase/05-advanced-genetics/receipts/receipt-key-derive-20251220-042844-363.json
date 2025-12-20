@@ -1,0 +1,20 @@
+{
+  "receipt_id": "bf4cabd7-8ef4-4446-89ff-5922863a98d0",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:28:44.363711078+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "share-3of5-member2-1766204923",
+    "algorithm": "AES-256-GCM",
+    "generation": 1,
+    "parent_key_id": "board-master-1766204923",
+    "expires_at": "2026-12-20T04:28:44.360016713+00:00",
+    "purpose": "board-member-2"
+  },
+  "metadata": {
+    "master_key_id": "board-master-1766204923",
+    "derivation_purpose": "board-member-2"
+  }
+}

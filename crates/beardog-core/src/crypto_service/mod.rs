@@ -29,8 +29,8 @@
 //!
 //! - [`r#trait`] - Protocol-agnostic trait definition
 //! - [`types`] - Configuration and state types
-//! - [`algorithms`] - Cryptographic algorithm implementations
-//! - [`implementation`] - BearDogCryptoService implementation
+//! - [`algorithms`](crate::crypto_service::algorithms) - Cryptographic algorithm implementations
+//! - [`implementation`](crate::crypto_service::implementation) - BearDogCryptoService implementation
 //!
 //! ## Example Usage
 //!

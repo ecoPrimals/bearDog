@@ -1,0 +1,24 @@
+{
+  "receipt_id": "a3fc4653-d0cd-48f4-8f40-46f7b839fa7a",
+  "operation": "key-generate",
+  "timestamp": "2025-12-20T03:57:16.022800513+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "bench-encrypt-Software-1766203034",
+    "algorithm": "AES-256-GCM",
+    "generation": 0,
+    "usage": "all"
+  },
+  "hsm_info": {
+    "name": "BearDog Native Software HSM",
+    "vendor": "BearDog",
+    "model": "Native Software HSM",
+    "hsm_type": "Software"
+  },
+  "metadata": {
+    "kdf": "argon2",
+    "entropy_source": "system"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "receipt_id": "204985c1-1323-4562-a6b1-67d8b4f9305c",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:28:51.836194576+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "share-7of11-holder11-1766204923",
+    "algorithm": "AES-256-GCM",
+    "generation": 1,
+    "parent_key_id": "dao-treasury-1766204923",
+    "expires_at": "2026-12-20T04:28:51.836073696+00:00",
+    "purpose": "dao-holder-11"
+  },
+  "metadata": {
+    "master_key_id": "dao-treasury-1766204923",
+    "derivation_purpose": "dao-holder-11"
+  }
+}

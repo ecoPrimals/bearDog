@@ -3,7 +3,7 @@
 // This module provides functionality for the BearDog ecosystem.
 
 pub mod entropy_hierarchy;
-pub mod human_entropy;
+pub mod human_entropy; // Human entropy collection (keyboard, mouse, sensors)
 pub mod key_exchange;
 pub mod spawning;
 

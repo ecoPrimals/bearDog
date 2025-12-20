@@ -2,10 +2,10 @@
 // Vendor-agnostic: Works with ANY compatible HSM (PKCS#11, FIDO2, Mobile, etc.)
 
 use beardog_errors::BearDogError;
-use beardog_genetics::genetics::human_entropy::{
-    HumanEntropyConfig, MultiModalHumanEntropyCollector,
-};
 use beardog_genetics::genetics::entropy_hierarchy::LiveFeedValidator;
+use beardog_genetics::genetics::human_entropy::{
+    InteractionCaptureConfig, InteractionEntropyCollector,
+};
 use beardog_tunnel::tunnel::hsm::universal_discovery::discovery_engine::DiscoveryEngine;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -167,48 +167,81 @@ pub async fn handle_entropy_collect(
 
     // Step 3: Collect entropy
     let entropy_bytes = if human_input {
-        println!("🎤 Collecting multi-modal human entropy...");
-        println!("   (System entropy + timing + process state)");
+        println!("🎤 Collecting LIVE human interaction entropy...");
+        println!("   (Interactive keyboard and mouse capture)");
         println!();
 
-        // Use MultiModalHumanEntropyCollector
-        let collector = MultiModalHumanEntropyCollector::new(HumanEntropyConfig::default());
+        // Use NEW InteractionEntropyCollector for REAL human input
+        let config = InteractionCaptureConfig {
+            target_interactions: 50,
+            timeout_seconds: 120,
+            min_quality: 0.7,
+            enable_keyboard: true,
+            enable_mouse: true,
+        };
 
-        let entropy = collector.collect_entropy()?;
+        let collector = InteractionEntropyCollector::new(config);
 
-        println!("✅ Collected {} bytes of human entropy", entropy.len());
-        
+        // This is a BLOCKING call that waits for real user interaction
+        let result = collector.collect_live_interactions()?;
+
+        println!();
+        println!(
+            "✅ Collected {} interactions",
+            result.metrics.total_interactions
+        );
+        println!("   Duration: {:.1}s", result.duration_ms as f64 / 1000.0);
+        println!("   Keyboard: {} events", result.metrics.keyboard_events);
+        println!("   Mouse: {} events", result.metrics.mouse_events);
+        println!("   Quality: {:.1}%", result.quality_score * 100.0);
+        println!(
+            "   Timing entropy: {:.1}%",
+            result.metrics.timing_entropy * 100.0
+        );
+        println!(
+            "   Movement entropy: {:.1}%",
+            result.metrics.movement_entropy * 100.0
+        );
+        println!();
+
         // CRITICAL: Validate that entropy is from live feed (NO SIMULATION)
         println!("🔒 Validating entropy hierarchy compliance...");
         let validator = LiveFeedValidator::new();
-        
+
         // Build metadata for validation
         let mut metadata = HashMap::new();
         metadata.insert("hardware_attestation".to_string(), "true".to_string());
         metadata.insert("anti_replay_nonce".to_string(), Uuid::new_v4().to_string());
-        metadata.insert("collection_method".to_string(), "multi_modal".to_string());
+        metadata.insert(
+            "collection_method".to_string(),
+            "interactive_capture".to_string(),
+        );
         metadata.insert("hsm_device".to_string(), selected_hsm.name.clone());
-        
-        let validation_result = validator.validate_live_feed_only(&entropy, &metadata)?;
-        
+        metadata.insert(
+            "interaction_count".to_string(),
+            result.metrics.total_interactions.to_string(),
+        );
+        metadata.insert(
+            "timing_entropy".to_string(),
+            result.metrics.timing_entropy.to_string(),
+        );
+
+        let validation_result =
+            validator.validate_live_feed_only(&result.entropy_bytes, &metadata)?;
+
         if !validation_result.is_live {
             println!("❌ ENTROPY HIERARCHY VIOLATION!");
             println!("   Detected simulated entropy (not live human input)");
-            println!("   Violations:");
-            for violation in &validation_result.violations {
-                println!("     • {}", violation);
-            }
             return Err(BearDogError::validation(
-                "Human entropy failed live feed validation. Refusing to use simulated data."
+                "Human entropy failed live feed validation. Refusing to use simulated data.",
             ));
         }
-        
+
         println!("✅ Entropy hierarchy validated");
-        println!("   Confidence: {:.1}%", validation_result.confidence * 100.0);
-        println!("   Timing entropy: {:.1}%", validation_result.timing_entropy * 100.0);
+        println!("   Live feed confirmed");
         println!();
-        
-        entropy
+
+        result.entropy_bytes
     } else {
         println!("🔢 Collecting hardware entropy from HSM...");
 

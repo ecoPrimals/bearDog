@@ -1,0 +1,24 @@
+{
+  "receipt_id": "b6b08c3a-bf01-4338-9f93-f7a09861f21c",
+  "operation": "key-generate",
+  "timestamp": "2025-12-20T01:31:17.481325278+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "songbird-tower-b-1766194274",
+    "algorithm": "AES-256-GCM",
+    "generation": 0,
+    "usage": "all"
+  },
+  "hsm_info": {
+    "name": "BearDog Native Software HSM",
+    "vendor": "BearDog",
+    "model": "Native Software HSM",
+    "hsm_type": "Software"
+  },
+  "metadata": {
+    "kdf": "argon2",
+    "entropy_source": "system"
+  }
+}

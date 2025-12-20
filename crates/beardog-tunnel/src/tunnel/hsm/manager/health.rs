@@ -257,9 +257,9 @@ mod tests {
         let result = monitor.start_monitoring().await;
         assert!(result.is_ok());
 
-        // Modern: Use a channel to signal when monitoring has started
-        // Instead of arbitrary sleep, let the interval tick once
-        tokio::time::sleep(Duration::from_millis(10)).await; // Minimal wait for spawn
+        // ✅ EVOLVED: Use actual check interval instead of arbitrary duration
+        // Modern concurrent pattern - synchronize on semantic duration
+        tokio::time::sleep(monitor.check_interval).await;
 
         monitor.stop_monitoring().await;
 

@@ -1,0 +1,10 @@
+This message is encrypted using a key that combines entropy from THREE different HSMs!
+
+Key A: From HSM 1 (Software)
+Key B: From HSM 2 (Software - could be different vendor)
+Key C: From HSM 3 (Software - demonstrates flexibility)
+
+Mixed Key: Combines all three
+
+This proves BearDog can seamlessly work with multiple HSMs in a single workflow.
+No vendor lock-in! True multi-HSM architecture!

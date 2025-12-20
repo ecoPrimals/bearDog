@@ -1,0 +1,20 @@
+{
+  "receipt_id": "75400c47-1e25-4e7c-9545-35d9203b47a0",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T04:34:00.928634368+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "david-accounting-1766205233",
+    "algorithm": "AES-256-GCM",
+    "generation": 3,
+    "parent_key_id": "team-accounting-1766205233",
+    "expires_at": "2026-03-20T04:34:00.928536606+00:00",
+    "purpose": "david-accountant"
+  },
+  "metadata": {
+    "derivation_purpose": "david-accountant",
+    "master_key_id": "team-accounting-1766205233"
+  }
+}

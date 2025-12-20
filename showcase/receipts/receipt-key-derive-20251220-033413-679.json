@@ -1,0 +1,20 @@
+{
+  "receipt_id": "49fa1618-ace5-46ab-ad6d-26a3e71caf9e",
+  "operation": "key-derive",
+  "timestamp": "2025-12-20T03:34:13.679888223+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "daily-ops-gen1",
+    "algorithm": "aes-256-gcm",
+    "generation": 1,
+    "parent_key_id": "master-key-gen0",
+    "expires_at": "2025-12-21T03:34:13.679480364+00:00",
+    "purpose": "daily-operations"
+  },
+  "metadata": {
+    "master_key_id": "master-key-gen0",
+    "derivation_purpose": "daily-operations"
+  }
+}
