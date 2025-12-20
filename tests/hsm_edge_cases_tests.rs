@@ -8,7 +8,7 @@ use std::time::Duration;
 
 #[tokio::test]
 async fn test_hsm_concurrent_key_generation() {
-    // Test multiple concurrent key generation operations
+    // ✅ MODERNIZED: Test actual concurrent operations without artificial delays
     use std::sync::Arc;
     use tokio::sync::Mutex;
 
@@ -18,8 +18,9 @@ async fn test_hsm_concurrent_key_generation() {
     for i in 0..10 {
         let results_clone = results.clone();
         let handle = tokio::spawn(async move {
-            // Simulate key generation
-            tokio::time::sleep(Duration::from_millis(10)).await;
+            // ✅ NO SLEEP: Simulate CPU-bound work instead of arbitrary delay
+            // Real key generation would do actual crypto work here
+            let _work = (0..100).map(|x| x * x).sum::<i32>();
             results_clone.lock().await.push(i);
         });
         handles.push(handle);
@@ -39,16 +40,26 @@ async fn test_hsm_concurrent_key_generation() {
 
 #[tokio::test]
 async fn test_hsm_rapid_connect_disconnect() {
-    // Test rapid connection cycling
+    // ✅ MODERNIZED: Test rapid cycling without artificial delays
+    // Real connections would have actual I/O, not sleeps
+    use tokio::task;
+
+    let mut handles = vec![];
     for i in 0..50 {
-        // Simulate connect
-        tokio::time::sleep(Duration::from_micros(100)).await;
+        let handle = task::spawn(async move {
+            // ✅ NO SLEEP: Test actual concurrent state transitions
+            // Simulate connect/disconnect work
+            let _connect = (0..10).sum::<i32>();
+            task::yield_now().await; // Cooperative yielding
+            let _disconnect = (0..10).sum::<i32>();
+            i
+        });
+        handles.push(handle);
+    }
 
-        // Simulate disconnect
-        tokio::time::sleep(Duration::from_micros(100)).await;
-
-        // Should handle rapid cycling without errors
-        assert!(i < 50, "Should complete all cycles");
+    // Wait for all cycles to complete
+    for handle in handles {
+        handle.await.expect("Cycle should complete");
     }
 }
 
@@ -96,14 +107,22 @@ async fn test_hsm_key_id_normalization() {
 
 #[tokio::test]
 async fn test_hsm_operation_cancellation() {
-    // Test that operations can be cancelled
-    let operation = tokio::time::timeout(Duration::from_millis(10), async {
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        "completed"
+    // ✅ MODERNIZED: Test real cancellation without arbitrary delays
+    use tokio::sync::mpsc;
+
+    let (tx, mut rx) = mpsc::channel::<()>(1);
+
+    let operation = tokio::time::timeout(Duration::from_millis(10), async move {
+        // Wait for a signal that won't come (simulates long operation)
+        rx.recv().await
     });
 
     let result = operation.await;
-    assert!(result.is_err(), "Long operation should be cancellable");
+    assert!(
+        result.is_err(),
+        "Long operation should be cancellable via timeout"
+    );
+    drop(tx); // Cleanup channel
 }
 
 #[tokio::test]
@@ -134,30 +153,34 @@ async fn test_hsm_memory_cleanup_on_error() {
 
 #[tokio::test]
 async fn test_hsm_concurrent_same_key_access() {
-    // Test concurrent access to the same key
+    // ✅ MODERNIZED: Test real concurrent RwLock patterns without sleeps
     use std::sync::Arc;
     use tokio::sync::RwLock;
+    use tokio::task;
 
     let key_data = Arc::new(RwLock::new(0u64));
     let mut handles = vec![];
 
-    // Multiple readers
+    // Multiple concurrent readers
     for _ in 0..10 {
         let key_clone = key_data.clone();
-        let handle = tokio::spawn(async move {
-            let _value = key_clone.read().await;
-            tokio::time::sleep(Duration::from_micros(10)).await;
+        let handle = task::spawn(async move {
+            let value = key_clone.read().await;
+            // ✅ NO SLEEP: Just read the value (tests lock concurrency)
+            let _read = *value;
+            task::yield_now().await; // Cooperative scheduling
         });
         handles.push(handle);
     }
 
-    // Few writers
+    // Few writers (tests write lock exclusivity)
     for i in 0..3 {
         let key_clone = key_data.clone();
-        let handle = tokio::spawn(async move {
+        let handle = task::spawn(async move {
             let mut value = key_clone.write().await;
             *value = i;
-            tokio::time::sleep(Duration::from_micros(10)).await;
+            // ✅ NO SLEEP: Real work would be crypto operations
+            task::yield_now().await;
         });
         handles.push(handle);
     }
@@ -165,6 +188,10 @@ async fn test_hsm_concurrent_same_key_access() {
     for handle in handles {
         handle.await.expect("Operation should complete");
     }
+
+    // Verify final state is from one of the writers
+    let final_value = *key_data.read().await;
+    assert!(final_value < 3, "Final value should be from a writer");
 }
 
 #[tokio::test]
@@ -190,18 +217,27 @@ async fn test_hsm_key_lifecycle_edge_cases() {
 
 #[tokio::test]
 async fn test_hsm_operation_retry_logic() {
-    // Test retry logic for transient failures
+    // ✅ MODERNIZED: Test retry without sleeps
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use tokio::task;
 
     let attempt_count = Arc::new(AtomicUsize::new(0));
     let max_retries = 3;
+    let mut handles = vec![];
 
     for _ in 0..max_retries {
-        attempt_count.fetch_add(1, Ordering::Relaxed);
+        let count = attempt_count.clone();
+        let handle = task::spawn(async move {
+            count.fetch_add(1, Ordering::Relaxed);
+            // ✅ NO SLEEP: Real operation would be actual work
+            task::yield_now().await;
+        });
+        handles.push(handle);
+    }
 
-        // Simulate operation
-        tokio::time::sleep(Duration::from_micros(10)).await;
+    for handle in handles {
+        handle.await.expect("Retry should complete");
     }
 
     assert_eq!(
@@ -213,15 +249,22 @@ async fn test_hsm_operation_retry_logic() {
 
 #[tokio::test]
 async fn test_hsm_performance_under_load() {
-    // Test HSM performance with many operations
+    // ✅ MODERNIZED: Test real concurrent load without sleeps
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
+    use tokio::task;
+
     let start = tokio::time::Instant::now();
     let operations = 100;
+    let counter = Arc::new(AtomicU64::new(0));
 
     let mut handles = vec![];
     for _ in 0..operations {
-        let handle = tokio::spawn(async {
-            // Simulate HSM operation
-            tokio::time::sleep(Duration::from_micros(100)).await;
+        let count = counter.clone();
+        let handle = task::spawn(async move {
+            // ✅ NO SLEEP: Simulate CPU-bound crypto work
+            let _work = (0..1000).map(|x| x * x).sum::<u64>();
+            count.fetch_add(1, Ordering::Relaxed);
         });
         handles.push(handle);
     }
@@ -231,8 +274,8 @@ async fn test_hsm_performance_under_load() {
     }
 
     let elapsed = start.elapsed();
-
-    // Should complete reasonably fast with concurrent execution
+    assert_eq!(counter.load(Ordering::Relaxed), operations);
+    // Real concurrent work should complete quickly (no artificial sleeps)
     assert!(
         elapsed < Duration::from_secs(2),
         "100 operations should complete in <2s, took {:?}",
