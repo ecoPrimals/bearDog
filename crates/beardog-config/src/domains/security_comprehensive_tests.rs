@@ -44,14 +44,19 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial] // Ensure env var isolation
     fn test_from_env_with_tls_version() {
+        // Clear any existing value first
         std::env::remove_var("BEARDOG_MIN_TLS_VERSION");
+
+        // Set test value
         std::env::set_var("BEARDOG_MIN_TLS_VERSION", "1.3");
 
         let config = SecurityConfig::from_env();
 
         assert_eq!(config.min_tls_version, "1.3");
 
+        // Clean up
         std::env::remove_var("BEARDOG_MIN_TLS_VERSION");
     }
 

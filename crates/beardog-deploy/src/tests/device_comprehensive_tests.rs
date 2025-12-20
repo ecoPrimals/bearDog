@@ -43,7 +43,7 @@ fn test_check_device() {
 #[test]
 fn test_check_device_returns_valid_device_info() {
     let manager = DeviceManager::new();
-    let device_info = manager.check_device();
+    let device_info = manager.check_device().expect("Should get device info");
 
     // Verify all fields are populated
     assert!(!device_info.id.is_empty());

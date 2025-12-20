@@ -314,7 +314,7 @@ mod software_hsm_tests {
 
         // Wait for all operations
         for handle in handles {
-            handle.await.unwrap()?;
+            handle.await??;
         }
 
         // Verify all keys exist
@@ -633,7 +633,7 @@ mod software_hsm_tests {
 
         // Wait for all operations
         for handle in handles {
-            handle.await.unwrap()?;
+            handle.await??;
         }
 
         Ok(())
@@ -672,7 +672,7 @@ mod software_hsm_tests {
 
         // Wait for all operations
         for handle in handles {
-            handle.await.unwrap()?;
+            handle.await??;
         }
 
         // Verify health after stress

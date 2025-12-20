@@ -390,7 +390,7 @@ use super::*;
         for task in tasks {
             let result = task.await;
             assert!(result.is_ok());
-            let bootstrap = result.unwrap();
+            let bootstrap = result?;
             assert!(bootstrap.is_ok());
         }
 
