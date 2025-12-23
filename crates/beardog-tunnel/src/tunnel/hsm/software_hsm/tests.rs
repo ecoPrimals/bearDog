@@ -314,7 +314,9 @@ mod software_hsm_tests {
 
         // Wait for all operations
         for handle in handles {
-            handle.await??;
+            handle
+                .await
+                .map_err(|e| BearDogError::system(format!("Task join failed: {}", e)))??;
         }
 
         // Verify all keys exist
@@ -633,7 +635,9 @@ mod software_hsm_tests {
 
         // Wait for all operations
         for handle in handles {
-            handle.await??;
+            handle
+                .await
+                .map_err(|e| BearDogError::system(format!("Task join failed: {}", e)))??;
         }
 
         Ok(())
@@ -672,7 +676,9 @@ mod software_hsm_tests {
 
         // Wait for all operations
         for handle in handles {
-            handle.await??;
+            handle
+                .await
+                .map_err(|e| BearDogError::system(format!("Task join failed: {}", e)))??;
         }
 
         // Verify health after stress

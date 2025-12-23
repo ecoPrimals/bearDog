@@ -10,6 +10,7 @@
 //! - **Zero Unsafe Code**: All operations are memory-safe
 
 #![deny(unsafe_code)]
+#![warn(missing_docs)]
 // Production code must use proper error handling - deny panicking methods
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
@@ -48,13 +49,47 @@
 //! operations when available, automatically falling back to safe scalar
 //! implementations on unsupported platforms.
 
+/// Authorization types and permission management
+///
+/// Provides types and utilities for managing authorization, permissions,
+/// and access control within the BearDog security system.
 pub mod authorization_types;
+
+/// Cryptographic utility functions
+///
+/// Core cryptographic operations including hashing, HMAC, signing,
+/// and secure random number generation.
 pub mod crypto_utils;
+
+/// Encryption services and algorithms
+///
+/// High-level encryption and decryption services supporting multiple
+/// symmetric algorithms with secure key management.
 pub mod encryption;
+
 pub mod hsm;
 pub mod key_rotation_manager;
+
+/// In-memory key management system
+///
+/// Secure key storage and management with memory protection,
+/// designed for temporary key handling and secure operations.
 pub mod memory_key_manager;
+
+/// SIMD-accelerated cryptographic operations
+///
+/// Hardware-accelerated crypto functions using SIMD instructions
+/// for improved performance on supported platforms.
 pub mod simd_crypto;
+
+/// Genesis module - Physical Bootstrap with Cryptographic Witness
+///
+/// Implements physical genesis bootstrap for new nodes, ensuring they
+/// receive cryptographic identity at birth via witnessed ceremony.
+///
+/// **"Never let a bird be alone in the dark forest"**
+pub mod genesis;
+
 // DISABLED: Module files are corrupted with syntax errors and need reconstruction
 // See MODULE_STRUCTURE_ISSUES.md for details
 // pub mod orchestration;
@@ -73,6 +108,10 @@ mod security_operations_comprehensive_tests;
 // Re-export main types and functions
 pub use authorization_types::*;
 pub use encryption::*;
+pub use genesis::{
+    GenesisWitness, GenesisWitnessVerifier, PhysicalChannelType, PhysicalProofError,
+    PhysicalProximityVerifier, TrustLevel, WitnessVerificationError,
+};
 pub use key_rotation_manager::{KeyRotationManager, RotationStatistics};
 pub use memory_key_manager::*;
 
@@ -476,6 +515,16 @@ pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
     result == 0
 }
 
+/// Securely zeroes memory to prevent sensitive data leakage
+///
+/// This function overwrites the provided buffer with zeros using a volatile write
+/// operation to prevent compiler optimization from removing the write.
+///
+/// # Arguments
+/// * `data` - Mutable slice of bytes to be zeroed
+///
+/// # Security
+/// Uses `ptr::write_volatile` to ensure the zeroing operation cannot be optimized away
 pub fn secure_zero_memory(data: &mut [u8]) {
     // 🛡️ 100% SAFE: Use zeroize crate (audited, guaranteed)!
     //

@@ -11,7 +11,26 @@ categories = [ "network-programming", "security", "development-tools",]
 [dependencies]
 # BearDog internal crates
 beardog-config = { path = "../beardog-config" }
+beardog-errors = { path = "../beardog-errors" }
+beardog-genetics = { path = "../beardog-genetics" }
+beardog-types = { path = "../beardog-types" }
+beardog-capabilities = { path = "../beardog-capabilities" }
+beardog-security = { path = "../beardog-security" }
+beardog-monitoring = { path = "../beardog-monitoring" }
+beardog-auth = { path = "../beardog-auth" }
+beardog-threat = { path = "../beardog-threat" }
+beardog-core = { path = "../beardog-core" }
+beardog-utils = { path = "../beardog-utils" }
+beardog-traits = { path = "../beardog-traits" }
 
+# External dependencies
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tarpc = { version = "0.34", features = ["full"] }
+tokio-serde = { version = "0.8", features = ["json"] }
+reqwest = { version = "0.11", features = ["json"] }
 tokio-tungstenite = "0.20"
 serde_json = "1.0"
 tracing = "0.1"
@@ -42,6 +61,12 @@ async-trait = "0.1"
 ctap-hid-fido2 = { version = "3.5", optional = true }
 hidapi = { version = "2.4", optional = true }
 
+# BTSP HTTP API dependencies (optional)
+axum = { version = "0.7", optional = true }
+tower = { version = "0.4", optional = true }
+tower-http = { version = "0.5", features = ["trace", "cors"], optional = true }
+base64 = { version = "0.21", optional = true }
+
 [dev-dependencies]
 tokio-test = "0.4"
 futures = "0.3"
@@ -56,6 +81,7 @@ solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
 ecosystem = []
+btsp-api = ["axum", "tower", "tower-http", "base64"]
 default = []
 android_native = []
 pixel8_optimizations = [ "android_native",]
@@ -72,64 +98,6 @@ workspace = true
 
 [package.authors]
 workspace = true
-
-[dependencies.beardog-errors]
-path = "../beardog-errors"
-
-[dependencies.beardog-security]
-path = "../beardog-security"
-
-[dependencies.beardog-genetics]
-path = "../beardog-genetics"
-
-[dependencies.beardog-monitoring]
-path = "../beardog-monitoring"
-
-[dependencies.beardog-auth]
-path = "../beardog-auth"
-
-[dependencies.beardog-threat]
-path = "../beardog-threat"
-
-[dependencies.beardog-core]
-path = "../beardog-core"
-
-[dependencies.beardog-utils]
-path = "../beardog-utils"
-
-[dependencies.beardog-types]
-path = "../beardog-types"
-
-[dependencies.beardog-traits]
-path = "../beardog-traits"
-
-[dependencies.tokio]
-version = "1.0"
-features = [ "full",]
-
-[dependencies.serde]
-version = "1.0"
-features = [ "derive",]
-
-[dependencies.uuid]
-version = "1.0"
-features = [ "v4",]
-
-[dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
-
-[dependencies.tarpc]
-version = "0.34"
-features = [ "full",]
-
-[dependencies.tokio-serde]
-version = "0.8"
-features = [ "json",]
-
-[dependencies.reqwest]
-version = "0.11"
-features = [ "json",]
 
 [target."cfg(target_os = \"android\")".dependencies]
 ndk = "0.8"

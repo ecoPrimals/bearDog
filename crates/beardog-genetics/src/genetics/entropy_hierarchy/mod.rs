@@ -4,6 +4,7 @@
 // supporting human-centric entropy classification.
 
 pub mod engine;
+pub mod live_feed_validator;
 pub mod monitoring;
 pub mod sources;
 pub mod types;
@@ -11,12 +12,11 @@ pub mod validation;
 
 // Re-export all types
 pub use engine::*;
+pub use live_feed_validator::{LiveFeedConfig, LiveFeedValidationResult, LiveFeedValidator};
 pub use monitoring::*;
 pub use sources::*;
 pub use types::*;
-pub use validation::{
-    EntropyValidator, LiveFeedConfig, LiveFeedValidationResult, LiveFeedValidator,
-};
+pub use validation::EntropyValidator;
 
 // Note: BearDogError, Deserialize, and Serialize imports removed as they are unused in this module
 // They can be re-added when needed for future implementations

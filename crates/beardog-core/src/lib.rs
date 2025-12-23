@@ -10,6 +10,7 @@
 //! - Sovereign cryptographic key management
 
 #![deny(unsafe_code)]
+#![warn(missing_docs)]
 // Production code must use proper error handling - deny panicking methods
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]

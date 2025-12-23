@@ -88,6 +88,7 @@ pub fn discover_algorithms() -> Vec<AlgorithmCapability> {
     // Detect hardware features
     let has_aes_ni = detect_aes_ni();
     let has_avx2 = detect_avx2();
+    let has_sha_ext = detect_sha_extensions();
 
     // Symmetric encryption algorithms
     capabilities.push(AlgorithmCapability {
@@ -153,18 +154,26 @@ pub fn discover_algorithms() -> Vec<AlgorithmCapability> {
         name: "SHA-256".to_string(),
         algorithm_type: AlgorithmType::Hash,
         available: true,
-        performance_tier: PerformanceTier::High,
+        performance_tier: if has_sha_ext {
+            PerformanceTier::VeryHigh
+        } else {
+            PerformanceTier::High
+        },
         security_level: 256,
-        hardware_accelerated: false, // TODO: Detect SHA extensions
+        hardware_accelerated: has_sha_ext,
     });
 
     capabilities.push(AlgorithmCapability {
         name: "SHA-512".to_string(),
         algorithm_type: AlgorithmType::Hash,
         available: true,
-        performance_tier: PerformanceTier::High,
+        performance_tier: if has_sha_ext {
+            PerformanceTier::VeryHigh
+        } else {
+            PerformanceTier::High
+        },
         security_level: 512,
-        hardware_accelerated: false,
+        hardware_accelerated: has_sha_ext,
     });
 
     capabilities.push(AlgorithmCapability {
@@ -361,6 +370,48 @@ fn detect_avx2() -> bool {
     }
 }
 
+/// Detect SHA extensions hardware support
+///
+/// SHA extensions (Intel SHA-NI / ARM SHA) provide hardware acceleration
+/// for SHA-256 and SHA-512 hash functions.
+fn detect_sha_extensions() -> bool {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    {
+        // Check for SHA extensions at compile time
+        #[cfg(target_feature = "sha")]
+        {
+            return true;
+        }
+
+        // Runtime detection via cpuid
+        #[cfg(not(target_feature = "sha"))]
+        {
+            std::arch::is_x86_feature_detected!("sha")
+        }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        // ARM SHA extensions
+        #[cfg(target_feature = "sha2")]
+        {
+            return true;
+        }
+
+        #[cfg(not(target_feature = "sha2"))]
+        {
+            // ARM doesn't have runtime detection in stable Rust yet
+            // Conservative: assume not available
+            false
+        }
+    }
+
+    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -415,9 +466,11 @@ mod tests {
         // Just verify these don't panic
         let has_aes = detect_aes_ni();
         let has_avx2 = detect_avx2();
+        let has_sha = detect_sha_extensions();
 
         println!("AES-NI: {has_aes}");
         println!("AVX2: {has_avx2}");
+        println!("SHA Extensions: {has_sha}");
 
         // On modern x86_64, at least one should be true
         #[cfg(target_arch = "x86_64")]

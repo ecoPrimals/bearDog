@@ -54,6 +54,9 @@ pub mod types;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod engine_comprehensive_tests;
+
 // Re-export key types for convenience
 pub use engine::{migrate_from_binary_patterns, EcosystemGeneticEngine};
 pub use support::{

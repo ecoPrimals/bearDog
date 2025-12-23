@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/*",
     "benchmarks",
+    "showcase/05-mixed-entropy",
 ]
 exclude = [
     "android",
@@ -88,6 +89,8 @@ sha2 = "0.10"
 sha3 = "0.10"
 lettre = "0.11"
 cryptoki = "0.6"
+rsa = "0.9"
+p256 = { version = "0.13", features = ["ecdsa"] }
 
 # Networking
 quinn = "0.11"
@@ -220,6 +223,7 @@ serial_test = "3.2"
 beardog-adapters = { path = "crates/beardog-adapters" }
 beardog-genetics = { path = "crates/beardog-genetics" }
 ed25519-dalek = { workspace = true }
+reqwest = { version = "0.11", features = ["json"] }
 
 [[test]]
 name = "chaos"
@@ -261,9 +265,12 @@ codegen-units = 1
 panic = "abort"
 
 [features]
-default = []
+# Enable btsp-api by default for examples and integration
+default = ["btsp-api"]
 # FIDO2 support - currently in Phase 2 development
 fido2 = ["beardog-security/fido2", "dep:hidapi"]
 # mDNS discovery support for primal-to-primal runtime discovery
 mdns = ["beardog-core/mdns"]
-full = ["fido2", "mdns"]
+# BTSP HTTP API for Songbird integration
+btsp-api = ["beardog-tunnel/btsp-api"]
+full = ["fido2", "mdns", "btsp-api"]

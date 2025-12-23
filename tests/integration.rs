@@ -2,6 +2,10 @@
 #[path = "integration/hsm_provider_tests.rs"]
 mod hsm_provider_tests;
 
+#[cfg(feature = "btsp-api")]
+#[path = "integration/upa_integration_test.rs"]
+mod upa_integration_test;
+
 // Disabled - modules don't exist yet
 // pub mod core_initialization;
 // pub mod api_endpoints;

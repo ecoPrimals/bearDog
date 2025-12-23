@@ -601,6 +601,10 @@ impl From<std::io::Error> for BearDogError {
     }
 }
 
+// Note: JoinError conversion moved to where tokio is available
+// Use handle.await.map_err(|e| BearDogError::system(format!("Task failed: {}", e)))??
+// in async code that needs to handle JoinError
+
 /// Convert `std::fmt::Error` to `BearDogError::System`
 impl From<std::fmt::Error> for BearDogError {
     fn from(err: std::fmt::Error) -> Self {

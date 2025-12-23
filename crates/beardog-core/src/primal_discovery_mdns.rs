@@ -34,6 +34,7 @@ pub struct MdnsDiscoveredPrimal {
 ///
 /// Discovers other primals on the local network through mDNS/DNS-SD.
 /// No hardcoded addresses - pure runtime discovery.
+#[derive(Clone, Debug)]
 pub struct MdnsDiscoveryClient {
     timeout: Duration,
 }

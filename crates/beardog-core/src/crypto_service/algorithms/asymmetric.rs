@@ -3,6 +3,7 @@
 //! Provides implementations of public-key cryptography including:
 //! - Ed25519 (Edwards-curve Digital Signature Algorithm)
 //! - ECDSA P-256 (Elliptic Curve Digital Signature Algorithm)
+//! - RSA-PSS (RSA Probabilistic Signature Scheme)
 //!
 //! All implementations use safe Rust with established cryptography libraries.
 
@@ -245,6 +246,95 @@ pub fn generate_ecdsa_p256_from_seed(seed: &[u8; 32]) -> Result<([u8; 32], Vec<u
     Ok((secret_array, public_key))
 }
 
+/// RSA-PSS signature generation
+///
+/// RSA-PSS (Probabilistic Signature Scheme) is a modern RSA signature scheme
+/// with provable security. Uses SHA-256 hash and MGF1 mask generation.
+///
+/// # Arguments
+///
+/// * `data` - Data to sign
+/// * `private_key_der` - DER-encoded PKCS#8 RSA private key
+///
+/// # Returns
+///
+/// RSA-PSS signature bytes
+///
+/// # Security
+///
+/// RSA-PSS provides better security than traditional PKCS#1 v1.5 signatures:
+/// - Probabilistic (uses random salt)
+/// - Provable security reduction
+/// - Recommended by modern standards
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Private key is invalid or wrong format
+/// - Signing operation fails
+/// - Key size is insufficient for the hash/salt combination
+pub fn sign_rsa_pss(data: &[u8], private_key_der: &[u8]) -> Result<Vec<u8>> {
+    use rsa::pkcs8::DecodePrivateKey;
+    use rsa::pss::{BlindedSigningKey, Signature};
+    use rsa::signature::{RandomizedSigner, SignatureEncoding};
+    use rsa::RsaPrivateKey;
+    use sha2::Sha256;
+
+    // Parse PKCS#8 DER-encoded private key
+    let private_key = RsaPrivateKey::from_pkcs8_der(private_key_der)
+        .map_err(|e| BearDogError::hsm(format!("Invalid RSA private key: {e}")))?;
+
+    // Create PSS signing key with SHA-256
+    let signing_key = BlindedSigningKey::<Sha256>::new(private_key);
+
+    // Sign with randomness
+    let mut rng = rand::thread_rng();
+    let signature: Signature = signing_key.sign_with_rng(&mut rng, data);
+
+    Ok(signature.to_bytes().into())
+}
+
+/// RSA-PSS signature verification
+///
+/// Verifies an RSA-PSS signature using SHA-256 hash.
+///
+/// # Arguments
+///
+/// * `data` - Original data that was signed
+/// * `signature` - RSA-PSS signature bytes
+/// * `public_key_der` - DER-encoded `SubjectPublicKeyInfo` RSA public key
+///
+/// # Returns
+///
+/// `true` if signature is valid, `false` otherwise
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Public key format is invalid
+/// - Signature format is malformed
+pub fn verify_rsa_pss(data: &[u8], signature: &[u8], public_key_der: &[u8]) -> Result<bool> {
+    use rsa::pkcs8::DecodePublicKey;
+    use rsa::pss::{Signature, VerifyingKey};
+    use rsa::signature::Verifier;
+    use rsa::RsaPublicKey;
+    use sha2::Sha256;
+
+    // Parse public key
+    let public_key = RsaPublicKey::from_public_key_der(public_key_der)
+        .map_err(|e| BearDogError::hsm(format!("Invalid RSA public key: {e}")))?;
+
+    // Create verifying key
+    let verifying_key = VerifyingKey::<Sha256>::new(public_key);
+
+    // Parse signature
+    let sig = Signature::try_from(signature)
+        .map_err(|e| BearDogError::hsm(format!("Invalid RSA signature format: {e}")))?;
+
+    // Verify signature
+    Ok(verifying_key.verify(data, &sig).is_ok())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -308,5 +398,35 @@ mod tests {
         let sig2 = sign_ed25519(data, &sk2).unwrap();
 
         assert_eq!(sig1, sig2);
+    }
+
+    #[test]
+    fn test_rsa_pss_sign_verify() {
+        use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
+        use rsa::{RsaPrivateKey, RsaPublicKey};
+
+        // Generate a 2048-bit RSA key for testing (smaller for faster tests)
+        let mut rng = rand::thread_rng();
+        let bits = 2048;
+        let private_key = RsaPrivateKey::new(&mut rng, bits).unwrap();
+        let public_key = RsaPublicKey::from(&private_key);
+
+        // Encode keys to DER
+        let private_key_der = private_key.to_pkcs8_der().unwrap();
+        let public_key_der = public_key.to_public_key_der().unwrap();
+
+        let data = b"Hello, BearDog RSA-PSS!";
+
+        // Sign
+        let signature = sign_rsa_pss(data, private_key_der.as_bytes()).unwrap();
+
+        // Verify with correct key
+        let valid = verify_rsa_pss(data, &signature, public_key_der.as_bytes()).unwrap();
+        assert!(valid);
+
+        // Verify with wrong data should fail
+        let wrong_data = b"Wrong data";
+        let invalid = verify_rsa_pss(wrong_data, &signature, public_key_der.as_bytes()).unwrap();
+        assert!(!invalid);
     }
 }

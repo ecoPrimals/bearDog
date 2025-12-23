@@ -1,6 +1,13 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Secure Session Management for BearDog Tunnels
+//!
+//! This module provides secure session lifecycle management including:
+//! - Session creation and validation
+//! - Expiration tracking and cleanup
+//! - Security genetics for adaptive threat response
+//! - Gaming-optimized security profiles
+//!
+//! # Thread Safety
+//! All session operations are thread-safe via `RwLock` synchronization.
 
 use crate::tunnel::events::types::SecurityLevel;
 use beardog_errors::BearDogError;
@@ -9,11 +16,16 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 
+/// Gaming-optimized security profile
+///
+/// Balances latency requirements with security needs for gaming applications.
+/// Profiles are tuned for specific use cases like competitive gaming where
+/// low latency is critical.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct GamingSecurityProfile {
-    /// The latency priority value
+    /// Latency priority (0.0-1.0, higher = more priority)
     pub latency_priority: f64,
-    /// The security level value
+    /// Security level configuration
     pub security_level: SecurityLevel,
 }
 
@@ -33,17 +45,23 @@ impl GamingSecurityProfile {
     }
 }
 
+/// Secure tunnel session
+///
+/// Represents an active secure tunnel session with peer authentication,
+/// expiration tracking, and security genetics for adaptive protection.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SecureSession {
+    /// Unique session identifier
     pub session_id: String,
+    /// Remote peer node identifier
     pub peer_node_id: String,
-    /// The created at value
+    /// Timestamp when session was created
     pub created_at: SystemTime,
-    /// The expires at value
+    /// Timestamp when session expires
     pub expires_at: SystemTime,
-    /// The security genetics value
+    /// Security genetics configuration for adaptive protection
     pub security_genetics: SecurityGenetics,
-    /// The gaming profile value
+    /// Gaming-specific security profile
     pub gaming_profile: GamingSecurityProfile,
 }
 
@@ -75,6 +93,15 @@ impl SecureSession {
         SystemTime::now() > self.expires_at
     }
 
+    /// Extends the session lifetime by the specified duration
+    ///
+    /// # Arguments
+    /// * `duration` - Time to add to the current expiration
+    ///
+    /// # Example
+    /// ```ignore
+    /// session.extend_session(Duration::from_secs(3600)); // Add 1 hour
+    /// ```
     pub fn extend_session(&mut self, duration: Duration) {
         self.expires_at += duration;
     }
@@ -86,13 +113,17 @@ impl SecureSession {
     }
 }
 
+/// Security genetics configuration
+///
+/// Provides adaptive security parameters that can evolve based on threat landscape.
+/// Uses genetic algorithm principles for self-tuning security responses.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SecurityGenetics {
-    /// The entropy level value
+    /// Entropy level for randomization (0.0-1.0)
     pub entropy_level: f64,
-    /// The mutation rate value
+    /// Rate of security parameter mutation (0.0-1.0)
     pub mutation_rate: f64,
-    /// The adaptive threshold value
+    /// Threshold for adaptive security adjustments (0.0-1.0)
     pub adaptive_threshold: f64,
 }
 
@@ -106,8 +137,13 @@ impl Default for SecurityGenetics {
     }
 }
 
+/// Session manager for secure tunnel sessions
+///
+/// Manages the lifecycle of secure sessions including creation, validation,
+/// key rotation, and cleanup. Thread-safe via RwLock.
 #[derive(Debug)]
 pub struct SessionManager {
+    /// Active sessions indexed by session ID
     sessions: Arc<RwLock<HashMap<String, SecureSession>>>,
 }
 
@@ -167,6 +203,10 @@ impl SessionManager {
         Ok(removed_count)
     }
 
+    /// Returns the total number of active sessions
+    ///
+    /// # Returns
+    /// The count of currently active sessions in the manager
     pub async fn session_count(&self) -> usize {
         let sessions = self.sessions.read().await;
         sessions.len()

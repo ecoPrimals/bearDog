@@ -102,9 +102,10 @@ impl DeviceManager {
 
         // Try runtime device discovery first
         match self.detect_android_devices() {
-            Ok(devices) if !devices.is_empty() => {
+            Ok(mut devices) if !devices.is_empty() => {
                 info!("✅ Found device via adb: {}", devices[0].name);
-                Ok(devices.into_iter().next().expect("verified non-empty"))
+                // Safe: we verified non-empty above
+                Ok(devices.remove(0))
             }
             Ok(_) | Err(_) => {
                 // Fallback: Check environment for device info

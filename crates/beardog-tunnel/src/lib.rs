@@ -4,6 +4,7 @@
 //! for the BearDog ecosystem, enabling encrypted channels and cryptographic key management.
 
 #![deny(unsafe_code)]
+#![warn(missing_docs)]
 // Production code must use proper error handling - deny panicking methods
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
@@ -108,9 +109,32 @@ pub mod simple_hsm_client;
 // NOTE: Tunnel module stabilized - proceeding with Phase 2 implementations
 pub mod universal_hsm;
 
+// BTSP Provider - Songbird integration for internet deployment
+pub mod btsp_provider;
+
+// BTSP HTTP API Server - Remote access for Songbird (legacy)
+#[cfg(feature = "btsp-api")]
+pub mod btsp_api_server;
+
+// Unified API Server - BTSP + Genesis + BirdSong + Lineage
+#[cfg(feature = "btsp-api")]
+pub mod api;
+
 // Re-export key types
 pub use simple_hsm_client::SimplePkcs11Client;
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
+
+// Re-export BTSP types for Songbird integration
+pub use btsp_provider::{
+    BeardogBtspProvider, BtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
+    TunnelStatus,
+};
+
+#[cfg(feature = "btsp-api")]
+pub use btsp_api_server::BtspApiServer;
+
+#[cfg(feature = "btsp-api")]
+pub use api::{BearDogApiServer, BearDogApiServerConfig, UpaClient, UpaClientConfig};
 
 // Re-export HSM discovery for CLI usage
 pub use tunnel::hsm::{

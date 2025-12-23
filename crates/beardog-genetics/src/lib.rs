@@ -49,9 +49,10 @@
 use serde::{Deserialize, Serialize};
 
 // Core genetics modules
+pub mod birdsong;
 pub mod constraints;
 pub mod ecosystem_evolution;
-pub mod genetics;
+pub mod genetics; // BirdSong lineage & encryption for Songbird integration
 
 // Re-export constraint types
 pub use constraints::{
@@ -82,6 +83,12 @@ pub use genetics::spawning::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
 pub use ecosystem_evolution::{
     BinaryAccessPattern, BinaryTrust, CoordinationModel, EcosystemContext, EcosystemGeneticEngine,
     EcosystemMembership, HierarchicalPattern, RelationshipHistory, SymbiosisType, TrustEvolution,
+};
+
+// Re-export BirdSong types
+pub use birdsong::{
+    BirdSongEncryption, BirdSongManager, LineageChain, LineageChainManager, LineageHint,
+    LineageKeyDerivation, LineageNode, LineageProof, LineageProofManager,
 };
 
 #[cfg(test)]

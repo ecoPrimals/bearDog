@@ -34,6 +34,8 @@ pub struct SoloV2KeyHandle {
     pub is_resident: bool,
     /// User ID associated with this key
     pub user_id: Option<Vec<u8>>,
+    /// Public key bytes (for verification)
+    pub public_key: Vec<u8>,
 }
 
 /// Key type supported by Solo V2
@@ -71,6 +73,8 @@ impl Default for PinConfig {
 pub struct SoloV2Config {
     /// Device to use (if multiple connected)
     pub device_id: Option<String>,
+    /// Relying party ID for FIDO2 operations (typically domain name)
+    pub relying_party_id: String,
     /// Whether to require user presence verification
     pub require_user_presence: bool,
     /// Whether to require user verification (PIN/biometric)
@@ -83,6 +87,7 @@ impl Default for SoloV2Config {
     fn default() -> Self {
         Self {
             device_id: None,
+            relying_party_id: "beardog.dev".to_string(), // Default RP ID
             require_user_presence: true,
             require_user_verification: true,
             user_interaction_timeout: 30,

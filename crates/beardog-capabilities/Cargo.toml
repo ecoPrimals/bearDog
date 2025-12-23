@@ -1,0 +1,56 @@
+[package]
+name = "beardog-capabilities"
+version = "0.1.0"
+edition = "2021"
+authors = ["ecoPrimals Team"]
+description = "Capability-based primal interaction framework for BearDog - enabling sovereign service discovery and dynamic capability negotiation"
+license = "AGPL-3.0"
+repository = "https://github.com/ecoPrimals/beardog"
+homepage = "https://beardog.dev"
+documentation = "https://docs.beardog.dev"
+readme = "README.md"
+keywords = ["capabilities", "security", "primal", "sovereignty", "discovery"]
+categories = ["cryptography", "network-programming", "api-bindings"]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Synchronization
+parking_lot = "0.12"
+
+# Error handling
+thiserror = "1.0"
+
+# Networking
+reqwest = { version = "0.11", features = ["json"] }
+
+# UUID generation
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
+
+# Memory safety
+zeroize = "1.7"
+
+# BearDog dependencies
+beardog-errors = { path = "../beardog-errors" }
+
+# Optional: mDNS discovery
+mdns-sd = { version = "0.7", optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[features]
+default = ["mdns"]
+mdns = ["mdns-sd"]

@@ -1,8 +1,12 @@
 // Module documentation
 //
-// This module provides functionality for the BearDog ecosystem.
+//! Memory-based key manager module
+//!
+//! Provides in-memory key management for BearDog with encryption and metrics.
 
+/// Configuration module for memory key manager
 pub mod config;
+/// Metrics module for key manager operations
 pub mod metrics;
 
 pub use config::*;
@@ -14,15 +18,20 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
+/// Key metadata structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyMetadata {
+    /// Unique key identifier
     pub id: String,
-    /// The created at value
+    /// Timestamp when key was created
     pub created_at: chrono::DateTime<chrono::Utc>,
-    /// The key type value
+    /// Type of the key (e.g., "AES-256", "RSA-2048")
     pub key_type: String,
 }
 
+/// In-memory key manager
+///
+/// Provides secure in-memory key storage with encryption capabilities
 #[derive(Debug, Clone)]
 pub struct MemoryKeyManager {
     keys: Arc<Mutex<HashMap<String, Vec<u8>>>>,
