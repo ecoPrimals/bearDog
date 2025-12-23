@@ -4,89 +4,140 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
-pub struct PhonebookConfig {
-
-    pub enabled: bool,
-
+    /// The bind address value
     pub bind_address: String,
 
+    /// Number of port
     pub port: u16,
 
+    /// Number of cache_size
     pub cache_size: usize,
 
+    /// Number of cache_ttl_seconds
     pub cache_ttl_seconds: u64,
 
+    /// Number of refresh_interval_seconds
     pub refresh_interval_seconds: u64,
 
+    /// Number of max_tracked_nodes
     pub max_tracked_nodes: usize,
 
+    /// The node entry ttl value
     pub node_entry_ttl: Duration,
 
+    /// Collection of default regions
     pub default_regions: Vec<String>,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
-impl Default for PhonebookConfig {}
-
+impl Default for PhonebookConfig {
     fn default() -> Self {
+        use beardog_types::constants::domains::network::config;
+        
         Self {
             enabled: true,
-            bind_address: "0.0.0.0".to_string(),
-            port: 8844,
-            cache_size: 10000,
-            cache_ttl_seconds: 300, // 5 minutes
-            refresh_interval_seconds: 60, // 1 minute
-            max_tracked_nodes: 10000,
-            node_entry_ttl: Duration::from_secs(300), // 5 minutes
+            bind_address: std::env::var("BEARDOG_PHONEBOOK_BIND_ADDRESS")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+                .unwrap_or_else(|_| config::default_service_host()),
+            cache_size: std::env::var("BEARDOG_PHONEBOOK_CACHE_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10000), // 10K entries default
+            cache_ttl_seconds: std::env::var("BEARDOG_PHONEBOOK_CACHE_TTL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300), // 5 minutes default
+            refresh_interval_seconds: std::env::var("BEARDOG_PHONEBOOK_REFRESH_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60), // 1 minute default
+            max_tracked_nodes: std::env::var("BEARDOG_MAX_TRACKED_NODES")
+                .ok()
+                .and_then(|n| n.parse().ok())
+                .unwrap_or(10000), // 10K nodes default
+            node_entry_ttl: Duration::from_secs(
+                std::env::var("BEARDOG_NODE_ENTRY_TTL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300) // 5 minutes default
+            ),
             default_regions: vec!["default".to_string()],
             metadata: HashMap::with_capacity(16),
         }
     }
 impl PhonebookConfig {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
 
+/// With Enabled operation.
+    /// Creates instance with enabled
     pub fn with_enabled(mut self, enabled: bool) -> Self {
         self.enabled = enabled;
         self
 
+/// With Cache Size operation.
+    /// Creates instance with cache size
     pub fn with_cache_size(mut self, size: usize) -> Self {
         self.cache_size = size;
 
+/// With Cache Ttl operation.
+    /// Creates instance with cache ttl
     pub fn with_cache_ttl(mut self, ttl_seconds: u64) -> Self {
         self.cache_ttl_seconds = ttl_seconds;
 
+/// With Refresh Interval operation.
+    /// Creates instance with refresh interval
     pub fn with_refresh_interval(mut self, interval_seconds: u64) -> Self {
         self.refresh_interval_seconds = interval_seconds;
 
+/// With Bind Address operation.
+    /// Creates instance with bind address
     pub fn with_bind_address(mut self, bind_address: &str) -> Self {
         self.bind_address = bind_address;
 
+/// With Port operation.
+    /// Creates instance with port
     pub fn with_port(mut self, port: u16) -> Self {
         self.port = port;
 
+/// With Max Tracked Nodes operation.
+    /// Creates instance with max tracked nodes
     pub fn with_max_tracked_nodes(mut self, max_tracked_nodes: usize) -> Self {
         self.max_tracked_nodes = max_tracked_nodes;
 
+/// With Node Entry Ttl operation.
+    /// Creates instance with node entry ttl
     pub fn with_node_entry_ttl(mut self, ttl_seconds: u64) -> Self {
         self.node_entry_ttl = Duration::from_secs(ttl_seconds);
 
+/// With Default Region operation.
+    /// Creates instance with default region
     pub fn with_default_region(mut self, region: &str) -> Self {
-        self.default_regions.push(region);
+        self.default_regions.push(&str, value: &str) -> Self {
+        self.metadata.insert(key.to_string(), value.into());
 
-    pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
-        self.metadata.insert(key, value);
-
+/// Cache Ttl operation.
     pub fn cache_ttl(&self) -> Duration {
         Duration::from_secs(self.cache_ttl_seconds)
 
+/// Refresh Interval operation.
     pub fn refresh_interval(&self) -> Duration {
         Duration::from_secs(self.refresh_interval_seconds)
 
+/// Full Address operation.
     pub fn full_address(&self) -> String {
-        format_args!("{}:{}", self.bind_address, self.port).to_string()
+        format!("{}:{}", self.bind_address, self.port)
 
+/// Validate operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Validates input
+    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         if self.cache_size == 0 {
             return Err("Cache size cannot be zero".to_string());
@@ -106,7 +157,11 @@ impl PhonebookConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]}
+
 
     fn test_phonebook_config_default() {
         let config = PhonebookConfig::default();
@@ -127,6 +182,7 @@ mod tests {
         assert_eq!(config.cache_size, 5000);
         assert_eq!(config.cache_ttl_seconds, 600);
         assert!(config.default_regions.contains(&"us-east".to_string()));}
+
 
     fn test_phonebook_config_durations() {
         let config = PhonebookConfig::default()
@@ -154,6 +210,7 @@ mod tests {
         config.port = 8844;
         config.bind_address = "".to_string();}
 
+
     fn test_phonebook_config_network() {
             .with_bind_address("127.0.0.1".to_string())
             .with_port(9999);
@@ -163,8 +220,9 @@ mod tests {
     fn test_phonebook_config_metadata() {
             .with_metadata("region".to_string(), "us-west".to_string())
             .with_metadata("tier".to_string(), "production".to_string());
-        assert_eq!(config.metadata.get("region"), Some(&"us-west".to_string()));
-        assert_eq!(config.metadata.get("tier"), Some(&"production".to_string()));}
+        assert_eq!(config.metadata.get("region"), Some("us-west".to_string()));
+        assert_eq!(config.metadata.get("tier"), Some("production".to_string()));}
+
 
     fn test_phonebook_config_regions() {
             .with_default_region("us-east".to_string())

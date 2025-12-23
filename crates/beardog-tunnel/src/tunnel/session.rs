@@ -1,30 +1,74 @@
+//! Secure Session Management for BearDog Tunnels
+//!
+//! This module provides secure session lifecycle management including:
+//! - Session creation and validation
+//! - Expiration tracking and cleanup
+//! - Security genetics for adaptive threat response
+//! - Gaming-optimized security profiles
+//!
+//! # Thread Safety
+//! All session operations are thread-safe via `RwLock` synchronization.
 
-
-use crate::tunnel::{GamingSecurityProfile, SecurityEvolution, SecurityLevel};
+use crate::tunnel::events::types::SecurityLevel;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 
-#[derive(Debug, Clone)]
+/// Gaming-optimized security profile
+///
+/// Balances latency requirements with security needs for gaming applications.
+/// Profiles are tuned for specific use cases like competitive gaming where
+/// low latency is critical.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct GamingSecurityProfile {
+    /// Latency priority (0.0-1.0, higher = more priority)
+    pub latency_priority: f64,
+    /// Security level configuration
+    pub security_level: SecurityLevel,
+}
+
+impl GamingSecurityProfile {
+    /// Competitive Gaming operation.
+    #[must_use]
+    pub const fn competitive_gaming() -> Self {
+        Self {
+            latency_priority: 0.9,
+            security_level: SecurityLevel {
+                level: 3,
+                authentication_strength: 85,
+                threat_detection_accuracy: 0.95,
+                performance_overhead: 0.15,
+            },
+        }
+    }
+}
+
+/// Secure tunnel session
+///
+/// Represents an active secure tunnel session with peer authentication,
+/// expiration tracking, and security genetics for adaptive protection.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SecureSession {
-
+    /// Unique session identifier
     pub session_id: String,
-
+    /// Remote peer node identifier
     pub peer_node_id: String,
-
+    /// Timestamp when session was created
     pub created_at: SystemTime,
-
+    /// Timestamp when session expires
     pub expires_at: SystemTime,
-
+    /// Security genetics configuration for adaptive protection
     pub security_genetics: SecurityGenetics,
-
+    /// Gaming-specific security profile
     pub gaming_profile: GamingSecurityProfile,
 }
-impl SecureSession {
 
-    pub async fn new(
+impl SecureSession {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(
         session_id: &str,
         peer_node_id: &str,
         security_genetics: SecurityGenetics,
@@ -33,8 +77,8 @@ impl SecureSession {
         let created_at = SystemTime::now();
         let expires_at = created_at + Duration::from_secs(3600); // 1 hour default
         Ok(Self {
-            session_id,
-            peer_node_id,
+            session_id: session_id.to_string(),
+            peer_node_id: peer_node_id.to_string(),
             created_at,
             expires_at,
             security_genetics,
@@ -42,167 +86,380 @@ impl SecureSession {
         })
     }
 
-#[derive(Debug, Clone, Default)]
+    /// Checks if expired
+    /// Checks if expired
+    #[must_use]
+    pub fn is_expired(&self) -> bool {
+        SystemTime::now() > self.expires_at
+    }
+
+    /// Extends the session lifetime by the specified duration
+    ///
+    /// # Arguments
+    /// * `duration` - Time to add to the current expiration
+    ///
+    /// # Example
+    /// ```ignore
+    /// session.extend_session(Duration::from_secs(3600)); // Add 1 hour
+    /// ```
+    pub fn extend_session(&mut self, duration: Duration) {
+        self.expires_at += duration;
+    }
+
+    /// Gets remaining session time
+    #[must_use]
+    pub fn remaining_time(&self) -> Option<Duration> {
+        self.expires_at.duration_since(SystemTime::now()).ok()
+    }
+}
+
+/// Security genetics configuration
+///
+/// Provides adaptive security parameters that can evolve based on threat landscape.
+/// Uses genetic algorithm principles for self-tuning security responses.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SecurityGenetics {
-    crypto_genes: CryptoChromosome,
-    auth_genes: AuthenticationChromosome,
-    threat_genes: ThreatResponseChromosome,
-    performance_genes: PerformanceChromosome,}
+    /// Entropy level for randomization (0.0-1.0)
+    pub entropy_level: f64,
+    /// Rate of security parameter mutation (0.0-1.0)
+    pub mutation_rate: f64,
+    /// Threshold for adaptive security adjustments (0.0-1.0)
+    pub adaptive_threshold: f64,
+}
 
-impl SecurityGenetics {
-
-    pub async fn new_for_peer(
-        _peer_id: &str,
-        _peer_capabilities: &crate::tunnel::events::PeerCapabilities,
-        _verification: &crate::tunnel::security_provider::VerificationResult,
-            crypto_genes: CryptoChromosome::default(),
-            auth_genes: AuthenticationChromosome::default(),
-            threat_genes: ThreatResponseChromosome::default(),
-            performance_genes: PerformanceChromosome::default(),
-
-fn validate_config(&self, config: &Config) -> Result<(), BearDogError> {
-
-    if config.is_valid() {
-        Ok(())
-    } else {
-        Err(BearDogError::configuration("Invalid configuration".to_string()))
-}; // SecureSession instance
-
-    pub fn get_security_level(&self) -> SecurityLevel {
-        SecurityLevel::High // Default for now
-
-    pub async fn evolve_for_performance(
-        &mut self,
-        performance_metrics: &crate::tunnel::SecurityMetrics,
-    ) -> Result<SecurityEvolution, BearDogError> {
-
-        self.performance_genes
-            .optimize_for_latency(performance_metrics.encryption_latency);
-        Ok(SecurityEvolution::PerformanceOptimized)
-
-    pub fn get_crypto_genes(&self) -> &CryptoChromosome {
-        &self.crypto_genes
-
-    pub fn get_auth_genes(&self) -> &AuthenticationChromosome {
-        &self.auth_genes
-
-    pub fn get_threat_genes(&self) -> &ThreatResponseChromosome {
-        &self.threat_genes
-
-    pub fn calculate_security_strength(&self) -> f64 {
-        (self.crypto_genes.get_algorithm_preference()
-            + self.auth_genes.get_trust_threshold()
-            + self.threat_genes.get_response_aggressiveness())
-            / 3.0
-
-pub struct CryptoChromosome {
-    algorithm_preference: f64,
-    key_strength: u32,
-    hardware_acceleration: bool,}
-
-impl CryptoChromosome {
-
-    pub fn get_algorithm_preference(&self) -> f64 {
-        self.algorithm_preference
-
-    pub fn get_key_strength(&self) -> u32 {
-        self.key_strength
-
-    pub fn is_hardware_acceleration_enabled(&self) -> bool {
-        self.hardware_acceleration
-
-pub struct AuthenticationChromosome {
-    trust_threshold: f64,
-    session_lifetime: Duration,}
-
-impl Default for AuthenticationChromosome {}
-
+impl Default for SecurityGenetics {
     fn default() -> Self {
         Self {
-            trust_threshold: 0.8,
-            session_lifetime: Duration::from_secs(3600),
+            entropy_level: 0.8,
+            mutation_rate: 0.05,
+            adaptive_threshold: 0.7,
         }
-impl AuthenticationChromosome {
+    }
+}
 
-    pub fn get_trust_threshold(&self) -> f64 {
-        self.trust_threshold
-
-    pub fn get_session_lifetime(&self) -> Duration {
-        self.session_lifetime
-
-pub struct ThreatResponseChromosome {
-    monitoring_frequency: Duration,
-    response_aggressiveness: f64,}
-
-impl Default for ThreatResponseChromosome {
-            monitoring_frequency: Duration::from_secs(30),
-            response_aggressiveness: 0.5,}
-
-impl ThreatResponseChromosome {
-
-    pub fn get_monitoring_frequency(&self) -> Duration {
-        self.monitoring_frequency
-
-    pub fn get_response_aggressiveness(&self) -> f64 {
-        self.response_aggressiveness
-
-pub struct PerformanceChromosome {
-    latency_priority: f64,
-    throughput_priority: f64,}
-
-impl PerformanceChromosome {
-
-    pub fn optimize_for_latency(&mut self, _target_latency: Duration) {
-        self.latency_priority = 1.0;
-        self.throughput_priority = 0.3;
-
+/// Session manager for secure tunnel sessions
+///
+/// Manages the lifecycle of secure sessions including creation, validation,
+/// key rotation, and cleanup. Thread-safe via RwLock.
 #[derive(Debug)]
 pub struct SessionManager {
-    sessions: Arc<RwLock<HashMap<String, SecureSession>>>,}
-
-impl Default for SessionManager {
-        Self::new()}
+    /// Active sessions indexed by session ID
+    sessions: Arc<RwLock<HashMap<String, SecureSession>>>,
+}
 
 impl SessionManager {
-
+    /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
-            sessions: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+        Self {
+            sessions: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
 
+    /// Creates session
+    /// Creates session
     pub async fn create_session(
-        peer_id: &str,
-        peer_capabilities: &crate::tunnel::events::PeerCapabilities,
-    ) -> Result<SecureSession, BearDogError> {
-        let session_id = format_args!("bstp_session_{}", uuid::Uuid::new_v4().to_string().simple());
-        let security_genetics = SecurityGenetics::new_for_peer(
-            peer_id,
-            peer_capabilities,
-            &crate::tunnel::security_provider::VerificationResult {
-                peer_id: peer_id.to_string(),
-                is_trusted: true,
-                trust_level: crate::tunnel::security_provider::TrustLevel::High,
-                verification_time: SystemTime::now(),
-                capabilities: HashMap::with_capacity(16),
-            },
-        )
-        .await?;
-        let gaming_profile = peer_capabilities
-            .gaming_profile
-            .clone()
-            .unwrap_or_else(GamingSecurityProfile::competitive_gaming);
+        &self,
+        session_id: String,
+        peer_node_id: String,
+        security_genetics: SecurityGenetics,
+        gaming_profile: GamingSecurityProfile,
+    ) -> Result<(), BearDogError> {
         let session = SecureSession::new(
-            session_id.clone(),
-            peer_id.to_string(),
-        self.sessions
-            .write()
-            .await
-            .insert(session_id.clone(), session.clone());
-        Ok(session)
+            &session_id,
+            &peer_node_id,
+            security_genetics,
+            gaming_profile,
+        )?;
 
+        let mut sessions = self.sessions.write().await;
+        sessions.insert(session_id, session);
+        Ok(())
+    }
+
+    /// Gets session
+    /// Gets session
     pub async fn get_session(&self, session_id: &str) -> Option<SecureSession> {
-        self.sessions.read().await.get(session_id).cloned()
+        let sessions = self.sessions.read().await;
+        sessions.get(session_id).cloned()
+    }
 
+    /// Removes session
+    /// Removes session
     pub async fn remove_session(&self, session_id: &str) -> Option<SecureSession> {
-        self.sessions.write().await.remove(session_id)
+        let mut sessions = self.sessions.write().await;
+        sessions.remove(session_id)
+    }
 
-    pub async fn add_session(&self, session_id: &str, session: SecureSession) {
-        self.sessions.write().await.insert(session_id, session);
+    /// Cleans up `expired_sessions`
+    /// Cleans up `expired_sessions`
+    pub async fn cleanup_expired_sessions(&self) -> Result<usize, BearDogError> {
+        let mut sessions = self.sessions.write().await;
+        let initial_count = sessions.len();
+
+        sessions.retain(|_, session| !session.is_expired());
+
+        let removed_count = initial_count - sessions.len();
+        Ok(removed_count)
+    }
+
+    /// Returns the total number of active sessions
+    ///
+    /// # Returns
+    /// The count of currently active sessions in the manager
+    pub async fn session_count(&self) -> usize {
+        let sessions = self.sessions.read().await;
+        sessions.len()
+    }
+}
+
+impl Default for SessionManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_secure_session_creation() {
+        let session = SecureSession::new(
+            "test-session-123",
+            "peer-node-456",
+            SecurityGenetics::default(),
+            GamingSecurityProfile::competitive_gaming(),
+        );
+
+        assert!(session.is_ok());
+        let session = session.unwrap();
+        assert_eq!(session.session_id, "test-session-123");
+        assert_eq!(session.peer_node_id, "peer-node-456");
+        assert!(!session.is_expired());
+    }
+
+    #[test]
+    fn test_session_expiration() {
+        let mut session = SecureSession::new(
+            "test-session",
+            "peer-node",
+            SecurityGenetics::default(),
+            GamingSecurityProfile::competitive_gaming(),
+        )
+        .unwrap();
+
+        // Should not be expired initially
+        assert!(!session.is_expired());
+
+        // Extend session
+        session.extend_session(Duration::from_secs(7200));
+        assert!(!session.is_expired());
+    }
+
+    #[test]
+    fn test_security_genetics_default() {
+        let genetics = SecurityGenetics::default();
+        assert_eq!(genetics.entropy_level, 0.8);
+        assert_eq!(genetics.mutation_rate, 0.05);
+        assert_eq!(genetics.adaptive_threshold, 0.7);
+    }
+
+    #[test]
+    fn test_gaming_security_profile_competitive() {
+        let profile = GamingSecurityProfile::competitive_gaming();
+        assert_eq!(profile.latency_priority, 0.9);
+        assert_eq!(profile.security_level.level, 3);
+        assert_eq!(profile.security_level.authentication_strength, 85);
+    }
+
+    #[tokio::test]
+    async fn test_session_manager_create_session() {
+        let manager = SessionManager::new();
+
+        let result = manager
+            .create_session(
+                "session-123".to_string(),
+                "peer-123".to_string(),
+                SecurityGenetics::default(),
+                GamingSecurityProfile::competitive_gaming(),
+            )
+            .await;
+
+        assert!(result.is_ok());
+        let count = manager.session_count().await;
+        assert_eq!(count, 1);
+    }
+
+    #[tokio::test]
+    async fn test_session_manager_get_session() {
+        let manager = SessionManager::new();
+
+        let session_id = "session-456";
+        manager
+            .create_session(
+                session_id.to_string(),
+                "peer-456".to_string(),
+                SecurityGenetics::default(),
+                GamingSecurityProfile::competitive_gaming(),
+            )
+            .await
+            .unwrap();
+
+        let session = manager.get_session(session_id).await;
+        assert!(session.is_some());
+
+        let session = session.unwrap();
+        assert_eq!(session.session_id, session_id);
+        assert_eq!(session.peer_node_id, "peer-456");
+    }
+
+    #[tokio::test]
+    async fn test_session_manager_remove_session() {
+        let manager = SessionManager::new();
+
+        let session_id = "session-789";
+        manager
+            .create_session(
+                session_id.to_string(),
+                "peer-789".to_string(),
+                SecurityGenetics::default(),
+                GamingSecurityProfile::competitive_gaming(),
+            )
+            .await
+            .unwrap();
+
+        let removed = manager.remove_session(session_id).await;
+        assert!(removed.is_some());
+
+        let session = manager.get_session(session_id).await;
+        assert!(session.is_none());
+
+        let count = manager.session_count().await;
+        assert_eq!(count, 0);
+    }
+
+    #[tokio::test]
+    async fn test_session_manager_cleanup_expired() {
+        let manager = SessionManager::new();
+
+        // Create sessions
+        for i in 0..5 {
+            manager
+                .create_session(
+                    format!("session-{i}"),
+                    format!("peer-{i}"),
+                    SecurityGenetics::default(),
+                    GamingSecurityProfile::competitive_gaming(),
+                )
+                .await
+                .unwrap();
+        }
+
+        let result = manager.cleanup_expired_sessions().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_session_manager_concurrent_access() {
+        let manager = Arc::new(SessionManager::new());
+        let mut handles = vec![];
+
+        // Create multiple sessions concurrently
+        for i in 0..10 {
+            let mgr = Arc::clone(&manager);
+            let handle = tokio::spawn(async move {
+                mgr.create_session(
+                    format!("session-{i}"),
+                    format!("peer-{i}"),
+                    SecurityGenetics::default(),
+                    GamingSecurityProfile::competitive_gaming(),
+                )
+                .await
+            });
+            handles.push(handle);
+        }
+
+        // Wait for all to complete
+        for handle in handles {
+            let result = handle.await;
+            assert!(result.is_ok());
+            assert!(result.unwrap().is_ok());
+        }
+
+        let count = manager.session_count().await;
+        assert_eq!(count, 10);
+    }
+
+    #[tokio::test]
+    async fn test_session_remaining_time() {
+        let genetics = SecurityGenetics::default();
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        let session = SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+
+        // Should have remaining time
+        let remaining = session.remaining_time();
+        assert!(remaining.is_some());
+
+        // Should be close to 1 hour (3600 seconds)
+        let duration = remaining.unwrap();
+        assert!(duration.as_secs() > 3590 && duration.as_secs() <= 3600);
+    }
+
+    #[tokio::test]
+    async fn test_session_extension() {
+        let genetics = SecurityGenetics::default();
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        let mut session =
+            SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+
+        let initial_remaining = session.remaining_time().unwrap();
+
+        // Extend by 1 hour
+        session.extend_session(Duration::from_secs(3600));
+
+        let after_extension = session.remaining_time().unwrap();
+
+        // Should have approximately 1 more hour
+        assert!(after_extension > initial_remaining);
+        assert!(after_extension.as_secs() > 7000); // ~2 hours
+    }
+
+    #[tokio::test]
+    async fn test_expired_session_no_remaining_time() {
+        let genetics = SecurityGenetics::default();
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        let mut session =
+            SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+
+        // Set expiration to the past
+        session.expires_at = SystemTime::now() - Duration::from_secs(60);
+
+        // Should have no remaining time
+        assert!(session.remaining_time().is_none());
+        assert!(session.is_expired());
+    }
+
+    #[tokio::test]
+    async fn test_security_genetics_default_values() {
+        let genetics = SecurityGenetics::default();
+
+        assert_eq!(genetics.entropy_level, 0.8);
+        assert_eq!(genetics.mutation_rate, 0.05);
+        assert_eq!(genetics.adaptive_threshold, 0.7);
+    }
+
+    #[tokio::test]
+    async fn test_competitive_gaming_profile() {
+        let profile = GamingSecurityProfile::competitive_gaming();
+
+        assert_eq!(profile.latency_priority, 0.9);
+        assert_eq!(profile.security_level.level, 3);
+        assert_eq!(profile.security_level.authentication_strength, 85);
+        assert_eq!(profile.security_level.threat_detection_accuracy, 0.95);
+        assert_eq!(profile.security_level.performance_overhead, 0.15);
+    }
+}

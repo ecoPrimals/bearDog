@@ -1,77 +1,84 @@
-use beardog_errors::BearDogError;
+// Configuration types for tunnel module
+
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
-    pub max_encryption_latency: Duration,
+    /// The max decryption latency value
     pub max_decryption_latency: Duration,
     pub max_session_setup_time: Duration,
+    /// Number of `min_gaming_throughput`
     pub min_gaming_throughput: u64,
+    /// Whether `enable_monitoring` is enabled
     pub enable_monitoring: bool,
+    /// The metrics interval value
     pub metrics_interval: Duration,
+    /// Whether `enable_prediction` is enabled
     pub enable_prediction: bool,
+    /// Number of `memory_limit_mb`
     pub memory_limit_mb: u64,
+    /// Number of `max_concurrent_sessions`
     pub max_concurrent_sessions: u32,
+    /// Whether `enable_auto_scaling` is enabled
     pub enable_auto_scaling: bool,
+    /// The cpu threshold value
     pub cpu_threshold: f64,
+    /// The memory threshold value
     pub memory_threshold: f64,
     pub bandwidth_limit_mbps: u64,
+    /// Whether `enable_compression` is enabled
     pub enable_compression: bool,
+    /// Number of `compression_level`
     pub compression_level: u32,
+    /// Whether `enable_caching` is enabled
     pub enable_caching: bool,
+    /// Number of `cache_size_mb`
     pub cache_size_mb: u64,
+    /// The cache ttl value
     pub cache_ttl: Duration,
 }
 
 impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
-            max_encryption_latency: Duration::from_micros(100),
             max_decryption_latency: Duration::from_micros(100),
-            max_session_setup_time: Duration::from_millis(10),
-            min_gaming_throughput: 1_000_000_000, // 1 Gbps
-            enable_monitoring: false,
-            metrics_interval: Duration::from_millis(100),
+            max_session_setup_time: Duration::from_millis(500),
+            min_gaming_throughput: 1_000_000, // 1 MB/s
+            enable_monitoring: true,
+            metrics_interval: Duration::from_secs(60),
             enable_prediction: false,
-            memory_limit_mb: 1024, // 1 GB
+            memory_limit_mb: 512,
             max_concurrent_sessions: 100,
-            enable_auto_scaling: false,
-            cpu_threshold: 0.8,
-            memory_threshold: 0.8,
-            bandwidth_limit_mbps: 1_000_000, // 1 Gbps
-            enable_compression: false,
-            compression_level: 5,
-            enable_caching: false,
-            cache_size_mb: 1024,                  // 1 GB
-            cache_ttl: Duration::from_secs(3600), // 1 hour
+            enable_auto_scaling: true,
+            cpu_threshold: 80.0,
+            memory_threshold: 85.0,
+            bandwidth_limit_mbps: 1000,
+            enable_compression: true,
+            compression_level: 6,
+            enable_caching: true,
+            cache_size_mb: 128,
+            cache_ttl: Duration::from_secs(300),
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct KeyManagementConfig {
-    pub use_hardware_keys: bool,
-    pub key_derivation_rounds: u32,
-    pub session_key_length: u32,
-    pub key_rotation_interval: Duration,
-    pub backup_key_count: u32,
+pub struct SecurityConfig {
+    /// The key storage path value
     pub key_storage_path: String,
-    pub enable_key_escrow: bool,
+    /// Number of `key_escrow_threshold`
     pub key_escrow_threshold: u32,
 }
 
-impl Default for KeyManagementConfig {
+impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
-            use_hardware_keys: true,
-            key_derivation_rounds: 100_000,
-            session_key_length: 32,                           // 256 bits
-            key_rotation_interval: Duration::from_secs(3600), // 1 hour
-            backup_key_count: 1,
-            key_storage_path: String::from("/var/lib/beardog/keys"),
-            enable_key_escrow: false,
+            key_storage_path: String::from("/secure/keys"),
             key_escrow_threshold: 10,
         }
     }
@@ -79,336 +86,305 @@ impl Default for KeyManagementConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GamingConfig {
-    pub profile_name: String,
-    pub ultra_low_latency: bool,
-    pub predictive_keying: bool,
-    pub jitter_elimination: bool,
-    pub bandwidth_optimization: bool,
-    pub prefer_hardware_crypto: bool,
-    pub enable_batch_processing: bool, // Prefer latency over throughput
-    pub target_fps: u32,
-    pub max_input_lag_ms: u32,
-    pub enable_traffic_priority: bool,
-    pub traffic_priority_level: u32,
-    pub enable_anti_cheat: bool,
     pub anti_cheat_provider: String,
-    pub enable_state_sync: bool,
-    pub state_sync_interval_ms: u32,
-    pub enable_spectator_mode: bool,
-    pub max_spectators: u32,
+    /// Number of `max_latency_ms`
+    pub max_latency_ms: u32,
 }
 
 impl Default for GamingConfig {
     fn default() -> Self {
         Self {
-            profile_name: String::from("Default"),
-            ultra_low_latency: true,
-            predictive_keying: true,
-            jitter_elimination: true,
-            bandwidth_optimization: false,
-            prefer_hardware_crypto: true,
-            enable_batch_processing: false, // Prefer latency over throughput
-            target_fps: 60,
-            max_input_lag_ms: 100,
-            enable_traffic_priority: false,
-            traffic_priority_level: 0,
-            enable_anti_cheat: false,
-            anti_cheat_provider: String::from(""),
-            enable_state_sync: false,
-            state_sync_interval_ms: 100,
-            enable_spectator_mode: false,
-            max_spectators: 100,
+            anti_cheat_provider: String::from("default"),
+            max_latency_ms: 50,
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GeneticHealingConfig {
-    pub enable_healing: bool,
-    pub generation_interval: Duration,
-    pub population_size: u32,
-    pub mutation_rate: f64,
-    pub crossover_rate: f64,
-    pub fitness_interval: Duration,
-    pub enable_consensus: bool,
-    pub consensus_threshold: f64,
-    pub max_healing_attempts: u32,
+pub struct ResilienceConfig {
+    /// Whether `enable_circuit_breaker` is enabled
+    pub enable_circuit_breaker: bool,
+    /// Number of `failure_threshold`
+    pub failure_threshold: u32,
+    pub recovery_timeout: Duration,
+    /// Number of `max_retries`
+    pub max_retries: u32,
+    /// The retry delay value
+    pub retry_delay: Duration,
+    /// Whether `enable_health_checks` is enabled
+    pub enable_health_checks: bool,
+    /// The health check interval value
+    pub health_check_interval: Duration,
+    pub health_check_timeout: Duration,
+    /// Whether `enable_graceful_shutdown` is enabled
+    pub enable_graceful_shutdown: bool,
+    pub shutdown_timeout: Duration,
+    /// Whether `enable_auto_recovery` is enabled
+    pub enable_auto_recovery: bool,
+    /// The recovery delay value
+    pub recovery_delay: Duration,
+    /// Number of `max_recovery_attempts`
+    pub max_recovery_attempts: u32,
+    /// Whether `enable_backup_systems` is enabled
+    pub enable_backup_systems: bool,
+    /// The backup sync interval value
+    pub backup_sync_interval: Duration,
+    /// Whether `enable_disaster_recovery` is enabled
+    pub enable_disaster_recovery: bool,
+    pub disaster_recovery_timeout: Duration,
+    /// Whether `enable_self_healing` is enabled
+    pub enable_self_healing: bool,
     pub healing_timeout: Duration,
-    pub adaptive_mutation: bool,
-    pub enable_elitism: bool,
-    pub elite_percentage: f64,
-    pub preserve_diversity: bool,
-    pub min_diversity: f64,
-    pub track_history: bool,
-    pub max_history_entries: u32,
-    pub enable_prediction: bool,
-    pub prediction_threshold: f64,
 }
 
-impl Default for GeneticHealingConfig {
+impl Default for ResilienceConfig {
     fn default() -> Self {
         Self {
-            enable_healing: true,
-            generation_interval: Duration::from_secs(3600), // 1 hour
-            population_size: 100,
-            mutation_rate: 0.05,
-            crossover_rate: 0.8,
-            fitness_interval: Duration::from_secs(3600), // 1 hour
-            enable_consensus: true,
-            consensus_threshold: 0.7,
-            max_healing_attempts: 10,
-            healing_timeout: Duration::from_secs(300), // 5 minutes
-            adaptive_mutation: true,
-            enable_elitism: true,
-            elite_percentage: 0.2,
-            preserve_diversity: true,
-            min_diversity: 0.5,
-            track_history: true,
-            max_history_entries: 100,
-            enable_prediction: true,
-            prediction_threshold: 0.9,
+            enable_circuit_breaker: true,
+            failure_threshold: 5,
+            recovery_timeout: Duration::from_secs(30),
+            max_retries: 3,
+            retry_delay: Duration::from_millis(100),
+            enable_health_checks: true,
+            health_check_interval: Duration::from_secs(30),
+            health_check_timeout: Duration::from_secs(5),
+            enable_graceful_shutdown: true,
+            shutdown_timeout: Duration::from_secs(30),
+            enable_auto_recovery: true,
+            recovery_delay: Duration::from_secs(10),
+            max_recovery_attempts: 5,
+            enable_backup_systems: false,
+            backup_sync_interval: Duration::from_secs(300),
+            enable_disaster_recovery: false,
+            disaster_recovery_timeout: Duration::from_secs(600),
+            enable_self_healing: true,
+            healing_timeout: Duration::from_secs(60),
         }
     }
 }
 
+/// Tunnel-specific monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitoringConfig {
-    pub enable_monitoring: bool,
+pub struct TunnelMonitoringConfig {
+    pub enable_metrics: bool,
+    pub metrics_port: u16,
     pub enable_tracing: bool,
     pub trace_sample_rate: f64,
-    pub enable_audit_logging: bool,
-    pub audit_retention: Duration,
+    pub enable_logging: bool,
+    pub log_level: String,
+    pub enable_health_endpoint: bool,
+    pub health_endpoint_port: u16,
     pub enable_profiling: bool,
-    pub profiling_retention: Duration,
-    pub enable_alerting: bool,
-    pub alert_interval: Duration,
-    pub enable_aggregation: bool,
+    pub profiling_port: u16,
+    pub enable_alerts: bool,
+    pub alert_thresholds: AlertThresholds,
     pub aggregation_window: Duration,
 }
 
-impl Default for MonitoringConfig {
-    fn default() -> Self {
-        Self {
-            enable_monitoring: true,
-            enable_tracing: false,
-            trace_sample_rate: 0.1,
-            enable_audit_logging: false,
-            audit_retention: Duration::from_secs(7 * 24 * 60 * 60), // 7 days
-            enable_profiling: false,
-            profiling_retention: Duration::from_secs(7 * 24 * 60 * 60), // 7 days
-            enable_alerting: true,
-            alert_interval: Duration::from_millis(100),
-            enable_aggregation: true,
-            aggregation_window: Duration::from_secs(5 * 60), // 5 minutes
-        }
-    }
-}
+// Backward compatibility alias
+#[deprecated(since = "3.1.0", note = "Use TunnelMonitoringConfig instead")]
+pub type MonitoringConfig = TunnelMonitoringConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
-    pub max_cpu_usage: f64,
-    pub max_memory_usage: f64,
-    pub max_network_latency: u32,
-    pub max_error_rate: f64,
-    pub min_throughput: u64,
-    pub max_disk_usage: f64,
-    pub max_connections: u32,
-    pub max_queue_depth: u32,
-    pub max_response_time: u32,
-    pub min_availability: f64,
+    /// The cpu threshold value
+    pub cpu_threshold: f64,
+    /// The memory threshold value
+    pub memory_threshold: f64,
+    /// The error rate threshold value
+    pub error_rate_threshold: f64,
 }
 
 impl Default for AlertThresholds {
     fn default() -> Self {
         Self {
-            max_cpu_usage: 0.9,
-            max_memory_usage: 0.9,
-            max_network_latency: 100,
-            max_error_rate: 0.05,
-            min_throughput: 1_000_000,
-            max_disk_usage: 0.9,
-            max_connections: 1000,
-            max_queue_depth: 100,
-            max_response_time: 500,
-            min_availability: 0.95,
+            cpu_threshold: 0.9,
+            memory_threshold: 0.85,
+            error_rate_threshold: 0.05,
+        }
+    }
+}
+
+impl Default for TunnelMonitoringConfig {
+    fn default() -> Self {
+        // ✅ MIGRATED: Load ports from global configuration instead of hardcoded values
+        // This allows runtime configuration via environment variables
+        use beardog_config::global::BEARDOG_CONFIG;
+
+        Self {
+            enable_metrics: true,
+            metrics_port: BEARDOG_CONFIG.network.discovery.port, // Was: 9090
+            enable_tracing: true,
+            trace_sample_rate: 0.1,
+            enable_logging: true,
+            log_level: "info".to_string(),
+            enable_health_endpoint: true,
+            health_endpoint_port: BEARDOG_CONFIG.network.api.port, // Was: 8080
+            enable_profiling: false,
+            profiling_port: std::env::var("BEARDOG_PROFILING_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(6060), // Was: 6060 (no standard config for profiling yet)
+            enable_alerts: true,
+            alert_thresholds: AlertThresholds::default(),
+            aggregation_window: Duration::from_secs(300),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedProcessorConfig {
+    /// Number of `session_key_length`
+    pub session_key_length: usize,
+    /// Number of `key_derivation_rounds`
+    pub key_derivation_rounds: u32,
+    /// The key rotation interval value
+    pub key_rotation_interval: Duration,
+    /// Whether `use_hardware_keys` is enabled
+    pub use_hardware_keys: bool,
+}
+
+impl Default for UnifiedProcessorConfig {
+    fn default() -> Self {
+        Self {
+            session_key_length: 32,
+            key_derivation_rounds: 10000,
+            key_rotation_interval: Duration::from_secs(3600), // 1 hour
+            use_hardware_keys: true,
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct BStpConfig {
-
+pub struct TunnelConfig {
     pub performance: PerformanceConfig,
-
-    pub key_management: KeyManagementConfig,
-
+    /// The security value
+    pub security: SecurityConfig,
+    /// The gaming value
     pub gaming: GamingConfig,
-
-    pub genetic_healing: GeneticHealingConfig,
-
-    pub monitoring: MonitoringConfig,
-
-    pub alert_thresholds: AlertThresholds,
-}
-
-impl BStpConfig {
-
-    pub fn from_env() -> Self {
-
-        let mut config = Self::default();
-
-        if std::env::var("BEARDOG_GAMING_MODE").is_ok() {
-            config.gaming.ultra_low_latency = true;
-            config.performance.max_encryption_latency = Duration::from_micros(50);
-            config.performance.max_decryption_latency = Duration::from_micros(50);
-        }
-        if std::env::var("BEARDOG_SECURITY_MODE").is_ok() {
-            config.genetic_healing.enable_healing = true;
-            config.key_management.use_hardware_keys = true;
-            config.key_management.key_rotation_interval = Duration::from_secs(1800);
-        }
-
-        config
-    }
-
-    pub fn competitive_gaming() -> Self {
-        let mut config = Self::default();
-        config.performance.max_encryption_latency = Duration::from_micros(50);
-        config.performance.max_decryption_latency = Duration::from_micros(50);
-        config.gaming.ultra_low_latency = true;
-        config.gaming.predictive_keying = true;
-        config.gaming.jitter_elimination = true;
-        config.genetic_healing.enable_healing = true;
-        config.genetic_healing.enable_prediction = true;
-        config.genetic_healing.prediction_threshold = 0.9;
-        config
-    }
-
-    pub fn maximum_security() -> Self {
-        let mut config = Self::default();
-        config.key_management.use_hardware_keys = true;
-        config.key_management.key_rotation_interval = Duration::from_secs(900); // 15 min
-        config.key_management.key_derivation_rounds = 200_000;
-        config
-    }
+    /// The resilience value
+    pub resilience: ResilienceConfig,
+    /// The monitoring value
+    pub monitoring: TunnelMonitoringConfig,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
 
     #[test]
-    fn test_default_configuration() -> Result<(), BearDogError> {
-        let config = BStpConfig::default();
-
-        assert_eq!(
-            config.performance.max_encryption_latency,
-            Duration::from_micros(100)
-        );
-        assert_eq!(config.performance.max_decryption_latency, Duration::from_micros(100));
-        assert_eq!(config.performance.min_gaming_throughput, 1_000_000_000);
-
-        assert!(config.key_management.use_hardware_keys);
-        assert_eq!(config.key_management.session_key_length, 32);
-        assert_eq!(config.key_management.key_rotation_interval, Duration::from_secs(3600));
-
-        assert!(config.gaming.ultra_low_latency);
-        assert!(config.gaming.predictive_keying);
-        assert!(config.gaming.prefer_hardware_crypto);
-
-        assert!(config.genetic_healing.enable_healing);
-        assert_eq!(config.genetic_healing.prediction_threshold, 0.9);
-        Ok(())
-    }
-
-    #[test]
-    fn test_competitive_gaming_configuration() -> Result<(), BearDogError> {
-        let config = BStpConfig::competitive_gaming();
-
-        assert_eq!(config.performance.max_encryption_latency, Duration::from_micros(50));
-        assert_eq!(config.performance.max_decryption_latency, Duration::from_micros(50));
-        assert!(config.gaming.jitter_elimination);
-        assert!(config.gaming.ultra_low_latency);
-        assert!(config.gaming.predictive_keying);
-        assert!(config.gaming.prefer_hardware_crypto);
-        assert!(config.genetic_healing.enable_healing);
-        assert!(config.genetic_healing.enable_prediction);
-        assert_eq!(config.genetic_healing.prediction_threshold, 0.9);
-        Ok(())
-    }
-
-    #[test]
-    fn test_maximum_security_configuration() -> Result<(), BearDogError> {
-        let config = BStpConfig::maximum_security();
-
-        assert!(config.key_management.use_hardware_keys);
-        assert_eq!(config.key_management.key_rotation_interval, Duration::from_secs(900)); // 15 min
-        assert_eq!(config.key_management.key_derivation_rounds, 200_000);
-        Ok(())
-    }
-
-    #[test]
-    fn test_environment_based_configuration() -> Result<(), BearDogError> {
-
-        std::env::set_var("BEARDOG_GAMING_MODE", "1");
-        let gaming_config = BStpConfig::from_env();
-        assert!(gaming_config.gaming.ultra_low_latency);
-        assert_eq!(gaming_config.performance.max_encryption_latency, Duration::from_micros(50));
-        std::env::remove_var("BEARDOG_GAMING_MODE");
-
-        std::env::set_var("BEARDOG_SECURITY_MODE", "1");
-        let security_config = BStpConfig::from_env();
-        assert!(security_config.key_management.use_hardware_keys);
-        assert_eq!(
-            security_config.key_management.key_rotation_interval,
-            Duration::from_secs(1800)
-        );
-        std::env::remove_var("BEARDOG_SECURITY_MODE");
-        Ok(())
-    }
-
-    #[test]
-    fn test_alert_thresholds() -> Result<(), BearDogError> {
-        let config = BStpConfig::default();
-        let alerts = &config.alert_thresholds;
-        assert_eq!(alerts.max_cpu_usage, 0.9);
-        assert_eq!(alerts.max_memory_usage, 0.9);
-        assert_eq!(alerts.max_network_latency, 100);
-        assert_eq!(alerts.max_error_rate, 0.05);
-        assert_eq!(alerts.min_throughput, 1_000_000);
-        assert_eq!(alerts.max_disk_usage, 0.9);
-        assert_eq!(alerts.max_connections, 1000);
-        assert_eq!(alerts.max_queue_depth, 100);
-        assert_eq!(alerts.max_response_time, 500);
-        assert_eq!(alerts.min_availability, 0.95);
-        Ok(())
-    }
-
-    #[test]
-    fn test_configuration_serialization() -> Result<(), BearDogError> {
-
-        let config = BStpConfig::default();
+    fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
+        let config = TunnelConfig::default();
         let serialized = serde_json::to_string(&config).map_err(|e| {
-            tracing::error!("Operation failed ({}): {:?}", "Should serialize", e);
-            beardog_errors::BearDogError::internal(format!(
-                "Operation failed ({}): {:?}",
-                "Should serialize", e
-            ))
-        })?;
-        let deserialized: BStpConfig = serde_json::from_str(&serialized).map_err(|e| {
-            tracing::error!("JSON parsing failed ({}): {}", "Should deserialize", e);
-            beardog_errors::BearDogError::ValidationError(format!(
-                "JSON parsing error ({}): {}",
-                "Should deserialize", e
-            ))
-        })?;
+            tracing::error!("JSON serialization failed ({}): {}", "Should serialize", e);
+            e
+        });
+        assert!(serialized.is_ok());
 
-        // Basic validation assertions
-        assert_eq!(config.performance.max_encryption_latency, deserialized.performance.max_encryption_latency);
-        assert_eq!(config.gaming.ultra_low_latency, deserialized.gaming.ultra_low_latency);
-        assert_eq!(config.genetic_healing.prediction_threshold, deserialized.genetic_healing.prediction_threshold);
-        
+        let deserialized: Result<TunnelConfig, _> =
+            serde_json::from_str(&serialized?).map_err(|e| {
+                tracing::error!("JSON parsing failed ({}): {}", "Should deserialize", e);
+                e
+            });
+        assert!(deserialized.is_ok());
         Ok(())
+    }
+
+    #[test]
+    fn test_performance_config_defaults() {
+        let config = PerformanceConfig::default();
+        assert_eq!(config.max_concurrent_sessions, 100);
+        assert!(config.enable_monitoring);
+        assert_eq!(config.compression_level, 6);
+    }
+
+    #[test]
+    fn test_security_config_defaults() {
+        let config = SecurityConfig::default();
+        assert_eq!(config.key_storage_path, "/secure/keys");
+        assert_eq!(config.key_escrow_threshold, 10);
+    }
+
+    #[test]
+    fn test_gaming_config_defaults() {
+        let config = GamingConfig::default();
+        assert_eq!(config.max_latency_ms, 50);
+        assert_eq!(config.anti_cheat_provider, "default");
+    }
+
+    #[test]
+    fn test_resilience_config_defaults() {
+        let config = ResilienceConfig::default();
+        assert_eq!(config.max_retries, 3);
+        assert_eq!(config.retry_delay, Duration::from_millis(100));
+        assert!(config.enable_circuit_breaker);
+        assert_eq!(config.failure_threshold, 5);
+    }
+
+    #[test]
+    fn test_tunnel_monitoring_config_defaults() {
+        let config = TunnelMonitoringConfig::default();
+        assert!(config.enable_metrics);
+        assert_eq!(
+            config.metrics_port,
+            beardog_config::domains::network_ports::DEFAULT_DISCOVERY_PORT
+        );
+        assert!(config.enable_tracing);
+        assert!(config.enable_logging);
+        assert_eq!(config.log_level, "info");
+    }
+
+    #[test]
+    fn test_unified_processor_config_defaults() {
+        let config = UnifiedProcessorConfig::default();
+        assert_eq!(config.session_key_length, 32);
+        assert_eq!(config.key_derivation_rounds, 10_000);
+        assert_eq!(config.key_rotation_interval, Duration::from_secs(3600));
+        assert!(config.use_hardware_keys);
+    }
+
+    #[test]
+    fn test_tunnel_config_contains_all_subconfigs() {
+        let config = TunnelConfig::default();
+
+        // Verify all subconfigs are present and have defaults
+        assert_eq!(config.performance.max_concurrent_sessions, 100);
+        assert_eq!(config.security.key_storage_path, "/secure/keys");
+        assert_eq!(config.gaming.max_latency_ms, 50);
+        assert_eq!(config.resilience.max_retries, 3);
+        assert!(config.monitoring.enable_metrics);
+    }
+
+    #[test]
+    fn test_performance_config_monitoring_enabled_by_default() {
+        let config = PerformanceConfig::default();
+        assert!(config.enable_monitoring);
+        assert!(config.enable_caching);
+    }
+
+    #[test]
+    fn test_performance_config_thresholds() {
+        let config = PerformanceConfig::default();
+        // Verify thresholds are reasonable percentages (0-100)
+        assert!(config.cpu_threshold >= 0.0 && config.cpu_threshold <= 100.0);
+        assert!(config.memory_threshold >= 0.0 && config.memory_threshold <= 100.0);
+        assert_eq!(config.cpu_threshold, 80.0);
+        assert_eq!(config.memory_threshold, 85.0);
+    }
+
+    #[test]
+    fn test_config_clone_and_equality() {
+        let config1 = TunnelConfig::default();
+        let config2 = config1.clone();
+
+        // Verify cloning works correctly
+        assert_eq!(
+            config1.performance.max_concurrent_sessions,
+            config2.performance.max_concurrent_sessions
+        );
+        assert_eq!(
+            config1.security.key_storage_path,
+            config2.security.key_storage_path
+        );
     }
 }

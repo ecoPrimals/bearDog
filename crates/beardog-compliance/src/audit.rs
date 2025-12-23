@@ -1,264 +1,297 @@
+// Audit trail and compliance tracking for BearDog
+// Provides comprehensive audit logging and compliance reporting
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Canonical audit severity levels
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AuditSeverity {
     Low,
+    /// Medium severity - notable events requiring attention
     Medium,
+    /// High severity - important security or compliance events
     High,
+    /// Critical severity - events requiring immediate attention
     Critical,
 }
 
-impl std::fmt::Display for AuditSeverity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AuditSeverity::Low => write!(f, "LOW"),
-            AuditSeverity::Medium => write!(f, "MEDIUM"),
-            AuditSeverity::High => write!(f, "HIGH"),
-            AuditSeverity::Critical => write!(f, "CRITICAL"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of audit events
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of audit event
 pub enum AuditEventType {
-    UserAction,
-    SystemEvent,
-    SecurityEvent,
-    ConfigurationChange,
+    /// Authentication-related events (login, logout, etc.)
+    Authentication,
+    /// Authorization and permission-related events
+    Authorization,
+    /// Data access and manipulation events
     DataAccess,
-    AuthenticationAttempt,
-    AuthorizationCheck,
-    ComplianceViolation,
+    /// System configuration or state changes
+    SystemChange,
+    /// Security-related events and violations
+    SecurityEvent,
+    /// Compliance verification and validation events
+    ComplianceCheck,
 }
 
-impl std::fmt::Display for AuditEventType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AuditEventType::UserAction => write!(f, "USER_ACTION"),
-            AuditEventType::SystemEvent => write!(f, "SYSTEM_EVENT"),
-            AuditEventType::SecurityEvent => write!(f, "SECURITY_EVENT"),
-            AuditEventType::ConfigurationChange => write!(f, "CONFIG_CHANGE"),
-            AuditEventType::DataAccess => write!(f, "DATA_ACCESS"),
-            AuditEventType::AuthenticationAttempt => write!(f, "AUTH_ATTEMPT"),
-            AuditEventType::AuthorizationCheck => write!(f, "AUTHZ_CHECK"),
-            AuditEventType::ComplianceViolation => write!(f, "COMPLIANCE_VIOLATION"),
-        }
-    }
-}
-
+/// Audit event record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEvent {
     pub id: Uuid,
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// Type of audit event
+    /// The event type value
     pub event_type: AuditEventType,
-    pub severity: AuditSeverity,
+    /// ID of the user who triggered this event
     pub user_id: Option<String>,
-    pub session_id: Option<String>,
-    pub source_ip: Option<String>,
+    /// Resource that was accessed or modified
+    /// The resource value
     pub resource: String,
+    /// The action value
     pub action: String,
-    pub outcome: String,
-    pub details: HashMap<String, String>,
+    /// Result of the action (success, failure, etc.)
+    /// The result value
+    pub result: String,
+    /// When this event occurred
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// IP address of the client (if applicable)
+    /// Optional source ip
+    pub source_ip: Option<String>,
+    /// User agent string of the client (if applicable)
+    /// Optional user agent
+    pub user_agent: Option<String>,
+    /// Compliance framework tags associated with this event
+    /// Collection of compliance tags
     pub compliance_tags: Vec<String>,
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
 }
 
 impl AuditEvent {
+    /// Create new audit event
+    /// Creates a new instance
+    #[must_use]
     pub fn new(
         event_type: AuditEventType,
-        severity: AuditSeverity,
-        resource: &str,
-        action: &str,
-        outcome: &str,
+        resource: String,
+        action: String,
+        result: String,
     ) -> Self {
         Self {
             id: Uuid::new_v4(),
-            timestamp: chrono::Utc::now(),
             event_type,
-            severity,
             user_id: None,
-            session_id: None,
+            resource,
+            action,
+            result,
+            timestamp: chrono::Utc::now(),
             source_ip: None,
-            resource: resource.to_string(),
-            action: action.to_string(),
-            outcome: outcome.to_string(),
-            details: HashMap::with_capacity(16),
+            user_agent: None,
             compliance_tags: Vec::new(),
+            metadata: HashMap::new(),
         }
     }
 
-    pub fn with_user_id(mut self, user_id: &str) -> Self {
-        self.user_id = Some(user_id.to_string());
+    /// Create audit event with explicit timestamp (for testing)
+    /// Creates instance with specific timestamp
+    #[must_use]
+    #[cfg(test)]
+    pub fn new_with_timestamp(
+        event_type: AuditEventType,
+        resource: String,
+        action: String,
+        result: String,
+        timestamp: chrono::DateTime<chrono::Utc>,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            event_type,
+            user_id: None,
+            resource,
+            action,
+            result,
+            timestamp,
+            source_ip: None,
+            user_agent: None,
+            compliance_tags: Vec::new(),
+            metadata: HashMap::new(),
+        }
+    }
+
+    /// Add user context to event
+    /// Creates instance with user
+    #[must_use]
+    pub fn with_user(mut self, user_id: String) -> Self {
+        self.user_id = Some(user_id);
         self
     }
 
-    pub fn with_session(mut self, session_id: &str) -> Self {
-        self.session_id = Some(session_id.to_string());
-        self
-    }
-
+    /// Add source IP to event
+    /// Creates instance with source ip
+    #[must_use]
     pub fn with_source_ip(mut self, ip: &str) -> Self {
         self.source_ip = Some(ip.to_string());
         self
     }
 
-    pub fn with_detail(mut self, key: &str, value: &str) -> Self {
-        self.details.insert(key.to_string(), value.to_string());
+    /// Add compliance tags
+    /// Creates instance with compliance tags
+    pub fn with_compliance_tags(mut self, tags: Vec<String>) -> Self {
+        self.compliance_tags = tags.iter().map(std::string::ToString::to_string).collect();
         self
     }
 
-    pub fn with_compliance_tags(mut self, tags: Vec<&str>) -> Self {
-        self.compliance_tags = tags.iter().map(|s| s.to_string()).collect();
+    /// Add metadata to event
+    /// Creates instance with metadata
+    #[must_use]
+    pub fn with_metadata(mut self, key: String, value: String) -> Self {
+        self.metadata.insert(key, value);
         self
     }
 }
 
+/// Audit trail storage and management
 pub struct AuditEngine {
-    events: Arc<RwLock<Vec<AuditEvent>>>,
+    events: Vec<AuditEvent>,
+    max_events: usize,
 }
 
 impl AuditEngine {
-    pub fn new() -> Self {
+    /// Create new audit engine
+    /// Creates a new instance
+    #[must_use]
+    pub fn new(max_events: usize) -> Self {
         Self {
-            events: Arc::new(RwLock::new(Vec::new())),
+            events: Vec::with_capacity(max_events),
+            max_events,
         }
     }
 
-    pub async fn log_event(&self, event: AuditEvent) -> Result<(), BearDogError> {
-        self.events.write().await.push(event);
-        Ok(())
+    /// Add audit event
+    pub fn add_event(&mut self, event: AuditEvent) {
+        self.events.push(event);
+
+        // Rotate events if we exceed max capacity
+        if self.events.len() > self.max_events {
+            self.events.remove(0);
+        }
     }
 
-    pub async fn get_recent_events(&self, limit: usize) -> Result<Vec<AuditEvent>, BearDogError> {
-        let events = self.events.read().await;
-        let start = events.len().saturating_sub(limit);
-        Ok(events[start..].to_vec())
-    }
-
-    pub async fn query_events(
-        &self,
-        event_type: Option<AuditEventType>,
-        severity: Option<AuditSeverity>,
-        user_id: Option<&str>,
-        limit: Option<usize>,
-    ) -> Result<Vec<AuditEvent>, BearDogError> {
-        let events = self.events.read().await;
-        let mut filtered: Vec<AuditEvent> = events
+    /// Get events by type
+    /// Gets `events_by_type`
+    /// Gets `events_by_type`
+    #[must_use]
+    pub fn get_events_by_type(&self, event_type: &AuditEventType) -> Vec<&AuditEvent> {
+        self.events
             .iter()
             .filter(|event| {
-                if let Some(ref et) = event_type {
-                    if &event.event_type != et {
-                        return false;
-                    }
-                }
-                if let Some(ref sev) = severity {
-                    if &event.severity != sev {
-                        return false;
-                    }
-                }
-                if let Some(ref uid) = user_id {
-                    if let Some(ref event_uid) = event.user_id {
-                        if event_uid != uid {
-                            return false;
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-                true
+                std::mem::discriminant(&event.event_type) == std::mem::discriminant(event_type)
             })
-            .cloned()
-            .collect();
+            .collect()
+    }
 
-        filtered.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+    /// Get events by user
+    /// Gets `events_by_user`
+    /// Gets `events_by_user`
+    #[must_use]
+    pub fn get_events_by_user(&self, user_id: &str) -> Vec<&AuditEvent> {
+        self.events
+            .iter()
+            .filter(|event| event.user_id.as_deref() == Some(user_id))
+            .collect()
+    }
 
-        if let Some(limit) = limit {
-            filtered.truncate(limit);
+    /// Get events in time range
+    /// Gets `events_in_range`
+    /// Gets `events_in_range`
+    #[must_use]
+    pub fn get_events_in_range(
+        &self,
+        start: chrono::DateTime<chrono::Utc>,
+        end: chrono::DateTime<chrono::Utc>,
+    ) -> Vec<&AuditEvent> {
+        self.events
+            .iter()
+            .filter(|event| event.timestamp >= start && event.timestamp <= end)
+            .collect()
+    }
+
+    /// Generate compliance report
+    #[must_use]
+    pub fn generate_compliance_report(&self) -> HashMap<String, usize> {
+        let mut report = HashMap::new();
+
+        for event in &self.events {
+            for tag in &event.compliance_tags {
+                *report.entry(tag.clone()).or_insert(0) += 1;
+            }
         }
 
-        Ok(filtered)
+        report
     }
 
-    pub async fn event_count(&self) -> usize {
-        self.events.read().await.len()
+    /// Clear old events
+    /// Cleans up `old_events`
+    /// Cleans up `old_events`
+    pub fn cleanup_old_events(&mut self, cutoff: chrono::DateTime<chrono::Utc>) {
+        self.events.retain(|event| event.timestamp > cutoff);
     }
 
-    pub async fn clear_events(&self) {
-        self.events.write().await.clear();
+    /// Get total event count
+    #[must_use]
+    pub fn event_count(&self) -> usize {
+        self.events.len()
+    }
+
+    pub fn export_events(&self) -> Result<String, BearDogError> {
+        serde_json::to_string(&self.events)
+            .map_err(|e| BearDogError::system(format!("Failed to serialize audit events: {e}")))
     }
 }
 
 impl Default for AuditEngine {
     fn default() -> Self {
-        Self::new()
+        Self::new(10000) // Default to 10,000 events
     }
 }
 
-pub struct AuditLog {
-    events: Vec<AuditEvent>,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl AuditLog {
-    pub fn new() -> Self {
-        Self { events: Vec::new() }
+    #[test]
+    fn test_audit_event_creation() {
+        let event = AuditEvent::new(
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: core
+            // TEST_PRIORITY: normal
+            AuditEventType::Authentication,
+            "login_endpoint".to_string(),
+            "login".to_string(),
+            "success ".to_string(),
+        );
+
+        assert_eq!(event.resource, "login_endpoint");
+        assert_eq!(event.action, "login");
+        assert_eq!(event.result, "success ");
     }
 
-    pub fn add_event(&mut self, event: AuditEvent) {
-        self.events.push(event);
-    }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_audit_engine() {
+        let mut engine = AuditEngine::new(100);
 
-    pub fn events(&self) -> &[AuditEvent] {
-        &self.events
-    }
+        let event = AuditEvent::new(
+            AuditEventType::DataAccess,
+            "user_data".to_string(),
+            "read".to_string(),
+            "success ".to_string(),
+        );
 
-    pub fn filter_events(
-        &self,
-        event_type: Option<AuditEventType>,
-        severity: Option<AuditSeverity>,
-        user_id: Option<&str>,
-    ) -> Result<Vec<AuditEvent>, BearDogError> {
-        let filtered: Vec<AuditEvent> = self
-            .events
-            .iter()
-            .filter(|event| {
-                if let Some(ref et) = event_type {
-                    if &event.event_type != et {
-                        return false;
-                    }
-                }
-                if let Some(ref sev) = severity {
-                    if &event.severity != sev {
-                        return false;
-                    }
-                }
-                if let Some(ref uid) = user_id {
-                    if let Some(ref event_uid) = event.user_id {
-                        if event_uid != uid {
-                            return false;
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-                true
-            })
-            .cloned()
-            .collect();
-
-        Ok(filtered)
-    }
-
-    pub fn placeholder() -> Self {
-        Self { events: Vec::new() }
-    }
-}
-
-impl Default for AuditLog {
-    fn default() -> Self {
-        Self::placeholder()
+        engine.add_event(event);
+        assert_eq!(engine.event_count(), 1);
     }
 }

@@ -6,22 +6,31 @@ use std::time::Duration;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TrustLevel {
 
+    /// Represents unknown = 0 variant
     Unknown = 0,
 
+    /// Represents basic = 1 variant
     Basic = 1,
 
+    /// Represents medium = 2 variant
     Medium = 2,
 
+    /// Represents high = 3 variant
     High = 3,
 
+    /// Represents explicit = 4 variant
     Explicit = 4,
 }
 impl TrustLevel {
 
+/// As U8 operation.
+    /// Returns as u8
     pub fn as_u8(&self) -> u8 {
         *self as u8
     }
 
+/// From U8 operation.
+    /// Creates instance from u8
     pub fn from_u8(value: u8) -> Option<Self> {
         match value {
             0 => Some(TrustLevel::Unknown),
@@ -35,9 +44,11 @@ impl TrustLevel {
     pub fn can_perform_sensitive_operations(&self) -> bool {
         *self >= TrustLevel::High
 
+/// Requires Monitoring operation.
     pub fn requires_monitoring(&self) -> bool {
         *self <= TrustLevel::Medium
 
+/// Next operation.
     pub fn next(&self) -> Option<Self> {
         match self {
             TrustLevel::Unknown => Some(TrustLevel::Basic),
@@ -56,64 +67,53 @@ impl std::fmt::Display for TrustLevel {}
             TrustLevel::Explicit => write!(f, "Explicit"),
 
 #[derive(Debug, Clone)]
-pub struct TrustPropagationConfig {
-
-    pub max_hops: u8,
-
+    /// The min trust level value
     pub min_trust_level: TrustLevel,
 
+    /// The decay factor value
     pub decay_factor: f64,
 
+    /// Whether feature is enabled
     pub enabled: bool,
 
+    /// The max age value
     pub max_age: Duration,}
 
 impl Default for TrustPropagationConfig {}
 
-    fn default() -> Self {
-        Self {
-            max_hops: 3,
+    fn default(3,
             min_trust_level: TrustLevel::Medium,
             decay_factor: 0.8,
             enabled: true,
-            max_age: Duration::from_secs(7 * 24 * 3600), // 7 days
+            max_age: Duration::from_secs(HashMap<String, HashMap<String, TrustLevel>>,
 
-pub struct TrustStore {
-
-    pub(crate) relationships: HashMap<String, HashMap<String, TrustLevel>>,
-
-    pub(crate) propagation_config: TrustPropagationConfig,}
+    pub(TrustPropagationConfig,}
 
 impl TrustStore {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: TrustPropagationConfig) -> Self {
-            relationships: HashMap::with_capacity(16),
-            propagation_config: config,
+            relationships: HashMap::with_capacity(config,
 
-    pub fn add_relationship(&mut self, from: &str, to: &str, trust_level: TrustLevel) {
+/// Add Relationship operation.
+    pub fn add_relationship(&str, to: &str, trust_level: TrustLevel) {
         self.relationships
             .entry(from)
             .or_insert_with(HashMap::new)
-            .insert(to, trust_level);
-
-    pub fn get_trust_level(&self, from: &str, to: &str) -> Option<TrustLevel> {
-            .get(from)
-            .and_then(|targets| targets.get(to))
-            .copied()
-
-    pub fn remove_relationship(&mut self, from: &str, to: &str) {
+            .insert(&str, to: &str) -> Option<TrustLevel> {
+            .get(&str, to: &str) {
         if let Some(targets) = self.relationships.get_mut(from) {
             targets.remove(to);
             if targets.is_empty() {
                 self.relationships.remove(from);
             }
 
+/// Get Relationships operation.
+    /// Gets relationships
+    /// Gets relationships
     pub fn get_relationships(&self, node: &str) -> HashMap<String, TrustLevel> {
-            .get(node)
-            .cloned()
-            .unwrap_or_default()
-
-    pub fn calculate_transitive_trust(&self, from: &str, to: &str) -> Option<TrustLevel> {
+            .get(&str, to: &str) -> Option<TrustLevel> {
         if let Some(direct_trust) = self.get_trust_level(from, to) {
             return Some(direct_trust);
         if !self.propagation_config.enabled {
@@ -122,111 +122,104 @@ impl TrustStore {
         let mut visited = std::collections::HashSet::new();
         let mut queue = std::collections::VecDeque::new();
         queue.push_back((from.to_string(), TrustLevel::Explicit, 0));
-        while let Some((current, trust_level, hops)) = queue.pop_front() {
-            if hops >= self.propagation_config.max_hops {
-                continue;
-            if visited.contains(&current) {
-            visited.insert(current.clone());
-            if let Some(relationships) = self.relationships.get(&current) {
-                for (target, &target_trust) in relationships {
-                    if target == to {
-                        let propagated_trust = self.calculate_propagated_trust(trust_level, target_trust, hops + 1);
-                        if propagated_trust >= self.propagation_config.min_trust_level {
-                            return Some(propagated_trust);
-                        }
-                    } else if !visited.contains(target) {
-                            queue.push_back((target.clone(), propagated_trust, hops + 1));
-                    }
-                }
-        None
-
-    fn calculate_propagated_trust(&self, current_trust: TrustLevel, relationship_trust: TrustLevel, hops: u8) -> TrustLevel {
+        while let Some(TrustLevel, relationship_trust: TrustLevel, hops: u8) -> TrustLevel {
         let min_trust = std::cmp::min(current_trust, relationship_trust);
         let decay = self.propagation_config.decay_factor.powi(hops as i32);
         let propagated_value = (min_trust.as_u8() as f64 * decay) as u8;
         
         TrustLevel::from_u8(propagated_value).unwrap_or(TrustLevel::Unknown)
 
+/// Get Trusting Nodes operation.
+    /// Gets trusting_nodes
+    /// Gets trusting_nodes
     pub fn get_trusting_nodes(&self, node_id: &str) -> Vec<String> {
         let mut trusting_nodes = Vec::new();
         for (from_node, targets) in &self.relationships {
             if targets.contains_key(node_id) {
-                trusting_nodes.push(from_node.clone());
+                trusting_nodes.push(&from_node);
         trusting_nodes
 
+/// Get Trusted Nodes operation.
+    /// Gets trusted_nodes
+    /// Gets trusted_nodes
     pub fn get_trusted_nodes(&self, node_id: &str) -> Vec<String> {
             .get(node_id)
             .map(|targets| targets.keys().cloned().collect())
 
+/// Relationship Count operation.
     pub fn relationship_count(&self) -> usize {
         self.relationships.values().map(|targets| targets.len()).sum()
 
+/// Clear All operation.
     pub fn clear_all(&mut self) {
         self.relationships.clear();
 impl Default for TrustStore {
-        Self::new(TrustPropagationConfig::default())
+        Self::new(TrustPropagationConfig::default(String,
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TrustRelationship {
-
-    pub from_node: String,
-
+    /// The to node value
     pub to_node: String,
 
+    /// The trust level value
     pub trust_level: TrustLevel,
 
+    /// The created at value
     pub created_at: chrono::DateTime<chrono::Utc>,
 
+    /// The updated at value
     pub updated_at: chrono::DateTime<chrono::Utc>,}
 
 impl TrustRelationship {
 
-    pub fn new(from_node: &str, to_node: &str, trust_level: TrustLevel) -> Self {
-        let now = chrono::Utc::now();
-            from_node,
-            to_node,
-            trust_level,
-            created_at: now,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(&str, to_node: &str, trust_level: TrustLevel) -> Self {
+        let now = chrono::Utc::now(now,
             updated_at: now,
 
+/// Update Trust Level operation.
+    /// Updates trust_level
+    /// Updates trust_level
     pub fn update_trust_level(&mut self, trust_level: TrustLevel) {
         self.trust_level = trust_level;
         self.updated_at = chrono::Utc::now();
 
+/// Age operation.
     pub fn age(&self) -> chrono::Duration {
-        chrono::Utc::now() - self.created_at
+        chrono::Utc::now(bool,
 
-    pub fn is_bidirectional(&self) -> bool {
-
-        true
-
-pub struct NodeVerificationResult {
-
-    pub verified: bool,
-
+    /// The message value
     pub message: String,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,}
 
 impl NodeVerificationResult {
 
+/// Success operation.
     pub fn success(trust_level: TrustLevel) -> Self {
             verified: true,
             message: "Node verified successfully".to_string(),
             metadata: HashMap::with_capacity(16),
 
+/// Failure operation.
     pub fn failure(message: &str) -> Self {
             verified: false,
             message,
             trust_level: TrustLevel::Unknown,
 
-    pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
-        self.metadata.insert(key, value);
+/// With Metadata operation.
+    /// Creates instance with metadata
+    pub fn with_metadata(&str, value: &str) -> Self {
+        self.metadata.insert(key.to_string(), value.into());
         self
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]}
+
 
     fn test_trust_level_progression() {
         assert_eq!(TrustLevel::Unknown.next(), Some(TrustLevel::Basic));
@@ -241,6 +234,7 @@ mod tests {
         assert_eq!(TrustLevel::from_u8(3), Some(TrustLevel::High));
         assert_eq!(TrustLevel::from_u8(4), Some(TrustLevel::Explicit));
         assert_eq!(TrustLevel::from_u8(5), None);}
+
 
     fn test_trust_store_operations() {
         let mut store = TrustStore::default();

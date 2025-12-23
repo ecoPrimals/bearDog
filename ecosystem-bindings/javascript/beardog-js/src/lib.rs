@@ -21,43 +21,28 @@ extern "C" {
     fn error(s: &str);
     
     type Performance;
-    #[wasm_bindgen(js_namespace = performance)]
-    static PERFORMANCE: Performance;
+    #[wasm_bindgen(Performance;
     #[wasm_bindgen(method, js_name = now)]
     fn now(this: &Performance) -> f64;
 }
 
 macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
-#[wasm_bindgen(js_name = BearDogSecurityManager)]
-pub struct JsBearDogSecurityManager {
-    quantum_engine: Option<QuantumCryptoEngine>,
+    ($($t:tt)*) => (log(Option<QuantumCryptoEngine>,
     ai_engine: Option<AIOptimizationEngine>,
     observability_engine: Option<AdvancedObservabilityEngine>,
     initialized: bool,
 }
 
-#[wasm_bindgen(js_name = QuantumCrypto)]
-pub struct JsQuantumCrypto {
-    engine: QuantumCryptoEngine,
+#[wasm_bindgen(QuantumCryptoEngine,
 }
 
-#[wasm_bindgen(js_name = AIOptimizer)]
-pub struct JsAIOptimizer {
-    engine: AIOptimizationEngine,
+#[wasm_bindgen(AIOptimizationEngine,
 }
 
-#[wasm_bindgen(js_name = AdvancedObservability)]
-pub struct JsAdvancedObservability {
-    engine: AdvancedObservabilityEngine,
+#[wasm_bindgen(AdvancedObservabilityEngine,
 }
 
-#[wasm_bindgen(js_name = SystemMetrics)]
-#[derive(Serialize, Deserialize)]
-pub struct JsSystemMetrics {
-    pub timestamp: u64,
+#[wasm_bindgen(u64,
     pub cpu_usage: f64,
     pub memory_usage: f64,
     pub network_latency: f64,
@@ -67,39 +52,27 @@ pub struct JsSystemMetrics {
     pub response_time: f64,
 }
 
-#[wasm_bindgen(js_name = OptimizationRecommendation)]
-#[derive(Serialize, Deserialize)]
-pub struct JsOptimizationRecommendation {
-    pub optimization_type: String,
+#[wasm_bindgen(String,
     pub confidence: f64,
     pub expected_improvement: f64,
     pub reasoning: String,
     pub priority: String,
 }
 
-#[wasm_bindgen(js_name = QuantumKeyExchange)]
-#[derive(Serialize, Deserialize)]
-pub struct JsQuantumKeyExchange {
-    pub algorithm: String,
+#[wasm_bindgen(String,
     pub security_level: u8,
     pub key_size: usize,
     pub quantum_resistant: bool,
 }
 
-#[wasm_bindgen(js_name = QuantumSignature)]
-#[derive(Serialize, Deserialize)]
-pub struct JsQuantumSignature {
-    pub algorithm: String,
+#[wasm_bindgen(String,
     pub security_level: u8,
     pub signature_size: usize,
     pub timestamp: u64,
     pub quantum_resistant: bool,
 }
 
-#[wasm_bindgen(js_name = DeploymentStats)]
-#[derive(Serialize, Deserialize)]
-pub struct JsDeploymentStats {
-    pub total_regions: u32,
+#[wasm_bindgen(u32,
     pub active_regions: u32,
     pub total_nodes: u32,
     pub healthy_nodes: u32,
@@ -112,12 +85,7 @@ pub struct JsDeploymentStats {
 #[wasm_bindgen]
 impl JsBearDogSecurityManager {
 
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> JsBearDogSecurityManager {
-        console_log!("🦀 Initializing BearDog Security Manager for JavaScript/WebAssembly");
-        
-        JsBearDogSecurityManager {
-            quantum_engine: None,
+    #[wasm_bindgen(None,
             ai_engine: None,
             observability_engine: None,
             initialized: false,
@@ -130,21 +98,21 @@ impl JsBearDogSecurityManager {
 
         let quantum_engine = QuantumCryptoEngine::new(SecurityLevel::Level5)
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Quantum engine init failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let ai_engine = AIOptimizationEngine::new(0.01, std::time::Duration::from_secs(60))
-            .map_err(|e| JsValue::from_str(&format_args!("AI engine init failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let observability_engine = AdvancedObservabilityEngine::new()
-            .map_err(|e| JsValue::from_str(&format_args!("Observability init failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         ai_engine.start_optimization()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("AI optimization start failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         observability_engine.start_observability()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Observability start failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         self.quantum_engine = Some(quantum_engine);
         self.ai_engine = Some(ai_engine);
@@ -217,7 +185,7 @@ impl JsBearDogSecurityManager {
         if let Some(ai_engine) = &self.ai_engine {
             let ai_stats = ai_engine.get_stats()
                 .await
-                .map_err(|e| JsValue::from_str(&format_args!("Failed to get AI stats: {}", e).to_string()))?;
+                .map_err(|e| JsValue::from_str({}", e)))?;
             
             let ai_obj = Object::new();
             js_sys::Reflect::set(&ai_obj, &"totalOptimizations".into(), &ai_stats.total_optimizations.into())?;
@@ -229,7 +197,7 @@ impl JsBearDogSecurityManager {
         if let Some(obs_engine) = &self.observability_engine {
             let obs_stats = obs_engine.get_observability_stats()
                 .await
-                .map_err(|e| JsValue::from_str(&format_args!("Failed to get observability stats: {}", e).to_string()))?;
+                .map_err(|e| JsValue::from_str({}", e)))?;
             
             let obs_obj = Object::new();
             js_sys::Reflect::set(&obs_obj, &"metricsPerSecond".into(), &obs_stats.metrics_collected_per_second.into())?;
@@ -265,7 +233,7 @@ impl JsBearDogSecurityManager {
         if let Some(obs_engine) = &self.observability_engine {
             let metrics = obs_engine.collect_system_metrics()
                 .await
-                .map_err(|e| JsValue::from_str(&format_args!("Failed to collect metrics: {}", e).to_string()))?;
+                .map_err(|e| JsValue::from_str({}", e)))?;
             
             js_sys::Reflect::set(&audit_result, &"cpuUsage".into(), &metrics.cpu_metrics.usage_percent.into())?;
             js_sys::Reflect::set(&audit_result, &"memoryUsage".into(), &((metrics.memory_metrics.used_bytes as f64) / (metrics.memory_metrics.total_bytes as f64)).into())?;
@@ -306,7 +274,7 @@ impl JsBearDogSecurityManager {
             let ai_start = PERFORMANCE.now();
             let _recommendations = ai_engine.generate_recommendations()
                 .await
-                .map_err(|e| JsValue::from_str(&format_args!("AI benchmark failed: {}", e).to_string()))?;
+                .map_err(|e| JsValue::from_str({}", e)))?;
             let ai_duration = PERFORMANCE.now() - ai_start;
             
             js_sys::Reflect::set(&benchmark_result, &"aiOptimizationDuration".into(), &ai_duration.into())?;
@@ -336,7 +304,7 @@ impl JsQuantumCrypto {
 
         let keypair = self.engine.generate_kem_keypair(kem_algorithm)
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Key generation failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let result = Object::new();
         js_sys::Reflect::set(&result, &"algorithm".into(), &algorithm.into())?;
@@ -360,7 +328,7 @@ impl JsQuantumCrypto {
 
         let keypair = self.engine.generate_signature_keypair(sig_algorithm)
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Signature key generation failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let result = Object::new();
         js_sys::Reflect::set(&result, &"algorithm".into(), &algorithm.into())?;
@@ -380,13 +348,7 @@ impl JsQuantumCrypto {
         js_sys::Reflect::set(&result, &"encryptedSize".into(), &data.len().into())?;
         js_sys::Reflect::set(&result, &"algorithm".into(), &"hybrid_quantum".into())?;
         js_sys::Reflect::set(&result, &"quantumResistant".into(), &true.into())?;
-        js_sys::Reflect::set(&result, &"encryptionTime".into(), &PERFORMANCE.now().into())?;
-
-        Ok(result.into())
-    }
-
-    #[wasm_bindgen(js_name = quantumSign)]
-    pub async fn quantum_sign(&self, message: &[u8], algorithm: &str) -> Result<JsValue, JsValue> {
+        js_sys::Reflect::set(&[u8], algorithm: &str) -> Result<JsValue, JsValue> {
         console_log!("✍️ Creating quantum-resistant digital signature");
         
         let signature_size = match algorithm {
@@ -429,16 +391,16 @@ impl JsAIOptimizer {
     pub async fn get_recommendations(&self) -> Result<Array, JsValue> {
         let recommendations = self.engine.generate_recommendations()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to generate recommendations: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let js_array = Array::new();
         for rec in recommendations {
             let rec_obj = Object::new();
-            js_sys::Reflect::set(&rec_obj, &"optimizationType".into(), &format_args!("{:?}", rec.optimization_type).to_string().into())?;
+            js_sys::Reflect::set(&rec_obj, &"optimizationType".into(), &format!("{:?}", rec.optimization_type).into())?;
             js_sys::Reflect::set(&rec_obj, &"confidence".into(), &rec.confidence.into())?;
             js_sys::Reflect::set(&rec_obj, &"expectedImprovement".into(), &rec.expected_improvement.into())?;
             js_sys::Reflect::set(&rec_obj, &"reasoning".into(), &rec.reasoning.into())?;
-            js_sys::Reflect::set(&rec_obj, &"priority".into(), &format_args!("{:?}", rec.priority).to_string().into())?;
+            js_sys::Reflect::set(&rec_obj, &"priority".into(), &format!("{:?}", rec.priority).into())?;
             js_array.push(&rec_obj);
         }
 
@@ -449,14 +411,14 @@ impl JsAIOptimizer {
     pub async fn apply_optimizations(&self, max_recommendations: Option<u32>) -> Result<u32, JsValue> {
         let recommendations = self.engine.generate_recommendations()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to generate recommendations: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let limit = max_recommendations.unwrap_or(3) as usize;
         let limited_recommendations: Vec<_> = recommendations.into_iter().take(limit).collect();
         
         self.engine.apply_optimizations(&limited_recommendations)
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to apply optimizations: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         Ok(limited_recommendations.len() as u32)
     }
@@ -465,7 +427,7 @@ impl JsAIOptimizer {
     pub async fn get_ai_stats(&self) -> Result<JsValue, JsValue> {
         let stats = self.engine.get_stats()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to get AI stats: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let result = Object::new();
         js_sys::Reflect::set(&result, &"totalOptimizations".into(), &stats.total_optimizations.into())?;
@@ -486,7 +448,7 @@ impl JsAdvancedObservability {
     pub async fn collect_metrics(&self) -> Result<JsValue, JsValue> {
         let metrics = self.engine.collect_system_metrics()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to collect metrics: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let result = Object::new();
         js_sys::Reflect::set(&result, &"timestamp".into(), &metrics.timestamp.into())?;
@@ -505,7 +467,7 @@ impl JsAdvancedObservability {
     pub async fn get_predictive_alerts(&self) -> Result<Array, JsValue> {
         let alerts = self.engine.generate_predictive_recommendations()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to generate alerts: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let js_array = Array::new();
         for alert in alerts {
@@ -513,8 +475,8 @@ impl JsAdvancedObservability {
             js_sys::Reflect::set(&alert_obj, &"alertId".into(), &alert.alert_id.into())?;
             js_sys::Reflect::set(&alert_obj, &"component".into(), &alert.component.into())?;
             js_sys::Reflect::set(&alert_obj, &"confidence".into(), &alert.confidence.into())?;
-            js_sys::Reflect::set(&alert_obj, &"failureType".into(), &format_args!("{:?}", alert.failure_type).to_string().into())?;
-            js_sys::Reflect::set(&alert_obj, &"severity".into(), &format_args!("{:?}", alert.severity).to_string().into())?;
+            js_sys::Reflect::set(&alert_obj, &"failureType".into(), &format!("{:?}", alert.failure_type).into())?;
+            js_sys::Reflect::set(&alert_obj, &"severity".into(), &format!("{:?}", alert.severity).into())?;
             
             let actions_array = Array::new();
             for action in alert.recommended_actions {
@@ -532,13 +494,13 @@ impl JsAdvancedObservability {
     pub async fn execute_healing(&self, condition: &str) -> Result<Array, JsValue> {
         let healing_actions = self.engine.execute_autonomous_healing(condition)
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Healing execution failed: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let js_array = Array::new();
         for action in healing_actions {
             let action_obj = Object::new();
             js_sys::Reflect::set(&action_obj, &"actionId".into(), &action.action_id.into())?;
-            js_sys::Reflect::set(&action_obj, &"actionType".into(), &format_args!("{:?}", action.action_type).to_string().into())?;
+            js_sys::Reflect::set(&action_obj, &"actionType".into(), &format!("{:?}", action.action_type).into())?;
             js_sys::Reflect::set(&action_obj, &"success".into(), &action.success.into())?;
             js_sys::Reflect::set(&action_obj, &"rollbackAvailable".into(), &action.rollback_available.into())?;
             js_sys::Reflect::set(&action_obj, &"executedAt".into(), &action.executed_at.into())?;
@@ -552,7 +514,7 @@ impl JsAdvancedObservability {
     pub async fn get_observability_stats(&self) -> Result<JsValue, JsValue> {
         let stats = self.engine.get_observability_stats()
             .await
-            .map_err(|e| JsValue::from_str(&format_args!("Failed to get observability stats: {}", e).to_string()))?;
+            .map_err(|e| JsValue::from_str({}", e)))?;
 
         let result = Object::new();
         js_sys::Reflect::set(&result, &"metricsPerSecond".into(), &stats.metrics_collected_per_second.into())?;
@@ -580,11 +542,11 @@ pub fn get_beardog_version() -> JsValue {
     let version_info = Object::new();
     js_sys::Reflect::set(&version_info, &"version".into(), &"2.0.0".into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&version_info, &"platform".into(), &"WebAssembly".into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&version_info, &"features".into(), &Array::of3(
         &"quantum_cryptography".into(),
@@ -592,11 +554,11 @@ pub fn get_beardog_version() -> JsValue {
         &"advanced_observability".into()
     )).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&version_info, &"buildDate".into(), &js_sys::Date::now().into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     
     version_info.into()
@@ -607,27 +569,27 @@ pub fn check_feature_support() -> JsValue {
     let support_info = Object::new();
     js_sys::Reflect::set(&support_info, &"webAssembly".into(), &true.into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&support_info, &"quantumCrypto".into(), &true.into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&support_info, &"aiOptimization".into(), &true.into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&support_info, &"observability".into(), &true.into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&support_info, &"asyncSupport".into(), &true.into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     js_sys::Reflect::set(&support_info, &"performanceAPI".into(), &true.into()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     
     support_info.into()
@@ -666,6 +628,6 @@ pub async fn benchmark_performance() -> Result<JsValue, JsValue> {
 
 impl From<BearDogError> for JsValue {
     fn from(err: BearDogError) -> JsValue {
-        JsValue::from_str(&format_args!("BearDog Error: {:?}", err).to_string())
+        JsValue::from_str({:?}", err))
     }
 } 

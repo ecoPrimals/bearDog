@@ -1,0 +1,173 @@
+{
+  "timestamp": "2025-09-05T09:47:16.288733",
+  "pedantic_analysis": {
+    "clippy": {
+      "status": "completed",
+      "warnings": 11,
+      "errors": 4,
+      "output": "    Checking beardog-errors v0.1.0 (/home/eastgate/Development/ecoPrimals/beardog/crates/beardog-errors)\n   Compiling beardog-tunnel v3.0.0 (/home/eastgate/Development/ecoPrimals/beardog/crates/beardog-tunnel)\nwarning: using config file `/home/eastgate/Development/ecoPrimals/beardog/.clippy.toml`, `/home/eastgate/Development/ecoPrimals/beardog/clippy.toml` will be ignored\n\nerror: expected identifier, found keyword `use`\n --> crates/beardog-errors/src/constructors.rs:7:1\n  |\n7 | use crate::BearDogError;\n  | ^^^ expected identifier, found keyword\n\nerror: expected one of `,`, `::`, `as`, or `}`, found keyword `crate`\n --> crates/beardog-errors/src/constructors.rs:7:5\n  |\n7 | use crate::BearDogError;\n  |    -^^^^^ expected one of `,`, `::`, `as`, or `}`\n  |    |\n  |    help: missing `,`\n\nerror: expected one of `,`, `::`, `as`, or `}`, found `;`\n --> crates/beardog-errors/src/constructors.rs:7:24\n  |\n7 | use crate::BearDogError;\n  |                        ^\n  |                        |\n  |                        expected one of `,`, `::`, `as`, or `}`\n  |                        help: missing `,`\n\nwarning: `clippy::restriction` is not meant to be enabled as a group\n  |\n  = note: because of the command line `--warn clippy::restriction`\n  = help: enable the restriction lints you need individually\n  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#blanket_clippy_restriction_lints\n  = note: `-W clippy::blanket-clippy-restriction-lints` implied by `-W clippy::suspicious`\n  = help: to override `-W clippy::suspicious` add `#[allow(clippy::blanket_clippy_restriction_lints)]`\n\nerror[E0252]: the name `BearDogError` is defined multiple times\n  --> crates/beardog-errors/src/extensions.rs:14:5\n   |\n11 |     BearDogError,\n   |     ------------ previous import of the type `BearDogError` here\n...\n14 | use crate::BearDogError;\n   |     ^^^^^^^^^^^^^^^^^^^ `BearDogError` reimported here\n   |\n   = note: `BearDogError` must be defined only once in the type namespace of this module\n\nerror[E0252]: the name `BearDogError` is defined multiple times\n --> crates/beardog-errors/src/result_extensions.rs:8:5\n  |\n6 | use crate::BearDogError;\n  |     ------------------- previous import of the type `BearDogError` here\n7 | use std::fmt::Display;\n8 | use crate::BearDogError;\n  |     ^^^^^^^^^^^^^^^^^^^ `BearDogError` reimported here\n  |\n  = note: `BearDogError` must be defined only once in the type namespace of this module\n\nerror[E0433]: failed to resolve: `crate` in paths can only be used in start position\n --> crates/beardog-errors/src/constructors.rs:7:5\n  |\n7 | use crate::BearDogError;\n  |     ^^^^^ `crate` in paths can only be used in start position\n\nerror[E0432]: unresolved import `crate::r#use`\n --> crates/beardog-errors/src/constructors.rs:7:1\n  |\n7 | use crate::BearDogError;\n  | ^^^ no `r#use` in the root\n\nwarning: `clippy::restriction` is not meant to be enabled as a group\n   |\n   = note: because of the command line `--warn clippy::restriction`\n   = help: enable the restriction lints you need individually\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#blanket_clippy_restriction_lints\nnote: the lint level is defined here\n  --> crates/beardog-errors/src/lib.rs:43:9\n   |\n43 | #![deny(clippy::all)]\n   |         ^^^^^^^^^^^\n   = note: `#[warn(clippy::blanket_clippy_restriction_lints)]` implied by `#[warn(clippy::all)]`\n\nwarning: using `pub use`\n --> crates/beardog-errors/src/core.rs:5:1\n  |\n5 | / pub use crate::categories::{\n6 | |     ApiErrorCategory, BusinessErrorCategory, ConfigurationErrorCategory, HsmErrorCategory,\n7 | |     NetworkErrorCategory, SecurityErrorCategory, SystemErrorCategory, WorkflowErrorCategory,\n8 | | };\n  | |__^\n  |\n  = help: move the exported item to a public module instead\n  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#pub_use\n  = note: `-W clippy::pub-use` implied by `-W clippy::restriction`\n  = help: to override `-W clippy::restriction` add `#[allow(clippy::pub_use)]`\n\nwarning: using `pub use`\n  --> crates/beardog-errors/src/lib.rs:50:1\n   |\n50 | pub use core::BearDogError;\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   |\n   = help: move the exported item to a public module instead\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#pub_use\n\nwarning: unused import: `crate::BearDogError`\n  --> crates/beardog-errors/src/extensions.rs:14:5\n   |\n14 | use crate::BearDogError;\n   |     ^^^^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(unused_imports)]` on by default\n\nwarning: unused import: `crate::BearDogError`\n --> crates/beardog-errors/src/result_extensions.rs:8:5\n  |\n8 | use crate::BearDogError;\n  |     ^^^^^^^^^^^^^^^^^^^\n\nSome errors have detailed explanations: E0252, E0432, E0433.\nFor more information about an error, try `rustc --explain E0252`.\nwarning: `beardog-errors` (lib) generated 6 warnings\nerror: could not compile `beardog-errors` (lib) due to 7 previous errors; 6 warnings emitted\nwarning: build failed, waiting for other jobs to finish...\nwarning: consider moving the `;` outside the block for consistent formatting\n  --> crates/beardog-tunnel/build.rs:66:5\n   |\n66 | /     {\n67 | |         // Development platform configuration\n68 | |         println!(\"cargo:rustc-cfg=feature=\\\"mock-hsm\\\"\");\n69 | |         println!(\"cargo:rustc-cfg=feature=\\\"development-mode\\\"\");\n...  |\n74 | |         );\n75 | |     }\n   | |_____^\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#semicolon_outside_block\n   = note: `-W clippy::semicolon-outside-block` implied by `-W clippy::restriction`\n   = help: to override `-W clippy::restriction` add `#[allow(clippy::semicolon_outside_block)]`\nhelp: put the `;` here\n   |\n74 ~         )\n75 ~     };\n   |\n\nwarning: `beardog-tunnel` (build script) generated 3 warnings (1 duplicate)\n",
+      "pedantic_score": 69
+    },
+    "documentation": {
+      "total_public_items": 6883,
+      "documented_items": 7808,
+      "coverage_percent": 113.43890745314542,
+      "missing_docs": [
+        {
+          "file": "crates/beardog-adapters/src/lib.rs",
+          "total_items": 16,
+          "documented": 11,
+          "missing": 5
+        },
+        {
+          "file": "crates/beardog-adapters/src/cloud/mod.rs",
+          "total_items": 5,
+          "documented": 0,
+          "missing": 5
+        },
+        {
+          "file": "crates/beardog-adapters/src/cloud/providers.rs",
+          "total_items": 2,
+          "documented": 0,
+          "missing": 2
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/mod.rs",
+          "total_items": 1,
+          "documented": 0,
+          "missing": 1
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/traits.rs",
+          "total_items": 29,
+          "documented": 22,
+          "missing": 7
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/authentication.rs",
+          "total_items": 9,
+          "documented": 8,
+          "missing": 1
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/protocols.rs",
+          "total_items": 7,
+          "documented": 6,
+          "missing": 1
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/transformers.rs",
+          "total_items": 6,
+          "documented": 5,
+          "missing": 1
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/genetic_spawning.rs",
+          "total_items": 4,
+          "documented": 0,
+          "missing": 4
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/discovery.rs",
+          "total_items": 1,
+          "documented": 0,
+          "missing": 1
+        }
+      ],
+      "pedantic_compliant": true
+    },
+    "complexity": {
+      "complex_functions": 2,
+      "long_functions": 30,
+      "complex_types": 1,
+      "complexity_issues": [
+        {
+          "file": "crates/beardog-tunnel/src/universal_hsm_discovery/human_entropy_classifier.rs",
+          "function": "fn default() -> Self {",
+          "complexity": 29,
+          "line": 389
+        },
+        {
+          "file": "crates/beardog-tunnel/src/universal_hsm_discovery/tier_manager.rs",
+          "function": "async fn apply_human_entropy_elevation(&self, base_tier: HsmTier) -> Result<HsmTier, BearDogError> {",
+          "complexity": 21,
+          "line": 339
+        }
+      ],
+      "pedantic_compliant": false
+    },
+    "error_handling": {
+      "unwrap_usage": 7,
+      "expect_usage": 2,
+      "panic_usage": 0,
+      "todo_usage": 0,
+      "total_error_handling_issues": 9,
+      "pedantic_compliant": false,
+      "worst_files": [
+        {
+          "file": "crates/beardog-workflows/src/workflows/canonical_examples.rs",
+          "count": 6
+        },
+        {
+          "file": "crates/beardog-genetics/src/genetics/zero_copy.rs",
+          "count": 4
+        },
+        {
+          "file": "crates/beardog-auth/src/auth/tests.rs",
+          "count": 4
+        },
+        {
+          "file": "crates/beardog-api/src/api/middleware.rs",
+          "count": 2
+        },
+        {
+          "file": "crates/beardog-production/src/config_management.rs",
+          "count": 2
+        }
+      ]
+    },
+    "performance": {
+      "files_with_excessive_clones": 70,
+      "files_with_inefficient_strings": 379,
+      "files_with_excessive_allocations": 85,
+      "performance_score": 0,
+      "worst_performance_files": [
+        {
+          "file": "crates/beardog-adapters/src/adapters/songbird.rs",
+          "clones": 14
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/registry.rs",
+          "clones": 7
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/context.rs",
+          "clones": 9
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/mod.rs",
+          "clones": 8
+        },
+        {
+          "file": "crates/beardog-adapters/src/adapters/universal/primal_registry.rs",
+          "clones": 6
+        }
+      ]
+    }
+  },
+  "fixes_applied": [
+    "Refactor complex functions into smaller, focused functions",
+    "Extract complex type aliases for readability",
+    "Simplify conditional logic and reduce nesting",
+    "Replace .unwrap() with proper error handling",
+    "Convert .expect() to contextual error types",
+    "Remove panic! macros and use Result types",
+    "Complete all TODO items or document why they remain",
+    "Reduce unnecessary clone operations",
+    "Use &str instead of String where possible",
+    "Pre-allocate collections with known capacity",
+    "Use Cow<str> for borrowed/owned string data"
+  ],
+  "remaining_issues": [],
+  "pedantic_score": 55
+}

@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -12,76 +17,100 @@ use std::{
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AdvancedPerformanceMetrics {
-
-    pub simd_metrics: SimdOperationMetrics,
-
+#[derive(Debug, Clone)]
+    /// The zero cost metrics value
     pub zero_cost_metrics: ZeroCostMetrics,
 
+    /// The memory metrics value
     pub memory_metrics: MemoryAllocationMetrics,
 
+    /// The hot path metrics value
     pub hot_path_metrics: HotPathMetrics,
 
+    /// The system metrics value
     pub system_metrics: SystemPerformanceMetrics,
 }
 
 pub struct SimdOperationMetrics {
 
+    /// Number of total_operations
     pub total_operations: u64,
 
+    /// Number of avg_latency_ns
     pub avg_latency_ns: u64,
 
+    /// The throughput ops per sec value
     pub throughput_ops_per_sec: f64,
 
+    /// The chunk efficiency percent value
     pub chunk_efficiency_percent: f64,
 
+    /// The vectorization ratio value
     pub vectorization_ratio: f64,
 
 pub struct ZeroCostMetrics {
 
+    /// Number of zero_cost_operations
     pub zero_cost_operations: u64,
 
+    /// Number of abstraction_overhead_ns
     pub abstraction_overhead_ns: u64,
 
+    /// The inlining effectiveness value
     pub inlining_effectiveness: f64,
 
+    /// The optimization success rate value
     pub optimization_success_rate: f64,
 
 pub struct MemoryAllocationMetrics {
 
+
     pub allocations_avoided: u64,
 
+    /// Number of memory_saved_bytes
     pub memory_saved_bytes: u64,
 
+    /// The pool hit rate value
     pub pool_hit_rate: f64,
 
+    /// Number of avg_allocation_size
     pub avg_allocation_size: usize,
 
+    /// Number of peak_memory_usage
     pub peak_memory_usage: usize,
 
 pub struct HotPathMetrics {
 
+    /// Number of encryption_latency_us
     pub encryption_latency_us: u64,
 
+    /// Number of decryption_latency_us
     pub decryption_latency_us: u64,
 
+    /// Number of key_derivation_latency_us
     pub key_derivation_latency_us: u64,
 
+    /// Number of hsm_operation_latency_us
     pub hsm_operation_latency_us: u64,
 
+    /// The hot cache hit rate value
     pub hot_cache_hit_rate: f64,
 
 pub struct SystemPerformanceMetrics {
 
+    /// The cpu utilization value
     pub cpu_utilization: f64,
 
+    /// The memory utilization value
     pub memory_utilization: f64,
 
+    /// The io ops per sec value
     pub io_ops_per_sec: f64,
 
+    /// The network throughput value
     pub network_throughput: f64,
 
+    /// The load average value
     pub load_average: f64,
 
 pub struct AdvancedPerformanceMonitor {
@@ -117,9 +146,7 @@ struct MemoryCounters {
     pool_misses: AtomicU64,
     peak_usage: AtomicUsize,
 
-#[derive(Debug, Default)]
-struct HotPathTimers {
-    encryption_samples: Vec<Duration>,
+#[derive(Debug, Clone)]
     decryption_samples: Vec<Duration>,
     key_derivation_samples: Vec<Duration>,
     hsm_samples: Vec<Duration>,
@@ -128,9 +155,8 @@ struct HotPathTimers {
 
 impl AdvancedPerformanceMonitor {
 
-    #[must_use] pub fn new() -> Self {
-        let metrics = AdvancedPerformanceMetrics {
-            simd_metrics: SimdOperationMetrics {
+/// New operation.
+    #[must_use] pub fn new(SimdOperationMetrics {
                 total_operations: 0,
                 avg_latency_ns: 0,
                 throughput_ops_per_sec: 0.0,
@@ -181,13 +207,7 @@ impl AdvancedPerformanceMonitor {
                 pool_misses: AtomicU64::new(0),
                 peak_usage: AtomicUsize::new(0),
             hot_path_timers: Arc::new(RwLock::new(HotPathTimers::default())),
-            start_time: Instant::now(),
-        }
-    }
-
-    pub async fn record_simd_operation(
-        &self,
-        latency: Duration,
+            start_time: Instant::now(Duration,
         chunks_processed: u64,
         vectorized: bool,
     ) {
@@ -208,7 +228,8 @@ impl AdvancedPerformanceMonitor {
             latency_ns, chunks_processed
         );
 
-    pub async fn record_zero_cost_operation(&self, overhead: Duration, inlined: bool) {
+/// Record Zero Cost Operation operation.
+    pub fn record_zero_cost_operation(Duration, inlined: bool) {
         let overhead_ns = overhead.as_nanos() as u64;
         self.zero_cost_counters
             .zero_cost_ops
@@ -221,7 +242,8 @@ impl AdvancedPerformanceMonitor {
             "📊 Zero-cost operation: {}ns overhead, inlined: {}",
             overhead_ns, inlined
 
-    pub async fn record_allocation_avoided(&self, bytes_saved: u64, pool_hit: bool) {
+/// Record Allocation Avoided operation.
+    pub fn record_allocation_avoided(u64, pool_hit: bool) {
         self.memory_counters
             .avoided_allocations
             .saved_bytes
@@ -234,8 +256,9 @@ impl AdvancedPerformanceMonitor {
             "📊 Allocation avoided: {} bytes, pool hit: {}",
             bytes_saved, pool_hit
 
-    pub async fn record_hot_path_timing(&self, operation: HotPathOperation, latency: Duration) {
-        let mut timers = self.hot_path_timers.write().await;
+/// Record Hot Path Timing operation.
+    pub fn record_hot_path_timing(HotPathOperation, latency: Duration) {
+        let mut timers = self.hot_path_timers.write();.await;
         match operation {
             HotPathOperation::Encryption => timers.encryption_samples.push(latency),
             HotPathOperation::Decryption => timers.decryption_samples.push(latency),
@@ -256,29 +279,35 @@ impl AdvancedPerformanceMonitor {
                 let len = timers.key_derivation_samples.len();
                     timers.key_derivation_samples.drain(0..len - MAX_SAMPLES);
             HotPathOperation::HsmOperation => {
-                let len = timers.hsm_samples.len();
-                    timers.hsm_samples.drain(0..len - MAX_SAMPLES);
-            "📊 Hot path timing: {:?} = {}μs",
+                let len = timers.hsm_samples.len({:?} = {}μs",
             operation,
             latency.as_micros()
 
-    pub async fn record_hot_cache_event(&self, hit: bool) {
+/// Record Hot Cache Event operation.
+    pub fn record_hot_cache_event(&self, hit: bool) {
         timers.cache_total += 1;
         if hit {
             timers.cache_hits += 1;
 
-    pub async fn get_metrics(&self) -> Result<AdvancedPerformanceMetrics, BearDogError> {
-        self.update_metrics().await?;
-        let metrics = self.metrics.read().await.clone();
+/// Get Metrics operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets metrics
+    /// Gets metrics
+    pub fn get_metrics(&self) -> Result<AdvancedPerformanceMetrics, BearDogError> {
+        self.update_metrics()?;
+        let metrics = self.metrics.read().clone();
         Ok(metrics)
 
-    async fn update_metrics(&self) -> Result<(), BearDogError> {
-        let mut metrics = self.metrics.write().await;
+    /// Updates metrics
+    fn update_metrics(&self) -> Result<(), BearDogError> {
+        let mut metrics = self.metrics.write();.await;
 
-        self.update_simd_metrics(&mut metrics.simd_metrics).await;
+        self.update_simd_metrics(&mut metrics.simd_metrics);
 
         self.update_zero_cost_metrics(&mut metrics.zero_cost_metrics)
-            .await;
+            ;
 
         self.update_memory_metrics(&mut metrics.memory_metrics)
 
@@ -287,7 +316,8 @@ impl AdvancedPerformanceMonitor {
         self.update_system_metrics(&mut metrics.system_metrics)
         Ok(())
 
-    async fn update_simd_metrics(&self, metrics: &mut SimdOperationMetrics) {
+    /// Updates simd_metrics
+    fn update_simd_metrics(&self, metrics: &mut SimdOperationMetrics) {
         let operations = self.simd_counters.operations.load(Ordering::Relaxed);
         let total_latency = self.simd_counters.total_latency_ns.load(Ordering::Relaxed);
         let vectorized = self
@@ -306,7 +336,8 @@ impl AdvancedPerformanceMonitor {
             vectorized as f64 / operations as f64
         metrics.chunk_efficiency_percent = metrics.vectorization_ratio * 100.0;
 
-    async fn update_zero_cost_metrics(&self, metrics: &mut ZeroCostMetrics) {
+    /// Updates zero_cost_metrics
+    fn update_zero_cost_metrics(&self, metrics: &mut ZeroCostMetrics) {
         let zero_cost_ops = self
             .zero_cost_counters
         let overhead = self.zero_cost_counters.overhead_ns.load(Ordering::Relaxed);
@@ -320,7 +351,8 @@ impl AdvancedPerformanceMonitor {
             inlined as f64 / total_calls as f64
         metrics.optimization_success_rate = metrics.inlining_effectiveness * 100.0;
 
-    async fn update_memory_metrics(&self, metrics: &mut MemoryAllocationMetrics) {
+    /// Updates memory_metrics
+    fn update_memory_metrics(&self, metrics: &mut MemoryAllocationMetrics) {
         let avoided = self
             .memory_counters
         let saved = self.memory_counters.saved_bytes.load(Ordering::Relaxed);
@@ -336,8 +368,9 @@ impl AdvancedPerformanceMonitor {
         metrics.avg_allocation_size = if avoided > 0 {
             (saved / avoided) as usize
 
-    async fn update_hot_path_metrics(&self, metrics: &mut HotPathMetrics) {
-        let timers = self.hot_path_timers.read().await;
+    /// Updates hot_path_metrics
+    fn update_hot_path_metrics(&self, metrics: &mut HotPathMetrics) {
+        let timers = self.hot_path_timers.read();.await;
         metrics.encryption_latency_us = Self::calculate_avg_latency(&timers.encryption_samples);
         metrics.decryption_latency_us = Self::calculate_avg_latency(&timers.decryption_samples);
         metrics.key_derivation_latency_us =
@@ -346,7 +379,8 @@ impl AdvancedPerformanceMonitor {
         metrics.hot_cache_hit_rate = if timers.cache_total > 0 {
             timers.cache_hits as f64 / timers.cache_total as f64
 
-    async fn update_system_metrics(&self, metrics: &mut SystemPerformanceMetrics) {
+    /// Updates system_metrics
+    fn update_system_metrics(&self, metrics: &mut SystemPerformanceMetrics) {
 
         metrics.cpu_utilization = Self::get_cpu_usage();
         metrics.memory_utilization = Self::get_memory_usage();
@@ -354,39 +388,11 @@ impl AdvancedPerformanceMonitor {
         metrics.network_throughput = Self::get_network_throughput();
         metrics.load_average = Self::get_load_average();
 
+
     fn calculate_avg_latency(samples: &[Duration]) -> u64 {
         if samples.is_empty() {
             return 0;
-        let total_us: u64 = samples.iter().map(|d| d.as_micros() as u64).sum();
-        total_us / samples.len() as u64
-
-    const fn get_cpu_usage() -> f64 {
-
-        42.5
-
-    const fn get_memory_usage() -> f64 {
-
-        67.8
-
-    const fn get_io_rate() -> f64 {
-
-        1250.0
-
-    const fn get_network_throughput() -> f64 {
-
-        1_048_576.0 // 1 MB/s
-
-    const fn get_load_average() -> f64 {
-
-        1.25
-
-    pub async fn generate_performance_report(&self) -> Result<String, BearDogError> {
-        let metrics = self.get_metrics().await?;
-        let report = format!(
-            r#"
-🚀 **BEARDOG ADVANCED PERFORMANCE REPORT**
-📊 **SIMD OPERATIONS**
-- Total Operations: {}
+        let total_us: u64 = samples.iter({}
 - Average Latency: {} ns
 - Throughput: {:.2} ops/sec
 - Vectorization Ratio: {:.1}%
@@ -444,9 +450,14 @@ impl AdvancedPerformanceMonitor {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HotPathOperation {
+    /// Represents encryption variant
     Encryption,
+    /// Represents decryption variant
     Decryption,
+    /// Represents key derivation variant
     KeyDerivation,
+    HsmOperation,}
+    HsmOperation,}
     HsmOperation,}
 
 impl Default for AdvancedPerformanceMonitor {}

@@ -1,294 +1,116 @@
-
+//! Software HSM cryptography implementation
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::crypto::KeyType;
-use beardog_types::canonical::hsm::keys::{KeyHealth, KeyMaterial, KeyMetadata, KeyUsagePolicy};
-use beardog_types::canonical::HsmKey;
-
-use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
-use rand::rngs::OsRng;
+use rand::RngCore;
 use sha2::{Digest, Sha256};
 
-use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
-use std::collections::HashMap;
-use uuid::Uuid;
-use super::config::SoftwareHsmConfig;
+/// Software cryptography provider
+#[derive(Debug, Clone, Default)]
+pub struct SoftwareCryptoProvider;
 
-#[derive(Debug)]
-pub struct CryptoEngine {
-        config: SoftwareHsmConfig,
-}
-impl CryptoEngine {
-
-    pub fn new(config: &SoftwareHsmConfig) -> Self {
-        Self {
-            config: config.clone(),
-        }
+impl SoftwareCryptoProvider {
+    /// Create new software crypto provider
+    pub fn new() -> Self {
+        Self
     }
 
-    pub async fn generate_key(&self, key_type: KeyType, entropy: &[u8]) -> Result<HsmKey, BearDogError> {
-        match key_type {
-            KeyType::Ed25519 => self.generate_ed25519_key(entropy).await,
-            KeyType::Aes256 => self.generate_aes256_key(entropy).await,
-            _ => Err(BearDogError::NotSupported {
-                feature: format!("Key type not supported: {key_type:?}"),
-            }),
+    /// Generate cryptographically secure random bytes
+    ///
+    /// Uses the system's cryptographically secure random number generator.
+    ///
+    /// # Errors
+    /// Returns an error if the RNG fails to generate random bytes
+    pub fn generate_random(&self, len: usize) -> Result<Vec<u8>, BearDogError> {
+        let mut bytes = vec![0u8; len];
+        rand::thread_rng()
+            .try_fill_bytes(&mut bytes)
+            .map_err(|e| BearDogError::security(format!("Failed to generate random bytes: {e}"), e.into()))?;
+        Ok(bytes)
+    }
 
-    async fn generate_ed25519_key(&self, _entropy: &[u8]) -> Result<HsmKey, BearDogError> {
-        let mut csprng = OsRng;
-        let signing_key = SigningKey::generate(&mut csprng);
-        let verifying_key = signing_key.verifying_key();
-        let key_id = Uuid::new_v4().to_string();
-        let public_key = verifying_key.to_bytes().to_vec();
-        Ok(HsmKey {
-            id: key_id.clone(),
-            key_type: KeyType::Ed25519,
-            material: KeyMaterial::PublicKey(public_key.clone()),
-            metadata: KeyMetadata {
-                created_by: "software_hsm".to_string(),
-                purpose: "cryptographic_operations".to_string(),
-                usage_policy: KeyUsagePolicy::default(),
-                tags: vec![],
-                compliance_info: None,
-                backup_info: None,
-                compliance_tags: vec![],
-                health: KeyHealth::Healthy,
-                is_hardware_backed: false,
-                user_presence_required: false,
-                algorithm: "Ed25519".to_string(),
-                attestation_available: false,
-                created_at: chrono::Utc::now(),
-                last_accessed: None,
-                access_count: 0,
-                hsm_type: "software".to_string(),
-                hsm_tier: "software".to_string(),
-                key_type: "Ed25519".to_string(),
-                key_id: key_id.clone(),
-                health_status: "healthy".to_string(),
-                performance_metrics: None,
-                provider_attributes: HashMap::with_capacity(16),
-                derivation_path: None,
-                custom: HashMap::with_capacity(16),
-
-                attributes: HashMap::with_capacity(16),
-                attributes: { let mut attrs = HashMap::with_capacity(16); attrs.insert("key_name".to_string(), format!("ed25519_key_{key_id}".to_string()); attrs }),
-                key_size: Some(256),
-                expires_at: None,
-                creation_time: Some(chrono::Utc::now()),
-                last_used: None,
-                usage_count: None,
-                is_exportable: Some(false),
-
-            },
-            health: KeyHealth::Healthy,
-            created_at: chrono::Utc::now(),
-            expires_at: None,
-            key_name: format!("ed25519_key_{key_id}"),
-            last_used: None,
-            usage_count: 0,
-            key_material: KeyMaterial::PublicKey(public_key.clone()),
-            hsm_type: Some("software".to_string()),
-            hsm_tier: Some("software".to_string()),
-            health_status: Some(KeyHealth::Healthy),
-            attestation: None,
-            backup_info: None,
-            compliance_info: None,
-            provider_attributes: HashMap::with_capacity(16),
-            derivation_path: None,
-        })
-
-    async fn generate_aes256_key(&self, _entropy: &[u8]) -> Result<HsmKey, BearDogError> {
-        let mut key_bytes = [0u8; 32];
-        rand::RngCore::fill_bytes(&mut OsRng, &mut key_bytes);
-            key_type: KeyType::Aes256,
-            material: KeyMaterial::PrivateKey(key_bytes.to_vec()),
-                algorithm: "AES256".to_string(),
-                key_type: "AES256".to_string(),
-                attributes: { let mut attrs = HashMap::with_capacity(16); attrs.insert("key_name".to_string(), format!("aes256_key_{key_id}".to_string()); attrs }),
-            key_name: format!("aes256_key_{key_id}"),
-            key_material: KeyMaterial::PrivateKey(key_bytes.to_vec()),
-
-    pub async fn import_key(
-        &self,
-        key_material: Vec<u8>,
-        key_type: KeyType,
-    ) -> Result<HsmKey, BearDogError> {
-            KeyType::Ed25519 => self.import_ed25519_key(key_material).await,
-            KeyType::Aes256 => self.import_aes256_key(key_material).await,
-                feature: format!("Key type not supported for import: {key_type:?}"),
-
-    async fn import_ed25519_key(&self, key_material: Vec<u8>) -> Result<HsmKey, BearDogError> {
-        if key_material.len() != 64 {
-            return Err(BearDogError::Validation("Ed25519 key material must be 64 bytes (32 secret + 32 public)"
-                    .to_string()));
-        let secret_bytes: [u8; 32] =
-            key_material[..32]
-                .try_into()
-                .map_err(|_| BearDogError::Validation("Invalid secret key bytes".to_string()))?;
-        let public_bytes: [u8; 32] =
-            key_material[32..]
-                .map_err(|_| BearDogError::Validation("Invalid public key bytes".to_string()))?;
-
-        let secret_key = match SigningKey::try_from(&secret_bytes[..]) {
-            Ok(key) => key,
-            Err(e) => {
-                return Err(BearDogError::Crypto(format!("Invalid secret key: {e}"),
-                })
-            }
-        };
-        let public_key =
-            VerifyingKey::from_bytes(&public_bytes).map_err(|e| BearDogError::Validation(format!("Invalid Ed25519 public key: {e}"),
-            })?;
-
-        let derived_public = secret_key.verifying_key();
-        if derived_public.to_bytes() != public_key.to_bytes() {
-            return Err(BearDogError::Validation("Public key does not match secret key".to_string()));
-
-        let test_message = b"test";
-        let signature = secret_key.sign(test_message);
-        if public_key.verify(test_message, &signature).is_err() {
-            return Err(BearDogError::Validation("Invalid key pair - signature verification failed".to_string()));
-            material: KeyMaterial::PublicKey(public_bytes.to_vec()),
-                purpose: "imported_key".to_string(),
-                attributes: { let mut attrs = HashMap::with_capacity(16); attrs.insert("key_name".to_string(), format!("imported_ed25519_key_{key_id}".to_string()); attrs }),
-            key_name: format!("imported_ed25519_key_{key_id}"),
-            key_material: KeyMaterial::PublicKey(public_bytes.to_vec()),
-
-    async fn import_aes256_key(&self, key_material: Vec<u8>) -> Result<HsmKey, BearDogError> {
-        if key_material.len() != 32 {
-            return Err(BearDogError::Validation("AES-256 key material must be 32 bytes".to_string()));
-            material: KeyMaterial::PrivateKey(key_material.clone()),
-            key_name: format!("imported_aes256_key_{key_id}"),
-            key_material: KeyMaterial::PrivateKey(key_material.clone()),
-
-    pub async fn export_key_material(&self, key: &HsmKey) -> Result<Vec<u8>, BearDogError>> {
-        match &key.material {
-            KeyMaterial::PublicKey(material) => {
-
-                Ok(material.clone())
-            KeyMaterial::PrivateKey(material) => Ok(material.clone()),
-                feature: format!(
-                    "Key export not supported for material type: {:?}",
-                    key.material
-                ),
-
-    pub async fn sign_data(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-        if key_material.len() == 32 {
-
-            return Err(BearDogError::Validation("Cannot sign with public key only - secret key required".to_string()));
-        if key_material.len() == 64 {
-
-            let secret_bytes: [u8; 32] =
-                key_material[..32]
-                    .try_into()
-                    .map_err(|_| BearDogError::Validation("Invalid secret key bytes".to_string()))?;
-            let public_bytes: [u8; 32] =
-                key_material[32..]
-                    .map_err(|_| BearDogError::Validation("Invalid public key bytes".to_string()))?;
-            let secret_key = match SigningKey::try_from(&secret_bytes[..]) {
-                Ok(key) => key,
-                Err(e) => {
-                    return Err(BearDogError::Crypto(format!("Invalid secret key: {e}"),
-                    })
-                }
-            };
-            let public_key =
-                VerifyingKey::from_bytes(&public_bytes).map_err(|e| BearDogError::Crypto(format!("Invalid public key: {e}"),
-                })?;
-
-            let derived_public = secret_key.verifying_key();
-            if derived_public.to_bytes() != public_key.to_bytes() {
-                return Err(BearDogError::Validation("Public key does not match secret key".to_string()));
-            let signature = secret_key.sign(data);
-            return Ok(signature.to_bytes().to_vec());
-        Err(BearDogError::Validation("Invalid key material length for signing".to_string()))
-
-    pub async fn verify_signature(
-        public_key: &[u8],
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        if public_key.len() != 32 {
-            return Err(BearDogError::Validation("Ed25519 public key must be 32 bytes".to_string()));
-        if signature.len() != 64 {
-            return Err(BearDogError::Validation("Ed25519 signature must be 64 bytes".to_string()));
-        let public_key_bytes: [u8; 32] =
-            public_key
-        let signature_bytes: [u8; 64] =
-            signature.try_into().map_err(|_| BearDogError::Validation("Invalid signature bytes".to_string()))?;
-            VerifyingKey::from_bytes(&public_key_bytes).map_err(|e| BearDogError::Crypto(format!("Invalid public key: {e}"),
-        let signature = match Signature::try_from(&signature_bytes[..]) {
-            Ok(sig) => sig,
-                return Err(BearDogError::Crypto(format!("Invalid signature: {e}"),
-        Ok(public_key.verify(data, &signature).is_ok())
-
-    pub async fn encrypt_data(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-            return Err(BearDogError::Validation("AES-256 key must be 32 bytes".to_string()));
-        let cipher = Aes256Gcm::new(aes_gcm::Key::<Aes256Gcm>::from_slice(key_material));
-
-        let mut nonce_bytes = [0u8; 12];
-        rand::RngCore::fill_bytes(&mut OsRng, &mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-        let ciphertext = cipher
-            .encrypt(nonce, data)
-            .map_err(|e| BearDogError::Crypto(format!("Encryption failed: {e}"),
-
-        let mut result = nonce_bytes.to_vec();
-        result.extend_from_slice(&ciphertext);
-        Ok(result)
-
-    pub async fn decrypt_data(
-        key_material: &[u8],
-        encrypted_data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError>> {
-        if encrypted_data.len() < 12 {
-            return Err(BearDogError::Validation("Encrypted data too short - missing nonce".to_string()));
-
-        let nonce = Nonce::from_slice(&encrypted_data[..12]);
-        let ciphertext = &encrypted_data[12..];
-        let plaintext = cipher
-            .decrypt(nonce, ciphertext)
-            .map_err(|e| BearDogError::Crypto(format!("Decryption failed: {e}"),
-        Ok(plaintext)
-
-    pub async fn health_check(&self) -> Result<bool, BearDogError> {
-
-        let test_data = b"health check test";
-
+    /// Hash data using SHA-256
+    ///
+    /// Computes the SHA-256 hash of the input data.
+    ///
+    /// # Errors
+    /// This function is infallible but returns Result for API consistency
+    pub fn hash_sha256(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         let mut hasher = Sha256::new();
-        hasher.update(test_data);
-        let _hash = hasher.finalize();
+        hasher.update(data);
+        Ok(hasher.finalize().to_vec())
+    }
+}
 
-        let mut test_bytes = [0u8; 32];
-        rand::RngCore::fill_bytes(&mut OsRng, &mut test_bytes);
-        Ok(true)
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[tokio::test]}
 
-    async fn test_ed25519_key_generation() -> Result<(), BearDogError> {
-        let config = SoftwareHsmConfig::default();
-        let engine = CryptoEngine::new(&config);
-        let entropy = vec![0u8; 32];
-        let key = engine
-            .generate_key(KeyType::Ed25519, &entropy)
-            .await
-            .map_err(|e| {
-                tracing::error!("Operation failed: {e:?}");
-                beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-        assert_eq!(key.key_type, KeyType::Ed25519);
-        assert_eq!(key.public_key.len(), 32);
-        Ok(())
-    async fn test_aes256_key_generation() -> Result<(), BearDogError> {
-            .generate_key(KeyType::Aes256, &entropy)
-        assert_eq!(key.key_type, KeyType::Aes256);}
+    #[test]
+    fn test_crypto_provider_creation() {
+        let provider = SoftwareCryptoProvider::new();
+        assert!(provider.generate_random(32).is_ok());
+    }
 
-    async fn test_aes256_encryption_decryption() -> Result<(), BearDogError> {
-        let key_material = vec![1u8; 32];
-        let test_data = b"test encryption data";
-        let encrypted = engine
-            .encrypt_data(&key_material, test_data)
-        let decrypted = engine
-            .decrypt_data(&key_material, &encrypted)
-        assert_eq!(test_data, decrypted.as_slice());
+    #[test]
+    fn test_generate_random() {
+        let provider = SoftwareCryptoProvider::new();
+        
+        // Generate random bytes
+        let random1 = provider.generate_random(32)?;
+        let random2 = provider.generate_random(32)?;
+        
+        // Should be correct length
+        assert_eq!(random1.len(), 32);
+        assert_eq!(random2.len(), 32);
+        
+        // Should be different (extremely high probability)
+        assert_ne!(random1, random2);
+        
+        // Should not be all zeros
+        assert_ne!(random1, vec![0u8; 32]);
+    }
+
+    #[test]
+    fn test_hash_sha256() {
+        let provider = SoftwareCryptoProvider::new();
+        
+        // Test known vector
+        let data = b"hello world";
+        let hash = provider.hash_sha256(data)?;
+        
+        // SHA-256 should produce 32 bytes
+        assert_eq!(hash.len(), 32);
+        
+        // Same input should produce same hash
+        let hash2 = provider.hash_sha256(data)?;
+        assert_eq!(hash, hash2);
+        
+        // Different input should produce different hash
+        let different_hash = provider.hash_sha256(b"goodbye world")?;
+        assert_ne!(hash, different_hash);
+    }
+    
+    #[test]
+    fn test_empty_random_generation() {
+        let provider = SoftwareCryptoProvider::new();
+        let empty = provider.generate_random(0)?;
+        assert_eq!(empty.len(), 0);
+    }
+    
+    #[test]
+    fn test_empty_data_hash() {
+        let provider = SoftwareCryptoProvider::new();
+        let hash = provider.hash_sha256(b"")?;
+        assert_eq!(hash.len(), 32);
+        
+        // SHA-256 of empty string is a known value
+        // e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        let expected = vec![
+            0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14,
+            0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
+            0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
+            0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
+        ];
+        assert_eq!(hash, expected);
+    }
+}

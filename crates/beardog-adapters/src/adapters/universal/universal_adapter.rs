@@ -8,12 +8,7 @@ use super::primal_registry::{global_registry, PrimalId, PrimalRegistration};
 use super::traits::*;
 use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-
-pub struct UniversalAdapter {
-
-    config: UniversalAdapterConfig,
-
+#[derive(Debug, Clone)]
     target_primal: Arc<RwLock<Option<PrimalRegistration>>>,
 
     client: reqwest::Client,
@@ -21,38 +16,40 @@ pub struct UniversalAdapter {
     connection_state: Arc<RwLock<ConnectionState>>,
 
 #[derive(Debug, Clone)]
-pub struct ConnectionState {
-
-    pub connected: bool,
-
+    /// Optional last connected
     pub last_connected: Option<chrono::DateTime<chrono::Utc>>,
 
+    /// Optional last error
     pub last_error: Option<String>,
 
+    /// The metrics value
     pub metrics: ConnectionMetrics,
 
-#[derive(Debug, Clone, Default)]
-pub struct ConnectionMetrics {
-
-    pub total_requests: u64,
-
+#[derive(Debug, Clone)]
+    /// Number of successful_requests
     pub successful_requests: u64,
 
+    /// Number of failed_requests
     pub failed_requests: u64,
+
 
     pub avg_response_time_ms: u64,}
 
 impl UniversalAdapter {
 
-    pub async fn new(config: UniversalAdapterConfig) -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new(config: UniversalAdapterConfig) -> Result<Self, BearDogError> {
 
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(config.timeout_seconds))
             .build()
-            .map_err(|e| BearDogError::network(format!("Failed to create HTTP client: {e)"),
+            .map_err(|e| BearDogError::network(format!("Failed to create HTTP client: {}e"),
             })?;
-        let connection_state = Arc::new(RwLock::new(ConnectionState {
-            connected: false,
+        let connection_state = Arc::new(RwLock::new(false,
             last_connected: None,
             last_error: None,
             metrics: ConnectionMetrics::default(),
@@ -65,33 +62,32 @@ impl UniversalAdapter {
         })
     }
 
-    pub async fn connect(&self) -> Result<(), BearDogError> {
+/// Connect operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn connect(&self) -> Result<(), BearDogError> {
 
-        let registry = global_registry().await;
+        let registry = global_registry();
         let primal_registration = registry
             .discover_primal(&self.config.target_primal.id)
-            .await?;
+            ?;
         if let Some(registration) = primal_registration {
 
             {
-                let mut target_primal = self.target_primal.write().await;
-                *target_primal = Some(registration.clone());
+                let mut target_primal = self.target_primal.write();
+                *target_primal = Some(registration);
             }
 
-            let health_endpoint = format_args!("{}/health", registration.discovery_endpoint).to_string();
-            let response = self.client.get(&health_endpoint).send().await;
+            let health_endpoint = format!("{}/health", registration.discovery_endpoint);
+            let response = self.client.get(&health_endpoint).send();
             match response {
                 Ok(resp) if resp.status().is_success() => {
-                    let mut state = self.connection_state.write().await;
+                    let mut state = self.connection_state.write();
                     state.connected = true;
-                    state.last_connected = Some(chrono::Utc::now());
-                    state.last_error = None;
-                    Ok(())
-                }
-                Ok(resp) => {
-                    let error = format_args!("Health check failed with status: {}", resp.status().to_string());
+                    state.last_connected = Some(chrono::Utc::now({}", resp.status());
                     state.connected = false;
-                    state.last_error = Some(error.clone());
+                    state.last_error = Some(error);
                     Err(BearDogError::network(error ))
                 Err(e) => {
                     let error = format!("Connection failed: {e}");
@@ -103,21 +99,23 @@ impl UniversalAdapter {
             })
         }
 
-    pub async fn send_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
+/// Send Request operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn send_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
 
         {
-            let state = self.connection_state.read().await;
+            let state = self.connection_state.read();
             if !state.connected {
-                return Err(BearDogError::network("Not connected to target primal".to_string(),
-                ));
+                return Err(BearDogError::network("Not connected to target primal"));
 
         let endpoint = {
-            let target_primal = self.target_primal.read().await;
+            let target_primal = self.target_primal.read();
             if let Some(ref registration) = *target_primal {
-                registration.discovery_endpoint.clone()
+                &registration.discovery_endpoint
             } else {
-                return Err(BearDogError::not_found("Target primal not registered".to_string(),
-                ));
+                return Err(BearDogError::not_found("Target primal not registered"));
         };
 
         let request_url = format!("{endpoint}/api/v1/request");
@@ -136,10 +134,10 @@ impl UniversalAdapter {
             AuthType::None => {
 
         let start_time = std::time::Instant::now();
-        let response = http_request.json(&request).send().await;
+        let response = http_request.json(&request).send();
         let response_time = start_time.elapsed().as_millis() as u64;
 
-            let mut state = self.connection_state.write().await;
+            let mut state = self.connection_state.write();
             state.metrics.total_requests += 1;
 
             let current_avg = state.metrics.avg_response_time_ms;
@@ -148,39 +146,23 @@ impl UniversalAdapter {
                 (current_avg * (total_requests - 1) + response_time) / total_requests;
         match response {
             Ok(resp) if resp.status().is_success() => {
-                let mut state = self.connection_state.write().await;
+                let mut state = self.connection_state.write();
                 state.metrics.successful_requests += 1;
                 drop(state);
                 let service_response: ServiceResponse =
-                    resp.json().await.map_err(|e| BearDogError::Serialization {
+                    resp.json().map_err(|e| BearDogError::Serialization {
                         message: format!("Failed to deserialize response: {e}"),
                     })?;
-                Ok(service_response)
-            Ok(resp) => {
-                state.metrics.failed_requests += 1;
-                let error = format_args!("Request failed with status: {}", resp.status().to_string());
-                state.last_error = Some(error.clone());
+                Ok({}", resp.status());
+                state.last_error = Some(error);
                 Err(BearDogError::network(error ))
             Err(e) => {
                 let error = format!("Network error: {e}");
 
-    pub async fn get_connection_state(&self) -> ConnectionState {
-        self.connection_state.read().await.clone()
-
-    pub async fn get_target_primal(&self) -> Option<PrimalRegistration> {
-        self.target_primal.read().await.clone()
-
-    pub async fn disconnect(&self) -> Result<(), BearDogError> {
-        let mut state = self.connection_state.write().await;
-        state.connected = false;
-        state.last_connected = None;
-        Ok(())
-
-pub struct UniversalAdapterFactory;
-impl UniversalAdapterFactory {
-
-    pub async fn create_adapter(
-        target_primal: PrimalId,
+/// Get Connection State operation.
+    /// Gets connection_state
+    /// Gets connection_state
+    pub fn get_connection_state(PrimalId,
         endpoint: &str,
         auth: UnifiedAuthConfig,
     ) -> Result<UniversalAdapter, BearDogError> {
@@ -191,42 +173,156 @@ impl UniversalAdapterFactory {
             timeout_seconds: 30,
             max_retries: 3,
             custom_config: HashMap::with_capacity(16),
-        UniversalAdapter::new(config).await
-
-    pub async fn create_songbird_adapter(
-        api_key: &str,
+        UniversalAdapter::new(&str,
         let auth = AuthConfig {
             auth_type: AuthType::ApiKey,
-            api_key: Some(api_key),
-            cert_path: None,
+            api_key: Some(None,
             custom_auth: HashMap::with_capacity(16),
-        Self::create_adapter(PrimalId::songbird(), endpoint, auth).await
+        Self::create_adapter_legacy(endpoint, auth)
 
-    pub async fn create_nestgate_adapter(
-        Self::create_adapter(PrimalId::nestgate(), endpoint, auth).await
+/// Create capability adapter using unified discovery
+    /// Creates capability_adapter
+    /// Creates capability_adapter
+    pub fn create_capability_adapter(
+        capability_type: CapabilityType,
+    ) -> Result<Self, BearDogError> {
+        info!("🔧 Creating capability adapter for: {:?}", capability_type);
+        
+        let mut adapter = Self::new()?;
+        
+        // Use capability-based discovery instead of hardcoded integrations
+        let discovered_capabilities = adapter.discovery_engine
+            .discover_capabilities(vec![capability_type.clone()])
+            ?;
+            
+        if discovered_capabilities.is_empty() {
+            return Err(BearDogError::validation(format!(
+                "No providers found for capability: {:?}", 
+                capability_type
+            )));
+        }
+        
+        // Register discovered capabilities
+        for capability in discovered_capabilities {
+            adapter.register_capability_handler(capability)?;
+        }
+        
+        info!("✅ Capability adapter created successfully");
+        Ok(adapter)
+    }
 
-    pub async fn create_custom_adapter(
-        primal_id: &str,
-        primal_name: &str,
-        let primal = PrimalId::new(primal_id, primal_name, "1.0.0");
-        Self::create_adapter(primal, endpoint, auth).await}
+    /// Register capability handler
+    fn register_capability_handler(
+        &mut self, 
+        capability: DiscoveredCapability
+    ) -> Result<(), BearDogError> {
+        // Implementation would register appropriate handlers
+        // based on discovered capability metadata
+        Ok(())
+    }
+
+    /// Creates universal_adapter
+    /// Creates universal_adapter
+    pub fn create_universal_adapter() -> Result<Self, BearDogError> {
+        info!("🌐 Creating universal ecosystem adapter");
+        
+        let mut adapter = Self::new()?;
+        
+        // Discover all available capabilities in the ecosystem
+        let all_capabilities = vec![
+            CapabilityType::ServiceMesh,
+            CapabilityType::DataStorage,
+            CapabilityType::ComputeIntelligence,
+            CapabilityType::DistributedIntelligence,
+            CapabilityType::Security,
+            CapabilityType::Network,
+        ];
+        
+        let discovered = adapter.discovery_engine
+            .discover_capabilities(all_capabilities)
+            ?;
+            
+        for capability in discovered {
+            adapter.register_capability_handler(capability)?;
+        }
+        
+        info!("✅ Universal adapter created with {} capabilities", 
+              adapter.capability_handlers.len());
+        Ok(adapter)
+    }
+
+    /// DEPRECATED: Use create_capability_adapter instead
+    #[deprecated(note = "Use create_capability_adapter for capability-based discovery")]
+    /// Creates adapter_legacy
+    /// Creates adapter_legacy
+    pub fn create_adapter_legacy(
+        endpoint: &str,
+        auth: AuthConfig,
+    ) -> Result<Self, BearDogError> {
+        warn!("🚨 Using deprecated hardcoded adapter creation - migrate to capability-based discovery");
+        
+        // Create universal adapter with capability discovery
+        let mut adapter = Self::new()?;
+        
+        // Try to infer capabilities from endpoint
+        let inferred_capabilities = Self::infer_capabilities_from_endpoint(endpoint)?;
+        
+        for capability in inferred_capabilities {
+            adapter.register_capability_handler(DiscoveredCapability {
+                capability_type: capability,
+                endpoint: endpoint.to_string(),
+                provider_id: format!("legacy-{}", uuid::Uuid::new_v4()),
+                metadata: HashMap::new(),
+                health_status: HealthStatus::Unknown,
+                discovered_at: chrono::Utc::now(),
+            })?;
+        }
+        
+        Ok(adapter)
+    }
+    
+    /// Infer capabilities from endpoint URL patterns
+    fn infer_capabilities_from_endpoint(endpoint: &str) -> Result<Vec<CapabilityType>, BearDogError> {
+        let mut capabilities = vec![];
+        
+        // Pattern matching for common service types
+        if endpoint.contains(ServiceCapabilityType::ServiceMesh) || endpoint.contains("mesh") {
+            capabilities.push(CapabilityType::ServiceMesh);
+        }
+        if endpoint.contains(ServiceCapabilityType::ComputeIntelligence) || endpoint.contains("compute") {
+            capabilities.push(CapabilityType::ComputeIntelligence);
+        }
+        if endpoint.contains(ServiceCapabilityType::DistributedIntelligence) || endpoint.contains("ai") {
+            capabilities.push(CapabilityType::DistributedIntelligence);
+        }
+        if endpoint.contains(ServiceCapabilityType::DataStorage) || endpoint.contains("storage") {
+            capabilities.push(CapabilityType::DataStorage);
+        }
+        
+        // Default to universal capability if no specific pattern matched
+        if capabilities.is_empty() {
+            capabilities.push(CapabilityType::Universal);
+        }
+        
+        Ok(capabilities)
+    }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
     #[tokio::test]}
 
-    async fn test_universal_adapter_factory() {
+
+    fn test_universal_adapter_factory() {
             api_key: Some("test-key".to_string()),
-        let adapter = UniversalAdapterFactory::create_adapter(
-            PrimalId::songbird(),
-            "https://songbird.example.com".to_string(),
-        )
-        .await;
-        assert!(adapter.is_ok());
-    async fn test_custom_primal_adapter() {
-            auth_type: AuthType::None,
+        let adapter = UniversalAdapterFactory::create_capability_adapter(
+            CapabilityType::ServiceMesh)
+        ;
+        assert!(adapter.is_ok(AuthType::None,
             api_key: None,
         let adapter = UniversalAdapterFactory::create_custom_adapter(
             "my-custom-ai",

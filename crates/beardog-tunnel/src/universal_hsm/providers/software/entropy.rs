@@ -1,251 +1,161 @@
-
+//! Software HSM entropy collection
 
 use beardog_errors::BearDogError;
 use rand::RngCore;
-use sha2::{Digest, Sha256};
-use std::time::{SystemTime, UNIX_EPOCH};
-use crate::universal_hsm::traits::{
-    EphemeralSeed, HumanEntropyCapabilities, HumanEntropyData, HumanEntropyMethod,
-};
-use super::config::SoftwareHsmConfig;
 
-#[derive(Debug)]
-pub struct EntropyCollector {
-    config: SoftwareHsmConfig,
-    entropy_pool: Vec<u8>,
-}
-impl EntropyCollector {
+/// Software entropy collector
+///
+/// Collects entropy from the system's cryptographically secure random number generator.
+/// This is suitable for software-based HSM implementations where hardware entropy
+/// sources are not available.
+#[derive(Debug, Clone, Default)]
+pub struct SoftwareEntropyCollector;
 
-    pub async fn new(config: &SoftwareHsmConfig) -> Result<Self, BearDogError> {
-        let mut collector = Self {
-            config: config.clone(),
-            entropy_pool: Vec::new(),
-        };
-
-        collector.initialize_entropy_pool().await?;
-        Ok(collector)
+impl SoftwareEntropyCollector {
+    /// Create new entropy collector
+    pub fn new() -> Self {
+        Self
     }
 
-    async fn initialize_entropy_pool(&mut self) -> Result<(), BearDogError> {
-        let mut initial_entropy = vec![0u8; self.config.max_entropy_pool_size];
+    /// Collect cryptographically secure entropy
+    ///
+    /// Uses the system's CSPRNG to collect high-quality entropy.
+    ///
+    /// # Errors
+    /// Returns an error if the system RNG fails
+    pub fn collect_entropy(&self, num_bytes: usize) -> Result<Vec<u8>, BearDogError> {
+        let mut entropy = vec![0u8; num_bytes];
+        rand::thread_rng()
+            .try_fill_bytes(&mut entropy)
+            .map_err(|e| BearDogError::security(
+                format!("Failed to collect entropy: {e}"),
+                e.into()
+            ))?;
+        Ok(entropy)
+    }
 
-        rand::thread_rng().fill_bytes(&mut initial_entropy);
+    /// Get entropy quality score
+    ///
+    /// For software-based entropy using system CSPRNG, the quality is high but not
+    /// as high as hardware-based sources. Returns a score between 0.0 and 1.0.
+    ///
+    /// # Quality Score
+    /// - 0.85: Software CSPRNG (good quality, validated by OS)
+    /// - 0.95+: Would require hardware entropy source
+    pub fn get_quality_score(&self) -> f64 {
+        // System CSPRNG provides good quality entropy, but not as high as
+        // dedicated hardware sources (TRNG)
+        0.85
+    }
 
-        if let Ok(time) = SystemTime::now().duration_since(UNIX_EPOCH) {
-            let time_bytes = time.as_nanos().to_le_bytes();
-            initial_entropy.extend_from_slice(&time_bytes);
+    /// Assess the quality of collected entropy
+    ///
+    /// Performs basic statistical tests on the entropy to ensure it appears random.
+    /// Returns a score between 0.0 (poor) and 1.0 (excellent).
+    pub fn assess_entropy_quality(&self, entropy: &[u8]) -> f64 {
+        if entropy.is_empty() {
+            return 0.0;
         }
 
-        let mut hasher = Sha256::new();
-        hasher.update(&initial_entropy);
-        let hashed = hasher.finalize();
-        self.entropy_pool = hashed.to_vec();
-        Ok(())
+        // Basic entropy assessment using Shannon entropy
+        let mut byte_counts = [0u64; 256];
+        for &byte in entropy {
+            byte_counts[byte as usize] += 1;
+        }
 
-    pub async fn collect_entropy(&self, size: usize) -> Result<Vec<u8>, BearDogError>> {
-        if size == 0 {
-            return Ok(Vec::new());
-        let mut entropy = vec![0u8; size];
-        if self.config.enable_hardware_entropy {
-
-            rand::thread_rng().fill_bytes(&mut entropy);
-        } else {
-
-            let pool_size = self.entropy_pool.len();
-            for (i, byte) in entropy.iter_mut().enumerate() {
-                *byte = self.entropy_pool[i % pool_size];
+        let len = entropy.len() as f64;
+        let mut shannon_entropy = 0.0;
+        
+        for &count in &byte_counts {
+            if count > 0 {
+                let probability = count as f64 / len;
+                shannon_entropy -= probability * probability.log2();
             }
+        }
 
-        let time_entropy = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_nanos() as u64)
-            .unwrap_or(0);
-        hasher.update(&entropy);
-        hasher.update(time_entropy.to_le_bytes());
-        let final_entropy = hasher.finalize();
-        Ok(final_entropy[..size.min(32)].to_vec())
+        // Normalize to 0.0-1.0 range (8 bits = perfect randomness)
+        (shannon_entropy / 8.0).min(1.0)
+    }
+}
 
-    pub async fn collect_human_entropy(
-        &self,
-        method: HumanEntropyMethod,
-    ) -> Result<HumanEntropyData, BearDogError> {
-        if !self.config.enable_human_entropy {
-            return Err(BearDogError::NotSupported {
-                feature: "Human entropy collection is disabled".to_string(),
-            });
-        match method {
-            HumanEntropyMethod::MouseMovement => self.collect_mouse_entropy().await,
-            HumanEntropyMethod::KeystrokeTiming => self.collect_keystroke_entropy().await,
-            HumanEntropyMethod::TouchGestures => self.collect_touch_entropy().await,
-            HumanEntropyMethod::VoicePattern => self.collect_voice_entropy().await,
-            HumanEntropyMethod::BiometricPattern => self.collect_biometric_entropy().await,
-
-    async fn collect_mouse_entropy(&self) -> Result<HumanEntropyData, BearDogError> {
-
-        let mut entropy_data = vec![0u8; 256];
-        rand::thread_rng().fill_bytes(&mut entropy_data);
-        Ok(HumanEntropyData {
-            entropy_bytes: entropy_data.clone(),
-            collection_method: HumanEntropyMethod::MouseMovement,
-            estimated_entropy_bits: (entropy_data.len() * 4) as f64, // Rough estimate
-            collected_at: chrono::Utc::now(),
-            collection_duration_ms: 100,
-            quality_score: 0.7,
-
-            method: HumanEntropyMethod::MouseMovement,
-            data: entropy_data,
-            timestamp: chrono::Utc::now(),
-        })
-
-    async fn collect_keystroke_entropy(&self) -> Result<HumanEntropyData, BearDogError> {
-        let mut entropy_data = vec![0u8; 128];
-            collection_method: HumanEntropyMethod::KeystrokeTiming,
-            estimated_entropy_bits: (entropy_data.len() * 6) as f64,
-            collection_duration_ms: 150,
-            method: HumanEntropyMethod::KeystrokeTiming,
-
-    async fn collect_touch_entropy(&self) -> Result<HumanEntropyData, BearDogError> {
-        let mut entropy_data = vec![0u8; 192];
-            collection_method: HumanEntropyMethod::TouchGestures,
-            estimated_entropy_bits: (entropy_data.len() * 5) as f64,
-            collection_duration_ms: 200,
-            quality_score: 0.9,
-            method: HumanEntropyMethod::TouchGestures,
-
-    async fn collect_voice_entropy(&self) -> Result<HumanEntropyData, BearDogError> {
-        let mut entropy_data = vec![0u8; 512];
-            collection_method: HumanEntropyMethod::VoicePattern,
-            estimated_entropy_bits: (entropy_data.len() * 4) as f64,
-            collection_duration_ms: 300,
-            quality_score: 0.85,
-            method: HumanEntropyMethod::VoicePattern,
-
-    async fn collect_biometric_entropy(&self) -> Result<HumanEntropyData, BearDogError> {
-        let mut entropy_data = vec![0u8; 1024];
-            collection_method: HumanEntropyMethod::BiometricPattern,
-            estimated_entropy_bits: (entropy_data.len() * 7) as f64,
-            collection_duration_ms: 500,
-            quality_score: 0.95,
-            method: HumanEntropyMethod::BiometricPattern,
-
-    pub async fn get_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
-        Ok(HumanEntropyCapabilities {
-            supports_ephemeral_seeds: true,
-            collection_methods: if self.config.enable_human_entropy {
-                vec![
-                    HumanEntropyMethod::MouseMovement,
-                    HumanEntropyMethod::KeystrokeTiming,
-                    HumanEntropyMethod::TouchGestures,
-                    HumanEntropyMethod::VoicePattern,
-                    HumanEntropyMethod::BiometricPattern,
-                ]
-            } else {
-                vec![]
-            },
-            realtime_entropy: true,
-            quality_assessment: true,
-            biometric_integration: false,
-            min_entropy_bits: 128.0,
-            max_collection_rate: 1000.0,
-            supported_methods: if self.config.enable_human_entropy {
-            max_entropy_size: 1024,
-            min_quality_score: 0.5,
-            supports_continuous_collection: true,
-
-    pub async fn create_ephemeral_seed(
-        entropy_data: &HumanEntropyData,
-    ) -> Result<EphemeralSeed, BearDogError> {
-
-        let mut combined_entropy = entropy_data.entropy_bytes.clone();
-        let system_entropy = self.collect_entropy(32).await?;
-        combined_entropy.extend_from_slice(&system_entropy);
-
-        let timestamp_bytes = entropy_data.collected_at.timestamp().to_le_bytes();
-        combined_entropy.extend_from_slice(&timestamp_bytes);
-
-        hasher.update(&combined_entropy);
-        let seed_bytes = hasher.finalize();
-        Ok(EphemeralSeed {
-            seed_bytes: seed_bytes.to_vec(),
-            source_entropy: entropy_data.entropy_bytes.clone(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
-            seed_id: uuid::Uuid::new_v4().to_string(),
-            metadata: std::collections::HashMap::with_capacity(16),
-            quality_score: entropy_data.quality_score,
-            seed: seed_bytes.to_vec(),
-            entropy_sources: vec![format_args!("{:?}", entropy_data.collection_method).to_string()],
-
-    pub async fn health_check(&self) -> Result<bool, BearDogError> {
-
-        let test_entropy = self.collect_entropy(32).await?;
-
-        if test_entropy.len() != 32 {
-            return Ok(false);
-
-        let all_zeros = test_entropy.iter().all(|&b| b == 0);
-        if all_zeros {
-        Ok(true)
-
-    pub async fn add_entropy(&mut self, entropy: &[u8]) -> Result<(), BearDogError> {
-        if entropy.is_empty() {
-            return Ok(());
-
-        hasher.update(&self.entropy_pool);
-        hasher.update(entropy);
-        let new_pool = hasher.finalize();
-        self.entropy_pool = new_pool.to_vec();
-
-    pub fn get_entropy_stats(&self) -> EntropyStats {
-        EntropyStats {
-            pool_size: self.entropy_pool.len(),
-            max_pool_size: self.config.max_entropy_pool_size,
-            hardware_entropy_enabled: self.config.enable_hardware_entropy,
-            human_entropy_enabled: self.config.enable_human_entropy,
-
-#[derive(Debug, Clone)]
-pub struct EntropyStats {
-    pub pool_size: usize,
-    pub max_pool_size: usize,
-    pub hardware_entropy_enabled: bool,
-    pub human_entropy_enabled: bool,
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[tokio::test]}
 
-    async fn test_entropy_collector_creation() -> Result<(), BearDogError> {
-        let config = SoftwareHsmConfig::default();
-        let collector = EntropyCollector::new(&config).await;
-        assert!(collector.is_ok());
-    async fn test_entropy_collection() -> Result<(), BearDogError> {
-        let collector = EntropyCollector::new(&config).await.map_err(|e| {
-            tracing::error!("Operation failed: {e:?}");
-            beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-        })?;
-        let entropy = collector.collect_entropy(32).await.map_err(|e| {
-        assert_eq!(entropy.len(), 32);
+    #[test]
+    fn test_entropy_collector_creation() {
+        let collector = SoftwareEntropyCollector::new();
+        assert!(collector.collect_entropy(32).is_ok());
+        assert!(collector.get_quality_score() > 0.0);
+    }
 
-        let entropy2 = collector.collect_entropy(32).await.map_err(|e| {
-        assert_ne!(entropy, entropy2);
-    async fn test_human_entropy_collection() -> Result<(), BearDogError> {
-        let human_entropy = collector
-            .collect_human_entropy(HumanEntropyMethod::MouseMovement)
-            .await
-            .map_err(|e| {
-                tracing::error!("Operation failed: {e:?}");
-                beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-            })?;
-        assert_eq!(human_entropy.method, HumanEntropyMethod::MouseMovement);
-        assert!(!human_entropy.data.is_empty());
-        assert!(human_entropy.quality_score > 0.0);
-    async fn test_ephemeral_seed_creation() -> Result<(), BearDogError> {
-            .collect_human_entropy(HumanEntropyMethod::TouchGestures)
-        let seed = collector
-            .create_ephemeral_seed(&human_entropy)
-        assert!(!seed.seed.is_empty());
-        assert!(seed.quality_score > 0.0);
-        assert!(!seed.entropy_sources.is_empty());}
+    #[test]
+    fn test_collect_entropy() {
+        let collector = SoftwareEntropyCollector::new();
+        
+        // Collect entropy
+        let entropy1 = collector.collect_entropy(32)?;
+        let entropy2 = collector.collect_entropy(32)?;
+        
+        // Should be correct length
+        assert_eq!(entropy1.len(), 32);
+        assert_eq!(entropy2.len(), 32);
+        
+        // Should be different (extremely high probability)
+        assert_ne!(entropy1, entropy2);
+        
+        // Should not be all zeros
+        assert_ne!(entropy1, vec![0u8; 32]);
+    }
 
-    async fn test_health_check() -> Result<(), BearDogError> {
-        let health = collector.health_check().await.map_err(|e| {
-        assert!(health);
+    #[test]
+    fn test_quality_score() {
+        let collector = SoftwareEntropyCollector::new();
+        let score = collector.get_quality_score();
+        
+        // Should be high quality but not perfect (0.85 for software)
+        assert!(score > 0.8);
+        assert!(score < 0.9);
+        assert_eq!(score, 0.85);
+    }
+
+    #[test]
+    fn test_assess_entropy_quality() {
+        let collector = SoftwareEntropyCollector::new();
+        
+        // Test with actual random data
+        let entropy = collector.collect_entropy(1024)?;
+        let quality = collector.assess_entropy_quality(&entropy);
+        
+        // Should assess as high quality (near 1.0)
+        assert!(quality > 0.95, "Quality score too low: {}", quality);
+        
+        // Test with poor entropy (all zeros)
+        let poor_entropy = vec![0u8; 1024];
+        let poor_quality = collector.assess_entropy_quality(&poor_entropy);
+        
+        // Should assess as very poor quality
+        assert!(poor_quality < 0.1, "Poor entropy scored too high: {}", poor_quality);
+        
+        // Test with empty data
+        let empty_quality = collector.assess_entropy_quality(&[]);
+        assert_eq!(empty_quality, 0.0);
+    }
+
+    #[test]
+    fn test_entropy_different_sizes() {
+        let collector = SoftwareEntropyCollector::new();
+        
+        // Test various sizes
+        for size in [0, 1, 16, 32, 64, 128, 256, 1024] {
+            let entropy = collector.collect_entropy(size)?;
+            assert_eq!(entropy.len(), size);
+            
+            if size > 0 {
+                // Assess quality for non-empty entropy
+                let quality = collector.assess_entropy_quality(&entropy);
+                assert!(quality > 0.9, "Size {} quality too low: {}", size, quality);
+            }
+        }
+    }
+}

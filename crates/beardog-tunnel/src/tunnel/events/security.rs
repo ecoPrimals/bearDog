@@ -1,14 +1,12 @@
-
-
-use serde::{Deserialize, Serialize};
-use super::compliance::*;
+use super::compliance::{ComplianceType, GeographicRegion, RoutingRestriction};
 use super::threat::ThreatMitigationAction;
-use super::types::*;
+use super::types::{PerformanceImpact, SecurityLevel, ThreatLevel};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum SecurityNetworkEvent {
-    SessionEstablished {
-        session_id: String,
+pub enum SecurityEvent {
+    /// State indicating securitylevelchanged
+    SecurityLevelChanged {
         peer_id: String,
         security_level: SecurityLevel,
         bandwidth_limit: Option<u64>,
@@ -34,20 +32,11 @@ pub enum SecurityNetworkEvent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum SecurityResponse {
-    SessionCreated {
-        session_id: String,
-        peer_id: String,
-    },
-
-    SessionTerminated {
-        session_id: String,
-        reason: String,
-    },
-
-    SecurityAdapted {
-        reason: String,
-        source_peer: String,
-    },
+pub enum SessionEvent {
+    /// Session successfully established
+    SessionEstablished { session_id: String, peer_id: String },
+    /// Session terminated
+    SessionTerminated { session_id: String, reason: String },
+    /// Security configuration adapted
+    SecurityAdapted { reason: String, source_peer: String },
 }
-

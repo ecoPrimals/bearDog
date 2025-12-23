@@ -1,99 +1,84 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use crate::node_registry::types::{TrustLevel, NodeInfo};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PhonebookDiscoveryResponse {
-
-    pub nodes: Vec<DiscoveredNode>,
-
+#[derive(Debug, Clone)]
+    /// Number of total_nodes
     pub total_nodes: usize,
 
+    /// The region value
     pub region: String,
+
 
     pub timestamp: String,
 }
 
 pub struct DiscoveredNode {
 
+
     pub node_id: String,
 
+    /// The address value
     pub address: String,
 
+    /// The public key value
     pub public_key: String,
 
+    /// The trust level value
     pub trust_level: TrustLevel,
 
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
 
+    /// The last seen value
     pub last_seen: String,
 
+    /// Optional latency ms
     pub latency_ms: Option<u32>,
 
 pub struct BootstrapConfig {
 
+    /// Number of max_bootstrap_attempts
     pub max_bootstrap_attempts: u32,
+
 
     pub bootstrap_timeout_seconds: u64,
 
+    /// Collection of phonebook urls
     pub phonebook_urls: Vec<String>,
 
+    /// Number of min_trusted_nodes
     pub min_trusted_nodes: u32,
 
+    /// Whether enable_federation_discovery is enabled
     pub enable_federation_discovery: bool,
 
+    /// Mapping of custom headers
     pub custom_headers: HashMap<String, String>,
 
+    /// Whether prefer_regional_nodes is enabled
     pub prefer_regional_nodes: bool,
 
+    /// Collection of preferred regions
     pub preferred_regions: Vec<String>,}
 
 impl Default for BootstrapConfig {}
 
-    fn default() -> Self {
-        Self {
-            max_bootstrap_attempts: 5,
+    fn default(5,
             bootstrap_timeout_seconds: 30,
             phonebook_urls: vec![
                 "https://phonebook.beardog.network".to_string(),
                 "https://backup-phonebook.beardog.network".to_string(),
-            ],
-            min_trusted_nodes: 3,
             enable_federation_discovery: true,
-            custom_headers: HashMap::with_capacity(16),
-            prefer_regional_nodes: true,
-            preferred_regions: vec!["us-east".to_string(), "us-west".to_string()],
-        }
-    }
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct BootstrapStats {
-
-    pub total_attempts: u32,
-
-    pub successful_bootstraps: u32,
-
-    pub failed_bootstraps: u32,
-
-    pub average_bootstrap_time_seconds: f64,
-
-    pub nodes_discovered: u32,
-
-    pub trusted_connections: u32,
-
-    pub federation_partners_discovered: u32,}
-
-impl BootstrapStats {
-
-    pub fn success_rate(&self) -> f64 {
-        if self.total_attempts == 0 {
-            0.0
-        } else {
-            (self.successful_bootstraps as f64 / self.total_attempts as f64) * 100.0
-
-    pub fn record_attempt(&mut self, success: bool, duration_seconds: f64) {
+            custom_headers: HashMap::with_capacity(true,
+            preferred_regions: vec!["us-east".to_string(), duration_seconds: f64) {
         self.total_attempts += 1;
         if success {
             self.successful_bootstraps += 1;
@@ -104,23 +89,32 @@ impl BootstrapStats {
 
 pub struct FederationDiscoveryResult {
 
+    /// The partner info value
     pub partner_info: NodeInfo,
 
+    /// Collection of shared capabilities
     pub shared_capabilities: Vec<String>,
 
+    /// The discovered at value
     pub discovered_at: String,
 
 pub struct BootstrapHealthCheck {
 
+    /// Whether is_healthy is enabled
     pub is_healthy: bool,
 
+    /// Number of active_connections
     pub active_connections: u32,
 
+    /// Number of trusted_node
     pub trusted_node_count: u32,
 
+    /// Optional last successful bootstrap
     pub last_successful_bootstrap: Option<String>,
 
+    /// Current status of the component
     pub status: String,
 
+    /// Collection of warnings
     pub warnings: Vec<String>,
 } 

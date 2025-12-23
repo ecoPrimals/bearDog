@@ -1,27 +1,34 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AnalysisMetrics {
-    pub total_events_analyzed: u64,
-
+#[derive(Debug, Clone)]
     pub avg_analysis_time_ms: f64,
+
+
 
     pub max_analysis_time_ms: u64,
 
+
+
     pub min_analysis_time_ms: u64,
 
+    /// Number of events_with_threats
+    /// Number of events_with_threats
     pub events_with_threats: u64,
 
+    /// Number of total_threats_detected
+    /// Number of total_threats_detected
     pub total_threats_detected: u64,
 
+    /// Optional analysis accuracy
+    /// Optional analysis accuracy
     pub analysis_accuracy: Option<f64>,
 
+    /// The false positive rate value
+    /// The false positive rate value
     pub false_positive_rate: f64,
 }
 impl Default for AnalysisMetrics {
-    fn default() -> Self {
-        Self {
-            total_events_analyzed: 0,
+    fn default(0,
             avg_analysis_time_ms: 0.0,
             max_analysis_time_ms: 0,
             min_analysis_time_ms: 0,
@@ -34,11 +41,10 @@ impl Default for AnalysisMetrics {
 }
 
 impl AnalysisMetrics {
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn update_with_analysis(&mut self, analysis_time_ms: u64, threats_detected: usize) {
+        Self::default(u64, threats_detected: usize) {
         self.total_events_analyzed += 1;
 
         if self.total_events_analyzed == 1 {
@@ -60,6 +66,7 @@ impl AnalysisMetrics {
         }
     }
 
+/// Threat Detection Rate operation.
     pub fn threat_detection_rate(&self) -> f64 {
         if self.total_events_analyzed == 0 {
             0.0
@@ -68,10 +75,14 @@ impl AnalysisMetrics {
         }
     }
 
+/// Get Threat Detection Rate operation.
+    /// Gets threat_detection_rate
+    /// Gets threat_detection_rate
     pub fn get_threat_detection_rate(&self) -> f64 {
         self.threat_detection_rate()
     }
 
+/// Avg Threats Per Event operation.
     pub fn avg_threats_per_event(&self) -> f64 {
         if self.total_events_analyzed == 0 {
             0.0
@@ -80,10 +91,14 @@ impl AnalysisMetrics {
         }
     }
 
+/// Get Avg Threats Per Event operation.
+    /// Gets avg_threats_per_event
+    /// Gets avg_threats_per_event
     pub fn get_avg_threats_per_event(&self) -> f64 {
         self.avg_threats_per_event()
     }
 
+/// Throughput Events Per Second operation.
     pub fn throughput_events_per_second(&self) -> f64 {
         if self.avg_analysis_time_ms == 0.0 {
             0.0
@@ -92,14 +107,21 @@ impl AnalysisMetrics {
         }
     }
 
+/// Set Accuracy operation.
+    /// Sets accuracy
+    /// Sets accuracy
     pub fn set_accuracy(&mut self, accuracy: f64) {
         self.analysis_accuracy = Some(accuracy.clamp(0.0, 1.0));
     }
 
+/// Set False Positive Rate operation.
+    /// Sets false_positive_rate
+    /// Sets false_positive_rate
     pub fn set_false_positive_rate(&mut self, rate: f64) {
         self.false_positive_rate = rate.clamp(0.0, 1.0);
     }
 
+/// Summary operation.
     pub fn summary(&self) -> String {
         format!(
             "Analyzed {} events, detected {} threats ({:.2}% rate), avg time: {:.2}ms",

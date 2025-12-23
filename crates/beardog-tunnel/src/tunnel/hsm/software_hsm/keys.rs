@@ -11,6 +11,9 @@ use super::encryption::EncryptionKey;
 use super::storage::StorageBackend;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// SoftwareKey configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct SoftwareKey {
     pub key_id: String,
     pub key_data: Vec<u8>,
@@ -36,6 +39,10 @@ where
     S: StorageBackend + Send + Sync + 'static,
     E: EncryptionKey + Send + Sync + 'static,
 {
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn new(
         storage_backend: S,
         encryption_key: E,
@@ -49,6 +56,10 @@ where
         }
     }
 
+    /// Store Key operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub async fn store_key(&self, key: &SoftwareKey) -> Result<(), BearDogError> {
         let encrypted_data = self.encryption_key.encrypt(&key.key_data).await?;
 
@@ -70,6 +81,10 @@ where
         Ok(())
     }
 
+    /// Retrieve Key operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub async fn retrieve_key(
         &self,
         key_id: &str,
@@ -107,7 +122,13 @@ where
 }
 
 // Default implementations for backward compatibility
+    /// DefaultStorageBackend configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct DefaultStorageBackend;
+    /// DefaultEncryptionKey configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct DefaultEncryptionKey;
 
 impl StorageBackend for DefaultStorageBackend {
@@ -141,6 +162,9 @@ impl EncryptionKey for DefaultEncryptionKey {
 pub type InMemoryKeyStore = SoftwareKeyStore<DefaultStorageBackend, DefaultEncryptionKey>;
 
 // Builder for legacy compatibility
+    /// SoftwareKeyBuilder configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct SoftwareKeyBuilder {
     key_id: Option<String>,
     key_data: Option<Vec<u8>>,
@@ -148,6 +172,10 @@ pub struct SoftwareKeyBuilder {
 }
 
 impl SoftwareKeyBuilder {
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn new() -> Self {
         Self {
             key_id: None,
@@ -156,21 +184,37 @@ impl SoftwareKeyBuilder {
         }
     }
 
+    /// Key Id operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn key_id(mut self, key_id: String) -> Self {
         self.key_id = Some(key_id);
         self
     }
 
+    /// Key Data operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn key_data(mut self, key_data: Vec<u8>) -> Self {
         self.key_data = Some(key_data);
         self
     }
 
+    /// Metadata operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn metadata(mut self, metadata: KeyMetadata) -> Self {
         self.metadata = Some(metadata);
         self
     }
 
+    /// Build operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn build(self) -> Result<SoftwareKey, BearDogError> {
         let key_id = self.key_id.ok_or_else(|| {
             beardog_errors::BearDogError::Validation {

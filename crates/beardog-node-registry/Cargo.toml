@@ -1,23 +1,66 @@
 [package]
 name = "beardog-node-registry"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-description = "BearDog node-registry module"
-authors.workspace = true
+description = "Decentralized node registry for BearDog ecosystem coordination and service discovery"
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = ["security", "distributed", "registry", "p2p", "coordination"]
+categories = ["cryptography", "network-programming", "web-programming"]
 
-[dependencies]
-beardog-errors = { workspace = true }
-# beardog-config removed - use beardog-types::config::complete_unified
-beardog-auth = { workspace = true }
-beardog-security = { path = "../beardog-security" }
-tokio = { workspace = true }
-serde = { workspace = true }
-chrono = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-thiserror = { workspace = true }
-# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
-hex = { workspace = true }
-rand = { workspace = true }
-sha2 = { workspace = true }
+[package.version]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[dependencies.beardog-config]
+path = "../beardog-config"
+
+[dependencies.beardog-errors]
+workspace = true
+
+[dependencies.beardog-auth]
+workspace = true
+
+[dependencies.beardog-security]
+path = "../beardog-security"
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.chrono]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.uuid]
+workspace = true
+
+[dependencies.thiserror]
+workspace = true
+
+[dependencies.hex]
+workspace = true
+
+[dependencies.rand]
+workspace = true
+
+[dependencies.sha2]
+workspace = true
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[lints]
+workspace = true

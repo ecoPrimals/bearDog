@@ -1,87 +1,38 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ThreatAction {
-    BlockSource,
-
-    QuarantineSystem,
-
-    AlertSecurityTeam,
-
-    IsolateNetwork,
-
-    ResetCredentials,
-
-    UpdatePolicies,
-
-    DeployPatches,
-
-    BackupData,
-
-    InitiateIncidentResponse,
-
-    NotifyLawEnforcement,
-
-    EngageThreatHunting,
-
-    UpdateThreatIntelligence,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub enum ThreatStatus {
-    #[default]
-    New,
-
-    Investigating,
-
-    Confirmed,
-
-    FalsePositive,
-
-    Mitigated,
-
-    Resolved,
-
-    Escalated,
-
-    Suppressed,
-
-    Active,
-
-    Acknowledged,
-
-    Contained,
-
-    Eradicated,
-
-    Recovery,
-
-    PostIncidentAnalysis,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MitigationStep {
-    pub description: String,
-
+#[derive(Debug, Clone)]
+    /// The executed at value
+    /// The executed at value
     pub executed_at: DateTime<Utc>,
 
+    /// Whether success is enabled
+    /// Whether success is enabled
     pub success: bool,
 
+    /// Optional details
+    /// Optional details
     pub details: Option<String>,
 
+    /// The executor value
+    /// The executor value
     pub executor: String,
 }
 
 pub enum ResponseAction {
+    /// Represents log alert variant
     LogAlert(String),
 
+    /// Represents block ip variant
     BlockIp(String),
 
+    /// Represents quarantine user variant
     QuarantineUser(String),
 
+    /// Represents notify admin variant
     NotifyAdmin(String),
 
+    /// Represents isolate system variant
     IsolateSystem(String),
 }
 
@@ -89,8 +40,7 @@ impl Default for MitigationStep {
     fn default() -> Self {
         Self {
             description: String::with_capacity(64),
-            executed_at: Utc::now(),
-            success: false,
+            executed_at: Utc::now(false,
             details: None,
             executor: String::with_capacity(64),
         }
@@ -98,6 +48,7 @@ impl Default for MitigationStep {
 }
 
 impl ThreatAction {
+    /// Severity Level operation.
     pub fn severity_level(&self) -> u8 {
         match self {
             ThreatAction::AlertSecurityTeam => 1,
@@ -115,6 +66,9 @@ impl ThreatAction {
         }
     }
 
+    /// Is Automated operation.
+    /// Checks if automated
+    /// Checks if automated
     pub fn is_automated(&self) -> bool {
         matches!(
             self,
@@ -126,6 +80,9 @@ impl ThreatAction {
         )
     }
 
+    /// Is Reversible operation.
+    /// Checks if reversible
+    /// Checks if reversible
     pub fn is_reversible(&self) -> bool {
         matches!(
             self,
@@ -137,6 +94,7 @@ impl ThreatAction {
         )
     }
 
+    /// Estimated Duration Minutes operation.
     pub fn estimated_duration_minutes(&self) -> u32 {
         match self {
             ThreatAction::BlockSource => 1,
@@ -155,6 +113,9 @@ impl ThreatAction {
     }
 }
 impl ThreatStatus {
+    /// Is Terminal operation.
+    /// Checks if terminal
+    /// Checks if terminal
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,
@@ -165,6 +126,9 @@ impl ThreatStatus {
         )
     }
 
+    /// Is Active operation.
+    /// Checks if active
+    /// Checks if active
     pub fn is_active(&self) -> bool {
         matches!(
             self,
@@ -179,6 +143,7 @@ impl ThreatStatus {
         )
     }
 
+    /// Valid Next Statuses operation.
     pub fn valid_next_statuses(&self) -> Vec<ThreatStatus> {
         match self {
             ThreatStatus::New => vec![
@@ -214,10 +179,12 @@ impl ThreatStatus {
         }
     }
 
+    /// Can Transition To operation.
     pub fn can_transition_to(&self, new_status: &ThreatStatus) -> bool {
         self.valid_next_statuses().contains(new_status)
     }
 
+    /// Priority Level operation.
     pub fn priority_level(&self) -> u8 {
         match self {
             ThreatStatus::Resolved | ThreatStatus::FalsePositive | ThreatStatus::Suppressed => 1,
@@ -233,36 +200,43 @@ impl ThreatStatus {
     }
 }
 impl MitigationStep {
-    pub fn new(description: &str, executor: &str) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(&str, executor: &str) -> Self {
         Self {
             description: description.to_string(),
             executor: executor.to_string(),
-            success: false,
-            details: None,
             executed_at: chrono::Utc::now(),
         }
     }
 
+    /// Mark Success operation.
     pub fn mark_success(&mut self, details: Option<&str>) {
         self.success = true;
-        self.details = details.map(|s| s.to_string());
+        self.details = details.map(std::string::ToString::to_string);
     }
 
+    /// Mark Failure operation.
     pub fn mark_failure(&mut self, details: Option<&str>) {
         self.success = false;
-        self.details = details.map(|s| s.to_string());
+        self.details = details.map(std::string::ToString::to_string);
     }
 
+    /// Duration Minutes operation.
     pub fn duration_minutes(&self) -> i64 {
         let now = Utc::now();
         (now - self.executed_at).num_minutes()
     }
 
+    /// Is Recent operation.
+    /// Checks if recent
+    /// Checks if recent
     pub fn is_recent(&self, minutes: i64) -> bool {
         self.duration_minutes() <= minutes
     }
 }
 impl ResponseAction {
+    /// Severity Level operation.
     pub fn severity_level(&self) -> u8 {
         match self {
             ResponseAction::LogAlert(_) => 1,
@@ -273,6 +247,9 @@ impl ResponseAction {
         }
     }
 
+    /// Is Reversible operation.
+    /// Checks if reversible
+    /// Checks if reversible
     pub fn is_reversible(&self) -> bool {
         matches!(
             self,
@@ -282,6 +259,9 @@ impl ResponseAction {
         )
     }
 
+    /// Get Target operation.
+    /// Gets tarvalue
+    /// Gets tarvalue
     pub fn get_target(&self) -> &str {
         match self {
             ResponseAction::LogAlert(msg) => msg,

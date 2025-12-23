@@ -2,23 +2,30 @@ use super::{AnalysisMetrics, EventCorrelationResult, SecurityEvent, ThreatAnalys
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatAnalysisSession {
-    pub session_id: String,
+#[derive(Debug, Clone)]
     pub start_time: DateTime<Utc>,
     pub end_time: Option<DateTime<Utc>>,
+    /// Collection of events analyzed
+    /// Collection of events analyzed
     pub events_analyzed: Vec<SecurityEvent>,
+    /// Collection of analysis results
+    /// Collection of analysis results
     pub analysis_results: Vec<ThreatAnalysisResult>,
+    /// The metrics value
+    /// The metrics value
     pub metrics: AnalysisMetrics,
+    /// Collection of correlation results
+    /// Collection of correlation results
     pub correlation_results: Vec<EventCorrelationResult>,
 }
 
 impl ThreatAnalysisSession {
-    pub fn new(session_id: String) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(session_id: &str) -> Self {
         Self {
-            session_id,
-            start_time: Utc::now(),
-            end_time: None,
+            session_id: session_id.to_string(),
+            start_time: Utc::now(None,
             events_analyzed: Vec::new(),
             analysis_results: Vec::new(),
             metrics: AnalysisMetrics::new(),
@@ -26,18 +33,22 @@ impl ThreatAnalysisSession {
         }
     }
 
+    /// Add Event operation.
     pub fn add_event(&mut self, event: SecurityEvent) {
         self.events_analyzed.push(event);
     }
 
+    /// Add Analysis Result operation.
     pub fn add_analysis_result(&mut self, result: ThreatAnalysisResult) {
         self.analysis_results.push(result);
     }
 
+    /// Finalize Session operation.
     pub fn finalize_session(&mut self) {
         self.end_time = Some(Utc::now());
     }
 
+    /// Total Threats Detected operation.
     pub fn total_threats_detected(&self) -> usize {
         self.analysis_results
             .iter()
@@ -45,6 +56,7 @@ impl ThreatAnalysisSession {
             .sum()
     }
 
+    /// Average Confidence operation.
     pub fn average_confidence(&self) -> f64 {
         if self.analysis_results.is_empty() {
             0.0
@@ -54,11 +66,9 @@ impl ThreatAnalysisSession {
         }
     }
 
+    /// Session Duration Seconds operation.
     pub fn session_duration_seconds(&self) -> Option<i64> {
-        if let Some(end_time) = self.end_time {
-            Some((end_time - self.start_time).num_seconds())
-        } else {
-            None
-        }
+        self.end_time
+            .map(|end_time| (end_time - self.start_time).num_seconds())
     }
 }

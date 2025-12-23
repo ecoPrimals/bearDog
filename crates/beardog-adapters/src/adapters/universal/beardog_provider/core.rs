@@ -1,64 +1,71 @@
 
 
+// MODERNIZATION NOTE: This file contains primal-specific references that should be migrated
+// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
+// Target: Replace with capability-based discovery for vendor/primal agnosticism
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
-use super::super::songbird_handoff::health::UniversalHealthMonitor;
-use super::super::songbird_handoff::registration::SongBirdRegistrationManager;
+use super::super::service_mesh_handoff::health::UniversalHealthMonitor;
+use super::super::service_mesh_handoff::registration::ServiceMeshRegistrationManager;
 use beardog_types::canonical::BearDogConfig;
 
 #[derive(Debug, Clone)]
-pub struct ProviderMetadata {
-
-    pub name: String,
-
+    /// The version value
     pub version: String,
 
+    /// The description value
     pub description: String,
 
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
 }
 
 pub struct BearDogPrimalProvider<T: Send + Sync> {
 
-    pub(crate) core: Arc<RwLock<Option<T>>>,
+    pub(Arc<RwLock<Option<T>>>,
 
-    pub(crate) instance_id: String,
+    pub(String,
 
-    pub(crate) metadata: ProviderMetadata,
+    pub(ProviderMetadata,
 
-    pub(crate) config: Arc<BearDogConfig>,
+    pub(Arc<BearDogConfig>,
 
-    pub(crate) registration_manager: Arc<SongBirdRegistrationManager<T>>,
+    pub(Arc<ServiceMeshRegistrationManager<T>>,
 
-    pub(crate) health_monitor: Arc<UniversalHealthMonitor>,
+    pub(Arc<UniversalHealthMonitor>,
 
     pub(crate) background_tasks: Arc<RwLock<Vec<JoinHandle<()>>>>,
 impl<T: Send + Sync> BearDogPrimalProvider<T> {
 
-    pub fn new(
-        core: Arc<RwLock<Option<T>>>,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(Arc<RwLock<Option<T>>>,
         instance_id: &str,
         config: Arc<BearDogConfig>,
-        registration_manager: Arc<SongBirdRegistrationManager<T>>,
+        registration_manager: Arc<ServiceMeshRegistrationManager<T>>,
         health_monitor: Arc<UniversalHealthMonitor>,
     ) -> Self {
 
         let runtime_config = beardog_types::config::get_config();
         let _endpoints = ServiceEndpoints {
-            primary: runtime_config.endpoints.external_api_base_url.clone(),
-            health: format_args!("{}/health", runtime_config.endpoints.external_api_base_url).to_string(),
-            metrics: format_args!("{}/metrics", runtime_config.endpoints.external_api_base_url).to_string(),
-            admin: format_args!("{}/admin", runtime_config.endpoints.external_api_base_url).to_string(),
-            websocket: Some(format_args!("wss://{}/ws", 
-                runtime_config.endpoints.external_api_base_url.replace("https://", "").to_string().replace("http://", ""))),
+            primary: runtime_config.&endpoints.external_api_base_url: base_url.to_string(),
+            metrics: format!("{}/metrics", runtime_config.endpoints.external_api_base_url),
+            admin: format!("{}/admin", runtime_config.endpoints.external_api_base_url),
+            websocket: Some(format!("wss://{}/ws", 
+                runtime_config.endpoints.external_api_base_url.replace("https://", "").replace("http://", ""))),
         };
         let metadata = ProviderMetadata {
             name: "BearDog Security Provider".to_string(),
             version: "1.0.0".to_string(),
             description: "Universal security provider for ecosystem integration".to_string(),
             capabilities: vec![
-                "encryption".to_string(),
+                "encryption ".to_string(),
                 "decryption".to_string(),
                 "authentication".to_string(),
                 "authorization".to_string(),
@@ -77,12 +84,15 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
         }
     }
 
+/// Metadata operation.
     pub fn metadata(&self) -> &ProviderMetadata {
         &self.metadata
 
+/// Instance Id operation.
     pub fn instance_id(&self) -> &str {
         &self.instance_id
 
+/// Config operation.
     pub fn config(&self) -> &Arc<BearDogConfig> {
         &self.config
-use super::super::songbird_handoff::types::ServiceEndpoints;
+use super::super::service_mesh_handoff::types::ServiceEndpoints;

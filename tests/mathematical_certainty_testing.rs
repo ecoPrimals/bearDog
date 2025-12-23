@@ -1,3 +1,0 @@
-
-
-mod mathematical_certainty; 

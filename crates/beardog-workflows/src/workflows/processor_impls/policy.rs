@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
 
@@ -10,9 +15,8 @@ use uuid::Uuid;
 pub struct PolicyChangeProcessor;
 
 impl WorkflowProcessor for PolicyChangeProcessor {
-    async fn process_workflow(
-        &self,
-        workflow: &Workflow,
+    /// Processes workflow
+    fn process_workflow(&Workflow,
     ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
@@ -36,7 +40,7 @@ impl WorkflowProcessor for PolicyChangeProcessor {
         actions_taken.push("Notified affected systems".to_string(),
         let execution_duration = start_time.elapsed();
         let mut result = WorkflowProcessingResult::success(
-            workflow.id.clone(),
+            &workflow.id: id.to_string(),
             "PolicyProcessor".to_string(),
             format!("Successfully updated policy: {policy_id}"));
             execution_duration.as_millis() as u64,
@@ -54,9 +58,11 @@ impl WorkflowProcessor for PolicyChangeProcessor {
     fn name(&self) -> &str {
         "PolicyProcessor"}
 
+
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::PolicyUpdate)
-    async fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
+    /// Validates workflow
+    fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
         if !workflow.parameters.contains_key("policy_id") {
             return Err(BearDogError::invalid_input(
             });
@@ -69,7 +75,7 @@ impl WorkflowProcessor for PolicyChangeProcessor {
         if policy_id.is_empty() {
                 message: "policy_id cannot be empty".to_string(),
         Ok(())
-    async fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
+    fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
         Ok(Duration::from_secs(300)) // 5 minutes
 }
 
@@ -80,22 +86,16 @@ impl WorkflowProcessor for ConfigChangeProcessor {
                 message: "Missing required parameter: config_path".to_string(),
         actions_taken.push(format!("Started configuration change for: {config_path}"));
 
-        actions_taken.push("Validated configuration changes".to_string(),
-        actions_taken.push("Created configuration backup".to_string(),
-        actions_taken.push("Applied configuration changes".to_string(),
-        actions_taken.push("Reloaded affected services".to_string(),
-        actions_taken.push("Verified system health".to_string(),
-        Ok(WorkflowProcessingResult {
-            success: true,
+        actions_taken.push(true,
             format!("Successfully updated configuration: {config_path}"));
-            execution_duration_ms: execution_duration.as_millis() as u64,
-            output_data: Some(serde_json::json!({
+            execution_duration_ms: execution_duration.as_millis(Some(serde_json::json!({
                 "config_path": config_path,
                 "change_id": Uuid::new_v4().to_string(),
                 "timestamp": chrono::Utc::now().to_rfc3339());
             })));
             actions_taken,
         })
+    /// Gets processor_name
     fn get_processor_name(&self) -> &'static str {
         "ConfigChangeProcessor"
         if !workflow.parameters.contains_key("config_path") {

@@ -1,451 +1,419 @@
-
+//! HSM Status and Monitoring Types
+//!
+//! Type definitions for HSM health status, performance metrics, and monitoring.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// HSM health status
+#[derive(Debug, Clone)]
 pub struct HsmHealthStatus {
-
-    pub healthy: bool,
-
+    /// Whether the HSM is healthy
+    pub is_healthy: bool,
+    /// Last health check timestamp
     pub last_check: DateTime<Utc>,
-
+    /// Optional error message
     pub error_message: Option<String>,
-
+    /// Performance metrics
     pub performance_metrics: PerformanceMetrics,
 }
 
+/// Performance metrics
+#[derive(Debug, Clone)]
 pub struct PerformanceMetrics {
-
+    /// Operations per second
     pub operations_per_second: f64,
-
+    /// Average latency in milliseconds
     pub average_latency_ms: f64,
-
+    /// Success rate (0.0-100.0)
     pub success_rate: f64,
-
+    /// Memory usage in MB
     pub memory_usage_mb: f64,
-
+    /// CPU usage percentage
     pub cpu_usage_percent: f64,
-
+    /// Network throughput in bits per second
     pub network_throughput_bps: f64,
-
-    pub total_operations: u64,
-
-    pub error_rate: f64,
-
-    pub availability_percentage: f64,
-
-    pub error_count: u64,
-
+    /// Latency in milliseconds
+    pub latency_ms: f64,
+    /// Throughput in MB/s
+    pub throughput_mbps: f64,
+    /// Uptime in seconds
     pub uptime_seconds: u64,
+}
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HsmOperationalStatus {
-
-    Operational,
-
-    Starting,
-
-    Shutting,
-
-    Maintenance,
-
-    Degraded {
-
-        reason: String,
-
-        severity: DegradationSeverity,
-    },
-
-    Offline {
-
-        offline_since: DateTime<Utc>,
-
-    Unknown,
-
-pub enum DegradationSeverity {
-
-    Low,
-
-    Medium,
-
-    High,
-
-    Critical,
-
-pub struct ResourceUtilization {
-
-    pub cpu_utilization: f64,
-
-    pub memory_utilization: f64,
-
-    pub storage_utilization: f64,
-
-    pub network_utilization: f64,
-
-    pub active_connections: u32,
-
-    pub max_connections: u32,
-
-pub struct HsmCapacity {
-
-    pub max_keys: u32,
-
-    pub current_keys: u32,
-
-    pub max_concurrent_operations: u32,
-
-    pub current_concurrent_operations: u32,
-
-    pub available_storage_bytes: u64,
-
-    pub total_storage_bytes: u64,
-
-pub struct HsmError {
-
-    pub error_code: String,
-
-    pub error_message: String,
-
-    pub severity: ErrorSeverity,
-
-    pub timestamp: DateTime<Utc>,
-
-    pub context: Option<ErrorContext>,
-
-pub use beardog_errors::ErrorSeverity;
-
-pub struct ErrorContext {
-
-    pub operation: String,
-
-    pub key_id: Option<String>,
-
-    pub user_id: Option<String>,
-
-    pub additional_data: std::collections::HashMap<String, String>,
-
-pub struct HsmStatistics {
-
-    pub successful_operations: u64,
-
-    pub failed_operations: u64,
-
-    pub peak_ops_per_second: f64,
-
-    pub last_restart: DateTime<Utc>,
-
-    pub error_statistics: ErrorStatistics,
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct ErrorStatistics {
-
-    pub total_errors: u64,
-
-    pub errors_by_severity: std::collections::HashMap<ErrorSeverity, u64>,
-
-    pub errors_by_code: std::collections::HashMap<String, u64>,
-
-    pub recent_errors: Vec<HsmError>,
-
-pub struct HsmAuditLogEntry {
-
-    pub entry_id: String,
-
-    pub event_type: AuditEventType,
-
-    pub session_id: Option<String>,
-
-    pub resource: Option<String>,
-
-    pub result: OperationResult,
-
-    pub event_data: std::collections::HashMap<String, String>,
-
-pub enum AuditEventType {
-
-    Authentication,
-
-    Authorization,
-
-    KeyManagement,
-
-    CryptographicOperation,
-
-    ConfigurationChange,
-
-    System,
-
-    Security,
-
-    Administrative,
-
-pub enum OperationResult {
-
-    Success,
-
-    Failure {
-
-        error_code: String,
-
-        error_message: String,
-
-    Denied {
-
-    Timeout,
-
-    Cancelled,
-
-pub struct HsmStatusSummary {
-
-    pub instance_id: String,
-
-    pub tier_type: String,
-
-    pub operational_status: HsmOperationalStatus,
-
-    pub health_status: HsmHealthStatus,
-
-    pub resource_utilization: ResourceUtilization,
-
-    pub capacity: HsmCapacity,
-
-    pub statistics: HsmStatistics,
-
-    pub config_version: String,
-
-    pub last_updated: DateTime<Utc>,
-
-pub struct HsmClusterStatus {
-
-    pub cluster_id: String,
-
-    pub nodes: Vec<HsmNodeStatus>,
-
-    pub cluster_health: ClusterHealth,
-
-    pub load_balancing_status: LoadBalancingStatus,
-
-    pub failover_status: FailoverStatus,
-
-pub struct HsmNodeStatus {
-
-    pub node_id: String,
-
-    pub address: String,
-
-    pub status: HsmStatusSummary,
-
-    pub role: NodeRole,
-
-    pub last_heartbeat: DateTime<Utc>,
-
-pub enum NodeRole {
-
-    Primary,
-
-    Secondary,
-
-    Backup,
-
-    Witness,
-
-pub enum ClusterHealth {
-
-    Healthy,
-
-    Degraded,
-
-    PartiallyAvailable,
-
-    Unavailable,
-
-pub struct LoadBalancingStatus {
-
-    pub strategy: String,
-
-    pub node_weights: std::collections::HashMap<String, f64>,
-
-    pub request_distribution: std::collections::HashMap<String, u64>,
-
-    pub load_balancer_health: bool,
-
-pub struct FailoverStatus {
-
-    pub enabled: bool,
-    pub primary_node: Option<String>,
-
-    pub backup_nodes: Vec<String>,
-
-    pub last_failover: Option<FailoverEvent>,
-
-    pub failover_health: bool,
-
-pub struct FailoverEvent {
-
-    pub previous_primary: String,
-
-    pub new_primary: String,
-
-    pub reason: String,
-
-    pub duration_seconds: u64,
-
-impl Default for PerformanceMetrics {}
-
+impl Default for PerformanceMetrics {
     fn default() -> Self {
         Self {
             operations_per_second: 0.0,
             average_latency_ms: 0.0,
-            error_rate: 0.0,
-            availability_percentage: 100.0,
-            success_rate: 0.0,
+            success_rate: 100.0,
             memory_usage_mb: 0.0,
             cpu_usage_percent: 0.0,
             network_throughput_bps: 0.0,
-            total_operations: 0,
-            error_count: 0,
+            latency_ms: 0.0,
+            throughput_mbps: 0.0,
             uptime_seconds: 0,
         }
     }
-impl Default for ResourceUtilization {
-            cpu_utilization: 0.0,
-            memory_utilization: 0.0,
-            storage_utilization: 0.0,
-            network_utilization: 0.0,
-            active_connections: 0,
-            max_connections: 1000,}
+}
 
-impl Default for HsmCapacity {
-            max_keys: 10000,
-            current_keys: 0,
-            max_concurrent_operations: 100,
-            current_concurrent_operations: 0,
-            available_storage_bytes: 1024 * 1024 * 1024, // 1GB
-            total_storage_bytes: 1024 * 1024 * 1024,     // 1GB
-impl Default for HsmStatistics {
-            successful_operations: 0,
-            failed_operations: 0,
-            peak_ops_per_second: 0.0,
-            last_restart: Utc::now(),
-            error_statistics: ErrorStatistics::default(),
+/// Status category enumeration
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum StatusCategory {
+    /// Operational status
+    Operational,
+    /// Performance status
+    Performance,
+    /// Security status
+    Security,
+    /// Connectivity status
+    Connectivity,
+    /// Resource status
+    Resource,
+}
 
-impl HsmHealthStatus {
+/// Status level enumeration
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum StatusLevel {
+    /// Normal operation
+    Normal,
+    /// Warning condition
+    Warning,
+    /// Error condition
+    Error,
+    /// Critical condition
+    Critical,
+}
 
-    pub fn healthy() -> Self {
-            healthy: true,
-            last_check: Utc::now(),
-            error_message: None,
-            performance_metrics: PerformanceMetrics::default(),
+/// Detailed status entry
+#[derive(Debug, Clone)]
+pub struct StatusEntry {
+    /// Status category
+    pub category: StatusCategory,
+    /// Status level
+    pub level: StatusLevel,
+    /// Status message
+    pub message: String,
+    /// Timestamp
+    pub timestamp: DateTime<Utc>,
+    /// Optional metadata
+    pub metadata: Option<std::collections::HashMap<String, String>>,
+}
 
-    pub fn unhealthy(error_message: &str) -> Self {
-            healthy: false,
-            error_message: Some(error_message),
+/// Connection status
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConnectionStatus {
+    /// Connected and operational
+    Connected,
+    /// Connecting
+    Connecting,
+    /// Disconnected
+    Disconnected,
+    /// Connection error
+    Error(String),
+}
 
-    pub const Healthy: Self = Self {
-        healthy: true,
-        last_check: chrono::DateTime::UNIX_EPOCH,
-        error_message: None,
-        performance_metrics: PerformanceMetrics::default(),
-    };
+/// Resource utilization metrics
+#[derive(Debug, Clone)]
+pub struct ResourceMetrics {
+    /// CPU usage percentage
+    pub cpu_percent: f64,
+    /// Memory usage in bytes
+    pub memory_bytes: u64,
+    /// Disk usage in bytes
+    pub disk_bytes: u64,
+    /// Network bandwidth in bytes per second
+    pub network_bps: u64,
+}
 
-    pub const Unknown: Self = Self {
-        healthy: false,
-impl HsmOperationalStatus {
+/// HSM operational status
+#[derive(Debug, Clone)]
+pub struct OperationalStatus {
+    /// Whether HSM is online
+    pub is_online: bool,
+    /// Whether HSM is ready for operations
+    pub is_ready: bool,
+    /// Connection status
+    pub connection_status: ConnectionStatus,
+    /// Number of active operations
+    pub active_operations: u64,
+    /// Number of queued operations
+    pub queued_operations: u64,
+}
 
-    pub fn is_available(&self) -> bool {
-        matches!(
-            self,
-            HsmOperationalStatus::Operational | HsmOperationalStatus::Degraded { .. }
-        )
+/// Security status information
+#[derive(Debug, Clone)]
+pub struct SecurityStatus {
+    /// Whether security is intact
+    pub is_secure: bool,
+    /// Tamper detection status
+    pub tamper_detected: bool,
+    /// Last security audit timestamp
+    pub last_audit: Option<DateTime<Utc>>,
+    /// Number of failed authentication attempts
+    pub failed_auth_attempts: u64,
+}
 
-    pub fn is_offline(&self) -> bool {
-        matches!(self, HsmOperationalStatus::Offline { .. })
+/// Availability metrics
+#[derive(Debug, Clone)]
+pub struct AvailabilityMetrics {
+    /// Uptime percentage (0.0-100.0)
+    pub uptime_percent: f64,
+    /// Total uptime duration in seconds
+    pub uptime_seconds: u64,
+    /// Downtime duration in seconds
+    pub downtime_seconds: u64,
+    /// Last downtime event
+    pub last_downtime: Option<DateTime<Utc>>,
+}
 
-pub struct HsmInfo {
+/// Error statistics
+#[derive(Debug, Clone)]
+pub struct ErrorStatistics {
+    /// Total errors
+    pub total_errors: u64,
+    /// Errors in last hour
+    pub errors_last_hour: u64,
+    /// Errors in last day
+    pub errors_last_day: u64,
+    /// Error rate (errors per operation)
+    pub error_rate: f64,
+    /// Most recent error
+    pub last_error: Option<String>,
+    /// Last error timestamp
+    pub last_error_time: Option<DateTime<Utc>>,
+}
 
-    pub vendor: String,
+/// Comprehensive HSM status
+#[derive(Debug, Clone)]
+pub struct ComprehensiveHsmStatus {
+    /// Health status
+    pub health: HsmHealthStatus,
+    /// Operational status
+    pub operational: OperationalStatus,
+    /// Security status
+    pub security: SecurityStatus,
+    /// Resource metrics
+    pub resources: ResourceMetrics,
+    /// Availability metrics
+    pub availability: AvailabilityMetrics,
+    /// Error statistics
+    pub errors: ErrorStatistics,
+    /// Status entries
+    pub status_entries: Vec<StatusEntry>,
+}
 
-    pub model: String,
+impl ComprehensiveHsmStatus {
+    /// Create new comprehensive status with defaults
+    pub fn new() -> Self {
+        Self {
+            health: HsmHealthStatus {
+                is_healthy: true,
+                last_check: Utc::now(),
+                error_message: None,
+                performance_metrics: PerformanceMetrics::default(),
+            },
+            operational: OperationalStatus {
+                is_online: true,
+                is_ready: true,
+                connection_status: ConnectionStatus::Connected,
+                active_operations: 0,
+                queued_operations: 0,
+            },
+            security: SecurityStatus {
+                is_secure: true,
+                tamper_detected: false,
+                last_audit: None,
+                failed_auth_attempts: 0,
+            },
+            resources: ResourceMetrics {
+                cpu_percent: 0.0,
+                memory_bytes: 0,
+                disk_bytes: 0,
+                network_bps: 0,
+            },
+            availability: AvailabilityMetrics {
+                uptime_percent: 100.0,
+                uptime_seconds: 0,
+                downtime_seconds: 0,
+                last_downtime: None,
+            },
+            errors: ErrorStatistics {
+                total_errors: 0,
+                errors_last_hour: 0,
+                errors_last_day: 0,
+                error_rate: 0.0,
+                last_error: None,
+                last_error_time: None,
+            },
+            status_entries: Vec::new(),
+        }
+    }
 
-    pub firmware_version: String,
+    /// Check if status is overall healthy
+    pub fn is_healthy(&self) -> bool {
+        self.health.is_healthy
+            && self.operational.is_online
+            && self.operational.is_ready
+            && self.security.is_secure
+            && !self.security.tamper_detected
+    }
 
-    pub api_version: String,
+    /// Get current status level
+    pub fn get_status_level(&self) -> StatusLevel {
+        if !self.is_healthy() {
+            StatusLevel::Critical
+        } else if self.errors.error_rate > 0.1 {
+            StatusLevel::Warning
+        } else {
+            StatusLevel::Normal
+        }
+    }
 
-    pub capabilities: Vec<HsmCapability>,
+    /// Add status entry
+    pub fn add_status_entry(&mut self, entry: StatusEntry) {
+        self.status_entries.push(entry);
+    }
+}
 
-    pub supported_algorithms: Vec<String>,
+impl Default for ComprehensiveHsmStatus {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
-    pub max_key_count: u32,
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    pub current_key_count: u32,
+    #[test]
+    fn test_performance_metrics_default() -> Result<(), Box<dyn std::error::Error>> {
+        let metrics = PerformanceMetrics::default();
+        assert_eq!(metrics.operations_per_second, 0.0);
+        assert_eq!(metrics.success_rate, 100.0);
+        assert_eq!(metrics.uptime_seconds, 0);
+        Ok(())
+    }
 
-    pub status: HsmOperationalStatus,
+    #[test]
+    fn test_status_level_ordering() -> Result<(), Box<dyn std::error::Error>> {
+        assert!(StatusLevel::Normal < StatusLevel::Warning);
+        assert!(StatusLevel::Warning < StatusLevel::Error);
+        assert!(StatusLevel::Error < StatusLevel::Critical);
+        Ok(())
+    }
 
-    pub hsm_type: String,
+    #[test]
+    fn test_connection_status_variants() -> Result<(), Box<dyn std::error::Error>> {
+        let connected = ConnectionStatus::Connected;
+        let disconnected = ConnectionStatus::Disconnected;
+        let error = ConnectionStatus::Error("timeout".to_string());
 
-    pub version: String,
+        assert_eq!(connected, ConnectionStatus::Connected);
+        assert_eq!(disconnected, ConnectionStatus::Disconnected);
 
-    pub max_key_size: Option<u32>,
+        match error {
+            ConnectionStatus::Error(msg) => assert_eq!(msg, "timeout"),
+            _ => panic!("Expected Error variant"),
+        }
+        Ok(())
+    }
 
-    pub certification: Option<String>,
+    #[test]
+    fn test_comprehensive_status_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let status = ComprehensiveHsmStatus::new();
 
-    pub tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel,
+        assert!(status.is_healthy());
+        assert_eq!(status.get_status_level(), StatusLevel::Normal);
+        assert!(status.operational.is_online);
+        assert!(status.security.is_secure);
+        Ok(())
+    }
 
-pub enum HsmCapability {
+    #[test]
+    fn test_comprehensive_status_unhealthy() -> Result<(), Box<dyn std::error::Error>> {
+        let mut status = ComprehensiveHsmStatus::new();
+        status.health.is_healthy = false;
 
-    KeyGeneration,
+        assert!(!status.is_healthy());
+        assert_eq!(status.get_status_level(), StatusLevel::Critical);
+        Ok(())
+    }
 
-    KeyStorage,
+    #[test]
+    fn test_status_entry_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let entry = StatusEntry {
+            category: StatusCategory::Performance,
+            level: StatusLevel::Warning,
+            message: "High latency detected".to_string(),
+            timestamp: Utc::now(),
+            metadata: None,
+        };
 
-    Encryption,
+        assert_eq!(entry.category, StatusCategory::Performance);
+        assert_eq!(entry.level, StatusLevel::Warning);
+        Ok(())
+    }
 
-    Decryption,
+    #[test]
+    fn test_add_status_entry() -> Result<(), Box<dyn std::error::Error>> {
+        let mut status = ComprehensiveHsmStatus::new();
 
-    Signing,
+        let entry = StatusEntry {
+            category: StatusCategory::Security,
+            level: StatusLevel::Normal,
+            message: "Security check passed".to_string(),
+            timestamp: Utc::now(),
+            metadata: None,
+        };
 
-    Verification,
+        status.add_status_entry(entry);
+        assert_eq!(status.status_entries.len(), 1);
+        Ok(())
+    }
 
-    KeyWrapping,
+    #[test]
+    fn test_resource_metrics() -> Result<(), Box<dyn std::error::Error>> {
+        let metrics = ResourceMetrics {
+            cpu_percent: 45.5,
+            memory_bytes: 1024 * 1024 * 512, // 512 MB
+            disk_bytes: 1024 * 1024 * 1024,  // 1 GB
+            network_bps: 1_000_000,          // 1 Mbps
+        };
 
-    KeyUnwrapping,
+        assert_eq!(metrics.cpu_percent, 45.5);
+        assert_eq!(metrics.memory_bytes, 536_870_912);
+        Ok(())
+    }
 
-    KeyDerivation,
+    #[test]
+    fn test_error_statistics() -> Result<(), Box<dyn std::error::Error>> {
+        let errors = ErrorStatistics {
+            total_errors: 100,
+            errors_last_hour: 5,
+            errors_last_day: 20,
+            error_rate: 0.01,
+            last_error: Some("Connection timeout".to_string()),
+            last_error_time: Some(Utc::now()),
+        };
 
-    RandomNumberGeneration,
+        assert_eq!(errors.total_errors, 100);
+        assert_eq!(errors.error_rate, 0.01);
+        assert!(errors.last_error.is_some());
+        Ok(())
+    }
 
-    Hashing,
+    #[test]
+    fn test_availability_metrics() -> Result<(), Box<dyn std::error::Error>> {
+        let availability = AvailabilityMetrics {
+            uptime_percent: 99.9,
+            uptime_seconds: 86400, // 1 day
+            downtime_seconds: 86,  // ~1.4 minutes
+            last_downtime: Some(Utc::now()),
+        };
 
-    KeyAttestation,
-
-    HardwareSecurity,
-
-    TamperResistance,
-
-    HighAvailability,
-
-    LoadBalancing,
-
-    BackupRestore,
-
-    AuditLogging,
-
-    RoleBasedAccess,
-
-    MultiFactor,
-
-    UserPresenceValidation,
-
-    KeyImport,
-
-    KeyExport,
-
-    SecureBackup,
-
-    SecureRestore,
-
-    TamperDetection,
-
-    BiometricAuthentication,
-
-    Custom(String),
+        assert_eq!(availability.uptime_percent, 99.9);
+        assert_eq!(availability.uptime_seconds, 86400);
+        Ok(())
+    }
+}

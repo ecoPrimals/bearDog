@@ -4,40 +4,22 @@ use std::collections::HashMap;
 use super::*;
 use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone)]
-pub struct CapabilityRegistry {
-
-    services_by_capability: HashMap<String, Vec<UniversalServiceRegistration>>,
+#[derive(HashMap<String, Vec<UniversalServiceRegistration>>,
 
     all_services: HashMap<uuid::Uuid, UniversalServiceRegistration>,
 }
 impl CapabilityRegistry {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             services_by_capability: HashMap::with_capacity(16),
-            all_services: HashMap::with_capacity(16),
-        }
-    }
-
-    pub async fn register_service(
-        &mut self,
-        registration: UniversalServiceRegistration,
+            all_services: HashMap::with_capacity(UniversalServiceRegistration,
     ) -> Result<(), BearDogError> {
 
         self.all_services
-            .insert(registration.service_id, registration.clone());
-
-        for capability in &registration.capabilities {
-            self.services_by_capability
-                .entry(capability.capability_id.clone())
-                .or_default()
-                .push(registration.clone());
-        Ok(())
-
-    pub async fn find_by_capability(
-        &self,
-        capability_id: &str,
+            .insert(&str,
     ) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
         Ok(self
             .services_by_capability
@@ -45,10 +27,20 @@ impl CapabilityRegistry {
             .cloned()
             .unwrap_or_else(Vec::new))
 
-    pub async fn get_all_services(&self) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
+/// Get All Services operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets all_services
+    /// Gets all_services
+    pub fn get_all_services(&self) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
         Ok(self.all_services.values().cloned().collect())
 
-    pub async fn unregister_service(&mut self, service_id: uuid::Uuid) -> Result<(), BearDogError> {
+/// Unregister Service operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn unregister_service(&mut self, service_id: uuid::Uuid) -> Result<(), BearDogError> {
         if let Some(registration) = self.all_services.remove(&service_id) {
 
             for capability in &registration.capabilities {

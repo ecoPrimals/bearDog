@@ -1,0 +1,251 @@
+//! Database Domain Configuration
+
+use beardog_errors::BearDogError;
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+
+/// Database domain configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabaseDomainConfig {
+    /// Primary database connection
+    pub primary: DatabaseConnectionConfig,
+    /// Connection pool settings
+    pub pool: DatabasePoolConfig,
+    /// Migration settings
+    pub migrations: MigrationConfig,
+}
+
+/// Database connection configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabaseConnectionConfig {
+    /// Database URL
+    pub url: String,
+    /// Maximum connections
+    pub max_connections: u32,
+    /// Connection timeout
+    pub timeout: Duration,
+    /// Enable SSL
+    pub ssl: bool,
+}
+
+/// Database pool configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabasePoolConfig {
+    /// Minimum idle connections
+    pub min_idle: u32,
+    /// Maximum connections
+    pub max_size: u32,
+    /// Connection idle timeout
+    pub idle_timeout: Duration,
+}
+
+/// Migration configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MigrationConfig {
+    /// Auto-run migrations
+    pub auto_migrate: bool,
+    /// Migration directory
+    pub directory: String,
+}
+
+impl Default for DatabaseDomainConfig {
+    fn default() -> Self {
+        Self {
+            primary: DatabaseConnectionConfig::default(),
+            pool: DatabasePoolConfig::default(),
+            migrations: MigrationConfig::default(),
+        }
+    }
+}
+
+impl DatabaseConnectionConfig {
+    /// Default database URL
+    pub const DEFAULT_URL: &'static str = "sqlite://beardog.db";
+
+    /// Default timeout in seconds
+    pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+
+    /// Default SSL setting
+    pub const DEFAULT_SSL: bool = false;
+
+    /// Create DatabaseConnectionConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            url: Self::DEFAULT_URL.to_string(),
+            max_connections: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32,
+            timeout: Duration::from_secs(Self::DEFAULT_TIMEOUT_SECS),
+            ssl: Self::DEFAULT_SSL,
+        }
+    }
+
+    /// Create DatabaseConnectionConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `DATABASE_URL` or `BEARDOG_DATABASE_URL`: Connection URL (default: "sqlite://beardog.db")
+    /// - `DATABASE_MAX_CONNECTIONS`: Maximum connections (default: DEFAULT_POOL_SIZE)
+    /// - `DATABASE_TIMEOUT_SECONDS`: Connection timeout (default: 30)
+    /// - `DATABASE_SSL`: Enable SSL/TLS (default: false)
+    pub fn from_env() -> Self {
+        let default_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            std::env::var("BEARDOG_DATABASE_URL").unwrap_or_else(|_| Self::DEFAULT_URL.to_string())
+        });
+
+        let max_connections = std::env::var("DATABASE_MAX_CONNECTIONS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32);
+
+        let timeout_secs = std::env::var("DATABASE_TIMEOUT_SECONDS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(Self::DEFAULT_TIMEOUT_SECS);
+
+        let ssl = std::env::var("DATABASE_SSL")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(Self::DEFAULT_SSL);
+
+        Self {
+            url: default_url,
+            max_connections,
+            timeout: Duration::from_secs(timeout_secs),
+            ssl,
+        }
+    }
+}
+
+impl Default for DatabaseConnectionConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl DatabasePoolConfig {
+    /// Default minimum idle connections
+    pub const DEFAULT_MIN_IDLE: u32 = 1;
+
+    /// Default idle timeout in seconds
+    pub const DEFAULT_IDLE_TIMEOUT_SECS: u64 = 600;
+
+    /// Create DatabasePoolConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            min_idle: Self::DEFAULT_MIN_IDLE,
+            max_size: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32,
+            idle_timeout: Duration::from_secs(Self::DEFAULT_IDLE_TIMEOUT_SECS),
+        }
+    }
+
+    /// Create DatabasePoolConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `DATABASE_POOL_MIN_IDLE`: Minimum idle connections (default: 1)
+    /// - `DATABASE_POOL_MAX_SIZE`: Maximum pool size (default: DEFAULT_POOL_SIZE)
+    /// - `DATABASE_POOL_IDLE_TIMEOUT_SECONDS`: Idle timeout (default: 600)
+    pub fn from_env() -> Self {
+        let min_idle = std::env::var("DATABASE_POOL_MIN_IDLE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(Self::DEFAULT_MIN_IDLE);
+
+        let max_size = std::env::var("DATABASE_POOL_MAX_SIZE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32);
+
+        let idle_timeout_secs = std::env::var("DATABASE_POOL_IDLE_TIMEOUT_SECONDS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(Self::DEFAULT_IDLE_TIMEOUT_SECS);
+
+        Self {
+            min_idle,
+            max_size,
+            idle_timeout: Duration::from_secs(idle_timeout_secs),
+        }
+    }
+}
+
+impl Default for DatabasePoolConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl MigrationConfig {
+    /// Default auto-migrate setting
+    pub const DEFAULT_AUTO_MIGRATE: bool = true;
+
+    /// Default migration directory
+    pub const DEFAULT_DIRECTORY: &'static str = "migrations";
+
+    /// Create MigrationConfig with hardcoded defaults
+    ///
+    /// This method is deterministic and safe for concurrent use.
+    /// No environment variables are read.
+    pub fn with_defaults() -> Self {
+        Self {
+            auto_migrate: Self::DEFAULT_AUTO_MIGRATE,
+            directory: Self::DEFAULT_DIRECTORY.to_string(),
+        }
+    }
+
+    /// Create MigrationConfig from environment variables
+    ///
+    /// Reads configuration from environment, falling back to defaults.
+    ///
+    /// # Environment Variables
+    /// - `DATABASE_AUTO_MIGRATE`: Enable auto-migration (default: true)
+    /// - `DATABASE_MIGRATION_DIR`: Migration directory (default: "migrations")
+    pub fn from_env() -> Self {
+        let auto_migrate = std::env::var("DATABASE_AUTO_MIGRATE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(Self::DEFAULT_AUTO_MIGRATE);
+
+        let directory = std::env::var("DATABASE_MIGRATION_DIR")
+            .unwrap_or_else(|_| Self::DEFAULT_DIRECTORY.to_string());
+
+        Self {
+            auto_migrate,
+            directory,
+        }
+    }
+}
+
+impl Default for MigrationConfig {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl DatabaseDomainConfig {
+    /// Load from environment variables
+    pub fn from_env() -> Result<Self, BearDogError> {
+        let mut config = Self::default();
+
+        if let Ok(url) = std::env::var("DATABASE_URL") {
+            config.primary.url = url;
+        }
+
+        Ok(config)
+    }
+
+    /// Validate configuration
+    pub fn validate(&self) -> Result<(), BearDogError> {
+        if self.primary.url.is_empty() {
+            return Err(BearDogError::validation("Database URL cannot be empty"));
+        }
+        Ok(())
+    }
+}

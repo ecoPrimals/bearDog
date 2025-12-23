@@ -1,50 +1,49 @@
+[[bin]]
+name = "deploy-pixel8"
+path = "src/main.rs"
+
 [package]
 name = "beardog-deploy"
 version = "1.0.0"
 edition = "2021"
 description = "Pure Rust deployment tool for BearDog on Android devices"
-
-[[bin]]
-name = "deploy-pixel8"
-path = "src/main.rs"
+repository = "https://github.com/eastgate-software/beardog"
+license = "MIT OR Apache-2.0"
+rust-version = "1.75"
+authors = [ "BearDog Team <team@beardog.dev>",]
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "deployment", "automation", "beardog", "orchestration", "devops",]
+categories = [ "development-tools", "deployment", "automation",]
+readme = "README.md"
 
 [dependencies]
-# CLI framework
-clap = { version = "4.0", features = ["derive"] }
-
-# Async runtime
-tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "process", "fs", "time", "io-util", "macros"] }
-
-# Logging
 tracing = "0.1"
 tracing-subscriber = "0.3"
-
-# BearDog dependencies
-beardog-errors = { path = "../beardog-errors" }
-
-# Time handling
-chrono = { version = "0.4", features = ["serde"] }
-
-# Error handling
-anyhow = "1.0"
-thiserror = "1.0"
-
-# File operations
+# CLEANED: anyhow removed - using BearDogError/BearDogResult (October 2025)
+thiserror = { workspace = true }
 walkdir = "2.0"
-
-# Process execution
-tokio-process = "0.2"
-
-# Serialization
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-
-# Path utilities
 path-absolutize = "3.0"
-
-# Console output
 console = "0.15"
 indicatif = "0.17"
+sysinfo = "0.29"
 
-# System info
-sysinfo = "0.29" 
+[dependencies.clap]
+version = "4.0"
+features = [ "derive",]
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "rt", "rt-multi-thread", "process", "fs", "time", "io-util", "macros",]
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]

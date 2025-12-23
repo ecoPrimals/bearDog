@@ -43,6 +43,7 @@ request_timeout = "${BEARDOG_REQUEST_TIMEOUT:-30}"
 connect_timeout = "${BEARDOG_CONNECT_TIMEOUT:-10}"
 read_timeout = "${BEARDOG_READ_TIMEOUT:-30}"
 write_timeout = "${BEARDOG_WRITE_TIMEOUT:-30}"
+discovery_timeout = "${BEARDOG_DISCOVERY_TIMEOUT:-5}"
 
 [security]
 level = "${BEARDOG_SECURITY_LEVEL:-Standard}"
@@ -104,12 +105,13 @@ connection_timeout_secs = "${BEARDOG_DB_CONNECTION_TIMEOUT:-30}"
 idle_timeout_secs = "${BEARDOG_DB_IDLE_TIMEOUT:-300}"
 max_lifetime_secs = "${BEARDOG_DB_MAX_LIFETIME:-3600}"
 
-[external_services]
-songbird_endpoint = "${BEARDOG_SONGBIRD_ENDPOINT:-https://songbird.beardog.local:8443}"
-nestgate_endpoint = "${BEARDOG_NESTGATE_ENDPOINT:-https://nestgate.beardog.local:8443}"
-squirrel_endpoint = "${BEARDOG_SQUIRREL_ENDPOINT:-https://squirrel.beardog.local:8443}"
-toadstool_endpoint = "${BEARDOG_TOADSTOOL_ENDPOINT:-https://toadstool.beardog.local:8443}"
-biomeos_endpoint = "${BEARDOG_BIOMEOS_ENDPOINT:-https://biomeos.beardog.local:8443}"
+[capability_endpoints]
+# ✅ SOVEREIGNTY COMPLIANT: Capability-based service discovery
+service_mesh_endpoint = "${SERVICE_MESH_ENDPOINT:-${BEARDOG_SERVICE_MESH_ENDPOINT}}"
+storage_service_endpoint = "${STORAGE_SERVICE_ENDPOINT:-${BEARDOG_STORAGE_SERVICE_ENDPOINT}}"
+ai_service_endpoint = "${AI_SERVICE_ENDPOINT:-${BEARDOG_AI_SERVICE_ENDPOINT}}"
+compute_service_endpoint = "${COMPUTE_SERVICE_ENDPOINT:-${BEARDOG_COMPUTE_SERVICE_ENDPOINT}}"
+container_platform_endpoint = "${CONTAINER_PLATFORM_ENDPOINT:-${BEARDOG_CONTAINER_PLATFORM_ENDPOINT}}"
 smtp_server = "${BEARDOG_SMTP_SERVER:-localhost}"
 smtp_port = "${BEARDOG_SMTP_PORT:-587}"
 
@@ -146,6 +148,21 @@ crossover_rate = "${BEARDOG_GENETIC_CROSSOVER_RATE:-0.8}"
 population_size = "${BEARDOG_GENETIC_POPULATION_SIZE:-100}"
 max_generations = "${BEARDOG_GENETIC_MAX_GENERATIONS:-1000}"
 fitness_threshold = "${BEARDOG_GENETIC_FITNESS_THRESHOLD:-0.95}"
+
+[ai]
+# Hybrid Intelligence Configuration
+[ai.hybrid_intelligence]
+update_interval_secs = "${BEARDOG_AI_UPDATE_INTERVAL:-60}"
+timeout_secs = "${BEARDOG_AI_TIMEOUT:-30}"
+request_timeout_secs = "${BEARDOG_AI_REQUEST_TIMEOUT:-30}"
+batch_timeout_ms = "${BEARDOG_AI_BATCH_TIMEOUT:-10}"
+max_inference_time_secs = "${BEARDOG_AI_MAX_INFERENCE:-30}"
+
+[ai.service_mesh]
+connection_timeout_secs = "${BEARDOG_AI_MESH_CONNECTION_TIMEOUT:-10}"
+request_timeout_secs = "${BEARDOG_AI_MESH_REQUEST_TIMEOUT:-30}"
+health_check_interval_secs = "${BEARDOG_AI_MESH_HEALTH_INTERVAL:-30}"
+health_check_timeout_secs = "${BEARDOG_AI_MESH_HEALTH_TIMEOUT:-5}"
 
 [performance.threat_detection]
 threat_threshold = "${BEARDOG_THREAT_THRESHOLD:-0.8}"

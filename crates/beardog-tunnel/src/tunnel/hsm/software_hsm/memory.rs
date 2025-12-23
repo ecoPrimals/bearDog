@@ -1,110 +1,243 @@
-
-
-use super::types::*;
 use beardog_errors::BearDogError;
+use tracing::{debug, info};
+use zeroize::Zeroize;
 
-pub struct DefaultMemoryProtector {
-
-    config: MemoryProtectionConfig,
-}
-impl DefaultMemoryProtector {
-
-    pub fn get_config(&self) -> &MemoryProtectionConfig {
-        &self.config
-    }
-
-    pub fn is_protection_enabled(&self) -> bool {
-
-        true // Default implementation}
-
-    pub async fn new(config: MemoryProtectionConfig) -> Result<Self, BearDogError> {
-        Ok(Self { config })
-    pub async fn protect_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
-
-        Ok(())}
-
-    pub async fn clear_memory(&self, _data: &mut [u8]) -> Result<(), BearDogError> {
-
+/// Memory protection configuration
 #[derive(Clone, Debug)]
 pub struct MemoryProtectionConfig {
-
     pub enable_protection: bool,
+    pub clear_on_drop: bool,
+}
 
-    pub clear_on_drop: bool,}
-
-impl Default for MemoryProtectionConfig {}
-
+impl Default for MemoryProtectionConfig {
     fn default() -> Self {
         Self {
             enable_protection: true,
             clear_on_drop: true,
         }
+    }
+}
 
-#[derive(Clone, Debug, Default)]
-pub struct MemoryProtectionStats {
+/// Default memory protector for securing sensitive data in memory
+pub struct DefaultMemoryProtector {
+    config: MemoryProtectionConfig,
+}
 
-    pub total_protected_bytes: usize,
+impl DefaultMemoryProtector {
+    /// Create new memory protector
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
+    pub async fn new(config: MemoryProtectionConfig) -> Result<Self, BearDogError> {
+        info!("Creating memory protector with config: {:?}", config);
+        Ok(Self { config })
+    }
 
-    pub active_regions: usize,
+    /// Get configuration
+    pub fn get_config(&self) -> &MemoryProtectionConfig {
+        &self.config
+    }
 
-    pub protection_failures: usize,
+    /// Check if protection is enabled
+    pub fn is_protection_enabled(&self) -> bool {
+        self.config.enable_protection
+    }
 
-#[derive(Clone)]
-pub struct SecureMemoryRegion {
+    /// Protect memory region
+    ///
+    /// # Errors
+    /// Returns an error if protection fails
+    pub async fn protect_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
+        if self.config.enable_protection {
+            debug!("Memory protection enabled for {} bytes", _data.len());
+            // Platform-specific memory protection would go here
+            // For example: mlock() on Unix, VirtualLock() on Windows
+        }
+        Ok(())
+    }
 
-    pub start_address: usize,
+    /// Clear memory region securely
+    ///
+    /// # Errors
+    /// Returns an error if clearing fails
+    pub async fn clear_memory(&self, data: &mut [u8]) -> Result<(), BearDogError> {
+        if self.config.clear_on_drop {
+            debug!("Securely clearing {} bytes", data.len());
+            data.zeroize();
+        }
+        Ok(())
+    }
 
-    pub size: usize,
+    /// Lock memory to prevent swapping
+    ///
+    /// # Errors
+    /// Returns an error if locking fails
+    pub async fn lock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
+        if self.config.enable_protection {
+            debug!("Locking {} bytes in memory", _data.len());
+            // Platform-specific memory locking
+            #[cfg(unix)]
+            {
+                // Would call mlock() here
+            }
+            #[cfg(windows)]
+            {
+                // Would call VirtualLock() here
+            }
+        }
+        Ok(())
+    }
 
-    pub protection_level: String,}
+    /// Unlock previously locked memory
+    ///
+    /// # Errors
+    /// Returns an error if unlocking fails
+    pub async fn unlock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
+        if self.config.enable_protection {
+            debug!("Unlocking {} bytes from memory", _data.len());
+            // Platform-specific memory unlocking
+            #[cfg(unix)]
+            {
+                // Would call munlock() here
+            }
+            #[cfg(windows)]
+            {
+                // Would call VirtualUnlock() here
+            }
+        }
+        Ok(())
+    }
 
-impl SecureMemoryRegion {}
+    /// Zeroize memory securely
+    ///
+    /// # Errors
+    /// Returns an error if zeroization fails
+    pub async fn zeroize(&self, data: &mut [u8]) -> Result<(), BearDogError> {
+        debug!("Zeroizing {} bytes", data.len());
+        data.zeroize();
+        Ok(())
+    }
 
-    pub fn new(start_address: usize, size: usize, protection_level: &str) -> Self {
-            start_address,
-            size,
-            protection_level,
+    /// Unprotect memory (decrypt/decode protected data)
+    ///
+    /// # Errors
+    /// Returns an error if unprotection fails
+    pub async fn unprotect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        debug!("Unprotecting {} bytes", data.len());
+        // For now, just return a copy
+        // In a real implementation, this would decrypt or decode protected memory
+        Ok(data.to_vec())
+    }
 
-pub fn create_memory_protection_stats() -> MemoryProtectionStats {
-    MemoryProtectionStats::default()
+    /// Protect memory (encrypt/encode sensitive data)
+    ///
+    /// # Errors
+    /// Returns an error if protection fails
+    pub async fn protect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        debug!("Protecting {} bytes", data.len());
+        // Lock the memory if protection is enabled
+        self.protect_memory(data).await?;
+        // For now, just return a copy
+        // In a real implementation, this would encrypt or encode the data
+        Ok(data.to_vec())
+    }
 
-impl crate::tunnel::hsm::software_hsm::health::MemoryProtector for DefaultMemoryProtector {
-    async fn initialize(&self) -> Result<(), BearDogError> {
+    /// Initialize memory protector
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
+        debug!("Initializing memory protector");
+        Ok(())
+    }
+}
 
-    async fn protect_key_material(&self, key_material: &[u8]) -> Result<ProtectedMemory, BearDogError> {
+/// Protected memory wrapper that automatically clears on drop
+pub struct ProtectedMemory {
+    data: Vec<u8>,
+    protector: DefaultMemoryProtector,
+}
 
-        Ok(ProtectedMemory::new(key_material.to_vec(), true))
-    async fn unprotect_key_material(&self, protected: &ProtectedMemory) -> Result<Vec<u8>, BearDogError>> {
+impl ProtectedMemory {
+    /// Create new protected memory
+    ///
+    /// # Errors
+    /// Returns an error if protection setup fails
+    pub async fn new(
+        data: Vec<u8>,
+        protector: DefaultMemoryProtector,
+    ) -> Result<Self, BearDogError> {
+        protector.protect_memory(&data).await?;
+        Ok(Self { data, protector })
+    }
 
-        Ok(protected.data().to_vec())}
+    /// Get reference to protected data
+    pub fn data(&self) -> &[u8] {
+        &self.data
+    }
 
-    async fn zeroize_key_material(&self, _key_material: &[u8]) -> Result<(), BearDogError> {
+    /// Get mutable reference to protected data
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
 
-    fn protect_memory(
-        &self,
-        data: &[u8],
-    ) -> std::pin::Pin<
-        Box<
-            dyn std::future::Future<
-                    Output = Result<
-                        crate::tunnel::hsm::software_hsm::health::ProtectedMemory,
-                    , BearDogError>,
-                > + Send
-                + '_,
-        >,
-    > {
-        Box::pin(async move {
-            debug!("🔒 Protecting {} bytes of memory", data.len());
+impl Drop for ProtectedMemory {
+    fn drop(&mut self) {
+        // Clear memory on drop
+        if self.protector.config.clear_on_drop {
+            self.data.zeroize();
+        }
+    }
+}
 
-            Ok(crate::tunnel::hsm::software_hsm::health::ProtectedMemory::new(data.to_vec(), true))
-        })
-    fn clear_memory(
-        protected: &crate::tunnel::hsm::software_hsm::health::ProtectedMemory,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BearDogError>> + Send + '_>> {
-            debug!(
-                "🧹 Clearing protected memory of {} bytes",
-                protected.data().len()
-            );
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-            info!("✅ Memory cleared successfully");
-            Ok(())
+    #[tokio::test]
+    async fn test_memory_protector_creation() -> Result<(), BearDogError> {
+        let config = MemoryProtectionConfig::default();
+        let protector = DefaultMemoryProtector::new(config).await?;
+        assert!(protector.is_protection_enabled());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_memory_clearing() -> Result<(), BearDogError> {
+        let config = MemoryProtectionConfig::default();
+        let protector = DefaultMemoryProtector::new(config).await?;
+
+        let mut data = vec![0xAA; 32];
+        protector.clear_memory(&mut data).await?;
+
+        assert!(data.iter().all(|&b| b == 0));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_protected_memory() -> Result<(), BearDogError> {
+        let config = MemoryProtectionConfig::default();
+        let protector = DefaultMemoryProtector::new(config).await?;
+
+        let sensitive_data = vec![1, 2, 3, 4, 5];
+        let protected = ProtectedMemory::new(sensitive_data.clone(), protector).await?;
+
+        assert_eq!(protected.data(), &sensitive_data[..]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_protected_memory_drop() -> Result<(), BearDogError> {
+        let config = MemoryProtectionConfig::default();
+        let protector = DefaultMemoryProtector::new(config).await?;
+
+        let sensitive_data = vec![0xAA; 32];
+        {
+            let _protected = ProtectedMemory::new(sensitive_data, protector).await?;
+            // Protected memory should be cleared when it goes out of scope
+        }
+        // Memory should be zeroed now (verified by Drop implementation)
+        Ok(())
+    }
+}

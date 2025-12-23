@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use crate::tunnel::{
     events::*, BStpConfig, BStpKeyManager, EncryptedPacket, GamingCryptoEngine,
     GamingSecurityProfile, GeneticSecurityHealing, LatencyMonitor, NetworkSecurityEvent,
@@ -16,20 +21,9 @@ use std::time::{Instant, SystemTime};
 use tokio::sync::RwLock;
 use tracing::debug;
 
-use beardog_traits::canonical::SecurityProvider;
+use beardog_types::canonical::providers_unified::traits::UnifiedSecurityProvider as SecurityProvider;
 
-// GamingSecurityProvider removed - use PlatformProvider from beardog-traits instead
-        session_id: &str,
-        encrypted_data: &EncryptedPacket,
-    ) -> Result<Vec<u8>, BearDogError>>;
-
-    async fn handle_network_event(
-        &self,
-        event: NetworkSecurityEvent,
-    ) -> Result<SecurityResponse, BearDogError>;
-}
-
-pub use beardog_traits::canonical::PlatformProvider as BStpSecurityProvider;
+pub use beardog_types::canonical::providers_unified::traits::UnifiedProvider as BStpSecurityProvider;
 
 pub struct BStpSecurityManager {
 
@@ -47,8 +41,9 @@ pub struct BStpSecurityManager {
 
 impl BStpSecurityManager {
 
-    pub async fn new(
-        encryption: Arc<EncryptionEngine>,
+/// New operation.
+    /// Creates a new instance
+    pub async fn new(Arc<EncryptionEngine>,
         genetics: Arc<DefaultBearDogGeneticsEngine>,
         key_manager: Arc<BStpKeyManager>,
         config: BStpConfig,
@@ -62,10 +57,10 @@ impl BStpSecurityManager {
                 key_manager.clone(),
                 config.clone(),
             )
-            .await?,
+            ?,
         );
-        let healing_engine = Arc::new(RwLock::new(
-            GeneticSecurityHealing::new(genetics.clone()).await?,
+        let healing_engine = Arc::new(&RwLock::new(
+            GeneticSecurityHealing::new(genetics)?,
         ));
         Ok(Self {
             crypto_engine,
@@ -77,34 +72,49 @@ impl BStpSecurityManager {
         })
     }
 
-    fn generate_session_id() -> String {
-        format_args!("bstp_session_{}", uuid::Uuid::new_v4().to_string().simple())
 
-    async fn create_session_monitor(&self, session_id: &str) -> SessionMonitor {
+    fn generate_session_id() -> String {
+        format!("bstp_session_{}", uuid::Uuid::new_v4().simple())
+    }
+
+    /// Creates session_monitor
+    fn create_session_monitor(&self, session_id: &str) -> SessionMonitor {
         SessionMonitor {
             session_id: session_id.to_string(),
             created_at: SystemTime::now(),
-            latency_monitor: LatencyMonitor::new(),
-            encryption_count: 0,
+            latency_monitor: LatencyMonitor::new(0,
             decryption_count: 0,
         }
+    }
 
+/// Get Healing Engine operation.
+    /// Gets healing_engine
+    /// Gets healing_engine
     pub fn get_healing_engine(&self) -> &Arc<RwLock<GeneticSecurityHealing>> {
         &self.healing_engine
+    }
 
+/// Get Auth Engine operation.
+    /// Gets auth_engine
+    /// Gets auth_engine
     pub fn get_auth_engine(&self) -> &Arc<CrossNodeAuthEngine> {
         &self.auth_engine
+    }
 
+/// Get Threat Engine operation.
+    /// Gets threat_engine
+    /// Gets threat_engine
     pub fn get_threat_engine(&self) -> &Arc<ThreatDetectionEngine> {
         &self.threat_engine
+    }
 
-    pub async fn perform_security_healing(&self, session_id: &str) -> Result<(), BearDogError> {
-        let healing_engine = self.healing_engine.read().await;
-
-        let _ = &*healing_engine; // Use the field
-        debug!("Performing security healing for session: {}", session_id);
-        Ok(())
-impl BStpSecurityProvider for BStpSecurityManager {
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn perform_security_healing(&self, session_id: &str) -> Result<(), BearDogError> {
+        let healing_engine = self.healing_engine.read({}", session_id);
+        Ok(&str,
+        peer_capabilities: &[&str],
     ) -> Result<SecureSession, BearDogError> {
         let session_id = Self::generate_session_id();
         let start_time = Instant::now();
@@ -114,13 +124,11 @@ impl BStpSecurityProvider for BStpSecurityManager {
             peer_capabilities,
             &VerificationResult {
                 peer_id: peer_id.to_string(),
-                is_trusted: true,
-                trust_level: TrustLevel::High,
                 verification_time: SystemTime::now(),
                 capabilities: HashMap::with_capacity(16),
             },
         )
-        .await?;
+        ?;
 
         let session = SecureSession::new(
             session_id.clone(),
@@ -130,30 +138,24 @@ impl BStpSecurityProvider for BStpSecurityManager {
                 .gaming_profile
                 .clone()
                 .unwrap_or_else(GamingSecurityProfile::competitive_gaming),
+        );
 
         {
-            let mut sessions = self.active_sessions.write().await;
-            sessions.insert(session_id.clone(), session.clone());
-            let mut monitors = self.session_monitors.write().await;
-            let monitor = self.create_session_monitor(&session_id).await;
-            debug!(
-                "Created session monitor for session: {}, age: {} seconds",
+            let mut sessions = self.active_sessions.write({}, age: {} seconds",
                 monitor.get_session_id(),
                 monitor.get_age_seconds()
             );
             monitors.insert(session_id.clone(), monitor);
+        }
         let setup_duration = start_time.elapsed();
         tracing::info!(
             "Created BSTP secure session {} for peer {} in {}μs",
-            session_id,
-            setup_duration.as_micros()
-        Ok(session)
-    async fn encrypt_packet(
+            session_id: session_id.to_string(&str,
         data: &[u8],
     ) -> Result<EncryptedPacket, BearDogError> {
 
         let session = {
-            let sessions = self.active_sessions.read().await;
+            let sessions = self.active_sessions.read();
             sessions
                 .get(session_id)
                 .cloned()
@@ -162,30 +164,23 @@ impl BStpSecurityProvider for BStpSecurityManager {
 
         let encrypted_packet = self
             .crypto_engine
-            .ultra_fast_encrypt(session_id, data, &session.security_genetics)
-            .await?;
-        let encryption_duration = start_time.elapsed();
+            .ultra_fast_encrypt({}, created at: {:?}",
+                    monitor.get_session_id(&str,
+        encrypted_data: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
 
-            if let Some(monitor) = monitors.get_mut(session_id) {
-                monitor
-                    .latency_monitor
-                    .record_encryption_latency(encryption_duration);
-                monitor.encryption_count += 1;
-                debug!(
-                    "Updated encryption count for session: {}, created at: {:?}",
-                    monitor.get_session_id(),
-                    monitor.get_created_at()
-                );
-            }
-        Ok(encrypted_packet)
-    ) -> Result<Vec<u8>, BearDogError>> {
+        let session = {
+            let sessions = self.active_sessions.read();
+            sessions
+                .get(session_id)
+                .cloned()
+                .ok_or(BearDogError::SessionNotFound)?
+        };
 
         let decrypted_data = self
-            .ultra_fast_decrypt(session_id, encrypted_data, &session.security_genetics)
-        let decryption_duration = start_time.elapsed();
-                    .record_decryption_latency(decryption_duration);
-                monitor.decryption_count += 1;
-        Ok(decrypted_data)
+            .crypto_engine
+            .ultra_fast_decrypt({}, created at: {:?}",
+                    monitor.get_session_id(NetworkSecurityEvent,
     ) -> Result<SecurityResponse, BearDogError> {
         match event {
             NetworkSecurityEvent::PeerDiscovered {
@@ -196,74 +191,79 @@ impl BStpSecurityProvider for BStpSecurityManager {
 
                 let session = self
                     .create_secure_session(&peer_id, &peer_capabilities)
-                    .await?;
+                    ?;
                 Ok(SecurityResponse::SessionCreated {
-                    session_id: session.session_id.clone(),
+                    session_id: &session.session_id.to_string(),
                     peer_id,
                     security_level: session.security_genetics.get_security_level(),
                 })
+            }
             NetworkSecurityEvent::PeerDisconnected {
+                peer_id,
                 reason: _,
                 was_planned: _,
-
+            } => {
                 let session_id = {
-                    let sessions = self.active_sessions.read().await;
+                    let sessions = self.active_sessions.read();
                     sessions
                         .iter()
                         .find(|(_, session)| session.peer_node_id == peer_id)
                         .map(|(id, _)| id.clone())
                 };
                 if let Some(session_id) = session_id {
-                    self.terminate_session(&session_id).await?;
+                    self.terminate_session(&session_id)?;
                 }
                 Ok(SecurityResponse::SessionTerminated { peer_id })
+            }
             _ => Ok(SecurityResponse::SecurityAdapted {
                 reason: "Network event handled".to_string(),
-                new_security_level: SecurityLevel::Adaptive,
             }),
-    async fn terminate_session(&self, session_id: &str) -> Result<(), BearDogError> {
+        }
+    }
 
-            sessions.remove(session_id);
-            monitors.remove(session_id);
+
+    fn terminate_session(&self, session_id: &str) -> Result<(), BearDogError> {
+        let mut sessions = self.active_sessions.write();
+        let mut monitors = self.session_monitors.write();
+        sessions.remove(session_id);
+        monitors.remove(session_id);
         tracing::info!("Terminated BSTP secure session {}", session_id);
-
-pub struct VerificationResult {
-
-    pub peer_id: String,
-
+        Ok(String,
+    /// Whether is_trusted is enabled
     pub is_trusted: bool,
-
+    /// The trust level value
     pub trust_level: TrustLevel,
-
     pub verification_time: SystemTime,
-
+    /// Mapping of capabilities
     pub capabilities: HashMap<String, String>,
+}
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum TrustLevel {
-
-    Low,
-
-    Medium,
-
-    High,
-
-    Ultimate,
-#[derive(Debug, Clone)]}
-
-struct SessionMonitor {
-    session_id: String,
+#[derive(Debug, Clone)]
     created_at: SystemTime,
     latency_monitor: LatencyMonitor,
     encryption_count: u64,
     decryption_count: u64,
-impl SessionMonitor {
+}
 
+impl SessionMonitor {
+/// Get Session Id operation.
+    /// Gets session_id
+    /// Gets session_id
     pub fn get_session_id(&self) -> &str {
         &self.session_id
+    }
 
+/// Get Created At operation.
+    /// Gets created_at
+    /// Gets created_at
     pub fn get_created_at(&self) -> SystemTime {
         self.created_at
+    }
 
+/// Get Age Seconds operation.
+    /// Gets age_seconds
+    /// Gets age_seconds
     pub fn get_age_seconds(&self) -> u64 {
         self.created_at.elapsed().map_or(0, |d| d.as_secs())
+    }
+}

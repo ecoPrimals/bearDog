@@ -1,41 +1,49 @@
 [package]
 name = "beardog-tunnel"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
 description = "BearDog tunnel module"
-authors.workspace = true
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "tunnel", "secure", "communication", "beardog", "networking",]
+categories = [ "network-programming", "security", "development-tools",]
 
 [dependencies]
+# BearDog internal crates
+beardog-config = { path = "../beardog-config" }
 beardog-errors = { path = "../beardog-errors" }
-beardog-security = { path = "../beardog-security" }
 beardog-genetics = { path = "../beardog-genetics" }
-# beardog-config removed - use beardog-types::config::complete_unified
+beardog-types = { path = "../beardog-types" }
+beardog-capabilities = { path = "../beardog-capabilities" }
+beardog-security = { path = "../beardog-security" }
 beardog-monitoring = { path = "../beardog-monitoring" }
 beardog-auth = { path = "../beardog-auth" }
 beardog-threat = { path = "../beardog-threat" }
 beardog-core = { path = "../beardog-core" }
 beardog-utils = { path = "../beardog-utils" }
-beardog-types = { path = "../beardog-types" }
+beardog-traits = { path = "../beardog-traits" }
 
-# Core dependencies
+# External dependencies
 tokio = { version = "1.0", features = ["full"] }
-tokio-tungstenite = "0.20"
 serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tarpc = { version = "0.34", features = ["full"] }
+tokio-serde = { version = "0.8", features = ["json"] }
+reqwest = { version = "0.11", features = ["json"] }
+tokio-tungstenite = "0.20"
 serde_json = "1.0"
 tracing = "0.1"
-uuid = { version = "1.0", features = ["v4"] }
-chrono = { version = "0.4", features = ["serde"] }
-# async-trait = "0.1"  # REMOVED: Modernized to native async fn
-thiserror = "1.0"
-anyhow = "1.0"
-
-# Cryptography
+thiserror = { workspace = true }
+# CLEANED: anyhow removed - unused dependency (October 2025)
 aes-gcm = "0.10"
 chacha20poly1305 = "0.10"
 ed25519-dalek = "2.0"
+p256 = { version = "0.13", features = ["ecdsa", "pem"] }
+ecdsa = "0.16"
 rand = "0.8"
 sha2 = "0.10"
+sha3 = "0.10"  # For entropy mixing (evolved from mock)
 blake3 = "1.0"
 argon2 = "0.5"
 openssl = "0.10"
@@ -43,40 +51,61 @@ ring = "0.17"
 hex = "0.4"
 hkdf = "0.12"
 arrayref = "0.3"
-
-# Serialization
 bincode = "1.3"
-
-# Networking
-tarpc = { version = "0.34", features = ["full"] }
-tokio-serde = { version = "0.8", features = ["json"] }
-reqwest = { version = "0.11", features = ["json"] }
-
-# HSM Integration - Real hardware support
 cryptoki = "0.6"
+zeroize = "1.7"
+parking_lot = "0.12"
+async-trait = "0.1"
 
-# Android integration (conditional)
-[target.'cfg(target_os = "android")'.dependencies]
-ndk = "0.8"
-ndk-sys = "0.5"
-jni = "0.21"
+# Solo V2 USB security key support
+ctap-hid-fido2 = { version = "3.5", optional = true }
+hidapi = { version = "2.4", optional = true }
 
-# iOS integration (conditional)  
-[target.'cfg(target_os = "ios")'.dependencies]
-security-framework = "2.9"
-security-framework-sys = "2.9"
-core-foundation = "0.9"
-core-foundation-sys = "0.8"
+# BTSP HTTP API dependencies (optional)
+axum = { version = "0.7", optional = true }
+tower = { version = "0.4", optional = true }
+tower-http = { version = "0.5", features = ["trace", "cors"], optional = true }
+base64 = { version = "0.21", optional = true }
 
-# Development dependencies
 [dev-dependencies]
 tokio-test = "0.4"
 futures = "0.3"
 rand = "0.8"
+serial_test = "3.0"
 
 [features]
+zero-cost-architecture = []
+universal-discovery = []
+primal-sovereignty = []
+solo-v2 = ["ctap-hid-fido2", "hidapi"]
+usb-discovery = ["hidapi"]
+ctap2 = ["ctap-hid-fido2"]
+ecosystem = []
+btsp-api = ["axum", "tower", "tower-http", "base64"]
 default = []
-android_native = []  # Android dependencies are now always available on Android targets
-pixel8_optimizations = ["android_native"]
-strongbox_hardware = ["android_native"]
-# Note: Android and iOS dependencies are now always available when building for those platforms
+android_native = []
+pixel8_optimizations = [ "android_native",]
+strongbox_hardware = [ "android_native",]
+
+[package.version]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[target."cfg(target_os = \"android\")".dependencies]
+ndk = "0.8"
+ndk-sys = "0.5"
+jni = "0.21"
+
+[target."cfg(target_os = \"ios\")".dependencies]
+security-framework = "2.9"
+security-framework-sys = "2.9"
+core-foundation = "0.9"
+core-foundation-sys = "0.8"

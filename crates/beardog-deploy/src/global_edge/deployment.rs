@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::types::*;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -16,44 +21,39 @@ pub struct DeploymentManager {
 
 impl DeploymentManager {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: GlobalDeploymentConfig) -> Self {
         Self {
             regions: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             config,
-            deployment_stats: Arc::new(RwLock::new(GlobalDeploymentStats::default())),
-        }
-    }
-
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
-        info!("Initializing global edge deployment manager");
-
-        let mut regions = self.regions.write().await;
-        for region_config in &self.config.regions {
-            let region = EdgeRegion {
-                region_id: region_config.region_id.clone(),
-                region_name: format_args!("{}-{}", 
+            deployment_stats: Arc::new(RwLock::new(GlobalDeploymentStats::default(&region_config.region_id,
+                region_name: format!("{}-{}", 
                     region_config.geographical_location.country,
                     region_config.geographical_location.city
-                ).to_string(),
-                cloud_provider: region_config.cloud_provider.clone(),
-                geographical_location: region_config.geographical_location.clone(),
-                edge_nodes: Vec::new(),
-                capacity: region_config.capacity.clone(),
+                ),
+                cloud_provider: &region_config.cloud_provider,
+                geographical_location: &region_config.geographical_location,
+                edge_nodes: Vec::new(&region_config.capacity,
                 status: RegionStatus::Initializing,
                 performance_metrics: RegionMetrics::default(),
                 last_updated: chrono::Utc::now().timestamp() as u64,
             };
-            regions.insert(region_config.region_id.clone(), region);
+            regions.insert(region_config.region_id, region);
         }
         
         info!("Initialized {} regions", regions.len());
         Ok(())
     }
 
-    pub async fn deploy_all_regions(&self) -> Result<(), BearDogError> {
+/// Deploy All Regions operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn deploy_all_regions(&self) -> Result<(), BearDogError> {
         info!("Starting global deployment");
         
-        let regions = self.regions.read().await;
+        let regions = self.regions.read();
         let mut deployment_tasks = Vec::new();
         
         for (region_id, _region) in regions.iter() {
@@ -61,23 +61,14 @@ impl DeploymentManager {
             let regions_clone = Arc::clone(&self.regions);
             
             let task = tokio::spawn(async move {
-                Self::deploy_region(&region_id, regions_clone).await
-            });
-            deployment_tasks.push(task);
-        }
-
-        let mut successful_deployments = 0;
-        for task in deployment_tasks {
-            match task.await {
-                Ok(Ok(())) => successful_deployments += 1,
-                Ok(Err(e)) => warn!("Region deployment failed: {}", e),
-                Err(e) => warn!("Deployment task panicked: {}", e),
+                Self::deploy_region({}", e),
+                Err({}", e),
             }
         }
         
         info!("Completed {} successful deployments", successful_deployments);
 
-        let mut stats = self.deployment_stats.write().await;
+        let mut stats = self.deployment_stats.write();
         stats.successful_deployments = successful_deployments;
         stats.total_regions = regions.len();
         stats.last_deployment = chrono::Utc::now().timestamp() as u64;
@@ -85,22 +76,13 @@ impl DeploymentManager {
         if successful_deployments == regions.len() {
             Ok(())
         } else {
-            Err(BearDogError::deployment(format!(
-                "Only {}/{} regions deployed successfully", 
-                successful_deployments, 
-                regions.len()
-            )))
-        }
-    }
-
-    async fn deploy_region(
-        region_id: &str, 
+            Err(BearDogError::deployment(&str, 
         regions: Arc<RwLock<HashMap<&str, EdgeRegion>>>
     ) -> Result<(), BearDogError> {
         info!("Deploying to region: {}", region_id);
 
         {
-            let mut regions_guard = regions.write().await;
+            let mut regions_guard = regions.write();
             if let Some(region) = regions_guard.get_mut(region_id) {
                 region.status = RegionStatus::Deploying;
                 region.last_updated = chrono::Utc::now().timestamp() as u64;
@@ -110,19 +92,21 @@ impl DeploymentManager {
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         {
-            let mut regions_guard = regions.write().await;
+            let mut regions_guard = regions.write();
             if let Some(region) = regions_guard.get_mut(region_id) {
                 region.status = RegionStatus::Active;
-                region.last_updated = chrono::Utc::now().timestamp() as u64;
-
-                region.edge_nodes = vec![
-                    EdgeNode {
-                        node_id: format_args!("{}-node-1", region_id).to_string(),
+                region.last_updated = chrono::Utc::now(format!("{}-node-1", region_id),
                         node_type: NodeType::Standard,
-                        endpoint_url: format_args!("https://{}-1.edge.beardog.com", region_id).to_string(),
+                        endpoint_url: format!("https://{}-1.edge.beardog.com", region_id),
                         capacity: NodeCapacity {
-                            max_connections: 1000,
-                            max_throughput_mbps: 1000.0,
+                            max_connections: std::env::var("BEARDOG_EDGE_MAX_CONNECTIONS")
+                                .ok()
+                                .and_then(|c| c.parse().ok())
+                                .unwrap_or(1000), // 1000 connections default
+                            max_throughput_mbps: std::env::var("BEARDOG_EDGE_MAX_THROUGHPUT_MBPS")
+                                .ok()
+                                .and_then(|t| t.parse().ok())
+                                .unwrap_or(1000.0), // 1 Gbps default
                             cpu_cores: 8,
                             memory_gb: 32,
                             storage_gb: 500,
@@ -130,39 +114,36 @@ impl DeploymentManager {
                         current_load: 0.0,
                         health_status: HealthStatus::Healthy,
                         supported_protocols: vec!["HTTP/2".to_string(), "HTTP/3".to_string()],
-                        deployment_timestamp: chrono::Utc::now().timestamp() as u64,
-                    }
-                ];
-            }
-        }
-        
-        info!("Successfully deployed to region: {}", region_id);
+                        deployment_timestamp: chrono::Utc::now({}", region_id);
         Ok(())
     }
 
-    pub async fn get_deployment_stats(&self) -> GlobalDeploymentStats {
-        self.deployment_stats.read().await.clone()
+/// Get Deployment Stats operation.
+    /// Gets deployment_stats
+    /// Gets deployment_stats
+    pub fn get_deployment_stats(&self) -> GlobalDeploymentStats {
+        self.deployment_stats.read().clone()
     }
 
-    pub async fn shutdown(&self) -> Result<(), BearDogError> {
+/// Shutdown operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn shutdown(&self) -> Result<(), BearDogError> {
         info!("Shutting down deployment manager");
         
-        let mut regions = self.regions.write().await;
+        let mut regions = self.regions.write();
         for (region_id, region) in regions.iter_mut() {
             region.status = RegionStatus::Shutdown;
-            region.last_updated = chrono::Utc::now().timestamp() as u64;
-            info!("Shutdown region: {}", region_id);
+            region.last_updated = chrono::Utc::now({}", region_id);
         }
         
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct GlobalDeploymentStats {
-    pub total_regions: usize,
+        Ok(usize,
+    /// Number of successful_deployments
     pub successful_deployments: usize,
+    /// Number of failed_deployments
     pub failed_deployments: usize,
+    /// Number of last_deployment
     pub last_deployment: u64,
     pub average_deployment_time: f64,
 } 

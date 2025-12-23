@@ -1,352 +1,353 @@
+//! Unified HSM Provider
+//!
+//! This module provides a unified interface for accessing different HSM providers.
 
-
+use super::types::{HsmKey, HsmTier, KeyType};
+use super::{GenerateKeyRequest, HsmProvider};
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::HsmProvider;
-use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
+use tracing::{debug, info};
 
-use tracing::debug;
-
-#[derive(Debug, Clone)]
-pub struct UnifiedHumanEntropyCapabilities {
-
-    pub hardware_backed: bool,
-
-    pub key_attestation: bool,
-
-    pub user_authentication: bool,
-
-    pub rollback_resistance: bool,
-
-    pub supported_key_sizes: Vec<u32>,
-
-    pub supports_ephemeral_seeds: bool,
-
-    pub collection_methods: Vec<HumanEntropyMethod>,
-
-    pub realtime_entropy: bool,
-
-    pub quality_assessment: bool,
-
-    pub biometric_integration: bool,
-
-    pub min_entropy_bits: f64,
-
-    pub max_collection_rate: f64,
+/// Unified HSM provider that routes to appropriate backends
+pub struct UnifiedHsmProvider {
+    providers: Arc<RwLock<HashMap<String, Arc<dyn HsmProvider>>>>,
+    default_provider: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub enum HumanEntropyMethod {
+/// Provider registration info
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProviderInfo {
+    pub id: String,
+    pub name: String,
+    pub tier: HsmTier,
+    pub is_available: bool,
+}
 
-    MouseMovement,
+impl UnifiedHsmProvider {
+    /// Creates a new unified HSM provider
+    pub fn new() -> Self {
+        info!("🔗 Initializing unified HSM provider");
+        Self {
+            providers: Arc::new(RwLock::new(HashMap::new())),
+            default_provider: None,
+        }
+    }
 
-    KeyboardTiming,
+    /// Registers an HSM provider
+    pub fn register_provider(
+        &mut self,
+        id: String,
+        provider: Arc<dyn HsmProvider>,
+    ) -> Result<(), BearDogError> {
+        info!("📝 Registering HSM provider: {}", id);
 
-    TouchPatterns,
+        let mut providers = self.providers.write();
+        providers.insert(id.clone(), provider);
 
-    Biometric,
+        if self.default_provider.is_none() {
+            self.default_provider = Some(id.clone());
+            info!("✅ Set default provider: {}", id);
+        }
 
-    Voice,
+        Ok(())
+    }
 
-    VoicePatterns,
+    /// Unregisters an HSM provider
+    pub fn unregister_provider(&mut self, id: &str) -> Result<(), BearDogError> {
+        info!("🗑️ Unregistering HSM provider: {}", id);
 
-    Camera,
+        let mut providers = self.providers.write();
+        providers.remove(id);
 
-    BehavioralPatterns,
+        if self.default_provider.as_deref() == Some(id) {
+            self.default_provider = providers.keys().next().cloned();
+        }
 
-    EnvironmentalSensors,
+        Ok(())
+    }
 
-    HardwareEntropy { source_type: String },
+    /// Sets the default provider
+    pub fn set_default_provider(&mut self, id: String) -> Result<(), BearDogError> {
+        let providers = self.providers.read();
 
-    Custom(String),
+        if !providers.contains_key(&id) {
+            return Err(BearDogError::not_found(format!(
+                "Provider '{id}' not found"
+            )));
+        }
 
-#[allow(async_fn_in_trait)]
-pub trait UnifiedHsmProvider: HsmProvider + Send + Sync {
+        self.default_provider = Some(id.clone());
+        info!("✅ Set default provider: {}", id);
+        Ok(())
+    }
 
-    async fn collect_human_entropy(
+    /// Gets a provider by ID
+    pub fn get_provider(&self, id: &str) -> Result<Arc<dyn HsmProvider>, BearDogError> {
+        let providers = self.providers.read();
+
+        providers
+            .get(id)
+            .cloned()
+            .ok_or_else(|| BearDogError::not_found(format!("Provider '{id}' not found")))
+    }
+
+    /// Gets the default provider
+    pub fn get_default_provider(&self) -> Result<Arc<dyn HsmProvider>, BearDogError> {
+        let default_id = self
+            .default_provider
+            .as_ref()
+            .ok_or_else(|| BearDogError::not_found("No default provider set".to_string()))?;
+
+        self.get_provider(default_id)
+    }
+
+    /// Lists all registered providers
+    pub fn list_providers(&self) -> Vec<String> {
+        let providers = self.providers.read();
+        providers.keys().cloned().collect()
+    }
+
+    /// Generates a key using a specific provider
+    pub async fn generate_key_with_provider(
         &self,
-        method: &HumanEntropyMethod,
-        target_bits: u32,
-    ) -> Result<HumanEntropyData, BearDogError>;
+        provider_id: &str,
+        key_id: &str,
+        key_type: &KeyType,
+    ) -> Result<HsmKey, BearDogError> {
+        debug!(
+            "🔑 Generating key '{}' with provider '{}'",
+            key_id, provider_id
+        );
 
-    async fn get_human_entropy_capabilities(
-    ) -> Result<UnifiedHumanEntropyCapabilities, BearDogError>;
+        let provider = self.get_provider(provider_id)?;
+        let request = GenerateKeyRequest {
+            key_id: key_id.to_string(),
+            key_type: key_type.clone(),
+        };
+        provider.generate_key(request).await
+    }
 
-    async fn create_ephemeral_seed(
-        entropy_data: &HumanEntropyData,
-        seed_length: u32,
-    ) -> Result<EphemeralSeed, BearDogError>;
+    /// Generates a key using the default provider
+    pub async fn generate_key(
+        &self,
+        key_id: &str,
+        key_type: &KeyType,
+    ) -> Result<HsmKey, BearDogError> {
+        debug!("🔑 Generating key '{}' with default provider", key_id);
 
-    async fn assess_entropy_quality(
-    ) -> Result<EntropyQualityReport, BearDogError>;
+        let provider = self.get_default_provider()?;
+        let request = GenerateKeyRequest {
+            key_id: key_id.to_string(),
+            key_type: key_type.clone(),
+        };
+        provider.generate_key(request).await
+    }
 
-    async fn get_tier_recommendation(&self) -> Result<HsmTier, BearDogError>;
+    /// Signs data using a specific provider
+    pub async fn sign_with_provider(
+        &self,
+        provider_id: &str,
+        key_id: &str,
+        data: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
+        debug!("✍️ Signing with provider '{}'", provider_id);
 
-pub struct HumanEntropyData {
+        let provider = self.get_provider(provider_id)?;
+        provider.sign(key_id, data).await
+    }
 
-    pub data: Vec<u8>,
+    /// Signs data using the default provider
+    pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        debug!("✍️ Signing with default provider");
 
-    pub method: HumanEntropyMethod,
+        let provider = self.get_default_provider()?;
+        provider.sign(key_id, data).await
+    }
 
-    pub entropy_bits: f64,
+    /// Verifies a signature using a specific provider
+    pub async fn verify_with_provider(
+        &self,
+        provider_id: &str,
+        key_id: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        debug!("✅ Verifying with provider '{}'", provider_id);
 
-    pub collected_at: DateTime<Utc>,
+        let provider = self.get_provider(provider_id)?;
+        provider.verify(key_id, data, signature).await
+    }
 
-    pub collection_duration_ms: u64,
+    /// Verifies a signature using the default provider
+    pub async fn verify(
+        &self,
+        key_id: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        debug!("✅ Verifying with default provider");
 
-    pub quality_indicators: HashMap<String, f64>,
+        let provider = self.get_default_provider()?;
+        provider.verify(key_id, data, signature).await
+    }
 
-#[derive(Debug)]
-pub struct EphemeralSeed {
+    /// Deletes a key using a specific provider
+    pub async fn delete_key_with_provider(
+        &self,
+        provider_id: &str,
+        key_id: &str,
+    ) -> Result<(), BearDogError> {
+        debug!(
+            "🗑️ Deleting key '{}' with provider '{}'",
+            key_id, provider_id
+        );
 
-        pub(crate) seed_data: Vec<u8>,
+        let provider = self.get_provider(provider_id)?;
+        provider.delete_key(key_id).await
+    }
 
-    pub created_at: DateTime<Utc>,
+    /// Deletes a key using the default provider
+    pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
+        debug!("🗑️ Deleting key '{}' with default provider", key_id);
 
-    pub expires_at: DateTime<Utc>,
+        let provider = self.get_default_provider()?;
+        provider.delete_key(key_id).await
+    }
+}
 
-    pub quality_score: f64,
-
-    pub seed_id: String,
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct EntropyQualityReport {
-
-    pub shannon_entropy: f64,
-
-    pub min_entropy: f64,
-
-    pub compression_ratio: f64,
-
-    pub statistical_tests: HashMap<String, f64>,
-
-    pub assessed_at: DateTime<Utc>,
-
-    pub recommendations: Vec<String>,
-
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
-)]
-
-pub struct UnifiedProviderRegistry {
-
-    pub providers: HashMap<String, Box<dyn UnifiedHsmProvider>>,
-
-    pub human_entropy_providers: Vec<String>,}
-
-impl Default for UnifiedProviderRegistry {}
-
+impl Default for UnifiedHsmProvider {
     fn default() -> Self {
         Self::new()
     }
-impl UnifiedProviderRegistry {
+}
 
-    pub fn new() -> Self {
-        Self {
-            providers: HashMap::with_capacity(16),
-            human_entropy_providers: Vec::new(),
-        }
-
-    pub async fn register_provider(
-        &mut self,
-        instance_id: &str,
-        provider: Box<dyn UnifiedHsmProvider>,
-    ) -> Result<(), BearDogError> {
-        self.providers.insert(instance_id, provider);
-        Ok(())
-
-    pub fn get_provider(&self, instance_id: &str) -> Option<&dyn UnifiedHsmProvider> {
-        self.providers.get(instance_id).map(|p| p.as_ref())
-
-    pub async fn get_best_entropy_provider(
-    ) -> Result<Option<&dyn UnifiedHsmProvider>, BearDogError>> {
-        let mut best_provider = None;
-        let mut best_score = 0.0;
-        for provider in self.providers.values() {
-            let capabilities = provider.get_human_entropy_capabilities().await?;
-
-            let mut score = 0.0;
-            if capabilities.realtime_entropy {
-                score += 10.0;
-            }
-            if capabilities.biometric_integration {
-                score += 15.0;
-            if capabilities.quality_assessment {
-            score += capabilities.min_entropy_bits * 0.1;
-            score += capabilities.max_collection_rate * 0.001;
-            score += capabilities.collection_methods.len() as f64 * 5.0;
-            if score > best_score {
-                best_score = score;
-                best_provider = Some(provider.as_ref());
-        Ok(best_provider)
-
-pub struct HumanEntropyQualityAssessor;
-impl HumanEntropyQualityAssessor {
-
-    pub async fn assess_quality(
-    ) -> Result<EntropyQualityReport, BearDogError> {
-        debug!("🧠 Assessing human entropy quality");
-
-        let shannon_entropy = Self::calculate_shannon_entropy(&entropy_data.data);
-
-        let min_entropy = Self::estimate_min_entropy(&entropy_data.data);
-
-        let compression_ratio = Self::compression_test(&entropy_data.data);
-
-        let mut statistical_tests = HashMap::with_capacity(16);
-        statistical_tests.insert(
-            "frequency_test".to_string(),
-            Self::frequency_test(&entropy_data.data),
-        );
-        statistical_tests.insert("runs_test".to_string(), Self::runs_test(&entropy_data.data));
-            "autocorrelation_test".to_string(),
-            Self::autocorrelation_test(&entropy_data.data),
-
-        let quality_score = Self::calculate_quality_score(
-            shannon_entropy,
-            min_entropy,
-            compression_ratio,
-            &statistical_tests,
-
-        let recommendations = Self::generate_recommendations(quality_score, &statistical_tests);
-        Ok(EntropyQualityReport {
-            quality_score,
-            statistical_tests,
-            assessed_at: Utc::now(),
-            recommendations,
-        })
-    fn calculate_shannon_entropy(data: &[u8]) -> f64 {
-        let mut counts = [0u32; 256];
-        for &byte in data {
-            counts[byte as usize] += 1;
-        let len = data.len() as f64;
-        let mut entropy = 0.0;
-        for count in counts {
-            if count > 0 {
-                let p = count as f64 / len;
-                entropy -= p * p.log2();
-        entropy}
-
-    fn estimate_min_entropy(data: &[u8]) -> f64 {
-
-        let max_count = counts.iter().max().unwrap_or(&0);
-        if *max_count == 0 {
-            return 0.0;
-        let p_max = *max_count as f64 / data.len() as f64;
-        -p_max.log2()}
-
-    fn compression_test(data: &[u8]) -> f64 {
-
-        if data.is_empty() {
-            return 1.0;
-        let mut compressed_size = 0;
-        let mut current = data[0];
-        let mut _count = 1;
-        for &byte in &data[1..] {
-            if byte == current {
-                _count += 1;
-            } else {
-                compressed_size += 2; // byte + count
-                current = byte;
-                _count = 1;
-        compressed_size += 2; // final run
-        data.len() as f64 / compressed_size as f64
-    fn frequency_test(data: &[u8]) -> f64 {
-
-        let expected = data.len() as f64 / 256.0;
-        let mut chi_square = 0.0;
-            let diff = count as f64 - expected;
-            chi_square += diff * diff / expected;
-
-        1.0 - (chi_square / 255.0).min(1.0)}
-
-    fn runs_test(data: &[u8]) -> f64 {
-
-        if data.len() < 2 {
-        let mut runs = 1;
-        for i in 1..data.len() {
-            if (data[i] > 127) != (data[i - 1] > 127) {
-                runs += 1;
-        let n = data.len() as f64;
-        let expected_runs = n / 2.0 + 1.0;
-        let variance = (n - 1.0) / 4.0;
-        if variance <= 0.0 {
-        let z = (runs as f64 - expected_runs).abs() / variance.sqrt();
-        1.0 - (z / 3.0).min(1.0) // Simplified p-value}
-
-    fn autocorrelation_test(data: &[u8]) -> f64 {
-
-        if data.len() < 10 {
-        let lag = (data.len() / 10).max(1);
-        let mut correlation = 0.0;
-        let mut count = 0;
-        for i in lag..data.len() {
-            correlation += (data[i] as f64) * (data[i - lag] as f64);
-            count += 1;
-        if count == 0 {
-        correlation /= count as f64;
-        let normalized = (correlation / (127.5 * 127.5) - 1.0).abs();
-        1.0 - normalized.min(1.0)}
-
-    fn calculate_quality_score(
-        shannon_entropy: f64,
-        min_entropy: f64,
-        compression_ratio: f64,
-        statistical_tests: &HashMap<&str, f64>,
-    ) -> f64 {
-        let mut score = 0.0;
-
-        score += (shannon_entropy / 8.0) * 25.0;
-
-        score += (min_entropy / 8.0) * 25.0;
-
-        score += (compression_ratio.min(2.0) / 2.0) * 25.0;
-
-        let avg_test_score: f64 =
-            statistical_tests.values().sum::<f64>() / statistical_tests.len() as f64;
-        score += avg_test_score * 25.0;
-        score.min(100.0) / 100.0}
-
-    fn generate_recommendations(
-        quality_score: f64,
-    ) -> Vec<String> {
-        let mut recommendations = Vec::new();
-        if quality_score < 0.7 {
-            recommendations.push("Consider collecting more entropy data".to_string());
-        if let Some(&freq_score) = statistical_tests.get("frequency_test") {
-            if freq_score < 0.5 {
-                recommendations.push("Frequency distribution appears non-uniform".to_string());
-        if let Some(&runs_score) = statistical_tests.get("runs_test") {
-            if runs_score < 0.5 {
-                recommendations.push(
-                    "Data may have patterns - consider different collection method".to_string(),
-                );
-        if recommendations.is_empty() {
-            recommendations.push("Entropy quality is acceptable".to_string());
-        recommendations
 #[cfg(test)]
 mod tests {
+    use super::super::software_hsm::RustSoftwareHsm;
+    use super::super::types::SoftwareHsmConfig;
     use super::*;
-    #[tokio::test]
-    async fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
 
-        let entropy_data = HumanEntropyData {
-            data: (0..1000).map(|i| (i % 256) as u8).collect(),
-            method: HumanEntropyMethod::TouchPatterns,
-            entropy_bits: 800.0,
-            collected_at: Utc::now(),
-            collection_duration_ms: 1000,
-            quality_indicators: HashMap::with_capacity(16),
-        };
-        let report = HumanEntropyQualityAssessor::assess_quality(&entropy_data)
-            .await
-            .map_err(|e| {
-                tracing::error!("Operation failed: {e:?}");
-                beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-            })?;
-        assert!(report.quality_score > 0.0);
-        assert!(report.shannon_entropy > 0.0);
     #[test]
-    fn test_unified_provider_registry() -> Result<(), BearDogError> {
-        let registry = UnifiedProviderRegistry::new();
-        assert_eq!(registry.providers.len(), 0);
+    fn test_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = UnifiedHsmProvider::new();
+        assert!(provider.list_providers().is_empty());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_register_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
+
+        let result = unified.register_provider("software".to_string(), Arc::new(software_hsm));
+
+        assert!(result.is_ok());
+        assert_eq!(unified.list_providers().len(), 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_default_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
+
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+
+        let provider = unified.get_default_provider();
+        assert!(provider.is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
+
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+
+        let provider = unified.get_provider("software");
+        assert!(provider.is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_unregister_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
+
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+
+        assert_eq!(unified.list_providers().len(), 1);
+
+        unified.unregister_provider("software")?;
+        assert_eq!(unified.list_providers().len(), 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_set_default_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm1 = RustSoftwareHsm::new(config.clone()).await?;
+        let software_hsm2 = RustSoftwareHsm::new(config).await?;
+
+        unified.register_provider("provider1".to_string(), Arc::new(software_hsm1))?;
+        unified.register_provider("provider2".to_string(), Arc::new(software_hsm2))?;
+
+        let result = unified.set_default_provider("provider2".to_string());
+        assert!(result.is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_generate_key() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
+
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+
+        let result = unified.generate_key("test_key", &KeyType::Ed25519).await;
+        assert!(result.is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_key_operations() -> Result<(), Box<dyn std::error::Error>> {
+        let mut unified = UnifiedHsmProvider::new();
+
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config).await?;
+
+        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+
+        // Generate key
+        let key = unified.generate_key("test_key", &KeyType::Ed25519).await?;
+
+        // Sign data
+        let data = b"test data";
+        let signature = unified.sign(&key.id, data).await?;
+
+        // Verify signature
+        let verified = unified.verify(&key.id, data, &signature).await?;
+        assert!(verified);
+
+        // Delete key
+        let deleted = unified.delete_key(&key.id).await;
+        assert!(deleted.is_ok());
+        Ok(())
+    }
+}

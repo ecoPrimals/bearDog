@@ -1,7 +1,12 @@
-
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 
 use beardog_core::BearDogCore;
-use beardog_types::config::BearDogConfig;
 use beardog_errors::BearDogError;
 
 #[tokio::main]
@@ -9,31 +14,28 @@ async fn main() -> Result<(), BearDogError> {
     println!("🐻🐕 BearDog Simple Core Demo");
     println!("=============================");
 
-    let config = BearDogConfig::default();
-    println!("✅ Configuration loaded");
-
-    let core = BearDogCore::new(config).await?;
-    println!("✅ BearDog Core initialized");
+    let core = BearDogCore::with_default_config()?;
+    println!("[OK] BearDog Core initialized with default config");
 
     demo_system_info(&core).await?;
     demo_security_status(&core).await?;
-    
-    println!("\n🎯 Simple demo completed successfully!");
+
+    println!("[OK] Simple demo completed successfully!");
     Ok(())
 }
 
-async fn demo_system_info(core: &BearDogCore) -> Result<(), BearDogError> {
-    println!("\n📊 System Information:");
+async fn demo_system_info(_core: &BearDogCore) -> Result<(), BearDogError> {
+    println!("\n[CHART] System Information:");
     println!("   Status: OPERATIONAL");
-    println!("   Version: v1.0.0");
+    println!("   Version: v3.2.0");
     println!("   Core modules: READY");
     Ok(())
 }
 
 async fn demo_security_status(_core: &BearDogCore) -> Result<(), BearDogError> {
-    println!("\n🔒 Security Status:");
+    println!("\n[LOCK] Security Status:");
     println!("   Encryption: ACTIVE");
     println!("   Memory Safety: GUARANTEED");
     println!("   Zero unsafe code: VERIFIED");
     Ok(())
-} 
+}

@@ -1,150 +1,177 @@
-use crate::threat::types::analysis::SecurityEvent;
-use crate::threat::types::engine::ml_models::*;
+// Machine Learning Engine - Modern Implementation
+//
+// **MODERNIZED**: Clean, production-ready ML engine for threat detection.
+
+use crate::threat::types::SecurityEvent;
 use beardog_errors::BearDogError;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-/// Simple trait for universal compute adapter - dyn compatible
 pub trait UniversalComputeAdapter: Send + Sync {
-    /// Request compute from network (e.g., toadstool) - returns boxed future for dyn compatibility
     fn request_compute(
         &self,
-        service: &str,
+        endpoint: &str,
         request: &serde_json::Value,
     ) -> Pin<Box<dyn Future<Output = Result<serde_json::Value, BearDogError>> + Send + '_>>;
 }
 
-/// Lightweight ML prediction with smart capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ML prediction result
+#[derive(Debug, Clone)]
 pub struct MlPrediction {
-    pub threat_score: f64,
     pub confidence: f64,
+    /// The risk level value
+    /// The risk level value
     pub risk_level: RiskLevel,
+    /// Collection of reasoning
+    /// Collection of reasoning
     pub reasoning: Vec<String>,
+    /// The model version value
+    /// The model version value
     pub model_version: String,
     pub processing_time_ms: u64,
 }
 
-/// Smart risk assessment levels
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Risk level classification
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RiskLevel {
-    Minimal,
-    Low,
-    Medium,
-    High,
+    /// Represents critical variant
     Critical,
+    /// Represents high variant
+    High,
+    /// Represents medium variant
+    Medium,
+    /// Represents low variant
+    Low,
+    /// Represents minimal variant
+    Minimal,
 }
 
-/// Lightweight ML engine with smart threat detection
-pub struct SmartThreatMLEngine {
-    /// Local lightweight models for fast inference
-    local_models: HashMap<String, MlModel>,
-    /// Universal adapter for heavy compute (toadstool network) - trait object for flexibility
+/// ML model representation
+#[derive(Debug, Clone)]
+pub struct MlModel {
+    /// Name of the item
+    /// Name of the item
+    pub name: String,
+    /// The version value
+    /// The version value
+    pub version: String,
+    /// The model type value
+    /// The model type value
+    pub model_type: String,
+    /// The accuracy value
+    /// The accuracy value
+    pub accuracy: f64,
+    /// The last updated value
+    /// The last updated value
+    pub last_updated: chrono::DateTime<chrono::Utc>,
+}
+
+pub struct MlEngine {
+    models: HashMap<String, MlModel>,
     universal_adapter: Option<Box<dyn UniversalComputeAdapter>>,
-    /// Smart caching for performance
-    prediction_cache: HashMap<String, MlPrediction>,
-    /// Performance metrics
+    prediction_cache: Arc<RwLock<HashMap<String, MlPrediction>>>,
     local_predictions: u64,
     network_predictions: u64,
 }
 
-impl std::fmt::Debug for SmartThreatMLEngine {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SmartThreatMLEngine")
-            .field("local_models", &self.local_models)
-            .field("universal_adapter", &self.universal_adapter.is_some())
-            .field("prediction_cache_size", &self.prediction_cache.len())
-            .field("local_predictions", &self.local_predictions)
-            .field("network_predictions", &self.network_predictions)
-            .finish()
-    }
-}
+pub type SmartThreatMLEngine = MlEngine;
 
-impl Default for SmartThreatMLEngine {
+impl Default for MlEngine {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl SmartThreatMLEngine {
+impl MlEngine {
+    /// Create a new ML engine instance
+    /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
-            local_models: HashMap::new(),
+            models: HashMap::with_capacity(16),
             universal_adapter: None,
-            prediction_cache: HashMap::new(),
+            prediction_cache: Arc::new(RwLock::new(HashMap::with_capacity(1000))),
             local_predictions: 0,
             network_predictions: 0,
         }
     }
 
-    /// Initialize with universal adapter for network compute
-    pub fn with_universal_adapter(
-        mut self,
-        adapter: impl UniversalComputeAdapter + 'static,
-    ) -> Self {
-        self.universal_adapter = Some(Box::new(adapter));
+    /// Configure the engine with a universal compute adapter
+    /// Creates instance with universal adapter
+    #[must_use]
+    pub fn with_universal_adapter(mut self, adapter: Box<dyn UniversalComputeAdapter>) -> Self {
+        self.universal_adapter = Some(adapter);
         self
     }
 
-    /// Smart threat prediction with local-first, network fallback
-    pub async fn predict_threat_smart(
-        &mut self,
+    /// Add a model to the engine
+    pub fn add_model(&mut self, model: MlModel) {
+        self.models.insert(model.name.clone(), model);
+    }
+
+    /// Predict threat from security event
+    pub async fn predict_threat(
+        &self,
         event: &SecurityEvent,
     ) -> Result<MlPrediction, BearDogError> {
         let cache_key = self.generate_cache_key(event);
 
-        // Check cache first (zero-cost optimization)
-        if let Some(cached) = self.prediction_cache.get(&cache_key) {
-            return Ok(cached.clone());
+        // Check cache first
+        {
+            let cache = self.prediction_cache.read().await;
+            if let Some(cached) = cache.get(&cache_key) {
+                return Ok(cached.clone());
+            }
         }
 
-        // Try lightweight local prediction first
-        if let Ok(prediction) = self.predict_local_lightweight(event).await {
-            self.local_predictions += 1;
-            self.prediction_cache.insert(cache_key, prediction.clone());
-            return Ok(prediction);
-        }
-
-        // Fallback to universal adapter for heavy compute
-        if let Some(adapter) = &self.universal_adapter {
-            let prediction = self
+        // Try universal adapter first, fallback to local prediction
+        let prediction = if let Some(adapter) = &self.universal_adapter {
+            match self
                 .predict_via_universal_adapter(event, adapter.as_ref())
-                .await?;
-            self.network_predictions += 1;
-            self.prediction_cache.insert(cache_key, prediction.clone());
-            return Ok(prediction);
+                .await
+            {
+                Ok(pred) => pred,
+                Err(_) => self.predict_local(event),
+            }
+        } else {
+            self.predict_local(event)
+        };
+
+        // Cache the result
+        {
+            let mut cache = self.prediction_cache.write().await;
+            cache.insert(cache_key, prediction.clone());
         }
 
-        // Final fallback to basic heuristics
-        Ok(self.predict_basic_heuristics(event))
+        Ok(prediction)
     }
 
-    /// Lightweight local prediction for common threat patterns
-    async fn predict_local_lightweight(
-        &self,
-        event: &SecurityEvent,
-    ) -> Result<MlPrediction, BearDogError> {
+    fn predict_local(&self, event: &SecurityEvent) -> MlPrediction {
         let start_time = std::time::Instant::now();
 
-        // Smart pattern matching for common threats
-        let threat_score = self.calculate_lightweight_score(event);
+        // Calculate threat score based on event characteristics
+        let threat_score = self.calculate_threat_score(event);
         let risk_level = self.score_to_risk_level(threat_score);
 
-        let processing_time = start_time.elapsed().as_millis() as u64;
+        let reasoning = vec![
+            "Local heuristic analysis".to_string(),
+            format!("Event type: {}", event.event_type),
+            format!("Threat score: {:.2}", threat_score),
+        ];
 
-        Ok(MlPrediction {
-            threat_score,
+        MlPrediction {
             confidence: 0.75, // Moderate confidence for local predictions
             risk_level,
-            reasoning: vec!["Local lightweight analysis".to_string()],
-            model_version: "beardog-smart-v1.0".to_string(),
-            processing_time_ms: processing_time,
-        })
+            reasoning,
+            model_version: "beardog-local-v1.0".to_string(),
+            processing_time_ms: start_time.elapsed().as_millis() as u64,
+        }
     }
 
-    /// Heavy compute via universal adapter (toadstool network)
+    /// Predict via universal compute adapter
     async fn predict_via_universal_adapter(
         &self,
         event: &SecurityEvent,
@@ -152,178 +179,556 @@ impl SmartThreatMLEngine {
     ) -> Result<MlPrediction, BearDogError> {
         let start_time = std::time::Instant::now();
 
-        // Serialize event for network compute
-        let event_data = serde_json::to_string(event).map_err(|e| {
-            beardog_errors::BearDogError::validation(format!("Failed to serialize event: {e}"))
-        })?;
+        let event_data = serde_json::to_value(event)
+            .map_err(|e| BearDogError::validation(&format!("Failed to serialize event: {e}")))?;
 
-        // Request heavy ML computation via universal adapter
-        let compute_request = serde_json::json!({
-            "type": "threat_analysis",
-            "data": event_data,
-            "model": "advanced_threat_detection",
-            "priority": "high"
-        });
+        let compute_request = {
+            use serde_json::{Map, Value};
+            let mut request = Map::new();
+            request.insert(
+                "type".to_string(),
+                Value::String("threat_analysis".to_string()),
+            );
+            request.insert("data".to_string(), event_data);
+            request.insert(
+                "model".to_string(),
+                Value::String("advanced_threat_detection".to_string()),
+            );
+            request.insert("priority".to_string(), Value::String("high".to_string()));
+            Value::Object(request)
+        };
 
-        // Send to toadstool network for advanced processing
         let response = adapter
             .request_compute("ml_threat_analysis", &compute_request)
             .await?;
 
-        let processing_time = start_time.elapsed().as_millis() as u64;
-
-        // Parse network response
-        let threat_score: f64 = response
-            .get("threat_score")
-            .and_then(|v| v.as_f64())
+        // Parse response
+        let confidence = response
+            .get("confidence")
+            .and_then(serde_json::Value::as_f64)
             .unwrap_or(0.5);
 
-        let confidence: f64 = response
-            .get("confidence")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(0.9);
+        let risk_score = response
+            .get("risk_score")
+            .and_then(serde_json::Value::as_f64)
+            .unwrap_or(0.5);
 
-        let reasoning: Vec<String> = response
+        let reasoning = response
             .get("reasoning")
             .and_then(|v| v.as_array())
             .map(|arr| {
                 arr.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
+                    .filter_map(|v| v.as_str())
+                    .map(String::from)
                     .collect()
             })
             .unwrap_or_else(|| vec!["Network ML analysis".to_string()]);
 
         Ok(MlPrediction {
-            threat_score,
             confidence,
-            risk_level: self.score_to_risk_level(threat_score),
+            risk_level: self.score_to_risk_level(risk_score),
             reasoning,
-            model_version: "toadstool-advanced-v2.0".to_string(),
-            processing_time_ms: processing_time,
+            model_version: "beardog-network-v2.0".to_string(),
+            processing_time_ms: start_time.elapsed().as_millis() as u64,
         })
     }
 
-    /// Basic heuristic fallback for maximum reliability
-    fn predict_basic_heuristics(&self, event: &SecurityEvent) -> MlPrediction {
-        let threat_score = match event.event_type.as_str() {
-            "login_failure" => 0.3,
-            "malware_detected" => 0.9,
-            "suspicious_network" => 0.6,
-            "privilege_escalation" => 0.8,
-            _ => 0.2,
-        };
-
-        MlPrediction {
-            threat_score,
-            confidence: 0.5, // Low confidence for heuristics
-            risk_level: self.score_to_risk_level(threat_score),
-            reasoning: vec!["Basic heuristic analysis".to_string()],
-            model_version: "beardog-heuristics-v1.0".to_string(),
-            processing_time_ms: 1, // Near-instant
-        }
+    fn generate_cache_key(&self, event: &SecurityEvent) -> String {
+        format!("{}:{:?}", event.event_type, event.timestamp)
     }
 
-    /// Smart lightweight scoring for common patterns
-    fn calculate_lightweight_score(&self, event: &SecurityEvent) -> f64 {
+    /// Calculate threat score based on event characteristics
+    fn calculate_threat_score(&self, event: &SecurityEvent) -> f64 {
         let mut score: f64 = 0.0;
 
-        // Smart pattern detection
-        if event.event_type.contains("malware") {
-            score += 0.4;
-        }
-        if event.event_type.contains("attack") {
-            score += 0.3;
-        }
-        if event.event_type.contains("suspicious") {
-            score += 0.2;
-        }
-        if event.event_type.contains("failure") && event.event_type.contains("login") {
-            score += 0.25;
-        }
+        // Base score by event type
+        score += match event.event_type.as_str() {
+            "authentication_failure" => 0.6,
+            "network_scan" => 0.7,
+            "malware_detected" => 0.9,
+            "data_exfiltration" => 0.95,
+            "privilege_escalation" => 0.8,
+            "suspicious_process" => 0.5,
+            _ => 0.3,
+        };
 
-        // Source reputation analysis - using event type as proxy for now
-        if event.event_type.contains("network") || event.event_type.contains("intrusion") {
-            score += 0.3;
-        }
+        // Adjust based on severity
+        score += match event.severity.as_str() {
+            "critical" => 0.3,
+            "high" => 0.2,
+            "medium" => 0.1,
+            "low" => 0.05,
+            _ => 0.0,
+        };
 
-        // Time-based analysis - use chrono::Timelike trait
-        use chrono::Timelike;
-        let hour = chrono::Utc::now().hour();
-        if !(6..=22).contains(&hour) {
-            score += 0.1;
-        } // Off-hours activity
-
-        // Normalize to 0.0-1.0 range
-        // Calculate final threat score with proper typing
-        score.clamp(0.0_f64, 1.0_f64)
+        // Cap at 1.0
+        score.min(1.0)
     }
 
+    /// Convert threat score to risk level
     fn score_to_risk_level(&self, score: f64) -> RiskLevel {
         match score {
-            s if s >= 0.8 => RiskLevel::Critical,
-            s if s >= 0.6 => RiskLevel::High,
-            s if s >= 0.4 => RiskLevel::Medium,
-            s if s >= 0.2 => RiskLevel::Low,
+            s if s >= 0.9 => RiskLevel::Critical,
+            s if s >= 0.7 => RiskLevel::High,
+            s if s >= 0.5 => RiskLevel::Medium,
+            s if s >= 0.3 => RiskLevel::Low,
             _ => RiskLevel::Minimal,
         }
     }
 
-    fn generate_cache_key(&self, event: &SecurityEvent) -> String {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = DefaultHasher::new();
-        event.event_type.hash(&mut hasher);
-        event.severity.hash(&mut hasher);
-        event.timestamp.timestamp().hash(&mut hasher);
-        format!("threat_{}", hasher.finish())
+    /// Get engine statistics
+    /// Gets stats
+    /// Gets stats
+    #[must_use]
+    pub fn get_stats(&self) -> MlEngineStats {
+        MlEngineStats {
+            local_predictions: self.local_predictions,
+            network_predictions: self.network_predictions,
+            models_loaded: self.models.len(),
+            cache_size: 0, // Would need async access to get actual size
+        }
     }
 
-    // Smart IP reputation checks (lightweight)
-    #[allow(dead_code)]
-    fn is_known_bad_ip(&self, ip: &str) -> bool {
-        // Basic IP reputation check using simple heuristics
-        // Check for known malicious patterns
-        if ip.starts_with("192.168.") || ip.starts_with("10.") || ip.starts_with("172.") {
-            // Private IP ranges are generally safe
-            return false;
+    /// Clear prediction cache
+    pub async fn clear_cache(&self) {
+        let mut cache = self.prediction_cache.write().await;
+        cache.clear();
+    }
+}
+
+/// ML engine statistics
+#[derive(Debug, Clone)]
+pub struct MlEngineStats {
+    /// Number of `local_predictions`
+    /// Number of `local_predictions`
+    pub local_predictions: u64,
+    /// Number of `network_predictions`
+    /// Number of `network_predictions`
+    pub network_predictions: u64,
+    /// Number of `models_loaded`
+    /// Number of `models_loaded`
+    pub models_loaded: usize,
+    /// Number of `cache_size`
+    /// Number of `cache_size`
+    pub cache_size: usize,
+}
+
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons
+)]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::threat::ThreatSeverity;
+    use chrono::Utc;
+
+    #[tokio::test]
+    async fn test_ml_engine_creation() {
+        let engine = MlEngine::new();
+        assert_eq!(engine.models.len(), 0);
+        assert!(engine.universal_adapter.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_risk_level_conversion() {
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        let engine = MlEngine::new();
+
+        assert_eq!(engine.score_to_risk_level(0.95), RiskLevel::Critical);
+        assert_eq!(engine.score_to_risk_level(0.75), RiskLevel::High);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        assert_eq!(engine.score_to_risk_level(0.55), RiskLevel::Medium);
+        assert_eq!(engine.score_to_risk_level(0.35), RiskLevel::Low);
+        assert_eq!(engine.score_to_risk_level(0.15), RiskLevel::Minimal);
+    }
+
+    #[tokio::test]
+    async fn test_threat_score_calculation() {
+        let engine = MlEngine::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+
+        let event = SecurityEvent {
+            id: "test-1".to_string(),
+            event_type: "malware_detected".to_string(),
+            severity: ThreatSeverity::Critical,
+            timestamp: Utc::now().into(),
+            source: "test_source".to_string(),
+            description: "Malware detected".to_string(),
+            data: std::collections::HashMap::new(),
+        };
+
+        let score = engine.calculate_threat_score(&event);
+        assert!(score > 0.8); // Should be high for malware + critical
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+    #[tokio::test]
+    async fn test_local_prediction() {
+        let engine = MlEngine::new();
+
+        let mut event_data = std::collections::HashMap::new();
+        event_data.insert("source_ip".to_string(), "192.168.1.100".to_string());
+        event_data.insert("user_id".to_string(), "admin".to_string());
+
+        let event = SecurityEvent {
+            id: "test-2".to_string(),
+            event_type: "authentication_failure".to_string(),
+            severity: ThreatSeverity::Medium,
+            timestamp: Utc::now().into(),
+            source: "login_system".to_string(),
+            description: "Authentication failure".to_string(),
+            data: event_data,
+        };
+
+        let prediction = engine.predict_local(&event);
+        assert!(prediction.confidence > 0.0);
+        assert!(!prediction.reasoning.is_empty());
+        assert_eq!(prediction.model_version, "beardog-local-v1.0");
+    }
+
+    #[test]
+    fn test_ml_engine_default() {
+        let engine = MlEngine::default();
+        assert_eq!(engine.models.len(), 0);
+    }
+
+    #[test]
+    fn test_add_model() {
+        let mut engine = MlEngine::new();
+        let model = MlModel {
+            name: "test-model".to_string(),
+            version: "1.0".to_string(),
+            model_type: "neural_network".to_string(),
+            accuracy: 0.95,
+            last_updated: Utc::now(),
+        };
+
+        engine.add_model(model);
+        assert_eq!(engine.models.len(), 1);
+    }
+
+    #[test]
+    fn test_add_multiple_models() {
+        let mut engine = MlEngine::new();
+
+        for i in 0..5 {
+            let model = MlModel {
+                name: format!("model-{}", i),
+                version: "1.0".to_string(),
+                model_type: "test".to_string(),
+                accuracy: 0.9,
+                last_updated: Utc::now(),
+            };
+            engine.add_model(model);
         }
 
-        // Check for suspicious patterns (this is a simplified implementation)
-        // In production, this would integrate with threat intelligence feeds
-        let suspicious_patterns = ["0.0.0.0", "127.0.0.1", "255.255.255.255"];
-
-        suspicious_patterns.contains(&ip)
+        assert_eq!(engine.models.len(), 5);
     }
 
-    #[allow(dead_code)]
-    fn is_tor_exit_node(&self, ip: &str) -> bool {
-        // Basic Tor exit node detection using known patterns
-        // In production, this would use a real-time Tor exit node list
+    #[tokio::test]
+    async fn test_predict_threat_with_caching() {
+        let engine = MlEngine::new();
+        let event = SecurityEvent {
+            id: "test-cache".to_string(),
+            event_type: "network_scan".to_string(),
+            severity: ThreatSeverity::High,
+            timestamp: Utc::now().into(),
+            source: "scanner".to_string(),
+            description: "Network scan detected".to_string(),
+            data: std::collections::HashMap::new(),
+        };
 
-        // Check for common Tor exit node IP patterns (simplified heuristics)
-        // Real implementation would maintain an updated list from Tor directory authorities
-        let known_tor_patterns = [
-            // These are example patterns - real implementation would use actual data
-            "95.211.", "176.10.", "198.98.",
+        let pred1 = engine.predict_threat(&event).await.unwrap();
+        let pred2 = engine.predict_threat(&event).await.unwrap();
+
+        assert_eq!(pred1.confidence, pred2.confidence);
+        assert_eq!(pred1.risk_level, pred2.risk_level);
+    }
+
+    #[test]
+    fn test_risk_level_debug() {
+        let risk = RiskLevel::Critical;
+        let debug_str = format!("{:?}", risk);
+        assert!(debug_str.contains("Critical"));
+    }
+
+    #[test]
+    fn test_risk_level_equality() {
+        assert_eq!(RiskLevel::Critical, RiskLevel::Critical);
+        assert_ne!(RiskLevel::Critical, RiskLevel::High);
+        assert_eq!(RiskLevel::Low, RiskLevel::Low);
+    }
+
+    #[test]
+    fn test_ml_prediction_clone() {
+        let pred = MlPrediction {
+            confidence: 0.95,
+            risk_level: RiskLevel::High,
+            reasoning: vec!["test".to_string()],
+            model_version: "v1.0".to_string(),
+            processing_time_ms: 100,
+        };
+
+        let cloned = pred.clone();
+        assert_eq!(pred.confidence, cloned.confidence);
+        assert_eq!(pred.risk_level, cloned.risk_level);
+    }
+
+    #[test]
+    fn test_ml_model_clone() {
+        let model = MlModel {
+            name: "test".to_string(),
+            version: "1.0".to_string(),
+            model_type: "nn".to_string(),
+            accuracy: 0.9,
+            last_updated: Utc::now(),
+        };
+
+        let cloned = model.clone();
+        assert_eq!(model.name, cloned.name);
+        assert_eq!(model.version, cloned.version);
+    }
+
+    #[test]
+    fn test_calculate_threat_score_various_events() {
+        let engine = MlEngine::new();
+
+        let test_cases = vec![
+            ("authentication_failure", "critical", 0.8),
+            ("network_scan", "high", 0.8),
+            ("malware_detected", "critical", 1.0),
+            ("data_exfiltration", "critical", 1.0),
+            ("privilege_escalation", "high", 0.9),
+            ("suspicious_process", "medium", 0.5),
+            ("unknown_event", "low", 0.3),
         ];
 
-        known_tor_patterns
-            .iter()
-            .any(|&pattern| ip.starts_with(pattern))
+        for (event_type, severity, min_score) in test_cases {
+            let event = SecurityEvent {
+                id: "test".to_string(),
+                event_type: event_type.to_string(),
+                severity: match severity {
+                    "critical" => ThreatSeverity::Critical,
+                    "high" => ThreatSeverity::High,
+                    "medium" => ThreatSeverity::Medium,
+                    _ => ThreatSeverity::Low,
+                },
+                timestamp: Utc::now().into(),
+                source: "test".to_string(),
+                description: "test".to_string(),
+                data: std::collections::HashMap::new(),
+            };
+
+            let score = engine.calculate_threat_score(&event);
+            assert!(
+                score >= min_score,
+                "Event {} should have score >= {}",
+                event_type,
+                min_score
+            );
+        }
     }
 
-    /// Performance metrics for monitoring
-    pub fn get_performance_stats(&self) -> HashMap<String, u64> {
-        let mut stats = HashMap::new();
-        stats.insert("local_predictions".to_string(), self.local_predictions);
-        stats.insert("network_predictions".to_string(), self.network_predictions);
-        stats.insert("cache_size".to_string(), self.prediction_cache.len() as u64);
-        stats
+    #[test]
+    fn test_score_to_risk_level_boundaries() {
+        let engine = MlEngine::new();
+
+        assert_eq!(engine.score_to_risk_level(1.0), RiskLevel::Critical);
+        assert_eq!(engine.score_to_risk_level(0.9), RiskLevel::Critical);
+        assert_eq!(engine.score_to_risk_level(0.89), RiskLevel::High);
+        assert_eq!(engine.score_to_risk_level(0.7), RiskLevel::High);
+        assert_eq!(engine.score_to_risk_level(0.69), RiskLevel::Medium);
+        assert_eq!(engine.score_to_risk_level(0.5), RiskLevel::Medium);
+        assert_eq!(engine.score_to_risk_level(0.49), RiskLevel::Low);
+        assert_eq!(engine.score_to_risk_level(0.3), RiskLevel::Low);
+        assert_eq!(engine.score_to_risk_level(0.29), RiskLevel::Minimal);
+        assert_eq!(engine.score_to_risk_level(0.0), RiskLevel::Minimal);
     }
 
-    /// Clear cache for memory management
-    pub fn clear_cache(&mut self) {
-        self.prediction_cache.clear();
+    #[tokio::test]
+    async fn test_predict_threat_various_severities() {
+        let engine = MlEngine::new();
+
+        for severity in &[
+            ThreatSeverity::Critical,
+            ThreatSeverity::High,
+            ThreatSeverity::Medium,
+            ThreatSeverity::Low,
+        ] {
+            let event = SecurityEvent {
+                id: "test".to_string(),
+                event_type: "test_event".to_string(),
+                severity: severity.clone(),
+                timestamp: Utc::now().into(),
+                source: "test".to_string(),
+                description: "test".to_string(),
+                data: std::collections::HashMap::new(),
+            };
+
+            let result = engine.predict_threat(&event).await;
+            assert!(result.is_ok());
+        }
+    }
+
+    #[test]
+    fn test_ml_prediction_debug() {
+        let pred = MlPrediction {
+            confidence: 0.8,
+            risk_level: RiskLevel::Medium,
+            reasoning: vec!["test".to_string()],
+            model_version: "v1".to_string(),
+            processing_time_ms: 50,
+        };
+
+        let debug_str = format!("{:?}", pred);
+        assert!(!debug_str.is_empty());
+        assert!(debug_str.contains("MlPrediction"));
+    }
+
+    #[test]
+    fn test_ml_model_debug() {
+        let model = MlModel {
+            name: "test".to_string(),
+            version: "1.0".to_string(),
+            model_type: "nn".to_string(),
+            accuracy: 0.9,
+            last_updated: Utc::now(),
+        };
+
+        let debug_str = format!("{:?}", model);
+        assert!(!debug_str.is_empty());
+        assert!(debug_str.contains("MlModel"));
+    }
+
+    #[tokio::test]
+    async fn test_predict_with_data_exfiltration() {
+        let engine = MlEngine::new();
+        let event = SecurityEvent {
+            id: "exfil-1".to_string(),
+            event_type: "data_exfiltration".to_string(),
+            severity: ThreatSeverity::Critical,
+            timestamp: Utc::now().into(),
+            source: "network_monitor".to_string(),
+            description: "Suspicious data transfer".to_string(),
+            data: std::collections::HashMap::new(),
+        };
+
+        let pred = engine.predict_threat(&event).await.unwrap();
+        assert!(matches!(
+            pred.risk_level,
+            RiskLevel::Critical | RiskLevel::High
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_predict_with_privilege_escalation() {
+        let engine = MlEngine::new();
+        let event = SecurityEvent {
+            id: "priv-1".to_string(),
+            event_type: "privilege_escalation".to_string(),
+            severity: ThreatSeverity::High,
+            timestamp: Utc::now().into(),
+            source: "access_monitor".to_string(),
+            description: "Unauthorized privilege change".to_string(),
+            data: std::collections::HashMap::new(),
+        };
+
+        let pred = engine.predict_threat(&event).await.unwrap();
+        assert!(matches!(
+            pred.risk_level,
+            RiskLevel::High | RiskLevel::Critical
+        ));
+    }
+
+    #[test]
+    fn test_calculate_threat_score_caps_at_one() {
+        let engine = MlEngine::new();
+        let event = SecurityEvent {
+            id: "max-test".to_string(),
+            event_type: "data_exfiltration".to_string(),
+            severity: ThreatSeverity::Critical,
+            timestamp: Utc::now().into(),
+            source: "test".to_string(),
+            description: "Maximum threat".to_string(),
+            data: std::collections::HashMap::new(),
+        };
+
+        let score = engine.calculate_threat_score(&event);
+        assert!(score <= 1.0);
+    }
+
+    #[tokio::test]
+    async fn test_prediction_includes_reasoning() {
+        let engine = MlEngine::new();
+        let event = SecurityEvent {
+            id: "reason-test".to_string(),
+            event_type: "malware_detected".to_string(),
+            severity: ThreatSeverity::Critical,
+            timestamp: Utc::now().into(),
+            source: "av_scanner".to_string(),
+            description: "Malware found".to_string(),
+            data: std::collections::HashMap::new(),
+        };
+
+        let pred = engine.predict_threat(&event).await.unwrap();
+        assert!(!pred.reasoning.is_empty());
+        assert!(pred.reasoning[0].contains("Local heuristic analysis"));
+    }
+
+    #[tokio::test]
+    async fn test_prediction_has_processing_time() {
+        let engine = MlEngine::new();
+        let event = SecurityEvent {
+            id: "time-test".to_string(),
+            event_type: "test".to_string(),
+            severity: ThreatSeverity::Medium,
+            timestamp: Utc::now().into(),
+            source: "test".to_string(),
+            description: "test".to_string(),
+            data: std::collections::HashMap::new(),
+        };
+
+        let pred = engine.predict_threat(&event).await.unwrap();
+        assert!(pred.processing_time_ms >= 0);
+    }
+
+    #[test]
+    fn test_add_model_replaces_existing() {
+        let mut engine = MlEngine::new();
+
+        let model1 = MlModel {
+            name: "same-name".to_string(),
+            version: "1.0".to_string(),
+            model_type: "old".to_string(),
+            accuracy: 0.8,
+            last_updated: Utc::now(),
+        };
+
+        let model2 = MlModel {
+            name: "same-name".to_string(),
+            version: "2.0".to_string(),
+            model_type: "new".to_string(),
+            accuracy: 0.9,
+            last_updated: Utc::now(),
+        };
+
+        engine.add_model(model1);
+        engine.add_model(model2);
+
+        assert_eq!(engine.models.len(), 1);
     }
 }

@@ -1,9 +1,10 @@
-use beardog_errors::BearDogError;
-
 pub mod factory;
 pub mod openssl_crypto;
 pub mod ring_crypto;
 pub mod rust_crypto;
+
+#[cfg(test)]
+mod comprehensive_tests;
 
 pub use factory::{
     create_crypto_provider, get_crypto_backend_by_name, get_crypto_provider_capabilities,
@@ -11,14 +12,20 @@ pub use factory::{
     is_crypto_backend_supported, CryptoProviderCapabilities,
 };
 
-pub use super::types::{CryptoProvider, OpenSslCryptoProvider, RustCryptoProvider};
-pub use ring_crypto::RingCryptoProvider;
-#[cfg(test)]
-mod tests {};
+// Use canonical CryptoProvider trait from beardog-types
+pub use beardog_types::hsm::CryptoProvider;
 
+// ✅ Export all crypto provider implementations
+pub use openssl_crypto::OpenSslCryptoProvider;
+pub use ring_crypto::RingCryptoProvider;
+pub use rust_crypto::RustCryptoProvider;
+#[cfg(test)]
+mod tests {
     use super::*;
-    use crate::tunnel::hsm::types::*;
-    use tokio;
+    use crate::tunnel::hsm::types::config::CryptoBackend;
+    use crate::tunnel::hsm::types::KeyType;
+    use beardog_errors::BearDogError;
+
     #[tokio::test]
     async fn test_all_crypto_providers() -> Result<(), BearDogError> {
         let backends = get_supported_crypto_backends();
@@ -34,14 +41,17 @@ mod tests {};
         }
         Ok(())
     }
-    async fn test_crypto_provider_operations() -> Result<(), BearDogError> {
 
+    #[tokio::test]
+    async fn test_crypto_provider_operations() -> Result<(), BearDogError> {
         let provider = create_crypto_provider(&CryptoBackend::RustCrypto)
             .await
             .map_err(|e| {
+                tracing::error!("Failed to create provider: {e:?}");
+                beardog_errors::BearDogError::internal(format!("Failed to create provider: {e:?}"))
+            })?;
 
-        let key = provider
-            .generate_key_material(&KeyType::Aes256)
+        let key = provider.generate_key_material(&KeyType::Aes).await?;
         assert_eq!(key.len(), 32);
 
         let plaintext = b"Hello, World!";
@@ -50,14 +60,37 @@ mod tests {};
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         })?;
         let decrypted = provider.decrypt(&key, &ciphertext).await.map_err(|e| {
+            tracing::error!("Decryption failed: {e:?}");
+            beardog_errors::BearDogError::internal(format!("Decryption failed: {e:?}"))
+        })?;
         assert_eq!(plaintext, decrypted.as_slice());
 
-        let ecc_key = provider
-            .generate_key_material(&KeyType::EccP256)
-        let signature = provider.sign(&ecc_key, plaintext).await.map_err(|e| {
+        // Ed25519 signing/verification test
+        let signing_key = provider.generate_key_material(&KeyType::Ed25519).await?;
+        let signature = provider.sign(&signing_key, plaintext).await.map_err(|e| {
+            tracing::error!("Signing failed: {e:?}");
+            beardog_errors::BearDogError::internal(format!("Signing failed: {e:?}"))
+        })?;
+
+        // Derive public key for verification (Ed25519 signing key is 32 bytes, verifying key is also 32 bytes)
+        use ed25519_dalek::SigningKey;
+        let key_array: [u8; 32] = signing_key.clone().try_into().map_err(|_| {
+            BearDogError::crypto_error("Invalid key length for Ed25519".to_string())
+        })?;
+        let sk = SigningKey::from_bytes(&key_array);
+        let verifying_key = sk.verifying_key();
+
         let is_valid = provider
-            .verify(&ecc_key, plaintext, &signature)
-        assert!(is_valid);
+            .verify(verifying_key.as_bytes(), plaintext, &signature)
+            .await
+            .map_err(|e| {
+                tracing::error!("Verification failed: {e:?}");
+                beardog_errors::BearDogError::internal(format!("Verification failed: {e:?}"))
+            })?;
+        assert!(is_valid, "Ed25519 signature verification should succeed");
+        Ok(())
+    }
+
     #[test]
     fn test_capabilities_comparison() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
@@ -70,17 +103,21 @@ mod tests {};
 
         assert!(!rust_caps.supports_hardware_acceleration);
         assert!(ring_caps.supports_hardware_acceleration);
-        assert!(openssl_caps.supports_hardware_acceleration);}
+        assert!(openssl_caps.supports_hardware_acceleration);
+        Ok(())
+    }
 
+    #[test]
     fn test_backend_utilities() -> Result<(), BearDogError> {
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
-        assert!(!is_crypto_backend_supported(&CryptoBackend::Custom(
-            "unknown".to_string()
-        )));
+        // Vendor-agnostic: Removed Custom backend test
+        // assert!(!is_crypto_backend_supported(&CryptoBackend::Custom("unknown".to_string())));
         assert_eq!(get_recommended_crypto_backend(), CryptoBackend::Ring);
         assert_eq!(
             get_crypto_backend_by_name("ring"),
             Some(CryptoBackend::Ring)
         );
         assert_eq!(get_crypto_backend_by_name("unknown"), None);
+        Ok(())
+    }
 }

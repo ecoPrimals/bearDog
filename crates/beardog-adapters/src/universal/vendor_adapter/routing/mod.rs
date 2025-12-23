@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub mod adaptive;
 pub mod circuit_breaker;
 pub mod multi_criteria;

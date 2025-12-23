@@ -7,15 +7,13 @@ use std::collections::HashMap;
 use tracing::{debug, info, warn};
 use tokio::time::{timeout, Duration};
 
-#[derive(Debug)]
-pub struct NodeDiscovery {
-
-    config: BootstrapConfig,
-
+#[derive(Debug, Clone)]
     client: reqwest::Client,
 }
 impl NodeDiscovery {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: BootstrapConfig) -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
@@ -24,7 +22,11 @@ impl NodeDiscovery {
         Self { config, client }
     }
 
-    pub async fn discover_from_environment(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
+/// Discover From Environment operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover_from_environment(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         debug!("🔍 Discovering bootstrap nodes from environment variables");
         
         let mut nodes = Vec::new();
@@ -33,7 +35,7 @@ impl NodeDiscovery {
             for node_addr in node_list.split(',') {
                 let addr = node_addr.trim();
                 if !addr.is_empty() {
-                    if let Ok(node_info) = self.parse_node_address(addr).await {
+                    if let Ok(node_info) = self.parse_node_address(addr) {
                         nodes.push(node_info);
                     }
                 }
@@ -41,29 +43,27 @@ impl NodeDiscovery {
         }
 
         for i in 1..=10 {
-            if let Ok(node_addr) = std::env::var(format_args!("BEARDOG_BOOTSTRAP_NODE_{}", i).to_string()) {
-                if let Ok(node_info) = self.parse_node_address(&node_addr).await {
+            if let Ok(node_addr) = std::env::var(format!("BEARDOG_BOOTSTRAP_NODE_{}", i)) {
+                if let Ok(node_info) = self.parse_node_address(&node_addr) {
                     nodes.push(node_info);
         info!("📋 Discovered {} nodes from environment", nodes.len());
         Ok(nodes)
 
-    pub async fn discover_from_phonebooks(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
+/// Discover From Phonebooks operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover_from_phonebooks(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         debug!("📞 Discovering nodes from phonebook services");
-        let mut all_nodes = Vec::new();
-        for phonebook_url in &self.config.phonebook_urls {
-            match self.discover_from_phonebook(phonebook_url).await {
-                Ok(mut nodes) => {
-                    info!("📞 Discovered {} nodes from {}", nodes.len(), phonebook_url);
-                    all_nodes.append(&mut nodes);
-                Err(e) => {
-                    warn!("Failed to discover from phonebook {}: {}", phonebook_url, e);
+        let mut all_nodes = Vec::new({}", phonebook_url, e);
 
         all_nodes.dedup_by(|a, b| a.node_id == b.node_id);
         info!("📋 Total discovered {} unique nodes from phonebooks", all_nodes.len());
         Ok(all_nodes)
 
-    async fn discover_from_phonebook(&self, phonebook_url: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
-        let discovery_url = format_args!("{}/api/v1/nodes/discover", phonebook_url).to_string();
+
+    fn discover_from_phonebook(&self, phonebook_url: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
+        let discovery_url = format!("{}/api/v1/nodes/discover", phonebook_url);
 
         let mut request = self.client.get(&discovery_url);
 
@@ -77,19 +77,17 @@ impl NodeDiscovery {
         let response = timeout(
             Duration::from_secs(self.config.bootstrap_timeout_seconds),
             request.send()
-        ).await
+        )
         .map_err(|_| BearDogError::timeout("Phonebook discovery request timed out"))?
-        .map_err(|e| BearDogError::network(format_args!("Phonebook request failed: {}", e).to_string()))?;
+        .map_err(|e| BearDogError::network({}", e)))?;
         if !response.status().is_success() {
-            return Err(BearDogError::network(format!(
-                "Phonebook returned error: {}", 
+            return Err(BearDogError::network({}", 
                 response.status()
             )));
 
         let discovery_response: PhonebookDiscoveryResponse = response
             .json()
-            .await
-            .map_err(|e| BearDogError::parsing(format_args!("Failed to parse phonebook response: {}", e).to_string()))?;
+            .map_err(|e| BearDogError::parsing({}", e)))?;
 
         for discovered in discovery_response.nodes {
             let node_info = NodeInfo {
@@ -103,33 +101,31 @@ impl NodeDiscovery {
             };
             nodes.push(node_info);
 
-    async fn parse_node_address(&self, addr: &str) -> Result<NodeInfo, BearDogError> {
+    /// Parses node_address
+    fn parse_node_address(&self, addr: &str) -> Result<NodeInfo, BearDogError> {
 
-        let (node_id, address) = if addr.contains('@') {
-            let parts: Vec<&str> = addr.splitn(2, '@').collect();
+        let (node_id, address) = if addr.contains(Vec<&str> = addr.splitn(2, '@').collect();
             if parts.len() == 2 {
                 (parts[0].to_string(), parts[1].to_string())
             } else {
                 return Err(BearDogError::validation("Invalid node address format"));
         } else {
 
-            let node_id = format_args!("bootstrap_{}", addr.replace(':', "_").to_string().replace('.', "_"));
+            let node_id = format!("bootstrap_{}", addr.replace(':', "_").replace('.', "_"));
             (node_id, addr.to_string())
         };
 
         let normalized_address = if address.starts_with("http://") || address.starts_with("https://") {
             address
-            format_args!("http://{}", address).to_string()
-        Ok(NodeInfo {
-            node_id,
-            address: normalized_address,
+            format!("http://{}", address)
+        Ok(normalized_address,
             public_key: String::with_capacity(64), // Will be discovered during verification
-            capabilities: Vec::new(),   // Will be discovered during handshake
-            trust_level: TrustLevel::Untrusted, // Default until verified
+            capabilities: Vec::new(TrustLevel::Untrusted, // Default until verified
             last_seen: None,
             metadata: HashMap::with_capacity(16),
         })
 
+/// Filter Discovered Nodes operation.
     pub fn filter_discovered_nodes(&self, nodes: Vec<NodeInfo>) -> Vec<NodeInfo> {
         let mut filtered = nodes;
 
@@ -145,6 +141,12 @@ impl NodeDiscovery {
             filtered.truncate(50);
         filtered
 
+/// Validate Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Validates node
+    /// Validates node
     pub fn validate_node(&self, node: &NodeInfo) -> Result<(), BearDogError> {
 
         if node.node_id.is_empty() {
@@ -156,7 +158,10 @@ impl NodeDiscovery {
             return Err(BearDogError::validation("Node address must include protocol"));
         Ok(())
 
-    pub async fn get_discovery_stats(&self) -> HashMap<String, u32> {
+/// Get Discovery Stats operation.
+    /// Gets discovery_stats
+    /// Gets discovery_stats
+    pub fn get_discovery_stats(&self) -> HashMap<String, u32> {
         let mut stats = HashMap::with_capacity(16);
 
         stats.insert("phonebook_endpoints".to_string(), self.config.phonebook_urls.len() as u32);

@@ -7,10 +7,15 @@ use std::sync::Arc;
 use tracing::{debug, info, warn};
 impl AndroidAttestationService {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new(config: AttestationConfig) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Android Attestation Service");
 
-        let trusted_certificates = Self::load_trusted_certificates(&config).await?;
+        let trusted_certificates = Self::load_trusted_certificates(&config)?;
         info!(
             "📜 Loaded {} trusted certificates",
             trusted_certificates.len()
@@ -26,7 +31,13 @@ impl AndroidAttestationService {
         Ok(service)
     }
 
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+/// Initialize operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Initializes componentialize
+    /// Initializes componentialize
+    pub fn initialize(&self) -> Result<(), BearDogError> {
         info!("🔍 Initializing attestation service");
 
         for (i, cert) in self.trusted_certificates.iter().enumerate() {
@@ -37,43 +48,12 @@ impl AndroidAttestationService {
             }
         }
 
-        let _test_challenge = self.challenge_generator.generate_challenge(32)?;
-        info!("✅ Attestation service initialization completed");
-        Ok(())
-
-    pub async fn verify_certificate_chain(
-        &self,
-        chain: &[Vec<u8>],
+        let _test_challenge = self.challenge_generator.generate_challenge(&[Vec<u8>],
         challenge: &[u8],
     ) -> Result<bool, BearDogError> {
             "🔍 Verifying certificate chain ({} certificates)",
-            chain.len()
-        if chain.is_empty() {
-            return Ok(false);
-
-        if chain.len() < 2 {
-            warn!(
-                "⚠️ Certificate chain too short: {} certificates",
-                chain.len()
-            );
-
-        for (i, cert) in chain.iter().enumerate() {
-            if cert.len() < 4 || cert[0] != 0x30 {
-                warn!("⚠️ Invalid DER certificate at position {}", i);
-                return Ok(false);
-
-        if challenge.is_empty() {
-            warn!("⚠️ Empty challenge provided");
-
-        let root_cert = &chain[chain.len() - 1];
-        let is_trusted = self.is_certificate_trusted(root_cert).await?;
-        if !is_trusted {
-            warn!("⚠️ Root certificate is not trusted");
-        info!("✅ Certificate chain verification successful");
-        Ok(true)
-
-    pub async fn create_attestation_data(
-        key_id: &str,
+            chain.len({} certificates",
+                chain.len(&str,
         device_info: &AndroidDeviceInfo,
     ) -> Result<Vec<u8>, BearDogError>> {
         info!("📝 Creating attestation data for key: {}", key_id);
@@ -104,16 +84,12 @@ impl AndroidAttestationService {
         attestation_data.extend_from_slice(&(challenge.len() as u32).to_be_bytes());
         attestation_data.extend_from_slice(challenge);
 
-        let timestamp = chrono::Utc::now().timestamp() as u64;
-        attestation_data.extend_from_slice(&timestamp.to_be_bytes());
-
-        attestation_data.push(0x01); // StrongBox-backed
-        debug!(
-            "📝 Attestation data created: {} bytes",
+        let timestamp = chrono::Utc::now({} bytes",
             attestation_data.len()
         Ok(attestation_data)
 
-    async fn is_certificate_trusted(&self, certificate: &[u8]) -> Result<bool, BearDogError> {
+    /// Checks if certificate trusted
+    fn is_certificate_trusted(&self, certificate: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔍 Checking if certificate is trusted");
 
         for trusted_cert in &self.trusted_certificates {
@@ -127,16 +103,18 @@ impl AndroidAttestationService {
         debug!("❌ Certificate is not trusted");
         Ok(false)
 
-    async fn load_trusted_certificates(_config: &AttestationConfig) -> Result<Vec<Vec<u8>, BearDogError>>> {
+    /// Loads trusted_certificates
+    fn load_trusted_certificates(_config: &AttestationConfig) -> Result<Vec<Vec<u8>, BearDogError>>> {
         info!("📜 Loading trusted certificates");
 
         let mut certificates = Vec::new();
 
-        certificates.push(Self::load_google_root_certificate().await?);
+        certificates.push(Self::load_google_root_certificate()?);
         info!("📜 Loaded {} trusted certificates", certificates.len());
         Ok(certificates)
 
-    async fn load_google_root_certificate() -> Result<Vec<u8>, BearDogError>> {
+    /// Loads google_root_certificate
+    fn load_google_root_certificate() -> Result<Vec<u8>, BearDogError>> {
 
         Ok(vec![
             0x30, 0x82, 0x01,
@@ -144,7 +122,13 @@ impl AndroidAttestationService {
 
         ])
 
-    pub async fn load_certificate_from_path(path: &str) -> Result<Vec<u8>, BearDogError>> {
+/// Load Certificate From Path operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Loads certificate_from_path
+    /// Loads certificate_from_path
+    pub fn load_certificate_from_path(path: &str) -> Result<Vec<u8>, BearDogError>> {
         debug!("📜 Loading certificate from: {}", path);
 
         Ok(vec![0x30, 0x82, 0x01, 0x00])

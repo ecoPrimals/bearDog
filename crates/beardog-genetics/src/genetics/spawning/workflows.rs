@@ -7,24 +7,15 @@ use super::engine::GeneticSpawningEngine;
 use super::types::{SpawnRequest, SpawnResult};
 use beardog_errors::BearDogError;
 
-pub async fn process_automated_consensus(
-    engine: &GeneticSpawningEngine,
+/// Process Automated Consensus operation.
+/// Processes automated_consensus
+pub fn process_automated_consensus(&GeneticSpawningEngine,
     request: &SpawnRequest,
 ) -> Result<SpawnResult, BearDogError> {
     info!("🤖 Processing automated consensus workflow");
     debug!("Request capabilities: {:?}", request.required_capabilities);
 
-    if request.required_capabilities.is_empty() {
-        debug!("No capabilities required - basic spawning");
-    }
-
-    let result = engine.spawn_genetics(request.clone()).await?;
-    info!("✅ Automated consensus workflow completed");
-    Ok(result)
-}
-
-pub async fn process_human_approval(
-    approver_threshold: f64,
+    if request.required_capabilities.is_empty(f64,
     info!("👥 Processing human approval workflow");
     debug!("Approver threshold: {}", approver_threshold);
 
@@ -33,12 +24,16 @@ pub async fn process_human_approval(
 
     info!("✅ Human approval workflow completed");
 
-pub async fn process_hybrid_approval(
+/// Process Hybrid Approval operation.
+/// Processes hybrid_approval
+pub fn process_hybrid_approval(
     info!("🔀 Processing hybrid approval workflow");
 
     debug!("Running hybrid validation checks");
     info!("✅ Hybrid approval workflow completed");
 
+/// Process Emergency Spawn operation.
+/// Processes emergency_spawn
 pub async fn process_emergency_spawn(
 ) -> GeneticsResult<SpawnResult> {
     info!("🚨 Processing emergency spawn workflow");
@@ -47,10 +42,16 @@ pub async fn process_emergency_spawn(
 
 #[derive(Debug)]
 pub enum AutomatedCheck {
+    /// Represents resource availability variant
     ResourceAvailability,
+    /// Represents security clearance variant
     SecurityClearance,
+    ComplianceValidation,}
+    ComplianceValidation,}
     ComplianceValidation,}
 
 pub enum EscalationCondition {
+    /// Represents high risk variant
     HighRisk,
+    /// Represents compliance violation variant
     ComplianceViolation,

@@ -1,9 +1,10 @@
-
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 pub use types::*;
 
 mod handlers;
-mod types;
 #[cfg(test)]
 mod tests;
-
+mod types;

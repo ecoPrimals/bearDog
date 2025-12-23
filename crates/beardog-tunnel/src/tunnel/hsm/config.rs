@@ -1,18 +1,29 @@
+//! HSM Configuration
+//!
+//! Configuration types for HSM operations.
+//!
+//! MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
+//! to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
+//! Target: Replace with capability-based discovery for vendor/primal agnosticism
 
-
-use crate::tunnel::hsm::types::*;
 use std::time::Duration;
 
+/// Simple HSM tier enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleHsmTier {
+    /// Smartphone HSM (iOS/Android)
     Smartphone,
+    /// Software HSM
     Software,
+    /// Hardware HSM
     Hardware,
+    /// Hybrid HSM
     Hybrid,
 }
-impl SimpleHsmTier {}
 
-    pub fn to_string(&self) -> String {
+impl SimpleHsmTier {
+    /// Convert to string representation
+    pub fn to_string_repr(&self) -> String {
         match self {
             SimpleHsmTier::Smartphone => "Smartphone".to_string(),
             SimpleHsmTier::Software => "Software".to_string(),
@@ -20,61 +31,72 @@ impl SimpleHsmTier {}
             SimpleHsmTier::Hybrid => "Hybrid".to_string(),
         }
     }
+}
 
+impl std::fmt::Display for SimpleHsmTier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string_repr())
+    }
+}
+
+/// HSM configuration
 #[derive(Debug, Clone)]
-pub struct HsmManagerConfig {
-    pub hsm_configs: Vec<HsmConfig>,
-    pub health_config: HealthConfig,
-    pub failover_config: FailoverConfig,
-    pub performance_config: PerformanceConfig,
-
-pub struct HealthConfig {
+pub struct HsmConfig {
+    /// Health check interval
     pub check_interval: Duration,
-    pub failure_threshold: u32,
-    pub recovery_threshold: u32,
+    /// Health check timeout
     pub timeout: Duration,
-
-pub struct FailoverConfig {
-    pub enabled: bool,
+    /// Maximum retry attempts
     pub max_retries: u32,
+    /// Retry delay
     pub retry_delay: Duration,
-    pub circuit_breaker_threshold: u32,
+    /// Circuit breaker timeout
     pub circuit_breaker_timeout: Duration,
+    /// Enable caching
+    pub enable_caching: bool,
+    /// Maximum concurrent operations
+    pub max_concurrent_operations: usize,
+    /// Operation timeout
+    pub operation_timeout: Duration,
+}
 
-impl Default for HealthConfig {}
-
+impl Default for HsmConfig {
     fn default() -> Self {
         Self {
             check_interval: Duration::from_secs(30),
-            failure_threshold: 3,
-            recovery_threshold: 2,
             timeout: Duration::from_secs(5),
-impl Default for FailoverConfig {
-            enabled: true,
             max_retries: 3,
-            retry_delay: Duration::from_millis(500),
-            circuit_breaker_threshold: 5,
-            circuit_breaker_timeout: Duration::from_secs(60),}
-
-impl Default for PerformanceConfig {
-            enable_load_balancing: true,
+            retry_delay: Duration::from_millis(100),
+            circuit_breaker_timeout: Duration::from_secs(60),
             enable_caching: true,
             max_concurrent_operations: 100,
-            operation_timeout: Duration::from_secs(10),
-impl Default for HsmManagerConfig {
-            hsm_configs: vec![],
-            health_config: HealthConfig::default(),
-            failover_config: FailoverConfig::default(),
-            performance_config: PerformanceConfig::default(),}
+            operation_timeout: Duration::from_secs(30),
+        }
+    }
+}
 
-impl std::fmt::Display for HsmType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            HsmType::SmartphoneIos => write!(f, "ios"),
-            HsmType::SmartphoneAndroid => write!(f, "android"),
-            HsmType::SoftwareRust => write!(f, "software"),
-            HsmType::HardwareAws => write!(f, "aws"),
-            HsmType::HardwareLuna => write!(f, "luna"),
-            HsmType::HardwareThales => write!(f, "thales"),
-            HsmType::HardwareUtimaco => write!(f, "utimaco"),
-            HsmType::Custom(name) => write!(f, "custom_{}", name),
-} 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple_hsm_tier_display() {
+        assert_eq!(SimpleHsmTier::Software.to_string(), "Software");
+        assert_eq!(SimpleHsmTier::Hardware.to_string(), "Hardware");
+    }
+
+    #[test]
+    fn test_simple_hsm_tier_equality() {
+        assert_eq!(SimpleHsmTier::Software, SimpleHsmTier::Software);
+        assert_ne!(SimpleHsmTier::Software, SimpleHsmTier::Hardware);
+    }
+
+    #[test]
+    fn test_hsm_config_default() {
+        let config = HsmConfig::default();
+        assert_eq!(config.check_interval, Duration::from_secs(30));
+        assert_eq!(config.max_retries, 3);
+        assert!(config.enable_caching);
+        assert_eq!(config.max_concurrent_operations, 100);
+    }
+}

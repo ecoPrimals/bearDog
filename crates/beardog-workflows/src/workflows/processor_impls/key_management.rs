@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
 
@@ -10,9 +15,8 @@ use uuid::Uuid;
 pub struct KeyRotationProcessor;
 
 impl WorkflowProcessor for KeyRotationProcessor {
-    async fn process_workflow(
-        &self,
-        workflow: &Workflow,
+    /// Processes workflow
+    fn process_workflow(&Workflow,
     ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
@@ -39,7 +43,7 @@ impl WorkflowProcessor for KeyRotationProcessor {
         let execution_duration = start_time.elapsed();
         
         let mut result = WorkflowProcessingResult::success(
-            workflow.id.clone(),
+            &workflow.id: id.to_string(),
             "KeyManagementProcessor".to_string(),
             format!("Successfully rotated key: {key_id}"));
             execution_duration.as_millis() as u64,
@@ -59,9 +63,11 @@ impl WorkflowProcessor for KeyRotationProcessor {
     fn name(&self) -> &str {
         "KeyManagementProcessor"}
 
+
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::KeyRotation | WorkflowType::KeyGeneration)
-    async fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
+    /// Validates workflow
+    fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
 
         if !workflow.parameters.contains_key("key_id") {
             return Err(BearDogError::invalid_input(
@@ -77,7 +83,7 @@ impl WorkflowProcessor for KeyRotationProcessor {
         if key_id.is_empty() {
                 message: "key_id cannot be empty".to_string(),
         Ok(())
-    async fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
+    fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
 
         Ok(Duration::from_secs(180))
 }
@@ -92,15 +98,9 @@ impl WorkflowProcessor for KeyDeletionProcessor {
         actions_taken.push(format!("Started key deletion for key: {key_id}"));
 
         if !force_delete {
-            actions_taken.push("Checked key dependencies".to_string(),
-            actions_taken.push("Archived key material".to_string(),
-        actions_taken.push("Removed key from active storage".to_string(),
-        actions_taken.push("Updated audit logs".to_string(),
-        Ok(WorkflowProcessingResult {
-            success: true,
+            actions_taken.push(true,
             format!("Successfully deleted key: {key_id}"));
-            execution_duration_ms: execution_duration.as_millis() as u64,
-            output_data: Some(serde_json::json!({
+            execution_duration_ms: execution_duration.as_millis(Some(serde_json::json!({
                 "key_id": key_id,
                 "force_delete": force_delete,
                 "deletion_id": Uuid::new_v4().to_string(),

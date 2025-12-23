@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use beardog_errors::BearDogError;
 use std::collections::VecDeque;
 
@@ -9,10 +13,11 @@ pub struct ResourcePredictor {
 }
 
 impl ResourcePredictor {
+    /// Creates a new instance
     pub fn new(window_size: usize) -> Result<Self, BearDogError> {
         if window_size == 0 {
             return Err(BearDogError::invalid_input(
-                "Window size must be greater than 0".to_string(),
+                "Window size must be greater than 0",
             ));
         }
 
@@ -46,9 +51,7 @@ impl ResourcePredictor {
 
     pub fn predict_cpu_usage(&self) -> Result<f64, BearDogError> {
         if self.cpu_history.is_empty() {
-            return Err(BearDogError::invalid_input(
-                "No CPU history available".to_string(),
-            ));
+            return Err(BearDogError::invalid_input("No CPU history available"));
         }
 
         // Simple moving average prediction
@@ -58,9 +61,7 @@ impl ResourcePredictor {
 
     pub fn predict_memory_usage(&self) -> Result<f64, BearDogError> {
         if self.memory_history.is_empty() {
-            return Err(BearDogError::invalid_input(
-                "No memory history available".to_string(),
-            ));
+            return Err(BearDogError::invalid_input("No memory history available"));
         }
 
         let sum: f64 = self.memory_history.iter().sum();
@@ -69,24 +70,23 @@ impl ResourcePredictor {
 
     pub fn predict_network_latency(&self) -> Result<f64, BearDogError> {
         if self.network_history.is_empty() {
-            return Err(BearDogError::invalid_input(
-                "No network history available".to_string(),
-            ));
+            return Err(BearDogError::invalid_input("No network history available"));
         }
 
         let sum: f64 = self.network_history.iter().sum();
         Ok(sum / self.network_history.len() as f64)
     }
 
+    /// Gets trend
+    /// Gets trend
     pub fn get_trend(&self, resource_type: &str) -> Result<f64, BearDogError> {
         let history = match resource_type {
             "cpu" => &self.cpu_history,
             "memory" => &self.memory_history,
             "network" => &self.network_history,
             _ => {
-                return Err(BearDogError::invalid_input(format!(
-                    "Unknown resource type: {}",
-                    resource_type
+                return Err(BearDogError::invalid_input(&format!(
+                    "Unknown resource type: {resource_type}"
                 )))
             }
         };

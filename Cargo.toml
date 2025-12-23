@@ -1,139 +1,276 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/beardog-errors",
-    "crates/beardog-types", 
-    "crates/beardog-traits",
-    "crates/beardog-utils",
-    "crates/beardog-security", # Fixed - type system errors resolved
-    "crates/beardog-auth",
-    # "crates/beardog-api", # Temporarily disabled - extensive syntax fixes needed
-    "crates/beardog-compliance", # Fixed - method signature issues resolved
-    "crates/beardog-monitoring", 
-    "crates/beardog-genetics", # Rebuilt with clean canonical patterns - now compiles successfully
-    "crates/beardog-adapters", # Re-enabling - compilation errors appear to be resolved
-    "crates/beardog-core",
-    "crates/beardog-deploy",
-    "crates/beardog-cli",
-    "crates/beardog-production",
-    "crates/beardog-node-registry",
-    "crates/beardog-threat",
-    "crates/beardog-workflows", # Fixed - now compiles successfully
-    # "crates/beardog-tunnel", # Temporarily disabled - extensive syntax fixes needed
-    # "benchmarks", # Temporarily disabled - needs type system updates
+    "crates/*",
+    "benchmarks",
+    "showcase/05-mixed-entropy",
+]
+exclude = [
+    "android",
+    "ecosystem-bindings",
+    "crates/beardog-crypto",
+    "crates/beardog-networking",
+    "crates/beardog",
 ]
 
 [workspace.package]
-version = "3.0.0"
+version = "0.9.0"
 edition = "2021"
-license = "AGPL-3.0-only"
-description = "Enterprise-grade security ecosystem with unified architecture and zero technical debt"
-homepage = "https://github.com/your-org/beardog"
-repository = "https://github.com/your-org/beardog"
-authors = ["BearDog Security Team"]
-keywords = ["security", "hsm", "threat-detection", "compliance", "workflow"]
-categories = ["cryptography", "authentication", "web-programming", "network-programming"]
-rust-version = "1.70"
+rust-version = "1.75.0"
+authors = ["BearDog Team"]
+license = "Apache-2.0"
+repository = "https://github.com/ecoPrimals/beardog"
+homepage = "https://beardog.dev"
+documentation = "https://docs.beardog.dev"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+# Transition period - BearDogResult is being migrated
+deprecated = "allow"
+
+[workspace.lints.clippy]
+# Pedantic allowlist - to be addressed in polish phase (Week 3-4)
+struct_excessive_bools = { level = "allow", priority = 1 }  # Refactor to enums (tracked)
+unused_async = { level = "allow", priority = 1 }  # Async infrastructure, may be used later
+trivially_copy_pass_by_ref = { level = "allow", priority = 1 }  # Optimization pass later
+cast_possible_truncation = { level = "allow", priority = 1 }  # Address with proper validation
+cast_precision_loss = { level = "allow", priority = 1 }  # Address with proper validation
+unnecessary_wraps = { level = "allow", priority = 1 }  # API consistency over optimization
+items_after_statements = { level = "allow", priority = 1 }  # Style preference
+if_same_then_else = { level = "allow", priority = 1 }  # May have different semantics
+
+# Additional pedantic allows for test code patterns
+field_reassign_with_default = { level = "allow", priority = 1 }  # Common test pattern
+default_trait_access = { level = "allow", priority = 1 }  # Style consistency
+needless_borrows_for_generic_args = { level = "allow", priority = 1 }  # Will fix in cleanup
+useless_format = { level = "allow", priority = 1 }  # Minor optimization
+print_literal = { level = "allow", priority = 1 }  # Allowed in CLIs
+vec_init_then_push = { level = "allow", priority = 1 }  # Performance is acceptable for clarity
+unnecessary_literal_unwrap = { level = "allow", priority = 1 }  # Test code pattern
+assertions_on_constants = { level = "allow", priority = 1 }  # Test scaffolding
+# doc_tests = { level = "allow", priority = 1 }  # NOTE: This lint doesn't exist in clippy - removed Dec 10, 2025
+
+# Lint groups (priority 0, lower than individual lints)
+all = "warn"
+pedantic = "warn"
+perf = "warn"
+
+# Disabled for transition period - will be re-enabled in Week 3
+expect_used = { level = "allow", priority = 2 }  # Tests only
+unwrap_used = { level = "allow", priority = 2 }  # Tests only
 
 [workspace.dependencies]
-# Core async runtime
-tokio = { version = "1.40", features = ["full"] }
-tokio-util = "0.7"
-futures = "0.3"
-
-# Serialization and configuration
+# Core dependencies
+tokio = { version = "1.35", features = ["full", "tracing"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
-
-# Async traits (legacy support) - REMOVED: Modernized to native async fn
-# async-trait = "0.1"
-
-# Time and UUIDs
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.0", features = ["v4", "serde"] }
-
-# Logging and tracing
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-appender = "0.2"
-
-# Error handling
 anyhow = "1.0"
 thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Async runtime
+async-trait = "0.1"
+futures = "0.3"
 
 # Cryptography
-ring = "0.16"
+ring = "0.17"
+ed25519-dalek = "2.1"
+x25519-dalek = "2.0"
+blake3 = "1.5"
+chacha20poly1305 = "0.10"
 aes-gcm = "0.10"
+argon2 = "0.5"
+zeroize = { version = "1.7", features = ["derive"] }
+hmac = "0.12"
 sha2 = "0.10"
 sha3 = "0.10"
-rand = "0.8"
-base64 = "0.21"
-hex = "0.4"
-rustls = "0.21"
-argon2 = "0.5"
-zeroize = "1.6"
-
-# HTTP and networking
-reqwest = { version = "0.11", features = ["json", "stream"] }
-hyper = { version = "0.14", features = ["full"] }
-axum = { version = "0.7", features = ["ws", "macros"] }
-tower = { version = "0.4", features = ["util", "timeout", "load-shed", "limit"] }
-tower-http = { version = "0.5", features = ["cors", "trace", "compression-gzip", "timeout"] }
-
-# Database
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
-redis = { version = "0.23", features = ["tokio-comp"] }
-
-# Configuration and CLI
-clap = { version = "4.0", features = ["derive"] }
-config = "0.13"
+lettre = "0.11"
+cryptoki = "0.6"
+rsa = "0.9"
+p256 = { version = "0.13", features = ["ecdsa"] }
 
 # Networking
-ipnet = "2.9"
+quinn = "0.11"
+rustls = { version = "0.23", features = ["dangerous_configuration"] }
+rustls-pemfile = "2.1"
+tokio-rustls = "0.26"
+
+# Database
+sled = "0.34"
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+
+# HTTP/API
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+hyper = { version = "1.1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+tokio-tungstenite = "0.24"
+serde_yaml = "0.9"
+
+# Serialization
+bincode = "1.3"
+postcard = { version = "1.0", features = ["alloc"] }
+rmp-serde = "1.1"
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+hidapi = "2.6"  # For FIDO2/hardware security token support
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"
+rand_core = { version = "0.6", features = ["getrandom"] }
+rand_chacha = "0.3"
+bytes = "1.5"
+parking_lot = "0.12"
+base64 = "0.22"
+hex = "0.4"
+bcrypt = "0.15"
+jsonwebtoken = "9.2"
+
+# Configuration
+config = "0.14"
+figment = { version = "0.10", features = ["toml", "env"] }
+
+# Monitoring/Metrics
+prometheus = "0.13"
+opentelemetry = "0.22"
+opentelemetry-prometheus = "0.15"
+metrics = "0.21"
+
+# Error handling
+color-eyre = "0.6"
 
 # Testing
-mockall = "0.11"
+proptest = "1.4"
+mockall = "0.12"
+wiremock = "0.6"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
-# Internal crates - unified and modernized
-beardog-errors = { path = "crates/beardog-errors" }
+# CLI
+clap = { version = "4.4", features = ["derive", "env"] }
+
+# BearDog internal crates
 beardog-types = { path = "crates/beardog-types" }
-beardog-traits = { path = "crates/beardog-traits" }
-beardog-utils = { path = "crates/beardog-utils" }
-beardog-security = { path = "crates/beardog-security" }
+beardog-errors = { path = "crates/beardog-errors" }
+beardog-core = { path = "crates/beardog-core" }
+beardog-config = { path = "crates/beardog-config" }
+beardog-tunnel = { path = "crates/beardog-tunnel" }
 beardog-auth = { path = "crates/beardog-auth" }
-beardog-api = { path = "crates/beardog-api" }
-beardog-compliance = { path = "crates/beardog-compliance" }
-beardog-monitoring = { path = "crates/beardog-monitoring" }
 beardog-genetics = { path = "crates/beardog-genetics" }
 beardog-adapters = { path = "crates/beardog-adapters" }
-beardog-core = { path = "crates/beardog-core" }
-beardog-deploy = { path = "crates/beardog-deploy" }
+beardog-monitoring = { path = "crates/beardog-monitoring" }
+beardog-security = { path = "crates/beardog-security" }
+beardog-threat = { path = "crates/beardog-threat" }
+beardog-traits = { path = "crates/beardog-traits" }
+beardog-utils = { path = "crates/beardog-utils" }
+beardog-workflows = { path = "crates/beardog-workflows" }
+beardog-compliance = { path = "crates/beardog-compliance" }
+beardog-api = { path = "crates/beardog-api" }
 beardog-cli = { path = "crates/beardog-cli" }
+beardog-deploy = { path = "crates/beardog-deploy" }
 beardog-production = { path = "crates/beardog-production" }
 beardog-node-registry = { path = "crates/beardog-node-registry" }
-beardog-threat = { path = "crates/beardog-threat" }
-beardog-workflows = { path = "crates/beardog-workflows" }
-beardog-tunnel = { path = "crates/beardog-tunnel" }
 
-[workspace.metadata.docs.rs]
-features = ["hsm", "ml-threat-detection", "genetic-spawning", "compliance", "federation"]
-rustdoc-args = ["--cfg", "docsrs"]
+[package]
+name = "beardog"
+description = "Zero-trust, sovereign cryptographic workflow orchestrator with hardware security module integration"
+keywords = ["cryptography", "hsm", "security", "workflow", "sovereignty"]
+categories = ["cryptography", "authentication", "network-programming"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
-[profile.release]
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
+[dependencies]
+beardog-core = { workspace = true }
+beardog-config = { workspace = true }
+beardog-types = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-tunnel = { workspace = true }
+beardog-auth = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-monitoring = { workspace = true }
+beardog-security = { workspace = true }
+beardog-traits = { workspace = true }
+beardog-api = { workspace = true }
+beardog-cli = { workspace = true }
+
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+# Optional dependencies for examples
+hidapi = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+proptest = { workspace = true }
+criterion = { workspace = true }
+rand = { workspace = true }
+async-trait = { workspace = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+chrono = { workspace = true }
+serial_test = "3.2"
+beardog-adapters = { path = "crates/beardog-adapters" }
+beardog-genetics = { path = "crates/beardog-genetics" }
+ed25519-dalek = { workspace = true }
+reqwest = { version = "0.11", features = ["json"] }
+
+[[test]]
+name = "chaos"
+path = "tests/chaos/mod.rs"
+harness = true
+
+[[test]]
+name = "fault_injection"
+path = "tests/fault_injection/mod.rs"
+harness = true
 
 [profile.dev]
-debug = true
 opt-level = 0
+debug = true
+split-debuginfo = "unpacked"
+debug-assertions = true
+overflow-checks = true
+incremental = true
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = false
+debug-assertions = false
+overflow-checks = true
+strip = "symbols"
+panic = "abort"
 
 [profile.bench]
-debug = false
-lto = true
+inherits = "release"
+debug = true
+strip = "none"
 
+[profile.production]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
 
-
- 
+[features]
+# Enable btsp-api by default for examples and integration
+default = ["btsp-api"]
+# FIDO2 support - currently in Phase 2 development
+fido2 = ["beardog-security/fido2", "dep:hidapi"]
+# mDNS discovery support for primal-to-primal runtime discovery
+mdns = ["beardog-core/mdns"]
+# BTSP HTTP API for Songbird integration
+btsp-api = ["beardog-tunnel/btsp-api"]
+full = ["fido2", "mdns", "btsp-api"]

@@ -1,0 +1,65 @@
+[[test]]
+name = "chaos_engineering"
+path = "tests/chaos_engineering.rs"
+
+[[test]]
+name = "e2e_comprehensive"
+path = "tests/e2e_comprehensive.rs"
+
+[[test]]
+name = "concurrency_stress_tests"
+path = "tests/concurrency_stress_tests.rs"
+
+[package]
+name = "beardog-integration-tests"
+version = "3.0.0"
+edition = "2021"
+description = "beardog-integration-tests component of BearDog security ecosystem"
+readme = "README.md"
+license = "AGPL-3.0-only"
+homepage = "https://github.com/your-org/beardog"
+repository = "https://github.com/your-org/beardog"
+authors = [ "BearDog Security Team",]
+keywords = [ "security", "hsm", "threat-detection", "compliance", "workflow",]
+categories = [ "cryptography", "authentication", "web-programming", "network-programming",]
+rust-version = "1.70"
+documentation = "https://docs.rs/beardog"
+
+[dependencies.beardog-core]
+path = "../beardog-core"
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.beardog-security]
+path = "../beardog-security"
+
+[dependencies.beardog-tunnel]
+path = "../beardog-tunnel"
+
+[dependencies.beardog-genetics]
+path = "../beardog-genetics"
+
+[dependencies.beardog-auth]
+path = "../beardog-auth"
+
+[dependencies.beardog-utils]
+path = "../beardog-utils"
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.uuid]
+workspace = true
+
+[dependencies.chrono]
+workspace = true
+
+[dependencies.tracing]
+workspace = true

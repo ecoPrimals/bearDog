@@ -1,21 +1,28 @@
 
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::hsm::config::SoftwareHsmConfig;
-use beardog_types::canonical::hsm::{HsmKey, KeyHealth, KeyMaterial};
-use beardog_types::canonical::{KeyMetadata, KeyOperation, KeyType, KeyUsagePolicy};
-use beardog_types::providers::{
-    BaseProvider, HsmHardwareStatus, HsmInfo, HsmKeyInfo, HsmProvider, ProviderConfig,
-    ProviderHealthStatus,
-};
+// NOTE: Commenting out canonical imports - types don't exist yet
+// use beardog_types::canonical::hsm::config::SoftwareHsmConfig;
+// use beardog_types::canonical::hsm::{HsmKey, KeyHealth, KeyMaterial};
+// use beardog_types::canonical::{KeyMetadata, KeyOperation, KeyType, KeyUsagePolicy};
+// use beardog_types::providers::{
+//     BaseProvider, HsmHardwareStatus, HsmInfo, HsmKeyInfo, HsmProvider, ProviderConfig,
+//     ProviderHealthStatus,
+// };
+// Using local types instead
+use crate::tunnel::hsm::types::{HsmKey, KeyMetadata, KeyType};
+use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use super::keys::SoftwareKeyStore;
 
-pub struct RustCryptoProvider;
+// ✅ RustCryptoProvider and OpenSslCryptoProvider moved to crypto_providers/
+// See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/crypto_providers/
+// Real implementations with actual cryptography are in that module
 
-pub struct OpenSslCryptoProvider;
-
+    /// RustSoftwareHsm configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct RustSoftwareHsm {
 
     pub config: SoftwareHsmConfig,
@@ -26,6 +33,10 @@ pub struct RustSoftwareHsm {
 }
 impl RustSoftwareHsm {
 
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub async fn new(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
 
         let storage_backend = Arc::new(super::storage::MemoryStorageBackend::new());
@@ -135,20 +146,20 @@ impl HsmProvider for RustSoftwareHsm {}
                     meta.insert("data_length".to_string(), key_data.len().to_string());
             key_name: format_args!("Imported Key {}", metadata.purpose).to_string(),
     async fn derive_key(
-        master_key_id: &str,
+        root_key_id: &str,
         derivation_data: &[u8],
         derived_key_type: KeyType,
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
-        master_key_id.hash(&mut hasher);
+        root_key_id.hash(&mut hasher);
         derivation_data.hash(&mut hasher);
         let derivation_hash = hasher.finish();
         let key_id = format_args!("rust_hsm_derived_{}_{:x}", Uuid::new_v4().to_string(), derivation_hash);
             key_type: derived_key_type.clone(),
                     meta.insert("type".to_string(), format!("{derived_key_type:?}"));
-                    meta.insert("derived_from".to_string(), master_key_id.to_string());
+                    meta.insert("derived_from".to_string(), root_key_id.to_string());
                     meta.insert(
                         "derivation_hash".to_string(),
                         format!("{derivation_hash:x}"),
@@ -243,6 +254,9 @@ impl HsmProvider for RustSoftwareHsm {}
     fn is_hardware_backed(&self) -> bool {
         false // Software HSM is not hardware-backed
 
+    /// SoftwareHsm configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct SoftwareHsm {
 
     pub id: String,

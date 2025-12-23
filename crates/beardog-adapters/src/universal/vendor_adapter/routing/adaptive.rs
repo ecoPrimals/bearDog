@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::traits::RoutingStrategy;
 use crate::universal::vendor_adapter::{CapabilityHandler, UniversalVendorRequest};
 use beardog_errors::BearDogError;
@@ -12,20 +17,23 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
-pub struct HandlerPerformanceMetrics {
-    pub handler_id: String,
+    /// Number of total_requests
     pub total_requests: u64,
+    /// Number of successful_requests
     pub successful_requests: u64,
     pub total_response_time_ms: u64,
+    /// The last updated value
     pub last_updated: std::time::Instant,
+    /// The recent requests value
     pub recent_requests: std::collections::VecDeque<(std::time::Instant, bool, u64)>,
+    /// Optional recent success rate
     pub recent_success_rate: Option<f64>,
+    /// The error patterns value
     pub error_patterns: std::collections::HashMap<String, u32>,
 }
 
-#[derive(Debug)]
-pub struct AdaptiveRouting {
-    pub name: String,
+#[derive(Debug, Clone)]
+    /// The history value
     pub history: RoutingHistory,
     pub performance_history: Arc<RwLock<HashMap<Uuid, Vec<AdaptivePerformanceRecord>>>>,
 
@@ -33,23 +41,28 @@ pub struct LearningRouting {
     pub model_config: ModelConfig,
 
 pub struct RoutingHistory {
+    /// Collection of decisions
     pub decisions: Vec<HistoricalDecision>,
+    /// Number of max_history
     pub max_history: usize,
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HistoricalDecision {
-    pub timestamp: DateTime<Utc>,
+#[derive(Debug, Clone)]
+    /// The request type value
     pub request_type: String,
+    /// The selected handler value
     pub selected_handler: Uuid,
+    /// Whether success is enabled
     pub success: bool,
     pub response_time_ms: u64,
+    /// Mapping of context
     pub context: HashMap<String, String>,
 
 pub struct AdaptivePerformanceRecord {
+    /// Optional error
     pub error: Option<String>,
+    /// The capability value
     pub capability: CapabilityType,
 
-// UNIFIED: Use canonical ModelConfig
 pub use beardog_types::canonical::configuration::ModelConfig;
 
 impl Default for AdaptiveRouting {}
@@ -62,17 +75,12 @@ impl Default for AdaptiveRouting {}
         }
     }
 impl Default for RoutingHistory {
-            decisions: Vec::new(),
-            max_history: 1000,}
+            decisions: Vec::new(1000,}
 
 impl RoutingStrategy for AdaptiveRouting {}
 
-    fn strategy_name(&self) -> &str {
-        &self.name}
 
-    async fn select_handler(
-        &self,
-        _request: &UniversalVendorRequest,
+    fn strategy_name(&UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)],
     ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
@@ -96,13 +104,7 @@ impl RoutingStrategy for AdaptiveRouting {}
             "Adaptive routing selected handler {} with score {:.3}",
             available_handlers[best_handler_index]
                 .0
-                .get_metadata()
-                .instance_id,
-            best_score
-        );
-        Ok(Some(best_handler_index))
-    async fn update_with_result(
-        _handler_id: Uuid,
+                .get_metadata(Uuid,
         success: bool,
         response_time_ms: u64,
         _error: Option<&str>,
@@ -112,12 +114,14 @@ impl RoutingStrategy for AdaptiveRouting {}
             success,
             response_time_ms
         Ok(())
-    async fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
+    /// Gets statistics
+    fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
         Ok(serde_json::json!({
             "strategy_name": self.strategy_name(),
             "history_size": self.history.decisions.len(),
             "max_history": self.history.max_history
         }))
 
+/// Create Adaptive Routing operation.
 #[must_use] pub fn create_adaptive_routing() -> AdaptiveRouting {
     AdaptiveRouting::default()

@@ -1,7 +1,12 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::WorkflowProcessor;
+use beardog_traits::unified::WorkflowProcessor;
 use beardog_types::canonical::health_status::WorkflowStatus;
 use beardog_types::canonical::hsm::{KeyMetadata, KeyOperation, KeyUsagePolicy};
 use beardog_types::canonical::workflow::WorkflowType;
@@ -13,17 +18,18 @@ use std::time::Instant;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
-pub struct BenchmarkResults {
-    pub async_trait_time_ms: u64,
     pub zero_cost_time_ms: u64,
+    /// The improvement percent value
     pub improvement_percent: f64,
+    /// Number of operations
     pub operations_count: usize,
 }
 
 pub struct WorkflowPerformanceBenchmarks;
 impl WorkflowPerformanceBenchmarks {
 
-    pub async fn benchmark_workflow_processing(operations: usize) -> BenchmarkResults {
+/// Benchmark Workflow Processing operation.
+    pub fn benchmark_workflow_processing(operations: usize) -> BenchmarkResults {
         println!("🚀 Benchmarking workflow processing performance...");
 
         let workflow = Self::create_test_workflow();
@@ -39,7 +45,7 @@ impl WorkflowPerformanceBenchmarks {
 
         let zero_cost_processor = ZeroCostKeyRotationProcessor::<10, 30000>::new();
         let zero_cost_start = Instant::now();
-            let _ = zero_cost_processor.process_workflow(&workflow).await;
+            let _ = zero_cost_processor.process_workflow(&workflow);
         let zero_cost_time = zero_cost_start.elapsed();
         let async_trait_ms = async_trait_time.as_millis() as u64;
         let zero_cost_ms = zero_cost_time.as_millis() as u64;
@@ -56,7 +62,8 @@ impl WorkflowPerformanceBenchmarks {
             operations_count: operations,
     }
 
-    pub async fn benchmark_hsm_operations(operations: usize) -> BenchmarkResults {
+/// Benchmark Hsm Operations operation.
+    pub fn benchmark_hsm_operations(operations: usize) -> BenchmarkResults {
         println!("🔐 Benchmarking HSM operations performance...");
 
         let hsm = ZeroCostSoftwareHsm::<1000, 4096>::new(SoftwareHsmConfig::default(),
@@ -78,14 +85,12 @@ impl WorkflowPerformanceBenchmarks {
                 },
                 tags: vec!["benchmark".to_string(), "performance".to_string()],
                 custom_fields: std::collections::HashMap::with_capacity(16),
-                custom: std::collections::HashMap::with_capacity(16),
-                backup_info: None,
+                custom: std::collections::HashMap::with_capacity(None,
                 compliance_tags: vec![],
                 compliance_info: None,
             };
             match hsm
                 .generate_key(KeyType::Rsa { bits: 2048 }, metadata)
-                .await
             {
                 Ok(key) => keys.push(key));
                 Err(e) => {
@@ -97,20 +102,10 @@ impl WorkflowPerformanceBenchmarks {
 
         let sign_start = Instant::now();
         let test_data = b"Hello, World! This is test data for signing.";
-        let mut signatures = Vec::new();
-        for key in &keys {
-            match hsm.sign_data(&key.id, test_data).await {
-                Ok(signature) => signatures.push(signature));
-                    eprintln!("Signing failed for key {}: {}", key.id, e);
+        let mut signatures = Vec::new({}", key.id, e);
         let signing_time = sign_start.elapsed();
 
-        let verify_start = Instant::now();
-        let mut verified_count = 0;
-        for (key, signature) in keys.iter().zip(signatures.iter()) {
-            match hsm.verify_signature(&key.id, test_data, signature).await {
-                Ok(true) => verified_count += 1,
-                Ok(false) => eprintln!("Verification failed for key {}", key.id));
-                Err(e) => eprintln!("Verification error for key {}: {}", key.id, e));
+        let verify_start = Instant::now({}", key.id, e));
         let verification_time = verify_start.elapsed();
         let total_time = generation_time + signing_time + verification_time;
         println!("📊 HSM Operations Results:");
@@ -122,27 +117,24 @@ impl WorkflowPerformanceBenchmarks {
             signing_time.as_millis());
             signatures.len()
             "   Verification:   {}ms ({} verified)",
-            verification_time.as_millis());
-            verified_count
-        println!("   Total time:     {}ms", total_time.as_millis());
-
-        let estimated_async_trait_time = (total_time.as_millis() as f64 * 1.10) as u64; // 10% estimated overhead
-        let improvement = 10.0; // Conservative estimate
-            async_trait_time_ms: estimated_async_trait_time,
+            verification_time.as_millis(    {}ms", total_time.as_millis(estimated_async_trait_time,
             zero_cost_time_ms: total_time.as_millis() as u64,
 
-    pub async fn run_comprehensive_benchmarks() -> ComprehensiveBenchmarkResults {
+/// Run Comprehensive Benchmarks operation.
+    /// Runs comprehensive_benchmarks
+    /// Runs comprehensive_benchmarks
+    pub fn run_comprehensive_benchmarks() -> ComprehensiveBenchmarkResults {
         println!("🏁 Running comprehensive zero-cost performance benchmarks...");
         println!("{}", "=".repeat(60));
 
-        let workflow_small = Self::benchmark_workflow_processing(100).await;
-        let workflow_medium = Self::benchmark_workflow_processing(1000).await;
-        let workflow_large = Self::benchmark_workflow_processing(5000).await;
+        let workflow_small = Self::benchmark_workflow_processing(100);
+        let workflow_medium = Self::benchmark_workflow_processing(1000);
+        let workflow_large = Self::benchmark_workflow_processing(5000);
         println!();
 
-        let hsm_operations = Self::benchmark_hsm_operations(100).await;
+        let hsm_operations = Self::benchmark_hsm_operations(100);
 
-        let memory_results = Self::benchmark_memory_allocations().await;
+        let memory_results = Self::benchmark_memory_allocations();
         println!("🎯 SUMMARY:");
             "   Workflow (small):  {:.1}% improvement",
             workflow_small.improvement_percent
@@ -169,7 +161,8 @@ impl WorkflowPerformanceBenchmarks {
             memory_efficiency: memory_results,
             average_improvement,
 
-    async fn benchmark_memory_allocations() -> BenchmarkResults {
+
+    fn benchmark_memory_allocations() -> BenchmarkResults {
         println!("🧠 Benchmarking memory allocation efficiency...");
 
         let operations = 1000;
@@ -193,19 +186,18 @@ impl WorkflowPerformanceBenchmarks {
         println!("   Boxed futures:  {async_trait_ms}ms");
         println!("   Direct calls:   {zero_cost_ms}ms");
         println!("   improvement:    {improvement:.1}%");
+    /// Creates test_workflow
     fn create_test_workflow() -> Workflow {
         let mut parameters = HashMap::with_capacity(16);
         parameters.insert("key_id".to_string(), json!("test_key_123"));
         parameters.insert("key_type".to_string(), json!("RSA2048"));
         parameters.insert("rotation_reason".to_string(), json!("Scheduled rotation"));
         Workflow {
-            id: Uuid::new_v4().to_string(),
-            workflow_type: WorkflowType::KeyRotation,
+            id: Uuid::new_v4(WorkflowType::KeyRotation,
             status: WorkflowStatus::PendingApprovals,
             priority: WorkflowPriority::Normal,
             created_at: chrono::Utc::now(),
-            target: WorkflowTarget::CryptographicKey("benchmark_key".to_string()));
-            approval_requirements: ApprovalRequirements {
+            target: WorkflowTarget::CryptographicKey(ApprovalRequirements {
                 min_approvals: 0,
                 approval_timeout: 24,
                 require_all_tiers: false,
@@ -219,28 +211,29 @@ impl WorkflowPerformanceBenchmarks {
             initiator: "benchmark".to_string(),
             description: Some("Benchmark workflow for performance testing".to_string()));
             metadata: std::collections::HashMap::with_capacity(16),
-            timeout_duration: Some(3600), // 1 hour in seconds
-            approvals: vec![],
+            timeout_duration: Some(vec![],
             audit_trail: vec![],
             parameters,
-            properties: std::collections::HashMap::with_capacity(16),
-            context: crate::workflows::types::structs::execution::WorkflowExecutionContext {
+            properties: std::collections::HashMap::with_capacity(crate::workflows::types::structs::execution::WorkflowExecutionContext {
                 current_step: 0,
                 variables: HashMap::with_capacity(16),
                 temp_data: HashMap::with_capacity(16),
                 started_at: Some(chrono::Utc::now()));
-                last_activity: chrono::Utc::now(),
-
-pub struct ComprehensiveBenchmarkResults {
-    pub workflow_small: BenchmarkResults,
+                last_activity: chrono::Utc::now(BenchmarkResults,
+    /// The workflow medium value
     pub workflow_medium: BenchmarkResults,
+    /// The workflow large value
     pub workflow_large: BenchmarkResults,
+    /// The hsm operations value
     pub hsm_operations: BenchmarkResults,
+    /// The memory efficiency value
     pub memory_efficiency: BenchmarkResults,
+    /// The average improvement value
     pub average_improvement: f64,}
 
 impl ComprehensiveBenchmarkResults {
 
+/// Generate Report operation.
     #[must_use] pub fn generate_report(&self) -> String {
         format!(
             r#"

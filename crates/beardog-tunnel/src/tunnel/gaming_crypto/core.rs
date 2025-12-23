@@ -5,58 +5,46 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub enum CryptoChoice {
-    Aes256Gcm,
-    ChaCha20Poly1305,
-    XChaCha20Poly1305,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EncryptedPacket {
-    pub session_id: String,
+    /// Collection of encrypted data
     pub encrypted_data: Vec<u8>,
+    /// Collection of nonce
     pub nonce: Vec<u8>,
+    /// The algorithm value
     pub algorithm: String,
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct KeyManager {
-    keys: HashMap<String, Vec<u8>>,
+#[derive(HashMap<String, Vec<u8>>,
 }
 
 impl KeyManager {
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            keys: HashMap::new(),
+            keys: HashMap::with_capacity(16),
         }
     }
     
-    pub async fn get_session_key(&self, session_id: &str) -> Option<Vec<u8>> {
-        self.keys.get(session_id).cloned()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct GamingCryptoEngine {
-    key_manager: KeyManager,
+/// Get Session Key operation.
+    /// Gets session_key
+    /// Gets session_key
+    pub fn get_session_key(&self, session_id: &str) -> Option<Vec<u8>> {
+        self.keys.get(KeyManager,
 }
 
 impl GamingCryptoEngine {
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            key_manager: KeyManager::new(),
-        }
-    }
-
-    pub async fn encrypt_gaming_packet(
-        &self,
-        session_id: &str,
+            key_manager: KeyManager::new(&str,
         data: &[u8],
     ) -> Result<EncryptedPacket, BearDogError> {
-        let crypto_choice = self.select_optimal_crypto(data.len()).await?;
+        let crypto_choice = self.select_optimal_crypto(data.len())?;
         
-        let session_key = match self.key_manager.get_session_key(session_id).await {
+        let session_key = match self.key_manager.get_session_key(session_id) {
             Some(key) => key,
             None => {
                 return Err(BearDogError::encryption("session_key".to_string(), format!("Session key not found for: {session_id}")));
@@ -64,21 +52,21 @@ impl GamingCryptoEngine {
         };
         
         let encrypted_data = match crypto_choice {
-            CryptoChoice::Aes256Gcm => self.encrypt_aes_gcm(data, &session_key).await?,
-            CryptoChoice::ChaCha20Poly1305 => self.encrypt_chacha20_poly1305(data, &session_key).await?,
-            CryptoChoice::XChaCha20Poly1305 => self.encrypt_xchacha20_poly1305(data, &session_key).await?,
+            CryptoChoice::Aes256Gcm => self.encrypt_aes_gcm(data, &session_key)?,
+            CryptoChoice::ChaCha20Poly1305 => self.encrypt_chacha20_poly1305(data, &session_key)?,
+            CryptoChoice::XChaCha20Poly1305 => self.encrypt_xchacha20_poly1305(data, &session_key)?,
         };
         
         Ok(EncryptedPacket {
             session_id: session_id.to_string(),
-            encrypted_data: encrypted_data.clone(),
-            nonce: vec![0; 12], // Simplified nonce
+            encrypted_data: encrypted_data.clone(vec![0; 12], // Simplified nonce
             algorithm: format!("{:?}", crypto_choice),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         })
     }
 
-    async fn select_optimal_crypto(&self, data_len: usize) -> Result<CryptoChoice, BearDogError> {
+
+    fn select_optimal_crypto(&self, data_len: usize) -> Result<CryptoChoice, BearDogError> {
         if data_len < 1024 {
             Ok(CryptoChoice::ChaCha20Poly1305)
         } else if data_len < 8192 {
@@ -88,40 +76,15 @@ impl GamingCryptoEngine {
         }
     }
 
-    async fn encrypt_aes_gcm(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        // Simplified encryption - in real implementation would use proper AES-GCM
-        let mut result = data.to_vec();
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte ^= key.get(i % key.len()).unwrap_or(&0);
-        }
-        Ok(result)
-    }
 
-    async fn encrypt_chacha20_poly1305(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        // Simplified encryption - in real implementation would use proper ChaCha20-Poly1305
-        let mut result = data.to_vec();
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte ^= key.get(i % key.len()).unwrap_or(&0) ^ 0xAA;
-        }
-        Ok(result)
-    }
+    fn encrypt_aes_gcm(&[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
-    async fn encrypt_xchacha20_poly1305(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        // Simplified encryption - in real implementation would use proper XChaCha20-Poly1305
-        let mut result = data.to_vec();
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte ^= key.get(i % key.len()).unwrap_or(&0) ^ 0x55;
-        }
-        Ok(result)
-    }
+        let mut result = data.to_vec(&[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
-    pub async fn evolve_key_genetics(&self, base_key: &[u8], fitness_score: f64) -> Result<Vec<u8>, BearDogError> {
-        let mut evolved_key = base_key.to_vec();
-        self.apply_genetic_mutations(&mut evolved_key, fitness_score).await?;
-        Ok(evolved_key)
-    }
+        let mut result = data.to_vec(&[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
-    async fn apply_genetic_mutations(&self, key: &mut [u8], fitness_score: f64) -> Result<(), BearDogError> {
+        let mut result = data.to_vec(&[u8], fitness_score: f64) -> Result<Vec<u8>, BearDogError> {
+        let mut evolved_key = base_key.to_vec(&mut [u8], fitness_score: f64) -> Result<(), BearDogError> {
         for (i, byte) in key.iter_mut().enumerate() {
             let mutation_intensity = (fitness_score * 255.0) as u8;
             let genetic_factor = (i as u64 * 0x9E3779B97F4A7C15) >> 56;
@@ -130,15 +93,17 @@ impl GamingCryptoEngine {
         Ok(())
     }
 
-    async fn apply_simd_key_transformation(&self, key: &mut [u8]) -> Result<(), BearDogError> {
+
+    fn apply_simd_key_transformation(&self, key: &mut [u8]) -> Result<(), BearDogError> {
         const SIMD_CHUNK_SIZE: usize = 32; // AVX2 vector size
         for chunk in key.chunks_mut(SIMD_CHUNK_SIZE) {
-            self.simd_transform_chunk(chunk).await?;
+            self.simd_transform_chunk(chunk)?;
         }
         Ok(())
     }
 
-    async fn simd_transform_chunk(&self, chunk: &mut [u8]) -> Result<(), BearDogError> {
+
+    fn simd_transform_chunk(&self, chunk: &mut [u8]) -> Result<(), BearDogError> {
         for (i, byte) in chunk.iter_mut().enumerate() {
             let simd_pattern = ((i * 0x5A) ^ 0xA5) as u8;
             *byte ^= simd_pattern;

@@ -1,667 +1,345 @@
-use crate::{BearDogError, SecurityErrorCategory, SystemErrorCategory, BusinessErrorCategory, NetworkErrorCategory, ConfigurationErrorCategory, ApiErrorCategory, HsmErrorCategory, WorkflowErrorCategory};
+// Unified error constructors for BearDog
+// Provides consistent error creation patterns across the ecosystem
 
-impl BearDogError {
-    /// Creates a security-related error with the given message
+use crate::categories::{BusinessErrorCategory, SecurityErrorCategory, SystemErrorCategory};
+use crate::core::BearDogError;
+
+/// Create a security error with proper categorization
+#[must_use]
+pub fn security_error(message: &str, category: SecurityErrorCategory) -> BearDogError {
+    BearDogError::Security {
+        message: message.to_string(),
+        category,
+    }
+}
+
+/// Create a system error with proper categorization
+#[must_use]
+pub fn system_error(message: &str, category: SystemErrorCategory) -> BearDogError {
+    BearDogError::System {
+        message: message.to_string(),
+        category,
+    }
+}
+
+/// Create a business error with proper categorization
+#[must_use]
+pub fn business_error(message: &str, category: BusinessErrorCategory) -> BearDogError {
+    BearDogError::Business {
+        message: message.to_string(),
+        category,
+    }
+}
+
+/// Create a validation error (business logic validation)
+#[must_use]
+pub fn validation_error(field: &str, message: &str) -> BearDogError {
+    BearDogError::Business {
+        message: format!("Validation failed for {field}: {message}"),
+        category: BusinessErrorCategory::Validation, // Fixed to use correct variant
+    }
+}
+
+/// Create a network error (system-level networking)
+#[must_use]
+pub fn network_error(operation: &str, cause: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!("Network operation '{operation}' failed: {cause}"),
+        category: SystemErrorCategory::General, // Using General since Network doesn't exist
+    }
+}
+
+/// Create a configuration error
+#[must_use]
+pub fn configuration_error(component: &str, issue: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!("Configuration error in {component}: {issue}"),
+        category: SystemErrorCategory::General, // Using General since Configuration doesn't exist
+    }
+}
+
+/// Create an authentication error
+#[must_use]
+pub fn authentication_error(reason: &str) -> BearDogError {
+    BearDogError::Security {
+        message: format!("Authentication failed: {reason}"),
+        category: SecurityErrorCategory::Authentication,
+    }
+}
+
+/// Create an authorization error
+#[must_use]
+pub fn authorization_error(resource: &str, action: &str) -> BearDogError {
+    BearDogError::Security {
+        message: format!("Access denied for action '{action}' on resource '{resource}'"),
+        category: SecurityErrorCategory::Authorization,
+    }
+}
+
+/// Create a cryptographic error
+#[must_use]
+pub fn crypto_error(operation: &str, details: &str) -> BearDogError {
+    BearDogError::Security {
+        message: format!("Cryptographic operation '{operation}' failed: {details}"),
+        category: SecurityErrorCategory::Encryption, // Using Encryption since Cryptographic doesn't exist
+    }
+}
+
+/// Create an unsupported operation error
+#[must_use]
+pub fn unsupported_operation(operation: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!("Unsupported operation: {operation}"),
+        category: SystemErrorCategory::NotSupported,
+    }
+}
+
+/// Create a not implemented error
+#[must_use]
+pub fn not_implemented(feature: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!("Not yet implemented: {feature}"),
+        category: SystemErrorCategory::NotImplemented,
+    }
+}
+
+/// Create an I/O error
+#[must_use]
+pub fn io_error(operation: &str, details: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!("I/O operation '{operation}' failed: {details}"),
+        category: SystemErrorCategory::FileSystem,
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENHANCED CONSTRUCTORS WITH REMEDIATION HINTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Enhanced authentication error with remediation hint
+///
+/// Use this constructor when authentication fails and you want to provide
+/// actionable guidance to help resolve the issue.
+///
+/// # Examples
+///
+/// ```
+/// use beardog_errors::authentication_error_with_hint;
+///
+/// let error = authentication_error_with_hint(
+///     "JWT token signature verification failed",
+///     "Verify the token was signed with the correct key. Check configuration: beardog.auth.jwt_secret"
+/// );
+/// ```
+#[must_use]
+pub fn authentication_error_with_hint(reason: &str, hint: &str) -> BearDogError {
+    BearDogError::Security {
+        message: format!("Authentication failed: {reason}\n💡 Hint: {hint}"),
+        category: SecurityErrorCategory::Authentication,
+    }
+}
+
+/// Enhanced authorization error with remediation hint
+///
+/// Use this constructor when access is denied and you want to provide
+/// guidance on what permissions or roles are required.
+///
+/// # Examples
+///
+/// ```
+/// use beardog_errors::authorization_error_with_hint;
+///
+/// let error = authorization_error_with_hint(
+///     "/api/admin/users",
+///     "DELETE",
+///     "Requires 'admin' role or 'users:delete' permission"
+/// );
+/// ```
+#[must_use]
+pub fn authorization_error_with_hint(resource: &str, action: &str, hint: &str) -> BearDogError {
+    BearDogError::Security {
+        message: format!(
+            "Access denied for action '{action}' on resource '{resource}'\n💡 Hint: {hint}"
+        ),
+        category: SecurityErrorCategory::Authorization,
+    }
+}
+
+/// Enhanced validation error with suggestion
+///
+/// Use this constructor when validation fails and you want to provide
+/// a helpful suggestion for fixing the input.
+///
+/// # Examples
+///
+/// ```
+/// use beardog_errors::validation_error_with_suggestion;
+///
+/// let error = validation_error_with_suggestion(
+///     "email",
+///     "Must be a valid email address",
+///     "Use format: user@domain.com or check for typos"
+/// );
+/// ```
+#[must_use]
+pub fn validation_error_with_suggestion(
+    field: &str,
+    issue: &str,
+    suggestion: &str,
+) -> BearDogError {
+    BearDogError::Business {
+        message: format!("Validation failed for '{field}': {issue}\n💡 Suggestion: {suggestion}"),
+        category: BusinessErrorCategory::Validation,
+    }
+}
+
+/// Network error with full context
+///
+/// Use this constructor when network operations fail and you want to provide
+/// complete context for debugging, including the endpoint and operation.
+///
+/// # Examples
+///
+/// ```
+/// use beardog_errors::network_error_with_context;
+///
+/// let error = network_error_with_context(
+///     "Connection timeout after 30s",
+///     "tcp://consul.service.local:8500",
+///     "service_discovery_init"
+/// );
+/// ```
+#[must_use]
+pub fn network_error_with_context(message: &str, endpoint: &str, operation: &str) -> BearDogError {
+    BearDogError::System {
+        message: format!(
+            "Network operation '{operation}' failed: {message}\n\
+             🌐 Endpoint: {endpoint}\n\
+             💡 Check network connectivity and firewall rules"
+        ),
+        category: SystemErrorCategory::General,
+    }
+}
+
+/// Configuration error with documentation link
+///
+/// Use this constructor when configuration is invalid and you want to point
+/// users to relevant documentation for troubleshooting.
+///
+/// # Examples
+///
+/// ```
+/// use beardog_errors::configuration_error_with_docs;
+///
+/// let error = configuration_error_with_docs(
+///     "HSM provider 'yubico' not found in configuration",
+///     "hsm",
+///     "docs/hsm/providers.md#supported-providers"
+/// );
+/// ```
+#[must_use]
+pub fn configuration_error_with_docs(
+    issue: &str,
+    component: &str,
+    docs_link: &str,
+) -> BearDogError {
+    BearDogError::System {
+        message: format!(
+            "Configuration error in {component}: {issue}\n\
+             📚 Documentation: {docs_link}"
+        ),
+        category: SystemErrorCategory::General,
+    }
+}
+
+/// Cryptographic error with detailed context
+///
+/// Use this constructor when cryptographic operations fail and you want to
+/// provide detailed information about what went wrong and how to fix it.
+///
+/// # Examples
+///
+/// ```
+/// use beardog_errors::crypto_error_with_details;
+///
+/// let error = crypto_error_with_details(
+///     "AES-256-GCM encryption",
+///     "Key size is 128 bits, expected 256 bits",
+///     "Ensure you're using generate_key_256() or check key derivation"
+/// );
+/// ```
+#[must_use]
+pub fn crypto_error_with_details(operation: &str, details: &str, hint: &str) -> BearDogError {
+    BearDogError::Security {
+        message: format!(
+            "Cryptographic operation '{operation}' failed: {details}\n💡 Hint: {hint}"
+        ),
+        category: SecurityErrorCategory::Encryption,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test security error creation functionality.
     ///
-    /// # Arguments
-    /// * `message` - Description of the security error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and general subcategory
-    pub fn security(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::General,
+    /// # Panics
+    /// Panics if the created error is not a Security variant or has incorrect values.
+    #[test]
+    fn test_security_error_creation() {
+        let error = security_error("Test error", SecurityErrorCategory::Authentication);
+        match error {
+            BearDogError::Security { message, category } => {
+                assert_eq!(message, "Test error");
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: errors
+                // TEST_PRIORITY: important
+                assert_eq!(category, SecurityErrorCategory::Authentication);
+            }
+            _ => panic!("Expected Security error"),
         }
     }
 
-    /// Creates a security error with specific category
+    /// Test validation error creation functionality.
     ///
-    /// # Arguments
-    /// * `message` - Description of the security error
-    /// * `category` - Specific security error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and specified subcategory
-    pub fn security_with_category(
-        message: impl Into<String>,
-        category: SecurityErrorCategory,
-    ) -> Self {
-        Self::Security {
-            message: message.into(),
-            category,
+    /// # Panics
+    /// Panics if the created error is not a Business variant with Validation category,
+    /// or if the message doesn't contain expected content.
+    #[test]
+    fn test_validation_error_creation() {
+        let error = validation_error("username", "cannot be empty");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
+        match error {
+            BearDogError::Business { message, category } => {
+                assert!(message.contains("username"));
+                assert!(message.contains("cannot be empty"));
+                assert_eq!(category, BusinessErrorCategory::Validation);
+            }
+            _ => panic!("Expected Business error"),
         }
     }
 
-    /// Creates a system-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the system error
-    ///
-    /// # Returns
-    /// A `BearDogError` with system category and general subcategory
-    pub fn system(message: impl Into<String>) -> Self {
-        Self::System {
-            message: message.into(),
-            category: SystemErrorCategory::General,
-        }
-    }
-
-    /// Creates a system error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the system error
-    /// * `category` - Specific system error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with system category and specified subcategory
-    pub fn system_with_category(message: impl Into<String>, category: SystemErrorCategory) -> Self {
-        Self::System {
-            message: message.into(),
-            category,
-        }
-    }
-
-    /// Creates a business logic error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the business error
-    ///
-    /// # Returns
-    /// A `BearDogError` with business category and general subcategory
-    pub fn business(message: impl Into<String>) -> Self {
-        Self::Business {
-            message: message.into(),
-            category: BusinessErrorCategory::General,
-        }
-    }
-
-    /// Creates an invalid input error (business validation)
-    ///
-    /// # Arguments
-    /// * `message` - Description of the invalid input
-    ///
-    /// # Returns
-    /// A `BearDogError` with business category and validation subcategory
-    pub fn invalid_input(message: impl Into<String>) -> Self {
-        Self::Business {
-            message: message.into(),
-            category: BusinessErrorCategory::Validation,
-        }
-    }
-
-    /// Creates a business error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the business error
-    /// * `category` - Specific business error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with business category and specified subcategory
-    pub fn business_with_category(
-        message: impl Into<String>,
-        category: BusinessErrorCategory,
-    ) -> Self {
-        Self::Business {
-            message: message.into(),
-            category,
-        }
-    }
-
-    /// Creates a network-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the network error
-    ///
-    /// # Returns
-    /// A `BearDogError` with network category and general subcategory
-    pub fn network(message: impl Into<String>) -> Self {
-        Self::Network {
-            message: message.into(),
-            category: NetworkErrorCategory::General,
-        }
-    }
-
-    /// Creates a configuration-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the configuration error
-    ///
-    /// # Returns
-    /// A `BearDogError` with configuration category and general subcategory
-    pub fn configuration(message: impl Into<String>) -> Self {
-        Self::Configuration {
-            message: message.into(),
-            category: ConfigurationErrorCategory::General,
-        }
-    }
-
-    /// Creates an initialization error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the initialization error
-    ///
-    /// # Returns
-    /// A `BearDogError` with initialization category
-    pub fn initialization(message: impl Into<String>) -> Self {
-        Self::Initialization {
-            message: message.into(),
-        }
-    }
-
-    /// Creates an API error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the API error
-    /// * `category` - Specific API error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with API category and specified subcategory
-    pub fn api(message: impl Into<String>, category: ApiErrorCategory) -> Self {
-        Self::Api {
-            message: message.into(),
-            category,
-            status_code: None,
-            endpoint: None,
-        }
-    }
-
-    /// Creates an HSM-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the HSM error
-    ///
-    /// # Returns
-    /// A `BearDogError` with HSM category and general subcategory
-    pub fn hsm(message: impl Into<String>) -> Self {
-        Self::Hsm {
-            message: message.into(),
-            category: HsmErrorCategory::General,
-        }
-    }
-
-    /// Creates a workflow-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the workflow error
-    ///
-    /// # Returns
-    /// A `BearDogError` with workflow category and general subcategory
-    pub fn workflow(message: impl Into<String>) -> Self {
-        Self::Workflow {
-            message: message.into(),
-            category: WorkflowErrorCategory::General,
-        }
-    }
-
-    /// Creates a genetics-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the genetics error
-    ///
-    /// # Returns
-    /// A `BearDogError` with genetics category
-    pub fn genetics(message: impl Into<String>) -> Self {
-        Self::Genetics {
-            message: message.into(),
-        }
-    }
-
-    /// Creates a deployment-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the deployment error
-    ///
-    /// # Returns
-    /// A `BearDogError` with deployment category
-    pub fn deployment(message: impl Into<String>) -> Self {
-        Self::Deployment {
-            message: message.into(),
-        }
-    }
-
-    /// Creates a memory-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the memory error
-    ///
-    /// # Returns
-    /// A `BearDogError` with memory category
-    pub fn memory(message: impl Into<String>) -> Self {
-        Self::Memory {
-            message: message.into(),
-        }
-    }
-
-    /// Creates a monitoring-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the monitoring error
-    ///
-    /// # Returns
-    /// A `BearDogError` with monitoring category
-    pub fn monitoring(message: impl Into<String>) -> Self {
-        Self::Monitoring {
-            message: message.into(),
-        }
-    }
-
-    /// Creates a compliance-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the compliance error
-    ///
-    /// # Returns
-    /// A `BearDogError` with compliance category
-    pub fn compliance(message: impl Into<String>) -> Self {
-        Self::Compliance {
-            message: message.into(),
-        }
-    }
-
-    /// Creates a cryptographic error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the cryptographic error
-    ///
-    /// # Returns
-    /// A `BearDogError` with cryptographic category
-    pub fn cryptographic(message: impl Into<String>) -> Self {
-        Self::Cryptographic {
-            message: message.into(),
-        }
-    }
-
-    /// Creates a tunnel-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the tunnel error
-    ///
-    /// # Returns
-    /// A `BearDogError` with tunnel category
-    pub fn tunnel(message: impl Into<String>) -> Self {
-        Self::Tunnel {
-            message: message.into(),
-        }
-    }
-
-    /// Creates an adapter-related error with the given message
-    ///
-    /// # Arguments
-    /// * `message` - Description of the adapter error
-    ///
-    /// # Returns
-    /// A `BearDogError` with adapter category
-    pub fn adapter(message: impl Into<String>) -> Self {
-        Self::Adapter {
-            message: message.into(),
-        }
-    }
-
-    /// Creates an authentication error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the authentication error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and authentication subcategory
-    pub fn authentication(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::Authentication,
-        }
-    }
-
-    /// Creates an authorization error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the authorization error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and authorization subcategory
-    pub fn authorization(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::Authorization,
-        }
-    }
-
-    /// Creates a validation error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the validation error
-    ///
-    /// # Returns
-    /// A `BearDogError` with business category and validation subcategory
-    pub fn validation(message: impl Into<String>) -> Self {
-        Self::Business {
-            message: message.into(),
-            category: BusinessErrorCategory::Validation,
-        }
-    }
-
-    /// Creates an internal error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the internal error
-    ///
-    /// # Returns
-    /// A `BearDogError` with system category and general subcategory
-    pub fn internal(message: impl Into<String>) -> Self {
-        Self::System {
-            message: message.into(),
-            category: SystemErrorCategory::General,
-        }
-    }
-
-    /// Creates a timeout error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the timeout error
-    ///
-    /// # Returns
-    /// A `BearDogError` with network category and timeout subcategory
-    pub fn timeout(message: impl Into<String>) -> Self {
-        Self::Network {
-            message: message.into(),
-            category: NetworkErrorCategory::Timeout,
-        }
-    }
-
-    /// Creates a connection error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the connection error
-    ///
-    /// # Returns
-    /// A `BearDogError` with network category and connection subcategory
-    pub fn connection(message: impl Into<String>) -> Self {
-        Self::Network {
-            message: message.into(),
-            category: NetworkErrorCategory::Connection,
-        }
-    }
-
-    /// Creates a parsing error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the parsing error
-    ///
-    /// # Returns
-    /// A `BearDogError` with configuration category and parsing subcategory
-    pub fn parsing(message: impl Into<String>) -> Self {
-        Self::Configuration {
-            message: message.into(),
-            category: ConfigurationErrorCategory::Parsing,
-        }
-    }
-
-    /// Creates a not found error
-    ///
-    /// # Arguments
-    /// * `message` - Description of what was not found
-    ///
-    /// # Returns
-    /// A `BearDogError` with API category and not found subcategory
-    pub fn not_found(message: impl Into<String>) -> Self {
-        Self::Api {
-            message: message.into(),
-            category: ApiErrorCategory::NotFound,
-            status_code: Some(404),
-            endpoint: None,
-        }
-    }
-
-    /// Creates an already exists error
-    ///
-    /// # Arguments
-    /// * `message` - Description of what already exists
-    ///
-    /// # Returns
-    /// A `BearDogError` with API category and conflict subcategory
-    pub fn already_exists(message: impl Into<String>) -> Self {
-        Self::Api {
-            message: message.into(),
-            category: ApiErrorCategory::Conflict,
-            status_code: Some(409),
-            endpoint: None,
-        }
-    }
-
-    /// Creates an API error with detailed information
-    ///
-    /// # Arguments
-    /// * `message` - Description of the API error
-    /// * `category` - Specific API error category
-    /// * `status_code` - HTTP status code, if applicable
-    /// * `endpoint` - API endpoint where the error occurred
-    ///
-    /// # Returns
-    /// A `BearDogError` with API category and detailed information
-    pub fn api_with_details(
-        message: impl Into<String>,
-        category: ApiErrorCategory,
-        status_code: Option<u16>,
-        endpoint: Option<&str>,
-    ) -> Self {
-        Self::Api {
-            message: message.into(),
-            category,
-            status_code,
-            endpoint: endpoint.map(|s| s.to_string()),
-        }
-    }
-
-    /// Creates an HSM error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the HSM error
-    /// * `category` - Specific HSM error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with HSM category and specified subcategory
-    pub fn hsm_with_category(message: impl Into<String>, category: HsmErrorCategory) -> Self {
-        Self::Hsm {
-            message: message.into(),
-            category,
-        }
-    }
-
-    /// Creates a workflow error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the workflow error
-    /// * `category` - Specific workflow error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with workflow category and specified subcategory
-    pub fn workflow_with_category(
-        message: impl Into<String>,
-        category: WorkflowErrorCategory,
-    ) -> Self {
-        Self::Workflow {
-            message: message.into(),
-            category,
-        }
-    }
-
-    /// Creates a network error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the network error
-    /// * `category` - Specific network error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with network category and specified subcategory
-    pub fn network_with_category(
-        message: impl Into<String>,
-        category: NetworkErrorCategory,
-    ) -> Self {
-        Self::Network {
-            message: message.into(),
-            category,
-        }
-    }
-
-    /// Creates a configuration error with specific category
-    ///
-    /// # Arguments
-    /// * `message` - Description of the configuration error
-    /// * `category` - Specific configuration error category
-    ///
-    /// # Returns
-    /// A `BearDogError` with configuration category and specified subcategory
-    pub fn configuration_with_category(
-        message: impl Into<String>,
-        category: ConfigurationErrorCategory,
-    ) -> Self {
-        Self::Configuration {
-            message: message.into(),
-            category,
-        }
-    }
-
-    /// Creates a permission denied error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the permission denied error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and authorization subcategory
-    pub fn permission_denied(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::Authorization,
-        }
-    }
-
-    /// Creates an invalid credentials error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the invalid credentials error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and authentication subcategory
-    pub fn invalid_credentials(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::Authentication,
-        }
-    }
-
-    /// Creates a service unavailable error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the service unavailable error
-    ///
-    /// # Returns
-    /// A `BearDogError` with API category and service unavailable subcategory
-    pub fn service_unavailable(message: impl Into<String>) -> Self {
-        Self::Api {
-            message: message.into(),
-            category: ApiErrorCategory::ServiceUnavailable,
-            status_code: Some(503),
-            endpoint: None,
-        }
-    }
-
-    /// Creates a database error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the database error
-    ///
-    /// # Returns
-    /// A `BearDogError` with system category and storage subcategory
-    pub fn database(message: impl Into<String>) -> Self {
-        Self::System {
-            message: message.into(),
-            category: SystemErrorCategory::Storage,
-        }
-    }
-
-    /// Creates a filesystem error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the filesystem error
-    ///
-    /// # Returns
-    /// A `BearDogError` with system category and filesystem subcategory
-    pub fn filesystem(message: impl Into<String>) -> Self {
-        Self::System {
-            message: message.into(),
-            category: SystemErrorCategory::FileSystem,
-        }
-    }
-
-    /// Creates an invalid format error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the invalid format error
-    ///
-    /// # Returns
-    /// A `BearDogError` with configuration category and format subcategory
-    pub fn invalid_format(message: impl Into<String>) -> Self {
-        Self::Configuration {
-            message: message.into(),
-            category: ConfigurationErrorCategory::Format,
-        }
-    }
-
-    /// Creates a rate limit exceeded error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the rate limit exceeded error
-    ///
-    /// # Returns
-    /// A `BearDogError` with API category and rate limit subcategory
-    pub fn rate_limit_exceeded(message: impl Into<String>) -> Self {
-        Self::Api {
-            message: message.into(),
-            category: ApiErrorCategory::RateLimit,
-            status_code: Some(429),
-            endpoint: None,
-        }
-    }
-
-    /// Creates a certificate error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the certificate error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and certificate subcategory
-    pub fn certificate_error(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::Certificate,
-        }
-    }
-
-    /// Creates an encryption error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the encryption error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and encryption subcategory
-    pub fn encryption_error(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::Encryption,
-        }
-    }
-
-    /// Creates a key management error
-    ///
-    /// # Arguments
-    /// * `message` - Description of the key management error
-    ///
-    /// # Returns
-    /// A `BearDogError` with security category and key management subcategory
-    pub fn key_management_error(message: impl Into<String>) -> Self {
-        Self::Security {
-            message: message.into(),
-            category: SecurityErrorCategory::KeyManagement,
+    /// Test network error creation functionality.
+    ///
+    /// # Panics
+    /// Panics if the created error is not a System variant or if the message
+    /// doesn't contain expected network-related content.
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
+    #[test]
+    fn test_network_error_creation() {
+        let error = network_error("connect", "timeout ");
+        match error {
+            BearDogError::System { message, category } => {
+                assert!(message.contains("connect"));
+                assert!(message.contains("timeout "));
+                assert_eq!(category, SystemErrorCategory::General);
+            }
+            _ => panic!("Expected System error"),
         }
     }
 }

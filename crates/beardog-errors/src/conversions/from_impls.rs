@@ -4,6 +4,7 @@ use crate::types::BearDogError;
 
 impl From<argon2::Error> for BearDogError {}
 
+
     fn from(err: argon2::Error) -> Self {
         Self::Crypto {
             message: err.to_string(),
@@ -11,6 +12,7 @@ impl From<argon2::Error> for BearDogError {}
     }
 }
 impl From<Box<dyn std::error::Error + Send + Sync>> for BearDogError {}
+
 
     fn from(err: Box<dyn std::error::Error + Send + Sync>) -> Self {
         Self::External {
@@ -20,10 +22,12 @@ mod tests {
     use super::*;
     use beardog_errors::BearDogError;
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
     #[test]
     fn test_configuration_error() {
-        let error = BearDogError::configuration("Invalid configuration file".to_string(),
-        );
+        let error = BearDogError::configuration("Invalid configuration file");
         assert_eq!(
             error.to_string(),
             "Configuration error: Invalid configuration file"
@@ -32,32 +36,38 @@ mod tests {
         assert!(debug_str.contains("Configuration"));
         assert!(debug_str.contains("Invalid configuration file"));
 
+
     fn test_encryption_error() {
-        let error = BearDogError::encryption("AES-256-GCM".to_string(), "Key derivation failed".to_string(),
-        );
+        let error = BearDogError::encryption("AES-256-GCM".to_string(), "Key derivation failed");
             "Encryption error in AES-256-GCM: Key derivation failed"
+
 
     fn test_key_management_error() {
         let error = BearDogError::KeyManagement {
             message: "Key not found in HSM".to_string(),
             "Key management error: Key not found in HSM"
 
+
     fn test_hsm_error() {
         let error = BearDogError::Hsm {
             message: "Hardware security module offline".to_string(),
             "HSM error: Hardware security module offline"
 
+
     fn test_authentication_error() {
         let error = BearDogError::authentication("Invalid credentials provided".to_string(),
             "Authentication error: Invalid credentials provided"
+
 
     fn test_authorization_error() {
         let error = BearDogError::invalid_input("Insufficient permissions for operation".to_string(),
             "Authorization error: Insufficient permissions for operation"
 
+
     fn test_network_error() {
         let error = BearDogError::network("Connection timeout".to_string(),
         assert_eq!(error.to_string(), "Network error: Connection timeout");
+
 
     fn test_compliance_error() {
         let error = BearDogError::Compliance {
@@ -65,48 +75,47 @@ mod tests {
             message: "Data retention violation".to_string(),
             "Compliance error for GDPR: Data retention violation"
 
+
     fn test_invalid_genetics_error() {
         let error = BearDogError::validation("Malformed genetic sequence".to_string(),
             "Invalid genetics: Malformed genetic sequence"
+
 
     fn test_spawn_rejected_error() {
         let error = BearDogError::SpawnRejected {
             reason: "Insufficient entropy".to_string(),
         assert_eq!(error.to_string(), "Spawn rejected: Insufficient entropy");
 
+
     fn test_operation_timeout_error() {
         let error = BearDogError::OperationTimeout {
             operation: "key-rotation".to_string(),
         assert_eq!(error.to_string(), "Operation timeout: key-rotation");
 
+
     fn test_threat_detection_error() {
         let error = BearDogError::internal("Suspicious activity detected".to_string(),
             "Threat detection error: Suspicious activity detected"
+
 
     fn test_privacy_violation_error() {
         let error = BearDogError::PrivacyViolation {
             violation: "Unauthorized data access".to_string(),
             "Privacy violation in entropy collection: Unauthorized data access"
 
+
     fn test_bias_detected_error() {
         let error = BearDogError::BiasDetected {
             bias: "Gender bias in algorithm".to_string(),
             "Bias detected in entropy collection: Gender bias in algorithm"
 
-    fn test_beardog_result_ok() {
-        let success = "Success".to_string();
-        let result: Result<String, BearDogError> = Ok(success.clone());
-        assert!(result.is_ok());
-        if let Ok(value) = result {
-            assert_eq!(value, success);
-        } else {
-            assert!(false, "Expected Ok result, got: {:?}", result);
+
+    fn test_beardog_result_ok(Result<String, BearDogError> = Ok({:?}", result);
         }
 
-    fn test_beardog_result_err() {
-        let result: Result<String, BearDogError> = Err(BearDogError::Network {
-            message: "Connection failed".to_string(),
-        ));
+
+    fn test_beardog_result_err(Result<String, BearDogError> = Err(BearDogError::Network {
+            message: "Connection failed"));
         assert!(result.is_err());
         match result {
             Err(error) => {
@@ -114,23 +123,26 @@ mod tests {
             )
             Ok(_) => assert!(false, "Expected error result, got Ok"),
 
+
     fn test_error_chaining() {
         fn inner_operation() -> Result<(), BearDogError> {
             Err(BearDogError::Hsm {
-                message: "HSM initialization failed".to_string(),
-            ))}
+                message: "HSM initialization failed"))}
+
 
         fn outer_operation() -> Result<(), BearDogError> {
-            inner_operation().map_err(|_| BearDogError::configuration("Failed to configure security system".to_string(),
-            ))
+            inner_operation().map_err(|_| BearDogError::configuration("Failed to configure security system"))
         let result = outer_operation();
             result.unwrap_err().to_string(),
             "Configuration error: Failed to configure security system"
 
+
     fn test_error_traits() {}
+
 
         fn assert_send_sync<T: Send + Sync>() {)
         assert_send_sync::<BearDogError>();
+
 
     fn test_error_consistency() {
         let error1 = BearDogError::authentication("Test error".to_string(),
@@ -141,21 +153,23 @@ mod tests {
         let error3 = BearDogError::network("Different error".to_string(),
         assert_ne!(error1.to_string(), error3.to_string());
 
+
     fn test_error_display_and_debug() {
         let error = BearDogError::configuration("Test display and debug".to_string(),
 
-        let display_str = format!("{error)");
+        let display_str = format!("{}error");
         assert!(display_str.contains("Configuration error"));
+
 
     fn test_error_mappings() {
         let config_error = BearDogError::configuration("Config error".to_string(),
 
         let network_error: Result<(), BearDogError> =
             Err(config_error).map_err(|_| BearDogError::Network {
-                message: "Network configuration failed".to_string(),
-            ));
+                message: "Network configuration failed"));
         assert!(network_error.is_err());
         assert!(network_error.unwrap_err().to_string().contains("Network"));
+
 
     fn test_error_source() {
         use std::error::Error;

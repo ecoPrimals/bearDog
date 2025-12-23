@@ -1,19 +1,38 @@
+use super::primal_types::{
+    PrimalCapability, PrimalError, PrimalHealth, PrimalMetadata, PrimalRequest, PrimalResponse,
+    UniversalIntegrationConfig,
+};
 
-
-use super::primal_types::*;
-
+/// Core trait for primal ecosystem services
+///
+/// Defines the standard interface that all primals must implement to participate
+/// in the ecosystem, enabling universal discovery, integration, and management.
 #[allow(async_fn_in_trait)]
 pub trait EcoPrimal: Send + Sync {
-
+    /// Returns metadata describing this primal's identity and characteristics
     fn metadata(&self) -> &PrimalMetadata;
 
+    /// Returns the list of capabilities this primal provides
     fn capabilities(&self) -> Vec<PrimalCapability>;
 
-    async fn initialize(&self, config: &PrimalIntegrationConfig) -> Result<(), PrimalError>;
+    /// Initializes the primal service component
+    ///
+    /// # Errors
+    /// Returns `PrimalError` if initialization fails due to invalid configuration or resource unavailability
+    fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError>;
 
-    async fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError>;
+    /// Handles incoming primal request
+    ///
+    /// # Errors
+    /// Returns `PrimalError` if the request cannot be processed or validation fails
+    fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError>;
 
-    async fn health_check(&self) -> PrimalHealth;
+    /// Performs health check and returns current operational status
+    fn health_check(&self) -> PrimalHealth;
 
-    async fn shutdown(&self) -> Result<(), PrimalError>;
-} 
+    /// Shuts down the primal service
+    ///
+    /// # Errors
+    /// Returns `PrimalError` if shutdown fails or cleanup encounters errors
+    fn shutdown(&self) -> Result<(), PrimalError>;
+}

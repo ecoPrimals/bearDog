@@ -2,33 +2,65 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EventCorrelationResult {
-    pub event_id: String,
+#[derive(Debug, Clone)]
+    /// The correlation type value
+    /// The correlation type value
     pub correlation_type: String,
     pub confidence: f64,
+    /// Collection of related events
+    /// Collection of related events
     pub related_events: Vec<String>,
     pub timestamp: DateTime<Utc>,
+    /// Mapping of metadata
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
     pub confidence_score: f64, // Add missing field
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of correlation
+/// Types of correlation
 pub enum CorrelationType {
+    /// Represents temporal variant
     Temporal,
 
+
+
+
+    /// Represents spatial variant
     Spatial,
 
+
+
+
+    /// Represents behavioral variant
     Behavioral,
 
+
+
+
+    /// Represents causal variant
     Causal,
 
+
+
+
+    /// Represents attack pattern variant
     AttackPattern,
 
+
+
+
+    /// Represents user behavior variant
     UserBehavior,
 
+
+
+
+    /// Represents network variant
     Network,
 
+    /// Represents custom variant
     Custom(String),
 }
 
@@ -36,74 +68,60 @@ impl Default for EventCorrelationResult {
     fn default() -> Self {
         Self {
             event_id: String::with_capacity(64),
-            correlation_type: "temporal".to_string(),
-            confidence: 0.0,
+            correlation_type: "temporal".to_string(0.0,
             related_events: Vec::new(),
             timestamp: Utc::now(),
-            metadata: HashMap::new(),
-            confidence_score: 0.0,
+            metadata: HashMap::with_capacity(16),
         }
     }
 }
 
 impl EventCorrelationResult {
-    pub fn new(event_id: String, correlation_type: String) -> EventCorrelationResult {
+/// New operation.
+    /// Creates a new instance
+    pub fn new(&str, correlation_type: &str) -> EventCorrelationResult {
         EventCorrelationResult {
             event_id,
-            related_events: Vec::new(),
-            correlation_type,
-            confidence: 0.0,
+            related_events: Vec::new(0.0,
             timestamp: Utc::now(),
-            metadata: HashMap::new(),
-            confidence_score: 0.0,
+            metadata: HashMap::with_capacity(16),
         }
     }
 
+/// With Capacity operation.
+    /// Creates instance with capacity
     pub fn with_capacity(capacity: usize) -> EventCorrelationResult {
         EventCorrelationResult {
             event_id: String::with_capacity(64),
             correlation_type: CorrelationType::Temporal.to_string(),
-            related_events: Vec::with_capacity(capacity),
-            confidence: 0.0,
+            related_events: Vec::with_capacity(0.0,
             timestamp: Utc::now(),
-            metadata: HashMap::new(),
-            confidence_score: 0.0,
+            metadata: HashMap::with_capacity(16),
         }
     }
 
+/// Add Related Event operation.
     pub fn add_related_event(&mut self, event_id: &str) {
         if !self.related_events.contains(&event_id.to_string()) {
             self.related_events.push(event_id.to_string());
         }
     }
 
+/// Set Confidence operation.
+    /// Sets confidence
+    /// Sets confidence
     pub fn set_confidence(&mut self, confidence: f64) {
         self.confidence_score = confidence.clamp(0.0, 1.0);
         self.confidence = confidence.clamp(0.0, 1.0);
     }
 
+/// Set Time Window operation.
+    /// Sets time_window
+    /// Sets time_window
     pub fn set_time_window(&mut self, minutes: u64) {
-        // Store time window in metadata since it's not a direct field
+
         self.metadata
-            .insert("time_window_minutes".to_string(), minutes.to_string());
-    }
-
-    pub fn get_correlation_strength(&self) -> f64 {
-        // Use confidence_score for correlation strength
-        self.confidence_score
-    }
-
-    pub fn get_related_event_count(&self) -> usize {
-        self.related_events.len()
-    }
-
-    pub fn is_significant(&self) -> bool {
-        self.confidence_score >= 0.5 && !self.related_events.is_empty()
-    }
-
-    pub fn summary(&self) -> String {
-        format!(
-            "{} correlation: {} related events with {:.2}% confidence",
+            .insert({} related events with {:.2}% confidence",
             self.correlation_type,
             self.get_related_event_count(),
             self.confidence_score * 100.0

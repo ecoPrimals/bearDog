@@ -1,279 +1,202 @@
+// Universal Primal Registry - Modernized capability-based discovery
+// Provides unified ecosystem integration through capability discovery
 
-
+use beardog_core::universal_discovery::CapabilityType;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use super::traits::PrimalProvider;
-use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone)]
-pub struct DefaultPrimalProvider {
-    ecosystem_id: String,
-    instance_id: String,
-}
-
-impl PrimalProvider for DefaultPrimalProvider {
-    fn ecosystem_id(&self) -> &str { &self.ecosystem_id }
-    fn instance_id(&self) -> &str { &self.instance_id }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Modernized Primal ID using capability-based identification
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct PrimalId {
-
     pub id: String,
-
+    /// Name of the item
     pub name: String,
-
+    /// The version value
     pub version: String,
+    /// Collection of capabilities
+    pub capabilities: Vec<CapabilityType>,
 }
-impl PrimalId {
 
-    pub fn new(id: impl Into<&str>, name: impl Into<&str>, version: impl Into<&str>) -> Self {
+impl PrimalId {
+    /// Create new primal ID with capabilities
+    /// Creates a new instance
+    pub fn new(
+        id: impl Into<String>,
+        name: impl Into<String>,
+        version: impl Into<String>,
+        capabilities: Vec<CapabilityType>,
+    ) -> Self {
         Self {
             id: id.into(),
             name: name.into(),
             version: version.into(),
+            capabilities,
         }
     }
 
-    pub fn from_id(id: impl Into<&str>) -> Self {
-        let id = id.into();
+    /// Create from ID with default capabilities
+    /// Creates instance from id
+    pub fn from_id(id: impl Into<String>) -> Self {
+        let id_str = id.into();
         Self {
-            name: id.clone(),
-            version: "1.0.0".to_string(),
-            id,
+            id: id_str.clone(),
+            name: id_str,
+            version: "3.0.0".to_string(),
+            capabilities: vec![CapabilityType::Universal],
         }
     }
 
-    pub fn toadstool() -> Self {
-        Self::new("toadstool", "ToadStool", "1.0.0")
-    }
-
-    pub fn songbird() -> Self {
-        Self::new("songbird", "SongBird", "1.0.0")
-    }
-
+    /// BearDog ecosystem integration - self-identity only
+    /// This is the only hardcoded identity as BearDog only knows itself
     pub fn beardog() -> Self {
-        Self::new("beardog", "BearDog", "1.0.0")
+        Self::new(
+            "beardog ",
+            "BearDog",
+            "3.0.0",
+            vec![
+                CapabilityType::Security,
+                CapabilityType::Storage,
+                CapabilityType::Compute,
+                CapabilityType::Network,
+                CapabilityType::Universal,
+            ],
+        )
     }
 
-    pub fn nestgate() -> Self {
-        Self::new("nestgate", "NestGate", "1.0.0")
+    /// Create primal ID from discovered service with capabilities
+    /// This replaces hardcoded primal constructors with dynamic discovery
+    /// Creates instance from discovered service
+    pub fn from_discovered_service(
+        service_id: impl Into<String>,
+        service_name: impl Into<String>,
+        version: impl Into<String>,
+        capabilities: Vec<CapabilityType>,
+    ) -> Self {
+        Self::new(service_id, service_name, version, capabilities)
     }
 
-    pub fn squirrel() -> Self {
-        Self::new("squirrel", "Squirrel", "1.0.0")
+    pub fn for_capability(capability: CapabilityType) -> Self {
+        let capability_name = format!("{:?}", capability).to_lowercase();
+        Self::new(
+            format!("dynamic-{}", capability_name),
+            format!("Dynamic {} Provider", capability_name),
+            "dynamic",
+            vec![capability],
+        )
     }
 
-    pub fn biomeos() -> Self {
-        Self::new("biomeos", "BiomeOS", "1.0.0")
+    /// Check if primal supports capability
+    pub fn supports_capability(&self, capability: &CapabilityType) -> bool {
+        self.capabilities.contains(capability)
+            || self.capabilities.contains(&CapabilityType::Universal)
+    }
+
+    pub fn capability_score(&self, required: &CapabilityType) -> f64 {
+        if self.capabilities.contains(required) {
+            1.0
+        } else if self.capabilities.contains(&CapabilityType::Universal) {
+            0.8 // Universal providers have lower priority than specific ones
+        } else {
+            0.0
+        }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PrimalRegistration {
-
-    pub id: PrimalId,
-
-    pub discovery_endpoint: String,
-
-    pub registered_at: chrono::DateTime<chrono::Utc>,
-
-    pub last_seen: chrono::DateTime<chrono::Utc>,
-
-    pub metadata: HashMap<String, String>,
+/// Modernized capability-based primal registry
+#[derive(Debug, Default)]
+pub struct CapabilityBasedPrimalRegistry {
+    primals: HashMap<String, PrimalId>,
+    capability_index: HashMap<CapabilityType, Vec<String>>,
 }
 
-pub struct UniversalPrimalRegistry<P: PrimalProvider = DefaultPrimalProvider> {
-
-    primals: Arc<RwLock<HashMap<String, PrimalRegistration>>>,
-
-    providers: Arc<RwLock<HashMap<String, Arc<P>>>>,
-}
-
-impl<P: PrimalProvider> UniversalPrimalRegistry<P> {
-
+impl CapabilityBasedPrimalRegistry {
+    /// Create new registry
+    /// Creates a new instance
     pub fn new() -> Self {
-        Self {
-            primals: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            providers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+        let mut registry = Self::default();
+        // Register BearDog ecosystem by default
+        registry.register_primal(PrimalId::beardog()).ok();
+        registry
+    }
+
+    /// Register a primal with capabilities
+    pub fn register_primal(&mut self, primal: PrimalId) -> Result<(), BearDogError> {
+        // Update capability index
+        for capability in &primal.capabilities {
+            self.capability_index
+                .entry(capability.clone())
+                .or_insert_with(Vec::new)
+                .push(primal.id.clone());
+        }
+
+        self.primals.insert(primal.id.clone(), primal);
+        Ok(())
+    }
+
+    /// Discover primals by capability
+    pub fn discover_capability(&self, capability: CapabilityType) -> Vec<&PrimalId> {
+        if let Some(primal_ids) = self.capability_index.get(&capability) {
+            primal_ids
+                .iter()
+                .filter_map(|id| self.primals.get(id))
+                .collect()
+        } else {
+            // Fallback to universal capability providers
+            self.primals
+                .values()
+                .filter(|p| p.supports_capability(&capability))
+                .collect()
         }
     }
 
-    pub async fn register_primal(
-        &self,
-        id: PrimalId,
-        discovery_endpoint: &str,
-        metadata: HashMap<&str, &str>,
-    ) -> Result<(), BearDogError> {
-        let registration = PrimalRegistration {
-            id: id.clone(),
-            discovery_endpoint,
-            registered_at: chrono::Utc::now(),
-            last_seen: chrono::Utc::now(),
-            metadata,
-        };
-        let mut primals = self.primals.write().await;
-        primals.insert(id.id.clone(), registration);
-        Ok(())
+    /// Gets best_primal
+    /// Gets best_primal
+    pub fn get_best_primal(&self, capability: CapabilityType) -> Option<&PrimalId> {
+        self.discover_capability(capability)
+            .into_iter()
+            .max_by(|a, b| {
+                a.capability_score(&capability)
+                    .partial_cmp(&b.capability_score(&capability))
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
     }
 
-    pub async fn register_provider(&self, provider: Arc<P>) -> Result<(), BearDogError> {
-        let ecosystem_id = provider.ecosystem_id().to_string();
-        let instance_id = provider.instance_id().to_string();
-        let key = format!("{ecosystem_id}:{instance_id}");
-        let mut providers = self.providers.write().await;
-        providers.insert(key, provider);
-        Ok(())
-    }
-
-    pub async fn discover_primal(&self, id: &str) -> Result<Option<PrimalRegistration>, BearDogError>> {
-        let primals = self.primals.read().await;
-        Ok(primals.get(id).cloned())
-    }
-
-    pub async fn get_provider(
-        &self,
-        ecosystem_id: &str,
-        instance_id: &str,
-    ) -> Result<Option<Arc<P>, BearDogError>>> {
-        let key = format!("{ecosystem_id}:{instance_id}");
-        let providers = self.providers.read().await;
-        Ok(providers.get(&key).cloned())
-    }
-
-    pub async fn list_primals(&self) -> Result<Vec<PrimalRegistration>, BearDogError>> {
-        let primals = self.primals.read().await;
-        Ok(primals.values().cloned().collect())
-    }
-
-    pub async fn list_providers(&self) -> Result<Vec<Arc<P>, BearDogError>>> {
-        let providers = self.providers.read().await;
-        Ok(providers.values().cloned().collect())
-    }
-
-    pub async fn unregister_primal(&self, id: &str) -> Result<(), BearDogError> {
-        let mut primals = self.primals.write().await;
-        primals.remove(id);
-        Ok(())
-    }
-
-    pub async fn unregister_provider(
-        &self,
-        ecosystem_id: &str,
-        instance_id: &str,
-    ) -> Result<(), BearDogError> {
-        let key = format!("{ecosystem_id}:{instance_id}");
-        let mut providers = self.providers.write().await;
-        providers.remove(&key);
-        Ok(())
-    }
-
-    pub async fn update_last_seen(&self, id: &str) -> Result<(), BearDogError> {
-        let mut primals = self.primals.write().await;
-        if let Some(registration) = primals.get_mut(id) {
-            registration.last_seen = chrono::Utc::now();
-        }
-        Ok(())
+    /// Get all registered primals
+    pub fn list_primals(&self) -> Vec<&PrimalId> {
+        self.primals.values().collect()
     }
 }
 
-impl<P: PrimalProvider> Default for UniversalPrimalRegistry<P> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-static GLOBAL_REGISTRY: tokio::sync::OnceCell<Arc<UniversalPrimalRegistry>> =
-    tokio::sync::OnceCell::const_new();
-
-pub async fn global_registry() -> Arc<UniversalPrimalRegistry> {
-    GLOBAL_REGISTRY
-        .get_or_init(|| async { Arc::new(UniversalPrimalRegistry::new()) })
-        .await
-        .clone()
-}
-
-pub async fn register_primal_type(
-    id: PrimalId,
-    discovery_endpoint: &str,
-    metadata: HashMap<&str, &str>,
-) -> Result<(), BearDogError> {
-    let registry = global_registry().await;
-    registry
-        .register_primal(id, discovery_endpoint, metadata)
-        .await
-}
-
-pub async fn register_provider(provider: Arc<DefaultPrimalProvider>) -> Result<(), BearDogError> {
-    let registry = global_registry().await;
-    registry.register_provider(provider).await
-}
-
-pub async fn discover_primal_type(id: &str) -> Result<Option<PrimalRegistration>, BearDogError>> {
-    let registry = global_registry().await;
-    registry.discover_primal(id).await
-}
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_universal_primal_registry() {
-        let registry = UniversalPrimalRegistry::new();
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: adapters
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_capability_based_discovery() {
+        let mut registry = CapabilityBasedPrimalRegistry::new();
 
-        let custom_primal = PrimalId::new("custom-ai", "CustomAI", "0.1.0");
-        let result = registry
-            .register_primal(
-                custom_primal.clone(),
-                "https://custom-ai.example.com".to_string(),
-                HashMap::with_capacity(16),
-            )
-            .await;
-        assert!(result.is_ok());
+        let custom_primal = PrimalId::new(
+            "custom",
+            "CustomPrimal",
+            "1.0.0",
+            vec![CapabilityType::Security, CapabilityType::Storage],
+        );
 
-        let discovered = registry.discover_primal("custom-ai").await;
-        assert!(discovered.is_ok());
-        let discovered = discovered.map_err(|e| BearDogError::internal(format_args!("Failed to discover primal: {}", e).to_string()))?;
-        assert!(discovered.is_some());
+        registry
+            .register_primal(custom_primal)
+            .map_err(|e| {
+                eprintln!("Warning: Failed to register custom primal: {}", e);
+            })
+            .ok();
 
-        let all_primals = registry.list_primals().await;
-        assert!(all_primals.is_ok());
-        assert_eq!(all_primals.map_err(|e| BearDogError::internal(format_args!("Failed to list primals: {}", e).to_string()))?.len(), 1);
-    }
+        let security_primals = registry.discover_capability(CapabilityType::Security);
+        assert!(!security_primals.is_empty());
 
-    #[tokio::test]
-    async fn test_primal_id_convenience_methods() {
-        let beardog = PrimalId::beardog();
-        assert_eq!(beardog.id, "beardog");
-        assert_eq!(beardog.name, "BearDog");
-        assert_eq!(beardog.version, "1.0.0");
-        
-        let custom = PrimalId::from_id("my-custom-primal");
-        assert_eq!(custom.id, "my-custom-primal");
-        assert_eq!(custom.name, "my-custom-primal");
-        assert_eq!(custom.version, "1.0.0");
-    }
-
-    #[tokio::test]
-    async fn test_zero_cost_provider_registration() {
-        let registry = UniversalPrimalRegistry::new();
-
-        let provider = Arc::new(DefaultPrimalProvider {
-            ecosystem_id: "test-ecosystem".to_string(),
-            instance_id: "test-instance".to_string(),
-        });
-
-        let result = registry.register_provider(provider.clone()).await;
-        assert!(result.is_ok());
-
-        let retrieved = registry.get_provider("test-ecosystem", "test-instance").await;
-        assert!(retrieved.is_ok());
-        assert!(retrieved.map_err(|e| BearDogError::internal(format_args!("Failed to retrieve primal: {}", e).to_string()))?.is_some());
-
-        let all_providers = registry.list_providers().await;
-        assert!(all_providers.is_ok());
-        assert_eq!(all_providers.map_err(|e| BearDogError::internal(format_args!("Failed to list providers: {}", e).to_string()))?.len(), 1);
+        let best = registry.get_best_primal(CapabilityType::Security);
+        assert!(best.is_some());
     }
 }

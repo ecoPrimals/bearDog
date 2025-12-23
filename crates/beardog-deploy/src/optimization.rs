@@ -1,368 +1,388 @@
-use beardog_errors::BearDogError;
-use chrono::{DateTime, Utc};
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use tracing::{debug, info};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BuildFeatures {
+    /// Enable parallel compilation
+    /// Whether `parallel_builds` is enabled
+    pub parallel_builds: bool,
+    /// Enable incremental compilation
+    /// Whether `incremental_builds` is enabled
+    pub incremental_builds: bool,
+    /// Optimization settings
+    /// The optimization value
+    pub optimization: OptimizationSettings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OptimizationSettings {
+    /// Enable Link Time Optimization
+    /// Whether lto is enabled
+    pub lto: bool,
+    /// Strip debug symbols from binaries
+    /// Whether `strip_symbols` is enabled
+    pub strip_symbols: bool,
+}
+
+impl Default for BuildFeatures {
+    fn default() -> Self {
+        Self {
+            parallel_builds: true,
+            incremental_builds: true,
+            optimization: OptimizationSettings::default(),
+        }
+    }
+}
+
+impl Default for OptimizationSettings {
+    fn default() -> Self {
+        Self {
+            lto: false,
+            strip_symbols: true,
+        }
+    }
+}
+
+/// Deployment optimization configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentOptimizationConfig {
-    pub enable_ai_optimization: bool,
+    /// Build features to enable during deployment
+    /// The features value
+    pub features: BuildFeatures,
+    /// Optional target cpu optimization
+    pub target_cpu_optimization: Option<String>,
+    /// The optimization level value
+    pub optimization_level: OptimizationLevel,
+}
 
-    pub performance_weight: f64,
-
-    pub cost_weight: f64,
-
-    pub reliability_weight: f64,
-
-    pub max_deployment_time_minutes: u32,
-
-    pub enable_auto_rollback: bool,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OptimizationLevel {
+    /// Debug build with no optimizations
+    Debug,
+    /// Standard release build
+    Release,
+    /// Release build with link-time optimization
+    ReleaseLto,
+    /// Release build with maximum optimizations
+    ReleaseMaxOpt,
 }
 
 impl Default for DeploymentOptimizationConfig {
     fn default() -> Self {
         Self {
-            enable_ai_optimization: true,
-            performance_weight: 0.4,
-            cost_weight: 0.3,
-            reliability_weight: 0.3,
-            max_deployment_time_minutes: 30,
-            enable_auto_rollback: true,
+            features: BuildFeatures::default(),
+            target_cpu_optimization: None,
+            optimization_level: OptimizationLevel::Release,
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OptimizedDeploymentTarget {
-    pub platform: String,
-
-    pub architecture: String,
-
-    pub performance_score: f64,
-
-    pub cost_score: f64,
-
-    pub reliability_score: f64,
-
-    pub optimization_score: f64,
-
-    pub estimated_deployment_time: u32,
-
-    pub last_successful_deployment: Option<DateTime<Utc>>,
-}
-
-#[derive(Debug)]
-pub struct DeploymentOptimizer {
-    config: DeploymentOptimizationConfig,
-
-    deployment_history: HashMap<String, Vec<DeploymentMetrics>>,
-
-    platform_profiles: HashMap<String, PlatformProfile>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DeploymentMetrics {
-    pub timestamp: DateTime<Utc>,
-
-    pub duration_seconds: u64,
-
-    pub success: bool,
-
-    pub performance_metrics: PerformanceMetrics,
-
-    pub cost_metrics: CostMetrics,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceMetrics {
-    pub cpu_utilization: f64,
-
-    pub memory_usage: f64,
-
-    pub network_throughput: f64,
-
-    pub avg_response_time_ms: f64,
-
-    pub requests_per_second: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CostMetrics {
-    pub deployment_cost_usd: f64,
-
-    pub hourly_cost_usd: f64,
-
-    pub storage_cost_usd_per_gb: f64,
-
-    pub network_cost_usd_per_gb: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlatformProfile {
-    pub name: String,
-
-    pub architectures: Vec<String>,
-
-    pub avg_performance_score: f64,
-
-    pub avg_cost_score: f64,
-
-    pub reliability_percentage: f64,
-
-    pub typical_deployment_time: u32,
-}
-
-impl DeploymentOptimizer {
-    pub fn new(config: DeploymentOptimizationConfig) -> Self {
-        let mut platform_profiles = HashMap::with_capacity(16);
-
-        platform_profiles.insert(
-            "android".to_string(),
-            PlatformProfile {
-                name: "Android".to_string(),
-                architectures: vec!["arm64-v8a".to_string(), "armeabi-v7a".to_string()],
-                avg_performance_score: 0.85,
-                avg_cost_score: 0.2, // Lower cost
-                reliability_percentage: 0.92,
-                typical_deployment_time: 15,
-            },
-        );
-
-        platform_profiles.insert(
-            "ios".to_string(),
-            PlatformProfile {
-                name: "iOS".to_string(),
-                architectures: vec!["arm64".to_string()],
-                avg_performance_score: 0.95,
-                avg_cost_score: 0.4, // Higher cost but better performance
-                reliability_percentage: 0.98,
-                typical_deployment_time: 20,
-            },
-        );
-
-        platform_profiles.insert(
-            "linux".to_string(),
-            PlatformProfile {
-                name: "Linux".to_string(),
-                architectures: vec!["x86_64".to_string(), "aarch64".to_string()],
-                avg_performance_score: 0.9,
-                avg_cost_score: 0.15, // Very cost effective
-                reliability_percentage: 0.95,
-                typical_deployment_time: 8,
-            },
-        );
-
-        platform_profiles.insert(
-            "windows".to_string(),
-            PlatformProfile {
-                name: "Windows".to_string(),
-                architectures: vec!["x86_64".to_string()],
-                avg_performance_score: 0.8,
-                avg_cost_score: 0.35,
-                reliability_percentage: 0.88,
-                typical_deployment_time: 12,
-            },
-        );
-
+impl DeploymentOptimizationConfig {
+    /// Creates development optimization configuration
+    ///
+    /// # Returns
+    #[must_use]
+    pub const fn development() -> Self {
         Self {
-            config,
-            deployment_history: HashMap::with_capacity(16),
-            platform_profiles,
+            features: BuildFeatures {
+                parallel_builds: true,
+                incremental_builds: true,
+                optimization: OptimizationSettings {
+                    lto: false,
+                    strip_symbols: false,
+                },
+            },
+            target_cpu_optimization: None,
+            optimization_level: OptimizationLevel::Debug,
         }
     }
 
-    pub async fn optimize_deployment_targets(
-        &self,
-        requirements: &DeploymentRequirements,
-    ) -> Result<Vec<OptimizedDeploymentTarget>, BearDogError> {
-        info!("🎯 Optimizing deployment targets with AI-driven selection");
-
-        let mut optimized_targets = Vec::new();
-
-        for (platform_name, profile) in &self.platform_profiles {
-            if let Some(required_arch) = &requirements.target_architecture {
-                if !profile.architectures.contains(required_arch) {
-                    debug!(
-                        "❌ Platform {} doesn't support architecture {}",
-                        platform_name, required_arch
-                    );
-                    continue;
-                }
-            }
-
-            let optimization_score = self
-                .calculate_optimization_score(profile, requirements)
-                .await?;
-
-            if optimization_score >= requirements.min_optimization_score {
-                let target = OptimizedDeploymentTarget {
-                    platform: platform_name.clone(),
-                    architecture: profile.architectures[0].clone(), // Use primary architecture
-                    performance_score: profile.avg_performance_score,
-                    cost_score: profile.avg_cost_score,
-                    reliability_score: profile.reliability_percentage,
-                    optimization_score,
-                    estimated_deployment_time: profile.typical_deployment_time,
-                    last_successful_deployment: self.get_last_successful_deployment(platform_name),
-                };
-
-                optimized_targets.push(target);
-                info!(
-                    "✅ Platform {} optimized with score: {:.3}",
-                    platform_name, optimization_score
-                );
-            } else {
-                debug!(
-                    "❌ Platform {} doesn't meet minimum optimization score",
-                    platform_name
-                );
-            }
-        }
-
-        optimized_targets.sort_by(|a, b| {
-            b.optimization_score
-                .partial_cmp(&a.optimization_score)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-
-        if let Some(max_targets) = requirements.max_targets {
-            optimized_targets.truncate(max_targets);
-        }
-
-        info!(
-            "🎯 Deployment optimization complete. Selected {} targets",
-            optimized_targets.len()
-        );
-        Ok(optimized_targets)
-    }
-
-    async fn calculate_optimization_score(
-        &self,
-        profile: &PlatformProfile,
-        requirements: &DeploymentRequirements,
-    ) -> Result<f64, BearDogError> {
-        debug!(
-            "🧮 Calculating optimization score for platform: {}",
-            profile.name
-        );
-
-        let performance_component = profile.avg_performance_score * self.config.performance_weight;
-        let cost_component = (1.0 - profile.avg_cost_score) * self.config.cost_weight; // Invert cost (lower is better)
-        let reliability_component = profile.reliability_percentage * self.config.reliability_weight;
-
-        let mut score = performance_component + cost_component + reliability_component;
-
-        if let Some(max_time) = requirements.max_deployment_time_minutes {
-            if profile.typical_deployment_time > max_time {
-                let time_penalty =
-                    0.2 * ((profile.typical_deployment_time - max_time) as f64 / max_time as f64);
-                score -= time_penalty.min(0.5); // Cap penalty at 0.5
-                debug!("⏰ Applied time penalty: {:.3}", time_penalty);
-            }
-        }
-
-        if let Some(_last_success) = self.get_last_successful_deployment(&profile.name) {
-            score += 0.1; // 10% bonus for recent success
-            debug!("✅ Applied recent success bonus");
-        }
-
-        if self.config.enable_ai_optimization {
-            let ml_adjustment = self.calculate_ml_adjustment(&profile.name).await?;
-            score += ml_adjustment;
-            debug!("🤖 Applied ML adjustment: {:.3}", ml_adjustment);
-        }
-
-        let final_score = score.clamp(0.0, 1.0);
-        debug!(
-            "📊 Final optimization score for {}: {:.3}",
-            profile.name, final_score
-        );
-
-        Ok(final_score)
-    }
-
-    async fn calculate_ml_adjustment(&self, platform_name: &str) -> Result<f64, BearDogError> {
-        debug!(
-            "🤖 Calculating ML adjustment for platform: {}",
-            platform_name
-        );
-
-        if let Some(history) = self.deployment_history.get(platform_name) {
-            if history.is_empty() {
-                return Ok(0.0);
-            }
-
-            let success_count = history.iter().filter(|m| m.success).count();
-            let success_rate = success_count as f64 / history.len() as f64;
-
-            let avg_performance: f64 = history
-                .iter()
-                .filter(|m| m.success)
-                .map(|m| m.performance_metrics.requests_per_second / 1000.0) // Normalize
-                .sum::<f64>()
-                / success_count.max(1) as f64;
-
-            let ml_adjustment = (success_rate - 0.5) * 0.2 + (avg_performance - 0.5) * 0.1;
-
-            debug!(
-                "🧠 ML adjustment: success_rate={:.3}, avg_performance={:.3}, adjustment={:.3}",
-                success_rate, avg_performance, ml_adjustment
-            );
-
-            Ok(ml_adjustment.clamp(-0.3, 0.3)) // Cap adjustment
-        } else {
-            Ok(0.0) // No historical data
-        }
-    }
-
-    fn get_last_successful_deployment(&self, platform_name: &str) -> Option<DateTime<Utc>> {
-        self.deployment_history
-            .get(platform_name)?
-            .iter()
-            .filter(|m| m.success)
-            .map(|m| m.timestamp)
-            .max()
-    }
-
-    pub fn record_deployment_metrics(&mut self, platform: &str, metrics: DeploymentMetrics) {
-        debug!("📊 Recording deployment metrics for platform: {}", platform);
-
-        self.deployment_history
-            .entry(platform.to_string())
-            .or_default()
-            .push(metrics);
-
-        if let Some(history) = self.deployment_history.get_mut(platform) {
-            if history.len() > 100 {
-                history.drain(0..history.len() - 100);
-            }
-        }
-
-        info!("✅ Deployment metrics recorded for {}", platform);
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DeploymentRequirements {
-    pub target_architecture: Option<String>,
-
-    pub max_deployment_time_minutes: Option<u32>,
-
-    pub min_optimization_score: f64,
-
-    pub max_targets: Option<usize>,
-
-    pub priority: String,
-}
-
-impl Default for DeploymentRequirements {
-    fn default() -> Self {
+    /// Creates production optimization configuration
+    ///
+    /// # Returns
+    #[must_use]
+    pub fn production() -> Self {
         Self {
-            target_architecture: None,
-            max_deployment_time_minutes: None,
-            min_optimization_score: 0.6,
-            max_targets: Some(3),
-            priority: "balanced".to_string(),
+            features: BuildFeatures {
+                parallel_builds: true,
+                incremental_builds: false,
+                optimization: OptimizationSettings {
+                    lto: true,
+                    strip_symbols: true,
+                },
+            },
+            target_cpu_optimization: Some("native".to_owned()),
+            optimization_level: OptimizationLevel::ReleaseMaxOpt,
         }
+    }
+
+    /// Gets the rustc optimization flags based on configuration
+    ///
+    /// # Returns
+    #[must_use]
+    /// Gets `rustc_flags`
+    /// Gets `rustc_flags`
+    pub fn get_rustc_flags(&self) -> Vec<String> {
+        let mut flags = Vec::new();
+
+        match self.optimization_level {
+            OptimizationLevel::Debug => flags.push("-C opt-level=0".to_string()),
+            OptimizationLevel::Release | OptimizationLevel::ReleaseMaxOpt => {
+                flags.push("-C opt-level=3".to_string());
+            }
+            OptimizationLevel::ReleaseLto => {
+                flags.push("-C opt-level=3".to_string());
+                flags.push("-C lto=thin".to_string());
+            }
+        }
+
+        if self.features.optimization.lto {
+            flags.push("-C lto=fat".to_string());
+        }
+
+        if self.features.optimization.strip_symbols {
+            flags.push("-C strip=symbols".to_string());
+        }
+
+        if let Some(ref target_cpu) = self.target_cpu_optimization {
+            flags.push(format!("-C target-cpu={target_cpu}"));
+        }
+
+        flags
+    }
+
+    /// Gets the cargo build flags based on configuration
+    ///
+    /// # Returns
+    #[must_use]
+    /// Gets `cargo_flags`
+    /// Gets `cargo_flags`
+    pub fn get_cargo_flags(&self) -> Vec<String> {
+        let mut flags = Vec::new();
+
+        if self.features.parallel_builds {
+            // Cargo enables parallel builds by default
+            // We could add specific job count configuration here
+        }
+
+        if self.features.incremental_builds {
+            flags.push("--incremental".to_string());
+        }
+
+        match self.optimization_level {
+            OptimizationLevel::Debug => {
+                // Debug is default, no extra flags needed
+            }
+            OptimizationLevel::Release
+            | OptimizationLevel::ReleaseLto
+            | OptimizationLevel::ReleaseMaxOpt => {
+                flags.push("--release".to_string());
+            }
+        }
+
+        flags
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // === OptimizationSettings Tests ===
+
+    #[test]
+    fn test_optimization_settings_default() {
+        let settings = OptimizationSettings::default();
+        assert!(!settings.lto);
+        assert!(settings.strip_symbols);
+    }
+
+    #[test]
+    fn test_optimization_settings_clone() {
+        let settings = OptimizationSettings {
+            lto: true,
+            strip_symbols: false,
+        };
+        let cloned = settings.clone();
+        assert_eq!(settings.lto, cloned.lto);
+    }
+
+    #[test]
+    fn test_optimization_settings_serialization() {
+        let settings = OptimizationSettings {
+            lto: true,
+            strip_symbols: true,
+        };
+        let serialized = serde_json::to_string(&settings).expect("serialize");
+        let deserialized: OptimizationSettings =
+            serde_json::from_str(&serialized).expect("deserialize");
+        assert_eq!(settings.lto, deserialized.lto);
+    }
+
+    // === BuildFeatures Tests ===
+
+    #[test]
+    fn test_build_features_default() {
+        let features = BuildFeatures::default();
+        assert!(features.parallel_builds);
+        assert!(features.incremental_builds);
+    }
+
+    #[test]
+    fn test_build_features_clone() {
+        let features = BuildFeatures::default();
+        let cloned = features.clone();
+        assert_eq!(features.parallel_builds, cloned.parallel_builds);
+    }
+
+    #[test]
+    fn test_build_features_serialization() {
+        let features = BuildFeatures::default();
+        let serialized = serde_json::to_string(&features).expect("serialize");
+        let deserialized: BuildFeatures = serde_json::from_str(&serialized).expect("deserialize");
+        assert_eq!(features.parallel_builds, deserialized.parallel_builds);
+    }
+
+    // === OptimizationLevel Tests ===
+
+    #[test]
+    fn test_optimization_level_serialization() {
+        let level = OptimizationLevel::ReleaseMaxOpt;
+        let serialized = serde_json::to_string(&level).expect("serialize");
+        let deserialized: OptimizationLevel =
+            serde_json::from_str(&serialized).expect("deserialize");
+        assert!(matches!(deserialized, OptimizationLevel::ReleaseMaxOpt));
+    }
+
+    #[test]
+    fn test_optimization_level_variants() {
+        let debug = OptimizationLevel::Debug;
+        let release = OptimizationLevel::Release;
+        let lto = OptimizationLevel::ReleaseLto;
+        let max = OptimizationLevel::ReleaseMaxOpt;
+
+        assert!(matches!(debug, OptimizationLevel::Debug));
+        assert!(matches!(release, OptimizationLevel::Release));
+        assert!(matches!(lto, OptimizationLevel::ReleaseLto));
+        assert!(matches!(max, OptimizationLevel::ReleaseMaxOpt));
+    }
+
+    // === DeploymentOptimizationConfig Tests ===
+
+    #[test]
+    fn test_config_default() {
+        let config = DeploymentOptimizationConfig::default();
+        assert!(config.target_cpu_optimization.is_none());
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::Release
+        ));
+    }
+
+    #[test]
+    fn test_config_development() {
+        let config = DeploymentOptimizationConfig::development();
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::Debug
+        ));
+        assert!(!config.features.optimization.lto);
+        assert!(!config.features.optimization.strip_symbols);
+    }
+
+    #[test]
+    fn test_config_production() {
+        let config = DeploymentOptimizationConfig::production();
+        assert!(matches!(
+            config.optimization_level,
+            OptimizationLevel::ReleaseMaxOpt
+        ));
+        assert!(config.features.optimization.lto);
+        assert!(config.features.optimization.strip_symbols);
+        assert_eq!(config.target_cpu_optimization, Some("native".to_owned()));
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = DeploymentOptimizationConfig::default();
+        let serialized = serde_json::to_string(&config).expect("serialize");
+        let deserialized: DeploymentOptimizationConfig =
+            serde_json::from_str(&serialized).expect("deserialize");
+        assert!(matches!(
+            deserialized.optimization_level,
+            OptimizationLevel::Release
+        ));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_debug() {
+        let config = DeploymentOptimizationConfig::development();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C opt-level=0".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_release() {
+        let config = DeploymentOptimizationConfig::default();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C opt-level=3".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_release_lto() {
+        let config = DeploymentOptimizationConfig {
+            features: BuildFeatures::default(),
+            target_cpu_optimization: None,
+            optimization_level: OptimizationLevel::ReleaseLto,
+        };
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C opt-level=3".to_string()));
+        assert!(flags.contains(&"-C lto=thin".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_with_lto() {
+        let config = DeploymentOptimizationConfig::production();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C lto=fat".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_with_strip() {
+        let config = DeploymentOptimizationConfig::production();
+        let flags = config.get_rustc_flags();
+        assert!(flags.contains(&"-C strip=symbols".to_string()));
+    }
+
+    #[test]
+    fn test_get_rustc_flags_with_target_cpu() {
+        let config = DeploymentOptimizationConfig::production();
+        let flags = config.get_rustc_flags();
+        assert!(flags.iter().any(|f| f.contains("target-cpu=native")));
+    }
+
+    #[test]
+    fn test_get_cargo_flags_debug() {
+        let config = DeploymentOptimizationConfig::development();
+        let flags = config.get_cargo_flags();
+        // Debug mode doesn't add --release
+        assert!(!flags.contains(&"--release".to_string()));
+    }
+
+    #[test]
+    fn test_get_cargo_flags_release() {
+        let config = DeploymentOptimizationConfig::default();
+        let flags = config.get_cargo_flags();
+        assert!(flags.contains(&"--release".to_string()));
+    }
+
+    #[test]
+    fn test_get_cargo_flags_incremental() {
+        let config = DeploymentOptimizationConfig::development();
+        let flags = config.get_cargo_flags();
+        assert!(flags.contains(&"--incremental".to_string()));
     }
 }

@@ -1,311 +1,442 @@
-
+//! Software HSM Provider
+//!
+//! Universal provider implementation for software-based HSM functionality.
+//!
+//! This module provides REAL cryptographic operations using the software HSM crypto providers.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::{
-    crypto::KeyType,
-    hsm::{
-        traits::{
-            AttestationData, AttestationProvider, AttestationResult, AuthenticationContext,
-            AuthenticationToken, CryptoOperation, HsmCapabilities, HsmRequirements,
-            SecurityLevel, UniversalHsmProvider, VendorInfo, HsmHealthStatus,
-            HardwareFeatures, PerformanceProfile, LatencyProfile, TamperResistance,
-            AuthenticationMethod, ComplianceCertification, PhysicalSecurityFeature,
-        },
-        HsmKey, KeyMetadata,
-    },
-};
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
-use tracing::{debug, info, warn};
+use std::sync::Arc;
+use tracing::{debug, info};
 
+// Import real crypto providers
+use crate::tunnel::hsm::software_hsm::crypto_providers::{
+    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+};
+use crate::tunnel::hsm::types::KeyType;
+use beardog_types::hsm::CryptoProvider;
+
+/// Software Universal HSM Provider
 pub struct SoftwareUniversalProvider {
-
-    capabilities: Option<HsmCapabilities>,
-
-    key_store: Arc<RwLock<HashMap<String, StoredKey>>>,
-
-    config: SoftwareHsmConfig,
+    /// HSM capabilities
+    capabilities: Option<SoftwareCapabilities>,
+    /// Crypto provider type
+    crypto_provider: CryptoProviderType,
+    /// Provider metadata
+    metadata: HashMap<String, String>,
+    /// Real crypto provider implementation
+    crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
+    /// Key storage (maps key_id -> key_material)
+    keys: HashMap<String, Vec<u8>>,
 }
 
+/// Software-specific HSM capabilities
 #[derive(Debug, Clone)]
-pub struct SoftwareHsmConfig {
+pub struct SoftwareCapabilities {
+    /// Supported algorithms
+    pub supported_algorithms: Vec<String>,
+    /// Maximum key size
+    pub max_key_size: u32,
+    /// Encryption support
+    pub encryption_supported: bool,
+    /// Signing support
+    pub signing_supported: bool,
+    /// Key derivation support
+    pub key_derivation_supported: bool,
+}
 
-    pub memory_protection: bool,
+// Re-export canonical CryptoProviderType from beardog-types
+// Note: Custom(String) variant removed - use provider configuration instead
+pub use beardog_types::hsm::providers::CryptoProviderType;
 
-    pub encrypted_storage: bool,
-
-    pub max_keys: usize,
-
-    pub pbkdf2_iterations: u32,
-
-struct StoredKey {
-    pub key_material: Vec<u8>,
-    pub key_type: KeyType,
-    pub metadata: KeyMetadata,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub usage_count: u64,}
+// Helper function for legacy code migration
+pub fn parse_provider_type(s: &str) -> CryptoProviderType {
+    match s {
+        "rust-crypto" | "RustCrypto" => CryptoProviderType::Software,
+        "openssl" | "OpenSsl" => CryptoProviderType::OpenSsl,
+        "ring" | "Ring" => CryptoProviderType::Ring,
+        _ => CryptoProviderType::Software, // Default to software for unknown
+    }
+}
 
 impl SoftwareUniversalProvider {
+    /// Create a new software HSM provider
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
+    pub async fn new(provider_type: CryptoProviderType) -> Result<Self, BearDogError> {
+        // Create real crypto provider based on type
+        let crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync> = match &provider_type {
+            CryptoProviderType::Software => {
+                let provider = RustCryptoProvider::new().await?;
+                Arc::new(provider)
+            }
+            CryptoProviderType::OpenSsl => {
+                let provider = OpenSslCryptoProvider::new().await?;
+                Arc::new(provider)
+            }
+            CryptoProviderType::Ring => {
+                let provider = RingCryptoProvider::new()?;
+                Arc::new(provider)
+            }
+            CryptoProviderType::Hardware => {
+                return Err(BearDogError::unsupported_operation(
+                    "Hardware crypto provider not yet implemented in software module".to_string(),
+                ));
+            }
+            CryptoProviderType::CloudKms => {
+                return Err(BearDogError::unsupported_operation(
+                    "Cloud KMS provider not yet implemented in software module".to_string(),
+                ));
+            }
+        };
 
-    pub async fn new() -> Result<Self, BearDogError> {
-        let config = SoftwareHsmConfig::default();
-        
+        // Initialize the crypto provider
+        crypto_impl.initialize().await?;
+
         let mut provider = Self {
             capabilities: None,
-            key_store: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            config,
+            crypto_provider: provider_type,
+            metadata: HashMap::with_capacity(16),
+            crypto_impl,
+            keys: HashMap::with_capacity(64),
         };
+
+        // Initialize metadata
+        provider.initialize_metadata();
 
         let capabilities = provider.discover_capabilities().await?;
         provider.capabilities = Some(capabilities);
+
+        info!("✅ Software HSM provider initialized with real crypto");
         Ok(provider)
     }
 
-    pub async fn with_config(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
+    /// Initialize provider metadata
+    fn initialize_metadata(&mut self) {
+        self.metadata
+            .insert("platform".to_string(), std::env::consts::OS.to_string());
+        self.metadata
+            .insert("arch".to_string(), std::env::consts::ARCH.to_string());
+        self.metadata.insert(
+            "provider_type".to_string(),
+            format!("{:?}", self.crypto_provider),
+        );
+    }
 
-    fn detect_security_features(&self) -> HardwareFeatures {
-
-        let memory_protection = self.config.memory_protection && self.has_memory_protection();
-        HardwareFeatures {
-            tamper_resistance: TamperResistance::None, // Software has no tamper resistance
-            true_rng: self.has_hardware_rng(),
-            secure_storage: self.config.encrypted_storage,
-            attestation: false, // Software can't provide hardware attestation
-            physical_security: vec![], // No physical security features
-        }
-
-    fn has_memory_protection(&self) -> bool {
-
-        cfg!(unix)
-
-    fn has_hardware_rng(&self) -> bool {
-
-        true
-
-    fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
-        match key_type {
-            KeyType::Ed25519 => {
-
-                let mut key_material = vec![0u8; 32]; // Ed25519 private key size
-
-                self.fill_random(&mut key_material)?;
-                Ok(key_material)
-            }
-            KeyType::EcdsaP256 => {
-                let mut key_material = vec![0u8; 32]; // P-256 private key size
-            KeyType::Aes256Gcm => {
-                let mut key_material = vec![0u8; 32]; // AES-256 key size
-            _ => Err(BearDogError::unsupported_operation(format_args!("Key type {:?) not supported by software provider", key_type},
-            }).to_string(),
-
-    fn fill_random(&self, buffer: &mut [u8]) -> Result<(), BearDogError> {
-
-        for (i, byte) in buffer.iter_mut().enumerate() {
-            *byte = (i % 256) as u8;
-        Ok(())
-
-    fn sign_data_software(&self, key_material: &[u8], data: &[u8], key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
-
-        let mut signature = Vec::new();
-        signature.extend_from_slice(b"software_sig_");
-        signature.extend_from_slice(&key_type.to_string().as_bytes()[..4]);
-        signature.extend_from_slice(&data[..std::cmp::min(16, data.len())]);
-        signature.extend_from_slice(&key_material[..std::cmp::min(16, key_material.len())]);
-        Ok(signature)
-
-    fn verify_signature_software(&self, key_material: &[u8], data: &[u8], signature: &[u8], key_type: &KeyType) -> bool {
-
-        if let Ok(expected_signature) = self.sign_data_software(key_material, data, key_type) {
-            expected_signature == signature
-        } else {
-            false
-
-impl UniversalHsmProvider for SoftwareUniversalProvider {
-    async fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
-        if let Some(ref capabilities) = self.capabilities {
-            return Ok(capabilities.clone());
-        let hardware_features = self.detect_security_features();
-
-        let crypto_operations = vec![
-            CryptoOperation::KeyGeneration,
-            CryptoOperation::DigitalSigning,
-            CryptoOperation::SignatureVerification,
-            CryptoOperation::Encryption,
-            CryptoOperation::Decryption,
-            CryptoOperation::RandomGeneration,
-            CryptoOperation::Hashing,
-            CryptoOperation::KeyDerivation,
-            CryptoOperation::KeyWrapping,
+    /// Discover software HSM capabilities
+    async fn discover_capabilities(&self) -> Result<SoftwareCapabilities, BearDogError> {
+        let supported_algorithms = vec![
+            "AES-256-GCM".to_string(),
+            "ChaCha20-Poly1305".to_string(),
+            "Ed25519".to_string(),
+            "HMAC-SHA256".to_string(),
+            "PBKDF2".to_string(),
         ];
 
-        let supported_key_types = vec![
-            KeyType::Ed25519,
-            KeyType::EcdsaP256,
-            KeyType::Aes256Gcm,
+        Ok(SoftwareCapabilities {
+            supported_algorithms,
+            max_key_size: 4096, // RSA-4096 or equivalent
+            encryption_supported: true,
+            signing_supported: true,
+            key_derivation_supported: true,
+        })
+    }
 
-        let auth_methods = vec![
-            AuthenticationMethod::None,
-            AuthenticationMethod::Pin,
+    /// Get security level (software is level 1)
+    pub fn get_security_level(&self) -> u8 {
+        1 // Software HSM
+    }
 
-        let performance_profile = PerformanceProfile {
-            key_generation_speed: 2000.0, // Very fast key generation
-            signing_speed: 5000.0,         // Very fast signing
-            encryption_throughput: 1000.0, // High throughput
-            latency: LatencyProfile {
-                average_ms: 1.0,   // Low latency
-                p95_ms: 2.0,
-                max_ms: 10.0,
-            },
-        let capabilities = HsmCapabilities {
-            vendor_info: VendorInfo {
-                name: "BearDog".to_string(),
-                product: "Software HSM".to_string(),
-                version: "1.0.0".to_string(),
-                metadata: {
-                    let mut metadata = HashMap::with_capacity(16);
-                    metadata.insert("platform".to_string(), std::env::consts::OS.to_string());
-                    metadata.insert("arch".to_string(), std::env::consts::ARCH.to_string());
-                    metadata.insert("memory_protection".to_string(), self.config.memory_protection.to_string());
-                    metadata.insert("encrypted_storage".to_string(), self.config.encrypted_storage.to_string());
-                    metadata
-                },
-            security_level: SecurityLevel::Software,
-            crypto_operations,
-            supported_key_types,
-            authentication_methods: auth_methods,
-            hardware_features,
-            performance_profile,
-            certifications: vec![], // No certifications for software implementation
-        Ok(capabilities)
-    async fn supports_operation(&self, operation: &CryptoOperation) -> bool {
-        if let Ok(capabilities) = self.discover_capabilities().await {
-            capabilities.crypto_operations.contains(operation)}
-
-    async fn generate_key(
-        &self,
-        key_type: KeyType,
-        metadata: KeyMetadata,
-        _auth: Option<AuthenticationContext>,
-    ) -> Result<HsmKey, BearDogError> {
-        info!("🔑 Generating software key with type: {:?}", key_type);
-
-        let key_material = self.generate_key_material(&key_type)?;
-        let key_id = uuid::Uuid::new_v4().to_string();
-
-        let stored_key = StoredKey {
-            key_material: key_material.clone(),
-            key_type: key_type.clone(),
-            metadata: metadata.clone(),
-            created_at: chrono::Utc::now(),
-            usage_count: 0,
-        {
-            let mut key_store = self.key_store.write().unwrap_or_else(|poisoned| {
-        tracing::warn!("RwLock poisoned for write, recovering");
-        poisoned.into_inner()
-    });
-            key_store.insert(key_id.clone(), stored_key);
-        let hsm_key = HsmKey {
-            id: key_id.clone(),
-            key_type,
-            material: beardog_types::canonical::hsm::KeyMaterial::Reference(key_id),
-            metadata,
-            health: beardog_types::canonical::hsm::KeyHealth::Healthy,
-            expires_at: None,
-            key_name: Some("software_generated_key".to_string()),
-            last_used: None,
-            is_hardware_backed: false, // Software keys are not hardware-backed
-        info!("✅ Software key generated successfully: {}", key_id);
-        Ok(hsm_key)
-    async fn sign_data(
-        key_id: &str,
-        data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError>> {
-        info!("✍️ Signing data with software key: {}", key_id);
-
-        let stored_key = {
-            let key_store = self.key_store.read().map_err(|e| {
-    tracing::error!("Operation failed: {e:?}");
-    beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-})?;
-            key_store.get(key_id).cloned()
-        let stored_key = stored_key.ok_or_else(|| BearDogError::KeyManagement {
-            message: format_args!("Key not found: {}", key_id).to_string(),
-        })?;
-
-        let signature = self.sign_data_software(&stored_key.key_material, data, &stored_key.key_type)?;
-
-            if let Some(key) = key_store.get_mut(key_id) {
-                key.usage_count += 1;
-        info!("✅ Data signed successfully with software key");
-    async fn verify_signature(
-        signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        info!("🔍 Verifying signature with software key: {}", key_id);
-
-        let valid = self.verify_signature_software(&stored_key.key_material, data, signature, &stored_key.key_type);
-        info!("✅ Signature verification result: {}", valid);
-        Ok(valid)
-    fn get_provider_info(&self) -> VendorInfo {
+    /// Get vendor information
+    pub fn get_vendor_info(&self) -> VendorInfo {
         VendorInfo {
             name: "BearDog".to_string(),
             product: "Software Universal HSM".to_string(),
             version: "1.0.0".to_string(),
-            metadata: {
-                let mut metadata = HashMap::with_capacity(16);
-                metadata.insert("platform".to_string(), std::env::consts::OS.to_string());
-                metadata.insert("type".to_string(), "software".to_string());
-                metadata}
+            metadata: self.metadata.clone(),
+        }
+    }
 
-    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
+    /// Get crypto provider type
+    pub fn crypto_provider(&self) -> &CryptoProviderType {
+        &self.crypto_provider
+    }
 
-        let key_count = {
-            key_store.len()
-        if key_count > self.config.max_keys {
-            Ok(HsmHealthStatus::Warning {
-                message: format_args!("Key store is near capacity: {}/{}", key_count, self.config.max_keys).to_string(),
-            })
-            Ok(HsmHealthStatus::Healthy)
-impl Default for SoftwareHsmConfig {}
+    /// Get capabilities
+    pub fn capabilities(&self) -> Option<&SoftwareCapabilities> {
+        self.capabilities.as_ref()
+    }
 
-    fn default() -> Self {
-        Self {
-            memory_protection: true,
-            encrypted_storage: true,
-            max_keys: 10000,
-            pbkdf2_iterations: 100000,
-impl Clone for SoftwareUniversalProvider {}
+    /// Generate a key (REAL IMPLEMENTATION)
+    pub async fn generate_key(&mut self, key_id: &str, key_type: &str) -> Result<(), BearDogError> {
+        info!(
+            "🔑 Generating REAL cryptographic key: {} (type: {})",
+            key_id, key_type
+        );
 
-    fn clone(&self) -> Self {
-            capabilities: self.capabilities.clone(),
-            key_store: Arc::clone(&self.key_store),
-            config: self.config.clone(),
-impl Default for SoftwareUniversalProvider {
+        // Map string key type to KeyType enum
+        let key_type_enum = match key_type {
+            "AES-256" | "AES" => KeyType::Aes,
+            "ChaCha20" => KeyType::ChaCha20,
+            "Ed25519" => KeyType::Ed25519,
+            "X25519" => KeyType::X25519,
+            "ECC" | "ECDSA" => KeyType::EllipticCurve,
+            "RSA" | "RSA-2048" => KeyType::Rsa,
+            _ => KeyType::Generic,
+        };
 
-            config: SoftwareHsmConfig::default(),
+        // Generate REAL key material using crypto provider
+        let key_material = self
+            .crypto_impl
+            .generate_key_material(&key_type_enum)
+            .await?;
 
-    pub fn get_statistics(&self) -> SoftwareHsmStatistics {
-        let key_store = self.key_store.read().map_err(|e| {
-        let mut key_type_counts = HashMap::with_capacity(16);
-        let mut total_usage = 0;
-        for stored_key in key_store.values() {
-            *key_type_counts.entry(stored_key.key_type.clone()).or_insert(0) += 1;
-            total_usage += stored_key.usage_count;
-        SoftwareHsmStatistics {
-            total_keys: key_store.len(),
-            key_type_distribution: key_type_counts,
-            total_operations: total_usage,
-            memory_protection_enabled: self.config.memory_protection,
-            encrypted_storage_enabled: self.config.encrypted_storage,
+        debug!(
+            "✅ Generated {} bytes of key material for key: {}",
+            key_material.len(),
+            key_id
+        );
 
-    pub fn clear_keys(&self) -> Result<(), BearDogError> {
-        let mut key_store = self.key_store.write().unwrap_or_else(|poisoned| {
-        key_store.clear();
-        info!("🧹 Software HSM key store cleared");
+        // Store key material securely
+        self.keys.insert(key_id.to_string(), key_material);
+        self.metadata
+            .insert(format!("key_{key_id}"), key_type.to_string());
 
-pub struct SoftwareHsmStatistics {
-    pub total_keys: usize,
-    pub key_type_distribution: HashMap<KeyType, usize>,
-    pub total_operations: u64,
-    pub memory_protection_enabled: bool,
-    pub encrypted_storage_enabled: bool,
-} 
+        Ok(())
+    }
+
+    /// Encrypt data (REAL IMPLEMENTATION)
+    pub async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        info!("🔒 REAL encryption with software key: {}", key_id);
+
+        // Retrieve key material
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
+
+        // Perform REAL encryption using crypto provider
+        let ciphertext = self.crypto_impl.encrypt(key_material, plaintext).await?;
+
+        debug!(
+            "✅ Encrypted {} bytes -> {} bytes",
+            plaintext.len(),
+            ciphertext.len()
+        );
+
+        Ok(ciphertext)
+    }
+
+    /// Decrypt data (REAL IMPLEMENTATION)
+    pub async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        info!("🔓 REAL decryption with software key: {}", key_id);
+
+        // Retrieve key material
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
+
+        // Perform REAL decryption using crypto provider
+        let plaintext = self.crypto_impl.decrypt(key_material, ciphertext).await?;
+
+        debug!(
+            "✅ Decrypted {} bytes -> {} bytes",
+            ciphertext.len(),
+            plaintext.len()
+        );
+
+        Ok(plaintext)
+    }
+
+    /// Sign data (REAL IMPLEMENTATION)
+    pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        info!("✍️ REAL signing with software key: {}", key_id);
+
+        // Retrieve key material
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
+
+        // Perform REAL signing using crypto provider
+        let signature = self.crypto_impl.sign(key_material, data).await?;
+
+        debug!(
+            "✅ Signed {} bytes, signature: {} bytes",
+            data.len(),
+            signature.len()
+        );
+
+        Ok(signature)
+    }
+
+    /// Verify signature (REAL IMPLEMENTATION)
+    pub async fn verify(
+        &self,
+        key_id: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        info!(
+            "🔍 REAL signature verification with software key: {}",
+            key_id
+        );
+
+        // Retrieve key material (private key)
+        let key_material = self
+            .keys
+            .get(key_id)
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?;
+
+        // For Ed25519: derive public key from private key for verification
+        // Check key type from metadata
+        let key_type = self.metadata.get(&format!("key_{key_id}"));
+        let public_key = if key_type == Some(&"Ed25519".to_string()) {
+            // Ed25519: derive public key from private key
+            use ed25519_dalek::SigningKey;
+            let signing_key: [u8; 32] = key_material.clone().try_into().map_err(|_| {
+                BearDogError::crypto_error("Invalid Ed25519 private key length".to_string())
+            })?;
+            let sk = SigningKey::from_bytes(&signing_key);
+            sk.verifying_key().to_bytes().to_vec()
+        } else {
+            // For other key types, use the key material directly
+            key_material.clone()
+        };
+
+        // Perform REAL verification using crypto provider with public key
+        let valid = self
+            .crypto_impl
+            .verify(&public_key, data, signature)
+            .await?;
+
+        debug!(
+            "✅ Signature verification result: {}",
+            if valid { "VALID" } else { "INVALID" }
+        );
+
+        Ok(valid)
+    }
+}
+
+/// Vendor information
+#[derive(Debug, Clone)]
+pub struct VendorInfo {
+    /// Vendor name
+    pub name: String,
+    /// Product name
+    pub product: String,
+    /// Version string
+    pub version: String,
+    /// Additional metadata
+    pub metadata: HashMap<String, String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_software_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await;
+        assert!(provider.is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+        let caps = provider.capabilities();
+        assert!(caps.is_some());
+
+        if let Some(caps) = caps {
+            assert!(caps.encryption_supported);
+            assert!(caps.signing_supported);
+            assert_eq!(caps.max_key_size, 4096);
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_security_level() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+        assert_eq!(provider.get_security_level(), 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_vendor_info() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+
+        let info = provider.get_vendor_info();
+        assert_eq!(info.name, "BearDog");
+        assert_eq!(info.product, "Software Universal HSM");
+        assert_eq!(info.version, "1.0.0");
+        assert!(!info.metadata.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_crypto_provider_types() -> Result<(), Box<dyn std::error::Error>> {
+        assert_eq!(CryptoProviderType::Software, CryptoProviderType::Software);
+        assert_ne!(CryptoProviderType::Software, CryptoProviderType::OpenSsl);
+
+        // Test variant coverage
+        let _hardware = CryptoProviderType::Hardware;
+        let _cloud = CryptoProviderType::CloudKms;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_key_generation() -> Result<(), Box<dyn std::error::Error>> {
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+
+        let result = provider.generate_key("test-key", "AES-256").await;
+        assert!(result.is_ok(), "Key generation should succeed for AES-256");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_encryption_decryption() -> Result<(), Box<dyn std::error::Error>> {
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+
+        provider.generate_key("test-key", "AES-256").await?;
+
+        let plaintext = b"Hello, BearDog!";
+        let ciphertext = provider.encrypt("test-key", plaintext).await?;
+        let decrypted = provider.decrypt("test-key", &ciphertext).await?;
+
+        assert_eq!(plaintext, &decrypted[..]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_signing_verification() -> Result<(), Box<dyn std::error::Error>> {
+        let mut provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+
+        provider.generate_key("test-key", "Ed25519").await?;
+
+        let data = b"Message to sign";
+        let signature = provider.sign("test-key", data).await?;
+        let valid = provider.verify("test-key", data, &signature).await?;
+
+        assert!(valid);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_supported_algorithms() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
+
+        if let Some(caps) = provider.capabilities() {
+            assert!(caps
+                .supported_algorithms
+                .contains(&"AES-256-GCM".to_string()));
+            assert!(caps.supported_algorithms.contains(&"Ed25519".to_string()));
+            assert!(caps.supported_algorithms.len() >= 5);
+        }
+        Ok(())
+    }
+}

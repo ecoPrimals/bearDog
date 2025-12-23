@@ -1,77 +1,42 @@
+/// Core component implementations and lifecycle management
+///
+/// Provides component registration, health checking, and lifecycle management
+/// for `BearDog` system components.
 pub mod components;
+
+/// Genetic algorithm optimization components
+pub mod genetic_optimizer;
+/// Service lifecycle management and state transitions
 pub mod lifecycle;
-use crate::types::{BearDogConfig, BearDogSecurityProvider, GeneticOptimizer, SystemMonitor};
-use beardog_errors::BearDogError;
-use beardog_types::canonical::{ComponentStatus, HealthStatus};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::info;
+#[allow(
+    unused_imports,
+    clippy::float_cmp,
+    clippy::useless_vec,
+    clippy::needless_range_loop,
+    clippy::uninlined_format_args,
+    dead_code
+)]
+#[cfg(test)]
+mod tests;
 
-pub type SystemError = BearDogError;
+// Core submodules
+pub mod adapter;
+pub mod auth_services; // Phase 2: JWT, OAuth2, RBAC
+pub mod key_management; // Phase 2: HSM key persistence, public key management
+pub mod monitoring;
+pub mod security;
+pub mod state;
+pub mod system;
 
-#[derive(Debug)]
-pub struct CoreState {
-    pub components: HashMap<String, ComponentStatus>,
-    pub overall_health: HealthStatus,
-    pub start_time: std::time::Instant,
-}
-
-impl Default for CoreState {
-    fn default() -> Self {
-        Self {
-            components: HashMap::new(),
-            overall_health: HealthStatus::Healthy,
-            start_time: std::time::Instant::now(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct BearDogCore {
-    pub config: BearDogConfig,
-    pub state: Arc<RwLock<CoreState>>,
-    pub security: BearDogSecurityProvider,
-    pub monitor: SystemMonitor,
-    pub genetic_optimizer: GeneticOptimizer,
-}
-
-impl BearDogCore {
-    pub fn new(config: BearDogConfig) -> Self {
-        Self {
-            config,
-            state: Arc::new(RwLock::new(CoreState::default())),
-            security: BearDogSecurityProvider::new(),
-            monitor: SystemMonitor::new().unwrap_or_default(),
-            genetic_optimizer: GeneticOptimizer::new(),
-        }
-    }
-
-    pub async fn initialize(&self) -> Result<(), SystemError> {
-        info!("🚀 Initializing BearDog Core");
-
-        {
-            let mut state = self.state.write().await;
-            state
-                .components
-                .insert("core".to_string(), ComponentStatus::Starting);
-        }
-
-        // Initialize components
-        self.monitor.start().await?;
-        self.genetic_optimizer.initialize().await?;
-
-        {
-            let mut state = self.state.write().await;
-            state
-                .components
-                .insert("core".to_string(), ComponentStatus::Running);
-            state.overall_health = HealthStatus::Healthy;
-        }
-
-        info!("✅ BearDog Core initialized successfully");
-        Ok(())
-    }
-
-    // shutdown and health_check methods moved to lifecycle.rs
-}
+// Re-export key types for convenience
+pub use adapter::UniversalAdapter;
+pub use genetic_optimizer::{
+    GeneticOptimizer, GeneticOptimizerConfig, OptimizationState, PerformanceMetric,
+};
+pub use monitoring::{
+    AlertHandler, AlertSeverity, AlertType, ComponentHealth, SystemAlert, SystemMetrics,
+    SystemMonitor, SystemMonitorConfig,
+};
+pub use security::CoreSecurityProvider;
+pub use state::CoreState;
+pub use system::BearDogCore;

@@ -5,23 +5,65 @@ edition = "2021"
 description = "Utility functions for BearDog Security Manager"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
+rust-version = "1.75"
+authors = [ "BearDog Team <team@beardog.dev>",]
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "utilities", "helpers", "beardog", "ecosystem", "tools",]
+categories = [ "development-tools", "data-structures", "algorithms",]
 
 [dependencies]
-beardog-errors = { path = "../beardog-errors" }
-beardog-types = { path = "../beardog-types" }
-
-# Async runtime - optimized features for utilities
-tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"] }
-
-# Serialization
-serde = { version = "1.0", features = ["derive"] }
-
-# Logging and tracing
 tracing = "0.1"
-
-# Time handling
-chrono = { version = "0.4", features = ["serde"] }
-
-# High-performance locking
 parking_lot = "0.12"
-rand.workspace = true
+once_cell = "1.19"
+
+# Safe concurrent data structures
+dashmap = "5.5"
+crossbeam = "0.8"
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.bytes]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "rt", "rt-multi-thread", "time", "fs", "macros",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.rand]
+workspace = true
+
+[dependencies.sha2]
+workspace = true
+
+# Crypto dependencies for migration module
+[dependencies.ring]
+version = "0.17"
+
+[dependencies.hmac]
+version = "0.12"
+
+[dependencies.hkdf]
+version = "0.12"
+
+[dependencies.hex]
+version = "0.4"
+
+[dev-dependencies]
+thiserror = "1.0"
+futures = "0.3"

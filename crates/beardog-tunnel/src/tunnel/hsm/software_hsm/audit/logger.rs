@@ -1,12 +1,14 @@
+//! Audit logger implementation for software HSM
 
-
-use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult}; // Import from software_hsm types
+use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult};
 use super::storage::PersistentAuditStorage;
-
 use beardog_errors::BearDogError;
-use beardog_security::handlers::audit_management::AuditStatistics;
+use tracing::debug;
+// NOTE: beardog_security::handlers doesn't exist yet - commented out
+// use beardog_security::handlers::audit_management::AuditStatistics;
 use std::sync::Arc;
 
+/// Context for crypto operations logging
 #[derive(Debug, Clone)]
 pub struct CryptoOperationLog {
     pub operation_type: String,
@@ -18,168 +20,253 @@ pub struct CryptoOperationLog {
     pub processing_time_ms: Option<u64>,
 }
 
-#[derive(Debug)]
+/// Default audit logger implementation
+#[derive(Debug, Clone)]
 pub struct DefaultAuditLogger {
-
-    storage: Arc<PersistentAuditStorage>,}
+    storage: Arc<PersistentAuditStorage>,
+}
 
 impl DefaultAuditLogger {
-
+    /// Create a new audit logger with default storage path
     pub async fn new() -> Result<Self, BearDogError> {
         let storage_path = std::path::PathBuf::from("audit.log");
         Self::with_storage_path(storage_path).await
     }
 
+    /// Create audit logger with custom storage path
     pub async fn with_storage_path(storage_path: std::path::PathBuf) -> Result<Self, BearDogError> {
-        let storage = Arc::new(PersistentAuditStorage::new(storage_path, 1000).await?);
+        let storage = Arc::new(PersistentAuditStorage::new(storage_path, 10000).await?);
         Ok(Self { storage })
+    }
 
+    /// Log an audit event (stub for missing AuditEvent type)
+    pub async fn log_audit_event(
+        &self,
+        _event: beardog_types::hsm::AuditEvent,
+    ) -> Result<(), BearDogError> {
+        // Stub implementation - convert to AuditLogEntry and log
+        debug!("Logging audit event (stub implementation)");
+        Ok(())
+    }
+
+    /// Log a detailed operation
     pub async fn log_detailed_operation(
         &self,
-        operation: &str,
-        user_id: Option<&str>,
-        key_id: Option<&str>,
+        operation: String,
+        user_id: Option<String>,
+        key_id: Option<String>,
         success: bool,
-        error_message: Option<&str>,
-        details: std::collections::HashMap<&str, &str>,
+        error_message: Option<String>,
+        details: std::collections::HashMap<String, String>,
     ) -> Result<(), BearDogError> {
         let entry = AuditLogEntry {
-            id: uuid::Uuid::new_v4().to_string(),
             timestamp: chrono::Utc::now(),
             operation,
+            user_id,
             key_id,
-            actor: user_id.unwrap_or_else(|| "system".to_string()),
             result: if success {
                 OperationResult::Success
             } else {
-                OperationResult::Failure(error_message.unwrap_or_else(|| "failed".to_string()))
+                OperationResult::Failure(
+                    error_message.unwrap_or_else(|| "Operation failed".to_string()),
+                )
             },
             metadata: details,
         };
         self.storage.append_entry(&entry).await
+    }
 
+    /// Log a successful operation
     pub async fn log_success(
+        &self,
         operation: &str,
         user_id: Option<&str>,
         key_id: Option<&str>,
+    ) -> Result<(), BearDogError> {
         self.log_detailed_operation(
             operation.to_string(),
             user_id.map(|s| s.to_string()),
             key_id.map(|s| s.to_string()),
             true,
             None,
-            std::collections::HashMap::with_capacity(16),
+            std::collections::HashMap::new(),
         )
         .await
+    }
 
+    /// Log a failed operation
     pub async fn log_failure(
+        &self,
+        operation: &str,
+        user_id: Option<&str>,
+        key_id: Option<&str>,
         error: &str,
+    ) -> Result<(), BearDogError> {
+        self.log_detailed_operation(
+            operation.to_string(),
+            user_id.map(|s| s.to_string()),
+            key_id.map(|s| s.to_string()),
             false,
             Some(error.to_string()),
+            std::collections::HashMap::new(),
+        )
+        .await
+    }
 
+    /// Log key generation operation
     pub async fn log_key_generation(
+        &self,
         key_id: &str,
         key_type: &str,
         algorithm: &str,
-        let mut details = std::collections::HashMap::with_capacity(16);
+        success: bool,
+    ) -> Result<(), BearDogError> {
+        let mut details = std::collections::HashMap::new();
         details.insert("key_type".to_string(), key_type.to_string());
         details.insert("algorithm".to_string(), algorithm.to_string());
+
+        self.log_detailed_operation(
             "key_generation".to_string(),
+            None,
             Some(key_id.to_string()),
             success,
+            None,
             details,
+        )
+        .await
+    }
 
+    /// Log key deletion
     pub async fn log_key_deletion(
+        &self,
+        key_id: &str,
+        success: bool,
         error_message: Option<&str>,
+    ) -> Result<(), BearDogError> {
+        self.log_detailed_operation(
             "key_deletion".to_string(),
+            None,
+            Some(key_id.to_string()),
+            success,
             error_message.map(|s| s.to_string()),
+            std::collections::HashMap::new(),
+        )
+        .await
+    }
 
-    pub async fn log_crypto_operation(&self, operation: CryptoOperationLog) -> Result<(), BearDogError> {
+    /// Log crypto operation
+    pub async fn log_crypto_operation(
+        &self,
+        operation: CryptoOperationLog,
+    ) -> Result<(), BearDogError> {
+        let mut details = std::collections::HashMap::new();
         details.insert("algorithm".to_string(), operation.algorithm.clone());
         details.insert(
             "data_size_bytes".to_string(),
             operation.data_size.to_string(),
         );
+
         if let Some(time_ms) = operation.processing_time_ms {
             details.insert("processing_time_ms".to_string(), time_ms.to_string());
         }
-            format_args!("crypto_{}", operation.operation_type).to_string(),
+
+        self.log_detailed_operation(
+            format!("crypto_{}", operation.operation_type),
             operation.user_id,
             operation.key_id,
             operation.success,
+            None,
+            details,
+        )
+        .await
+    }
 
+    /// Log security event
     pub async fn log_security_event(
+        &self,
         event_type: &str,
         severity: &str,
         description: &str,
-        additional_info: std::collections::HashMap<&str, &str>,
+        additional_info: std::collections::HashMap<String, String>,
+    ) -> Result<(), BearDogError> {
         let mut details = additional_info;
         details.insert("severity".to_string(), severity.to_string());
         details.insert("description".to_string(), description.to_string());
+
+        self.log_detailed_operation(
             format!("security_{event_type}"),
-            true, // Security events are logged as successful by default
+            None,
+            None,
+            true,
+            None,
+            details,
+        )
+        .await
+    }
 
-    pub async fn get_audit_statistics(&self) -> Result<AuditStatistics, BearDogError> {
-        self.generate_statistics().await
+    /// Get audit statistics
+    pub async fn get_audit_statistics(
+        &self,
+    ) -> Result<beardog_types::hsm::AuditStatistics, BearDogError> {
+        // Mock implementation - replace with real statistics gathering
+        Ok(beardog_types::hsm::AuditStatistics::new())
+    }
 
-    pub async fn purge_old_entries(
-        older_than: chrono::DateTime<chrono::Utc>,
-    ) -> Result<u64, BearDogError> {
-        self.purge_entries_older_than(older_than).await
-
-    pub async fn export_audit_log(&self, format: &str) -> Result<Vec<u8>, BearDogError>> {
+    /// Export audit log in specified format
+    pub async fn export_audit_log(&self, format: &str) -> Result<Vec<u8>, BearDogError> {
         match format.to_lowercase().as_str() {
             "json" => self.export_as_json().await,
             "csv" => self.export_as_csv().await,
-            _ => Err(BearDogError::invalid_input(format!("Unsupported export format: {format)"),
-            }),
+            _ => Err(BearDogError::invalid_input(&format!(
+                "Unsupported export format: {format}"
+            ))),
+        }
+    }
 
-    async fn generate_statistics(&self) -> Result<AuditStatistics, BearDogError> {
-
-        Ok(AuditStatistics {
-            period_hours: 24,
-            total_events: 1000,
-            auth_events: 300,
-            authz_events: 200,
-            high_risk_events: 50,
-            success_rate: 0.95, // 95% success rate
-        })
-
-    async fn purge_entries_older_than(
-        _older_than: chrono::DateTime<chrono::Utc>,
-
-        Ok(10)
-
-    async fn export_as_json(&self) -> Result<Vec<u8>, BearDogError>> {
+    async fn export_as_json(&self) -> Result<Vec<u8>, BearDogError> {
         let filter = AuditLogFilter::default();
         let entries = self.storage.get_entries(&filter).await?;
-        let json =
-            serde_json::to_string_pretty(&entries).map_err(|e| BearDogError::Serialization {
-                message: format!("Failed to serialize audit log to JSON: {e}"),
-            })?;
+        let json = serde_json::to_string_pretty(&entries)
+            .map_err(|e| BearDogError::serialization(&format!("JSON serialization failed: {e}")))?;
         Ok(json.into_bytes())
+    }
 
-    async fn export_as_csv(&self) -> Result<Vec<u8>, BearDogError>> {
-        let mut csv = "timestamp,operation,user_id,key_id,success,error_message\n";
+    async fn export_as_csv(&self) -> Result<Vec<u8>, BearDogError> {
+        let filter = AuditLogFilter::default();
+        let entries = self.storage.get_entries(&filter).await?;
+
+        let mut csv = String::from("timestamp,operation,user_id,key_id,success,error_message\n");
         for entry in entries {
+            let success = matches!(entry.result, OperationResult::Success);
+            let error = match entry.result {
+                OperationResult::Failure(ref msg) => msg.as_str(),
+                _ => "",
+            };
             csv.push_str(&format!(
                 "{},{},{},{},{},{}\n",
-                entry.timestamp.to_rfc3339(),
+                entry.timestamp,
                 entry.operation,
-                entry.actor,
-                entry.key_id.unwrap_or_default(),
-                matches!(entry.result, OperationResult::Success),
-                match entry.result {
-                    OperationResult::Success => String::with_capacity(64),
-                    OperationResult::Failure(ref msg) => msg.clone(),
-                }
+                entry.user_id.as_deref().unwrap_or(""),
+                entry.key_id.as_deref().unwrap_or(""),
+                success,
+                error
             ));
+        }
+
         Ok(csv.into_bytes())
+    }
+}
 
+#[async_trait::async_trait]
 impl AuditLogger for DefaultAuditLogger {
-
     async fn log_operation(&self, operation: &AuditLogEntry) -> Result<(), BearDogError> {
         self.storage.log_entry(operation.clone()).await
+    }
 
-    async fn get_audit_log(&self, filter: &AuditLogFilter) -> Result<Vec<AuditLogEntry>, BearDogError>> {
+    async fn get_audit_log(
+        &self,
+        filter: &AuditLogFilter,
+    ) -> Result<Vec<AuditLogEntry>, BearDogError> {
         self.storage.get_entries(filter).await
+    }
+}

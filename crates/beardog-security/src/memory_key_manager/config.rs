@@ -1,44 +1,62 @@
-use chrono::Duration;
+//! Configuration for memory-based key manager
+//!
+//! This module provides configuration structures for in-memory key management.
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+/// Memory key manager configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryKeyConfig {
+    /// Maximum number of keys to store in memory
+    /// Number of `max_keys`
     pub max_keys: usize,
-    pub key_expiry: Option<Duration>,
-    pub cache_derivations: bool,
-    pub auto_rotation: bool,
-    pub rotation_interval: Duration,
-    pub enable_vault_sharing: bool,
-    pub max_shared_vaults: usize,
+    /// Key expiration time in seconds (0 = no expiration)
+    /// Number of `key_expiration_seconds`
+    pub key_expiration_seconds: u64,
+    /// Enable key rotation
+    /// Whether `enable_rotation` is enabled
+    pub enable_rotation: bool,
 }
 
 impl Default for MemoryKeyConfig {
     fn default() -> Self {
         Self {
-            max_keys: 10_000,
-            key_expiry: Some(Duration::hours(24)),
-            cache_derivations: true,
-            auto_rotation: false,
-            rotation_interval: Duration::hours(1),
-            enable_vault_sharing: false,
-            max_shared_vaults: 5,
+            max_keys: std::env::var("BEARDOG_MAX_KEYS")
+                .ok()
+                .and_then(|k| k.parse().ok())
+                .unwrap_or(1000), // 1000 keys default
+            key_expiration_seconds: 0,
+            enable_rotation: false,
         }
     }
 }
 
+/// Type alias for backwards compatibility
+pub type KeyManagerConfig = MemoryKeyConfig;
+
+/// Key storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyStorageConfig {
-    pub memory_protection: bool,
+    /// Storage backend type
+    /// The backend value
+    pub backend: String,
+    /// Maximum storage capacity
+    /// Number of `max_capacity`
+    pub max_capacity: usize,
+    /// Enable encryption at rest
+    /// Whether `encrypt_at_rest` is enabled
     pub encrypt_at_rest: bool,
-    pub backup_enabled: bool,
 }
 
 impl Default for KeyStorageConfig {
     fn default() -> Self {
         Self {
-            memory_protection: true,
+            backend: "memory".to_string(),
+            max_capacity: std::env::var("BEARDOG_KEY_STORAGE_CAPACITY")
+                .ok()
+                .and_then(|c| c.parse().ok())
+                .unwrap_or(10000), // 10000 keys default
             encrypt_at_rest: true,
-            backup_enabled: true,
         }
     }
 }

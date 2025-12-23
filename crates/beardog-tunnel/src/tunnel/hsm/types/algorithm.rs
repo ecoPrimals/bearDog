@@ -1,213 +1,22 @@
-
+//! Cryptographic Algorithm Types
+//!
+//! Type definitions for cryptographic algorithms supported by the HSM.
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum CryptographicAlgorithm {
-
-    Aes128,
-
-    Aes192,
-
-    Aes256,
-
-    Aes128Gcm,
-
-    Aes192Gcm,
-
-    Aes256Gcm,
-
-    ChaCha20Poly1305,
-
-    RsaPkcs1V15,
-
-    RsaPss,
-
-    EccP256,
-
-    EccP384,
-
-    EccP521,
-
-    Ed25519,
-
-    X25519,
-
-    EcdsaSha256,
-
-    EcdsaSha384,
-
-    EcdsaSha512,
-
-    RsaSha256,
-
-    RsaSha384,
-
-    RsaSha512,
-
-    EcdhP256,
-
-    EcdhP384,
-
-    EcdhP521,
-
-    X25519KeyAgreement,
-
-    AesGcm,
-
-    ChaCha20Poly1305Aead,
-
-    HkdfSha256,
-
-    HkdfSha384,
-
-    HkdfSha512,
-
-    Pbkdf2,
-
-    Sha256,
-
-    Sha384,
-
-    Sha512,
-
-    Blake2b,
-
-    Blake2s,
-
-    Custom(String),
+/// Algorithm parameters configuration
+#[derive(Debug, Clone)]
+pub struct AlgorithmParameters {
+    /// Cryptographic algorithm
+    pub algorithm: CryptographicAlgorithm,
+    /// Optional key size in bits
+    pub key_size: Option<u32>,
+    /// Algorithm-specific parameters
+    pub parameters: AlgorithmSpecificParameters,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AlgorithmParameters {
-
-    pub algorithm: CryptographicAlgorithm,
-
-    pub key_size: Option<u32>,
-
-    pub parameters: AlgorithmSpecificParameters,
-
-pub enum AlgorithmSpecificParameters {
-
-    Aes {
-
-        mode: AesMode,
-
-        iv: Option<Vec<u8>>,
-
-        aad: Option<Vec<u8>>,
-    },
-
-    Rsa {
-
-        public_exponent: Option<u32>,
-
-        padding: RsaPadding,
-
-        hash_algorithm: Option<HashAlgorithm>,
-
-    EllipticCurve {
-
-        curve: EllipticCurveType,
-
-        point_compression: bool,
-
-    Hkdf {
-
-        hash_algorithm: HashAlgorithm,
-
-        salt: Option<Vec<u8>>,
-
-        info: Option<Vec<u8>>,
-
-        output_length: u32,
-
-    Pbkdf2 {
-        salt: Vec<u8>,
-
-        iterations: u32,
-
-    Generic {
-
-        parameters: std::collections::HashMap<String, String>,
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum AesMode {
-
-    Ecb,
-
-    Cbc,
-
-    Cfb,
-
-    Ofb,
-
-    Ctr,
-
-    Gcm,
-
-    Ccm,
-
-pub enum RsaPadding {
-
-    Pkcs1V15,
-
-    Pss,
-
-    Oaep {
-
-        mgf1_hash: HashAlgorithm,
-
-        label: Option<Vec<u8>>,
-
-pub enum HashAlgorithm {
-
-    Sha1,
-
-    Sha512_224,
-
-    Sha512_256,
-
-    Sha3_256,
-
-    Sha3_384,
-
-    Sha3_512,
-
-pub enum EllipticCurveType {
-
-    P256,
-
-    P384,
-
-    P521,
-
-    Secp256k1,
-
-    Curve25519,
-
-pub struct AlgorithmCapability {
-
-    pub supported_key_sizes: Vec<u32>,
-
-    pub supported_modes: Vec<String>,
-
-    pub hardware_accelerated: bool,
-
-    pub performance_characteristics: PerformanceCharacteristics,
-
-pub struct PerformanceCharacteristics {
-
-    pub ops_per_second: f64,
-
-    pub avg_latency_us: f64,
-
-    pub memory_usage_bytes: u64,
-
-    pub cpu_usage_percent: f64,}
-
-impl Default for AlgorithmParameters {}
-
+impl Default for AlgorithmParameters {
     fn default() -> Self {
         Self {
             algorithm: CryptographicAlgorithm::Aes256Gcm,
@@ -219,124 +28,342 @@ impl Default for AlgorithmParameters {}
             },
         }
     }
+}
+
+/// Algorithm-specific parameters
+#[derive(Debug, Clone)]
+pub enum AlgorithmSpecificParameters {
+    /// AES encryption parameters
+    Aes {
+        /// Cipher mode
+        mode: AesMode,
+        /// Initialization vector
+        iv: Option<Vec<u8>>,
+        /// Additional authenticated data
+        aad: Option<Vec<u8>>,
+    },
+    /// RSA encryption parameters
+    Rsa {
+        /// Public exponent (typically 65537)
+        public_exponent: Option<u32>,
+        /// Padding scheme
+        padding: RsaPadding,
+        /// Hash algorithm for OAEP/PSS
+        hash_algorithm: Option<HashAlgorithm>,
+        /// Optional label for OAEP
+        label: Option<Vec<u8>>,
+    },
+    /// Elliptic curve parameters
+    EllipticCurve {
+        /// Elliptic curve type
+        curve: EllipticCurveType,
+        /// Use point compression
+        point_compression: bool,
+    },
+    /// HKDF parameters
+    Hkdf {
+        /// Hash algorithm
+        hash_algorithm: HashAlgorithm,
+        /// Salt value
+        salt: Option<Vec<u8>>,
+        /// Info/context string
+        info: Option<Vec<u8>>,
+        /// Output length in bytes
+        output_length: u32,
+    },
+    /// PBKDF2 parameters
+    Pbkdf2 {
+        /// Salt value
+        salt: Vec<u8>,
+        /// Number of iterations
+        iterations: u32,
+        /// Hash algorithm
+        hash_algorithm: HashAlgorithm,
+    },
+    /// Generic parameters for custom algorithms
+    Generic {
+        /// Key-value parameters
+        parameters: HashMap<String, String>,
+    },
+}
+
+/// Hash algorithm types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum HashAlgorithm {
+    /// SHA-1 (deprecated, use for legacy only)
+    Sha1,
+    /// SHA-256
+    Sha256,
+    /// SHA-384
+    Sha384,
+    /// SHA-512
+    Sha512,
+    /// SHA-512/224
+    Sha512_224,
+    /// SHA-512/256
+    Sha512_256,
+    /// SHA3-256
+    Sha3_256,
+    /// SHA3-384
+    Sha3_384,
+    /// SHA3-512
+    Sha3_512,
+    /// BLAKE2b
+    Blake2b,
+    /// BLAKE2s
+    Blake2s,
+}
+
+/// AES cipher modes
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum AesMode {
+    /// Electronic Codebook (deprecated)
+    Ecb,
+    /// Cipher Block Chaining
+    Cbc,
+    /// Counter mode
+    Ctr,
+    /// Galois/Counter Mode (AEAD)
+    Gcm,
+    /// Cipher Feedback
+    Cfb,
+    /// Output Feedback
+    Ofb,
+}
+
+/// RSA padding schemes
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum RsaPadding {
+    /// No padding (raw RSA)
+    None,
+    /// PKCS#1 v1.5 padding
+    Pkcs1v15,
+    /// OAEP padding
+    Oaep,
+    /// PSS padding (for signatures)
+    Pss,
+}
+
+/// Elliptic curve types
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum EllipticCurveType {
+    /// NIST P-256 (secp256r1)
+    P256,
+    /// NIST P-384 (secp384r1)
+    P384,
+    /// NIST P-521 (secp521r1)
+    P521,
+    /// secp256k1 (Bitcoin curve)
+    Secp256k1,
+    /// Curve25519 (for Ed25519)
+    Curve25519,
+    /// Curve448 (for Ed448)
+    Curve448,
+}
+
+/// Cryptographic algorithms
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum CryptographicAlgorithm {
+    /// AES-128-GCM
+    Aes128Gcm,
+    /// AES-256-GCM
+    Aes256Gcm,
+    /// AES-128-CBC
+    Aes128Cbc,
+    /// AES-256-CBC
+    Aes256Cbc,
+    /// RSA-2048
+    Rsa2048,
+    /// RSA-3072
+    Rsa3072,
+    /// RSA-4096
+    Rsa4096,
+    /// ECDSA with P-256
+    EcdsaP256,
+    /// ECDSA with P-384
+    EcdsaP384,
+    /// Ed25519 (EdDSA)
+    Ed25519,
+    /// HMAC-SHA256
+    HmacSha256,
+    /// HMAC-SHA384
+    HmacSha384,
+    /// HMAC-SHA512
+    HmacSha512,
+    /// HKDF-SHA256
+    HkdfSha256,
+    /// PBKDF2-HMAC-SHA256
+    Pbkdf2HmacSha256,
+    /// ChaCha20-Poly1305
+    ChaCha20Poly1305,
+}
+
+impl CryptographicAlgorithm {
+    /// Get the recommended key size for this algorithm
+    pub fn recommended_key_size(&self) -> Option<u32> {
+        match self {
+            Self::Aes128Gcm | Self::Aes128Cbc => Some(128),
+            Self::Aes256Gcm | Self::Aes256Cbc => Some(256),
+            Self::Rsa2048 => Some(2048),
+            Self::Rsa3072 => Some(3072),
+            Self::Rsa4096 => Some(4096),
+            Self::EcdsaP256 => Some(256),
+            Self::EcdsaP384 => Some(384),
+            Self::Ed25519 => Some(256),
+            Self::HmacSha256 | Self::HkdfSha256 | Self::Pbkdf2HmacSha256 => Some(256),
+            Self::HmacSha384 => Some(384),
+            Self::HmacSha512 => Some(512),
+            Self::ChaCha20Poly1305 => Some(256),
+        }
+    }
+
+    /// Check if this algorithm supports authenticated encryption
+    pub fn is_authenticated_encryption(&self) -> bool {
+        matches!(
+            self,
+            Self::Aes128Gcm | Self::Aes256Gcm | Self::ChaCha20Poly1305
+        )
+    }
+
+    /// Check if this algorithm is for signing/verification
+    pub fn is_signature_algorithm(&self) -> bool {
+        matches!(
+            self,
+            Self::EcdsaP256
+                | Self::EcdsaP384
+                | Self::Ed25519
+                | Self::Rsa2048
+                | Self::Rsa3072
+                | Self::Rsa4096
+        )
+    }
+}
+
+/// Performance characteristics for an algorithm
+#[derive(Debug, Clone)]
+pub struct PerformanceCharacteristics {
+    /// Operations per second
+    pub ops_per_second: f64,
+    /// Average latency in microseconds
+    pub avg_latency_us: f64,
+    /// Memory usage in bytes
+    pub memory_usage_bytes: u64,
+    /// CPU usage percentage
+    pub cpu_usage_percent: f64,
+}
+
 impl Default for PerformanceCharacteristics {
+    fn default() -> Self {
+        Self {
             ops_per_second: 1000.0,
             avg_latency_us: 100.0,
             memory_usage_bytes: 1024,
-            cpu_usage_percent: 5.0,}
+            cpu_usage_percent: 5.0,
+        }
+    }
+}
 
-impl CryptographicAlgorithm {
+/// Algorithm capability information
+#[derive(Debug, Clone)]
+pub struct AlgorithmCapability {
+    /// Algorithm type
+    pub algorithm: CryptographicAlgorithm,
+    /// Whether the algorithm is supported
+    pub supported: bool,
+    /// Whether hardware acceleration is available
+    pub hardware_accelerated: bool,
+    /// Performance characteristics
+    pub performance: PerformanceCharacteristics,
+}
 
-    pub fn is_symmetric(&self) -> bool {
-        matches!(
-            self,
-            CryptographicAlgorithm::Aes128
-                | CryptographicAlgorithm::Aes192
-                | CryptographicAlgorithm::Aes256
-                | CryptographicAlgorithm::Aes128Gcm
-                | CryptographicAlgorithm::Aes192Gcm
-                | CryptographicAlgorithm::Aes256Gcm
-                | CryptographicAlgorithm::ChaCha20Poly1305
-                | CryptographicAlgorithm::AesGcm
-                | CryptographicAlgorithm::ChaCha20Poly1305Aead
-        )
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    pub fn is_asymmetric(&self) -> bool {
-            CryptographicAlgorithm::RsaPkcs1V15
-                | CryptographicAlgorithm::RsaPss
-                | CryptographicAlgorithm::EccP256
-                | CryptographicAlgorithm::EccP384
-                | CryptographicAlgorithm::EccP521
-                | CryptographicAlgorithm::Ed25519
-                | CryptographicAlgorithm::X25519
-                | CryptographicAlgorithm::EcdsaSha256
-                | CryptographicAlgorithm::EcdsaSha384
-                | CryptographicAlgorithm::EcdsaSha512
-                | CryptographicAlgorithm::RsaSha256
-                | CryptographicAlgorithm::RsaSha384
-                | CryptographicAlgorithm::RsaSha512
-                | CryptographicAlgorithm::EcdhP256
-                | CryptographicAlgorithm::EcdhP384
-                | CryptographicAlgorithm::EcdhP521
-                | CryptographicAlgorithm::X25519KeyAgreement
+    #[test]
+    fn test_algorithm_parameters_default() {
+        let params = AlgorithmParameters::default();
+        assert_eq!(params.algorithm, CryptographicAlgorithm::Aes256Gcm);
+        assert_eq!(params.key_size, Some(256));
+    }
 
-    pub fn is_hash(&self) -> bool {
-            CryptographicAlgorithm::Sha256
-                | CryptographicAlgorithm::Sha384
-                | CryptographicAlgorithm::Sha512
-                | CryptographicAlgorithm::Blake2b
-                | CryptographicAlgorithm::Blake2s
+    #[test]
+    fn test_recommended_key_sizes() {
+        assert_eq!(
+            CryptographicAlgorithm::Aes128Gcm.recommended_key_size(),
+            Some(128)
+        );
+        assert_eq!(
+            CryptographicAlgorithm::Aes256Gcm.recommended_key_size(),
+            Some(256)
+        );
+        assert_eq!(
+            CryptographicAlgorithm::Rsa2048.recommended_key_size(),
+            Some(2048)
+        );
+        assert_eq!(
+            CryptographicAlgorithm::Ed25519.recommended_key_size(),
+            Some(256)
+        );
+    }
 
-    pub fn is_kdf(&self) -> bool {
-            CryptographicAlgorithm::HkdfSha256
-                | CryptographicAlgorithm::HkdfSha384
-                | CryptographicAlgorithm::HkdfSha512
-                | CryptographicAlgorithm::Pbkdf2
+    #[test]
+    fn test_authenticated_encryption() {
+        assert!(CryptographicAlgorithm::Aes256Gcm.is_authenticated_encryption());
+        assert!(CryptographicAlgorithm::ChaCha20Poly1305.is_authenticated_encryption());
+        assert!(!CryptographicAlgorithm::Aes256Cbc.is_authenticated_encryption());
+        assert!(!CryptographicAlgorithm::Ed25519.is_authenticated_encryption());
+    }
 
-    pub fn is_aead(&self) -> bool {
-            CryptographicAlgorithm::Aes128Gcm
+    #[test]
+    fn test_signature_algorithms() {
+        assert!(CryptographicAlgorithm::Ed25519.is_signature_algorithm());
+        assert!(CryptographicAlgorithm::EcdsaP256.is_signature_algorithm());
+        assert!(CryptographicAlgorithm::Rsa2048.is_signature_algorithm());
+        assert!(!CryptographicAlgorithm::Aes256Gcm.is_signature_algorithm());
+        assert!(!CryptographicAlgorithm::HmacSha256.is_signature_algorithm());
+    }
 
-    pub fn default_key_size(&self) -> Option<u32> {
-        match self {
-            CryptographicAlgorithm::Aes128 | CryptographicAlgorithm::Aes128Gcm => Some(128),
-            CryptographicAlgorithm::Aes192 | CryptographicAlgorithm::Aes192Gcm => Some(192),
-            CryptographicAlgorithm::Aes256 | CryptographicAlgorithm::Aes256Gcm => Some(256),
-            CryptographicAlgorithm::ChaCha20Poly1305
-            | CryptographicAlgorithm::ChaCha20Poly1305Aead => Some(256),
-            CryptographicAlgorithm::RsaPkcs1V15 | CryptographicAlgorithm::RsaPss => Some(2048),
-            CryptographicAlgorithm::EccP256
-            | CryptographicAlgorithm::EcdsaSha256
-            | CryptographicAlgorithm::EcdhP256 => Some(256),
-            CryptographicAlgorithm::EccP384
-            | CryptographicAlgorithm::EcdsaSha384
-            | CryptographicAlgorithm::EcdhP384 => Some(384),
-            CryptographicAlgorithm::EccP521
-            | CryptographicAlgorithm::EcdsaSha512
-            | CryptographicAlgorithm::EcdhP521 => Some(521),
-            CryptographicAlgorithm::Ed25519
-            | CryptographicAlgorithm::X25519
-            | CryptographicAlgorithm::X25519KeyAgreement => Some(256),
-            CryptographicAlgorithm::RsaSha256
-            | CryptographicAlgorithm::RsaSha384
-            | CryptographicAlgorithm::RsaSha512 => Some(2048),
-            CryptographicAlgorithm::AesGcm => Some(256),
-            _ => None,
+    #[test]
+    fn test_performance_characteristics_default() {
+        let perf = PerformanceCharacteristics::default();
+        assert_eq!(perf.ops_per_second, 1000.0);
+        assert_eq!(perf.avg_latency_us, 100.0);
+        assert_eq!(perf.memory_usage_bytes, 1024);
+        assert_eq!(perf.cpu_usage_percent, 5.0);
+    }
 
-    pub fn as_str(&self) -> &str {
-            CryptographicAlgorithm::Aes128 => "AES-128",
-            CryptographicAlgorithm::Aes192 => "AES-192",
-            CryptographicAlgorithm::Aes256 => "AES-256",
-            CryptographicAlgorithm::Aes128Gcm => "AES-128-GCM",
-            CryptographicAlgorithm::Aes192Gcm => "AES-192-GCM",
-            CryptographicAlgorithm::Aes256Gcm => "AES-256-GCM",
-            CryptographicAlgorithm::ChaCha20Poly1305 => "ChaCha20-Poly1305",
-            CryptographicAlgorithm::RsaPkcs1V15 => "RSA-PKCS1-v1.5",
-            CryptographicAlgorithm::RsaPss => "RSA-PSS",
-            CryptographicAlgorithm::EccP256 => "ECC-P256",
-            CryptographicAlgorithm::EccP384 => "ECC-P384",
-            CryptographicAlgorithm::EccP521 => "ECC-P521",
-            CryptographicAlgorithm::Ed25519 => "Ed25519",
-            CryptographicAlgorithm::X25519 => "X25519",
-            CryptographicAlgorithm::EcdsaSha256 => "ECDSA-SHA256",
-            CryptographicAlgorithm::EcdsaSha384 => "ECDSA-SHA384",
-            CryptographicAlgorithm::EcdsaSha512 => "ECDSA-SHA512",
-            CryptographicAlgorithm::RsaSha256 => "RSA-SHA256",
-            CryptographicAlgorithm::RsaSha384 => "RSA-SHA384",
-            CryptographicAlgorithm::RsaSha512 => "RSA-SHA512",
-            CryptographicAlgorithm::EcdhP256 => "ECDH-P256",
-            CryptographicAlgorithm::EcdhP384 => "ECDH-P384",
-            CryptographicAlgorithm::EcdhP521 => "ECDH-P521",
-            CryptographicAlgorithm::X25519KeyAgreement => "X25519-KeyAgreement",
-            CryptographicAlgorithm::AesGcm => "AES-GCM",
-            CryptographicAlgorithm::ChaCha20Poly1305Aead => "ChaCha20-Poly1305-AEAD",
-            CryptographicAlgorithm::HkdfSha256 => "HKDF-SHA256",
-            CryptographicAlgorithm::HkdfSha384 => "HKDF-SHA384",
-            CryptographicAlgorithm::HkdfSha512 => "HKDF-SHA512",
-            CryptographicAlgorithm::Pbkdf2 => "PBKDF2",
-            CryptographicAlgorithm::Sha256 => "SHA-256",
-            CryptographicAlgorithm::Sha384 => "SHA-384",
-            CryptographicAlgorithm::Sha512 => "SHA-512",
-            CryptographicAlgorithm::Blake2b => "BLAKE2b",
-            CryptographicAlgorithm::Blake2s => "BLAKE2s",
-            CryptographicAlgorithm::Custom(name) => name,
+    #[test]
+    fn test_hash_algorithm_serialization() {
+        let alg = HashAlgorithm::Sha256;
+        let serialized = serde_json::to_string(&alg).unwrap();
+        let deserialized: HashAlgorithm = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(alg, deserialized);
+    }
 
+    #[test]
+    fn test_aes_mode_variants() {
+        let modes = [
+            AesMode::Ecb,
+            AesMode::Cbc,
+            AesMode::Ctr,
+            AesMode::Gcm,
+            AesMode::Cfb,
+            AesMode::Ofb,
+        ];
+        assert_eq!(modes.len(), 6);
+    }
+
+    #[test]
+    fn test_elliptic_curve_types() {
+        let curves = [
+            EllipticCurveType::P256,
+            EllipticCurveType::P384,
+            EllipticCurveType::P521,
+            EllipticCurveType::Secp256k1,
+            EllipticCurveType::Curve25519,
+            EllipticCurveType::Curve448,
+        ];
+        assert_eq!(curves.len(), 6);
+    }
+}

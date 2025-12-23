@@ -1,3 +1,8 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
@@ -36,51 +41,60 @@ pub struct BearDogNodeRegistry {
 }
 
 #[derive(Debug, Clone)]
-pub struct LocalRegistryInfo {
-
-    pub registry_id: String,
-
+    /// The operator value
     pub operator: String,
 
+    /// Collection of public key
     pub public_key: Vec<u8>,
 
+    /// Collection of private key
     pub private_key: Vec<u8>,
 
+    /// Collection of endpoints
     pub endpoints: Vec<String>,
 
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
 
+    /// The region value
     pub region: String,
 
+    /// The version value
     pub version: String,
 
+    /// The started at value
     pub started_at: SystemTime,}
 
 impl BearDogNodeRegistry {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new(config: RegistryConfig) -> Result<Self, BearDogError> {
         info!("🚀 Initializing BearDog Node Registry with decentralized architecture");
 
-        let local_info = Self::initialize_local_registry_info(&config).await?;
+        let local_info = Self::initialize_local_registry_info(&config)?;
 
-        let trust_manager = Arc::new(TrustManager::new(config.trust_propagation.clone()));
+        let trust_manager = Arc::new(&TrustManager::new(config.trust_propagation));
 
-        let bootstrap_manager = Arc::new(BootstrapManager::new(config.clone()).await?);
+        let bootstrap_manager = Arc::new(&BootstrapManager::new(config)?);
 
         let federation_manager = if config.federation.enabled {
             let manager = FederationManager::new(
-                config.federation.clone(),
-                local_info.registry_id.clone(),
-                local_info.public_key.clone(),
+                &config.federation,
+                &local_info.registry_id,
+                &local_info.public_key,
             )
-            .await?;
+            ?;
             Some(Arc::new(manager))
         } else {
             None
         };
 
         let phonebook_service = if config.phonebook.enabled {
-            let service = PhonebookService::new(config.phonebook.clone()).await?;
+            let service = PhonebookService::new(&config.phonebook)?;
             Some(Arc::new(service))
 
         let statistics = Arc::new(RwLock::new(RegistryStatistics::new()));
@@ -94,23 +108,25 @@ impl BearDogNodeRegistry {
             statistics,
             local_registry_info: Arc::new(RwLock::new(local_info)),
 
-        registry.start_background_tasks().await?;
+        registry.start_background_tasks()?;
         info!("✅ BearDog Node Registry initialized successfully");
         Ok(registry)
     }
 
-    pub async fn new_default() -> Result<Self, BearDogError> {
-        Self::new(RegistryConfig::default()).await
-
-    pub async fn add_node_with_id(
-        &self,
-        node_id: &str,
+/// New Default operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    /// Creates a new instance
+    pub fn new_default() -> Result<Self, BearDogError> {
+        Self::new(RegistryConfig::default(&str,
         node_info: NodeInfo,
     ) -> Result<(), BearDogError> {
-        info!("📝 Adding node '{}' to registry", node_id);
+        info!("📝 Adding node "{}" to registry", node_id);
 
         {
-            let nodes = self.nodes.read().await;
+            let nodes = self.nodes.read();
             if nodes.len() >= self.config.max_nodes {
                 return Err(BearDogError::validation(
                     "nodes",
@@ -122,62 +138,43 @@ impl BearDogNodeRegistry {
         node_info.validate()?;
 
         if node_info.trust_level < self.config.min_registration_trust {
-            return Err(BearDogError::validation(
-                "trust_level",
-                "Node trust level too low for registration",
-            ));
-
-            let mut nodes = self.nodes.write().await;
-            nodes.insert(node_id.clone(), node_info.clone());
-
-            let mut stats = self.statistics.write().await;
-            stats.total_nodes += 1;
-            *stats
-                .nodes_by_trust_level
-                .entry(node_info.trust_level)
-                .or_insert(0) += 1;
-
-        if let Some(ref phonebook) = self.phonebook_service {
-            if let Err(e) = phonebook
-                .register_node(node_info.clone(), "local".to_string())
-                .await
-            {
-                warn!("Failed to register node with phonebook: {}", e);
+            return Err(BearDogError::validation({}", e);
 
         if let Some(ref federation) = self.federation_manager {
             let advertisement = ServiceAdvertisement {
                 service_id: node_id.clone(),
-                service_name: node_info.name.clone(),
-                service_type: node_info.node_type.clone(),
-                version: "1.0.0".to_string(),
-                endpoints: node_info.endpoints.clone(),
-                capabilities: node_info.capabilities.clone(),
-                metadata: node_info.metadata.clone(),
-                region: self.local_registry_info.read().await.region.clone(),
-                ttl: Duration::from_secs(24 * 60 * 60), // 24 hours
-                health_status: ServiceHealthStatus::Healthy,
+                service_name: &node_info.name: name.to_string(&node_info.node_type,
+                version: "1.0.0".to_string(&node_info.endpoints,
+                capabilities: &node_info.capabilities,
+                metadata: &node_info.metadata,
+                region: self.local_registry_info.read().&await.region,
+                ttl: Duration::from_secs(ServiceHealthStatus::Healthy,
             };
-            if let Err(e) = federation.advertise_service(advertisement).await {
-                warn!("Failed to advertise service through federation: {}", e);
-        info!("✅ Node '{}' added to registry successfully", node_id);
+            if let Err({}", e);
+        info!("✅ Node "{}" added to registry successfully", node_id);
         Ok(())
 
-    pub async fn add_node(&self, node_info: NodeInfo) -> Result<(), BearDogError> {
-        let node_id = node_info.id.clone();
-        self.add_node_with_id(node_id, node_info).await
+/// Add Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn add_node(&self, node_info: NodeInfo) -> Result<(), BearDogError> {
+        let node_id = &node_info.id;
+        self.add_node_with_id(node_id, node_info)
 
-    pub async fn get_node(&self, node_id: &str) -> Result<Option<NodeInfo>, BearDogError>> {
+/// Get Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets node
+    /// Gets node
+    pub fn get_node(&self, node_id: &str) -> Result<Option<NodeInfo>, BearDogError>> {
 
-            if let Some(node) = nodes.get(node_id) {
-                return Ok(Some(node.clone()));
-
-            let criteria = NodeSearchCriteria {
-                node_type: None,
-                required_capabilities: Vec::new(),
-                min_trust_level: TrustLevel::Unknown,
+            if let Some(None,
+                required_capabilities: Vec::new(TrustLevel::Unknown,
                 region: None,
                 max_results: 1,
-            if let Ok(federated_nodes) = federation.find_federated_nodes(&criteria).await {
+            if let Ok(federated_nodes) = federation.find_federated_nodes(&criteria) {
                 for federated_node in federated_nodes {
                     if federated_node.node_info.id == node_id {
                         return Ok(Some(federated_node.node_info));
@@ -185,7 +182,11 @@ impl BearDogNodeRegistry {
                 }
         Ok(None)
 
-    pub async fn list_nodes(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
+/// List Nodes operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn list_nodes(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         let mut all_nodes = Vec::new();
 
             all_nodes.extend(nodes.values().cloned());
@@ -194,14 +195,16 @@ impl BearDogNodeRegistry {
                     all_nodes.push(federated_node.node_info);
         Ok(all_nodes)
 
-    pub async fn update_node_last_seen(&self, node_id: &str) -> Result<(), BearDogError> {
-        let mut nodes = self.nodes.write().await;
+/// Update Node Last Seen operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Updates node_last_seen
+    /// Updates node_last_seen
+    pub fn update_node_last_seen(&self, node_id: &str) -> Result<(), BearDogError> {
+        let mut nodes = self.nodes.write();
         if let Some(node) = nodes.get_mut(node_id) {
-            node.last_seen = SystemTime::now();
-            debug!("👀 Updated last seen for node {}", node_id);
-
-    pub async fn set_trust_level(
-        node_id: &str,
+            node.last_seen = SystemTime::now(&str,
         trust_level: TrustLevel,
 
             if let Some(node) = nodes.get_mut(node_id) {
@@ -209,7 +212,7 @@ impl BearDogNodeRegistry {
                 node.trust_level = trust_level;
 
                 {
-                    let mut stats = self.statistics.write().await;
+                    let mut stats = self.statistics.write();
                     *stats.nodes_by_trust_level.entry(old_trust).or_insert(0) = stats
                         .nodes_by_trust_level
                         .get(&old_trust)
@@ -224,62 +227,42 @@ impl BearDogNodeRegistry {
             node_id, trust_level
         );
 
-    pub async fn get_trust_level(&self, node_id: &str) -> Result<TrustLevel, BearDogError> {
+/// Get Trust Level operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets trust_level
+    /// Gets trust_level
+    pub fn get_trust_level(&self, node_id: &str) -> Result<TrustLevel, BearDogError> {
                 return Ok(node.trust_level);
 
-        self.trust_manager.get_trust_level(node_id).await
+        self.trust_manager.get_trust_level(node_id)
 
-    pub async fn remove_node(&self, node_id: &str) -> Result<(), BearDogError> {
-        info!("🗑️ Removing node '{}' from registry", node_id);
+/// Remove Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Removes node
+    /// Removes node
+    pub fn remove_node(&self, node_id: &str) -> Result<(), BearDogError> {
+        info!("🗑️ Removing node "{}" from registry", node_id);
         let removed_node = {
-            nodes.remove(node_id)
-        if let Some(node) = removed_node {
+            nodes.remove({}", e);
+            info!("✅ Node "{}" removed from registry", node_id);
 
-                let mut stats = self.statistics.write().await;
-                stats.total_nodes = stats.total_nodes.saturating_sub(1);
-                *stats
-                    .nodes_by_trust_level
-                    .entry(node.trust_level)
-                    .or_insert(0) = stats
-                    .get(&node.trust_level)
-                    .unwrap_or(&0)
-                    .saturating_sub(1);
-
-            self.trust_manager.remove_node(node_id).await?;
-
-            if let Some(ref phonebook) = self.phonebook_service {
-                if let Err(e) = phonebook.unregister_node(node_id).await {
-                    warn!("Failed to unregister node from phonebook: {}", e);
-            info!("✅ Node '{}' removed from registry", node_id);
-
-    pub async fn bootstrap(&self) -> Result<(), BearDogError> {
-        info!("🔄 Bootstrapping node registry");
-
-        self.bootstrap_manager.bootstrap_registry(self).await?;
-
-            federation.start_federation_discovery().await?;
-        info!("✅ Registry bootstrap completed");
-
-    pub async fn get_trusted_nodes(
-        min_trust_level: TrustLevel,
+/// Bootstrap operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn bootstrap(TrustLevel,
     ) -> Result<Vec<NodeInfo>, BearDogError>> {
-        let nodes = self.nodes.read().await;
-        let trusted_nodes = nodes
-            .values()
-            .filter(|node| node.trust_level >= min_trust_level)
-            .cloned()
-            .collect();
-        Ok(trusted_nodes)
-
-    pub async fn verify_node_signature(
-        data: &[u8],
+        let nodes = self.nodes.read(&[u8],
         signature: &[u8],
     ) -> Result<bool, BearDogError> {
         let node = self
             .get_node(node_id)
-            .await?
-            .ok_or_else(|| BearDogError::not_found("node", node_id))?;
-        debug!("🔐 Verifying signature for node: {}", node_id);
+            ?
+            .ok_or_else(|| BearDogError::not_found({}", node_id);
 
         if node.public_key.len() != 32 {
             return Ok(false);
@@ -291,54 +274,54 @@ impl BearDogNodeRegistry {
         )?;
         if is_valid {
             debug!("✅ Signature verified for node {}", node_id);
-            self.update_node_last_seen(node_id).await?;
+            self.update_node_last_seen(node_id)?;
             warn!("❌ Invalid signature from node {}", node_id);
         Ok(is_valid)
 
-    pub async fn get_statistics(&self) -> RegistryStatistics {
-        self.statistics.read().await.clone()
+/// Get Statistics operation.
+    /// Gets statistics
+    /// Gets statistics
+    pub fn get_statistics(&self) -> RegistryStatistics {
+        self.statistics.read().clone()
 
-    pub async fn get_local_registry_info(&self) -> LocalRegistryInfo {
-        self.local_registry_info.read().await.clone()
+/// Get Local Registry Info operation.
+    /// Gets local_registry_info
+    /// Gets local_registry_info
+    pub fn get_local_registry_info(&self) -> LocalRegistryInfo {
+        self.local_registry_info.read().clone()
 
-    pub async fn get_federation_status(
+/// Get Federation Status operation.
+    /// Gets federation_status
+    /// Gets federation_status
+    pub fn get_federation_status(
     ) -> Option<super::federation::FederationManagerStatus> {
-            Some(federation.get_federation_status().await)
+            Some(federation.get_federation_status())
 
-    pub async fn get_phonebook_status(&self) -> Option<super::phonebook::PhonebookStatus> {
-            Some(phonebook.get_statistics().await)
-
-    pub async fn health_check(&self) -> Result<NodeRegistryHealthStatus, BearDogError> {
-        let mut health = NodeRegistryHealthStatus {
-            overall_status: HealthStatus::Healthy,
+/// Get Phonebook Status operation.
+    /// Gets phonebook_status
+    /// Gets phonebook_status
+    pub fn get_phonebook_status(&self) -> Option<super::phonebook::PhonebookStatus> {
+            Some(HealthStatus::Healthy,
             local_nodes: 0,
             federation_status: None,
             phonebook_status: None,
             trust_relationships: 0,
-            last_check: chrono::Utc::now(),
-
-            health.local_nodes = nodes.len();
-
-            health.federation_status = Some(federation.health_check().await?);
-
-            health.phonebook_status = Some(phonebook.get_statistics().await.health_status);
-
-        health.trust_relationships = self.trust_manager.get_relationship_count().await;
-        Ok(health)
-
-    async fn initialize_local_registry_info(
-        config: &RegistryConfig,
+            last_check: chrono::Utc::now(&RegistryConfig,
     ) -> Result<LocalRegistryInfo, BearDogError> {
 
         let (public_key, private_key) =
-            crate::crypto_utils::BearDogCrypto::generate_ed25519_keypair()?;
-        Ok(LocalRegistryInfo {
-            registry_id: format_args!("beardog-registry-{}", uuid::Uuid::new_v4().to_string()),
+            crate::crypto_utils::BearDogCrypto::generate_ed25519_keypair(format!("beardog-registry-{}", uuid::Uuid::new_v4()),
             operator: "BearDog User".to_string(),
             public_key,
             private_key,
             endpoints: vec![std::env::var("BEARDOG_REGISTRY_ENDPOINT")
-                .unwrap_or_else(|_| "https://localhost:8843".to_string())],
+                .unwrap_or_else(|_| {
+                    use beardog_types::canonical::config::network::NetworkConfig;
+                    let network_config = NetworkConfig::default();
+                    format!("https://{}:{}", 
+                        network_config.default_host, 
+                        network_config.service_ports.admin_port)
+                })],
             capabilities: vec![
                 "security".to_string(),
                 "trust-management".to_string(),
@@ -348,35 +331,45 @@ impl BearDogNodeRegistry {
             version: "1.0.0".to_string(),
             started_at: SystemTime::now(),
         })
-    async fn start_background_tasks(&self) -> Result<(), BearDogError> {
+    /// Starts background_tasks
+    fn start_background_tasks(&self) -> Result<(), BearDogError> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NodeRegistryHealthStatus {
 
+    /// Current status of the overall
     pub overall_status: HealthStatus,
 
+    /// Number of local_nodes
     pub local_nodes: usize,
 
+    /// Current status of the federation
     pub federation_status: Option<super::federation::FederationHealthStatus>,
 
+    /// Current status of the phonebook
     pub phonebook_status: Option<ServiceHealthStatus>,
 
+    /// Number of trust_relationships
     pub trust_relationships: usize,
 
+    /// The last check value
     pub last_check: chrono::DateTime<chrono::Utc>,
 
-// UNIFIED: Use canonical HealthStatus from beardog-types
 pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
+
     Degraded,
 
+
     Unhealthy,
+
 
     Unknown,
 
 impl NodeRegistry for BearDogNodeRegistry {}
 
+    /// Gets node_info
     fn get_node_info(&self, node_id: &str) -> Result<crate::auth::types::NodeInfo, BearDogError> {
 
         let rt = tokio::runtime::Handle::try_current()
@@ -384,14 +377,13 @@ impl NodeRegistry for BearDogNodeRegistry {}
         
         rt.block_on(async {
 
-            match self.get_node(node_id).await {
+            match self.get_node(node_id) {
                 Ok(node_data) => {
 
                     Ok(crate::auth::types::NodeInfo {
                         node_id: node_data.node_id,
                         address: node_data.address.unwrap_or_default(),
-                        public_key: node_data.public_key.unwrap_or_default(),
-                        capabilities: node_data.capabilities,
+                        public_key: node_data.public_key.unwrap_or_default(node_data.capabilities,
                         trust_level: node_data.trust_level,
                         last_seen: node_data.last_seen,
                         status: match node_data.status.as_str() {
@@ -407,20 +399,16 @@ impl NodeRegistry for BearDogNodeRegistry {}
                 &node_info.node_id,
                 &node_info.public_key,
                 &node_info.address,
-            ).await}
+            )}
 
+    /// Gets trust_level
     fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
 
-                Ok(node_data) => Ok(node_data.trust_level),
-    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError> {
+                Ok(&str, trust_level: f64) -> Result<(), BearDogError> {
 
-            self.update_node_trust(node_id, trust_level).await
-
-    pub async fn register_node_with_key(
-        public_key: &[u8],
+            self.update_node_trust(&[u8],
         let node_info = NodeInfo {
-            public_key: public_key.to_vec(),
-            trust_level: TrustLevel::Unknown,
+            public_key: public_key.to_vec(TrustLevel::Unknown,
             capabilities: vec!["basic".to_string()],
             endpoints: vec![format!("node://{node_id}")],
             last_seen: SystemTime::now(),
@@ -430,8 +418,14 @@ impl NodeRegistry for BearDogNodeRegistry {}
             region: "default".to_string(),
             node_type: "beardog_security_node".to_string(),
             registered_at: SystemTime::now(),
-        self.add_node_with_id(node_id.to_string(), node_info).await
+        self.add_node_with_id(node_id.to_string(), node_info)
 
-    pub async fn is_trusted_node(&self, node_id: &str) -> Result<bool, BearDogError> {
-        let trust_level = self.get_trust_level(node_id).await?;
+/// Is Trusted Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Checks if trusted node
+    /// Checks if trusted node
+    pub fn is_trusted_node(&self, node_id: &str) -> Result<bool, BearDogError> {
+        let trust_level = self.get_trust_level(node_id)?;
         Ok(trust_level >= TrustLevel::Basic)

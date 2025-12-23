@@ -1,323 +1,565 @@
-
+// Entropy Hierarchy Module
+//
+// This module provides entropy hierarchy management and validation capabilities,
+// supporting human-centric entropy classification.
 
 pub mod engine;
+pub mod live_feed_validator;
 pub mod monitoring;
-pub mod seed;
 pub mod sources;
 pub mod types;
 pub mod validation;
 
-pub use engine::{EntropyHierarchyManager, EntropyQualityAssessment};
-pub use monitoring::{EntropyAnalytics, EntropyHealthStatus, HealthLevel, PerformanceMetrics};
-pub use sources::EntropyMixingEngine;
-pub use types::{
-    BiometricHash, ContributionProof, DownstreamEffects, EntropyClass, EntropyHierarchyConfig,
-    EntropyHierarchyStats, EntropySeed, EventType, FusionAlgorithm, GovernanceModel,
-    HumanEntropySource, HumanIdentity, InheritancePolicy, IrreproducibilityProof,
-    MachineEntropySource, OwnershipProof, OwnershipTransition, SecretBytes, SeedLifetimePolicy,
-    SeedOwnership, SeedUsageEvent, SeedUsagePolicy, SharingPolicy, SharingTerms, SocialContext,
-    TransferPermissions, VerificationLevel,
-};
+// Re-export all types
+pub use engine::*;
+pub use live_feed_validator::{LiveFeedConfig, LiveFeedValidationResult, LiveFeedValidator};
+pub use monitoring::*;
+pub use sources::*;
+pub use types::*;
 pub use validation::EntropyValidator;
+
+// Note: BearDogError, Deserialize, and Serialize imports removed as they are unused in this module
+// They can be re-added when needed for future implementations
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::genetics::human_entropy;
-    use beardog_errors::BearDogError;
     use chrono::Utc;
-    use std::sync::Arc;
 
-    async fn create_test_manager() -> Result<EntropyHierarchyManager, BearDogError> {
+    // ========================================================================
+    // Manager Creation Tests
+    // ========================================================================
+
+    #[test]
+    fn test_entropy_hierarchy_creation() {
         let config = EntropyHierarchyConfig::default();
-
-        let human_config = human_entropy::create_default_config();
-        let human_entropy_collector = Arc::new(
-            human_entropy::MultiModalHumanEntropyCollector::new(human_config),
-        );
-        Ok(EntropyHierarchyManager::new(
-            config,
-            human_entropy_collector,
-        ))
-    }
-    #[tokio::test]
-    async fn test_entropy_hierarchy_creation() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await?;
-
-        let stats = manager.get_statistics();
-        assert_eq!(stats.total_seeds, 0);
-        assert_eq!(stats.human_entropy_seeds, 0);
-
-        let health = manager.get_health_status();
-        assert!(matches!(
-            health.overall_health,
-            HealthLevel::Good | HealthLevel::Warning | HealthLevel::Poor
-        ));
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_human_entropy_seed_creation() -> Result<(), BearDogError> {
-        let mut manager = create_test_manager().await?;
-        let owner = HumanIdentity {
-            identity_id: "test_user".to_string(),
-            public_key: vec![0u8; 32],
-            biometric_hash: None,
-            verification_level: VerificationLevel::BasicBiometric,
-        };
-        let entropy_class = EntropyClass::HumanLivedExperience {
-            source_type: HumanEntropySource::Microphone {
-                duration_ms: 8000,
-                sample_rate: 44100,
-                spectral_features: (0..100).map(|i| i as f32 * 0.01).collect(), // 100 features for quality > 0.7
-            },
-            capture_timestamp: Utc::now(),
-            biometric_signature: BiometricHash(vec![0u8; 32]),
-            ownership_proof: OwnershipProof {
-                signature: vec![0u8; 64],
-                timestamp: Utc::now(),
-                verification_key: vec![0u8; 32],
-            },
-        };
-        let lifetime_policy = SeedLifetimePolicy::Persistent {
-            ownership_transfer_allowed: true,
-            ownership_expiration: None,
-        };
-        let seed_id = manager
-            .create_human_seed(entropy_class, lifetime_policy, owner, vec![1, 2, 3, 4, 5])
-            .await?;
-
-        let seed = manager.get_seed(&seed_id).ok_or_else(|| {
-            tracing::error!("Operation failed: seed not found");
-            beardog_errors::BearDogError::system("Operation failed: seed not found")
-        })?;
-        
-        assert!(matches!(
-            seed.entropy_class,
-            EntropyClass::HumanLivedExperience { .. }
-        ));
-        assert_eq!(manager.get_statistics().total_seeds, 1);
-        assert_eq!(manager.get_statistics().human_entropy_seeds, 1);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_event_seed_creation() -> Result<(), BearDogError> {
-        let owner = HumanIdentity {
-            identity_id: "concert_attendee".to_string(),
-            public_key: vec![0u8; 32],
-            biometric_hash: None,
-            verification_level: VerificationLevel::BasicBiometric,
-        };
-        let event_context = SocialContext {
-            event_type: EventType::Concert {
-                artist: "Artist Name".to_string(),
-                venue: "Concert Hall".to_string(),
-            },
-            location: Some("City, State".to_string()),
-            participants: vec![owner.clone()],
-            tags: vec!["music".to_string(), "live".to_string()],
-            event_timestamp: Utc::now(),
-            cultural_significance: Some("First post-pandemic concert".to_string()),
-        };
-        let sharing_policy = SharingPolicy {
-            max_shares: Some(100),
-            sharing_expiration: Some(Utc::now() + chrono::Duration::days(30)),
-            require_permission: false,
-            allowed_operations: vec!["derive_key".to_string()],
-        };
-        let mut manager = create_test_manager().await?;
-        let seed_id = manager
-            .create_event_seed(event_context, sharing_policy, owner, vec![1, 2, 3, 4, 5])
-            .await?;
-        let seed = manager.get_seed(&seed_id).unwrap();
-        assert!(seed.social_context.is_some());
-        assert_eq!(manager.get_statistics().event_seeds, 1);
-        Ok(())
+        let _manager = EntropyHierarchyManager::new(config);
     }
 
     #[test]
-    fn test_entropy_hierarchy_precedence() -> Result<(), BearDogError> {
-        let config = EntropyMixingConfig::default();
-        let mixer = EntropyMixingEngine::new(config);
-        let human_entropy = EntropyClass::HumanLivedExperience {
-            source_type: HumanEntropySource::Microphone {
-                duration_ms: 1000,
-                sample_rate: 44100,
-                spectral_features: vec![0.5],
-            },
-            capture_timestamp: Utc::now(),
-            biometric_signature: BiometricHash(vec![0u8; 32]),
-            ownership_proof: OwnershipProof {
-                signature: vec![0u8; 64],
-                timestamp: Utc::now(),
-                verification_key: vec![0u8; 32],
-            },
+    fn test_entropy_hierarchy_with_custom_config() {
+        let config = EntropyHierarchyConfig {
+            min_human_quality: 0.9,
+            min_machine_quality: 0.7,
+            max_entropy_age_hours: 48,
+            require_biometric_verification: false,
+            require_ownership_proof: false,
         };
-        let machine_entropy = EntropyClass::StoreBoughtMachine {
-            source_type: MachineEntropySource::Csprng {
-                algorithm: "ChaCha20".to_string(),
-                seed_source: "OS".to_string(),
-                state_size: 256,
-            },
-            generation_timestamp: Utc::now(),
-            reproducibility_index: 0.8,
-        };
-        let mixed = mixer
-            .mix_entropy_sources(vec![machine_entropy, human_entropy.clone()])
-            .map_err(|e| {
-                tracing::error!("Operation failed: {:?}", e);
-                beardog_errors::BearDogError::system(&format!("Operation failed: {:?}", e))
-            })?;
+        let manager = EntropyHierarchyManager::new(config.clone());
 
-        assert!(matches!(mixed, EntropyClass::HumanLivedExperience { .. }));
-        Ok(())
+        assert_eq!(manager.config.min_human_quality, 0.9);
+        assert_eq!(manager.config.min_machine_quality, 0.7);
+        assert_eq!(manager.config.max_entropy_age_hours, 48);
     }
 
-    #[tokio::test]
-    async fn test_seed_usage_and_lifecycle() -> Result<(), BearDogError> {
-        let owner = HumanIdentity {
-            identity_id: "lifecycle_test".to_string(),
-            public_key: vec![0u8; 32],
-            biometric_hash: None,
-            verification_level: VerificationLevel::CryptographicProof,
-        };
-        let entropy_class = EntropyClass::HumanLivedExperience {
-            source_type: HumanEntropySource::Biometric {
-                entropy_hash: vec![1, 2, 3],
-                biometric_type: "fingerprint".to_string(),
-                quality_score: 0.95,
-            },
+    #[test]
+    fn test_entropy_hierarchy_has_empty_seeds_initially() {
+        let config = EntropyHierarchyConfig::default();
+        let manager = EntropyHierarchyManager::new(config);
+
+        assert_eq!(manager.active_seeds.len(), 0);
+    }
+
+    // ========================================================================
+    // EntropyClass Tests
+    // ========================================================================
+
+    #[test]
+    fn test_entropy_class_human_lived_experience() {
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.95,
             capture_timestamp: Utc::now(),
-            biometric_signature: BiometricHash(vec![0u8; 32]),
-            ownership_proof: OwnershipProof {
-                signature: vec![0u8; 64],
-                timestamp: Utc::now(),
-                verification_key: vec![0u8; 32],
-            },
+            biometric_signature: BiometricHash::new(vec![1, 2, 3], vec![4, 5, 6]),
+            ownership_proof: OwnershipProof::new(vec![7, 8, 9], vec![10, 11, 12]),
         };
-        let lifetime_policy = SeedLifetimePolicy::SelfSovereign {
-            user_controlled_lifetime: true,
-            transfer_permissions: TransferPermissions {
-                transferable: true,
-                max_transfers: Some(3),
-                transfer_requires_approval: false,
-                transfer_audit_trail: true,
-            },
-            downstream_effects: DownstreamEffects {
-                inheritance_policy: InheritancePolicy::PreserveHumanClassification,
-                classification_preservation: true,
-                lineage_tracking: true,
-            },
-        };
-        let mut manager = create_test_manager().await?;
-        let seed_id = manager
-            .create_human_seed(
-                entropy_class,
-                lifetime_policy,
-                owner.clone(),
-                vec![5, 4, 3, 2, 1],
-            )
-            .await?;
 
-        let result = manager.use_seed(&seed_id, "key_derivation")?;
-        assert!(!result.is_empty());
-
-        let seed = manager.get_seed(&seed_id).unwrap();
-        assert_eq!(seed.usage_history.len(), 1);
-        assert_eq!(seed.get_entropy_tier(), 3); // Human-lived experience
-
-        if let Some(current_owner) = seed.get_current_owner() {
-            assert_eq!(current_owner.identity_id, "lifecycle_test");
+        if let EntropyClass::HumanLivedExperience { quality_score, .. } = entropy {
+            assert_eq!(quality_score, 0.95);
+        } else {
+            panic!("Expected HumanLivedExperience variant");
         }
-        Ok(())
     }
 
-    #[tokio::test]
-    async fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
-        let entropy_class = EntropyClass::HumanLivedExperience {
-            source_type: HumanEntropySource::Microphone {
-                duration_ms: 8000, // Increased duration for better quality
-                sample_rate: 44100,
-                spectral_features: (0..100).map(|i| i as f32 * 0.01).collect(),
-            },
-            capture_timestamp: Utc::now(),
-            biometric_signature: BiometricHash(vec![0u8; 32]),
-            ownership_proof: OwnershipProof {
-                signature: vec![0u8; 64],
-                timestamp: Utc::now(),
-                verification_key: vec![0u8; 32],
-            },
+    #[test]
+    fn test_entropy_class_human_supervised_machine() {
+        let human_id = HumanIdentity {
+            identity_id: "test-human-123".to_string(),
+            identity_hash: vec![1, 2, 3, 4],
+            verification_level: VerificationLevel::Enhanced,
+            verified_at: Utc::now(),
         };
-        let manager = create_test_manager().await?;
-        let assessment = manager.assess_entropy_quality(&entropy_class)?;
-        assert_eq!(assessment.entropy_tier, 3);
-        assert!(assessment.quality_score > 0.7);
-        assert!(!assessment.recommendations.is_empty());
-        Ok(())
+
+        let machine_source = MachineEntropySource {
+            source_type: MachineSourceType::CSPRNG {
+                algorithm: "ChaCha20".to_string(),
+                seed_source: "hardware".to_string(),
+            },
+            algorithm: "ChaCha20".to_string(),
+            seed_source: "hardware".to_string(),
+            quality_metrics: Default::default(),
+        };
+
+        let entropy = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.85,
+            machine_source,
+            human_validator: human_id,
+            validation_timestamp: Utc::now(),
+        };
+
+        if let EntropyClass::HumanSupervisedMachine { quality_score, .. } = entropy {
+            assert_eq!(quality_score, 0.85);
+        } else {
+            panic!("Expected HumanSupervisedMachine variant");
+        }
     }
 
-    #[tokio::test]
-    async fn test_health_monitoring() -> Result<(), BearDogError> {
-        let owner = HumanIdentity {
-            identity_id: "health_test_user".to_string(),
-            public_key: vec![0u8; 32],
-            biometric_hash: None,
-            verification_level: VerificationLevel::MultiFactorBiometric,
-        };
-        let entropy_class = EntropyClass::HumanLivedExperience {
-            source_type: HumanEntropySource::Haptic {
-                duration_ms: 3000,
-                touch_points: vec![(0.1, 0.2), (0.3, 0.4), (0.5, 0.6)],
-                motion_patterns: vec![0.1, 0.2, 0.3, 0.4, 0.5],
+    #[test]
+    fn test_entropy_class_store_bought_machine() {
+        let machine_source = MachineEntropySource {
+            source_type: MachineSourceType::CSPRNG {
+                algorithm: "MT19937".to_string(),
+                seed_source: "time".to_string(),
             },
+            algorithm: "MT19937".to_string(),
+            seed_source: "time".to_string(),
+            quality_metrics: Default::default(),
+        };
+
+        let entropy = EntropyClass::StoreBoughtMachine {
+            quality_score: 0.65,
+            source_type: machine_source,
+            generation_timestamp: Utc::now(),
+            reproducibility_index: 0.3,
+        };
+
+        if let EntropyClass::StoreBoughtMachine {
+            quality_score,
+            reproducibility_index,
+            ..
+        } = entropy
+        {
+            assert_eq!(quality_score, 0.65);
+            assert_eq!(reproducibility_index, 0.3);
+        } else {
+            panic!("Expected StoreBoughtMachine variant");
+        }
+    }
+
+    // ========================================================================
+    // EntropyClass Ordering Tests
+    // ========================================================================
+
+    #[test]
+    fn test_entropy_class_ordering_human_highest() {
+        let human = EntropyClass::HumanLivedExperience {
+            quality_score: 0.95,
             capture_timestamp: Utc::now(),
-            biometric_signature: BiometricHash(vec![0u8; 32]),
-            ownership_proof: OwnershipProof {
-                signature: vec![0u8; 64],
-                timestamp: Utc::now(),
-                verification_key: vec![0u8; 32],
+            biometric_signature: BiometricHash::new(vec![1], vec![2]),
+            ownership_proof: OwnershipProof::new(vec![3], vec![4]),
+        };
+
+        let machine_source = MachineEntropySource {
+            source_type: MachineSourceType::CSPRNG {
+                algorithm: "test".to_string(),
+                seed_source: "test".to_string(),
             },
+            algorithm: "test".to_string(),
+            seed_source: "test".to_string(),
+            quality_metrics: Default::default(),
         };
-        let mut manager = create_test_manager().await?;
-        let _seed1 = manager
-            .create_human_seed(
-                entropy_class,
-                SeedLifetimePolicy::Persistent {
-                    ownership_transfer_allowed: false,
-                    ownership_expiration: None,
-                },
-                owner.clone(),
-                vec![1, 2, 3],
-            )
-            .await?;
 
-        let social_context = SocialContext {
-            event_type: EventType::Community {
-                group_name: "BearDog Test Community".to_string(),
-                purpose: "Testing entropy diversity".to_string(),
+        let supervised = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.85,
+            machine_source: machine_source.clone(),
+            human_validator: HumanIdentity {
+                identity_id: "test".to_string(),
+                identity_hash: vec![1],
+                verification_level: VerificationLevel::Basic,
+                verified_at: Utc::now(),
             },
-            location: Some("Test Environment".to_string()),
-            participants: vec![owner.clone()],
-            tags: vec!["test".to_string(), "entropy".to_string()],
-            event_timestamp: Utc::now(),
-            cultural_significance: Some("Testing entropy system".to_string()),
+            validation_timestamp: Utc::now(),
         };
-        let sharing_policy = SharingPolicy {
-            max_shares: Some(5),
-            sharing_expiration: None,
-            require_permission: true,
-            allowed_operations: vec!["read".to_string(), "derive".to_string()],
+
+        assert!(human > supervised);
+    }
+
+    #[test]
+    fn test_entropy_class_ordering_supervised_higher_than_store_bought() {
+        let machine_source = MachineEntropySource {
+            source_type: MachineSourceType::CSPRNG {
+                algorithm: "test".to_string(),
+                seed_source: "test".to_string(),
+            },
+            algorithm: "test".to_string(),
+            seed_source: "test".to_string(),
+            quality_metrics: Default::default(),
         };
-        let _seed2 = manager
-            .create_event_seed(social_context, sharing_policy, owner.clone(), vec![4, 5, 6])
-            .await?;
 
-        let health = manager.get_health_status().await?;
-        assert!(!matches!(health.overall_health, HealthLevel::Poor));
+        let supervised = EntropyClass::HumanSupervisedMachine {
+            quality_score: 0.85,
+            machine_source: machine_source.clone(),
+            human_validator: HumanIdentity {
+                identity_id: "test".to_string(),
+                identity_hash: vec![1],
+                verification_level: VerificationLevel::Basic,
+                verified_at: Utc::now(),
+            },
+            validation_timestamp: Utc::now(),
+        };
 
-        let metrics = manager.get_performance_metrics();
-        assert!(metrics.total_seeds >= 2);
-        Ok(())
+        let store_bought = EntropyClass::StoreBoughtMachine {
+            quality_score: 0.65,
+            source_type: machine_source,
+            generation_timestamp: Utc::now(),
+            reproducibility_index: 0.3,
+        };
+
+        assert!(supervised > store_bought);
+    }
+
+    // ========================================================================
+    // BiometricHash Tests
+    // ========================================================================
+
+    #[test]
+    fn test_biometric_hash_creation() {
+        let hash = vec![1, 2, 3, 4, 5];
+        let proof = vec![6, 7, 8, 9, 10];
+
+        let biometric = BiometricHash::new(hash.clone(), proof.clone());
+
+        assert_eq!(biometric.hash, hash);
+        assert_eq!(biometric.ownership_proof, proof);
+    }
+
+    #[test]
+    fn test_biometric_hash_equality() {
+        let bio1 = BiometricHash::new(vec![1, 2, 3], vec![4, 5, 6]);
+        let bio2 = BiometricHash::new(vec![1, 2, 3], vec![4, 5, 6]);
+
+        assert_eq!(bio1, bio2);
+    }
+
+    #[test]
+    fn test_biometric_hash_inequality() {
+        let bio1 = BiometricHash::new(vec![1, 2, 3], vec![4, 5, 6]);
+        let bio2 = BiometricHash::new(vec![1, 2, 3], vec![4, 5, 7]); // Different proof
+
+        assert_ne!(bio1, bio2);
+    }
+
+    // ========================================================================
+    // OwnershipProof Tests
+    // ========================================================================
+
+    #[test]
+    fn test_ownership_proof_creation() {
+        let proof_data = vec![1, 2, 3];
+        let signature = vec![4, 5, 6];
+
+        let proof = OwnershipProof::new(proof_data.clone(), signature.clone());
+
+        assert_eq!(proof.proof_data, proof_data);
+        assert_eq!(proof.signature, signature);
+    }
+
+    #[test]
+    fn test_ownership_proof_has_timestamp() {
+        let proof = OwnershipProof::new(vec![1], vec![2]);
+        let now = Utc::now();
+
+        // Timestamp should be very recent
+        let diff = (now - proof.timestamp).num_seconds().abs();
+        assert!(diff < 2, "Timestamp should be within 2 seconds of now");
+    }
+
+    // ========================================================================
+    // HumanIdentity Tests
+    // ========================================================================
+
+    #[test]
+    fn test_human_identity_verification_levels() {
+        let basic = HumanIdentity {
+            identity_id: "user1".to_string(),
+            identity_hash: vec![1, 2, 3],
+            verification_level: VerificationLevel::Basic,
+            verified_at: Utc::now(),
+        };
+
+        assert_eq!(basic.verification_level, VerificationLevel::Basic);
+
+        let enhanced = HumanIdentity {
+            identity_id: "user2".to_string(),
+            identity_hash: vec![4, 5, 6],
+            verification_level: VerificationLevel::Enhanced,
+            verified_at: Utc::now(),
+        };
+
+        assert_eq!(enhanced.verification_level, VerificationLevel::Enhanced);
+
+        let maximum = HumanIdentity {
+            identity_id: "user3".to_string(),
+            identity_hash: vec![7, 8, 9],
+            verification_level: VerificationLevel::Maximum,
+            verified_at: Utc::now(),
+        };
+
+        assert_eq!(maximum.verification_level, VerificationLevel::Maximum);
+    }
+
+    // ========================================================================
+    // MachineSourceType Tests
+    // ========================================================================
+
+    #[test]
+    fn test_machine_source_type_csprng() {
+        let source = MachineSourceType::CSPRNG {
+            algorithm: "ChaCha20".to_string(),
+            seed_source: "hardware".to_string(),
+        };
+
+        if let MachineSourceType::CSPRNG {
+            algorithm,
+            seed_source,
+        } = source
+        {
+            assert_eq!(algorithm, "ChaCha20");
+            assert_eq!(seed_source, "hardware");
+        } else {
+            panic!("Expected CSPRNG variant");
+        }
+    }
+
+    #[test]
+    fn test_machine_source_type_hrng() {
+        let source = MachineSourceType::HRNG {
+            device_type: "TPM2.0".to_string(),
+            entropy_rate: 0.95,
+        };
+
+        if let MachineSourceType::HRNG {
+            device_type,
+            entropy_rate,
+        } = source
+        {
+            assert_eq!(device_type, "TPM2.0");
+            assert_eq!(entropy_rate, 0.95);
+        } else {
+            panic!("Expected HRNG variant");
+        }
+    }
+
+    #[test]
+    fn test_machine_source_type_trng() {
+        let source = MachineSourceType::TRNG {
+            source_type: "quantum".to_string(),
+            randomness_tests: vec!["diehard".to_string(), "nist".to_string()],
+        };
+
+        if let MachineSourceType::TRNG {
+            source_type,
+            randomness_tests,
+        } = source
+        {
+            assert_eq!(source_type, "quantum");
+            assert_eq!(randomness_tests.len(), 2);
+        } else {
+            panic!("Expected TRNG variant");
+        }
+    }
+
+    // ========================================================================
+    // HumanEntropyType Tests
+    // ========================================================================
+
+    #[test]
+    fn test_human_entropy_type_biometric() {
+        let entropy = HumanEntropyType::Biometric {
+            biometric_type: "fingerprint".to_string(),
+            quality_score: 0.92,
+        };
+
+        if let HumanEntropyType::Biometric {
+            biometric_type,
+            quality_score,
+        } = entropy
+        {
+            assert_eq!(biometric_type, "fingerprint");
+            assert_eq!(quality_score, 0.92);
+        } else {
+            panic!("Expected Biometric variant");
+        }
+    }
+
+    #[test]
+    fn test_human_entropy_type_behavioral() {
+        let entropy = HumanEntropyType::Behavioral {
+            pattern_type: "typing_rhythm".to_string(),
+            complexity_score: 0.88,
+        };
+
+        if let HumanEntropyType::Behavioral {
+            pattern_type,
+            complexity_score,
+        } = entropy
+        {
+            assert_eq!(pattern_type, "typing_rhythm");
+            assert_eq!(complexity_score, 0.88);
+        } else {
+            panic!("Expected Behavioral variant");
+        }
+    }
+
+    #[test]
+    fn test_human_entropy_type_creative() {
+        let entropy = HumanEntropyType::Creative {
+            expression_type: "drawing".to_string(),
+            uniqueness_score: 0.94,
+        };
+
+        if let HumanEntropyType::Creative {
+            expression_type,
+            uniqueness_score,
+        } = entropy
+        {
+            assert_eq!(expression_type, "drawing");
+            assert_eq!(uniqueness_score, 0.94);
+        } else {
+            panic!("Expected Creative variant");
+        }
+    }
+
+    // ========================================================================
+    // MixingStrategy Tests
+    // ========================================================================
+
+    #[test]
+    fn test_mixing_strategy_xor() {
+        let strategy = MixingStrategy::XorMix;
+
+        match strategy {
+            MixingStrategy::XorMix => {
+                // XorMix strategy correctly identified
+            }
+            _ => panic!("Expected XorMix variant"),
+        }
+    }
+
+    #[test]
+    fn test_mixing_strategy_hash() {
+        let strategy = MixingStrategy::HashMix {
+            hash_algorithm: "SHA3-512".to_string(),
+        };
+
+        if let MixingStrategy::HashMix { hash_algorithm } = strategy {
+            assert_eq!(hash_algorithm, "SHA3-512");
+        } else {
+            panic!("Expected HashMix variant");
+        }
+    }
+
+    #[test]
+    fn test_mixing_strategy_crypto() {
+        let strategy = MixingStrategy::CryptoMix {
+            cipher: "AES-256-GCM".to_string(),
+        };
+
+        if let MixingStrategy::CryptoMix { cipher } = strategy {
+            assert_eq!(cipher, "AES-256-GCM");
+        } else {
+            panic!("Expected CryptoMix variant");
+        }
+    }
+
+    // ========================================================================
+    // SeedMetadata Tests
+    // ========================================================================
+
+    #[test]
+    fn test_seed_metadata_no_expiry() {
+        let metadata = SeedMetadata {
+            created_at: Utc::now(),
+            expires_at: None,
+            usage_count: 0,
+            max_usage: None,
+        };
+
+        assert!(metadata.expires_at.is_none());
+        assert!(metadata.max_usage.is_none());
+        assert_eq!(metadata.usage_count, 0);
+    }
+
+    #[test]
+    fn test_seed_metadata_with_limits() {
+        let metadata = SeedMetadata {
+            created_at: Utc::now(),
+            expires_at: Some(Utc::now()),
+            usage_count: 5,
+            max_usage: Some(100),
+        };
+
+        assert!(metadata.expires_at.is_some());
+        assert_eq!(metadata.max_usage, Some(100));
+        assert_eq!(metadata.usage_count, 5);
+    }
+
+    // ========================================================================
+    // Config Tests
+    // ========================================================================
+
+    #[test]
+    fn test_entropy_config_default_values() {
+        let config = EntropyHierarchyConfig::default();
+
+        assert_eq!(config.min_human_quality, 0.8);
+        assert_eq!(config.min_machine_quality, 0.6);
+        assert_eq!(config.max_entropy_age_hours, 24);
+        assert!(config.require_biometric_verification);
+        assert!(config.require_ownership_proof);
+    }
+
+    #[test]
+    fn test_entropy_config_custom_quality_thresholds() {
+        let config = EntropyHierarchyConfig {
+            min_human_quality: 0.95,
+            min_machine_quality: 0.75,
+            max_entropy_age_hours: 12,
+            require_biometric_verification: false,
+            require_ownership_proof: true,
+        };
+
+        assert_eq!(config.min_human_quality, 0.95);
+        assert_eq!(config.min_machine_quality, 0.75);
+        assert!(!config.require_biometric_verification);
+    }
+
+    // ========================================================================
+    // Serialization Tests
+    // ========================================================================
+
+    #[test]
+    fn test_entropy_class_serialization() {
+        let entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.95,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash::new(vec![1, 2, 3], vec![4, 5, 6]),
+            ownership_proof: OwnershipProof::new(vec![7, 8, 9], vec![10, 11, 12]),
+        };
+
+        let serialized = serde_json::to_string(&entropy);
+        assert!(serialized.is_ok());
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = EntropyHierarchyConfig::default();
+
+        let serialized = serde_json::to_string(&config);
+        assert!(serialized.is_ok());
+
+        if let Ok(json) = serialized {
+            let deserialized: Result<EntropyHierarchyConfig, _> = serde_json::from_str(&json);
+            assert!(deserialized.is_ok());
+        }
     }
 }

@@ -1,88 +1,43 @@
-
+//! Software HSM configuration
 
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
+/// Software HSM configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SoftwareHsmConfig {
-
-    pub max_keys: usize,
-
-    pub key_derivation_iterations: u32,
-
-    pub enable_hardware_entropy: bool,
-
-    pub enable_human_entropy: bool,
-
-    pub max_entropy_pool_size: usize,
-
-    pub key_rotation_interval: Duration,
-
+    /// Provider identifier
+    pub provider_id: String,
+    /// Whether to enable attestation
     pub enable_attestation: bool,
-
-    pub optimization_level: OptimizationLevel,
-
-    pub security_level: SecurityLevelConfig,
+    /// Whether to enable entropy collection
+    pub enable_entropy: bool,
+    /// Key storage path
+    pub key_storage_path: String,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum OptimizationLevel {
-
-    Security,
-
-    Balanced,
-
-    Performance,
-
-impl Default for SoftwareHsmConfig {}
-
+impl Default for SoftwareHsmConfig {
     fn default() -> Self {
         Self {
-            max_keys: 10000,
-            key_derivation_iterations: 100_000,
-            enable_hardware_entropy: true,
-            enable_human_entropy: true,
-            max_entropy_pool_size: 4096,
-            key_rotation_interval: Duration::from_secs(86400 * 30), // 30 days
+            provider_id: "software-hsm".to_string(),
             enable_attestation: true,
-            optimization_level: OptimizationLevel::Balanced,
-            security_level: SecurityLevelConfig::default(),
+            enable_entropy: true,
+            key_storage_path: "/tmp/beardog/keys".to_string(),
         }
     }
-impl Default for SecurityLevelConfig {
-            constant_time: true,
-            memory_protection: true,
-            side_channel_protection: true,
-            timing_attack_protection: true,}
+}
 
 impl SoftwareHsmConfig {
-
-    pub fn security_focused() -> Self {
-            optimization_level: OptimizationLevel::Security,
-            security_level: SecurityLevelConfig {
-                constant_time: true,
-                memory_protection: true,
-                side_channel_protection: true,
-                timing_attack_protection: true,
-            },
+    /// Create new configuration
+    pub fn new(provider_id: impl Into<String>) -> Self {
+        Self {
+            provider_id: provider_id.into(),
             ..Default::default()
+        }
+    }
 
-    pub fn performance_focused() -> Self {
-            optimization_level: OptimizationLevel::Performance,
-            key_derivation_iterations: 50_000, // Reduced for performance
-                constant_time: false,
-                side_channel_protection: false,
-                timing_attack_protection: false,
-
-    pub fn validate(&self) -> Result<(), String> {
-        if self.max_keys == 0 {
-            return Err("max_keys must be greater than 0".to_string());
-        if self.key_derivation_iterations < 10_000 {
-            return Err(
-                "key_derivation_iterations must be at least 10,000 for security".to_string(),
-            );
-        if self.max_entropy_pool_size < 256 {
-            return Err("max_entropy_pool_size must be at least 256 bytes".to_string());
-        if self.key_rotation_interval < Duration::from_secs(3600) {
-            return Err("key_rotation_interval must be at least 1 hour".to_string());
-        Ok(())
+    /// Set key storage path
+    pub fn with_key_storage_path(mut self, path: impl Into<String>) -> Self {
+        self.key_storage_path = path.into();
+        self
+    }
+}

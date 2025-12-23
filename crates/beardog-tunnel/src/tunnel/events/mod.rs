@@ -1,11 +1,7 @@
-
-
-pub use capabilities::*;
-pub use compliance::*;
-pub use network::*;
-pub use security::*;
-pub use threat::*;
-pub use types::*;
+// Module declarations
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 pub mod capabilities;
 pub mod compliance;

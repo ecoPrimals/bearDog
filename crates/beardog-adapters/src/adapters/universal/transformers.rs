@@ -1,12 +1,20 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use serde_json;
 
 pub trait DataTransformer: Send + Sync {
     fn transform(&self, input: serde_json::Value) -> Result<serde_json::Value, BearDogError>;
 
+
     fn name(&self) -> &str;
 
+
     fn supported_inputs(&self) -> Vec<String>;
+
 
     fn supported_outputs(&self) -> Vec<String>;
 }
@@ -20,6 +28,8 @@ impl Default for PassThroughTransformer {
 }
 
 impl PassThroughTransformer {
+    /// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self
     }
@@ -30,13 +40,16 @@ impl DataTransformer for PassThroughTransformer {
         Ok(input)
     }
 
+
     fn name(&self) -> &str {
         "passthrough"
     }
 
+
     fn supported_inputs(&self) -> Vec<String> {
         vec!["json".to_string()]
     }
+
 
     fn supported_outputs(&self) -> Vec<String> {
         vec!["json".to_string()]
@@ -47,6 +60,8 @@ impl DataTransformer for PassThroughTransformer {
 pub struct JsonToYamlTransformer;
 
 impl JsonToYamlTransformer {
+    /// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self
     }
@@ -62,28 +77,35 @@ impl DataTransformer for JsonToYamlTransformer {
         }))
     }
 
+
     fn name(&self) -> &str {
         "json_to_yaml"
     }
 
+
     fn supported_inputs(&self) -> Vec<String> {
         vec!["json".to_string()]
     }
+
 
     fn supported_outputs(&self) -> Vec<String> {
         vec!["yaml".to_string()]
     }
 }
 
-pub struct KubernetesResourceTransformer;
+pub struct UniversalContainerResourceTransformer {
+    provider_type: String,
+}
 
-impl Default for KubernetesResourceTransformer {
+impl Default for UniversalContainerResourceTransformer {
     fn default() -> Self {
-        Self
+        Self {
+            provider_type: "universal-container-orchestration".to_string(),
+        }
     }
 }
 
-impl DataTransformer for KubernetesResourceTransformer {
+impl DataTransformer for UniversalContainerResourceTransformer {
     fn transform(&self, input: serde_json::Value) -> Result<serde_json::Value, BearDogError> {
         let resource_type = input
             .get("type")
@@ -107,7 +129,7 @@ impl DataTransformer for KubernetesResourceTransformer {
                     "namespace": namespace,
                     "labels": {
                         "app": name,
-                        "managed-by": "beardog"
+                        "managed-by": "beardog "
                     }
                 },
                 "spec": input.get("spec").cloned().unwrap_or_else(|| serde_json::json!({
@@ -132,40 +154,48 @@ impl DataTransformer for KubernetesResourceTransformer {
                     }
                 }))
             })),
-            "service" => Ok(serde_json::json!({
-                "apiVersion": "v1",
-                "kind": "Service",
-                "metadata": {
-                    "name": name,
-                    "labels": {
-                        "app": name
-                    }
-                },
-                "spec": {
-                    "selector": {
-                        "app": name
+            "service " => {
+                let network_config =
+                    beardog_types::canonical::config::network::NetworkConfig::default();
+                Ok(serde_json::json!({
+                    "apiVersion": "v1",
+                    "kind": "Service",
+                    "metadata": {
+                        "name": name,
+                        "namespace": "beardog "
                     },
-                    "ports": [{
-                        "port": 80,
-                        "targetPort": 8080
-                    }]
-                }
-            })),
+                    "spec": {
+                        "selector": {
+                            "app": name
+                        },
+                        "ports": [{
+                            "port": 80,
+                            "targetPort": network_config.service_ports.api_port
+                        }]
+                    }
+                }))
+            }
             _ => Err(BearDogError::invalid_input(format!(
-                "Unsupported Kubernetes resource type: {resource_type}"
+                "Unsupported container orchestration resource type: {resource_type}"
             ))),
         }
     }
 
+
     fn name(&self) -> &str {
-        "kubernetes_resource"
+        "universal_container_resource"
     }
+
 
     fn supported_inputs(&self) -> Vec<String> {
         vec!["beardog_resource".to_string()]
     }
 
+
     fn supported_outputs(&self) -> Vec<String> {
-        vec!["kubernetes_manifest".to_string()]
+        vec![
+            "container_manifest".to_string(),
+            "kubernetes_manifest".to_string(),
+        ]
     }
 }

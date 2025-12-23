@@ -1,0 +1,37 @@
+# BearDog Profiling Configuration
+
+[general]
+output_dir = "./profiling/reports"
+flamegraph_dir = "./profiling/flamegraphs"
+
+[flamegraph]
+# Frequency of sampling (Hz)
+frequency = 997
+# Enable debug symbols
+debug_symbols = true
+# Minimum function duration to include (microseconds)
+min_duration_us = 100
+
+[benchmark]
+# Number of iterations for benchmarks
+iterations = 1000
+# Warmup iterations
+warmup_iterations = 100
+
+[targets]
+# High-priority targets for profiling
+hot_paths = [
+    "beardog_adapters::universal::capability_based_adapter",
+    "beardog_core::service_discovery",
+    "beardog_tunnel::universal_hsm",
+    "beardog_security::crypto_operations",
+]
+
+[clone_analysis]
+# Focus areas for clone optimization
+focus_areas = [
+    "Arc<RwLock<HashMap>>",
+    "String::clone",
+    "Vec::clone",
+    "Configuration cloning",
+]

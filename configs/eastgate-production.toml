@@ -1,0 +1,108 @@
+# BearDog Configuration - Eastgate Production
+# Real hardware configuration for i9-12900K with 4x SoloKey V2
+
+[system]
+name = "eastgate"
+platform = "linux-x86_64"
+cores = 20
+model = "Intel i9-12900K"
+
+[hsm]
+# Enable hardware security modules
+enabled = true
+require_hardware = true
+
+[hsm.pkcs11]
+# Enable PKCS#11 interface for SoloKeys
+enabled = true
+
+# PKCS#11 library paths (tried in order)
+library_paths = [
+    "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so",
+    "/usr/lib/x86_64-linux-gnu/pkcs11/opensc-pkcs11.so",
+    "/usr/lib/softhsm/libsofthsm2.so",
+]
+
+# Explicit device configuration (optional - auto-discover if not specified)
+[[hsm.pkcs11.devices]]
+slot = 0
+label = "SoloKey-01"
+purpose = "entropy"
+priority = 1
+
+[[hsm.pkcs11.devices]]
+slot = 1
+label = "SoloKey-02"
+purpose = "entropy"
+priority = 1
+
+[[hsm.pkcs11.devices]]
+slot = 2
+label = "SoloKey-03"
+purpose = "entropy"
+priority = 1
+
+[[hsm.pkcs11.devices]]
+slot = 3
+label = "SoloKey-04"
+purpose = "entropy"
+priority = 1
+
+[entropy]
+# Entropy collection and mixing configuration
+mixing_algorithm = "sha3-512"  # Cryptographically secure mixing
+min_sources = 2                # Require at least 2 sources
+require_hardware = true        # Only use hardware entropy
+bytes_per_source = 256         # Collect 256 bytes from each source
+
+# Quality thresholds
+min_unique_bytes = 200         # At least 200/256 unique byte values
+min_entropy_bits = 7.5         # At least 7.5 bits of entropy per byte
+
+[network]
+# Network configuration (for future cross-device mixing)
+api_enabled = false
+api_host = "0.0.0.0"
+api_port = 8443
+tls_enabled = true
+
+[logging]
+level = "info"
+format = "json"
+output = "stdout"
+
+[security]
+# Security policies
+allow_software_fallback = false  # Never fall back to software entropy
+require_attestation = false      # Don't require device attestation yet
+audit_all_operations = true      # Log all HSM operations
+
+[features]
+# Feature flags
+multi_device_mixing = true       # Enable mixing from multiple devices
+cross_platform_sync = false      # Not yet implemented
+network_distribution = false     # Not yet implemented
+
+[genetics]
+# Genetic crypto and key evolution
+entropy_collection_enabled = true        # Enable genetic entropy collection
+genetic_spawning_enabled = true          # Enable genetic algorithm spawning
+ecosystem_evolution_enabled = true       # Enable ecosystem evolution
+human_entropy_validation = true          # Validate human entropy quality
+authorization_genetics_enabled = true    # Enable genetic authorization
+
+# Advanced genetic algorithms
+enable_genetic_key_evolution = true      # Enable genetic key evolution (Phase 2)
+genetic_key_rotation_enabled = true      # Enable automatic key rotation
+genetic_mutation_rate = 0.05             # Mutation rate for genetic algorithms
+genetic_crossover_rate = 0.8             # Crossover rate for evolution
+genetic_population_size = 100            # Population size for evolution
+genetic_max_generations = 1000           # Maximum generations for optimization
+genetic_fitness_threshold = 0.95         # Fitness threshold for convergence
+
+# Ecosystem genetic spawning
+enable_ecosystem_spawning = true         # Enable ecosystem-aware spawning
+coordination_mutation_rate = 0.1         # Coordination evolution rate
+inter_primal_evolution_rate = 0.05       # Inter-primal evolution rate
+max_ecosystem_size = 100                 # Maximum ecosystem size
+

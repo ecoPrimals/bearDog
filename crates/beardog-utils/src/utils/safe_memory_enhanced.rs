@@ -1,10 +1,20 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+// Re-export buffer size constants from centralized location
+pub use beardog_types::constants::domains::buffers::{
+    BUFFER_SIZE_LARGE as LARGE, BUFFER_SIZE_MEDIUM as MEDIUM, BUFFER_SIZE_SMALL as SMALL,
+};
+
 pub mod buffer_sizes {
-    pub const SMALL: usize = 1024;
-    pub const MEDIUM: usize = 4096;
-    pub const LARGE: usize = 16384;
+    // Re-export for backward compatibility
+    pub use beardog_types::constants::domains::buffers::{
+        BUFFER_SIZE_LARGE as LARGE, BUFFER_SIZE_MEDIUM as MEDIUM, BUFFER_SIZE_SMALL as SMALL,
+    };
 }
 
 pub struct SafePinnedBuffer {
@@ -13,6 +23,8 @@ pub struct SafePinnedBuffer {
 }
 
 impl SafePinnedBuffer {
+    /// Creates a new instance
+    #[must_use]
     pub fn new(size: usize) -> Self {
         Self {
             data: vec![0u8; size],
@@ -20,14 +32,17 @@ impl SafePinnedBuffer {
         }
     }
 
+    #[must_use]
     pub fn named(size: usize, _name: &str) -> Self {
         Self::new(size)
     }
 
-    pub fn size(&self) -> usize {
+    #[must_use]
+    pub const fn size(&self) -> usize {
         self.size
     }
 
+    /// Creates instance with slice
     pub fn with_slice<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&[u8]) -> R,
@@ -35,6 +50,7 @@ impl SafePinnedBuffer {
         f(&self.data)
     }
 
+    /// Creates instance with mut slice
     pub fn with_mut_slice<F, R>(&mut self, f: F) -> R
     where
         F: FnOnce(&mut [u8]) -> R,
@@ -54,29 +70,37 @@ impl<const SIZE: usize> Default for SafePooledBuffer<SIZE> {
 }
 
 impl<const SIZE: usize> SafePooledBuffer<SIZE> {
+    /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             buffer: SafePinnedBuffer::new(SIZE),
         }
     }
 
-    pub fn buffer(&self) -> &SafePinnedBuffer {
+    #[must_use]
+    pub const fn buffer(&self) -> &SafePinnedBuffer {
         &self.buffer
     }
 
+    /// Returns mutable reference to buffer
     pub fn buffer_mut(&mut self) -> &mut SafePinnedBuffer {
         &mut self.buffer
     }
 
-    pub fn size(&self) -> usize {
+    #[must_use]
+    pub const fn size(&self) -> usize {
         SIZE
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct BufferPoolMetrics {
+    /// Number of `total_requests`
     pub total_requests: u64,
+    /// Number of `cache_hits`
     pub cache_hits: u64,
+    /// Number of `cache_misses`
     pub cache_misses: u64,
 }
 
@@ -87,7 +111,9 @@ impl Default for BufferPoolMetrics {
 }
 
 impl BufferPoolMetrics {
-    pub fn new() -> Self {
+    /// Creates a new instance
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             total_requests: 0,
             cache_hits: 0,
@@ -95,6 +121,7 @@ impl BufferPoolMetrics {
         }
     }
 
+    #[must_use]
     pub fn hit_rate(&self) -> f64 {
         if self.total_requests == 0 {
             0.0
@@ -110,6 +137,8 @@ pub struct SafeBufferPool<const SIZE: usize> {
 }
 
 impl<const SIZE: usize> SafeBufferPool<SIZE> {
+    /// Creates a new instance
+    #[must_use]
     pub fn new(initial_capacity: usize) -> Self {
         let mut available = Vec::with_capacity(initial_capacity);
         for _ in 0..initial_capacity {
@@ -122,6 +151,8 @@ impl<const SIZE: usize> SafeBufferPool<SIZE> {
         }
     }
 
+    /// Gets buffer
+    /// Gets buffer
     pub async fn get_buffer(&self) -> SafePooledBuffer<SIZE> {
         if let Some(_buffer) = self.available.lock().await.pop() {
             let mut metrics = self.metrics.lock().await;
@@ -154,6 +185,8 @@ impl Default for EnhancedMemoryPools {
 }
 
 impl EnhancedMemoryPools {
+    /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             small_pool: SafeBufferPool::new(10),
@@ -162,14 +195,20 @@ impl EnhancedMemoryPools {
         }
     }
 
+    /// Gets small
+    /// Gets small
     pub async fn get_small(&self) -> SafePooledBuffer<{ buffer_sizes::SMALL }> {
         self.small_pool.get_buffer().await
     }
 
+    /// Gets medium
+    /// Gets medium
     pub async fn get_medium(&self) -> SafePooledBuffer<{ buffer_sizes::MEDIUM }> {
         self.medium_pool.get_buffer().await
     }
 
+    /// Gets large
+    /// Gets large
     pub async fn get_large(&self) -> SafePooledBuffer<{ buffer_sizes::LARGE }> {
         self.large_pool.get_buffer().await
     }
@@ -193,6 +232,7 @@ impl EnhancedMemoryPools {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -203,11 +243,17 @@ mod tests {
         let _buffer1 = pool.get_buffer().await;
         let _buffer2 = pool.get_buffer().await;
         assert!(pool.metrics().await.total_requests >= 2);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 
     #[tokio::test]
     async fn test_enhanced_memory_pools() {
         let pools = EnhancedMemoryPools::new();
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         let small = pools.get_small().await;
         let medium = pools.get_medium().await;
         let large = pools.get_large().await;
@@ -218,6 +264,9 @@ mod tests {
         assert!(metrics.total_requests >= 3);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_safe_pinned_buffer_operations() {
         let mut buffer = SafePinnedBuffer::new(1024);

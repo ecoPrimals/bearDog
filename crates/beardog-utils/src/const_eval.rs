@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use beardog_errors::BearDogError;
 use std::marker::PhantomData;
 
@@ -44,30 +48,39 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
         })
     }
 
+    #[must_use]
     pub const fn buffer_size(&self) -> usize {
         B
     }
 
+    #[must_use]
     pub const fn cache_size(&self) -> usize {
         C
     }
 
+    #[must_use]
     pub const fn logging_enabled(&self) -> bool {
         L
     }
 
+    #[must_use]
     pub const fn hash_rounds(&self) -> u32 {
         H
     }
 
+    #[must_use]
     pub const fn total_memory_usage(&self) -> usize {
         B * C + C * 64 // Buffer size + cache overhead
     }
 
+    /// Validates input
+    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.total_memory_usage() > 100 * 1024 * 1024 {
             // 100MB limit
-            return Err(BearDogError::validation("Configuration exceeds memory limit"));
+            return Err(BearDogError::validation(
+                "Configuration exceeds memory limit",
+            ));
         }
 
         if B > 1024 * 1024 {
@@ -81,6 +94,7 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
 pub struct ConstMath;
 
 impl ConstMath {
+    #[must_use]
     pub const fn factorial(n: u64) -> u64 {
         match n {
             0 | 1 => 1,
@@ -88,6 +102,7 @@ impl ConstMath {
         }
     }
 
+    #[must_use]
     pub const fn pow(base: u64, exp: u32) -> u64 {
         match exp {
             0 => 1,
@@ -103,6 +118,7 @@ impl ConstMath {
         }
     }
 
+    #[must_use]
     pub const fn gcd(a: u64, b: u64) -> u64 {
         if b == 0 {
             a
@@ -111,10 +127,12 @@ impl ConstMath {
         }
     }
 
+    #[must_use]
     pub const fn lcm(a: u64, b: u64) -> u64 {
         (a * b) / Self::gcd(a, b)
     }
 
+    #[must_use]
     pub const fn is_prime(n: u64) -> bool {
         if n < 2 {
             return false;
@@ -136,6 +154,7 @@ impl ConstMath {
         true
     }
 
+    #[must_use]
     pub const fn fibonacci(n: u32) -> u64 {
         match n {
             0 => 0,
@@ -150,7 +169,8 @@ pub struct ConstTables;
 impl ConstTables {
     pub const CRC32_TABLE: [u32; 256] = Self::generate_crc32_table();
 
-    pub const SINE_TABLE: [f32; 360] = Self::generate_sine_table();
+    // Reference centralized sine table
+    pub const SINE_TABLE: [f32; 360] = beardog_types::constants::domains::math::SINE_TABLE_360;
 
     pub const PRIMES_1000: [u16; 168] = Self::generate_primes_1000();
 
@@ -164,7 +184,7 @@ impl ConstTables {
 
             while j < 8 {
                 if crc & 1 != 0 {
-                    crc = (crc >> 1) ^ 0xEDB88320;
+                    crc = (crc >> 1) ^ 0xEDB8_8320;
                 } else {
                     crc >>= 1;
                 }
@@ -178,27 +198,8 @@ impl ConstTables {
         table
     }
 
-    const fn generate_sine_table() -> [f32; 360] {
-        let mut table = [0.0f32; 360];
-        let mut i = 0;
-
-        while i < 360 {
-            let angle_rad = (i as f32) * std::f32::consts::PI / 180.0;
-            table[i] = Self::const_sin(angle_rad);
-            i += 1;
-        }
-
-        table
-    }
-
-    const fn const_sin(x: f32) -> f32 {
-        let x2 = x * x;
-        let x3 = x2 * x;
-        let x5 = x3 * x2;
-        let x7 = x5 * x2;
-
-        x - (x3 / 6.0) + (x5 / 120.0) - (x7 / 5040.0)
-    }
+    // Note: generate_sine_table and const_sin moved to beardog-types/constants/domains/math.rs
+    // We now reference the centralized SINE_TABLE_360 instead
 
     const fn generate_primes_1000() -> [u16; 168] {
         let mut primes = [0u16; 168];
@@ -216,25 +217,30 @@ impl ConstTables {
         primes
     }
 
-    pub fn crc32(data: &[u8]) -> u32 {
-        let mut crc = 0xFFFFFFFF;
+    #[must_use]
+    pub fn crc32(input_bytes: &[u8]) -> u32 {
+        let mut crc = 0xFFFF_FFFF;
 
-        for &byte in data {
-            let index = ((crc ^ byte as u32) & 0xFF) as usize;
+        for &byte in input_bytes {
+            let index = ((crc ^ u32::from(byte)) & 0xFF) as usize;
             crc = (crc >> 8) ^ Self::CRC32_TABLE[index];
         }
 
         !crc
     }
 
-    pub fn fast_sin(degrees: u16) -> f32 {
+    #[must_use]
+    pub const fn fast_sin(degrees: u16) -> f32 {
         let index = (degrees % 360) as usize;
         Self::SINE_TABLE[index]
     }
 
+    /// Checks if small prime
+    /// Checks if small prime
+    #[must_use]
     pub fn is_small_prime(n: u16) -> bool {
         if n > 1000 {
-            return ConstMath::is_prime(n as u64);
+            return ConstMath::is_prime(u64::from(n));
         }
 
         Self::PRIMES_1000.contains(&n)
@@ -244,14 +250,17 @@ impl ConstTables {
 pub struct ConstStr;
 
 impl ConstStr {
+    #[must_use]
     pub const fn len(s: &str) -> usize {
         s.len()
     }
 
+    #[must_use]
     pub const fn is_empty(s: &str) -> bool {
         s.len() == 0
     }
 
+    #[must_use]
     pub const fn eq(a: &str, b: &str) -> bool {
         if a.len() != b.len() {
             return false;
@@ -271,6 +280,7 @@ impl ConstStr {
         true
     }
 
+    #[must_use]
     pub const fn hash(s: &str) -> u64 {
         let bytes = s.as_bytes();
         let mut hash = 0u64;
@@ -306,29 +316,34 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
         })
     }
 
+    #[must_use]
     pub const fn capacity(&self) -> usize {
         SIZE
     }
 
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.len
     }
 
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    #[must_use]
     pub const fn is_full(&self) -> bool {
         self.len == SIZE
     }
 
+    #[must_use]
     pub const fn remaining(&self) -> usize {
         SIZE - self.len
     }
 
     pub fn push(&mut self, byte: u8) -> Result<(), BearDogError> {
         if self.len >= SIZE {
-            return Err(BearDogError::system("Buffer full"));
+            return Err(BearDogError::system("Buffer full".to_string()));
         }
 
         self.data[self.len] = byte;
@@ -345,6 +360,8 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
         Some(self.data[self.len])
     }
 
+    /// Returns as slice
+    #[must_use]
     pub fn as_slice(&self) -> &[u8] {
         &self.data[..self.len]
     }
@@ -395,6 +412,7 @@ macro_rules! const_config {
 pub struct ConstMetrics;
 
 impl ConstMetrics {
+    #[must_use]
     pub const fn theoretical_throughput(
         buffer_size: usize,
         processing_time_ns: u64,
@@ -406,6 +424,7 @@ impl ConstMetrics {
         items_per_buffer as u64 * buffers_per_second * parallelism as u64
     }
 
+    #[must_use]
     pub const fn memory_requirements(
         buffer_size: usize,
         buffer_count: usize,
@@ -420,6 +439,7 @@ impl ConstMetrics {
     }
 }
 
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -436,9 +456,12 @@ mod tests {
 
         assert_eq!(config.buffer_size(), 8192);
         assert_eq!(config.cache_size(), 512);
-        assert_eq!(config.logging_enabled(), true);
+        assert!(config.logging_enabled());
         assert_eq!(config.hash_rounds(), 12);
     }
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     #[test]
     fn test_const_math() {
@@ -446,12 +469,15 @@ mod tests {
         assert_eq!(ConstMath::pow(2, 10), 1024);
         assert_eq!(ConstMath::gcd(48, 18), 6);
         assert_eq!(ConstMath::lcm(4, 6), 12);
-        assert_eq!(ConstMath::is_prime(17), true);
-        assert_eq!(ConstMath::is_prime(18), false);
+        assert!(ConstMath::is_prime(17));
+        assert!(!ConstMath::is_prime(18));
         assert_eq!(ConstMath::fibonacci(10), 55);
     }
 
     #[test]
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     fn test_const_tables() {
         let data = b"Hello, World!";
         let crc = ConstTables::crc32(data);
@@ -460,10 +486,13 @@ mod tests {
         let sin_0 = ConstTables::fast_sin(0);
         let sin_90 = ConstTables::fast_sin(90);
         assert!((sin_0 - 0.0).abs() < 0.1);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
         assert!((sin_90 - 1.0).abs() < 0.1);
 
-        assert_eq!(ConstTables::is_small_prime(17), true);
-        assert_eq!(ConstTables::is_small_prime(18), false);
+        assert!(ConstTables::is_small_prime(17));
+        assert!(!ConstTables::is_small_prime(18));
     }
 
     #[test]
@@ -472,6 +501,9 @@ mod tests {
             tracing::error!("Operation failed ({}): {:?}", "Valid buffer", e);
             beardog_errors::BearDogError::internal(
                 format_args!("Operation failed ({}): {:?}", "Valid buffer", e).to_string(),
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: core
+                // TEST_PRIORITY: normal
             )
         })?;
 
@@ -502,10 +534,13 @@ mod tests {
     #[test]
     fn test_const_str() {
         assert_eq!(ConstStr::len("hello"), 5);
-        assert_eq!(ConstStr::is_empty(""), true);
-        assert_eq!(ConstStr::is_empty("hello"), false);
-        assert_eq!(ConstStr::eq("hello", "hello"), true);
-        assert_eq!(ConstStr::eq("hello", "world"), false);
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
+        assert!(ConstStr::is_empty(""));
+        assert!(!ConstStr::is_empty("hello"));
+        assert!(ConstStr::eq("hello", "hello"));
+        assert!(!ConstStr::eq("hello", "world"));
 
         let hash1 = ConstStr::hash("test");
         let hash2 = ConstStr::hash("test");
@@ -514,6 +549,9 @@ mod tests {
         assert_ne!(hash1, hash3);
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_const_metrics() {
         let throughput = ConstMetrics::theoretical_throughput(8192, 1000, 4);

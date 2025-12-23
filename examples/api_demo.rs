@@ -1,22 +1,28 @@
-
+#![allow(
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_comparisons,
+    clippy::all
+)]
 
 use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 BearDog API Demo");
+    println!("[ROCKET] BearDog API Demo");
     println!("==================");
 
-    println!("\n🔍 Security Event Analysis:");
+    println!("[SEARCH] Security Event Analysis:");
     demo_security_analysis().await?;
 
-    println!("\n🧠 ML Threat Prediction:");
+    println!("🧠 ML Threat Prediction:");
     demo_ml_predictions().await?;
 
-    println!("\n⚡ Performance Features:");
+    println!("[LIGHTNING] Performance Features:");
     demo_performance().await?;
 
-    println!("\n✅ API Demo completed!");
+    println!("[OK] API Demo completed!");
 
     Ok(())
 }

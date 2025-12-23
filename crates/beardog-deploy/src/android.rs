@@ -1,222 +1,319 @@
-use anyhow::Result;
+// Android deployment and build verification
+//
+// This module provides comprehensive Android deployment capabilities including
+// Rust toolchain verification, NDK setup, and cargo-ndk installation.
+// All operations maintain sovereignty compliance and zero hardcoded assumptions.
+
 use beardog_errors::BearDogError;
-use std::{
-    env,
-    path::{Path, PathBuf},
-    process::Stdio,
-};
-use tokio::process::Command;
-use tracing::{debug, info, warn};
+use std::process::Command;
+use tracing::{info, warn};
 
+type Result<T> = std::result::Result<T, BearDogError>;
+
+/// Android deployment manager
+///
+/// Handles all aspects of Android deployment including toolchain verification,
+/// NDK setup, and build environment preparation.
 #[derive(Debug)]
-
-pub struct AndroidManager {
-    project_root: PathBuf,
-    ndk_home: Option<PathBuf>,
+pub struct AndroidDeployment {
+    /// Android NDK path (if configured)
+    ndk_path: Option<String>,
+    /// Target Android API level
+    #[allow(dead_code)] // Will be used in future API-level specific operations
+    api_level: u32,
 }
-impl AndroidManager {
-    pub fn new(project_root: PathBuf) -> Self {
-        let ndk_home = env::var("ANDROID_NDK_HOME")
-            .or_else(|_| env::var("NDK_HOME"))
-            .map(PathBuf::from)
-            .ok();
+
+impl AndroidDeployment {
+    /// Creates a new Android deployment manager
+    ///
+    /// # Arguments
+    /// * `ndk_path` - Optional path to Android NDK
+    /// * `api_level` - Target Android API level
+    ///
+    /// # Returns
+    /// A new `AndroidDeployment` instance
+    #[must_use]
+    pub const fn new(ndk_path: Option<String>, api_level: u32) -> Self {
         Self {
-            project_root,
-            ndk_home,
+            ndk_path,
+            api_level,
         }
     }
 
-    pub async fn check_prerequisites(&self) -> Result<()> {
-        info!("🔍 Checking Android development prerequisites...");
+    /// Verifies the complete Android build environment
+    ///
+    /// including Rust toolchain, Android NDK, and cargo-ndk installation.
+    ///
+    /// # Returns
+    /// `Ok(())` if all components are properly configured
+    ///
+    /// # Errors
+    /// Returns error if any required component is missing or misconfigured
+    pub fn verify_environment(&self) -> Result<()> {
+        info!("🤖 Verifying Android deployment environment");
 
-        self.check_rust().await?;
-        info!("✅ Rust toolchain available");
+        // Verify all components in sequence
+        self.verify_all_components()?;
 
-        self.check_ndk()?;
-        info!("✅ Android NDK available");
-
-        self.check_cargo_ndk().await?;
-        info!("✅ cargo-ndk available");
-
-        self.check_adb().await?;
-        info!("✅ ADB available");
+        info!("✅ Android deployment environment verified successfully");
         Ok(())
     }
 
-    pub async fn setup_build_environment(&self) -> Result<()> {
-        info!("🦀 Setting up Rust Android build environment...");
-
-        self.add_android_target("aarch64-linux-android").await?;
-        info!("✅ Android target added");
-
-        self.setup_ndk_environment()?;
-        info!("✅ NDK environment configured");
+    /// Verifies all Android deployment components
+    ///
+    /// # Returns
+    /// `Ok(())` if all components are verified
+    ///
+    /// # Errors
+    /// Returns error if any component verification fails
+    fn verify_all_components(&self) -> Result<()> {
+        Self::verify_rust_installation()?;
+        self.verify_android_ndk()?;
+        Self::verify_cargo_ndk()?;
         Ok(())
     }
 
-    async fn check_rust(&self) -> Result<()> {
-        let output = Command::new("rustc")
-            .arg("--version")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .await
-            .map_err(|_| BearDogError::system("rustc not found in PATH"))?;
-        if !output.status.success() {
-            return Err(BearDogError::system("rustc command failed").into());
-        }
-        debug!("Rust version: {}", String::from_utf8_lossy(&output.stdout));
-        Ok(())
-    }
+    /// Verifies Rust installation and Android targets
+    ///
+    /// Checks that Rust is installed and that required Android targets are available.
+    /// Installs missing targets automatically if needed.
+    ///
+    /// # Returns
+    /// `Ok(())` if Rust and Android targets are properly configured
+    ///
+    /// # Errors
+    /// Returns error if Rust is not installed or target installation fails
+    fn verify_rust_installation() -> Result<()> {
+        info!("🦀 Checking Rust installation");
 
-    fn check_ndk(&self) -> Result<()> {
-        let ndk_home = self
-            .ndk_home
-            .as_ref()
-            .ok_or_else(|| BearDogError::system("ANDROID_NDK_HOME not set"))?;
-        if !ndk_home.exists() {
-            return Err(BearDogError::system(format!(
-                "NDK directory does not exist: {}",
-                ndk_home.display()
-            ))
-            .into());
-        }
+        // Check basic Rust installation
+        Self::check_rust_compiler()?;
 
-        let toolchain_dir = ndk_home.join("toolchains/llvm/prebuilt");
-        if !toolchain_dir.exists() {
-            return Err(BearDogError::system("NDK toolchain directory not found").into());
-        }
-        debug!("NDK found at: {}", ndk_home.display());
-        Ok(())
-    }
-
-    async fn check_cargo_ndk(&self) -> Result<()> {
-        match Command::new("cargo-ndk").arg("--version").output().await {
-            Ok(output) if output.status.success() => {
-                debug!(
-                    "cargo-ndk version: {}",
-                    String::from_utf8_lossy(&output.stdout)
-                );
-                Ok(())
-            }
-            _ => {
-                warn!("cargo-ndk not found, installing...");
-                self.install_cargo_ndk().await
-            }
-        }
-    }
-    async fn install_cargo_ndk(&self) -> Result<()> {
-        info!("📦 Installing cargo-ndk...");
-        let output = Command::new("cargo")
-            .args(["install", "cargo-ndk"])
-            .output()
-            .await
-            .map_err(|e| BearDogError::system(format!("Failed to install cargo-ndk: {e}")))?;
-
-        if !output.status.success() {
-            return Err(BearDogError::system(format!(
-                "cargo-ndk installation failed: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ))
-            .into());
-        }
-        Ok(())
-    }
-
-    async fn check_adb(&self) -> Result<()> {
-        let output = Command::new("adb")
-            .arg("version")
-            .output()
-            .await
-            .map_err(|_| BearDogError::system("adb not found in PATH"))?;
-
-        if !output.status.success() {
-            return Err(BearDogError::system("adb command failed").into());
-        }
-        debug!("ADB version: {}", String::from_utf8_lossy(&output.stdout));
-        Ok(())
-    }
-
-    async fn add_android_target(&self, target: &str) -> Result<()> {
-        let output = Command::new("rustup")
-            .args(["target", "list", "--installed"])
-            .output()
-            .await
-            .map_err(|e| BearDogError::system(format!("Failed to list targets: {e}")))?;
-        let installed_targets = String::from_utf8_lossy(&output.stdout);
-        if installed_targets.contains(target) {
-            debug!("Target {} already installed", target);
+        // Check rustup for target management
+        if !Self::check_rustup_available() {
+            warn!("rustup not available, cannot manage Android targets automatically");
             return Ok(());
         }
 
-        info!("📱 Adding Android target: {}", target);
+        // Verify and install Android targets
+        Self::verify_android_targets()?;
+
+        info!("✅ Rust installation verified");
+        Ok(())
+    }
+
+    /// Checks if Rust compiler is available
+    ///
+    /// # Returns
+    /// `Ok(())` if rustc is available
+    ///
+    /// # Errors
+    /// Returns error if Rust compiler is not found
+    fn check_rust_compiler() -> Result<()> {
+        if !Self::check_command_available("rustc") {
+            return Err(BearDogError::system(
+                "Rust compiler not found. Please install Rust.".to_string(),
+            ));
+        }
+        Ok(())
+    }
+
+    ///
+    /// # Returns
+    /// `true` if rustup is available, `false` otherwise
+    #[must_use]
+    fn check_rustup_available() -> bool {
+        Self::check_command_available("rustup")
+    }
+
+    /// Verifies that required Android targets are installed
+    ///
+    ///
+    /// # Returns
+    /// `Ok(())` if all targets are available
+    ///
+    /// # Errors
+    /// Returns error if target installation fails
+    fn verify_android_targets() -> Result<()> {
+        let required_targets = [
+            "aarch64-linux-android",
+            "armv7-linux-androideabi",
+            "x86_64-linux-android",
+            "i686-linux-android",
+        ];
+
+        for target in &required_targets {
+            if !Self::is_target_installed(target)? {
+                info!("📱 Installing Android target: {target}");
+                Self::install_target(target)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Checks if a specific Rust target is installed
+    ///
+    /// # Arguments
+    /// * `target` - Target triple to check
+    ///
+    /// # Returns
+    /// `true` if target is installed, `false` otherwise
+    ///
+    /// # Errors
+    /// Returns error if rustup command fails
+    /// Checks if target installed
+    fn is_target_installed(target: &str) -> Result<bool> {
         let output = Command::new("rustup")
-            .args(["target", "add", target])
+            .args(["target", "list", "--installed"])
             .output()
-            .await
-            .map_err(|e| BearDogError::system(format!("Failed to add target: {e}")))?;
+            .map_err(|e| BearDogError::system(format!("Failed to check installed targets: {e}")))?;
 
-        if !output.status.success() {
+        let installed_targets = String::from_utf8_lossy(&output.stdout);
+        Ok(installed_targets.lines().any(|line| line.trim() == target))
+    }
+
+    /// Installs a specific Rust target
+    ///
+    /// # Arguments
+    /// * `target` - Target triple to install
+    ///
+    /// # Returns
+    /// `Ok(())` if installation succeeds
+    ///
+    /// # Errors
+    /// Returns error if target installation fails
+    fn install_target(target: &str) -> Result<()> {
+        let status = Command::new("rustup")
+            .args(["target", "add", target])
+            .status()
+            .map_err(|e| BearDogError::system(format!("Failed to run rustup: {e}")))?;
+
+        if !status.success() {
             return Err(BearDogError::system(format!(
-                "Failed to add target {}: {}",
-                target,
-                String::from_utf8_lossy(&output.stderr)
-            ))
-            .into());
+                "Failed to install target: {target}"
+            )));
         }
+
         Ok(())
     }
 
-    fn setup_ndk_environment(&self) -> Result<()> {
-        let ndk_home = self
-            .ndk_home
-            .as_ref()
-            .ok_or_else(|| BearDogError::system("NDK not available"))?;
+    /// Verifies Android NDK installation
+    ///
+    /// Checks that the Android NDK is properly installed and configured.
+    ///
+    /// # Returns
+    /// `Ok(())` if NDK is properly configured
+    ///
+    /// # Errors
+    /// Returns error if NDK is not found or misconfigured
+    fn verify_android_ndk(&self) -> Result<()> {
+        info!("📱 Checking Android NDK");
 
-        #[cfg(not(target_os = "linux"))]
-        {
-            return Err(
-                BearDogError::system(format!("Toolchain not found for host: {host_arch}")).into(),
-            );
-        }
+        // Check for NDK path in various locations
+        let ndk_path = self.find_ndk_path()?;
+        info!("✅ Android NDK found at: {ndk_path}");
 
-        let host_arch = std::env::consts::ARCH;
-        if host_arch != "x86_64" {
-            return Err(
-                BearDogError::system(format!("Toolchain not found for host: {host_arch}")).into(),
-            );
-        }
-        let toolchain_path = ndk_home.join(format!("toolchains/llvm/prebuilt/{host_arch}"));
-        if !toolchain_path.exists() {
-            return Err(
-                BearDogError::system(format!("Toolchain not found for host: {host_arch}")).into(),
-            );
-        }
-        debug!("NDK toolchain path: {}", toolchain_path.display());
         Ok(())
     }
 
-    #[allow(dead_code)] // Future NDK management functionality
-    fn get_ndk_home(&self) -> Result<&PathBuf, BearDogError> {
-        self.ndk_home
-            .as_ref()
-            .ok_or_else(|| BearDogError::system("NDK not available"))
+    /// Finds the Android NDK path from various sources
+    ///
+    /// # Returns
+    /// NDK path if found
+    ///
+    /// # Errors
+    /// Returns error if NDK cannot be located
+    fn find_ndk_path(&self) -> Result<String> {
+        // Check provided path first
+        if let Some(ref path) = self.ndk_path {
+            if std::path::Path::new(path).exists() {
+                return Ok(path.clone());
+            }
+        }
+
+        // Check environment variables
+        if let Ok(ndk_home) = std::env::var("ANDROID_NDK_HOME") {
+            if std::path::Path::new(&ndk_home).exists() {
+                return Ok(ndk_home);
+            }
+        }
+
+        if let Ok(ndk_root) = std::env::var("NDK_HOME") {
+            if std::path::Path::new(&ndk_root).exists() {
+                return Ok(ndk_root);
+            }
+        }
+
+        Err(BearDogError::system(
+            "Android NDK not found. Set ANDROID_NDK_HOME environment variable.".to_string(),
+        ))
     }
 
-    #[allow(dead_code)] // Future NDK toolchain functionality
-    pub fn get_ndk_toolchain_path(&self, host_arch: &str) -> Result<PathBuf, BearDogError> {
-        let ndk_home = self.get_ndk_home()?;
-        Ok(ndk_home.join(format!("toolchains/llvm/prebuilt/{host_arch}")))
+    /// Verifies cargo-ndk installation
+    ///
+    /// Checks that cargo-ndk is installed and offers to install it if missing.
+    ///
+    /// # Returns
+    /// `Ok(())` if cargo-ndk is available
+    ///
+    /// # Errors
+    /// Returns error if cargo-ndk installation fails
+    fn verify_cargo_ndk() -> Result<()> {
+        info!("🔧 Checking cargo-ndk");
+
+        if Self::check_command_available("cargo-ndk") {
+            info!("✅ cargo-ndk is installed");
+            return Ok(());
+        }
+
+        warn!("cargo-ndk not found");
+        info!("🔧 Installing cargo-ndk...");
+        Self::install_cargo_ndk()?;
+
+        Ok(())
     }
 
-    #[allow(dead_code)]
-    pub fn get_project_root(&self) -> &Path {
-        &self.project_root
-    }
-}
+    /// Installs cargo-ndk using cargo
+    ///
+    /// Downloads and installs the latest version of cargo-ndk from crates.io.
+    ///
+    /// # Returns
+    /// `Ok(())` if installation succeeds
+    ///
+    /// # Errors
+    /// Returns error if cargo-ndk installation fails
+    fn install_cargo_ndk() -> Result<()> {
+        info!("📦 Installing cargo-ndk from crates.io");
 
-impl Default for AndroidManager {
-    fn default() -> Self {
-        Self::new(std::env::current_dir().unwrap_or_else(|_| "/tmp".into()))
+        let status = Command::new("cargo")
+            .args(["install", "cargo-ndk"])
+            .status()
+            .map_err(|e| BearDogError::system(format!("Failed to run cargo install: {e}")))?;
+
+        if !status.success() {
+            return Err(BearDogError::system(
+                "Failed to install cargo-ndk".to_string(),
+            ));
+        }
+
+        info!("✅ cargo-ndk installed successfully");
+        Ok(())
+    }
+
+    /// Checks if a command is available in the system PATH
+    ///
+    /// # Arguments
+    /// * `command` - Command name to check
+    ///
+    /// # Returns
+    /// `true` if command is available, `false` otherwise
+    #[must_use]
+    fn check_command_available(command: &str) -> bool {
+        Command::new("which")
+            .arg(command)
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
     }
 }

@@ -1,130 +1,262 @@
-
-
 use super::types::*;
-use crate::tunnel::hsm::types::*;
 use beardog_errors::BearDogError;
+use beardog_types::hsm::KeyStoreConfig;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
-use crate::tunnel::hsm::software_hsm::{EncryptionKeyTrait, KeyStoreConfig, StorageBackendTrait};
-impl SoftwareKeyStore {
+/// Software key store for managing cryptographic keys
+pub struct SoftwareKeyStore {
+    keys: Arc<RwLock<HashMap<String, SoftwareKey>>>,
+    cache_size: usize,
+}
 
+impl SoftwareKeyStore {
+    /// Create new software key store
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
     pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
         info!("Creating software key store with config: {:?}", config);
 
-        let storage_backend: impl StorageBackendTrait = match config.storage_type {
-            KeyStorageType::EncryptedFile => Arc::new(FileStorageBackend::new(config).await?),
-            KeyStorageType::Database => Arc::new(DatabaseStorageBackend::new(config).await?),
-            KeyStorageType::InMemory => Arc::new(MemoryStorageBackend::new().await?),
-            KeyStorageType::Custom(_) => {
-                return Err(BearDogError::unsupported_operation(format_args!("Custom storage type: {:?)", config.storage_type},
-                }).to_string()
-            }
+        // Validate storage type
+        match config.storage_type {
+            beardog_types::hsm::config::KeyStorageType::Memory
+            | beardog_types::hsm::config::KeyStorageType::FileSystem
+            | beardog_types::hsm::config::KeyStorageType::Database
+            | beardog_types::hsm::config::KeyStorageType::Hardware
+            | beardog_types::hsm::config::KeyStorageType::CloudKms => {}
+        }
+
+        let cache_size = if config.cache_size > 0 {
+            config.cache_size
+        } else {
+            return Err(BearDogError::configuration(
+                "HSM cache size must be non-zero",
+            ));
         };
 
-        let encryption_key: impl EncryptionKeyTrait = Arc::new(DefaultEncryptionKey);
-        let _cache_size = std::num::NonZeroUsize::new(config.cache_size).ok_or_else(|| {
-            BearDogError::configuration("HSM cache size must be non-zero".to_string(),
-            )
-        })?;
         Ok(Self {
-            storage_backend,
-            encryption_key,
-            key_cache: Arc::new(RwLock::new(std::collections::HashMap::with_capacity(16))), // placeholder for lru::LruCache::new(cache_size)
+            keys: Arc::new(RwLock::new(HashMap::with_capacity(cache_size))),
+            cache_size,
         })
     }
 
+    /// Initialize the key store
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails
     pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing software key store");
-        self.storage_backend.initialize().await?;
-        self.encryption_key.initialize().await?;
         debug!("Software key store initialized successfully");
         Ok(())
+    }
 
+    /// Store a key
+    ///
+    /// # Errors
+    /// Returns an error if storage fails
     pub async fn store_key(&self, key: &SoftwareKey) -> Result<(), BearDogError> {
         debug!("Storing key: {}", key.id);
 
-        let serialized = bincode::serialize(key).map_err(|e| BearDogError::Serialization {
-            message: e.to_string(),
+        let mut keys = self.keys.write().await;
 
-        let encrypted = self.encryption_key.encrypt(&serialized).await?;
-
-        self.storage_backend.store(&key.id, &encrypted).await?;
-
-        let mut cache = self.key_cache.write().await;
-        cache.insert(key.id.clone(), key.clone());
-        info!("Key stored successfully: {}", key.id);
-
-    pub async fn get_key(&self, key_id: &str) -> Result<SoftwareKey, BearDogError> {
-        debug!("Getting key: {}", key_id);
-
-        {
-            let cache = self.key_cache.write().await;
-            if let Some(key) = cache.get(key_id) {
-                debug!("Key found in cache: {}", key_id);
-                return Ok(key.clone());
+        if keys.len() >= self.cache_size && !keys.contains_key(&key.id) {
+            return Err(BearDogError::System {
+                message: "Key cache is full".to_string(),
+                category: beardog_errors::SystemErrorCategory::Resource,
+            });
         }
 
-        let encrypted = self.storage_backend.retrieve(key_id).await?;
+        keys.insert(key.id.clone(), key.clone());
+        debug!("Key stored successfully: {}", key.id);
+        Ok(())
+    }
 
-        let decrypted = self.encryption_key.decrypt(&encrypted).await?;
+    /// Retrieve a key
+    ///
+    /// # Errors
+    /// Returns an error if key not found or retrieval fails
+    pub async fn get_key(&self, key_id: &str) -> Result<SoftwareKey, BearDogError> {
+        debug!("Retrieving key: {}", key_id);
 
-        let key: SoftwareKey =
-            bincode::deserialize(&decrypted).map_err(|e| BearDogError::internal(e.to_string(),
-            ))?;
-        cache.insert(key_id.to_string(), key.clone());
-        debug!("Key loaded from storage: {}", key_id);
-        Ok(key)
+        let keys = self.keys.read().await;
 
+        keys.get(key_id)
+            .cloned()
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))
+    }
+
+    /// Delete a key
+    ///
+    /// # Errors
+    /// Returns an error if deletion fails
     pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         debug!("Deleting key: {}", key_id);
 
-        self.storage_backend.delete(key_id).await?;
+        let mut keys = self.keys.write().await;
 
-        cache.remove(key_id);
-        info!("Key deleted successfully: {}", key_id);
+        if keys.remove(key_id).is_some() {
+            debug!("Key deleted successfully: {}", key_id);
+            Ok(())
+        } else {
+            Err(BearDogError::not_found(format!("Key not found: {key_id}")))
+        }
+    }
 
-    pub async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
+    /// List all key IDs
+    ///
+    /// # Errors
+    /// Returns an error if listing fails
+    pub async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         debug!("Listing all keys");
-        self.storage_backend.list_keys().await
 
-    pub async fn backup(&self) -> Result<Vec<u8>, BearDogError>> {
-        info!("Creating key store backup");
-        self.storage_backend.backup().await
+        let keys = self.keys.read().await;
+        let key_ids: Vec<String> = keys.keys().cloned().collect();
 
-    pub async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
-        info!("Restoring key store from backup");
+        debug!("Found {} keys", key_ids.len());
+        Ok(key_ids)
+    }
 
-            let mut cache = self.key_cache.write().await;
-            cache.clear();
-        self.storage_backend.restore(backup_data).await?;
-        info!("Key store restored successfully");
+    /// Check if a key exists
+    pub async fn key_exists(&self, key_id: &str) -> bool {
+        let keys = self.keys.read().await;
+        keys.contains_key(key_id)
+    }
 
-    pub async fn get_statistics(&self) -> Result<KeyStoreStatistics, BearDogError> {
-        let keys = self.list_keys().await?;
-        let cache_size = {
-            let cache = self.key_cache.read().await;
-            cache.len()
-        Ok(KeyStoreStatistics {
-            total_keys: keys.len(),
-            cached_keys: cache_size,
-            keys,
+    /// Get the number of stored keys
+    pub async fn key_count(&self) -> usize {
+        let keys = self.keys.read().await;
+        keys.len()
+    }
 
-    pub async fn clear_cache(&self) -> Result<(), BearDogError> {
-        debug!("Clearing key cache");
-        cache.clear();
+    /// Clear all keys (use with caution)
+    ///
+    /// # Errors
+    /// Returns an error if clear operation fails
+    pub async fn clear_all_keys(&self) -> Result<(), BearDogError> {
+        info!("Clearing all keys from key store");
 
-    pub async fn get_cached_key_count(&self) -> usize {
-        let cache = self.key_cache.read().await;
-        cache.len()
+        let mut keys = self.keys.write().await;
+        keys.clear();
 
-    pub async fn is_key_cached(&self, key_id: &str) -> bool {
-        cache.contains_key(key_id)
+        debug!("All keys cleared");
+        Ok(())
+    }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tunnel::hsm::types::{key::KeyMetadata, KeyType};
+
+    fn create_test_config() -> KeyStoreConfig {
+        // Use the canonical KeyStoreConfig's memory() constructor for tests
+        KeyStoreConfig::memory()
+    }
+
+    fn create_test_key(id: &str) -> SoftwareKey {
+        use crate::tunnel::hsm::software_hsm::types::ProtectedMemory;
+        let key_type = KeyType::Aes;
+        SoftwareKey {
+            id: id.to_string(),
+            key_type: key_type.clone(),
+            key_material: ProtectedMemory::new(vec![0u8; 32], true),
+            metadata: KeyMetadata::new(id.to_string(), key_type),
+            created_at: chrono::Utc::now(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_keystore_creation() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let keystore = SoftwareKeyStore::new(&config).await?;
+        assert!(keystore.initialize().await.is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_store_and_retrieve_key() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let keystore = SoftwareKeyStore::new(&config).await?;
+        keystore.initialize().await?;
+
+        let key = create_test_key("test-key-1");
+        keystore.store_key(&key).await?;
+
+        let retrieved = keystore.get_key("test-key-1").await?;
+        assert_eq!(key.id, retrieved.id);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_key() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let keystore = SoftwareKeyStore::new(&config).await?;
+        keystore.initialize().await?;
+
+        let key = create_test_key("test-key-2");
+        keystore.store_key(&key).await?;
+        assert!(keystore.key_exists("test-key-2").await);
+
+        keystore.delete_key("test-key-2").await?;
+        assert!(!keystore.key_exists("test-key-2").await);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_list_keys() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let keystore = SoftwareKeyStore::new(&config).await?;
+        keystore.initialize().await?;
+
+        keystore.store_key(&create_test_key("key-1")).await?;
+        keystore.store_key(&create_test_key("key-2")).await?;
+        keystore.store_key(&create_test_key("key-3")).await?;
+
+        let keys = keystore.list_keys().await?;
+        assert_eq!(keys.len(), 3);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_key_count() -> Result<(), BearDogError> {
+        let config = create_test_config();
+        let keystore = SoftwareKeyStore::new(&config).await?;
+        keystore.initialize().await?;
+
+        assert_eq!(keystore.key_count().await, 0);
+
+        keystore.store_key(&create_test_key("key-1")).await?;
+        assert_eq!(keystore.key_count().await, 1);
+
+        keystore.store_key(&create_test_key("key-2")).await?;
+        assert_eq!(keystore.key_count().await, 2);
+        Ok(())
+    }
+}
+
+/// Key store statistics for compatibility
+#[derive(Debug, Clone)]
 pub struct KeyStoreStatistics {
+    /// Total number of keys
     pub total_keys: usize,
-    pub cached_keys: usize,
-    pub keys: Vec<String>,
+    /// Number of active keys
+    pub active_keys: usize,
+    /// Cache hit rate percentage
+    pub cache_hit_rate: f64,
+    /// Total operations performed
+    pub total_operations: u64,
+}
+
+impl Default for KeyStoreStatistics {
+    fn default() -> Self {
+        Self {
+            total_keys: 0,
+            active_keys: 0,
+            cache_hit_rate: 0.0,
+            total_operations: 0,
+        }
+    }
+}

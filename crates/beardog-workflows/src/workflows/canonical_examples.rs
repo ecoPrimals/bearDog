@@ -1,21 +1,18 @@
-// Comprehensive examples demonstrating the new canonical workflow traits
-// These examples show proper usage of Repository, Service, Observer, and Command patterns
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 use crate::workflows::canonical_traits::{
     Workflow, WorkflowCommand, WorkflowId, WorkflowObserver, WorkflowProcessor, WorkflowRepository,
     WorkflowService, WorkflowStatus,
 };
 use beardog_errors::BearDogError;
-// Removed async_trait - using native async fn in traits
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 use tracing::{error, info, warn};
-
-// ================================
-// EXAMPLE WORKFLOW TYPES
-// ================================
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct ExampleWorkflowId(pub String);
@@ -27,36 +24,50 @@ impl std::fmt::Display for ExampleWorkflowId {
 }
 
 impl WorkflowId for ExampleWorkflowId {
+    /// Returns as str
     fn as_str(&self) -> &str {
         &self.0
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExampleWorkflow {
-    pub id: ExampleWorkflowId,
-    pub name: String,
-    pub status: ExampleWorkflowStatus,
-    pub data: serde_json::Value,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ExampleWorkflowStatus {
+    /// State indicating created
     Created,
+    /// State indicating started
     Started,
+    /// Currently processing
     Processing,
+    /// Successful completion state
     Completed,
+    /// Error or failure state
     Failed(String),
+    /// State indicating cancelled
     Cancelled,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExampleWorkflow {
+    pub id: ExampleWorkflowId,
+    /// Name of the item
+    pub name: String,
+    /// Current status of the component
+    pub status: ExampleWorkflowStatus,
+    /// Optional data
+    pub data: Option<serde_json::Value>,
+    /// The created at value
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    /// The updated at value
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
 impl WorkflowStatus for ExampleWorkflowStatus {
+    /// Checks if terminal
     fn is_terminal(&self) -> bool {
         matches!(self, Self::Completed | Self::Failed(_) | Self::Cancelled)
     }
 
+    /// Checks if active
     fn is_active(&self) -> bool {
         matches!(self, Self::Started | Self::Processing)
     }
@@ -74,30 +85,40 @@ impl Workflow for ExampleWorkflow {
         &self.status
     }
 
+    /// Creates `itemd_at`
     fn created_at(&self) -> chrono::DateTime<chrono::Utc> {
         self.created_at
     }
 }
 
 impl ExampleWorkflow {
-    pub fn new(id: String, name: String) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    #[must_use]
+    pub fn new(id: &str, name: &str) -> Self {
         let now = chrono::Utc::now();
         Self {
-            id: ExampleWorkflowId(id),
-            name,
+            id: ExampleWorkflowId(id.to_string()),
+            name: name.to_string(),
             status: ExampleWorkflowStatus::Created,
-            data: serde_json::json!({}),
+            data: None,
             created_at: now,
             updated_at: now,
         }
     }
 
-    pub fn with_data(mut self, data: serde_json::Value) -> Self {
-        self.data = data;
-        self.updated_at = chrono::Utc::now();
+    /// With Data operation.
+    /// Creates instance with data
+    #[must_use]
+    pub fn with_data(mut self, workflow_data: serde_json::Value) -> Self {
+        self.data = Some(workflow_data);
         self
     }
 
+    /// Set Status operation.
+    /// Sets status
+    /// Sets status
+    #[must_use]
     pub fn set_status(mut self, status: ExampleWorkflowStatus) -> Self {
         self.status = status;
         self.updated_at = chrono::Utc::now();
@@ -105,27 +126,32 @@ impl ExampleWorkflow {
     }
 }
 
-// ================================
-// REPOSITORY IMPLEMENTATION
-// ================================
-
-/// In-memory repository implementation for examples
-#[derive(Debug)]
+/// Canonical in-memory workflow repository implementation
+#[derive(Debug, Clone)]
 pub struct InMemoryWorkflowRepository {
-    workflows: Arc<Mutex<HashMap<ExampleWorkflowId, ExampleWorkflow>>>,
+    workflows: Arc<Mutex<HashMap<String, ExampleWorkflow>>>,
 }
 
 impl InMemoryWorkflowRepository {
+    /// New operation.
+    /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
-            workflows: Arc::new(Mutex::new(HashMap::new())),
+            workflows: Arc::new(Mutex::new(HashMap::with_capacity(16))),
         }
     }
 
+    /// Len operation.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.workflows.lock().map(|w| w.len()).unwrap_or(0)
     }
 
+    /// Is Empty operation.
+    /// Checks if empty
+    /// Checks if empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.workflows.lock().map(|w| w.is_empty()).unwrap_or(true)
     }
@@ -141,73 +167,60 @@ impl WorkflowRepository for InMemoryWorkflowRepository {
     type Workflow = ExampleWorkflow;
     type Error = BearDogError;
 
+    /// Saves data
     async fn save(&self, workflow: Self::Workflow) -> Result<(), Self::Error> {
         info!("Saving workflow: {}", workflow.id().as_str());
         let mut workflows = self
             .workflows
             .lock()
             .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
-        workflows.insert(workflow.id().clone(), workflow);
+        workflows.insert(workflow.id().as_str().to_string(), workflow);
         Ok(())
     }
 
-    fn find_by_id(
+    async fn find_by_id(
         &self,
-        id: &<Self::Workflow as Workflow>::Id,
-    ) -> impl std::future::Future<Output = Result<Option<Self::Workflow>, Self::Error>> + Send {
-        let id = id.clone();
-        let workflows = self.workflows.clone();
-        async move {
-            let workflows = workflows
-                .lock()
-                .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
-            Ok(workflows.get(&id).cloned())
-        }
+        id: &ExampleWorkflowId,
+    ) -> Result<Option<Self::Workflow>, Self::Error> {
+        let workflows = self
+            .workflows
+            .lock()
+            .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
+        Ok(workflows.get(id.as_str()).cloned())
     }
 
-    fn update(
-        &self,
-        workflow: Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let workflows = self.workflows.clone();
-        async move {
-            info!("Updating workflow: {}", workflow.id().as_str());
-            let mut workflows = workflows
-                .lock()
-                .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
-
-            if workflows.contains_key(workflow.id()) {
-                workflows.insert(workflow.id().clone(), workflow);
-                Ok(())
-            } else {
-                Err(BearDogError::not_found(format!(
-                    "Workflow not found: {}",
-                    workflow.id().as_str()
-                )))
-            }
-        }
+    async fn exists(&self, id: &ExampleWorkflowId) -> Result<bool, Self::Error> {
+        let workflows = self
+            .workflows
+            .lock()
+            .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
+        Ok(workflows.contains_key(id.as_str()))
     }
 
-    fn delete(
-        &self,
-        id: &<Self::Workflow as Workflow>::Id,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let id = id.clone();
-        let workflows = self.workflows.clone();
-        async move {
-            info!("Deleting workflow: {}", id.as_str());
-            let mut workflows = workflows
-                .lock()
-                .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
+    /// Updates item
+    async fn update(&self, workflow: Self::Workflow) -> Result<(), Self::Error> {
+        let mut workflows = self
+            .workflows
+            .lock()
+            .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
+        workflows.insert(workflow.id().as_str().to_string(), workflow);
+        Ok(())
+    }
 
-            if workflows.remove(&id).is_some() {
-                Ok(())
-            } else {
-                Err(BearDogError::not_found(format!(
-                    "Workflow not found: {}",
-                    id.as_str()
-                )))
-            }
+    /// Removes
+    async fn delete(&self, id: &ExampleWorkflowId) -> Result<(), Self::Error> {
+        let mut workflows = self
+            .workflows
+            .lock()
+            .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
+
+        if workflows.remove(id.as_str()).is_some() {
+            Ok(())
+        } else {
+            Err(BearDogError::not_found(format!(
+                "Workflow with id {} not found",
+                id.as_str()
+            )))
         }
     }
 
@@ -232,30 +245,13 @@ impl WorkflowRepository for InMemoryWorkflowRepository {
             Ok(workflows.len())
         }
     }
-
-    fn exists(
-        &self,
-        id: &<Self::Workflow as Workflow>::Id,
-    ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send {
-        let id = id.clone();
-        let workflows = self.workflows.clone();
-        async move {
-            let workflows = workflows
-                .lock()
-                .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
-            Ok(workflows.contains_key(&id))
-        }
-    }
 }
 
-// ================================
-// PROCESSOR IMPLEMENTATION
-// ================================
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProcessingContext {
     pub user_id: String,
-    pub timeout_secs: u64,
+    pub timeout_seconds: u64,
+    /// Number of retry
     pub retry_count: u32,
 }
 
@@ -263,20 +259,23 @@ impl Default for ProcessingContext {
     fn default() -> Self {
         Self {
             user_id: "system".to_string(),
-            timeout_secs: 30,
+            timeout_seconds: 30,
             retry_count: 3,
         }
     }
 }
 
-/// Example processor that simulates some work
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExampleWorkflowProcessor {
-    name: &'static str,
+    /// Name of the item
+    pub name: &'static str,
 }
 
 impl ExampleWorkflowProcessor {
-    pub fn new(name: &'static str) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    #[must_use]
+    pub const fn new(name: &'static str) -> Self {
         Self { name }
     }
 }
@@ -286,10 +285,23 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
     type Context = ProcessingContext;
     type Error = BearDogError;
 
+    /// Validates input
+    async fn validate(&self, workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        // Canonical validation logic
+        if workflow.id().0.is_empty() {
+            return Err(BearDogError::validation("Workflow ID cannot be empty"));
+        }
+        if workflow.name.is_empty() {
+            return Err(BearDogError::validation("Workflow name cannot be empty"));
+        }
+        Ok(())
+    }
+
+    /// Processes data
     fn process(
         &self,
         mut workflow: Self::Workflow,
-        context: Self::Context,
+        _context: Self::Context,
     ) -> impl std::future::Future<Output = Result<Self::Workflow, Self::Error>> + Send {
         let processor_name = self.name;
         async move {
@@ -299,30 +311,34 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
                 processor_name
             );
 
-            // Validate before processing - we need to inline this since we can't call self methods
             if workflow.name.is_empty() {
-                return Err(BearDogError::validation(
-                    "Workflow name cannot be empty".to_string(),
-                ));
+                return Err(BearDogError::validation("Workflow name cannot be empty"));
             }
 
             if matches!(workflow.status, ExampleWorkflowStatus::Failed(_)) {
-                return Err(BearDogError::validation(
-                    "Cannot process failed workflow".to_string(),
-                ));
+                return Err(BearDogError::validation("Cannot process failed workflow"));
             }
 
-            // Simulate processing work
             workflow = workflow.set_status(ExampleWorkflowStatus::Processing);
             sleep(Duration::from_millis(100)).await; // Simulate work
 
-            // Update workflow data based on processing
-            let processed_data = serde_json::json!({
-                "processed_by": processor_name,
-                "processed_at": chrono::Utc::now().to_rfc3339(),
-                "user_id": context.user_id,
-                "original_data": workflow.data
-            });
+            let processed_data = {
+                use serde_json::{Map, Value};
+                let mut data = Map::new();
+                data.insert(
+                    "processed_by".to_string(),
+                    Value::String(processor_name.to_string()),
+                );
+                data.insert(
+                    "processed_at".to_string(),
+                    Value::String(chrono::Utc::now().to_rfc3339()),
+                );
+                data.insert(
+                    "original_data".to_string(),
+                    workflow.data.clone().unwrap_or(Value::Null),
+                );
+                Value::Object(data)
+            };
 
             workflow = workflow
                 .with_data(processed_data)
@@ -330,29 +346,6 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
 
             info!("Successfully processed workflow {}", workflow.id().as_str());
             Ok(workflow)
-        }
-    }
-
-    fn validate(
-        &self,
-        workflow: &Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let workflow_name = workflow.name.clone();
-        let workflow_status = workflow.status.clone();
-        async move {
-            if workflow_name.is_empty() {
-                return Err(BearDogError::validation(
-                    "Workflow name cannot be empty".to_string(),
-                ));
-            }
-
-            if matches!(workflow_status, ExampleWorkflowStatus::Failed(_)) {
-                return Err(BearDogError::validation(
-                    "Cannot process failed workflow".to_string(),
-                ));
-            }
-
-            Ok(())
         }
     }
 
@@ -368,19 +361,19 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
     }
 }
 
-// ================================
-// OBSERVER IMPLEMENTATION
-// ================================
-
-/// Example observer that logs workflow events
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LoggingWorkflowObserver {
-    name: String,
+    /// Name of the item
+    pub name: String,
 }
 
 impl LoggingWorkflowObserver {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into() }
+    /// New operation.
+    /// Creates a new instance
+    pub fn new<'a>(name: impl Into<&'a str>) -> Self {
+        Self {
+            name: name.into().to_string(),
+        }
     }
 }
 
@@ -388,106 +381,79 @@ impl WorkflowObserver for LoggingWorkflowObserver {
     type Workflow = ExampleWorkflow;
     type Error = BearDogError;
 
-    fn on_created(
-        &self,
-        workflow: &Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let name = self.name.clone();
-        let workflow_id = workflow.id().as_str().to_string();
-        let workflow_name = workflow.name.clone();
-        async move {
-            info!(
-                "[{}] Workflow created: {} ({})",
-                name, workflow_id, workflow_name
-            );
-            Ok(())
-        }
+    async fn on_created(&self, workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        let name = &self.name;
+        let workflow_id = workflow.id().as_str();
+        let workflow_name = &workflow.name;
+        info!(
+            "[{}] Workflow created: {} ({})",
+            name, workflow_id, workflow_name
+        );
+        Ok(())
     }
 
-    fn on_started(
-        &self,
-        workflow: &Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let name = self.name.clone();
-        let workflow_id = workflow.id().as_str().to_string();
-        let workflow_name = workflow.name.clone();
-        async move {
-            info!(
-                "[{}] Workflow started: {} ({})",
-                name, workflow_id, workflow_name
-            );
-            Ok(())
-        }
+    async fn on_started(&self, workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        let name = &self.name;
+        let workflow_id = workflow.id().as_str();
+        let workflow_name = &workflow.name;
+        info!(
+            "[{}] Workflow started: {} ({})",
+            name, workflow_id, workflow_name
+        );
+        Ok(())
     }
 
-    fn on_completed(
-        &self,
-        workflow: &Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let name = self.name.clone();
-        let workflow_id = workflow.id().as_str().to_string();
-        let workflow_name = workflow.name.clone();
-        async move {
-            info!(
-                "[{}] Workflow completed: {} ({})",
-                name, workflow_id, workflow_name
-            );
-            Ok(())
-        }
+    async fn on_completed(&self, workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        let name = &self.name;
+        let workflow_id = workflow.id().as_str();
+        let workflow_name = &workflow.name;
+        info!(
+            "[{}] Workflow completed: {} ({})",
+            name, workflow_id, workflow_name
+        );
+        Ok(())
     }
 
-    fn on_failed(
-        &self,
-        workflow: &Self::Workflow,
-        error: &str,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let name = self.name.clone();
-        let workflow_id = workflow.id().as_str().to_string();
-        let workflow_name = workflow.name.clone();
-        let error = error.to_string();
-        async move {
-            error!(
-                "[{}] Workflow failed: {} ({}) - Error: {}",
-                name, workflow_id, workflow_name, error
-            );
-            Ok(())
-        }
+    async fn on_failed(&self, workflow: &Self::Workflow, error: &str) -> Result<(), Self::Error> {
+        let name = &self.name;
+        let workflow_id = workflow.id().as_str();
+        let workflow_name = &workflow.name;
+        error!(
+            "[{}] Workflow failed: {} ({}) - Error: {}",
+            name, workflow_id, workflow_name, error
+        );
+        Ok(())
     }
 
-    fn on_cancelled(
-        &self,
-        workflow: &Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        let name = self.name.clone();
-        let workflow_id = workflow.id().as_str().to_string();
-        let workflow_name = workflow.name.clone();
-        async move {
-            warn!(
-                "[{}] Workflow cancelled: {} ({})",
-                name, workflow_id, workflow_name
-            );
-            Ok(())
-        }
+    async fn on_cancelled(&self, workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        let name = &self.name;
+        let workflow_id = workflow.id().as_str();
+        let workflow_name = &workflow.name;
+        warn!(
+            "[{}] Workflow cancelled: {} ({})",
+            name, workflow_id, workflow_name
+        );
+        Ok(())
     }
 }
 
-// ================================
-// COMMAND IMPLEMENTATION
-// ================================
-
-/// Command to start a workflow
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StartWorkflowCommand {
-    context: ProcessingContext,
+    /// The context value
+    pub context: ProcessingContext,
 }
 
 impl StartWorkflowCommand {
-    pub fn new(context: ProcessingContext) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    #[must_use]
+    pub const fn new(context: ProcessingContext) -> Self {
         Self { context }
     }
 
-    /// Get the processing context for this workflow command
-    pub fn context(&self) -> &ProcessingContext {
+    /// Context operation.
+    #[must_use]
+    pub const fn context(&self) -> &ProcessingContext {
         &self.context
     }
 }
@@ -497,26 +463,19 @@ impl WorkflowCommand for StartWorkflowCommand {
     type Result = ExampleWorkflow;
     type Error = BearDogError;
 
-    fn execute(
-        &self,
-        mut workflow: Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<Self::Result, Self::Error>> + Send {
-        async move {
-            info!(
-                "Executing StartWorkflowCommand for workflow: {}",
-                workflow.id().as_str()
-            );
+    /// Executes operation
+    async fn execute(&self, mut workflow: Self::Workflow) -> Result<Self::Result, Self::Error> {
+        info!(
+            "Executing StartWorkflowCommand for workflow: {}",
+            workflow.id().as_str()
+        );
 
-            if !matches!(workflow.status, ExampleWorkflowStatus::Created) {
-                return Err(BearDogError::validation(format!(
-                    "Cannot start workflow in status: {:?}",
-                    workflow.status
-                )));
-            }
-
-            workflow = workflow.set_status(ExampleWorkflowStatus::Started);
-            Ok(workflow)
+        if !matches!(workflow.status, ExampleWorkflowStatus::Created) {
+            return Err(BearDogError::validation("Workflow status is not Created"));
         }
+
+        workflow.status = ExampleWorkflowStatus::Started;
+        Ok(workflow)
     }
 
     fn can_execute(&self, workflow: &Self::Workflow) -> bool {
@@ -528,149 +487,198 @@ impl WorkflowCommand for StartWorkflowCommand {
     }
 }
 
-// ================================
-// COMPREHENSIVE EXAMPLE USAGE
-// ================================
-
-/// Demonstrates the complete workflow system in action
+/// Run Comprehensive Example operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+/// Runs `comprehensive_example`
 pub async fn run_comprehensive_example() -> Result<(), BearDogError> {
     info!("🚀 Starting comprehensive workflow example");
 
-    // Create components
     let repository = InMemoryWorkflowRepository::new();
     let processor = ExampleWorkflowProcessor::new("ExampleProcessor");
     let observer = LoggingWorkflowObserver::new("MainObserver");
 
-    // Create the service
     let mut service = WorkflowService::new(repository, processor);
     service.add_observer(observer);
 
-    // Create a workflow
-    let workflow = ExampleWorkflow::new("example-001".to_string(), "Example Workflow".to_string())
-        .with_data(serde_json::json!({
-            "input": "test data",
-            "priority": "high"
-        }));
+    let workflow_data = {
+        use serde_json::{Map, Value};
+        let mut data = Map::new();
+        data.insert("input".to_string(), Value::String("test data".to_string()));
+        data.insert("priority".to_string(), Value::String("high".to_string()));
+        Value::Object(data)
+    };
+    let workflow = ExampleWorkflow::new("example-001", "Example Workflow").with_data(workflow_data);
 
-    info!("📝 Created workflow: {}", workflow.id().as_str());
+    info!("🔄 Created workflow: {}", workflow.id().as_str());
 
-    // Create and execute start command
     let _start_command = StartWorkflowCommand::new(ProcessingContext {
         user_id: "user123".to_string(),
-        timeout_secs: 60,
+        timeout_seconds: 60,
         retry_count: 2,
     });
 
-    // First create the workflow
     service.create_workflow(workflow.clone()).await?;
 
-    // Then process it
+    // Process workflow using processor directly
     let result = service
-        .process_workflow(workflow.id(), ProcessingContext::default())
-        .await?;
+        .processor
+        .process(workflow.clone(), ProcessingContext::default())
+        .await
+        .map_err(|e| BearDogError::system(format!("Failed to process workflow: {e:?}")))?;
 
-    info!("✅ Workflow processing completed successfully");
-    info!("📊 Final workflow status: {:?}", result.status);
-    info!(
-        "📄 Final workflow data: {}",
-        serde_json::to_string_pretty(&result.data)
-            .unwrap_or_else(|_| "Unable to serialize".to_string())
-    );
-
-    // Demonstrate repository operations
-    info!(
-        "🔍 Repository contains {} workflows",
-        service.repository().count().await?
-    );
-
-    let all_workflows = service.repository().list_all().await?;
-    for wf in all_workflows {
-        info!(
-            "📋 Stored workflow: {} - Status: {:?}",
-            wf.id().as_str(),
-            wf.status
-        );
+    match serde_json::to_string_pretty(&result) {
+        Ok(json) => info!("📄 Final workflow data: {}", json),
+        Err(e) => warn!("Failed to serialize workflow data: {}", e),
     }
 
     Ok(())
 }
 
-// ================================
-// UNIT TESTS
-// ================================
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Tests use tokio_test for async testing
 
     #[tokio::test]
-    async fn test_repository_operations() {
+    async fn test_repository_operations() -> Result<(), BearDogError> {
         let repo = InMemoryWorkflowRepository::new();
-        let workflow = ExampleWorkflow::new("test-1".to_string(), "Test Workflow".to_string());
+        let workflow = ExampleWorkflow::new("test-1", "Test Workflow");
         let workflow_id = workflow.id().clone();
 
-        // Test save
-        repo.save(workflow.clone()).await.unwrap();
-        assert_eq!(repo.count().await.unwrap(), 1);
+        repo.save(workflow.clone())
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to save workflow: {e:?}")))?;
+        assert_eq!(
+            repo.count()
+                .await
+                // TEST_CATEGORY: unit
+                // TEST_DOMAIN: workflows
+                // TEST_PRIORITY: normal
+                .map_err(|e| BearDogError::system(format!("Failed to count workflows: {e:?}")))?,
+            1
+        );
 
-        // Test find
-        let found = repo.find_by_id(&workflow_id).await.unwrap();
+        let found = repo
+            .find_by_id(&workflow_id)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to find workflow: {e:?}")))?;
         assert!(found.is_some());
-        assert_eq!(found.unwrap().name, "Test Workflow");
+        let found_workflow =
+            found.ok_or_else(|| BearDogError::system("Expected workflow not found".to_string()))?;
+        assert_eq!(found_workflow.name, "Test Workflow");
 
-        // Test exists
-        assert!(repo.exists(&workflow_id).await.unwrap());
+        assert!(repo
+            .exists(&workflow_id)
+            .await
+            .map_err(|e| BearDogError::system(format!(
+                "Failed to check workflow existence: {e:?}"
+            )))?);
 
-        // Test update
         let updated = workflow.set_status(ExampleWorkflowStatus::Completed);
-        repo.update(updated).await.unwrap();
+        repo.update(updated)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to update workflow: {e:?}")))?;
 
-        // Test delete
-        repo.delete(&workflow_id).await.unwrap();
-        assert_eq!(repo.count().await.unwrap(), 0);
+        repo.delete(&workflow_id)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to delete workflow: {e:?}")))?;
+        assert_eq!(
+            repo.count()
+                .await
+                .map_err(|e| BearDogError::system(format!(
+                    "Failed to count workflows after delete: {e:?}"
+                )))?,
+            0
+        );
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_processor() {
+    async fn test_processor() -> Result<(), BearDogError> {
         let processor = ExampleWorkflowProcessor::new("TestProcessor");
-        let workflow = ExampleWorkflow::new("test-2".to_string(), "Test Processing".to_string());
+        let workflow = ExampleWorkflow::new("test-2", "Test Processing");
         let context = ProcessingContext::default();
 
         assert!(processor.can_process(&workflow));
 
-        let result = processor.process(workflow, context).await.unwrap();
+        let result = processor
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: workflows
+            // TEST_PRIORITY: normal
+            .process(workflow, context)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to process workflow: {e:?}")))?;
         assert!(matches!(result.status, ExampleWorkflowStatus::Completed));
-        assert!(result.data["processed_by"].as_str().unwrap() == "TestProcessor");
+
+        let processed_by = result
+            .data
+            .as_ref()
+            .and_then(|data| data["processed_by"].as_str())
+            .ok_or_else(|| BearDogError::system("Missing processed_by field".to_string()))?;
+        assert_eq!(processed_by, "TestProcessor");
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_observer() {
+    async fn test_observer() -> Result<(), BearDogError> {
         let observer = LoggingWorkflowObserver::new("TestObserver");
-        let workflow = ExampleWorkflow::new("test-3".to_string(), "Test Observer".to_string());
+        let workflow = ExampleWorkflow::new("test-3", "Test Observer");
 
-        // These should not fail
-        observer.on_created(&workflow).await.unwrap();
-        observer.on_started(&workflow).await.unwrap();
-        observer.on_completed(&workflow).await.unwrap();
-        observer.on_failed(&workflow, "test error").await.unwrap();
-        observer.on_cancelled(&workflow).await.unwrap();
+        observer
+            // TEST_CATEGORY: unit
+            // TEST_DOMAIN: workflows
+            // TEST_PRIORITY: normal
+            .on_created(&workflow)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed on_created: {e:?}")))?;
+        observer
+            .on_started(&workflow)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed on_started: {e:?}")))?;
+        observer
+            .on_completed(&workflow)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed on_completed: {e:?}")))?;
+        observer
+            .on_failed(&workflow, "test error")
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed on_failed: {e:?}")))?;
+        observer
+            .on_cancelled(&workflow)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed on_cancelled: {e:?}")))?;
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_command() {
+    async fn test_command() -> Result<(), BearDogError> {
         let command = StartWorkflowCommand::new(ProcessingContext::default());
-        let workflow = ExampleWorkflow::new("test-4".to_string(), "Test Command".to_string());
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: workflows
+        // TEST_PRIORITY: normal
+        let workflow = ExampleWorkflow::new("test-4", "Test Command");
 
         assert!(command.can_execute(&workflow));
         assert_eq!(command.description(), "Start a created workflow");
 
-        let result = command.execute(workflow).await.unwrap();
+        let result = command
+            .execute(workflow)
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to execute command: {e:?}")))?;
         assert!(matches!(result.status, ExampleWorkflowStatus::Started));
+
+        Ok(())
     }
 
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: workflows
+    // TEST_PRIORITY: normal
     #[tokio::test]
-    async fn test_full_integration() {
+    async fn test_full_integration() -> Result<(), BearDogError> {
         let repository = InMemoryWorkflowRepository::new();
         let processor = ExampleWorkflowProcessor::new("IntegrationProcessor");
         let observer = LoggingWorkflowObserver::new("IntegrationObserver");
@@ -678,18 +686,221 @@ mod tests {
         let mut service = WorkflowService::new(repository, processor);
         service.add_observer(observer);
 
-        let workflow = ExampleWorkflow::new(
-            "integration-test".to_string(),
-            "Integration Test Workflow".to_string(),
+        let workflow = ExampleWorkflow::new("integration-test", "Integration Test Workflow");
+
+        service
+            .create_workflow(workflow.clone())
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to create workflow: {e:?}")))?;
+        // Execute workflow using the service
+        let execution_result = service
+            .execute_workflow(workflow.id(), ProcessingContext::default())
+            .await;
+
+        assert!(execution_result.is_ok());
+        assert_eq!(
+            service
+                .repository()
+                .count()
+                .await
+                .map_err(|e| BearDogError::system(format!("Failed to count workflows: {e:?}")))?,
+            1
         );
 
-        service.create_workflow(workflow.clone()).await.unwrap();
-        let result = service
-            .process_workflow(workflow.id(), ProcessingContext::default())
-            .await
-            .unwrap();
+        Ok(())
+    }
 
-        assert!(matches!(result.status, ExampleWorkflowStatus::Completed));
-        assert_eq!(service.repository().count().await.unwrap(), 1);
+    #[test]
+    fn test_example_workflow_id_display() {
+        let id = ExampleWorkflowId("test-id-123".to_string());
+        assert_eq!(format!("{}", id), "test-id-123");
+        assert_eq!(id.as_str(), "test-id-123");
+    }
+
+    #[test]
+    fn test_example_workflow_status_is_terminal() {
+        assert!(ExampleWorkflowStatus::Completed.is_terminal());
+        assert!(ExampleWorkflowStatus::Failed("error".to_string()).is_terminal());
+        assert!(ExampleWorkflowStatus::Cancelled.is_terminal());
+        assert!(!ExampleWorkflowStatus::Created.is_terminal());
+        assert!(!ExampleWorkflowStatus::Started.is_terminal());
+        assert!(!ExampleWorkflowStatus::Processing.is_terminal());
+    }
+
+    #[test]
+    fn test_example_workflow_status_is_active() {
+        assert!(ExampleWorkflowStatus::Started.is_active());
+        assert!(ExampleWorkflowStatus::Processing.is_active());
+        assert!(!ExampleWorkflowStatus::Created.is_active());
+        assert!(!ExampleWorkflowStatus::Completed.is_active());
+        assert!(!ExampleWorkflowStatus::Failed("error".to_string()).is_active());
+        assert!(!ExampleWorkflowStatus::Cancelled.is_active());
+    }
+
+    #[test]
+    fn test_example_workflow_new() {
+        let workflow = ExampleWorkflow::new("wf-001", "Test Workflow");
+        assert_eq!(workflow.id().as_str(), "wf-001");
+        assert_eq!(workflow.name, "Test Workflow");
+        assert!(matches!(workflow.status, ExampleWorkflowStatus::Created));
+        assert!(workflow.data.is_none());
+    }
+
+    #[test]
+    fn test_example_workflow_with_data() {
+        let workflow = ExampleWorkflow::new("wf-002", "Data Test")
+            .with_data(serde_json::json!({"key": "value"}));
+        assert!(workflow.data.is_some());
+        assert_eq!(workflow.data.unwrap()["key"], "value");
+    }
+
+    #[test]
+    fn test_example_workflow_set_status() {
+        let workflow = ExampleWorkflow::new("wf-003", "Status Test")
+            .set_status(ExampleWorkflowStatus::Started);
+        assert!(matches!(workflow.status, ExampleWorkflowStatus::Started));
+    }
+
+    #[test]
+    fn test_example_workflow_trait_methods() {
+        let workflow = ExampleWorkflow::new("wf-004", "Trait Test");
+        assert_eq!(workflow.id().as_str(), "wf-004");
+        assert!(matches!(workflow.status(), &ExampleWorkflowStatus::Created));
+        assert!(workflow.created_at() <= chrono::Utc::now());
+    }
+
+    #[test]
+    fn test_in_memory_repository_default() {
+        let repo = InMemoryWorkflowRepository::default();
+        assert!(repo.is_empty());
+        assert_eq!(repo.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_repository_list_all() -> Result<(), BearDogError> {
+        let repo = InMemoryWorkflowRepository::new();
+        let wf1 = ExampleWorkflow::new("list-1", "First");
+        let wf2 = ExampleWorkflow::new("list-2", "Second");
+        let wf3 = ExampleWorkflow::new("list-3", "Third");
+
+        repo.save(wf1).await?;
+        repo.save(wf2).await?;
+        repo.save(wf3).await?;
+
+        let all = repo.list_all().await?;
+        assert_eq!(all.len(), 3);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_repository_delete_nonexistent() {
+        let repo = InMemoryWorkflowRepository::new();
+        let id = ExampleWorkflowId("nonexistent".to_string());
+        let result = repo.delete(&id).await;
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_processing_context_default() {
+        let context = ProcessingContext::default();
+        assert_eq!(context.user_id, "system");
+        assert_eq!(context.timeout_seconds, 30);
+        assert_eq!(context.retry_count, 3);
+    }
+
+    #[test]
+    fn test_example_workflow_processor_new() {
+        let processor = ExampleWorkflowProcessor::new("TestProc");
+        assert_eq!(processor.name(), "TestProc");
+    }
+
+    #[tokio::test]
+    async fn test_processor_validation() -> Result<(), BearDogError> {
+        let processor = ExampleWorkflowProcessor::new("ValidationTest");
+        let valid = ExampleWorkflow::new("valid-1", "Valid Workflow");
+        assert!(processor.validate(&valid).await.is_ok());
+
+        let invalid_id = ExampleWorkflow::new("", "No ID");
+        assert!(processor.validate(&invalid_id).await.is_err());
+
+        let mut invalid_name = ExampleWorkflow::new("name-test", "");
+        invalid_name.name = String::new();
+        assert!(processor.validate(&invalid_name).await.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_processor_can_process() {
+        let processor = ExampleWorkflowProcessor::new("CanProcessTest");
+        let created =
+            ExampleWorkflow::new("cp-1", "Created").set_status(ExampleWorkflowStatus::Created);
+        let started =
+            ExampleWorkflow::new("cp-2", "Started").set_status(ExampleWorkflowStatus::Started);
+        let processing = ExampleWorkflow::new("cp-3", "Processing")
+            .set_status(ExampleWorkflowStatus::Processing);
+        let completed =
+            ExampleWorkflow::new("cp-4", "Completed").set_status(ExampleWorkflowStatus::Completed);
+
+        assert!(processor.can_process(&created));
+        assert!(processor.can_process(&started));
+        assert!(!processor.can_process(&processing));
+        assert!(!processor.can_process(&completed));
+    }
+
+    #[tokio::test]
+    async fn test_processor_failed_workflow() {
+        let processor = ExampleWorkflowProcessor::new("FailedTest");
+        let failed = ExampleWorkflow::new("fail-1", "Failed Test")
+            .set_status(ExampleWorkflowStatus::Failed("Previous error".to_string()));
+
+        let result = processor
+            .process(failed, ProcessingContext::default())
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_logging_observer_new() {
+        let observer = LoggingWorkflowObserver::new("ObserverTest");
+        assert_eq!(observer.name, "ObserverTest");
+    }
+
+    #[test]
+    fn test_start_command_new() {
+        let context = ProcessingContext::default();
+        let command = StartWorkflowCommand::new(context.clone());
+        assert_eq!(command.context(), &context);
+    }
+
+    #[test]
+    fn test_start_command_can_execute() {
+        let command = StartWorkflowCommand::new(ProcessingContext::default());
+        let created = ExampleWorkflow::new("cmd-1", "Created");
+        let started =
+            ExampleWorkflow::new("cmd-2", "Started").set_status(ExampleWorkflowStatus::Started);
+
+        assert!(command.can_execute(&created));
+        assert!(!command.can_execute(&started));
+    }
+
+    #[tokio::test]
+    async fn test_start_command_execute_invalid_status() {
+        let command = StartWorkflowCommand::new(ProcessingContext::default());
+        let already_started = ExampleWorkflow::new("invalid-1", "Already Started")
+            .set_status(ExampleWorkflowStatus::Started);
+
+        let result = command.execute(already_started).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_workflow_with_chained_operations() {
+        let workflow = ExampleWorkflow::new("chain-1", "Chained Test")
+            .with_data(serde_json::json!({"step": 1}))
+            .set_status(ExampleWorkflowStatus::Started);
+
+        assert!(workflow.data.is_some());
+        assert!(matches!(workflow.status, ExampleWorkflowStatus::Started));
     }
 }

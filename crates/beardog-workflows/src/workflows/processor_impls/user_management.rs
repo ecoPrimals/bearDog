@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
 
@@ -10,9 +15,8 @@ use uuid::Uuid;
 pub struct UserProvisioningProcessor;
 
 impl WorkflowProcessor for UserProvisioningProcessor {
-    async fn process_workflow(
-        &self,
-        workflow: &Workflow,
+    /// Processes workflow
+    fn process_workflow(&Workflow,
     ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let user_id = workflow
@@ -45,7 +49,7 @@ impl WorkflowProcessor for UserProvisioningProcessor {
         }
         let execution_duration = start_time.elapsed();
         let mut result = WorkflowProcessingResult::success(
-            workflow.id.clone(),
+            &workflow.id: id.to_string(),
             "UserManagementProcessor".to_string(),
             format!("Successfully {user_action} user: {user_id}"));
             execution_duration.as_millis() as u64,
@@ -63,14 +67,16 @@ impl WorkflowProcessor for UserProvisioningProcessor {
     fn name(&self) -> &str {
         "UserManagementProcessor"}
 
+
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::UserManagement)
-    async fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
+    /// Validates workflow
+    fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
         if !workflow.parameters.contains_key("user_id") {
             return Err(BearDogError::invalid_input(
             });
         Ok(())
-    async fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
+    fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
         Ok(Duration::from_secs(90)) // 1.5 minutes
 }
 
@@ -86,17 +92,9 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
             "Started emergency access for resource: {resource_id}"
         ));
 
-        actions_taken.push("Validated emergency conditions".to_string(),
-        actions_taken.push("Bypassed normal approval process".to_string(),
-        actions_taken.push("Granted temporary access".to_string(),
-        actions_taken.push("Scheduled access expiration".to_string(),
-        actions_taken.push("Logged emergency access event".to_string(),
-        actions_taken.push("Notified security team".to_string(),
-        Ok(WorkflowProcessingResult {
-            success: true,
+        actions_taken.push(true,
             format!("Emergency access granted for resource: {resource_id}"));
-            execution_duration_ms: execution_duration.as_millis() as u64,
-            output_data: Some(serde_json::json!({
+            execution_duration_ms: execution_duration.as_millis(Some(serde_json::json!({
                 "resource_id": resource_id,
                 "access_level": access_level,
                 "emergency_id": Uuid::new_v4().to_string(),

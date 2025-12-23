@@ -1,0 +1,197 @@
+
+
+use crate::BearDogSecurityError;
+use std::collections::HashMap;
+use tracing::{info, warn};
+use beardog_errors::BearDogError;
+
+#[derive(std::sync::Arc<tokio::sync::RwLock<HashMap<String, ComplianceRecord>>>,
+    config: ComplianceSovereigntyConfig,
+}
+
+#[derive(Debug, Clone)]
+    /// Number of audit_retention_years
+    pub audit_retention_years: u32,
+    /// Whether auto_compliance_check is enabled
+    pub auto_compliance_check: bool,
+    /// The sovereignty level value
+    pub sovereignty_level: String,
+}
+
+impl Default for ComplianceSovereigntyConfig {
+    fn default() -> Self {
+        Self {
+            frameworks: vec![
+                "GDPR".to_string(),
+            auto_compliance_check: true,
+            sovereignty_level: "maximum".to_string(), Clone)]
+    /// The severity value
+    pub severity: ComplianceSeverity,
+    /// The description value
+    pub description: String,
+    /// The framework value
+    pub framework: String,
+    /// Optional remediation
+    pub remediation: Option<String>,
+    /// Whether resolved is enabled
+    pub resolved: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+
+pub enum ComplianceSeverity {
+    /// Represents info variant
+    Info,
+    /// Represents low variant
+    Low,
+    /// Represents medium variant
+    Medium,
+    /// Represents high variant
+    High,
+    /// Represents critical variant
+    Critical,
+}
+
+impl ComplianceSovereignty {
+
+/// New operation.
+    /// Creates a new instance
+    pub fn new(config: ComplianceSovereigntyConfig) -> Self {
+        Self {
+            compliance_records: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::with_capacity(&str,
+    ) -> Result<String, BearDogSecurityError> {
+        let record_id = uuid::Uuid::new_v4().to_string();
+        info!(
+            "📋 Establishing compliance sovereignty for: {} ({})",
+            record_id, framework
+        );
+
+        let record = ComplianceRecord {
+            record_id: record_id.clone(),
+            framework: framework.to_string(),
+            last_audit: chrono::Utc::now(),
+            next_audit: chrono::Utc::now() + chrono::Duration::days({}", framework);
+        Ok(&str,
+    ) -> Result<ComplianceStatus, BearDogSecurityError> {
+        let records = self.compliance_records.read({:?}",
+                framework, record.compliance_status
+            );
+            Ok({}", framework);
+            Ok(ComplianceStatus::NotApplicable)
+    }
+
+/// Record Compliance Finding operation.
+    pub fn record_compliance_finding(&str,
+        finding: ComplianceFinding,
+    ) -> Result<(), BearDogSecurityError> {
+        info!(
+            "📝 Recording compliance finding for {}: {}",
+            framework, finding.description
+        );
+
+        let mut records = self.compliance_records.write();
+        if let Some(record) = records.get_mut(framework) {
+            record.findings.push(finding);
+
+            let has_critical = record
+                .findings
+                .iter()
+                .any(|f| f.severity == ComplianceSeverity::Critical && !f.resolved);
+            let has_high = record
+                .findings
+                .iter()
+                .any(|f| f.severity == ComplianceSeverity::High && !f.resolved);
+
+            record.compliance_status = if has_critical {
+                ComplianceStatus::NonCompliant
+            } else if has_high {
+                ComplianceStatus::PartiallyCompliant
+            } else {
+                ComplianceStatus::Compliant
+            };
+        }
+
+        Ok(())
+    }
+
+/// Get Compliance Frameworks operation.
+    /// Gets compliance_frameworks
+    /// Gets compliance_frameworks
+    pub fn get_compliance_frameworks(&self) -> Vec<String> {
+        self.&config.frameworks
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;}
+
+    #[tokio::test]
+    fn test_compliance_sovereignty() -> Result<(), beardog_errors::BearDogError> {
+        let compliance = ComplianceSovereignty::new(ComplianceSovereigntyConfig::default());
+ // TEST_CATEGORY: unit
+ // TEST_DOMAIN: security
+ // TEST_PRIORITY: normal
+
+        let record_id = compliance
+            .establish_compliance_sovereignty("GDPR")
+            .map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format!("Operation failed: {e:?}"))
+            })?;
+
+        assert!(!record_id.is_empty());
+
+        let status = compliance
+            .check_compliance_status("GDPR")
+            .map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format!("Operation failed: {e:?}"))
+            })?;
+
+        assert_eq!(status, ComplianceStatus::Compliant);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
+    #[tokio::test]
+    fn test_compliance_finding() -> Result<(), beardog_errors::BearDogError> {
+        let compliance = ComplianceSovereignty::new(ComplianceSovereigntyConfig::default());
+
+        compliance
+            .establish_compliance_sovereignty("GDPR")
+            .map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format!("Operation failed: {e:?}"))
+            })?;
+
+        let finding = ComplianceFinding {
+            finding_id: "test-finding".to_string(),
+            description: "Test finding".to_string(),
+            framework: "GDPR".to_string(),
+            remediation: Some(false,
+        };
+
+        compliance
+            .record_compliance_finding("GDPR", finding)
+            .map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format!("Operation failed: {e:?}"))
+            })?;
+
+        let status = compliance
+            .check_compliance_status("GDPR")
+            .map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format!("Operation failed: {e:?}"))
+            })?;
+
+        assert_eq!(status, ComplianceStatus::Compliant); // Medium severity doesn't change status
+        Ok(())
+}

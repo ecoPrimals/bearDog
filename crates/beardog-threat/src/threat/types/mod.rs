@@ -1,419 +1,914 @@
-pub mod actions;
-pub mod analysis;
-pub mod config;
-pub mod core;
-pub mod detection;
-pub mod engine;
+// Threat Detection Types - Modern Implementation
+//
+// **MODERNIZED**: Clean, production-ready type definitions for the BearDog threat detection system.
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::SystemTime;
+
 pub mod incidents;
-pub mod intelligence;
-pub mod sources;
-pub mod statistics;
 
-pub use config::ThreatDetectionConfig;
+pub mod engine;
 
-pub use core::{ThreatEvent, ThreatSeverity, ThreatType};
+// Re-export engine types
+pub use engine::threat_engine::*;
 
-pub use sources::{
-    AssetCriticality, GeoLocation, ProtectionLevel, SourceClassification, ThreatSource,
-    ThreatTarget,
-};
+// Re-export canonical threat detection configuration
+pub use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 
-pub use detection::{
-    DetectionMethod, EvidenceData, EvidenceType, FileMetadataData, LogEntryData, NetworkPacketData,
-    ThreatEvidence,
-};
+/// Threat event representing a detected security incident
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatEvent {
+    pub id: String,
+    /// Type of threat detected
+    /// The threat type value
+    /// The threat type value
+    pub threat_type: ThreatType,
+    /// Severity level of the threat
+    /// The severity value
+    /// The severity value
+    pub severity: ThreatSeverity,
+    /// Current status of the threat
+    /// Current status of the component
+    /// Current status of the component
+    pub status: ThreatStatus,
+    /// Source of the threat
+    /// The source value
+    /// The source value
+    pub source: ThreatSource,
+    /// Target of the threat
+    /// The target value
+    /// The target value
+    pub target: ThreatTarget,
+    /// Timestamp when threat was detected
+    /// The detected at value
+    /// The detected at value
+    pub detected_at: SystemTime,
+    pub timestamp: SystemTime,
+    /// Threat confidence score (0.0 - 1.0)
+    pub confidence: f64,
+    /// Threat score (0-100)
+    /// Number of score
+    /// Number of score
+    pub score: u8,
+    /// Threat description
+    /// The description value
+    /// The description value
+    pub description: String,
+    /// Detection method used
+    /// The detection method value
+    /// The detection method value
+    pub detection_method: DetectionMethod,
+    /// Evidence collected
+    pub evidence: Vec<String>,
+    /// Recommended actions
+    /// Collection of recommended actions
+    /// Collection of recommended actions
+    pub recommended_actions: Vec<ThreatAction>,
+    /// Assigned analyst
+    /// Optional assigned analyst
+    /// Optional assigned analyst
+    pub assigned_analyst: Option<String>,
+    /// Related events
+    /// Collection of related events
+    /// Collection of related events
+    pub related_events: Vec<String>,
+    /// Raw event data
+    /// Optional raw data
+    /// Optional raw data
+    pub raw_data: Option<serde_json::Value>,
+    /// Whether threat has been mitigated
+    /// Whether mitigated is enabled
+    /// Whether mitigated is enabled
+    pub mitigated: bool,
+    /// Mitigation actions taken
+    /// Collection of mitigation actions
+    /// Collection of mitigation actions
+    pub mitigation_actions: Vec<ThreatAction>,
+    /// Additional metadata
+    /// Mapping of metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+    /// Mitigation steps taken
+    /// Collection of mitigation steps
+    /// Collection of mitigation steps
+    pub mitigation_steps: Vec<MitigationStep>,
+}
 
-pub use actions::{MitigationStep, ResponseAction, ThreatAction, ThreatStatus};
+/// Source of the threat
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatSource {
+    /// Source type (IP, domain, process, etc.)
+    /// The source type value
+    /// The source type value
+    pub source_type: String,
+    /// Source identifier
+    pub identifier: String,
+    pub id: String,
+    /// IP address if applicable
+    /// Optional ip address
+    /// Optional ip address
+    pub ip_address: Option<String>,
+    /// Hostname if applicable
+    /// Name of the hostitem
+    /// Name of the hostitem
+    pub hostname: Option<String>,
+    /// User agent if applicable
+    /// Optional user agent
+    /// Optional user agent
+    pub user_agent: Option<String>,
+    /// Geographic location if available
+    /// Optional location
+    /// Optional location
+    pub location: Option<String>,
+    /// Optional geolocation
+    /// Optional geolocation
+    pub geolocation: Option<String>,
+    /// Optional threat actor
+    /// Optional threat actor
+    pub threat_actor: Option<String>,
+    /// Source classification
+    /// The classification value
+    /// The classification value
+    pub classification: SourceClassification,
+    /// Reputation score if available
+    /// Optional reputation
+    /// Optional reputation
+    pub reputation: Option<f64>,
+    /// Reputation score (alias)
+    /// The reputation score value
+    /// The reputation score value
+    pub reputation_score: f64,
+    /// Confidence score
+    pub confidence_score: f64,
+    /// First seen timestamp
+    /// Optional first seen
+    /// Optional first seen
+    pub first_seen: Option<SystemTime>,
+    /// Last seen timestamp
+    /// Optional last seen
+    /// Optional last seen
+    pub last_seen: Option<SystemTime>,
+    /// Additional metadata
+    /// Mapping of metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+}
 
-pub use statistics::{DetectionMethodStats, ThreatDetectionStats, ThreatStatistics, ThreatTrend};
-
-pub use intelligence::{
-    FeedStatus, FeedType, IndicatorType, ThreatIndicator, ThreatIntelligenceFeed, UpdateFrequency,
-};
-
-pub use engine::{
-    DetectionRule, MlModel, MlModelType, RuleCondition, ThreatDetectionEngine, ThreatDetectionRule,
-};
-
-pub use analysis::{
-    AnalysisMetrics, CorrelationType, EventCorrelationResult, SecurityEvent, ThreatAnalysisResult,
-    ThreatAnalysisSession,
-};
-
-pub use incidents::{
-    IncidentMetrics, IncidentResponse, IncidentRole, IncidentStatus, IncidentTeamMember,
-    IncidentTimelineEntry, TimelineEntryType,
-};
-
-pub type ResponseActionType = ResponseAction;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::threat::types::engine::rules::ThreatRuleType;
-    use chrono::Utc;
-    use std::collections::HashMap;
-    #[test]
-    fn test_threat_severity_ordering() {
-        assert!(ThreatSeverity::Critical > ThreatSeverity::High);
-        assert!(ThreatSeverity::High > ThreatSeverity::Medium);
-        assert!(ThreatSeverity::Medium > ThreatSeverity::Low);
-        assert!(ThreatSeverity::Low > ThreatSeverity::Info);
-    }
-    #[test]
-    fn test_threat_severity_scoring() {
-        assert_eq!(ThreatSeverity::Critical.to_score(), 100);
-        assert_eq!(ThreatSeverity::High.to_score(), 80);
-        assert_eq!(ThreatSeverity::Medium.to_score(), 50);
-        assert_eq!(ThreatSeverity::Low.to_score(), 30);
-        assert_eq!(ThreatSeverity::Info.to_score(), 10);
-    }
-
-    #[test]
-    fn test_threat_type_typical_severity() {
-        assert_eq!(
-            ThreatType::Ransomware.typical_severity(),
-            ThreatSeverity::Critical
-        );
-        assert_eq!(
-            ThreatType::Phishing.typical_severity(),
-            ThreatSeverity::Medium
-        );
-        assert_eq!(
-            ThreatType::BruteForce.typical_severity(),
-            ThreatSeverity::High
-        );
-    }
-
-    #[test]
-    fn test_threat_event_priority() {
-        let mut event = ThreatEvent {
-            id: "test_event".to_string(),
-            threat_type: ThreatType::Unknown,
-            severity: ThreatSeverity::High,
-            score: 85,
-            timestamp: Utc::now(),
-            source: ThreatSource {
-                id: "test_source".to_string(),
-                source_type: "ip".to_string(),
-                ip_address: Some("192.168.1.1".to_string()),
-                hostname: None,
-                geolocation: None,
-                user_agent: None,
-                reputation_score: 0.0,
-                threat_actor: None,
-                classification: SourceClassification::Unknown,
-                confidence_score: 0.0,
-                first_seen: Some(Utc::now()),
-                last_seen: Some(Utc::now()),
-                threat_score: 0.0,
-                metadata: HashMap::new(),
-            },
-            target: ThreatTarget {
-                id: "test_target".to_string(),
-                target_type: "file".to_string(),
-                resource_id: "test_resource".to_string(),
-                node_id: None,
-                user_account: None,
-                asset_criticality: AssetCriticality::Low,
-                protection_level: ProtectionLevel::Basic,
-                service: None,
-                port: None,
-                protocol: None,
-                metadata: HashMap::new(),
-                resource_type: "file".to_string(),
-                criticality: AssetCriticality::Low,
-                ip_address: None,
-                hostname: Some("test-host".to_string()),
-            },
-            description: "Test threat event".to_string(),
-            evidence: vec![],
-            detection_method: DetectionMethod::Signature,
-            recommended_actions: vec![],
-            status: ThreatStatus::New,
-            assigned_analyst: None,
-            related_events: vec![],
-            mitigation_steps: vec![],
-            confidence: 0.8,
-            raw_data: None,
-            mitigated: false,
-            mitigation_actions: vec![],
-        };
-        assert!(event.is_high_priority());
-        event.severity = ThreatSeverity::Medium;
-        event.score = 60;
-        assert!(!event.is_high_priority());
-    }
-
-    #[test]
-    fn test_detection_config_validation() {
-        let config = ThreatDetectionConfig {
-            threat_threshold: 105,  // Invalid
-            alert_threshold: 1.5,   // Invalid
-            cache_size: 0,          // Invalid
-            monitoring_interval: 0, // Invalid
-            ..Default::default()
-        };
-        assert!(!config.is_valid());
-        let valid_config = ThreatDetectionConfig::default();
-        assert!(valid_config.is_valid());
-    }
-
-    #[test]
-    fn test_threat_source_classification() {
-        let mut source = ThreatSource {
-            classification: SourceClassification::Malicious,
-            reputation_score: 0.1,
-            ..Default::default()
-        };
-        assert!(source.is_malicious());
-        assert!(!source.is_trustworthy());
-        source.classification = SourceClassification::Trusted;
-        source.reputation_score = 0.9;
-        assert!(source.is_trustworthy());
-        assert!(!source.is_malicious());
-    }
-
-    #[test]
-    fn test_threat_target_risk_assessment() {
-        let target = ThreatTarget {
-            criticality: AssetCriticality::Critical,
-            protection_level: ProtectionLevel::Basic,
-            ..Default::default()
-        };
-        assert!(target.is_high_value());
-        assert!(!target.is_well_protected());
-        let risk = target.risk_score();
-        assert!(risk > 0.5); // High risk due to critical asset with basic protection
-    }
-
-    #[test]
-    fn test_detection_method_characteristics() {
-        assert!(DetectionMethod::Signature.typical_accuracy() > 0.9);
-        assert!(DetectionMethod::Signature.false_positive_rate() < 0.1);
-        assert!(!DetectionMethod::Signature.is_good_for_unknown_threats());
-        assert!(DetectionMethod::Anomaly.is_good_for_unknown_threats());
-        assert!(DetectionMethod::Anomaly.false_positive_rate() > 0.1);
-    }
-
-    #[test]
-    fn test_threat_status_transitions() {
-        let status = ThreatStatus::New;
-        let valid_next = status.valid_next_statuses();
-        assert!(valid_next.contains(&ThreatStatus::Investigating));
-        assert!(valid_next.contains(&ThreatStatus::FalsePositive));
-        assert!(!valid_next.contains(&ThreatStatus::Resolved));
-        assert!(status.can_transition_to(&ThreatStatus::Investigating));
-        assert!(!status.can_transition_to(&ThreatStatus::Resolved));
-    }
-
-    #[test]
-    fn test_threat_action_automation() {
-        assert!(ThreatAction::BlockSource.is_automated());
-        assert!(ThreatAction::BlockSource.is_reversible());
-        assert_eq!(ThreatAction::BlockSource.severity_level(), 3);
-        assert!(!ThreatAction::NotifyLawEnforcement.is_automated());
-        assert!(!ThreatAction::NotifyLawEnforcement.is_reversible());
-        assert_eq!(ThreatAction::NotifyLawEnforcement.severity_level(), 5);
-    }
-
-    #[test]
-    fn test_threat_intelligence_indicator() {
-        let mut indicator = ThreatIndicator::new(IndicatorType::IpAddress, "192.168.1.100", 0.9);
-        assert!(indicator.is_high_confidence());
-        assert!(indicator.is_recent(24));
-        indicator.add_threat_type("malware");
-        indicator.add_tag("botnet");
-        assert_eq!(indicator.threat_types.len(), 1);
-        assert_eq!(indicator.tags.len(), 1);
-    }
-
-    #[test]
-    fn test_incident_response_workflow() {
-        let mut incident =
-            IncidentResponse::new("INC-2024-001", ThreatSeverity::High, "Malware detected");
-        assert!(incident.is_active());
-        // assert!(incident.is_high_priority()); // Method doesn't exist
-        assert_eq!(incident.status, IncidentStatus::Open);
-        incident.update_status(IncidentStatus::InProgress);
-        incident.assign_to("analyst-001");
-        incident.add_containment_action("System isolated");
-        assert_eq!(incident.status, IncidentStatus::InProgress);
-        assert_eq!(incident.assigned_to, Some("analyst-001".to_string()));
-        assert_eq!(incident.containment_actions.len(), 1);
-        incident.update_status(IncidentStatus::Resolved);
-        assert!(incident.status.can_transition_to(&IncidentStatus::Closed));
-    }
-
-    #[test]
-    fn test_analysis_metrics() {
-        let mut metrics = AnalysisMetrics::new();
-        metrics.update_with_analysis(100.0, true);
-        metrics.update_with_analysis(200.0, false);
-        metrics.update_with_analysis(150.0, true);
-        assert_eq!(metrics.total_events_processed, 3);
-        assert_eq!(metrics.threat_count, 2);
-        assert_eq!(metrics.threat_detection_rate(), 2.0 / 3.0);
-        assert_eq!(metrics.avg_threats_per_event(), 2.0 / 3.0);
-    }
-
-    #[test]
-    fn test_security_event() {
-        let event = SecurityEvent::new(
-            "authentication_failure".to_string(),
-            chrono::Utc::now(),
-            "high".to_string(),
-        );
-        assert_eq!(event.event_type, "authentication_failure");
-        assert_eq!(event.severity, "high");
-    }
-
-    #[test]
-    fn test_rule_condition_complexity() {
-        let simple = RuleCondition::FieldEquals {
-            field: "event_type".to_string(),
-            value: "login".to_string(),
-        };
-        let complex = RuleCondition::And {
-            conditions: vec![
-                simple.clone(),
-                RuleCondition::FrequencyThreshold {
-                    count: 5,
-                    window_minutes: 1,
-                },
-            ],
-        };
-        assert!(!simple.is_complex());
-        assert!(complex.is_complex());
-        assert!(complex.complexity_score() > simple.complexity_score());
-    }
-
-    #[test]
-    fn test_ml_model_lifecycle() {
-        let mut model = MlModel::new(
-            "model-001",
-            "Anomaly Detector",
-            MlModelType::AnomalyDetection,
-            0.8,
-            vec!["packet_count", "byte_count"],
-        );
-
-        assert!(!model.is_high_accuracy());
-
-        model.update_accuracy(0.9);
-        assert!(model.is_high_accuracy());
-        assert_eq!(model.get_age_days(), 0);
-        assert!(!model.needs_retraining());
-        model.update_training_timestamp();
-    }
-
-    #[test]
-    fn test_comprehensive_workflow() {
-        let config = ThreatDetectionConfig::default();
-        let mut engine = ThreatDetectionEngine::new(config);
-
-        let rule = DetectionRule::new(
-            "test-rule",
-            "Test rule description",
-            ThreatRuleType::Behavioral,
-            ThreatSeverity::Medium,
-            "threat_type == 'malware'",
-        );
-        engine.add_detection_rule(rule);
-
-        let _event = SecurityEvent::new(
-            "event-001".to_string(),
-            chrono::Utc::now(),
-            "file_scan".to_string(),
-        )
-        .with_source_ip("192.168.1.100".to_string())
-        .with_user_id("user123".to_string());
-
-        let analysis = ThreatAnalysisResult::new("analysis-001", "event-001")
-            .with_threat_detected(true)
-            .with_confidence(0.85);
-
-        assert!(analysis.threat_detected);
-        assert_eq!(analysis.confidence, 0.85);
-        assert!(analysis.details.contains("analysis-001"));
-        assert!(analysis.details.contains("event-001"));
-
-        if analysis.has_threats() {
-            let incident =
-                IncidentResponse::new("INC-2024-001", ThreatSeverity::High, "Malware detected");
-            assert!(incident.is_active());
-            assert!(incident.is_high_priority());
+impl Default for ThreatSource {
+    fn default() -> Self {
+        Self {
+            source_type: "unknown".to_string(),
+            identifier: "unknown".to_string(),
+            id: uuid::Uuid::new_v4().to_string(),
+            ip_address: None,
+            hostname: None,
+            user_agent: None,
+            location: None,
+            geolocation: None,
+            threat_actor: None,
+            classification: SourceClassification::Unknown,
+            reputation: None,
+            reputation_score: 0.0,
+            confidence_score: 0.0,
+            first_seen: None,
+            last_seen: None,
+            metadata: HashMap::new(),
         }
-
-        assert_eq!(engine.detection_rules.len(), 1);
-        assert_eq!(engine.get_enabled_rules().len(), 1);
-    }
-
-    #[test]
-    fn test_threat_analysis_result() {
-        let analysis = ThreatAnalysisResult::new("analysis-001", "event-001")
-            .with_threat_detected(true)
-            .with_confidence(0.85);
-
-        assert!(analysis.threat_detected);
-        assert_eq!(analysis.confidence, 0.85);
-        assert!(analysis.details.contains("analysis-001"));
-        assert!(analysis.details.contains("event-001"));
     }
 }
 
-pub mod validation {
-    use super::*;
-    use beardog_errors::BearDogError;
+/// Target of the threat
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatTarget {
+    /// Target type (system, service, data, etc.)
+    /// The target type value
+    /// The target type value
+    pub target_type: String,
+    /// Target identifier
+    pub identifier: String,
+    pub id: String,
+    /// Resource identifier
+    pub resource_id: String,
+    /// Node identifier
+    pub node_id: Option<String>,
+    /// User account if applicable
+    /// Number of `user_acitems`
+    /// Number of `user_acitems`
+    pub user_account: Option<String>,
+    /// Asset criticality
+    /// The asset criticality value
+    /// The asset criticality value
+    pub asset_criticality: AssetCriticality,
+    /// Protection level
+    /// The protection level value
+    /// The protection level value
+    pub protection_level: ProtectionLevel,
+    /// Service name if applicable
+    /// Optional service
+    /// Optional service
+    pub service: Option<String>,
+    /// Port number if applicable
+    /// Optional port
+    /// Optional port
+    pub port: Option<u16>,
+    /// Protocol if applicable
+    /// Optional protocol
+    /// Optional protocol
+    pub protocol: Option<String>,
+    /// Additional metadata
+    /// Mapping of metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+    /// Resource type
+    /// The resource type value
+    /// The resource type value
+    pub resource_type: String,
+    /// Criticality level of the target
+    /// The criticality value
+    /// The criticality value
+    pub criticality: ThreatSeverity,
+    /// IP address if applicable
+    /// Optional ip address
+    /// Optional ip address
+    pub ip_address: Option<String>,
+    /// Hostname if applicable
+    /// Name of the hostitem
+    /// Name of the hostitem
+    pub hostname: Option<String>,
+}
 
-    pub fn validate_threat_event(event: &ThreatEvent) -> Result<(), BearDogError> {
-        if event.id.is_empty() {
-            return Err(BearDogError::validation("Event ID cannot be empty"));
+impl Default for ThreatTarget {
+    fn default() -> Self {
+        Self {
+            target_type: "unknown".to_string(),
+            identifier: "unknown".to_string(),
+            id: uuid::Uuid::new_v4().to_string(),
+            resource_id: "unknown".to_string(),
+            node_id: None,
+            user_account: None,
+            asset_criticality: AssetCriticality::Low,
+            protection_level: ProtectionLevel::Basic,
+            service: None,
+            port: None,
+            protocol: None,
+            metadata: HashMap::new(),
+            resource_type: "unknown".to_string(),
+            criticality: ThreatSeverity::Low,
+            ip_address: None,
+            hostname: None,
         }
-        if event.score > 100 {
-            return Err(BearDogError::validation("Threat score cannot exceed 100"));
-        }
-        if event.description.is_empty() {
-            return Err(BearDogError::validation("Event description cannot be empty"));
-        }
+    }
+}
 
-        Ok(())
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RuleCondition {
+    /// Field equals a specific value
+    FieldEquals { field: String, value: String },
+    /// Field greater than a threshold
+    FieldGreaterThan { field: String, threshold: f64 },
+    /// Field less than a threshold
+    FieldLessThan { field: String, threshold: f64 },
+    /// Field contains a pattern
+    FieldContains { field: String, pattern: String },
+    /// Complex condition with multiple criteria
+    Complex { conditions: Vec<RuleCondition> },
+}
+
+/// Types of threats that can be detected
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of threat
+/// Types of threat
+pub enum ThreatType {
+    /// Malware detection
+    Malware,
+    /// Intrusion attempt
+    Intrusion,
+    /// Data exfiltration
+    DataExfiltration,
+    /// Denial of service attack
+    DenialOfService,
+    /// Privilege escalation
+    PrivilegeEscalation,
+    /// Suspicious network activity
+    SuspiciousNetwork,
+    /// Configuration tampering
+    ConfigurationTampering,
+    /// Unauthorized access
+    UnauthorizedAccess,
+    /// Resource abuse
+    ResourceAbuse,
+    /// Anomalous behavior detected
+    Anomaly,
+    /// Suspicious activity
+    Suspicious,
+    /// Malicious activity confirmed
+    Malicious,
+    /// Unknown threat pattern
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ThreatSeverity {
+    /// Low severity - monitoring only
+    Low,
+    /// Medium severity - requires attention
+    Medium,
+    /// High severity - immediate action required
+    High,
+    /// Critical severity - emergency response
+    Critical,
+}
+
+impl ThreatSeverity {
+    /// Convert severity to string representation
+    /// Returns as str
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+            Self::Critical => "critical",
+        }
     }
 
-    pub fn validate_detection_rule(rule: &DetectionRule) -> Result<(), BearDogError> {
-        if rule.id.is_empty() {
-            return Err(BearDogError::validation("Rule ID cannot be empty"));
+    #[must_use]
+    pub const fn score(&self) -> u8 {
+        match self {
+            Self::Low => 1,
+            Self::Medium => 2,
+            Self::High => 3,
+            Self::Critical => 4,
         }
-        if rule.name.is_empty() {
-            return Err(BearDogError::validation("Rule name cannot be empty"));
-        }
-        if rule.condition.complexity_score() > 10 {
-            return Err(BearDogError::validation("Rule condition too complex"));
-        }
+    }
+}
 
-        Ok(())
+/// Status of threat handling
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ThreatStatus {
+    /// Threat detected but not yet processed
+    Detected,
+    /// Threat is being analyzed
+    Analyzing,
+    /// Threat is being mitigated
+    Mitigating,
+    /// Threat has been contained
+    Contained,
+    /// Threat has been resolved
+    Resolved,
+    /// False positive - not a real threat
+    FalsePositive,
+    /// Threat is currently active
+    Active,
+}
+
+/// Detection method used to identify threat
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DetectionMethod {
+    /// Rule-based detection
+    RuleBased,
+    /// Machine learning detection
+    MachineLearning,
+    /// Threat intelligence matching
+    ThreatIntelligence,
+    /// Behavioral analysis
+    BehavioralAnalysis,
+    /// Signature matching
+    SignatureMatching,
+    /// Anomaly detection
+    AnomalyDetection,
+}
+
+/// Classification of threat source
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum SourceClassification {
+    /// Trusted source
+    Trusted,
+    /// Unknown source
+    Unknown,
+    /// Suspicious source
+    Suspicious,
+    /// Known malicious source
+    KnownMalicious,
+    /// Compromised legitimate source
+    Compromised,
+}
+
+/// Asset criticality levels
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum AssetCriticality {
+    /// Low criticality
+    Low,
+    /// Medium criticality
+    Medium,
+    /// High criticality
+    High,
+    /// Critical asset
+    Critical,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ProtectionLevel {
+    /// Basic protection
+    Basic,
+    /// Standard protection
+    Standard,
+    /// Enhanced protection
+    Enhanced,
+    /// Maximum protection
+    Maximum,
+}
+
+/// Threat response actions
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ThreatAction {
+    /// Block the source
+    BlockSource,
+    /// Alert security team
+    AlertSecurityTeam,
+    /// Investigate activity
+    InvestigateActivity,
+    /// Quarantine asset
+    QuarantineAsset,
+    /// Escalate to administrator
+    EscalateToAdmin,
+    LogForAnalysis,
+}
+
+/// Types of threat detection rules
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of threat rule
+/// Types of threat rule
+pub enum ThreatRuleType {
+    /// Signature-based rule
+    Signature,
+    /// Anomaly detection rule
+    Anomaly,
+    /// Behavioral analysis rule
+    Behavioral,
+    /// Machine learning rule
+    MachineLearning,
+    /// Heuristic rule
+    Heuristic,
+    /// Custom rule
+    Custom,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of indicator
+/// Types of indicator
+pub enum IndicatorType {
+    /// IP address indicator
+    IpAddress,
+    /// Domain name indicator
+    DomainName,
+    /// URL indicator
+    Url,
+    /// File hash indicator
+    FileHash,
+    /// Email address indicator
+    EmailAddress,
+    /// User agent indicator
+    UserAgent,
+    /// Registry key indicator
+    RegistryKey,
+    /// Process name indicator
+    ProcessName,
+}
+
+impl std::fmt::Display for IndicatorType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::IpAddress => "IP Address",
+            Self::DomainName => "Domain Name",
+            Self::Url => "URL",
+            Self::FileHash => "File Hash",
+            Self::EmailAddress => "Email Address",
+            Self::UserAgent => "User Agent",
+            Self::RegistryKey => "Registry Key",
+            Self::ProcessName => "Process Name",
+        };
+        write!(f, "{s}")
+    }
+}
+
+/// Threat intelligence indicator
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatIndicator {
+    /// Indicator type
+    /// The indicator type value
+    /// The indicator type value
+    pub indicator_type: IndicatorType,
+    /// Indicator value
+    /// The value value
+    /// The value value
+    pub value: String,
+    /// Confidence in indicator
+    pub confidence: f64,
+    /// Source of indicator
+    /// The source value
+    /// The source value
+    pub source: String,
+    /// Timestamp when indicator was created
+    /// The created at value
+    /// The created at value
+    pub created_at: SystemTime,
+}
+
+/// Threat intelligence feed
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatIntelligenceFeed {
+    /// Feed identifier
+    pub id: String,
+    /// Feed name
+    /// Name of the item
+    /// Name of the item
+    pub name: String,
+    /// Feed source
+    /// The source value
+    /// The source value
+    pub source: String,
+    /// Last update timestamp
+    /// The last updated value
+    /// The last updated value
+    pub last_updated: SystemTime,
+    /// Whether feed is enabled
+    /// Whether feature is enabled
+    /// Whether feature is enabled
+    pub enabled: bool,
+    /// Feed reliability score
+    /// The reliability value
+    /// The reliability value
+    pub reliability: f64,
+    /// Indicators in this feed
+    /// Collection of indicators
+    /// Collection of indicators
+    pub indicators: Vec<ThreatIndicator>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MitigationStep {
+    /// Step identifier
+    pub id: String,
+    /// Action taken
+    /// The action value
+    /// The action value
+    pub action: String,
+    /// Timestamp when action was taken
+    pub timestamp: SystemTime,
+    /// Result of the action
+    /// The result value
+    /// The result value
+    pub result: String,
+    /// Success status
+    /// Whether success is enabled
+    /// Whether success is enabled
+    pub success: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityEvent {
+    /// Event identifier
+    pub id: String,
+    /// Event type
+    /// The event type value
+    /// The event type value
+    pub event_type: String,
+    /// Event timestamp
+    pub timestamp: SystemTime,
+    /// Event severity
+    /// The severity value
+    /// The severity value
+    pub severity: ThreatSeverity,
+    /// Event source
+    /// The source value
+    /// The source value
+    pub source: String,
+    /// Event description
+    /// The description value
+    /// The description value
+    pub description: String,
+    /// Additional event data
+    /// Mapping of data
+    /// Mapping of data
+    pub data: HashMap<String, String>,
+}
+
+impl SecurityEvent {
+    /// Create a new security event
+    /// Creates a new instance
+    #[must_use]
+    pub fn new(event_type: &str, timestamp: chrono::DateTime<chrono::Utc>, source: &str) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            event_type: event_type.to_string(),
+            timestamp: timestamp.into(),
+            severity: ThreatSeverity::Low,
+            source: source.to_string(),
+            description: String::new(),
+            data: HashMap::new(),
+        }
     }
 
-    pub fn validate_threat_indicator(indicator: &ThreatIndicator) -> Result<(), BearDogError> {
-        if indicator.value.is_empty() {
-            return Err(BearDogError::validation("Indicator value cannot be empty"));
-        }
-        // Confidence level validation is handled by the enum type itself
-        if indicator.first_seen > indicator.last_seen {
-            return Err(BearDogError::validation("First seen cannot be after last seen"));
-        }
-
-        Ok(())
+    /// Add source IP to event data
+    /// Creates instance with source ip
+    #[must_use]
+    pub fn with_source_ip(mut self, source_ip: &str) -> Self {
+        self.data
+            .insert("source_ip".to_string(), source_ip.to_string());
+        self
     }
 
-    pub fn validate_security_event(event: &SecurityEvent) -> Result<(), BearDogError> {
-        if event.event_type.is_empty() {
-            return Err(BearDogError::validation("Event type cannot be empty"));
-        }
-        if event.severity.is_empty() {
-            return Err(BearDogError::validation("Event severity cannot be empty"));
-        }
+    /// Add user ID to event data
+    /// Creates instance with user id
+    #[must_use]
+    pub fn with_user_id(mut self, user_id: &str) -> Self {
+        self.data.insert("user_id".to_string(), user_id.to_string());
+        self
+    }
+}
 
-        Ok(())
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MlModel {
+    /// Model identifier
+    pub id: String,
+    /// Model name
+    /// Name of the item
+    /// Name of the item
+    pub name: String,
+    /// Model type
+    /// The model type value
+    /// The model type value
+    pub model_type: MlModelType,
+    /// Model accuracy score
+    /// The accuracy value
+    /// The accuracy value
+    pub accuracy: f64,
+    /// Model version
+    /// The version value
+    /// The version value
+    pub version: String,
+    /// Model training timestamp
+    /// The trained at value
+    /// The trained at value
+    pub trained_at: SystemTime,
+}
+
+/// Types of machine learning models
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of ml model
+/// Types of ml model
+pub enum MlModelType {
+    /// Anomaly detection model
+    AnomalyDetection,
+    /// Classification model
+    Classification,
+    /// Clustering model
+    Clustering,
+    /// Neural network model
+    NeuralNetwork,
+    /// Decision tree model
+    DecisionTree,
+    /// Ensemble model
+    Ensemble,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IncidentResponse {
+    /// Incident identifier
+    pub id: String,
+    /// Related threat event ID
+    pub threat_id: String,
+    /// Response status
+    /// Current status of the component
+    /// Current status of the component
+    pub status: ResponseStatus,
+    /// Response team assigned
+    /// The assigned team value
+    /// The assigned team value
+    pub assigned_team: String,
+    /// Response start time
+    /// The started at value
+    /// The started at value
+    pub started_at: SystemTime,
+    /// Response completion time
+    /// Optional completed at
+    /// Optional completed at
+    pub completed_at: Option<SystemTime>,
+    /// Response actions taken
+    /// Collection of actions
+    /// Collection of actions
+    pub actions: Vec<ResponseAction>,
+    /// Response notes
+    /// The notes value
+    /// The notes value
+    pub notes: String,
+}
+
+/// Status of incident response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ResponseStatus {
+    /// Response initiated
+    Initiated,
+    /// Response in progress
+    InProgress,
+    /// Response escalated
+    Escalated,
+    /// Response completed
+    Completed,
+    /// Response failed
+    Failed,
+}
+
+/// Action taken during incident response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResponseAction {
+    /// Action identifier
+    pub id: String,
+    /// Action type
+    /// The action type value
+    /// The action type value
+    pub action_type: String,
+    /// Action description
+    /// The description value
+    /// The description value
+    pub description: String,
+    /// Action timestamp
+    pub timestamp: SystemTime,
+    /// Action result
+    /// The result value
+    /// The result value
+    pub result: String,
+    /// Action success status
+    /// Whether success is enabled
+    /// Whether success is enabled
+    pub success: bool,
+}
+
+impl ThreatEvent {
+    /// Create a new threat event
+    /// Creates a new instance
+    #[must_use]
+    pub fn new(
+        id: String,
+        threat_type: ThreatType,
+        severity: ThreatSeverity,
+        source: ThreatSource,
+        target: ThreatTarget,
+    ) -> Self {
+        let now = SystemTime::now();
+        Self {
+            id,
+            threat_type,
+            severity,
+            status: ThreatStatus::Detected,
+            source,
+            target,
+            detected_at: now,
+            timestamp: now,
+            confidence: 0.5,
+            score: 50,
+            description: String::new(),
+            detection_method: DetectionMethod::RuleBased,
+            evidence: Vec::new(),
+            recommended_actions: Vec::new(),
+            assigned_analyst: None,
+            related_events: Vec::new(),
+            raw_data: None,
+            mitigated: false,
+            mitigation_actions: Vec::new(),
+            metadata: HashMap::new(),
+            mitigation_steps: Vec::new(),
+        }
+    }
+
+    /// Add a mitigation step to the threat event
+    pub fn add_mitigation_step(&mut self, step: MitigationStep) {
+        self.mitigation_steps.push(step);
+    }
+
+    /// Update threat status
+    /// Updates status
+    /// Updates status
+    pub fn update_status(&mut self, status: ThreatStatus) {
+        self.status = status;
+    }
+
+    /// Check if threat is active
+    /// Checks if active
+    /// Checks if active
+    #[must_use]
+    pub const fn is_active(&self) -> bool {
+        matches!(
+            self.status,
+            ThreatStatus::Detected | ThreatStatus::Analyzing | ThreatStatus::Mitigating
+        )
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DetectionRule {
+    /// Unique rule identifier
+    pub id: String,
+    /// Human-readable rule name
+    /// Name of the item
+    /// Name of the item
+    pub name: String,
+    /// Rule description
+    /// The description value
+    /// The description value
+    pub description: String,
+    /// Rule pattern or signature
+    /// The pattern value
+    /// The pattern value
+    pub pattern: String,
+    /// Rule severity
+    /// The severity value
+    /// The severity value
+    pub severity: ThreatSeverity,
+    /// Rule enabled status
+    /// Whether feature is enabled
+    /// Whether feature is enabled
+    pub enabled: bool,
+    /// Rule confidence score
+    pub confidence: f64,
+    /// The condition value
+    /// The condition value
+    pub condition: RuleCondition,
+    /// The rule type value
+    /// The rule type value
+    pub rule_type: ThreatRuleType,
+}
+
+impl Default for DetectionRule {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            description: String::new(),
+            pattern: String::new(),
+            severity: ThreatSeverity::Medium,
+            enabled: true,
+            confidence: 0.5,
+            condition: RuleCondition::FieldEquals {
+                field: String::new(),
+                value: String::new(),
+            },
+            rule_type: ThreatRuleType::Signature,
+        }
+    }
+}
+
+impl DetectionRule {
+    /// Create a new detection rule
+    /// Creates a new instance
+    #[must_use]
+    pub const fn new(
+        id: String,
+        name: String,
+        description: String,
+        pattern: String,
+        severity: ThreatSeverity,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            description,
+            pattern,
+            severity,
+            enabled: true,
+            confidence: 0.8,
+            condition: RuleCondition::FieldEquals {
+                field: String::new(),
+                value: String::new(),
+            },
+            rule_type: ThreatRuleType::Signature,
+        }
+    }
+
+    /// Enable the detection rule
+    pub fn enable(&mut self) {
+        self.enabled = true;
+    }
+
+    /// Disable the detection rule
+    pub fn disable(&mut self) {
+        self.enabled = false;
+    }
+}
+
+impl MitigationStep {
+    /// Create a new mitigation step
+    /// Creates a new instance
+    #[must_use]
+    pub fn new(id: String, action: String, result: String, success: bool) -> Self {
+        Self {
+            id,
+            action,
+            timestamp: SystemTime::now(),
+            result,
+            success,
+        }
     }
 }

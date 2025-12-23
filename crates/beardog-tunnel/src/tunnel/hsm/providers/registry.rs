@@ -1,304 +1,373 @@
-
+//! Universal HSM Provider Registry
+//!
+//! Central registry for managing and selecting HSM providers across platforms.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::hsm::{
-    traits::{
-        CapabilityDiscoveryEngine, CryptoOperation, HsmCapabilities, HsmRequirements,
-        SecurityLevel, UniversalHsmProvider, VendorInfo, HsmHealthStatus,
-        AuthenticationMethod, PerformanceRequirements,
-    },
-    HsmKey, KeyMetadata,
-};
-use beardog_types::canonical::crypto::KeyType;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
-use tracing::{debug, info, warn, error};
-use super::{AndroidUniversalProvider, IosUniversalProvider, SoftwareUniversalProvider};
+use tracing::info;
 
+/// Universal HSM Provider Registry
 pub struct UniversalProviderRegistry {
-
-    discovery_engine: CapabilityDiscoveryEngine,
-
-    providers: Arc<RwLock<HashMap<String, impl HsmProvider + Send + Sync>>>,
-
-    health_cache: Arc<RwLock<HashMap<String, (HsmHealthStatus, chrono::DateTime<chrono::Utc>)>>>,
-
-    config: RegistryConfig,
+    /// Registered providers
+    providers: HashMap<String, ProviderInfo>,
+    /// Provider selection strategy
+    strategy: SelectionStrategy,
+    /// Registry statistics
+    stats: RegistryStats,
 }
 
+/// Provider information
 #[derive(Debug, Clone)]
-pub struct RegistryConfig {
+pub struct ProviderInfo {
+    /// Provider name/ID
+    pub id: String,
+    /// Provider type
+    pub provider_type: ProviderType,
+    /// Security level
+    pub security_level: u8,
+    /// Whether provider is available
+    pub available: bool,
+    /// Provider metadata
+    pub metadata: HashMap<String, String>,
+}
 
-    pub health_cache_duration: i64,
+/// Provider type enumeration
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ProviderType {
+    /// Software HSM
+    Software,
+    /// Android StrongBox/TEE
+    Android,
+    /// iOS Secure Enclave
+    Ios,
+    /// PKCS#11 Hardware HSM
+    Pkcs11,
+    /// TPM 2.0
+    Tpm,
+    /// Cloud HSM
+    Cloud,
+}
 
-    pub auto_register_platform_providers: bool,
-
-    pub include_software_fallback: bool,
-
-    pub preferred_security_level: SecurityLevel,
-
-pub enum ProviderSelectionStrategy {
-
+/// Provider selection strategy
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SelectionStrategy {
+    /// Highest security level
     HighestSecurity,
-
+    /// Best performance
     BestPerformance,
+    /// Requirements-based selection
+    RequirementsBased,
+}
 
-    RequirementsBased(HsmRequirements),
-
-    Specific(String),
-
-pub struct RegistryStatistics {
+/// Registry statistics
+#[derive(Debug, Clone, Default)]
+pub struct RegistryStats {
+    /// Total registered providers
     pub total_providers: usize,
+    /// Healthy/available providers
     pub healthy_providers: usize,
-    pub security_levels: HashMap<SecurityLevel, usize>,
+    /// Security level distribution
+    pub security_levels: HashMap<u8, usize>,
+    /// Vendor distribution
     pub vendor_distribution: HashMap<String, usize>,
-    pub total_capabilities: usize,}
+    /// Total capabilities
+    pub total_capabilities: usize,
+}
 
 impl UniversalProviderRegistry {
-
-    pub async fn new() -> Result<Self, BearDogError> {
-        let config = RegistryConfig::default();
-        Self::with_config(config).await
+    /// Create a new provider registry
+    pub fn new() -> Self {
+        Self {
+            providers: HashMap::new(),
+            strategy: SelectionStrategy::HighestSecurity,
+            stats: RegistryStats::default(),
+        }
     }
 
-    pub async fn with_config(config: RegistryConfig) -> Result<Self, BearDogError> {
-        let mut registry = Self {
-            discovery_engine: CapabilityDiscoveryEngine::new(),
-            providers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            health_cache: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            config,
-        };
-        
-        if registry.config.auto_register_platform_providers {
-            registry.auto_register_providers().await?;
+    /// Register a provider
+    ///
+    /// # Errors
+    /// Returns an error if registration fails
+    pub fn register_provider(&mut self, info: ProviderInfo) -> Result<(), BearDogError> {
+        info!(
+            "📝 Registering HSM provider: {} ({:?})",
+            info.id, info.provider_type
+        );
+
+        // Update stats
+        self.stats.total_providers += 1;
+        if info.available {
+            self.stats.healthy_providers += 1;
         }
-        Ok(registry)
 
-    pub async fn auto_register_providers(&mut self) -> Result<(), BearDogError> {
-        info!("🔍 Auto-registering platform HSM providers...");
-        let mut registered_count = 0;
+        *self
+            .stats
+            .security_levels
+            .entry(info.security_level)
+            .or_insert(0) += 1;
 
-        match AndroidUniversalProvider::new().await {
-            Ok(provider) => {
-                let provider_id = "android_universal".to_string();
-                self.register_provider(provider_id.clone(), provider).await?;
-                info!("✅ Registered Android Universal Provider: {}", provider_id);
-                registered_count += 1;
-            }
-            Err(e) => {
-                debug!("Android provider not available: {}", e);
+        if let Some(vendor) = info.metadata.get("vendor") {
+            *self
+                .stats
+                .vendor_distribution
+                .entry(vendor.clone())
+                .or_insert(0) += 1;
+        }
 
-        match IosUniversalProvider::new().await {
-                let provider_id = "ios_universal".to_string();
-                info!("✅ Registered iOS Universal Provider: {}", provider_id);
-                debug!("iOS provider not available: {}", e);
-
-        if self.config.include_software_fallback {
-            match SoftwareUniversalProvider::new().await {
-                Ok(provider) => {
-                    let provider_id = "software_universal".to_string();
-                    self.register_provider(provider_id.clone(), provider).await?;
-                    info!("✅ Registered Software Universal Provider: {}", provider_id);
-                    registered_count += 1;
-                }
-                Err(e) => {
-                    warn!("Failed to register software fallback: {}", e);
-        info!("🎉 Auto-registration complete: {} providers registered", registered_count);
-        if registered_count == 0 {
-            warn!("⚠️ No providers were registered during auto-registration");
+        self.providers.insert(info.id.clone(), info);
         Ok(())
+    }
 
-    pub async fn register_provider(
-        &mut self,
-        provider_id: &str,
-        provider: impl HsmProvider + Send + Sync,
-    ) -> Result<(), BearDogError> {
+    /// Unregister a provider
+    pub fn unregister_provider(&mut self, provider_id: &str) -> Option<ProviderInfo> {
+        if let Some(info) = self.providers.remove(provider_id) {
+            info!("🗑️ Unregistered HSM provider: {}", provider_id);
 
-        let capabilities = provider.discover_capabilities().await?;
-        info!("📝 Registering provider: {} ({})", 
-              provider_id, capabilities.vendor_info.product);
+            // Update stats
+            self.stats.total_providers = self.stats.total_providers.saturating_sub(1);
+            if info.available {
+                self.stats.healthy_providers = self.stats.healthy_providers.saturating_sub(1);
+            }
 
-        self.discovery_engine.register_provider(provider);
-
-        {
-            let mut providers = self.providers.write().unwrap_or_else(|poisoned| {
-        tracing::warn!("RwLock poisoned for write, recovering");
-        poisoned.into_inner()
-    });
-            providers.insert(provider_id.clone(), provider);
-        info!("✅ Provider registered successfully: {}", provider_id);
-
-    pub async fn get_provider(&self, provider_id: &str) -> Result<&dyn HsmProvider, BearDogError> {
-        let providers = self.providers.read().map_err(|e| {
-    tracing::error!("Operation failed: {e:?}");
-    beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-})?;
-        providers.get(provider_id)
-            .map(|p| p.as_ref())
-            .ok_or_else(|| BearDogError::no_suitable_provider(format_args!("Provider not found: }", provider_id).to_string(),
-            })
-
-    pub async fn select_provider(
-        &self,
-        strategy: ProviderSelectionStrategy,
-    ) -> Result<&dyn HsmProvider, BearDogError> {
-        match strategy {
-            ProviderSelectionStrategy::HighestSecurity => {
-                self.select_highest_security_provider().await
-            ProviderSelectionStrategy::BestPerformance => {
-                self.select_best_performance_provider().await
-            ProviderSelectionStrategy::RequirementsBased(requirements) => {
-                self.discovery_engine.find_best_provider(&requirements).await
-            ProviderSelectionStrategy::Specific(provider_id) => {
-                self.get_provider(&provider_id).await
-
-    async fn select_highest_security_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
-        let discovered_providers = self.discovery_engine.discover_all().await?;
-        let mut best_provider = None;
-        let mut best_security_level = SecurityLevel::Software;
-        for (vendor_info, capabilities) in &discovered_providers {
-            if capabilities.security_level > best_security_level {
-                best_security_level = capabilities.security_level.clone();
-
-                if let Ok(provider) = self.get_provider_by_vendor_info(vendor_info).await {
-                    best_provider = Some(provider);
-        best_provider.ok_or_else(|| BearDogError::no_suitable_provider("No providers available for highest security selection".to_string(),
-        ))
-
-    async fn select_best_performance_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
-        let mut best_score = 0.0;
-
-            let score = capabilities.performance_profile.key_generation_speed +
-                       capabilities.performance_profile.signing_speed +
-                       capabilities.performance_profile.encryption_throughput;
-            
-            if score > best_score {
-                best_score = score;
-        best_provider.ok_or_else(|| BearDogError::no_suitable_provider("No providers available for performance selection".to_string(),
-
-    async fn get_provider_by_vendor_info(&self, vendor_info: &VendorInfo) -> Result<&dyn HsmProvider, BearDogError> {
-        for provider in providers.values() {
-            let provider_info = provider.get_provider_info();
-            if provider_info.name == vendor_info.name && 
-               provider_info.product == vendor_info.product {
-                return Ok(provider.as_ref());
-        Err(BearDogError::no_suitable_provider(format_args!("Provider not found for vendor: }", vendor_info.name).to_string(),
-        })
-
-    pub async fn health_check_all(&self) -> Result<HashMap<String, HsmHealthStatus, BearDogError>> {
-        let mut health_status = HashMap::with_capacity(16);
-        for (provider_id, provider) in providers.iter() {
-
-            let cached_health = {
-                let health_cache = self.health_cache.read().map_err(|e| {
-                health_cache.get(provider_id).cloned()
-            };
-            let health = if let Some((cached_health, cached_time)) = cached_health {
-                let age = chrono::Utc::now() - cached_time;
-                if age.num_seconds() < self.config.health_cache_duration {
-                    cached_health
-                } else {
-
-                    let new_health = provider.health_check().await?;
-
-                    {
-                        let mut health_cache = self.health_cache.write().unwrap_or_else(|poisoned| {
-                        health_cache.insert(provider_id.clone(), (new_health.clone(), chrono::Utc::now()));
-                    }
-                    new_health
-            } else {
-
-                let new_health = provider.health_check().await?;
-
-                {
-                    let mut health_cache = self.health_cache.write().unwrap_or_else(|poisoned| {
-                    health_cache.insert(provider_id.clone(), (new_health.clone(), chrono::Utc::now()));
-                new_health
-            health_status.insert(provider_id.clone(), health);
-        Ok(health_status)
-
-    pub async fn get_statistics(&self) -> Result<RegistryStatistics, BearDogError> {
-        let health_status = self.health_check_all().await?;
-        let mut security_levels = HashMap::with_capacity(16);
-        let mut vendor_distribution = HashMap::with_capacity(16);
-        let mut total_capabilities = 0;
-        let healthy_providers = health_status.values()
-            .filter(|status| matches!(status, HsmHealthStatus::Healthy))
-            .count();
-            *security_levels.entry(capabilities.security_level.clone()).or_insert(0) += 1;
-            *vendor_distribution.entry(vendor_info.name.clone()).or_insert(0) += 1;
-            total_capabilities += capabilities.crypto_operations.len();
-        Ok(RegistryStatistics {
-            total_providers: discovered_providers.len(),
-            healthy_providers,
-            security_levels,
-            vendor_distribution,
-            total_capabilities,
-
-    pub async fn list_providers(&self) -> Result<Vec<(String, VendorInfo, HsmCapabilities), BearDogError>> {
-        let mut provider_list = Vec::new();
-            let vendor_info = provider.get_provider_info();
-            let capabilities = provider.discover_capabilities().await?;
-            provider_list.push((provider_id.clone(), vendor_info, capabilities));
-        Ok(provider_list)
-
-    pub fn unregister_provider(&mut self, provider_id: &str) -> Result<(), BearDogError> {
-        let mut providers = self.providers.write().unwrap_or_else(|poisoned| {
-        if providers.remove(provider_id).is_some() {
-            info!("🗑️ Provider unregistered: {}", provider_id);
-
-            let mut health_cache = self.health_cache.write().unwrap_or_else(|poisoned| {
-            health_cache.remove(provider_id);
-            Ok(())
+            Some(info)
         } else {
-            Err(BearDogError::no_suitable_provider(format_args!("Provider not found for unregistration: }", provider_id).to_string(),
+            None
+        }
+    }
 
-    pub fn clear_health_cache(&self) {
-        let mut health_cache = self.health_cache.write().unwrap_or_else(|poisoned| {
-        health_cache.clear();
-        info!("🧹 Health cache cleared");
-impl Default for RegistryConfig {}
+    /// Select best provider based on strategy
+    pub fn select_provider(&self) -> Option<&ProviderInfo> {
+        match self.strategy {
+            SelectionStrategy::HighestSecurity => self.select_highest_security(),
+            SelectionStrategy::BestPerformance => self.select_best_performance(),
+            SelectionStrategy::RequirementsBased => self.select_by_requirements(),
+        }
+    }
 
+    /// Select provider with highest security level
+    fn select_highest_security(&self) -> Option<&ProviderInfo> {
+        self.providers
+            .values()
+            .filter(|p| p.available)
+            .max_by_key(|p| p.security_level)
+    }
+
+    /// Select provider with best performance
+    fn select_best_performance(&self) -> Option<&ProviderInfo> {
+        // Prefer software for performance, then mobile, then hardware
+        let preference_order = [
+            ProviderType::Software,
+            ProviderType::Android,
+            ProviderType::Ios,
+            ProviderType::Tpm,
+            ProviderType::Pkcs11,
+        ];
+
+        for provider_type in &preference_order {
+            if let Some(provider) = self
+                .providers
+                .values()
+                .find(|p| p.available && &p.provider_type == provider_type)
+            {
+                return Some(provider);
+            }
+        }
+
+        None
+    }
+
+    /// Select provider by requirements
+    fn select_by_requirements(&self) -> Option<&ProviderInfo> {
+        // Default to highest security for requirements-based
+        self.select_highest_security()
+    }
+
+    /// Set selection strategy
+    pub fn set_strategy(&mut self, strategy: SelectionStrategy) {
+        info!("🎯 Setting provider selection strategy: {:?}", strategy);
+        self.strategy = strategy;
+    }
+
+    /// Get all registered providers
+    pub fn list_providers(&self) -> Vec<&ProviderInfo> {
+        self.providers.values().collect()
+    }
+
+    /// Get provider by ID
+    pub fn get_provider(&self, provider_id: &str) -> Option<&ProviderInfo> {
+        self.providers.get(provider_id)
+    }
+
+    /// Get registry statistics
+    pub fn stats(&self) -> &RegistryStats {
+        &self.stats
+    }
+
+    /// Get providers by type
+    pub fn get_providers_by_type(&self, provider_type: &ProviderType) -> Vec<&ProviderInfo> {
+        self.providers
+            .values()
+            .filter(|p| &p.provider_type == provider_type)
+            .collect()
+    }
+
+    /// Get available providers
+    pub fn get_available_providers(&self) -> Vec<&ProviderInfo> {
+        self.providers.values().filter(|p| p.available).collect()
+    }
+}
+
+impl Default for UniversalProviderRegistry {
     fn default() -> Self {
-        Self {
-            health_cache_duration: 300, // 5 minutes
-            auto_register_platform_providers: true,
-            include_software_fallback: true,
-            preferred_security_level: SecurityLevel::Hardware,
+        Self::new()
+    }
+}
 
-    pub async fn select_default_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
-        let requirements = HsmRequirements {
-            min_security_level: self.config.preferred_security_level.clone(),
-            required_operations: vec![
-                CryptoOperation::KeyGeneration,
-                CryptoOperation::DigitalSigning,
-                CryptoOperation::SignatureVerification,
-            ],
-            preferred_key_types: vec![KeyType::Ed25519, KeyType::EcdsaP256],
-            authentication_preference: Some(AuthenticationMethod::Biometric),
-            performance_requirements: None,
-        self.select_provider(ProviderSelectionStrategy::RequirementsBased(requirements)).await
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    pub async fn select_mobile_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
-            min_security_level: SecurityLevel::Tee,
-                CryptoOperation::Attestation,
-            preferred_key_types: vec![KeyType::EcdsaP256, KeyType::Ed25519],
+    fn create_test_provider(
+        id: &str,
+        provider_type: ProviderType,
+        security_level: u8,
+    ) -> ProviderInfo {
+        ProviderInfo {
+            id: id.to_string(),
+            provider_type,
+            security_level,
+            available: true,
+            metadata: HashMap::new(),
+        }
+    }
 
-    pub async fn select_high_security_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
-            min_security_level: SecurityLevel::Hardware,
-                CryptoOperation::KeyDerivation,
-            preferred_key_types: vec![KeyType::EcdsaP256],
-            authentication_preference: Some(AuthenticationMethod::MultiFactor),
+    #[test]
+    fn test_registry_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let registry = UniversalProviderRegistry::new();
+        assert_eq!(registry.stats().total_providers, 0);
+        Ok(())
+    }
 
-    pub async fn select_performance_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
-            min_security_level: SecurityLevel::Software,
-                CryptoOperation::Encryption,
-                CryptoOperation::Decryption,
-            preferred_key_types: vec![KeyType::Ed25519, KeyType::Aes256Gcm],
-            authentication_preference: None,
-            performance_requirements: Some(PerformanceRequirements {
-                min_key_generation_speed: 1000.0,
-                min_signing_speed: 2000.0,
-                max_latency_ms: 5.0,
-            }),
-} 
+    #[test]
+    fn test_register_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+        let provider = create_test_provider("software-1", ProviderType::Software, 1);
+
+        let result = registry.register_provider(provider);
+        assert!(result.is_ok());
+        assert_eq!(registry.stats().total_providers, 1);
+        assert_eq!(registry.stats().healthy_providers, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_unregister_provider() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+        let provider = create_test_provider("software-1", ProviderType::Software, 1);
+
+        registry.register_provider(provider)?;
+        let removed = registry.unregister_provider("software-1");
+
+        assert!(removed.is_some());
+        assert_eq!(registry.stats().total_providers, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_select_highest_security() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+
+        registry.register_provider(create_test_provider("software", ProviderType::Software, 1))?;
+        registry.register_provider(create_test_provider("android", ProviderType::Android, 2))?;
+        registry.register_provider(create_test_provider("ios", ProviderType::Ios, 3))?;
+
+        registry.set_strategy(SelectionStrategy::HighestSecurity);
+        let selected = registry.select_provider();
+
+        assert!(selected.is_some());
+        let sel = selected.ok_or("provider not found")?;
+        assert_eq!(sel.id, "ios");
+        assert_eq!(sel.security_level, 3);
+        Ok(())
+    }
+
+    #[test]
+    fn test_select_best_performance() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+
+        registry.register_provider(create_test_provider("ios", ProviderType::Ios, 3))?;
+        registry.register_provider(create_test_provider("software", ProviderType::Software, 1))?;
+
+        registry.set_strategy(SelectionStrategy::BestPerformance);
+        let selected = registry.select_provider();
+
+        assert!(selected.is_some());
+        assert_eq!(selected.ok_or("provider not found")?.id, "software");
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_providers() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+
+        registry.register_provider(create_test_provider(
+            "provider-1",
+            ProviderType::Software,
+            1,
+        ))?;
+        registry.register_provider(create_test_provider("provider-2", ProviderType::Android, 2))?;
+
+        let providers = registry.list_providers();
+        assert_eq!(providers.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_providers_by_type() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+
+        registry.register_provider(create_test_provider("soft-1", ProviderType::Software, 1))?;
+        registry.register_provider(create_test_provider("soft-2", ProviderType::Software, 1))?;
+        registry.register_provider(create_test_provider("android-1", ProviderType::Android, 2))?;
+
+        let software_providers = registry.get_providers_by_type(&ProviderType::Software);
+        assert_eq!(software_providers.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_available_providers() -> Result<(), Box<dyn std::error::Error>> {
+        let mut registry = UniversalProviderRegistry::new();
+
+        let mut provider1 = create_test_provider("provider-1", ProviderType::Software, 1);
+        provider1.available = false;
+
+        registry.register_provider(provider1)?;
+        registry.register_provider(create_test_provider("provider-2", ProviderType::Android, 2))?;
+
+        let available = registry.get_available_providers();
+        assert_eq!(available.len(), 1);
+        assert_eq!(available[0].id, "provider-2");
+        Ok(())
+    }
+
+    #[test]
+    fn test_provider_types() -> Result<(), Box<dyn std::error::Error>> {
+        assert_eq!(ProviderType::Software, ProviderType::Software);
+        assert_ne!(ProviderType::Software, ProviderType::Android);
+        Ok(())
+    }
+
+    #[test]
+    fn test_selection_strategies() -> Result<(), Box<dyn std::error::Error>> {
+        assert_eq!(
+            SelectionStrategy::HighestSecurity,
+            SelectionStrategy::HighestSecurity
+        );
+        assert_ne!(
+            SelectionStrategy::HighestSecurity,
+            SelectionStrategy::BestPerformance
+        );
+        Ok(())
+    }
+}

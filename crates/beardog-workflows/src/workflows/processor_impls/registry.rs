@@ -1,56 +1,112 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 
-use beardog_errors::BearDogError;
-use beardog_types::canonical::workflow::WorkflowType;
-use super::core::WorkflowProcessor;
 use super::{
-    ComplianceAuditProcessor, ConfigChangeProcessor, EmergencyAccessProcessor,
-    KeyDeletionProcessor, KeyRotationProcessor, PolicyChangeProcessor, SystemMaintenanceProcessor,
-    UserProvisioningProcessor,
+    ConfigurationChangeProcessor, KeyDeletionProcessor, KeyRotationProcessor,
+    PolicyChangeProcessor, SecurityScanProcessor,
 };
+use beardog_errors::BearDogError;
+use beardog_types::workflow::{WorkflowRequest, WorkflowResponse, WorkflowType};
 use std::collections::HashMap;
 
-pub struct WorkflowProcessorRegistry {
-    processors: HashMap<WorkflowType, Box<dyn WorkflowProvider>>,
+/// Zero-cost workflow processor using enum dispatch instead of trait objects
+#[derive(Debug, Clone)]
+pub enum WorkflowProcessor {
+    /// Represents key rotation variant
+    KeyRotation(KeyRotationProcessor),
+    /// Represents key deletion variant
+    KeyDeletion(KeyDeletionProcessor),
+    /// Represents policy change variant
+    PolicyChange(PolicyChangeProcessor),
+    /// Represents configuration change variant
+    ConfigurationChange(ConfigurationChangeProcessor),
+    /// Represents security scan variant
+    SecurityScan(SecurityScanProcessor),
 }
-impl WorkflowProcessorRegistry {
 
-    #[must_use] pub fn new() -> Self {
-        let mut processors: HashMap<WorkflowType, Box<dyn WorkflowProvider>> = HashMap::with_capacity(16);
-        processors.insert(WorkflowType::KeyRotation, Box::new(KeyRotationProcessor));
-        processors.insert(WorkflowType::KeyDeletion, Box::new(KeyDeletionProcessor));
-        processors.insert(WorkflowType::PolicyChange, Box::new(PolicyChangeProcessor));
+impl WorkflowProcessor {
+    /// Process a workflow request with zero-cost dispatch
+    /// Processes data
+    /// Processes data
+    pub fn process(
+        &self,
+        request: &WorkflowRequest,
+    ) -> Result<WorkflowResponse, BearDogError> {
+        match self {
+            Self::KeyRotation(processor) => processor.process(request),
+            Self::KeyDeletion(processor) => processor.process(request),
+            Self::PolicyChange(processor) => processor.process(request),
+            Self::ConfigurationChange(processor) => processor.process(request),
+            Self::SecurityScan(processor) => processor.process(request),
+        }
+    }
+}
+
+/// Zero-cost workflow processor registry using const generic dispatch
+pub struct WorkflowProcessorRegistry {
+    processors: HashMap<WorkflowType, WorkflowProcessor>,
+}
+
+impl WorkflowProcessorRegistry {
+    /// Create a new registry with zero-cost processor dispatch
+    #[must_use]
+    /// Creates a new instance
+    pub fn new() -> Self {
+        let mut processors = HashMap::with_capacity(16);
+
+        processors.insert(
+            WorkflowType::KeyRotation,
+            WorkflowProcessor::KeyRotation(KeyRotationProcessor::new()),
+        );
+        processors.insert(
+            WorkflowType::KeyDeletion,
+            WorkflowProcessor::KeyDeletion(KeyDeletionProcessor::new()),
+        );
+        processors.insert(
+            WorkflowType::PolicyChange,
+            WorkflowProcessor::PolicyChange(PolicyChangeProcessor::new()),
+        );
         processors.insert(
             WorkflowType::ConfigurationChange,
-            Box::new(ConfigChangeProcessor));
+            WorkflowProcessor::ConfigurationChange(ConfigurationChangeProcessor::new()),
         );
-            WorkflowType::UserProvisioning,
-            Box::new(UserProvisioningProcessor));
-            WorkflowType::EmergencyAccess,
-            Box::new(EmergencyAccessProcessor));
-            WorkflowType::SystemMaintenance,
-            Box::new(SystemMaintenanceProcessor));
-            WorkflowType::ComplianceAudit,
-            Box::new(ComplianceAuditProcessor));
+        processors.insert(
+            WorkflowType::SecurityScan,
+            WorkflowProcessor::SecurityScan(SecurityScanProcessor::new()),
+        );
+
         Self { processors }
     }
 
-    #[must_use] pub fn get_processor(&self, workflow_type: &WorkflowType) -> Option<&dyn WorkflowProvider> {
-        self.processors.get(workflow_type).map(|p| p.as_ref())
-
-    pub fn register_processor(
-        &mut self,
+    /// Process workflow with compile-time dispatch
+    /// Processes workflow
+    /// Processes workflow
+    pub fn process_workflow(
+        &self,
         workflow_type: WorkflowType,
-        processor: Box<dyn WorkflowProvider>,
-    ) {
-        self.processors.insert(workflow_type, processor);
+        request: &WorkflowRequest,
+    ) -> Result<WorkflowResponse, BearDogError> {
+        match self.processors.get(&workflow_type) {
+            Some(processor) => processor.process(request),
+            None => Err(BearDogError::validation(format!(
+                "No processor registered for workflow type: {:?}",
+                workflow_type
+            ))),
+        }
+    }
 
-    #[must_use] pub fn list_processors(&self) -> Vec<(WorkflowType, &'static str)> {
-        self.processors
-            .iter()
-            .map(|(wt, p)| (wt.clone(), p.get_processor_name()))
-            .collect()
-impl Default for WorkflowProcessorRegistry {}
+    /// Get processor count
+    /// Processes dataor_count
+    /// Processes dataor_count
+    pub fn processor_count(&self) -> usize {
+        self.processors.len()
+    }
+}
 
+impl Default for WorkflowProcessorRegistry {
     fn default() -> Self {
         Self::new()
+    }
+}

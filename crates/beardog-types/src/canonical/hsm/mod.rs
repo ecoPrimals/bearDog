@@ -1,9 +1,22 @@
+/// HSM (Hardware Security Module) types and configurations
+//
+// This module provides functionality for the BearDog ecosystem.
+/// Android HSM module
 pub mod android;
+/// Capabilities module
 pub mod capabilities;
+/// Config module
+/// Configuration management
+/// Configuration management
 pub mod config;
+/// Discovery configuration (HSM-specific)
+pub mod discovery;
+/// Keys module
 pub mod keys;
 pub mod platform_types;
+/// Status module
 pub mod status;
+/// Tiers module
 pub mod tiers;
 
 pub use capabilities::{

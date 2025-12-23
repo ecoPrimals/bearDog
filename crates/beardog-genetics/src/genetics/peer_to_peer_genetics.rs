@@ -1,237 +1,137 @@
-//! Peer-to-Peer Genetics Module
-//!
-//! This module provides distributed genetics operations across the BearDog network
-//! using canonical patterns and zero-cost abstractions.
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
-use beardog_auth::auth::{BearDogGenetics, NodeCapability};
-use beardog_errors::BearDogError;
-use beardog_types::canonical::{HealthStatus, SecurityContext};
+
+use beardog_types::canonical::SecurityContext;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
 
-/// Genetics node in the peer-to-peer network
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsNode {
     pub id: String,
-    pub capabilities: Vec<NodeCapability>,
+    /// Collection of genetics data
+    pub genetics_data: Vec<u8>,
+    /// The last seen value
     pub last_seen: DateTime<Utc>,
+    /// The security context value
     pub security_context: SecurityContext,
-    pub health_status: HealthStatus,
 }
 
 impl GeneticsNode {
-    pub fn new(capabilities: Vec<NodeCapability>) -> Self {
+    /// Creates a new instance
+    pub fn new(id: String, genetics_data: Vec<u8>) -> Self {
         Self {
-            id: Uuid::new_v4().to_string(),
-            capabilities,
+            id,
+            genetics_data,
             last_seen: Utc::now(),
             security_context: SecurityContext::default(),
-            health_status: HealthStatus::Healthy,
         }
     }
 
-    pub fn is_healthy(&self) -> bool {
-        matches!(self.health_status, HealthStatus::Healthy)
-    }
-
-    pub fn has_capability(&self, capability: &NodeCapability) -> bool {
-        self.capabilities.contains(capability)
-    }
-
-    pub fn update_heartbeat(&mut self) {
+    /// Updates last_seen
+    /// Updates last_seen
+    pub fn update_last_seen(&mut self) {
         self.last_seen = Utc::now();
     }
 }
 
-/// Peer-to-peer genetics network manager
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct P2PGeneticsNetwork {
-    nodes: HashMap<String, GeneticsNode>,
-    local_node: GeneticsNode,
-    network_config: NetworkConfig,
+    /// Mapping of nodes
+    pub nodes: HashMap<String, GeneticsNode>,
+    pub config: P2PNetworkConfig,
 }
 
-/// Network configuration for P2P genetics
-#[derive(Debug, Clone)]
-pub struct NetworkConfig {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct P2PNetworkConfig {
+    /// Number of max_nodes
     pub max_nodes: usize,
-    pub heartbeat_interval_seconds: u64,
-    pub node_timeout_minutes: u64,
-    pub enable_discovery: bool,
+    pub connection_timeout_ms: u64,
+    /// Number of sync_interval_ms
+    pub sync_interval_ms: u64,
 }
 
-impl Default for NetworkConfig {
+impl Default for P2PNetworkConfig {
     fn default() -> Self {
         Self {
             max_nodes: 100,
-            heartbeat_interval_seconds: 30,
-            node_timeout_minutes: 5,
-            enable_discovery: true,
+            connection_timeout_ms: 5000,
+            sync_interval_ms: 10000,
         }
     }
 }
 
-impl Default for P2PGeneticsNetwork {
-    fn default() -> Self {
-        Self::new(NetworkConfig::default())
-    }
-}
-
-impl P2PGeneticsNetwork {
-    pub fn new(config: NetworkConfig) -> Self {
-        let local_node = GeneticsNode::new(vec![
-            NodeCapability::ComputeProvider,
-            NodeCapability::SecurityAnalysis,
-        ]);
-
-        Self {
-            nodes: HashMap::new(),
-            local_node,
-            network_config: config,
-        }
-    }
-
-    pub async fn join_network(&mut self) -> Result<(), BearDogError> {
-        // Initialize network connection
-        tracing::info!(
-            "Joining P2P genetics network with node ID: {}",
-            self.local_node.id
-        );
-
-        // In a real implementation, this would:
-        // 1. Connect to bootstrap nodes
-        // 2. Announce local capabilities
-        // 3. Start heartbeat mechanism
-
-        Ok(())
-    }
-
-    pub async fn discover_nodes(&mut self) -> Result<Vec<GeneticsNode>, BearDogError> {
-        if !self.network_config.enable_discovery {
-            return Ok(vec![]);
-        }
-
-        // Simulate node discovery
-        let discovered_nodes = vec![
-            GeneticsNode::new(vec![NodeCapability::ComputeProvider]),
-            GeneticsNode::new(vec![NodeCapability::SecurityAnalysis]),
-        ];
-
-        for node in &discovered_nodes {
-            self.nodes.insert(node.id.clone(), node.clone());
-        }
-
-        Ok(discovered_nodes)
-    }
-
-    pub async fn spawn_genetics_distributed(
-        &self,
-        genetics_request: &DistributedSpawnRequest,
-    ) -> Result<BearDogGenetics, BearDogError> {
-        // Find capable nodes
-        let capable_nodes: Vec<&GeneticsNode> = self
-            .nodes
-            .values()
-            .filter(|node| node.has_capability(&NodeCapability::ComputeProvider))
-            .filter(|node| node.is_healthy())
-            .collect();
-
-        if capable_nodes.is_empty() {
-            return Err(BearDogError::system(
-                "No capable nodes available for genetics spawning",
-            ));
-        }
-
-        // Select best node (simplified selection)
-        let selected_node = capable_nodes[0];
-
-        tracing::info!(
-            "Delegating genetics spawning to node: {} with {} capabilities",
-            selected_node.id,
-            selected_node.capabilities.len()
-        );
-
-        // Create genetics based on request
-        let genetics = BearDogGenetics {
-            id: Uuid::new_v4().to_string(),
-            capabilities: genetics_request.required_capabilities.clone(),
-            security_clearance: genetics_request.security_clearance.clone(),
-            generation: 0,
-            fitness_score: 0.8, // Default fitness
-            ..Default::default()
-        };
-
-        Ok(genetics)
-    }
-
-    pub fn get_network_status(&self) -> NetworkStatus {
-        let healthy_nodes = self.nodes.values().filter(|node| node.is_healthy()).count();
-
-        NetworkStatus {
-            total_nodes: self.nodes.len(),
-            healthy_nodes,
-            local_node_id: self.local_node.id.clone(),
-            network_health: if healthy_nodes > 0 {
-                HealthStatus::Healthy
-            } else {
-                HealthStatus::Degraded
-            },
-        }
-    }
-
-    pub fn cleanup_stale_nodes(&mut self) -> usize {
-        let timeout = chrono::Duration::minutes(self.network_config.node_timeout_minutes as i64);
-        let cutoff = Utc::now() - timeout;
-
-        let initial_count = self.nodes.len();
-        self.nodes.retain(|_, node| node.last_seen > cutoff);
-
-        initial_count - self.nodes.len()
-    }
-
-    pub fn get_nodes_with_capability(&self, capability: &NodeCapability) -> Vec<&GeneticsNode> {
-        self.nodes
-            .values()
-            .filter(|node| node.has_capability(capability))
-            .collect()
-    }
-}
-
-/// Distributed genetics spawning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DistributedSpawnRequest {
-    pub required_capabilities: Vec<NodeCapability>,
-    pub security_clearance: beardog_auth::auth::SecurityClearance,
-    pub priority: SpawnPriority,
-    pub timeout_seconds: u32,
+pub enum NetworkStatus {
+    /// Active or enabled state
+    Active,
+    /// Inactive or disabled state
+    Inactive,
+    /// Currently syncing
+    Syncing,
+    /// Error or failure state
+    Error(String),
 }
 
-/// Spawn priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawnPriority {
+    /// Represents low variant
     Low,
+    /// Represents normal variant
     Normal,
+    /// Represents high variant
     High,
+    /// Represents critical variant
     Critical,
 }
 
-/// Network status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkStatus {
-    pub total_nodes: usize,
-    pub healthy_nodes: usize,
-    pub local_node_id: String,
-    pub network_health: HealthStatus,
+pub struct DistributedSpawnRequest {
+    pub genetics_id: String,
+    /// The priority value
+    pub priority: SpawnPriority,
+    /// Number of required_nodes
+    pub required_nodes: usize,
+    pub timeout_ms: u64,
 }
 
-impl Default for DistributedSpawnRequest {
-    fn default() -> Self {
+impl P2PGeneticsNetwork {
+    /// Creates a new instance
+    pub fn new(config: P2PNetworkConfig) -> Self {
         Self {
-            required_capabilities: vec![NodeCapability::ComputeProvider],
-            security_clearance: beardog_auth::auth::SecurityClearance::Basic,
-            priority: SpawnPriority::Normal,
-            timeout_seconds: 30,
+            nodes: HashMap::new(),
+            config,
         }
+    }
+
+
+
+    pub fn add_node(&mut self, node: GeneticsNode) -> Result<(), String> {
+        if self.nodes.len() >= self.config.max_nodes {
+            return Err("Network at capacity".to_string());
+        }
+
+        self.nodes.insert(node.id.clone(), node);
+        Ok(())
+    }
+
+    /// Removes node
+    /// Removes node
+    pub fn remove_node(&mut self, node_id: &str) -> Option<GeneticsNode> {
+        self.nodes.remove(node_id)
+    }
+
+    /// Gets node
+    /// Gets node
+    pub fn get_node(&self, node_id: &str) -> Option<&GeneticsNode> {
+        self.nodes.get(node_id)
+    }
+
+
+
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
     }
 }

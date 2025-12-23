@@ -1,148 +1,164 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use super::trust::TrustLevel;
 
 #[derive(Debug, Clone)]
-pub struct DistributedRegistryInfo {
-
-    pub registry_id: String,
-
+    /// Name of the registry
     pub registry_name: String,
 
+    /// The endpoint value
     pub endpoint: String,
 
+    /// Collection of public key
     pub public_key: Vec<u8>,
 
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
 
+    /// The region value
     pub region: String,
 
+    /// Current status of the federation
     pub federation_status: FederationStatus,
 
+    /// The last seen value
     pub last_seen: SystemTime,
 
+    /// The trust level value
     pub trust_level: TrustLevel,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FederationStatus {
-
-    NotFederated,
-
-    Connecting,
-
-    Federated,
-
-    Failed,
-
-    Disconnected,
-
-pub struct ServiceAdvertisement {
-
-    pub service_id: String,
-
+#[derive(Debug, Clone)]
+    /// Name of the service
     pub service_name: String,
 
+    /// The service type value
     pub service_type: String,
 
+    /// The version value
     pub version: String,
 
+    /// Collection of endpoints
     pub endpoints: Vec<String>,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 
+    /// The ttl value
     pub ttl: Duration,
 
+    /// Current status of the health
     pub health_status: ServiceHealthStatus,
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ServiceHealthStatus {
 
+
+    /// Represents healthy variant
     Healthy,
 
+
+    /// State indicating degraded
     Degraded,
 
+
+    /// Represents unavailable variant
     Unavailable,
 
+
+    /// Unknown or undefined state
     Unknown,
 
 pub mod service_types {
-    use beardog_types::constants::unified::nodes::*;
-
-    pub const SECURITY: &str = SECURITY_SERVICE;
-
-    pub const PHONEBOOK: &str = PHONEBOOK_SERVICE;
-
-    pub const FEDERATION: &str = FEDERATION_SERVICE;
-
-    pub const COMPUTE: &str = "compute";
-
-    pub const STORAGE: &str = "storage";
-
-    pub const RELAY: &str = "relay";
-
-    pub const BACKUP: &str = "backup";}
+    // Re-export service types from centralized ecosystem constants
+    pub use beardog_types::constants::domains::ecosystem::service_types::*;
+}
 
 impl ServiceAdvertisement {
 
-    pub fn new(service_id: &str, service_name: &str, service_type: &str) -> Self {
+/// New operation.
+    /// Creates a new instance
+    pub fn new(&str, service_name: &str, service_type: &str) -> Self {
         Self {
             service_id,
-            service_name,
+            service_name: name.to_string(),
             service_type,
             version: "1.0.0".to_string(),
             endpoints: Vec::new(),
             capabilities: Vec::new(),
             metadata: HashMap::with_capacity(16),
             region: "default".to_string(),
-            ttl: Duration::from_secs(300), // 5 minutes
-            health_status: ServiceHealthStatus::Unknown,
+            ttl: Duration::from_secs(ServiceHealthStatus::Unknown,
         }
     }
 
+/// With Endpoint operation.
+    /// Creates instance with endpoint
     pub fn with_endpoint(mut self, endpoint: &str) -> Self {
         self.endpoints.push(endpoint);
         self
 
+/// With Capability operation.
+    /// Creates instance with capability
     pub fn with_capability(mut self, capability: &str) -> Self {
         self.capabilities.push(capability);
 
+/// With Region operation.
+    /// Creates instance with region
     pub fn with_region(mut self, region: &str) -> Self {
         self.region = region;
 
+/// With Ttl operation.
+    /// Creates instance with ttl
     pub fn with_ttl(mut self, ttl: Duration) -> Self {
         self.ttl = ttl;
 
+/// With Health Status operation.
+    /// Creates instance with health status
     pub fn with_health_status(mut self, status: ServiceHealthStatus) -> Self {
         self.health_status = status;
 
-    pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
-        self.metadata.insert(key, value);
-impl DistributedRegistryInfo {
-
-    pub fn new(registry_id: &str, registry_name: &str, endpoint: &str) -> Self {
+/// With Metadata operation.
+    /// Creates instance with metadata
+    pub fn with_metadata(&str, value: &str) -> Self {
+        self.metadata.insert(&str, registry_name: &str, endpoint: &str) -> Self {
             registry_id,
-            registry_name,
+            registry_name: name.to_string(),
             endpoint,
-            public_key: Vec::new(),
-            federation_status: FederationStatus::NotFederated,
-            last_seen: SystemTime::now(),
-            trust_level: TrustLevel::Unknown,
+            public_key: Vec::new(FederationStatus::NotFederated,
+            last_seen: SystemTime::now(TrustLevel::Unknown,
 
+/// With Public Key operation.
+    /// Creates instance with public key
     pub fn with_public_key(mut self, public_key: Vec<u8>) -> Self {
         self.public_key = public_key;
 
+/// With Federation Status operation.
+    /// Creates instance with federation status
     pub fn with_federation_status(mut self, status: FederationStatus) -> Self {
         self.federation_status = status;
 
+/// With Trust Level operation.
+    /// Creates instance with trust level
     pub fn with_trust_level(mut self, trust_level: TrustLevel) -> Self {
         self.trust_level = trust_level;
 
+/// Update Last Seen operation.
+    /// Updates last_seen
+    /// Updates last_seen
     pub fn update_last_seen(&mut self) {
         self.last_seen = SystemTime::now();
 
+/// Is Online operation.
+    /// Checks if online
+    /// Checks if online
     pub fn is_online(&self, threshold_seconds: u64) -> bool {
         if let Ok(elapsed) = self.last_seen.elapsed() {
             elapsed.as_secs() <= threshold_seconds
@@ -167,22 +183,25 @@ impl std::fmt::Display for ServiceHealthStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
     #[test]
     fn test_service_advertisement_creation() {
         let ad = ServiceAdvertisement::new(
             "test-service".to_string(),
             "Test Service".to_string(),
-            "security".to_string(),
-        )
-        .with_endpoint("http://localhost:8080".to_string())
+            "security")
+        .with_endpoint(adapter.discover_capability_endpoint(required_capability)?.to_string())
         .with_capability("authentication".to_string())
         .with_region("us-east".to_string());
         assert_eq!(ad.service_id, "test-service");
         assert_eq!(ad.service_name, "Test Service");
         assert_eq!(ad.service_type, "security");
-        assert!(ad.endpoints.contains(&"http://localhost:8080".to_string()));
+        assert!(ad.endpoints.contains(&adapter.discover_capability_endpoint(required_capability)?.to_string()));
         assert!(ad.capabilities.contains(&"authentication".to_string()));
         assert_eq!(ad.region, "us-east");}
+
 
     fn test_distributed_registry_info() {
         let info = DistributedRegistryInfo::new(
@@ -202,6 +221,7 @@ mod tests {
         assert_eq!(FederationStatus::Federated.to_string(), "Federated");
         assert_eq!(FederationStatus::Failed.to_string(), "Failed");
         assert_eq!(FederationStatus::Disconnected.to_string(), "Disconnected");}
+
 
     fn test_service_health_status_display() {
         assert_eq!(ServiceHealthStatus::Healthy.to_string(), "Healthy");

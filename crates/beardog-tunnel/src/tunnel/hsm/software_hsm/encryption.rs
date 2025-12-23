@@ -17,11 +17,18 @@ pub trait EncryptionKey: Send + Sync {
     async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
 }
 
+    /// DefaultEncryptionKey configuration and state.
+    ///
+    /// Provides comprehensive functionality for the beardog ecosystem.
 pub struct DefaultEncryptionKey {
     cipher: Arc<Aes256Gcm>,}
 
 impl DefaultEncryptionKey {
 
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn new() -> Result<Self, BearDogError> {
         let mut key_bytes = [0u8; 32];
         OsRng.fill_bytes(&mut key_bytes);
@@ -32,6 +39,10 @@ impl DefaultEncryptionKey {
         })
     }
 
+    /// From Key Material operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn from_key_material(key_material: &[u8]) -> Result<Self, BearDogError> {
         if key_material.len() != 32 {
             return Err(BearDogError::encryption("key_initialization".to_string(), "Key material must be exactly 32 bytes for AES-256".to_string(),
@@ -40,6 +51,10 @@ impl DefaultEncryptionKey {
         let key = Key::<Aes256Gcm>::from_slice(key_material);
 
     #[must_use]
+    /// Fallback operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
     pub fn fallback() -> Self {
 
         let zero_key = [0u8; 32];

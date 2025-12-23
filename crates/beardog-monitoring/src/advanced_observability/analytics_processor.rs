@@ -1,30 +1,58 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
-pub struct AnalyticsProcessor {
-
-}
+pub struct AnalyticsProcessor {}
 
 impl AnalyticsProcessor {
+    /// New operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {})
     }
 
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+    /// Initialize operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    /// Initializes componentialize
+    /// Initializes componentialize
+    pub fn initialize(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 
-    pub async fn start(&self) -> Result<(), BearDogError> {
+    /// Start operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    /// Starts service
+    /// Starts service
+    pub fn start(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 
-    pub async fn is_healthy(&self) -> Result<bool, BearDogError> {
+    /// Is Healthy operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    /// Checks if healthy
+    /// Checks if healthy
+    pub fn is_healthy(&self) -> Result<bool, BearDogError> {
         Ok(true)
     }
 
-    pub async fn shutdown(&self) -> Result<(), BearDogError> {
+    /// Shutdown operation.
+    ///
+    /// # Errors
+    /// Returns an error if the operation fails.
+    pub fn shutdown(&self) -> Result<(), BearDogError> {
         Ok(())
     }
-} 
+}

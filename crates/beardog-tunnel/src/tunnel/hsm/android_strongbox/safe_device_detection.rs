@@ -1,86 +1,210 @@
+//! Safe Android Device Detection
+//!
+//! Platform-safe detection of Android device capabilities and StrongBox implementation
 
-
-use crate::tunnel::hsm::types::{DeviceModel, StrongBoxCapabilities, StrongBoxImplementation};
+use crate::tunnel::hsm::android_strongbox::types::{
+    AndroidDeviceInfo, StrongBoxImplementation, VerifiedBootState,
+};
 use beardog_errors::BearDogError;
-use tracing::info;
+use tracing::{debug, info};
 
-pub async fn detect_strongbox_implementation() -> Result<StrongBoxImplementation, BearDogError> {
-
-    if !cfg!(target_os = "android") {
-        info!("Not on Android platform, using generic fallback");
+/// Detects the StrongBox implementation on the current Android device
+///
+/// # Errors
+/// Returns error if device detection fails
+pub fn detect_strongbox_implementation() -> Result<StrongBoxImplementation, BearDogError> {
+    if !is_android_platform() {
+        debug!("Not on Android platform, using generic fallback");
         return Ok(StrongBoxImplementation::Generic {
-            vendor: "unknown".to_string(),
-            version: "unknown".to_string(),
+            vendor: "non-android".to_string(),
+            capabilities: vec!["software_fallback".to_string()],
         });
     }
 
-    match detect_device_model().await? {
-        DeviceModel::Pixel(pixel_version) => match pixel_version {
-            3..=8 => Ok(StrongBoxImplementation::TitanM {
-                version: pixel_version.to_string(),
-                security_level: "hardware".to_string(),
-            }),
-            _ => Ok(StrongBoxImplementation::Generic {
-                vendor: "google".to_string(),
-        },
-        DeviceModel::Samsung => {
+    let device_info = detect_device_info()?;
 
-            if detect_knox_availability().await? {
-                Ok(StrongBoxImplementation::SamsungKnox {
-                    version: "knox".to_string(),
-                    security_level: "hardware".to_string(),
-                })
-            } else {
-                Ok(StrongBoxImplementation::Generic {
-                    vendor: "samsung".to_string(),
-                    version: "unknown".to_string(),
-            }
-        }
-        DeviceModel::Other => Ok(StrongBoxImplementation::Generic {
+    match device_info.manufacturer.as_str() {
+        "Google" => detect_google_strongbox(&device_info),
+        "Samsung" => detect_samsung_strongbox(&device_info),
+        "Qualcomm" | "OnePlus" | "Xiaomi" => detect_qualcomm_strongbox(&device_info),
+        "MediaTek" | "Oppo" | "Vivo" => detect_mediatek_strongbox(&device_info),
+        _ => Ok(StrongBoxImplementation::Generic {
+            vendor: device_info.manufacturer.clone(),
+            capabilities: vec!["unknown".to_string()],
         }),
+    }
 }
 
-pub async fn check_strongbox_availability() -> Result<bool, BearDogError> {
-    info!("🔍 Checking StrongBox availability using safe detection");
-    let available = detect_knox_availability().await?;
-    if available {
-        info!("✅ StrongBox is available");
+/// Detects Google Pixel StrongBox (Titan M)
+fn detect_google_strongbox(
+    device_info: &AndroidDeviceInfo,
+) -> Result<StrongBoxImplementation, BearDogError> {
+    if let Some(ref titan_version) = device_info.titan_m_version {
+        info!("Detected Google Titan M: {}", titan_version);
+        Ok(StrongBoxImplementation::TitanM {
+            version: titan_version.clone(),
+            security_level: "EAL4+".to_string(),
+        })
     } else {
-        info!("⚠️ StrongBox not available, will use software fallback");
-    Ok(available)
+        Ok(StrongBoxImplementation::Generic {
+            vendor: "Google".to_string(),
+            capabilities: vec!["software_hsm".to_string()],
+        })
+    }
+}
 
-async fn detect_device_model() -> Result<DeviceModel, BearDogError> {
+/// Detects Samsung StrongBox (Knox)
+fn detect_samsung_strongbox(
+    device_info: &AndroidDeviceInfo,
+) -> Result<StrongBoxImplementation, BearDogError> {
+    if detect_knox_availability(device_info)? {
+        info!("Detected Samsung Knox StrongBox");
+        Ok(StrongBoxImplementation::SamsungKnox {
+            version: device_info.android_version.clone(),
+        })
+    } else {
+        Ok(StrongBoxImplementation::Generic {
+            vendor: "Samsung".to_string(),
+            capabilities: vec!["software_hsm".to_string()],
+        })
+    }
+}
 
-    if cfg!(target_os = "android") {
+/// Detects Qualcomm SPU StrongBox
+fn detect_qualcomm_strongbox(
+    device_info: &AndroidDeviceInfo,
+) -> Result<StrongBoxImplementation, BearDogError> {
+    let attestation_support = device_info.verified_boot_state == VerifiedBootState::Verified;
+    info!(
+        "Detected Qualcomm SPU, attestation: {}",
+        attestation_support
+    );
 
-        info!("Simulating device model detection");
-        Ok(DeviceModel::Other)
+    Ok(StrongBoxImplementation::QualcommSpu {
+        attestation_support,
+    })
+}
 
-async fn detect_knox_availability() -> Result<bool, BearDogError> {
+/// Detects MediaTek HSM StrongBox
+fn detect_mediatek_strongbox(
+    device_info: &AndroidDeviceInfo,
+) -> Result<StrongBoxImplementation, BearDogError> {
+    let features = vec![
+        "aes256".to_string(),
+        "rsa2048".to_string(),
+        "ecdsa_p256".to_string(),
+    ];
 
-    info!("Simulating Knox availability check");
-    Ok(false)
+    info!("Detected MediaTek HSM with {} features", features.len());
 
+    Ok(StrongBoxImplementation::MediaTekHsm { features })
+}
+
+/// Checks if StrongBox is available on the device
+///
+/// # Errors
+/// Returns error if availability check fails
+pub fn check_strongbox_availability() -> Result<bool, BearDogError> {
+    if !is_android_platform() {
+        debug!("Not on Android platform, StrongBox not available");
+        return Ok(false);
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        // Real Android implementation would query KeyStore capabilities
+        let has_strongbox = check_android_keystore_strongbox()?;
+        if has_strongbox {
+            info!("✅ StrongBox is available");
+        } else {
+            info!("⚠️  StrongBox not available, will use software fallback");
+        }
+        Ok(has_strongbox)
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        debug!("Mock platform: Simulating StrongBox availability");
+        Ok(false)
+    }
+}
+
+/// Detects Android device information
+///
+/// # Errors
+/// Returns error if device info cannot be determined
+fn detect_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
+    #[cfg(target_os = "android")]
+    {
+        // In real implementation, query Android system properties
+        AndroidDeviceInfo::detect()
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        // Mock implementation for non-Android platforms
+        AndroidDeviceInfo::new()
+    }
+}
+
+/// Checks if Samsung Knox is available
+fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, BearDogError> {
+    #[cfg(target_os = "android")]
+    {
+        // Real implementation would check Knox API availability
+        Ok(device_info.model.contains("Galaxy") && device_info.android_version >= "9".to_string())
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        debug!("Mock platform: Knox not available");
+        Ok(false)
+    }
+}
+
+/// Checks Android KeyStore for StrongBox capability
+#[cfg(target_os = "android")]
+fn check_android_keystore_strongbox() -> Result<bool, BearDogError> {
+    // Real implementation would use JNI to query:
+    // KeyStore.getInstance("AndroidKeyStore")
+    //   .getEntry("test_key", null)
+    //   .getSecurityLevel() == KeyProperties.SECURITY_LEVEL_STRONGBOX
+
+    debug!("Checking Android KeyStore for StrongBox support");
+    Ok(true) // Placeholder - would be real JNI call
+}
+
+/// Returns true if running on Android platform
 fn is_android_platform() -> bool {
-
     cfg!(target_os = "android")
+}
 
-fn get_device_model() -> String {
+/// Gets the Android device model string
+#[cfg(target_os = "android")]
+fn get_device_model() -> Result<String, BearDogError> {
+    // Real implementation would query android.os.Build.MODEL
+    Ok("Pixel 8".to_string())
+}
 
-    std::env::var("ANDROID_DEVICE_MODEL")
-        .or_else(|_| std::env::var("DEVICE"))
-        .unwrap_or_else(|_| "Unknown".to_string())
+#[cfg(not(target_os = "android"))]
+fn get_device_model() -> Result<String, BearDogError> {
+    Ok("Non-Android Device".to_string())
+}
 
-fn get_android_version() -> String {
-    std::env::var("ANDROID_VERSION").unwrap_or_else(|_| "Unknown".to_string())
+/// Gets the Android device manufacturer string
+#[cfg(target_os = "android")]
+fn get_device_manufacturer() -> Result<String, BearDogError> {
+    // Real implementation would query android.os.Build.MANUFACTURER
+    Ok("Google".to_string())
+}
 
-fn get_android_api_level() -> u32 {
-    std::env::var("ANDROID_API_LEVEL")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(21) // Safe default (Android 5.0)
+#[cfg(not(target_os = "android"))]
+fn get_device_manufacturer() -> Result<String, BearDogError> {
+    Ok("Unknown".to_string())
+}
 
-fn detect_pixel_generation(model: &str) -> u32 {
+/// Detects Pixel generation from model string
+pub fn detect_pixel_generation(model: &str) -> u32 {
     if model.contains("Pixel 8") {
         8
     } else if model.contains("Pixel 7") {
@@ -95,46 +219,126 @@ fn detect_pixel_generation(model: &str) -> u32 {
         3
     } else if model.contains("Pixel 2") {
         2
+    } else if model.contains("Pixel") {
         1
+    } else {
+        0
+    }
+}
 
-fn has_hardware_security_indicators() -> bool {
-
-    let security_paths = [
-        "/sys/firmware/devicetree/base/chosen/kaslr-seed",
-        "/proc/device-tree/chosen/kaslr-seed",
-        "/sys/kernel/security",
-    ];
-    security_paths
-        .iter()
-        .any(|path| std::path::Path::new(path).exists())
-
-pub async fn get_strongbox_capabilities() -> Result<StrongBoxCapabilities, BearDogError> {
-    let implementation = detect_strongbox_implementation().await?;
-    let available = check_strongbox_availability().await?;
-    Ok(StrongBoxCapabilities {
-        available,}
-
-        implementation,
-        attestation_supported: available, // Assume attestation if StrongBox available
-        key_generation_supported: available,
-        signing_supported: available,
-        hardware_backed: available,
-    })
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[tokio::test]
-    async fn test_safe_strongbox_detection() -> Result<(), BearDogError> {
-        let implementation = detect_strongbox_implementation().await;
-        assert!(implementation.is_ok());
-        Ok(())}
-
-    async fn test_safe_availability_check() -> Result<(), BearDogError> {
-        let available = check_strongbox_availability().await;
-        assert!(available.is_ok());}
 
     #[test]
-    fn test_pixel_generation_detection() -> Result<(), BearDogError> {
-        assert_eq!(detect_pixel_generation("Pixel 8 Pro"), 8);
-        assert_eq!(detect_pixel_generation("Pixel 6a"), 6);
+    fn test_is_android_platform() {
+        let is_android = is_android_platform();
+        // Should be false on non-Android build targets
+        #[cfg(not(target_os = "android"))]
+        assert!(!is_android);
+    }
+
+    #[test]
+    fn test_strongbox_detection_non_android() {
+        let result = detect_strongbox_implementation();
+        assert!(result.is_ok());
+
+        let impl_type = result?;
+        match impl_type {
+            StrongBoxImplementation::Generic { vendor, .. } => {
+                assert_eq!(vendor, "non-android");
+            }
+            _ => {
+                #[cfg(not(target_os = "android"))]
+                panic!("Expected Generic implementation on non-Android platform");
+            }
+        }
+    }
+
+    #[test]
+    fn test_availability_check() {
+        let result = check_strongbox_availability();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_pixel_generation_detection() {
+        assert_eq!(detect_pixel_generation("Pixel 8"), 8);
+        assert_eq!(detect_pixel_generation("Pixel 7"), 7);
+        assert_eq!(detect_pixel_generation("Pixel 6 Pro"), 6);
         assert_eq!(detect_pixel_generation("Pixel"), 1);
+        assert_eq!(detect_pixel_generation("Samsung Galaxy"), 0);
+    }
+
+    #[test]
+    fn test_device_model_query() {
+        let result = get_device_model();
+        assert!(result.is_ok());
+        assert!(!result?.is_empty());
+    }
+
+    #[test]
+    fn test_device_manufacturer_query() {
+        let result = get_device_manufacturer();
+        assert!(result.is_ok());
+        assert!(!result?.is_empty());
+    }
+
+    #[test]
+    fn test_device_info_detection() {
+        let result = detect_device_info();
+        assert!(result.is_ok());
+
+        let info = result?;
+        assert!(!info.manufacturer.is_empty());
+        assert!(!info.model.is_empty());
+    }
+
+    #[test]
+    fn test_google_strongbox_detection() {
+        let device_info = AndroidDeviceInfo {
+            manufacturer: "Google".to_string(),
+            model: "Pixel 8".to_string(),
+            android_version: "14".to_string(),
+            strongbox_version: Some("1.0".to_string()),
+            titan_m_version: Some("1.0".to_string()),
+            security_patch_level: "2024-01-01".to_string(),
+            verified_boot_state: VerifiedBootState::Verified,
+        };
+
+        let result = detect_google_strongbox(&device_info);
+        assert!(result.is_ok());
+
+        match result? {
+            StrongBoxImplementation::TitanM { .. } => {
+                // Expected for Pixel with Titan M
+            }
+            _ => panic!("Expected TitanM implementation"),
+        }
+    }
+
+    #[test]
+    fn test_qualcomm_strongbox_detection() {
+        let device_info = AndroidDeviceInfo {
+            manufacturer: "Qualcomm".to_string(),
+            model: "Test Device".to_string(),
+            android_version: "13".to_string(),
+            strongbox_version: Some("1.0".to_string()),
+            titan_m_version: None,
+            security_patch_level: "2024-01-01".to_string(),
+            verified_boot_state: VerifiedBootState::Verified,
+        };
+
+        let result = detect_qualcomm_strongbox(&device_info);
+        assert!(result.is_ok());
+
+        match result? {
+            StrongBoxImplementation::QualcommSpu {
+                attestation_support,
+            } => {
+                assert!(attestation_support);
+            }
+            _ => panic!("Expected QualcommSpu implementation"),
+        }
+    }
+}

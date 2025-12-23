@@ -1,5 +1,5 @@
-# BearDog Production Container
-# Multi-stage build for optimal security and performance
+# BearDog Production Dockerfile
+# Multi-stage build for optimized production container
 
 # Build stage
 FROM rust:1.75-slim as builder
@@ -8,24 +8,31 @@ FROM rust:1.75-slim as builder
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
+    libpq-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
-WORKDIR /usr/src/beardog
+WORKDIR /app
 
-# Copy dependency manifests
+# Copy dependency manifests first for better caching
 COPY Cargo.toml Cargo.lock ./
-COPY crates/ ./crates/
-COPY benchmarks/ ./benchmarks/
+COPY crates/*/Cargo.toml ./crates/*/
 
-# Build dependencies (cached layer)
+# Create dummy main files for dependency building
+RUN find crates -name Cargo.toml -exec dirname {} \; | \
+    xargs -I {} mkdir -p {}/src && \
+    find crates -name Cargo.toml -exec dirname {} \; | \
+    xargs -I {} touch {}/src/lib.rs
+
+# Build dependencies (this layer will be cached)
 RUN cargo build --release --workspace
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN cargo build --release --bin beardog-cli
+# Build the actual application with all optimizations
+RUN cargo build --release --workspace --features="production,quantum-resistant,simd"
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -34,35 +41,45 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd -r -s /bin/false beardog
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# Create non-root user for security
+RUN groupadd -r beardog && useradd -r -g beardog beardog
 
-# Copy binary from builder stage
-COPY --from=builder /usr/src/beardog/target/release/beardog-cli /usr/bin/beardog-cli
+# Create application directories
+RUN mkdir -p /app/configs /app/logs /app/data && \
+    chown -R beardog:beardog /app
 
-# Copy configuration files
-COPY configs/ ./configs/
-COPY docs/ ./docs/
+# Copy built binaries
+COPY --from=builder /app/target/release/beardog* /app/
+COPY --from=builder /app/configs/ /app/configs/
 
-# Create necessary directories
-RUN mkdir -p /app/logs /app/data \
-    && chown -R beardog:beardog /app
+# Set ownership
+RUN chown -R beardog:beardog /app
 
 # Switch to non-root user
 USER beardog
 
+# Set working directory
+WORKDIR /app
+
+# Environment variables
+ENV RUST_LOG=info
+ENV BEARDOG_CONFIG_PATH=/app/configs/production.toml
+ENV BEARDOG_ENABLE_QUANTUM=true
+ENV BEARDOG_ENABLE_SIMD=true
+
 # Expose ports
-EXPOSE 8080 8443
+EXPOSE 8080 9090
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD beardog-cli health-check || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:9090/health || exit 1
 
 # Default command
-CMD ["beardog-cli", "server", "--config", "/app/configs/beardog-config.toml"]
+CMD ["./beardog-core"]
 
 # Metadata
 LABEL maintainer="BearDog Project <beardog@ecoprimal.io>"

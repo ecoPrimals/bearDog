@@ -1,44 +1,119 @@
 [package]
 name = "beardog-core"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
 description = "BearDog core module"
-authors.workspace = true
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "core", "ecosystem", "beardog", "orchestration", "management",]
+categories = [ "development-tools", "ecosystem", "orchestration",]
+
+[lints]
+workspace = true
 
 [dependencies]
-beardog-errors = { path = "../beardog-errors" }
-beardog-types = { path = "../beardog-types" }
-beardog-traits = { path = "../beardog-traits" }
-beardog-security = { path = "../beardog-security" }
-beardog-genetics = { path = "../beardog-genetics" }
-# beardog-config removed - use beardog-types::config::complete_unified
-beardog-monitoring = { path = "../beardog-monitoring" }
-beardog-auth = { path = "../beardog-auth" }
-beardog-compliance = { path = "../beardog-compliance" }
-beardog-threat = { path = "../beardog-threat" }
-beardog-adapters = { path = "../beardog-adapters" }
-
-# Core dependencies
-tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 tracing = "0.1"
-uuid = { version = "1.0", features = ["v4"] }
-chrono = { version = "0.4", features = ["serde"] }
-# async-trait = "0.1"  # REMOVED: Modernized to native async fn
-reqwest = { version = "0.11", features = ["json"] }
 hex = "0.4"
 ed25519-dalek = "2.1"
+x25519-dalek = "2.0"
 sha2 = "0.10"
+sha3 = "0.10"
 toml = "0.8"
 ahash = "0.8"
-async-trait = "0.1"  # Still needed for some trait implementations
+async-trait = "0.1"
 rand = "0.8"
-rmp-serde = "1.1"
 urlencoding = "2.1"
+hickory-resolver = "0.24"  # Replaced unmaintained trust-dns
+zeroize = "1.7"
+rand_chacha.workspace = true
+http = "1.3.1"
+aes-gcm = "0.10"  # For real encryption (evolved from mock)
+chacha20poly1305 = "0.10"  # Modern, fast AEAD cipher
+jsonwebtoken = "9.2"  # For Phase 2 JWT token generation
+base64 = "0.21"  # For encoding operations
+mdns-sd = { version = "0.11", optional = true }  # mDNS service discovery
+gethostname = "0.4"  # Get system hostname for identity
+p256 = { version = "0.13.2", features = ["ecdsa"] }
+rsa = "0.9"  # RSA-PSS signature support
+blake3.workspace = true
+hmac.workspace = true
+hkdf = "0.12.4"
+argon2.workspace = true
 
 [dev-dependencies]
 tokio-test = "0.4.3"
+tracing-subscriber = "0.3"
+approx = "0.5"
+tempfile = "3.8"
 
+[package.version]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[dependencies.beardog-config]
+path = "../beardog-config"
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.beardog-traits]
+path = "../beardog-traits"
+
+[dependencies.beardog-security]
+path = "../beardog-security"
+
+[dependencies.beardog-genetics]
+path = "../beardog-genetics"
+
+[dependencies.beardog-monitoring]
+path = "../beardog-monitoring"
+
+[dependencies.beardog-auth]
+path = "../beardog-auth"
+
+[dependencies.beardog-compliance]
+path = "../beardog-compliance"
+
+[dependencies.beardog-threat]
+path = "../beardog-threat"
+
+[dependencies.beardog-adapters]
+path = "../beardog-adapters"
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json",]
+
+[features]
+default = []
+hsm-integration = []
+mdns = ["dep:mdns-sd"]  # Enable mDNS runtime discovery
