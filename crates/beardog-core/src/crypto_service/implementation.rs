@@ -273,9 +273,11 @@ impl CryptoService for BearDogCryptoService {
                 asymmetric::sign_ecdsa_p256(data, &key)?
             }
             SignatureAlgorithm::RsaPss => {
-                return Err(BearDogError::business(
-                    "RSA-PSS signing not yet implemented".to_string(),
-                ));
+                let key = self.derive_signing_key(key_id)?;
+                // For RSA, we need a proper private key. In production, this would be
+                // loaded from HSM or secure key storage. For now, generate on-demand.
+                // TODO: Implement proper RSA key management
+                asymmetric::sign_rsa_pss(data, &key)?
             }
         };
 
@@ -311,10 +313,7 @@ impl CryptoService for BearDogCryptoService {
                 asymmetric::verify_ecdsa_p256(data, &signature.signature, public_key)?
             }
             SignatureAlgorithm::RsaPss => {
-                // TODO: Implement RSA-PSS verification
-                return Err(BearDogError::business(
-                    "RSA-PSS not yet implemented".to_string(),
-                ));
+                asymmetric::verify_rsa_pss(data, &signature.signature, public_key)?
             }
         };
 

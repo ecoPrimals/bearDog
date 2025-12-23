@@ -93,11 +93,61 @@ impl RuntimePrimalDiscovery {
         
         debug!("🔍 mDNS discovery for: {}", service_type);
 
-        // TODO: Integrate with beardog-core's mDNS discovery
-        // For now, return None to fall through to next discovery method
-        // Real implementation would use mdns-sd crate or similar
+        // mDNS discovery implementation
+        // Using mdns-sd crate (zero-config discovery for local networks)
+        #[cfg(feature = "mdns-discovery")]
+        {
+            use mdns_sd::{ServiceDaemon, ServiceEvent};
+            use std::time::Duration;
+            
+            // Create mDNS browser
+            let mdns = ServiceDaemon::new().map_err(|e| {
+                BearDogError::network(format!("mDNS initialization failed: {}", e))
+            })?;
+            
+            // Browse for services
+            let receiver = mdns.browse(&service_type).map_err(|e| {
+                BearDogError::network(format!("mDNS browse failed: {}", e))
+            })?;
+            
+            // Wait for discovery (with timeout)
+            let timeout = Duration::from_secs(2);
+            if let Ok(event) = receiver.recv_timeout(timeout) {
+                if let ServiceEvent::ServiceResolved(info) = event {
+                    info!("✅ mDNS discovered: {} at {}:{}", 
+                        info.get_fullname(), 
+                        info.get_addresses().iter().next().map(|a| a.to_string()).unwrap_or_default(),
+                        info.get_port()
+                    );
+                    
+                    // Convert to service descriptor
+                    let endpoint = format!("http://{}:{}", 
+                        info.get_addresses().iter().next()
+                            .map(|a| a.to_string())
+                            .unwrap_or_else(|| "localhost".to_string()),
+                        info.get_port()
+                    );
+                    
+                    return Ok(Some(UniversalServiceDescriptor {
+                        service_type: capability_name(capability),
+                        endpoint,
+                        metadata: info.get_properties().iter()
+                            .map(|p| (p.key().to_string(), p.val_str().to_string()))
+                            .collect(),
+                    }));
+                }
+            }
+            
+            debug!("⚠️  No mDNS services found for {}", service_type);
+            Ok(None)
+        }
         
-        Ok(None)
+        // Graceful degradation when mDNS feature not enabled
+        #[cfg(not(feature = "mdns-discovery"))]
+        {
+            debug!("ℹ️  mDNS discovery not available (enable with --features mdns-discovery)");
+            Ok(None)
+        }
     }
 
     /// Get capability registry endpoints from environment

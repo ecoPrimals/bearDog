@@ -1,9 +1,10 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Configuration for memory-based key manager
+//!
+//! This module provides configuration structures for in-memory key management.
 
 use serde::{Deserialize, Serialize};
 
+/// Memory key manager configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryKeyConfig {
     /// Maximum number of keys to store in memory
@@ -30,6 +31,7 @@ impl Default for MemoryKeyConfig {
     }
 }
 
+/// Type alias for backwards compatibility
 pub type KeyManagerConfig = MemoryKeyConfig;
 
 /// Key storage configuration

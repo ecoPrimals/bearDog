@@ -25,13 +25,23 @@ impl Default for SafeCryptoConfig {
 }
 
 /// Safe crypto engine statistics
+///
+/// Tracks operational metrics for the safe crypto engine
 #[derive(Debug, Clone, Default)]
 pub struct SafeCryptoStats {
+    /// Total number of cryptographic operations performed
     pub operations_performed: u64,
-    /// Number of `total_bytes_processed`
+    /// Total bytes processed across all operations
     pub total_bytes_processed: u64,
 }
 
+/// Safe cryptographic engine with zero unsafe code
+///
+/// Provides cryptographic operations using pure Rust implementations,
+/// avoiding all unsafe code for maximum safety and verifiability.
+///
+/// # Safety
+/// This engine uses ZERO unsafe code. All operations are memory-safe.
 pub struct SafeCryptoEngine {
     #[allow(dead_code)]
     config: SafeCryptoConfig,
@@ -49,6 +59,16 @@ impl SafeCryptoEngine {
         }
     }
 
+    /// Computes SHA-256 hash of the input data
+    ///
+    /// # Arguments
+    /// * `data` - Input data to hash
+    ///
+    /// # Returns
+    /// 32-byte SHA-256 hash
+    ///
+    /// # Safety
+    /// Pure Rust implementation with zero unsafe code
     pub fn safe_hash(&mut self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use sha2::{Digest, Sha256};
 
@@ -63,6 +83,20 @@ impl SafeCryptoEngine {
         Ok(result)
     }
 
+    /// Encrypts data using ChaCha20 stream cipher
+    ///
+    /// # Arguments
+    /// * `data` - Input data to encrypt
+    /// * `_key` - Encryption key (currently placeholder)
+    ///
+    /// # Returns
+    /// Encrypted data
+    ///
+    /// # Note
+    /// Current implementation is a placeholder. Production use requires proper ChaCha20.
+    ///
+    /// # Safety
+    /// Pure Rust implementation with zero unsafe code
     pub fn safe_chacha20(&mut self, data: &[u8], _key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         // Simple XOR for demonstration (replace with real ChaCha20)
         let mut result = data.to_vec();

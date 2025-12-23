@@ -251,3 +251,6 @@ impl Default for SecuritySentinel {
         Self::new(SecuritySentinelConfig::default())
     }
 }
+
+#[cfg(test)]
+mod comprehensive_tests;

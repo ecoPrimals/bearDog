@@ -1,3 +1,13 @@
+//! Cryptographic utility functions for the BearDog security system
+//!
+//! This module provides core cryptographic operations including:
+//! - Ed25519 key generation and signing
+//! - HMAC operations
+//! - Password hashing and verification
+//! - AES-GCM encryption
+//!
+//! All operations use industry-standard, well-audited cryptographic libraries.
+
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
@@ -26,6 +36,10 @@ use zeroize::Zeroize;
 
 type HmacSha256 = Hmac<Sha256>;
 
+/// Core cryptographic operations provider for BearDog
+///
+/// Provides methods for key generation, signing, verification,
+/// and other cryptographic primitives.
 pub struct BearDogCrypto;
 
 impl BearDogCrypto {

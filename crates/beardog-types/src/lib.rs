@@ -7,6 +7,7 @@
 //!
 //! **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
 //!
+#![warn(missing_docs)]
 // Production code must use proper error handling - deny panicking methods
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]

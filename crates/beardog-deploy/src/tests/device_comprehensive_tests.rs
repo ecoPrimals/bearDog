@@ -29,7 +29,7 @@ fn test_device_manager_default() {
 #[test]
 fn test_check_device() {
     let manager = DeviceManager::new();
-    let device_info = manager.check_device();
+    let device_info = manager.check_device().expect("Should get device info");
 
     // Verify device info structure
     assert!(!device_info.id.is_empty());
@@ -270,8 +270,8 @@ fn test_device_manager_multiple_checks() {
     let manager = DeviceManager::new();
 
     // Perform multiple device checks
-    let device1 = manager.check_device();
-    let device2 = manager.check_device();
+    let device1 = manager.check_device().expect("Should get device 1");
+    let device2 = manager.check_device().expect("Should get device 2");
 
     // Both should succeed
     assert!(!device1.id.is_empty());

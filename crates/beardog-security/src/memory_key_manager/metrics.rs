@@ -1,20 +1,22 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Metrics for memory-based key manager
+//!
+//! This module provides metrics and monitoring structures for key management operations.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+/// Key manager metrics structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagerMetrics {
-    /// Number of `total_keys`
+    /// Total number of keys currently stored
     pub total_keys: usize,
-    /// Number of `keys_created`
+    /// Total number of keys created
     pub keys_created: u64,
-    /// Number of `keys_accessed`
+    /// Total number of key access operations
     pub keys_accessed: u64,
-    /// Number of `keys_expired`
+    /// Total number of keys that have expired
     pub keys_expired: u64,
+    /// Average time to access a key
     pub avg_access_time: Duration,
     /// The cache hit rate value
     pub cache_hit_rate: f64,
@@ -36,13 +38,14 @@ impl Default for KeyManagerMetrics {
     }
 }
 
+/// Operation-level metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationMetrics {
-    /// The operation type value
+    /// Type of operation performed
     pub operation_type: String,
-    /// The duration value
+    /// Duration of the operation
     pub duration: Duration,
-    /// Whether success is enabled
+    /// Whether the operation succeeded
     pub success: bool,
     /// Optional error
     pub error: Option<String>,
@@ -55,5 +58,6 @@ pub struct ExtendedMetrics {
     pub base_metrics: KeyManagerMetrics,
     /// Collection of recent operations
     pub recent_operations: Vec<OperationMetrics>,
+    /// Timestamp when these metrics were captured
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }

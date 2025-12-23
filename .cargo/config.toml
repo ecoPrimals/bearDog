@@ -1,0 +1,42 @@
+# Cargo Build Optimization Configuration
+# Optimized for 24-core system
+
+[build]
+# Use all 24 cores for parallel compilation
+jobs = 24
+
+# Enable pipelined compilation (faster for large workspaces)
+pipelining = true
+
+# [target.x86_64-unknown-linux-gnu]
+# Uncomment and install fast linker for 30-50% faster linking:
+# 
+# Option 1: lld (recommended)
+# sudo apt install lld clang
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+#
+# Option 2: mold (fastest, but newer)
+# sudo apt install mold
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# Incremental compilation settings
+[profile.dev]
+# Already set in Cargo.toml, but ensure incremental is on
+incremental = true
+
+# Split debuginfo for faster linking
+split-debuginfo = "unpacked"
+
+[net]
+# Increase git fetch parallelism
+git-fetch-with-cli = false
+
+# Note: git-fetch-parallelism was removed - Cargo now auto-detects optimal parallelism
+# Dependencies will fetch in parallel automatically
+
+[term]
+verbose = false
+quiet = false
+

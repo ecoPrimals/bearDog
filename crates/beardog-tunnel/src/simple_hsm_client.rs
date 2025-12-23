@@ -9,13 +9,22 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 /// Simple HSM device information
+///
+/// Contains basic metadata about a PKCS#11 HSM device/token.
+/// Used for device enumeration and selection in the CLI.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimpleHsmDevice {
+    /// PKCS#11 slot identifier
     pub slot_id: u64,
+    /// Human-readable token label
     pub label: String,
+    /// Manufacturer name
     pub manufacturer: String,
+    /// Device model identifier
     pub model: String,
+    /// Hardware serial number
     pub serial_number: String,
+    /// Whether a token is present in this slot
     pub has_token: bool,
 }
 

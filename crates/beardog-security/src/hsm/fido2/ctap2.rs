@@ -21,57 +21,111 @@ use ciborium::Value as CborValue;
 use std::collections::BTreeMap;
 use tracing::{debug, info, warn};
 
-/// CTAP2 status codes
+/// CTAP2 (Client to Authenticator Protocol 2) status codes
+///
+/// These status codes are defined in the FIDO2/WebAuthn specification and are
+/// returned by authenticators to indicate operation results or error conditions.
+///
+/// # Specification
+/// Based on CTAP2 specification: <https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html>
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Ctap2Status {
+    /// Operation completed successfully
     Success = 0x00,
+    /// The command is not a valid CTAP command
     InvalidCommand = 0x01,
+    /// The command included an invalid parameter
     InvalidParameter = 0x02,
+    /// Invalid message or item length
     InvalidLength = 0x03,
+    /// Invalid message sequencing
     InvalidSeq = 0x04,
+    /// Message timed out
     Timeout = 0x05,
+    /// Channel busy - cannot process command at this time
     ChannelBusy = 0x06,
+    /// Command requires channel lock
     LockRequired = 0x0A,
+    /// Invalid channel identifier
     InvalidChannel = 0x0B,
+    /// Unexpected CBOR type encountered
     CborUnexpected = 0x11,
+    /// Error when parsing CBOR structure
     CborError = 0x12,
+    /// Missing required parameter in the request
     MissingParameter = 0x14,
+    /// Limit for number of items exceeded
     LimitExceeded = 0x15,
+    /// Unsupported extension requested
     UnsupportedExtension = 0x16,
+    /// Credential was excluded from the operation
     CredentialExcluded = 0x19,
+    /// Authenticator is processing the request
     Processing = 0x21,
+    /// The credential provided is invalid or not recognized
     InvalidCredential = 0x22,
+    /// User action (e.g., touch, button press) is pending
     UserActionPending = 0x23,
+    /// Operation is pending and needs to be completed
     OperationPending = 0x24,
+    /// No operations are currently pending
     NoOperations = 0x25,
+    /// The requested algorithm is not supported
     UnsupportedAlgorithm = 0x26,
+    /// Operation was denied by user or policy
     OperationDenied = 0x27,
+    /// Internal key storage is full
     KeyStoreFull = 0x28,
+    /// Authenticator is not busy (no operation in progress)
     NotBusy = 0x29,
+    /// No operation is currently pending
     NoOperationPending = 0x2A,
+    /// The requested option is not supported
     UnsupportedOption = 0x2B,
+    /// The option value provided is invalid
     InvalidOption = 0x2C,
+    /// Keepalive was cancelled by user or timeout
     KeepaliveCancel = 0x2D,
+    /// No credentials are available
     NoCredentials = 0x2E,
+    /// User action timed out waiting for input
     UserActionTimeout = 0x2F,
+    /// Operation not allowed
     NotAllowed = 0x30,
+    /// PIN is invalid
     PinInvalid = 0x31,
+    /// PIN is blocked due to too many attempts
     PinBlocked = 0x32,
+    /// PIN authentication is invalid
     PinAuthInvalid = 0x33,
+    /// PIN authentication is blocked
     PinAuthBlocked = 0x34,
+    /// PIN is not set
     PinNotSet = 0x35,
+    /// PIN is required for this operation
     PinRequired = 0x36,
+    /// PIN policy violation
     PinPolicyViolation = 0x37,
+    /// PIN token has expired
     PinTokenExpired = 0x38,
+    /// Request is too large
     RequestTooLarge = 0x39,
+    /// Action timed out
     ActionTimeout = 0x3A,
+    /// User presence required
     UpRequired = 0x3B,
+    /// User verification is blocked
     UvBlocked = 0x3C,
+    /// Integrity check failure
     IntegrityFailure = 0x3D,
+    /// Invalid subcommand
     InvalidSubcommand = 0x3E,
+    /// User verification is invalid
     UvInvalid = 0x3F,
+    /// Unauthorized permission
     UnauthorizedPermission = 0x40,
+    /// Other error
     Other = 0xFF,
 }
 
@@ -124,13 +178,20 @@ impl Ctap2Status {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
 pub enum CtapHidCommand {
-    Msg = 0x83,       // CTAPHID_MSG - Encapsulates CTAP command
-    Cbor = 0x90,      // CTAPHID_CBOR - CTAP CBOR command
-    Init = 0x86,      // CTAPHID_INIT - Initialize channel
-    Ping = 0x81,      // CTAPHID_PING - Echo data
-    Cancel = 0x91,    // CTAPHID_CANCEL - Cancel pending request
-    Error = 0xBF,     // CTAPHID_ERROR - Error response
-    Keepalive = 0xBB, // CTAPHID_KEEPALIVE - Keep connection alive
+    /// CTAPHID_MSG - Encapsulates CTAP command
+    Msg = 0x83,
+    /// CTAPHID_CBOR - CTAP CBOR command
+    Cbor = 0x90,
+    /// CTAPHID_INIT - Initialize channel
+    Init = 0x86,
+    /// CTAPHID_PING - Echo data
+    Ping = 0x81,
+    /// CTAPHID_CANCEL - Cancel pending request
+    Cancel = 0x91,
+    /// CTAPHID_ERROR - Error response
+    Error = 0xBF,
+    /// CTAPHID_KEEPALIVE - Keep connection alive
+    Keepalive = 0xBB,
 }
 
 impl CtapHidCommand {
@@ -145,12 +206,19 @@ impl CtapHidCommand {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
 pub enum Ctap2Command {
+    /// Make a new credential (attestation)
     MakeCredential = 0x01,
+    /// Get an assertion (authentication)
     GetAssertion = 0x02,
+    /// Get authenticator info
     GetInfo = 0x04,
+    /// Client PIN operations
     ClientPin = 0x06,
+    /// Reset the authenticator
     Reset = 0x07,
+    /// Get next assertion in multi-credential scenario
     GetNextAssertion = 0x08,
+    /// Manage credentials
     CredentialManagement = 0x0A,
 }
 

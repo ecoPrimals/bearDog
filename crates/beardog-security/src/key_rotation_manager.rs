@@ -520,14 +520,23 @@ impl KeyRotationManager {
 /// Rotation statistics
 #[derive(Debug, Clone)]
 pub struct RotationStatistics {
+    /// Total number of keys in the system
     pub total_keys: usize,
+    /// Number of active keys
     pub active_keys: usize,
+    /// Number of deprecated keys
     pub deprecated_keys: usize,
+    /// Number of revoked keys
     pub revoked_keys: usize,
+    /// Number of keys currently rotating
     pub rotating_keys: usize,
+    /// Number of expired keys
     pub expired_keys: usize,
+    /// Total rotation operations performed
     pub total_rotations: usize,
+    /// Number of successful rotations
     pub successful_rotations: usize,
+    /// Number of failed rotations
     pub failed_rotations: usize,
 }
 
