@@ -217,3 +217,4 @@ mod tests {
         assert_eq!(time.elapsed_since_creation(), Duration::from_millis(1000));
     }
 }
+
