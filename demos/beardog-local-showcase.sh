@@ -49,13 +49,12 @@ if $BEARDOG entropy collect --help &>/dev/null; then
     echo -e "${GREEN}✅ Entropy collection available${NC}"
     
     echo ""
-    echo -e "${YELLOW}📝 Collecting human entropy...${NC}"
-    echo "   (In real demo: keyboard, mouse, webcam input)"
+    echo -e "${YELLOW}📝 Collecting hardware entropy...${NC}"
+    echo "   (In interactive demo: add --human-input for keyboard/mouse/webcam)"
     echo ""
     
-    # Collect entropy
+    # Collect entropy (without --human-input to avoid TTY errors in scripts)
     $BEARDOG entropy collect \
-        --human-input \
         --device auto \
         --quality-tier 2 \
         --output human.seed \
