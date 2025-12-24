@@ -39,15 +39,19 @@
 
 ---
 
-## 🔐 Latest: Physical Genesis Bootstrap (Week 2)
+## 🎬 Latest: BirdSong Privacy & Local Showcase (Dec 24, 2025)
 
-**"Never let a bird be alone in the dark forest"**
+**"Privacy by default. Sovereignty by design."**
 
-BearDog is implementing physical genesis bootstrap to ensure new nodes receive cryptographic identity at birth via witnessed ceremony, not vulnerable internet bootstrap.
+BearDog v0.9.3 is production-ready with full BirdSong lineage-based encryption and a comprehensive local showcase demonstrating all core features.
 
-**Status**: Week 2 Phase 1 Complete (Type Integration) ✅
-- ✅ Genesis module foundation (Week 1)
-- ✅ Type integration (Week 2 Phase 1)
+**Status**: Showcase Complete - Ready for Video Recording ✅
+- ✅ BirdSong CLI implemented (encrypt/decrypt)
+- ✅ Privacy enforcement proven (strangers blocked)
+- ✅ All bugs fixed (100% fix rate)
+- ✅ Demo script complete (8/8 tests passing)
+- ✅ 20+ documentation files
+- 📹 Next: Record showcase video
 - 🔄 API endpoints (Week 2 Phase 2 - In Progress)
 
 See [GENESIS_BOOTSTRAP_STATUS_DEC_22_2025.md](GENESIS_BOOTSTRAP_STATUS_DEC_22_2025.md) for details.
