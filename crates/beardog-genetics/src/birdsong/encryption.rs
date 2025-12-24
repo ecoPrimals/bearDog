@@ -130,8 +130,15 @@ impl BirdSongEncryption {
         let node_depth = (request.proof.path.len() - 1) as u32;
 
         // Check if node depth is within allowed range
-        if node_depth < request.broadcast.hint.min_depth
-            || node_depth > request.broadcast.hint.max_depth
+        // Note: Sender is ALWAYS allowed to decrypt their own messages (for verification)
+        // So we skip depth check if this is the sender's own key
+        let is_sender = request.proof.path.last()
+            .map(|last| last == &request.proof.node_id)
+            .unwrap_or(false);
+
+        if !is_sender 
+            && (node_depth < request.broadcast.hint.min_depth
+                || node_depth > request.broadcast.hint.max_depth)
         {
             return Err(BearDogError::system(format!(
                 "Node depth {} not in allowed range [{}, {}]",
@@ -144,7 +151,8 @@ impl BirdSongEncryption {
         let key = self.kdf.derive_key(&request.broadcast.hint, 0)?;
 
         // Check key validity for this depth
-        if !self.kdf.is_key_valid_for_depth(&key, node_depth) {
+        // Note: Sender is always allowed (already checked above), so skip depth validity check for sender
+        if !is_sender && !self.kdf.is_key_valid_for_depth(&key, node_depth) {
             return Err(BearDogError::system(format!(
                 "Key not valid for depth {}",
                 node_depth

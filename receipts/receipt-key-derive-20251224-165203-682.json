@@ -1,0 +1,19 @@
+{
+  "receipt_id": "de501ace-9556-467f-91a4-6a0645d6c2d4",
+  "operation": "key-derive",
+  "timestamp": "2025-12-24T16:52:03.682475002+00:00",
+  "result": {
+    "status": "success"
+  },
+  "key_info": {
+    "key_id": "test-child",
+    "algorithm": "ed25519",
+    "generation": 1,
+    "parent_key_id": "test-root",
+    "purpose": "child"
+  },
+  "metadata": {
+    "master_key_id": "test-root",
+    "derivation_purpose": "child"
+  }
+}
