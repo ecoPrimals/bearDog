@@ -63,6 +63,7 @@ pub async fn handle_key_mix(
         parent_key_id: Some(format!("{}+{}", key1_id, key2_id)), // Both parents
         derivation_purpose: Some(format!("mixed-{}", threshold)),
         children: Vec::new(),
+        lineage: None, // Mixed keys don't have simple lineage
         expires_at: expires_at_str,
         usage: Some("all".to_string()), // Mixed keys can do everything parents can
         purpose: Some(format!(

@@ -191,6 +191,8 @@ pub async fn handle_key_delegate(
     })?;
 
     // Create delegated key
+    let parent_depth = master_key.lineage.as_ref().map(|l| l.depth).unwrap_or(0);
+    
     let delegated_key = StoredKey {
         key_id: output_key_id.to_string(),
         algorithm: master_key.algorithm.clone(),
@@ -201,6 +203,10 @@ pub async fn handle_key_delegate(
         parent_key_id: Some(master_key_id.to_string()),
         derivation_purpose: Some(format!("delegated-to-{}", delegate_to)),
         children: Vec::new(),
+        lineage: Some(key_store::KeyLineageInfo {
+            parent_key_id: Some(master_key_id.to_string()),
+            depth: parent_depth + 1,
+        }),
         expires_at: Some(expiry.to_rfc3339()),
         usage: Some("delegated".to_string()),
         purpose: Some(constraints_json), // Store constraints in purpose field

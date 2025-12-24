@@ -1,5 +1,6 @@
 // Handler module exports
 
+pub mod birdsong; // BirdSong lineage-based encryption
 pub mod cross_primal; // Cross-primal secure messaging (Workflow 3)
 pub mod decrypt;
 pub mod encrypt;

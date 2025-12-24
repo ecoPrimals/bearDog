@@ -141,6 +141,10 @@ pub async fn handle_key_generate(
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(key_store::KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: None,
         usage: None,
         purpose: None,
@@ -408,6 +412,10 @@ pub async fn handle_key_generate_v2(
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(key_store::KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: expires_at_str.clone(),
         usage: usage.map(|s| s.to_string()),
         purpose: purpose.map(|s| s.to_string()),

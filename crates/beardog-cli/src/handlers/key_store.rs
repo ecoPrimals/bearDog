@@ -7,6 +7,13 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+/// Lineage information for a key
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct KeyLineageInfo {
+    pub parent_key_id: Option<String>,
+    pub depth: u32,
+}
+
 /// Key metadata stored in ~/.beardog/keys/
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StoredKey {
@@ -31,6 +38,9 @@ pub struct StoredKey {
     /// Child key IDs derived from this key
     #[serde(default)]
     pub children: Vec<String>,
+    /// Lineage information (for BirdSong encryption)
+    #[serde(default)]
+    pub lineage: Option<KeyLineageInfo>,
 
     // Usage restrictions
     /// Expiry timestamp

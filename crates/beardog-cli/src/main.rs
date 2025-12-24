@@ -31,6 +31,10 @@ enum Commands {
     #[command(subcommand)]
     Key(KeyCommands),
 
+    /// BirdSong lineage-based encryption (privacy-preserving)
+    #[command(subcommand)]
+    Birdsong(BirdSongCommands),
+
     /// Encryption operations
     Encrypt(EncryptArgs),
 
@@ -381,6 +385,43 @@ struct DecryptArgs {
 }
 
 // ============================================================================
+// BIRDSONG COMMANDS
+// ============================================================================
+
+#[derive(Subcommand)]
+enum BirdSongCommands {
+    /// Encrypt message for lineage only (privacy-preserving)
+    Encrypt {
+        /// Message to encrypt
+        #[arg(long)]
+        message: String,
+
+        /// Lineage hint type (DirectAncestors, AllDescendants, RootOnly, Depth:min-max)
+        #[arg(long)]
+        hint: String,
+
+        /// Root lineage ID
+        #[arg(long)]
+        root_id: String,
+
+        /// Output file path (default: encrypted.birdsong)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+
+    /// Decrypt BirdSong message (if in lineage)
+    Decrypt {
+        /// Input file path (encrypted broadcast)
+        #[arg(short, long)]
+        input: String,
+
+        /// Key ID to use for decryption
+        #[arg(long)]
+        key_id: String,
+    },
+}
+
+// ============================================================================
 // HSM COMMANDS
 // ============================================================================
 
@@ -447,6 +488,25 @@ async fn main() -> Result<(), BearDogError> {
             }
             EntropyCommands::Info { seed } => {
                 handlers::entropy::handle_entropy_info(&seed).await?;
+            }
+        },
+        Commands::Birdsong(birdsong_cmd) => match birdsong_cmd {
+            BirdSongCommands::Encrypt {
+                message,
+                hint,
+                root_id,
+                output,
+            } => {
+                handlers::birdsong::handle_birdsong_encrypt(
+                    &message,
+                    &hint,
+                    &root_id,
+                    output.as_deref(),
+                )
+                .await?;
+            }
+            BirdSongCommands::Decrypt { input, key_id } => {
+                handlers::birdsong::handle_birdsong_decrypt(&input, &key_id).await?;
             }
         },
         Commands::Key(key_cmd) => match key_cmd {

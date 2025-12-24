@@ -52,6 +52,8 @@ pub async fn handle_key_derive(
     let expires_at_str = expires_at.map(|dt| dt.to_rfc3339());
 
     // Create derived key metadata
+    let parent_depth = master_key.lineage.as_ref().map(|l| l.depth).unwrap_or(0);
+    
     let derived_key = StoredKey {
         key_id: output_key_id.to_string(),
         algorithm: master_key.algorithm.clone(),
@@ -62,6 +64,10 @@ pub async fn handle_key_derive(
         parent_key_id: Some(master_key_id.to_string()),
         derivation_purpose: Some(purpose.to_string()),
         children: Vec::new(),
+        lineage: Some(key_store::KeyLineageInfo {
+            parent_key_id: Some(master_key_id.to_string()),
+            depth: parent_depth + 1,
+        }),
         expires_at: expires_at_str,
         usage: None,
         purpose: Some(purpose.to_string()),
