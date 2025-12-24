@@ -56,13 +56,25 @@ pub async fn handle_birdsong_encrypt(
         associated_data: None,
     };
 
-    // Generate master secret for key derivation
-    // In production, this would come from HSM or key store
-    let mut master_secret = vec![0u8; 32];
-    use rand::RngCore;
-    rand::rngs::OsRng.fill_bytes(&mut master_secret);
+    // Load root key to get master secret for lineage-based key derivation
+    println!("🔑 Loading root key {}...", root_id);
+    let root_key = key_store::load_key(root_id)?;
+    let root_key_material = key_store::base64_decode(&root_key.key_material_b64)?;
 
-    // Initialize BirdSong encryption
+    // Use root key material as master secret for lineage derivation
+    // All nodes in the lineage will derive from this same root
+    let master_secret = if root_key_material.len() >= 32 {
+        root_key_material[..32].to_vec()
+    } else {
+        // If key is smaller, pad with HKDF expand
+        use sha2::{Sha256, Digest};
+        let mut hasher = Sha256::new();
+        hasher.update(&root_key_material);
+        hasher.update(b"beardog-birdsong-master-secret-v1");
+        hasher.finalize().to_vec()
+    };
+
+    // Initialize BirdSong encryption with root-derived master secret
     let kdf = Arc::new(LineageKeyDerivation::new(master_secret)?);
     let encryption = BirdSongEncryption::new(kdf);
 
@@ -155,13 +167,24 @@ pub async fn handle_birdsong_decrypt(
         proof: proof.clone(),
     };
 
-    // Generate master secret for key derivation
-    // In production, this would come from HSM or key store
-    let mut master_secret = vec![0u8; 32];
-    use rand::RngCore;
-    rand::rngs::OsRng.fill_bytes(&mut master_secret);
+    // Load root key to get master secret (must match encryption!)
+    println!("🔑 Loading root key {}...", proof.root_id);
+    let root_key = key_store::load_key(&proof.root_id)?;
+    let root_key_material = key_store::base64_decode(&root_key.key_material_b64)?;
 
-    // Initialize BirdSong encryption
+    // Use same root key material as master secret (must match encryption)
+    let master_secret = if root_key_material.len() >= 32 {
+        root_key_material[..32].to_vec()
+    } else {
+        // If key is smaller, pad with HKDF expand (same as encrypt)
+        use sha2::{Sha256, Digest};
+        let mut hasher = Sha256::new();
+        hasher.update(&root_key_material);
+        hasher.update(b"beardog-birdsong-master-secret-v1");
+        hasher.finalize().to_vec()
+    };
+
+    // Initialize BirdSong encryption with root-derived master secret
     let kdf = Arc::new(LineageKeyDerivation::new(master_secret)?);
     let encryption = BirdSongEncryption::new(kdf);
 
