@@ -1,0 +1,127 @@
+===============================================================================
+🔧 SONGBIRD TEAM - KEY DERIVATION BUG FIXED! 🔧
+===============================================================================
+
+Hi Songbird Team!
+
+You found another real bug - key derivation was broken! Fixed in 30 minutes! ⚡
+
+THE BUG YOU FOUND:
+------------------
+Even Node A (root) couldn't decrypt messages:
+  ❌ "Decryption failed (wrong key or tampered data)"
+
+ROOT CAUSE:
+-----------
+Encrypt and decrypt were using RANDOM master secrets (different every time!)
+- encrypt: random secret A → key A
+- decrypt: random secret B → key B  
+- key A ≠ key B → decryption fails!
+
+THE FIX:
+--------
+Now both encrypt and decrypt use the ROOT KEY from key store as master secret:
+- encrypt: root key → master secret → key A
+- decrypt: root key → master secret → key A (same!)
+- key A = key A → decryption works! ✅
+
+NEW BINARY AVAILABLE:
+---------------------
+Location: ../phase2/phase1bins/beardog-v0.9.2-keyfixed-dec24
+Checksum: beardog-v0.9.2-keyfixed-dec24.sha256
+
+WHAT TO TEST:
+-------------
+Your exact test case should now work:
+
+1. Setup lineage:
+   beardog key generate --key-id node-a-root --algorithm ed25519
+   beardog key derive --master-key node-a-root --purpose child --output node-b-child
+   beardog key derive --master-key node-b-child --purpose grandchild --output node-c-grandchild
+
+2. Encrypt for ancestors:
+   beardog birdsong encrypt \
+     --message "RELAY_REQUEST: Node C needs relay" \
+     --hint DirectAncestors \
+     --root-id node-a-root
+
+3. Node A (root) can decrypt: ✅
+   beardog birdsong decrypt \
+     --input encrypted.birdsong \
+     --key-id node-a-root
+   # Expected: "RELAY_REQUEST: Node C needs relay"
+
+4. Node B (child) can decrypt: ✅
+   beardog birdsong decrypt \
+     --input encrypted.birdsong \
+     --key-id node-b-child
+   # Expected: "RELAY_REQUEST: Node C needs relay"
+
+5. Node X (stranger) CANNOT decrypt: ✅
+   beardog key generate --key-id node-x-stranger --algorithm ed25519
+   beardog birdsong decrypt \
+     --input encrypted.birdsong \
+     --key-id node-x-stranger
+   # Expected: "Cannot decrypt: not in lineage"
+
+EXPECTED RESULTS:
+-----------------
+Before (v0.9.1):
+  ❌ All nodes fail to decrypt (even root!)
+
+After (v0.9.2):
+  ✅ Ancestors can decrypt
+  ✅ Strangers CANNOT decrypt (privacy enforced!)
+
+PROGRESS TRACKING:
+------------------
+v0.9.0 → Found: Privacy gap → Fixed: 3 hours
+v0.9.1 → Found: Key derivation bug → Fixed: 30 minutes
+v0.9.2 → Status: All known gaps fixed! 🎉
+
+WHAT TO VERIFY:
+---------------
+1. Does Node A decrypt successfully? (should work now!)
+2. Does Node B decrypt successfully? (should work!)
+3. Does Node X fail to decrypt? (privacy enforcement!)
+4. Do all depth hints work correctly?
+
+DOCUMENTATION:
+--------------
+Full details: SONGBIRD_KEY_DERIVATION_FIX.md
+
+GREAT TESTING WORK:
+-------------------
+Your live testing found 2 real bugs in 2 iterations! 🏆
+
+This is EXACTLY what iterative testing should do:
+- Find real issues
+- Get fast fixes
+- Verify fixes work
+- Find next issue (if any)
+
+No mocks. Real crypto. Real bugs. Real fixes. ✅
+
+TIMELINE:
+---------
+Bug reported: Today afternoon
+Fix delivered: 30 minutes later
+Why so fast: Clear bug report with reproduction steps!
+
+STATUS:
+-------
+🟢 READY FOR RE-TESTING (v0.9.2)
+
+Please re-run your tests and let us know:
+- Does decryption work now?
+- Does privacy enforcement work?
+- Any other gaps found?
+
+Thank you for the excellent testing!
+
+-- BearDog Team
+
+===============================================================================
+🐻 BearDog v0.9.2 + 🌳 Songbird = 🧬 Iterative Evolution Works!
+===============================================================================
+
