@@ -17,7 +17,7 @@ pub enum PhysicalProofError {
     #[error("Insufficient trust level: {actual:?} (minimum required: Medium)")]
     InsufficientTrust {
         /// The actual trust level provided
-        actual: TrustLevel
+        actual: TrustLevel,
     },
 
     /// Physical attestation failed verification
@@ -164,22 +164,14 @@ mod tests {
         let verifier = PhysicalProximityVerifier::default_genesis_config();
 
         // Maximum trust should pass
-        assert!(verifier
-            .verify(PhysicalChannelType::HardwareKey)
-            .is_ok());
+        assert!(verifier.verify(PhysicalChannelType::HardwareKey).is_ok());
 
         // High trust should pass
-        assert!(verifier
-            .verify(PhysicalChannelType::Nfc)
-            .is_ok());
-        assert!(verifier
-            .verify(PhysicalChannelType::QrCodeWithOob)
-            .is_ok());
+        assert!(verifier.verify(PhysicalChannelType::Nfc).is_ok());
+        assert!(verifier.verify(PhysicalChannelType::QrCodeWithOob).is_ok());
 
         // Medium trust should pass
-        assert!(verifier
-            .verify(PhysicalChannelType::Bluetooth)
-            .is_ok());
+        assert!(verifier.verify(PhysicalChannelType::Bluetooth).is_ok());
     }
 
     #[test]
@@ -187,20 +179,12 @@ mod tests {
         let verifier = PhysicalProximityVerifier::maximum_security();
 
         // Only hardware key should pass
-        assert!(verifier
-            .verify(PhysicalChannelType::HardwareKey)
-            .is_ok());
+        assert!(verifier.verify(PhysicalChannelType::HardwareKey).is_ok());
 
         // All others should fail
-        assert!(verifier
-            .verify(PhysicalChannelType::Nfc)
-            .is_err());
-        assert!(verifier
-            .verify(PhysicalChannelType::QrCodeWithOob)
-            .is_err());
-        assert!(verifier
-            .verify(PhysicalChannelType::Bluetooth)
-            .is_err());
+        assert!(verifier.verify(PhysicalChannelType::Nfc).is_err());
+        assert!(verifier.verify(PhysicalChannelType::QrCodeWithOob).is_err());
+        assert!(verifier.verify(PhysicalChannelType::Bluetooth).is_err());
     }
 
     #[test]
@@ -209,9 +193,7 @@ mod tests {
 
         // Verify correct trust levels are returned
         assert_eq!(
-            verifier
-                .verify(PhysicalChannelType::HardwareKey)
-                .unwrap(),
+            verifier.verify(PhysicalChannelType::HardwareKey).unwrap(),
             TrustLevel::Maximum
         );
         assert_eq!(
@@ -219,9 +201,7 @@ mod tests {
             TrustLevel::High
         );
         assert_eq!(
-            verifier
-                .verify(PhysicalChannelType::Bluetooth)
-                .unwrap(),
+            verifier.verify(PhysicalChannelType::Bluetooth).unwrap(),
             TrustLevel::Medium
         );
     }
@@ -241,17 +221,10 @@ mod tests {
         let verifier = PhysicalProximityVerifier::new(TrustLevel::High);
 
         // High and maximum should pass
-        assert!(verifier
-            .verify(PhysicalChannelType::HardwareKey)
-            .is_ok());
-        assert!(verifier
-            .verify(PhysicalChannelType::Nfc)
-            .is_ok());
+        assert!(verifier.verify(PhysicalChannelType::HardwareKey).is_ok());
+        assert!(verifier.verify(PhysicalChannelType::Nfc).is_ok());
 
         // Medium should fail
-        assert!(verifier
-            .verify(PhysicalChannelType::Bluetooth)
-            .is_err());
+        assert!(verifier.verify(PhysicalChannelType::Bluetooth).is_err());
     }
 }
-

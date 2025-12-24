@@ -55,19 +55,26 @@ impl GenesisWitness {
     }
 
     /// Verify this witness signature
-    pub fn verify_signature(&self, new_node_id: &str) -> Result<bool, beardog_errors::BearDogError> {
+    pub fn verify_signature(
+        &self,
+        new_node_id: &str,
+    ) -> Result<bool, beardog_errors::BearDogError> {
         let message = Self::create_signing_message(new_node_id, self.timestamp, &self.public_key);
 
         // Use Ed25519 to verify (ed25519-dalek 2.x uses VerifyingKey)
         use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
-        let pubkey = VerifyingKey::from_bytes(&self.public_key.as_slice().try_into().map_err(|_| {
-            beardog_errors::BearDogError::security("Invalid witness pubkey length".into())
-        })?)
-        .map_err(|e| beardog_errors::BearDogError::security(format!("Invalid witness pubkey: {}", e)))?;
+        let pubkey =
+            VerifyingKey::from_bytes(&self.public_key.as_slice().try_into().map_err(|_| {
+                beardog_errors::BearDogError::security("Invalid witness pubkey length".into())
+            })?)
+            .map_err(|e| {
+                beardog_errors::BearDogError::security(format!("Invalid witness pubkey: {}", e))
+            })?;
 
-        let signature = Signature::try_from(&self.signature.as_slice()[..64])
-            .map_err(|e| beardog_errors::BearDogError::security(format!("Invalid signature: {}", e)))?;
+        let signature = Signature::try_from(&self.signature.as_slice()[..64]).map_err(|e| {
+            beardog_errors::BearDogError::security(format!("Invalid signature: {}", e))
+        })?;
 
         pubkey
             .verify(&message, &signature)
@@ -105,9 +112,14 @@ impl GeneticLineage {
     pub fn verify(&self) -> Result<bool, beardog_errors::BearDogError> {
         // 1. Verify witness signature
         // Find the child node (non-root) in the lineage
-        let child_node = self.lineage_chain.nodes.values()
+        let child_node = self
+            .lineage_chain
+            .nodes
+            .values()
             .find(|n| n.parent_id.is_some())
-            .ok_or_else(|| beardog_errors::BearDogError::business("No child node in lineage chain".into()))?;
+            .ok_or_else(|| {
+                beardog_errors::BearDogError::business("No child node in lineage chain".into())
+            })?;
 
         let node_id = child_node.node_id.clone();
 
@@ -185,15 +197,24 @@ impl PhysicalChannelProof {
             }
             PhysicalChannelType::QrCodeWithOob => {
                 // Verify OOB codes present
-                Ok(self.verification_codes.as_ref().map_or(false, |codes| !codes.is_empty()))
+                Ok(self
+                    .verification_codes
+                    .as_ref()
+                    .map_or(false, |codes| !codes.is_empty()))
             }
             PhysicalChannelType::Bluetooth => {
                 // Verify pairing data present
-                Ok(self.pairing_data.as_ref().map_or(false, |data| !data.is_empty()))
+                Ok(self
+                    .pairing_data
+                    .as_ref()
+                    .map_or(false, |data| !data.is_empty()))
             }
             PhysicalChannelType::Nfc => {
                 // NFC should have attestation
-                Ok(self.attestation.as_ref().map_or(false, |att| !att.is_empty()))
+                Ok(self
+                    .attestation
+                    .as_ref()
+                    .map_or(false, |att| !att.is_empty()))
             }
         }
     }
@@ -226,9 +247,18 @@ mod tests {
 
     #[test]
     fn test_physical_channel_trust_levels() {
-        assert_eq!(PhysicalChannelType::HardwareKey.trust_level(), TrustLevel::Maximum);
-        assert_eq!(PhysicalChannelType::QrCodeWithOob.trust_level(), TrustLevel::High);
-        assert_eq!(PhysicalChannelType::Bluetooth.trust_level(), TrustLevel::Medium);
+        assert_eq!(
+            PhysicalChannelType::HardwareKey.trust_level(),
+            TrustLevel::Maximum
+        );
+        assert_eq!(
+            PhysicalChannelType::QrCodeWithOob.trust_level(),
+            TrustLevel::High
+        );
+        assert_eq!(
+            PhysicalChannelType::Bluetooth.trust_level(),
+            TrustLevel::Medium
+        );
         assert_eq!(PhysicalChannelType::Nfc.trust_level(), TrustLevel::High);
     }
 
@@ -262,4 +292,3 @@ mod tests {
         assert_eq!(u64::from_be_bytes(ts_bytes.try_into().unwrap()), timestamp);
     }
 }
-

@@ -199,9 +199,13 @@ mod tests {
             key_material_b64: "dGVzdA==".to_string(), // "test" in base64
             created_at: Utc::now().to_rfc3339(),
             generation,
-            parent_key_id: parent_id,
+            parent_key_id: parent_id.clone(),
             derivation_purpose: Some("test".to_string()),
             children: Vec::new(),
+            lineage: Some(key_store::KeyLineageInfo {
+                parent_key_id: parent_id,
+                depth: generation,
+            }),
             expires_at: None,
             usage: None,
             purpose: None,

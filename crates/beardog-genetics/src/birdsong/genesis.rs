@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tracing::{debug, info, warn};
 
 use super::genesis_types::{
-    GenesisCeremonyResult, GeneticLineage, GenesisWitness, PhysicalChannelProof, TrustLevel,
+    GenesisCeremonyResult, GenesisWitness, GeneticLineage, PhysicalChannelProof, TrustLevel,
 };
 use super::{LineageChain, LineageChainManager, LineageNode, LineageProofManager};
 
@@ -110,9 +110,7 @@ impl GenesisLineageProvider {
                 "Invalid witness signature for node: {} from witness: {}",
                 new_node_id, witness.device_id
             );
-            return Err(BearDogError::security(
-                "Invalid witness signature".into(),
-            ));
+            return Err(BearDogError::security("Invalid witness signature".into()));
         }
 
         // 3. Verify trust level meets threshold
@@ -132,7 +130,11 @@ impl GenesisLineageProvider {
 
         // 4. Generate genetic identity for new node
         let genetic_id = self.generate_genetic_id(new_node_id, witness)?;
-        debug!("Generated genetic ID for {}: {} bytes", new_node_id, genetic_id.len());
+        debug!(
+            "Generated genetic ID for {}: {} bytes",
+            new_node_id,
+            genetic_id.len()
+        );
 
         // 5. Create lineage chain from witness
         let lineage_chain = self.create_lineage_from_witness(new_node_id, witness)?;
@@ -186,7 +188,10 @@ impl GenesisLineageProvider {
 
         // 1. Verify physical channel proof
         if !physical_proof.verify()? {
-            warn!("Physical channel proof verification failed for {}", new_node_id);
+            warn!(
+                "Physical channel proof verification failed for {}",
+                new_node_id
+            );
             return Ok(GenesisCeremonyResult {
                 genetic_lineage: GeneticLineage {
                     genetic_id: vec![],
@@ -314,9 +319,7 @@ impl GenesisLineageProvider {
 
         // Check signature is present
         if witness.signature.is_empty() {
-            return Err(BearDogError::security(
-                "Witness signature missing".into(),
-            ));
+            return Err(BearDogError::security("Witness signature missing".into()));
         }
 
         Ok(())
@@ -387,7 +390,7 @@ impl GenesisLineageProvider {
             node_id: new_node_id.to_string(),
             parent_id: Some(witness.device_id.clone()),
             public_key: vec![], // Will be filled in by node itself
-            depth: 1, // One level below witness
+            depth: 1,           // One level below witness
             created_at: now,
             metadata: super::types::LineageMetadata {
                 biome_type: Some("new-node".to_string()),
@@ -465,16 +468,12 @@ mod tests {
             signature: vec![0u8; 64],
         };
 
-        let genetic_id = provider
-            .generate_genetic_id("test-node", &witness)
-            .unwrap();
+        let genetic_id = provider.generate_genetic_id("test-node", &witness).unwrap();
 
         assert_eq!(genetic_id.len(), 32);
 
         // Same input should produce same output
-        let genetic_id2 = provider
-            .generate_genetic_id("test-node", &witness)
-            .unwrap();
+        let genetic_id2 = provider.generate_genetic_id("test-node", &witness).unwrap();
         assert_eq!(genetic_id, genetic_id2);
 
         // Different node ID should produce different output
@@ -504,7 +503,9 @@ mod tests {
         assert_eq!(lineage.root_node.node_id, "witness-001");
         assert!(lineage.nodes.contains_key("witness-001"));
         assert!(lineage.nodes.contains_key("new-node"));
-        assert_eq!(lineage.nodes.get("new-node").unwrap().parent_id, Some("witness-001".into()));
+        assert_eq!(
+            lineage.nodes.get("new-node").unwrap().parent_id,
+            Some("witness-001".into())
+        );
     }
 }
-

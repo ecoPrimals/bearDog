@@ -5,7 +5,7 @@
 //!
 //! Coverage expansion: December 10, 2025
 
-use crate::handlers::key_store::{base64_decode, base64_encode, StoredKey};
+use crate::handlers::key_store::{base64_decode, base64_encode, KeyLineageInfo, StoredKey};
 use chrono::Utc;
 
 // ============================================================================
@@ -66,6 +66,10 @@ fn test_stored_key_serialization() {
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: None,
         usage: None,
         purpose: None,
@@ -92,6 +96,10 @@ fn test_stored_key_clone() {
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: None,
         usage: None,
         purpose: None,
@@ -119,6 +127,10 @@ fn test_key_material_not_in_debug_output() {
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: None,
         usage: None,
         purpose: None,
@@ -191,6 +203,10 @@ fn test_key_id_with_special_but_valid_chars() {
             parent_key_id: None,
             derivation_purpose: None,
             children: Vec::new(),
+            lineage: Some(KeyLineageInfo {
+                parent_key_id: None,
+                depth: 0,
+            }),
             expires_at: None,
             usage: None,
             purpose: None,
@@ -214,6 +230,10 @@ fn test_empty_algorithm_field() {
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: None,
         usage: None,
         purpose: None,
@@ -246,6 +266,10 @@ fn test_created_at_rfc3339_format() {
         parent_key_id: None,
         derivation_purpose: None,
         children: Vec::new(),
+        lineage: Some(KeyLineageInfo {
+            parent_key_id: None,
+            depth: 0,
+        }),
         expires_at: None,
         usage: None,
         purpose: None,
@@ -279,6 +303,10 @@ fn test_multiple_algorithms_storage() {
             parent_key_id: None,
             derivation_purpose: None,
             children: Vec::new(),
+            lineage: Some(KeyLineageInfo {
+                parent_key_id: None,
+                depth: 0,
+            }),
             expires_at: None,
             usage: None,
             purpose: None,
@@ -306,6 +334,10 @@ fn test_different_hsm_names() {
             parent_key_id: None,
             derivation_purpose: None,
             children: Vec::new(),
+            lineage: Some(KeyLineageInfo {
+                parent_key_id: None,
+                depth: 0,
+            }),
             expires_at: None,
             usage: None,
             purpose: None,

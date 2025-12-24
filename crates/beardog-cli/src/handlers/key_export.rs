@@ -294,7 +294,7 @@ pub async fn handle_key_import(
         parent_key_id: exported.parent.clone(),
         derivation_purpose: exported.context.clone(),
         children: Vec::new(), // Will be rebuilt as keys are derived
-        lineage: None, // Imported keys don't have lineage info initially
+        lineage: None,        // Imported keys don't have lineage info initially
         expires_at: exported.expires_at.clone(),
         usage: exported.usage.clone(),
         purpose: exported.purpose.clone(),

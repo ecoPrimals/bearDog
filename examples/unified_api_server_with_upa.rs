@@ -74,7 +74,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             upa_client.start_heartbeat();
         }
         Err(e) => {
-            println!("⚠️  UPA registration failed (Songbird may not be running): {}", e);
+            println!(
+                "⚠️  UPA registration failed (Songbird may not be running): {}",
+                e
+            );
             println!("   API server will continue without UPA registration.");
         }
     }
@@ -86,10 +89,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
     println!("Capabilities:");
-    println!("  🔒 BTSP   - Secure Tunnels       → http://{}/btsp/*", api_config.bind_addr);
-    println!("  🔐 Genesis - Physical Bootstrap  → http://{}/genesis/*", api_config.bind_addr);
-    println!("  🎵 BirdSong - Encrypted Broadcasts → http://{}/birdsong/*", api_config.bind_addr);
-    println!("  🧬 Lineage - Cryptographic Proofs → http://{}/lineage/*", api_config.bind_addr);
+    println!(
+        "  🔒 BTSP   - Secure Tunnels       → http://{}/btsp/*",
+        api_config.bind_addr
+    );
+    println!(
+        "  🔐 Genesis - Physical Bootstrap  → http://{}/genesis/*",
+        api_config.bind_addr
+    );
+    println!(
+        "  🎵 BirdSong - Encrypted Broadcasts → http://{}/birdsong/*",
+        api_config.bind_addr
+    );
+    println!(
+        "  🧬 Lineage - Cryptographic Proofs → http://{}/lineage/*",
+        api_config.bind_addr
+    );
     println!();
     println!("Health Check: http://{}/health", api_config.bind_addr);
     println!();
@@ -115,4 +130,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

@@ -53,7 +53,7 @@ pub async fn handle_key_derive(
 
     // Create derived key metadata
     let parent_depth = master_key.lineage.as_ref().map(|l| l.depth).unwrap_or(0);
-    
+
     let derived_key = StoredKey {
         key_id: output_key_id.to_string(),
         algorithm: master_key.algorithm.clone(),

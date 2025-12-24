@@ -71,9 +71,11 @@ impl From<beardog_errors::BearDogError> for ApiError {
             BearDogError::Network { message, .. } => {
                 ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "network_error", message)
             }
-            BearDogError::Configuration { message, .. } => {
-                ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "configuration_error", message)
-            }
+            BearDogError::Configuration { message, .. } => ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "configuration_error",
+                message,
+            ),
             _ => ApiError::internal(err.to_string()),
         }
     }
@@ -164,4 +166,3 @@ mod tests {
         assert_eq!(resp.message, None);
     }
 }
-

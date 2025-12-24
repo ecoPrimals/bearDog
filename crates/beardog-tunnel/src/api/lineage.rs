@@ -104,4 +104,3 @@ mod tests {
         assert_eq!(result.message, Some("Success".into()));
     }
 }
-

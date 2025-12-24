@@ -4,9 +4,9 @@
 
 use std::sync::Arc;
 
-use beardog_tunnel::{BeardogBtspProvider, BearDogApiServer, BearDogApiServerConfig};
-use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
+use beardog_tunnel::tunnel::hsm::manager::HsmManager;
+use beardog_tunnel::{BearDogApiServer, BearDogApiServerConfig, BeardogBtspProvider};
 
 #[tokio::main]
 async fn main() -> Result<(), beardog_errors::BearDogError> {
@@ -46,4 +46,3 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
     Ok(())
 }
-

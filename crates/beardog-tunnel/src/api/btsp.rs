@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, warn};
 
-use beardog_capabilities::traits::SecureTunnelProvider;
 use crate::btsp_provider::BeardogBtspProvider;
+use beardog_capabilities::traits::SecureTunnelProvider;
 
 use super::types::{base64_serde, ApiError, ApiResponse};
 
@@ -146,7 +146,7 @@ async fn tunnel_status(
     // Create minimal tunnel handle for status query
     let handle = beardog_capabilities::traits::TunnelHandle {
         id: tunnel_id.clone(),
-        peer_id: String::new(), // Not needed for status query
+        peer_id: String::new(),        // Not needed for status query
         established_at: String::new(), // Not needed for status query
     };
 
@@ -211,4 +211,3 @@ mod tests {
         assert!(json.contains("peer-123"));
     }
 }
-

@@ -69,7 +69,7 @@ pub mod types;
 pub use encryption::BirdSongEncryption;
 pub use genesis::GenesisLineageProvider;
 pub use genesis_types::{
-    GenesisCeremonyResult, GeneticLineage, GenesisWitness, PhysicalChannelProof,
+    GenesisCeremonyResult, GenesisWitness, GeneticLineage, PhysicalChannelProof,
     PhysicalChannelType, TrustLevel,
 };
 pub use key_derivation::LineageKeyDerivation;

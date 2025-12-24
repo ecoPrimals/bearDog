@@ -1,10 +1,10 @@
 //! Integration tests for genesis module
 
 use super::*;
-use types::{PhysicalChannelType, TrustLevel};
-use witness::{GenesisWitness, GenesisWitnessVerifier};
 use physical_proof::PhysicalProximityVerifier;
 use std::time::{SystemTime, UNIX_EPOCH};
+use types::{PhysicalChannelType, TrustLevel};
+use witness::{GenesisWitness, GenesisWitnessVerifier};
 
 fn current_timestamp() -> u64 {
     SystemTime::now()
@@ -13,10 +13,7 @@ fn current_timestamp() -> u64 {
         .as_secs()
 }
 
-fn create_test_witness(
-    device_id: &str,
-    channel: PhysicalChannelType,
-) -> GenesisWitness {
+fn create_test_witness(device_id: &str, channel: PhysicalChannelType) -> GenesisWitness {
     GenesisWitness::new(
         device_id.to_string(),
         vec![0u8; 32], // Mock Ed25519 public key
@@ -33,9 +30,7 @@ fn test_end_to_end_genesis_verification() {
 
     // Verify witness
     let witness_verifier = GenesisWitnessVerifier::permissive();
-    assert!(witness_verifier
-        .verify(&witness, "new-node-001")
-        .is_ok());
+    assert!(witness_verifier.verify(&witness, "new-node-001").is_ok());
 
     // Verify physical channel
     let physical_verifier = PhysicalProximityVerifier::default_genesis_config();
@@ -55,9 +50,7 @@ fn test_medium_trust_channel_acceptable() {
 
     // Should pass with default config
     let witness_verifier = GenesisWitnessVerifier::permissive();
-    assert!(witness_verifier
-        .verify(&witness, "new-node-002")
-        .is_ok());
+    assert!(witness_verifier.verify(&witness, "new-node-002").is_ok());
 
     let physical_verifier = PhysicalProximityVerifier::default_genesis_config();
     let trust_level = physical_verifier
@@ -75,9 +68,7 @@ fn test_maximum_security_rejects_medium_trust() {
 
     // Should fail with maximum security config
     let physical_verifier = PhysicalProximityVerifier::maximum_security();
-    assert!(physical_verifier
-        .verify(witness.physical_channel)
-        .is_err());
+    assert!(physical_verifier.verify(witness.physical_channel).is_err());
 }
 
 #[test]
@@ -93,7 +84,7 @@ fn test_all_physical_channels() {
 
     for (channel, expected_trust) in channels {
         let witness = create_test_witness("test-device", channel);
-        
+
         let trust_level = verifier
             .verify(witness.physical_channel)
             .expect(&format!("Channel {:?} should be acceptable", channel));
@@ -113,14 +104,9 @@ fn test_witness_with_trusted_list() {
 
     // Trusted witness should pass
     let trusted_witness = create_test_witness("solokey-123", PhysicalChannelType::HardwareKey);
-    assert!(verifier
-        .verify(&trusted_witness, "test-node")
-        .is_ok());
+    assert!(verifier.verify(&trusted_witness, "test-node").is_ok());
 
     // Untrusted witness should fail
     let untrusted_witness = create_test_witness("unknown-key", PhysicalChannelType::HardwareKey);
-    assert!(verifier
-        .verify(&untrusted_witness, "test-node")
-        .is_err());
+    assert!(verifier.verify(&untrusted_witness, "test-node").is_err());
 }
-

@@ -23,7 +23,7 @@ pub enum WitnessVerificationError {
         /// Age of signature in seconds
         age_secs: u64,
         /// Maximum allowed age in seconds
-        max_secs: u64
+        max_secs: u64,
     },
 
     /// Witness public key is invalid format
@@ -34,7 +34,7 @@ pub enum WitnessVerificationError {
     #[error("Witness {device_id} not authorized for genesis")]
     UnauthorizedWitness {
         /// Device ID of unauthorized witness
-        device_id: String
+        device_id: String,
     },
 
     /// Failed to verify signature due to crypto error
@@ -168,7 +168,10 @@ impl GenesisWitnessVerifier {
     }
 
     /// Check if witness is authorized
-    fn check_authorization(&self, witness: &GenesisWitness) -> Result<(), WitnessVerificationError> {
+    fn check_authorization(
+        &self,
+        witness: &GenesisWitness,
+    ) -> Result<(), WitnessVerificationError> {
         if let Some(ref trusted) = self.trusted_witnesses {
             if !trusted.contains(&witness.device_id) {
                 return Err(WitnessVerificationError::UnauthorizedWitness {
@@ -180,7 +183,10 @@ impl GenesisWitnessVerifier {
     }
 
     /// Validate public key format
-    fn validate_public_key(&self, witness: &GenesisWitness) -> Result<(), WitnessVerificationError> {
+    fn validate_public_key(
+        &self,
+        witness: &GenesisWitness,
+    ) -> Result<(), WitnessVerificationError> {
         if witness.public_key.len() != 32 {
             return Err(WitnessVerificationError::InvalidPublicKey(format!(
                 "Expected 32 bytes, got {}",
@@ -191,12 +197,13 @@ impl GenesisWitnessVerifier {
     }
 
     /// Check signature age
-    fn check_signature_age(&self, witness: &GenesisWitness) -> Result<(), WitnessVerificationError> {
+    fn check_signature_age(
+        &self,
+        witness: &GenesisWitness,
+    ) -> Result<(), WitnessVerificationError> {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map_err(|e| {
-                WitnessVerificationError::CryptoError(format!("System time error: {e}"))
-            })?
+            .map_err(|e| WitnessVerificationError::CryptoError(format!("System time error: {e}")))?
             .as_secs();
 
         if witness.timestamp > now {
@@ -227,7 +234,7 @@ impl GenesisWitnessVerifier {
     ) -> Result<(), WitnessVerificationError> {
         // For Phase 1: Mock verification (always succeeds)
         // TODO: Implement real Ed25519 verification in Week 5
-        
+
         // Validate signature length
         if witness.signature.len() != 64 {
             return Err(WitnessVerificationError::InvalidSignature);
@@ -242,7 +249,7 @@ impl GenesisWitnessVerifier {
         // 1. Compute message: BLAKE3(new_node_id || timestamp || witness_device_id)
         // 2. Verify Ed25519 signature using witness.public_key
         // 3. Return error if verification fails
-        
+
         Ok(())
     }
 }
@@ -280,9 +287,7 @@ mod tests {
         let verifier = GenesisWitnessVerifier::permissive();
         let witness = create_test_witness("any-device", current_timestamp());
 
-        assert!(verifier
-            .verify(&witness, "test-node")
-            .is_ok());
+        assert!(verifier.verify(&witness, "test-node").is_ok());
     }
 
     #[test]
@@ -292,15 +297,11 @@ mod tests {
 
         // Trusted witness should pass
         let trusted_witness = create_test_witness("solokey-123", current_timestamp());
-        assert!(verifier
-            .verify(&trusted_witness, "test-node")
-            .is_ok());
+        assert!(verifier.verify(&trusted_witness, "test-node").is_ok());
 
         // Untrusted witness should fail
         let untrusted_witness = create_test_witness("unknown-device", current_timestamp());
-        assert!(verifier
-            .verify(&untrusted_witness, "test-node")
-            .is_err());
+        assert!(verifier.verify(&untrusted_witness, "test-node").is_err());
     }
 
     #[test]
@@ -309,47 +310,36 @@ mod tests {
 
         // Recent signature (valid)
         let recent_witness = create_test_witness("device", current_timestamp());
-        assert!(verifier
-            .verify(&recent_witness, "test-node")
-            .is_ok());
+        assert!(verifier.verify(&recent_witness, "test-node").is_ok());
 
         // Old signature (expired)
         let old_timestamp = current_timestamp() - (MAX_SIGNATURE_AGE_SECS + 1);
         let old_witness = create_test_witness("device", old_timestamp);
-        assert!(verifier
-            .verify(&old_witness, "test-node")
-            .is_err());
+        assert!(verifier.verify(&old_witness, "test-node").is_err());
 
         // Future signature (invalid)
         let future_timestamp = current_timestamp() + 3600;
         let future_witness = create_test_witness("device", future_timestamp);
-        assert!(verifier
-            .verify(&future_witness, "test-node")
-            .is_err());
+        assert!(verifier.verify(&future_witness, "test-node").is_err());
     }
 
     #[test]
     fn test_invalid_public_key_length() {
         let verifier = GenesisWitnessVerifier::permissive();
-        
+
         let mut witness = create_test_witness("device", current_timestamp());
         witness.public_key = vec![0u8; 16]; // Wrong length
 
-        assert!(verifier
-            .verify(&witness, "test-node")
-            .is_err());
+        assert!(verifier.verify(&witness, "test-node").is_err());
     }
 
     #[test]
     fn test_invalid_signature_length() {
         let verifier = GenesisWitnessVerifier::permissive();
-        
+
         let mut witness = create_test_witness("device", current_timestamp());
         witness.signature = vec![0u8; 32]; // Wrong length (should be 64)
 
-        assert!(verifier
-            .verify(&witness, "test-node")
-            .is_err());
+        assert!(verifier.verify(&witness, "test-node").is_err());
     }
 }
-

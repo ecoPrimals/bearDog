@@ -177,4 +177,3 @@ mod tests {
         assert!(!PhysicalChannelType::Bluetooth.requires_oob());
     }
 }
-

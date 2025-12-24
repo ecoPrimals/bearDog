@@ -28,8 +28,8 @@ use beardog_genetics::birdsong::GenesisLineageProvider;
 use crate::btsp_provider::BeardogBtspProvider;
 
 use super::{
-    btsp::{BtspApiState, routes as btsp_routes},
-    genesis::{GenesisApiState, routes as genesis_routes},
+    btsp::{routes as btsp_routes, BtspApiState},
+    genesis::{routes as genesis_routes, GenesisApiState},
     types::HealthResponse,
 };
 
@@ -49,9 +49,7 @@ impl Default for BearDogApiServerConfig {
         Self {
             // SAFETY: "127.0.0.1:9000" is a valid SocketAddr literal
             // This is a const-time operation that cannot fail with valid input
-            bind_addr: "127.0.0.1:9000"
-                .parse()
-                .expect("Valid SocketAddr literal"),
+            bind_addr: "127.0.0.1:9000".parse().expect("Valid SocketAddr literal"),
             enable_cors: true,
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
@@ -147,7 +145,10 @@ impl BearDogApiServer {
                 beardog_errors::BearDogError::network(format!("Failed to bind to address: {}", e))
             })?;
 
-        info!("🚀 BearDog API Server starting on {}", self.config.bind_addr);
+        info!(
+            "🚀 BearDog API Server starting on {}",
+            self.config.bind_addr
+        );
         info!("📡 Capabilities: BTSP, Genesis");
         info!("🔗 Health check: http://{}/health", self.config.bind_addr);
         info!("📖 API endpoints:");
@@ -197,15 +198,14 @@ mod tests {
         use beardog_genetics::EcosystemGeneticEngine;
 
         let config = BearDogApiServerConfig::default();
-        
+
         // Initialize required providers
         let hsm = Arc::new(HsmManager::new());
         let genetics = Arc::new(EcosystemGeneticEngine::new().unwrap());
         let provider = Arc::new(BeardogBtspProvider::new(hsm, genetics).await.unwrap());
-        
+
         let server = BearDogApiServer::new(config, provider).await;
 
         assert!(server.is_ok());
     }
 }
-

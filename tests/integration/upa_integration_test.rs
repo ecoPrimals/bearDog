@@ -278,7 +278,10 @@ async fn test_full_api_server_with_upa() {
     let service_id = upa_client.register().await.unwrap();
     upa_client.start_heartbeat();
 
-    println!("✅ API server started with UPA registration: {}", service_id);
+    println!(
+        "✅ API server started with UPA registration: {}",
+        service_id
+    );
 
     // Start server in background
     let server_handle = tokio::spawn(async move {
@@ -307,9 +310,7 @@ async fn test_full_api_server_with_upa() {
         .await
         .expect("Failed to query BTSP");
 
-    assert!(
-        btsp_response.status().is_success() || btsp_response.status().as_u16() == 404
-    );
+    assert!(btsp_response.status().is_success() || btsp_response.status().as_u16() == 404);
 
     println!("✅ All endpoints accessible");
 
@@ -435,4 +436,3 @@ async fn test_load_metrics() {
     // Cleanup
     upa_client.stop_heartbeat().await;
 }
-

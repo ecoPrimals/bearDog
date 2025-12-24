@@ -39,10 +39,9 @@ pub mod types;
 pub mod witness;
 
 // Re-exports for ergonomic API
-pub use physical_proof::{PhysicalProximityVerifier, PhysicalProofError};
+pub use physical_proof::{PhysicalProofError, PhysicalProximityVerifier};
 pub use types::{PhysicalChannelType, TrustLevel};
 pub use witness::{GenesisWitness, GenesisWitnessVerifier, WitnessVerificationError};
 
 #[cfg(test)]
 mod tests;
-

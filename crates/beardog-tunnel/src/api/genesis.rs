@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tracing::{info, warn};
 
 use beardog_genetics::birdsong::{
-    GenesisCeremonyResult, GeneticLineage, GenesisLineageProvider, GenesisWitness,
+    GenesisCeremonyResult, GenesisLineageProvider, GenesisWitness, GeneticLineage,
     PhysicalChannelProof,
 };
 
@@ -68,13 +68,15 @@ async fn establish_lineage(
     let trust_stars = lineage.trust_level.stars();
     info!(
         "✅ Genesis lineage established for {} with trust level {}",
-        req.node_id,
-        trust_stars
+        req.node_id, trust_stars
     );
 
     Ok(Json(ApiResponse::success_with_message(
         lineage,
-        format!("Genesis lineage established with trust level {}", trust_stars),
+        format!(
+            "Genesis lineage established with trust level {}",
+            trust_stars
+        ),
     )))
 }
 
@@ -139,4 +141,3 @@ mod tests {
         assert!(json.contains("test-witness"));
     }
 }
-

@@ -193,7 +193,10 @@ impl UpaClient {
     /// Sends registration request with BearDog's capabilities and endpoints.
     /// Stores the returned service_id and token for subsequent heartbeats.
     pub async fn register(&self) -> Result<String, BearDogError> {
-        info!("Registering with Songbird UPA at {}", self.config.upa_base_url);
+        info!(
+            "Registering with Songbird UPA at {}",
+            self.config.upa_base_url
+        );
 
         // Build registration request
         let request = RegistrationRequest {
@@ -284,7 +287,10 @@ impl UpaClient {
         let credentials = Arc::clone(&self.credentials);
 
         let handle = tokio::spawn(async move {
-            info!("Starting UPA heartbeat loop (interval: {}s)", config.heartbeat_interval_secs);
+            info!(
+                "Starting UPA heartbeat loop (interval: {}s)",
+                config.heartbeat_interval_secs
+            );
 
             loop {
                 // Wait for interval
@@ -361,7 +367,10 @@ impl UpaClient {
 
     /// Get current service ID (if registered)
     pub fn service_id(&self) -> Option<String> {
-        self.credentials.read().as_ref().map(|c| c.service_id.clone())
+        self.credentials
+            .read()
+            .as_ref()
+            .map(|c| c.service_id.clone())
     }
 
     /// Check if registered
@@ -406,10 +415,7 @@ mod tests {
         let request = RegistrationRequest {
             primal: "beardog".to_string(),
             version: "0.1.0".to_string(),
-            capabilities: vec![
-                ServiceCapability::Security,
-                ServiceCapability::Btsp,
-            ],
+            capabilities: vec![ServiceCapability::Security, ServiceCapability::Btsp],
             endpoints: vec![ServiceEndpoint {
                 name: "btsp".to_string(),
                 url: "https://127.0.0.1:9000/btsp".to_string(),
@@ -443,4 +449,3 @@ mod tests {
         assert!(json.contains("23.4"));
     }
 }
-

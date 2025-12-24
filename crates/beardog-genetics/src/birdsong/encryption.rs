@@ -70,9 +70,7 @@ impl BirdSongEncryption {
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         // Prepare additional authenticated data (AAD)
-        let _aad = request
-            .associated_data.as_deref()
-            .unwrap_or(&[]);
+        let _aad = request.associated_data.as_deref().unwrap_or(&[]);
 
         // Encrypt plaintext
         let ciphertext = cipher
@@ -132,11 +130,14 @@ impl BirdSongEncryption {
         // Check if node depth is within allowed range
         // Note: Sender is ALWAYS allowed to decrypt their own messages (for verification)
         // So we skip depth check if this is the sender's own key
-        let is_sender = request.proof.path.last()
+        let is_sender = request
+            .proof
+            .path
+            .last()
             .map(|last| last == &request.proof.node_id)
             .unwrap_or(false);
 
-        if !is_sender 
+        if !is_sender
             && (node_depth < request.broadcast.hint.min_depth
                 || node_depth > request.broadcast.hint.max_depth)
         {
