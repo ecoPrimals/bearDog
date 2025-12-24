@@ -46,11 +46,21 @@ pub struct BearDogApiServerConfig {
 
 impl Default for BearDogApiServerConfig {
     fn default() -> Self {
+        let bind_addr = std::env::var("BEARDOG_API_BIND_ADDR")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_else(|| {
+                "127.0.0.1:9000"
+                    .parse()
+                    .expect("Default bind address is valid")
+            });
+
         Self {
-            // SAFETY: "127.0.0.1:9000" is a valid SocketAddr literal
-            // This is a const-time operation that cannot fail with valid input
-            bind_addr: "127.0.0.1:9000".parse().expect("Valid SocketAddr literal"),
-            enable_cors: true,
+            bind_addr,
+            enable_cors: std::env::var("BEARDOG_ENABLE_CORS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }

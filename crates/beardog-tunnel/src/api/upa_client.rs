@@ -39,12 +39,21 @@ pub struct UpaClientConfig {
 impl Default for UpaClientConfig {
     fn default() -> Self {
         Self {
-            upa_base_url: "https://localhost:8080".to_string(),
-            service_name: "beardog".to_string(),
+            upa_base_url: std::env::var("BEARDOG_UPA_URL")
+                .unwrap_or_else(|_| "https://localhost:8080".to_string()),
+            service_name: std::env::var("BEARDOG_SERVICE_NAME")
+                .unwrap_or_else(|_| "beardog".to_string()),
             service_version: env!("CARGO_PKG_VERSION").to_string(),
-            api_bind_addr: "https://127.0.0.1:9000".to_string(),
-            heartbeat_interval_secs: 30,
-            connection_timeout_secs: 10,
+            api_bind_addr: std::env::var("BEARDOG_API_BIND_ADDR")
+                .unwrap_or_else(|_| "https://127.0.0.1:9000".to_string()),
+            heartbeat_interval_secs: std::env::var("BEARDOG_HEARTBEAT_INTERVAL")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+            connection_timeout_secs: std::env::var("BEARDOG_CONNECTION_TIMEOUT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10),
         }
     }
 }
