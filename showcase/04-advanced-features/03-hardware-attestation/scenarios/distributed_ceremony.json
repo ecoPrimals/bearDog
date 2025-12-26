@@ -1,0 +1,107 @@
+{
+  "scenario_name": "Distributed Key Ceremony with Hardware Attestation",
+  "scenario_id": "dist-ceremony-001",
+  "operation": "multi_node_key_generation",
+  "participants": [
+    {
+      "node_id": "node-alpha",
+      "location": "New York Data Center",
+      "hsm_type": "yubikey",
+      "role": "coordinator"
+    },
+    {
+      "node_id": "node-beta",
+      "location": "London Data Center",
+      "hsm_type": "tpm",
+      "role": "participant"
+    },
+    {
+      "node_id": "node-gamma",
+      "location": "Tokyo Data Center",
+      "hsm_type": "software",
+      "role": "participant"
+    }
+  ],
+  "attestation_flow": [
+    {
+      "phase": 1,
+      "name": "Hardware Identity Verification",
+      "steps": [
+        "Verify manufacturer certificates",
+        "Check certificate chain validity",
+        "Validate hardware serial numbers"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Boot Integrity Attestation",
+      "steps": [
+        "Collect secure boot measurements",
+        "Verify PCR values",
+        "Check for tampering"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Runtime Attestation",
+      "steps": [
+        "Generate attestation quote",
+        "Include fresh nonce",
+        "Sign with hardware key"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Key Storage Verification",
+      "steps": [
+        "Prove key is hardware-backed",
+        "Verify no software emulation",
+        "Check key protection level"
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Chain Verification",
+      "steps": [
+        "Validate entire attestation chain",
+        "Check all signatures",
+        "Accept or reject node"
+      ]
+    }
+  ],
+  "test_cases": [
+    {
+      "test_id": "TC-001",
+      "description": "All nodes with valid hardware (should PASS)",
+      "nodes_to_test": ["node-alpha", "node-beta"],
+      "expected_result": "success"
+    },
+    {
+      "test_id": "TC-002",
+      "description": "Include software HSM node (should WARN in strict mode)",
+      "nodes_to_test": ["node-alpha", "node-gamma"],
+      "expected_result": "warning"
+    },
+    {
+      "test_id": "TC-003",
+      "description": "Simulated tampered boot (should FAIL)",
+      "nodes_to_test": ["node-alpha"],
+      "tamper_simulation": "boot_integrity",
+      "expected_result": "failure"
+    },
+    {
+      "test_id": "TC-004",
+      "description": "Remote attestation across all nodes (should PASS)",
+      "nodes_to_test": ["node-alpha", "node-beta", "node-gamma"],
+      "expected_result": "success"
+    }
+  ],
+  "expected_results": {
+    "local_attestation_ms": 100,
+    "remote_attestation_ms": 500,
+    "chain_verification_ms": 200,
+    "total_ceremony_ms": 1000,
+    "test_cases_passed": 3
+  }
+}
+
