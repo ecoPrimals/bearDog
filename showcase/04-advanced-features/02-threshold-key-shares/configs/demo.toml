@@ -1,0 +1,43 @@
+[ceremony]
+name = "threshold-key-shares-demo"
+description = "Shamir's Secret Sharing for distributed trust"
+max_duration_ms = 500
+
+[threshold]
+# M-of-N threshold
+total_shares = 5  # N
+threshold = 3     # M (minimum shares required)
+
+# Share distribution
+share_holders = [
+    "CEO",
+    "CFO",
+    "CTO",
+    "COO",
+    "Board-Member"
+]
+
+[beardog]
+hsm_type = "software"  # Use software HSM for demo
+key_constraints = ["purpose:corporate-treasury", "retention:365_days", "threshold:3-of-5"]
+
+[security]
+# Share encryption (each share encrypted with holder's key)
+encrypt_shares = true
+# Tamper detection
+verify_share_integrity = true
+# Audit all operations
+audit_all_operations = true
+
+[audit]
+log_level = "info"
+include_performance = true
+include_share_usage = true
+hash_algorithm = "blake3"
+
+[scenarios]
+# Test different threshold combinations
+test_insufficient_shares = true  # M-1 shares should fail
+test_exact_threshold = true      # M shares should succeed
+test_excess_shares = true        # M+1 shares should succeed
+
