@@ -1,0 +1,34 @@
+[workflow]
+name = "multi-primal-workflow-demo"
+description = "End-to-end workflow across all ecosystem primals"
+max_duration_ms = 500
+
+[beardog]
+hsm_type = "software"  # Use software HSM for demo
+key_constraints = ["purpose:workflow", "retention:90_days"]
+
+[discovery]
+# Capability-based discovery configuration
+methods = ["environment", "config_fallback"]
+
+# Fallback endpoints if discovery fails
+[discovery.fallback]
+orchestration = "http://localhost:9090"
+ai = "http://localhost:6060"
+storage = "http://localhost:8080"
+compute = "http://localhost:7070"
+
+[policies]
+# Policies for the workflow
+max_retries = 3
+timeout_ms = 10000
+require_audit = true
+require_lineage = true
+
+[audit]
+# Audit configuration
+log_level = "info"
+include_performance = true
+include_lineage = true
+hash_algorithm = "blake3"
+

@@ -1,0 +1,8 @@
+/home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/01-multi-primal-workflow/target/release/deps/enum_ordinalize-7de5e1b9c648ddf4.d: /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/lib.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/big_int_wrapper.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/panic.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/variant_type.rs
+
+/home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/01-multi-primal-workflow/target/release/deps/libenum_ordinalize-7de5e1b9c648ddf4.so: /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/lib.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/big_int_wrapper.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/panic.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/variant_type.rs
+
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/lib.rs:
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/big_int_wrapper.rs:
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/panic.rs:
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-3.1.15/src/variant_type.rs:

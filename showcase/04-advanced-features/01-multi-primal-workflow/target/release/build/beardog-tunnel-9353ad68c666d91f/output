@@ -1,0 +1,3 @@
+cargo:warning=Building for non-Android platform - using mock StrongBox implementation
+cargo:rerun-if-env-changed=ANDROID_NDK_HOME
+cargo:rerun-if-env-changed=CARGO_CFG_TARGET_OS
