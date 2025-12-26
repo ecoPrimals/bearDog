@@ -1,0 +1,80 @@
+{
+  "scenario_id": "pqc-migration-001",
+  "timestamp": "2025-12-26T15:23:35.630632716+00:00",
+  "test_results": [
+    {
+      "test_id": "TC-001",
+      "description": "Kyber768 key encapsulation (should PASS)",
+      "test_type": "kem",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-002",
+      "description": "Dilithium3 signature generation and verification (should PASS)",
+      "test_type": "signature",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-003",
+      "description": "Hybrid KEM (X25519 + Kyber768, should PASS)",
+      "test_type": "hybrid_kem",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-004",
+      "description": "Hybrid signatures (Ed25519 + Dilithium3, should PASS)",
+      "test_type": "hybrid_signature",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-005",
+      "description": "Tampered PQC signature detection (should FAIL)",
+      "test_type": "signature",
+      "expected": "failure",
+      "actual": "success",
+      "passed": false,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-006",
+      "description": "Size overhead validation (should PASS)",
+      "test_type": "size_comparison",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    }
+  ],
+  "performance": {
+    "keygen_ms": 0,
+    "encap_ms": 0,
+    "decap_ms": 0,
+    "sign_ms": 0,
+    "verify_ms": 0,
+    "hybrid_ms": 0
+  },
+  "sizes": {
+    "kyber768_public_key": 1184,
+    "kyber768_private_key": 2400,
+    "kyber768_ciphertext": 1088,
+    "dilithium3_public_key": 1952,
+    "dilithium3_private_key": 4000,
+    "dilithium3_signature": 3293
+  },
+  "total_duration_ms": 0,
+  "all_tests_passed": false,
+  "quantum_safe": true,
+  "audit_hash": "272f7cbf8a12d137e7ac970ebf0d52d7d76ba7871a6e9dc060d5ebb116010788"
+}
