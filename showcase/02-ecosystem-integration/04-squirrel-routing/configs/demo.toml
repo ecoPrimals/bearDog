@@ -1,0 +1,8 @@
+# Squirrel Privacy Routing Demo Configuration
+
+# Squirrel MCP endpoint (simulated for demo)
+squirrel_endpoint = "http://localhost:9292"
+
+# Identity mapping expiry (hours)
+identity_expiry_hours = 1
+

@@ -1,0 +1,5 @@
+# Policy Enforcement Demo Configuration
+
+# Enforcement mode: strict, warn, audit
+enforcement_mode = "strict"
+

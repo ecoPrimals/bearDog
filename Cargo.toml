@@ -11,6 +11,14 @@ exclude = [
     "crates/beardog-crypto",
     "crates/beardog-networking",
     "crates/beardog",
+    "showcase/00-local-primal/01-hello-beardog",
+    "showcase/00-local-primal/02-hsm-discovery",
+    "showcase/00-local-primal/03-key-constraints",
+    "showcase/00-local-primal/04-entropy-mixing",
+    "showcase/00-local-primal/05-key-lineage",
+    "showcase/00-local-primal/06-btsp-tunnel",
+    "showcase/02-ecosystem-integration/01-songbird-btsp",
+    "showcase/02-ecosystem-integration/02-nestgate-encryption",
 ]
 
 [workspace.package]

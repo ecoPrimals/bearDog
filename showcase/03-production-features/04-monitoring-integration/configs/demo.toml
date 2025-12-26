@@ -1,0 +1,5 @@
+# Monitoring Integration Demo Configuration
+
+# Metrics HTTP port
+metrics_port = 9090
+

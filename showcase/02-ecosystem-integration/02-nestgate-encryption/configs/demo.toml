@@ -1,0 +1,11 @@
+# BearDog + NestGate Encryption Demo Configuration
+
+# Storage settings
+storage_path = "./data/encrypted_storage"
+
+# Key rotation policy (days)
+key_rotation_days = 90
+
+# Compression level (0-9, where 9 is best compression)
+compression_level = 9
+

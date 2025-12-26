@@ -1,0 +1,35 @@
+[package]
+name = "beardog-monitoring-demo"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1.0"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Time
+chrono = "0.4"
+
+# Concurrency
+parking_lot = "0.12"
+
+[[bin]]
+name = "beardog-monitoring-demo"
+path = "src/main.rs"
+

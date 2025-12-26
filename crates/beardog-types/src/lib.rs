@@ -7,6 +7,7 @@
 //!
 //! **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
 //!
+#![deny(unsafe_code)]
 #![warn(missing_docs)]
 // Production code must use proper error handling - deny panicking methods
 #![deny(clippy::unwrap_used)]
@@ -379,7 +380,6 @@
 
 #![doc(html_root_url = "https://docs.rs/beardog-types/3.0.0")]
 #![allow(missing_docs)] // Comprehensive documentation pending stabilization
-#![deny(unsafe_code)]
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
 #![warn(clippy::cargo)]

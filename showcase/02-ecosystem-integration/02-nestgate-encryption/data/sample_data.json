@@ -1,0 +1,75 @@
+{
+  "demo": "BearDog + NestGate Encryption",
+  "description": "This is sample data for demonstrating sovereign file encryption",
+  "medical_records": [
+    {
+      "patient_id": "P12345",
+      "name": "John Doe",
+      "age": 45,
+      "conditions": ["hypertension", "type 2 diabetes"],
+      "medications": [
+        {"name": "Metformin", "dosage": "500mg", "frequency": "twice daily"},
+        {"name": "Lisinopril", "dosage": "10mg", "frequency": "once daily"}
+      ],
+      "lab_results": {
+        "glucose": 120,
+        "a1c": 6.5,
+        "blood_pressure": "130/85"
+      },
+      "visit_history": [
+        {"date": "2025-12-01", "reason": "routine checkup", "notes": "stable"},
+        {"date": "2025-11-15", "reason": "follow-up", "notes": "adjust medication"}
+      ]
+    },
+    {
+      "patient_id": "P12346",
+      "name": "Jane Smith",
+      "age": 32,
+      "conditions": ["asthma"],
+      "medications": [
+        {"name": "Albuterol", "dosage": "90mcg", "frequency": "as needed"}
+      ],
+      "lab_results": {
+        "spirometry": "normal",
+        "peak_flow": 450
+      },
+      "visit_history": [
+        {"date": "2025-12-10", "reason": "asthma control", "notes": "well controlled"}
+      ]
+    }
+  ],
+  "financial_data": {
+    "accounts": [
+      {"account_number": "ACC-001", "balance": 125000.50, "type": "checking"},
+      {"account_number": "ACC-002", "balance": 450000.00, "type": "savings"},
+      {"account_number": "ACC-003", "balance": 1250000.75, "type": "investment"}
+    ],
+    "transactions": [
+      {"date": "2025-12-20", "amount": -50.00, "description": "grocery store"},
+      {"date": "2025-12-19", "amount": -1500.00, "description": "rent"},
+      {"date": "2025-12-18", "amount": 5000.00, "description": "salary deposit"}
+    ]
+  },
+  "research_data": {
+    "project": "Genomic Analysis",
+    "samples": [
+      {"sample_id": "S001", "genome_size_mb": 3200, "quality_score": 0.98},
+      {"sample_id": "S002", "genome_size_mb": 3100, "quality_score": 0.96},
+      {"sample_id": "S003", "genome_size_mb": 3250, "quality_score": 0.99}
+    ],
+    "analysis_results": {
+      "variants_found": 15234,
+      "pathogenic": 12,
+      "benign": 14890,
+      "uncertain": 332
+    }
+  },
+  "metadata": {
+    "created_at": "2025-12-25T00:00:00Z",
+    "classification": "confidential",
+    "retention_years": 7,
+    "encryption_required": true,
+    "access_control": ["authorized_personnel_only"]
+  }
+}
+

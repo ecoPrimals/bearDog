@@ -1,0 +1,6 @@
+{
+  "user_id": "alice@example.com",
+  "task": "Summarize this medical document",
+  "data": "Patient Report: John Doe, SSN: 123-45-6789, Email: john.doe@email.com, Phone: 555-123-4567. Patient is a 45-year-old male presenting with chronic hypertension. Blood pressure readings over the past month average 145/95. Current medications include Lisinopril 10mg daily. Patient reports good medication compliance. Follow-up recommended in 3 months. Contact: 555-123-4567 for scheduling."
+}
+

@@ -116,7 +116,7 @@ impl GenesisWitnessVerifier {
     /// # Arguments
     ///
     /// * `trusted_witnesses` - Optional list of trusted witness device IDs.
-    ///                        If None, all witnesses are accepted (use for development).
+    ///   If None, all witnesses are accepted (use for development).
     pub fn new(trusted_witnesses: Option<Vec<String>>) -> Self {
         Self { trusted_witnesses }
     }

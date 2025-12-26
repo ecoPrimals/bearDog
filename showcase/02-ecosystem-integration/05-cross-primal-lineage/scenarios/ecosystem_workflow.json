@@ -1,0 +1,10 @@
+{
+  "user_id": "alice@example.com",
+  "operations": [
+    "store_file_nestgate",
+    "submit_compute_toadstool",
+    "route_ai_squirrel",
+    "establish_tunnel_songbird"
+  ]
+}
+

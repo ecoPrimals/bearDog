@@ -1,0 +1,10 @@
+# Node A (Alice) Configuration
+
+node_name = "alice"
+listen_address = "http://127.0.0.1:8080"
+
+# Songbird tower URL (optional - will discover if not set)
+songbird_url = "http://localhost:9090"
+
+# Peer address (optional - will discover via Songbird)
+# peer_address = "127.0.0.1:8081"
