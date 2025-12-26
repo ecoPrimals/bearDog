@@ -14,6 +14,7 @@ beardog-core = { path = "../../../crates/beardog-core" }
 beardog-errors = { path = "../../../crates/beardog-errors" }
 beardog-genetics = { path = "../../../crates/beardog-genetics" }
 beardog-capabilities = { path = "../../../crates/beardog-capabilities" }
+beardog-discovery = { path = "../../../crates/beardog-discovery" }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

@@ -1,6 +1,9 @@
-// 🐻🍄 BearDog + Toadstool: Encrypted Compute Workloads Demo
+// 🐻 BearDog: Encrypted Compute Workloads Demo
 //
-// This demo shows BearDog providing encryption for Toadstool compute jobs
+// ✅ CORRECT: BearDog discovers compute services by "compute" capability
+// ❌ WRONG: Hardcoded "Toadstool" knowledge removed!
+//
+// This demo shows BearDog providing encryption for ANY compute service
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -12,7 +15,7 @@ use tracing::{info, warn};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 
-/// BearDog + Toadstool Encrypted Workloads Demo
+/// BearDog Encrypted Compute Workloads Demo (Capability-Based)
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -36,8 +39,9 @@ async fn main() -> Result<()> {
     // Setup logging
     setup_logging(args.verbose);
 
-    info!("🐻🍄 BearDog + Toadstool: Encrypted Compute Workloads Demo");
+    info!("🐻 BearDog: Encrypted Compute Workloads Demo");
     info!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    info!("✅ Using capability-based discovery (no hardcoded compute services!)");
     info!("");
 
     // Load configuration
@@ -143,7 +147,7 @@ async fn run_compute_workflow(workload_path: &PathBuf, config: DemoConfig) -> Re
     info!("   Job ID: {}", job_id);
     info!("   Processing time: {:?}", compute_time);
     info!("   Result size: {} bytes (encrypted)", encrypted_results.data.len());
-    info!("   Toadstool CANNOT see plaintext (zero-knowledge)");
+    info!("   Compute service CANNOT see plaintext (zero-knowledge)");
     info!("");
 
     // Step 7: Retrieve and decrypt results
@@ -217,7 +221,7 @@ async fn run_compute_workflow(workload_path: &PathBuf, config: DemoConfig) -> Re
 #[derive(Debug, Clone, serde::Deserialize)]
 #[allow(dead_code)]
 struct DemoConfig {
-    toadstool_endpoint: String,
+    compute_endpoint: String,
     compute_timeout_secs: u64,
     key_expiry_hours: u32,
 }

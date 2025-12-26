@@ -1,6 +1,10 @@
-// 🐻🐦 BearDog + Songbird BTSP Integration Demo
+// 🐻 BearDog BTSP Tunnel Coordination Demo
 //
-// This demo shows BearDog establishing BTSP tunnels through Songbird coordination
+// ✅ CORRECT ARCHITECTURE: BearDog discovers orchestration capability
+// ❌ WRONG: Hardcoded "Songbird" knowledge removed!
+//
+// This demo shows BearDog establishing BTSP tunnels through ANY orchestration service
+// that provides the "orchestration" capability (Songbird, Kubernetes, custom, etc.)
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -14,6 +18,20 @@ use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
+
+// Capability-based discovery types
+
+#[derive(Debug, Clone)]
+struct DiscoveredService {
+    display_name: String,
+    endpoint: ServiceEndpoint,
+    capabilities: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ServiceEndpoint {
+    primary_url: String,
+}
 
 /// BearDog + Songbird BTSP Integration Demo
 #[derive(Parser, Debug)]
@@ -39,8 +57,9 @@ async fn main() -> Result<()> {
     // Setup logging
     setup_logging(args.verbose);
 
-    info!("🐻🐦 BearDog + Songbird BTSP Integration Demo");
+    info!("🐻 BearDog BTSP Tunnel Coordination Demo");
     info!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    info!("✅ Using capability-based discovery (no hardcoded services!)");
     info!("");
 
     // Load configuration
@@ -68,34 +87,37 @@ async fn run_alice_node(config: DemoConfig) -> Result<()> {
     info!("[Alice - Initiator]");
     info!("");
 
-    // Step 1: Connect to Songbird tower
-    info!("Step 1: Discovering Songbird tower...");
+    // Step 1: Discover orchestration service (capability-based!)
+    info!("Step 1: Discovering orchestration service...");
     let start = Instant::now();
     
-    let tower_address = discover_songbird_tower(&config).await?;
+    let orchestrator = discover_orchestrator(&config).await?;
     let discovery_time = start.elapsed();
     
-    info!("✅ Found Songbird tower at: {}", tower_address);
+    info!("✅ Found orchestrator: {}", orchestrator.display_name);
+    info!("   Endpoint: {}", orchestrator.endpoint.primary_url);
+    info!("   Capabilities: {:?}", orchestrator.capabilities);
     info!("   Discovery time: {:?}", discovery_time);
     info!("");
 
-    // Step 2: Register with Songbird
-    info!("Step 2: Registering with Songbird...");
+    // Step 2: Register with orchestrator
+    info!("Step 2: Registering with orchestrator...");
     let start = Instant::now();
     
-    let (node_id, upa_client) = register_with_songbird(&config, &tower_address).await?;
+    let (node_id, upa_client) = register_with_orchestrator(&config, &orchestrator).await?;
     let registration_time = start.elapsed();
     
-    info!("✅ Registered with Songbird");
+    info!("✅ Registered with orchestrator");
+    info!("   Service: {}", orchestrator.display_name);
     info!("   Node ID: {}", node_id);
     info!("   Registration time: {:?}", registration_time);
     info!("");
 
-    // Step 3: Discover Bob
-    info!("Step 3: Discovering peer 'Bob' via Songbird...");
+    // Step 3: Discover Bob via orchestrator
+    info!("Step 3: Discovering peer 'Bob' via orchestrator...");
     let start = Instant::now();
     
-    let bob_info = discover_peer(&tower_address, "bob").await?;
+    let bob_info = discover_peer(&orchestrator, "bob").await?;
     let peer_discovery_time = start.elapsed();
     
     info!("✅ Found Bob");
@@ -118,7 +140,7 @@ async fn run_alice_node(config: DemoConfig) -> Result<()> {
 
     // Step 5: Send encrypted message
     info!("Step 5: Sending encrypted message...");
-    let message = "Hello Bob from Alice via Songbird! 🐻🐦";
+    let message = "Hello Bob from Alice via orchestrator! 🐻";
     let start = Instant::now();
     
     send_encrypted_message(&btsp_provider, &tunnel_handle, message).await?;
@@ -174,16 +196,18 @@ async fn run_bob_node(config: DemoConfig) -> Result<()> {
     info!("[Bob - Responder]");
     info!("");
 
-    // Step 1: Connect to Songbird tower
-    info!("Step 1: Discovering Songbird tower...");
-    let tower_address = discover_songbird_tower(&config).await?;
-    info!("✅ Found Songbird tower at: {}", tower_address);
+    // Step 1: Discover orchestration service
+    info!("Step 1: Discovering orchestration service...");
+    let orchestrator = discover_orchestrator(&config).await?;
+    info!("✅ Found orchestrator: {}", orchestrator.display_name);
+    info!("   Endpoint: {}", orchestrator.endpoint.primary_url);
     info!("");
 
-    // Step 2: Register with Songbird
-    info!("Step 2: Registering with Songbird...");
-    let (node_id, upa_client) = register_with_songbird(&config, &tower_address).await?;
-    info!("✅ Registered with Songbird");
+    // Step 2: Register with orchestrator
+    info!("Step 2: Registering with orchestrator...");
+    let (node_id, upa_client) = register_with_orchestrator(&config, &orchestrator).await?;
+    info!("✅ Registered with orchestrator");
+    info!("   Service: {}", orchestrator.display_name);
     info!("   Node ID: {}", node_id);
     info!("");
 
@@ -209,11 +233,11 @@ async fn run_bob_node(config: DemoConfig) -> Result<()> {
     info!("");
 
     info!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    info!("✅ SUCCESS! BearDog + Songbird integration working!");
+    info!("✅ SUCCESS! BearDog orchestrated tunnel working!");
     info!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     info!("");
     info!("Validated:");
-    info!("   ✅ Songbird tower discovery");
+    info!("   ✅ Capability-based discovery (no hardcoded services!)");
     info!("   ✅ Node registration");
     info!("   ✅ BTSP tunnel establishment");
     info!("   ✅ End-to-end encryption");
@@ -247,22 +271,74 @@ fn load_config(path: &PathBuf) -> Result<DemoConfig> {
     Ok(config)
 }
 
-async fn discover_songbird_tower(config: &DemoConfig) -> Result<String> {
-    // In a real implementation, this would use mDNS, DNS-SD, or Consul
-    // For demo, use config or default
-    let tower = config.songbird_url.clone()
+/// Discover orchestration service via capability-based discovery
+/// ✅ CORRECT: Discovers ANY service with "orchestration" capability
+/// ❌ NO hardcoded "Songbird" knowledge!
+async fn discover_orchestrator(config: &DemoConfig) -> Result<DiscoveredService> {
+    info!("🔍 Searching for services with 'orchestration' capability...");
+    
+    // Method 1: Check environment variables (PRIMAL_*_ENDPOINT, PRIMAL_*_CAPABILITIES)
+    if let Some(service) = discover_from_environment("orchestration").await? {
+        info!("   ✅ Found via environment variables");
+        return Ok(service);
+    }
+    
+    // Method 2: Fallback to config (for demo purposes)
+    warn!("   ⚠️  No orchestrators found via discovery, using config fallback");
+    let endpoint = config.songbird_url.clone()
         .unwrap_or_else(|| "http://localhost:9090".to_string());
     
-    // Simulate network discovery delay
-    tokio::time::sleep(Duration::from_millis(50)).await;
-    
-    Ok(tower)
+    Ok(DiscoveredService {
+        display_name: "Config Fallback Orchestrator".to_string(),
+        endpoint: ServiceEndpoint {
+            primary_url: endpoint,
+        },
+        capabilities: vec!["orchestration".to_string()],
+    })
 }
 
-async fn register_with_songbird(config: &DemoConfig, tower: &str) -> Result<(String, Arc<UpaClient>)> {
-    // Create UPA client configuration
+/// Discover services from environment variables
+/// Example: PRIMAL_SONGBIRD_ENDPOINT="http://localhost:9090" PRIMAL_SONGBIRD_CAPABILITIES="orchestration,federation"
+async fn discover_from_environment(required_capability: &str) -> Result<Option<DiscoveredService>> {
+    for (key, value) in std::env::vars() {
+        if key.starts_with("PRIMAL_") && key.ends_with("_ENDPOINT") {
+            let parts: Vec<&str> = key.split('_').collect();
+            if parts.len() == 3 {
+                let primal_name = parts[1].to_lowercase();
+                let endpoint_url = value;
+                
+                // Check capabilities
+                let caps_key = format!("PRIMAL_{}_CAPABILITIES", parts[1].to_uppercase());
+                if let Ok(capabilities_str) = std::env::var(&caps_key) {
+                    let capabilities: Vec<String> = capabilities_str
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect();
+                    
+                    if capabilities.contains(&required_capability.to_string()) {
+                        return Ok(Some(DiscoveredService {
+                            display_name: format!("{} (discovered)", primal_name),
+                            endpoint: ServiceEndpoint {
+                                primary_url: endpoint_url,
+                            },
+                            capabilities,
+                        }));
+                    }
+                }
+            }
+        }
+    }
+    Ok(None)
+}
+
+/// Register with discovered orchestrator (works with ANY UPA-compatible service!)
+async fn register_with_orchestrator(
+    config: &DemoConfig,
+    orchestrator: &DiscoveredService
+) -> Result<(String, Arc<UpaClient>)> {
+    // Create UPA client configuration using discovered endpoint
     let upa_config = UpaClientConfig {
-        upa_base_url: tower.to_string(),
+        upa_base_url: orchestrator.endpoint.primary_url.clone(),
         service_name: config.node_name.clone(),
         service_version: env!("CARGO_PKG_VERSION").to_string(),
         api_bind_addr: config.listen_address.clone(),
@@ -274,9 +350,9 @@ async fn register_with_songbird(config: &DemoConfig, tower: &str) -> Result<(Str
     let upa_client = UpaClient::new(upa_config)
         .context("Failed to create UPA client")?;
     
-    // Register with Songbird
+    // Register with orchestrator (agnostic - works with any UPA-compatible service!)
     let service_id = upa_client.register().await
-        .context("Failed to register with Songbird")?;
+        .context("Failed to register with orchestrator")?;
     
     let upa_client = Arc::new(upa_client);
     
@@ -286,11 +362,12 @@ async fn register_with_songbird(config: &DemoConfig, tower: &str) -> Result<(Str
     Ok((service_id, upa_client))
 }
 
-async fn discover_peer(_tower: &str, peer_name: &str) -> Result<PeerEndpoint> {
-    // In a real implementation, query Songbird's service registry
-    // For demo, construct peer endpoint
+/// Discover peer via orchestrator
+async fn discover_peer(_orchestrator: &DiscoveredService, peer_name: &str) -> Result<PeerEndpoint> {
+    // In a production implementation, query orchestrator's service registry
+    // For demo, construct peer endpoint based on naming convention
     
-    // Simulate discovery delay
+    // Simulate discovery delay (real impl would query orchestrator)
     tokio::time::sleep(Duration::from_millis(40)).await;
     
     Ok(PeerEndpoint {

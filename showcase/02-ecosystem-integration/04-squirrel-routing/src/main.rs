@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use tracing::{info, warn};
 
-/// BearDog + Squirrel Privacy Routing Demo
+/// BearDog Privacy-Preserving AI Routing Demo (Capability-Based)
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -171,7 +171,7 @@ async fn run_privacy_routing_workflow(request_path: &PathBuf, config: DemoConfig
     info!("   Redactions: {} PII instances removed", sanitized.redactions.len());
     info!("   Identity protection: COMPLETE (no leakage)");
     info!("   Metadata stripped: IP, device, detailed location");
-    info!("   Zero-knowledge routing: Squirrel cannot correlate requests");
+    info!("   Zero-knowledge routing: AI service cannot correlate requests");
     info!("");
 
     // Performance summary
@@ -210,7 +210,7 @@ async fn run_privacy_routing_workflow(request_path: &PathBuf, config: DemoConfig
 #[derive(Debug, Clone, serde::Deserialize)]
 #[allow(dead_code)]
 struct DemoConfig {
-    squirrel_endpoint: String,
+    ai_endpoint: String,
     identity_expiry_hours: u32,
 }
 

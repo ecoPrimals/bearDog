@@ -1,0 +1,54 @@
+[package]
+name = "beardog-discovery"
+version = "0.1.0"
+edition = "2021"
+authors = ["BearDog Team"]
+description = "Capability-based service discovery for BearDog - zero hardcoded knowledge"
+license = "AGPL-3.0"
+
+[dependencies]
+# Core async runtime
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+
+# Configuration
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# mDNS discovery
+mdns-sd = "0.11"
+
+# DNS-SD discovery
+trust-dns-resolver = "0.23"
+
+# HTTP client for service registries
+reqwest = { version = "0.11", features = ["json"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+
+# Time utilities
+chrono = { version = "0.4", features = ["serde"] }
+
+# URL parsing
+url = "2.5"
+
+# Network utilities
+local-ip-address = "0.6"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.10"
+
+[features]
+default = ["mdns", "dns-sd", "service-registry"]
+mdns = []
+dns-sd = []
+service-registry = []
+network-scan = []  # Opt-in only (slow)
+

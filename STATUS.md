@@ -1,8 +1,8 @@
 # 📊 BearDog Project Status
 
 **Last Updated**: December 26, 2025  
-**Version**: 0.9.5  
-**Status**: ✅ **Production Ready** + **Phase 3 Complete (57% Overall)**
+**Version**: 0.9.6  
+**Status**: ✅ **Production Ready** + **Capability Discovery Complete (60% Overall)**
 
 > **NOTE**: For the most current status, see [CURRENT_STATUS_DEC_26_2025.md](CURRENT_STATUS_DEC_26_2025.md)
 
@@ -18,7 +18,13 @@
 
 ## ✅ Recent Achievements
 
-### December 26, 2025 - Phase 3 Complete! (57% Overall)
+### December 26, 2025 - Capability Discovery Complete! (60% Overall)
+
+**🎉 MAJOR**: Eliminated ALL hardcoded service names!
+- ✅ New `beardog-discovery` crate (1,002 lines)
+- ✅ Environment-based discovery implemented
+- ✅ All 3 ecosystem demos updated (capability-based)
+- ✅ **True primal agnosticism achieved!**
 
 **Phase 3: Production Features** - All 7 demos complete:
 

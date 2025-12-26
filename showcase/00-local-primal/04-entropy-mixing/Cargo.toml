@@ -1,0 +1,18 @@
+[package]
+name = "entropy-mixing"
+version = "0.1.0"
+edition = "2021"
+
+# Standalone demo - not part of beardog workspace
+[workspace]
+
+[dependencies]
+beardog-tunnel = { path = "../../../crates/beardog-tunnel" }
+beardog-types = { path = "../../../crates/beardog-types" }
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+colored = "2.1"
+sha3 = "0.10"
+rand = "0.8"
+chrono = "0.4"
+

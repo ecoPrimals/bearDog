@@ -1,0 +1,18 @@
+[package]
+name = "hello-beardog"
+version = "0.1.0"
+edition = "2021"
+
+# Standalone demo - not part of beardog workspace
+[workspace]
+
+[dependencies]
+beardog-core = { path = "../../../crates/beardog-core" }
+beardog-security = { path = "../../../crates/beardog-security" }
+beardog-types = { path = "../../../crates/beardog-types" }
+beardog-tunnel = { path = "../../../crates/beardog-tunnel" }
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+

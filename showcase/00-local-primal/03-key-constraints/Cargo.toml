@@ -1,0 +1,17 @@
+[package]
+name = "key-constraints"
+version = "0.1.0"
+edition = "2021"
+
+# Standalone demo - not part of beardog workspace
+[workspace]
+
+[dependencies]
+beardog-tunnel = { path = "../../../crates/beardog-tunnel" }
+beardog-types = { path = "../../../crates/beardog-types" }
+beardog-genetics = { path = "../../../crates/beardog-genetics" }
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+colored = "2.1"
+chrono = "0.4"
+

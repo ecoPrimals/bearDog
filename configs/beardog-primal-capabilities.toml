@@ -1,0 +1,236 @@
+# 🐻 BearDog Primal Self-Knowledge Configuration
+# This configuration defines what BearDog IS and what it PROVIDES
+# BearDog knows itself - it discovers others through capabilities
+
+[primal_self]
+primal_id = "beardog"
+primal_type = "security"
+version = "0.9.5"
+display_name = "BearDog Security Primal"
+
+# ✅ CORRECT: BearDog announces what IT provides (self-knowledge)
+# Other primals discover these capabilities, BearDog doesn't know who they are
+self_capabilities = [
+    "security",
+    "encryption",
+    "key_management",
+    "audit",
+    "hsm_integration",
+    "genetic_keys",
+    "btsp_protocol",
+    "lineage_tracking",
+    "entropy_mixing"
+]
+
+[primal_self.endpoint]
+# Self-endpoint configuration
+host = "0.0.0.0"  # Bind to all interfaces
+# Use BEARDOG_PORT environment variable (default: 8443)
+port = 8443
+scheme = "https"
+path_prefix = "/api/v1"
+
+[primal_self.health]
+enabled = true
+endpoint = "/health"
+check_interval_secs = 30
+
+[primal_self.announcement]
+# How BearDog announces itself to the ecosystem
+enabled = true
+methods = ["mdns", "environment", "service_registry"]
+announcement_interval_secs = 60
+ttl_secs = 300
+
+# mDNS configuration
+[primal_self.announcement.mdns]
+enabled = true
+service_name = "_beardog._tcp.local."
+service_type = "_security._tcp"
+announce_ipv4 = true
+announce_ipv6 = false
+
+# Environment variable pattern for announcement
+[primal_self.announcement.environment]
+# BearDog sets these for others to discover:
+# PRIMAL_BEARDOG_ENDPOINT="https://localhost:8443"
+# PRIMAL_BEARDOG_CAPABILITIES="security,encryption,audit"
+# CAPABILITY_SECURITY_ENDPOINT="https://localhost:8443"
+prefix = "PRIMAL_BEARDOG_"
+capability_prefix = "CAPABILITY_SECURITY_"
+
+# Service registry announcement
+[primal_self.announcement.service_registry]
+enabled = true
+# Auto-discover service registries (Consul, etcd, etc.)
+auto_discover = true
+fallback_endpoints = []
+
+# ===============================================================================
+# CAPABILITY REQUIREMENTS - What BearDog NEEDS (not WHO provides it)
+# ===============================================================================
+
+[required_capabilities]
+# ✅ CORRECT: BearDog knows it NEEDS these capabilities
+# ❌ WRONG: BearDog doesn't know "Songbird" provides them
+
+# Orchestration capability (optional - BearDog can work standalone)
+[required_capabilities.orchestration]
+required = false
+preferred = true
+min_version = "1.0"
+features = ["service_discovery", "load_balancing", "coordination"]
+fallback = "standalone"  # BearDog operates standalone if not available
+
+# Tunnel coordination capability (optional)
+[required_capabilities.tunnel_coordination]
+required = false
+preferred = true
+features = ["peer_discovery", "nat_traversal", "relay"]
+fallback = "direct"  # Direct peer-to-peer if not available
+
+# Storage capability (optional - for key backup, audit logs)
+[required_capabilities.storage]
+required = false
+preferred = false
+features = ["encrypted_storage", "versioning", "backup"]
+fallback = "local"  # Use local storage if not available
+
+# Compute capability (optional - for intensive crypto operations)
+[required_capabilities.compute]
+required = false
+preferred = false
+features = ["gpu_acceleration", "parallel_processing"]
+fallback = "local"  # Use local CPU if not available
+
+# AI/Analytics capability (optional - for security analytics)
+[required_capabilities.ai]
+required = false
+preferred = false
+features = ["anomaly_detection", "threat_analysis"]
+fallback = "rule_based"  # Use rule-based security if not available
+
+# ===============================================================================
+# DISCOVERY CONFIGURATION - How BearDog finds what it needs
+# ===============================================================================
+
+[discovery]
+# Discovery methods (in priority order)
+methods = ["environment", "mdns", "dns_sd", "service_registry", "network_scan"]
+discovery_timeout_secs = 10
+discovery_interval_secs = 300  # Re-discover every 5 minutes
+cache_ttl_secs = 600
+
+# Environment variable discovery
+[discovery.environment]
+enabled = true
+# Look for patterns like:
+# CAPABILITY_ORCHESTRATION_ENDPOINT="https://orchestrator:8080"
+# PRIMAL_*_ENDPOINT + PRIMAL_*_CAPABILITIES
+capability_pattern = "CAPABILITY_{}_ENDPOINT"
+primal_pattern = "PRIMAL_{}_ENDPOINT"
+
+# mDNS discovery
+[discovery.mdns]
+enabled = true
+timeout_secs = 5
+# Discover services announcing these types
+service_types = [
+    "_orchestration._tcp",
+    "_coordination._tcp",
+    "_storage._tcp",
+    "_compute._tcp",
+    "_ai._tcp"
+]
+
+# DNS-SD discovery
+[discovery.dns_sd]
+enabled = true
+timeout_secs = 5
+# DNS domains to search
+search_domains = ["local", "internal", "cluster.local"]
+
+# Service registry discovery (Consul, etcd, etc.)
+[discovery.service_registry]
+enabled = true
+auto_discover_registries = true
+# Common registry endpoints (auto-discovered via mDNS/DNS)
+consul_endpoints = []  # Auto-discovered
+etcd_endpoints = []    # Auto-discovered
+timeout_secs = 5
+
+# Network scan discovery (last resort)
+[discovery.network_scan]
+enabled = false  # Disabled by default (slow)
+scan_ranges = ["127.0.0.0/8", "10.0.0.0/8", "192.168.0.0/16"]
+scan_ports = [8080, 8081, 8082, 8083, 8443, 9000, 9090]
+timeout_secs = 30
+max_concurrent_scans = 100
+
+# ===============================================================================
+# SERVICE SELECTION - How BearDog chooses between discovered services
+# ===============================================================================
+
+[service_selection]
+# Selection strategy when multiple services provide same capability
+strategy = "qos_based"  # Options: "qos_based", "random", "round_robin", "first"
+
+# QoS metrics weighting
+[service_selection.qos_weights]
+latency = 0.4
+throughput = 0.2
+availability = 0.3
+reliability = 0.1
+
+# Service health checking
+[service_selection.health_check]
+enabled = true
+check_interval_secs = 30
+failure_threshold = 3
+success_threshold = 2
+
+# ===============================================================================
+# SECURITY - Trust and verification
+# ===============================================================================
+
+[security]
+# Verify service capabilities before use
+verify_capabilities = true
+# Require mutual TLS for security-critical capabilities
+require_mtls_for = ["security", "audit", "key_management"]
+# Trust anchors
+trust_anchor_path = "/etc/beardog/ca-certificates"
+# Service identity verification
+verify_service_identity = true
+
+# ===============================================================================
+# OBSERVABILITY
+# ===============================================================================
+
+[observability]
+metrics_enabled = true
+tracing_enabled = true
+# Emit discovery events
+log_discovery_events = true
+log_announcement_events = true
+
+# ===============================================================================
+# NOTES
+# ===============================================================================
+# This configuration demonstrates the correct architecture:
+#
+# 1. BearDog knows ITSELF (primal_self)
+# 2. BearDog announces what IT provides (self_capabilities)
+# 3. BearDog knows what it NEEDS (required_capabilities) - NOT who provides it
+# 4. BearDog DISCOVERS who can provide what it needs (discovery)
+# 5. BearDog SELECTS best provider based on QoS (service_selection)
+#
+# ❌ WRONG: hardcode "Songbird provides orchestration"
+# ✅ CORRECT: discover "who provides orchestration capability"
+#
+# This enables:
+# - Zero code changes to add new service providers
+# - Composable ecosystem
+# - Service provider independence
+# - Runtime service discovery and failover
+
