@@ -1,0 +1,38 @@
+[ceremony]
+name = "cross-tower-federation-demo"
+description = "Multi-tower federated operations demonstration"
+max_duration_ms = 2000
+
+[federation]
+# Tower configuration
+num_towers = 3
+regions = ["us", "eu", "apac"]
+
+# Consensus
+consensus_algorithm = "unanimous"  # n/n agreement
+consensus_timeout_ms = 5000
+require_all_towers = true
+
+[discovery]
+# Discovery settings
+enable_auto_discovery = true
+discovery_timeout_ms = 100
+announce_capabilities = true
+
+[sovereignty]
+# Data sovereignty
+enforce_boundaries = true
+allow_cross_border = false
+gdpr_strict_mode = true
+
+[performance]
+discovery_target_ms = 100
+trust_establishment_target_ms = 200
+consensus_target_ms = 500
+operation_target_ms = 1000
+
+[audit]
+log_level = "info"
+include_performance = true
+enable_cross_tower_audit = true
+
