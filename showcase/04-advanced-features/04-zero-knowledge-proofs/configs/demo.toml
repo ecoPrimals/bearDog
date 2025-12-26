@@ -1,0 +1,42 @@
+[ceremony]
+name = "zero-knowledge-proofs-demo"
+description = "Zero-knowledge proofs for privacy-preserving verification"
+max_duration_ms = 500
+
+[zkp_protocol]
+# Protocol type: schnorr, range_proof, set_membership
+protocol_types = ["schnorr", "age_verification", "key_ownership"]
+
+# Security level (bits)
+security_level = 128
+
+# Number of rounds for interactive proofs
+proof_rounds = 3
+
+[schnorr]
+# Schnorr protocol parameters
+curve = "curve25519"
+hash_algorithm = "sha256"
+
+[age_verification]
+# Age verification parameters
+minimum_age = 21
+reveal_exact_age = false
+
+[compliance]
+# Compliance proof parameters
+require_zero_knowledge = true
+allow_information_leakage = false
+
+[performance]
+# Performance settings
+batch_verification = true
+parallel_proofs = true
+cache_commitments = true
+
+[audit]
+log_level = "info"
+include_performance = true
+include_proof_details = true
+hash_algorithm = "blake3"
+
