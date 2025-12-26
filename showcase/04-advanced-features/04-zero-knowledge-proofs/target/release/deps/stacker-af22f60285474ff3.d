@@ -1,0 +1,10 @@
+/home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/04-zero-knowledge-proofs/target/release/deps/stacker-af22f60285474ff3.d: /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/lib.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/mod.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/unix.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/mmap_stack_restore_guard.rs
+
+/home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/04-zero-knowledge-proofs/target/release/deps/libstacker-af22f60285474ff3.rlib: /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/lib.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/mod.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/unix.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/mmap_stack_restore_guard.rs
+
+/home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/04-zero-knowledge-proofs/target/release/deps/libstacker-af22f60285474ff3.rmeta: /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/lib.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/mod.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/unix.rs /home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/mmap_stack_restore_guard.rs
+
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/lib.rs:
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/mod.rs:
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/backends/unix.rs:
+/home/eastgate/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stacker-0.1.22/src/mmap_stack_restore_guard.rs:

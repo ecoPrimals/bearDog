@@ -1,0 +1,90 @@
+{
+  "scenario_id": "zkp-auth-001",
+  "timestamp": "2025-12-26T15:16:31.679799113+00:00",
+  "proof_results": [
+    {
+      "proof_id": "PR-001",
+      "proof_type": "key_ownership",
+      "prover": "Alice",
+      "verifier": "BearDog Service",
+      "commitment_time_ms": 0,
+      "challenge_response_time_ms": 0,
+      "verification_time_ms": 0,
+      "total_time_ms": 0,
+      "verified": true,
+      "zero_knowledge_preserved": true,
+      "audit_hash": "ffc4b396450aad59abe7e5a97f243f74b77b15f35a9e60b48e51cade6eabb16e"
+    },
+    {
+      "proof_id": "PR-002",
+      "proof_type": "age_verification",
+      "prover": "Bob",
+      "verifier": "Age-Restricted Service",
+      "commitment_time_ms": 0,
+      "challenge_response_time_ms": 0,
+      "verification_time_ms": 0,
+      "total_time_ms": 0,
+      "verified": true,
+      "zero_knowledge_preserved": true,
+      "audit_hash": "ce55340ce743075d50c9af16a78a2de189aace8bedc1a9e195fc56b09f954d39"
+    },
+    {
+      "proof_id": "PR-003",
+      "proof_type": "set_membership",
+      "prover": "Carol",
+      "verifier": "Access Control System",
+      "commitment_time_ms": 0,
+      "challenge_response_time_ms": 0,
+      "verification_time_ms": 0,
+      "total_time_ms": 0,
+      "verified": true,
+      "zero_knowledge_preserved": true,
+      "audit_hash": "fe84830ce016841fb8b1f96bcc528ba2de7f6fdc6b1cbeef26dd1936b32ac7ff"
+    }
+  ],
+  "test_results": [
+    {
+      "test_id": "TC-001",
+      "description": "Valid key ownership proof (should PASS)",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-002",
+      "description": "Valid age verification (age 25 > 21, should PASS)",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-003",
+      "description": "Invalid key ownership (wrong key, should FAIL)",
+      "expected": "failure",
+      "actual": "failure",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-004",
+      "description": "Invalid age (underage, should FAIL)",
+      "expected": "failure",
+      "actual": "failure",
+      "passed": true,
+      "duration_ms": 0
+    },
+    {
+      "test_id": "TC-005",
+      "description": "Valid set membership proof (should PASS)",
+      "expected": "success",
+      "actual": "success",
+      "passed": true,
+      "duration_ms": 0
+    }
+  ],
+  "total_duration_ms": 0,
+  "all_tests_passed": true,
+  "audit_hash": "8969283cc6982f0dae8a50dd639c82e92bd5b0b0d71c56ee0875287152040134"
+}
