@@ -1,7 +1,7 @@
 //! Configuration loading for discovery
 
 use crate::{
-    error::{DiscoveryError, Result},
+    error::Result,
     types::{Capability, PrimalInfo, RequiredCapability, ServiceEndpoint},
 };
 use serde::{Deserialize, Serialize};
@@ -211,4 +211,3 @@ reliability = 0.1
         assert_eq!(config.primal_self.self_capabilities.len(), 2);
     }
 }
-

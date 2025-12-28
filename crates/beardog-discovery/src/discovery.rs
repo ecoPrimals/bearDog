@@ -2,7 +2,7 @@
 
 use crate::{
     config::DiscoveryConfig,
-    error::{DiscoveryError, Result},
+    error::Result,
     types::{DiscoveredService, QoSWeights},
 };
 use std::path::Path;
@@ -246,7 +246,11 @@ impl CapabilityDiscovery {
             .max_by(|a, b| {
                 let score_a = a.qos.calculate_score(&weights);
                 let score_b = b.qos.calculate_score(&weights);
-                score_a.partial_cmp(&score_b).unwrap()
+                // Modern Rust idiom: Handle NaN gracefully in float comparisons
+                // NaN scores are treated as lowest priority
+                score_a
+                    .partial_cmp(&score_b)
+                    .unwrap_or(std::cmp::Ordering::Less)
             })
             .cloned()
     }

@@ -23,4 +23,3 @@ impl MdnsDiscovery {
         Ok(vec![])
     }
 }
-

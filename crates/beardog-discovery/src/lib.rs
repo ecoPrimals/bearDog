@@ -37,7 +37,7 @@ pub mod mdns;
 pub mod service_registry;
 pub mod types;
 
-pub use announcement::{Announcer, AnnouncementConfig};
+pub use announcement::{AnnouncementConfig, Announcer};
 pub use config::DiscoveryConfig;
 pub use discovery::CapabilityDiscovery;
 pub use error::{DiscoveryError, Result};
@@ -46,11 +46,10 @@ pub use types::{Capability, DiscoveredService, PrimalInfo, ServiceEndpoint};
 /// Re-exports for convenience
 pub mod prelude {
     pub use crate::{
-        announcement::{Announcer, AnnouncementConfig},
+        announcement::{AnnouncementConfig, Announcer},
         config::DiscoveryConfig,
         discovery::CapabilityDiscovery,
         error::{DiscoveryError, Result},
         types::{Capability, DiscoveredService, PrimalInfo, ServiceEndpoint},
     };
 }
-

@@ -57,4 +57,3 @@ impl From<url::ParseError> for DiscoveryError {
         DiscoveryError::Parse(err.to_string())
     }
 }
-

@@ -28,12 +28,18 @@ async fn main() -> Result<()> {
     } else {
         println!("   Found {} orchestrator(s):", orchestrators.len());
         for service in &orchestrators {
-            println!("     - {} at {}", service.display_name, service.endpoint.primary_url);
+            println!(
+                "     - {} at {}",
+                service.display_name, service.endpoint.primary_url
+            );
         }
 
         // Select best service based on QoS
         if let Some(best) = discovery.select_best(&orchestrators) {
-            println!("\n   ✅ Best service: {} (score based on QoS metrics)", best.display_name);
+            println!(
+                "\n   ✅ Best service: {} (score based on QoS metrics)",
+                best.display_name
+            );
         }
     }
 
@@ -55,4 +61,3 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-

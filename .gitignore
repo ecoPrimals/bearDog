@@ -54,3 +54,7 @@ session-reports-*/
 *~
 *.swp
 *.swo
+
+# Showcase demo build artifacts
+showcase/**/target/
+showcase/**/Cargo.lock
