@@ -112,6 +112,9 @@ pub mod universal_hsm;
 // BTSP Provider - Songbird integration for internet deployment
 pub mod btsp_provider;
 
+// TLS support for mTLS
+pub mod tls;
+
 // BTSP HTTP API Server - Remote access for Songbird (legacy)
 #[cfg(feature = "btsp-api")]
 pub mod btsp_api_server;

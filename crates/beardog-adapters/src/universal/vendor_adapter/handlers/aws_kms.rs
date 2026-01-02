@@ -325,20 +325,12 @@ impl UniversalKmsHandler {
                 self.execute_builtin_operation(provider, &payload)?
             }
             _ => {
+                // Execute custom operation and return its result
                 self.execute_custom_operation(provider, &payload)?
-                serde_json::json!({
-                    "result": "success ",
-                    "provider": "custom_kms",
-                    "data": "custom_encrypted_data_or_key_id",
-                    "metadata": {
-                        "encryption_algorithm": "Ed25519",
-                        "key_origin": "custom_hsm"
-                    }
-                })
             }
         };
         
-        Ok(mock_result)
+        Ok(result)
     }
     
     /// Select best KMS provider based on configuration

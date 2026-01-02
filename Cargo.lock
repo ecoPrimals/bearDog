@@ -471,11 +471,12 @@ dependencies = [
  "chrono",
  "criterion",
  "ed25519-dalek 2.2.0",
+ "futures",
  "hex",
  "hidapi",
  "proptest",
  "rand 0.8.5",
- "reqwest 0.11.27",
+ "reqwest 0.12.23",
  "serde",
  "serde_json",
  "serial_test",
@@ -606,7 +607,7 @@ dependencies = [
  "clap",
  "hex",
  "hkdf",
- "hostname",
+ "hostname 0.4.1",
  "nusb",
  "openssl",
  "pbkdf2",
@@ -623,6 +624,22 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
  "whoami",
+]
+
+[[package]]
+name = "beardog-client"
+version = "0.9.0"
+dependencies = [
+ "anyhow",
+ "beardog-genetics",
+ "mockito",
+ "reqwest 0.12.23",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.16",
+ "tokio",
+ "tokio-test",
+ "tracing",
 ]
 
 [[package]]
@@ -742,6 +759,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
+ "hostname 0.4.1",
  "local-ip-address",
  "mdns-sd 0.11.5",
  "reqwest 0.11.27",
@@ -1044,6 +1062,7 @@ dependencies = [
  "hex",
  "hidapi",
  "hkdf",
+ "hostname 0.3.1",
  "jni",
  "ndk",
  "ndk-sys",
@@ -1053,6 +1072,9 @@ dependencies = [
  "rand 0.8.5",
  "reqwest 0.11.27",
  "ring 0.17.14",
+ "rustls 0.21.12",
+ "rustls-native-certs",
+ "rustls-pemfile",
  "security-framework",
  "security-framework-sys",
  "serde",
@@ -1063,6 +1085,7 @@ dependencies = [
  "tarpc",
  "thiserror 1.0.69",
  "tokio",
+ "tokio-rustls 0.24.1",
  "tokio-serde",
  "tokio-test",
  "tokio-tungstenite",
@@ -1070,6 +1093,7 @@ dependencies = [
  "tower-http 0.5.2",
  "tracing",
  "uuid",
+ "webpki-roots 0.25.4",
  "zeroize",
 ]
 
@@ -2223,7 +2247,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2767,6 +2791,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589533453244b0995c858700322199b2becb13b627df2851f64a2775d024abcf"
 dependencies = [
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "hostname"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c731c3e10504cc8ed35cfe2f1db4c9274c3d35fa486e3b31df46f068ef3e867"
+dependencies = [
+ "libc",
+ "match_cfg",
+ "winapi",
 ]
 
 [[package]]
@@ -3382,7 +3417,7 @@ dependencies = [
  "email_address",
  "fastrand",
  "futures-util",
- "hostname",
+ "hostname 0.4.1",
  "httpdate",
  "idna 1.1.0",
  "mime",
@@ -3507,6 +3542,12 @@ checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "match_cfg"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffbee8634e0d45d258acb448e7eaab3fce7a0a467395d4d9f228e3c1f01fb2e4"
 
 [[package]]
 name = "matchers"
@@ -4954,7 +4995,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.11.0",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4981,6 +5022,18 @@ dependencies = [
  "rustls-webpki 0.103.5",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "rustls-native-certs"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
+dependencies = [
+ "openssl-probe",
+ "rustls-pemfile",
+ "schannel",
+ "security-framework",
 ]
 
 [[package]]
@@ -5910,7 +5963,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix 1.1.2",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6853,7 +6906,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

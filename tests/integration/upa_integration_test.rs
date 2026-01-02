@@ -353,7 +353,7 @@ async fn test_graceful_degradation() {
     }
 
     // Verify API server can still start
-    let hsm_manager = Arc::new(HsmManager::new());
+    let hsm_manager = Arc::new(HsmManager::auto_initialize().await.unwrap());
     let genetic_engine = Arc::new(EcosystemGeneticEngine::new().unwrap());
     let btsp_provider = Arc::new(
         BeardogBtspProvider::new(hsm_manager, genetic_engine)

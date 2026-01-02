@@ -5,6 +5,7 @@
 //! - Genesis (Physical Bootstrap)
 //! - BirdSong (Privacy-Preserving Broadcasts)
 //! - Lineage (Cryptographic Proofs)
+//! - Trust (Peer Evaluation for biomeOS)
 //!
 //! Multi-primal coordination:
 //! - UPA (Universal Port Authority) client for Songbird integration
@@ -14,6 +15,7 @@ pub mod btsp;
 pub mod genesis;
 pub mod lineage;
 pub mod server;
+pub mod trust;
 pub mod types;
 pub mod upa_client;
 

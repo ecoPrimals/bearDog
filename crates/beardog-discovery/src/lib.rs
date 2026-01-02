@@ -22,7 +22,7 @@
 //! let orchestrators = discovery.find_by_capability("orchestration").await?;
 //!
 //! if let Some(service) = orchestrators.first() {
-//!     println!("Found orchestrator at: {}", service.endpoint);
+//!     println!("Found orchestrator at: {}", service.endpoint.primary_url);
 //!     // Connect to service.endpoint (could be Songbird, or anything else!)
 //! }
 //! # Ok(())
@@ -32,6 +32,7 @@
 pub mod announcement;
 pub mod config;
 pub mod discovery;
+pub mod dns_sd;
 pub mod error;
 pub mod mdns;
 pub mod service_registry;

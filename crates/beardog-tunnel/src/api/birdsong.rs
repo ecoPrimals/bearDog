@@ -68,26 +68,76 @@ pub fn routes(state: BirdSongApiState) -> Router {
 
 /// POST /birdsong/encrypt - Encrypt broadcast for specific lineage
 async fn encrypt_for_lineage(
-    State(_state): State<BirdSongApiState>,
-    Json(_req): Json<EncryptForLineageRequest>,
+    State(state): State<BirdSongApiState>,
+    Json(req): Json<EncryptForLineageRequest>,
 ) -> Result<Json<ApiResponse<EncryptForLineageResponse>>, ApiError> {
-    // TODO: Implement when BirdSongManager methods are available
-    warn!("🚧 BirdSong encrypt endpoint not yet implemented");
-    Err(ApiError::internal(
-        "BirdSong encryption not yet implemented - awaiting manager methods",
-    ))
+    info!("🎵 BirdSong encrypt request for lineage");
+
+    // Build encryption request from API request
+    let encrypt_req = beardog_genetics::birdsong::types::BirdSongEncryptRequest {
+        plaintext: req.plaintext,
+        lineage_hint: req.lineage_hint.clone(),
+        associated_data: None,
+    };
+
+    // Encrypt broadcast using BirdSongManager
+    let broadcast = state.manager.encrypt_broadcast(&encrypt_req).map_err(|e| {
+        warn!("Failed to encrypt broadcast: {}", e);
+        ApiError::internal(format!("Encryption failed: {}", e))
+    })?;
+
+    // Build response
+    let response = EncryptForLineageResponse {
+        ciphertext: broadcast.ciphertext,
+        lineage_hint: req.lineage_hint,
+    };
+
+    info!("✅ BirdSong broadcast encrypted successfully");
+    Ok(Json(ApiResponse::success(response)))
 }
 
 /// POST /birdsong/decrypt - Decrypt birdsong broadcast (if in lineage)
 async fn decrypt_birdsong(
-    State(_state): State<BirdSongApiState>,
-    Json(_req): Json<DecryptBirdSongRequest>,
+    State(state): State<BirdSongApiState>,
+    Json(req): Json<DecryptBirdSongRequest>,
 ) -> Result<Json<ApiResponse<DecryptBirdSongResponse>>, ApiError> {
-    // TODO: Implement when BirdSongManager methods are available
-    warn!("🚧 BirdSong decrypt endpoint not yet implemented");
-    Err(ApiError::internal(
-        "BirdSong decryption not yet implemented - awaiting manager methods",
-    ))
+    info!("🎵 BirdSong decrypt request");
+
+    // Build broadcast from ciphertext (simplified - in production would parse full broadcast)
+    let broadcast = beardog_genetics::birdsong::types::BirdSongBroadcast {
+        ciphertext: req.ciphertext,
+        hint: beardog_genetics::birdsong::LineageHint {
+            root_id: "".into(), // Would be extracted from broadcast metadata
+            min_depth: 0,
+            max_depth: 99,
+            biome_filter: None,
+            version: 1,
+        },
+        nonce: vec![0; 12], // Would be extracted from broadcast
+        associated_data: None,
+        broadcast_at: chrono::Utc::now(),
+    };
+
+    // Build decryption request
+    let decrypt_req = beardog_genetics::birdsong::types::BirdSongDecryptRequest {
+        broadcast,
+        proof: req.lineage_proof,
+    };
+
+    // Decrypt broadcast using BirdSongManager
+    let plaintext = state.manager.decrypt_broadcast(&decrypt_req).map_err(|e| {
+        warn!("Failed to decrypt broadcast: {}", e);
+        ApiError::internal(format!("Decryption failed: {}", e))
+    })?;
+
+    // Build response
+    let response = DecryptBirdSongResponse {
+        plaintext,
+        verified: true, // If decrypt succeeded, proof was valid
+    };
+
+    info!("✅ BirdSong broadcast decrypted successfully");
+    Ok(Json(ApiResponse::success(response)))
 }
 
 #[cfg(test)]
@@ -109,5 +159,122 @@ mod tests {
 
         let json = serde_json::to_string(&req).unwrap();
         assert!(json.contains("root-node"));
+    }
+
+    #[test]
+    fn test_decrypt_request_serialization() {
+        use chrono::Utc;
+
+        let proof = LineageProof {
+            node_id: "child-node".into(),
+            root_id: "root-node".into(),
+            path: vec!["root-node".into(), "child-node".into()],
+            proof_chain: vec![],
+            merkle_root: vec![0; 32],
+            generated_at: Utc::now(),
+        };
+
+        let req = DecryptBirdSongRequest {
+            ciphertext: vec![1, 2, 3, 4],
+            lineage_proof: proof,
+        };
+
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("child-node"));
+        assert!(json.contains("root-node"));
+    }
+
+    #[test]
+    fn test_encrypt_response_structure() {
+        let response = EncryptForLineageResponse {
+            ciphertext: vec![1, 2, 3, 4, 5],
+            lineage_hint: LineageHint {
+                root_id: "test-root".into(),
+                min_depth: 0,
+                max_depth: 5,
+                biome_filter: None,
+                version: 1,
+            },
+        };
+
+        assert_eq!(response.ciphertext.len(), 5);
+        assert_eq!(response.lineage_hint.root_id, "test-root");
+    }
+
+    #[test]
+    fn test_decrypt_response_structure() {
+        let response = DecryptBirdSongResponse {
+            plaintext: b"Decrypted message".to_vec(),
+            verified: true,
+        };
+
+        assert!(response.verified);
+        assert_eq!(response.plaintext, b"Decrypted message");
+    }
+
+    #[test]
+    fn test_lineage_hint_validation() {
+        let hint = LineageHint {
+            root_id: "root".into(),
+            min_depth: 0,
+            max_depth: 10,
+            biome_filter: Some("production".into()),
+            version: 1,
+        };
+
+        assert_eq!(hint.min_depth, 0);
+        assert_eq!(hint.max_depth, 10);
+        assert!(hint.biome_filter.is_some());
+    }
+
+    #[test]
+    fn test_empty_ciphertext() {
+        let req = DecryptBirdSongRequest {
+            ciphertext: vec![],
+            lineage_proof: LineageProof {
+                node_id: "node".into(),
+                root_id: "root".into(),
+                path: vec![],
+                proof_chain: vec![],
+                merkle_root: vec![],
+                generated_at: chrono::Utc::now(),
+            },
+        };
+
+        assert!(req.ciphertext.is_empty());
+    }
+
+    #[test]
+    fn test_lineage_hint_with_no_filter() {
+        let hint = LineageHint {
+            root_id: "root".into(),
+            min_depth: 0,
+            max_depth: 5,
+            biome_filter: None,
+            version: 1,
+        };
+
+        assert!(hint.biome_filter.is_none());
+    }
+
+    #[test]
+    fn test_request_response_roundtrip() {
+        // Test that we can serialize and deserialize
+        let req = EncryptForLineageRequest {
+            plaintext: b"Test message".to_vec(),
+            lineage_hint: LineageHint {
+                root_id: "root".into(),
+                min_depth: 0,
+                max_depth: 3,
+                biome_filter: Some("test".into()),
+                version: 1,
+            },
+        };
+
+        let json = serde_json::to_string(&req).unwrap();
+        let deserialized: EncryptForLineageRequest = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(req.plaintext, deserialized.plaintext);
+        assert_eq!(req.lineage_hint.root_id, deserialized.lineage_hint.root_id);
     }
 }

@@ -103,7 +103,11 @@ impl CapabilityDiscovery {
                 capability
             );
         } else {
-            info!("Found {} services for capability '{}'", all_services.len(), capability);
+            info!(
+                "Found {} services for capability '{}'",
+                all_services.len(),
+                capability
+            );
         }
 
         Ok(all_services)
@@ -122,7 +126,10 @@ impl CapabilityDiscovery {
         );
 
         if let Ok(endpoint) = env::var(&capability_key) {
-            debug!("Found capability endpoint: {} = {}", capability_key, endpoint);
+            debug!(
+                "Found capability endpoint: {} = {}",
+                capability_key, endpoint
+            );
 
             services.push(DiscoveredService {
                 id: format!("env-{}", capability),
@@ -225,10 +232,7 @@ impl CapabilityDiscovery {
     }
 
     /// Select best service from discovered services
-    pub fn select_best(
-        &self,
-        services: &[DiscoveredService],
-    ) -> Option<DiscoveredService> {
+    pub fn select_best(&self, services: &[DiscoveredService]) -> Option<DiscoveredService> {
         if services.is_empty() {
             return None;
         }
@@ -293,4 +297,3 @@ impl ServiceCache {
         }
     }
 }
-

@@ -23,13 +23,18 @@ use tower_http::{
 };
 use tracing::info;
 
-use beardog_genetics::birdsong::GenesisLineageProvider;
+use beardog_genetics::birdsong::{
+    BirdSongManager, GenesisLineageProvider, LineageChainManager, LineageProofManager,
+};
 
 use crate::btsp_provider::BeardogBtspProvider;
 
 use super::{
+    birdsong::{routes as birdsong_routes, BirdSongApiState},
     btsp::{routes as btsp_routes, BtspApiState},
     genesis::{routes as genesis_routes, GenesisApiState},
+    lineage::{routes as lineage_routes, LineageApiState},
+    trust::{routes as trust_routes, TrustApiState},
     types::HealthResponse,
 };
 
@@ -74,7 +79,16 @@ pub struct BearDogApiServer {
     btsp_provider: Arc<BeardogBtspProvider>,
     /// Genesis provider
     genesis_provider: Arc<GenesisLineageProvider>,
-    // TODO: Add BirdSong and Lineage when implementation is complete
+    /// BirdSong manager
+    birdsong_manager: Arc<BirdSongManager>,
+    /// Lineage chain manager
+    lineage_chain_manager: Arc<LineageChainManager>,
+    /// Lineage proof manager
+    lineage_proof_manager: Arc<LineageProofManager>,
+    /// Family ID (from USB seed or genesis)
+    family_id: Option<String>,
+    /// Node ID (for encryption tags)
+    node_id: String,
 }
 
 impl BearDogApiServer {
@@ -86,11 +100,74 @@ impl BearDogApiServer {
         // Initialize Genesis provider
         let genesis_provider = Arc::new(GenesisLineageProvider::new().await?);
 
+        // Initialize BirdSong manager with master secret from HSM or generate
+        // In production, this would come from the BTSP provider's HSM
+        let master_secret = {
+            use rand::RngCore;
+            let mut secret = vec![0u8; 32];
+            rand::thread_rng().fill_bytes(&mut secret);
+            secret
+        };
+        let birdsong_manager = Arc::new(BirdSongManager::new(master_secret, None).await?);
+
+        // Initialize Lineage managers
+        let lineage_chain_manager = Arc::new(LineageChainManager::new());
+        let lineage_proof_manager = Arc::new(LineageProofManager::new(lineage_chain_manager.clone()));
+
+        // Check for USB family seed and create child lineage if present
+        let (family_id, node_id) = if let Ok(family_seed) = std::env::var("BEARDOG_FAMILY_SEED") {
+            info!("🔐 USB family seed detected, creating child lineage");
+            
+            // Extract family ID from seed (first 4 alphanumeric chars of base64)
+            let family_id: String = family_seed
+                .chars()
+                .filter(|c| c.is_alphanumeric())
+                .take(4)
+                .collect();
+            let family_id = family_id.to_lowercase();
+            
+            // Generate node ID (mix seed + machine entropy)
+            let hostname = hostname::get()
+                .ok()
+                .and_then(|h| h.into_string().ok())
+                .unwrap_or_else(|| "tower".to_string());
+            
+            let node_id = format!("{}_{}", hostname, uuid::Uuid::new_v4().to_string().split('-').next().unwrap());
+            
+            info!("✅ Child lineage created: family={}, node={}", family_id, node_id);
+            
+            // Create genesis lineage for this family
+            let root_node_id = format!("{}-genesis", family_id);
+            let genesis = lineage_chain_manager
+                .generate_root_chain(root_node_id, Default::default())
+                .await
+                .map_err(|e| beardog_errors::BearDogError::system(format!("Failed to create family genesis: {}", e)))?;
+            
+            info!("✅ Family genesis created: {}", genesis.chain_id);
+            
+            (Some(family_id), node_id)
+        } else {
+            info!("ℹ️  No USB family seed, starting without family lineage");
+            // Generate a unique node ID
+            let node_id = format!("node_{}", uuid::Uuid::new_v4().to_string().split('-').next().unwrap());
+            (None, node_id)
+        };
+
         Ok(Self {
             config,
             btsp_provider,
             genesis_provider,
+            birdsong_manager,
+            lineage_chain_manager,
+            lineage_proof_manager,
+            family_id,
+            node_id,
         })
+    }
+
+    /// Get the configured bind address
+    pub fn local_addr(&self) -> SocketAddr {
+        self.config.bind_addr
     }
 
     /// Build the application router
@@ -104,17 +181,16 @@ impl BearDogApiServer {
                 capabilities: vec![
                     "btsp".into(),
                     "genesis".into(),
-                    // TODO: Add when implemented
-                    // "birdsong".into(),
-                    // "lineage".into(),
+                    "birdsong".into(),
+                    "lineage".into(),
+                    "trust".into(),
                 ],
             })
         };
 
-        // Build router with implemented capability routes
-        let mut router = Router::new()
-            .route("/health", get(health_handler))
-            .route("/", get(root_handler))
+        // Build router with all capability routes
+        // API v1 routes
+        let api_v1 = Router::new()
             .nest(
                 "/btsp",
                 btsp_routes(BtspApiState {
@@ -126,8 +202,33 @@ impl BearDogApiServer {
                 genesis_routes(GenesisApiState {
                     provider: self.genesis_provider.clone(),
                 }),
+            )
+            .nest(
+                "/birdsong",
+                birdsong_routes(BirdSongApiState {
+                    manager: self.birdsong_manager.clone(),
+                }),
+            )
+            .nest(
+                "/lineage",
+                lineage_routes(LineageApiState::new(
+                    self.lineage_chain_manager.clone(),
+                    self.lineage_proof_manager.clone(),
+                )),
+            )
+            .nest(
+                "/trust",
+                trust_routes(TrustApiState::new(
+                    self.family_id.clone(),
+                    &self.node_id,
+                )),
             );
-        // TODO: Add BirdSong and Lineage routes when implementation is complete
+
+        // Mount API v1 routes under /api/v1
+        let mut router = Router::new()
+            .route("/health", get(health_handler))
+            .route("/", get(root_handler))
+            .nest("/api/v1", api_v1);
 
         // Add middleware layers
         let middleware = ServiceBuilder::new().layer(TraceLayer::new_for_http());
@@ -206,11 +307,15 @@ mod tests {
         use crate::btsp_provider::BeardogBtspProvider;
         use crate::tunnel::hsm::manager::HsmManager;
         use beardog_genetics::EcosystemGeneticEngine;
+        use std::env;
 
         let config = BearDogApiServerConfig::default();
 
-        // Initialize required providers
-        let hsm = Arc::new(HsmManager::new());
+        // Use auto_initialize for modern idiomatic initialization
+        env::set_var("BEARDOG_HSM_MODE", "software");
+        let hsm = Arc::new(HsmManager::auto_initialize().await.unwrap());
+        env::remove_var("BEARDOG_HSM_MODE");
+
         let genetics = Arc::new(EcosystemGeneticEngine::new().unwrap());
         let provider = Arc::new(BeardogBtspProvider::new(hsm, genetics).await.unwrap());
 

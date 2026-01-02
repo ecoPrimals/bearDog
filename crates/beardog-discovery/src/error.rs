@@ -36,6 +36,22 @@ pub enum DiscoveryError {
     #[error("Invalid endpoint: {0}")]
     InvalidEndpoint(String),
 
+    // New variants for complete implementations
+    #[error("Query failed: {0}")]
+    QueryFailed(String),
+
+    #[error("Invalid service information: {0}")]
+    InvalidServiceInfo(String),
+
+    #[error("Initialization failed: {0}")]
+    InitializationFailed(String),
+
+    #[error("System error: {0}")]
+    SystemError(String),
+
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
+
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

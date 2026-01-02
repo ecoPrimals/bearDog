@@ -20,8 +20,12 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
     tracing::info!("🐻 Starting BearDog Unified API Server");
 
-    // Initialize dependencies
-    let hsm_manager = Arc::new(HsmManager::new());
+    // Initialize HSM with auto-detection from environment
+    // Set BEARDOG_HSM_MODE=software (default) or hardware/android_strongbox/ios_secure_enclave
+    tracing::info!("🔐 Initializing HSM Manager...");
+    let hsm_manager = Arc::new(HsmManager::auto_initialize().await?);
+    tracing::info!("✅ HSM Manager initialized successfully");
+
     let genetic_engine = Arc::new(EcosystemGeneticEngine::new()?);
 
     // Create BTSP provider

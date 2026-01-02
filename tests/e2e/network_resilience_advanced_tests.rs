@@ -299,8 +299,9 @@ async fn test_circuit_breaker_half_open_transition() {
     // Circuit is open
     metrics.circuit_opens += 1;
 
-    // Wait for cooldown period (simulated)
-    sleep(Duration::from_millis(10)).await;
+    // Event-driven cooldown: In production, use timer event/channel
+    // For test: validate state transition logic
+    tokio::task::yield_now().await;
 
     // Transition to half-open
     let circuit_state = CircuitState::HalfOpen;
@@ -500,8 +501,8 @@ async fn test_concurrent_connections() {
     for _ in 0..10 {
         let metrics_clone = Arc::clone(&metrics);
         let handle = tokio::spawn(async move {
-            // Simulate connection attempt
-            sleep(Duration::from_millis(10)).await;
+            // Simulate async connection work (not timing-based)
+            tokio::task::yield_now().await;
             metrics_clone.fetch_add(1, Ordering::SeqCst);
         });
         handles.push(handle);

@@ -223,7 +223,7 @@ mod tests {
         let score = metrics.calculate_score(&weights);
 
         // Score should be between 0.0 and 1.0
-        assert!(score >= 0.0 && score <= 1.0);
+        assert!((0.0..=1.0).contains(&score));
         // With good metrics, score should be high
         assert!(score > 0.8);
     }

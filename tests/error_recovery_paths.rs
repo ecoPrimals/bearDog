@@ -32,28 +32,46 @@ async fn test_recovery_from_transient_failure() {
 
 #[tokio::test]
 async fn test_recovery_from_connection_loss() {
-    // Test reconnection after connection loss
-    let connected = Arc::new(AtomicUsize::new(1));
+    // Test reconnection after connection loss - using channels for coordination
+    use tokio::sync::watch;
+    
+    let (conn_tx, mut conn_rx) = watch::channel(1_usize); // 1 = connected
 
     // Connection is active
-    assert_eq!(connected.load(Ordering::Relaxed), 1);
+    assert_eq!(*conn_rx.borrow(), 1);
 
-    // Connection lost
-    connected.store(0, Ordering::Relaxed);
-    tokio::time::sleep(Duration::from_millis(10)).await;
+    // Simulate connection loss event
+    conn_tx.send(0).unwrap();
+    conn_rx.changed().await.unwrap();
+    assert_eq!(*conn_rx.borrow(), 0);
 
-    // Attempt reconnection
+    // Simulate reconnection logic with retries
+    let reconnect_attempts = Arc::new(AtomicUsize::new(0));
+    let attempts = reconnect_attempts.clone();
+
+    // Spawn reconnection task
+    let tx = conn_tx.clone();
+    let handle = tokio::spawn(async move {
+        // Try reconnection up to 3 times
     for attempt in 1..=3 {
-        tokio::time::sleep(Duration::from_millis(5)).await;
+            attempts.fetch_add(1, Ordering::Relaxed);
+            tokio::task::yield_now().await; // Yield for concurrent behavior
 
         if attempt == 3 {
             // Reconnection succeeds on 3rd attempt
-            connected.store(1, Ordering::Relaxed);
-            break;
+                tx.send(1).unwrap();
+                return Ok::<_, ()>(());
+            }
         }
-    }
+        Err(())
+    });
 
-    assert_eq!(connected.load(Ordering::Relaxed), 1);
+    // Wait for reconnection
+    handle.await.unwrap().unwrap();
+    conn_rx.changed().await.unwrap();
+    
+    assert_eq!(*conn_rx.borrow(), 1);
+    assert_eq!(reconnect_attempts.load(Ordering::Relaxed), 3);
 }
 
 #[tokio::test]
@@ -129,32 +147,42 @@ async fn test_recovery_from_corrupted_state() {
 #[tokio::test]
 async fn test_recovery_with_exponential_backoff() {
     // Test exponential backoff retry strategy
+    // Note: This test validates backoff calculation, not actual timing
     let mut backoff_ms = 10;
     let max_backoff = 100;
+    let mut backoff_values = Vec::new();
 
     for attempt in 0..5 {
-        tokio::time::sleep(Duration::from_micros(backoff_ms * 10)).await;
+        // Record backoff value for verification
+        backoff_values.push(backoff_ms);
+        
+        // In production: tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
+        // For testing: we verify the algorithm, not wall-clock time
 
-        // Exponential backoff
+        // Exponential backoff calculation
         backoff_ms = (backoff_ms * 2).min(max_backoff);
 
         assert!(attempt < 5, "Should complete attempts");
     }
 
+    // Verify exponential growth: 10, 20, 40, 80, 100
+    assert_eq!(backoff_values, vec![10, 20, 40, 80, 100]);
     assert_eq!(backoff_ms, max_backoff);
 }
 
 #[tokio::test]
 async fn test_recovery_with_circuit_breaker() {
-    // Test circuit breaker pattern
-    #[derive(Debug, PartialEq)]
+    // Test circuit breaker pattern with event-driven state transitions
+    use tokio::sync::watch;
+    
+    #[derive(Debug, PartialEq, Clone)]
     enum CircuitState {
         Closed,
         Open,
         HalfOpen,
     }
 
-    let mut circuit = CircuitState::Closed;
+    let (state_tx, mut state_rx) = watch::channel(CircuitState::Closed);
     let failure_count = Arc::new(AtomicUsize::new(0));
     let threshold = 3;
 
@@ -162,28 +190,31 @@ async fn test_recovery_with_circuit_breaker() {
     for _ in 0..threshold {
         failure_count.fetch_add(1, Ordering::Relaxed);
         if failure_count.load(Ordering::Relaxed) >= threshold {
-            circuit = CircuitState::Open;
+            state_tx.send(CircuitState::Open).unwrap();
         }
     }
 
-    assert_eq!(circuit, CircuitState::Open);
+    // Wait for state change to Open
+    state_rx.changed().await.unwrap();
+    assert_eq!(*state_rx.borrow(), CircuitState::Open);
 
-    // Wait and try half-open
-    tokio::time::sleep(Duration::from_millis(10)).await;
-    circuit = CircuitState::HalfOpen;
-    assert_eq!(circuit, CircuitState::HalfOpen);
+    // Simulate timer/recovery event triggering half-open state
+    state_tx.send(CircuitState::HalfOpen).unwrap();
+    state_rx.changed().await.unwrap();
+    assert_eq!(*state_rx.borrow(), CircuitState::HalfOpen);
 
-    // Success in half-open state
-    circuit = CircuitState::Closed;
+    // Success in half-open state - close circuit
+    state_tx.send(CircuitState::Closed).unwrap();
     failure_count.store(0, Ordering::Relaxed);
 
-    assert_eq!(circuit, CircuitState::Closed);
+    state_rx.changed().await.unwrap();
+    assert_eq!(*state_rx.borrow(), CircuitState::Closed);
     assert_eq!(failure_count.load(Ordering::Relaxed), 0);
 }
 
 #[tokio::test]
 async fn test_recovery_from_deadlock_prevention() {
-    // Test deadlock prevention with timeout
+    // Test deadlock prevention with timeout - demonstrates proper timeout usage
     use tokio::sync::Mutex;
 
     let lock1 = Arc::new(Mutex::new(0));
@@ -193,10 +224,11 @@ async fn test_recovery_from_deadlock_prevention() {
     let l2 = lock2.clone();
 
     let handle = tokio::spawn(async move {
-        // Try to acquire locks with timeout
+        // Try to acquire locks with timeout to prevent deadlock
         match tokio::time::timeout(Duration::from_millis(50), async {
             let _g1 = l1.lock().await;
-            tokio::time::sleep(Duration::from_micros(100)).await;
+            // Yield to test interleaving (not sleep for timing)
+            tokio::task::yield_now().await;
             let _g2 = l2.lock().await;
         })
         .await
@@ -207,6 +239,7 @@ async fn test_recovery_from_deadlock_prevention() {
     });
 
     let result = handle.await.unwrap();
+    // Either succeeds (locks acquired) or times out (deadlock prevented)
     assert!(result.is_ok() || result.is_err());
 }
 

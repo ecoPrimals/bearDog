@@ -1,0 +1,37 @@
+[package]
+name = "beardog-client"
+version = "0.9.0"
+edition = "2021"
+authors = ["BearDog Team"]
+description = "HTTP client library for BearDog lineage API integration"
+license = "AGPL-3.0"
+repository = "https://github.com/eastgate-software/beardog"
+readme = "README.md"
+keywords = ["beardog", "lineage", "client", "api", "sovereignty"]
+categories = ["network-programming", "api-bindings", "cryptography"]
+
+[dependencies]
+# HTTP client
+reqwest = { version = "0.12", features = ["json"] }
+
+# Async runtime
+tokio = { version = "1.43", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0"
+
+# BearDog types
+beardog-genetics = { version = "0.9.0", path = "../beardog-genetics" }
+
+# Logging
+tracing = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.0"
+

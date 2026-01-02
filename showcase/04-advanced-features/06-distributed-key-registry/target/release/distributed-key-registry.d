@@ -1,1 +1,0 @@
-/home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/06-distributed-key-registry/target/release/distributed-key-registry: /home/eastgate/Development/ecoPrimals/beardog/showcase/04-advanced-features/06-distributed-key-registry/src/main.rs

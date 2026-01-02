@@ -61,6 +61,7 @@ pub mod genesis;
 pub mod genesis_types;
 pub mod key_derivation;
 pub mod lineage_chain;
+pub mod lineage_id;
 pub mod lineage_proof;
 pub mod manager;
 pub mod types;
@@ -74,6 +75,7 @@ pub use genesis_types::{
 };
 pub use key_derivation::LineageKeyDerivation;
 pub use lineage_chain::LineageChainManager;
+pub use lineage_id::LineageID;
 pub use lineage_proof::LineageProofManager;
 pub use manager::BirdSongManager;
 pub use types::{

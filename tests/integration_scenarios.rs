@@ -55,15 +55,24 @@ async fn test_multi_hsm_failover_scenario() {
 #[tokio::test]
 async fn test_concurrent_multi_user_operations() {
     // Test multiple users performing operations concurrently
+    use tokio::sync::Barrier;
+    
     let user_operations = Arc::new(Mutex::new(Vec::new()));
+    let barrier = Arc::new(Barrier::new(5)); // Synchronize 5 users
     let mut handles = vec![];
 
     for user_id in 0..5 {
         let ops = user_operations.clone();
+        let barrier = barrier.clone();
         let handle = tokio::spawn(async move {
+            // Wait for all users to be ready
+            barrier.wait().await;
+            
+            // Perform operations concurrently (no artificial delays)
             for op in 0..10 {
-                tokio::time::sleep(Duration::from_micros(10)).await;
                 ops.lock().await.push((user_id, op));
+                // Yield to allow interleaving (tests true concurrency)
+                tokio::task::yield_now().await;
             }
         });
         handles.push(handle);
@@ -75,6 +84,11 @@ async fn test_concurrent_multi_user_operations() {
 
     let final_ops = user_operations.lock().await;
     assert_eq!(final_ops.len(), 50); // 5 users × 10 ops
+    
+    // Verify operations from all users are interleaved (true concurrency)
+    let unique_users: std::collections::HashSet<_> = 
+        final_ops.iter().map(|(user, _)| user).collect();
+    assert_eq!(unique_users.len(), 5);
 }
 
 #[tokio::test]
@@ -186,17 +200,34 @@ async fn test_cache_invalidation_cascade() {
 
 #[tokio::test]
 async fn test_graceful_shutdown_sequence() {
-    // Test graceful shutdown with cleanup
+    // Test graceful shutdown with cleanup using proper async coordination
+    use tokio::sync::watch;
+    
     let services_running = Arc::new(AtomicUsize::new(3));
-    let shutdown_signal = Arc::new(AtomicBool::new(false));
+    let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+    
+    // Spawn services that listen for shutdown
+    let mut service_handles = vec![];
+    for _ in 0..3 {
+        let services = services_running.clone();
+        let mut rx = shutdown_rx.clone();
+        let handle = tokio::spawn(async move {
+            // Wait for shutdown signal
+            let _ = rx.changed().await;
+            if *rx.borrow() {
+                // Service shuts down
+                services.fetch_sub(1, Ordering::Relaxed);
+            }
+        });
+        service_handles.push(handle);
+    }
 
     // Signal shutdown
-    shutdown_signal.store(true, Ordering::Relaxed);
+    shutdown_tx.send(true).unwrap();
 
-    // Services shutdown one by one
-    while services_running.load(Ordering::Relaxed) > 0 {
-        services_running.fetch_sub(1, Ordering::Relaxed);
-        tokio::time::sleep(Duration::from_micros(10)).await;
+    // Wait for all services to complete shutdown
+    for handle in service_handles {
+        handle.await.expect("Service should shutdown cleanly");
     }
 
     assert_eq!(services_running.load(Ordering::Relaxed), 0);

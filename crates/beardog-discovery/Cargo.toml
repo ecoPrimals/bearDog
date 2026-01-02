@@ -5,6 +5,10 @@ edition = "2021"
 authors = ["BearDog Team"]
 description = "Capability-based service discovery for BearDog - zero hardcoded knowledge"
 license = "AGPL-3.0"
+repository = "https://github.com/eastgate-software/beardog"
+readme = "README.md"
+keywords = ["discovery", "service-discovery", "mdns", "dns-sd", "consul"]
+categories = ["network-programming", "development-tools"]
 
 [dependencies]
 # Core async runtime
@@ -40,6 +44,7 @@ url = "2.5"
 
 # Network utilities
 local-ip-address = "0.6"
+hostname = "0.4"
 
 [dev-dependencies]
 tokio-test = "0.4"
