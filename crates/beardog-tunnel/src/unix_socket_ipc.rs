@@ -636,11 +636,18 @@ impl UnixSocketIpcServer {
                     .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
                     .unwrap_or_else(|_| "unknown".to_string());
                 
-                info!("🆔 Identity requested - family: {}, node: {}", family_id, node_id);
+                // Generate encryption tag for discovery/federation
+                // Format: beardog:family:{family_id} for family-based federation
+                let encryption_tag = format!("beardog:family:{}", family_id);
+                
+                info!("🆔 Identity requested - family: {}, node: {}, encryption_tag: {}", 
+                    family_id, node_id, encryption_tag);
+                
                 Ok(serde_json::json!({
                     "primal": "beardog",
                     "family": family_id,
                     "node": node_id,
+                    "encryption_tag": encryption_tag,
                     "version": env!("CARGO_PKG_VERSION"),
                 }))
             }
@@ -741,11 +748,15 @@ impl UnixSocketIpcServer {
                     .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
                     .unwrap_or_else(|_| "unknown".to_string());
                 
+                // Generate encryption tag for consistency
+                let encryption_tag = format!("beardog:family:{}", family_id);
+                
                 info!("🌳 Lineage info requested - family: {}, node: {}", family_id, node_id);
                 Ok(serde_json::json!({
                     "primal": "beardog",
                     "family": family_id,
                     "node": node_id,
+                    "encryption_tag": encryption_tag,
                     "generation": 0,
                     "parent": null,
                     "capabilities": ["security", "encryption", "trust"],

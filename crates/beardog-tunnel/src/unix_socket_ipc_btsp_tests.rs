@@ -677,4 +677,110 @@ mod btsp_jsonrpc_unit_tests {
             assert!(!error.message.contains("Method not found"));
         }
     }
+
+    // ========================================================================
+    // UNIT TESTS - Identity API (Songbird compatibility)
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_identity_includes_encryption_tag() {
+        let temp_dir = TempDir::new().unwrap();
+        let socket_path = temp_dir.path().join("test-identity.sock");
+        let server = create_test_server(socket_path).await;
+
+        // Set environment for test
+        std::env::set_var("FAMILY_ID", "nat0");
+        std::env::set_var("NODE_ID", "node-alpha");
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "identity",
+            "id": 1
+        });
+
+        let response = server
+            .handle_jsonrpc_request(&request.to_string())
+            .await
+            .expect("Should handle identity request");
+        
+        assert!(response.error.is_none(), "Identity request should succeed");
+        
+        let result = response.result.expect("Should have result");
+        
+        // Verify all required fields for Songbird compatibility
+        assert_eq!(result["family"], "nat0", "Should have family field");
+        assert_eq!(result["node"], "node-alpha", "Should have node field");
+        assert_eq!(result["encryption_tag"], "beardog:family:nat0", 
+            "Should have encryption_tag field with correct format");
+        assert_eq!(result["primal"], "beardog", "Should identify as beardog");
+        
+        // Clean up
+        std::env::remove_var("FAMILY_ID");
+        std::env::remove_var("NODE_ID");
+    }
+
+    #[tokio::test]
+    async fn test_identity_alternative_method_names() {
+        let temp_dir = TempDir::new().unwrap();
+        let socket_path = temp_dir.path().join("test-identity-alt.sock");
+        let server = create_test_server(socket_path).await;
+
+        std::env::set_var("FAMILY_ID", "test_family");
+        std::env::set_var("NODE_ID", "test_node");
+
+        let methods = vec!["identity", "whoami", "get_identity"];
+
+        for method in methods {
+            let request = json!({
+                "jsonrpc": "2.0",
+                "method": method,
+                "id": 1
+            });
+
+            let response = server
+                .handle_jsonrpc_request(&request.to_string())
+                .await
+                .expect("Should handle request");
+            
+            assert!(response.error.is_none(), 
+                "Method '{}' should succeed", method);
+            
+            let result = response.result.expect("Should have result");
+            assert!(result["encryption_tag"].is_string(), 
+                "Method '{}' should return encryption_tag", method);
+        }
+
+        std::env::remove_var("FAMILY_ID");
+        std::env::remove_var("NODE_ID");
+    }
+
+    #[tokio::test]
+    async fn test_lineage_includes_encryption_tag() {
+        let temp_dir = TempDir::new().unwrap();
+        let socket_path = temp_dir.path().join("test-lineage.sock");
+        let server = create_test_server(socket_path).await;
+
+        std::env::set_var("FAMILY_ID", "nat0");
+        std::env::set_var("NODE_ID", "node-beta");
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "security.lineage",
+            "id": 1
+        });
+
+        let response = server
+            .handle_jsonrpc_request(&request.to_string())
+            .await
+            .expect("Should handle lineage request");
+        
+        assert!(response.error.is_none(), "Lineage request should succeed");
+        
+        let result = response.result.expect("Should have result");
+        assert_eq!(result["encryption_tag"], "beardog:family:nat0", 
+            "Lineage should include encryption_tag");
+
+        std::env::remove_var("FAMILY_ID");
+        std::env::remove_var("NODE_ID");
+    }
 }
