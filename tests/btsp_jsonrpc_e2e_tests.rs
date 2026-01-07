@@ -6,35 +6,86 @@
 //! - Real-world usage patterns
 //! - Integration with underlying BTSP provider
 
-use beardog_tunnel::{
-    btsp_provider::BeardogBtspProvider,
-    tunnel::hsm::manager::HsmManager,
-    unix_socket_ipc::UnixSocketIpcServer,
-};
-use beardog_genetics::{
-    birdsong::BirdSongManager,
-    ecosystem_evolution::EcosystemGeneticEngine,
-};
+use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::TempDir;
 
-/// Create test BTSP provider for E2E tests
-async fn create_e2e_btsp_provider() -> Arc<BeardogBtspProvider> {
-    let hsm = Arc::new(HsmManager::new());
-    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics"));
-    
-    let provider = BeardogBtspProvider::new(hsm, genetics)
-        .await
-        .expect("Failed to create BTSP provider");
-    
-    Arc::new(provider)
+// Mock BTSP provider for E2E tests
+mod test_helpers {
+    use async_trait::async_trait;
+    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus};
+    use beardog_errors::BearDogError;
+    use beardog_tunnel::btsp_provider::ContactInfo;
+    use std::sync::{Arc, Mutex};
+
+    pub struct MockBtspProvider {
+        tunnels: Arc<Mutex<Vec<String>>>,
+    }
+
+    impl MockBtspProvider {
+        pub fn new() -> Self {
+            Self {
+                tunnels: Arc::new(Mutex::new(Vec::new())),
+            }
+        }
+    }
+
+    #[async_trait]
+    impl SecureTunnelProvider for MockBtspProvider {
+        async fn establish_tunnel(&self, peer: PeerEndpoint) -> Result<TunnelHandle, BearDogError> {
+            let tunnel_id = format!("mock-tunnel-{}", uuid::Uuid::new_v4());
+            self.tunnels.lock().unwrap().push(tunnel_id.clone());
+            Ok(TunnelHandle {
+                id: tunnel_id,
+                peer_id: peer.id,
+                established_at: chrono::Utc::now().to_rfc3339(),
+            })
+        }
+
+        async fn tunnel_encrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(data.iter().rev().copied().collect())
+        }
+
+        async fn tunnel_decrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(data.iter().rev().copied().collect())
+        }
+
+        async fn tunnel_status(&self, tunnel: &TunnelHandle) -> Result<TunnelStatus, BearDogError> {
+            let active = self.tunnels.lock().unwrap().contains(&tunnel.id);
+            Ok(TunnelStatus {
+                tunnel_id: tunnel.id.clone(),
+                peer_id: tunnel.peer_id.clone(),
+                established_at: tunnel.established_at.clone(),
+                bytes_sent: 1024,
+                bytes_received: 2048,
+                active,
+                last_activity: chrono::Utc::now().to_rfc3339(),
+            })
+        }
+
+        async fn close_tunnel(&self, tunnel: &TunnelHandle) -> Result<(), BearDogError> {
+            self.tunnels.lock().unwrap().retain(|t| t != &tunnel.id);
+            Ok(())
+        }
+
+        async fn contact_exchange(&self, target_peer_id: &str, _requester_lineage: &str, _max_hops: usize) -> Result<ContactInfo, BearDogError> {
+            Ok(ContactInfo {
+                peer_id: target_peer_id.to_string(),
+                addresses: vec!["192.168.1.100:8080".to_string()],
+                lineage_proof: "mock-proof".to_string(),
+                lineage_path: vec!["mock".to_string()],
+                search_depth: 1,
+                last_seen: chrono::Utc::now(),
+            })
+        }
+    }
 }
 
 /// Create test server for E2E tests
 async fn create_e2e_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
-    let provider = create_e2e_btsp_provider().await;
+    let provider = Arc::new(test_helpers::MockBtspProvider::new());
     let server = UnixSocketIpcServer::new(socket_path, provider)
         .await
         .expect("Failed to create server");

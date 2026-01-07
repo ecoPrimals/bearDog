@@ -137,6 +137,9 @@ mod unix_socket_ipc_schema_tests;
 #[cfg(test)]
 mod unix_socket_ipc_btsp_tests;
 
+#[cfg(test)]
+mod test_helpers;
+
 // Re-export key types
 pub use simple_hsm_client::SimplePkcs11Client;
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};

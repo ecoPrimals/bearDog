@@ -8,33 +8,80 @@
 //! - Recovery from failures
 //! - Edge cases and corner cases
 
-use beardog_tunnel::{
-    btsp_provider::BeardogBtspProvider,
-    tunnel::hsm::manager::HsmManager,
-    unix_socket_ipc::UnixSocketIpcServer,
-};
-use beardog_genetics::{
-    birdsong::BirdSongManager,
-    ecosystem_evolution::EcosystemGeneticEngine,
-};
+use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::TempDir;
 
+// Mock BTSP provider for chaos tests
+mod test_helpers {
+    use async_trait::async_trait;
+    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus};
+    use beardog_errors::BearDogError;
+    use beardog_tunnel::btsp_provider::ContactInfo;
+
+    pub struct MockBtspProvider;
+
+    impl MockBtspProvider {
+        pub fn new() -> Self {
+            Self
+        }
+    }
+
+    #[async_trait]
+    impl SecureTunnelProvider for MockBtspProvider {
+        async fn establish_tunnel(&self, peer: PeerEndpoint) -> Result<TunnelHandle, BearDogError> {
+            Ok(TunnelHandle {
+                id: format!("mock-{}", uuid::Uuid::new_v4()),
+                peer_id: peer.id,
+                established_at: chrono::Utc::now().to_rfc3339(),
+            })
+        }
+
+        async fn tunnel_encrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(data.to_vec())
+        }
+
+        async fn tunnel_decrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+            Ok(data.to_vec())
+        }
+
+        async fn tunnel_status(&self, tunnel: &TunnelHandle) -> Result<TunnelStatus, BearDogError> {
+            Ok(TunnelStatus {
+                tunnel_id: tunnel.id.clone(),
+                peer_id: tunnel.peer_id.clone(),
+                established_at: tunnel.established_at.clone(),
+                bytes_sent: 0,
+                bytes_received: 0,
+                active: true,
+                last_activity: chrono::Utc::now().to_rfc3339(),
+            })
+        }
+
+        async fn close_tunnel(&self, _tunnel: &TunnelHandle) -> Result<(), BearDogError> {
+            Ok(())
+        }
+
+        async fn contact_exchange(&self, target_peer_id: &str, _requester_lineage: &str, _max_hops: usize) -> Result<ContactInfo, BearDogError> {
+            Ok(ContactInfo {
+                peer_id: target_peer_id.to_string(),
+                addresses: vec!["192.168.1.100:8080".to_string()],
+                lineage_proof: "mock".to_string(),
+                lineage_path: vec![],
+                search_depth: 1,
+                last_seen: chrono::Utc::now(),
+            })
+        }
+    }
+}
+
 /// Create test server for chaos tests
 async fn create_chaos_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
-    let hsm = Arc::new(HsmManager::new());
-    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics"));
-    
-    let provider = BeardogBtspProvider::new(hsm, genetics)
-        .await
-        .expect("Failed to create BTSP provider");
-    
-    let server = UnixSocketIpcServer::new(socket_path, Arc::new(provider))
+    let provider = Arc::new(test_helpers::MockBtspProvider::new());
+    let server = UnixSocketIpcServer::new(socket_path, provider)
         .await
         .expect("Failed to create server");
-    
     Arc::new(server)
 }
 

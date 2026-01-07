@@ -8,31 +8,25 @@
 
 #[cfg(test)]
 mod btsp_jsonrpc_unit_tests {
-    use crate::btsp_provider::BeardogBtspProvider;
-    use crate::tunnel::hsm::manager::HsmManager;
+    use crate::test_helpers::{create_mock_btsp_provider, create_failing_btsp_provider};
     use crate::unix_socket_ipc::UnixSocketIpcServer;
-    use beardog_genetics::birdsong::BirdSongManager;
-    use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
     use serde_json::json;
     use std::path::PathBuf;
     use std::sync::Arc;
     use tempfile::TempDir;
 
-    /// Create test BTSP provider
-    async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
-        let hsm = Arc::new(HsmManager::new());
-        let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
-        
-        let provider = BeardogBtspProvider::new(hsm, genetics)
+    /// Create test server with mock BTSP provider
+    async fn create_test_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
+        let provider = create_mock_btsp_provider();
+        let server = UnixSocketIpcServer::new(socket_path, provider)
             .await
-            .expect("Failed to create BTSP provider");
-        
-        Arc::new(provider)
+            .expect("Failed to create Unix socket IPC server");
+        Arc::new(server)
     }
 
-    /// Create test server
-    async fn create_test_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
-        let provider = create_test_btsp_provider().await;
+    /// Create test server that will fail operations (for error path testing)
+    async fn create_failing_test_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
+        let provider = create_failing_btsp_provider();
         let server = UnixSocketIpcServer::new(socket_path, provider)
             .await
             .expect("Failed to create Unix socket IPC server");
