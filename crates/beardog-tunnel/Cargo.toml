@@ -81,6 +81,7 @@ tokio-test = "0.4"
 futures = "0.3"
 rand = "0.8"
 serial_test = "3.0"
+tempfile = "3.8"
 
 [features]
 zero-cost-architecture = []

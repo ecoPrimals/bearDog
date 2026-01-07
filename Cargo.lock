@@ -1105,6 +1105,7 @@ dependencies = [
  "sha2 0.10.9",
  "sha3",
  "tarpc",
+ "tempfile",
  "thiserror 1.0.69",
  "tokio",
  "tokio-rustls 0.24.1",
