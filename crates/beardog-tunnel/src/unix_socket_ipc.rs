@@ -424,7 +424,7 @@ impl UnixSocketIpcServer {
     }
     
     /// Handle a JSON-RPC request
-    async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
+    pub(crate) async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
         debug!("→ JSON-RPC Request: {}", request_str.trim());
         
         // Parse JSON-RPC request
@@ -489,11 +489,13 @@ impl UnixSocketIpcServer {
             }
             ("GET", "/capabilities") => {
                 Ok(serde_json::json!({
-                    "capabilities": ["encryption", "trust_evaluation", "key_management", "signatures"],
+                    "capabilities": ["encryption", "trust_evaluation", "key_management", "signatures", "btsp"],
                     "version": env!("CARGO_PKG_VERSION"),
                     "supported_protocols": ["json-rpc", "http"],
                     "recommended_protocol": "json-rpc",
-                    "security_warning": "HTTP has lower security level than JSON-RPC"
+                    "security_warning": "HTTP has lower security level than JSON-RPC",
+                    "btsp_enabled": true,
+                    "btsp_methods": ["contact_exchange", "tunnel_establish", "tunnel_encrypt", "tunnel_decrypt", "tunnel_status", "tunnel_close"]
                 }))
             }
             ("GET", "/metrics/security") => {
@@ -609,10 +611,17 @@ impl UnixSocketIpcServer {
                             "type": "trust",
                             "version": "1.0",
                             "methods": ["evaluate", "lineage"],
+                        },
+                        {
+                            "type": "btsp",
+                            "version": "1.0",
+                            "methods": ["contact_exchange", "tunnel_establish", "tunnel_encrypt", "tunnel_decrypt", "tunnel_status", "tunnel_close"],
+                            "description": "BearDog Tunnel Security Protocol - VPN-free P2P mesh via genetic lineage"
                         }
                     ],
                     "version": env!("CARGO_PKG_VERSION"),
                     "protocols": ["tarpc", "json-rpc", "http"],
+                    "btsp_enabled": true,
                 }))
             }
             
@@ -826,8 +835,230 @@ impl UnixSocketIpcServer {
                 }
             }
             
+            // ========================================================================
+            // BTSP (BearDog Tunnel Security Protocol) METHODS
+            // ========================================================================
+            
+            // BTSP Contact Exchange - Discover peer addresses via genetic lineage
+            ("beardog", "/btsp/contact/exchange") | ("btsp", "contact_exchange") | ("btsp", "contact/exchange") => {
+                info!("🔍 BTSP Contact Exchange requested");
+                
+                let params = params.ok_or("Missing params for contact exchange")?;
+                
+                // Extract parameters
+                let target_peer_id = params.get("target_peer_id")
+                    .or_else(|| params.get("peer_id"))
+                    .and_then(|v| v.as_str())
+                    .ok_or("Missing target_peer_id")?;
+                    
+                let requester_lineage = params.get("requester_lineage")
+                    .or_else(|| params.get("lineage"))
+                    .and_then(|v| v.as_str())
+                    .ok_or("Missing requester_lineage")?;
+                    
+                let max_hops = params.get("max_hops")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(3) as usize;
+                
+                // Call BTSP provider's contact exchange
+                match self.btsp_provider.contact_exchange(target_peer_id, requester_lineage, max_hops).await {
+                    Ok(contact_info) => {
+                        info!("✅ Contact exchange successful for peer: {}", target_peer_id);
+                        Ok(serde_json::to_value(contact_info).map_err(|e| format!("Serialization error: {}", e))?)
+                    }
+                    Err(e) => {
+                        warn!("⚠️  Contact exchange failed: {}", e);
+                        Err(format!("Contact exchange failed: {}", e))
+                    }
+                }
+            }
+            
+            // BTSP Tunnel Establish - Create secure tunnel with peer
+            ("beardog", "/btsp/tunnel/establish") | ("btsp", "tunnel_establish") | ("btsp", "tunnel/establish") => {
+                info!("🔒 BTSP Tunnel Establish requested");
+                
+                let params = params.ok_or("Missing params for tunnel establish")?;
+                
+                // Parse PeerEndpoint from params
+                let peer: beardog_capabilities::traits::PeerEndpoint = serde_json::from_value(params.clone())
+                    .map_err(|e| format!("Invalid peer endpoint: {}", e))?;
+                
+                // Establish tunnel using the trait method
+                use beardog_capabilities::traits::SecureTunnelProvider;
+                match self.btsp_provider.establish_tunnel(peer).await {
+                    Ok(handle) => {
+                        info!("✅ BTSP tunnel established: {}", handle.id);
+                        Ok(serde_json::to_value(handle).map_err(|e| format!("Serialization error: {}", e))?)
+                    }
+                    Err(e) => {
+                        warn!("⚠️  Tunnel establish failed: {}", e);
+                        Err(format!("Tunnel establish failed: {}", e))
+                    }
+                }
+            }
+            
+            // BTSP Tunnel Encrypt - Encrypt data through tunnel
+            ("beardog", "/btsp/tunnel/encrypt") | ("btsp", "tunnel_encrypt") | ("btsp", "tunnel/encrypt") => {
+                info!("🔒 BTSP Tunnel Encrypt requested");
+                
+                let params = params.ok_or("Missing params for tunnel encrypt")?;
+                
+                // Extract tunnel handle
+                let tunnel: beardog_capabilities::traits::TunnelHandle = serde_json::from_value(
+                    params.get("tunnel")
+                        .ok_or("Missing tunnel handle")?
+                        .clone()
+                ).map_err(|e| format!("Invalid tunnel handle: {}", e))?;
+                
+                // Extract data (base64 encoded)
+                let data_b64 = params.get("data")
+                    .and_then(|v| v.as_str())
+                    .ok_or("Missing data")?;
+                    
+                let data = base64::engine::general_purpose::STANDARD
+                    .decode(data_b64)
+                    .map_err(|e| format!("Invalid base64 data: {}", e))?;
+                
+                // Encrypt using the trait method
+                use beardog_capabilities::traits::SecureTunnelProvider;
+                match self.btsp_provider.tunnel_encrypt(&tunnel, &data).await {
+                    Ok(ciphertext) => {
+                        info!("✅ Data encrypted for tunnel: {}", tunnel.id);
+                        let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(&ciphertext);
+                        Ok(serde_json::json!({
+                            "ciphertext": ciphertext_b64
+                        }))
+                    }
+                    Err(e) => {
+                        warn!("⚠️  Tunnel encrypt failed: {}", e);
+                        Err(format!("Tunnel encrypt failed: {}", e))
+                    }
+                }
+            }
+            
+            // BTSP Tunnel Decrypt - Decrypt data from tunnel
+            ("beardog", "/btsp/tunnel/decrypt") | ("btsp", "tunnel_decrypt") | ("btsp", "tunnel/decrypt") => {
+                info!("🔓 BTSP Tunnel Decrypt requested");
+                
+                let params = params.ok_or("Missing params for tunnel decrypt")?;
+                
+                // Extract tunnel handle
+                let tunnel: beardog_capabilities::traits::TunnelHandle = serde_json::from_value(
+                    params.get("tunnel")
+                        .ok_or("Missing tunnel handle")?
+                        .clone()
+                ).map_err(|e| format!("Invalid tunnel handle: {}", e))?;
+                
+                // Extract data (base64 encoded)
+                let data_b64 = params.get("data")
+                    .and_then(|v| v.as_str())
+                    .ok_or("Missing data")?;
+                    
+                let data = base64::engine::general_purpose::STANDARD
+                    .decode(data_b64)
+                    .map_err(|e| format!("Invalid base64 data: {}", e))?;
+                
+                // Decrypt using the trait method
+                use beardog_capabilities::traits::SecureTunnelProvider;
+                match self.btsp_provider.tunnel_decrypt(&tunnel, &data).await {
+                    Ok(plaintext) => {
+                        info!("✅ Data decrypted for tunnel: {}", tunnel.id);
+                        let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(&plaintext);
+                        Ok(serde_json::json!({
+                            "plaintext": plaintext_b64
+                        }))
+                    }
+                    Err(e) => {
+                        warn!("⚠️  Tunnel decrypt failed: {}", e);
+                        Err(format!("Tunnel decrypt failed: {}", e))
+                    }
+                }
+            }
+            
+            // BTSP Tunnel Status - Get tunnel status
+            ("beardog", "/btsp/tunnel/status") | ("btsp", "tunnel_status") | ("btsp", "tunnel/status") => {
+                info!("📊 BTSP Tunnel Status requested");
+                
+                let params = params.ok_or("Missing params for tunnel status")?;
+                
+                // Extract tunnel handle or ID
+                let tunnel_handle = if let Some(tunnel) = params.get("tunnel") {
+                    // Full tunnel handle provided
+                    serde_json::from_value(tunnel.clone())
+                        .map_err(|e| format!("Invalid tunnel handle: {}", e))?
+                } else {
+                    // Just ID provided - create minimal handle
+                    let tunnel_id = params.get("tunnel_id")
+                        .or_else(|| params.get("id"))
+                        .and_then(|v| v.as_str())
+                        .ok_or("Missing tunnel_id or tunnel handle")?;
+                    
+                    beardog_capabilities::traits::TunnelHandle {
+                        id: tunnel_id.to_string(),
+                        peer_id: "unknown".to_string(), // Will be looked up by provider
+                        established_at: Utc::now().to_rfc3339(),
+                    }
+                };
+                
+                // Get status
+                use beardog_capabilities::traits::SecureTunnelProvider;
+                match self.btsp_provider.tunnel_status(&tunnel_handle).await {
+                    Ok(status) => {
+                        info!("✅ Tunnel status retrieved: {}", tunnel_handle.id);
+                        Ok(serde_json::to_value(status).map_err(|e| format!("Serialization error: {}", e))?)
+                    }
+                    Err(e) => {
+                        warn!("⚠️  Tunnel status failed: {}", e);
+                        Err(format!("Tunnel status failed: {}", e))
+                    }
+                }
+            }
+            
+            // BTSP Tunnel Close - Close tunnel
+            ("beardog", "/btsp/tunnel/close") | ("btsp", "tunnel_close") | ("btsp", "tunnel/close") => {
+                info!("🔒 BTSP Tunnel Close requested");
+                
+                let params = params.ok_or("Missing params for tunnel close")?;
+                
+                // Extract tunnel handle or ID
+                let tunnel_handle = if let Some(tunnel) = params.get("tunnel") {
+                    // Full tunnel handle provided
+                    serde_json::from_value(tunnel.clone())
+                        .map_err(|e| format!("Invalid tunnel handle: {}", e))?
+                } else {
+                    // Just ID provided - create minimal handle
+                    let tunnel_id = params.get("tunnel_id")
+                        .or_else(|| params.get("id"))
+                        .and_then(|v| v.as_str())
+                        .ok_or("Missing tunnel_id or tunnel handle")?;
+                    
+                    beardog_capabilities::traits::TunnelHandle {
+                        id: tunnel_id.to_string(),
+                        peer_id: "unknown".to_string(), // Will be looked up by provider
+                        established_at: Utc::now().to_rfc3339(),
+                    }
+                };
+                
+                // Close tunnel
+                use beardog_capabilities::traits::SecureTunnelProvider;
+                match self.btsp_provider.close_tunnel(&tunnel_handle).await {
+                    Ok(_) => {
+                        info!("✅ Tunnel closed: {}", tunnel_handle.id);
+                        Ok(serde_json::json!({
+                            "success": true,
+                            "tunnel_id": tunnel_handle.id,
+                            "message": "Tunnel closed successfully"
+                        }))
+                    }
+                    Err(e) => {
+                        warn!("⚠️  Tunnel close failed: {}", e);
+                        Err(format!("Tunnel close failed: {}", e))
+                    }
+                }
+            }
+            
             // Unknown method
-            _ => Err(format!("Method not found: {}.{} (try: ping, capabilities, identity, security.evaluate, encryption.encrypt)", namespace, action)),
+            _ => Err(format!("Method not found: {}.{} (try: ping, capabilities, identity, security.evaluate, encryption.encrypt, btsp.contact_exchange, btsp.tunnel_establish)", namespace, action)),
         }
     }
 }

@@ -134,6 +134,8 @@ pub mod tarpc_service;
 mod unix_socket_ipc_logic_tests;
 #[cfg(test)]
 mod unix_socket_ipc_schema_tests;
+#[cfg(test)]
+mod unix_socket_ipc_btsp_tests;
 
 // Re-export key types
 pub use simple_hsm_client::SimplePkcs11Client;
