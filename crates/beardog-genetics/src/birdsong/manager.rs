@@ -214,6 +214,128 @@ impl BirdSongManager {
     }
 
     // =============================================================================
+    // Discovery Encryption (Family-Based, Simpler than Lineage)
+    // =============================================================================
+
+    /// Encrypt discovery packet for a specific family
+    ///
+    /// Uses family-specific keys derived from family_id. Only towers with the
+    /// same family ID can decrypt. This is simpler than lineage-based encryption
+    /// and perfect for UDP discovery broadcasts.
+    ///
+    /// # Arguments
+    ///
+    /// * `plaintext` - Discovery message to encrypt
+    /// * `family_id` - Family ID for key derivation
+    ///
+    /// # Returns
+    ///
+    /// Encrypted bytes with nonce prepended (nonce + ciphertext)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if encryption fails
+    pub fn encrypt_discovery_for_family(
+        &self,
+        plaintext: &[u8],
+        family_id: &str,
+    ) -> Result<Vec<u8>, BearDogError> {
+        use chacha20poly1305::{
+            aead::{rand_core::RngCore, Aead, KeyInit, OsRng},
+            ChaCha20Poly1305, Nonce,
+        };
+        use sha3::{Digest, Sha3_256};
+
+        // Derive 256-bit key from family_id using SHA3
+        let mut hasher = Sha3_256::new();
+        hasher.update(b"beardog:birdsong:discovery:v1:");
+        hasher.update(family_id.as_bytes());
+        let key_bytes = hasher.finalize();
+
+        // Create cipher
+        let cipher = ChaCha20Poly1305::new_from_slice(&key_bytes)
+            .map_err(|e| BearDogError::crypto_error(format!("Failed to create cipher: {}", e)))?;
+
+        // Generate random nonce (ChaCha20-Poly1305 uses 12 bytes)
+        let mut nonce_bytes = [0u8; 12];
+        OsRng.fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        // Encrypt
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext)
+            .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {}", e)))?;
+
+        // Prepend nonce to ciphertext (nonce is public, safe to transmit)
+        let mut result = nonce_bytes.to_vec();
+        result.extend_from_slice(&ciphertext);
+
+        Ok(result)
+    }
+
+    /// Decrypt discovery packet from a specific family
+    ///
+    /// Attempts to decrypt using family-specific keys. Will fail if:
+    /// - Different family (different keys)
+    /// - Corrupted ciphertext
+    /// - Invalid authentication tag
+    ///
+    /// # Arguments
+    ///
+    /// * `encrypted` - Encrypted bytes (nonce + ciphertext)
+    /// * `family_id` - Family ID for key derivation
+    ///
+    /// # Returns
+    ///
+    /// Decrypted plaintext bytes
+    ///
+    /// # Errors
+    ///
+    /// Returns error if decryption fails (likely different family or corrupted data)
+    pub fn decrypt_discovery_from_family(
+        &self,
+        encrypted: &[u8],
+        family_id: &str,
+    ) -> Result<Vec<u8>, BearDogError> {
+        use chacha20poly1305::{
+            aead::{Aead, KeyInit},
+            ChaCha20Poly1305, Nonce,
+        };
+        use sha3::{Digest, Sha3_256};
+
+        // Check minimum length (nonce is 12 bytes + at least some ciphertext)
+        if encrypted.len() < 13 {
+            return Err(BearDogError::validation(
+                "Encrypted data too short (need nonce + ciphertext)",
+            ));
+        }
+
+        // Derive same 256-bit key from family_id
+        let mut hasher = Sha3_256::new();
+        hasher.update(b"beardog:birdsong:discovery:v1:");
+        hasher.update(family_id.as_bytes());
+        let key_bytes = hasher.finalize();
+
+        // Create cipher
+        let cipher = ChaCha20Poly1305::new_from_slice(&key_bytes)
+            .map_err(|e| BearDogError::crypto_error(format!("Failed to create cipher: {}", e)))?;
+
+        // Extract nonce (first 12 bytes) and ciphertext (rest)
+        let (nonce_bytes, ciphertext) = encrypted.split_at(12);
+        let nonce = Nonce::from_slice(nonce_bytes);
+
+        // Decrypt
+        let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|e| {
+              BearDogError::crypto_error(format!(
+                "Decryption failed (likely different family): {}",
+                e
+            ))
+        })?;
+
+        Ok(plaintext)
+    }
+
+    // =============================================================================
     // Key Distribution (Phase 1-2 Requirement)
     // =============================================================================
 

@@ -257,8 +257,6 @@ impl BirdSongEncryption {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::birdsong::lineage_chain::LineageChainManager;
-    use crate::birdsong::lineage_proof::LineageProofManager;
     use crate::birdsong::types::{LineageHint, LineageProof};
     use std::sync::Arc;
 

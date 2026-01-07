@@ -32,4 +32,3 @@ pub enum BearDogClientError {
     #[error("Connection error: {0}")]
     ConnectionError(String),
 }
-

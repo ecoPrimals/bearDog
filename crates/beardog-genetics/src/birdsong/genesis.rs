@@ -15,6 +15,9 @@ use super::genesis_types::{
 };
 use super::{LineageChain, LineageChainManager, LineageNode, LineageProofManager};
 
+/// Type alias for hardware entropy provider functions
+type HardwareEntropyFn = Arc<dyn Fn() -> Result<Vec<u8>, BearDogError> + Send + Sync>;
+
 /// Genesis lineage provider for establishing cryptographic lineage
 /// during physical witness ceremonies
 ///
@@ -44,9 +47,11 @@ use super::{LineageChain, LineageChainManager, LineageNode, LineageProofManager}
 /// ```
 pub struct GenesisLineageProvider {
     /// Lineage chain manager for creating lineage structures
+    #[allow(dead_code)] // Reserved for future lineage chain operations
     lineage_chain_mgr: Arc<LineageChainManager>,
 
     /// Lineage proof manager for verification
+    #[allow(dead_code)] // Reserved for future proof verification
     lineage_proof_mgr: Arc<LineageProofManager>,
 
     /// Store of established genetic lineages (node_id -> lineage)
@@ -59,7 +64,7 @@ pub struct GenesisLineageProvider {
     /// Hardware entropy source (optional, for production security)
     /// When available, used to salt genetic ID generation
     #[allow(dead_code)] // Used conditionally based on feature flags
-    hardware_entropy: Option<Arc<dyn Fn() -> Result<Vec<u8>, BearDogError> + Send + Sync>>,
+    hardware_entropy: Option<HardwareEntropyFn>,
 
     /// Minimum trust level required for genesis
     min_trust_level: TrustLevel,
@@ -223,7 +228,7 @@ impl GenesisLineageProvider {
 
         let start_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
         // 1. Verify physical channel proof
@@ -273,7 +278,7 @@ impl GenesisLineageProvider {
                     new_node_id,
                     (std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
+                        .unwrap_or_else(|_| std::time::Duration::from_secs(0))
                         .as_secs()
                         - start_time)
                         * 1000
@@ -284,7 +289,7 @@ impl GenesisLineageProvider {
                     physical_proof: physical_proof.clone(),
                     completed_at: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
+                        .unwrap_or_else(|_| std::time::Duration::from_secs(0))
                         .as_secs(),
                     success: true,
                     error: None,
@@ -321,7 +326,7 @@ impl GenesisLineageProvider {
                     physical_proof: physical_proof.clone(),
                     completed_at: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
+                        .unwrap_or_else(|_| std::time::Duration::from_secs(0))
                         .as_secs(),
                     success: false,
                     error: Some(e.to_string()),

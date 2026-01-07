@@ -3,7 +3,6 @@
 //! These tests cover security monitoring lifecycle, configuration,
 //! and state management.
 
-#![cfg(test)]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use super::*;

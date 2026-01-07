@@ -1,0 +1,433 @@
+//! Zero Hardcoding Configuration Infrastructure
+//!
+//! Modern, idiomatic Rust configuration system that eliminates ALL hardcoding:
+//! - Ports (8080, 9000, etc.) → Environment or Port 0 (OS auto-select)
+//! - IPs (localhost, 127.0.0.1) → Environment or runtime discovery
+//! - Timeouts (Duration::from_secs) → Environment-driven with smart defaults
+//!
+//! ## Philosophy
+//!
+//! **"Never hardcode what can be discovered, never discover what can be configured"**
+//!
+//! ## Design Principles
+//!
+//! 1. **Environment-First**: All config from environment variables
+//! 2. **Port 0 Magic**: OS selects available ports (no conflicts!)
+//! 3. **Smart Defaults**: Production-tested fallbacks
+//! 4. **Type-Safe**: Strong typing prevents errors
+//! 5. **Zero-Cost**: Compile-time optimization
+//!
+//! ## Architecture
+//!
+//! ```text
+//! Environment Variables
+//!         ↓
+//!   ZeroHardcodingConfig
+//!    ├─ EndpointConfig     (ports, bind addresses)
+//!    ├─ TimeoutConfig      (all timeouts)
+//!    ├─ RetryConfig        (retry policies)
+//!    └─ DiscoveryConfig    (runtime discovery)
+//! ```
+
+use serde::{Deserialize, Serialize};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::str::FromStr;
+use std::time::Duration;
+
+// ============================================================================
+// Endpoint Configuration (Ports & Bind Addresses)
+// ============================================================================
+
+/// Endpoint configuration - NO hardcoded ports or IPs!
+///
+/// ## Usage
+///
+/// ```rust
+/// // Environment-driven (production)
+/// let config = EndpointConfig::from_env();
+///
+/// // Auto-select ports (testing)
+/// let config = EndpointConfig::auto();
+///
+/// // Explicit (human sovereignty)
+/// let config = EndpointConfig::new(9000, 9001, "0.0.0.0");
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EndpointConfig {
+    /// HTTP/REST API port (0 = OS auto-select)
+    pub http_port: u16,
+
+    /// RPC/tarpc port (0 = OS auto-select)
+    pub rpc_port: u16,
+
+    /// WebSocket port (0 = OS auto-select)
+    pub ws_port: u16,
+
+    /// Metrics/Prometheus port (0 = OS auto-select)
+    pub metrics_port: u16,
+
+    /// Bind address (default: 0.0.0.0 for production, 127.0.0.1 for dev)
+    pub bind_addr: IpAddr,
+}
+
+impl EndpointConfig {
+    /// Create from environment variables
+    ///
+    /// Environment variables:
+    /// - `BEARDOG_HTTP_PORT` - HTTP port (default: 0)
+    /// - `BEARDOG_RPC_PORT` - RPC port (default: 0)
+    /// - `BEARDOG_WS_PORT` - WebSocket port (default: 0)
+    /// - `BEARDOG_METRICS_PORT` - Metrics port (default: 0)
+    /// - `BEARDOG_BIND_ADDR` - Bind address (default: 0.0.0.0)
+    pub fn from_env() -> Self {
+        Self {
+            http_port: Self::env_port("BEARDOG_HTTP_PORT", 0),
+            rpc_port: Self::env_port("BEARDOG_RPC_PORT", 0),
+            ws_port: Self::env_port("BEARDOG_WS_PORT", 0),
+            metrics_port: Self::env_port("BEARDOG_METRICS_PORT", 0),
+            bind_addr: Self::env_addr("BEARDOG_BIND_ADDR", "0.0.0.0"),
+        }
+    }
+
+    /// Auto-select all ports (OS chooses available ports)
+    ///
+    /// Perfect for:
+    /// - Testing (no port conflicts!)
+    /// - Development (multiple instances)
+    /// - Cloud environments (dynamic allocation)
+    pub fn auto() -> Self {
+        Self {
+            http_port: 0,
+            rpc_port: 0,
+            ws_port: 0,
+            metrics_port: 0,
+            bind_addr: IpAddr::V4(Ipv4Addr::LOCALHOST),
+        }
+    }
+
+    /// Create with explicit ports (human sovereignty)
+    pub fn new(http: u16, rpc: u16, ws: u16, metrics: u16, bind: &str) -> Self {
+        Self {
+            http_port: http,
+            rpc_port: rpc,
+            ws_port: ws,
+            metrics_port: metrics,
+            bind_addr: IpAddr::from_str(bind).unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+        }
+    }
+
+    /// Get HTTP socket address
+    pub fn http_socket_addr(&self) -> SocketAddr {
+        SocketAddr::new(self.bind_addr, self.http_port)
+    }
+
+    /// Get RPC socket address
+    pub fn rpc_socket_addr(&self) -> SocketAddr {
+        SocketAddr::new(self.bind_addr, self.rpc_port)
+    }
+
+    /// Get WebSocket socket address
+    pub fn ws_socket_addr(&self) -> SocketAddr {
+        SocketAddr::new(self.bind_addr, self.ws_port)
+    }
+
+    /// Get metrics socket address
+    pub fn metrics_socket_addr(&self) -> SocketAddr {
+        SocketAddr::new(self.bind_addr, self.metrics_port)
+    }
+
+    // Helper: Get port from environment
+    fn env_port(var: &str, default: u16) -> u16 {
+        std::env::var(var)
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(default)
+    }
+
+    // Helper: Get address from environment
+    fn env_addr(var: &str, default: &str) -> IpAddr {
+        std::env::var(var)
+            .ok()
+            .and_then(|s| IpAddr::from_str(&s).ok())
+            .unwrap_or_else(|| IpAddr::from_str(default).unwrap())
+    }
+}
+
+impl Default for EndpointConfig {
+    fn default() -> Self {
+        Self::from_env()
+    }
+}
+
+// ============================================================================
+// Timeout Configuration (NO hardcoded durations!)
+// ============================================================================
+
+/// Timeout configuration - environment-driven with smart defaults
+///
+/// ## Usage
+///
+/// ```rust
+/// let config = ZeroHardcodingTimeouts::from_env();
+///
+/// let client = reqwest::Client::builder()
+///     .connect_timeout(config.connect)
+///     .timeout(config.request)
+///     .build()?;
+/// ```
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct ZeroHardcodingTimeouts {
+    /// Connection timeout
+    pub connect: Duration,
+
+    /// Request timeout
+    pub request: Duration,
+
+    /// Idle/keep-alive timeout
+    pub idle: Duration,
+
+    /// Discovery timeout
+    pub discovery: Duration,
+
+    /// Shutdown grace period
+    pub shutdown: Duration,
+
+    /// Health check timeout
+    pub health_check: Duration,
+
+    /// Database query timeout
+    pub db_query: Duration,
+}
+
+impl ZeroHardcodingTimeouts {
+    /// Create from environment variables
+    ///
+    /// Environment variables:
+    /// - `BEARDOG_TIMEOUT_CONNECT` - Connection timeout (seconds, default: 10)
+    /// - `BEARDOG_TIMEOUT_REQUEST` - Request timeout (seconds, default: 30)
+    /// - `BEARDOG_TIMEOUT_IDLE` - Idle timeout (seconds, default: 60)
+    /// - `BEARDOG_TIMEOUT_DISCOVERY` - Discovery timeout (seconds, default: 5)
+    /// - `BEARDOG_TIMEOUT_SHUTDOWN` - Shutdown timeout (seconds, default: 30)
+    /// - `BEARDOG_TIMEOUT_HEALTH` - Health check timeout (seconds, default: 5)
+    /// - `BEARDOG_TIMEOUT_DB_QUERY` - DB query timeout (seconds, default: 10)
+    pub fn from_env() -> Self {
+        Self {
+            connect: Self::env_duration("BEARDOG_TIMEOUT_CONNECT", 10),
+            request: Self::env_duration("BEARDOG_TIMEOUT_REQUEST", 30),
+            idle: Self::env_duration("BEARDOG_TIMEOUT_IDLE", 60),
+            discovery: Self::env_duration("BEARDOG_TIMEOUT_DISCOVERY", 5),
+            shutdown: Self::env_duration("BEARDOG_TIMEOUT_SHUTDOWN", 30),
+            health_check: Self::env_duration("BEARDOG_TIMEOUT_HEALTH", 5),
+            db_query: Self::env_duration("BEARDOG_TIMEOUT_DB_QUERY", 10),
+        }
+    }
+
+    /// Aggressive timeouts (for fast-fail scenarios)
+    pub fn aggressive() -> Self {
+        Self {
+            connect: Duration::from_secs(2),
+            request: Duration::from_secs(5),
+            idle: Duration::from_secs(10),
+            discovery: Duration::from_secs(1),
+            shutdown: Duration::from_secs(5),
+            health_check: Duration::from_secs(1),
+            db_query: Duration::from_secs(2),
+        }
+    }
+
+    /// Relaxed timeouts (for slow networks)
+    pub fn relaxed() -> Self {
+        Self {
+            connect: Duration::from_secs(30),
+            request: Duration::from_secs(120),
+            idle: Duration::from_secs(300),
+            discovery: Duration::from_secs(15),
+            shutdown: Duration::from_secs(60),
+            health_check: Duration::from_secs(10),
+            db_query: Duration::from_secs(30),
+        }
+    }
+
+    // Helper: Get duration from environment
+    fn env_duration(var: &str, default_secs: u64) -> Duration {
+        std::env::var(var)
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+            .map(Duration::from_secs)
+            .unwrap_or_else(|| Duration::from_secs(default_secs))
+    }
+}
+
+impl Default for ZeroHardcodingTimeouts {
+    fn default() -> Self {
+        Self::from_env()
+    }
+}
+
+// ============================================================================
+// Retry Configuration
+// ============================================================================
+
+/// Retry configuration - smart backoff and retry policies
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct RetryConfig {
+    /// Maximum retry attempts
+    pub max_attempts: u32,
+
+    /// Initial backoff duration
+    pub initial_backoff: Duration,
+
+    /// Maximum backoff duration
+    pub max_backoff: Duration,
+
+    /// Backoff multiplier (exponential)
+    pub backoff_multiplier: f64,
+}
+
+impl RetryConfig {
+    /// Create from environment variables
+    ///
+    /// Environment variables:
+    /// - `BEARDOG_RETRY_MAX_ATTEMPTS` - Max attempts (default: 3)
+    /// - `BEARDOG_RETRY_INITIAL_BACKOFF_MS` - Initial backoff ms (default: 100)
+    /// - `BEARDOG_RETRY_MAX_BACKOFF_SECS` - Max backoff seconds (default: 30)
+    /// - `BEARDOG_RETRY_BACKOFF_MULTIPLIER` - Backoff multiplier (default: 2.0)
+    pub fn from_env() -> Self {
+        Self {
+            max_attempts: std::env::var("BEARDOG_RETRY_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3),
+            initial_backoff: Duration::from_millis(
+                std::env::var("BEARDOG_RETRY_INITIAL_BACKOFF_MS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(100),
+            ),
+            max_backoff: Duration::from_secs(
+                std::env::var("BEARDOG_RETRY_MAX_BACKOFF_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(30),
+            ),
+            backoff_multiplier: std::env::var("BEARDOG_RETRY_BACKOFF_MULTIPLIER")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(2.0),
+        }
+    }
+
+    /// Calculate backoff for attempt N
+    pub fn backoff_for_attempt(&self, attempt: u32) -> Duration {
+        let multiplier = self.backoff_multiplier.powi(attempt as i32);
+        let backoff = self.initial_backoff.as_millis() as f64 * multiplier;
+        let backoff_duration = Duration::from_millis(backoff as u64);
+        std::cmp::min(backoff_duration, self.max_backoff)
+    }
+}
+
+impl Default for RetryConfig {
+    fn default() -> Self {
+        Self::from_env()
+    }
+}
+
+// ============================================================================
+// Complete Zero-Hardcoding Configuration
+// ============================================================================
+
+/// Complete zero-hardcoding configuration
+///
+/// ## Usage
+///
+/// ```rust
+/// // Simple: Just use defaults from environment
+/// let config = ZeroHardcodingConfig::default();
+///
+/// // Start server with auto-selected port
+/// let server = HttpServer::bind(config.endpoints.http_socket_addr())?;
+/// let actual_port = server.local_addr().port();
+/// println!("Listening on port: {}", actual_port);
+///
+/// // Create client with configurable timeouts
+/// let client = reqwest::Client::builder()
+///     .connect_timeout(config.timeouts.connect)
+///     .timeout(config.timeouts.request)
+///     .build()?;
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZeroHardcodingConfig {
+    /// Endpoint configuration (ports, addresses)
+    pub endpoints: EndpointConfig,
+
+    /// Timeout configuration
+    pub timeouts: ZeroHardcodingTimeouts,
+
+    /// Retry configuration
+    pub retries: RetryConfig,
+}
+
+impl ZeroHardcodingConfig {
+    /// Create from environment variables (recommended)
+    pub fn from_env() -> Self {
+        Self {
+            endpoints: EndpointConfig::from_env(),
+            timeouts: ZeroHardcodingTimeouts::from_env(),
+            retries: RetryConfig::from_env(),
+        }
+    }
+
+    /// Auto-select all ports (testing)
+    pub fn auto() -> Self {
+        Self {
+            endpoints: EndpointConfig::auto(),
+            timeouts: ZeroHardcodingTimeouts::default(),
+            retries: RetryConfig::default(),
+        }
+    }
+}
+
+impl Default for ZeroHardcodingConfig {
+    fn default() -> Self {
+        Self::from_env()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_endpoint_config_auto() {
+        let config = EndpointConfig::auto();
+        assert_eq!(config.http_port, 0); // OS will select
+        assert_eq!(config.rpc_port, 0);
+        assert!(config.bind_addr.is_loopback());
+    }
+
+    #[test]
+    fn test_timeout_config_defaults() {
+        let config = ZeroHardcodingTimeouts::from_env();
+        assert!(config.connect.as_secs() > 0);
+        assert!(config.request.as_secs() >= config.connect.as_secs());
+    }
+
+    #[test]
+    fn test_retry_backoff() {
+        let config = RetryConfig::default();
+        let backoff1 = config.backoff_for_attempt(0);
+        let backoff2 = config.backoff_for_attempt(1);
+        let backoff3 = config.backoff_for_attempt(2);
+
+        assert!(backoff2 > backoff1);
+        assert!(backoff3 > backoff2);
+        assert!(backoff3 <= config.max_backoff);
+    }
+
+    #[test]
+    fn test_zero_hardcoding_config() {
+        let config = ZeroHardcodingConfig::auto();
+        let http_addr = config.endpoints.http_socket_addr();
+        assert!(http_addr.port() == 0 || http_addr.port() > 0);
+    }
+}

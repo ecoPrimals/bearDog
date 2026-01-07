@@ -3,7 +3,6 @@
 //! These tests cover ecosystem genetics, relationship evolution,
 //! and symbiosis patterns to increase test coverage.
 
-#![cfg(test)]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use super::engine::*;

@@ -115,13 +115,25 @@ pub mod btsp_provider;
 // TLS support for mTLS
 pub mod tls;
 
+// Generic IPC server - capability-based, primal-agnostic
+pub mod ipc_server;
+
 // BTSP HTTP API Server - Remote access for Songbird (legacy)
 #[cfg(feature = "btsp-api")]
 pub mod btsp_api_server;
 
-// Unified API Server - BTSP + Genesis + BirdSong + Lineage
+// Unified API Server - BTSP + Genesis + BirdSong + Lineage (OPTIONAL - HTTP)
 #[cfg(feature = "btsp-api")]
 pub mod api;
+
+// Unix socket IPC server (PRIMARY inter-primal communication)
+pub mod unix_socket_ipc;
+pub mod tarpc_service;
+
+#[cfg(test)]
+mod unix_socket_ipc_logic_tests;
+#[cfg(test)]
+mod unix_socket_ipc_schema_tests;
 
 // Re-export key types
 pub use simple_hsm_client::SimplePkcs11Client;

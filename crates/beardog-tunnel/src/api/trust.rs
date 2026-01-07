@@ -317,18 +317,14 @@ fn get_capabilities_for_level(level: TrustLevel) -> (Vec<String>, Vec<String>) {
             vec![],                // Nothing denied
         ),
         TrustLevel::None => (
-            vec![],         // Nothing allowed
+            vec![],                // Nothing allowed
             vec!["*".to_string()], // Everything denied
         ),
     }
 }
 
 /// Check if an operation is allowed given the capability lists
-fn is_operation_allowed(
-    operation: &str,
-    allowed: &[String],
-    denied: &[String],
-) -> bool {
+fn is_operation_allowed(operation: &str, allowed: &[String], denied: &[String]) -> bool {
     // Check denied first (deny takes precedence)
     for pattern in denied {
         if matches_capability_pattern(operation, pattern) {
@@ -463,87 +459,87 @@ async fn evaluate_trust(
         .map(|t| t.to_string());
 
     // Extract family ID from tag (beardog:family:a3f2:tower1 → a3f2)
-    let peer_family_id = peer_family_tag.as_ref().and_then(|tag| {
-        tag.split(':').nth(2).map(|s| s.to_string())
-    });
+    let peer_family_id = peer_family_tag
+        .as_ref()
+        .and_then(|tag| tag.split(':').nth(2).map(|s| s.to_string()));
 
     // Evaluate trust based on family relationship (progressive trust model)
-    let (decision, trust_level, confidence, reason, reason_code, metadata_value) = match (
-        &state.family_id,
-        peer_family_id,
-    ) {
-        // Both have families, same family → LIMITED trust (auto-accept for coordination only)
-        (Some(our_family), Some(peer_family)) if our_family == &peer_family => {
-            (
-                TrustDecision::AutoAccept,
-                TrustLevel::Limited, // Changed from High to Limited
-                1.0,
-                format!("Same genetic family ({}) - limited trust for coordination", our_family),
-                "same_genetic_family",
-                serde_json::json!({
-                    "same_family": true,
-                    "family_id": our_family,
-                    "provider": "beardog",
-                    "lineage_verified": true,
-                    "relationship": "sibling",
-                    "trust_model": "progressive"
-                }),
-            )
-        }
+    let (decision, trust_level, confidence, reason, reason_code, metadata_value) =
+        match (&state.family_id, peer_family_id) {
+            // Both have families, same family → LIMITED trust (auto-accept for coordination only)
+            (Some(our_family), Some(peer_family)) if our_family == &peer_family => {
+                (
+                    TrustDecision::AutoAccept,
+                    TrustLevel::Limited, // Changed from High to Limited
+                    1.0,
+                    format!(
+                        "Same genetic family ({}) - limited trust for coordination",
+                        our_family
+                    ),
+                    "same_genetic_family",
+                    serde_json::json!({
+                        "same_family": true,
+                        "family_id": our_family,
+                        "provider": "beardog",
+                        "lineage_verified": true,
+                        "relationship": "sibling",
+                        "trust_model": "progressive"
+                    }),
+                )
+            }
 
-        // Both have families, different families → prompt user (no auto-trust)
-        (Some(our_family), Some(peer_family)) => {
-            (
-                TrustDecision::PromptUser,
-                TrustLevel::None, // Changed from Medium to None
-                0.5,
-                format!(
-                    "Valid lineage but different genetic family ({} vs {})",
-                    peer_family, our_family
-                ),
-                "different_genetic_family",
-                serde_json::json!({
-                    "same_family": false,
-                    "peer_family_id": peer_family,
-                    "our_family_id": our_family,
-                    "provider": "beardog",
-                    "relationship": "stranger"
-                }),
-            )
-        }
+            // Both have families, different families → prompt user (no auto-trust)
+            (Some(our_family), Some(peer_family)) => {
+                (
+                    TrustDecision::PromptUser,
+                    TrustLevel::None, // Changed from Medium to None
+                    0.5,
+                    format!(
+                        "Valid lineage but different genetic family ({} vs {})",
+                        peer_family, our_family
+                    ),
+                    "different_genetic_family",
+                    serde_json::json!({
+                        "same_family": false,
+                        "peer_family_id": peer_family,
+                        "our_family_id": our_family,
+                        "provider": "beardog",
+                        "relationship": "stranger"
+                    }),
+                )
+            }
 
-        // We have family, peer doesn't → prompt user (could be legacy)
-        (Some(_our_family), None) => {
-            (
-                TrustDecision::PromptUser,
-                TrustLevel::None, // Changed from Low to None
-                0.3,
-                "Peer has no genetic lineage".to_string(),
-                "peer_has_no_genetic_lineage",
-                serde_json::json!({
-                    "provider": "beardog"
-                }),
-            )
-        }
+            // We have family, peer doesn't → prompt user (could be legacy)
+            (Some(_our_family), None) => {
+                (
+                    TrustDecision::PromptUser,
+                    TrustLevel::None, // Changed from Low to None
+                    0.3,
+                    "Peer has no genetic lineage".to_string(),
+                    "peer_has_no_genetic_lineage",
+                    serde_json::json!({
+                        "provider": "beardog"
+                    }),
+                )
+            }
 
-        // We don't have family, peer does → prompt user
-        (None, Some(peer_family)) => {
-            (
-                TrustDecision::PromptUser,
-                TrustLevel::None, // Changed from Low to None
-                0.3,
-                "We have no family lineage".to_string(),
-                "we_have_no_family_lineage",
-                serde_json::json!({
-                    "peer_family_id": peer_family,
-                    "provider": "beardog"
-                }),
-            )
-        }
+            // We don't have family, peer does → prompt user
+            (None, Some(peer_family)) => {
+                (
+                    TrustDecision::PromptUser,
+                    TrustLevel::None, // Changed from Low to None
+                    0.3,
+                    "We have no family lineage".to_string(),
+                    "we_have_no_family_lineage",
+                    serde_json::json!({
+                        "peer_family_id": peer_family,
+                        "provider": "beardog"
+                    }),
+                )
+            }
 
-        // Neither has family → reject (no crypto identity)
-        (None, None) => {
-            (
+            // Neither has family → reject (no crypto identity)
+            (None, None) => (
                 TrustDecision::Reject,
                 TrustLevel::None,
                 0.0,
@@ -552,9 +548,8 @@ async fn evaluate_trust(
                 serde_json::json!({
                     "provider": "beardog"
                 }),
-            )
-        }
-    };
+            ),
+        };
 
     // Get capability restrictions for this trust level
     let (allowed_caps, denied_caps) = get_capabilities_for_level(trust_level);
@@ -708,8 +703,7 @@ async fn elevate_trust(
         3 => {
             // Highest (3) requires human entropy
             request.evidence.evidence_type == "human_entropy"
-                && (request.evidence.method == "phone_hsm"
-                    || request.evidence.method == "solokey")
+                && (request.evidence.method == "phone_hsm" || request.evidence.method == "solokey")
                 && request.evidence.entropy.is_some()
         }
         _ => {
@@ -736,8 +730,7 @@ async fn elevate_trust(
         _ => unreachable!(),
     };
 
-    let (new_allowed_caps, _denied_caps) =
-        get_capabilities_for_level(requested_trust_level);
+    let (new_allowed_caps, _denied_caps) = get_capabilities_for_level(requested_trust_level);
 
     info!(
         "✅ Trust elevation validated: {} -> level {} with {} capabilities",
@@ -850,11 +843,7 @@ mod tests {
     #[test]
     fn test_operation_matching() {
         // Test exact matches
-        assert!(is_operation_allowed(
-            "health",
-            &["health".to_string()],
-            &[]
-        ));
+        assert!(is_operation_allowed("health", &["health".to_string()], &[]));
 
         // Test wildcard matches
         assert!(is_operation_allowed(
@@ -903,21 +892,21 @@ mod tests {
 
     #[test]
     fn test_trust_level_serialization() {
-        let level = TrustLevel::High;
-        let json = serde_json::to_string(&level).unwrap();
-        assert_eq!(json, "\"high\"");
-
-        let level = TrustLevel::Medium;
-        let json = serde_json::to_string(&level).unwrap();
-        assert_eq!(json, "\"medium\"");
-
-        let level = TrustLevel::Low;
-        let json = serde_json::to_string(&level).unwrap();
-        assert_eq!(json, "\"low\"");
-
         let level = TrustLevel::None;
         let json = serde_json::to_string(&level).unwrap();
         assert_eq!(json, "\"none\"");
+
+        let level = TrustLevel::Limited;
+        let json = serde_json::to_string(&level).unwrap();
+        assert_eq!(json, "\"limited\"");
+
+        let level = TrustLevel::Elevated;
+        let json = serde_json::to_string(&level).unwrap();
+        assert_eq!(json, "\"elevated\"");
+
+        let level = TrustLevel::Highest;
+        let json = serde_json::to_string(&level).unwrap();
+        assert_eq!(json, "\"highest\"");
     }
 
     #[test]
@@ -985,10 +974,7 @@ mod tests {
         );
         assert!(request.evaluator.is_some());
         assert_eq!(request.evaluator.as_ref().unwrap().peer_id, "tower2");
-        assert_eq!(
-            request.evaluator.as_ref().unwrap().attestations.len(),
-            1
-        );
+        assert_eq!(request.evaluator.as_ref().unwrap().attestations.len(), 1);
     }
 
     #[test]
@@ -1005,7 +991,15 @@ mod tests {
                 "provider": "beardog"
             })),
             expires_at: Some("2026-01-03T00:00:00Z".to_string()),
-            trust_level: Some(TrustLevel::High),
+            trust_level_numeric: Some(1), // Limited trust
+            allowed_capabilities: Some(vec!["discovery".to_string(), "health".to_string()]),
+            denied_capabilities: Some(vec!["data/*".to_string()]),
+            elevation_path: Some(ElevationPath {
+                next_level: 2,
+                requirements: vec!["human_approval".to_string()],
+                method: "user_consent_ui".to_string(),
+            }),
+            trust_level: Some(TrustLevel::Limited),
             encryption_tag: Some("beardog:family:a3f2:tower2".to_string()),
         };
 
@@ -1041,4 +1035,3 @@ mod tests {
         assert_eq!(tags.len(), 0);
     }
 }
-

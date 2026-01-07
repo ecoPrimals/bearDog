@@ -369,7 +369,7 @@ mod tests {
         ];
         let caps = ServiceRegistryDiscovery::parse_caps(&tags, "storage");
         // Should have primary plus one duplicate (not deduplicated)
-        assert!(caps.len() >= 1);
+        assert!(!caps.is_empty());
     }
 
     #[test]

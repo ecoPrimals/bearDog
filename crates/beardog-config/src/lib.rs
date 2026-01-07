@@ -37,6 +37,7 @@ pub mod hierarchy;
 pub mod loader;
 pub mod runtime_network_discovery;
 pub mod validation;
+pub mod zero_hardcoding;
 
 pub use error::{ConfigError, ConfigResult};
 pub use global::{config, BEARDOG_CONFIG};
@@ -45,6 +46,11 @@ pub use loader::ConfigLoader;
 // Re-export commonly used types
 pub use domains::network_addresses::NetworkAddressesConfig;
 pub use domains::network_ports::NetworkPortsConfig;
+
+// Re-export zero hardcoding for easy access
+pub use zero_hardcoding::{
+    EndpointConfig, RetryConfig, ZeroHardcodingConfig, ZeroHardcodingTimeouts as ZeroTimeouts,
+};
 
 use domains::{
     capacity::CapacityConfig, crypto::CryptoConfig, hsm::HsmConfig, limits::LimitsConfig,

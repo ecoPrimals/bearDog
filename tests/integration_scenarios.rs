@@ -56,7 +56,7 @@ async fn test_multi_hsm_failover_scenario() {
 async fn test_concurrent_multi_user_operations() {
     // Test multiple users performing operations concurrently
     use tokio::sync::Barrier;
-    
+
     let user_operations = Arc::new(Mutex::new(Vec::new()));
     let barrier = Arc::new(Barrier::new(5)); // Synchronize 5 users
     let mut handles = vec![];
@@ -67,7 +67,7 @@ async fn test_concurrent_multi_user_operations() {
         let handle = tokio::spawn(async move {
             // Wait for all users to be ready
             barrier.wait().await;
-            
+
             // Perform operations concurrently (no artificial delays)
             for op in 0..10 {
                 ops.lock().await.push((user_id, op));
@@ -84,9 +84,9 @@ async fn test_concurrent_multi_user_operations() {
 
     let final_ops = user_operations.lock().await;
     assert_eq!(final_ops.len(), 50); // 5 users × 10 ops
-    
+
     // Verify operations from all users are interleaved (true concurrency)
-    let unique_users: std::collections::HashSet<_> = 
+    let unique_users: std::collections::HashSet<_> =
         final_ops.iter().map(|(user, _)| user).collect();
     assert_eq!(unique_users.len(), 5);
 }
@@ -202,10 +202,10 @@ async fn test_cache_invalidation_cascade() {
 async fn test_graceful_shutdown_sequence() {
     // Test graceful shutdown with cleanup using proper async coordination
     use tokio::sync::watch;
-    
+
     let services_running = Arc::new(AtomicUsize::new(3));
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
-    
+
     // Spawn services that listen for shutdown
     let mut service_handles = vec![];
     for _ in 0..3 {

@@ -455,6 +455,7 @@ version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "base64 0.22.1",
  "beardog-adapters",
  "beardog-api",
  "beardog-auth",
@@ -463,6 +464,7 @@ dependencies = [
  "beardog-core",
  "beardog-errors",
  "beardog-genetics",
+ "beardog-ipc",
  "beardog-monitoring",
  "beardog-security",
  "beardog-traits",
@@ -474,12 +476,14 @@ dependencies = [
  "futures",
  "hex",
  "hidapi",
+ "hostname 0.3.1",
  "proptest",
  "rand 0.8.5",
  "reqwest 0.12.23",
  "serde",
  "serde_json",
  "serial_test",
+ "tempfile",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -870,6 +874,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "beardog-ipc"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "beardog-core",
+ "beardog-errors",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "tracing-test",
+]
+
+[[package]]
 name = "beardog-mixed-entropy-showcase"
 version = "0.1.0"
 
@@ -1031,6 +1052,7 @@ name = "beardog-tunnel"
 version = "0.9.0"
 dependencies = [
  "aes-gcm",
+ "anyhow",
  "argon2",
  "arrayref",
  "async-trait",
@@ -6439,6 +6461,27 @@ dependencies = [
  "tracing-core",
  "tracing-log",
  "tracing-serde",
+]
+
+[[package]]
+name = "tracing-test"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "557b891436fe0d5e0e363427fc7f217abf9ccd510d5136549847bdcbcd011d68"
+dependencies = [
+ "tracing-core",
+ "tracing-subscriber",
+ "tracing-test-macro",
+]
+
+[[package]]
+name = "tracing-test-macro"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04659ddb06c87d233c566112c1c9c5b9e98256d9af50ec3bc9c8327f873a7568"
+dependencies = [
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]

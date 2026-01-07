@@ -7,9 +7,9 @@
 //! These tests ensure seamless integration with Songbird and future primals.
 
 use beardog_genetics::EcosystemGeneticEngine;
-use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::api::server::{BearDogApiServer, BearDogApiServerConfig};
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
+use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::env;
@@ -17,7 +17,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 /// Start test server with family seed
-async fn start_test_server() -> Result<(tokio::task::JoinHandle<()>, String), Box<dyn std::error::Error>> {
+async fn start_test_server(
+) -> Result<(tokio::task::JoinHandle<()>, String), Box<dyn std::error::Error>> {
     // Use a unique port for each test
     static PORT_COUNTER: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(25000);
     let port = PORT_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
@@ -26,7 +27,7 @@ async fn start_test_server() -> Result<(tokio::task::JoinHandle<()>, String), Bo
 
     // Always clear env vars first to avoid test pollution
     env::remove_var("BEARDOG_FAMILY_SEED");
-    
+
     // Set family seed for testing
     env::set_var("BEARDOG_FAMILY_SEED", "UniversalTestFamily");
     env::set_var("BEARDOG_HSM_MODE", "software");
@@ -73,7 +74,10 @@ async fn test_universal_trust_get_identity() -> Result<(), Box<dyn std::error::E
     assert_eq!(resp.status(), 200);
 
     let body: Value = resp.json().await?;
-    println!("Identity response: {}", serde_json::to_string_pretty(&body)?);
+    println!(
+        "Identity response: {}",
+        serde_json::to_string_pretty(&body)?
+    );
 
     // Verify structure (unwrapped - no "data" wrapper, HTTP 200 indicates success)
     assert!(body["encryption_tag"]
@@ -87,10 +91,7 @@ async fn test_universal_trust_get_identity() -> Result<(), Box<dyn std::error::E
     // Verify attestations
     let attestations = body["identity_attestations"].as_array().unwrap();
     assert_eq!(attestations.len(), 1);
-    assert_eq!(
-        attestations[0]["provider_capability"],
-        "security/identity"
-    );
+    assert_eq!(attestations[0]["provider_capability"], "security/identity");
     assert_eq!(attestations[0]["format"], "tag_list");
     assert!(attestations[0]["data"]["tags"].is_array());
     assert!(attestations[0]["data"]["family_id"].is_string());
@@ -99,8 +100,7 @@ async fn test_universal_trust_get_identity() -> Result<(), Box<dyn std::error::E
 }
 
 #[tokio::test]
-async fn test_universal_trust_evaluate_same_family(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_universal_trust_evaluate_same_family() -> Result<(), Box<dyn std::error::Error>> {
     let (_handle, base_url) = start_test_server().await?;
     let client = Client::new();
 
@@ -163,8 +163,8 @@ async fn test_universal_trust_evaluate_same_family(
 }
 
 #[tokio::test]
-async fn test_universal_trust_evaluate_different_family(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_universal_trust_evaluate_different_family() -> Result<(), Box<dyn std::error::Error>>
+{
     let (_handle, base_url) = start_test_server().await?;
     let client = Client::new();
 
@@ -224,8 +224,7 @@ async fn test_universal_trust_evaluate_different_family(
 }
 
 #[tokio::test]
-async fn test_universal_trust_evaluate_no_lineage() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn test_universal_trust_evaluate_no_lineage() -> Result<(), Box<dyn std::error::Error>> {
     let (_handle, base_url) = start_test_server().await?;
     let client = Client::new();
 
@@ -337,10 +336,7 @@ async fn test_universal_trust_missing_evaluator() -> Result<(), Box<dyn std::err
     assert_eq!(resp.status(), 400);
 
     let body: Value = resp.json().await?;
-    assert!(body["error"]
-        .as_str()
-        .unwrap()
-        .contains("evaluator"));
+    assert!(body["error"].as_str().unwrap().contains("evaluator"));
 
     Ok(())
 }
@@ -368,10 +364,7 @@ async fn test_universal_trust_unsupported_format() -> Result<(), Box<dyn std::er
     assert_eq!(resp.status(), 400);
 
     let body: Value = resp.json().await?;
-    assert!(body["error"]
-        .as_str()
-        .unwrap()
-        .contains("Unsupported"));
+    assert!(body["error"].as_str().unwrap().contains("Unsupported"));
 
     Ok(())
 }
@@ -498,4 +491,3 @@ async fn test_cross_tower_integration() -> Result<(), Box<dyn std::error::Error>
 
     Ok(())
 }
-

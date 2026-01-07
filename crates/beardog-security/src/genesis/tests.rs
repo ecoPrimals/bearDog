@@ -87,7 +87,7 @@ fn test_all_physical_channels() {
 
         let trust_level = verifier
             .verify(witness.physical_channel)
-            .expect(&format!("Channel {:?} should be acceptable", channel));
+            .unwrap_or_else(|_| panic!("Channel {:?} should be acceptable", channel));
 
         assert_eq!(
             trust_level, expected_trust,

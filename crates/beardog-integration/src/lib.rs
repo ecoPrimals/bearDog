@@ -131,11 +131,19 @@ impl BearDogIntegration {
         let upa_client = Arc::new(UpaClient::new(upa_config)?);
 
         // Register with UPA
+        // Use environment-driven endpoint or construct from config
+        let endpoint = std::env::var("BEARDOG_ENDPOINT")
+            .unwrap_or_else(|_| {
+                // If no explicit endpoint, use the bind address or localhost fallback
+                let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "localhost".to_string());
+                format!("http://{}:{}", host, config.api_port)
+            });
+        
         let registration_req = RegistrationRequest {
             service_name: config.service_name.clone(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             capabilities: config.capabilities.clone(),
-            endpoint: format!("http://localhost:{}", config.api_port),
+            endpoint,
             metadata: None,
         };
 

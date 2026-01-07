@@ -18,8 +18,8 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 /// Helper to start a test server
-async fn start_test_server() -> Result<(tokio::task::JoinHandle<()>, String), Box<dyn std::error::Error>>
-{
+async fn start_test_server(
+) -> Result<(tokio::task::JoinHandle<()>, String), Box<dyn std::error::Error>> {
     static PORT_COUNTER: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(26000);
     let port = PORT_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 
@@ -304,9 +304,7 @@ async fn test_fault_request_timeout() -> Result<(), Box<dyn std::error::Error>> 
     let (_handle, base_url) = start_test_server().await?;
 
     // Use extremely short timeout
-    let client = Client::builder()
-        .timeout(Duration::from_nanos(1))
-        .build()?;
+    let client = Client::builder().timeout(Duration::from_nanos(1)).build()?;
 
     let result = client
         .get(&format!("{}/api/v1/trust/identity", base_url))
@@ -637,4 +635,3 @@ async fn test_fault_multiple_rapid_recoveries() -> Result<(), Box<dyn std::error
 
     Ok(())
 }
-

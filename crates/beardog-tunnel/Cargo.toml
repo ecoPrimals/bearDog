@@ -41,6 +41,7 @@ tokio-serde = { version = "0.8", features = ["json"] }
 reqwest = { version = "0.11", features = ["json"] }
 tokio-tungstenite = "0.20"
 serde_json = "1.0"
+anyhow = "1.0"  # Required for Unix socket IPC
 tracing = "0.1"
 thiserror = { workspace = true }
 # CLEANED: anyhow removed - unused dependency (October 2025)
@@ -73,7 +74,7 @@ hidapi = { version = "2.4", optional = true }
 axum = { version = "0.7", optional = true }
 tower = { version = "0.4", optional = true }
 tower-http = { version = "0.5", features = ["trace", "cors"], optional = true }
-base64 = { version = "0.21", optional = true }
+base64 = "0.21"  # Required for Unix socket IPC (no longer optional)
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -89,7 +90,7 @@ solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
 ecosystem = []
-btsp-api = ["axum", "tower", "tower-http", "base64"]
+btsp-api = ["axum", "tower", "tower-http"]  # base64 is now always required
 default = []
 android_native = []
 pixel8_optimizations = [ "android_native",]

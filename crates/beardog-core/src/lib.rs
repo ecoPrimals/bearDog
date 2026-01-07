@@ -145,6 +145,12 @@ pub mod zero_cost_architecture;
 /// This eliminates the 2^n hardcoding problem by using O(1) universal patterns.
 pub mod zero_knowledge_bootstrap;
 
+/// Capability manifest - BearDog's self-knowledge for ecosystem integration
+///
+/// Defines what BearDog provides without coupling to specific primals.
+/// Enables capability-based routing to avoid N^2 connection problems.
+pub mod capabilities;
+
 /// Migration system for sovereign entropy and ecosystem upgrades
 ///
 /// Comprehensive migration framework for transitioning from traditional

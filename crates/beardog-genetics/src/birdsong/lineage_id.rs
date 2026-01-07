@@ -72,7 +72,9 @@ impl LineageID {
 
         Self(format!(
             "lineage:{}:{}:{}:{}",
-            service_type, timestamp, &hash[..12], // First 12 chars of hash
+            service_type,
+            timestamp,
+            &hash[..12], // First 12 chars of hash
             node_id
         ))
     }
@@ -257,4 +259,3 @@ mod tests {
         assert_ne!(id1, id3);
     }
 }
-

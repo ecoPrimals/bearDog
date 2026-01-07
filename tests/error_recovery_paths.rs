@@ -34,7 +34,7 @@ async fn test_recovery_from_transient_failure() {
 async fn test_recovery_from_connection_loss() {
     // Test reconnection after connection loss - using channels for coordination
     use tokio::sync::watch;
-    
+
     let (conn_tx, mut conn_rx) = watch::channel(1_usize); // 1 = connected
 
     // Connection is active
@@ -53,12 +53,12 @@ async fn test_recovery_from_connection_loss() {
     let tx = conn_tx.clone();
     let handle = tokio::spawn(async move {
         // Try reconnection up to 3 times
-    for attempt in 1..=3 {
+        for attempt in 1..=3 {
             attempts.fetch_add(1, Ordering::Relaxed);
             tokio::task::yield_now().await; // Yield for concurrent behavior
 
-        if attempt == 3 {
-            // Reconnection succeeds on 3rd attempt
+            if attempt == 3 {
+                // Reconnection succeeds on 3rd attempt
                 tx.send(1).unwrap();
                 return Ok::<_, ()>(());
             }
@@ -69,7 +69,7 @@ async fn test_recovery_from_connection_loss() {
     // Wait for reconnection
     handle.await.unwrap().unwrap();
     conn_rx.changed().await.unwrap();
-    
+
     assert_eq!(*conn_rx.borrow(), 1);
     assert_eq!(reconnect_attempts.load(Ordering::Relaxed), 3);
 }
@@ -155,7 +155,7 @@ async fn test_recovery_with_exponential_backoff() {
     for attempt in 0..5 {
         // Record backoff value for verification
         backoff_values.push(backoff_ms);
-        
+
         // In production: tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
         // For testing: we verify the algorithm, not wall-clock time
 
@@ -174,7 +174,7 @@ async fn test_recovery_with_exponential_backoff() {
 async fn test_recovery_with_circuit_breaker() {
     // Test circuit breaker pattern with event-driven state transitions
     use tokio::sync::watch;
-    
+
     #[derive(Debug, PartialEq, Clone)]
     enum CircuitState {
         Closed,

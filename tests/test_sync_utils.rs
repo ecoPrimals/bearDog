@@ -1,7 +1,7 @@
 //! Modern Async Test Synchronization Utilities
 //!
 //! This module provides reusable patterns for test synchronization without sleeps.
-//! 
+//!
 //! **Philosophy**: Test issues = Production issues
 //! - Use channels, barriers, and watch for synchronization
 //! - Never use `sleep` for coordination (only for simulating real delays)
@@ -284,12 +284,9 @@ mod tests {
             r.store(true, Ordering::Relaxed);
         });
 
-        wait_for_condition(
-            || ready.load(Ordering::Relaxed),
-            Duration::from_secs(1),
-        )
-        .await
-        .unwrap();
+        wait_for_condition(|| ready.load(Ordering::Relaxed), Duration::from_secs(1))
+            .await
+            .unwrap();
 
         assert!(ready.load(Ordering::Relaxed));
     }
@@ -386,4 +383,3 @@ mod tests {
         assert_eq!(final_state.len(), 10);
     }
 }
-

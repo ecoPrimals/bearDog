@@ -18,10 +18,7 @@ fn test_trust_api_state_creation_with_family() {
     let state = TrustApiState::new(Some("test_family".to_string()), "test_node");
 
     assert_eq!(state.family_id, Some("test_family".to_string()));
-    assert_eq!(
-        state.encryption_tag,
-        "beardog:family:test_family:test_node"
-    );
+    assert_eq!(state.encryption_tag, "beardog:family:test_family:test_node");
     assert_eq!(state.capabilities.len(), 3);
     assert!(state.capabilities.contains(&"btsp".to_string()));
     assert!(state.capabilities.contains(&"birdsong".to_string()));
@@ -143,6 +140,7 @@ fn test_trust_request_universal_format_serialization() {
             }],
         }),
         context: Some(json!({"method": "udp"})),
+        requested_operation: None,
         peer_id: None,
         peer_tags: None,
         connection_info: None,
@@ -159,6 +157,7 @@ fn test_trust_request_legacy_format_serialization() {
         request_format: None,
         evaluator: None,
         context: None,
+        requested_operation: None,
         peer_id: Some("peer1".to_string()),
         peer_tags: Some(vec!["beardog:family:test:peer1".to_string()]),
         connection_info: Some(
@@ -184,6 +183,7 @@ fn test_trust_request_mixed_fields_serialization() {
             attestations: vec![],
         }),
         context: Some(json!({})),
+        requested_operation: None,
         peer_id: Some("legacy_peer".to_string()),
         peer_tags: Some(vec![]),
         connection_info: None,
@@ -209,7 +209,11 @@ fn test_trust_response_universal_format() {
         reason_code: Some("same_genetic_family".to_string()),
         metadata: Some(json!({"family_id": "test"})),
         expires_at: Some("2026-01-04T00:00:00Z".to_string()),
-        trust_level: Some(TrustLevel::High),
+        trust_level_numeric: Some(3),
+        allowed_capabilities: Some(vec!["btsp".to_string(), "birdsong".to_string()]),
+        denied_capabilities: Some(vec![]),
+        elevation_path: None,
+        trust_level: Some(TrustLevel::Highest),
         encryption_tag: Some("beardog:family:test:peer1".to_string()),
     };
 
@@ -237,6 +241,10 @@ fn test_trust_response_all_decision_types() {
             reason_code: Some("test".to_string()),
             metadata: None,
             expires_at: None,
+            trust_level_numeric: None,
+            allowed_capabilities: None,
+            denied_capabilities: None,
+            elevation_path: None,
             trust_level: None,
             encryption_tag: None,
         };
@@ -249,9 +257,9 @@ fn test_trust_response_all_decision_types() {
 #[test]
 fn test_trust_response_all_trust_levels() {
     let levels = vec![
-        TrustLevel::High,
-        TrustLevel::Medium,
-        TrustLevel::Low,
+        TrustLevel::Highest,
+        TrustLevel::Elevated,
+        TrustLevel::Limited,
         TrustLevel::None,
     ];
 
@@ -264,7 +272,11 @@ fn test_trust_response_all_trust_levels() {
             reason_code: None,
             metadata: None,
             expires_at: None,
-            trust_level: Some(level.clone()),
+            trust_level_numeric: None,
+            allowed_capabilities: None,
+            denied_capabilities: None,
+            elevation_path: None,
+            trust_level: Some(level),
             encryption_tag: None,
         };
 
@@ -286,6 +298,10 @@ fn test_trust_response_confidence_bounds() {
             reason_code: Some("test".to_string()),
             metadata: None,
             expires_at: None,
+            trust_level_numeric: None,
+            allowed_capabilities: None,
+            denied_capabilities: None,
+            elevation_path: None,
             trust_level: None,
             encryption_tag: None,
         };
@@ -305,6 +321,10 @@ fn test_trust_response_optional_fields_omitted() {
         reason_code: Some("test".to_string()),
         metadata: None,
         expires_at: None,
+        trust_level_numeric: None,
+        allowed_capabilities: None,
+        denied_capabilities: None,
+        elevation_path: None,
         trust_level: None,
         encryption_tag: None,
     };
@@ -374,14 +394,17 @@ fn test_trust_decision_roundtrip() {
 #[test]
 fn test_trust_level_serialization() {
     assert_eq!(
-        serde_json::to_string(&TrustLevel::High).unwrap(),
-        "\"high\""
+        serde_json::to_string(&TrustLevel::Highest).unwrap(),
+        "\"highest\""
     );
     assert_eq!(
-        serde_json::to_string(&TrustLevel::Medium).unwrap(),
-        "\"medium\""
+        serde_json::to_string(&TrustLevel::Elevated).unwrap(),
+        "\"elevated\""
     );
-    assert_eq!(serde_json::to_string(&TrustLevel::Low).unwrap(), "\"low\"");
+    assert_eq!(
+        serde_json::to_string(&TrustLevel::Limited).unwrap(),
+        "\"limited\""
+    );
     assert_eq!(
         serde_json::to_string(&TrustLevel::None).unwrap(),
         "\"none\""
@@ -391,16 +414,16 @@ fn test_trust_level_serialization() {
 #[test]
 fn test_trust_level_deserialization() {
     assert_eq!(
-        serde_json::from_str::<TrustLevel>("\"high\"").unwrap(),
-        TrustLevel::High
+        serde_json::from_str::<TrustLevel>("\"highest\"").unwrap(),
+        TrustLevel::Highest
     );
     assert_eq!(
-        serde_json::from_str::<TrustLevel>("\"medium\"").unwrap(),
-        TrustLevel::Medium
+        serde_json::from_str::<TrustLevel>("\"elevated\"").unwrap(),
+        TrustLevel::Elevated
     );
     assert_eq!(
-        serde_json::from_str::<TrustLevel>("\"low\"").unwrap(),
-        TrustLevel::Low
+        serde_json::from_str::<TrustLevel>("\"limited\"").unwrap(),
+        TrustLevel::Limited
     );
     assert_eq!(
         serde_json::from_str::<TrustLevel>("\"none\"").unwrap(),
@@ -411,9 +434,9 @@ fn test_trust_level_deserialization() {
 #[test]
 fn test_trust_level_roundtrip() {
     let levels = vec![
-        TrustLevel::High,
-        TrustLevel::Medium,
-        TrustLevel::Low,
+        TrustLevel::Highest,
+        TrustLevel::Elevated,
+        TrustLevel::Limited,
         TrustLevel::None,
     ];
 
@@ -444,7 +467,16 @@ fn test_large_attestation_data() {
     let serialized = serde_json::to_string(&attestation).unwrap();
     let deserialized: IdentityAttestation = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized.provider_capability, "test/large");
-    assert!(deserialized.data.get("tags").unwrap().as_array().unwrap().len() == 1000);
+    assert!(
+        deserialized
+            .data
+            .get("tags")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len()
+            == 1000
+    );
 }
 
 #[test]
@@ -477,6 +509,10 @@ fn test_confidence_precision() {
         reason_code: Some("test".to_string()),
         metadata: None,
         expires_at: None,
+        trust_level_numeric: None,
+        allowed_capabilities: None,
+        denied_capabilities: None,
+        elevation_path: None,
         trust_level: None,
         encryption_tag: None,
     };
@@ -505,14 +541,14 @@ fn test_metadata_with_nested_objects() {
         reason_code: Some("test".to_string()),
         metadata: Some(metadata.clone()),
         expires_at: None,
+        trust_level_numeric: None,
+        allowed_capabilities: None,
+        denied_capabilities: None,
+        elevation_path: None,
         trust_level: None,
         encryption_tag: None,
     };
 
     let json = serde_json::to_value(&response).unwrap();
-    assert_eq!(
-        json["metadata"]["level1"]["level2"]["level3"],
-        "deep_value"
-    );
+    assert_eq!(json["metadata"]["level1"]["level2"]["level3"], "deep_value");
 }
-

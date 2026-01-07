@@ -11,8 +11,7 @@ use std::sync::Arc;
 
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::{
-    tunnel::hsm::manager::HsmManager, BearDogApiServer, BearDogApiServerConfig,
-    BeardogBtspProvider,
+    tunnel::hsm::manager::HsmManager, BearDogApiServer, BearDogApiServerConfig, BeardogBtspProvider,
 };
 use reqwest::Client;
 use serde_json::{json, Value};
@@ -24,7 +23,7 @@ async fn start_test_server(
     // Use a fixed port range for testing to avoid conflicts
     static PORT_COUNTER: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(19000);
     let port = PORT_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    
+
     let addr: std::net::SocketAddr = format!("127.0.0.1:{}", port).parse()?;
     let base_url = format!("http://{}", addr);
 
@@ -39,7 +38,7 @@ async fn start_test_server(
     let genetics = Arc::new(EcosystemGeneticEngine::new()?);
     let provider = Arc::new(BeardogBtspProvider::new(hsm, genetics).await?);
     let server = BearDogApiServer::new(config, provider).await?;
-    
+
     // Start server in background
     let handle = tokio::spawn(async move {
         let _ = server.serve().await;
@@ -127,8 +126,7 @@ async fn test_lineage_api_full_flow() -> Result<(), Box<dyn std::error::Error>> 
     assert_eq!(current_resp.status(), 200);
     let current_body: Value = current_resp.json().await?;
     assert_eq!(
-        current_body["data"]["lineage_id"],
-        child_lineage_id,
+        current_body["data"]["lineage_id"], child_lineage_id,
         "Current lineage should be the last created"
     );
 
@@ -177,8 +175,14 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     assert_eq!(verify_a_resp.status(), 200);
     let verify_a_body: Value = verify_a_resp.json().await?;
-    assert_eq!(verify_a_body["data"]["valid"], true, "Child A proof should be valid");
-    assert_eq!(verify_a_body["data"]["same_genesis"], true, "Child A should have same_genesis=true");
+    assert_eq!(
+        verify_a_body["data"]["valid"], true,
+        "Child A proof should be valid"
+    );
+    assert_eq!(
+        verify_a_body["data"]["same_genesis"], true,
+        "Child A should have same_genesis=true"
+    );
 
     // 4. Create Tower B genesis (different genesis!)
     let tower_b_resp = client
@@ -217,7 +221,10 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     assert_eq!(verify_a_again_resp.status(), 200);
     let verify_a_again_body: Value = verify_a_again_resp.json().await?;
-    assert_eq!(verify_a_again_body["data"]["valid"], true, "Child A proof should still be valid");
+    assert_eq!(
+        verify_a_again_body["data"]["valid"], true,
+        "Child A proof should still be valid"
+    );
     assert_eq!(
         verify_a_again_body["data"]["same_genesis"], false,
         "Child A should now have same_genesis=false (current is Tower B)"
@@ -232,8 +239,14 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     assert_eq!(verify_b_resp.status(), 200);
     let verify_b_body: Value = verify_b_resp.json().await?;
-    assert_eq!(verify_b_body["data"]["valid"], true, "Child B proof should be valid");
-    assert_eq!(verify_b_body["data"]["same_genesis"], true, "Child B should have same_genesis=true");
+    assert_eq!(
+        verify_b_body["data"]["valid"], true,
+        "Child B proof should be valid"
+    );
+    assert_eq!(
+        verify_b_body["data"]["same_genesis"], true,
+        "Child B should have same_genesis=true"
+    );
 
     // 8. Check same_family - should return false for cross-tower
     let same_family_resp = client
@@ -274,10 +287,7 @@ async fn test_lineage_api_concurrent_creates() -> Result<(), Box<dyn std::error:
                 .expect("Failed to send request");
             assert_eq!(resp.status(), 200);
             let body: Value = resp.json().await.expect("Failed to parse JSON");
-            body["data"]["lineage_id"]
-                .as_str()
-                .unwrap()
-                .to_string()
+            body["data"]["lineage_id"].as_str().unwrap().to_string()
         }));
     }
 
@@ -288,7 +298,10 @@ async fn test_lineage_api_concurrent_creates() -> Result<(), Box<dyn std::error:
         .collect();
 
     // All should be unique
-    let unique_count = lineage_ids.iter().collect::<std::collections::HashSet<_>>().len();
+    let unique_count = lineage_ids
+        .iter()
+        .collect::<std::collections::HashSet<_>>()
+        .len();
     assert_eq!(unique_count, 10, "All lineage IDs should be unique");
 
     Ok(())
@@ -372,10 +385,7 @@ async fn test_lineage_api_deep_hierarchy() -> Result<(), Box<dyn std::error::Err
 
         assert_eq!(resp.status(), 200);
         let body: Value = resp.json().await?;
-        current_lineage = body["data"]["lineage_id"]
-            .as_str()
-            .unwrap()
-            .to_string();
+        current_lineage = body["data"]["lineage_id"].as_str().unwrap().to_string();
     }
 
     // Final lineage should still be verifiable
@@ -406,10 +416,7 @@ async fn test_lineage_api_health_check() -> Result<(), Box<dyn std::error::Error
     let (_handle, base_url) = start_test_server().await?;
     let client = Client::new();
 
-    let health_resp = client
-        .get(&format!("{}/health", base_url))
-        .send()
-        .await?;
+    let health_resp = client.get(&format!("{}/health", base_url)).send().await?;
 
     assert_eq!(health_resp.status(), 200);
     let body: Value = health_resp.json().await?;
@@ -466,4 +473,3 @@ async fn test_lineage_api_stress_spawn() -> Result<(), Box<dyn std::error::Error
 
     Ok(())
 }
-

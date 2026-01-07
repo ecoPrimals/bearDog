@@ -276,9 +276,12 @@ impl HsmManager {
                 // Initialize software HSM
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!("Failed to initialize software HSM: {}", e))
+                    BearDogError::initialization(format!(
+                        "Failed to initialize software HSM: {}",
+                        e
+                    ))
                 })?;
-                
+
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
                 info!("✅ Software HSM initialized successfully");
             }
@@ -287,7 +290,10 @@ impl HsmManager {
                 warn!("⚠️  Hardware HSM mode requested but not yet implemented, falling back to software");
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!("Failed to initialize fallback software HSM: {}", e))
+                    BearDogError::initialization(format!(
+                        "Failed to initialize fallback software HSM: {}",
+                        e
+                    ))
                 })?;
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
             }
@@ -296,7 +302,10 @@ impl HsmManager {
                 warn!("⚠️  Android StrongBox mode requested but not yet implemented, falling back to software");
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!("Failed to initialize fallback software HSM: {}", e))
+                    BearDogError::initialization(format!(
+                        "Failed to initialize fallback software HSM: {}",
+                        e
+                    ))
                 })?;
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
             }
@@ -305,7 +314,10 @@ impl HsmManager {
                 warn!("⚠️  iOS Secure Enclave mode requested but not yet implemented, falling back to software");
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!("Failed to initialize fallback software HSM: {}", e))
+                    BearDogError::initialization(format!(
+                        "Failed to initialize fallback software HSM: {}",
+                        e
+                    ))
                 })?;
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
             }
@@ -881,32 +893,41 @@ mod tests {
     async fn test_auto_initialize_default_software_mode() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         // Clear any existing env vars
         env::remove_var("BEARDOG_HSM_MODE");
         env::remove_var("BEARDOG_HSM_AUTO_INIT");
-        
+
         // Should default to software mode
         let manager = HsmManager::auto_initialize().await;
-        assert!(manager.is_ok(), "Auto-initialize should succeed with default software mode");
-        
+        assert!(
+            manager.is_ok(),
+            "Auto-initialize should succeed with default software mode"
+        );
+
         let manager = manager.unwrap();
         // Verify we can generate a key (proves HSM is registered)
         let key = manager.generate_key("test_key", &KeyType::Ed25519).await;
-        assert!(key.is_ok(), "Should be able to generate key with auto-initialized HSM");
+        assert!(
+            key.is_ok(),
+            "Should be able to generate key with auto-initialized HSM"
+        );
     }
 
     #[tokio::test]
     async fn test_auto_initialize_explicit_software_mode() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "software");
         env::set_var("BEARDOG_HSM_AUTO_INIT", "true");
-        
+
         let manager = HsmManager::auto_initialize().await;
-        assert!(manager.is_ok(), "Auto-initialize should succeed with explicit software mode");
-        
+        assert!(
+            manager.is_ok(),
+            "Auto-initialize should succeed with explicit software mode"
+        );
+
         let manager = manager.unwrap();
         let key = manager.generate_key("test_key", &KeyType::ChaCha20).await;
         assert!(key.is_ok(), "Should be able to generate key");
@@ -916,13 +937,13 @@ mod tests {
     async fn test_auto_initialize_case_insensitive() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         // Test uppercase
         env::set_var("BEARDOG_HSM_MODE", "SOFTWARE");
         let manager = HsmManager::auto_initialize().await;
         assert!(manager.is_ok(), "Should handle uppercase mode");
         env::remove_var("BEARDOG_HSM_MODE");
-        
+
         // Test mixed case
         env::set_var("BEARDOG_HSM_MODE", "SoftWare");
         let manager = HsmManager::auto_initialize().await;
@@ -933,13 +954,16 @@ mod tests {
     async fn test_auto_initialize_hardware_mode_fallback() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "hardware");
-        
+
         // Should fallback to software (hardware not yet implemented)
         let manager = HsmManager::auto_initialize().await;
-        assert!(manager.is_ok(), "Should fallback to software when hardware not available");
-        
+        assert!(
+            manager.is_ok(),
+            "Should fallback to software when hardware not available"
+        );
+
         let manager = manager.unwrap();
         // Verify it works
         let key = manager.generate_key("test_key", &KeyType::Aes).await;
@@ -950,78 +974,93 @@ mod tests {
     async fn test_auto_initialize_android_mode_fallback() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "android_strongbox");
-        
+
         // Should fallback to software (android not yet implemented)
         let manager = HsmManager::auto_initialize().await;
-        assert!(manager.is_ok(), "Should fallback to software when Android not available");
+        assert!(
+            manager.is_ok(),
+            "Should fallback to software when Android not available"
+        );
     }
 
     #[tokio::test]
     async fn test_auto_initialize_ios_mode_fallback() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "ios_secure_enclave");
-        
+
         // Should fallback to software (iOS not yet implemented)
         let manager = HsmManager::auto_initialize().await;
-        assert!(manager.is_ok(), "Should fallback to software when iOS not available");
+        assert!(
+            manager.is_ok(),
+            "Should fallback to software when iOS not available"
+        );
     }
 
     #[tokio::test]
     async fn test_auto_initialize_invalid_mode() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "invalid_mode");
-        
+
         let result = HsmManager::auto_initialize().await;
         assert!(result.is_err(), "Should fail with invalid HSM mode");
-        
+
         let error = result.err().unwrap();
-        assert!(error.to_string().contains("Invalid BEARDOG_HSM_MODE"), 
-                "Error should mention invalid mode: {}", error);
+        assert!(
+            error.to_string().contains("Invalid BEARDOG_HSM_MODE"),
+            "Error should mention invalid mode: {}",
+            error
+        );
     }
 
     #[tokio::test]
     async fn test_auto_initialize_disabled() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         // Clear env vars first
         env::remove_var("BEARDOG_HSM_MODE");
         env::set_var("BEARDOG_HSM_AUTO_INIT", "false");
-        
+
         let manager = HsmManager::auto_initialize().await;
         assert!(manager.is_ok(), "Should succeed even when disabled");
-        
+
         let manager = manager.unwrap();
         // Should have NO providers registered
         let key_result = manager.generate_key("test_key", &KeyType::Ed25519).await;
-        assert!(key_result.is_err(), "Should fail - no providers registered when auto-init disabled");
-        assert!(key_result.unwrap_err().to_string().contains("No HSM providers available"));
+        assert!(
+            key_result.is_err(),
+            "Should fail - no providers registered when auto-init disabled"
+        );
+        assert!(key_result
+            .unwrap_err()
+            .to_string()
+            .contains("No HSM providers available"));
     }
 
     #[tokio::test]
     async fn test_auto_initialize_multiple_key_operations() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "software");
-        
+
         let manager = HsmManager::auto_initialize().await.unwrap();
-        
+
         // Generate multiple keys
         let key1 = manager.generate_key("key1", &KeyType::Ed25519).await;
         let key2 = manager.generate_key("key2", &KeyType::ChaCha20).await;
         let key3 = manager.generate_key("key3", &KeyType::Aes).await;
-        
+
         assert!(key1.is_ok());
         assert!(key2.is_ok());
         assert!(key3.is_ok());
-        
+
         // Delete keys
         assert!(manager.delete_key("key1").await.is_ok());
         assert!(manager.delete_key("key2").await.is_ok());
@@ -1033,9 +1072,9 @@ mod tests {
         use std::env;
         use tokio::task;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         env::set_var("BEARDOG_HSM_MODE", "software");
-        
+
         // Create multiple managers concurrently
         let handles: Vec<_> = (0..10)
             .map(|i| {
@@ -1048,7 +1087,7 @@ mod tests {
                 })
             })
             .collect();
-        
+
         // Wait for all to complete
         for handle in handles {
             handle.await.unwrap();
@@ -1059,11 +1098,11 @@ mod tests {
     async fn test_auto_initialize_environment_precedence() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         // Test that environment variable takes precedence over default
         env::set_var("BEARDOG_HSM_MODE", "software");
         env::set_var("BEARDOG_HSM_AUTO_INIT", "true");
-        
+
         let manager = HsmManager::auto_initialize().await.unwrap();
         let key = manager.generate_key("test", &KeyType::Ed25519).await;
         assert!(key.is_ok());
@@ -1073,30 +1112,29 @@ mod tests {
     async fn test_auto_initialize_bool_parsing() {
         use std::env;
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-        
+
         // Test various boolean representations
         let bool_values = vec![
             ("true", true),
             ("false", false),
             ("TRUE", false), // Invalid - parse will fail, default to false
-            ("1", false),     // Invalid - parse will fail, default to false
-            ("", false),      // Invalid - parse will fail, default to false
+            ("1", false),    // Invalid - parse will fail, default to false
+            ("", false),     // Invalid - parse will fail, default to false
         ];
-        
+
         for (value, should_have_provider) in bool_values {
             env::set_var("BEARDOG_HSM_AUTO_INIT", value);
             env::set_var("BEARDOG_HSM_MODE", "software");
-            
+
             let manager = HsmManager::auto_initialize().await.unwrap();
             let key_result = manager.generate_key("test", &KeyType::Ed25519).await;
-            
+
             if should_have_provider {
                 assert!(key_result.is_ok(), "Should have provider for: {}", value);
             } // else: no assertion - behavior depends on parse result
-            
+
             env::remove_var("BEARDOG_HSM_AUTO_INIT");
             env::remove_var("BEARDOG_HSM_MODE");
         }
     }
 }
-

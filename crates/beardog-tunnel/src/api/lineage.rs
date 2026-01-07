@@ -2,7 +2,11 @@
 //!
 //! Cryptographic lineage proofs and verification for biomeOS integration.
 
-use axum::{extract::State, routing::{get, post}, Json, Router};
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Json, Router,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -55,10 +59,9 @@ impl LineageApiState {
 
     /// Store root node to chain mapping (for genesis lineages)
     fn store_root_mapping(&self, root_node_id: &str, chain_id: &str) {
-        self.root_to_chain.write().insert(
-            root_node_id.to_string(),
-            chain_id.to_string(),
-        );
+        self.root_to_chain
+            .write()
+            .insert(root_node_id.to_string(), chain_id.to_string());
     }
 
     /// Get chain_id and node_id for a lineage
@@ -215,7 +218,10 @@ async fn create_lineage(
     State(state): State<LineageApiState>,
     Json(req): Json<CreateLineageRequest>,
 ) -> Result<Json<ApiResponse<CreateLineageResponse>>, ApiError> {
-    info!("🌱 Creating new genesis lineage for service: {}", req.service_type);
+    info!(
+        "🌱 Creating new genesis lineage for service: {}",
+        req.service_type
+    );
 
     // Generate root chain
     let root_node_id = format!("{}-genesis", req.service_type);
@@ -230,7 +236,7 @@ async fn create_lineage(
 
     // Store mapping for future operations
     state.store_lineage(lineage_id.as_str(), &chain.chain_id, &root_node_id);
-    
+
     // Store root mapping for proof verification
     state.store_root_mapping(&root_node_id, &chain.chain_id);
 
@@ -257,9 +263,8 @@ async fn spawn_lineage(
     );
 
     // Look up parent lineage mapping
-    let (parent_chain_id, parent_node_id) = state
-        .get_lineage(&req.parent_lineage)
-        .ok_or_else(|| {
+    let (parent_chain_id, parent_node_id) =
+        state.get_lineage(&req.parent_lineage).ok_or_else(|| {
             ApiError::bad_request(&format!(
                 "Parent lineage not found: {}. Create genesis first with /lineage/create",
                 req.parent_lineage
@@ -272,7 +277,12 @@ async fn spawn_lineage(
     // Add child to the parent's chain
     let child_node = state
         .chain_manager
-        .add_child(&parent_chain_id, &parent_node_id, child_node_id.clone(), req.metadata)
+        .add_child(
+            &parent_chain_id,
+            &parent_node_id,
+            child_node_id.clone(),
+            req.metadata,
+        )
         .await
         .map_err(|e| ApiError::internal(format!("Failed to spawn child: {}", e)))?;
 
@@ -281,7 +291,7 @@ async fn spawn_lineage(
 
     // Store mapping for child
     state.store_lineage(child_lineage_id.as_str(), &parent_chain_id, &child_node_id);
-    
+
     // Update current lineage to the child
     state.set_current_lineage(child_lineage_id.as_str());
 
@@ -296,7 +306,10 @@ async fn spawn_lineage(
         proof,
     };
 
-    info!("✅ Child lineage spawned: {} (depth: {})", child_lineage_id, child_node.depth);
+    info!(
+        "✅ Child lineage spawned: {} (depth: {})",
+        child_lineage_id, child_node.depth
+    );
     Ok(Json(ApiResponse::success(response)))
 }
 
@@ -308,14 +321,12 @@ async fn sign_lineage(
     info!("🔐 Signing lineage: {}", req.lineage_id);
 
     // Look up lineage mapping
-    let (chain_id, node_id) = state
-        .get_lineage(&req.lineage_id)
-        .ok_or_else(|| {
-            ApiError::not_found(&format!(
-                "Lineage not found: {}. Lineage must be created or spawned first",
-                req.lineage_id
-            ))
-        })?;
+    let (chain_id, node_id) = state.get_lineage(&req.lineage_id).ok_or_else(|| {
+        ApiError::not_found(&format!(
+            "Lineage not found: {}. Lineage must be created or spawned first",
+            req.lineage_id
+        ))
+    })?;
 
     // Generate proof
     let proof = state
@@ -374,13 +385,11 @@ async fn get_current_lineage(
     info!("📊 Querying current lineage state");
 
     // Get current lineage ID
-    let current_lineage_id = state
-        .get_current_lineage()
-        .ok_or_else(|| {
-            ApiError::not_found(
-                "No current lineage set. Create a genesis lineage with /lineage/create first"
-            )
-        })?;
+    let current_lineage_id = state.get_current_lineage().ok_or_else(|| {
+        ApiError::not_found(
+            "No current lineage set. Create a genesis lineage with /lineage/create first",
+        )
+    })?;
 
     // Look up lineage details
     let (chain_id, node_id) = state
@@ -414,7 +423,10 @@ async fn get_current_lineage(
         depth: current_node.depth,
     };
 
-    info!("✅ Current lineage retrieved: {} (depth: {})", response.lineage_id, response.depth);
+    info!(
+        "✅ Current lineage retrieved: {} (depth: {})",
+        response.lineage_id, response.depth
+    );
     Ok(Json(ApiResponse::success(response)))
 }
 

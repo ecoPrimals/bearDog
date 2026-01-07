@@ -66,6 +66,29 @@ pub struct DecryptResponse {
     pub plaintext: Vec<u8>,
 }
 
+/// Request to exchange contact information via genetic lineage
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContactExchangeRequest {
+    /// Target peer ID to find contact info for
+    pub target_peer_id: String,
+    /// Requester's lineage ID for verification
+    pub requester_lineage: String,
+    /// Maximum hops to search in genetic lineage (default: 3)
+    #[serde(default = "default_max_hops")]
+    pub max_hops: usize,
+}
+
+fn default_max_hops() -> usize {
+    3
+}
+
+/// Response with peer contact information
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContactExchangeResponse {
+    /// Contact information for the requested peer
+    pub contact: crate::btsp_provider::ContactInfo,
+}
+
 /// BTSP routes
 pub fn routes(state: BtspApiState) -> Router {
     Router::new()
@@ -74,6 +97,7 @@ pub fn routes(state: BtspApiState) -> Router {
         .route("/tunnel/decrypt", post(decrypt))
         .route("/tunnel/status/:id", get(tunnel_status))
         .route("/tunnel/close/:id", delete(close_tunnel))
+        .route("/contact/exchange", post(contact_exchange))
         .with_state(state)
 }
 
@@ -191,6 +215,27 @@ async fn close_tunnel(
         (),
         "Tunnel closed successfully",
     )))
+}
+
+/// POST /btsp/contact/exchange - Exchange contact information via genetic lineage
+async fn contact_exchange(
+    State(state): State<BtspApiState>,
+    Json(req): Json<ContactExchangeRequest>,
+) -> Result<Json<ApiResponse<ContactExchangeResponse>>, ApiError> {
+    info!("🔍 Contact exchange request for peer: {}", req.target_peer_id);
+
+    let contact = state
+        .provider
+        .contact_exchange(&req.target_peer_id, &req.requester_lineage, req.max_hops)
+        .await
+        .map_err(|e| {
+            warn!("Contact exchange failed: {}", e);
+            ApiError::from(e)
+        })?;
+
+    info!("✅ Contact exchange successful: {} addresses found", contact.addresses.len());
+
+    Ok(Json(ApiResponse::success(ContactExchangeResponse { contact })))
 }
 
 #[cfg(test)]

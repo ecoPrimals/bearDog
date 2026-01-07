@@ -131,7 +131,9 @@ impl BearDogClient {
             Ok(api_response.data)
         } else {
             Err(BearDogClientError::ApiError(
-                api_response.error.unwrap_or_else(|| "Unknown error".to_string()),
+                api_response
+                    .error
+                    .unwrap_or_else(|| "Unknown error".to_string()),
             ))
         }
     }
@@ -166,7 +168,10 @@ impl BearDogClient {
         service_type: &str,
         metadata: Option<LineageMetadata>,
     ) -> ClientResult<SpawnLineageResponse> {
-        info!("👶 Spawning {} from parent {}", service_type, parent_lineage);
+        info!(
+            "👶 Spawning {} from parent {}",
+            service_type, parent_lineage
+        );
 
         let request = SpawnLineageRequest {
             parent_lineage: parent_lineage.to_string(),
@@ -188,7 +193,9 @@ impl BearDogClient {
             Ok(api_response.data)
         } else {
             Err(BearDogClientError::ApiError(
-                api_response.error.unwrap_or_else(|| "Unknown error".to_string()),
+                api_response
+                    .error
+                    .unwrap_or_else(|| "Unknown error".to_string()),
             ))
         }
     }
@@ -248,7 +255,9 @@ impl BearDogClient {
             Ok(result)
         } else {
             Err(BearDogClientError::ApiError(
-                api_response.error.unwrap_or_else(|| "Unknown error".to_string()),
+                api_response
+                    .error
+                    .unwrap_or_else(|| "Unknown error".to_string()),
             ))
         }
     }
@@ -305,7 +314,9 @@ impl BearDogClient {
             Ok(api_response.data)
         } else {
             Err(BearDogClientError::ApiError(
-                api_response.error.unwrap_or_else(|| "Unknown error".to_string()),
+                api_response
+                    .error
+                    .unwrap_or_else(|| "Unknown error".to_string()),
             ))
         }
     }
@@ -330,7 +341,9 @@ impl BearDogClient {
             Ok(api_response.data)
         } else {
             Err(BearDogClientError::ApiError(
-                api_response.error.unwrap_or_else(|| "Unknown error".to_string()),
+                api_response
+                    .error
+                    .unwrap_or_else(|| "Unknown error".to_string()),
             ))
         }
     }
@@ -474,4 +487,3 @@ mod tests {
         assert_eq!(response.common_ancestor, Some("root-node".to_string()));
     }
 }
-

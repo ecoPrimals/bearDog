@@ -3,7 +3,6 @@
 //! These tests cover edge cases, error paths, and complex scenarios
 //! to increase test coverage in the genetics crate.
 
-#![cfg(test)]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use super::enforcement::*;

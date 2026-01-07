@@ -40,7 +40,7 @@ async fn test_chaos_random_operation_failures() {
 async fn test_chaos_network_partition() {
     // Test behavior during network partition
     use tokio::sync::watch;
-    
+
     let (partition_tx, mut partition_rx) = watch::channel(false);
 
     // Normal operation
@@ -65,7 +65,7 @@ async fn test_chaos_network_partition() {
 async fn test_chaos_resource_exhaustion() {
     // Test handling of resource exhaustion with proper concurrent coordination
     use tokio::sync::Semaphore;
-    
+
     let max_connections = 10;
     let semaphore = Arc::new(Semaphore::new(max_connections));
     let mut handles = vec![];
@@ -80,11 +80,11 @@ async fn test_chaos_resource_exhaustion() {
                     // Connection accepted
                     tokio::task::yield_now().await; // Simulate work
                     drop(permit); // Release connection
-                Ok(i)
+                    Ok(i)
                 }
                 Err(_) => {
                     // Connection rejected - limit reached
-                Err("connection limit reached")
+                    Err("connection limit reached")
                 }
             }
         });
@@ -139,7 +139,7 @@ async fn test_chaos_delayed_responses() {
 async fn test_chaos_cascading_failures() {
     // Test handling of cascading failures with proper event signaling
     use tokio::sync::watch;
-    
+
     let (services_tx, mut services_rx) = watch::channel(5_usize);
 
     // First service fails
