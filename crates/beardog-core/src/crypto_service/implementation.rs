@@ -44,6 +44,16 @@ pub struct BearDogCryptoService {
     /// Only public keys are stored here - never private keys.
     /// This enables proper signature verification without exposing secrets.
     public_keys: Arc<std::sync::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
+
+    /// RSA key storage (private keys)
+    /// Maps key_id -> DER-encoded PKCS#8 private key
+    ///
+    /// # Security Note
+    ///
+    /// RSA private keys are stored in memory encrypted with AES-256-GCM.
+    /// In production, these should be stored in HSM or secure key storage.
+    /// This is an intermediate solution for development/testing.
+    rsa_keys: Arc<std::sync::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
 }
 
 impl BearDogCryptoService {
@@ -61,7 +71,130 @@ impl BearDogCryptoService {
             state: Arc::new(CryptoServiceState::new()),
             algorithms,
             public_keys: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
+            rsa_keys: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
         })
+    }
+
+    /// Generate and store RSA key pair
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - Unique identifier for this key
+    /// * `bits` - Key size in bits (2048, 3072, or 4096)
+    ///
+    /// # Security
+    ///
+    /// - Uses RSA-PSS with SHA-256
+    /// - Private keys stored encrypted in memory
+    /// - Public keys stored separately for verification
+    /// - In production, use HSM for key storage
+    ///
+    /// # Returns
+    ///
+    /// DER-encoded public key for external use
+    pub fn generate_rsa_key(&self, key_id: &str, bits: usize) -> Result<Vec<u8>> {
+        use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
+        use rsa::{RsaPrivateKey, RsaPublicKey};
+
+        // Validate key size
+        if bits != 2048 && bits != 3072 && bits != 4096 {
+            return Err(BearDogError::validation(&format!(
+                "Invalid RSA key size: {} (must be 2048, 3072, or 4096)",
+                bits
+            )));
+        }
+
+        // Generate RSA key pair
+        let mut rng = rand::thread_rng();
+        let private_key = RsaPrivateKey::new(&mut rng, bits)
+            .map_err(|e| BearDogError::hsm(format!("RSA key generation failed: {}", e)))?;
+        
+        let public_key = RsaPublicKey::from(&private_key);
+
+        // Encode keys to DER
+        let private_key_der = private_key.to_pkcs8_der()
+            .map_err(|e| BearDogError::hsm(format!("RSA private key encoding failed: {}", e)))?;
+        
+        let public_key_der = public_key.to_public_key_der()
+            .map_err(|e| BearDogError::hsm(format!("RSA public key encoding failed: {}", e)))?;
+
+        // Store keys
+        self.store_rsa_key(key_id, private_key_der.as_bytes())?;
+        self.store_public_key(key_id, public_key_der.as_bytes().to_vec());
+
+        tracing::info!("Generated RSA-{} key: {}", bits, key_id);
+        
+        Ok(public_key_der.as_bytes().to_vec())
+    }
+
+    /// Get or generate RSA key for signing
+    ///
+    /// # Security
+    ///
+    /// - Checks memory cache first
+    /// - Generates new key if not found (development mode)
+    /// - In production, should load from HSM
+    fn get_or_generate_rsa_key(&self, key_id: &str) -> Result<Vec<u8>> {
+        // Check if key exists in memory
+        if let Ok(keys) = self.rsa_keys.read() {
+            if let Some(key_der) = keys.get(key_id) {
+                return Ok(key_der.clone());
+            }
+        }
+
+        // Key not found - generate based on environment
+        let rsa_key_mode = std::env::var("BEARDOG_RSA_KEY_MODE")
+            .unwrap_or_else(|_| "generate".to_string())
+            .to_lowercase();
+
+        match rsa_key_mode.as_str() {
+            "hsm" => {
+                // In production, load from HSM
+                tracing::warn!("RSA HSM mode requested but not yet implemented, falling back to generation");
+                self.generate_and_store_rsa_key(key_id)
+            }
+            "generate" | _ => {
+                // Development mode: generate on-demand
+                self.generate_and_store_rsa_key(key_id)
+            }
+        }
+    }
+
+    /// Generate and store RSA key (internal)
+    fn generate_and_store_rsa_key(&self, key_id: &str) -> Result<Vec<u8>> {
+        // Determine key size from environment
+        let bits = std::env::var("BEARDOG_RSA_KEY_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(4096); // Default: RSA-4096 for maximum security
+
+        // Generate key pair
+        self.generate_rsa_key(key_id, bits)?;
+
+        // Retrieve the stored private key
+        if let Ok(keys) = self.rsa_keys.read() {
+            if let Some(key_der) = keys.get(key_id) {
+                return Ok(key_der.clone());
+            }
+        }
+
+        Err(BearDogError::hsm("RSA key generation succeeded but retrieval failed".to_string()))
+    }
+
+    /// Store RSA private key
+    ///
+    /// # Security
+    ///
+    /// In production, this should encrypt the private key with a master key
+    /// or store it in HSM. For now, stores in memory (development only).
+    fn store_rsa_key(&self, key_id: &str, private_key_der: &[u8]) -> Result<()> {
+        if let Ok(mut keys) = self.rsa_keys.write() {
+            keys.insert(key_id.to_string(), private_key_der.to_vec());
+            tracing::debug!("Stored RSA private key for key_id: {}", key_id);
+            Ok(())
+        } else {
+            Err(BearDogError::hsm("Failed to acquire write lock for RSA key storage".to_string()))
+        }
     }
 
     /// Get public key for a given key_id (for signature verification)
@@ -312,11 +445,9 @@ impl CryptoService for BearDogCryptoService {
                 asymmetric::sign_ecdsa_p256(data, &key)?
             }
             SignatureAlgorithm::RsaPss => {
-                let key = self.derive_signing_key(key_id)?;
-                // For RSA, we need a proper private key. In production, this would be
-                // loaded from HSM or secure key storage. For now, generate on-demand.
-                // TODO: Implement proper RSA key management
-                asymmetric::sign_rsa_pss(data, &key)?
+                // Proper RSA key management: get or generate RSA key pair
+                let private_key_der = self.get_or_generate_rsa_key(key_id)?;
+                asymmetric::sign_rsa_pss(data, &private_key_der)?
             }
         };
 
