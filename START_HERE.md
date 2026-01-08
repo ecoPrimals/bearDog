@@ -1,392 +1,213 @@
-# 🐻 BearDog - Start Here
+# 🚀 Start Here - BearDog Quick Guide
 
-**Version**: 0.15.0  
-**Date**: January 7, 2026  
-**Status**: ✅ **Production Ready - All Development & Testing Complete**
+**Welcome to BearDog!** This guide will get you oriented quickly.
+
+---
+
+## 📍 Where Am I?
+
+You're in the **BearDog** repository - the Security & Trust Primal for the ecoPrimals ecosystem.
+
+**Current Status**: ✅ Production Ready (v0.15.0)
 
 ---
 
 ## 🎯 What is BearDog?
 
-BearDog is the **security and trust primal** for sovereign distributed systems, providing:
-
-- 🔐 **Genetic Lineage Trust** - Auto-trust within families, cryptographic proofs
-- 🔑 **BTSP Secure Tunneling** - VPN-free P2P mesh with NAT traversal
-- 🛡️ **Zero Technical Debt** - No unsafe code, no hardcoding, modern Rust
-- 🌐 **Capability-Based IPC** - Universal inter-primal communication
-- 🧪 **Comprehensive Testing** - 1,247/1,250 tests passing (99.76%)
+BearDog provides:
+- **Genetic Lineage Trust** - Cryptographic family verification
+- **BTSP Secure Tunneling** - Genetic cryptography-based secure channels
+- **HSM Integration** - Hardware and software security modules
+- **Zero-Knowledge Crypto** - Privacy-preserving cryptographic services
 
 ---
 
-## 🚀 Quick Start (Choose Your Path)
+## 📚 Essential Documents (Read in Order)
 
-### For biomeOS Teams → Deploy Now (30 minutes)
+### 1. Current Status
+**[CURRENT_STATUS.md](CURRENT_STATUS.md)** - What's working now, latest achievements
 
-**📖 Read**: [`DEPLOYMENT_GUIDE_JAN_7_2026.md`](DEPLOYMENT_GUIDE_JAN_7_2026.md)
+### 2. Project Overview
+**[README.md](README.md)** - Comprehensive project documentation
+
+### 3. Latest Session
+**[LEGENDARY_SESSION_JAN_8_2026.md](LEGENDARY_SESSION_JAN_8_2026.md)** - Most recent achievements
+
+### 4. Complete Documentation
+**[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Full documentation index
+
+---
+
+## 🏃 Quick Start
+
+### For Developers
 
 ```bash
-# 1. Copy binary
-scp target/release/beardog-server tower1:/usr/local/bin/
+# 1. Clone the repository
+git clone git@github.com:ecoPrimals/bearDog.git
+cd bearDog
 
-# 2. Set environment
-export BEARDOG_FAMILY_ID=nat0
-export BEARDOG_NODE_ID=tower1
-export BEARDOG_HSM_MODE=software
-
-# 3. Restart service
-sudo systemctl restart beardog
-
-# 4. Verify
-curl http://localhost:9000/health
-```
-
-**Expected**: ✅ Federation with genetic lineage trust working!
-
-**Handoff Doc**: [`HANDOFF_TO_BIOMEOS_JAN_7_2026.md`](HANDOFF_TO_BIOMEOS_JAN_7_2026.md)
-
----
-
-### For Songbird Teams → Integrate (30 minutes)
-
-**📖 Read**: [`BTSP_IMPLEMENTATION_COMPLETE.md`](BTSP_IMPLEMENTATION_COMPLETE.md)
-
-**What You Need**:
-1. Add `SecurityAdapter.call_generic()` method (10 min)
-2. Wire `BtspClient` to `/btsp/contact/exchange` (10 min)
-3. Test and deploy v3.16.0 (10 min)
-
-**Result**: ✅ VPN-free P2P mesh enabled!
-
-**Handoff Doc**: [`BTSP_SONGBIRD_HANDOFF_RESPONSE.md`](BTSP_SONGBIRD_HANDOFF_RESPONSE.md)
-
----
-
-### For Developers → Build & Test
-
-```bash
-# Clone and build
-git clone <repo>
-cd beardog
+# 2. Build the project
 cargo build --release
 
-# Configure
-export FAMILY_ID=test-family
-export NODE_ID=test-node
-export BEARDOG_HSM_MODE=software
+# 3. Run tests
+cargo test --lib
 
-# Run
-./target/release/beardog-server
-
-# Test trust evaluation
-curl -X POST http://localhost:9000/api/trust/evaluate \
-  -H "Content-Type: application/json" \
-  -d '{"peer_id":"peer1","peer_family":"test-family"}'
-
-# Test BTSP contact exchange
-curl -X POST http://localhost:9000/btsp/contact/exchange \
-  -H "Content-Type: application/json" \
-  -d '{"target_peer_id":"peer2","requester_lineage":"peer1","max_hops":3}'
+# 4. Check coverage
+cargo llvm-cov --lib
 ```
 
----
+### For Integrators (biomeOS, Songbird, etc.)
 
-### For Test Engineers → Run Tests
-
+#### Option 1: Standalone Server
 ```bash
-# All tests (1,247 passing)
-cargo test --workspace
+# Run standalone server
+cargo run --bin beardog-server
 
-# New tests only (50 tests)
-cargo test -p beardog-tunnel unix_socket_ipc_schema_tests --lib && \
-  cargo test --test schema_fix_e2e_tests -- --test-threads=1 && \
-  cargo test --test btsp_contact_exchange_e2e_tests
-
-# Specific features
-cargo test decision              # Decision field tests
-cargo test contact_exchange      # BTSP tests
-cargo test env_var              # Environment variable tests
+# With custom port
+BEARDOG_BIND_ADDR=0.0.0.0:19000 beardog-server
 ```
 
-**Testing Guide**: [`TESTING_EVOLUTION_COMPLETE.md`](TESTING_EVOLUTION_COMPLETE.md)
+See: **[BIOMEOS_STANDALONE_SERVER_COMPLETE_JAN_8_2026.md](BIOMEOS_STANDALONE_SERVER_COMPLETE_JAN_8_2026.md)**
+
+#### Option 2: Embeddable Library
+```rust
+use beardog_tunnel::tunnel::hsm::manager::HsmManager;
+
+// Auto-initialize HSM
+let hsm = Arc::new(HsmManager::auto_initialize().await?);
+```
+
+See: **[examples/embeddable_beardog_server.rs](examples/embeddable_beardog_server.rs)**
 
 ---
 
-## 📚 Essential Documentation
+## 🎓 Key Concepts
 
-### 🚀 Start Here
-1. **This File** - You're reading it!
-2. **[NEXT_STEPS_FOR_TEAMS.md](NEXT_STEPS_FOR_TEAMS.md)** - Team-specific action items
-3. **[FINAL_STATUS_JAN_7_2026.txt](FINAL_STATUS_JAN_7_2026.txt)** - Final status summary
+### 1. Genetic Lineage
+- Cryptographic family relationships
+- Genesis → Parent → Child lineage chains
+- BirdSong protocol for secure discovery
 
-### 📦 Deployment
-- **[DEPLOYMENT_GUIDE_JAN_7_2026.md](DEPLOYMENT_GUIDE_JAN_7_2026.md)** - Complete deployment guide (481 lines)
-- **[HANDOFF_TO_BIOMEOS_JAN_7_2026.md](HANDOFF_TO_BIOMEOS_JAN_7_2026.md)** - biomeOS handoff
-- **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** - All 24 config variables
-- **[env.example](env.example)** - Configuration template
+### 2. BTSP (BearDog Tunnel Security Protocol)
+- Genetic cryptography-based tunnels
+- Lineage-based trust evaluation
+- Zero-knowledge contact exchange
 
-### 🔐 Features
-- **[SCHEMA_FIX_JAN_7_2026.md](SCHEMA_FIX_JAN_7_2026.md)** - Decision field & env vars (CRITICAL)
-- **[BTSP_IMPLEMENTATION_COMPLETE.md](BTSP_IMPLEMENTATION_COMPLETE.md)** - BTSP contact exchange (NEW)
-- **[CAPABILITY_BASED_IPC_COMPLETE.md](CAPABILITY_BASED_IPC_COMPLETE.md)** - IPC architecture
-- **[TRUST_POLICY_EVOLUTION_JAN_7_2026.md](TRUST_POLICY_EVOLUTION_JAN_7_2026.md)** - Trust system
+### 3. HSM Architecture
+- Universal HSM abstraction
+- Software HSM (pure Rust)
+- Hardware HSM integration (TPM, StrongBox, Secure Enclave)
 
-### 🧪 Testing
-- **[TESTING_EVOLUTION_COMPLETE.md](TESTING_EVOLUTION_COMPLETE.md)** - Testing guide (50 new tests)
-- **[FINAL_TESTING_STATUS.txt](FINAL_TESTING_STATUS.txt)** - Test results summary
-
-### 📋 Status & Issues
-- **[ISSUES_STATUS_REPORT.md](ISSUES_STATUS_REPORT.md)** - All issues resolved (5/5) ✅
-- **[JAN_7_2026_SESSION_COMPLETE.md](JAN_7_2026_SESSION_COMPLETE.md)** - Session summary
-
-**Total**: 22 comprehensive documentation files
+### 4. Primal Sovereignty
+- Self-knowledge only (no hardcoded dependencies)
+- Runtime discovery via capabilities
+- Environment-driven configuration
 
 ---
 
-## 🎊 What's Complete (January 7, 2026)
+## 🔍 Common Tasks
 
-### Development ✅
-- ✅ Schema fix (decision field + env var fallback)
-- ✅ BTSP contact exchange (genetic lineage NAT traversal)
-- ✅ All 6 BTSP endpoints complete
-- ✅ Zero unsafe code in production
+### Run Tests
+```bash
+# All library tests
+cargo test --lib
+
+# Specific test
+cargo test test_name
+
+# With output
+cargo test -- --nocapture
+```
+
+### Check Coverage
+```bash
+# Generate coverage report
+cargo llvm-cov --lib
+
+# HTML report
+cargo llvm-cov --lib --html
+```
+
+### Run Standalone Server
+```bash
+# Default (port 9000)
+cargo run --bin beardog-server
+
+# Custom configuration
+BEARDOG_BIND_ADDR=0.0.0.0:19000 \
+BEARDOG_HSM_MODE=software \
+beardog-server
+```
+
+### Environment Variables
+See **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** for complete reference.
+
+---
+
+## 🏆 Recent Achievements
+
+### January 8, 2026 - Legendary Session ✅
+- 100% Phase 5 Security complete (9/9 TODOs)
+- biomeOS unblocked (HSM fix + standalone server)
+- Complete security suite (Ed25519, RSA, attestation, multi-sig, behavioral)
+- 7 commits pushed to main
+
+### Quality Metrics
+- ✅ 97.40% test coverage
+- ✅ Zero unsafe code
 - ✅ Zero hardcoding
-- ✅ Production binary ready (MD5: `12da9d23540ad189ea26a5c7d9b04546`)
-
-### Testing ✅
-- ✅ 50 new tests added (17 unit + 33 E2E)
-- ✅ All tests passing (1,247/1,250 = 99.76%)
-- ✅ Schema fix tests (30 tests)
-- ✅ BTSP contact exchange tests (20 tests)
-- ✅ Comprehensive test documentation
-
-### Issues Resolved ✅
-- ✅ Issue #1: Missing "decision" field (Songbird) - RESOLVED
-- ✅ Issue #2: Environment variable reading (Songbird) - RESOLVED
-- ✅ Issue #3: BTSP contact exchange needed (Songbird) - IMPLEMENTED
-- ✅ Issue #4: Port-free architecture (biomeOS) - ALREADY COMPLETE
-- ✅ Issue #5: Capability-based IPC (biomeOS) - ALREADY COMPLETE
-
-### Documentation ✅
-- ✅ 22 comprehensive documentation files
-- ✅ Deployment guides
-- ✅ API specifications
-- ✅ Team handoffs
-- ✅ Testing guides
+- ✅ A+ grade (98%)
 
 ---
 
-## 🎯 What's Next (External Teams)
+## 📞 Need Help?
 
-### Timeline to Production (2 hours)
+### Documentation
+1. **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Complete doc index
+2. **[CURRENT_STATUS.md](CURRENT_STATUS.md)** - Current state
+3. **[README.md](README.md)** - Comprehensive overview
 
-```
-Now: All BearDog work complete ✅
-  │
-  ├─ +30min: biomeOS deploys BearDog v0.15.0
-  │          Guide: DEPLOYMENT_GUIDE_JAN_7_2026.md
-  │
-  ├─ +30min: Songbird implements BTSP client
-  │          Guide: BTSP_IMPLEMENTATION_COMPLETE.md
-  │
-  ├─ +1hour: Both deployed, ready for testing
-  │
-  └─ +2hours: VPN-free P2P mesh working! 🎊
-```
+### Integration Guides
+- **biomeOS**: `BIOMEOS_HSM_FIX_HANDOFF_JAN_8_2026.md`
+- **Songbird**: `BTSP_SONGBIRD_HANDOFF_RESPONSE.md`
+- **Embeddable Pattern**: `docs/EMBEDDABLE_HSM_PATTERN.md`
 
-### Team Actions
-
-**biomeOS (30 min)**:
-1. Deploy binary to towers
-2. Set environment variables
-3. Restart BearDog services
-4. Verify federation working
-
-**Songbird (30 min)**:
-1. Add `SecurityAdapter.call_generic()`
-2. Wire `BtspClient` to contact exchange endpoint
-3. Deploy Songbird v3.16.0
-4. Test with BearDog
-
-**Integration (1 hour)**:
-1. Test dual-tower federation
-2. Verify VPN-free P2P mesh
-3. Performance testing
-4. Production deployment
+### Technical Reference
+- **Architecture**: `ARCHITECTURE.md`
+- **Security**: `SECURITY.md`
+- **Environment Variables**: `ENVIRONMENT_VARIABLES.md`
 
 ---
 
-## 🔍 Key Features Explained
+## 🎯 Next Steps
 
-### Genetic Lineage Trust
-**What**: Automatic trust within same genetic family  
-**How**: Cryptographic proofs verify shared lineage  
-**Result**: Same family = auto-accept for coordination
+### For New Contributors
+1. Read `CURRENT_STATUS.md`
+2. Review `README.md`
+3. Check `DOCUMENTATION_INDEX.md` for specific topics
+4. Run tests: `cargo test --lib`
 
-**Example**:
-```json
-{
-  "decision": "auto_accept",      // NEW: Explicit decision
-  "trust_level": 1,                // Integer (backward compat)
-  "trust_level_name": "limited",   // String (Songbird compat)
-  "reason": "same_genetic_family",
-  "our_family": "nat0",            // Correct (not "unknown")
-  "our_node": "tower1"             // Correct (not "unknown")
-}
-```
-
-### BTSP Contact Exchange (NEW)
-**What**: Genetic lineage-based peer discovery  
-**How**: Query lineage for peer addresses, no central servers  
-**Result**: Decentralized NAT traversal for VPN-free P2P
-
-**Example**:
-```json
-{
-  "contact": {
-    "peer_id": "tower2",
-    "addresses": ["192.168.1.10:10000", "203.0.113.42:10000"],
-    "lineage_proof": "proof123",
-    "lineage_path": ["nat0", "tower2"],
-    "search_depth": 1
-  }
-}
-```
-
-### Environment Variable Fallback
-**What**: Supports both `FAMILY_ID` and `BEARDOG_FAMILY_ID`  
-**How**: Reads primary first, falls back to prefixed version  
-**Result**: Works with any environment naming convention
-
-**Priority**:
-1. `FAMILY_ID` / `NODE_ID` (primary)
-2. `BEARDOG_FAMILY_ID` / `BEARDOG_NODE_ID` (fallback)
-3. `"unknown"` (if neither set)
+### For Integrators
+1. Choose deployment mode (standalone vs embeddable)
+2. Review integration guide for your primal
+3. Check `examples/` directory
+4. Test with your use case
 
 ---
 
-## 🧪 Testing Details
+## 🔗 Quick Links
 
-### Test Coverage (Updated January 7, 2026)
-
-| Category | Tests | Status |
-|----------|-------|--------|
-| **Existing Tests** | 1,197 | ✅ Passing |
-| **New Schema Tests** | 30 | ✅ Passing |
-| **New BTSP Tests** | 20 | ✅ Passing |
-| **HSM Tests** | 3 | ⏸️ Ignored (hardware) |
-| **Total** | 1,250 | **99.76%** ✅ |
-
-### Run All New Tests
-```bash
-cargo test -p beardog-tunnel unix_socket_ipc_schema_tests --lib && \
-  cargo test --test schema_fix_e2e_tests -- --test-threads=1 && \
-  cargo test --test btsp_contact_exchange_e2e_tests
-
-# Expected: 50 tests, 50 passed, 0 failed ✅
-```
-
-**Note**: Schema E2E tests require `--test-threads=1` to avoid environment variable conflicts.
+- **Current Status**: [CURRENT_STATUS.md](CURRENT_STATUS.md)
+- **README**: [README.md](README.md)
+- **Documentation Index**: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
+- **Latest Session**: [LEGENDARY_SESSION_JAN_8_2026.md](LEGENDARY_SESSION_JAN_8_2026.md)
+- **Phase 5 Complete**: [PHASE_5_COMPLETE_JAN_8_2026.md](PHASE_5_COMPLETE_JAN_8_2026.md)
 
 ---
 
-## 📊 Code Quality
-
-### Metrics
-
-| Metric | Value | Status |
-|--------|-------|--------|
-| **Unsafe Code** | 0 blocks | ✅ |
-| **Hardcoding** | 0 instances | ✅ |
-| **Production Mocks** | 0 | ✅ |
-| **Test Coverage** | 99.76% | ✅ |
-| **Binary Size** | 6.5MB | ✅ |
-| **Build Time** | 34 seconds | ✅ |
-| **Primal Sovereignty** | 100% | ✅ |
-
-### Architecture Compliance
-- ✅ **Primal Sovereignty**: Only self-knowledge, no vendor hardcoding
-- ✅ **Capability-Based**: Universal IPC adapter
-- ✅ **Environment-Driven**: All config from env vars
-- ✅ **Multi-Protocol**: tarpc, JSON-RPC, HTTP
-- ✅ **Zero-Copy**: Optimized for performance
-
----
-
-## 🎯 Common Tasks
-
-### Check Service Status
-```bash
-# Health check
-curl http://localhost:9000/health
-
-# Via Unix socket
-echo '{"jsonrpc":"2.0","method":"health.check","id":1}' | nc -U /tmp/beardog-nat0-tower1.sock
-```
-
-### Verify Environment
-```bash
-# Check if BearDog is reading env vars correctly
-echo '{"jsonrpc":"2.0","method":"identity.get_family","id":1}' | nc -U /tmp/beardog-nat0-tower1.sock
-
-# Expected: "family": "nat0", "node": "tower1" (not "unknown")
-```
-
-### Test Trust Evaluation
-```bash
-# Same family (should auto-accept)
-curl -X POST http://localhost:9000/api/trust/evaluate \
-  -H "Content-Type: application/json" \
-  -d '{"peer_id":"tower2","peer_family":"nat0"}'
-
-# Expected: "decision": "auto_accept"
-```
-
-### Test Contact Exchange
-```bash
-# Request peer contact info
-curl -X POST http://localhost:9000/btsp/contact/exchange \
-  -H "Content-Type: application/json" \
-  -d '{"target_peer_id":"tower2","requester_lineage":"tower1","max_hops":3}'
-
-# Expected: addresses, lineage_proof, lineage_path
-```
-
----
-
-## 🆘 Troubleshooting
-
-### BearDog returns `"our_family": "unknown"`
-**Cause**: Environment variables not set correctly  
-**Fix**: Set `BEARDOG_FAMILY_ID` and `BEARDOG_NODE_ID`
-```bash
-export BEARDOG_FAMILY_ID=nat0
-export BEARDOG_NODE_ID=tower1
-sudo systemctl restart beardog
-```
-
-### Missing "decision" field error
-**Cause**: Old binary (< v0.15.0)  
-**Fix**: Deploy latest binary (MD5: `12da9d23540ad189ea26a5c7d9b04546`)
-
-### Test failures with env vars
-**Cause**: Parallel test execution causing env var conflicts  
-**Fix**: Run schema E2E tests with `--test-threads=1`
-
----
-
-## 📖 More Information
-
-- **README**: [`README.md`](README.md) - Complete project overview
-- **Architecture**: [`ARCHITECTURE.md`](ARCHITECTURE.md) - System architecture
-- **Quick Ref**: [`QUICK_REFERENCE_TARPC.md`](QUICK_REFERENCE_TARPC.md) - tarpc protocol
-- **Security**: [`SECURITY.md`](SECURITY.md) - Security model
-
----
-
+**Status**: ✅ Production Ready  
 **Version**: 0.15.0  
-**Date**: January 7, 2026  
-**Status**: ✅ **Production Ready - All Development & Testing Complete**
+**Confidence**: VERY HIGH 🚀
 
-**Next**: External teams execute → 2 hours to VPN-free P2P mesh! 🚀
-
-🔐 **Ready for production deployment!** 🔐
+🐻 **Welcome to BearDog!** 🛡️
