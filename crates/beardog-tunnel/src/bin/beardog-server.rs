@@ -20,25 +20,28 @@
 //! # Environment Variables
 //!
 //! - `BEARDOG_HSM_MODE` - HSM mode (default: "software")
-//! - `BEARDOG_BIND_ADDR` - HTTP bind address (e.g., "0.0.0.0:9000")
-//! - `HTTP_PORT` - HTTP port (alternative to BEARDOG_BIND_ADDR)
+//! - `BEARDOG_HTTP_ENABLED` - Enable HTTP API (default: false) **NEW**
+//! - `BEARDOG_BIND_ADDR` - HTTP bind address (only if HTTP enabled)
+//! - `HTTP_PORT` - HTTP port (only if HTTP enabled)
 //! - `BEARDOG_FAMILY_SEED` - Family lineage seed (optional)
-//! - `NODE_ID` - Node identifier for socket path
+//! - `BEARDOG_FAMILY_ID` - Family identifier (for socket path)
+//! - `BEARDOG_NODE_ID` - Node identifier (for socket path)
+//! - `NODE_ID` - Fallback node identifier
 //! - `BEARDOG_ENABLE_CORS` - Enable CORS (default: true)
 //!
 //! # Usage
 //!
 //! ```bash
-//! # Start with default settings
+//! # Start with default settings (Unix socket only, NO HTTP)
 //! beardog-server
 //!
-//! # Start with custom port
-//! BEARDOG_BIND_ADDR=0.0.0.0:19000 beardog-server
+//! # Start with HTTP enabled
+//! BEARDOG_HTTP_ENABLED=true HTTP_PORT=9000 beardog-server
 //!
-//! # Or using HTTP_PORT
-//! HTTP_PORT=19000 beardog-server
+//! # Or with full bind address
+//! BEARDOG_HTTP_ENABLED=true BEARDOG_BIND_ADDR=0.0.0.0:19000 beardog-server
 //!
-//! # With family seed
+//! # With family seed (Unix socket only)
 //! BEARDOG_FAMILY_SEED="$(cat /media/usb/seed.txt)" beardog-server
 //! ```
 
@@ -119,70 +122,101 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("✅ BTSP Provider created");
     info!("");
 
-    // Step 5: Configure API Server
-    info!("🚀 Step 4: Configuring API Server...");
+    // Step 5: Determine Family and Node IDs for Unix Socket
+    info!("🔌 Step 4: Configuring Unix Socket IPC...");
+    let family_id = std::env::var("BEARDOG_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+    let node_id = std::env::var("BEARDOG_NODE_ID")
+        .or_else(|_| std::env::var("NODE_ID"))
+        .unwrap_or_else(|_| "default".to_string());
+    
+    let socket_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
+    info!("   Socket Path: {}", socket_path);
+    info!("   Family ID: {}", family_id);
+    info!("   Node ID: {}", node_id);
+    info!("");
 
-    // Determine bind address from environment
-    let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
-        .or_else(|_| {
-            std::env::var("HTTP_PORT").map(|port| format!("0.0.0.0:{}", port))
-        })
-        .unwrap_or_else(|_| {
-            warn!("   No BEARDOG_BIND_ADDR or HTTP_PORT set, using default: 0.0.0.0:9000");
-            "0.0.0.0:9000".to_string()
-        })
-        .parse()
-        .map_err(|e| {
-            error!("Invalid bind address: {}", e);
-            BearDogError::configuration(&format!("Invalid bind address: {}", e))
-        })?;
-
-    let enable_cors = std::env::var("BEARDOG_ENABLE_CORS")
+    // Step 6: Check if HTTP is enabled
+    let http_enabled = std::env::var("BEARDOG_HTTP_ENABLED")
         .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(true);
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(false);
 
-    let config = BearDogApiServerConfig {
-        bind_addr,
-        enable_cors,
-        version: env!("CARGO_PKG_VERSION").to_string(),
+    let server_task = if http_enabled {
+        info!("🌐 Step 5: HTTP API Enabled");
+        
+        // Determine bind address from environment
+        let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
+            .or_else(|_| {
+                std::env::var("HTTP_PORT").map(|port| format!("0.0.0.0:{}", port))
+            })
+            .unwrap_or_else(|_| {
+                warn!("   No BEARDOG_BIND_ADDR or HTTP_PORT set, using default: 0.0.0.0:9000");
+                "0.0.0.0:9000".to_string()
+            })
+            .parse()
+            .map_err(|e| {
+                error!("Invalid bind address: {}", e);
+                BearDogError::configuration(&format!("Invalid bind address: {}", e))
+            })?;
+
+        let enable_cors = std::env::var("BEARDOG_ENABLE_CORS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(true);
+
+        let config = BearDogApiServerConfig {
+            bind_addr,
+            enable_cors,
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        };
+
+        info!("   Bind Address: {}", config.bind_addr);
+        info!("   CORS Enabled: {}", config.enable_cors);
+        info!("");
+
+        info!("📡 Step 6: Creating HTTP API Server...");
+        let server = BearDogApiServer::new(config.clone(), btsp_provider.clone())
+            .await
+            .map_err(|e| {
+                error!("Failed to create API server: {}", e);
+                e
+            })?;
+        info!("✅ HTTP API Server created");
+        info!("");
+
+        info!("🚦 Step 7: Starting HTTP Server...");
+        Some((tokio::spawn(async move {
+            if let Err(e) = server.serve().await {
+                error!("HTTP Server error: {}", e);
+            }
+        }), config))
+    } else {
+        info!("🔌 Step 5: Unix Socket ONLY (Port-Free Mode)");
+        info!("   HTTP API disabled (set BEARDOG_HTTP_ENABLED=true to enable)");
+        info!("   ✅ Zero HTTP ports - Maximum security");
+        info!("");
+        None
     };
 
-    info!("   Bind Address: {}", config.bind_addr);
-    info!("   CORS Enabled: {}", config.enable_cors);
-    info!("   Version: {}", config.version);
-    info!("");
-
-    // Step 6: Create API Server
-    info!("📡 Step 5: Creating API Server...");
-    let server = BearDogApiServer::new(config.clone(), btsp_provider)
-        .await
-        .map_err(|e| {
-            error!("Failed to create API server: {}", e);
-            e
-        })?;
-    info!("✅ API Server created");
-    info!("");
-
-    // Step 7: Start Server in Background
-    info!("🚦 Step 6: Starting Server...");
-    let server_task = tokio::spawn(async move {
-        if let Err(e) = server.serve().await {
-            error!("Server error: {}", e);
-        }
-    });
-
+    // Display status
     info!("╔════════════════════════════════════════════════════════════════════╗");
     info!("║                                                                    ║");
     info!("║         ✅ BearDog Service Ready!                                  ║");
     info!("║                                                                    ║");
-    info!("║  HTTP API: http://{}                              ", config.bind_addr);
+    if let Some((_, config)) = &server_task {
+        info!("║  🌐 HTTP API: http://{}                              ║", config.bind_addr);
+        info!("║                                                                    ║");
+    } else {
+        info!("║  🔌 Unix Socket ONLY (Port-Free)                                   ║");
+        info!("║                                                                    ║");
+    }
+    info!("║  Unix Socket: {}                 ║", socket_path);
     info!("║                                                                    ║");
-    info!("║  Unix Socket: /tmp/primals/beardog-{{node}}.sock                    ║");
-    info!("║                                                                    ║");
-    info!("║  Health Check:                                                     ║");
-    info!("║    curl http://{}/health                         ", config.bind_addr);
-    info!("║                                                                    ║");
+    if server_task.is_some() {
+        info!("║  Health Check:                                                     ║");
+        info!("║    curl http://{}/health                         ", server_task.as_ref().unwrap().1.bind_addr);
+        info!("║                                                                    ║");
+    }
     info!("║  Press Ctrl+C or send SIGTERM to shutdown gracefully              ║");
     info!("║                                                                    ║");
     info!("╚════════════════════════════════════════════════════════════════════╝");
@@ -208,7 +242,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Step 9: Graceful Shutdown
     info!("");
     info!("🛑 Shutting down BearDog service...");
-    server_task.abort();
+    
+    if let Some((task, _)) = server_task {
+        task.abort();
+        info!("   HTTP server stopped");
+    }
 
     // Wait a moment for graceful shutdown
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
