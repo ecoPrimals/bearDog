@@ -29,6 +29,7 @@ fn test_socket() -> (TempDir, std::path::PathBuf) {
 // Helper to create test BTSP provider
 async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
     std::env::set_var("BEARDOG_HSM_MODE", "software");
+    std::env::set_var("BEARDOG_FAMILY_ID", "nat0"); // Set family ID for tests
     let hsm = Arc::new(HsmManager::auto_initialize().await.expect("HSM init"));
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Genetics init"));
     Arc::new(BeardogBtspProvider::new(hsm, genetics).await.expect("BTSP init"))
