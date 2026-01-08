@@ -129,8 +129,11 @@ pub mod mocks {
             tunnels.retain(|t| t != &tunnel.id);
             Ok(())
         }
+    }
 
-        async fn contact_exchange(
+    // Implement contact_exchange as a separate impl block (not part of trait)
+    impl MockBtspProvider {
+        pub async fn contact_exchange(
             &self,
             target_peer_id: &str,
             _requester_lineage: &str,

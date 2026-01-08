@@ -366,8 +366,10 @@ mod tests {
 
     #[test]
     fn test_establish_request_serialization() {
+        use beardog_capabilities::traits::PeerEndpoint;
+        
         let request = EstablishTunnelRequest {
-            peer: PeerInfo {
+            peer: PeerEndpoint {
                 id: "test-peer".to_string(),
                 endpoint: "192.168.1.1:8080".to_string(),
                 public_key: Some(vec![1, 2, 3, 4]),

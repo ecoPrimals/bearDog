@@ -917,9 +917,9 @@ async fn create_modern_discovery(
 ) -> Result<Box<dyn ProtocolHandler>, BearDogError> {
     match protocol {
         DiscoveryProtocol::Mdns {
-            service_type: _,
+            service_type,
             interface: _,
-            timeout_ms: _,
+            timeout_ms,
             continuous_monitoring: _,
         } => {
             // mDNS handler - integrate with primal_discovery_mdns module

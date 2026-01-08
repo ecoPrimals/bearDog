@@ -744,8 +744,8 @@ mod tests {
 
         let json = serde_json::to_string(&req).unwrap();
         assert!(json.contains("tower"));
-        assert!(json.contains("key"));
-        assert!(json.contains("value"));
+        // metadata is None, so key/value won't be present
+        assert!(json.contains("service_type"));
     }
 
     #[test]

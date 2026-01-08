@@ -55,7 +55,7 @@ use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 mod contact;
 mod metrics;
 mod trust;
-mod types;
+pub mod types;
 
 // Re-exports
 pub use contact::ContactInfo;

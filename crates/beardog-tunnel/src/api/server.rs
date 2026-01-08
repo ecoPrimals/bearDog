@@ -319,7 +319,8 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = BearDogApiServerConfig::default();
-        assert_eq!(config.bind_addr.to_string(), "127.0.0.1:9000");
+        // Default uses zero-hardcoding (0.0.0.0:0 = OS auto-select)
+        assert_eq!(config.bind_addr.to_string(), "0.0.0.0:0");
         assert!(config.enable_cors);
     }
 

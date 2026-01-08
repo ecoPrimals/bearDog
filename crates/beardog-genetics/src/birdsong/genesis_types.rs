@@ -246,7 +246,7 @@ impl PhysicalChannelProof {
         &self,
         attestation: &[u8],
     ) -> Result<bool, beardog_errors::BearDogError> {
-        use sha2::{Digest, Sha256};
+        use sha2::Sha256;
 
         // Check attestation is non-empty
         if attestation.is_empty() {

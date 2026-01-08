@@ -7,9 +7,7 @@
 mod tests {
     use crate::crypto_service::implementation::BearDogCryptoService;
     use crate::crypto_service::r#trait::CryptoService;
-    use beardog_types::crypto_service::{
-        KeyAlgorithm, KeyGenOptions, SignOptions, SignatureAlgorithm, VerifyOptions,
-    };
+    use beardog_types::crypto_service::{SignOptions, SignatureAlgorithm, VerifyOptions};
 
     fn create_test_service() -> BearDogCryptoService {
         let config = crate::crypto_service::types::CryptoServiceConfig {
