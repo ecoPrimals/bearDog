@@ -222,7 +222,10 @@ async fn contact_exchange(
     State(state): State<BtspApiState>,
     Json(req): Json<ContactExchangeRequest>,
 ) -> Result<Json<ApiResponse<ContactExchangeResponse>>, ApiError> {
-    info!("🔍 Contact exchange request for peer: {}", req.target_peer_id);
+    info!(
+        "🔍 Contact exchange request for peer: {}",
+        req.target_peer_id
+    );
 
     let contact = state
         .provider
@@ -233,9 +236,14 @@ async fn contact_exchange(
             ApiError::from(e)
         })?;
 
-    info!("✅ Contact exchange successful: {} addresses found", contact.addresses.len());
+    info!(
+        "✅ Contact exchange successful: {} addresses found",
+        contact.addresses.len()
+    );
 
-    Ok(Json(ApiResponse::success(ContactExchangeResponse { contact })))
+    Ok(Json(ApiResponse::success(ContactExchangeResponse {
+        contact,
+    })))
 }
 
 #[cfg(test)]

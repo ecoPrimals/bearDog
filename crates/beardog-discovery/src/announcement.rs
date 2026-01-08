@@ -48,9 +48,33 @@ impl Announcer {
         Ok(())
     }
 
+    /// Announce service via mDNS
+    ///
+    /// Broadcasts service availability on local network using mDNS.
+    /// Agnostic to primal type - announces capabilities generically.
+    ///
+    /// # Implementation Status
+    /// Currently logs announcement intent. Full implementation requires `mdns` crate.
+    ///
+    /// # Future Enhancement
+    /// - Broadcast _beardog._tcp.local or capability-specific service
+    /// - Include TXT records with capability metadata
+    /// - Periodic re-announcement with TTL
+    /// - Graceful shutdown announcement
     async fn announce_via_mdns(&self) -> Result<()> {
-        // TODO: Implement mDNS announcement
-        debug!("mDNS announcement not yet implemented");
+        info!(
+            "mDNS announcement for {} with capabilities: {} (full impl pending)",
+            self.primal_info.primal_id,
+            self.primal_info
+                .capabilities
+                .iter()
+                .map(|c| c.capability_type.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        
+        // Graceful no-op: service still functions via other discovery methods
+        debug!("mDNS announcement pending full implementation");
         Ok(())
     }
 
@@ -73,9 +97,50 @@ impl Announcer {
         Ok(())
     }
 
+    /// Announce service via service registry
+    ///
+    /// Registers service with centralized registry (Consul, etcd, etc.).
+    /// Environment-driven configuration determines target registry.
+    ///
+    /// # Configuration
+    /// Set `SERVICE_REGISTRY_URL` to enable registration.
+    /// Example: `http://consul:8500` or `http://etcd:2379`
+    ///
+    /// # Implementation Status
+    /// Currently logs registration intent. Full implementation requires HTTP client.
+    ///
+    /// # Future Enhancement
+    /// - POST registration to Consul/etcd/Kubernetes
+    /// - Include health check endpoint
+    /// - Periodic heartbeat/TTL refresh
+    /// - Deregistration on shutdown
     async fn announce_via_service_registry(&self) -> Result<()> {
-        // TODO: Implement service registry announcement
-        debug!("Service registry announcement not yet implemented");
+        // Check if service registry is configured (environment-driven)
+        if let Ok(registry_url) = std::env::var("SERVICE_REGISTRY_URL") {
+            info!(
+                "Service registry configured at {}, registration for {} pending full implementation",
+                registry_url, self.primal_info.primal_id
+            );
+            
+            debug!(
+                "Would register: id={}, endpoint={}, capabilities={}",
+                self.primal_info.primal_id,
+                self.primal_info.endpoint.primary_url,
+                self.primal_info
+                    .capabilities
+                    .iter()
+                    .map(|c| c.capability_type.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        } else {
+            debug!(
+                "Service registry not configured (set SERVICE_REGISTRY_URL) for {}",
+                self.primal_info.primal_id
+            );
+        }
+        
+        // Graceful no-op: service still functions via other discovery methods
         Ok(())
     }
 }

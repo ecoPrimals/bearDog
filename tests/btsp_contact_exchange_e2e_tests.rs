@@ -227,9 +227,24 @@ async fn test_e2e_complete_contact_exchange_flow() {
     // Verify complete flow
     assert!(response["success"].as_bool().unwrap());
     assert_eq!(response["data"]["contact"]["peer_id"], "tower-b");
-    assert!(response["data"]["contact"]["addresses"].as_array().unwrap().len() > 0);
-    assert!(!response["data"]["contact"]["lineage_proof"].as_str().unwrap().is_empty());
-    assert!(response["data"]["contact"]["lineage_path"].as_array().unwrap().len() > 0);
+    assert!(
+        response["data"]["contact"]["addresses"]
+            .as_array()
+            .unwrap()
+            .len()
+            > 0
+    );
+    assert!(!response["data"]["contact"]["lineage_proof"]
+        .as_str()
+        .unwrap()
+        .is_empty());
+    assert!(
+        response["data"]["contact"]["lineage_path"]
+            .as_array()
+            .unwrap()
+            .len()
+            > 0
+    );
 
     // Cleanup
     env::remove_var("BEARDOG_FAMILY_ID");
@@ -473,4 +488,3 @@ async fn test_e2e_genetic_family_verification() {
     // Cleanup
     env::remove_var("BEARDOG_FAMILY_ID");
 }
-

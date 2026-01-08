@@ -22,7 +22,10 @@ mod tests {
             "reason": "same_genetic_family"
         });
 
-        assert!(response["decision"].is_string(), "decision field must be present");
+        assert!(
+            response["decision"].is_string(),
+            "decision field must be present"
+        );
         assert_eq!(response["decision"], "auto_accept");
     }
 
@@ -386,7 +389,10 @@ mod tests {
         // All three present
         assert!(response.as_object().unwrap().contains_key("decision"));
         assert!(response.as_object().unwrap().contains_key("trust_level"));
-        assert!(response.as_object().unwrap().contains_key("trust_level_name"));
+        assert!(response
+            .as_object()
+            .unwrap()
+            .contains_key("trust_level_name"));
 
         // Types correct
         assert!(response["decision"].is_string());
@@ -399,4 +405,3 @@ mod tests {
         assert_eq!(response["trust_level_name"], "limited");
     }
 }
-

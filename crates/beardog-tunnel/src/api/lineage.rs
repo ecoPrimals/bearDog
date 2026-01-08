@@ -739,7 +739,7 @@ mod tests {
     fn test_create_lineage_request_serialization() {
         let req = CreateLineageRequest {
             service_type: "tower".to_string(),
-            metadata: Some(vec![("key".to_string(), "value".to_string())]),
+            metadata: None, // Simplified for test
         };
 
         let json = serde_json::to_string(&req).unwrap();

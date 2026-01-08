@@ -22,26 +22,22 @@ use tracing::{error, info, warn};
 pub enum IpcMessage {
     /// Capability request
     CapabilityRequest(CapabilityRequest),
-    
+
     /// Capability response
     CapabilityResponse(CapabilityResponse),
-    
+
     /// Register client
     Register {
         primal_id: String,
         capabilities: Vec<String>,
     },
-    
+
     /// Heartbeat
-    Ping {
-        from: String,
-    },
-    
+    Ping { from: String },
+
     /// Heartbeat response
-    Pong {
-        to: String,
-    },
-    
+    Pong { to: String },
+
     /// Generic event notification
     Event {
         event_type: String,
@@ -50,7 +46,7 @@ pub enum IpcMessage {
 }
 
 /// IPC request handler trait
-/// 
+///
 /// Implement this to handle capability requests in a primal-specific way
 #[async_trait::async_trait]
 pub trait IpcHandler: Send + Sync {
@@ -59,14 +55,14 @@ pub trait IpcHandler: Send + Sync {
         &self,
         request: CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError>;
-    
+
     /// Handle a registration request
     async fn handle_register(
         &self,
         primal_id: String,
         capabilities: Vec<String>,
     ) -> Result<(), BearDogError>;
-    
+
     /// Handle custom events
     async fn handle_event(
         &self,
@@ -91,7 +87,7 @@ impl IpcServer {
             active_connections: Arc::new(RwLock::new(Vec::new())),
         }
     }
-    
+
     /// Start the IPC server
     pub async fn serve(&self) -> Result<(), BearDogError> {
         // Remove existing socket if present
@@ -100,23 +96,23 @@ impl IpcServer {
                 BearDogError::system(format!("Failed to remove existing socket: {}", e))
             })?;
         }
-        
+
         // Create Unix listener
-        let listener = UnixListener::bind(&self.socket_path).map_err(|e| {
-            BearDogError::system(format!("Failed to bind Unix socket: {}", e))
-        })?;
-        
+        let listener = UnixListener::bind(&self.socket_path)
+            .map_err(|e| BearDogError::system(format!("Failed to bind Unix socket: {}", e)))?;
+
         info!("🔌 IPC server listening on {:?}", self.socket_path);
-        
+
         // Accept connections
         loop {
             match listener.accept().await {
                 Ok((stream, _addr)) => {
                     let handler = Arc::clone(&self.handler);
                     let connections = Arc::clone(&self.active_connections);
-                    
+
                     tokio::spawn(async move {
-                        if let Err(e) = Self::handle_connection(stream, handler, connections).await {
+                        if let Err(e) = Self::handle_connection(stream, handler, connections).await
+                        {
                             error!("Connection error: {}", e);
                         }
                     });
@@ -127,7 +123,7 @@ impl IpcServer {
             }
         }
     }
-    
+
     /// Handle a single connection
     async fn handle_connection(
         stream: UnixStream,
@@ -137,7 +133,7 @@ impl IpcServer {
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
         let mut line = String::new();
-        
+
         loop {
             line.clear();
             match reader.read_line(&mut line).await {
@@ -154,18 +150,23 @@ impl IpcServer {
                             continue;
                         }
                     };
-                    
+
                     // Handle message
-                    let response = Self::handle_message(message, &handler, &active_connections).await;
-                    
+                    let response =
+                        Self::handle_message(message, &handler, &active_connections).await;
+
                     // Send response
                     if let Some(response_msg) = response {
-                        let response_json = serde_json::to_string(&response_msg)
-                            .map_err(|e| BearDogError::system(format!("Failed to serialize response: {}", e)))?;
-                        
-                        writer.write_all(response_json.as_bytes()).await.map_err(|e| {
-                            BearDogError::system(format!("Failed to write response: {}", e))
+                        let response_json = serde_json::to_string(&response_msg).map_err(|e| {
+                            BearDogError::system(format!("Failed to serialize response: {}", e))
                         })?;
+
+                        writer
+                            .write_all(response_json.as_bytes())
+                            .await
+                            .map_err(|e| {
+                                BearDogError::system(format!("Failed to write response: {}", e))
+                            })?;
                         writer.write_all(b"\n").await.map_err(|e| {
                             BearDogError::system(format!("Failed to write newline: {}", e))
                         })?;
@@ -177,10 +178,10 @@ impl IpcServer {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Handle a single message
     async fn handle_message(
         message: IpcMessage,
@@ -197,9 +198,15 @@ impl IpcServer {
                     }
                 }
             }
-            
-            IpcMessage::Register { primal_id, capabilities } => {
-                match handler.handle_register(primal_id.clone(), capabilities).await {
+
+            IpcMessage::Register {
+                primal_id,
+                capabilities,
+            } => {
+                match handler
+                    .handle_register(primal_id.clone(), capabilities)
+                    .await
+                {
                     Ok(_) => {
                         active_connections.write().await.push(primal_id.clone());
                         info!("✅ Registered primal: {}", primal_id);
@@ -211,18 +218,16 @@ impl IpcServer {
                     }
                 }
             }
-            
-            IpcMessage::Ping { from } => {
-                Some(IpcMessage::Pong { to: from })
-            }
-            
+
+            IpcMessage::Ping { from } => Some(IpcMessage::Pong { to: from }),
+
             IpcMessage::Event { event_type, data } => {
                 if let Err(e) = handler.handle_event(event_type, data).await {
                     error!("Event handling failed: {}", e);
                 }
                 None
             }
-            
+
             IpcMessage::Pong { .. } | IpcMessage::CapabilityResponse(_) => {
                 // These are responses, not requests
                 None
@@ -274,10 +279,10 @@ mod tests {
         let msg = IpcMessage::Ping {
             from: "test".to_string(),
         };
-        
+
         let json = serde_json::to_string(&msg).unwrap();
         assert!(json.contains("ping"));
-        
+
         let deserialized: IpcMessage = serde_json::from_str(&json).unwrap();
         match deserialized {
             IpcMessage::Ping { from } => assert_eq!(from, "test"),
@@ -296,10 +301,10 @@ mod tests {
             params: std::collections::HashMap::new(),
             request_id: "req_123".to_string(),
         };
-        
+
         let msg = IpcMessage::CapabilityRequest(req);
         let json = serde_json::to_string(&msg).unwrap();
-        
+
         let deserialized: IpcMessage = serde_json::from_str(&json).unwrap();
         match deserialized {
             IpcMessage::CapabilityRequest(req) => {
@@ -310,4 +315,3 @@ mod tests {
         }
     }
 }
-

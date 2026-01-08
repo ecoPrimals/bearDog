@@ -17,7 +17,9 @@ use tempfile::TempDir;
 // Mock BTSP provider for chaos tests
 mod test_helpers {
     use async_trait::async_trait;
-    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus};
+    use beardog_capabilities::traits::{
+        PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus,
+    };
     use beardog_errors::BearDogError;
     use beardog_tunnel::btsp_provider::ContactInfo;
 
@@ -39,19 +41,25 @@ mod test_helpers {
             })
         }
 
-        async fn tunnel_encrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        async fn tunnel_encrypt(
+            &self,
+            _tunnel: &TunnelHandle,
+            data: &[u8],
+        ) -> Result<Vec<u8>, BearDogError> {
             Ok(data.to_vec())
         }
 
-        async fn tunnel_decrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        async fn tunnel_decrypt(
+            &self,
+            _tunnel: &TunnelHandle,
+            data: &[u8],
+        ) -> Result<Vec<u8>, BearDogError> {
             Ok(data.to_vec())
         }
 
         async fn tunnel_status(&self, tunnel: &TunnelHandle) -> Result<TunnelStatus, BearDogError> {
             Ok(TunnelStatus {
                 tunnel_id: tunnel.id.clone(),
-                peer_id: tunnel.peer_id.clone(),
-                established_at: tunnel.established_at.clone(),
                 bytes_sent: 0,
                 bytes_received: 0,
                 active: true,
@@ -62,8 +70,16 @@ mod test_helpers {
         async fn close_tunnel(&self, _tunnel: &TunnelHandle) -> Result<(), BearDogError> {
             Ok(())
         }
+    }
 
-        async fn contact_exchange(&self, target_peer_id: &str, _requester_lineage: &str, _max_hops: usize) -> Result<ContactInfo, BearDogError> {
+    // Additional mock methods (not part of trait)
+    impl MockBtspProvider {
+        pub async fn contact_exchange(
+            &self,
+            target_peer_id: &str,
+            _requester_lineage: &str,
+            _max_hops: usize,
+        ) -> Result<ContactInfo, BearDogError> {
             Ok(ContactInfo {
                 peer_id: target_peer_id.to_string(),
                 addresses: vec!["192.168.1.100:8080".to_string()],
@@ -78,7 +94,10 @@ mod test_helpers {
 
 /// Create test server for chaos tests
 async fn create_chaos_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
-    let provider = Arc::new(test_helpers::MockBtspProvider::new());
+    use beardog_tunnel::btsp_provider::BeardogBtspProvider;
+    
+    // Create real BTSP provider for chaos tests
+    let provider = Arc::new(BeardogBtspProvider::new());
     let server = UnixSocketIpcServer::new(socket_path, provider)
         .await
         .expect("Failed to create server");
@@ -109,13 +128,16 @@ async fn chaos_test_malformed_json() {
 
     for input in malformed_inputs {
         let result = server.handle_jsonrpc_request(input).await;
-        
+
         // Should handle malformed JSON gracefully (return error, not panic)
         match result {
             Ok(response) => {
                 // If it parses, should have an error
-                assert!(response.error.is_some(), 
-                    "Malformed input '{}' should result in error", input);
+                assert!(
+                    response.error.is_some(),
+                    "Malformed input '{}' should result in error",
+                    input
+                );
             }
             Err(_) => {
                 // Error is also acceptable for truly malformed JSON
@@ -178,15 +200,15 @@ async fn chaos_test_unicode_and_special_chars() {
     let server = create_chaos_server(socket_path).await;
 
     let special_inputs = vec![
-        "🔥🎊🚀",  // Emojis
-        "测试中文",  // Chinese
-        "тест",     // Cyrillic
-        "اختبار",   // Arabic
-        "🔐\u{0000}null byte", // Null byte
-        "\n\r\t",   // Control characters
-        "'; DROP TABLE--", // SQL injection attempt
+        "🔥🎊🚀",                        // Emojis
+        "测试中文",                      // Chinese
+        "тест",                          // Cyrillic
+        "اختبار",                        // Arabic
+        "🔐\u{0000}null byte",           // Null byte
+        "\n\r\t",                        // Control characters
+        "'; DROP TABLE--",               // SQL injection attempt
         "<script>alert('xss')</script>", // XSS attempt
-        "../../../../etc/passwd", // Path traversal attempt
+        "../../../../etc/passwd",        // Path traversal attempt
     ];
 
     for input in special_inputs {
@@ -200,9 +222,7 @@ async fn chaos_test_unicode_and_special_chars() {
             "id": 1
         });
 
-        let result = server
-            .handle_jsonrpc_request(&request.to_string())
-            .await;
+        let result = server.handle_jsonrpc_request(&request.to_string()).await;
 
         // Should handle gracefully
         assert!(result.is_ok(), "Should handle special input: {}", input);
@@ -228,9 +248,7 @@ async fn chaos_test_extremely_long_strings() {
         "id": 1
     });
 
-    let result = server
-        .handle_jsonrpc_request(&request.to_string())
-        .await;
+    let result = server.handle_jsonrpc_request(&request.to_string()).await;
 
     // Should handle without panicking
     assert!(result.is_ok());
@@ -288,9 +306,7 @@ async fn chaos_test_type_confusion() {
     ];
 
     for request in type_confusion_cases {
-        let result = server
-            .handle_jsonrpc_request(&request.to_string())
-            .await;
+        let result = server.handle_jsonrpc_request(&request.to_string()).await;
 
         // Should handle type errors gracefully
         assert!(result.is_ok());
@@ -332,8 +348,10 @@ async fn chaos_test_memory_pressure() {
                 },
                 "id": 1
             });
-            
-            server_clone.handle_jsonrpc_request(&request.to_string()).await
+
+            server_clone
+                .handle_jsonrpc_request(&request.to_string())
+                .await
         });
         handles.push(handle);
     }
@@ -362,8 +380,10 @@ async fn chaos_test_concurrent_avalanche() {
                 "method": "capabilities",
                 "id": i
             });
-            
-            server_clone.handle_jsonrpc_request(&request.to_string()).await
+
+            server_clone
+                .handle_jsonrpc_request(&request.to_string())
+                .await
         });
         handles.push(handle);
     }
@@ -383,7 +403,11 @@ async fn chaos_test_concurrent_avalanche() {
     }
 
     // Should handle most requests successfully
-    assert!(success_count > 400, "Should handle avalanche: {} successes", success_count);
+    assert!(
+        success_count > 400,
+        "Should handle avalanche: {} successes",
+        success_count
+    );
 }
 
 // ========================================================================
@@ -409,7 +433,7 @@ async fn chaos_test_rapid_method_switching() {
     for _ in 0..100 {
         let server_clone = Arc::clone(&server);
         let methods_clone = methods.clone();
-        
+
         let handle = tokio::spawn(async move {
             // Rapidly switch between methods
             for (i, method) in methods_clone.iter().enumerate() {
@@ -425,8 +449,10 @@ async fn chaos_test_rapid_method_switching() {
                     },
                     "id": i
                 });
-                
-                let _ = server_clone.handle_jsonrpc_request(&request.to_string()).await;
+
+                let _ = server_clone
+                    .handle_jsonrpc_request(&request.to_string())
+                    .await;
             }
         });
         handles.push(handle);
@@ -461,9 +487,7 @@ async fn chaos_test_negative_numbers() {
         "id": 1
     });
 
-    let result = server
-        .handle_jsonrpc_request(&request.to_string())
-        .await;
+    let result = server.handle_jsonrpc_request(&request.to_string()).await;
 
     // Should handle negative numbers gracefully
     assert!(result.is_ok());
@@ -486,9 +510,7 @@ async fn chaos_test_float_where_int_expected() {
         "id": 1
     });
 
-    let result = server
-        .handle_jsonrpc_request(&request.to_string())
-        .await;
+    let result = server.handle_jsonrpc_request(&request.to_string()).await;
 
     // Should handle float values gracefully
     assert!(result.is_ok());
@@ -533,7 +555,7 @@ async fn chaos_test_whitespace_variations() {
 
     for request_str in variations {
         let result = server.handle_jsonrpc_request(request_str).await;
-        
+
         // All should parse successfully
         assert!(result.is_ok(), "Should handle whitespace variation");
         let response = result.unwrap();
@@ -560,7 +582,9 @@ async fn chaos_test_recovery_after_errors() {
         "method": "nonexistent",
         "id": 1
     });
-    let _ = server.handle_jsonrpc_request(&invalid_request.to_string()).await;
+    let _ = server
+        .handle_jsonrpc_request(&invalid_request.to_string())
+        .await;
 
     // Server should still work for valid requests
     let valid_request = json!({
@@ -575,7 +599,10 @@ async fn chaos_test_recovery_after_errors() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    assert!(response.error.is_none(), "Server should recover after errors");
+    assert!(
+        response.error.is_none(),
+        "Server should recover after errors"
+    );
 }
 
 #[tokio::test]
@@ -604,8 +631,10 @@ async fn chaos_test_mixed_success_failure_pattern() {
                     "id": i
                 })
             };
-            
-            server_clone.handle_jsonrpc_request(&request.to_string()).await
+
+            server_clone
+                .handle_jsonrpc_request(&request.to_string())
+                .await
         });
         handles.push(handle);
     }
@@ -617,4 +646,3 @@ async fn chaos_test_mixed_success_failure_pattern() {
         assert!(result.is_ok(), "Request {} should complete", i);
     }
 }
-

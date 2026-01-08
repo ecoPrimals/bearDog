@@ -191,12 +191,70 @@ impl CertificateIssuer {
 
     /// Check if a valid license exists for this request
     ///
-    /// TODO: Implement actual license checking
-    /// For now, returns false (requires Phase 5: Usage Metering)
-    async fn has_valid_license(&self, _context: &RequestContext) -> Result<bool, BearDogError> {
-        // Placeholder: License system not yet implemented
-        // Will be completed in Phase 5
-        Ok(false)
+    /// Environment-driven license validation:
+    /// - Checks BEARDOG_LICENSE_KEY environment variable
+    /// - Validates license format and expiration
+    /// - Graceful fallback: No license = free tier (human use)
+    ///
+    /// Phase 5 will add: Usage metering, commercial tiers, HSM-backed validation
+    async fn has_valid_license(&self, context: &RequestContext) -> Result<bool, BearDogError> {
+        // Check for license key in environment
+        let license_key = match std::env::var("BEARDOG_LICENSE_KEY") {
+            Ok(key) if !key.is_empty() => key,
+            _ => {
+                // No license key = free tier (human use)
+                debug!(
+                    "No license key found for {}, assuming free tier",
+                    context.requester_id
+                );
+                return Ok(false);
+            }
+        };
+
+        // Basic license validation (Phase 1)
+        // Format: BEARDOG-{TYPE}-{EXPIRY}-{SIGNATURE}
+        // Example: BEARDOG-PRO-20261231-abc123def456
+        let parts: Vec<&str> = license_key.split('-').collect();
+        if parts.len() != 4 || parts[0] != "BEARDOG" {
+            warn!("Invalid license key format for {}", context.requester_id);
+            return Ok(false);
+        }
+
+        let license_type = parts[1];
+        let expiry_str = parts[2];
+        let _signature = parts[3]; // Phase 5: Verify signature with HSM
+
+        // Check expiration
+        if let Ok(expiry_date) = chrono::NaiveDate::parse_from_str(expiry_str, "%Y%m%d") {
+            let expiry = expiry_date.and_hms_opt(23, 59, 59).unwrap();
+            let now = chrono::Utc::now().naive_utc();
+            
+            if expiry < now {
+                warn!(
+                    "License expired for {} (expired: {})",
+                    context.requester_id, expiry_str
+                );
+                return Ok(false);
+            }
+
+            info!(
+                "✅ Valid {} license for {} (expires: {})",
+                license_type, context.requester_id, expiry_str
+            );
+            Ok(true)
+        } else {
+            warn!(
+                "Invalid license expiry format for {}: {}",
+                context.requester_id, expiry_str
+            );
+            Ok(false)
+        }
+
+        // Phase 5 TODO:
+        // - Verify signature using HSM
+        // - Check usage limits from metering system
+        // - Validate license tier matches request type
+        // - Support license revocation lists
     }
 
     /// Get the public key for certificate verification

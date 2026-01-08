@@ -8,7 +8,7 @@
 
 #[cfg(test)]
 mod btsp_jsonrpc_unit_tests {
-    use crate::test_helpers::{create_mock_btsp_provider, create_failing_btsp_provider};
+    use crate::test_helpers::{create_failing_btsp_provider, create_mock_btsp_provider};
     use crate::unix_socket_ipc::UnixSocketIpcServer;
     use serde_json::json;
     use std::path::PathBuf;
@@ -55,21 +55,21 @@ mod btsp_jsonrpc_unit_tests {
             .expect("Should handle capabilities request");
 
         assert!(response.error.is_none(), "Should not have error");
-        
+
         let result = response.result.expect("Should have result");
         let capabilities = result["provided_capabilities"]
             .as_array()
             .expect("Should have capabilities array");
-        
+
         // Find BTSP capability
         let btsp_cap = capabilities
             .iter()
             .find(|c| c["type"] == "btsp")
             .expect("BTSP capability should be advertised");
-        
+
         assert_eq!(btsp_cap["version"], "1.0");
         assert!(result["btsp_enabled"].as_bool().unwrap());
-        
+
         let methods = btsp_cap["methods"].as_array().unwrap();
         assert_eq!(methods.len(), 6, "Should have all 6 BTSP methods");
         assert!(methods.contains(&json!("contact_exchange")));
@@ -105,11 +105,14 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Method should be recognized (error will be about missing lineage data, not method)
         if let Some(error) = response.error {
-            assert!(!error.message.contains("Method not found"), 
-                "Method should be recognized, got: {}", error.message);
+            assert!(
+                !error.message.contains("Method not found"),
+                "Method should be recognized, got: {}",
+                error.message
+            );
         }
     }
 
@@ -134,7 +137,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
         }
@@ -160,8 +163,11 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should have error for missing params");
+
+        assert!(
+            response.error.is_some(),
+            "Should have error for missing params"
+        );
         let error = response.error.unwrap();
         assert!(
             error.message.contains("Missing") || error.message.contains("target_peer_id"),
@@ -191,7 +197,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Should recognize alternative param names
         if let Some(error) = response.error {
             assert!(!error.message.contains("Missing target_peer_id"));
@@ -224,7 +230,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Method should be recognized
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -248,8 +254,11 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should have error for invalid peer");
+
+        assert!(
+            response.error.is_some(),
+            "Should have error for invalid peer"
+        );
     }
 
     // ========================================================================
@@ -280,7 +289,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Method should be recognized
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -311,11 +320,17 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should have error for invalid base64");
+
+        assert!(
+            response.error.is_some(),
+            "Should have error for invalid base64"
+        );
         let error = response.error.unwrap();
-        assert!(error.message.contains("base64") || error.message.contains("Invalid"),
-            "Error should mention base64: {}", error.message);
+        assert!(
+            error.message.contains("base64") || error.message.contains("Invalid"),
+            "Error should mention base64: {}",
+            error.message
+        );
     }
 
     #[tokio::test]
@@ -337,11 +352,17 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should have error for missing tunnel");
+
+        assert!(
+            response.error.is_some(),
+            "Should have error for missing tunnel"
+        );
         let error = response.error.unwrap();
-        assert!(error.message.contains("Missing") || error.message.contains("tunnel"),
-            "Error should mention missing tunnel: {}", error.message);
+        assert!(
+            error.message.contains("Missing") || error.message.contains("tunnel"),
+            "Error should mention missing tunnel: {}",
+            error.message
+        );
     }
 
     // ========================================================================
@@ -367,7 +388,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Method should be recognized
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -393,7 +414,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Should accept "id" as alternative param name
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -424,7 +445,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Should accept full tunnel handle
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -454,7 +475,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Method should be recognized
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -481,8 +502,11 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should have error for unknown method");
+
+        assert!(
+            response.error.is_some(),
+            "Should have error for unknown method"
+        );
         let error = response.error.unwrap();
         assert!(error.message.contains("Method not found"));
     }
@@ -503,14 +527,14 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         assert!(response.error.is_some());
         let error = response.error.unwrap();
         assert!(error.message.contains("Method not found"));
         // Error message should list BTSP methods as available
         assert!(
-            error.message.contains("btsp.contact_exchange") || 
-            error.message.contains("btsp.tunnel_establish"),
+            error.message.contains("btsp.contact_exchange")
+                || error.message.contains("btsp.tunnel_establish"),
             "Error message should list BTSP methods: {}",
             error.message
         );
@@ -523,9 +547,18 @@ mod btsp_jsonrpc_unit_tests {
         let server = create_test_server(socket_path).await;
 
         let test_cases = vec![
-            ("beardog./btsp/contact/exchange", json!({"target_peer_id": "test", "requester_lineage": "test"})),
-            ("btsp.contact_exchange", json!({"target_peer_id": "test", "requester_lineage": "test"})),
-            ("btsp.contact/exchange", json!({"target_peer_id": "test", "requester_lineage": "test"})),
+            (
+                "beardog./btsp/contact/exchange",
+                json!({"target_peer_id": "test", "requester_lineage": "test"}),
+            ),
+            (
+                "btsp.contact_exchange",
+                json!({"target_peer_id": "test", "requester_lineage": "test"}),
+            ),
+            (
+                "btsp.contact/exchange",
+                json!({"target_peer_id": "test", "requester_lineage": "test"}),
+            ),
         ];
 
         for (method, params) in test_cases {
@@ -540,7 +573,7 @@ mod btsp_jsonrpc_unit_tests {
                 .handle_jsonrpc_request(&request.to_string())
                 .await
                 .expect("Should handle request");
-            
+
             // All should be recognized (no "Method not found")
             if let Some(error) = &response.error {
                 assert!(
@@ -571,11 +604,17 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should reject invalid JSON-RPC version");
+
+        assert!(
+            response.error.is_some(),
+            "Should reject invalid JSON-RPC version"
+        );
         let error = response.error.unwrap();
-        assert!(error.message.contains("version") || error.message.contains("2.0"),
-            "Error should mention version: {}", error.message);
+        assert!(
+            error.message.contains("version") || error.message.contains("2.0"),
+            "Error should mention version: {}",
+            error.message
+        );
     }
 
     #[tokio::test]
@@ -595,8 +634,11 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
-        assert!(response.error.is_some(), "Should have error for empty params");
+
+        assert!(
+            response.error.is_some(),
+            "Should have error for empty params"
+        );
     }
 
     #[tokio::test]
@@ -611,7 +653,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(request)
             .await
             .expect("Should handle request");
-        
+
         // Should handle null params gracefully
         assert!(response.error.is_some());
     }
@@ -637,7 +679,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Should handle large numbers (might fail on business logic, not parsing)
         if let Some(error) = response.error {
             assert!(!error.message.contains("parse") && !error.message.contains("invalid"));
@@ -665,7 +707,7 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle request");
-        
+
         // Should handle zero hops gracefully
         if let Some(error) = response.error {
             assert!(!error.message.contains("Method not found"));
@@ -696,18 +738,20 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle identity request");
-        
+
         assert!(response.error.is_none(), "Identity request should succeed");
-        
+
         let result = response.result.expect("Should have result");
-        
+
         // Verify all required fields for Songbird compatibility
         assert_eq!(result["family"], "nat0", "Should have family field");
         assert_eq!(result["node"], "node-alpha", "Should have node field");
-        assert_eq!(result["encryption_tag"], "beardog:family:nat0", 
-            "Should have encryption_tag field with correct format");
+        assert_eq!(
+            result["encryption_tag"], "beardog:family:nat0",
+            "Should have encryption_tag field with correct format"
+        );
         assert_eq!(result["primal"], "beardog", "Should identify as beardog");
-        
+
         // Clean up
         std::env::remove_var("FAMILY_ID");
         std::env::remove_var("NODE_ID");
@@ -735,13 +779,19 @@ mod btsp_jsonrpc_unit_tests {
                 .handle_jsonrpc_request(&request.to_string())
                 .await
                 .expect("Should handle request");
-            
-            assert!(response.error.is_none(), 
-                "Method '{}' should succeed", method);
-            
+
+            assert!(
+                response.error.is_none(),
+                "Method '{}' should succeed",
+                method
+            );
+
             let result = response.result.expect("Should have result");
-            assert!(result["encryption_tag"].is_string(), 
-                "Method '{}' should return encryption_tag", method);
+            assert!(
+                result["encryption_tag"].is_string(),
+                "Method '{}' should return encryption_tag",
+                method
+            );
         }
 
         std::env::remove_var("FAMILY_ID");
@@ -767,12 +817,14 @@ mod btsp_jsonrpc_unit_tests {
             .handle_jsonrpc_request(&request.to_string())
             .await
             .expect("Should handle lineage request");
-        
+
         assert!(response.error.is_none(), "Lineage request should succeed");
-        
+
         let result = response.result.expect("Should have result");
-        assert_eq!(result["encryption_tag"], "beardog:family:nat0", 
-            "Lineage should include encryption_tag");
+        assert_eq!(
+            result["encryption_tag"], "beardog:family:nat0",
+            "Lineage should include encryption_tag"
+        );
 
         std::env::remove_var("FAMILY_ID");
         std::env::remove_var("NODE_ID");

@@ -7,7 +7,9 @@
 pub mod mocks {
     use crate::btsp_provider::ContactInfo;
     use async_trait::async_trait;
-    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus};
+    use beardog_capabilities::traits::{
+        PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus,
+    };
     use beardog_errors::BearDogError;
     use std::sync::{Arc, Mutex};
 
@@ -60,7 +62,9 @@ pub mod mocks {
     impl SecureTunnelProvider for MockBtspProvider {
         async fn establish_tunnel(&self, peer: PeerEndpoint) -> Result<TunnelHandle, BearDogError> {
             if *self.should_fail.lock().unwrap() {
-                return Err(BearDogError::system("Mock tunnel establishment failed".to_string()));
+                return Err(BearDogError::system(
+                    "Mock tunnel establishment failed".to_string(),
+                ));
             }
 
             let tunnel_id = format!("mock-tunnel-{}", uuid::Uuid::new_v4());
@@ -133,7 +137,9 @@ pub mod mocks {
             _max_hops: usize,
         ) -> Result<ContactInfo, BearDogError> {
             if *self.should_fail.lock().unwrap() {
-                return Err(BearDogError::system("Mock contact exchange failed".to_string()));
+                return Err(BearDogError::system(
+                    "Mock contact exchange failed".to_string(),
+                ));
             }
 
             Ok(ContactInfo {
@@ -160,4 +166,3 @@ pub mod mocks {
 
 #[cfg(test)]
 pub use mocks::*;
-

@@ -197,24 +197,21 @@ impl PhysicalChannelProof {
             }
             PhysicalChannelType::QrCodeWithOob => {
                 // Verify OOB codes present
-                  Ok(self
+                Ok(self
                     .verification_codes
                     .as_ref()
                     .is_some_and(|codes| !codes.is_empty()))
             }
             PhysicalChannelType::Bluetooth => {
                 // Verify pairing data present
-                  Ok(self
+                Ok(self
                     .pairing_data
                     .as_ref()
                     .is_some_and(|data| !data.is_empty()))
             }
             PhysicalChannelType::Nfc => {
                 // NFC should have attestation
-                  Ok(self
-                    .attestation
-                    .as_ref()
-                    .is_some_and(|att| !att.is_empty()))
+                Ok(self.attestation.as_ref().is_some_and(|att| !att.is_empty()))
             }
         }
     }

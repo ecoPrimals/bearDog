@@ -15,11 +15,11 @@ mod registry_client_tests {
     fn test_zero_vendor_hardcoding() {
         // This test DOCUMENTS that we have ZERO vendor hardcoding
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/any-registry.sock"));
-        
+
         // Client doesn't know or care what's on the other end
         // Could be Songbird, Consul, etcd, custom - it adapts universally
         assert_eq!(client.socket_path, PathBuf::from("/tmp/any-registry.sock"));
-        
+
         // No vendor-specific methods
         // No primal-specific knowledge
         // Pure universal adapter
@@ -50,7 +50,10 @@ mod registry_client_tests {
     fn test_works_with_custom_registry() {
         // Works with custom/future registries
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/my-custom-registry.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/my-custom-registry.sock"));
+        assert_eq!(
+            client.socket_path,
+            PathBuf::from("/tmp/my-custom-registry.sock")
+        );
     }
 
     // ============================================================================
@@ -85,14 +88,15 @@ mod registry_client_tests {
 
     #[test]
     fn test_json_rpc_error_deserialization() {
-        let json = r#"{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}"#;
+        let json =
+            r#"{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}"#;
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
 
         assert_eq!(response.jsonrpc, "2.0");
         assert_eq!(response.id, 1);
         assert!(response.result.is_none());
         assert!(response.error.is_some());
-        
+
         let error = response.error.unwrap();
         assert_eq!(error.code, -32601);
         assert_eq!(error.message, "Method not found");
@@ -139,16 +143,18 @@ mod registry_client_tests {
     #[test]
     fn test_registration_params_structure() {
         use beardog_core::capabilities::BearDogCapabilities;
-        
+
         let capabilities = BearDogCapabilities::new(Some("nat0".to_string()), "node1".to_string());
-        
+
         // Verify capability names are extracted correctly
         let capability_names: Vec<String> = capabilities
             .provides
             .iter()
             .map(|cap| match cap {
                 beardog_core::capabilities::Capability::Encryption { .. } => "encryption",
-                beardog_core::capabilities::Capability::TrustEvaluation { .. } => "trust_evaluation",
+                beardog_core::capabilities::Capability::TrustEvaluation { .. } => {
+                    "trust_evaluation"
+                }
                 beardog_core::capabilities::Capability::KeyManagement { .. } => "key_management",
                 beardog_core::capabilities::Capability::Signatures { .. } => "signatures",
                 _ => "other",
@@ -175,19 +181,28 @@ mod registry_client_tests {
     #[test]
     fn test_absolute_socket_path() {
         let client = PrimalRegistryClient::new(PathBuf::from("/absolute/path/to/registry.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("/absolute/path/to/registry.sock"));
+        assert_eq!(
+            client.socket_path,
+            PathBuf::from("/absolute/path/to/registry.sock")
+        );
     }
 
     #[test]
     fn test_relative_socket_path() {
         let client = PrimalRegistryClient::new(PathBuf::from("./relative/registry.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("./relative/registry.sock"));
+        assert_eq!(
+            client.socket_path,
+            PathBuf::from("./relative/registry.sock")
+        );
     }
 
     #[test]
     fn test_socket_path_with_special_chars() {
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/registry-nat0_v2.0.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/registry-nat0_v2.0.sock"));
+        assert_eq!(
+            client.socket_path,
+            PathBuf::from("/tmp/registry-nat0_v2.0.sock")
+        );
     }
 
     // ============================================================================
@@ -236,7 +251,7 @@ mod registry_client_tests {
         };
 
         let json = serde_json::to_string(&request).unwrap();
-        
+
         // Should NOT contain vendor names
         assert!(!json.to_lowercase().contains("songbird"));
         assert!(!json.to_lowercase().contains("consul"));
@@ -297,9 +312,9 @@ mod registry_client_tests {
     #[test]
     fn test_fault_malformed_json_rpc() {
         let malformed = vec![
-            r#"{"jsonrpc":"1.0","method":"test","id":1}"#,  // Wrong version
-            r#"{"method":"test","id":1}"#,                    // Missing jsonrpc
-            r#"{"jsonrpc":"2.0","id":1}"#,                    // Missing method
+            r#"{"jsonrpc":"1.0","method":"test","id":1}"#, // Wrong version
+            r#"{"method":"test","id":1}"#,                 // Missing jsonrpc
+            r#"{"jsonrpc":"2.0","id":1}"#,                 // Missing method
         ];
 
         for json in malformed {
@@ -330,4 +345,3 @@ mod registry_client_tests {
         assert!(info.capabilities.is_empty());
     }
 }
-

@@ -127,15 +127,15 @@ pub mod btsp_api_server;
 pub mod api;
 
 // Unix socket IPC server (PRIMARY inter-primal communication)
-pub mod unix_socket_ipc;
 pub mod tarpc_service;
+pub mod unix_socket_ipc;
 
+#[cfg(test)]
+mod unix_socket_ipc_btsp_tests;
 #[cfg(test)]
 mod unix_socket_ipc_logic_tests;
 #[cfg(test)]
 mod unix_socket_ipc_schema_tests;
-#[cfg(test)]
-mod unix_socket_ipc_btsp_tests;
 
 #[cfg(test)]
 mod test_helpers;

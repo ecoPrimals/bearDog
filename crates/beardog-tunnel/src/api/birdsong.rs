@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, warn};
 
+use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::{BirdSongManager, LineageHint, LineageProof};
 
 use super::types::{base64_serde, ApiError, ApiResponse};
@@ -334,10 +335,20 @@ async fn encrypt_v2(
     State(state): State<BirdSongApiState>,
     Json(req): Json<EncryptRequestV2>,
 ) -> Result<Json<ApiResponse<EncryptResponseV2>>, ApiError> {
-    let family_id = req.family_id.clone().unwrap_or_else(|| {
-        // TODO: Get node's default family_id from manager
-        "default".to_string()
-    });
+    // Primal self-knowledge: Read own family ID from environment
+    // No hardcoding, no "default" fallback - fail fast if not configured
+    let family_id = req.family_id.clone()
+        .or_else(|| {
+            // Try both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
+            std::env::var("FAMILY_ID")
+                .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
+                .ok()
+        })
+        .ok_or_else(|| {
+        BearDogError::configuration(
+            "family_id required: provide in request or set FAMILY_ID environment variable"
+        )
+        })?;
 
     info!("🎵 BirdSong v2 encrypt for family: {}", family_id);
 
@@ -379,10 +390,20 @@ async fn decrypt_v2(
     State(state): State<BirdSongApiState>,
     Json(req): Json<DecryptRequestV2>,
 ) -> Result<Json<ApiResponse<DecryptResponseV2>>, ApiError> {
-    let family_id = req.family_id.clone().unwrap_or_else(|| {
-        // TODO: Get node's default family_id from manager
-        "default".to_string()
-    });
+    // Primal self-knowledge: Read own family ID from environment
+    // No hardcoding, no "default" fallback - fail fast if not configured
+    let family_id = req.family_id.clone()
+        .or_else(|| {
+            // Try both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
+            std::env::var("FAMILY_ID")
+                .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
+                .ok()
+        })
+        .ok_or_else(|| {
+        BearDogError::configuration(
+            "family_id required: provide in request or set FAMILY_ID environment variable"
+        )
+        })?;
 
     info!("🎵 BirdSong v2 decrypt for family: {}", family_id);
 

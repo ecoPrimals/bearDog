@@ -45,9 +45,10 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 use crate::btsp_provider::{
-    BeardogBtspProvider, BtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
+    BeardogBtspProvider, BtspProvider, Direction, SecurityContext, TunnelHandle,
     TunnelStatus,
 };
+use beardog_capabilities::traits::PeerEndpoint;
 use beardog_errors::BearDogError;
 
 // =============================================================================
@@ -58,7 +59,7 @@ use beardog_errors::BearDogError;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct EstablishTunnelRequest {
     /// Peer information
-    pub peer: PeerInfo,
+    pub peer: PeerEndpoint,
 }
 
 /// Response with tunnel handle

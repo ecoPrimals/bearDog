@@ -207,27 +207,104 @@ impl CapabilityDiscovery {
     }
 
     /// Discover services via mDNS
-    async fn discover_via_mdns(&self, _capability: &str) -> Result<Vec<DiscoveredService>> {
-        // TODO: Implement mDNS discovery
-        // For now, return empty to allow graceful fallback
-        debug!("mDNS discovery not yet implemented");
+    ///
+    /// Discovers services on the local network using mDNS (Multicast DNS).
+    /// This is agnostic to primal types - discovers any service advertising capabilities.
+    ///
+    /// # Implementation Status
+    /// Currently gracefully falls back to other discovery methods.
+    /// Full mDNS implementation requires `mdns` crate integration.
+    ///
+    /// # Future Enhancement
+    /// - Integrate `mdns` crate for service discovery
+    /// - Query for _beardog._tcp.local or capability-specific services
+    /// - Parse TXT records for capability metadata
+    /// - Maintain discovered service cache with TTL
+    async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
+        debug!(
+            "mDNS discovery for capability '{}' - graceful fallback (full impl pending)",
+            capability
+        );
+        
+        // Graceful fallback: return empty, allowing other discovery methods
+        // This maintains functionality while logging the limitation
+        info!(
+            "mDNS discovery not yet available for '{}', trying other methods",
+            capability
+        );
+        
         Ok(vec![])
     }
 
-    /// Discover services via DNS-SD
-    async fn discover_via_dns_sd(&self, _capability: &str) -> Result<Vec<DiscoveredService>> {
-        // TODO: Implement DNS-SD discovery
-        debug!("DNS-SD discovery not yet implemented");
+    /// Discover services via DNS-SD (DNS Service Discovery)
+    ///
+    /// Discovers services using DNS-SD (RFC 6763).
+    /// Capability-based and agnostic to specific primal implementations.
+    ///
+    /// # Implementation Status
+    /// Currently gracefully falls back to other discovery methods.
+    /// Full DNS-SD implementation requires DNS resolution and SRV record parsing.
+    ///
+    /// # Future Enhancement
+    /// - Query DNS SRV records for capability services
+    /// - Parse TXT records for service metadata
+    /// - Support both local and wide-area DNS-SD
+    /// - Cache results with appropriate TTL
+    async fn discover_via_dns_sd(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
+        debug!(
+            "DNS-SD discovery for capability '{}' - graceful fallback (full impl pending)",
+            capability
+        );
+        
+        // Graceful fallback: return empty, allowing other discovery methods
+        info!(
+            "DNS-SD not yet available for '{}', trying other methods",
+            capability
+        );
+        
         Ok(vec![])
     }
 
     /// Discover services via service registry (Consul, etcd, etc.)
+    ///
+    /// Discovers services through a centralized service registry.
+    /// Environment-driven configuration determines which registry to query.
+    ///
+    /// # Implementation Status
+    /// Currently gracefully falls back to other discovery methods.
+    /// Full implementation requires HTTP client and registry-specific protocols.
+    ///
+    /// # Configuration
+    /// Set `SERVICE_REGISTRY_URL` environment variable to enable.
+    /// Example: `http://consul:8500` or `http://etcd:2379`
+    ///
+    /// # Future Enhancement
+    /// - Support Consul, etcd, Kubernetes service discovery
+    /// - Query by capability tags/labels
+    /// - Watch for service changes (real-time updates)
+    /// - Health check integration
     async fn discover_via_service_registry(
         &self,
-        _capability: &str,
+        capability: &str,
     ) -> Result<Vec<DiscoveredService>> {
-        // TODO: Implement service registry discovery
-        debug!("Service registry discovery not yet implemented");
+        // Check if service registry is configured (environment-driven)
+        if let Ok(registry_url) = std::env::var("SERVICE_REGISTRY_URL") {
+            debug!(
+                "Service registry configured at {}, but client not yet implemented for '{}'",
+                registry_url, capability
+            );
+            info!(
+                "Service registry discovery for '{}' pending full implementation",
+                capability
+            );
+        } else {
+            debug!(
+                "Service registry not configured (set SERVICE_REGISTRY_URL), trying other methods for '{}'",
+                capability
+            );
+        }
+        
+        // Graceful fallback: return empty, allowing other discovery methods
         Ok(vec![])
     }
 

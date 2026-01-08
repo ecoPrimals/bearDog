@@ -146,7 +146,7 @@ impl BearDogApiServer {
                 .await
             {
                 Ok(genesis) => {
-            info!("✅ Family genesis created: {}", genesis.chain_id);
+                    info!("✅ Family genesis created: {}", genesis.chain_id);
                     // Genesis created successfully - lineage proofs will work
                 }
                 Err(e) => {

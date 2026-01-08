@@ -15,7 +15,9 @@ use tempfile::TempDir;
 // Mock BTSP provider for E2E tests
 mod test_helpers {
     use async_trait::async_trait;
-    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus};
+    use beardog_capabilities::traits::{
+        PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus,
+    };
     use beardog_errors::BearDogError;
     use beardog_tunnel::btsp_provider::ContactInfo;
     use std::sync::{Arc, Mutex};
@@ -44,11 +46,19 @@ mod test_helpers {
             })
         }
 
-        async fn tunnel_encrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        async fn tunnel_encrypt(
+            &self,
+            _tunnel: &TunnelHandle,
+            data: &[u8],
+        ) -> Result<Vec<u8>, BearDogError> {
             Ok(data.iter().rev().copied().collect())
         }
 
-        async fn tunnel_decrypt(&self, _tunnel: &TunnelHandle, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        async fn tunnel_decrypt(
+            &self,
+            _tunnel: &TunnelHandle,
+            data: &[u8],
+        ) -> Result<Vec<u8>, BearDogError> {
             Ok(data.iter().rev().copied().collect())
         }
 
@@ -56,8 +66,6 @@ mod test_helpers {
             let active = self.tunnels.lock().unwrap().contains(&tunnel.id);
             Ok(TunnelStatus {
                 tunnel_id: tunnel.id.clone(),
-                peer_id: tunnel.peer_id.clone(),
-                established_at: tunnel.established_at.clone(),
                 bytes_sent: 1024,
                 bytes_received: 2048,
                 active,
@@ -69,8 +77,16 @@ mod test_helpers {
             self.tunnels.lock().unwrap().retain(|t| t != &tunnel.id);
             Ok(())
         }
+    }
 
-        async fn contact_exchange(&self, target_peer_id: &str, _requester_lineage: &str, _max_hops: usize) -> Result<ContactInfo, BearDogError> {
+    // Additional mock methods (not part of trait)
+    impl MockBtspProvider {
+        pub async fn contact_exchange(
+            &self,
+            target_peer_id: &str,
+            _requester_lineage: &str,
+            _max_hops: usize,
+        ) -> Result<ContactInfo, BearDogError> {
             Ok(ContactInfo {
                 peer_id: target_peer_id.to_string(),
                 addresses: vec!["192.168.1.100:8080".to_string()],
@@ -85,7 +101,10 @@ mod test_helpers {
 
 /// Create test server for E2E tests
 async fn create_e2e_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
-    let provider = Arc::new(test_helpers::MockBtspProvider::new());
+    use beardog_tunnel::btsp_provider::BeardogBtspProvider;
+    
+    // Create real BTSP provider for integration tests
+    let provider = Arc::new(BeardogBtspProvider::new());
     let server = UnixSocketIpcServer::new(socket_path, provider)
         .await
         .expect("Failed to create server");
@@ -214,7 +233,9 @@ async fn test_e2e_rapid_fire_requests() {
                 },
                 "id": i
             });
-            server_clone.handle_jsonrpc_request(&request.to_string()).await
+            server_clone
+                .handle_jsonrpc_request(&request.to_string())
+                .await
         });
         handles.push(handle);
     }
@@ -264,10 +285,22 @@ async fn test_e2e_mixed_valid_and_invalid_requests() {
         "id": 4
     });
 
-    let valid_response = server.handle_jsonrpc_request(&valid_request.to_string()).await.unwrap();
-    let invalid_method_response = server.handle_jsonrpc_request(&invalid_method.to_string()).await.unwrap();
-    let invalid_version_response = server.handle_jsonrpc_request(&invalid_version.to_string()).await.unwrap();
-    let missing_params_response = server.handle_jsonrpc_request(&missing_params.to_string()).await.unwrap();
+    let valid_response = server
+        .handle_jsonrpc_request(&valid_request.to_string())
+        .await
+        .unwrap();
+    let invalid_method_response = server
+        .handle_jsonrpc_request(&invalid_method.to_string())
+        .await
+        .unwrap();
+    let invalid_version_response = server
+        .handle_jsonrpc_request(&invalid_version.to_string())
+        .await
+        .unwrap();
+    let missing_params_response = server
+        .handle_jsonrpc_request(&missing_params.to_string())
+        .await
+        .unwrap();
 
     // Valid request should succeed
     assert!(valid_response.error.is_none());
@@ -286,10 +319,22 @@ async fn test_e2e_all_btsp_methods_accessible() {
     let server = create_e2e_server(socket_path).await;
 
     let methods = vec![
-        ("beardog./btsp/contact/exchange", json!({"target_peer_id": "t", "requester_lineage": "r"})),
-        ("beardog./btsp/tunnel/establish", json!({"id": "t", "address": "127.0.0.1:8080"})),
-        ("beardog./btsp/tunnel/encrypt", json!({"tunnel": {"id": "t", "peer_id": "p", "established_at": "2026-01-07T00:00:00Z"}, "data": "dGVzdA=="})),
-        ("beardog./btsp/tunnel/decrypt", json!({"tunnel": {"id": "t", "peer_id": "p", "established_at": "2026-01-07T00:00:00Z"}, "data": "dGVzdA=="})),
+        (
+            "beardog./btsp/contact/exchange",
+            json!({"target_peer_id": "t", "requester_lineage": "r"}),
+        ),
+        (
+            "beardog./btsp/tunnel/establish",
+            json!({"id": "t", "address": "127.0.0.1:8080"}),
+        ),
+        (
+            "beardog./btsp/tunnel/encrypt",
+            json!({"tunnel": {"id": "t", "peer_id": "p", "established_at": "2026-01-07T00:00:00Z"}, "data": "dGVzdA=="}),
+        ),
+        (
+            "beardog./btsp/tunnel/decrypt",
+            json!({"tunnel": {"id": "t", "peer_id": "p", "established_at": "2026-01-07T00:00:00Z"}, "data": "dGVzdA=="}),
+        ),
         ("beardog./btsp/tunnel/status", json!({"tunnel_id": "test"})),
         ("beardog./btsp/tunnel/close", json!({"tunnel_id": "test"})),
     ];
@@ -326,12 +371,7 @@ async fn test_e2e_request_id_preservation() {
     let server = create_e2e_server(socket_path).await;
 
     // Test with different ID types
-    let test_cases = vec![
-        json!(1),
-        json!("string-id"),
-        json!(12345),
-        json!(null),
-    ];
+    let test_cases = vec![json!(1), json!("string-id"), json!(12345), json!(null)];
 
     for id in test_cases {
         let request = json!({
@@ -368,7 +408,7 @@ async fn test_e2e_stress_test_sustained_load() {
                     "method": "capabilities",
                     "id": format!("client{}-req{}", client_id, request_id)
                 });
-                
+
                 let response = server_clone
                     .handle_jsonrpc_request(&request.to_string())
                     .await;
@@ -387,7 +427,7 @@ async fn test_e2e_stress_test_sustained_load() {
         assert!(client_results.is_ok());
         let responses = client_results.unwrap();
         assert_eq!(responses.len(), 20);
-        
+
         // All responses should be successful
         for response in responses {
             assert!(response.is_ok());
@@ -396,4 +436,3 @@ async fn test_e2e_stress_test_sustained_load() {
         }
     }
 }
-

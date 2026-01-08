@@ -326,7 +326,7 @@ impl BirdSongManager {
 
         // Decrypt
         let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|e| {
-              BearDogError::crypto_error(format!(
+            BearDogError::crypto_error(format!(
                 "Decryption failed (likely different family): {}",
                 e
             ))

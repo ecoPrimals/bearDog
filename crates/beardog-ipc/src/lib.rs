@@ -16,5 +16,3 @@
 pub mod registry_client;
 
 pub use registry_client::{JsonRpcRequest, JsonRpcResponse, PrimalInfo, PrimalRegistryClient};
-
-

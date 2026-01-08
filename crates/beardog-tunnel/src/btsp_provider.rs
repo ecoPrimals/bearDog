@@ -31,6 +31,7 @@
 //! ```
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -50,26 +51,16 @@ use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::{BirdSongManager, LineageHint};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 
-// =============================================================================
-// Internal Types (for implementation)
-// =============================================================================
+// Sub-modules
+mod contact;
+mod metrics;
+mod trust;
+mod types;
 
-/// Internal tunnel handle (uses DateTime for implementation convenience)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct InternalTunnelHandle {
-    pub id: String,
-    pub peer_id: String,
-    pub established_at: DateTime<Utc>,
-}
-
-/// Internal tunnel status (uses DateTime for implementation convenience)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct InternalTunnelStatus {
-    pub active: bool,
-    pub bytes_sent: u64,
-    pub bytes_received: u64,
-    pub last_activity: DateTime<Utc>,
-}
+// Re-exports
+pub use contact::ContactInfo;
+pub use metrics::BtspMetrics;
+pub use types::{Direction, PeerInfo, SecurityContext, TrustLevel};
 
 // =============================================================================
 // Re-export Capability Types (Primary Public Interface)
@@ -82,44 +73,10 @@ pub use beardog_capabilities::traits::TunnelHandle;
 pub use beardog_capabilities::traits::TunnelStatus;
 
 // =============================================================================
-// Legacy Type Aliases (Backward Compatibility)
+// Internal Types (from types module)
 // =============================================================================
 
-/// Legacy peer info type (backward compatibility)
-///
-/// **Deprecated**: Use `PeerEndpoint` directly
-#[deprecated(since = "0.10.0", note = "Use PeerEndpoint from beardog_capabilities")]
-pub type PeerInfo = PeerEndpoint;
-
-/// Legacy BTSP tunnel handle (backward compatibility)
-///
-/// **Deprecated**: Use `TunnelHandle` directly  
-#[deprecated(since = "0.10.0", note = "Use TunnelHandle from beardog_capabilities")]
-pub type BtspTunnelHandle = TunnelHandle;
-
-/// Legacy BTSP tunnel status (backward compatibility)
-///
-/// **Deprecated**: Use `TunnelStatus` directly
-#[deprecated(since = "0.10.0", note = "Use TunnelStatus from beardog_capabilities")]
-pub type BtspTunnelStatus = TunnelStatus;
-
-/// Security context for encryption/decryption operations
-#[derive(Debug, Clone)]
-pub struct SecurityContext {
-    /// Tunnel identifier
-    pub tunnel_id: String,
-    /// Direction of data flow
-    pub direction: Direction,
-}
-
-/// Data flow direction
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Direction {
-    /// Outbound (local -> remote)
-    Outbound,
-    /// Inbound (remote -> local)
-    Inbound,
-}
+use types::{InternalTunnelHandle, InternalTunnelStatus, PeerTrustRecord};
 
 // =============================================================================
 // Legacy BTSP Provider Trait (Deprecated)
@@ -166,27 +123,7 @@ pub trait BtspProvider: Send + Sync {
 // Trust Management (TOFU - Trust On First Use)
 // =============================================================================
 
-/// Trust level for peers
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TrustLevel {
-    /// Fully trusted (key pinned, verified)
-    Trusted,
-    /// Tentative trust (TOFU, first connection)
-    Tentative,
-    /// Untrusted (failed verification)
-    Untrusted,
-}
-
-/// Peer trust record
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct PeerTrustRecord {
-    peer_id: String,
-    public_key: Vec<u8>,
-    trust_level: TrustLevel,
-    first_seen: DateTime<Utc>,
-    last_seen: DateTime<Utc>,
-    connection_count: u64,
-}
+// TrustLevel and PeerTrustRecord are now in the types module
 
 // =============================================================================
 // Tunnel State
@@ -283,27 +220,7 @@ impl Drop for Tunnel {
     }
 }
 
-// =============================================================================
-// Contact Exchange Types
-// =============================================================================
-
-/// Contact information for a peer (decentralized NAT traversal)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ContactInfo {
-    /// Peer identifier
-    pub peer_id: String,
-    /// Peer addresses (IP:Port combinations)
-    pub addresses: Vec<String>,
-    /// Lineage proof (cryptographic verification of relationship)
-    pub lineage_proof: String,
-    /// Path through genetic lineage to reach peer
-    pub lineage_path: Vec<String>,
-    /// Depth of search through lineage tree
-    pub search_depth: usize,
-    /// Last time peer was seen
-    #[serde(with = "chrono::serde::ts_seconds")]
-    pub last_seen: DateTime<Utc>,
-}
+// Contact exchange types are re-exported at the top
 
 // =============================================================================
 // BearDog BTSP Provider Implementation
@@ -328,6 +245,18 @@ pub struct BeardogBtspProvider {
 
     /// TLS configuration for mTLS connections
     tls_config: Arc<crate::tls::TlsConfig>,
+
+    /// Metrics: Total tunnels established
+    tunnels_established: Arc<AtomicU64>,
+
+    /// Metrics: Encryption operations count
+    encryption_count: Arc<AtomicU64>,
+
+    /// Metrics: Decryption operations count
+    decryption_count: Arc<AtomicU64>,
+
+    /// Metrics: Trust evaluations count
+    trust_eval_count: Arc<AtomicU64>,
 }
 
 impl BeardogBtspProvider {
@@ -400,6 +329,10 @@ impl BeardogBtspProvider {
             tunnels: Arc::new(RwLock::new(HashMap::new())),
             trust_db: Arc::new(RwLock::new(HashMap::new())),
             tls_config: Arc::new(tls_config),
+            tunnels_established: Arc::new(AtomicU64::new(0)),
+            encryption_count: Arc::new(AtomicU64::new(0)),
+            decryption_count: Arc::new(AtomicU64::new(0)),
+            trust_eval_count: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -417,6 +350,27 @@ impl BeardogBtspProvider {
     /// This allows the API server to use the same BirdSong instance and master key.
     pub fn birdsong_manager(&self) -> Arc<BirdSongManager> {
         self.birdsong.clone()
+    }
+
+    /// Get BTSP metrics
+    ///
+    /// Returns current operational metrics for monitoring and observability.
+    /// All metrics are collected atomically for lock-free performance.
+    ///
+    /// # Returns
+    ///
+    /// Current snapshot of BTSP metrics including:
+    /// - Tunnels established (total and active)
+    /// - Encryption/decryption operations
+    /// - Trust evaluations
+    pub fn get_metrics(&self) -> BtspMetrics {
+        BtspMetrics {
+            tunnels_established: self.tunnels_established.load(Ordering::Relaxed),
+            tunnels_active: self.tunnels.read().len() as u64,
+            encryption_operations: self.encryption_count.load(Ordering::Relaxed),
+            decryption_operations: self.decryption_count.load(Ordering::Relaxed),
+            trust_evaluations: self.trust_eval_count.load(Ordering::Relaxed),
+        }
     }
 
     // =========================================================================
@@ -447,11 +401,16 @@ impl BeardogBtspProvider {
         requester_lineage: &str,
         max_hops: usize,
     ) -> Result<ContactInfo, BearDogError> {
-        info!("🔍 Contact exchange: searching for peer {} (max hops: {})", target_peer_id, max_hops);
+        info!(
+            "🔍 Contact exchange: searching for peer {} (max hops: {})",
+            target_peer_id, max_hops
+        );
 
         // 1. Query genetic lineage for path to peer
-        let lineage_path = self.find_lineage_path(requester_lineage, target_peer_id, max_hops).await?;
-        
+        let lineage_path = self
+            .find_lineage_path(requester_lineage, target_peer_id, max_hops)
+            .await?;
+
         if lineage_path.is_empty() {
             return Err(BearDogError::business(format!(
                 "Peer {} not found within {} hops in genetic lineage",
@@ -473,9 +432,13 @@ impl BeardogBtspProvider {
         let lineage_proof = self.generate_lineage_proof(&lineage_path).await?;
 
         let search_depth = lineage_path.len();
-        
-        info!("✅ Contact exchange: found {} addresses for {} (depth: {})", 
-              addresses.len(), target_peer_id, search_depth);
+
+        info!(
+            "✅ Contact exchange: found {} addresses for {} (depth: {})",
+            addresses.len(),
+            target_peer_id,
+            search_depth
+        );
 
         Ok(ContactInfo {
             peer_id: target_peer_id.to_string(),
@@ -496,22 +459,22 @@ impl BeardogBtspProvider {
     ) -> Result<Vec<String>, BearDogError> {
         // For initial implementation, check if peer is in same family (depth 1)
         // This can be expanded to multi-hop lineage traversal later
-        
+
         // Get our family from environment (primal self-knowledge)
         let our_family = std::env::var("FAMILY_ID")
             .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
-        
+
         // Check if peer is known in trust database
         let trust_db = self.trust_db.read();
         if trust_db.contains_key(target_peer_id) {
             // Direct connection in same family
             return Ok(vec![our_family, target_peer_id.to_string()]);
         }
-        
+
         // For future: Query genetics engine for multi-hop paths
         // let path = self.genetics.find_path(requester_lineage, target_peer_id, max_hops).await?;
-        
+
         // If peer not found in immediate family, return empty path
         warn!("⚠️  Peer {} not found in genetic lineage", target_peer_id);
         Ok(Vec::new())
@@ -531,12 +494,12 @@ impl BeardogBtspProvider {
         // 2. Discovery mechanism: query environment or discovery service
         // This is agnostic - no hardcoding of specific discovery systems
         // The primal discovers addresses through capability-based discovery at runtime
-        
+
         // For initial implementation, generate placeholder addresses
         // In production, this would query actual discovery service via capability
-        addresses.push(format!("192.168.1.5:10000"));  // Local network
-        addresses.push(format!("10.0.0.3:10001"));      // Another local network
-        
+        addresses.push(format!("192.168.1.5:10000")); // Local network
+        addresses.push(format!("10.0.0.3:10001")); // Another local network
+
         // Future: Query discovery service via capability
         // let discovery_service = self.discover_capability("peer_discovery").await?;
         // addresses = discovery_service.query_peer_addresses(peer_id).await?;
@@ -545,24 +508,27 @@ impl BeardogBtspProvider {
     }
 
     /// Generate lineage proof (cryptographic verification of genetic relationship)
-    async fn generate_lineage_proof(&self, lineage_path: &[String]) -> Result<String, BearDogError> {
+    async fn generate_lineage_proof(
+        &self,
+        lineage_path: &[String],
+    ) -> Result<String, BearDogError> {
         // Generate cryptographic proof that requester and target are related through genetic lineage
         // This uses the genetics engine to create a verifiable proof
-        
+
         use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
-        
+
         // Hash the lineage path to create a proof
         for node in lineage_path {
             hasher.update(node.as_bytes());
         }
-        
+
         let proof_hash = hasher.finalize();
         let proof = format!("lineage_proof_{}", hex::encode(proof_hash));
-        
+
         // Future: Use genetics engine for proper cryptographic proof
         // let proof = self.genetics.generate_lineage_proof(lineage_path).await?;
-        
+
         Ok(proof)
     }
 
@@ -614,7 +580,7 @@ impl BeardogBtspProvider {
     /// Establish mTLS connection with peer
     async fn establish_mtls(
         &self,
-        peer: &PeerInfo,
+        peer: &PeerEndpoint,
         _session_key: &[u8],
     ) -> Result<(), BearDogError> {
         debug!("🔗 Establishing mTLS with peer: {}", peer.endpoint);
@@ -670,7 +636,7 @@ impl BeardogBtspProvider {
             associated_data: Some(format!("BTSP session: {}", peer_id).into_bytes()),
         };
 
-        let broadcast = self
+        let _broadcast = self
             .birdsong
             .encrypt_broadcast(&encrypt_request)
             .map_err(|e| {

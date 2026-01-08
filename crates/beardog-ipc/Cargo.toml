@@ -2,6 +2,12 @@
 name = "beardog-ipc"
 version = "0.1.0"
 edition = "2021"
+description = "Inter-process communication primitives for BearDog primal coordination"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ecoPrimals/beardog"
+readme = "README.md"
+keywords = ["ipc", "beardog", "primal", "coordination"]
+categories = ["network-programming", "asynchronous"]
 
 [dependencies]
 # Async runtime

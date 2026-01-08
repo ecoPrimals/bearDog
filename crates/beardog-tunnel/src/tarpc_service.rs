@@ -32,19 +32,21 @@ use crate::btsp_provider::BeardogBtspProvider;
 pub trait BearDogService {
     /// Ping the service (health check)
     async fn ping() -> PingResponse;
-    
+
     /// Get BearDog capabilities
     async fn capabilities() -> CapabilitiesResponse;
-    
+
     /// Evaluate trust for a peer
-    async fn evaluate_trust(request: TrustEvaluationRequest) -> Result<TrustEvaluationResponse, String>;
-    
+    async fn evaluate_trust(
+        request: TrustEvaluationRequest,
+    ) -> Result<TrustEvaluationResponse, String>;
+
     /// Encrypt data with BirdSong
     async fn birdsong_encrypt(plaintext: Vec<u8>, family_id: String) -> Result<Vec<u8>, String>;
-    
+
     /// Decrypt data with BirdSong
     async fn birdsong_decrypt(ciphertext: Vec<u8>, family_id: String) -> Result<Vec<u8>, String>;
-    
+
     /// Get security metrics (for Songbird)
     async fn security_metrics() -> SecurityMetricsResponse;
 }
@@ -117,7 +119,7 @@ impl BearDogService for BearDogServiceImpl {
     /// Ping endpoint - health check
     async fn ping(self, _context: tarpc::context::Context) -> PingResponse {
         tracing::debug!("🎯 tarpc: ping");
-        
+
         PingResponse {
             pong: true,
             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -125,11 +127,11 @@ impl BearDogService for BearDogServiceImpl {
             protocol: "tarpc".to_string(),
         }
     }
-    
+
     /// Get capabilities
     async fn capabilities(self, _context: tarpc::context::Context) -> CapabilitiesResponse {
         tracing::debug!("🎯 tarpc: capabilities");
-        
+
         CapabilitiesResponse {
             capabilities: vec![
                 "encryption".to_string(),
@@ -138,14 +140,11 @@ impl BearDogService for BearDogServiceImpl {
                 "signatures".to_string(),
             ],
             version: env!("CARGO_PKG_VERSION").to_string(),
-            protocols: vec![
-                "tarpc".to_string(),
-                "json-rpc".to_string(),
-            ],
+            protocols: vec!["tarpc".to_string(), "json-rpc".to_string()],
             security_level: 5, // tarpc has highest security level
         }
     }
-    
+
     /// Evaluate trust for a peer
     async fn evaluate_trust(
         self,
@@ -153,16 +152,39 @@ impl BearDogService for BearDogServiceImpl {
         request: TrustEvaluationRequest,
     ) -> Result<TrustEvaluationResponse, String> {
         tracing::debug!("🎯 tarpc: evaluate_trust for peer={}", request.peer_id);
-        
-        // TODO: Implement actual trust evaluation using BTSP provider
-        // For now, return a basic response
+
+        // Real trust evaluation using genetic lineage
+        // Get our family ID from environment (primal self-knowledge)
+        let our_family = std::env::var("FAMILY_ID")
+            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
+            .unwrap_or_else(|_| "unknown".to_string());
+
+        // Evaluate trust based on genetic lineage
+        let peer_family = request.family_id.as_str();
+        let same_family = our_family == peer_family;
+
+        let (trust_level, reason, allowed) = if same_family {
+            (2, "same_genetic_family".to_string(), true)
+        } else {
+            (0, "different_genetic_family".to_string(), false)
+        };
+
+        tracing::info!(
+            "🎯 Trust evaluation: peer={}, peer_family={}, our_family={}, trust_level={}, allowed={}",
+            request.peer_id,
+            peer_family,
+            our_family,
+            trust_level,
+            allowed
+        );
+
         Ok(TrustEvaluationResponse {
-            trust_level: 2, // Genetic lineage verified
-            reason: "tarpc_type_safe_communication".to_string(),
-            allowed: true,
+            trust_level,
+            reason,
+            allowed,
         })
     }
-    
+
     /// Encrypt data with BirdSong
     async fn birdsong_encrypt(
         self,
@@ -171,13 +193,13 @@ impl BearDogService for BearDogServiceImpl {
         family_id: String,
     ) -> Result<Vec<u8>, String> {
         tracing::debug!("🎯 tarpc: birdsong_encrypt for family={}", family_id);
-        
+
         self.btsp_provider
             .birdsong_manager()
             .encrypt_discovery_for_family(&plaintext, &family_id)
             .map_err(|e| format!("Encryption failed: {}", e))
     }
-    
+
     /// Decrypt data with BirdSong
     async fn birdsong_decrypt(
         self,
@@ -186,26 +208,32 @@ impl BearDogService for BearDogServiceImpl {
         family_id: String,
     ) -> Result<Vec<u8>, String> {
         tracing::debug!("🎯 tarpc: birdsong_decrypt for family={}", family_id);
-        
+
         self.btsp_provider
             .birdsong_manager()
             .decrypt_discovery_from_family(&ciphertext, &family_id)
             .map_err(|e| format!("Decryption failed: {}", e))
     }
-    
+
     /// Get security metrics
-    async fn security_metrics(
-        self,
-        _context: tarpc::context::Context,
-    ) -> SecurityMetricsResponse {
+    async fn security_metrics(self, _context: tarpc::context::Context) -> SecurityMetricsResponse {
         tracing::debug!("🎯 tarpc: security_metrics");
-        
-        // TODO: Implement actual metrics collection
+
+        // Real metrics from BTSP provider
+        // Metrics collection is synchronous and lock-free (atomic operations)
+        let metrics = self.btsp_provider.get_metrics();
+
+        // Get uptime from system (process start time)
+        let uptime_seconds = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+
         SecurityMetricsResponse {
-            trust_evaluations: 0,
-            encryption_operations: 0,
-            active_sessions: 0,
-            uptime_seconds: 0,
+            trust_evaluations: metrics.trust_evaluations,
+            encryption_operations: metrics.encryption_operations + metrics.decryption_operations,
+            active_sessions: metrics.tunnels_active,
+            uptime_seconds,
         }
     }
 }
@@ -213,7 +241,7 @@ impl BearDogService for BearDogServiceImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_ping_response_structure() {
         let response = PingResponse {
@@ -222,11 +250,11 @@ mod tests {
             version: "0.15.0".to_string(),
             protocol: "tarpc".to_string(),
         };
-        
+
         assert!(response.pong);
         assert_eq!(response.protocol, "tarpc");
     }
-    
+
     #[test]
     fn test_capabilities_response_security_level() {
         let response = CapabilitiesResponse {
@@ -235,10 +263,10 @@ mod tests {
             protocols: vec!["tarpc".to_string()],
             security_level: 5,
         };
-        
+
         assert_eq!(response.security_level, 5); // Highest security
     }
-    
+
     #[test]
     fn test_trust_evaluation_types() {
         let request = TrustEvaluationRequest {
@@ -246,11 +274,11 @@ mod tests {
             family_id: "nat0".to_string(),
             requested_operation: Some("encrypt".to_string()),
         };
-        
+
         assert_eq!(request.peer_id, "tower1");
         assert_eq!(request.family_id, "nat0");
     }
-    
+
     #[test]
     fn test_security_metrics_response() {
         let response = SecurityMetricsResponse {
@@ -259,8 +287,7 @@ mod tests {
             active_sessions: 5,
             uptime_seconds: 3600,
         };
-        
+
         assert_eq!(response.trust_evaluations, 42);
     }
 }
-

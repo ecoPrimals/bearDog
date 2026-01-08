@@ -459,6 +459,7 @@ dependencies = [
  "beardog-adapters",
  "beardog-api",
  "beardog-auth",
+ "beardog-capabilities",
  "beardog-cli",
  "beardog-config",
  "beardog-core",
@@ -488,6 +489,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

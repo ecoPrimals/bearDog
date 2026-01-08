@@ -111,14 +111,12 @@ impl PrimalRegistryClient {
     pub async fn connect(&mut self) -> Result<(), BearDogError> {
         info!("🔌 Connecting to primal registry at {:?}", self.socket_path);
 
-        let stream = UnixStream::connect(&self.socket_path)
-            .await
-            .map_err(|e| {
-                BearDogError::system(format!(
-                    "Failed to connect to registry at {:?}: {}",
-                    self.socket_path, e
-                ))
-            })?;
+        let stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
+            BearDogError::system(format!(
+                "Failed to connect to registry at {:?}: {}",
+                self.socket_path, e
+            ))
+        })?;
 
         self.stream = Some(stream);
         info!("✅ Connected to primal registry");
@@ -149,7 +147,9 @@ impl PrimalRegistryClient {
             .iter()
             .map(|cap| match cap {
                 beardog_core::capabilities::Capability::Encryption { .. } => "encryption",
-                beardog_core::capabilities::Capability::TrustEvaluation { .. } => "trust_evaluation",
+                beardog_core::capabilities::Capability::TrustEvaluation { .. } => {
+                    "trust_evaluation"
+                }
                 beardog_core::capabilities::Capability::KeyManagement { .. } => "key_management",
                 beardog_core::capabilities::Capability::Signatures { .. } => "signatures",
                 beardog_core::capabilities::Capability::Discovery { .. } => "discovery",
@@ -194,18 +194,24 @@ impl PrimalRegistryClient {
             "capability": capability,
         });
 
-        let response = self.send_request("primal.get_provider", Some(params)).await?;
+        let response = self
+            .send_request("primal.get_provider", Some(params))
+            .await?;
 
         if let Some(error) = response.error {
-            warn!("⚠️  No provider found for {}: {}", capability, error.message);
+            warn!(
+                "⚠️  No provider found for {}: {}",
+                capability, error.message
+            );
             return Err(BearDogError::system(format!(
                 "No provider for capability {}: {}",
                 capability, error.message
             )));
         }
 
-        let primal_info: PrimalInfo = serde_json::from_value(response.result.unwrap_or_default())
-            .map_err(|e| BearDogError::system(format!("Failed to parse primal info: {}", e)))?;
+        let primal_info: PrimalInfo =
+            serde_json::from_value(response.result.unwrap_or_default())
+                .map_err(|e| BearDogError::system(format!("Failed to parse primal info: {}", e)))?;
 
         debug!("✅ Found provider: {}", primal_info.primal_id);
         Ok(primal_info)
@@ -270,9 +276,10 @@ impl PrimalRegistryClient {
         method: &str,
         params: Option<serde_json::Value>,
     ) -> Result<JsonRpcResponse, BearDogError> {
-        let stream = self.stream.as_mut().ok_or_else(|| {
-            BearDogError::system("Not connected to registry".to_string())
-        })?;
+        let stream = self
+            .stream
+            .as_mut()
+            .ok_or_else(|| BearDogError::system("Not connected to registry".to_string()))?;
 
         self.request_id += 1;
         let request = JsonRpcRequest {
@@ -380,7 +387,7 @@ mod tests {
     fn test_zero_vendor_hardcoding() {
         // This test documents that we have ZERO vendor hardcoding
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/any-registry.sock"));
-        
+
         // Client doesn't know or care what's on the other end
         // Could be Songbird, Consul, etcd, custom - it adapts universally
         assert_eq!(client.socket_path, PathBuf::from("/tmp/any-registry.sock"));
@@ -391,4 +398,3 @@ mod tests {
 #[cfg(test)]
 #[path = "registry_client_tests.rs"]
 mod registry_client_tests;
-

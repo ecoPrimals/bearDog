@@ -14,7 +14,7 @@ mod capability_unit_tests {
     #[test]
     fn test_capability_manifest_creation() {
         let caps = BearDogCapabilities::new(Some("test_family".to_string()), "node1".to_string());
-        
+
         assert_eq!(caps.primal_id, "beardog");
         assert_eq!(caps.family_id, Some("test_family".to_string()));
         assert_eq!(caps.node_id, "node1");
@@ -25,7 +25,7 @@ mod capability_unit_tests {
     #[test]
     fn test_capability_manifest_no_family() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         assert_eq!(caps.primal_id, "beardog");
         assert_eq!(caps.family_id, None);
         assert_eq!(caps.node_id, "node1");
@@ -34,56 +34,56 @@ mod capability_unit_tests {
     #[test]
     fn test_provides_encryption_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let encryption_request = Capability::Encryption {
             algorithms: vec!["any".to_string()],
             key_types: vec!["any".to_string()],
         };
-        
+
         assert!(caps.provides_capability(&encryption_request));
     }
 
     #[test]
     fn test_provides_trust_evaluation_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let trust_request = Capability::TrustEvaluation {
             trust_models: vec!["any".to_string()],
         };
-        
+
         assert!(caps.provides_capability(&trust_request));
     }
 
     #[test]
     fn test_provides_key_management_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let km_request = Capability::KeyManagement {
             hsm_types: vec!["any".to_string()],
         };
-        
+
         assert!(caps.provides_capability(&km_request));
     }
 
     #[test]
     fn test_provides_signatures_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let sig_request = Capability::Signatures {
             algorithms: vec!["any".to_string()],
         };
-        
+
         assert!(caps.provides_capability(&sig_request));
     }
 
     #[test]
     fn test_does_not_provide_discovery_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let discovery_request = Capability::Discovery {
             protocols: vec!["any".to_string()],
         };
-        
+
         // BearDog requires discovery but doesn't provide it
         assert!(!caps.provides_capability(&discovery_request));
     }
@@ -91,34 +91,34 @@ mod capability_unit_tests {
     #[test]
     fn test_does_not_provide_storage_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let storage_request = Capability::Storage {
             storage_types: vec!["any".to_string()],
         };
-        
+
         assert!(!caps.provides_capability(&storage_request));
     }
 
     #[test]
     fn test_does_not_provide_compute_capability() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let compute_request = Capability::Compute {
             compute_types: vec!["any".to_string()],
         };
-        
+
         assert!(!caps.provides_capability(&compute_request));
     }
 
     #[test]
     fn test_capability_serialization() {
         let caps = BearDogCapabilities::new(Some("test".to_string()), "node1".to_string());
-        
+
         let json = serde_json::to_string_pretty(&caps).unwrap();
         assert!(json.contains("beardog"));
         assert!(json.contains("encryption"));
         assert!(json.contains("trust_evaluation"));
-        
+
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.primal_id, "beardog");
         assert_eq!(deserialized.family_id, Some("test".to_string()));
@@ -127,29 +127,31 @@ mod capability_unit_tests {
     #[test]
     fn test_endpoint_unix_socket() {
         let caps = BearDogCapabilities::new(Some("nat0".to_string()), "node1".to_string());
-        
-        let has_unix_socket = caps.endpoints.iter().any(|e| {
-            matches!(e, IpcEndpoint::UnixSocket { .. })
-        });
-        
+
+        let has_unix_socket = caps
+            .endpoints
+            .iter()
+            .any(|e| matches!(e, IpcEndpoint::UnixSocket { .. }));
+
         assert!(has_unix_socket);
     }
 
     #[test]
     fn test_endpoint_http() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
-        let has_http = caps.endpoints.iter().any(|e| {
-            matches!(e, IpcEndpoint::Http { .. })
-        });
-        
+
+        let has_http = caps
+            .endpoints
+            .iter()
+            .any(|e| matches!(e, IpcEndpoint::Http { .. }));
+
         assert!(has_http);
     }
 
     #[test]
     fn test_metadata_includes_version() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         assert!(caps.metadata.contains_key("version"));
         assert!(caps.metadata.contains_key("primal_type"));
         assert_eq!(caps.metadata.get("primal_type").unwrap(), "security");
@@ -165,11 +167,11 @@ mod capability_unit_tests {
             algorithms: vec!["ChaCha20Poly1305".to_string()],
             key_types: vec!["X25519".to_string()],
         };
-        
+
         let json = serde_json::to_string(&cap).unwrap();
         assert!(json.contains("encryption"));
         assert!(json.contains("ChaCha20Poly1305"));
-        
+
         let deserialized: Capability = serde_json::from_str(&json).unwrap();
         assert!(matches!(deserialized, Capability::Encryption { .. }));
     }
@@ -179,7 +181,7 @@ mod capability_unit_tests {
         let cap = Capability::TrustEvaluation {
             trust_models: vec!["family_based".to_string()],
         };
-        
+
         let json = serde_json::to_string(&cap).unwrap();
         assert!(json.contains("trust_evaluation"));
         assert!(json.contains("family_based"));
@@ -189,13 +191,13 @@ mod capability_unit_tests {
     fn test_capability_custom_serialization() {
         let mut properties = HashMap::new();
         properties.insert("key1".to_string(), "value1".to_string());
-        
+
         let cap = Capability::Custom {
             name: "custom_capability".to_string(),
             version: "1.0.0".to_string(),
             properties,
         };
-        
+
         let json = serde_json::to_string(&cap).unwrap();
         assert!(json.contains("custom"));
         assert!(json.contains("custom_capability"));
@@ -216,11 +218,11 @@ mod capability_unit_tests {
             params: HashMap::new(),
             request_id: "req_123".to_string(),
         };
-        
+
         let json = serde_json::to_string(&request).unwrap();
         assert!(json.contains("toadstool"));
         assert!(json.contains("req_123"));
-        
+
         let deserialized: CapabilityRequest = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.from_primal, "toadstool");
         assert_eq!(deserialized.request_id, "req_123");
@@ -234,7 +236,7 @@ mod capability_unit_tests {
             data: Some(serde_json::json!({"result": "encrypted"})),
             error: None,
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("success"));
         assert!(json.contains("req_123"));
@@ -248,7 +250,7 @@ mod capability_unit_tests {
             data: None,
             error: Some("Encryption failed".to_string()),
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("error"));
         assert!(json.contains("Encryption failed"));
@@ -262,7 +264,7 @@ mod capability_unit_tests {
             data: None,
             error: Some("Capability not provided".to_string()),
         };
-        
+
         assert!(matches!(response.status, ResponseStatus::NotAvailable));
     }
 
@@ -276,12 +278,12 @@ mod capability_unit_tests {
             algorithms: vec!["ChaCha20".to_string()],
             key_types: vec!["X25519".to_string()],
         };
-        
+
         let requested = Capability::Encryption {
             algorithms: vec!["any".to_string()],
             key_types: vec!["any".to_string()],
         };
-        
+
         let caps = BearDogCapabilities::new(None, "node1".to_string());
         // Should match because both are Encryption type
         assert!(caps.provides_capability(&requested));
@@ -290,11 +292,11 @@ mod capability_unit_tests {
     #[test]
     fn test_capability_matching_different_type() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         let storage_request = Capability::Storage {
             storage_types: vec!["any".to_string()],
         };
-        
+
         // BearDog provides Encryption, not Storage
         assert!(!caps.provides_capability(&storage_request));
     }
@@ -325,14 +327,17 @@ mod capability_unit_tests {
     #[test]
     fn test_capability_request_with_complex_params() {
         let mut params = HashMap::new();
-        params.insert("nested".to_string(), serde_json::json!({
-            "level1": {
-                "level2": {
-                    "value": 42
+        params.insert(
+            "nested".to_string(),
+            serde_json::json!({
+                "level1": {
+                    "level2": {
+                        "value": 42
+                    }
                 }
-            }
-        }));
-        
+            }),
+        );
+
         let request = CapabilityRequest {
             from_primal: "test".to_string(),
             capability: Capability::Encryption {
@@ -342,10 +347,10 @@ mod capability_unit_tests {
             params,
             request_id: "req_123".to_string(),
         };
-        
+
         let json = serde_json::to_string(&request).unwrap();
         let deserialized: CapabilityRequest = serde_json::from_str(&json).unwrap();
-        
+
         assert!(deserialized.params.contains_key("nested"));
     }
 }
@@ -362,10 +367,10 @@ mod capability_e2e_tests {
     fn test_e2e_capability_advertisement() {
         // Simulate primal startup and capability advertisement
         let caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
-        
+
         // Verify all expected capabilities are advertised
         assert!(caps.provides.len() >= 4); // Encryption, Trust, KeyMgmt, Signatures
-        
+
         // Verify endpoints are configured
         assert!(caps.endpoints.len() >= 2); // Unix socket + HTTP
     }
@@ -374,13 +379,13 @@ mod capability_e2e_tests {
     fn test_e2e_capability_discovery() {
         // Simulate another primal discovering BearDog's capabilities
         let beardog_caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
-        
+
         // Serialize (as biomeOS would store in registry)
         let json = serde_json::to_string(&beardog_caps).unwrap();
-        
+
         // Deserialize (as another primal would read from registry)
         let discovered_caps: BearDogCapabilities = serde_json::from_str(&json).unwrap();
-        
+
         // Verify discovered capabilities match
         assert_eq!(discovered_caps.primal_id, "beardog");
         assert_eq!(discovered_caps.provides.len(), beardog_caps.provides.len());
@@ -390,19 +395,20 @@ mod capability_e2e_tests {
     fn test_e2e_capability_request_encryption() {
         // Simulate ToadStool requesting encryption from BearDog
         let beardog_caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
-        
+
         let request = CapabilityRequest {
             from_primal: "toadstool".to_string(),
             capability: Capability::Encryption {
                 algorithms: vec!["ChaCha20Poly1305".to_string()],
                 key_types: vec!["X25519".to_string()],
             },
-            params: std::collections::HashMap::from([
-                ("plaintext".to_string(), serde_json::json!("test data")),
-            ]),
+            params: std::collections::HashMap::from([(
+                "plaintext".to_string(),
+                serde_json::json!("test data"),
+            )]),
             request_id: uuid::Uuid::new_v4().to_string(),
         };
-        
+
         // Verify BearDog can handle this request
         assert!(beardog_caps.provides_capability(&request.capability));
     }
@@ -411,18 +417,19 @@ mod capability_e2e_tests {
     fn test_e2e_capability_request_trust_evaluation() {
         // Simulate Songbird requesting trust evaluation from BearDog
         let beardog_caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
-        
+
         let request = CapabilityRequest {
             from_primal: "songbird".to_string(),
             capability: Capability::TrustEvaluation {
                 trust_models: vec!["family_based".to_string()],
             },
-            params: std::collections::HashMap::from([
-                ("peer_family_id".to_string(), serde_json::json!("nat0")),
-            ]),
+            params: std::collections::HashMap::from([(
+                "peer_family_id".to_string(),
+                serde_json::json!("nat0"),
+            )]),
             request_id: uuid::Uuid::new_v4().to_string(),
         };
-        
+
         // Verify BearDog can handle this request
         assert!(beardog_caps.provides_capability(&request.capability));
     }
@@ -431,7 +438,7 @@ mod capability_e2e_tests {
     fn test_e2e_multiple_primals_same_capability() {
         // Simulate two encryption providers
         let beardog_caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
-        
+
         // Hypothetical second provider
         let gorilla_caps = BearDogCapabilities {
             primal_id: "gorilla-encrypt".to_string(),
@@ -445,12 +452,12 @@ mod capability_e2e_tests {
             endpoints: vec![],
             metadata: std::collections::HashMap::new(),
         };
-        
+
         let encryption_request = Capability::Encryption {
             algorithms: vec!["any".to_string()],
             key_types: vec!["any".to_string()],
         };
-        
+
         // Both should be able to handle encryption
         assert!(beardog_caps.provides_capability(&encryption_request));
         assert!(gorilla_caps.provides_capability(&encryption_request));
@@ -469,9 +476,9 @@ mod capability_chaos_tests {
     fn test_chaos_random_capability_types() {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        
+
         let caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
-        
+
         // Test with random capability types
         for _ in 0..100 {
             let random_type = rng.gen_range(0..7);
@@ -499,7 +506,7 @@ mod capability_chaos_tests {
                     compute_types: vec!["any".to_string()],
                 },
             };
-            
+
             // Should not panic
             let _ = caps.provides_capability(&capability);
         }
@@ -508,16 +515,20 @@ mod capability_chaos_tests {
     #[test]
     fn test_chaos_malformed_json() {
         let malformed_jsons = vec![
-            r#"{"primal_id": "beardog""#,  // Missing closing brace
-            r#"{"primal_id": beardog}"#,    // Missing quotes
-            r#"{primal_id: "beardog"}"#,    // Missing quotes on key
-            r#"{"primal_id": null}"#,       // Null value
-            r#"{}"#,                         // Empty object
+            r#"{"primal_id": "beardog""#, // Missing closing brace
+            r#"{"primal_id": beardog}"#,  // Missing quotes
+            r#"{primal_id: "beardog"}"#,  // Missing quotes on key
+            r#"{"primal_id": null}"#,     // Null value
+            r#"{}"#,                      // Empty object
         ];
-        
+
         for json in malformed_jsons {
             let result = serde_json::from_str::<BearDogCapabilities>(json);
-            assert!(result.is_err(), "Should fail to parse malformed JSON: {}", json);
+            assert!(
+                result.is_err(),
+                "Should fail to parse malformed JSON: {}",
+                json
+            );
         }
     }
 
@@ -525,11 +536,14 @@ mod capability_chaos_tests {
     fn test_chaos_concurrent_capability_checks() {
         use std::sync::Arc;
         use std::thread;
-        
-        let caps = Arc::new(BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string()));
-        
+
+        let caps = Arc::new(BearDogCapabilities::new(
+            Some("nat0".to_string()),
+            "tower1".to_string(),
+        ));
+
         let mut handles = vec![];
-        
+
         // Spawn 10 threads checking capabilities concurrently
         for i in 0..10 {
             let caps_clone = Arc::clone(&caps);
@@ -550,14 +564,14 @@ mod capability_chaos_tests {
                             storage_types: vec!["any".to_string()],
                         },
                     };
-                    
+
                     // Should be thread-safe
                     let _ = caps_clone.provides_capability(&capability);
                 }
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -574,7 +588,7 @@ mod capability_chaos_tests {
                 properties: std::collections::HashMap::new(),
             });
         }
-        
+
         let caps = BearDogCapabilities {
             primal_id: "test_primal".to_string(),
             family_id: None,
@@ -584,10 +598,10 @@ mod capability_chaos_tests {
             endpoints: vec![],
             metadata: std::collections::HashMap::new(),
         };
-        
+
         // Should handle large capability lists
         assert_eq!(caps.provides.len(), 1000);
-        
+
         // Serialization should work
         let json = serde_json::to_string(&caps).unwrap();
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
@@ -623,13 +637,16 @@ mod capability_fault_tests {
             algorithms: vec![],
             key_types: vec![],
         };
-        
+
         // Should serialize/deserialize even with empty lists
         let json = serde_json::to_string(&cap).unwrap();
         let deserialized: Capability = serde_json::from_str(&json).unwrap();
-        
+
         match deserialized {
-            Capability::Encryption { algorithms, key_types } => {
+            Capability::Encryption {
+                algorithms,
+                key_types,
+            } => {
                 assert!(algorithms.is_empty());
                 assert!(key_types.is_empty());
             }
@@ -648,7 +665,7 @@ mod capability_fault_tests {
             "endpoints": [],
             "metadata": {}
         }"#;
-        
+
         let caps: BearDogCapabilities = serde_json::from_str(json).unwrap();
         assert_eq!(caps.family_id, None);
     }
@@ -656,18 +673,13 @@ mod capability_fault_tests {
     #[test]
     fn test_fault_special_characters_in_ids() {
         let special_chars = vec![
-            "node\n1",
-            "node\t1",
-            "node\r1",
-            "node\"1",
-            "node'1",
-            "node\\1",
+            "node\n1", "node\t1", "node\r1", "node\"1", "node'1", "node\\1",
         ];
-        
+
         for special_id in special_chars {
             let caps = BearDogCapabilities::new(None, special_id.to_string());
             assert_eq!(caps.node_id, special_id);
-            
+
             // Should serialize/deserialize correctly
             let json = serde_json::to_string(&caps).unwrap();
             let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
@@ -681,7 +693,7 @@ mod capability_fault_tests {
         for i in 0..10000 {
             large_metadata.insert(format!("key_{}", i), format!("value_{}", i));
         }
-        
+
         let caps = BearDogCapabilities {
             primal_id: "test".to_string(),
             family_id: None,
@@ -691,11 +703,11 @@ mod capability_fault_tests {
             endpoints: vec![],
             metadata: large_metadata,
         };
-        
+
         // Should handle large JSON
         let json = serde_json::to_string(&caps).unwrap();
         assert!(json.len() > 100000);
-        
+
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.metadata.len(), 10000);
     }
@@ -704,10 +716,16 @@ mod capability_fault_tests {
     fn test_fault_circular_capability_requests() {
         // Test that capability system doesn't allow circular dependencies
         let caps = BearDogCapabilities::new(None, "node1".to_string());
-        
+
         // BearDog requires Discovery but doesn't provide it
-        assert!(caps.requires.iter().any(|c| matches!(c, Capability::Discovery { .. })));
-        assert!(!caps.provides.iter().any(|c| matches!(c, Capability::Discovery { .. })));
+        assert!(caps
+            .requires
+            .iter()
+            .any(|c| matches!(c, Capability::Discovery { .. })));
+        assert!(!caps
+            .provides
+            .iter()
+            .any(|c| matches!(c, Capability::Discovery { .. })));
     }
 
     #[test]
@@ -730,7 +748,7 @@ mod capability_fault_tests {
             endpoints: vec![],
             metadata: std::collections::HashMap::new(),
         };
-        
+
         // Should handle duplicate capability types
         let json = serde_json::to_string(&caps).unwrap();
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
@@ -746,21 +764,20 @@ mod capability_fault_tests {
             data: None,
             error: Some("Error message".to_string()),
         };
-        
+
         assert!(matches!(error_response.status, ResponseStatus::Error));
         assert!(error_response.error.is_some());
         assert!(error_response.data.is_none());
-        
+
         let success_response = CapabilityResponse {
             request_id: "req_123".to_string(),
             status: ResponseStatus::Success,
             data: Some(serde_json::json!({"result": "ok"})),
             error: None,
         };
-        
+
         assert!(matches!(success_response.status, ResponseStatus::Success));
         assert!(success_response.data.is_some());
         assert!(success_response.error.is_none());
     }
 }
-

@@ -195,9 +195,10 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
-[[bin]]
-name = "beardog-server"
-path = "beardog-server.rs"
+# Binary target temporarily disabled - needs proper main.rs
+# [[bin]]
+# name = "beardog-server"
+# path = "src/main.rs"
 
 [dependencies]
 beardog-core = { workspace = true }
@@ -237,11 +238,13 @@ hex = { workspace = true }
 chrono = { workspace = true }
 serial_test = "3.2"
 beardog-adapters = { path = "crates/beardog-adapters" }
+beardog-capabilities = { path = "crates/beardog-capabilities" }
 futures = { workspace = true }
 beardog-genetics = { path = "crates/beardog-genetics" }
 ed25519-dalek = { workspace = true }
 base64 = { workspace = true }  # For E2E tests
 tempfile = "3.8"  # For creating temporary Unix sockets in tests
+uuid = { workspace = true }  # For chaos tests
 
 [[test]]
 name = "chaos"

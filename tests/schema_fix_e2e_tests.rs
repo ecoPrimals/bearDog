@@ -41,7 +41,10 @@ async fn test_e2e_trust_evaluation_decision_field_present() {
 
     // Verify decision field is present
     assert!(
-        expected_response["result"].as_object().unwrap().contains_key("decision"),
+        expected_response["result"]
+            .as_object()
+            .unwrap()
+            .contains_key("decision"),
         "decision field must be present in response"
     );
 }
@@ -151,7 +154,7 @@ async fn test_e2e_identity_method_with_env_fallback() {
     env::remove_var("NODE_ID");
     env::remove_var("BEARDOG_FAMILY_ID");
     env::remove_var("BEARDOG_NODE_ID");
-    
+
     env::set_var("BEARDOG_FAMILY_ID", "test-family");
     env::set_var("BEARDOG_NODE_ID", "test-node");
 
@@ -199,7 +202,7 @@ async fn test_e2e_complete_trust_evaluation_same_family() {
     env::remove_var("NODE_ID");
     env::remove_var("BEARDOG_FAMILY_ID");
     env::remove_var("BEARDOG_NODE_ID");
-    
+
     // Setup environment
     env::set_var("BEARDOG_FAMILY_ID", "nat0");
     env::set_var("BEARDOG_NODE_ID", "tower1");
@@ -430,7 +433,7 @@ async fn test_e2e_production_tower_identification() {
     env::remove_var("NODE_ID");
     env::remove_var("BEARDOG_FAMILY_ID");
     env::remove_var("BEARDOG_NODE_ID");
-    
+
     // Simulate production tower with biomeOS env vars
     env::set_var("BEARDOG_FAMILY_ID", "nat0");
     env::set_var("BEARDOG_NODE_ID", "tower1");
@@ -484,4 +487,3 @@ async fn test_e2e_dual_tower_federation() {
     env::remove_var("BEARDOG_FAMILY_ID");
     env::remove_var("BEARDOG_NODE_ID");
 }
-
