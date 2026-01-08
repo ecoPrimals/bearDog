@@ -10,8 +10,12 @@ use std::sync::Arc;
 #[tokio::test]
 #[ignore] // Requires HSM initialization
 async fn test_contact_exchange_same_family() {
-    // Initialize components
-    let hsm = Arc::new(HsmManager::new());
+    // Initialize components with auto_initialize for proper HSM provider registration
+    use std::env;
+    env::set_var("BEARDOG_HSM_MODE", "software");
+    let hsm = Arc::new(HsmManager::auto_initialize().await.expect("Failed to initialize HSM"));
+    env::remove_var("BEARDOG_HSM_MODE");
+    
     let genetics =
         Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
 
@@ -81,7 +85,12 @@ async fn test_lineage_path_environment() {
 #[tokio::test]
 #[ignore] // Requires HSM initialization
 async fn test_contact_exchange_max_hops() {
-    let hsm = Arc::new(HsmManager::new());
+    // Initialize components with auto_initialize for proper HSM provider registration
+    use std::env;
+    env::set_var("BEARDOG_HSM_MODE", "software");
+    let hsm = Arc::new(HsmManager::auto_initialize().await.expect("Failed to initialize HSM"));
+    env::remove_var("BEARDOG_HSM_MODE");
+    
     let genetics =
         Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
 
