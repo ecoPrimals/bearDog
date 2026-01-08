@@ -8,13 +8,60 @@
 //! HTTP is OPTIONAL and only for external/debugging access.
 //!
 //! ```text
-//! Songbird                     BearDog
-//!    │                            │
-//!    └─────Unix Socket────────────┘
-//!         /tmp/beardog-{family}.sock
+//! ┌─────────────┐     Unix Socket      ┌──────────────┐
+//! │  Songbird   │────/tmp/beardog.sock│   BearDog    │
+//! │  (Client)   │<────JSON-RPC 2.0─────│  (Server)    │
+//! └─────────────┘                      └──────────────┘
+//!        │
+//!        │ Methods: health, btsp.*, encryption.*, security.*
+//!        │ Protocol: JSON-RPC 2.0
+//!        │ Transport: Unix socket
+//!        │
+//!        └─→ BearDog provides security and trust services
 //!
 //! NO HTTP PORTS NEEDED!
 //! ```
+//!
+//! ## Modern Concurrent Rust Pattern
+//!
+//! This implementation uses **atomic readiness flags** for lock-free concurrent operations,
+//! following patterns from Songbird's production-tested implementation.
+//!
+//! ### Readiness Pattern Example
+//!
+//! ```rust,no_run
+//! use std::sync::Arc;
+//! use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
+//! # use beardog_tunnel::btsp_provider::BeardogBtspProvider;
+//! # use std::time::Duration;
+//!
+//! # async fn example(btsp: Arc<BeardogBtspProvider>) -> anyhow::Result<()> {
+//! // Server side - start server
+//! let server = Arc::new(UnixSocketIpcServer::new("/tmp/beardog.sock", btsp).await?);
+//! let ready_flag = server.readiness_flag(); // Get flag BEFORE moving server
+//!
+//! tokio::spawn(async move {
+//!     server.start().await.unwrap();
+//! });
+//!
+//! // Client side - wait for readiness (atomic, lock-free!)
+//! // No filesystem polling, just pure concurrent Rust!
+//! assert!(UnixSocketIpcServer::wait_ready_flag(&ready_flag, Duration::from_secs(5)).await);
+//!
+//! // Now connect
+//! let stream = tokio::net::UnixStream::connect("/tmp/beardog.sock").await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Key Features
+//!
+//! - **Lock-Free Readiness**: Atomic `AtomicBool` for concurrent readiness checks
+//! - **Standard JSON-RPC 2.0**: Full spec compliance with standard error codes
+//! - **Multi-Protocol**: JSON-RPC (primary), tarpc (advanced), HTTP (legacy)
+//! - **Graceful Shutdown**: Proper cleanup and socket removal
+//! - **Concurrent Connections**: Handle multiple clients simultaneously
+//! - **Zero Hardcoding**: Environment-driven configuration
 
 use anyhow::{Context as _, Result}; // Import Context trait explicitly
 use base64::Engine as _; // Import Engine trait for base64
@@ -220,6 +267,89 @@ impl UnixSocketIpcServer {
         })
     }
 
+    /// Get the socket path
+    pub fn socket_path(&self) -> &Path {
+        &self.socket_path
+    }
+
+    /// Get a clone of the readiness flag
+    ///
+    /// This allows checking readiness even after the server has been moved
+    /// into a spawn task. This is lock-free and safe for concurrent access!
+    pub fn readiness_flag(&self) -> Arc<std::sync::atomic::AtomicBool> {
+        Arc::clone(&self.is_ready)
+    }
+
+    /// Check if the server is ready to accept connections
+    ///
+    /// This is an atomic, lock-free operation that can be safely called
+    /// from any thread without blocking. Modern concurrent Rust at its best!
+    pub fn is_ready(&self) -> bool {
+        self.is_ready.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    /// Wait for the server to be ready
+    ///
+    /// This is a non-blocking async wait that checks readiness without
+    /// filesystem polling. Use this instead of `sleep` loops!
+    ///
+    /// Returns `true` if ready within timeout, `false` if timeout expired.
+    pub async fn wait_ready(&self, timeout: std::time::Duration) -> bool {
+        let start = std::time::Instant::now();
+        while !self.is_ready() {
+            if start.elapsed() > timeout {
+                return false;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        }
+        true
+    }
+
+    /// Wait for readiness using a readiness flag
+    ///
+    /// This is a standalone function for use after the server has been moved.
+    /// Fully concurrent - no locks, just atomic operations!
+    pub async fn wait_ready_flag(
+        flag: &Arc<std::sync::atomic::AtomicBool>,
+        timeout: std::time::Duration,
+    ) -> bool {
+        let start = std::time::Instant::now();
+        while !flag.load(std::sync::atomic::Ordering::Acquire) {
+            if start.elapsed() > timeout {
+                return false;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        }
+        true
+    }
+
+    /// Stop the IPC server gracefully
+    ///
+    /// Cleans up the socket file. The actual server loop will continue
+    /// until the task is cancelled by the orchestrator.
+    pub async fn stop(&self) -> Result<()> {
+        info!("🛑 Stopping Unix socket IPC server...");
+
+        // Mark as not ready (atomic, lock-free!)
+        self.is_ready
+            .store(false, std::sync::atomic::Ordering::Release);
+
+        // Mark as not running (needs lock for compatibility)
+        {
+            let mut running = self.is_running.write().await;
+            *running = false;
+        }
+
+        // Remove socket file
+        if self.socket_path.exists() {
+            std::fs::remove_file(&self.socket_path)
+                .context("Failed to remove socket file")?;
+            info!("🧹 Removed socket: {}", self.socket_path.display());
+        }
+
+        Ok(())
+    }
+
     /// Start the Unix socket IPC server
     pub async fn start(self: Arc<Self>) -> Result<()> {
         {
@@ -242,10 +372,16 @@ impl UnixSocketIpcServer {
             self.socket_path.display()
         ))?;
 
+        // Mark server as ready atomically (no locks needed!)
+        // This enables lock-free concurrent readiness checks!
+        self.is_ready
+            .store(true, std::sync::atomic::Ordering::Release);
+
         info!(
             "✅ Unix socket IPC server listening: {}",
             self.socket_path.display()
         );
+        info!("   Status: READY ✅ (atomic flag set)");
 
         // Accept connections loop
         loop {
@@ -540,7 +676,7 @@ impl UnixSocketIpcServer {
             .handle_method(&request.method, request.params.as_ref())
             .await;
 
-        // Build response
+        // Build response with proper error codes
         let response = match result {
             Ok(value) => JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
@@ -548,15 +684,26 @@ impl UnixSocketIpcServer {
                 error: None,
                 id: request.id.unwrap_or(serde_json::Value::Null),
             },
-            Err(e) => JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
-                result: None,
-                error: Some(JsonRpcError {
-                    code: -32603,
-                    message: e,
-                    data: None,
-                }),
-                id: request.id.unwrap_or(serde_json::Value::Null),
+            Err(e) => {
+                // Detect error type and use appropriate error code
+                let (code, message) = if e.contains("Unknown method") || e.contains("Method not found") {
+                    (JsonRpcError::METHOD_NOT_FOUND, e)
+                } else if e.contains("Invalid params") || e.contains("Missing required") {
+                    (JsonRpcError::INVALID_PARAMS, e)
+                } else {
+                    (JsonRpcError::INTERNAL_ERROR, e)
+                };
+                
+                JsonRpcResponse {
+                    jsonrpc: "2.0".to_string(),
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code,
+                        message,
+                        data: None,
+                    }),
+                    id: request.id.unwrap_or(serde_json::Value::Null),
+                }
             },
         };
 

@@ -151,13 +151,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 7: Start Unix Socket Server in Background
     info!("🚀 Step 6: Starting Unix Socket Server...");
+    
+    // Get readiness flag BEFORE moving server into spawn
+    // This is the modern concurrent Rust pattern!
+    let ready_flag = unix_server.readiness_flag();
+    
     let unix_server_clone = unix_server.clone();
     let unix_task = tokio::spawn(async move {
         if let Err(e) = unix_server_clone.start().await {
             error!("Unix socket server error: {}", e);
         }
     });
-    info!("✅ Unix Socket Server started");
+    
+    // Wait for readiness (atomic, lock-free!)
+    // No filesystem polling, just pure concurrent Rust!
+    info!("   Waiting for socket to be ready (atomic check)...");
+    if !UnixSocketIpcServer::wait_ready_flag(&ready_flag, tokio::time::Duration::from_secs(5)).await {
+        error!("❌ Unix socket server failed to become ready within 5 seconds");
+        return Err(BearDogError::configuration("Unix socket server startup timeout").into());
+    }
+    
+    info!("✅ Unix Socket Server started and ready");
+    info!("   ✨ Lock-free concurrent readiness verified!");
     info!("");
 
     // Step 8: Check if HTTP is enabled (optional)
@@ -269,14 +284,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("");
     info!("🛑 Shutting down BearDog service...");
     
+    // Stop Unix socket server gracefully
+    if let Err(e) = unix_server.stop().await {
+        error!("Error stopping Unix socket server: {}", e);
+    } else {
+        info!("   Unix socket server stopped gracefully");
+    }
+    
     // Stop HTTP server if running
     if let Some((task, _)) = http_task {
         task.abort();
         info!("   HTTP server stopped");
     }
-
-    // Unix socket server will cleanup automatically when dropped
-    info!("   Unix socket server stopped");
 
     // Wait a moment for graceful shutdown
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
