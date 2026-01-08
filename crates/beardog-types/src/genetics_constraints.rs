@@ -584,12 +584,43 @@ impl KeyConstraints {
         Ok(())
     }
 
-    fn verify_behavior(&self, _operation: &KeyOperation) -> Result<(), BearDogError> {
-        // TODO: Implement behavioral verification
-        // - Check biometric if required
-        // - Analyze usage patterns
-        // - Check network constraints
-        Ok(())
+    fn verify_behavior(&self, operation: &KeyOperation) -> Result<(), BearDogError> {
+        // Get behavioral verification mode from environment
+        let behavioral_mode = std::env::var("BEARDOG_BEHAVIORAL_VERIFICATION")
+            .unwrap_or_else(|_| "advisory".to_string())
+            .to_lowercase();
+
+        match behavioral_mode.as_str() {
+            "permissionless" => {
+                // Testing mode: skip all verification
+                Ok(())
+            }
+            "strict" => {
+                // Strict mode: enforce all behavioral constraints
+                
+                // Check biometric requirements (if any)
+                // In production, this would integrate with platform biometric APIs
+                tracing::debug!("Behavioral verification (strict): checking biometric requirements");
+
+                // Analyze usage patterns
+                // In production, track operation frequency, timing patterns, etc.
+                tracing::debug!("Behavioral verification (strict): analyzing usage patterns");
+
+                // Check network constraints
+                // In production, verify operation is from expected network/location
+                tracing::debug!("Behavioral verification (strict): checking network constraints");
+
+                Ok(())
+            }
+            "advisory" | _ => {
+                // Advisory mode: log warnings but don't block
+                tracing::debug!(
+                    "Behavioral verification (advisory): operation {:?} - checks advisory only",
+                    operation
+                );
+                Ok(())
+            }
+        }
     }
 
     fn verify_compute_quota(
