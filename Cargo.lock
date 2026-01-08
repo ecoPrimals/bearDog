@@ -1117,6 +1117,7 @@ dependencies = [
  "tower 0.4.13",
  "tower-http 0.5.2",
  "tracing",
+ "tracing-subscriber",
  "uuid",
  "webpki-roots 0.25.4",
  "zeroize",
