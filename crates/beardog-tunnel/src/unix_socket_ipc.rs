@@ -1038,7 +1038,7 @@ impl UnixSocketIpcServer {
             }
 
             // BirdSong decryption (used by Songbird for secure discovery)
-            ("beardog", "birdsong.decrypt") | ("encryption", "decrypt") | ("birdsong", "decrypt") => {
+            ("beardog", "birdsong.decrypt") | ("birdsong", "decrypt") => {
                 let params = params.ok_or("Missing params")?;
                 let ciphertext = params["ciphertext"]
                     .as_str()
