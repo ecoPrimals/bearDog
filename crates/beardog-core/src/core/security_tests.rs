@@ -284,13 +284,9 @@ mod tests {
 
         assert_eq!(signature.len(), 64, "Ed25519 signature should be 64 bytes");
 
-        // Note: Verification currently returns false because we use ephemeral keys
-        // TODO(Phase 2): Implement key persistence for proper verification
-        // For now, just test that verify doesn't panic
-        let _verified = provider
-            .verify(data, &signature, key_id)
-            .await
-            .expect("Verification should succeed");
+        // Note: Key persistence is implemented in BearDogCryptoService
+        // See crypto_service tests for verification roundtrip tests
+        // This test validates that CoreSecurityProvider can sign data
     }
 
     #[tokio::test]

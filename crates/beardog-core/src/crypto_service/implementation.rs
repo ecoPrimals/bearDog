@@ -35,6 +35,15 @@ pub struct BearDogCryptoService {
 
     /// Algorithm registry for capability discovery
     algorithms: discovery::AlgorithmRegistry,
+
+    /// Public key storage for signature verification
+    /// Maps key_id -> public_key_bytes
+    /// 
+    /// # Security Note
+    /// 
+    /// Only public keys are stored here - never private keys.
+    /// This enables proper signature verification without exposing secrets.
+    public_keys: Arc<std::sync::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
 }
 
 impl BearDogCryptoService {
@@ -51,7 +60,32 @@ impl BearDogCryptoService {
             config: Arc::new(config),
             state: Arc::new(CryptoServiceState::new()),
             algorithms,
+            public_keys: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
         })
+    }
+
+    /// Get public key for a given key_id (for signature verification)
+    ///
+    /// # Security Note
+    ///
+    /// Public keys are safe to store and share. This enables proper
+    /// signature verification without exposing private keys.
+    pub fn get_public_key(&self, key_id: &str) -> Result<Vec<u8>> {
+        let keys = self.public_keys.read()
+            .map_err(|e| BearDogError::security(format!("Failed to acquire read lock: {}", e)))?;
+        keys.get(key_id)
+            .cloned()
+            .ok_or_else(|| BearDogError::security(format!("Public key not found for key_id: {}", key_id)))
+    }
+
+    /// Store public key for future verification
+    fn store_public_key(&self, key_id: &str, public_key: Vec<u8>) {
+        if let Ok(mut keys) = self.public_keys.write() {
+            keys.insert(key_id.to_string(), public_key);
+            tracing::debug!("Stored public key for key_id: {}", key_id);
+        } else {
+            tracing::error!("Failed to acquire write lock for storing public key");
+        }
     }
 
     /// Increment operation counter and return operation ID
@@ -262,10 +296,15 @@ impl CryptoService for BearDogCryptoService {
         }
 
         // Delegate to appropriate algorithm module
+        // Store public key for later verification (key persistence)
         let signature_bytes = match algorithm {
             SignatureAlgorithm::Ed25519 => {
                 let key = self.derive_signing_key(key_id)?;
-                let (secret_key, _public_key) = asymmetric::generate_ed25519_from_seed(&key)?;
+                let (secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&key)?;
+                
+                // Store public key for verification (key persistence)
+                self.store_public_key(key_id, public_key.to_vec());
+                
                 asymmetric::sign_ed25519(data, &secret_key)?
             }
             SignatureAlgorithm::EcdsaP256 => {

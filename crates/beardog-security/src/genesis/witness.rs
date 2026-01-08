@@ -227,28 +227,60 @@ impl GenesisWitnessVerifier {
     /// Verify Ed25519 signature
     ///
     /// Signs: BLAKE3(new_node_id || timestamp || witness_device_id)
+    ///
+    /// # Security
+    ///
+    /// Uses Ed25519 signature verification with BLAKE3 hash for:
+    /// - Cryptographic proof of witness authority
+    /// - Non-repudiation of genesis events
+    /// - Tamper-evident lineage creation
     fn verify_signature(
         &self,
         witness: &GenesisWitness,
         new_node_id: &str,
     ) -> Result<(), WitnessVerificationError> {
-        // For Phase 1: Mock verification (always succeeds)
-        // TODO: Implement real Ed25519 verification in Week 5
+        use ed25519_dalek::{Signature, VerifyingKey, Verifier};
+        use blake3::Hasher;
 
-        // Validate signature length
+        // Validate signature length (Ed25519 signatures are 64 bytes)
         if witness.signature.len() != 64 {
             return Err(WitnessVerificationError::InvalidSignature);
         }
 
-        // Mock: Check that we have the data we need
+        // Validate input data
         if new_node_id.is_empty() || witness.device_id.is_empty() {
             return Err(WitnessVerificationError::InvalidSignature);
         }
 
-        // In production (Week 5), this will:
-        // 1. Compute message: BLAKE3(new_node_id || timestamp || witness_device_id)
-        // 2. Verify Ed25519 signature using witness.public_key
-        // 3. Return error if verification fails
+        // Validate public key length (Ed25519 public keys are 32 bytes)
+        if witness.public_key.len() != 32 {
+            return Err(WitnessVerificationError::InvalidSignature);
+        }
+
+        // Step 1: Compute message hash using BLAKE3
+        // Message = BLAKE3(new_node_id || timestamp || witness_device_id)
+        let mut hasher = Hasher::new();
+        hasher.update(new_node_id.as_bytes());
+        hasher.update(&witness.timestamp.to_le_bytes());
+        hasher.update(witness.device_id.as_bytes());
+        let message = hasher.finalize();
+
+        // Step 2: Parse Ed25519 public key
+        let public_key_bytes: [u8; 32] = witness.public_key.clone().try_into()
+            .map_err(|_| WitnessVerificationError::InvalidSignature)?;
+        
+        let public_key = VerifyingKey::from_bytes(&public_key_bytes)
+            .map_err(|_| WitnessVerificationError::InvalidSignature)?;
+
+        // Step 3: Parse Ed25519 signature
+        let signature_bytes: [u8; 64] = witness.signature.clone().try_into()
+            .map_err(|_| WitnessVerificationError::InvalidSignature)?;
+        
+        let signature = Signature::from_bytes(&signature_bytes);
+
+        // Step 4: Verify signature
+        public_key.verify(message.as_bytes(), &signature)
+            .map_err(|_| WitnessVerificationError::InvalidSignature)?;
 
         Ok(())
     }

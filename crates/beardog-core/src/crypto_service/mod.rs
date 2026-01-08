@@ -90,3 +90,7 @@ mod tests_coverage_expansion_dec17;
 // Deep edge case testing - December 18, 2025
 #[cfg(test)]
 mod tests_dec18_edge_cases;
+
+// Key persistence testing - January 8, 2026
+#[cfg(test)]
+mod tests_key_persistence;

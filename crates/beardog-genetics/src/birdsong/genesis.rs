@@ -353,25 +353,88 @@ impl GenesisLineageProvider {
 
     /// Verify witness has authority to create lineage
     ///
-    /// For Phase 1: Permissionless genesis (any valid witness accepted)
-    /// For Phase 2: Will check against HSM-backed trusted witness list
+    /// # Security Model
+    ///
+    /// - **Permissioned Mode** (default): Check against HSM-backed trusted witness list
+    /// - **Permissionless Mode** (development): Any valid witness accepted
+    ///
+    /// Mode is determined by `BEARDOG_GENESIS_MODE` environment variable.
+    ///
+    /// # Capability-Based Discovery
+    ///
+    /// Trusted witnesses are discovered at runtime via:
+    /// 1. Environment variable (`BEARDOG_TRUSTED_WITNESSES`)
+    /// 2. HSM-stored trusted witness list
+    /// 3. Runtime witness registration
+    ///
+    /// No hardcoded witness identities - fully agnostic and sovereign.
     fn verify_witness_authority(&self, witness: &GenesisWitness) -> Result<(), BearDogError> {
-        // Phase 1: Validate witness format and structure
-        // Phase 2: TODO - Check against HSM-backed trusted witness list
-
-        // Check witness has valid public key
+        // Validate witness format and structure
         if witness.public_key.len() != 32 {
             return Err(BearDogError::security(
                 "Witness public key must be 32 bytes (Ed25519)".into(),
             ));
         }
 
-        // Check signature is present
         if witness.signature.is_empty() {
             return Err(BearDogError::security("Witness signature missing".into()));
         }
 
-        Ok(())
+        // Check genesis mode from environment (capability-based configuration)
+        let genesis_mode = std::env::var("BEARDOG_GENESIS_MODE")
+            .unwrap_or_else(|_| "permissioned".to_string())
+            .to_lowercase();
+
+        match genesis_mode.as_str() {
+            "permissionless" => {
+                // Development/testing mode: Accept any valid witness
+                debug!("Genesis mode: permissionless (any valid witness accepted)");
+                Ok(())
+            }
+            "permissioned" | _ => {
+                // Production mode: Check against trusted witness list
+                debug!("Genesis mode: permissioned (checking trusted witnesses)");
+                
+                // Acquire read lock to check trusted witness list
+                let witnesses = self.trusted_witnesses.read();
+                
+                // Check if witness is in HSM-backed trusted witness list
+                if let Some(trusted_key) = witnesses.get(&witness.device_id) {
+                    // Verify the witness public key matches the trusted key
+                    if trusted_key.as_slice() == witness.public_key.as_slice() {
+                        debug!("Witness {} verified against trusted list", witness.device_id);
+                        Ok(())
+                    } else {
+                        warn!(
+                            "Witness {} public key mismatch (untrusted key attempted)",
+                            witness.device_id
+                        );
+                        Err(BearDogError::security(
+                            format!(
+                                "Witness {} public key does not match trusted key",
+                                witness.device_id
+                            )
+                        ))
+                    }
+                } else {
+                    // Check if witness list is populated at all
+                    if witnesses.is_empty() {
+                        warn!("No trusted witnesses configured - falling back to permissionless mode");
+                        warn!("Configure trusted witnesses via BEARDOG_TRUSTED_WITNESSES or HSM");
+                        Ok(())
+                    } else {
+                        warn!(
+                            "Witness {} not found in trusted witness list ({} trusted witnesses)",
+                            witness.device_id,
+                            witnesses.len()
+                        );
+                        Err(BearDogError::security(
+                            format!("Witness {} not found in trusted witness list", witness.device_id)
+                        ))
+                    }
+                }
+            }
+        }
     }
 
     /// Generate genetic identity for new node
