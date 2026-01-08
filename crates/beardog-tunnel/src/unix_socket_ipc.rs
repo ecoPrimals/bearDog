@@ -38,8 +38,13 @@ pub struct UnixSocketIpcServer {
     /// BTSP provider (provides all capabilities)
     btsp_provider: Arc<BeardogBtspProvider>,
 
-    /// Server running state
+    /// Server running state (using RwLock for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
+
+    /// Atomic readiness flag for lock-free checks
+    /// This allows other components to wait for readiness without filesystem polling
+    /// (Learned from Songbird's implementation - much better than sleep loops!)
+    is_ready: Arc<std::sync::atomic::AtomicBool>,
 }
 
 /// JSON-RPC 2.0 Request
@@ -70,6 +75,42 @@ pub struct JsonRpcError {
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
+}
+
+impl JsonRpcError {
+    /// Standard JSON-RPC 2.0 error codes
+    pub const PARSE_ERROR: i32 = -32700;
+    pub const INVALID_REQUEST: i32 = -32600;
+    pub const METHOD_NOT_FOUND: i32 = -32601;
+    pub const INVALID_PARAMS: i32 = -32602;
+    pub const INTERNAL_ERROR: i32 = -32603;
+
+    /// Create a parse error
+    pub fn parse_error(message: impl Into<String>) -> Self {
+        Self {
+            code: Self::PARSE_ERROR,
+            message: message.into(),
+            data: None,
+        }
+    }
+
+    /// Create a method not found error
+    pub fn method_not_found(method: impl Into<String>) -> Self {
+        Self {
+            code: Self::METHOD_NOT_FOUND,
+            message: format!("Method not found: {}", method.into()),
+            data: None,
+        }
+    }
+
+    /// Create an internal error
+    pub fn internal_error(message: impl Into<String>) -> Self {
+        Self {
+            code: Self::INTERNAL_ERROR,
+            message: message.into(),
+            data: None,
+        }
+    }
 }
 
 /// Protocol detection result
@@ -175,6 +216,7 @@ impl UnixSocketIpcServer {
             socket_path,
             btsp_provider,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
+            is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
     }
 
