@@ -50,6 +50,7 @@ use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::api::{BearDogApiServer, BearDogApiServerConfig};
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::HsmManager;
+use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use std::sync::Arc;
 use tokio::signal;
 use tracing::{error, info, warn, Level};
@@ -135,14 +136,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Node ID: {}", node_id);
     info!("");
 
-    // Step 6: Check if HTTP is enabled
+    // Step 6: Create Unix Socket IPC Server
+    info!("🔌 Step 5: Creating Unix Socket IPC Server...");
+    let unix_server = Arc::new(
+        UnixSocketIpcServer::new(socket_path.clone(), btsp_provider.clone())
+            .await
+            .map_err(|e| {
+                error!("Failed to create Unix socket server: {}", e);
+                BearDogError::configuration(&format!("Failed to create Unix socket server: {}", e))
+            })?
+    );
+    info!("✅ Unix Socket IPC Server created");
+    info!("");
+
+    // Step 7: Start Unix Socket Server in Background
+    info!("🚀 Step 6: Starting Unix Socket Server...");
+    let unix_server_clone = unix_server.clone();
+    let unix_task = tokio::spawn(async move {
+        if let Err(e) = unix_server_clone.start().await {
+            error!("Unix socket server error: {}", e);
+        }
+    });
+    info!("✅ Unix Socket Server started");
+    info!("");
+
+    // Step 8: Check if HTTP is enabled (optional)
     let http_enabled = std::env::var("BEARDOG_HTTP_ENABLED")
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(false);
 
-    let server_task = if http_enabled {
-        info!("🌐 Step 5: HTTP API Enabled");
+    let http_task = if http_enabled {
+        info!("🌐 Step 7: HTTP API Enabled");
         
         // Determine bind address from environment
         let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
@@ -174,7 +199,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("   CORS Enabled: {}", config.enable_cors);
         info!("");
 
-        info!("📡 Step 6: Creating HTTP API Server...");
+        info!("📡 Step 8: Creating HTTP API Server...");
         let server = BearDogApiServer::new(config.clone(), btsp_provider.clone())
             .await
             .map_err(|e| {
@@ -184,15 +209,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("✅ HTTP API Server created");
         info!("");
 
-        info!("🚦 Step 7: Starting HTTP Server...");
+        info!("🚦 Step 9: Starting HTTP Server...");
         Some((tokio::spawn(async move {
             if let Err(e) = server.serve().await {
                 error!("HTTP Server error: {}", e);
             }
         }), config))
     } else {
-        info!("🔌 Step 5: Unix Socket ONLY (Port-Free Mode)");
-        info!("   HTTP API disabled (set BEARDOG_HTTP_ENABLED=true to enable)");
+        info!("🔌 HTTP API: Disabled (Port-Free Mode)");
+        info!("   Set BEARDOG_HTTP_ENABLED=true to enable HTTP");
         info!("   ✅ Zero HTTP ports - Maximum security");
         info!("");
         None
@@ -203,18 +228,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("║                                                                    ║");
     info!("║         ✅ BearDog Service Ready!                                  ║");
     info!("║                                                                    ║");
-    if let Some((_, config)) = &server_task {
+    info!("║  🔌 Unix Socket: {}               ║", socket_path);
+    info!("║                                                                    ║");
+    if let Some((_, config)) = &http_task {
         info!("║  🌐 HTTP API: http://{}                              ║", config.bind_addr);
         info!("║                                                                    ║");
-    } else {
-        info!("║  🔌 Unix Socket ONLY (Port-Free)                                   ║");
-        info!("║                                                                    ║");
-    }
-    info!("║  Unix Socket: {}                 ║", socket_path);
-    info!("║                                                                    ║");
-    if server_task.is_some() {
         info!("║  Health Check:                                                     ║");
-        info!("║    curl http://{}/health                         ", server_task.as_ref().unwrap().1.bind_addr);
+        info!("║    curl http://{}/health                         ║", config.bind_addr);
+        info!("║                                                                    ║");
+    } else {
+        info!("║  🔒 Port-Free Mode (HTTP Disabled)                                 ║");
         info!("║                                                                    ║");
     }
     info!("║  Press Ctrl+C or send SIGTERM to shutdown gracefully              ║");
@@ -222,7 +245,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("╚════════════════════════════════════════════════════════════════════╝");
     info!("");
 
-    // Step 8: Wait for Shutdown Signal
+    // Step 10: Wait for Shutdown Signal
     tokio::select! {
         _ = signal::ctrl_c() => {
             info!("📡 Received SIGINT (Ctrl+C)");
@@ -237,16 +260,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Err(e) => error!("Error setting up SIGTERM handler: {}", e),
             }
         }
+        _ = unix_task => {
+            error!("Unix socket server task ended unexpectedly");
+        }
     }
 
-    // Step 9: Graceful Shutdown
+    // Step 11: Graceful Shutdown
     info!("");
     info!("🛑 Shutting down BearDog service...");
     
-    if let Some((task, _)) = server_task {
+    // Stop HTTP server if running
+    if let Some((task, _)) = http_task {
         task.abort();
         info!("   HTTP server stopped");
     }
+
+    // Unix socket server will cleanup automatically when dropped
+    info!("   Unix socket server stopped");
 
     // Wait a moment for graceful shutdown
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
