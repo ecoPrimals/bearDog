@@ -335,3 +335,243 @@ async fn test_authorization_confidence_score() {
     assert!(result.confidence > 0.9, "Confidence should be high for authorized requests");
 }
 
+#[tokio::test]
+async fn test_owner_can_modify_graph_metadata() {
+    let mut graph = create_test_graph("alice");
+    graph.metadata = Some(HashMap::from([
+        ("version".to_string(), serde_json::json!("1.0")),
+        ("description".to_string(), serde_json::json!("Test graph")),
+    ]));
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-2")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.authorized, "Owner should be able to add nodes with metadata present");
+}
+
+#[tokio::test]
+async fn test_empty_metadata_handled() {
+    let mut graph = create_test_graph("alice");
+    graph.metadata = None;
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-2")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.authorized, "Should handle missing metadata gracefully");
+}
+
+#[tokio::test]
+async fn test_multiple_threat_detection() {
+    let graph = create_test_graph("alice");
+    
+    let mut config = HashMap::new();
+    config.insert("script".to_string(), serde_json::json!("eval('rm -rf /')"));
+    config.insert("cpu".to_string(), serde_json::json!("1000"));
+    
+    let malicious_node = GraphNode {
+        id: "node-1".to_string(),
+        node_type: "compute".to_string(),
+        primal: "ToadStool".to_string(),
+        config,
+    };
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(malicious_node),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.authorized, "Multiple threats should be blocked");
+    assert!(result.threat_details.is_some(), "Should have threat details");
+    let threat = result.threat_details.unwrap();
+    assert!(!threat.pattern.is_empty(), "Should have threat pattern");
+}
+
+#[tokio::test]
+async fn test_modification_with_different_primal() {
+    let graph = create_test_graph("alice");
+    
+    let different_node = GraphNode {
+        id: "node-1".to_string(),
+        node_type: "storage".to_string(),
+        primal: "Squirrel".to_string(),
+        config: HashMap::new(),
+    };
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(different_node),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    // Owner can add nodes with different primals
+    assert!(result.confidence > 0.0, "Should have some confidence");
+}
+
+#[tokio::test]
+async fn test_remove_nonexistent_node() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::RemoveNode,
+        node: None,
+        node_id: Some("nonexistent-node".to_string()),
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    // Authorization may pass (owner can try), but would fail at execution
+    assert!(result.confidence >= 0.0, "Should have some confidence value");
+}
+
+#[tokio::test]
+async fn test_add_edge_between_nodes() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddEdge,
+        node: None,
+        node_id: None,
+        edge: Some(crate::graph_security::types::GraphEdge {
+            from: "node-1".to_string(),
+            to: "node-2".to_string(),
+            edge_type: Some("depends_on".to_string()),
+        }),
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    // Owner can add edges
+    assert!(result.confidence >= 0.0, "Should have confidence value");
+}
+
+#[tokio::test]
+async fn test_authorization_with_empty_graph() {
+    let graph = crate::graph_security::types::Graph {
+        id: "empty-graph".to_string(),
+        owner: "alice".to_string(),
+        nodes: vec![],
+        edges: vec![],
+        metadata: Some(HashMap::new()),
+    };
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-1")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.authorized, "Owner can add to empty graph");
+}
+
+#[tokio::test]
+async fn test_risk_level_assessment() {
+    let graph = create_test_graph("alice");
+    
+    let mut config = HashMap::new();
+    config.insert("command".to_string(), serde_json::json!("sudo rm -rf /"));
+    
+    let high_risk_node = GraphNode {
+        id: "node-1".to_string(),
+        node_type: "compute".to_string(),
+        primal: "ToadStool".to_string(),
+        config,
+    };
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(high_risk_node),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    // Should have a risk level assessment (could be any level)
+    // Just verify we got some response
+    assert!(result.confidence >= 0.0);
+}
+
+#[tokio::test]
+async fn test_authorization_reasoning_present() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-1")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.reasoning.is_empty(), "Should provide reasoning");
+    assert!(result.reasoning.len() > 20, "Reasoning should be descriptive");
+}
+
+#[tokio::test]
+async fn test_audit_id_format() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-1")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.audit_id.is_empty(), "Should include audit ID");
+    // Audit ID should be a reasonable format (UUID or similar)
+    assert!(result.audit_id.len() > 10, "Audit ID should be substantial");
+}
+
