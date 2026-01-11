@@ -130,6 +130,9 @@ pub mod api;
 pub mod tarpc_service;
 pub mod unix_socket_ipc;
 
+// Graph Security for Collaborative Intelligence
+pub mod graph_security;
+
 #[cfg(test)]
 mod unix_socket_ipc_btsp_tests;
 #[cfg(test)]
