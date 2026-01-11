@@ -851,11 +851,18 @@ impl UnixSocketIpcServer {
                             "version": "1.0",
                             "methods": ["contact_exchange", "tunnel_establish", "tunnel_encrypt", "tunnel_decrypt", "tunnel_status", "tunnel_close"],
                             "description": "BearDog Tunnel Security Protocol - VPN-free P2P mesh via genetic lineage"
+                        },
+                        {
+                            "type": "graph",
+                            "version": "1.0",
+                            "methods": ["authorize_modification", "validate_template", "audit_origin"],
+                            "description": "Collaborative Intelligence graph security - 5-layer authorization, threat detection, and provenance"
                         }
                     ],
                     "version": env!("CARGO_PKG_VERSION"),
                     "protocols": ["tarpc", "json-rpc", "http"],
                     "btsp_enabled": true,
+                    "collaborative_intelligence": true,
                 }))
             }
 
@@ -1488,8 +1495,87 @@ impl UnixSocketIpcServer {
                 }))
             }
 
+            // ========================================================================
+            // COLLABORATIVE INTELLIGENCE - GRAPH SECURITY METHODS
+            // ========================================================================
+            
+            // Authorize graph modification - Real-time authorization with 5-layer security
+            ("graph", "authorize_modification") | ("graph", "authorize") => {
+                info!("🔐 Authorizing graph modification");
+                
+                let params = params.ok_or("Missing required params")?;
+                
+                let user_id = params.get("user_id")
+                    .and_then(|v| v.as_str())
+                    .ok_or("Missing required param: user_id")?;
+                
+                let graph = params.get("graph")
+                    .ok_or("Missing required param: graph")?;
+                let graph: crate::graph_security::types::Graph = serde_json::from_value(graph.clone())
+                    .map_err(|e| format!("Invalid graph format: {}", e))?;
+                
+                let modification = params.get("modification")
+                    .ok_or("Missing required param: modification")?;
+                let modification: crate::graph_security::types::GraphModification = serde_json::from_value(modification.clone())
+                    .map_err(|e| format!("Invalid modification format: {}", e))?;
+                
+                // Call authorization logic
+                let result = crate::graph_security::authorize::authorize_modification(
+                    &user_id.to_string(),
+                    &graph,
+                    &modification,
+                ).await;
+                
+                match result {
+                    Ok(response) => Ok(serde_json::to_value(&response)
+                        .map_err(|e| format!("Failed to serialize response: {}", e))?),
+                    Err(e) => Err(format!("Authorization failed: {:?}", e)),
+                }
+            }
+            
+            // Validate graph template - Template safety validation
+            ("graph", "validate_template") | ("graph", "validate") => {
+                info!("✅ Validating graph template");
+                
+                let params = params.ok_or("Missing required params")?;
+                
+                let template = params.get("template")
+                    .ok_or("Missing required param: template")?;
+                let template: crate::graph_security::types::GraphTemplate = serde_json::from_value(template.clone())
+                    .map_err(|e| format!("Invalid template format: {}", e))?;
+                
+                // Call validation logic
+                let result = crate::graph_security::validate::validate_template(&template).await;
+                
+                match result {
+                    Ok(report) => Ok(serde_json::to_value(&report)
+                        .map_err(|e| format!("Failed to serialize report: {}", e))?),
+                    Err(e) => Err(format!("Validation failed: {:?}", e)),
+                }
+            }
+            
+            // Audit template origin - Provenance verification
+            ("graph", "audit_origin") | ("graph", "audit") => {
+                info!("🔍 Auditing template origin");
+                
+                let params = params.ok_or("Missing required params")?;
+                
+                let template_id = params.get("template_id")
+                    .and_then(|v| v.as_str())
+                    .ok_or("Missing required param: template_id")?;
+                
+                // Call audit logic
+                let result = crate::graph_security::audit::audit_origin(&template_id.to_string()).await;
+                
+                match result {
+                    Ok(report) => Ok(serde_json::to_value(&report)
+                        .map_err(|e| format!("Failed to serialize report: {}", e))?),
+                    Err(e) => Err(format!("Audit failed: {:?}", e)),
+                }
+            }
+
             // Unknown method
-            _ => Err(format!("Method not found: {}.{} (try: ping, capabilities, identity, security.evaluate, encryption.encrypt, encryption.decrypt, federation.verify_family_member, federation.derive_subfed_key, btsp.*)", namespace, action)),
+            _ => Err(format!("Method not found: {}.{} (try: ping, capabilities, identity, security.evaluate, encryption.encrypt, encryption.decrypt, federation.verify_family_member, federation.derive_subfed_key, graph.authorize_modification, graph.validate_template, graph.audit_origin, btsp.*)", namespace, action)),
         }
     }
 }

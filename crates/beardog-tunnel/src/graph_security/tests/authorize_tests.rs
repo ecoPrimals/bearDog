@@ -140,3 +140,198 @@ async fn test_privilege_escalation_detected() {
     assert!(result.threat_details.is_some());
 }
 
+#[tokio::test]
+async fn test_owner_can_remove_node() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::RemoveNode,
+        node: None,
+        node_id: Some("node-1".to_string()),
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.authorized, "Owner should be able to remove nodes");
+}
+
+#[tokio::test]
+async fn test_non_owner_cannot_remove_node() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::RemoveNode,
+        node: None,
+        node_id: Some("node-1".to_string()),
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"bob".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.authorized, "Non-owner should not be able to remove nodes");
+}
+
+#[tokio::test]
+async fn test_owner_can_add_edge() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddEdge,
+        node: None,
+        node_id: None,
+        edge: Some(crate::graph_security::types::GraphEdge {
+            from: "node-1".to_string(),
+            to: "node-2".to_string(),
+            edge_type: None,
+        }),
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.authorized);
+}
+
+#[tokio::test]
+async fn test_owner_can_modify_node() {
+    let graph = create_test_graph("alice");
+    
+    let mut changes = HashMap::new();
+    changes.insert("memory".to_string(), serde_json::json!("8GB"));
+    
+    let modification = GraphModification {
+        action: ModificationAction::ModifyNode,
+        node: None,
+        node_id: Some("node-1".to_string()),
+        edge: None,
+        changes: Some(changes),
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.authorized, "Owner should be able to modify nodes");
+}
+
+#[tokio::test]
+async fn test_shell_injection_detected() {
+    let graph = create_test_graph("alice");
+    
+    let mut config = HashMap::new();
+    config.insert("script".to_string(), serde_json::json!("$(rm -rf /)"));
+    
+    let malicious_node = GraphNode {
+        id: "node-1".to_string(),
+        node_type: "compute".to_string(),
+        primal: "ToadStool".to_string(),
+        config,
+    };
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(malicious_node),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.authorized, "Shell injection should be blocked");
+    assert_eq!(result.risk_level, RiskLevel::High);
+}
+
+#[tokio::test]
+async fn test_backtick_injection_detected() {
+    let graph = create_test_graph("alice");
+    
+    let mut config = HashMap::new();
+    config.insert("command".to_string(), serde_json::json!("`whoami`"));
+    
+    let malicious_node = GraphNode {
+        id: "node-1".to_string(),
+        node_type: "compute".to_string(),
+        primal: "ToadStool".to_string(),
+        config,
+    };
+    
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(malicious_node),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.authorized, "Backtick injection should be blocked");
+}
+
+#[tokio::test]
+async fn test_authorization_includes_audit_id() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-1")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(!result.audit_id.is_empty(), "Should include audit ID");
+}
+
+#[tokio::test]
+async fn test_authorization_includes_checks_performed() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-1")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.checks_performed.contains(&"permission_check".to_string()));
+    assert!(result.checks_performed.contains(&"structure_validation".to_string()));
+    assert!(result.checks_performed.contains(&"threat_detection".to_string()));
+}
+
+#[tokio::test]
+async fn test_authorization_confidence_score() {
+    let graph = create_test_graph("alice");
+    let modification = GraphModification {
+        action: ModificationAction::AddNode,
+        node: Some(create_test_node("node-1")),
+        node_id: None,
+        edge: None,
+        changes: None,
+    };
+    
+    let result = authorize_modification(&"alice".to_string(), &graph, &modification)
+        .await
+        .expect("Authorization should succeed");
+    
+    assert!(result.confidence > 0.9, "Confidence should be high for authorized requests");
+}
+

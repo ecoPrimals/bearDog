@@ -138,3 +138,55 @@ async fn test_excessive_memory_request() {
     assert!(report.issues.iter().any(|i| i.category == ThreatCategory::ResourceAbuse));
 }
 
+#[tokio::test]
+async fn test_validation_includes_recommendations() {
+    let template = create_test_template(vec![], vec![]);
+    let report = validate_template(&template).await.expect("Validation should succeed");
+    
+    assert!(!report.recommendations.is_empty(), "Should include recommendations");
+}
+
+#[tokio::test]
+async fn test_validation_security_score() {
+    let nodes = vec![create_test_node("node-1"), create_test_node("node-2")];
+    let edges = vec![GraphEdge {
+        from: "node-1".to_string(),
+        to: "node-2".to_string(),
+        edge_type: None,
+    }];
+    
+    let template = create_test_template(nodes, edges);
+    let report = validate_template(&template).await.expect("Validation should succeed");
+    
+    assert!(report.security_score >= 0.0 && report.security_score <= 1.0);
+}
+
+#[tokio::test]
+async fn test_disconnected_subgraphs_detected() {
+    let nodes = vec![
+        create_test_node("node-1"),
+        create_test_node("node-2"),
+        create_test_node("node-3"),
+    ];
+    // node-1 and node-2 connected, node-3 disconnected
+    let edges = vec![GraphEdge {
+        from: "node-1".to_string(),
+        to: "node-2".to_string(),
+        edge_type: None,
+    }];
+    
+    let template = create_test_template(nodes, edges);
+    let report = validate_template(&template).await.expect("Validation should succeed");
+    
+    // Disconnected subgraphs are a low severity issue
+    assert!(report.issues.iter().any(|i| i.description.contains("disconnected")));
+}
+
+#[tokio::test]
+async fn test_validation_id_generated() {
+    let template = create_test_template(vec![create_test_node("node-1")], vec![]);
+    let report = validate_template(&template).await.expect("Validation should succeed");
+    
+    assert!(!report.validation_id.is_empty(), "Should generate validation ID");
+}
+

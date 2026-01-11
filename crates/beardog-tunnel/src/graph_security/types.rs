@@ -111,6 +111,7 @@ pub enum ModificationAction {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphModification {
     /// Type of modification
+    #[serde(alias = "type")]
     pub action: ModificationAction,
     /// Node to add/modify (for node operations)
     #[serde(skip_serializing_if = "Option::is_none")]
