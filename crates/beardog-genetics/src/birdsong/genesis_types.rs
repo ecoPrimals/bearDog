@@ -246,8 +246,6 @@ impl PhysicalChannelProof {
         &self,
         attestation: &[u8],
     ) -> Result<bool, beardog_errors::BearDogError> {
-        use sha2::Sha256;
-
         // Check attestation is non-empty
         if attestation.is_empty() {
             return Ok(false);
@@ -301,10 +299,15 @@ impl PhysicalChannelProof {
                 // Software-based attestation (development, non-hardware platforms)
                 self.verify_software_attestation(attestation)
             }
-            "permissionless" | _ => {
+            "permissionless" => {
                 // Permissionless mode (testing only)
                 tracing::debug!("Attestation mode: permissionless (accepting any attestation)");
                 Ok(!attestation.is_empty())
+            }
+            _ => {
+                // Unknown mode - default to software attestation (secure default)
+                tracing::warn!("Unknown attestation mode, defaulting to software attestation");
+                self.verify_software_attestation(attestation)
             }
         }
     }
@@ -317,8 +320,6 @@ impl PhysicalChannelProof {
         &self,
         attestation: &[u8],
     ) -> Result<bool, beardog_errors::BearDogError> {
-        use sha2::Sha256;
-
         // Minimum attestation length (32 bytes for SHA256 hash)
         if attestation.len() < 32 {
             return Ok(false);

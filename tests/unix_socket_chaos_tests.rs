@@ -245,6 +245,7 @@ async fn chaos_test_shutdown_during_connections() {
                         connection_count.fetch_add(1, Ordering::SeqCst);
                     }
                 }
+                // Rate limit connection attempts (chaos test - simulate realistic client behavior)
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
         });
@@ -252,7 +253,8 @@ async fn chaos_test_shutdown_during_connections() {
         handles.push(handle);
     }
 
-    // Let connections run for a bit
+    // Let chaos test run for a bit to stress test concurrent connections
+    // CHAOS TEST: This sleep is intentional - we want connections actively running
     tokio::time::sleep(Duration::from_millis(200)).await;
 
     // Graceful shutdown while connections are active

@@ -11,7 +11,7 @@ use serde_json::json;
 use std::sync::Arc;
 use std::time::Duration;
 use tempfile::TempDir;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 use beardog_genetics::EcosystemGeneticEngine;
@@ -74,11 +74,18 @@ async fn send_jsonrpc(
     stream.write_all(b"\n").await?;
     stream.flush().await?;
 
-    let (reader, _writer) = stream.split();
-    let mut reader = BufReader::new(reader);
-    let mut line = String::new();
-    reader.read_line(&mut line).await?;
+    // Read response byte-by-byte until newline to preserve stream for reuse
+    let mut response_bytes = Vec::new();
+    let mut buf = [0u8; 1];
+    loop {
+        stream.read_exact(&mut buf).await?;
+        if buf[0] == b'\n' {
+            break;
+        }
+        response_bytes.push(buf[0]);
+    }
 
+    let line = String::from_utf8(response_bytes)?;
     Ok(serde_json::from_str(&line)?)
 }
 

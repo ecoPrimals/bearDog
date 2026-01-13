@@ -9,10 +9,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info};
 
-// Import real crypto providers
+// Import real crypto providers (pure Rust only)
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+    RingCryptoProvider, RustCryptoProvider,
 };
+// OpenSslCryptoProvider removed - pure Rust alternatives available
 use crate::tunnel::hsm::types::KeyType;
 use beardog_types::hsm::CryptoProvider;
 
@@ -72,7 +73,9 @@ impl SoftwareUniversalProvider {
                 Arc::new(provider)
             }
             CryptoProviderType::OpenSsl => {
-                let provider = OpenSslCryptoProvider::new().await?;
+                // OpenSSL removed - fallback to Ring (pure Rust, similar capabilities)
+                tracing::warn!("OpenSSL backend not available - using Ring instead");
+                let provider = RingCryptoProvider::new()?;
                 Arc::new(provider)
             }
             CryptoProviderType::Ring => {

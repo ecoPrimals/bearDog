@@ -391,7 +391,7 @@ impl GenesisLineageProvider {
                 debug!("Genesis mode: permissionless (any valid witness accepted)");
                 Ok(())
             }
-            "permissioned" | _ => {
+            "permissioned" => {
                 // Production mode: Check against trusted witness list
                 debug!("Genesis mode: permissioned (checking trusted witnesses)");
 
@@ -436,6 +436,29 @@ impl GenesisLineageProvider {
                             witness.device_id
                         )))
                     }
+                }
+            }
+            _ => {
+                // Unknown genesis mode - default to permissioned (secure default)
+                debug!(
+                    "Unknown genesis mode '{}', defaulting to permissioned",
+                    genesis_mode
+                );
+                let witnesses = self.trusted_witnesses.read();
+                if let Some(trusted_key) = witnesses.get(&witness.device_id) {
+                    if trusted_key.as_slice() == witness.public_key.as_slice() {
+                        Ok(())
+                    } else {
+                        Err(BearDogError::security(format!(
+                            "Witness {} public key mismatch",
+                            witness.device_id
+                        )))
+                    }
+                } else {
+                    Err(BearDogError::security(format!(
+                        "Unknown witness device_id: {}",
+                        witness.device_id
+                    )))
                 }
             }
         }

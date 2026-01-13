@@ -63,11 +63,20 @@ impl BearDogClient {
     ///
     /// let client = BearDogClient::new("http://localhost:9000");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function uses a default HTTP client configuration that should never fail
+    /// in practice. If you need custom client configuration, use `with_client` instead.
     pub fn new(base_url: impl Into<String>) -> Self {
+        // Default client configuration should never fail - if it does, it's a programming error
+        // Use with_client() for custom configurations that might fail
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
-            .expect("Failed to create HTTP client");
+            .unwrap_or_else(|e| {
+                panic!("BUG: Default HTTP client configuration failed: {}. This should never happen. Please report this issue.", e)
+            });
 
         Self {
             base_url: base_url.into(),

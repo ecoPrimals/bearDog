@@ -211,4 +211,3 @@ mod tests {
         assert_eq!(Protocol::Http.security_level(), 2);
     }
 }
-

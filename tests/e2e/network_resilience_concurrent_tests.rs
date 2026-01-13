@@ -367,7 +367,8 @@ async fn test_concurrent_retry_coordination() {
                         }
                         Err(_) if retry < max_retries - 1 => {
                             total_retries.fetch_add(1, Ordering::SeqCst);
-                            // Exponential backoff
+                            // Exponential backoff (NETWORK RESILIENCE TEST - intentional)
+                            // This tests the retry mechanism itself
                             let backoff_ms = 5 * (1 << retry.min(4));
                             tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
                         }
@@ -539,6 +540,8 @@ async fn test_connection_recovery_after_mass_failure() {
     let recovery_handle = {
         let connections = connections.clone();
         tokio::spawn(async move {
+            // NETWORK RESILIENCE TEST: Deliberate delay before recovery
+            // Simulates network partition lasting 30ms
             tokio::time::sleep(Duration::from_millis(30)).await;
             for conn in connections.iter() {
                 conn.revive();
@@ -554,7 +557,8 @@ async fn test_connection_recovery_after_mass_failure() {
             let requests_after = requests_after_recovery.clone();
 
             tokio::spawn(async move {
-                // Spread requests over time
+                // LOAD TEST: Spread requests over time to simulate realistic traffic pattern
+                // Not an arbitrary wait - testing gradual load increase
                 let delay_ms = (i as u64) * 2 / 5;
                 if delay_ms > 0 {
                     tokio::time::sleep(Duration::from_millis(delay_ms)).await;

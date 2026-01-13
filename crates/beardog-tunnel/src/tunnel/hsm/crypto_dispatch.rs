@@ -24,10 +24,11 @@
 
 use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
-// ✅ SECURITY FIX: Using real crypto providers with actual encryption
+// ✅ SECURITY FIX: Using real crypto providers with actual encryption (pure Rust only)
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider,
+    RingCryptoProvider, RustCryptoProvider,
 };
+// OpenSslCryptoProvider removed - pure Rust alternatives available
 use beardog_types::hsm::CryptoProvider;
 
 /// **Zero-Cost Crypto Provider Dispatch**
@@ -52,8 +53,7 @@ pub enum CryptoProviderDispatch {
     /// Ring crypto library (hardware-accelerated)
     Ring(RingCryptoProvider),
 
-    /// OpenSSL crypto library
-    OpenSsl(OpenSslCryptoProvider),
+    // OpenSSL crypto library removed - pure Rust only
 }
 
 impl CryptoProviderDispatch {
@@ -67,17 +67,13 @@ impl CryptoProviderDispatch {
         Self::Ring(provider)
     }
 
-    /// Create an OpenSSL provider
-    pub fn openssl(provider: OpenSslCryptoProvider) -> Self {
-        Self::OpenSsl(provider)
-    }
+    // OpenSSL provider removed - use Ring or RustCrypto instead
 
     /// Get the provider type as a string
     pub fn provider_type(&self) -> &'static str {
         match self {
             Self::RustCrypto(_) => "rust_crypto",
             Self::Ring(_) => "ring",
-            Self::OpenSsl(_) => "openssl",
         }
     }
 }
@@ -89,7 +85,6 @@ impl CryptoProvider<KeyType> for CryptoProviderDispatch {
         match self {
             Self::RustCrypto(p) => p.initialize().await,
             Self::Ring(p) => p.initialize().await,
-            Self::OpenSsl(p) => p.initialize().await,
         }
     }
 
@@ -97,7 +92,6 @@ impl CryptoProvider<KeyType> for CryptoProviderDispatch {
         match self {
             Self::RustCrypto(p) => p.generate_key_material(key_type).await,
             Self::Ring(p) => p.generate_key_material(key_type).await,
-            Self::OpenSsl(p) => p.generate_key_material(key_type).await,
         }
     }
 
@@ -109,7 +103,6 @@ impl CryptoProvider<KeyType> for CryptoProviderDispatch {
         match self {
             Self::RustCrypto(p) => p.encrypt(key_material, plaintext).await,
             Self::Ring(p) => p.encrypt(key_material, plaintext).await,
-            Self::OpenSsl(p) => p.encrypt(key_material, plaintext).await,
         }
     }
 
@@ -121,7 +114,6 @@ impl CryptoProvider<KeyType> for CryptoProviderDispatch {
         match self {
             Self::RustCrypto(p) => p.decrypt(key_material, ciphertext).await,
             Self::Ring(p) => p.decrypt(key_material, ciphertext).await,
-            Self::OpenSsl(p) => p.decrypt(key_material, ciphertext).await,
         }
     }
 
@@ -129,7 +121,6 @@ impl CryptoProvider<KeyType> for CryptoProviderDispatch {
         match self {
             Self::RustCrypto(p) => p.sign(key_material, data).await,
             Self::Ring(p) => p.sign(key_material, data).await,
-            Self::OpenSsl(p) => p.sign(key_material, data).await,
         }
     }
 
@@ -142,7 +133,6 @@ impl CryptoProvider<KeyType> for CryptoProviderDispatch {
         match self {
             Self::RustCrypto(p) => p.verify(public_key, data, signature).await,
             Self::Ring(p) => p.verify(public_key, data, signature).await,
-            Self::OpenSsl(p) => p.verify(public_key, data, signature).await,
         }
     }
 }
@@ -175,14 +165,7 @@ mod tests {
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    async fn test_openssl_constructor() -> Result<(), BearDogError> {
-        let provider = OpenSslCryptoProvider::new().await?;
-        let dispatch = CryptoProviderDispatch::openssl(provider);
-        assert_eq!(dispatch.provider_type(), "openssl");
-        Ok(())
-    }
+    // OpenSSL tests removed - pure Rust only
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
@@ -195,8 +178,7 @@ mod tests {
         let ring = CryptoProviderDispatch::Ring(RingCryptoProvider::new()?);
         assert_eq!(ring.provider_type(), "ring");
 
-        let openssl = CryptoProviderDispatch::OpenSsl(OpenSslCryptoProvider::new().await?);
-        assert_eq!(openssl.provider_type(), "openssl");
+        // OpenSSL provider removed - pure Rust only
         Ok(())
     }
 
@@ -224,14 +206,7 @@ mod tests {
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    async fn test_openssl_initialize() -> Result<(), BearDogError> {
-        let provider = OpenSslCryptoProvider::new().await?;
-        let dispatch = CryptoProviderDispatch::openssl(provider);
-        dispatch.initialize().await?;
-        Ok(())
-    }
+    // OpenSSL tests removed - pure Rust only
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
@@ -259,15 +234,7 @@ mod tests {
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    async fn test_openssl_generate_key() -> Result<(), BearDogError> {
-        let provider = OpenSslCryptoProvider::new().await?;
-        let dispatch = CryptoProviderDispatch::openssl(provider);
-        let key = dispatch.generate_key_material(&KeyType::Aes).await?;
-        assert!(!key.is_empty());
-        Ok(())
-    }
+    // OpenSSL tests removed - pure Rust only
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
@@ -307,21 +274,7 @@ mod tests {
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: crypto
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    async fn test_openssl_encrypt_decrypt() -> Result<(), BearDogError> {
-        let provider = OpenSslCryptoProvider::new().await?;
-        let dispatch = CryptoProviderDispatch::openssl(provider);
-        let key = dispatch.generate_key_material(&KeyType::Aes).await?;
-        let plaintext = b"test message";
-
-        let ciphertext = dispatch.encrypt(&key, plaintext).await?;
-        assert_ne!(ciphertext, plaintext);
-
-        let decrypted = dispatch.decrypt(&key, &ciphertext).await?;
-        assert_eq!(decrypted, plaintext);
-        Ok(())
-    }
+    // OpenSSL tests removed - pure Rust only
 
     // Note: Sign/verify tests removed - Ed25519 signing not fully implemented in all providers yet.
     // The dispatch layer itself is working correctly as verified by encrypt/decrypt tests.

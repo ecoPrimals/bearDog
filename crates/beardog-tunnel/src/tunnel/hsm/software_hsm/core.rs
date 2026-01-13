@@ -13,11 +13,12 @@ use crate::tunnel::hsm::crypto::{
     RustCryptoProvider, SigningOptions, VerificationOptions,
 };
 use crate::tunnel::hsm::manager::HsmProvider;
-// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers
+// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers (pure Rust only)
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    GeneticCryptoProvider, OpenSslCryptoProvider, RingCryptoProvider,
+    GeneticCryptoProvider, RingCryptoProvider,
     RustCryptoProvider as SoftwareRustCryptoProvider,
 };
+// OpenSslCryptoProvider removed - pure Rust alternatives available
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
 };
@@ -216,8 +217,12 @@ impl RustSoftwareHsm {
                 as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
             CryptoBackendType::Ring => Ok(Arc::new(RingCryptoProvider::new()?)
                 as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
-            CryptoBackendType::OpenSsl => Ok(Arc::new(OpenSslCryptoProvider::new().await?)
-                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
+            CryptoBackendType::OpenSsl => {
+                // OpenSSL removed - fallback to Ring (pure Rust, similar capabilities)
+                tracing::warn!("OpenSSL backend not available - using Ring instead");
+                Ok(Arc::new(RingCryptoProvider::new()?)
+                    as Arc<dyn CryptoProvider<KeyType> + Send + Sync>)
+            }
         }
     }
 

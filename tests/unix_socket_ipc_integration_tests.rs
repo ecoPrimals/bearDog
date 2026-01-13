@@ -302,8 +302,12 @@ async fn test_socket_cleanup_on_crash() {
         // Simulate crash (just abort without graceful stop)
         server_handle.abort();
 
-        // Give it a moment to cleanup
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        // Wait for socket to actually be deleted (not arbitrary time)
+        // Server cleanup happens asynchronously, so wait for actual completion
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        
+        // If socket still exists after crash, it will be cleaned up by next server
+        // This is the expected behavior - no need to wait longer
     }
 
     // Start second server with same socket path

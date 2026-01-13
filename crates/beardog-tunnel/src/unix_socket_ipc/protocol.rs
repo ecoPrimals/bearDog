@@ -68,4 +68,3 @@ mod tests {
         assert_eq!(Protocol::detect_from_bytes(b""), Protocol::JsonRpc);
     }
 }
-

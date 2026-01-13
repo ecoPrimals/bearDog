@@ -3,7 +3,7 @@ use std::sync::Arc;
 use beardog_errors::BearDogError;
 
 use super::genetic_crypto::GeneticCryptoProvider;
-use super::openssl_crypto::OpenSslCryptoProvider;
+// OpenSslCryptoProvider removed - pure Rust only
 use super::ring_crypto::RingCryptoProvider;
 use super::rust_crypto::RustCryptoProvider;
 use crate::tunnel::hsm::types::config::CryptoBackend;
@@ -32,7 +32,9 @@ pub async fn create_crypto_provider(
             Ok(Arc::new(provider))
         }
         CryptoBackend::OpenSsl => {
-            let provider = OpenSslCryptoProvider::new().await?;
+            // OpenSSL removed - fallback to Ring (pure Rust, similar capabilities)
+            tracing::warn!("OpenSSL backend not available - using Ring instead");
+            let provider = RingCryptoProvider::new()?;
             Ok(Arc::new(provider))
         }
     }
@@ -41,10 +43,10 @@ pub async fn create_crypto_provider(
 /// Get Supported Crypto Backends operation.
 pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     vec![
-        CryptoBackend::GeneticCrypto,  // NEW: 100% Pure Rust (RECOMMENDED)
+        CryptoBackend::GeneticCrypto,  // RECOMMENDED: 100% Pure Rust
         CryptoBackend::RustCrypto,
         CryptoBackend::Ring,
-        CryptoBackend::OpenSsl,
+        // OpenSsl removed - pure Rust only
     ]
 }
 

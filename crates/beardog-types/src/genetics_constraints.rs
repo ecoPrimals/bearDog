@@ -614,7 +614,7 @@ impl KeyConstraints {
 
                 Ok(())
             }
-            "advisory" | _ => {
+            _ => {
                 // Advisory mode: log warnings but don't block
                 tracing::debug!(
                     "Behavioral verification (advisory): operation {:?} - checks advisory only",

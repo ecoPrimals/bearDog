@@ -108,13 +108,13 @@ pub use self::core::RustSoftwareHsm;
 pub use crate::tunnel::hsm::types::key::KeyMetadata;
 
 pub use self::audit::{AuditLogEntry, AuditLogFilter, DefaultAuditLogger, PersistentAuditStorage};
-// ✅ ENABLED: Real crypto providers with production implementations
+// ✅ ENABLED: Real crypto providers with production implementations (pure Rust only)
 pub use self::crypto_providers::rust_crypto::RustCryptoProvider;
 pub use self::crypto_providers::{
     create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
-    get_supported_storage_backends, CryptoProviderCapabilities, OpenSslCryptoProvider,
-    RingCryptoProvider,
+    get_supported_storage_backends, CryptoProviderCapabilities, RingCryptoProvider,
 };
+// OpenSslCryptoProvider removed - pure Rust alternatives available
 pub use self::health::SimpleHealthSummary;
 pub use self::keystore::KeyStoreStatistics;
 // Note: These memory types don't exist yet - commented out

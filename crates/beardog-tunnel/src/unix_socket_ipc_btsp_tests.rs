@@ -548,8 +548,8 @@ mod btsp_jsonrpc_unit_tests {
         let error = response.error.unwrap();
         assert!(error.message.contains("Method not found"));
         assert_eq!(error.code, -32601); // JSON-RPC METHOD_NOT_FOUND error code
-        // Refactored implementation gives cleaner error messages
-        // (Old implementation listed available methods, new one just says "not found")
+                                        // Refactored implementation gives cleaner error messages
+                                        // (Old implementation listed available methods, new one just says "not found")
     }
 
     #[tokio::test]

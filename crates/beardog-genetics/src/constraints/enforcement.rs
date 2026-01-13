@@ -289,7 +289,7 @@ impl ConstraintEnforcer {
                 );
                 Ok(())
             }
-            "threshold" | _ => {
+            "threshold" => {
                 // Threshold mode: M-of-N signatures required
                 let threshold = std::env::var("BEARDOG_MULTISIG_THRESHOLD")
                     .ok()
@@ -318,6 +318,22 @@ impl ConstraintEnforcer {
                     co_signers.len(),
                     threshold
                 );
+                Ok(())
+            }
+            _ => {
+                // Unknown multisig mode - default to threshold
+                tracing::warn!("Unknown multisig mode '{}', defaulting to threshold", multisig_mode);
+                let threshold = std::env::var("BEARDOG_MULTISIG_THRESHOLD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or_else(|| std::cmp::min(1, co_signers.len()));
+
+                if co_signers.len() < threshold {
+                    return Err(ConstraintViolationError::CoSignerRequired {
+                        required: vec![format!("threshold-{}-of-N", threshold)],
+                        present: co_signers.to_vec(),
+                    });
+                }
                 Ok(())
             }
         }
@@ -370,7 +386,7 @@ impl ConstraintEnforcer {
 
                 Ok(())
             }
-            "relaxed" | _ => {
+            "relaxed" => {
                 // Relaxed mode: some checks may be advisory
                 if behavioral.requires_biometric {
                     tracing::debug!("Behavioral advisory: biometric recommended");
@@ -387,6 +403,23 @@ impl ConstraintEnforcer {
                     );
                 }
 
+                Ok(())
+            }
+            _ => {
+                // Unknown behavioral mode - default to relaxed (most permissive)
+                tracing::warn!("Unknown behavioral enforcement mode, defaulting to relaxed");
+                if behavioral.requires_biometric {
+                    tracing::debug!("Behavioral advisory: biometric recommended");
+                }
+                if behavioral.requires_mfa {
+                    tracing::debug!("Behavioral advisory: MFA recommended");
+                }
+                if let Some(interval) = behavioral.min_operation_interval_secs {
+                    tracing::debug!(
+                        "Behavioral advisory: min operation interval {} secs",
+                        interval
+                    );
+                }
                 Ok(())
             }
         }

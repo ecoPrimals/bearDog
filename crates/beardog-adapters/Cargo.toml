@@ -60,8 +60,7 @@ version = "1.0"
 features = [ "full",]
 
 [dependencies.reqwest]
-version = "0.11"
-features = [ "json",]
+workspace = true  # Updated from 0.11 to workspace 0.12 with rustls-tls
 
 [dependencies.chrono]
 version = "0.4"

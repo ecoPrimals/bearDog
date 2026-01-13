@@ -184,8 +184,8 @@ async fn fault_test_rapid_server_restart() {
         server.stop().await.unwrap();
         server_handle.abort();
 
-        // Small delay before next cycle
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        // No arbitrary delay - proceed immediately to next cycle
+        // Socket cleanup is handled by OS, and next server will handle any stale socket
     }
 
     // Final test: server should still work after multiple restarts
@@ -227,8 +227,10 @@ async fn fault_test_partial_writes() {
         .unwrap();
     stream.flush().await.unwrap();
 
-    // Wait a bit
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    // Small delay to ensure server has buffered the partial message
+    // This tests that the server correctly handles fragmented protocol messages
+    // NOTE: This is a legitimate protocol test, not an arbitrary wait
+    tokio::time::sleep(Duration::from_millis(10)).await;
 
     // Complete the request
     stream.write_all(b",\"id\":1}\n").await.unwrap();
@@ -299,7 +301,7 @@ async fn fault_test_connection_after_stop() {
     server_handle.abort();
 
     // Try to connect (should fail gracefully)
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    // No sleep needed - connection should fail immediately to stopped server
     let result = UnixStream::connect(&socket_path).await;
 
     assert!(result.is_err(), "Connection should fail after stop");

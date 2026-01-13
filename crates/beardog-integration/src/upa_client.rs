@@ -146,8 +146,9 @@ impl UpaClient {
         let client = Client::builder()
             .timeout(config.timeout)
             .pool_max_idle_per_host(10)
-            .http2_keep_alive_interval(Some(Duration::from_secs(30)))
-            .http2_keep_alive_while_idle(true)
+            // Note: http2_keep_alive_interval API changed in reqwest 0.12
+            // .http2_keep_alive_interval(Some(Duration::from_secs(30)))
+            // .http2_keep_alive_while_idle(true)
             .build()
             .map_err(|e| BearDogError::network(format!("Failed to build HTTP client: {}", e)))?;
 

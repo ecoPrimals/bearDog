@@ -216,6 +216,7 @@ impl UnixSocketIpcServer {
     ///
     /// Reads the first line to detect the protocol (tarpc, JSON-RPC, or HTTP),
     /// then routes to the appropriate handler.
+    /// For JSON-RPC, continues handling requests until connection closes.
     ///
     /// # Errors
     /// Returns error if unable to read from stream or handle request
@@ -272,11 +273,11 @@ impl UnixSocketIpcServer {
                     Protocol::Tarpc => {
                         // TODO: Implement tarpc handler when tarpc support is ready
                         warn!("⚠️  tarpc not yet implemented, falling back to JSON-RPC");
-                        self.handle_jsonrpc_connection(&first_line, &mut writer)
+                        self.handle_jsonrpc_persistent(&first_line, &mut reader, &mut writer)
                             .await?;
                     }
                     Protocol::JsonRpc => {
-                        self.handle_jsonrpc_connection(&first_line, &mut writer)
+                        self.handle_jsonrpc_persistent(&first_line, &mut reader, &mut writer)
                             .await?;
                     }
                     Protocol::Http => {
@@ -293,15 +294,56 @@ impl UnixSocketIpcServer {
         Ok(())
     }
 
-    /// Handle JSON-RPC connection
-    async fn handle_jsonrpc_connection(
+    /// Handle JSON-RPC connection persistently (multiple requests)
+    ///
+    /// Modern JSON-RPC supports persistent connections with multiple
+    /// requests over a single connection. This reduces overhead and
+    /// enables better performance for inter-primal communication.
+    async fn handle_jsonrpc_persistent(
         &self,
         first_line: &str,
+        reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
+        writer: &mut tokio::net::unix::OwnedWriteHalf,
+    ) -> Result<()> {
+        // Handle first request
+        self.handle_one_jsonrpc_request(first_line, writer).await?;
+
+        // Continue handling requests until connection closes
+        loop {
+            let mut line = String::new();
+            match reader.read_line(&mut line).await {
+                Ok(0) => {
+                    debug!("📤 Client disconnected gracefully");
+                    break;
+                }
+                Ok(_) => {
+                    if line.trim().is_empty() {
+                        continue;
+                    }
+                    if let Err(e) = self.handle_one_jsonrpc_request(&line, writer).await {
+                        warn!("⚠️  Error handling request: {}", e);
+                        break;
+                    }
+                }
+                Err(e) => {
+                    debug!("📤 Connection closed: {}", e);
+                    break;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Handle a single JSON-RPC request
+    async fn handle_one_jsonrpc_request(
+        &self,
+        line: &str,
         writer: &mut tokio::net::unix::OwnedWriteHalf,
     ) -> Result<()> {
         // Parse JSON-RPC request
-        let request: JsonRpcRequest = serde_json::from_str(first_line)
-            .context("Failed to parse JSON-RPC request")?;
+        let request: JsonRpcRequest =
+            serde_json::from_str(line).context("Failed to parse JSON-RPC request")?;
 
         debug!("📨 JSON-RPC request: {}", request.method);
 
@@ -318,6 +360,7 @@ impl UnixSocketIpcServer {
             .write_all(b"\n")
             .await
             .context("Failed to write newline")?;
+        writer.flush().await.context("Failed to flush writer")?;
 
         Ok(())
     }
@@ -330,8 +373,8 @@ impl UnixSocketIpcServer {
     /// # Errors
     /// Returns error if unable to parse or handle the request
     pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
-        let request: JsonRpcRequest = serde_json::from_str(request_str)
-            .context("Failed to parse JSON-RPC request")?;
+        let request: JsonRpcRequest =
+            serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
         Ok(handle_jsonrpc_request(&request, &self.btsp_provider).await)
     }
 
@@ -377,4 +420,3 @@ impl UnixSocketIpcServer {
         Ok(())
     }
 }
-

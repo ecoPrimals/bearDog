@@ -12,7 +12,7 @@ categories = ["network-programming", "api-bindings", "cryptography"]
 
 [dependencies]
 # HTTP client
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { workspace = true }  # Inherit workspace version with rustls-tls
 
 # Async runtime
 tokio = { version = "1.43", features = ["full"] }

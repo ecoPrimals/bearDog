@@ -1,6 +1,6 @@
 pub mod factory;
-pub mod genetic_crypto;  // NEW: 100% Pure Rust, zero FFI (RECOMMENDED)
-pub mod openssl_crypto;
+pub mod genetic_crypto;  // RECOMMENDED: 100% Pure Rust, zero FFI
+// openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, Ring, RustCrypto)
 pub mod ring_crypto;
 pub mod rust_crypto;
 
@@ -17,8 +17,8 @@ pub use factory::{
 pub use beardog_types::hsm::CryptoProvider;
 
 // ✅ Export all crypto provider implementations (ordered by recommendation)
-pub use genetic_crypto::GeneticCryptoProvider;  // NEW: RECOMMENDED (100% Pure Rust)
-pub use openssl_crypto::OpenSslCryptoProvider;
+pub use genetic_crypto::GeneticCryptoProvider;  // RECOMMENDED (100% Pure Rust)
+// OpenSslCryptoProvider removed - pure Rust alternatives available
 pub use ring_crypto::RingCryptoProvider;
 pub use rust_crypto::RustCryptoProvider;
 #[cfg(test)]

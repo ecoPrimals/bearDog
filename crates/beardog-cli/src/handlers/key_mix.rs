@@ -159,8 +159,10 @@ fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
     // Generate salt for HKDF
     let mut salt = vec![0u8; 32];
-    openssl::rand::rand_bytes(&mut salt)
-        .map_err(|e| BearDogError::crypto_error(format!("Salt generation failed: {}", e)))?;
+    // Use pure Rust CSPRNG instead of OpenSSL
+    use rand::RngCore;
+    let mut rng = rand::thread_rng();
+    rng.fill_bytes(&mut salt);
 
     // Derive final key using HKDF
     let hk = Hkdf::<Sha256>::new(Some(&salt), &xored);
