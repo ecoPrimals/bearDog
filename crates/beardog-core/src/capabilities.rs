@@ -41,32 +41,55 @@ pub struct BearDogCapabilities {
 pub enum Capability {
     /// Encryption capability
     Encryption {
+        /// Supported encryption algorithms (e.g., "AES-256-GCM", "ChaCha20-Poly1305")
         algorithms: Vec<String>,
+        /// Supported key types (e.g., "symmetric", "asymmetric")
         key_types: Vec<String>,
     },
 
     /// Trust evaluation capability
-    TrustEvaluation { trust_models: Vec<String> },
+    TrustEvaluation {
+        /// Supported trust evaluation models (e.g., "hierarchical", "web-of-trust")
+        trust_models: Vec<String>,
+    },
 
     /// Key management capability
-    KeyManagement { hsm_types: Vec<String> },
+    KeyManagement {
+        /// Supported HSM types (e.g., "software", "yubikey", "nitrokey")
+        hsm_types: Vec<String>,
+    },
 
     /// Signature generation/verification
-    Signatures { algorithms: Vec<String> },
+    Signatures {
+        /// Supported signature algorithms (e.g., "Ed25519", "ECDSA-P256")
+        algorithms: Vec<String>,
+    },
 
     /// Discovery capability (for other primals)
-    Discovery { protocols: Vec<String> },
+    Discovery {
+        /// Supported discovery protocols (e.g., "mdns", "dns-sd", "manual")
+        protocols: Vec<String>,
+    },
 
     /// Storage capability (for other primals)
-    Storage { storage_types: Vec<String> },
+    Storage {
+        /// Supported storage types (e.g., "sled", "memory", "filesystem")
+        storage_types: Vec<String>,
+    },
 
     /// Compute capability (for other primals)
-    Compute { compute_types: Vec<String> },
+    Compute {
+        /// Supported compute types (e.g., "local", "distributed")
+        compute_types: Vec<String>,
+    },
 
     /// Custom capability (extensible)
     Custom {
+        /// Capability name
         name: String,
+        /// Capability version
         version: String,
+        /// Custom properties specific to this capability
         properties: HashMap<String, String>,
     },
 }
@@ -117,11 +140,15 @@ pub struct CapabilityResponse {
     pub error: Option<String>,
 }
 
+/// Response status for capability requests
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ResponseStatus {
+    /// Request completed successfully
     Success,
+    /// Request failed with an error
     Error,
+    /// Requested capability is not available
     NotAvailable,
 }
 

@@ -260,7 +260,7 @@ impl ConstraintEnforcer {
         if co_signers.is_empty() {
             return Ok(());
         }
-        
+
         // Get multi-sig mode from environment
         let multisig_mode = std::env::var("BEARDOG_MULTISIG_MODE")
             .unwrap_or_else(|_| "threshold".to_string())
@@ -339,9 +339,7 @@ impl ConstraintEnforcer {
     /// - **permissionless**: No verification (testing only)
     ///
     /// Controlled by `BEARDOG_BEHAVIORAL_MODE` environment variable.
-    fn check_behavioral(
-        behavioral: &BehavioralConstraint,
-    ) -> Result<(), ConstraintViolationError> {
+    fn check_behavioral(behavioral: &BehavioralConstraint) -> Result<(), ConstraintViolationError> {
         // Get behavioral mode from environment
         let behavioral_mode = std::env::var("BEARDOG_BEHAVIORAL_MODE")
             .unwrap_or_else(|_| "relaxed".to_string())
@@ -383,7 +381,10 @@ impl ConstraintEnforcer {
                 }
 
                 if let Some(interval) = behavioral.min_operation_interval_secs {
-                    tracing::debug!("Behavioral advisory: min operation interval {} secs", interval);
+                    tracing::debug!(
+                        "Behavioral advisory: min operation interval {} secs",
+                        interval
+                    );
                 }
 
                 Ok(())

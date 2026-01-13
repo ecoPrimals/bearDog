@@ -327,39 +327,39 @@ async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDog
 
     // Generate cryptographic proofs for lineage verification
     // Uses SHA-256 hashing to create verifiable proof chain
-    
+
     use sha2::{Digest, Sha256};
-    
+
     // Build proof chain: Create LineageRelationship for each parent-child link
     let mut proof_chain = Vec::new();
     let mut merkle_leaves = Vec::new();
-    
+
     for i in 0..(path.len().saturating_sub(1)) {
         let parent_id = path[i].clone();
         let child_id = path[i + 1].clone();
-        
+
         // Create cryptographic proof of parent-child relationship
         // Hash: parent_id || child_id for signature
         let mut hasher = Sha256::new();
         hasher.update(parent_id.as_bytes());
         hasher.update(child_id.as_bytes());
         hasher.update(chrono::Utc::now().to_rfc3339().as_bytes());
-        
+
         let relationship_hash = hasher.finalize();
-        
+
         // Create LineageRelationship with cryptographic proof
         let relationship = LineageRelationship {
             parent_id: parent_id.clone(),
             child_id: child_id.clone(),
             parent_signature: relationship_hash.to_vec(), // Phase 5: Real Ed25519 signature
-            witness_signatures: vec![], // Phase 5: Add witness signatures
+            witness_signatures: vec![],                   // Phase 5: Add witness signatures
             established_at: chrono::Utc::now(),
         };
-        
+
         proof_chain.push(relationship);
         merkle_leaves.push(relationship_hash.to_vec());
     }
-    
+
     // Compute Merkle root from proof chain
     // This allows efficient verification of any relationship in the lineage
     let merkle_root = if merkle_leaves.is_empty() {
@@ -367,14 +367,14 @@ async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDog
     } else {
         compute_merkle_root(&merkle_leaves)
     };
-    
+
     info!(
         "✅ Generated lineage proof: {} nodes, {} proofs, merkle_root={}",
         path.len(),
         proof_chain.len(),
         hex::encode(&merkle_root)
     );
-    
+
     let proof = LineageProof {
         node_id: key_id.to_string(),
         root_id,
@@ -393,37 +393,37 @@ async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDog
 /// If odd number of leaves, the last one is duplicated.
 fn compute_merkle_root(leaves: &[Vec<u8>]) -> Vec<u8> {
     use sha2::{Digest, Sha256};
-    
+
     if leaves.is_empty() {
         return vec![];
     }
-    
+
     if leaves.len() == 1 {
         return leaves[0].clone();
     }
-    
+
     let mut current_level = leaves.to_vec();
-    
+
     while current_level.len() > 1 {
         let mut next_level = Vec::new();
-        
+
         for chunk in current_level.chunks(2) {
             let mut hasher = Sha256::new();
             hasher.update(&chunk[0]);
-            
+
             // If odd number, duplicate the last hash
             if chunk.len() == 2 {
                 hasher.update(&chunk[1]);
             } else {
                 hasher.update(&chunk[0]);
             }
-            
+
             next_level.push(hasher.finalize().to_vec());
         }
-        
+
         current_level = next_level;
     }
-    
+
     current_level[0].clone()
 }
 

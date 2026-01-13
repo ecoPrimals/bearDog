@@ -425,7 +425,7 @@ mod tests {
         // When mdns feature is disabled, it will log a warning and return Ok
         let announcer = MdnsServiceAnnouncer::new(8080, vec!["crypto".to_string()]);
         let result = announcer.announce().await;
-        
+
         // We expect either:
         // - Ok(()) if announcement succeeds or feature is disabled
         // - Err() if network/mDNS fails (which is acceptable in test environment)

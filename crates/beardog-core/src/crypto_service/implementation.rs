@@ -38,9 +38,9 @@ pub struct BearDogCryptoService {
 
     /// Public key storage for signature verification
     /// Maps key_id -> public_key_bytes
-    /// 
+    ///
     /// # Security Note
-    /// 
+    ///
     /// Only public keys are stored here - never private keys.
     /// This enables proper signature verification without exposing secrets.
     public_keys: Arc<std::sync::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
@@ -108,14 +108,16 @@ impl BearDogCryptoService {
         let mut rng = rand::thread_rng();
         let private_key = RsaPrivateKey::new(&mut rng, bits)
             .map_err(|e| BearDogError::hsm(format!("RSA key generation failed: {}", e)))?;
-        
+
         let public_key = RsaPublicKey::from(&private_key);
 
         // Encode keys to DER
-        let private_key_der = private_key.to_pkcs8_der()
+        let private_key_der = private_key
+            .to_pkcs8_der()
             .map_err(|e| BearDogError::hsm(format!("RSA private key encoding failed: {}", e)))?;
-        
-        let public_key_der = public_key.to_public_key_der()
+
+        let public_key_der = public_key
+            .to_public_key_der()
             .map_err(|e| BearDogError::hsm(format!("RSA public key encoding failed: {}", e)))?;
 
         // Store keys
@@ -123,7 +125,7 @@ impl BearDogCryptoService {
         self.store_public_key(key_id, public_key_der.as_bytes().to_vec());
 
         tracing::info!("Generated RSA-{} key: {}", bits, key_id);
-        
+
         Ok(public_key_der.as_bytes().to_vec())
     }
 
@@ -150,7 +152,9 @@ impl BearDogCryptoService {
         match rsa_key_mode.as_str() {
             "hsm" => {
                 // In production, load from HSM
-                tracing::warn!("RSA HSM mode requested but not yet implemented, falling back to generation");
+                tracing::warn!(
+                    "RSA HSM mode requested but not yet implemented, falling back to generation"
+                );
                 self.generate_and_store_rsa_key(key_id)
             }
             "generate" | _ => {
@@ -178,7 +182,9 @@ impl BearDogCryptoService {
             }
         }
 
-        Err(BearDogError::hsm("RSA key generation succeeded but retrieval failed".to_string()))
+        Err(BearDogError::hsm(
+            "RSA key generation succeeded but retrieval failed".to_string(),
+        ))
     }
 
     /// Store RSA private key
@@ -193,7 +199,9 @@ impl BearDogCryptoService {
             tracing::debug!("Stored RSA private key for key_id: {}", key_id);
             Ok(())
         } else {
-            Err(BearDogError::hsm("Failed to acquire write lock for RSA key storage".to_string()))
+            Err(BearDogError::hsm(
+                "Failed to acquire write lock for RSA key storage".to_string(),
+            ))
         }
     }
 
@@ -204,11 +212,13 @@ impl BearDogCryptoService {
     /// Public keys are safe to store and share. This enables proper
     /// signature verification without exposing private keys.
     pub fn get_public_key(&self, key_id: &str) -> Result<Vec<u8>> {
-        let keys = self.public_keys.read()
+        let keys = self
+            .public_keys
+            .read()
             .map_err(|e| BearDogError::security(format!("Failed to acquire read lock: {}", e)))?;
-        keys.get(key_id)
-            .cloned()
-            .ok_or_else(|| BearDogError::security(format!("Public key not found for key_id: {}", key_id)))
+        keys.get(key_id).cloned().ok_or_else(|| {
+            BearDogError::security(format!("Public key not found for key_id: {}", key_id))
+        })
     }
 
     /// Store public key for future verification
@@ -434,10 +444,10 @@ impl CryptoService for BearDogCryptoService {
             SignatureAlgorithm::Ed25519 => {
                 let key = self.derive_signing_key(key_id)?;
                 let (secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&key)?;
-                
+
                 // Store public key for verification (key persistence)
                 self.store_public_key(key_id, public_key.to_vec());
-                
+
                 asymmetric::sign_ed25519(data, &secret_key)?
             }
             SignatureAlgorithm::EcdsaP256 => {

@@ -85,7 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Step 1: Initializing HSM Manager...");
     info!("   Reading BEARDOG_HSM_MODE from environment");
     info!("   Supported modes: software (pure Rust), hardware, android, ios");
-    
+
     let hsm = Arc::new(HsmManager::auto_initialize().await?);
     info!("✅ HSM Manager initialized successfully");
     info!("");
@@ -109,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Bind address: {}", config.bind_addr);
     info!("   CORS enabled: {}", config.enable_cors);
     info!("   Version: {}", config.version);
-    
+
     let server = BearDogApiServer::new(config.clone(), btsp_provider).await?;
     info!("✅ API Server created");
     info!("");
@@ -136,11 +136,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("║                                                                    ║");
     info!("║         ✅ BearDog Server Ready!                                   ║");
     info!("║                                                                    ║");
-    info!("║  HTTP API: http://{}                              ", config.bind_addr);
+    info!(
+        "║  HTTP API: http://{}                              ",
+        config.bind_addr
+    );
     info!("║                                                                    ║");
     info!("║  Try:                                                              ║");
-    info!("║    curl http://{}/health                         ", config.bind_addr);
-    info!("║    curl http://{}/api/v1/lineage/create          ", config.bind_addr);
+    info!(
+        "║    curl http://{}/health                         ",
+        config.bind_addr
+    );
+    info!(
+        "║    curl http://{}/api/v1/lineage/create          ",
+        config.bind_addr
+    );
     info!("║                                                                    ║");
     info!("╚════════════════════════════════════════════════════════════════════╝");
     info!("");
@@ -149,4 +158,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

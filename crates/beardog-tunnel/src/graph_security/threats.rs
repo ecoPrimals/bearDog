@@ -19,14 +19,14 @@ pub async fn detect_modification_threats(
             return Ok(Some(threat));
         }
     }
-    
+
     // Check for suspicious changes
     if let Some(changes) = &modification.changes {
         if let Some(threat) = check_suspicious_changes(changes).await? {
             return Ok(Some(threat));
         }
     }
-    
+
     Ok(None)
 }
 
@@ -35,14 +35,14 @@ pub async fn detect_template_threats(
     template: &GraphTemplate,
 ) -> Result<Vec<ThreatDetails>, BearDogError> {
     let mut threats = Vec::new();
-    
+
     // Check each node for threats
     for node in &template.nodes {
         if let Some(threat) = check_code_injection(node).await? {
             threats.push(threat);
         }
     }
-    
+
     // Check for cyclic dependencies
     if has_cycles(&template.nodes, &template.edges) {
         threats.push(ThreatDetails {
@@ -51,7 +51,7 @@ pub async fn detect_template_threats(
             pattern: "Cyclic dependency detected".to_string(),
         });
     }
-    
+
     Ok(threats)
 }
 
@@ -69,7 +69,7 @@ async fn check_code_injection(node: &GraphNode) -> Result<Option<ThreatDetails>,
         "`",  // Backticks
         ";",  // Command chaining
     ];
-    
+
     // Check config values for dangerous patterns
     for (key, value) in &node.config {
         if let Some(value_str) = value.as_str() {
@@ -84,7 +84,7 @@ async fn check_code_injection(node: &GraphNode) -> Result<Option<ThreatDetails>,
             }
         }
     }
-    
+
     Ok(None)
 }
 
@@ -100,7 +100,7 @@ async fn check_suspicious_changes(
             pattern: "Privilege escalation attempt detected".to_string(),
         }));
     }
-    
+
     Ok(None)
 }
 
@@ -111,17 +111,17 @@ fn has_cycles(nodes: &[GraphNode], edges: &[crate::graph_security::types::GraphE
     for node in nodes {
         adj.insert(node.id.clone(), Vec::new());
     }
-    
+
     for edge in edges {
         if let Some(neighbors) = adj.get_mut(&edge.from) {
             neighbors.push(edge.to.clone());
         }
     }
-    
+
     // DFS to detect cycles
     let mut visited = HashSet::new();
     let mut rec_stack = HashSet::new();
-    
+
     for node in nodes {
         if !visited.contains(&node.id) {
             if has_cycle_dfs(&node.id, &adj, &mut visited, &mut rec_stack) {
@@ -129,7 +129,7 @@ fn has_cycles(nodes: &[GraphNode], edges: &[crate::graph_security::types::GraphE
             }
         }
     }
-    
+
     false
 }
 
@@ -142,7 +142,7 @@ fn has_cycle_dfs(
 ) -> bool {
     visited.insert(node.to_string());
     rec_stack.insert(node.to_string());
-    
+
     if let Some(neighbors) = adj.get(node) {
         for neighbor in neighbors {
             if !visited.contains(neighbor) {
@@ -154,7 +154,7 @@ fn has_cycle_dfs(
             }
         }
     }
-    
+
     rec_stack.remove(node);
     false
 }
@@ -178,10 +178,10 @@ mod tests {
     async fn test_detect_code_injection() {
         let mut config = HashMap::new();
         config.insert("command".to_string(), serde_json::json!("eval(user_input)"));
-        
+
         let node = create_test_node("node-1", config);
         let result = check_code_injection(&node).await.unwrap();
-        
+
         assert!(result.is_some());
         let threat = result.unwrap();
         assert_eq!(threat.category, ThreatCategory::CodeInjection);
@@ -191,10 +191,10 @@ mod tests {
     async fn test_no_code_injection() {
         let mut config = HashMap::new();
         config.insert("memory".to_string(), serde_json::json!("4GB"));
-        
+
         let node = create_test_node("node-1", config);
         let result = check_code_injection(&node).await.unwrap();
-        
+
         assert!(result.is_none());
     }
 
@@ -204,7 +204,7 @@ mod tests {
             create_test_node("node-1", HashMap::new()),
             create_test_node("node-2", HashMap::new()),
         ];
-        
+
         let edges = vec![
             GraphEdge {
                 from: "node-1".to_string(),
@@ -217,7 +217,7 @@ mod tests {
                 edge_type: None,
             },
         ];
-        
+
         assert!(has_cycles(&nodes, &edges));
     }
 
@@ -228,7 +228,7 @@ mod tests {
             create_test_node("node-2", HashMap::new()),
             create_test_node("node-3", HashMap::new()),
         ];
-        
+
         let edges = vec![
             GraphEdge {
                 from: "node-1".to_string(),
@@ -241,8 +241,7 @@ mod tests {
                 edge_type: None,
             },
         ];
-        
+
         assert!(!has_cycles(&nodes, &edges));
     }
 }
-

@@ -15,7 +15,8 @@ use crate::tunnel::hsm::crypto::{
 use crate::tunnel::hsm::manager::HsmProvider;
 // ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider as SoftwareRustCryptoProvider,
+    GeneticCryptoProvider, OpenSslCryptoProvider, RingCryptoProvider,
+    RustCryptoProvider as SoftwareRustCryptoProvider,
 };
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
@@ -209,6 +210,8 @@ impl RustSoftwareHsm {
         backend: &CryptoBackendType,
     ) -> Result<Arc<dyn CryptoProvider<KeyType> + Send + Sync>, BearDogError> {
         match backend {
+            CryptoBackendType::GeneticCrypto => Ok(Arc::new(GeneticCryptoProvider::new()?)
+                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
             CryptoBackendType::RustCrypto => Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
                 as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
             CryptoBackendType::Ring => Ok(Arc::new(RingCryptoProvider::new()?)

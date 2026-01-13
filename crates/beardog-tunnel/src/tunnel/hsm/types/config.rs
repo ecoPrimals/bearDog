@@ -195,7 +195,9 @@ impl Default for SoftwareHsmConfig {
 /// Crypto backend types
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CryptoBackendType {
-    /// Ring cryptography library
+    /// GeneticCrypto - 100% Pure Rust with genetic enhancements (RECOMMENDED)
+    GeneticCrypto,
+    /// Ring cryptography library (has C dependencies)
     Ring,
     /// OpenSSL
     OpenSsl,

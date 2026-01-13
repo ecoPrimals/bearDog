@@ -597,10 +597,12 @@ impl KeyConstraints {
             }
             "strict" => {
                 // Strict mode: enforce all behavioral constraints
-                
+
                 // Check biometric requirements (if any)
                 // In production, this would integrate with platform biometric APIs
-                tracing::debug!("Behavioral verification (strict): checking biometric requirements");
+                tracing::debug!(
+                    "Behavioral verification (strict): checking biometric requirements"
+                );
 
                 // Analyze usage patterns
                 // In production, track operation frequency, timing patterns, etc.

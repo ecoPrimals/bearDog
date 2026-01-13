@@ -72,7 +72,7 @@ impl Announcer {
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        
+
         // Graceful no-op: service still functions via other discovery methods
         debug!("mDNS announcement pending full implementation");
         Ok(())
@@ -121,7 +121,7 @@ impl Announcer {
                 "Service registry configured at {}, registration for {} pending full implementation",
                 registry_url, self.primal_info.primal_id
             );
-            
+
             debug!(
                 "Would register: id={}, endpoint={}, capabilities={}",
                 self.primal_info.primal_id,
@@ -139,7 +139,7 @@ impl Announcer {
                 self.primal_info.primal_id
             );
         }
-        
+
         // Graceful no-op: service still functions via other discovery methods
         Ok(())
     }

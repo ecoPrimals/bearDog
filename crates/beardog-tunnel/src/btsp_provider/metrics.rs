@@ -27,16 +27,16 @@ use serde::{Deserialize, Serialize};
 pub struct BtspMetrics {
     /// Total tunnels established since start
     pub tunnels_established: u64,
-    
+
     /// Currently active tunnels
     pub tunnels_active: u64,
-    
+
     /// Total encryption operations
     pub encryption_operations: u64,
-    
+
     /// Total decryption operations
     pub decryption_operations: u64,
-    
+
     /// Total trust evaluations
     pub trust_evaluations: u64,
 }
@@ -46,7 +46,7 @@ impl BtspMetrics {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     /// Check if any operations have been performed
     pub fn has_activity(&self) -> bool {
         self.tunnels_established > 0
@@ -54,10 +54,11 @@ impl BtspMetrics {
             || self.decryption_operations > 0
             || self.trust_evaluations > 0
     }
-    
+
     /// Get total cryptographic operations (encryption + decryption)
     pub fn total_crypto_ops(&self) -> u64 {
-        self.encryption_operations.saturating_add(self.decryption_operations)
+        self.encryption_operations
+            .saturating_add(self.decryption_operations)
     }
 }
 
@@ -77,7 +78,7 @@ mod tests {
     fn test_has_activity() {
         let mut metrics = BtspMetrics::new();
         assert!(!metrics.has_activity());
-        
+
         metrics.encryption_operations = 1;
         assert!(metrics.has_activity());
     }
@@ -90,4 +91,3 @@ mod tests {
         assert_eq!(metrics.total_crypto_ops(), 15);
     }
 }
-

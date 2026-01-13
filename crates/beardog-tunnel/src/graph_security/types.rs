@@ -358,14 +358,14 @@ mod tests {
     fn test_graph_node_serialization() {
         let mut config = HashMap::new();
         config.insert("cpu".to_string(), serde_json::json!(4));
-        
+
         let node = GraphNode {
             id: "node-1".to_string(),
             node_type: "compute".to_string(),
             primal: "ToadStool".to_string(),
             config,
         };
-        
+
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-1"));
         assert!(json.contains("compute"));
@@ -380,11 +380,10 @@ mod tests {
             ModificationAction::AddEdge,
             ModificationAction::RemoveEdge,
         ];
-        
+
         for action in actions {
             let json = serde_json::to_string(&action).unwrap();
             assert!(!json.is_empty());
         }
     }
 }
-

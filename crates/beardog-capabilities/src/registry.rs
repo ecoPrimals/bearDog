@@ -185,7 +185,7 @@ impl CapabilityRegistry {
         // mDNS advertisement (Phase 3)
         // Environment-driven: Only advertise if ENABLE_MDNS=true
         // Graceful fallback: Log intent if mDNS unavailable
-        
+
         let mdns_enabled = std::env::var("ENABLE_MDNS")
             .ok()
             .and_then(|v| v.parse::<bool>().ok())

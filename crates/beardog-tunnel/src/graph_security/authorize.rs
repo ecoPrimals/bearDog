@@ -34,14 +34,14 @@ pub async fn authorize_modification(
 ) -> Result<AuthorizationResult, BearDogError> {
     let mut checks_performed = Vec::new();
     let audit_id = Uuid::new_v4().to_string();
-    
+
     // Layer 1: Authentication (handled by calling context - HSM-backed)
     checks_performed.push("user_authentication".to_string());
-    
+
     // Layer 2: Authorization - Check permissions
     let has_permission = permissions::check_permission(user_id, graph, modification).await?;
     checks_performed.push("permission_check".to_string());
-    
+
     if !has_permission {
         return Ok(AuthorizationResult {
             authorized: false,
@@ -61,12 +61,12 @@ pub async fn authorize_modification(
             ]),
         });
     }
-    
+
     // Layer 3: Validation - Verify ownership for destructive operations
     if modification.action == crate::graph_security::types::ModificationAction::RemoveNode {
         let is_owner = permissions::verify_ownership(user_id, graph);
         checks_performed.push("ownership_verification".to_string());
-        
+
         if !is_owner {
             return Ok(AuthorizationResult {
                 authorized: false,
@@ -77,13 +77,11 @@ pub async fn authorize_modification(
                 audit_id,
                 blocked_reason: Some("owner_only_operation".to_string()),
                 threat_details: None,
-                recommendations: Some(vec![
-                    "Contact graph owner for this operation".to_string(),
-                ]),
+                recommendations: Some(vec!["Contact graph owner for this operation".to_string()]),
             });
         }
     }
-    
+
     // Layer 3: Validation - Structure validation
     if let Err(e) = validate_modification_structure(modification) {
         checks_performed.push("structure_validation".to_string());
@@ -103,7 +101,7 @@ pub async fn authorize_modification(
         });
     }
     checks_performed.push("structure_validation".to_string());
-    
+
     // Layer 4: Threat Detection - Check for malicious patterns
     if let Some(threat) = threats::detect_modification_threats(modification, graph).await? {
         checks_performed.push("threat_detection".to_string());
@@ -127,7 +125,7 @@ pub async fn authorize_modification(
         });
     }
     checks_performed.push("threat_detection".to_string());
-    
+
     // All checks passed - authorize the modification
     Ok(AuthorizationResult {
         authorized: true,
@@ -148,7 +146,7 @@ pub async fn authorize_modification(
 /// Validate the structure of a modification
 fn validate_modification_structure(modification: &GraphModification) -> Result<(), BearDogError> {
     use crate::graph_security::types::ModificationAction;
-    
+
     match modification.action {
         ModificationAction::AddNode => {
             if modification.node.is_none() {
@@ -186,7 +184,7 @@ fn validate_modification_structure(modification: &GraphModification) -> Result<(
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -225,11 +223,11 @@ mod tests {
             edge: None,
             changes: None,
         };
-        
+
         let result = authorize_modification(&"alice".to_string(), &graph, &modification)
             .await
             .unwrap();
-        
+
         assert!(result.authorized);
         assert_eq!(result.risk_level, RiskLevel::Low);
     }
@@ -244,11 +242,11 @@ mod tests {
             edge: None,
             changes: None,
         };
-        
+
         let result = authorize_modification(&"bob".to_string(), &graph, &modification)
             .await
             .unwrap();
-        
+
         assert!(!result.authorized);
         assert!(result.blocked_reason.is_some());
     }
@@ -263,11 +261,11 @@ mod tests {
             edge: None,
             changes: None,
         };
-        
+
         let result = authorize_modification(&"alice".to_string(), &graph, &modification)
             .await
             .unwrap();
-        
+
         assert!(!result.authorized);
         assert_eq!(result.blocked_reason, Some("invalid_structure".to_string()));
     }
@@ -275,17 +273,17 @@ mod tests {
     #[tokio::test]
     async fn test_authorize_code_injection_detected() {
         let graph = create_test_graph("alice");
-        
+
         let mut config = HashMap::new();
         config.insert("command".to_string(), serde_json::json!("eval(user_input)"));
-        
+
         let malicious_node = GraphNode {
             id: "node-1".to_string(),
             node_type: "compute".to_string(),
             primal: "ToadStool".to_string(),
             config,
         };
-        
+
         let modification = GraphModification {
             action: ModificationAction::AddNode,
             node: Some(malicious_node),
@@ -293,14 +291,13 @@ mod tests {
             edge: None,
             changes: None,
         };
-        
+
         let result = authorize_modification(&"alice".to_string(), &graph, &modification)
             .await
             .unwrap();
-        
+
         assert!(!result.authorized);
         assert_eq!(result.blocked_reason, Some("threat_detected".to_string()));
         assert!(result.threat_details.is_some());
     }
 }
-

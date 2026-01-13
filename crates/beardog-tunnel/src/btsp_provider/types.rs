@@ -73,10 +73,10 @@ pub struct PeerTrustRecord {
 pub struct InternalTunnelHandle {
     /// Unique tunnel identifier
     pub id: String,
-    
+
     /// Peer node identifier
     pub peer_id: String,
-    
+
     /// Timestamp when tunnel was established
     pub established_at: DateTime<Utc>,
 }
@@ -90,7 +90,7 @@ impl InternalTunnelHandle {
             established_at: Utc::now(),
         }
     }
-    
+
     /// Get age of tunnel in seconds
     pub fn age_seconds(&self) -> i64 {
         Utc::now()
@@ -107,13 +107,13 @@ impl InternalTunnelHandle {
 pub struct InternalTunnelStatus {
     /// Whether tunnel is currently active
     pub active: bool,
-    
+
     /// Total bytes sent through tunnel
     pub bytes_sent: u64,
-    
+
     /// Total bytes received through tunnel
     pub bytes_received: u64,
-    
+
     /// Timestamp of last activity
     pub last_activity: DateTime<Utc>,
 }
@@ -128,7 +128,7 @@ impl InternalTunnelStatus {
             last_activity: Utc::now(),
         }
     }
-    
+
     /// Create new inactive tunnel status
     pub fn new_inactive() -> Self {
         Self {
@@ -138,31 +138,31 @@ impl InternalTunnelStatus {
             last_activity: Utc::now(),
         }
     }
-    
+
     /// Update last activity timestamp
     pub fn touch(&mut self) {
         self.last_activity = Utc::now();
     }
-    
+
     /// Record bytes sent
     pub fn add_bytes_sent(&mut self, bytes: u64) {
         self.bytes_sent = self.bytes_sent.saturating_add(bytes);
         self.touch();
     }
-    
+
     /// Record bytes received
     pub fn add_bytes_received(&mut self, bytes: u64) {
         self.bytes_received = self.bytes_received.saturating_add(bytes);
         self.touch();
     }
-    
+
     /// Get seconds since last activity
     pub fn idle_seconds(&self) -> i64 {
         Utc::now()
             .signed_duration_since(self.last_activity)
             .num_seconds()
     }
-    
+
     /// Check if tunnel is stale (idle > threshold)
     pub fn is_stale(&self, idle_threshold_seconds: i64) -> bool {
         self.idle_seconds() > idle_threshold_seconds
@@ -211,7 +211,7 @@ mod tests {
         let mut status = InternalTunnelStatus::new_active();
         thread::sleep(Duration::from_millis(100));
         assert!(status.idle_seconds() >= 0);
-        
+
         status.touch();
         assert!(status.idle_seconds() < 1);
     }
@@ -222,4 +222,3 @@ mod tests {
         assert!(!status.is_stale(3600)); // Not stale if threshold is 1 hour
     }
 }
-

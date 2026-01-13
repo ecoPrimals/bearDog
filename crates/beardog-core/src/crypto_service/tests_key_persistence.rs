@@ -118,7 +118,10 @@ mod tests {
             .expect("Public key 2 should be stored");
 
         // Keys should be different
-        assert_ne!(pub_key1, pub_key2, "Different key IDs should generate different keys");
+        assert_ne!(
+            pub_key1, pub_key2,
+            "Different key IDs should generate different keys"
+        );
 
         // Verify with correct keys
         let verified1 = service
@@ -161,10 +164,7 @@ mod tests {
             .await
             .expect("Verification should not panic");
 
-        assert!(
-            !cross_verified,
-            "Signature 1 should NOT verify with key 2"
-        );
+        assert!(!cross_verified, "Signature 1 should NOT verify with key 2");
     }
 
     #[tokio::test]
@@ -260,4 +260,3 @@ mod tests {
         assert!(verified2, "Second signature should verify");
     }
 }
-

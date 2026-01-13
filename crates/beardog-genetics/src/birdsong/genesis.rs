@@ -394,32 +394,35 @@ impl GenesisLineageProvider {
             "permissioned" | _ => {
                 // Production mode: Check against trusted witness list
                 debug!("Genesis mode: permissioned (checking trusted witnesses)");
-                
+
                 // Acquire read lock to check trusted witness list
                 let witnesses = self.trusted_witnesses.read();
-                
+
                 // Check if witness is in HSM-backed trusted witness list
                 if let Some(trusted_key) = witnesses.get(&witness.device_id) {
                     // Verify the witness public key matches the trusted key
                     if trusted_key.as_slice() == witness.public_key.as_slice() {
-                        debug!("Witness {} verified against trusted list", witness.device_id);
+                        debug!(
+                            "Witness {} verified against trusted list",
+                            witness.device_id
+                        );
                         Ok(())
                     } else {
                         warn!(
                             "Witness {} public key mismatch (untrusted key attempted)",
                             witness.device_id
                         );
-                        Err(BearDogError::security(
-                            format!(
-                                "Witness {} public key does not match trusted key",
-                                witness.device_id
-                            )
-                        ))
+                        Err(BearDogError::security(format!(
+                            "Witness {} public key does not match trusted key",
+                            witness.device_id
+                        )))
                     }
                 } else {
                     // Check if witness list is populated at all
                     if witnesses.is_empty() {
-                        warn!("No trusted witnesses configured - falling back to permissionless mode");
+                        warn!(
+                            "No trusted witnesses configured - falling back to permissionless mode"
+                        );
                         warn!("Configure trusted witnesses via BEARDOG_TRUSTED_WITNESSES or HSM");
                         Ok(())
                     } else {
@@ -428,9 +431,10 @@ impl GenesisLineageProvider {
                             witness.device_id,
                             witnesses.len()
                         );
-                        Err(BearDogError::security(
-                            format!("Witness {} not found in trusted witness list", witness.device_id)
-                        ))
+                        Err(BearDogError::security(format!(
+                            "Witness {} not found in trusted witness list",
+                            witness.device_id
+                        )))
                     }
                 }
             }

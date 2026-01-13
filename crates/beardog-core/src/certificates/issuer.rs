@@ -226,7 +226,19 @@ impl CertificateIssuer {
 
         // Check expiration
         if let Ok(expiry_date) = chrono::NaiveDate::parse_from_str(expiry_str, "%Y%m%d") {
-            let expiry = expiry_date.and_hms_opt(23, 59, 59).unwrap();
+            // Set expiration to end of day (23:59:59)
+            // and_hms_opt returns None only for invalid times, which 23:59:59 is not
+            let expiry = match expiry_date.and_hms_opt(23, 59, 59) {
+                Some(dt) => dt,
+                None => {
+                    warn!(
+                        "Failed to create expiry datetime for {} (date: {})",
+                        context.requester_id, expiry_str
+                    );
+                    return Ok(false);
+                }
+            };
+            
             let now = chrono::Utc::now().naive_utc();
             
             if expiry < now {

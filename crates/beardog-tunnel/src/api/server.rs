@@ -128,11 +128,14 @@ impl BearDogApiServer {
                 .and_then(|h| h.into_string().ok())
                 .unwrap_or_else(|| "tower".to_string());
 
-            let node_id = format!(
-                "{}_{}",
-                hostname,
-                uuid::Uuid::new_v4().to_string().split('-').next().unwrap()
-            );
+            // Extract first segment of UUID (8 hex chars) - safe because UUIDs have known format
+            let uuid_str = uuid::Uuid::new_v4().to_string();
+            let uuid_segment = uuid_str
+                .split('-')
+                .next()
+                .unwrap_or("00000000"); // Fallback to zeros if format unexpected
+            
+            let node_id = format!("{}_{}", hostname, uuid_segment);
 
             info!(
                 "✅ Child lineage created: family={}, node={}",
@@ -161,10 +164,14 @@ impl BearDogApiServer {
         } else {
             info!("ℹ️  No USB family seed, starting without family lineage");
             // Generate a unique node ID
-            let node_id = format!(
-                "node_{}",
-                uuid::Uuid::new_v4().to_string().split('-').next().unwrap()
-            );
+            // Extract first segment of UUID (8 hex chars) - safe because UUIDs have known format
+            let uuid_str = uuid::Uuid::new_v4().to_string();
+            let uuid_segment = uuid_str
+                .split('-')
+                .next()
+                .unwrap_or("00000000"); // Fallback to zeros if format unexpected
+            
+            let node_id = format!("node_{}", uuid_segment);
             (None, node_id)
         };
 

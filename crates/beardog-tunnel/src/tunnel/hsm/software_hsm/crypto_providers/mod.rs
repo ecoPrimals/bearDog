@@ -1,4 +1,5 @@
 pub mod factory;
+pub mod genetic_crypto;  // NEW: 100% Pure Rust, zero FFI (RECOMMENDED)
 pub mod openssl_crypto;
 pub mod ring_crypto;
 pub mod rust_crypto;
@@ -15,7 +16,8 @@ pub use factory::{
 // Use canonical CryptoProvider trait from beardog-types
 pub use beardog_types::hsm::CryptoProvider;
 
-// ✅ Export all crypto provider implementations
+// ✅ Export all crypto provider implementations (ordered by recommendation)
+pub use genetic_crypto::GeneticCryptoProvider;  // NEW: RECOMMENDED (100% Pure Rust)
 pub use openssl_crypto::OpenSslCryptoProvider;
 pub use ring_crypto::RingCryptoProvider;
 pub use rust_crypto::RustCryptoProvider;
@@ -109,10 +111,18 @@ mod tests {
 
     #[test]
     fn test_backend_utilities() -> Result<(), BearDogError> {
+        // Test GeneticCrypto is supported (the new default)
+        assert!(is_crypto_backend_supported(&CryptoBackend::GeneticCrypto));
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
-        // Vendor-agnostic: Removed Custom backend test
-        // assert!(!is_crypto_backend_supported(&CryptoBackend::Custom("unknown".to_string())));
-        assert_eq!(get_recommended_crypto_backend(), CryptoBackend::Ring);
+        
+        // Verify GeneticCrypto is now the recommended backend (100% Pure Rust!)
+        assert_eq!(get_recommended_crypto_backend(), CryptoBackend::GeneticCrypto);
+        
+        // Test backend name resolution
+        assert_eq!(
+            get_crypto_backend_by_name("genetic"),
+            Some(CryptoBackend::GeneticCrypto)
+        );
         assert_eq!(
             get_crypto_backend_by_name("ring"),
             Some(CryptoBackend::Ring)

@@ -191,21 +191,58 @@ export BEARDOG_API_PORT=8443
 
 ### Unix Socket IPC (PRIMARY)
 
-Unix socket paths are **automatically constructed**:
+#### `BEARDOG_SOCKET`
 
+**Purpose**: Explicit Unix socket path override (**NEW in v0.16.1**)  
+**Required**: No  
+**Default**: See 3-tier fallback below  
+**Example**:
+
+```bash
+export BEARDOG_SOCKET=/run/user/1000/beardog-nat0.sock
+```
+
+**Priority**: Highest - overrides all other socket path configuration
+
+---
+
+#### Socket Path Resolution (3-Tier Fallback)
+
+BearDog uses a robust 3-tier fallback system for socket paths:
+
+**Tier 1 - Explicit Override (Highest Priority)**:
+```bash
+BEARDOG_SOCKET=/custom/path/beardog.sock
+```
+
+**Tier 2 - XDG Runtime Directory (Preferred, Secure)**:
+```
+/run/user/<uid>/beardog-${FAMILY_ID}.sock
+```
+- Used if `/run/user/<uid>/` exists
+- More secure (per-user permissions)
+- XDG Base Directory Specification compliant
+
+**Tier 3 - Temp Directory (Last Resort)**:
 ```
 /tmp/beardog-${FAMILY_ID}-${NODE_ID}.sock
 ```
+- Used if XDG directory doesn't exist
+- Includes node ID for multi-instance support
 
 **Examples**:
-- `FAMILY_ID=nat0 NODE_ID=tower1` → `/tmp/beardog-nat0-tower1.sock`
-- `FAMILY_ID=prod NODE_ID=tower2` → `/tmp/beardog-prod-tower2.sock`
+- `BEARDOG_SOCKET=/run/user/1000/beardog.sock` → `/run/user/1000/beardog.sock` (Tier 1)
+- `FAMILY_ID=nat0` (XDG available) → `/run/user/1000/beardog-nat0.sock` (Tier 2)
+- `FAMILY_ID=nat0 NODE_ID=tower1` (no XDG) → `/tmp/beardog-nat0-tower1.sock` (Tier 3)
 
 **Benefits**:
 - ✅ No port conflicts (ever)
 - ✅ Multiple instances on same machine
 - ✅ Secure (Unix file permissions)
 - ✅ Fast (no network stack overhead)
+- ✅ XDG-compliant (follows Linux standards)
+- ✅ Automatic parent directory creation
+- ✅ Automatic old socket cleanup
 
 ---
 

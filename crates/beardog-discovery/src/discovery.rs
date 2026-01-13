@@ -225,14 +225,14 @@ impl CapabilityDiscovery {
             "mDNS discovery for capability '{}' - graceful fallback (full impl pending)",
             capability
         );
-        
+
         // Graceful fallback: return empty, allowing other discovery methods
         // This maintains functionality while logging the limitation
         info!(
             "mDNS discovery not yet available for '{}', trying other methods",
             capability
         );
-        
+
         Ok(vec![])
     }
 
@@ -255,13 +255,13 @@ impl CapabilityDiscovery {
             "DNS-SD discovery for capability '{}' - graceful fallback (full impl pending)",
             capability
         );
-        
+
         // Graceful fallback: return empty, allowing other discovery methods
         info!(
             "DNS-SD not yet available for '{}', trying other methods",
             capability
         );
-        
+
         Ok(vec![])
     }
 
@@ -303,7 +303,7 @@ impl CapabilityDiscovery {
                 capability
             );
         }
-        
+
         // Graceful fallback: return empty, allowing other discovery methods
         Ok(vec![])
     }

@@ -13,9 +13,13 @@ async fn test_contact_exchange_same_family() {
     // Initialize components with auto_initialize for proper HSM provider registration
     use std::env;
     env::set_var("BEARDOG_HSM_MODE", "software");
-    let hsm = Arc::new(HsmManager::auto_initialize().await.expect("Failed to initialize HSM"));
+    let hsm = Arc::new(
+        HsmManager::auto_initialize()
+            .await
+            .expect("Failed to initialize HSM"),
+    );
     env::remove_var("BEARDOG_HSM_MODE");
-    
+
     let genetics =
         Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
 
@@ -88,9 +92,13 @@ async fn test_contact_exchange_max_hops() {
     // Initialize components with auto_initialize for proper HSM provider registration
     use std::env;
     env::set_var("BEARDOG_HSM_MODE", "software");
-    let hsm = Arc::new(HsmManager::auto_initialize().await.expect("Failed to initialize HSM"));
+    let hsm = Arc::new(
+        HsmManager::auto_initialize()
+            .await
+            .expect("Failed to initialize HSM"),
+    );
     env::remove_var("BEARDOG_HSM_MODE");
-    
+
     let genetics =
         Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
 

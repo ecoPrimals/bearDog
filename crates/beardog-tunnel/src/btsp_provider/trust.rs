@@ -127,7 +127,10 @@ impl TrustManager {
     ///
     /// This uses BirdSong to encrypt a random session key for the peer's lineage,
     /// ensuring only trusted peers in the same cryptographic family can derive it.
-    pub async fn generate_session_key(&self, peer_id: &str) -> Result<Zeroizing<Vec<u8>>, BearDogError> {
+    pub async fn generate_session_key(
+        &self,
+        peer_id: &str,
+    ) -> Result<Zeroizing<Vec<u8>>, BearDogError> {
         debug!(
             "🎵 Generating BirdSong lineage-aware session key for peer: {}",
             peer_id
@@ -208,4 +211,3 @@ mod tests {
         assert!(peer.public_key.is_some());
     }
 }
-

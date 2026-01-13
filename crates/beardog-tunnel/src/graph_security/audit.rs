@@ -26,29 +26,34 @@ use uuid::Uuid;
 /// Origin audit with trust score and risk assessment
 pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearDogError> {
     let audit_id = Uuid::new_v4().to_string();
-    
+
     // 1. Verify creator identity
     let creator = verify_creator_identity(template_id).await?;
-    
+
     // 2. Get template lineage
     let lineage = get_template_lineage(template_id).await?;
-    
+
     // 3. Verify chain of custody
     let chain_valid = verify_chain_of_custody(&lineage).await?;
-    
+
     // 4. Get community usage metrics
     let community_usage = get_community_usage(template_id).await?;
-    
+
     // 5. Get security assessment
     let security_assessment = get_security_assessment(template_id).await?;
-    
+
     // Calculate overall trust score and risk level
     let trust_score = calculate_trust_score(&creator, &community_usage, &security_assessment);
     let risk_level = calculate_audit_risk_level(&creator, &security_assessment, chain_valid);
-    
+
     // Generate warnings and recommendations
-    let (warnings, recommendations) = generate_audit_warnings(&creator, &security_assessment, chain_valid, &community_usage);
-    
+    let (warnings, recommendations) = generate_audit_warnings(
+        &creator,
+        &security_assessment,
+        chain_valid,
+        &community_usage,
+    );
+
     Ok(OriginAudit {
         template_id: template_id.clone(),
         creator,
@@ -58,8 +63,16 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
         trust_score,
         community_usage,
         security_assessment,
-        warnings: if warnings.is_empty() { None } else { Some(warnings) },
-        recommendations: if recommendations.is_empty() { None } else { Some(recommendations) },
+        warnings: if warnings.is_empty() {
+            None
+        } else {
+            Some(warnings)
+        },
+        recommendations: if recommendations.is_empty() {
+            None
+        } else {
+            Some(recommendations)
+        },
         audit_id,
     })
 }
@@ -69,13 +82,13 @@ async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo
     // TODO: Get actual creator info from NestGate
     // For now, return placeholder data
     let creator_id = extract_creator_from_template_id(template_id);
-    
+
     // Check if identity is verified (would use genetic lineage in production)
     let identity_verified = creator_id != "unknown";
-    
+
     // Calculate base trust score
     let trust_score = if identity_verified { 0.75 } else { 0.10 };
-    
+
     Ok(CreatorInfo {
         user_id: creator_id.clone(),
         identity_verified,
@@ -131,7 +144,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
             // For now, accept any signature
         }
     }
-    
+
     // Check if lineage is continuous (no gaps in versions)
     Ok(!lineage.is_empty())
 }
@@ -168,24 +181,24 @@ fn calculate_trust_score(
     security: &SecurityAssessment,
 ) -> f64 {
     let mut score = creator.trust_score;
-    
+
     // Boost for successful deployments
     if community.deployments > 100 {
         score += 0.10;
     }
-    
+
     // Boost for high success rate
     if let Some(success_rate) = community.success_rate {
         if success_rate > 0.90 {
             score += 0.05;
         }
     }
-    
+
     // Penalty for vulnerabilities
     if security.vulnerabilities_found > 0 {
         score -= 0.20 * (security.vulnerabilities_found as f64 / 10.0);
     }
-    
+
     score.clamp(0.0, 1.0)
 }
 
@@ -198,15 +211,15 @@ fn calculate_audit_risk_level(
     if !creator.identity_verified || !chain_valid {
         return RiskLevel::High;
     }
-    
+
     if security.vulnerabilities_found > 5 {
         return RiskLevel::Critical;
     }
-    
+
     if security.vulnerabilities_found > 0 {
         return RiskLevel::Medium;
     }
-    
+
     RiskLevel::Low
 }
 
@@ -219,22 +232,22 @@ fn generate_audit_warnings(
 ) -> (Vec<String>, Vec<String>) {
     let mut warnings = Vec::new();
     let mut recommendations = Vec::new();
-    
+
     if !creator.identity_verified {
         warnings.push("Creator identity not verified".to_string());
         recommendations.push("Verify creator identity before using template".to_string());
     }
-    
+
     if !chain_valid {
         warnings.push("Template modification chain is invalid".to_string());
         recommendations.push("Contact template creator for verification".to_string());
     }
-    
+
     if community.deployments == 0 {
         warnings.push("No community usage history".to_string());
         recommendations.push("Test template thoroughly before production use".to_string());
     }
-    
+
     if security.vulnerabilities_found > 0 {
         warnings.push(format!(
             "Template has {} known vulnerabilities",
@@ -242,11 +255,11 @@ fn generate_audit_warnings(
         ));
         recommendations.push("Review and fix security vulnerabilities".to_string());
     }
-    
+
     if security.vulnerabilities_found > 0 || !creator.identity_verified {
         recommendations.push("Consider using established community templates instead".to_string());
     }
-    
+
     (warnings, recommendations)
 }
 
@@ -258,7 +271,7 @@ mod tests {
     async fn test_audit_origin_basic() {
         let template_id = "template-123".to_string();
         let result = audit_origin(&template_id).await.unwrap();
-        
+
         assert!(result.creator.identity_verified);
         assert!(!result.lineage.is_empty());
         assert!(result.trust_score > 0.0);
@@ -268,7 +281,7 @@ mod tests {
     async fn test_audit_origin_unknown_creator() {
         let template_id = "unknown-template".to_string();
         let result = audit_origin(&template_id).await.unwrap();
-        
+
         assert!(!result.creator.identity_verified);
         assert_eq!(result.risk_level, RiskLevel::High);
         assert!(result.warnings.is_some());
@@ -284,20 +297,20 @@ mod tests {
             member_since: "2025-01-01T00:00:00Z".to_string(),
             genetic_family: Some("nat0".to_string()),
         };
-        
+
         let community = CommunityUsage {
             deployments: 150,
             success_rate: Some(0.95),
             avg_rating: Some(4.8),
             total_ratings: 50,
         };
-        
+
         let security = SecurityAssessment {
             last_scan: "2026-01-11T12:00:00Z".to_string(),
             vulnerabilities_found: 0,
             threat_level: "none".to_string(),
         };
-        
+
         let score = calculate_trust_score(&creator, &community, &security);
         assert!(score > 0.85); // High trust
     }
@@ -312,13 +325,13 @@ mod tests {
             member_since: "2025-01-01T00:00:00Z".to_string(),
             genetic_family: Some("nat0".to_string()),
         };
-        
+
         let security = SecurityAssessment {
             last_scan: "2026-01-11T12:00:00Z".to_string(),
             vulnerabilities_found: 0,
             threat_level: "none".to_string(),
         };
-        
+
         let risk = calculate_audit_risk_level(&creator, &security, true);
         assert_eq!(risk, RiskLevel::Low);
     }
@@ -333,15 +346,14 @@ mod tests {
             member_since: "2026-01-11T00:00:00Z".to_string(),
             genetic_family: None,
         };
-        
+
         let security = SecurityAssessment {
             last_scan: "2026-01-11T12:00:00Z".to_string(),
             vulnerabilities_found: 0,
             threat_level: "none".to_string(),
         };
-        
+
         let risk = calculate_audit_risk_level(&creator, &security, false);
         assert_eq!(risk, RiskLevel::High);
     }
 }
-

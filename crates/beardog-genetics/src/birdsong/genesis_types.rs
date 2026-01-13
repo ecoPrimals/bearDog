@@ -268,21 +268,21 @@ impl PhysicalChannelProof {
                     // For now, verify attestation structure
                     self.verify_strongbox_attestation(attestation)
                 }
-                
+
                 #[cfg(target_os = "ios")]
                 {
                     // iOS Secure Enclave attestation
                     // In production, this would verify Secure Enclave signature
                     self.verify_secure_enclave_attestation(attestation)
                 }
-                
+
                 #[cfg(any(target_os = "linux", target_os = "windows"))]
                 {
                     // TPM 2.0 attestation
                     // In production, this would verify TPM quote and PCR values
                     self.verify_tpm_attestation(attestation)
                 }
-                
+
                 #[cfg(not(any(
                     target_os = "android",
                     target_os = "ios",
@@ -327,7 +327,7 @@ impl PhysicalChannelProof {
         // Verify attestation structure:
         // [hash:32 bytes][signature:remaining bytes]
         let hash = &attestation[..32];
-        
+
         // In production, verify signature against known software attestation key
         // For now, verify hash is non-zero
         Ok(hash.iter().any(|&b| b != 0))
@@ -343,7 +343,7 @@ impl PhysicalChannelProof {
         // - Quote (signature over PCR values)
         // - PCR values
         // - Attestation key certificate
-        
+
         // Minimum TPM quote size
         if attestation.len() < 64 {
             return Ok(false);
@@ -354,7 +354,7 @@ impl PhysicalChannelProof {
         // 2. Verify quote signature using AIK (Attestation Identity Key)
         // 3. Verify PCR values match expected platform state
         // 4. Verify AIK certificate chain
-        
+
         // For now, verify structure is reasonable
         Ok(attestation.len() >= 64 && attestation.iter().any(|&b| b != 0))
     }
@@ -369,7 +369,7 @@ impl PhysicalChannelProof {
         // - Key attestation certificate chain
         // - Attestation application ID
         // - Attestation challenge
-        
+
         // Minimum certificate size
         if attestation.len() < 128 {
             return Ok(false);
@@ -380,7 +380,7 @@ impl PhysicalChannelProof {
         // 2. Verify root certificate is Google Hardware Attestation Root
         // 3. Verify attestation extension contains correct security level
         // 4. Verify challenge matches expected value
-        
+
         // For now, verify structure is reasonable
         Ok(attestation.len() >= 128 && attestation.iter().any(|&b| b != 0))
     }
@@ -395,7 +395,7 @@ impl PhysicalChannelProof {
         // - Attestation data signed by Secure Enclave
         // - Device identifier
         // - App identifier
-        
+
         // Minimum attestation size
         if attestation.len() < 64 {
             return Ok(false);
@@ -405,7 +405,7 @@ impl PhysicalChannelProof {
         // 1. Verify signature using Secure Enclave public key
         // 2. Verify device identifier matches expected device
         // 3. Verify app identifier matches expected app
-        
+
         // For now, verify structure is reasonable
         Ok(attestation.len() >= 64 && attestation.iter().any(|&b| b != 0))
     }

@@ -674,7 +674,7 @@ impl BeardogBtspProvider {
     ) -> Result<Vec<u8>, BearDogError> {
         // Use genetics engine to apply key lineage
         // This ensures cryptographic evolution and forward secrecy
-        
+
         // Integrate with beardog-genetics key derivation
         // ChaCha20-Poly1305 provides fast, secure AEAD encryption
         // The session key is derived from genetic lineage for forward secrecy

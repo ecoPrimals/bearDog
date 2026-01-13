@@ -17,6 +17,12 @@
 // Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
+// Enable select pedantic lints for code quality
+#![warn(clippy::pedantic)]
+// Allow some pedantic lints that conflict with our patterns
+#![allow(clippy::module_name_repetitions)] // BearDogConfig in beardog module is clear
+#![allow(clippy::missing_errors_doc)] // Will add incrementally
+#![allow(clippy::missing_panics_doc)] // Will add incrementally
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration
 //! - Zero-copy memory optimization
@@ -151,6 +157,14 @@ pub mod zero_knowledge_bootstrap;
 /// Enables capability-based routing to avoid N^2 connection problems.
 pub mod capabilities;
 
+/// Unix socket configuration with XDG compliance and 3-tier fallback
+///
+/// Provides robust socket path resolution for inter-primal communication:
+/// 1. BEARDOG_SOCKET environment variable (explicit override)
+/// 2. XDG Runtime Directory (secure, per-user)
+/// 3. /tmp fallback (last resort)
+pub mod socket_config;
+
 /// Migration system for sovereign entropy and ecosystem upgrades
 ///
 /// Comprehensive migration framework for transitioning from traditional
@@ -159,7 +173,7 @@ pub mod migration;
 
 /// Protocol-agnostic crypto service
 ///
-/// Core cryptographic service trait that can be exposed via HTTP, JSON-RPC, tarpc,
+/// Core cryptographic service trait that can be exposed via HTTP, JSON-RPC, `tarpc`,
 /// or any future protocol without protocol-specific dependencies.
 pub mod crypto_service;
 #[cfg(test)]

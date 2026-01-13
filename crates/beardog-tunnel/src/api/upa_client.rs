@@ -215,7 +215,7 @@ impl UpaClient {
                 }
             }
         }
-        
+
         // Fallback for non-Linux or if /proc/stat unavailable
         Err(BearDogError::system(
             "CPU monitoring not available on this platform".to_string(),
@@ -246,7 +246,7 @@ impl UpaClient {
             if let Ok(meminfo) = fs::read_to_string("/proc/meminfo") {
                 let mut total_kb = 0u64;
                 let mut available_kb = 0u64;
-                
+
                 for line in meminfo.lines() {
                     if line.starts_with("MemTotal:") {
                         if let Some(value) = line.split_whitespace().nth(1) {
@@ -258,7 +258,7 @@ impl UpaClient {
                         }
                     }
                 }
-                
+
                 if total_kb > 0 && available_kb > 0 {
                     let used_kb = total_kb.saturating_sub(available_kb);
                     let used_mb = used_kb / 1024;
@@ -266,7 +266,7 @@ impl UpaClient {
                 }
             }
         }
-        
+
         // Fallback for non-Linux or if /proc/meminfo unavailable
         Err(BearDogError::system(
             "Memory monitoring not available on this platform".to_string(),
@@ -416,14 +416,14 @@ impl UpaClient {
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(0),
-                    
+
                     // CPU usage: environment override or system query with fallback
                     cpu_percent: std::env::var("BEARDOG_CPU_PERCENT")
                         .ok()
                         .and_then(|s| s.parse::<f64>().ok())
                         .or_else(|| Self::get_system_cpu_usage().ok())
                         .unwrap_or(0.0) as f32,
-                    
+
                     // Memory usage: environment override or system query with fallback
                     memory_mb: std::env::var("BEARDOG_MEMORY_MB")
                         .ok()
@@ -452,7 +452,7 @@ impl UpaClient {
                             match response.json::<HeartbeatResponse>().await {
                                 Ok(hb_response) => {
                                     info!("Heartbeat acknowledged: status={}", hb_response.status);
-                                    
+
                                     // Update interval if server requests different heartbeat rate
                                     // This allows dynamic heartbeat adjustment based on system load
                                     if let Some(new_interval) = hb_response.next_interval_secs {

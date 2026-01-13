@@ -126,6 +126,9 @@ pub mod btsp_api_server;
 #[cfg(feature = "btsp-api")]
 pub mod api;
 
+// Unix socket IPC server (OLD - being refactored)
+// Removed: unix_socket_ipc_OLD (refactored into unix_socket_ipc/)
+
 // Unix socket IPC server (PRIMARY inter-primal communication)
 pub mod tarpc_service;
 pub mod unix_socket_ipc;

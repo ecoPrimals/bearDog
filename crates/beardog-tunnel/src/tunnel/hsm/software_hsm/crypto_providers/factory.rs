@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use beardog_errors::BearDogError;
 
+use super::genetic_crypto::GeneticCryptoProvider;
 use super::openssl_crypto::OpenSslCryptoProvider;
 use super::ring_crypto::RingCryptoProvider;
 use super::rust_crypto::RustCryptoProvider;
@@ -18,6 +19,10 @@ pub async fn create_crypto_provider(
     backend: &CryptoBackend,
 ) -> Result<Arc<dyn CryptoProvider<KeyType>>, BearDogError> {
     match backend {
+        CryptoBackend::GeneticCrypto => {
+            let provider = GeneticCryptoProvider::new()?;
+            Ok(Arc::new(provider))
+        }
         CryptoBackend::RustCrypto => {
             let provider = RustCryptoProvider::new().await?;
             Ok(Arc::new(provider))
@@ -36,6 +41,7 @@ pub async fn create_crypto_provider(
 /// Get Supported Crypto Backends operation.
 pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     vec![
+        CryptoBackend::GeneticCrypto,  // NEW: 100% Pure Rust (RECOMMENDED)
         CryptoBackend::RustCrypto,
         CryptoBackend::Ring,
         CryptoBackend::OpenSsl,
@@ -64,6 +70,13 @@ pub struct CryptoProviderCapabilities {
 /// Get Crypto Provider Capabilities operation.
 pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProviderCapabilities {
     match backend {
+        CryptoBackend::GeneticCrypto => CryptoProviderCapabilities {
+            supports_aes: true,
+            supports_chacha20: false,  // Not yet implemented (use AES-256-GCM)
+            supports_ecc: true,
+            supports_rsa: false,  // Not yet implemented
+            supports_hardware_acceleration: true,  // Uses AES-NI, AVX2
+        },
         CryptoBackend::RustCrypto => CryptoProviderCapabilities {
             supports_aes: true,
             supports_chacha20: true,
@@ -93,18 +106,31 @@ pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProvid
 pub fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
     matches!(
         backend,
-        CryptoBackend::RustCrypto | CryptoBackend::Ring | CryptoBackend::OpenSsl
+        CryptoBackend::GeneticCrypto
+            | CryptoBackend::RustCrypto
+            | CryptoBackend::Ring
+            | CryptoBackend::OpenSsl
     )
 }
 
 /// Get Recommended Crypto Backend.
+///
+/// **UPDATED**: Now recommends GeneticCrypto (100% Pure Rust, zero FFI)
+///
+/// GeneticCrypto provides:
+/// - 100% memory safe (borrow checker enforced)
+/// - Zero FFI boundaries (full compiler optimization)
+/// - Hardware acceleration (AES-NI, AVX2)
+/// - Single language audit (no C code)
+/// - Genetic crypto enhancements (future)
 pub fn get_recommended_crypto_backend() -> CryptoBackend {
-    CryptoBackend::Ring
+    CryptoBackend::GeneticCrypto  // Changed from Ring!
 }
 
 /// Get Crypto Backend By Name.
 pub fn get_crypto_backend_by_name(name: &str) -> Option<CryptoBackend> {
     match name.to_lowercase().as_str() {
+        "genetic" | "geneticcrypto" | "genetic-crypto" => Some(CryptoBackend::GeneticCrypto),
         "rust" | "rustcrypto" | "rust-crypto" => Some(CryptoBackend::RustCrypto),
         "ring" => Some(CryptoBackend::Ring),
         "openssl" | "ssl" => Some(CryptoBackend::OpenSsl),

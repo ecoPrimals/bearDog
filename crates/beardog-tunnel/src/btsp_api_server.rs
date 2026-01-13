@@ -45,8 +45,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 use crate::btsp_provider::{
-    BeardogBtspProvider, BtspProvider, Direction, SecurityContext, TunnelHandle,
-    TunnelStatus,
+    BeardogBtspProvider, BtspProvider, Direction, SecurityContext, TunnelHandle, TunnelStatus,
 };
 use beardog_capabilities::traits::PeerEndpoint;
 use beardog_errors::BearDogError;
@@ -367,7 +366,7 @@ mod tests {
     #[test]
     fn test_establish_request_serialization() {
         use beardog_capabilities::traits::PeerEndpoint;
-        
+
         let request = EstablishTunnelRequest {
             peer: PeerEndpoint {
                 id: "test-peer".to_string(),

@@ -239,4 +239,3 @@ mod tests {
         assert_eq!(contact.search_depth, deserialized.search_depth);
     }
 }
-

@@ -18,8 +18,8 @@
 //! - `validate_template`: Template safety validation
 //! - `audit_origin`: Template provenance verification
 
-pub mod authorize;
 pub mod audit;
+pub mod authorize;
 pub mod permissions;
 pub mod threats;
 pub mod types;
@@ -28,8 +28,7 @@ pub mod validate;
 #[cfg(test)]
 mod tests;
 
-pub use authorize::authorize_modification;
 pub use audit::audit_origin;
+pub use authorize::authorize_modification;
 pub use types::*;
 pub use validate::validate_template;
-

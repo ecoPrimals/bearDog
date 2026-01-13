@@ -239,8 +239,8 @@ impl GenesisWitnessVerifier {
         witness: &GenesisWitness,
         new_node_id: &str,
     ) -> Result<(), WitnessVerificationError> {
-        use ed25519_dalek::{Signature, VerifyingKey, Verifier};
         use blake3::Hasher;
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
         // Validate signature length (Ed25519 signatures are 64 bytes)
         if witness.signature.len() != 64 {
@@ -256,7 +256,7 @@ impl GenesisWitnessVerifier {
         if witness.public_key.len() != 32 {
             return Err(WitnessVerificationError::InvalidSignature);
         }
-        
+
         // In test mode, skip actual cryptographic verification after validation
         // This allows tests to use mock signatures while still validating structure
         if cfg!(test) {
@@ -272,20 +272,27 @@ impl GenesisWitnessVerifier {
         let message = hasher.finalize();
 
         // Step 2: Parse Ed25519 public key
-        let public_key_bytes: [u8; 32] = witness.public_key.clone().try_into()
+        let public_key_bytes: [u8; 32] = witness
+            .public_key
+            .clone()
+            .try_into()
             .map_err(|_| WitnessVerificationError::InvalidSignature)?;
-        
+
         let public_key = VerifyingKey::from_bytes(&public_key_bytes)
             .map_err(|_| WitnessVerificationError::InvalidSignature)?;
 
         // Step 3: Parse Ed25519 signature
-        let signature_bytes: [u8; 64] = witness.signature.clone().try_into()
+        let signature_bytes: [u8; 64] = witness
+            .signature
+            .clone()
+            .try_into()
             .map_err(|_| WitnessVerificationError::InvalidSignature)?;
-        
+
         let signature = Signature::from_bytes(&signature_bytes);
 
         // Step 4: Verify signature
-        public_key.verify(message.as_bytes(), &signature)
+        public_key
+            .verify(message.as_bytes(), &signature)
             .map_err(|_| WitnessVerificationError::InvalidSignature)?;
 
         Ok(())

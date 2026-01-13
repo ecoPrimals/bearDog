@@ -337,7 +337,9 @@ async fn encrypt_v2(
 ) -> Result<Json<ApiResponse<EncryptResponseV2>>, ApiError> {
     // Primal self-knowledge: Read own family ID from environment
     // No hardcoding, no "default" fallback - fail fast if not configured
-    let family_id = req.family_id.clone()
+    let family_id = req
+        .family_id
+        .clone()
         .or_else(|| {
             // Try both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
             std::env::var("FAMILY_ID")
@@ -345,9 +347,9 @@ async fn encrypt_v2(
                 .ok()
         })
         .ok_or_else(|| {
-        BearDogError::configuration(
-            "family_id required: provide in request or set FAMILY_ID environment variable"
-        )
+            BearDogError::configuration(
+                "family_id required: provide in request or set FAMILY_ID environment variable",
+            )
         })?;
 
     info!("🎵 BirdSong v2 encrypt for family: {}", family_id);
@@ -392,7 +394,9 @@ async fn decrypt_v2(
 ) -> Result<Json<ApiResponse<DecryptResponseV2>>, ApiError> {
     // Primal self-knowledge: Read own family ID from environment
     // No hardcoding, no "default" fallback - fail fast if not configured
-    let family_id = req.family_id.clone()
+    let family_id = req
+        .family_id
+        .clone()
         .or_else(|| {
             // Try both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
             std::env::var("FAMILY_ID")
@@ -400,9 +404,9 @@ async fn decrypt_v2(
                 .ok()
         })
         .ok_or_else(|| {
-        BearDogError::configuration(
-            "family_id required: provide in request or set FAMILY_ID environment variable"
-        )
+            BearDogError::configuration(
+                "family_id required: provide in request or set FAMILY_ID environment variable",
+            )
         })?;
 
     info!("🎵 BirdSong v2 decrypt for family: {}", family_id);

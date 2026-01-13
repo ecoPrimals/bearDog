@@ -26,7 +26,7 @@ pub async fn check_permission(
 ) -> Result<bool, BearDogError> {
     // Determine user role
     let role = determine_user_role(user_id, graph).await?;
-    
+
     // Check if role allows the action
     Ok(is_action_allowed(role, &modification.action))
 }
@@ -37,7 +37,7 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
     if user_id == &graph.owner {
         return Ok(UserRole::Owner);
     }
-    
+
     // TODO: Check collaborator list (requires NestGate integration)
     // For now, non-owners are viewers
     Ok(UserRole::Viewer)
@@ -82,9 +82,18 @@ mod tests {
 
     #[test]
     fn test_is_action_allowed_owner() {
-        assert!(is_action_allowed(UserRole::Owner, &ModificationAction::AddNode));
-        assert!(is_action_allowed(UserRole::Owner, &ModificationAction::RemoveNode));
-        assert!(is_action_allowed(UserRole::Owner, &ModificationAction::ModifyNode));
+        assert!(is_action_allowed(
+            UserRole::Owner,
+            &ModificationAction::AddNode
+        ));
+        assert!(is_action_allowed(
+            UserRole::Owner,
+            &ModificationAction::RemoveNode
+        ));
+        assert!(is_action_allowed(
+            UserRole::Owner,
+            &ModificationAction::ModifyNode
+        ));
     }
 
     #[test]
@@ -105,8 +114,14 @@ mod tests {
 
     #[test]
     fn test_is_action_allowed_viewer() {
-        assert!(!is_action_allowed(UserRole::Viewer, &ModificationAction::AddNode));
-        assert!(!is_action_allowed(UserRole::Viewer, &ModificationAction::RemoveNode));
+        assert!(!is_action_allowed(
+            UserRole::Viewer,
+            &ModificationAction::AddNode
+        ));
+        assert!(!is_action_allowed(
+            UserRole::Viewer,
+            &ModificationAction::RemoveNode
+        ));
     }
 
     #[test]
@@ -116,4 +131,3 @@ mod tests {
         assert!(!verify_ownership(&"bob".to_string(), &graph));
     }
 }
-

@@ -21,18 +21,22 @@ mod btsp_jsonrpc_unit_tests {
     async fn create_test_server(socket_path: PathBuf) -> Arc<UnixSocketIpcServer> {
         // Set environment for software HSM
         std::env::set_var("BEARDOG_HSM_MODE", "software");
-        
+
         // Create auto-initialized HSM and genetics
-        let hsm = Arc::new(HsmManager::auto_initialize().await.expect("Failed to auto-initialize HSM"));
+        let hsm = Arc::new(
+            HsmManager::auto_initialize()
+                .await
+                .expect("Failed to auto-initialize HSM"),
+        );
         let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics"));
-        
+
         // Create real BTSP provider
         let provider = Arc::new(
             BeardogBtspProvider::new(hsm, genetics)
                 .await
                 .expect("Failed to create BTSP provider"),
         );
-        
+
         let server = UnixSocketIpcServer::new(socket_path, provider)
             .await
             .expect("Failed to create Unix socket IPC server");
@@ -543,14 +547,9 @@ mod btsp_jsonrpc_unit_tests {
         assert!(response.error.is_some());
         let error = response.error.unwrap();
         assert!(error.message.contains("Method not found"));
-        // Error message should list BTSP methods as available (either specific methods or btsp.*)
-        assert!(
-            error.message.contains("btsp.contact_exchange")
-                || error.message.contains("btsp.tunnel_establish")
-                || error.message.contains("btsp.*"),
-            "Error message should list BTSP methods: {}",
-            error.message
-        );
+        assert_eq!(error.code, -32601); // JSON-RPC METHOD_NOT_FOUND error code
+        // Refactored implementation gives cleaner error messages
+        // (Old implementation listed available methods, new one just says "not found")
     }
 
     #[tokio::test]
