@@ -23,15 +23,17 @@
 //! - `BEARDOG_HSM_MODE` - HSM mode (default: "software")
 //!
 //! ## Unix Socket Configuration (Primary IPC)
-//! - `BEARDOG_SOCKET` - **Explicit socket path** (highest priority)
+//! - `BEARDOG_SOCKET` - **Primal-specific socket path** (highest priority)
+//! - `BIOMEOS_SOCKET_PATH` - **Generic orchestrator socket path** (Neural API)
 //! - `BEARDOG_FAMILY_ID` - Family identifier (for auto socket path)
 //! - `BEARDOG_NODE_ID` - Node identifier (for auto socket path)
 //! - `NODE_ID` - Fallback node identifier
 //!
-//! ### Socket Path Resolution (3-Tier Fallback)
-//! 1. **Explicit**: Use `BEARDOG_SOCKET` if set (e.g., `/run/user/1000/beardog.sock`)
-//! 2. **XDG Runtime**: Use `/run/user/<uid>/beardog-<family>.sock` if XDG dir exists
-//! 3. **Temp Fallback**: Use `/tmp/beardog-<family>-<node>.sock` as last resort
+//! ### Socket Path Resolution (4-Tier Fallback - TRUE PRIMAL Architecture)
+//! 1. **Primal-Specific**: Use `BEARDOG_SOCKET` if set (highest priority)
+//! 2. **Orchestrator**: Use `BIOMEOS_SOCKET_PATH` if set (Neural API orchestration)
+//! 3. **XDG Runtime**: Use `/run/user/<uid>/beardog-<family>.sock` if XDG dir exists
+//! 4. **Temp Fallback**: Use `/tmp/beardog-<family>-<node>.sock` as last resort
 //!
 //! ## HTTP Configuration (Optional, Default: Disabled)
 //! - `BEARDOG_HTTP_ENABLED` - Enable HTTP API (default: false)
@@ -49,10 +51,14 @@
 //! beardog-server
 //! # Creates socket at: /run/user/<uid>/beardog-default.sock (or /tmp fallback)
 //!
-//! # Specify explicit socket path (highest priority)
+//! # Specify explicit socket path (Tier 1 - highest priority)
 //! BEARDOG_SOCKET=/run/user/1000/beardog-nat0.sock beardog-server
 //!
-//! # Configure socket via family/node IDs
+//! # Neural API orchestration (Tier 2 - recommended for biomeOS)
+//! BIOMEOS_SOCKET_PATH=/tmp/beardog-default-default.sock beardog-server
+//! # Creates socket at: /tmp/beardog-default-default.sock (Neural API standard)
+//!
+//! # Configure socket via family/node IDs (Tier 3/4)
 //! BEARDOG_FAMILY_ID=nat0 BEARDOG_NODE_ID=tower1 beardog-server
 //! # Creates socket at: /run/user/<uid>/beardog-nat0.sock (or /tmp fallback)
 //!
@@ -63,6 +69,7 @@
 //! BEARDOG_FAMILY_SEED="$(cat /media/usb/seed.txt)" beardog-server
 //! ```
 
+use beardog_core::self_knowledge::PrimalSelfKnowledge;
 use beardog_core::socket_config::SocketConfig;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
@@ -88,16 +95,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_target(false)
         .init();
 
+    // Step 0: Discover Self-Knowledge (Zero Hardcoded Identity)
+    info!("🔍 Discovering self-knowledge from environment...");
+    let self_knowledge = PrimalSelfKnowledge::discover().map_err(|e| {
+        error!("Failed to discover self-knowledge: {}", e);
+        e
+    })?;
+
     info!("╔════════════════════════════════════════════════════════════════════╗");
     info!("║                                                                    ║");
     info!(
-        "║         🐻 BearDog Standalone Service v{}                     ║",
-        env!("CARGO_PKG_VERSION")
+        "║         🐻 {} v{}                                        ║",
+        self_knowledge.my_name(),
+        self_knowledge.my_version().version
     );
     info!("║                                                                    ║");
     info!("║              Sovereign Primal for Tower Orchestration             ║");
     info!("║                                                                    ║");
     info!("╚════════════════════════════════════════════════════════════════════╝");
+    info!("");
+    info!("🎯 Self-Knowledge Discovered:");
+    info!("   Name: {}", self_knowledge.my_name());
+    info!("   Version: {}", self_knowledge.my_version().version);
+    if let Some(git_hash) = &self_knowledge.my_version().git_hash {
+        info!("   Git Hash: {}", git_hash);
+    }
+    info!("   Endpoints: {:?}", self_knowledge.my_endpoints());
+    info!(
+        "   Capabilities: {} discovered",
+        self_knowledge.my_capabilities().len()
+    );
+    for cap in self_knowledge.my_capabilities() {
+        info!("      • {:?}", cap);
+    }
     info!("");
 
     // Step 1: Initialize HSM Manager

@@ -206,16 +206,26 @@ export BEARDOG_SOCKET=/run/user/1000/beardog-nat0.sock
 
 ---
 
-#### Socket Path Resolution (3-Tier Fallback)
+#### Socket Path Resolution (4-Tier Fallback - TRUE PRIMAL Architecture)
 
-BearDog uses a robust 3-tier fallback system for socket paths:
+BearDog uses a robust 4-tier fallback system for socket paths, compatible with Neural API orchestration:
 
-**Tier 1 - Explicit Override (Highest Priority)**:
+**Tier 1 - Primal-Specific Override (Highest Priority)**:
 ```bash
 BEARDOG_SOCKET=/custom/path/beardog.sock
 ```
+- Highest priority for primal-specific configuration
+- Overrides all other settings
 
-**Tier 2 - XDG Runtime Directory (Preferred, Secure)**:
+**Tier 2 - Generic Orchestrator (Neural API)**:
+```bash
+BIOMEOS_SOCKET_PATH=/tmp/beardog-default-default.sock
+```
+- Set by Neural API or other orchestrators
+- Allows consistent socket paths across all primals
+- **This is what Neural API uses!** ⭐
+
+**Tier 3 - XDG Runtime Directory (Preferred, Secure)**:
 ```
 /run/user/<uid>/beardog-${FAMILY_ID}.sock
 ```
@@ -223,7 +233,7 @@ BEARDOG_SOCKET=/custom/path/beardog.sock
 - More secure (per-user permissions)
 - XDG Base Directory Specification compliant
 
-**Tier 3 - Temp Directory (Last Resort)**:
+**Tier 4 - Temp Directory (Last Resort)**:
 ```
 /tmp/beardog-${FAMILY_ID}-${NODE_ID}.sock
 ```
@@ -232,8 +242,9 @@ BEARDOG_SOCKET=/custom/path/beardog.sock
 
 **Examples**:
 - `BEARDOG_SOCKET=/run/user/1000/beardog.sock` → `/run/user/1000/beardog.sock` (Tier 1)
-- `FAMILY_ID=nat0` (XDG available) → `/run/user/1000/beardog-nat0.sock` (Tier 2)
-- `FAMILY_ID=nat0 NODE_ID=tower1` (no XDG) → `/tmp/beardog-nat0-tower1.sock` (Tier 3)
+- `BIOMEOS_SOCKET_PATH=/tmp/beardog-nat0.sock` → `/tmp/beardog-nat0.sock` (Tier 2 - Neural API)
+- `FAMILY_ID=nat0` (XDG available) → `/run/user/1000/beardog-nat0.sock` (Tier 3)
+- `FAMILY_ID=nat0 NODE_ID=tower1` (no XDG) → `/tmp/beardog-nat0-tower1.sock` (Tier 4)
 
 **Benefits**:
 - ✅ No port conflicts (ever)
@@ -241,6 +252,7 @@ BEARDOG_SOCKET=/custom/path/beardog.sock
 - ✅ Secure (Unix file permissions)
 - ✅ Fast (no network stack overhead)
 - ✅ XDG-compliant (follows Linux standards)
+- ✅ **Neural API orchestration support** ⭐
 - ✅ Automatic parent directory creation
 - ✅ Automatic old socket cleanup
 

@@ -1,11 +1,12 @@
 //! # Unix Socket Configuration
 //!
 //! This module provides a robust, XDG-compliant socket path configuration
-//! with a 3-tier fallback system:
+//! with a 4-tier fallback system (TRUE PRIMAL architecture):
 //!
-//! 1. **Environment Variable** (highest priority): `BEARDOG_SOCKET`
-//! 2. **XDG Runtime Directory**: `/run/user/<uid>/beardog-<family>.sock`
-//! 3. **Temp Directory** (last resort): `/tmp/beardog-<family>-<node>.sock`
+//! 1. **Primal-Specific** (highest priority): `BEARDOG_SOCKET`
+//! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH`
+//! 3. **XDG Runtime Directory**: `/run/user/<uid>/beardog-<family>.sock`
+//! 4. **Temp Directory** (last resort): `/tmp/beardog-<family>-<node>.sock`
 //!
 //! ## Security & Standards
 //!
@@ -14,6 +15,7 @@
 //! - ✅ Automatic directory creation with proper permissions
 //! - ✅ Old socket cleanup (prevents "address already in use")
 //! - ✅ Multi-instance support via family/node IDs
+//! - ✅ Neural API orchestration support (BIOMEOS_SOCKET_PATH)
 //!
 //! ## Usage
 //!
@@ -25,7 +27,7 @@
 //! let socket_path = config.socket_path();
 //!
 //! println!("Socket: {}", socket_path);
-//! // Output: /run/user/1000/beardog-nat0.sock
+//! // Output: /tmp/beardog-default-default.sock (or as set by Neural API)
 //! ```
 
 use std::fs;
@@ -47,8 +49,10 @@ pub struct SocketConfig {
 /// Indicates which tier of fallback logic was used
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SocketPathSource {
-    /// Explicit environment variable (highest priority)
-    EnvVar,
+    /// Primal-specific environment variable (BEARDOG_SOCKET, highest priority)
+    PrimalEnvVar,
+    /// Generic orchestrator environment variable (BIOMEOS_SOCKET_PATH)
+    OrchestratorEnvVar,
     /// XDG Runtime Directory (preferred)
     XdgRuntime,
     /// Temp directory (last resort)
@@ -58,10 +62,11 @@ pub enum SocketPathSource {
 impl SocketConfig {
     /// Create socket configuration from environment variables
     ///
-    /// Implements 3-tier fallback:
-    /// 1. `BEARDOG_SOCKET` env var
-    /// 2. `/run/user/<uid>/beardog-<family>.sock` (XDG)
-    /// 3. `/tmp/beardog-<family>-<node>.sock` (fallback)
+    /// Implements 4-tier fallback (TRUE PRIMAL architecture):
+    /// 1. `BEARDOG_SOCKET` env var (primal-specific, highest priority)
+    /// 2. `BIOMEOS_SOCKET_PATH` env var (generic orchestrator, e.g., Neural API)
+    /// 3. `/run/user/<uid>/beardog-<family>.sock` (XDG)
+    /// 4. `/tmp/beardog-<family>-<node>.sock` (fallback)
     pub fn from_env() -> Self {
         let family_id = std::env::var("BEARDOG_FAMILY_ID")
             .or_else(|_| std::env::var("FAMILY_ID"))
@@ -71,17 +76,28 @@ impl SocketConfig {
             .or_else(|_| std::env::var("NODE_ID"))
             .unwrap_or_else(|_| "default".to_string());
 
-        // Tier 1: Check for explicit BEARDOG_SOCKET env var
+        // Tier 1: Check for primal-specific BEARDOG_SOCKET env var (highest priority)
         if let Ok(socket_path) = std::env::var("BEARDOG_SOCKET") {
             return Self {
                 socket_path: PathBuf::from(socket_path),
                 family_id,
                 node_id,
-                source: SocketPathSource::EnvVar,
+                source: SocketPathSource::PrimalEnvVar,
             };
         }
 
-        // Tier 2: Try XDG Runtime Directory (more secure, per-user)
+        // Tier 2: Check for generic orchestrator BIOMEOS_SOCKET_PATH
+        // This allows Neural API to set a standard path for all primals
+        if let Ok(socket_path) = std::env::var("BIOMEOS_SOCKET_PATH") {
+            return Self {
+                socket_path: PathBuf::from(socket_path),
+                family_id,
+                node_id,
+                source: SocketPathSource::OrchestratorEnvVar,
+            };
+        }
+
+        // Tier 3: Try XDG Runtime Directory (more secure, per-user)
         if let Some(xdg_path) = Self::try_xdg_runtime(&family_id) {
             return Self {
                 socket_path: xdg_path,
@@ -91,7 +107,7 @@ impl SocketConfig {
             };
         }
 
-        // Tier 3: Fallback to /tmp (last resort)
+        // Tier 4: Fallback to /tmp (last resort)
         let tmp_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
         Self {
             socket_path: PathBuf::from(tmp_path),
@@ -199,17 +215,23 @@ impl SocketConfig {
     /// Get a descriptive string for logging
     pub fn description(&self) -> String {
         match self.source {
-            SocketPathSource::EnvVar => {
+            SocketPathSource::PrimalEnvVar => {
                 format!(
-                    "{} (from BEARDOG_SOCKET env var)",
+                    "{} (from BEARDOG_SOCKET env var ⭐ Tier 1)",
+                    self.socket_path_string()
+                )
+            }
+            SocketPathSource::OrchestratorEnvVar => {
+                format!(
+                    "{} (from BIOMEOS_SOCKET_PATH env var ⭐ Tier 2 - Neural API)",
                     self.socket_path_string()
                 )
             }
             SocketPathSource::XdgRuntime => {
-                format!("{} (XDG Runtime Directory)", self.socket_path_string())
+                format!("{} (XDG Runtime Directory - Tier 3)", self.socket_path_string())
             }
             SocketPathSource::TempDir => {
-                format!("{} (fallback to /tmp)", self.socket_path_string())
+                format!("{} (fallback to /tmp - Tier 4)", self.socket_path_string())
             }
         }
     }
@@ -220,7 +242,7 @@ impl SocketConfig {
             socket_path: socket_path.into(),
             family_id,
             node_id,
-            source: SocketPathSource::EnvVar,
+            source: SocketPathSource::PrimalEnvVar,
         }
     }
 }
@@ -259,8 +281,8 @@ mod tests {
         );
         assert_eq!(
             config.source(),
-            SocketPathSource::EnvVar,
-            "Source should be EnvVar when BEARDOG_SOCKET is set"
+            SocketPathSource::PrimalEnvVar,
+            "Source should be PrimalEnvVar when BEARDOG_SOCKET is set"
         );
         assert_eq!(config.family_id(), "test0");
 
@@ -270,8 +292,66 @@ mod tests {
     }
 
     #[test]
+    fn test_biomeos_socket_path_tier2() {
+        // Clean slate
+        std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        std::env::remove_var("BEARDOG_FAMILY_ID");
+
+        // Set BIOMEOS_SOCKET_PATH (Tier 2 - Neural API orchestrator)
+        std::env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/beardog-default-default.sock");
+        std::env::set_var("BEARDOG_FAMILY_ID", "nat0");
+
+        let config = SocketConfig::from_env();
+
+        assert_eq!(
+            config.socket_path_string(),
+            "/tmp/beardog-default-default.sock",
+            "BIOMEOS_SOCKET_PATH should be honored (Tier 2)"
+        );
+        assert_eq!(
+            config.source(),
+            SocketPathSource::OrchestratorEnvVar,
+            "Source should be OrchestratorEnvVar when BIOMEOS_SOCKET_PATH is set"
+        );
+
+        // Cleanup
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        std::env::remove_var("BEARDOG_FAMILY_ID");
+    }
+
+    #[test]
+    fn test_beardog_socket_overrides_biomeos_socket_path() {
+        // Clean slate
+        std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+
+        // Set both - BEARDOG_SOCKET should win (Tier 1 > Tier 2)
+        std::env::set_var("BEARDOG_SOCKET", "/custom/beardog-specific.sock");
+        std::env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/biomeos-generic.sock");
+
+        let config = SocketConfig::from_env();
+
+        assert_eq!(
+            config.socket_path_string(),
+            "/custom/beardog-specific.sock",
+            "BEARDOG_SOCKET (Tier 1) should override BIOMEOS_SOCKET_PATH (Tier 2)"
+        );
+        assert_eq!(
+            config.source(),
+            SocketPathSource::PrimalEnvVar,
+            "Source should be PrimalEnvVar when BEARDOG_SOCKET is set"
+        );
+
+        // Cleanup
+        std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+    }
+
+    #[test]
     fn test_xdg_runtime_preferred_over_tmp() {
         std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
         std::env::set_var("BEARDOG_FAMILY_ID", "xdg-test");
 
         let config = SocketConfig::from_env();
