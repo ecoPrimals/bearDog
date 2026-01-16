@@ -1,0 +1,496 @@
+//! Universal Adapter for Primal-to-Primal Communication
+//!
+//! **Core Principle**: "Primals only know themselves, discover others by capability"
+//!
+//! This module implements the Universal Adapter pattern - a single, unified interface
+//! for all inter-primal communication that eliminates hardcoded primal names, vendor
+//! assumptions, and network topology knowledge.
+//!
+//! # Philosophy: Infant Discovery
+//!
+//! Like an infant, primals start with zero knowledge:
+//! - Know only themselves (via `PrimalSelfKnowledge`)
+//! - Discover others by capability (not by name)
+//! - Learn infrastructure at runtime (K8s, Consul, bare metal, etc.)
+//! - Adapt to what's available (graceful degradation)
+//!
+//! # Architecture
+//!
+//! ```text
+//!  ┌────────────────────────────────────────────────────────┐
+//!  │              Universal Adapter                         │
+//!  │  "Single interface for all primal communication"       │
+//!  └────────────────────────────────────────────────────────┘
+//!                          ↓
+//!         ┌────────────────┼───────────────┐
+//!         ↓                ↓               ↓
+//!   Self-Knowledge    Discovery        Routing
+//!   "Who am I?"       "Who provides?"  "How to reach?"
+//!         ↓                ↓               ↓
+//!   [BearDog]        [Capability]     [HighestTrust]
+//!   [v0.9.0]         [AI: Squirrel]   [LeastLoaded]
+//!   [8900]           [Storage: ...]   [LowestLatency]
+//! ```
+//!
+//! # Usage Example
+//!
+//! ```rust,no_run
+//! use beardog_core::universal_adapter::UniversalAdapter;
+//! use beardog_core::self_knowledge::SimpleCapability;
+//!
+//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! // Create adapter with zero initial knowledge
+//! let adapter = UniversalAdapter::new().await?;
+//!
+//! // Find ANY primal providing AI capability (don't care who!)
+//! let ai_primal = adapter
+//!     .find_primal_by_capability(SimpleCapability::Discovery)
+//!     .await?;
+//!
+//! println!("Using AI primal: {}", ai_primal.name);
+//! // Could be: "Squirrel", "FutureAIPrimal", or any AI provider
+//! // BearDog discovered it automatically!
+//! # Ok(())
+//! # }
+//! ```
+
+use crate::capability_router::{CapabilityRouter, RequestContext, SelectionStrategy};
+use crate::primal_discovery::{DiscoveredPrimal, DiscoveryQuery, PrimalDiscovery};
+use crate::self_knowledge::{PrimalSelfKnowledge, SimpleCapability};
+use beardog_errors::BearDogError;
+use parking_lot::RwLock;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+use tracing::{debug, info};
+
+// =============================================================================
+// CORE TYPES
+// =============================================================================
+
+/// Cached primal information
+#[derive(Debug, Clone)]
+struct CachedPrimal {
+    /// Discovered primal
+    primal: DiscoveredPrimal,
+
+    /// When it was cached
+    cached_at: Instant,
+
+    /// Cache TTL
+    ttl: Duration,
+}
+
+impl CachedPrimal {
+    /// Check if cache entry is still valid
+    fn is_valid(&self) -> bool {
+        self.cached_at.elapsed() < self.ttl
+    }
+}
+
+/// Universal adapter for primal-to-primal communication
+///
+/// **Philosophy**: Eliminates hardcoded primal names, vendor assumptions, and network topology
+///
+/// # Example: Complete Zero-Knowledge Flow
+///
+/// ```rust,no_run
+/// use beardog_core::universal_adapter::UniversalAdapter;
+/// use beardog_core::self_knowledge::SimpleCapability;
+///
+/// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+/// // 1. Start with zero knowledge
+/// let adapter = UniversalAdapter::new().await?;
+///
+/// // 2. Need AI analysis (don't know who provides it)
+/// let ai_primals = adapter
+///     .discover_capability(SimpleCapability::Discovery)
+///     .await?;
+///
+/// println!("Found {} AI providers", ai_primals.len());
+/// // BearDog discovered Squirrel (or whoever) automatically!
+///
+/// // 3. Get best provider (by trust, load, latency)
+/// let best_ai = adapter
+///     .find_primal_by_capability(SimpleCapability::Discovery)
+///     .await?;
+///
+/// println!("Using: {} at {:?}", best_ai.name, best_ai.endpoints);
+/// # Ok(())
+/// # }
+/// ```
+pub struct UniversalAdapter {
+    /// Self-knowledge (who am I?)
+    self_knowledge: Arc<PrimalSelfKnowledge>,
+
+    /// Discovery engine (who provides what?)
+    discovery: Arc<RwLock<PrimalDiscovery>>,
+
+    /// Capability router (how to reach them?)
+    router: Arc<RwLock<CapabilityRouter>>,
+
+    /// Cached capability map (performance optimization)
+    capability_cache: Arc<RwLock<HashMap<SimpleCapability, Vec<CachedPrimal>>>>,
+
+    /// Default cache TTL
+    default_cache_ttl: Duration,
+}
+
+// =============================================================================
+// UNIVERSAL ADAPTER IMPLEMENTATION
+// =============================================================================
+
+impl UniversalAdapter {
+    /// Create universal adapter with zero initial knowledge
+    ///
+    /// **Infant Discovery**: Starts knowing only itself, discovers everything else
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::universal_adapter::UniversalAdapter;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// // Start with zero knowledge about other primals
+    /// let adapter = UniversalAdapter::new().await?;
+    ///
+    /// // Now adapter knows:
+    /// // - Self (from environment)
+    /// // - Discovery method (from environment)
+    /// // - Nothing else! (will discover as needed)
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn new() -> Result<Self, BearDogError> {
+        info!("🧒 Initializing Universal Adapter (Infant Discovery Mode)");
+
+        // Step 1: Discover self (who am I?)
+        info!("   1️⃣  Discovering self-knowledge...");
+        let self_knowledge = PrimalSelfKnowledge::discover()?;
+        info!(
+            "   ✅ I am: {} v{}",
+            self_knowledge.my_name(),
+            self_knowledge.my_version().version
+        );
+
+        // Step 2: Initialize discovery engine (how to find others?)
+        info!("   2️⃣  Initializing discovery engine...");
+        let discovery = PrimalDiscovery::from_env()?;
+        info!("   ✅ Discovery engine ready");
+
+        // Step 3: Initialize routing (how to choose best?)
+        info!("   3️⃣  Initializing capability router...");
+        let router = CapabilityRouter::new().await?;
+        info!("   ✅ Routing engine ready");
+
+        // Get cache TTL from environment (default: 5 minutes)
+        let default_cache_ttl = std::env::var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .map(Duration::from_secs)
+            .unwrap_or(Duration::from_secs(300));
+
+        info!("✅ Universal Adapter initialized (zero hardcoded knowledge)");
+
+        Ok(Self {
+            self_knowledge: Arc::new(self_knowledge),
+            discovery: Arc::new(RwLock::new(discovery)),
+            router: Arc::new(RwLock::new(router)),
+            capability_cache: Arc::new(RwLock::new(HashMap::new())),
+            default_cache_ttl,
+        })
+    }
+
+    /// Discover ALL primals providing a capability
+    ///
+    /// **Zero Assumptions**: Doesn't know or care which primals exist
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::universal_adapter::UniversalAdapter;
+    /// use beardog_core::self_knowledge::SimpleCapability;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// let adapter = UniversalAdapter::new().await?;
+    ///
+    /// // Find ALL primals with AI capability
+    /// let ai_primals = adapter
+    ///     .discover_capability(SimpleCapability::Discovery)
+    ///     .await?;
+    ///
+    /// for primal in ai_primals {
+    ///     println!("AI provider: {} at {:?}", primal.name, primal.endpoints);
+    ///     // Could be Squirrel, future AI primals, or anyone!
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn discover_capability(
+        &self,
+        capability: SimpleCapability,
+    ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
+        debug!("🔍 Discovering primals with capability: {:?}", capability);
+
+        // Check cache first
+        if let Some(cached) = self.get_cached_capability(&capability) {
+            debug!("💾 Using cached results for {:?}", capability);
+            return Ok(cached);
+        }
+
+        // Discover primals providing this capability
+        let query = DiscoveryQuery::by_capability(capability.clone());
+        let primals = self.discovery.write().discover(query).await?;
+
+        info!(
+            "✅ Discovered {} primals providing {:?}",
+            primals.len(),
+            capability
+        );
+
+        // Cache results
+        self.cache_capability(capability, primals.clone());
+
+        Ok(primals)
+    }
+
+    /// Find BEST primal providing a capability
+    ///
+    /// Uses intelligent routing (trust, load, latency) to select optimal primal
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use beardog_core::universal_adapter::UniversalAdapter;
+    /// use beardog_core::self_knowledge::SimpleCapability;
+    ///
+    /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
+    /// let adapter = UniversalAdapter::new().await?;
+    ///
+    /// // Get BEST AI provider (by trust score, load, latency)
+    /// let best_ai = adapter
+    ///     .find_primal_by_capability(SimpleCapability::Discovery)
+    ///     .await?;
+    ///
+    /// println!("Best AI: {} (reason: highest trust)", best_ai.name);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn find_primal_by_capability(
+        &self,
+        capability: SimpleCapability,
+    ) -> Result<DiscoveredPrimal, BearDogError> {
+        debug!("🎯 Finding best primal for capability: {:?}", capability);
+
+        // Route to best primal
+        let decision = self
+            .router
+            .write()
+            .route(
+                capability.clone(),
+                RequestContext::new(capability).with_strategy(SelectionStrategy::HighestTrust),
+            )
+            .await?;
+
+        info!(
+            "✅ Selected primal: {} (reason: {})",
+            decision.primal.name, decision.reason
+        );
+
+        Ok(decision.primal)
+    }
+
+    /// Get self-knowledge (who am I?)
+    #[must_use]
+    pub fn self_knowledge(&self) -> &PrimalSelfKnowledge {
+        &self.self_knowledge
+    }
+
+    /// Clear capability cache (force re-discovery)
+    pub fn clear_cache(&self) {
+        self.capability_cache.write().clear();
+        info!("🗑️  Capability cache cleared");
+    }
+
+    /// Clear cache for specific capability
+    pub fn clear_capability_cache(&self, capability: &SimpleCapability) {
+        self.capability_cache.write().remove(capability);
+        debug!("🗑️  Cleared cache for {:?}", capability);
+    }
+
+    // Internal: Get cached capability results
+    fn get_cached_capability(
+        &self,
+        capability: &SimpleCapability,
+    ) -> Option<Vec<DiscoveredPrimal>> {
+        let cache = self.capability_cache.read();
+
+        if let Some(cached_primals) = cache.get(capability) {
+            // Filter out expired entries
+            let valid_primals: Vec<DiscoveredPrimal> = cached_primals
+                .iter()
+                .filter(|cp| cp.is_valid())
+                .map(|cp| cp.primal.clone())
+                .collect();
+
+            if !valid_primals.is_empty() {
+                return Some(valid_primals);
+            }
+        }
+
+        None
+    }
+
+    // Internal: Cache capability results
+    fn cache_capability(&self, capability: SimpleCapability, primals: Vec<DiscoveredPrimal>) {
+        let cached_primals: Vec<CachedPrimal> = primals
+            .into_iter()
+            .map(|primal| CachedPrimal {
+                primal,
+                cached_at: Instant::now(),
+                ttl: self.default_cache_ttl,
+            })
+            .collect();
+
+        self.capability_cache
+            .write()
+            .insert(capability, cached_primals);
+    }
+}
+
+// =============================================================================
+// CONVENIENCE METHODS
+// =============================================================================
+
+impl UniversalAdapter {
+    /// Check if adapter knows about any primals providing capability
+    ///
+    /// **Non-blocking**: Checks cache only, doesn't trigger discovery
+    pub fn has_capability(&self, capability: &SimpleCapability) -> bool {
+        self.get_cached_capability(capability).is_some()
+    }
+
+    /// Get number of known primals providing capability
+    pub fn count_capability_providers(&self, capability: &SimpleCapability) -> usize {
+        self.get_cached_capability(capability)
+            .map(|primals| primals.len())
+            .unwrap_or(0)
+    }
+
+    /// Get all capabilities currently in cache
+    pub fn cached_capabilities(&self) -> Vec<SimpleCapability> {
+        self.capability_cache.read().keys().cloned().collect()
+    }
+}
+
+// =============================================================================
+// TESTS
+// =============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_universal_adapter_creation() {
+        // Set required environment for self-knowledge
+        std::env::set_var("PRIMAL_NAME", "BearDog");
+        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+
+        let adapter = UniversalAdapter::new().await.unwrap();
+
+        assert_eq!(adapter.self_knowledge().my_name(), "BearDog");
+        assert_eq!(adapter.cached_capabilities().len(), 0); // Empty cache initially
+
+        std::env::remove_var("PRIMAL_NAME");
+        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+    }
+
+    #[tokio::test]
+    async fn test_discover_capability_from_environment() {
+        std::env::set_var("PRIMAL_NAME", "BearDog");
+        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        std::env::set_var("PRIMAL_TESTPRIMAL_ADDR", "127.0.0.1:9999");
+        std::env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery");
+
+        let adapter = UniversalAdapter::new().await.unwrap();
+
+        // Discover any capability (will find TestPrimal from env)
+        let primals = adapter
+            .discover_capability(SimpleCapability::Discovery)
+            .await
+            .unwrap();
+
+        assert!(
+            !primals.is_empty(),
+            "Should discover at least one primal from environment"
+        );
+
+        std::env::remove_var("PRIMAL_NAME");
+        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        std::env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
+        std::env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
+    }
+
+    #[tokio::test]
+    async fn test_cache_behavior() {
+        std::env::set_var("PRIMAL_NAME", "BearDog");
+        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        std::env::set_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS", "60");
+
+        // Set up environment to provide a discoverable primal with capabilities
+        std::env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9000");
+        std::env::set_var(
+            "PRIMAL_TESTPRIMAL_CAPABILITIES",
+            "Discovery,SecureTunneling",
+        );
+
+        let adapter = UniversalAdapter::new().await.unwrap();
+
+        // Initially no cached capabilities
+        assert_eq!(adapter.cached_capabilities().len(), 0);
+
+        // Discover triggers caching
+        let result = adapter
+            .discover_capability(SimpleCapability::Discovery)
+            .await;
+        assert!(result.is_ok(), "Discovery should succeed");
+        let primals = result.unwrap();
+        assert_eq!(
+            primals.len(),
+            1,
+            "Should discover 1 primal with Discovery capability"
+        );
+
+        // Now should have cached capability
+        assert_eq!(adapter.cached_capabilities().len(), 1);
+        assert!(adapter.has_capability(&SimpleCapability::Discovery));
+
+        // Clear specific cache
+        adapter.clear_capability_cache(&SimpleCapability::Discovery);
+        assert!(!adapter.has_capability(&SimpleCapability::Discovery));
+
+        std::env::remove_var("PRIMAL_NAME");
+        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        std::env::remove_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS");
+        std::env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
+        std::env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
+    }
+
+    #[test]
+    fn test_self_knowledge_access() {
+        std::env::set_var("PRIMAL_NAME", "TestPrimal");
+        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let adapter = UniversalAdapter::new().await.unwrap();
+
+            let sk = adapter.self_knowledge();
+            assert_eq!(sk.my_name(), "TestPrimal");
+        });
+
+        std::env::remove_var("PRIMAL_NAME");
+        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+    }
+}

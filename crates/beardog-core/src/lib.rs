@@ -114,12 +114,21 @@ pub mod external_functions;
 #[cfg(feature = "mdns")]
 pub mod primal_discovery_mdns;
 pub mod primal_self_knowledge;
+
+pub mod capability_router;
+pub mod primal_discovery;
 pub mod primal_self_knowledge_validation;
 /// Primal sovereignty implementation
 ///
 /// Core implementation of primal sovereignty patterns, ensuring human control
 /// and autonomous operation without corporate dependencies.
 pub mod primal_sovereignty;
+/// Primal self-knowledge pattern (zero hardcoding)
+///
+/// Implements runtime discovery of primal identity, capabilities, and endpoints.
+/// See module documentation for the self-knowledge pattern.
+pub mod self_knowledge;
+pub mod universal_adapter;
 
 // Service discovery for distributed BearDog deployments
 // Note: Service discovery functionality is provided by beardog-adapters
