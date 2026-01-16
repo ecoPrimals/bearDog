@@ -109,12 +109,10 @@ tokio-rustls = "0.26"
 sled = "0.34"
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 
-# HTTP/API
-axum = { version = "0.7", features = ["ws", "macros"] }
-tower = "0.4"
-tower-http = { version = "0.5", features = ["trace", "cors"] }
-hyper = { version = "1.1", features = ["full"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }  # Use rustls instead of OpenSSL
+# HTTP/API (minimized - BTSP evolved to Unix sockets!)
+# axum, tower, tower-http removed - BTSP now uses Unix socket JSON-RPC
+hyper = { version = "1.1", features = ["full"] }  # Still used by integration crate for testing  
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }  # Only for OAuth2 + external HTTP services (not inter-primal!)
 tokio-tungstenite = "0.24"
 serde_yaml = "0.9"
 
@@ -285,12 +283,13 @@ codegen-units = 1
 panic = "abort"
 
 [features]
-# Enable btsp-api by default for examples and integration
-default = ["btsp-api"]
+# BTSP evolved to Unix socket JSON-RPC! HTTP API deprecated.
+# default = ["btsp-api"]  # DEPRECATED: BTSP now uses Unix sockets
+default = []
 # FIDO2 support - currently in Phase 2 development
 fido2 = ["beardog-security/fido2", "dep:hidapi"]
 # mDNS discovery support for primal-to-primal runtime discovery
 mdns = ["beardog-core/mdns"]
-# BTSP HTTP API for Songbird integration
-btsp-api = ["beardog-tunnel/btsp-api"]
-full = ["fido2", "mdns", "btsp-api"]
+# BTSP HTTP API DEPRECATED - evolved to Unix socket JSON-RPC!
+# btsp-api = ["beardog-tunnel/btsp-api"]  # DEPRECATED: Use Unix socket BTSP instead
+full = ["fido2", "mdns"]  # Removed btsp-api - BTSP now pure Unix sockets

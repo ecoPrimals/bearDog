@@ -1,9 +1,19 @@
-// BTSP HTTP API Server
+// ⚠️ **DEPRECATED**: BTSP HTTP API Server
 //!
-//! HTTP/JSON API wrapper for the BTSP provider, enabling remote access
-//! from Songbird orchestrator.
+//! **DEPRECATED**: This module is deprecated and will be removed in a future version.
 //!
-//! ## Architecture
+//! **Migration Path**: Use Unix socket JSON-RPC instead!
+//!
+//! This module provides HTTP/JSON API for BTSP, which has been **DEPRECATED** 
+//! in favor of Unix socket JSON-RPC communication.
+//!
+//! **Evolution**: BTSP now uses Unix socket JSON-RPC 2.0 protocol for inter-primal
+//! communication, aligning with the "Concentrated Gap" strategy where Songbird
+//! is the single HTTP gateway.
+//!
+//! **For Songbird Integration**: Use Unix socket client instead of HTTP client.
+//!
+//! ## Legacy Architecture (DEPRECATED)
 //!
 //! ```text
 //! ┌─────────────────────────────────────────┐
@@ -27,6 +37,12 @@
 //! │   BeardogBtspProvider (Core Logic)      │
 //! └─────────────────────────────────────────┘
 //! ```
+
+#![cfg(feature = "btsp-api")]  // Feature-gated - HTTP BTSP deprecated
+#![deprecated(
+    since = "0.9.0",
+    note = "Use Unix socket JSON-RPC instead - BTSP evolved to Unix sockets for Concentrated Gap strategy"
+)]
 
 use std::net::SocketAddr;
 use std::sync::Arc;

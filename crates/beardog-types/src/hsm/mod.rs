@@ -22,7 +22,8 @@ pub use attestation::{AttestationData, AuditStatistics};
 pub use audit::AuditEvent;
 pub use config::{DatabaseConfig, HsmConfig, KeyStoreConfig};
 pub use crypto::CryptoProvider;
-pub use crypto_providers::{OpenSslCryptoProvider, RingCryptoProvider, RustCryptoProvider};
+pub use crypto_providers::{OpenSslCryptoProvider, RustCryptoProvider};
+// RingCryptoProvider removed (Jan 16, 2026) - evolved to RustCryptoProvider (100% Pure Rust)
 pub use entropy::{EphemeralSeed, HumanEntropyCapabilities, HumanEntropyMethod};
 pub use health::{ProviderHealth, ProviderInfo};
 pub use implementations::{InMemoryStorageBackend, RustSoftwareHsm};

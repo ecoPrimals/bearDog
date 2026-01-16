@@ -59,7 +59,7 @@ hmac = "0.12"  # Pure Rust HMAC for genetic crypto
 blake3 = "1.0"
 argon2 = "0.5"
 # openssl = "0.10"  # REMOVED: Using 100% pure Rust crypto (RustCrypto)
-ring = { version = "0.17", optional = true }  # DEPRECATED: Only for legacy ring_crypto provider
+# ring = "0.17"  # REMOVED (Jan 16, 2026): Evolved to RustCrypto (100% Pure Rust!)
 hex = "0.4"
 hkdf = "0.12"
 arrayref = "0.3"
@@ -73,11 +73,11 @@ async-trait = "0.1"
 ctap-hid-fido2 = { version = "3.5", optional = true }
 hidapi = { version = "2.4", optional = true }
 
-# BTSP HTTP API dependencies (optional)
-axum = { version = "0.7", optional = true }
-tower = { version = "0.4", optional = true }
-tower-http = { version = "0.5", features = ["trace", "cors"], optional = true }
-base64 = "0.21"  # Required for Unix socket IPC (no longer optional)
+# BTSP HTTP API dependencies (DEPRECATED - evolved to Unix socket JSON-RPC!)
+# axum = { version = "0.7", optional = true }  # REMOVED: BTSP now uses Unix sockets
+# tower = { version = "0.4", optional = true }  # REMOVED: BTSP now uses Unix sockets  
+# tower-http = { version = "0.5", features = ["trace", "cors"], optional = true }  # REMOVED
+base64 = "0.21"  # Required for Unix socket IPC
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -94,7 +94,7 @@ solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
 ecosystem = []
-btsp-api = ["axum", "tower", "tower-http"]  # base64 is now always required
+# btsp-api = ["axum", "tower", "tower-http"]  # DEPRECATED: BTSP evolved to Unix socket JSON-RPC
 default = []
 android_native = []
 pixel8_optimizations = [ "android_native",]

@@ -7,13 +7,12 @@ use crate::BearDogError;
 /// Cryptographic Provider Trait
 ///
 /// Defines the interface for cryptographic operations that can be backed
-/// by different implementations (Ring, RustCrypto, OpenSSL, etc.).
+/// by different implementations (RustCrypto, OpenSSL, etc.).
 ///
 /// # Implementations
 ///
-/// - **RustCryptoProvider**: Pure Rust cryptography using RustCrypto libraries
-/// - **RingCryptoProvider**: Ring library with hardware acceleration
-/// - **OpenSslCryptoProvider**: OpenSSL library integration
+/// - **RustCryptoProvider**: Pure Rust cryptography using RustCrypto libraries (✅ RECOMMENDED)
+/// - **OpenSslCryptoProvider**: OpenSSL library integration (for compatibility)
 ///
 /// # Thread Safety
 ///
