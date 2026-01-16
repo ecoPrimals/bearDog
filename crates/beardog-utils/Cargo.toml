@@ -51,9 +51,9 @@ workspace = true
 [dependencies.sha2]
 workspace = true
 
-# Crypto dependencies for migration module
-[dependencies.ring]
-version = "0.17"
+# Crypto dependencies (100% Pure Rust!)
+[dependencies.pbkdf2]
+version = "0.12"
 
 [dependencies.hmac]
 version = "0.12"

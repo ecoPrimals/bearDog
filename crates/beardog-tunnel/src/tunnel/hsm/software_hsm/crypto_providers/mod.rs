@@ -1,7 +1,7 @@
 pub mod factory;
-pub mod genetic_crypto;  // RECOMMENDED: 100% Pure Rust, zero FFI
-// openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, Ring, RustCrypto)
-pub mod ring_crypto;
+pub mod genetic_crypto; // RECOMMENDED: 100% Pure Rust, zero FFI
+                        // openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, RustCrypto)
+// pub mod ring_crypto;  // REMOVED: Has C dependencies, use RustCrypto instead (100% Pure Rust!)
 pub mod rust_crypto;
 
 #[cfg(test)]
@@ -17,9 +17,9 @@ pub use factory::{
 pub use beardog_types::hsm::CryptoProvider;
 
 // ✅ Export all crypto provider implementations (ordered by recommendation)
-pub use genetic_crypto::GeneticCryptoProvider;  // RECOMMENDED (100% Pure Rust)
-// OpenSslCryptoProvider removed - pure Rust alternatives available
-pub use ring_crypto::RingCryptoProvider;
+pub use genetic_crypto::GeneticCryptoProvider; // RECOMMENDED (100% Pure Rust)
+                                               // OpenSslCryptoProvider removed - pure Rust alternatives available
+// pub use ring_crypto::RingCryptoProvider;  // REMOVED: C dependencies, use RustCryptoProvider instead!
 pub use rust_crypto::RustCryptoProvider;
 #[cfg(test)]
 mod tests {
@@ -96,15 +96,16 @@ mod tests {
     #[test]
     fn test_capabilities_comparison() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
-        let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
+        // Ring removed - 100% Pure Rust now!
+        // let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
         let openssl_caps = get_crypto_provider_capabilities(&CryptoBackend::OpenSsl);
 
         assert!(rust_caps.supports_aes);
-        assert!(ring_caps.supports_aes);
+        // assert!(ring_caps.supports_aes);
         assert!(openssl_caps.supports_aes);
 
         assert!(!rust_caps.supports_hardware_acceleration);
-        assert!(ring_caps.supports_hardware_acceleration);
+        // assert!(ring_caps.supports_hardware_acceleration);
         assert!(openssl_caps.supports_hardware_acceleration);
         Ok(())
     }
@@ -113,20 +114,25 @@ mod tests {
     fn test_backend_utilities() -> Result<(), BearDogError> {
         // Test GeneticCrypto is supported (the new default)
         assert!(is_crypto_backend_supported(&CryptoBackend::GeneticCrypto));
-        assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
-        
+        // Ring removed - 100% Pure Rust now!
+        // assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
+
         // Verify GeneticCrypto is now the recommended backend (100% Pure Rust!)
-        assert_eq!(get_recommended_crypto_backend(), CryptoBackend::GeneticCrypto);
-        
+        assert_eq!(
+            get_recommended_crypto_backend(),
+            CryptoBackend::GeneticCrypto
+        );
+
         // Test backend name resolution
         assert_eq!(
             get_crypto_backend_by_name("genetic"),
             Some(CryptoBackend::GeneticCrypto)
         );
-        assert_eq!(
-            get_crypto_backend_by_name("ring"),
-            Some(CryptoBackend::Ring)
-        );
+        // Ring removed!
+        // assert_eq!(
+        //     get_crypto_backend_by_name("ring"),
+        //     Some(CryptoBackend::Ring)
+        // );
         assert_eq!(get_crypto_backend_by_name("unknown"), None);
         Ok(())
     }

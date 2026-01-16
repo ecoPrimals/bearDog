@@ -5,9 +5,10 @@
 use crate::tunnel::hsm::manager::HsmProvider;
 use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    CryptoProvider, RingCryptoProvider, RustCryptoProvider,
+    CryptoProvider, RustCryptoProvider,
 };
-// OpenSslCryptoProvider removed - pure Rust only
+// RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust!)
+// OpenSslCryptoProvider removed - evolved to pure Rust only
 use crate::tunnel::hsm::types::config::{CryptoBackendType, SoftwareHsmConfig};
 use crate::tunnel::hsm::types::KeyType;
 use crate::tunnel::hsm::GenerateKeyRequest;
@@ -25,13 +26,7 @@ async fn test_rustcrypto_provider_initialization() -> Result<(), BearDogError> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_ring_provider_initialization() -> Result<(), BearDogError> {
-    let provider = RingCryptoProvider::new()?;
-    let result = provider.initialize().await;
-    assert!(result.is_ok());
-    Ok(())
-}
+// Ring test removed - evolved to RustCrypto (100% Pure Rust!)
 
 // OpenSSL tests removed - pure Rust only
 

@@ -32,9 +32,8 @@ use beardog_errors::BearDogError;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hmac::{Hmac, Mac};
 use rand::{thread_rng, RngCore, distributions::Alphanumeric, Rng};
-use ring::{pbkdf2, rand::{SecureRandom, SystemRandom}};
+use pbkdf2;
 use sha2::{Digest, Sha256};
-use std::num::NonZeroU32;
 use tracing::{debug, info, warn};
 
 type HmacSha256 = Hmac<Sha256>;
@@ -245,7 +244,7 @@ impl UnifiedBearDogCrypto {
     // KEY DERIVATION - PBKDF2 and Argon2
     // =============================================================================
 
-    /// Derive key using PBKDF2-HMAC-SHA256
+    /// Derive key using PBKDF2-HMAC-SHA256 (100% Pure Rust!)
     pub fn derive_key_pbkdf2(
         password: &[u8],
         salt: &[u8],
@@ -257,16 +256,7 @@ impl UnifiedBearDogCrypto {
         }
 
         let mut key = vec![0u8; key_length];
-        let iterations_nonzero = NonZeroU32::new(iterations)
-            .ok_or_else(|| BearDogError::validation("PBKDF2 iterations must be non-zero"))?;
-        
-        pbkdf2::derive(
-            pbkdf2::PBKDF2_HMAC_SHA256,
-            iterations_nonzero,
-            salt,
-            password,
-            &mut key,
-        );
+        pbkdf2::pbkdf2_hmac::<Sha256>(password, salt, iterations, &mut key);
         Ok(key)
     }
 

@@ -1,3 +1,17 @@
+//! ⚠️ **DEPRECATED**: This module uses the `ring` crate which has C dependencies.
+//!
+//! **Migration Path**: Use `RustCryptoProvider` instead (100% Pure Rust!)
+//!
+//! This module will be removed in a future version.
+//! The RustCrypto provider provides equivalent functionality with:
+//! - ✅ 100% Pure Rust (no C dependencies)
+//! - ✅ ARM cross-compilation support (no C compiler needed)
+//! - ✅ WebAssembly support
+//! - ✅ Easier auditing
+//! - ✅ TRUE PRIMAL alignment
+//!
+//! See `rustcrypto.rs` for the replacement implementation.
+
 use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::KeyType;
 use arrayref::array_ref;
@@ -9,6 +23,14 @@ use std::sync::Arc;
 use tracing::{debug, info};
 
 /// Ring crypto provider with hardware acceleration
+///
+/// ⚠️ **DEPRECATED**: Use `RustCryptoProvider` instead (100% Pure Rust!)
+///
+/// This provider will be removed in a future version in favor of RustCrypto.
+#[deprecated(
+    since = "0.9.0",
+    note = "Use RustCryptoProvider instead - ring has C dependencies, blocks ARM deployment"
+)]
 #[derive(Debug, Clone)]
 pub struct RingCryptoProvider {
     rng: Arc<SystemRandom>,

@@ -112,9 +112,10 @@ pub use self::audit::{AuditLogEntry, AuditLogFilter, DefaultAuditLogger, Persist
 pub use self::crypto_providers::rust_crypto::RustCryptoProvider;
 pub use self::crypto_providers::{
     create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
-    get_supported_storage_backends, CryptoProviderCapabilities, RingCryptoProvider,
+    get_supported_storage_backends, CryptoProviderCapabilities,
 };
-// OpenSslCryptoProvider removed - pure Rust alternatives available
+// RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
+// OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 pub use self::health::SimpleHealthSummary;
 pub use self::keystore::KeyStoreStatistics;
 // Note: These memory types don't exist yet - commented out

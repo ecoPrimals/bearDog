@@ -34,7 +34,8 @@
 
 use beardog_errors::BearDogError;
 use hmac::{Hmac, Mac};
-use ring::rand::{SecureRandom, SystemRandom};
+use pbkdf2;
+use rand::RngCore;
 use sha2::{Digest, Sha256};
 type HmacSha256 = Hmac<Sha256>;
 
@@ -57,19 +58,11 @@ type HmacSha256 = Hmac<Sha256>;
     note = "Use beardog_security::crypto_utils::BearDogCrypto::generate_secure_random instead"
 )]
 pub fn secure_random_bytes(size: usize) -> Vec<u8> {
-    let rng = SystemRandom::new();
+    // 100% Pure Rust - using rand crate with OsRng
+    let mut rng = rand::rngs::OsRng;
     let mut bytes = vec![0u8; size];
-
-    match rng.fill(&mut bytes) {
-        Ok(()) => bytes,
-        Err(_) => {
-
-            use rand::RngCore;
-            let mut rng = rand::thread_rng();
-            rng.fill_bytes(&mut bytes);
-            bytes
-        }
-    }
+    rng.fill_bytes(&mut bytes);
+    bytes
 }
 
 /// Generate cryptographic salt - DEPRECATED
@@ -230,23 +223,14 @@ pub fn pbkdf2_hmac_sha256(
     iterations: u32,
     output_len: usize,
 ) -> Result<Vec<u8>, BearDogError> {
-    use ring::pbkdf2;
+    // 100% Pure Rust - using pbkdf2 crate
     if iterations == 0 {
         return Err(BearDogError::Crypto {
             message: "PBKDF2 iterations must be non-zero".to_string(),
         });
     }
     let mut output = vec![0u8; output_len];
-    let iterations = std::num::NonZeroU32::new(iterations).ok_or_else(|| BearDogError::Crypto {
-        message: "PBKDF2 iterations must be non-zero".to_string(),
-    })?;
-    pbkdf2::derive(
-        pbkdf2::PBKDF2_HMAC_SHA256,
-        iterations,
-        salt,
-        password,
-        &mut output,
-    );
+    pbkdf2::pbkdf2_hmac::<Sha256>(password, salt, iterations, &mut output);
     Ok(output)
 }
 

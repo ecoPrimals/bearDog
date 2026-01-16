@@ -80,12 +80,11 @@ pub use beardog_types::hsm::{
     KeyStoreConfig, ProviderHealth, ProviderInfo, RustSoftwareHsm,
 };
 
-// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers and canonical trait (pure Rust only)
+// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers and canonical trait (100% Pure Rust!)
 pub use beardog_types::hsm::CryptoProvider; // Canonical trait
-pub use software_hsm::crypto_providers::{
-    RingCryptoProvider, RustCryptoProvider,
-};
-// OpenSslCryptoProvider removed - pure Rust alternatives available
+pub use software_hsm::crypto_providers::RustCryptoProvider;
+// RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
+// OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 pub use types::{
     AuthenticationMethod, HsmCapability, HsmKey, HsmKeyInfo, HsmKeyMetadata, HsmOperation, HsmTier,
     KeyType, SecurityLevel,

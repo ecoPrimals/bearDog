@@ -58,8 +58,8 @@ sha3 = "0.10"  # For entropy mixing (evolved from mock)
 hmac = "0.12"  # Pure Rust HMAC for genetic crypto
 blake3 = "1.0"
 argon2 = "0.5"
-# openssl = "0.10"  # REMOVED: Using pure Rust crypto (RustCrypto, ring)
-ring = "0.17"
+# openssl = "0.10"  # REMOVED: Using 100% pure Rust crypto (RustCrypto)
+ring = { version = "0.17", optional = true }  # DEPRECATED: Only for legacy ring_crypto provider
 hex = "0.4"
 hkdf = "0.12"
 arrayref = "0.3"

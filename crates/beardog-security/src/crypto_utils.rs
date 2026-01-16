@@ -28,9 +28,8 @@ use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hex;
 use hmac::{Hmac, Mac};
 use rand::{thread_rng, Rng, RngCore};
-use ring::pbkdf2;
+use pbkdf2;
 use sha2::{Digest, Sha256};
-use std::num::NonZeroU32;
 use subtle::ConstantTimeEq;
 use zeroize::Zeroize;
 
@@ -123,17 +122,13 @@ impl BearDogCrypto {
         iterations: u32,
         key_length: usize,
     ) -> Result<Vec<u8>, BearDogError> {
-        let mut key = vec![0u8; key_length];
-        let iterations = NonZeroU32::new(iterations)
-            .ok_or_else(|| BearDogError::invalid_input("Iterations must be non-zero"))?;
+        if iterations == 0 {
+            return Err(BearDogError::invalid_input("Iterations must be non-zero"));
+        }
 
-        pbkdf2::derive(
-            pbkdf2::PBKDF2_HMAC_SHA256,
-            iterations,
-            salt,
-            password,
-            &mut key,
-        );
+        let mut key = vec![0u8; key_length];
+        // 100% Pure Rust PBKDF2-HMAC-SHA256
+        pbkdf2::pbkdf2_hmac::<Sha256>(password, salt, iterations, &mut key);
 
         Ok(key)
     }

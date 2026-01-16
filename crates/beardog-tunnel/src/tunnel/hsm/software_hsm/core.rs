@@ -13,12 +13,12 @@ use crate::tunnel::hsm::crypto::{
     RustCryptoProvider, SigningOptions, VerificationOptions,
 };
 use crate::tunnel::hsm::manager::HsmProvider;
-// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers (pure Rust only)
+// ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers (100% Pure Rust!)
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    GeneticCryptoProvider, RingCryptoProvider,
-    RustCryptoProvider as SoftwareRustCryptoProvider,
+    GeneticCryptoProvider, RustCryptoProvider as SoftwareRustCryptoProvider,
 };
-// OpenSslCryptoProvider removed - pure Rust alternatives available
+// RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
+// OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
 };
@@ -215,12 +215,16 @@ impl RustSoftwareHsm {
                 as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
             CryptoBackendType::RustCrypto => Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
                 as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
-            CryptoBackendType::Ring => Ok(Arc::new(RingCryptoProvider::new()?)
-                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
+            CryptoBackendType::Ring => {
+                // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready!)
+                tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
+                Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
+                    as Arc<dyn CryptoProvider<KeyType> + Send + Sync>)
+            }
             CryptoBackendType::OpenSsl => {
-                // OpenSSL removed - fallback to Ring (pure Rust, similar capabilities)
-                tracing::warn!("OpenSSL backend not available - using Ring instead");
-                Ok(Arc::new(RingCryptoProvider::new()?)
+                // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty!)
+                tracing::warn!("OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
+                Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
                     as Arc<dyn CryptoProvider<KeyType> + Send + Sync>)
             }
         }

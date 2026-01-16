@@ -83,8 +83,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 async-trait = "0.1"
 futures = "0.3"
 
-# Cryptography
-ring = "0.17"
+# Cryptography (100% Pure Rust!)
 ed25519-dalek = "2.1"
 x25519-dalek = "2.0"
 blake3 = "1.5"
@@ -244,6 +243,7 @@ ed25519-dalek = { workspace = true }
 base64 = { workspace = true }  # For E2E tests
 tempfile = "3.8"  # For creating temporary Unix sockets in tests
 uuid = { workspace = true }  # For chaos tests
+reqwest = { workspace = true }  # For integration tests
 
 [[test]]
 name = "chaos"
