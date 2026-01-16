@@ -5,7 +5,7 @@
 use crate::auth::types::{NodeInfo, NodeRegistry};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use std::sync::RwLock;
+use parking_lot::RwLock;
 
 pub struct InMemoryNodeRegistry {
     nodes: RwLock<HashMap<String, NodeInfo>>,
@@ -30,10 +30,8 @@ impl InMemoryNodeRegistry {
 impl NodeRegistry for InMemoryNodeRegistry {
     /// Gets `node_info`
     fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError> {
-        let nodes = self
-            .nodes
-            .read()
-            .map_err(|e| BearDogError::internal(format!("Failed to acquire read lock: {e}")))?;
+        // parking_lot::RwLock never panics - cleaner API!
+        let nodes = self.nodes.read();
 
         nodes
             .get(node_id)
@@ -42,10 +40,8 @@ impl NodeRegistry for InMemoryNodeRegistry {
     }
 
     fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError> {
-        let mut nodes = self
-            .nodes
-            .write()
-            .map_err(|e| BearDogError::internal(format!("Failed to acquire write lock: {e}")))?;
+        // parking_lot::RwLock never panics - cleaner API!
+        let mut nodes = self.nodes.write();
 
         nodes.insert(node_info.node_id.clone(), node_info);
         Ok(())
@@ -59,10 +55,8 @@ impl NodeRegistry for InMemoryNodeRegistry {
 
     /// Updates `trust_level`
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError> {
-        let mut nodes = self
-            .nodes
-            .write()
-            .map_err(|e| BearDogError::internal(format!("Failed to acquire write lock: {e}")))?;
+        // parking_lot::RwLock never panics - cleaner API!
+        let mut nodes = self.nodes.write();
 
         if let Some(node) = nodes.get_mut(node_id) {
             node.trust_level = trust_level;

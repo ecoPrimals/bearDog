@@ -135,7 +135,7 @@ parking_lot = "0.12"
 base64 = "0.22"
 hex = "0.4"
 bcrypt = "0.15"
-jsonwebtoken = "9.2"
+# JWT: Implemented using RustCrypto (hmac + sha2 + base64) - 100% Pure Rust!
 
 # Configuration
 config = "0.14"

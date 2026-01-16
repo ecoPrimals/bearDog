@@ -11,7 +11,7 @@ use serde_json::Value;
 #[derive(Debug, Clone)]
     client: reqwest::Client,
 
-    verification_cache: std::sync::RwLock<HashMap<String, (bool, std::time::Instant)>>,
+    verification_cache: parking_lot::RwLock<HashMap<String, (bool, std::time::Instant)>>,
 }
 impl NodeVerification {
 
@@ -25,7 +25,7 @@ impl NodeVerification {
         Self {
             config,
             client,
-            verification_cache: std::sync::RwLock::new(HashMap::with_capacity(16)),
+            verification_cache: parking_lot::RwLock::new(HashMap::with_capacity(16)),
         }
     }
 

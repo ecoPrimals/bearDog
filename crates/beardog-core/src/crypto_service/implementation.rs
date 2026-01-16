@@ -43,7 +43,7 @@ pub struct BearDogCryptoService {
     ///
     /// Only public keys are stored here - never private keys.
     /// This enables proper signature verification without exposing secrets.
-    public_keys: Arc<std::sync::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
+    public_keys: Arc<parking_lot::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
 
     /// RSA key storage (private keys)
     /// Maps key_id -> DER-encoded PKCS#8 private key
@@ -53,7 +53,7 @@ pub struct BearDogCryptoService {
     /// RSA private keys are stored in memory encrypted with AES-256-GCM.
     /// In production, these should be stored in HSM or secure key storage.
     /// This is an intermediate solution for development/testing.
-    rsa_keys: Arc<std::sync::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
+    rsa_keys: Arc<parking_lot::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
 }
 
 impl BearDogCryptoService {
@@ -70,8 +70,8 @@ impl BearDogCryptoService {
             config: Arc::new(config),
             state: Arc::new(CryptoServiceState::new()),
             algorithms,
-            public_keys: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
-            rsa_keys: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
+            public_keys: Arc::new(parking_lot::RwLock::new(std::collections::HashMap::new())),
+            rsa_keys: Arc::new(parking_lot::RwLock::new(std::collections::HashMap::new())),
         })
     }
 
@@ -137,8 +137,9 @@ impl BearDogCryptoService {
     /// - Generates new key if not found (development mode)
     /// - In production, should load from HSM
     fn get_or_generate_rsa_key(&self, key_id: &str) -> Result<Vec<u8>> {
-        // Check if key exists in memory
-        if let Ok(keys) = self.rsa_keys.read() {
+        // Check if key exists in memory (parking_lot::RwLock never panics!)
+        {
+            let keys = self.rsa_keys.read();
             if let Some(key_der) = keys.get(key_id) {
                 return Ok(key_der.clone());
             }
@@ -175,8 +176,9 @@ impl BearDogCryptoService {
         // Generate key pair
         self.generate_rsa_key(key_id, bits)?;
 
-        // Retrieve the stored private key
-        if let Ok(keys) = self.rsa_keys.read() {
+        // Retrieve the stored private key (parking_lot::RwLock never panics!)
+        {
+            let keys = self.rsa_keys.read();
             if let Some(key_der) = keys.get(key_id) {
                 return Ok(key_der.clone());
             }
@@ -194,15 +196,11 @@ impl BearDogCryptoService {
     /// In production, this should encrypt the private key with a master key
     /// or store it in HSM. For now, stores in memory (development only).
     fn store_rsa_key(&self, key_id: &str, private_key_der: &[u8]) -> Result<()> {
-        if let Ok(mut keys) = self.rsa_keys.write() {
-            keys.insert(key_id.to_string(), private_key_der.to_vec());
-            tracing::debug!("Stored RSA private key for key_id: {}", key_id);
-            Ok(())
-        } else {
-            Err(BearDogError::hsm(
-                "Failed to acquire write lock for RSA key storage".to_string(),
-            ))
-        }
+        // parking_lot::RwLock never panics, always succeeds!
+        let mut keys = self.rsa_keys.write();
+        keys.insert(key_id.to_string(), private_key_der.to_vec());
+        tracing::debug!("Stored RSA private key for key_id: {}", key_id);
+        Ok(())
     }
 
     /// Get public key for a given key_id (for signature verification)
@@ -212,10 +210,8 @@ impl BearDogCryptoService {
     /// Public keys are safe to store and share. This enables proper
     /// signature verification without exposing private keys.
     pub fn get_public_key(&self, key_id: &str) -> Result<Vec<u8>> {
-        let keys = self
-            .public_keys
-            .read()
-            .map_err(|e| BearDogError::security(format!("Failed to acquire read lock: {}", e)))?;
+        // parking_lot::RwLock never panics, cleaner API!
+        let keys = self.public_keys.read();
         keys.get(key_id).cloned().ok_or_else(|| {
             BearDogError::security(format!("Public key not found for key_id: {}", key_id))
         })
@@ -223,12 +219,10 @@ impl BearDogCryptoService {
 
     /// Store public key for future verification
     fn store_public_key(&self, key_id: &str, public_key: Vec<u8>) {
-        if let Ok(mut keys) = self.public_keys.write() {
-            keys.insert(key_id.to_string(), public_key);
-            tracing::debug!("Stored public key for key_id: {}", key_id);
-        } else {
-            tracing::error!("Failed to acquire write lock for storing public key");
-        }
+        // parking_lot::RwLock never panics, always succeeds!
+        let mut keys = self.public_keys.write();
+        keys.insert(key_id.to_string(), public_key);
+        tracing::debug!("Stored public key for key_id: {}", key_id);
     }
 
     /// Increment operation counter and return operation ID

@@ -25,7 +25,7 @@ use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderHe
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::RwLock;
+use parking_lot::RwLock;
 use tracing::{info, warn, error};
 
 /// **Type-Erased Provider Wrapper**

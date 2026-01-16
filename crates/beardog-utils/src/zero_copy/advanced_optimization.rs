@@ -83,7 +83,7 @@ impl StringInterner {
     /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            interned_strings: std::sync::RwLock::new(HashMap::with_capacity(16)),
+            interned_strings: parking_lot::RwLock::new(HashMap::with_capacity(16)),
         }
     }
 

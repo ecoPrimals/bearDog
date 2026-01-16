@@ -6,15 +6,26 @@
 
 use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, OnceLock};
 use tokio::sync::RwLock;
 
+// HMAC-SHA256 type alias for JWT signatures (Pure Rust!)
+type HmacSha256 = Hmac<Sha256>;
+
 // ============================================================================
 // JWT Token Management
 // ============================================================================
+
+/// JWT Header structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct JwtHeader {
+    alg: String,
+    typ: String,
+}
 
 /// JWT Claims structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,13 +41,13 @@ pub struct JwtClaims {
     /// Audience
     pub aud: String,
     /// Custom claims (roles, permissions, etc.)
+    #[serde(flatten)]
     pub custom: HashMap<String, serde_json::Value>,
 }
 
-/// JWT Token Manager
+/// JWT Token Manager (Pure Rust implementation using RustCrypto!)
 pub struct JwtTokenManager {
-    encoding_key: EncodingKey,
-    decoding_key: DecodingKey,
+    secret: Vec<u8>,
     issuer: String,
     audience: String,
     default_expiry: Duration,
@@ -53,15 +64,45 @@ impl JwtTokenManager {
     #[must_use]
     pub fn new(secret: &[u8], issuer: String, audience: String, expiry_hours: i64) -> Self {
         Self {
-            encoding_key: EncodingKey::from_secret(secret),
-            decoding_key: DecodingKey::from_secret(secret),
+            secret: secret.to_vec(),
             issuer,
             audience,
             default_expiry: Duration::hours(expiry_hours),
         }
     }
 
-    /// Generate a JWT token for a user
+    /// Base64 URL-safe encode (JWT standard)
+    fn base64url_encode(data: &[u8]) -> String {
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+        URL_SAFE_NO_PAD.encode(data)
+    }
+
+    /// Base64 URL-safe decode (JWT standard)
+    fn base64url_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+        URL_SAFE_NO_PAD
+            .decode(data)
+            .map_err(|e| BearDogError::security(format!("Base64 decode failed: {e}")))
+    }
+
+    /// Sign data with HMAC-SHA256 (Pure Rust!)
+    fn sign(&self, data: &str) -> Result<Vec<u8>, BearDogError> {
+        let mut mac = HmacSha256::new_from_slice(&self.secret)
+            .map_err(|e| BearDogError::security(format!("HMAC initialization failed: {e}")))?;
+        mac.update(data.as_bytes());
+        Ok(mac.finalize().into_bytes().to_vec())
+    }
+
+    /// Verify HMAC-SHA256 signature (Pure Rust!)
+    fn verify(&self, data: &str, signature: &[u8]) -> Result<(), BearDogError> {
+        let mut mac = HmacSha256::new_from_slice(&self.secret)
+            .map_err(|e| BearDogError::security(format!("HMAC initialization failed: {e}")))?;
+        mac.update(data.as_bytes());
+        mac.verify_slice(signature)
+            .map_err(|_| BearDogError::security("JWT signature verification failed".to_string()))
+    }
+
+    /// Generate a JWT token for a user (Pure Rust implementation!)
     ///
     /// # Arguments
     /// * `user_id` - User identifier
@@ -80,7 +121,14 @@ impl JwtTokenManager {
         let now = Utc::now();
         let expiry = now + self.default_expiry;
 
-        let claims = JwtClaims {
+        // Create JWT header
+        let header = JwtHeader {
+            alg: "HS256".to_string(),
+            typ: "JWT".to_string(),
+        };
+
+        // Create JWT claims with custom fields
+        let mut claims = JwtClaims {
             sub: user_id.to_string(),
             iat: now.timestamp(),
             exp: expiry.timestamp(),
@@ -89,11 +137,28 @@ impl JwtTokenManager {
             custom: custom_claims,
         };
 
-        encode(&Header::default(), &claims, &self.encoding_key)
-            .map_err(|e| BearDogError::security(format!("JWT token generation failed: {e}")))
+        // Serialize header and claims
+        let header_json = serde_json::to_string(&header)
+            .map_err(|e| BearDogError::security(format!("Failed to serialize header: {e}")))?;
+        let claims_json = serde_json::to_string(&claims)
+            .map_err(|e| BearDogError::security(format!("Failed to serialize claims: {e}")))?;
+
+        // Base64url encode header and claims
+        let header_b64 = Self::base64url_encode(header_json.as_bytes());
+        let claims_b64 = Self::base64url_encode(claims_json.as_bytes());
+
+        // Create signing input
+        let signing_input = format!("{}.{}", header_b64, claims_b64);
+
+        // Sign with HMAC-SHA256 (Pure Rust!)
+        let signature = self.sign(&signing_input)?;
+        let signature_b64 = Self::base64url_encode(&signature);
+
+        // Create final JWT token
+        Ok(format!("{}.{}", signing_input, signature_b64))
     }
 
-    /// Validate and decode a JWT token
+    /// Validate and decode a JWT token (Pure Rust implementation!)
     ///
     /// # Arguments
     /// * `token` - JWT token string to validate
@@ -104,24 +169,80 @@ impl JwtTokenManager {
     ///
     /// Returns an error if the operation fails.
     pub fn validate_token(&self, token: &str) -> Result<JwtClaims, BearDogError> {
-        let mut validation = Validation::new(Algorithm::HS256);
-        validation.set_issuer(&[&self.issuer]);
-        validation.set_audience(&[&self.audience]);
+        // Split token into parts
+        let parts: Vec<&str> = token.split('.').collect();
+        if parts.len() != 3 {
+            return Err(BearDogError::security(
+                "Invalid JWT format: expected 3 parts".to_string(),
+            ));
+        }
 
-        decode::<JwtClaims>(token, &self.decoding_key, &validation)
-            .map(|data| data.claims)
-            .map_err(|e| BearDogError::security(format!("JWT token validation failed: {e}")))
+        let header_b64 = parts[0];
+        let claims_b64 = parts[1];
+        let signature_b64 = parts[2];
+
+        // Verify signature (Pure Rust!)
+        let signing_input = format!("{}.{}", header_b64, claims_b64);
+        let signature = Self::base64url_decode(signature_b64)?;
+        self.verify(&signing_input, &signature)?;
+
+        // Decode and parse header
+        let header_json = Self::base64url_decode(header_b64)?;
+        let header: JwtHeader = serde_json::from_slice(&header_json)
+            .map_err(|e| BearDogError::security(format!("Failed to parse header: {e}")))?;
+
+        // Verify algorithm
+        if header.alg != "HS256" {
+            return Err(BearDogError::security(format!(
+                "Unsupported algorithm: {}",
+                header.alg
+            )));
+        }
+
+        // Decode and parse claims
+        let claims_json = Self::base64url_decode(claims_b64)?;
+        let claims: JwtClaims = serde_json::from_slice(&claims_json)
+            .map_err(|e| BearDogError::security(format!("Failed to parse claims: {e}")))?;
+
+        // Verify issuer
+        if claims.iss != self.issuer {
+            return Err(BearDogError::security(format!(
+                "Invalid issuer: expected {}, got {}",
+                self.issuer, claims.iss
+            )));
+        }
+
+        // Verify audience
+        if claims.aud != self.audience {
+            return Err(BearDogError::security(format!(
+                "Invalid audience: expected {}, got {}",
+                self.audience, claims.aud
+            )));
+        }
+
+        // Verify expiration
+        let now = Utc::now().timestamp();
+        if claims.exp < now {
+            return Err(BearDogError::security("Token has expired".to_string()));
+        }
+
+        Ok(claims)
     }
 
     /// Extract user ID from token without full validation (for logging/debugging)
     #[must_use]
     pub fn extract_user_id(&self, token: &str) -> Option<String> {
-        let mut validation = Validation::new(Algorithm::HS256);
-        validation.insecure_disable_signature_validation();
+        // Split token and decode claims (skip signature verification for debugging)
+        let parts: Vec<&str> = token.split('.').collect();
+        if parts.len() != 3 {
+            return None;
+        }
 
-        decode::<JwtClaims>(token, &self.decoding_key, &validation)
-            .ok()
-            .map(|data| data.claims.sub)
+        let claims_b64 = parts[1];
+        let claims_json = Self::base64url_decode(claims_b64).ok()?;
+        let claims: JwtClaims = serde_json::from_slice(&claims_json).ok()?;
+
+        Some(claims.sub)
     }
 }
 

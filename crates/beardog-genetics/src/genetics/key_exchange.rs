@@ -88,7 +88,7 @@ impl Default for KeyExchangeConfig {
 pub struct GeneticKeyExchange {
     config: KeyExchangeConfig,
     /// Active key lineages (`peer_id` -> `key_lineage`)
-    lineages: std::sync::RwLock<HashMap<String, KeyLineage>>,
+    lineages: parking_lot::RwLock<HashMap<String, KeyLineage>>,
     /// Key generation counter for unique IDs
     key_counter: std::sync::atomic::AtomicU64,
 }
@@ -222,7 +222,7 @@ impl GeneticKeyExchange {
 
         Ok(Self {
             config,
-            lineages: std::sync::RwLock::new(HashMap::new()),
+            lineages: parking_lot::RwLock::new(HashMap::new()),
             key_counter: std::sync::atomic::AtomicU64::new(0),
         })
     }
@@ -336,10 +336,8 @@ impl GeneticKeyExchange {
     ///
     /// Returns error if lineage lookup fails.
     pub fn should_evolve(&self, peer_id: &str) -> Result<bool, BearDogError> {
-        let lineages = self
-            .lineages
-            .read()
-            .map_err(|e| BearDogError::internal(format!("Failed to acquire lineage lock: {e}")))?;
+        // parking_lot::RwLock never panics - cleaner API!
+        let lineages = self.lineages.read();
 
         let Some(lineage) = lineages.get(peer_id) else {
             return Ok(false);
@@ -438,10 +436,8 @@ impl GeneticKeyExchange {
         peer_id: &str,
         new_lineage: &KeyLineage,
     ) -> Result<KeyLineage, BearDogError> {
-        let mut lineages = self
-            .lineages
-            .write()
-            .map_err(|e| BearDogError::internal(format!("Failed to acquire lineage lock: {e}")))?;
+        // parking_lot::RwLock never panics - cleaner API!
+        let mut lineages = self.lineages.write();
 
         // Update or insert lineage
         if let Some(existing) = lineages.get_mut(peer_id) {

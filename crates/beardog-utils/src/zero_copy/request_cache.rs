@@ -3,7 +3,7 @@
 // This module provides request caching using safe Rust patterns.
 
 use std::collections::HashMap;
-use std::sync::RwLock;
+use parking_lot::RwLock;
 use std::time::{Duration, Instant};
 
 /// Request cache entry
@@ -41,19 +41,15 @@ impl<T: Clone> RequestCache<T> {
             ttl: self.default_ttl,
         };
 
-        let mut cache = self.cache.write().unwrap_or_else(|poisoned| {
-            tracing::warn!("Request cache lock poisoned on write, recovering");
-            poisoned.into_inner()
-        });
+        // parking_lot::RwLock never panics - cleaner API!
+        let mut cache = self.cache.write();
         cache.insert(key, entry);
     }
 
     /// Get entry from cache
     pub fn get(&self, key: &str) -> Option<T> {
-        let cache = self.cache.read().unwrap_or_else(|poisoned| {
-            tracing::warn!("Request cache lock poisoned on read, recovering");
-            poisoned.into_inner()
-        });
+        // parking_lot::RwLock never panics - cleaner API!
+        let cache = self.cache.read();
         if let Some(entry) = cache.get(key) {
             if entry.timestamp.elapsed() < entry.ttl {
                 return Some(entry.data.clone());
@@ -64,36 +60,22 @@ impl<T: Clone> RequestCache<T> {
 
     /// Remove expired entries
     pub fn cleanup_expired(&self) {
-        let mut cache = self.cache.write().unwrap_or_else(|poisoned| {
-            tracing::warn!("Request cache lock poisoned on cleanup, recovering");
-            poisoned.into_inner()
-        });
+        // parking_lot::RwLock never panics - cleaner API!
+        let mut cache = self.cache.write();
         let now = Instant::now();
         cache.retain(|_, entry| now.duration_since(entry.timestamp) < entry.ttl);
     }
 
     /// Get cache size
     pub fn len(&self) -> usize {
-        self.cache
-            .read()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Request cache lock poisoned on len, recovering");
-                poisoned.into_inner()
-            })
-            .len()
+        // parking_lot::RwLock never panics - cleaner API!
+        self.cache.read().len()
     }
 
     /// Check if cache is empty
-    /// Checks if empty
-    /// Checks if empty
     pub fn is_empty(&self) -> bool {
-        self.cache
-            .read()
-            .unwrap_or_else(|poisoned| {
-                tracing::warn!("Request cache lock poisoned on is_empty, recovering");
-                poisoned.into_inner()
-            })
-            .is_empty()
+        // parking_lot::RwLock never panics - cleaner API!
+        self.cache.read().is_empty()
     }
 }
 

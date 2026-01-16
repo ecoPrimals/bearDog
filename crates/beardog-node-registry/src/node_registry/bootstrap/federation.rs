@@ -11,7 +11,7 @@ use serde_json::Value;
 #[derive(Debug, Clone)]
     client: reqwest::Client,
 
-    federation_cache: std::sync::RwLock<HashMap<String, (Vec<FederationDiscoveryResult>, std::time::Instant)>>,
+    federation_cache: parking_lot::RwLock<HashMap<String, (Vec<FederationDiscoveryResult>, std::time::Instant)>>,
 }
 impl FederationBootstrap {
 
@@ -25,7 +25,7 @@ impl FederationBootstrap {
         Self {
             config,
             client,
-            federation_cache: std::sync::RwLock::new(HashMap::with_capacity(16)),
+            federation_cache: parking_lot::RwLock::new(HashMap::with_capacity(16)),
         }
     }
 

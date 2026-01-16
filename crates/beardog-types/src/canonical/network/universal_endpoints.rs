@@ -336,7 +336,7 @@ pub struct ValidationResult {
 
 pub struct UniversalEndpointResolver {
     config: UniversalEndpointConfig,
-    cache: std::sync::RwLock<HashMap<String, (String, std::time::Instant)>>,
+    cache: parking_lot::RwLock<HashMap<String, (String, std::time::Instant)>>,
     cache_ttl: std::time::Duration,
 }
 
@@ -346,7 +346,7 @@ impl UniversalEndpointResolver {
     pub fn new() -> Self {
         Self {
             config: UniversalEndpointConfig::new(),
-            cache: std::sync::RwLock::new(HashMap::new()),
+            cache: parking_lot::RwLock::new(HashMap::new()),
             cache_ttl: std::time::Duration::from_secs(
                 env::var("BEARDOG_ENDPOINT_CACHE_TTL_SECS")
                     .ok()
