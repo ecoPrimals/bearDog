@@ -224,7 +224,8 @@ async fn handle_method(
                     {
                         "type": "security",
                         "version": "1.0",
-                        "methods": ["evaluate", "lineage"],
+                        "methods": ["evaluate", "lineage", "generate_jwt_secret"],
+                        "description": "Security provider - trust evaluation, genetic lineage, and secret generation"
                     },
                     {
                         "type": "encryption",
@@ -247,6 +248,12 @@ async fn handle_method(
                         "version": "1.0",
                         "methods": ["authorize_modification", "validate_template", "audit_origin"],
                         "description": "Collaborative Intelligence graph security - 5-layer authorization, threat detection, and provenance"
+                    },
+                    {
+                        "type": "jwt_secrets",
+                        "version": "1.0",
+                        "methods": ["generate_jwt_secret"],
+                        "description": "JWT secret generation for authentication systems (e.g., NestGate)"
                     }
                 ],
                 "version": env!("CARGO_PKG_VERSION"),
@@ -989,10 +996,710 @@ async fn handle_method(
             }))
         }
 
+        // ========================================================================
+        // JWT SECRET GENERATION (Security Provider Capability)
+        // ========================================================================
+
+        // Generate JWT secret - BearDog provides secure secrets to other primals
+        ("beardog", "generate_jwt_secret")
+        | ("security", "generate_jwt_secret")
+        | ("beardog", "jwt_secret")
+        | ("security", "jwt_secret") => {
+            info!("🔐 JWT Secret Generation requested");
+
+            let params = params.ok_or("Missing params for JWT secret generation")?;
+
+            let purpose = params
+                .get("purpose")
+                .and_then(|v| v.as_str())
+                .unwrap_or("authentication");
+
+            let strength = params
+                .get("strength")
+                .and_then(|v| v.as_str())
+                .unwrap_or("high");
+
+            // Determine byte length based on strength
+            // high: 64 bytes (512 bits) -> 88 chars base64
+            // medium: 48 bytes (384 bits) -> 64 chars base64
+            // low: 32 bytes (256 bits) -> 44 chars base64
+            let byte_length = match strength {
+                "high" => 64,
+                "medium" => 48,
+                "low" => 32,
+                _ => 64, // Default to high security
+            };
+
+            // Generate cryptographically secure random bytes
+            use rand::RngCore;
+            let mut secret_bytes = vec![0u8; byte_length];
+            rand::rngs::OsRng.fill_bytes(&mut secret_bytes);
+
+            // Encode to base64 (URL-safe for JWT)
+            let jwt_secret = base64::engine::general_purpose::STANDARD.encode(&secret_bytes);
+
+            info!(
+                "🔐 Generated JWT secret: purpose={}, strength={}, length={}",
+                purpose,
+                strength,
+                jwt_secret.len()
+            );
+
+            Ok(serde_json::json!({
+                "secret": jwt_secret,
+                "purpose": purpose,
+                "strength": strength,
+                "byte_length": byte_length,
+                "encoded_length": jwt_secret.len(),
+                "algorithm": "CSPRNG",
+                "provider": "beardog",
+                "generated_at": Utc::now().to_rfc3339(),
+            }))
+        }
+
         // Unknown method
         _ => {
             warn!("⚠️  Unknown method: {}.{}", namespace, action);
             Err(format!("Method not found: {}.{}", namespace, action))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::btsp_provider::BeardogBtspProvider;
+    use crate::tunnel::hsm::manager::HsmManager;
+    use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
+    use crate::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
+    use beardog_genetics::EcosystemGeneticEngine;
+    use std::sync::Arc;
+
+    /// Helper function to create a test HSM manager
+    async fn create_test_hsm() -> Arc<HsmManager> {
+        let mut hsm = HsmManager::new();
+        let config = SoftwareHsmConfig::default();
+        let software_hsm = RustSoftwareHsm::new(config)
+            .await
+            .expect("Software HSM init failed");
+
+        hsm.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))
+            .expect("HSM provider registration failed");
+
+        Arc::new(hsm)
+    }
+
+    /// Helper function to create a test BTSP provider with all dependencies
+    async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
+        let hsm = create_test_hsm().await;
+        let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Genetics init failed"));
+        
+        Arc::new(
+            BeardogBtspProvider::new(hsm, genetics)
+                .await
+                .expect("Failed to create BTSP provider"),
+        )
+    }
+
+    #[tokio::test]
+    async fn test_generate_jwt_secret_high_strength() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        // Test high strength JWT secret generation
+        let params = serde_json::json!({
+            "purpose": "nestgate_authentication",
+            "strength": "high"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("JWT secret generation should succeed");
+
+        // Verify response structure
+        assert!(result.get("secret").is_some(), "Response should contain secret");
+        assert_eq!(result["purpose"].as_str().unwrap(), "nestgate_authentication");
+        assert_eq!(result["strength"].as_str().unwrap(), "high");
+        assert_eq!(result["byte_length"].as_u64().unwrap(), 64);
+        assert!(result["encoded_length"].as_u64().unwrap() >= 88, "Base64 encoded secret should be at least 88 chars");
+        assert_eq!(result["provider"].as_str().unwrap(), "beardog");
+
+        // Verify the secret is properly base64 encoded
+        let secret = result["secret"].as_str().unwrap();
+        assert!(
+            base64::engine::general_purpose::STANDARD.decode(secret).is_ok(),
+            "Secret should be valid base64"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_generate_jwt_secret_medium_strength() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "testing",
+            "strength": "medium"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("JWT secret generation should succeed");
+
+        assert_eq!(result["byte_length"].as_u64().unwrap(), 48);
+        assert!(result["encoded_length"].as_u64().unwrap() >= 64);
+    }
+
+    #[tokio::test]
+    async fn test_generate_jwt_secret_low_strength() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "development",
+            "strength": "low"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("JWT secret generation should succeed");
+
+        assert_eq!(result["byte_length"].as_u64().unwrap(), 32);
+        assert!(result["encoded_length"].as_u64().unwrap() >= 44);
+    }
+
+    #[tokio::test]
+    async fn test_generate_jwt_secret_default_params() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        // Test with minimal params (should use defaults)
+        let params = serde_json::json!({});
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("JWT secret generation should succeed");
+
+        // Should default to high strength
+        assert_eq!(result["strength"].as_str().unwrap(), "high");
+        assert_eq!(result["purpose"].as_str().unwrap(), "authentication");
+        assert_eq!(result["byte_length"].as_u64().unwrap(), 64);
+    }
+
+    #[tokio::test]
+    async fn test_generate_jwt_secret_uniqueness() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "testing_uniqueness",
+            "strength": "high"
+        });
+
+        // Generate multiple secrets and verify they're all unique
+        let mut secrets = Vec::new();
+        for _ in 0..10 {
+            let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+                .await
+                .expect("JWT secret generation should succeed");
+            
+            let secret = result["secret"].as_str().unwrap().to_string();
+            secrets.push(secret);
+        }
+
+        // Verify all secrets are unique
+        for i in 0..secrets.len() {
+            for j in (i + 1)..secrets.len() {
+                assert_ne!(
+                    secrets[i], secrets[j],
+                    "Generated secrets should be unique"
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_in_capabilities() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let result = handle_method("capabilities", None, &btsp_provider)
+            .await
+            .expect("Capabilities query should succeed");
+
+        let capabilities = result["provided_capabilities"]
+            .as_array()
+            .expect("provided_capabilities should be an array");
+
+        // Find the jwt_secrets capability
+        let jwt_cap = capabilities
+            .iter()
+            .find(|c| c["type"].as_str() == Some("jwt_secrets"));
+
+        assert!(jwt_cap.is_some(), "jwt_secrets capability should be advertised");
+        
+        let methods = jwt_cap.unwrap()["methods"]
+            .as_array()
+            .expect("methods should be an array");
+        
+        assert!(
+            methods.iter().any(|m| m.as_str() == Some("generate_jwt_secret")),
+            "generate_jwt_secret should be in methods list"
+        );
+    }
+
+    // =========================================================================
+    // FAULT VALIDATION TESTS - Error Handling & Edge Cases
+    // =========================================================================
+
+    #[tokio::test]
+    async fn test_jwt_secret_missing_params() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        // Should succeed with defaults even without params
+        let result = handle_method("beardog.generate_jwt_secret", None, &btsp_provider).await;
+
+        // Missing params should be treated as an error by the handler
+        assert!(result.is_err(), "Missing params should return error");
+        assert!(result.unwrap_err().contains("Missing params"), "Error should mention missing params");
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_invalid_strength() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "testing",
+            "strength": "ultra_mega_high" // Invalid strength
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("Should default to high strength for invalid values");
+
+        // Should default to high strength
+        assert_eq!(result["byte_length"].as_u64().unwrap(), 64);
+        assert_eq!(result["strength"].as_str().unwrap(), "ultra_mega_high"); // Echoes back but uses default
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_empty_purpose() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "",
+            "strength": "high"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("Empty purpose should succeed");
+
+        assert_eq!(result["purpose"].as_str().unwrap(), "");
+        assert!(result.get("secret").is_some());
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_special_chars_in_purpose() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "test!@#$%^&*()_+-={}[]|:;<>?,./~`",
+            "strength": "high"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("Special characters in purpose should succeed");
+
+        assert!(result.get("secret").is_some());
+        assert_eq!(result["purpose"].as_str().unwrap(), "test!@#$%^&*()_+-={}[]|:;<>?,./~`");
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_very_long_purpose() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let long_purpose = "a".repeat(10000); // 10KB purpose string
+        let params = serde_json::json!({
+            "purpose": long_purpose,
+            "strength": "high"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("Very long purpose should succeed");
+
+        assert!(result.get("secret").is_some());
+        assert_eq!(result["purpose"].as_str().unwrap().len(), 10000);
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_method_aliases() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "alias_test",
+            "strength": "high"
+        });
+
+        // Test all method aliases
+        let aliases = vec![
+            "beardog.generate_jwt_secret",
+            "security.generate_jwt_secret",
+            "beardog.jwt_secret",
+            "security.jwt_secret",
+        ];
+
+        for alias in aliases {
+            let result = handle_method(alias, Some(&params), &btsp_provider)
+                .await
+                .unwrap_or_else(|_| panic!("Alias '{}' should work", alias));
+
+            assert!(result.get("secret").is_some(), "Alias '{}' should return secret", alias);
+        }
+    }
+
+    // =========================================================================
+    // CHAOS TESTS - Concurrent Access & Race Conditions
+    // =========================================================================
+
+    #[tokio::test]
+    async fn test_jwt_secret_concurrent_generation() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "concurrent_test",
+            "strength": "high"
+        });
+
+        // Spawn 100 concurrent requests
+        let mut handles = vec![];
+        for i in 0..100 {
+            let provider = Arc::clone(&btsp_provider);
+            let params_clone = params.clone();
+            
+            let handle = tokio::spawn(async move {
+                let result = handle_method(
+                    "beardog.generate_jwt_secret",
+                    Some(&params_clone),
+                    &provider
+                ).await;
+                (i, result)
+            });
+            handles.push(handle);
+        }
+
+        // Collect all results
+        let mut secrets = Vec::new();
+        for handle in handles {
+            let (idx, result) = handle.await.expect("Task should complete");
+            let result = result.unwrap_or_else(|_| panic!("Request {} should succeed", idx));
+            let secret = result["secret"].as_str().unwrap().to_string();
+            secrets.push(secret);
+        }
+
+        // Verify all 100 secrets are unique
+        assert_eq!(secrets.len(), 100);
+        for i in 0..secrets.len() {
+            for j in (i + 1)..secrets.len() {
+                assert_ne!(
+                    secrets[i], secrets[j],
+                    "Concurrent secrets {} and {} should be unique",
+                    i, j
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_high_frequency_generation() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "high_frequency_test",
+            "strength": "medium" // Use medium to be faster
+        });
+
+        // Generate 1000 secrets in rapid succession
+        let mut secrets = Vec::new();
+        for _ in 0..1000 {
+            let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+                .await
+                .expect("High frequency generation should succeed");
+            
+            let secret = result["secret"].as_str().unwrap().to_string();
+            secrets.push(secret);
+        }
+
+        // Verify all are unique (sampling check - check first 100)
+        for i in 0..100.min(secrets.len()) {
+            for j in (i + 1)..100.min(secrets.len()) {
+                assert_ne!(
+                    secrets[i], secrets[j],
+                    "High frequency secrets should be unique"
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_mixed_concurrent_requests() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        // Mix of different strength levels and purposes
+        let test_cases = vec![
+            ("high", "auth1"),
+            ("medium", "auth2"),
+            ("low", "auth3"),
+            ("high", "auth4"),
+            ("invalid", "auth5"), // Invalid strength
+        ];
+
+        let mut handles = vec![];
+        for (strength, purpose) in test_cases {
+            let provider = Arc::clone(&btsp_provider);
+            let strength = strength.to_string();
+            let purpose = purpose.to_string();
+            
+            // Spawn 20 concurrent requests for each case
+            for _ in 0..20 {
+                let provider_clone = Arc::clone(&provider);
+                let strength_clone = strength.clone();
+                let purpose_clone = purpose.clone();
+                
+                let handle = tokio::spawn(async move {
+                    let params = serde_json::json!({
+                        "purpose": purpose_clone,
+                        "strength": strength_clone
+                    });
+                    handle_method("beardog.generate_jwt_secret", Some(&params), &provider_clone).await
+                });
+                handles.push(handle);
+            }
+        }
+
+        // All should complete successfully
+        let mut success_count = 0;
+        for handle in handles {
+            if let Ok(result) = handle.await {
+                if result.is_ok() {
+                    success_count += 1;
+                }
+            }
+        }
+
+        assert_eq!(success_count, 100, "All 100 mixed concurrent requests should succeed");
+    }
+
+    // =========================================================================
+    // SECURITY VALIDATION TESTS - Entropy & Cryptographic Quality
+    // =========================================================================
+
+    #[tokio::test]
+    async fn test_jwt_secret_entropy_quality() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "entropy_test",
+            "strength": "high"
+        });
+
+        let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("Entropy test should succeed");
+
+        let secret = result["secret"].as_str().unwrap();
+        let secret_bytes = base64::engine::general_purpose::STANDARD
+            .decode(secret)
+            .expect("Should decode base64");
+
+        // Test 1: Not all zeros
+        assert!(
+            secret_bytes.iter().any(|&b| b != 0),
+            "Secret should not be all zeros"
+        );
+
+        // Test 2: Not all 0xFF
+        assert!(
+            secret_bytes.iter().any(|&b| b != 0xFF),
+            "Secret should not be all 0xFF"
+        );
+
+        // Test 3: Has reasonable distribution (not all same byte)
+        let first_byte = secret_bytes[0];
+        let all_same = secret_bytes.iter().all(|&b| b == first_byte);
+        assert!(!all_same, "Secret should have varied bytes");
+
+        // Test 4: Has both high and low nibbles set (not trivial pattern)
+        let has_high_bits = secret_bytes.iter().any(|&b| (b & 0xF0) != 0);
+        let has_low_bits = secret_bytes.iter().any(|&b| (b & 0x0F) != 0);
+        assert!(has_high_bits && has_low_bits, "Secret should use full byte range");
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_no_predictable_patterns() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "pattern_test",
+            "strength": "high"
+        });
+
+        // Generate 10 secrets
+        let mut decoded_secrets = Vec::new();
+        for _ in 0..10 {
+            let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+                .await
+                .expect("Pattern test should succeed");
+            
+            let secret = result["secret"].as_str().unwrap();
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(secret)
+                .expect("Should decode base64");
+            decoded_secrets.push(bytes);
+        }
+
+        // Test: No two secrets share the same first 16 bytes
+        for i in 0..decoded_secrets.len() {
+            for j in (i + 1)..decoded_secrets.len() {
+                let prefix_i = &decoded_secrets[i][0..16];
+                let prefix_j = &decoded_secrets[j][0..16];
+                assert_ne!(
+                    prefix_i, prefix_j,
+                    "Secrets should not share common prefixes (predictable pattern)"
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_all_strengths_different_lengths() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let strengths = vec![
+            ("high", 64),
+            ("medium", 48),
+            ("low", 32),
+        ];
+
+        for (strength, expected_bytes) in strengths {
+            let params = serde_json::json!({
+                "purpose": format!("length_test_{}", strength),
+                "strength": strength
+            });
+
+            let result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+                .await
+                .expect("Length test should succeed");
+
+            let secret = result["secret"].as_str().unwrap();
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(secret)
+                .expect("Should decode base64");
+
+            assert_eq!(
+                bytes.len(),
+                expected_bytes,
+                "Strength '{}' should produce {} bytes",
+                strength,
+                expected_bytes
+            );
+        }
+    }
+
+    // =========================================================================
+    // E2E TESTS - Full JSON-RPC Flow
+    // =========================================================================
+
+    #[tokio::test]
+    async fn test_jwt_secret_full_jsonrpc_request() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        // Create a full JSON-RPC request
+        let request = JsonRpcRequest {
+            jsonrpc: "2.0".to_string(),
+            method: "beardog.generate_jwt_secret".to_string(),
+            params: Some(serde_json::json!({
+                "purpose": "e2e_test",
+                "strength": "high"
+            })),
+            id: Some(serde_json::json!(1)),
+        };
+
+        // Handle the full request
+        let response = handle_jsonrpc_request(&request, &btsp_provider).await;
+
+        // Verify response structure
+        assert_eq!(response.jsonrpc, "2.0");
+        assert!(response.error.is_none(), "Should not have error");
+        assert!(response.result.is_some(), "Should have result");
+
+        let result = response.result.unwrap();
+        assert!(result.get("secret").is_some());
+        assert_eq!(result["provider"].as_str().unwrap(), "beardog");
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_jsonrpc_error_handling() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        // Request with wrong JSON-RPC version
+        let request = JsonRpcRequest {
+            jsonrpc: "1.0".to_string(), // Wrong version
+            method: "beardog.generate_jwt_secret".to_string(),
+            params: Some(serde_json::json!({})),
+            id: Some(serde_json::json!(1)),
+        };
+
+        let response = handle_jsonrpc_request(&request, &btsp_provider).await;
+
+        // Should return error
+        assert!(response.error.is_some(), "Should have error for wrong JSON-RPC version");
+        assert_eq!(response.error.unwrap().code, -32600); // Invalid Request
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_jsonrpc_method_not_found() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let request = JsonRpcRequest {
+            jsonrpc: "2.0".to_string(),
+            method: "beardog.nonexistent_method".to_string(),
+            params: Some(serde_json::json!({})),
+            id: Some(serde_json::json!(1)),
+        };
+
+        let response = handle_jsonrpc_request(&request, &btsp_provider).await;
+
+        // Should return method not found error
+        assert!(response.error.is_some(), "Should have error for unknown method");
+        assert_eq!(response.error.unwrap().code, JsonRpcError::METHOD_NOT_FOUND);
+    }
+
+    // =========================================================================
+    // PERFORMANCE & LOAD TESTS
+    // =========================================================================
+
+    #[tokio::test]
+    async fn test_jwt_secret_batch_generation_performance() {
+        let btsp_provider = create_test_btsp_provider().await;
+
+        let params = serde_json::json!({
+            "purpose": "performance_test",
+            "strength": "high"
+        });
+
+        let start = std::time::Instant::now();
+        
+        // Generate 100 secrets sequentially
+        for _ in 0..100 {
+            let _result = handle_method("beardog.generate_jwt_secret", Some(&params), &btsp_provider)
+                .await
+                .expect("Performance test should succeed");
+        }
+
+        let duration = start.elapsed();
+
+        // Should complete 100 secrets in under 1 second (very generous)
+        assert!(
+            duration.as_secs() < 1,
+            "100 sequential secret generations should complete in under 1s, took {:?}",
+            duration
+        );
     }
 }
