@@ -67,7 +67,7 @@ async fn test_universal_trust_get_identity() -> Result<(), Box<dyn std::error::E
 
     // Get identity
     let resp = client
-        .get(&format!("{}/api/v1/trust/identity", base_url))
+        .get(format!("{}/api/v1/trust/identity", base_url))
         .send()
         .await?;
 
@@ -106,7 +106,7 @@ async fn test_universal_trust_evaluate_same_family() -> Result<(), Box<dyn std::
 
     // Get our identity first (unwrapped response)
     let identity_resp = client
-        .get(&format!("{}/api/v1/trust/identity", base_url))
+        .get(format!("{}/api/v1/trust/identity", base_url))
         .send()
         .await?;
     let identity: Value = identity_resp.json().await?;
@@ -136,7 +136,7 @@ async fn test_universal_trust_evaluate_same_family() -> Result<(), Box<dyn std::
 
     // Evaluate trust
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&request)
         .send()
         .await?;
@@ -170,7 +170,7 @@ async fn test_universal_trust_evaluate_different_family() -> Result<(), Box<dyn 
 
     // Get our identity (unwrapped response)
     let identity_resp = client
-        .get(&format!("{}/api/v1/trust/identity", base_url))
+        .get(format!("{}/api/v1/trust/identity", base_url))
         .send()
         .await?;
     let identity: Value = identity_resp.json().await?;
@@ -198,7 +198,7 @@ async fn test_universal_trust_evaluate_different_family() -> Result<(), Box<dyn 
     });
 
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&request)
         .send()
         .await?;
@@ -242,7 +242,7 @@ async fn test_universal_trust_evaluate_no_lineage() -> Result<(), Box<dyn std::e
     });
 
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&request)
         .send()
         .await?;
@@ -275,7 +275,7 @@ async fn test_legacy_trust_evaluate() -> Result<(), Box<dyn std::error::Error>> 
 
     // Get our identity (unwrapped response)
     let identity_resp = client
-        .get(&format!("{}/api/v1/trust/identity", base_url))
+        .get(format!("{}/api/v1/trust/identity", base_url))
         .send()
         .await?;
     let identity: Value = identity_resp.json().await?;
@@ -290,7 +290,7 @@ async fn test_legacy_trust_evaluate() -> Result<(), Box<dyn std::error::Error>> 
     });
 
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&request)
         .send()
         .await?;
@@ -328,7 +328,7 @@ async fn test_universal_trust_missing_evaluator() -> Result<(), Box<dyn std::err
     });
 
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&request)
         .send()
         .await?;
@@ -356,7 +356,7 @@ async fn test_universal_trust_unsupported_format() -> Result<(), Box<dyn std::er
     });
 
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&request)
         .send()
         .await?;
@@ -383,7 +383,7 @@ async fn test_songbird_integration_flow() -> Result<(), Box<dyn std::error::Erro
     // Step 1: Songbird queries BearDog for identity on startup
     println!("Step 1: Songbird queries BearDog for identity");
     let identity_resp = client
-        .get(&format!("{}/api/v1/trust/identity", base_url))
+        .get(format!("{}/api/v1/trust/identity", base_url))
         .send()
         .await?;
     let identity: Value = identity_resp.json().await?;
@@ -426,7 +426,7 @@ async fn test_songbird_integration_flow() -> Result<(), Box<dyn std::error::Erro
     });
 
     let trust_resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&peer_request)
         .send()
         .await?;
@@ -474,7 +474,7 @@ async fn test_cross_tower_integration() -> Result<(), Box<dyn std::error::Error>
     });
 
     let resp = client
-        .post(&format!("{}/api/v1/trust/evaluate", base_url))
+        .post(format!("{}/api/v1/trust/evaluate", base_url))
         .json(&tower_b_request)
         .send()
         .await?;

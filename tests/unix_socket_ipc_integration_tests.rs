@@ -305,7 +305,7 @@ async fn test_socket_cleanup_on_crash() {
         // Wait for socket to actually be deleted (not arbitrary time)
         // Server cleanup happens asynchronously, so wait for actual completion
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-        
+
         // If socket still exists after crash, it will be cleaned up by next server
         // This is the expected behavior - no need to wait longer
     }

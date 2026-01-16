@@ -33,6 +33,11 @@ use beardog_types::canonical::discovery::{
     ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
     UniversalCapabilityType, UniversalServiceDescriptor,
 };
+use chacha20poly1305::{
+    aead::{Aead, KeyInit, OsRng},
+    ChaCha20Poly1305, Nonce,
+};
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -483,10 +488,6 @@ impl SecureCrossPrimalMessenger {
 
         // Phase 1.2: ChaCha20-Poly1305 AEAD encryption
         // Modern Rust: Fast, secure, constant-time authenticated encryption
-        use chacha20poly1305::{
-            aead::{Aead, KeyInit, OsRng},
-            ChaCha20Poly1305, Nonce,
-        };
 
         // Ensure key is exactly 32 bytes for ChaCha20-Poly1305
         let mut key_bytes = [0u8; 32];
@@ -498,7 +499,6 @@ impl SecureCrossPrimalMessenger {
 
         // Generate random nonce (96 bits / 12 bytes for ChaCha20-Poly1305)
         let mut nonce_bytes = [0u8; 12];
-        use rand::RngCore;
         OsRng.fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 

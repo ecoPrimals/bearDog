@@ -8,7 +8,6 @@ use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use std::sync::Arc;
 use tracing::{info, Level};
-use tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), BearDogError> {

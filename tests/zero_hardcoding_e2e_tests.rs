@@ -3,7 +3,7 @@
 //! Validates that BearDog works with ANY registry implementation
 
 use beardog_core::capabilities::BearDogCapabilities;
-use beardog_ipc::{JsonRpcRequest, JsonRpcResponse, PrimalRegistryClient};
+use beardog_ipc::{JsonRpcRequest, PrimalRegistryClient};
 use std::path::PathBuf;
 
 #[tokio::test]

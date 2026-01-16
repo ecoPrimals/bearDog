@@ -322,7 +322,10 @@ impl ConstraintEnforcer {
             }
             _ => {
                 // Unknown multisig mode - default to threshold
-                tracing::warn!("Unknown multisig mode '{}', defaulting to threshold", multisig_mode);
+                tracing::warn!(
+                    "Unknown multisig mode '{}', defaulting to threshold",
+                    multisig_mode
+                );
                 let threshold = std::env::var("BEARDOG_MULTISIG_THRESHOLD")
                     .ok()
                     .and_then(|s| s.parse().ok())

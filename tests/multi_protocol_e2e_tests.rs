@@ -6,8 +6,6 @@
 //! - Security warnings
 //! - Protocol-specific behaviors
 
-use std::time::Duration;
-
 // ============================================================================
 // E2E Test: Protocol Detection
 // ============================================================================
@@ -224,7 +222,7 @@ async fn test_e2e_both_protocols_supported() {
 #[tokio::test]
 async fn test_e2e_protocol_switching() {
     // Client can switch protocols between requests
-    let requests = vec![
+    let requests = [
         r#"{"jsonrpc":"2.0","method":"beardog.ping","id":1}"#,
         "GET /capabilities HTTP/1.1\r\n\r\n",
         r#"{"jsonrpc":"2.0","method":"beardog.ping","id":2}"#,
@@ -440,7 +438,7 @@ async fn test_e2e_extensible_for_tarpc() {
     // Architecture should be extensible for future protocols
     // (This is a structural test, not functional)
 
-    let protocols = vec!["json-rpc", "http", "tarpc"];
+    let protocols = ["json-rpc", "http", "tarpc"];
 
     assert!(protocols.contains(&"json-rpc"));
     assert!(protocols.contains(&"http"));

@@ -57,7 +57,7 @@ async fn test_lineage_api_full_flow() -> Result<(), Box<dyn std::error::Error>> 
 
     // 1. Create genesis lineage
     let create_resp = client
-        .post(&format!("{}/api/v1/lineage/create", base_url))
+        .post(format!("{}/api/v1/lineage/create", base_url))
         .json(&json!({ "service_type": "tower" }))
         .send()
         .await?;
@@ -73,7 +73,7 @@ async fn test_lineage_api_full_flow() -> Result<(), Box<dyn std::error::Error>> 
 
     // 2. Spawn child lineage
     let spawn_resp = client
-        .post(&format!("{}/api/v1/lineage/spawn", base_url))
+        .post(format!("{}/api/v1/lineage/spawn", base_url))
         .json(&json!({
             "parent_lineage": genesis_lineage_id,
             "service_type": "songbird"
@@ -93,7 +93,7 @@ async fn test_lineage_api_full_flow() -> Result<(), Box<dyn std::error::Error>> 
 
     // 3. Verify the child proof
     let verify_resp = client
-        .post(&format!("{}/api/v1/lineage/proof/verify", base_url))
+        .post(format!("{}/api/v1/lineage/proof/verify", base_url))
         .json(&json!({ "proof": child_proof }))
         .send()
         .await?;
@@ -105,7 +105,7 @@ async fn test_lineage_api_full_flow() -> Result<(), Box<dyn std::error::Error>> 
 
     // 4. Check same family
     let same_family_resp = client
-        .post(&format!("{}/api/v1/lineage/same_family", base_url))
+        .post(format!("{}/api/v1/lineage/same_family", base_url))
         .json(&json!({
             "lineage_a": genesis_lineage_id,
             "lineage_b": child_lineage_id
@@ -119,7 +119,7 @@ async fn test_lineage_api_full_flow() -> Result<(), Box<dyn std::error::Error>> 
 
     // 5. Get current lineage
     let current_resp = client
-        .get(&format!("{}/api/v1/lineage/current", base_url))
+        .get(format!("{}/api/v1/lineage/current", base_url))
         .send()
         .await?;
 
@@ -140,7 +140,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 1. Create Tower A genesis
     let tower_a_resp = client
-        .post(&format!("{}/api/v1/lineage/create", base_url))
+        .post(format!("{}/api/v1/lineage/create", base_url))
         .json(&json!({ "service_type": "tower-a" }))
         .send()
         .await?;
@@ -154,7 +154,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 2. Spawn child from Tower A
     let child_a_resp = client
-        .post(&format!("{}/api/v1/lineage/spawn", base_url))
+        .post(format!("{}/api/v1/lineage/spawn", base_url))
         .json(&json!({
             "parent_lineage": tower_a_lineage,
             "service_type": "songbird-a"
@@ -168,7 +168,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 3. Verify child A proof - should have same_genesis=true (current lineage)
     let verify_a_resp = client
-        .post(&format!("{}/api/v1/lineage/proof/verify", base_url))
+        .post(format!("{}/api/v1/lineage/proof/verify", base_url))
         .json(&json!({ "proof": child_a_proof }))
         .send()
         .await?;
@@ -186,7 +186,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 4. Create Tower B genesis (different genesis!)
     let tower_b_resp = client
-        .post(&format!("{}/api/v1/lineage/create", base_url))
+        .post(format!("{}/api/v1/lineage/create", base_url))
         .json(&json!({ "service_type": "tower-b" }))
         .send()
         .await?;
@@ -200,7 +200,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 5. Spawn child from Tower B
     let child_b_resp = client
-        .post(&format!("{}/api/v1/lineage/spawn", base_url))
+        .post(format!("{}/api/v1/lineage/spawn", base_url))
         .json(&json!({
             "parent_lineage": tower_b_lineage,
             "service_type": "songbird-b"
@@ -214,7 +214,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 6. Verify child A proof again - should now have same_genesis=false (different current lineage)
     let verify_a_again_resp = client
-        .post(&format!("{}/api/v1/lineage/proof/verify", base_url))
+        .post(format!("{}/api/v1/lineage/proof/verify", base_url))
         .json(&json!({ "proof": child_a_proof }))
         .send()
         .await?;
@@ -232,7 +232,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 7. Verify child B proof - should have same_genesis=true (current lineage)
     let verify_b_resp = client
-        .post(&format!("{}/api/v1/lineage/proof/verify", base_url))
+        .post(format!("{}/api/v1/lineage/proof/verify", base_url))
         .json(&json!({ "proof": child_b_proof }))
         .send()
         .await?;
@@ -250,7 +250,7 @@ async fn test_lineage_api_cross_tower_same_genesis() -> Result<(), Box<dyn std::
 
     // 8. Check same_family - should return false for cross-tower
     let same_family_resp = client
-        .post(&format!("{}/api/v1/lineage/same_family", base_url))
+        .post(format!("{}/api/v1/lineage/same_family", base_url))
         .json(&json!({
             "lineage_a": tower_a_lineage,
             "lineage_b": tower_b_lineage
@@ -280,7 +280,7 @@ async fn test_lineage_api_concurrent_creates() -> Result<(), Box<dyn std::error:
         let base_url = base_url.clone();
         handles.push(tokio::spawn(async move {
             let resp = client
-                .post(&format!("{}/api/v1/lineage/create", base_url))
+                .post(format!("{}/api/v1/lineage/create", base_url))
                 .json(&json!({ "service_type": format!("service-{}", i) }))
                 .send()
                 .await
@@ -314,7 +314,7 @@ async fn test_lineage_api_invalid_parent() -> Result<(), Box<dyn std::error::Err
 
     // Try to spawn with non-existent parent
     let spawn_resp = client
-        .post(&format!("{}/api/v1/lineage/spawn", base_url))
+        .post(format!("{}/api/v1/lineage/spawn", base_url))
         .json(&json!({
             "parent_lineage": "lineage:fake:123:abc:xyz",
             "service_type": "songbird"
@@ -334,7 +334,7 @@ async fn test_lineage_api_malformed_requests() -> Result<(), Box<dyn std::error:
 
     // Missing service_type
     let resp = client
-        .post(&format!("{}/api/v1/lineage/create", base_url))
+        .post(format!("{}/api/v1/lineage/create", base_url))
         .json(&json!({}))
         .send()
         .await?;
@@ -342,7 +342,7 @@ async fn test_lineage_api_malformed_requests() -> Result<(), Box<dyn std::error:
 
     // Invalid JSON
     let resp = client
-        .post(&format!("{}/api/v1/lineage/create", base_url))
+        .post(format!("{}/api/v1/lineage/create", base_url))
         .header("Content-Type", "application/json")
         .body("{not json}")
         .send()
@@ -367,14 +367,14 @@ async fn test_lineage_api_deep_hierarchy() -> Result<(), Box<dyn std::error::Err
         let resp = if depth == 0 {
             // Genesis
             client
-                .post(&format!("{}/api/v1/lineage/create", base_url))
+                .post(format!("{}/api/v1/lineage/create", base_url))
                 .json(&json!({ "service_type": service_type }))
                 .send()
                 .await?
         } else {
             // Child
             client
-                .post(&format!("{}/api/v1/lineage/spawn", base_url))
+                .post(format!("{}/api/v1/lineage/spawn", base_url))
                 .json(&json!({
                     "parent_lineage": current_lineage,
                     "service_type": service_type
@@ -390,7 +390,7 @@ async fn test_lineage_api_deep_hierarchy() -> Result<(), Box<dyn std::error::Err
 
     // Final lineage should still be verifiable
     let sign_resp = client
-        .post(&format!("{}/api/v1/lineage/sign", base_url))
+        .post(format!("{}/api/v1/lineage/sign", base_url))
         .json(&json!({ "lineage_id": current_lineage }))
         .send()
         .await?;
@@ -399,7 +399,7 @@ async fn test_lineage_api_deep_hierarchy() -> Result<(), Box<dyn std::error::Err
     let proof = sign_resp.json::<Value>().await?;
 
     let verify_resp = client
-        .post(&format!("{}/api/v1/lineage/proof/verify", base_url))
+        .post(format!("{}/api/v1/lineage/proof/verify", base_url))
         .json(&json!({ "proof": proof["data"] }))
         .send()
         .await?;
@@ -416,7 +416,7 @@ async fn test_lineage_api_health_check() -> Result<(), Box<dyn std::error::Error
     let (_handle, base_url) = start_test_server().await?;
     let client = Client::new();
 
-    let health_resp = client.get(&format!("{}/health", base_url)).send().await?;
+    let health_resp = client.get(format!("{}/health", base_url)).send().await?;
 
     assert_eq!(health_resp.status(), 200);
     let body: Value = health_resp.json().await?;
@@ -437,7 +437,7 @@ async fn test_lineage_api_stress_spawn() -> Result<(), Box<dyn std::error::Error
 
     // Create genesis
     let create_resp = client
-        .post(&format!("{}/api/v1/lineage/create", base_url))
+        .post(format!("{}/api/v1/lineage/create", base_url))
         .json(&json!({ "service_type": "tower" }))
         .send()
         .await?;
@@ -456,7 +456,7 @@ async fn test_lineage_api_stress_spawn() -> Result<(), Box<dyn std::error::Error
 
         handles.push(tokio::spawn(async move {
             let resp = client
-                .post(&format!("{}/api/v1/lineage/spawn", base_url))
+                .post(format!("{}/api/v1/lineage/spawn", base_url))
                 .json(&json!({
                     "parent_lineage": genesis_id,
                     "service_type": format!("child-{}", i)

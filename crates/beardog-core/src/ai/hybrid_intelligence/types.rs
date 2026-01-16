@@ -601,30 +601,74 @@ impl Default for DeploymentConfig {
     }
 }
 
+/// AI monitoring metric types
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum AIMetricType {
+    /// Training metrics (loss, accuracy, learning rate, etc.)
+    Training,
+    /// Inference metrics (latency, throughput, batch size, etc.)
+    Inference,
+    /// Model performance tracking over time
+    ModelPerformance,
+    /// Resource usage monitoring (CPU, memory, GPU)
+    ResourceUsage,
+}
+
 /// AI-specific monitoring configuration for model observability
 ///
 /// Configures collection of metrics and telemetry specific to AI model training,
 /// inference, performance, and resource utilization in production.
+///
+/// Evolved from multiple boolean fields to a set-based approach, following
+/// modern idiomatic Rust patterns and clippy recommendations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIMonitoringConfig {
-    /// Whether to collect and report training metrics (loss, accuracy, learning rate, etc.)
-    pub collect_training_metrics: bool,
-    /// Whether to collect and report inference metrics (latency, throughput, batch size, etc.)
-    pub collect_inference_metrics: bool,
-    /// Whether to track and monitor model prediction quality and accuracy over time
-    pub track_model_performance: bool,
-    /// Whether to monitor computational resource usage (CPU, memory, GPU utilization)
-    pub monitor_resource_usage: bool,
+    /// Enabled metric types
+    #[serde(default = "default_enabled_ai_metrics")]
+    pub enabled_metrics: std::collections::HashSet<AIMetricType>,
+}
+
+fn default_enabled_ai_metrics() -> std::collections::HashSet<AIMetricType> {
+    [
+        AIMetricType::Training,
+        AIMetricType::Inference,
+        AIMetricType::ModelPerformance,
+        AIMetricType::ResourceUsage,
+    ]
+    .into_iter()
+    .collect()
 }
 
 impl Default for AIMonitoringConfig {
     fn default() -> Self {
         Self {
-            collect_training_metrics: true,
-            collect_inference_metrics: true,
-            track_model_performance: true,
-            monitor_resource_usage: true,
+            enabled_metrics: default_enabled_ai_metrics(),
         }
+    }
+}
+
+impl AIMonitoringConfig {
+    /// Check if training metrics are enabled
+    #[must_use]
+    pub fn collects_training_metrics(&self) -> bool {
+        self.enabled_metrics.contains(&AIMetricType::Training)
+    }
+
+    /// Check if inference metrics are enabled
+    #[must_use]
+    pub fn collects_inference_metrics(&self) -> bool {
+        self.enabled_metrics.contains(&AIMetricType::Inference)
+    }
+
+    /// Check if model performance tracking is enabled
+    pub fn tracks_model_performance(&self) -> bool {
+        self.enabled_metrics
+            .contains(&AIMetricType::ModelPerformance)
+    }
+
+    /// Check if resource usage monitoring is enabled
+    pub fn monitors_resource_usage(&self) -> bool {
+        self.enabled_metrics.contains(&AIMetricType::ResourceUsage)
     }
 }
 

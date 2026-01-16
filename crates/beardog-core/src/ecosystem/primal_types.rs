@@ -82,22 +82,83 @@ pub struct ServiceEndpoints {
 
 /// Capability integration configuration
 ///
+/// Standard capability types for ecosystem integration
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum CapabilityType {
+    /// Security capability integration
+    Security,
+    /// Storage capability integration
+    Storage,
+    /// Compute capability integration
+    Compute,
+    /// Networking capability integration
+    Networking,
+    /// AI capability integration
+    AI,
+}
+
+/// Capability Integration Configuration
+///
 /// Uses capability-based configuration instead of hardcoded primal flags,
 /// enabling dynamic service integration based on discovered capabilities.
+///
+/// Evolved from multiple boolean fields to a set-based approach for better
+/// idiomatic Rust and easier runtime capability management.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityIntegrationConfig {
-    /// Enable security capability integration
-    pub enable_security_capability: bool,
-    /// Enable storage capability integration
-    pub enable_storage_capability: bool,
-    /// Enable compute capability integration
-    pub enable_compute_capability: bool,
-    /// Enable networking capability integration
-    pub enable_networking_capability: bool,
-    /// Enable AI capability integration
-    pub enable_ai_capability: bool,
+    /// Enabled standard capability types
+    #[serde(default = "default_enabled_capabilities")]
+    pub enabled_capabilities: std::collections::HashSet<CapabilityType>,
     /// Custom capability configurations mapping capability names to their config values
     pub custom_capabilities: HashMap<String, serde_json::Value>,
+}
+
+fn default_enabled_capabilities() -> std::collections::HashSet<CapabilityType> {
+    [
+        CapabilityType::Security,
+        CapabilityType::Storage,
+        CapabilityType::Networking,
+    ]
+    .into_iter()
+    .collect()
+}
+
+impl Default for CapabilityIntegrationConfig {
+    fn default() -> Self {
+        Self {
+            enabled_capabilities: default_enabled_capabilities(),
+            custom_capabilities: HashMap::new(),
+        }
+    }
+}
+
+impl CapabilityIntegrationConfig {
+    /// Check if security capability is enabled
+    pub fn has_security_capability(&self) -> bool {
+        self.enabled_capabilities
+            .contains(&CapabilityType::Security)
+    }
+
+    /// Check if storage capability is enabled
+    pub fn has_storage_capability(&self) -> bool {
+        self.enabled_capabilities.contains(&CapabilityType::Storage)
+    }
+
+    /// Check if compute capability is enabled
+    pub fn has_compute_capability(&self) -> bool {
+        self.enabled_capabilities.contains(&CapabilityType::Compute)
+    }
+
+    /// Check if networking capability is enabled
+    pub fn has_networking_capability(&self) -> bool {
+        self.enabled_capabilities
+            .contains(&CapabilityType::Networking)
+    }
+
+    /// Check if AI capability is enabled
+    pub fn has_ai_capability(&self) -> bool {
+        self.enabled_capabilities.contains(&CapabilityType::AI)
+    }
 }
 
 /// Attestation verification result

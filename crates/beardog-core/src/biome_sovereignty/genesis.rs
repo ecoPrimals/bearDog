@@ -63,22 +63,82 @@ pub struct CorporateAccessControl {
     pub sovereignty_level: SovereigntyLevel,
 }
 
+/// Privacy protection mechanism types
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum PrivacyMechanism {
+    /// Zero-knowledge proof systems for privacy-preserving authentication
+    ZeroKnowledgeProofs,
+    /// Homomorphic encryption for computation on encrypted data
+    HomomorphicEncryption,
+    /// Secure multi-party computation protocols
+    SecureMultipartyComputation,
+    /// Data minimization and retention policies
+    DataMinimization,
+    /// Anonymous credential systems
+    AnonymousCredentials,
+}
+
 /// Privacy protection settings
 ///
 /// Advanced privacy protection mechanisms including zero-knowledge proofs,
 /// homomorphic encryption, and secure multi-party computation.
+///
+/// Uses a set-based approach for enabled mechanisms, following modern
+/// idiomatic Rust patterns and avoiding excessive boolean fields.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyProtectionSettings {
-    /// Enable zero-knowledge proof systems for privacy-preserving authentication
-    pub zero_knowledge_proofs: bool,
-    /// Enable homomorphic encryption for computation on encrypted data
-    pub homomorphic_encryption: bool,
-    /// Enable secure multi-party computation protocols
-    pub secure_multiparty_computation: bool,
-    /// Enable data minimization and retention policies
-    pub data_minimization: bool,
-    /// Enable anonymous credential systems
-    pub anonymous_credentials: bool,
+    /// Enabled privacy protection mechanisms
+    #[serde(default = "default_privacy_mechanisms")]
+    pub enabled_mechanisms: std::collections::HashSet<PrivacyMechanism>,
+}
+
+fn default_privacy_mechanisms() -> std::collections::HashSet<PrivacyMechanism> {
+    [
+        PrivacyMechanism::ZeroKnowledgeProofs,
+        PrivacyMechanism::DataMinimization,
+    ]
+    .into_iter()
+    .collect()
+}
+
+impl Default for PrivacyProtectionSettings {
+    fn default() -> Self {
+        Self {
+            enabled_mechanisms: default_privacy_mechanisms(),
+        }
+    }
+}
+
+impl PrivacyProtectionSettings {
+    /// Check if zero-knowledge proofs are enabled
+    pub fn uses_zero_knowledge_proofs(&self) -> bool {
+        self.enabled_mechanisms
+            .contains(&PrivacyMechanism::ZeroKnowledgeProofs)
+    }
+
+    /// Check if homomorphic encryption is enabled
+    pub fn uses_homomorphic_encryption(&self) -> bool {
+        self.enabled_mechanisms
+            .contains(&PrivacyMechanism::HomomorphicEncryption)
+    }
+
+    /// Check if secure multiparty computation is enabled
+    pub fn uses_secure_multiparty_computation(&self) -> bool {
+        self.enabled_mechanisms
+            .contains(&PrivacyMechanism::SecureMultipartyComputation)
+    }
+
+    /// Check if data minimization is enabled
+    pub fn uses_data_minimization(&self) -> bool {
+        self.enabled_mechanisms
+            .contains(&PrivacyMechanism::DataMinimization)
+    }
+
+    /// Check if anonymous credentials are enabled
+    pub fn uses_anonymous_credentials(&self) -> bool {
+        self.enabled_mechanisms
+            .contains(&PrivacyMechanism::AnonymousCredentials)
+    }
 }
 
 /// Genetic diversity maintenance configuration

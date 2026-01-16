@@ -519,7 +519,7 @@ mod capability_chaos_tests {
             r#"{"primal_id": beardog}"#,  // Missing quotes
             r#"{primal_id: "beardog"}"#,  // Missing quotes on key
             r#"{"primal_id": null}"#,     // Null value
-            r#"{}"#,                      // Empty object
+            r"{}",                        // Empty object
         ];
 
         for json in malformed_jsons {
@@ -706,7 +706,7 @@ mod capability_fault_tests {
 
         // Should handle large JSON
         let json = serde_json::to_string(&caps).unwrap();
-        assert!(json.len() > 100000);
+        assert!(json.len() > 100_000);
 
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.metadata.len(), 10000);

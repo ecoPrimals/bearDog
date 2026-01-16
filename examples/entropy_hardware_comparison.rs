@@ -239,9 +239,7 @@ async fn test_solokey_entropy(size: usize) -> Result<EntropyTestResult, BearDogE
     let serial_corr = calculate_serial_correlation(&mixed_entropy);
     let quality_score = analyze_entropy(&mixed_entropy) * 0.95; // Hardware bonus
 
-    println!(
-        "   ⚠️  Note: Using simulated hardware entropy (CTAP2 hmac-secret in Phase 2)"
-    );
+    println!("   ⚠️  Note: Using simulated hardware entropy (CTAP2 hmac-secret in Phase 2)");
 
     Ok(EntropyTestResult {
         source: format!("SoloKey: {}", devices[0].product),
@@ -443,9 +441,17 @@ async fn run_comparison() -> Result<(), BearDogError> {
                 "║  {}. {:50} ║",
                 idx + 1,
                 if idx == 0 {
-                    format!("🏆 {} ({:.1}%)", result.source, result.quality_score * 100.0)
+                    format!(
+                        "🏆 {} ({:.1}%)",
+                        result.source,
+                        result.quality_score * 100.0
+                    )
                 } else {
-                    format!("   {} ({:.1}%)", result.source, result.quality_score * 100.0)
+                    format!(
+                        "   {} ({:.1}%)",
+                        result.source,
+                        result.quality_score * 100.0
+                    )
                 }
             );
         }
@@ -456,10 +462,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
         println!("📈 Insights:");
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-        let fastest = results
-            .iter()
-            .min_by_key(|r| r.generation_time_ms)
-            .unwrap();
+        let fastest = results.iter().min_by_key(|r| r.generation_time_ms).unwrap();
         println!(
             "⚡ Fastest: {} ({} ms)",
             fastest.source, fastest.generation_time_ms
@@ -516,4 +519,3 @@ async fn main() -> Result<(), BearDogError> {
 
     run_comparison().await
 }
-

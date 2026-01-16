@@ -94,19 +94,19 @@ fn print_menu(caps: &HardwareCapabilities) {
     println!("╠════════════════════════════════════════════════════════════════╣");
     println!("║  1. Quick Test (Software HSM only)                             ║");
     println!("║  2. Full Test (All available hardware)                         ║");
-    
+
     if caps.solokey_detected {
         println!("║  3. SoloKey FIDO2 Test                                         ║");
     } else {
         println!("║  3. SoloKey FIDO2 Test (not available)                        ║");
     }
-    
+
     if caps.pixel_detected {
         println!("║  4. Pixel 8a Titan M Test                                      ║");
     } else {
         println!("║  4. Pixel 8a Titan M Test (not available)                     ║");
     }
-    
+
     println!("║  5. Human Entropy Test (Interactive)                           ║");
     println!("║  6. Build for Android (Pixel 8a)                               ║");
     println!("║  7. Exit                                                       ║");
@@ -205,11 +205,7 @@ fn run_pixel_test() -> io::Result<()> {
 
     println!("📱 Deploying to Pixel 8a...");
     let push_status = Command::new("adb")
-        .args([
-            "push",
-            binary_path,
-            "/data/local/tmp/entropy_test",
-        ])
+        .args(["push", binary_path, "/data/local/tmp/entropy_test"])
         .status()?;
 
     if !push_status.success() {
@@ -224,7 +220,7 @@ fn run_pixel_test() -> io::Result<()> {
 
     println!("🚀 Running on device...");
     println!();
-    
+
     let run_status = Command::new("adb")
         .args(["shell", "/data/local/tmp/entropy_test"])
         .status()?;
@@ -266,19 +262,19 @@ fn main() -> io::Result<()> {
                 println!();
                 println!("🔄 Running all available tests...");
                 println!();
-                
+
                 run_software_test()?;
-                
+
                 if caps.solokey_detected {
                     println!();
                     run_solokey_test()?;
                 }
-                
+
                 if caps.pixel_detected {
                     println!();
                     run_pixel_test()?;
                 }
-                
+
                 println!();
                 println!("✅ All tests complete!");
                 println!();
@@ -330,4 +326,3 @@ fn main() -> io::Result<()> {
 
     Ok(())
 }
-

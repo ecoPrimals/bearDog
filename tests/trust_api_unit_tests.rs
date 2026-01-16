@@ -7,7 +7,7 @@ use beardog_tunnel::api::trust::{
     IdentityAttestation, TrustApiState, TrustDecision, TrustEvaluationRequest,
     TrustEvaluationResponse, TrustLevel,
 };
-use serde_json::{json, Value};
+use serde_json::json;
 
 // ====================================================================================
 // TrustApiState Unit Tests

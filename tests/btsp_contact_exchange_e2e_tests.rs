@@ -88,7 +88,7 @@ async fn test_e2e_lineage_path_same_family() {
     // Same family should have a lineage path
     assert_eq!(our_family, peer_family);
 
-    let lineage_path = vec![our_family.clone(), "tower-b".to_string()];
+    let lineage_path = [our_family.clone(), "tower-b".to_string()];
     assert_eq!(lineage_path.len(), 2);
     assert_eq!(lineage_path[0], "nat0");
 
@@ -99,7 +99,7 @@ async fn test_e2e_lineage_path_same_family() {
 #[tokio::test]
 async fn test_e2e_lineage_path_max_hops() {
     let max_hops = 3u32;
-    let lineage_path = vec!["nat0", "tower-a", "tower-b"];
+    let lineage_path = ["nat0", "tower-a", "tower-b"];
 
     // Path length should respect max_hops
     assert!(lineage_path.len() <= max_hops as usize + 1);
@@ -138,7 +138,7 @@ async fn test_e2e_peer_addresses_format() {
 
 #[tokio::test]
 async fn test_e2e_peer_addresses_multiple() {
-    let addresses = vec![
+    let addresses = [
         "192.168.1.5:10000".to_string(),
         "10.0.0.3:10001".to_string(),
     ];
@@ -155,7 +155,7 @@ async fn test_e2e_peer_addresses_multiple() {
 #[tokio::test]
 async fn test_e2e_search_depth_tracking() {
     let search_depth = 2usize;
-    let lineage_path = vec!["genesis", "tower-a", "tower-b"];
+    let lineage_path = ["genesis", "tower-a", "tower-b"];
 
     // Search depth should match lineage path length - 1
     assert_eq!(search_depth, lineage_path.len() - 1);
@@ -227,24 +227,18 @@ async fn test_e2e_complete_contact_exchange_flow() {
     // Verify complete flow
     assert!(response["success"].as_bool().unwrap());
     assert_eq!(response["data"]["contact"]["peer_id"], "tower-b");
-    assert!(
-        response["data"]["contact"]["addresses"]
-            .as_array()
-            .unwrap()
-            .len()
-            > 0
-    );
+    assert!(!response["data"]["contact"]["addresses"]
+        .as_array()
+        .unwrap()
+        .is_empty());
     assert!(!response["data"]["contact"]["lineage_proof"]
         .as_str()
         .unwrap()
         .is_empty());
-    assert!(
-        response["data"]["contact"]["lineage_path"]
-            .as_array()
-            .unwrap()
-            .len()
-            > 0
-    );
+    assert!(!response["data"]["contact"]["lineage_path"]
+        .as_array()
+        .unwrap()
+        .is_empty());
 
     // Cleanup
     env::remove_var("BEARDOG_FAMILY_ID");
@@ -305,7 +299,7 @@ async fn test_e2e_contact_exchange_different_family() {
 #[tokio::test]
 async fn test_e2e_contact_exchange_max_hops_exceeded() {
     let max_hops = 2u32;
-    let lineage_path = vec!["nat0", "a", "b", "c", "d"]; // 4 hops
+    let lineage_path = ["nat0", "a", "b", "c", "d"]; // 4 hops
 
     // If path exceeds max_hops, should fail
     assert!(lineage_path.len() > max_hops as usize + 1);
@@ -397,7 +391,7 @@ async fn test_e2e_songbird_contact_exchange_integration() {
     assert!(beardog_response["success"].as_bool().unwrap());
     let contact = &beardog_response["data"]["contact"];
     assert_eq!(contact["peer_id"], "tower2");
-    assert!(contact["addresses"].as_array().unwrap().len() > 0);
+    assert!(!contact["addresses"].as_array().unwrap().is_empty());
 
     // Songbird extracts first address for connection
     let peer_address = contact["addresses"][0].as_str().unwrap();
@@ -480,7 +474,7 @@ async fn test_e2e_genetic_family_verification() {
         .unwrap();
 
     let peer_family = "nat0";
-    let peer_lineage_path = vec![our_family.clone(), "tower-b".to_string()];
+    let peer_lineage_path = [our_family.clone(), "tower-b".to_string()];
 
     // Verify peer is in same genetic family
     assert!(peer_lineage_path[0] == our_family);
