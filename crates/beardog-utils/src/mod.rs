@@ -18,7 +18,6 @@ pub mod zero_copy;
 pub mod zero_copy_optimized;
 
 // Testing utilities
-pub mod property_based_testing;
 pub mod property_testing;
 
 // Re-export safe implementations
@@ -30,7 +29,6 @@ pub use zero_copy_safe::*;
 
 // Performance and testing utilities
 pub use performance_optimizations::*;
-pub use property_based_testing::PropertyBasedTestFramework;
 pub use property_testing::*;
 pub use simd_crypto_acceleration::*;
 pub use simd_optimizations::*;

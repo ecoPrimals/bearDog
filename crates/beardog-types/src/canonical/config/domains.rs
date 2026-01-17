@@ -20,7 +20,6 @@ pub mod bootstrap;
 pub mod compliance;
 pub mod database;
 pub mod discovery; // ✅ Canonical DiscoveryConfig (Nov 10, 2025)
-pub mod discovery_config; // ⚠️ DEPRECATED - Use discovery_unified (Nov 8, 2025)
 pub mod discovery_modules; // Domain-driven refactored components (Dec 18, 2025)
 pub mod discovery_unified;
 pub mod monitoring_config;
@@ -39,12 +38,6 @@ pub use ai_config::*;
 pub use bootstrap::*;
 pub use compliance::*;
 pub use database::*;
-// Re-export deprecated discovery types for backward compatibility
-#[allow(deprecated)]
-pub use discovery_config::{
-    ConsolidatedDiscoveryConfig, DiscoveryCacheConfig, DiscoverySecurityConfig,
-    NetworkDiscoveryConfig, QuantumDiscoveryConfig, ServiceRegistryConfig,
-};
 pub use discovery_unified::{
     CircuitBreakerConfig as UnifiedCircuitBreakerConfig,
     DiscoveryCacheConfig as UnifiedDiscoveryCacheConfig, DiscoveryProtocol,
@@ -78,10 +71,6 @@ pub use workflow::{
 // Re-export canonical configs (Nov 8, 2025 unification)
 pub use retry::CanonicalRetryConfig;
 pub use timeout::CanonicalTimeoutConfig;
-
-// Legacy re-exports (DEPRECATED - use CanonicalRetryConfig instead)
-// These will be removed once all code migrates to canonical versions
-pub use discovery_config::RetryConfig as DiscoveryRetryConfig;
 
 // All domain modules have been extracted and are complete
 

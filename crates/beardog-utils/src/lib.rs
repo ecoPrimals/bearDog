@@ -95,10 +95,6 @@ pub mod zero_copy_optimized;
 // Testing frameworks - canonical location
 pub mod property_testing;
 
-// Deprecated modules - for backward compatibility
-#[deprecated(since = "3.0.2", note = "Use property_testing module instead")]
-pub mod property_based_testing;
-
 // Export safe implementations by default - specific imports to avoid ambiguity
 pub use buffer_pools_safe::{PoolStats as BufferPoolStats, SafeBufferPool as BufferPoolSafe};
 pub use concurrent_safe::*;
