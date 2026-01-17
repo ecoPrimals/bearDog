@@ -4,7 +4,8 @@
 //! with certificate validation and connection pooling.
 
 use beardog_errors::BearDogError;
-use rustls::{ClientConfig, RootCertStore, ServerName};
+use rustls::{ClientConfig, RootCertStore};
+use rustls::pki_types::ServerName;
 use std::sync::Arc;
 use tokio_rustls::TlsConnector;
 
@@ -26,19 +27,30 @@ impl TlsConfig {
     pub fn new() -> Result<Self, BearDogError> {
         // Load system root certificates
         let mut root_store = RootCertStore::empty();
-        for cert in rustls_native_certs::load_native_certs()
-            .map_err(|e| BearDogError::system(format!("Failed to load root certificates: {}", e)))?
-        {
-            // Convert rustls_native_certs::Certificate to rustls::Certificate
-            let rustls_cert = rustls::Certificate(cert.0);
-            root_store.add(&rustls_cert).map_err(|e| {
+        
+        // rustls-native-certs 0.8 API: load_native_certs() returns CertificateResult
+        let cert_result = rustls_native_certs::load_native_certs();
+        
+        // Check for errors
+        if !cert_result.errors.is_empty() {
+            // Log errors but continue if we got some certs
+            if cert_result.certs.is_empty() {
+                return Err(BearDogError::system(format!(
+                    "Failed to load any root certificates: {:?}",
+                    cert_result.errors
+                )));
+            }
+        }
+        
+        for cert in cert_result.certs {
+            // rustls 0.23 API: add() now takes CertificateDer directly
+            root_store.add(cert).map_err(|e| {
                 BearDogError::system(format!("Failed to add root certificate: {}", e))
             })?;
         }
 
-        // Create TLS client configuration
+        // rustls 0.23 API: with_root_certificates() instead of with_safe_defaults()
         let config = ClientConfig::builder()
-            .with_safe_defaults()
             .with_root_certificates(root_store)
             .with_no_client_auth();
 
@@ -55,9 +67,9 @@ impl TlsConfig {
     /// This should ONLY be used for testing. In production, always validate certificates.
     #[cfg(test)]
     pub fn insecure() -> Result<Self, BearDogError> {
-        use rustls::client::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
-        use rustls::{Certificate, DigitallySignedStruct};
-        use std::time::SystemTime;
+        use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
+        use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
+        use rustls::DigitallySignedStruct;
 
         #[derive(Debug)]
         struct NoVerifier;
@@ -65,12 +77,11 @@ impl TlsConfig {
         impl ServerCertVerifier for NoVerifier {
             fn verify_server_cert(
                 &self,
-                _end_entity: &Certificate,
-                _intermediates: &[Certificate],
+                _end_entity: &CertificateDer,
+                _intermediates: &[CertificateDer],
                 _server_name: &ServerName,
-                _scts: &mut dyn Iterator<Item = &[u8]>,
                 _ocsp_response: &[u8],
-                _now: SystemTime,
+                _now: UnixTime,
             ) -> Result<ServerCertVerified, rustls::Error> {
                 Ok(ServerCertVerified::assertion())
             }
@@ -78,7 +89,7 @@ impl TlsConfig {
             fn verify_tls12_signature(
                 &self,
                 _message: &[u8],
-                _cert: &Certificate,
+                _cert: &CertificateDer,
                 _dss: &DigitallySignedStruct,
             ) -> Result<HandshakeSignatureValid, rustls::Error> {
                 Ok(HandshakeSignatureValid::assertion())
@@ -87,7 +98,7 @@ impl TlsConfig {
             fn verify_tls13_signature(
                 &self,
                 _message: &[u8],
-                _cert: &Certificate,
+                _cert: &CertificateDer,
                 _dss: &DigitallySignedStruct,
             ) -> Result<HandshakeSignatureValid, rustls::Error> {
                 Ok(HandshakeSignatureValid::assertion())
@@ -101,9 +112,9 @@ impl TlsConfig {
             }
         }
 
-        // Build config with custom (insecure) verifier
+        // rustls 0.23 API: with_custom_certificate_verifier moved to dangerous module
         let config = ClientConfig::builder()
-            .with_safe_defaults()
+            .dangerous()
             .with_custom_certificate_verifier(Arc::new(NoVerifier))
             .with_no_client_auth();
 
@@ -146,8 +157,8 @@ impl TlsConfig {
             .parse::<u16>()
             .map_err(|e| BearDogError::invalid_input(&format!("Invalid port: {}", e)))?;
 
-        // Parse server name for TLS
-        let server_name = ServerName::try_from(host)
+        // Parse server name for TLS (rustls 0.23 API)
+        let server_name = ServerName::try_from(host.to_owned())
             .map_err(|e| BearDogError::invalid_input(&format!("Invalid hostname: {}", e)))?;
 
         // Establish TCP connection

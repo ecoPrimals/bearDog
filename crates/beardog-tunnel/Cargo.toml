@@ -33,11 +33,13 @@ hostname = "0.3"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # TLS support for mTLS
-rustls = { version = "0.21", features = ["dangerous_configuration"] }
-tokio-rustls = "0.24"
-rustls-pemfile = "1.0"
-webpki-roots = "0.25"
-rustls-native-certs = "0.6"
+# rustls 0.23 uses aws-lc-rs by default (better than ring, but still has some C)
+# For BearDog we use the default crypto provider for production-quality TLS
+rustls = { version = "0.23", features = ["std"] }  # Default includes aws-lc-rs
+tokio-rustls = "0.26"
+rustls-pemfile = "2.0"
+webpki-roots = "0.26"
+rustls-native-certs = "0.8"
 tarpc = { version = "0.34", features = ["full"] }
 tokio-serde = { version = "0.8", features = ["json"] }
 reqwest = { workspace = true }  # Now uses rustls-tls (pure Rust!)
