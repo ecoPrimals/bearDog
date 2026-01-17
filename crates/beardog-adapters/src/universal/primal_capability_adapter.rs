@@ -6,9 +6,9 @@
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
-    ComputeAbility, NetworkFunction, OrchestrationFeature, PerformanceRequirements,
-    SecurityRequirements, SecurityService, StorageCharacteristic, UniversalCapabilityType,
-    UniversalDiscoveryRequest, UniversalServiceDescriptor,
+    CollaborationFunction, ComputeAbility, NetworkFunction, OrchestrationFeature,
+    PerformanceRequirements, SecurityRequirements, SecurityService, StorageCharacteristic,
+    UniversalCapabilityType, UniversalDiscoveryRequest, UniversalServiceDescriptor,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -289,6 +289,109 @@ impl UniversalPrimalAdapter {
         };
 
         self.send_capability_request(orchestration_capability, orchestration_request)
+    }
+
+    // ================================================================================================
+    // Collaboration Capability Methods (Replaces NestGate hardcoded calls)
+    // ================================================================================================
+
+    /// Request template information (replaces direct NestGate::get_template_info)
+    ///
+    /// Discovers any primal providing Collaboration::TemplateStorage capability
+    /// No hardcoded "NestGate" - pure runtime discovery
+    pub fn request_template_info(
+        &self,
+        template_id: &str,
+    ) -> Result<PrimalResponse> {
+        let collaboration_capability = UniversalCapabilityType::Collaboration {
+            functions: vec![CollaborationFunction::TemplateStorage],
+        };
+
+        let payload = serde_json::json!({
+            "action": "get_template_info",
+            "template_id": template_id,
+        });
+
+        self.send_capability_request(collaboration_capability, payload)
+    }
+
+    /// Request user permissions and collaborator list (replaces direct NestGate::get_collaborators)
+    ///
+    /// Discovers any primal providing Collaboration::PermissionManagement capability
+    /// No hardcoded primal names - pure capability-based discovery
+    pub fn request_user_permissions(
+        &self,
+        user_id: &str,
+        resource_id: &str,
+    ) -> Result<PrimalResponse> {
+        let collaboration_capability = UniversalCapabilityType::Collaboration {
+            functions: vec![CollaborationFunction::PermissionManagement],
+        };
+
+        let payload = serde_json::json!({
+            "action": "get_user_permissions",
+            "user_id": user_id,
+            "resource_id": resource_id,
+        });
+
+        self.send_capability_request(collaboration_capability, payload)
+    }
+
+    /// Request template lineage data (replaces direct NestGate::get_lineage)
+    ///
+    /// Discovers any primal providing Collaboration::LineageTracking capability
+    pub fn request_lineage_data(
+        &self,
+        template_id: &str,
+    ) -> Result<PrimalResponse> {
+        let collaboration_capability = UniversalCapabilityType::Collaboration {
+            functions: vec![CollaborationFunction::LineageTracking],
+        };
+
+        let payload = serde_json::json!({
+            "action": "get_lineage",
+            "template_id": template_id,
+        });
+
+        self.send_capability_request(collaboration_capability, payload)
+    }
+
+    /// Request community metrics and usage statistics (replaces direct NestGate::get_usage)
+    ///
+    /// Discovers any primal providing Collaboration::CommunityMetrics capability
+    pub fn request_community_metrics(
+        &self,
+        template_id: &str,
+    ) -> Result<PrimalResponse> {
+        let collaboration_capability = UniversalCapabilityType::Collaboration {
+            functions: vec![CollaborationFunction::CommunityMetrics],
+        };
+
+        let payload = serde_json::json!({
+            "action": "get_community_metrics",
+            "template_id": template_id,
+        });
+
+        self.send_capability_request(collaboration_capability, payload)
+    }
+
+    /// Request security assessment (replaces direct NestGate::get_security_assessment)
+    ///
+    /// Discovers any primal providing Collaboration::SecurityAssessment capability
+    pub fn request_security_assessment(
+        &self,
+        template_id: &str,
+    ) -> Result<PrimalResponse> {
+        let collaboration_capability = UniversalCapabilityType::Collaboration {
+            functions: vec![CollaborationFunction::SecurityAssessment],
+        };
+
+        let payload = serde_json::json!({
+            "action": "get_security_assessment",
+            "template_id": template_id,
+        });
+
+        self.send_capability_request(collaboration_capability, payload)
     }
 
     /// Get adapter metrics
