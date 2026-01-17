@@ -42,7 +42,6 @@ webpki-roots = "0.26"
 rustls-native-certs = "0.8"
 tarpc = { version = "0.34", features = ["full"] }
 tokio-serde = { version = "0.8", features = ["json"] }
-reqwest = { workspace = true }  # Now uses rustls-tls (pure Rust!)
 tokio-tungstenite = "0.20"
 serde_json = "1.0"
 anyhow = "1.0"  # Required for Unix socket IPC
@@ -97,7 +96,6 @@ solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
 ecosystem = []
-# btsp-api = ["axum", "tower", "tower-http"]  # DEPRECATED: BTSP evolved to Unix socket JSON-RPC
 default = []
 android_native = []
 pixel8_optimizations = [ "android_native",]

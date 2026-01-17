@@ -10,7 +10,8 @@ use tracing::{debug, error, info, warn};
 // Submodules
 pub mod cloud_discoverer;
 pub mod mobile_discoverer;
-pub mod network_discoverer;
+// DELETED: network_discoverer (used HTTP client - not needed!)
+// pub mod network_discoverer;
 pub mod pkcs11_discoverer;
 pub mod platform_discoverer;
 pub mod software_discoverer;
@@ -19,7 +20,8 @@ pub mod usb_discoverer;
 // Re-exports
 pub use cloud_discoverer::CloudDiscoverer;
 pub use mobile_discoverer::MobileDiscoverer;
-pub use network_discoverer::NetworkDiscoverer;
+// DELETED: NetworkDiscoverer (used HTTP client)
+// pub use network_discoverer::NetworkDiscoverer;
 pub use pkcs11_discoverer::Pkcs11Discoverer;
 pub use platform_discoverer::PlatformDiscoverer;
 pub use software_discoverer::SoftwareDiscoverer;
@@ -36,8 +38,8 @@ pub struct DiscoveryEngine {
     mobile_discoverer: MobileDiscoverer,
     /// Platform discoverer
     platform_discoverer: PlatformDiscoverer,
-    /// Network discoverer
-    network_discoverer: NetworkDiscoverer,
+    // DELETED: network_discoverer (used HTTP client - not needed!)
+    // network_discoverer: NetworkDiscoverer,
     /// USB discoverer
     usb_discoverer: UsbDiscoverer,
     /// Software HSM discoverer
@@ -57,7 +59,7 @@ impl DiscoveryEngine {
             cloud_discoverer: CloudDiscoverer::new()?,
             mobile_discoverer: MobileDiscoverer::new()?,
             platform_discoverer: PlatformDiscoverer::new()?,
-            network_discoverer: NetworkDiscoverer::new()?,
+            // DELETED: network_discoverer (HTTP client not needed!)
             usb_discoverer: UsbDiscoverer::new()?,
             software_discoverer: SoftwareDiscoverer::new()?,
         })
@@ -116,16 +118,8 @@ impl DiscoveryEngine {
             }
         }
 
-        // 4. Network HSMs (mDNS, ecosystem discovery, known endpoints)
-        match self.network_discoverer.discover().await {
-            Ok(mut hsms) => {
-                info!("✓ Network discovery: {} HSMs found", hsms.len());
-                discovered.append(&mut hsms);
-            }
-            Err(e) => {
-                warn!("⚠ Network discovery failed (non-fatal): {}", e);
-            }
-        }
+        // 4. Network HSMs - DELETED (used HTTP client, not needed for Unix architecture!)
+        debug!("⊘ Network discovery skipped (BearDog uses Unix sockets only)");
 
         // 5. USB HSMs (YubiKey, Nitrokey, etc.)
         match self.usb_discoverer.discover().await {

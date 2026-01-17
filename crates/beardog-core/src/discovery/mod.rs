@@ -37,8 +37,9 @@
 //! # }
 //! ```
 
-/// Infant discovery system - zero-knowledge bootstrap
-pub mod infant_discovery;
+// DELETED: infant_discovery (used HTTP client - not needed!)
+// #[cfg(feature = "http-client")]
+// pub mod infant_discovery;
 
 /// Universal infant discovery patterns
 pub mod universal_infant_discovery;

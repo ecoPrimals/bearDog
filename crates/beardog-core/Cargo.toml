@@ -42,7 +42,6 @@ blake3.workspace = true
 hmac.workspace = true
 hkdf = "0.12.4"
 argon2.workspace = true
-reqwest = { workspace = true }  # HTTP client with rustls-tls (pure Rust)
 parking_lot.workspace = true  # High-performance RwLock for UniversalAdapter
 
 [dev-dependencies]

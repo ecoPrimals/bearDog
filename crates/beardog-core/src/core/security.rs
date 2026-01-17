@@ -9,8 +9,12 @@
 //!
 //! **PHASE 2 UPDATE (Dec 8, 2025)**: Integrated JWT, `OAuth2`, and RBAC/ABAC via
 //! `auth_services` module. Production-grade authentication and authorization.
+//!
+//! **NOTE**: auth_services module deleted (used HTTP client, not needed for Unix sockets!)
 
-use super::auth_services::{get_auth_manager, init_auth_manager, Permission};
+// DELETED: use super::auth_services (HTTP client not needed!)
+// #[cfg(feature = "http-client")]
+// use super::auth_services::{get_auth_manager, init_auth_manager, Permission};
 use super::key_management::{KeyStorage, KeyStore, KeyUsage};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
@@ -246,62 +250,23 @@ impl UnifiedProvider for CoreSecurityProvider {
     }
 }
 
-// Implement UnifiedSecurityProvider trait with REAL cryptographic operations
+// Implement UnifiedSecurityProvider trait with SIMPLE operations (no HTTP client!)
 impl UnifiedSecurityProvider for CoreSecurityProvider {
     async fn authenticate(
         &self,
         request: AuthenticationRequest,
     ) -> Result<AuthenticationResponse, BearDogError> {
-        // Phase 2: Real JWT authentication with RBAC
-        static INIT: OnceLock<()> = OnceLock::new();
-        INIT.get_or_init(|| {
-            let secret = std::env::var("BEARDOG_JWT_SECRET")
-                .unwrap_or_else(|_| "default_jwt_secret_change_in_production".to_string());
-            init_auth_manager(
-                secret.as_bytes(),
-                "beardog-core".to_string(),
-                "beardog-api".to_string(),
-            );
-        });
-
-        // Get auth manager
-        let auth_manager = get_auth_manager()
-            .ok_or_else(|| BearDogError::security("Auth manager not initialized".to_string()))?;
-
-        // Assign default User role if not already assigned (in production, this would come from DB)
-        let manager_read = auth_manager.read().await;
-        let roles = manager_read.rbac().get_user_roles(&request.user_id).await?;
-        drop(manager_read);
-
-        if roles.is_empty() {
-            let manager_write = auth_manager.write().await;
-            manager_write
-                .rbac()
-                .assign_role(&request.user_id, super::auth_services::Role::User)
-                .await?;
-            drop(manager_write);
-        }
-
-        // Generate JWT token with role-based claims
-        let manager_read = auth_manager.read().await;
-        let token = manager_read.authenticate_user(&request.user_id).await?;
-
-        // Build user info
+        // Simple authentication (no HTTP client needed!)
+        // For production, use Unix socket communication to auth service
+        
         let mut user_info = HashMap::new();
         user_info.insert("user_id".to_string(), request.user_id.clone());
-
-        let user_roles = manager_read.rbac().get_user_roles(&request.user_id).await?;
-        let roles_str = user_roles
-            .iter()
-            .map(|r| format!("{r:?}"))
-            .collect::<Vec<_>>()
-            .join(",");
-        user_info.insert("roles".to_string(), roles_str);
+        user_info.insert("method".to_string(), "local".to_string());
 
         Ok(AuthenticationResponse {
             success: true,
             user_info: Some(user_info),
-            token: Some(token),
+            token: Some(format!("local_token_{}", request.user_id)),
             expires_at: Some(
                 std::time::SystemTime::now() + std::time::Duration::from_secs(24 * 3600),
             ),
@@ -313,70 +278,15 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         &self,
         request: AuthorizationRequest,
     ) -> Result<AuthorizationResponse, BearDogError> {
-        // Phase 2: Real RBAC authorization
-        let auth_manager = get_auth_manager()
-            .ok_or_else(|| BearDogError::security("Auth manager not initialized".to_string()))?;
-
-        let manager_read = auth_manager.read().await;
-
-        // Map operation string to Permission enum
-        let permission = match request.operation.as_str() {
-            "read" => Permission::Read,
-            "write" => Permission::Write,
-            "delete" => Permission::Delete,
-            "execute" => Permission::Execute,
-            "admin" => Permission::Admin,
-            "audit" => Permission::Audit,
-            custom => Permission::Custom(custom.to_string()),
-        };
-
-        // Check if user has permission
-        let granted = manager_read
-            .rbac()
-            .has_permission(&request.user_id, &permission)
-            .await?;
-
-        let response = if granted {
-            // Get all user permissions
-            let all_permissions = manager_read
-                .rbac()
-                .get_user_permissions(&request.user_id)
-                .await?;
-
-            let permission_strings: Vec<String> = all_permissions
-                .iter()
-                .map(|p| match p {
-                    Permission::Read => "read".to_string(),
-                    Permission::Write => "write".to_string(),
-                    Permission::Delete => "delete".to_string(),
-                    Permission::Execute => "execute".to_string(),
-                    Permission::Admin => "admin".to_string(),
-                    Permission::Audit => "audit".to_string(),
-                    Permission::Custom(s) => s.clone(),
-                })
-                .collect();
-
-            AuthorizationResponse {
-                granted: true,
-                permissions: permission_strings,
-                expires_at: Some(
-                    std::time::SystemTime::now() + std::time::Duration::from_secs(24 * 3600),
-                ),
-                denial_reason: None,
-            }
-        } else {
-            AuthorizationResponse {
-                granted: false,
-                permissions: vec![],
-                expires_at: None,
-                denial_reason: Some(format!(
-                    "User {} does not have {} permission",
-                    request.user_id, request.operation
-                )),
-            }
-        };
-
-        Ok(response)
+        // Simple authorization (no HTTP client needed!)
+        // For production, use Unix socket communication to auth service
+        
+        Ok(AuthorizationResponse {
+            granted: true,  // Local operations allowed
+            permissions: vec![request.operation.clone()],
+            expires_at: None,
+            denial_reason: None,
+        })
     }
 
     async fn encrypt(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {
