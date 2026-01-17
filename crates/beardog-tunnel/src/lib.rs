@@ -102,6 +102,9 @@
 /// Core tunnel and session management functionality
 pub mod tunnel;
 
+// Operational modes for UniBin architecture
+pub mod modes;
+
 // Simple HSM client for CLI usage
 pub mod simple_hsm_client;
 

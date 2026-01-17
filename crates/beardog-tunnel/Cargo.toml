@@ -28,6 +28,7 @@ tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.4", features = ["derive"] }  # UniBin architecture (ecosystem standard)
 hostname = "0.3"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
@@ -124,5 +125,5 @@ core-foundation = "0.9"
 core-foundation-sys = "0.8"
 
 [[bin]]
-name = "beardog-server"
-path = "src/bin/beardog-server.rs"
+name = "beardog"  # UniBin architecture (ecosystem standard v1.0.0)
+path = "src/main.rs"
