@@ -11,18 +11,23 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
 /// HSM Provider types supported by the factory
+///
+/// **Philosophy**: Open standards only, zero vendor locks!
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProviderType {
     /// Software-based HSM (for development/testing)
     Software,
-    /// Android StrongBox hardware HSM
+    /// Android StrongBox hardware HSM (open Android standard)
     AndroidStrongBox,
-    /// iOS Secure Enclave hardware HSM
+    /// iOS Secure Enclave hardware HSM (open iOS standard)
     IOSSecureEnclave,
-    /// PKCS#11 hardware HSM (YubiKey, network HSM, etc.)
-    Pkcs11,
+    /// TPM 2.0 hardware HSM (open TCG standard)
+    Tpm,
     /// Cloud HSM (AWS KMS, Azure Key Vault, Google Cloud KMS)
     Cloud(CloudProvider),
+    // PKCS#11 ELIMINATED: Vendor lock removed!
+    // Use FIDO2/SoloKey for hardware keys (open standard)
+    // Use TPM 2.0 for platform HSM (open standard)
 }
 
 // Re-export canonical CloudProvider and CloudHsmService from beardog-types
@@ -97,7 +102,7 @@ impl ProviderFactory {
             "ios" | "ios-secure-enclave" | "secure-enclave" => {
                 self.create_ios_provider(&config).await
             }
-            "pkcs11" | "yubikey" | "hsm" => self.create_pkcs11_provider(&config).await,
+            "tpm" | "tpm2" | "tpm20" => self.create_tpm_provider(&config).await,
             "aws" | "aws-kms" => self.create_cloud_provider(&config, CloudProvider::AwsKms).await,
             "azure" | "azure-keyvault" => {
                 self.create_cloud_provider(&config, CloudProvider::AzureKeyVault).await
@@ -105,8 +110,12 @@ impl ProviderFactory {
             "gcp" | "gcp-kms" | "google" => {
                 self.create_cloud_provider(&config, CloudProvider::GcpKms).await
             }
+            // PKCS#11 ELIMINATED: Use open standards instead!
+            "pkcs11" | "yubikey" => Err(BearDogError::not_supported(
+                "PKCS#11 eliminated (vendor lock). Use: FIDO2/SoloKey (solo-v2) or TPM 2.0 (tpm)".to_string()
+            )),
             _ => Err(BearDogError::not_supported(format!(
-                "Unknown HSM provider: {}. Supported: software, android, ios, pkcs11, aws, azure, gcp",
+                "Unknown HSM provider: {}. Supported: software, android, ios, tpm, aws, azure, gcp",
                 provider_name
             ))),
         }
@@ -208,8 +217,11 @@ impl ProviderFactory {
         }
     }
 
-    /// Create PKCS#11 hardware HSM provider
-    async fn create_pkcs11_provider(
+    /// Create TPM 2.0 hardware HSM provider
+    ///
+    /// **Philosophy**: Open TCG standard, vendor neutral!
+    /// Works with ANY TPM 2.0 chip (Intel, AMD, STMicro, etc.)
+    async fn create_tpm_provider(
         &self,
         config: &UnifiedHsmConfig,
     ) -> Result<ProviderType, BearDogError> {
@@ -219,33 +231,29 @@ impl ProviderFactory {
             ));
         }
 
-        if !config.hardware.pkcs11.enabled {
+        if !config.hardware.tpm.enabled {
             return Err(BearDogError::business(
-                "PKCS#11 is disabled in configuration".to_string(),
+                "TPM 2.0 is disabled in configuration".to_string(),
             ));
         }
 
-        let library_path = config
+        // TPM device path from config or default
+        let device_path = config
             .hardware
-            .pkcs11
-            .library_path
+            .tpm
+            .device_path
             .as_ref()
-            .ok_or_else(|| BearDogError::business("PKCS#11 library path not configured".to_string()))?;
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|| "/dev/tpm0".to_string());
 
-        if !library_path.exists() {
-            return Err(BearDogError::not_found(format!(
-                "PKCS#11 library not found: {}",
-                library_path.display()
-            )));
-        }
-
-        info!("Creating PKCS#11 HSM provider from {}", library_path.display());
+        info!("Creating TPM 2.0 HSM provider (device: {})", device_path);
         debug!(
-            "PKCS#11 config: slot={:?}, pin_required={}",
-            config.hardware.pkcs11.slot_id, config.hardware.pkcs11.require_pin
+            "TPM config: require_endorsement_key={}, use_resource_manager={}",
+            config.hardware.tpm.require_endorsement_key,
+            config.hardware.tpm.use_resource_manager
         );
 
-        Ok(ProviderType::Pkcs11)
+        Ok(ProviderType::Tpm)
     }
 
     /// Create cloud HSM provider
