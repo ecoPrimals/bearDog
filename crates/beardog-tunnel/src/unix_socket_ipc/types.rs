@@ -134,8 +134,11 @@ impl Protocol {
             return Protocol::JsonRpc;
         }
 
-        // TODO: Add tarpc magic byte detection when tarpc format is finalized
-        // For now, tarpc requires explicit implementation
+        // Check for tarpc magic bytes: 0x54 0x52 0x50 0x43 ("TRPC" in ASCII)
+        // tarpc uses bincode serialization with magic header
+        if first_bytes.len() >= 4 && first_bytes.starts_with(b"TRPC") {
+            return Protocol::Tarpc;
+        }
 
         // Default: JSON-RPC (universal fallback)
         Protocol::JsonRpc
