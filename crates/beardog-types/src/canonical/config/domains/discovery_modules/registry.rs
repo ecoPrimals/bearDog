@@ -77,7 +77,7 @@ pub struct ServiceRegistryConfig {
     ///
     /// Multiple endpoints provide redundancy and load balancing.
     /// Uses `Arc<str>` for zero-copy cloning (10x faster).
-    pub endpoints: Vec<Arc<str>>,
+    pub endpoints: Vec<String>,
 
     /// Time-to-live for service registrations before automatic expiration
     ///

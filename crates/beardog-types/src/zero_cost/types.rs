@@ -192,18 +192,18 @@ pub struct WorkflowResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
     /// Name of the item
-    pub name: std::sync::Arc<str>,
+    pub name: String,
     /// The endpoint value
-    pub endpoint: std::sync::Arc<str>,
+    pub endpoint: String,
     /// Port number the service is listening on
     /// Number of port
     pub port: u16,
     /// The metadata value
-    pub metadata: std::collections::HashMap<std::sync::Arc<str>, std::sync::Arc<str>>,
+    pub metadata: std::collections::HashMap<String, String>,
     /// Optional health check path
-    pub health_check_path: Option<std::sync::Arc<str>>,
+    pub health_check_path: Option<String>,
     /// Collection of capabilities
-    pub capabilities: Vec<std::sync::Arc<str>>,
+    pub capabilities: Vec<String>,
 }
 
 impl ServiceInfo {
@@ -217,18 +217,12 @@ impl ServiceInfo {
         capabilities: Vec<String>,
     ) -> Self {
         Self {
-            name: name.into().into(),
-            endpoint: endpoint.into().into(),
+            name: name.into(),
+            endpoint: endpoint.into(),
             port,
-            metadata: metadata
-                .into_iter()
-                .map(|(k, v)| (k.into(), v.into()))
-                .collect(),
-            health_check_path: health_check_path.map(std::convert::Into::into),
-            capabilities: capabilities
-                .into_iter()
-                .map(std::convert::Into::into)
-                .collect(),
+            metadata,
+            health_check_path,
+            capabilities,
         }
     }
 }

@@ -182,11 +182,10 @@ pub struct ServiceRegistryConfig {
         serialize_with = "crate::canonical::config::utils::serialize_arc_str",
         deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
     )]
-    pub backend: Arc<str>,
+    pub backend: String,
 
     /// Registry endpoint URLs for connecting to the backend
-    /// Uses `Arc<str>` for zero-copy cloning (10x faster)
-    pub endpoints: Vec<Arc<str>>,
+    pub endpoints: Vec<String>,
 
     /// Time-to-live for service registrations before automatic expiration
     #[serde(with = "humantime_serde_secs")]
@@ -223,8 +222,7 @@ pub struct ServiceRegistryConfig {
 #[serde(default)]
 pub struct NetworkDiscoveryConfig {
     /// Discovery protocols to use for service location (e.g., ["mdns", "http", "grpc"])
-    /// Uses `Arc<str>` for zero-copy cloning (10x faster)
-    pub protocols: Vec<Arc<str>>,
+    pub protocols: Vec<String>,
 
     /// Ports to scan during network discovery
     pub ports: Vec<u16>,
