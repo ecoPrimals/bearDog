@@ -177,11 +177,7 @@ pub struct EtcdAuth {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct ServiceRegistryConfig {
-    /// Registry backend type (e.g., "etcd", "consul", "zookeeper", "redis") - Arc for fast cloning
-    #[serde(
-        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
-        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
-    )]
+    /// Registry backend type (e.g., "etcd", "consul", "zookeeper", "redis")
     pub backend: String,
 
     /// Registry endpoint URLs for connecting to the backend
@@ -509,7 +505,7 @@ impl UnifiedDiscoveryConfig {
 impl ServiceRegistryConfig {
     pub fn const_defaults() -> Self {
         Self {
-            backend: Arc::from(""),
+            backend: String::new(),
             endpoints: Vec::new(),
             service_ttl: Duration::from_secs(300), // 5 minutes
             health_check_interval: Duration::from_secs(30),
@@ -645,8 +641,8 @@ impl Default for ServiceRegistryConfig {
             });
 
         Self {
-            backend: Arc::from("consul"),
-            endpoints: vec![Arc::from(registry_endpoint.as_str())],
+            backend: "consul".to_string(),
+            endpoints: vec![registry_endpoint],
             service_ttl: Duration::from_secs(300), // 5 minutes
             health_check_interval: Duration::from_secs(30),
             cleanup_interval: Duration::from_secs(60),
@@ -661,7 +657,7 @@ impl Default for NetworkDiscoveryConfig {
         use beardog_config::domains::network_ports::{DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT};
 
         Self {
-            protocols: vec![Arc::from("http"), Arc::from("grpc")],
+            protocols: vec!["http".to_string(), "grpc".to_string()],
             ports: vec![DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT],
             timeout: Duration::from_secs(5),
             retry: CanonicalRetryConfig::default(),
@@ -849,10 +845,10 @@ impl BearDogConfig for UnifiedDiscoveryConfig {
 
         // Registry settings
         if let Ok(backend) = std::env::var("BEARDOG_REGISTRY_BACKEND") {
-            config.registry.backend = Arc::from(backend.as_str());
+            config.registry.backend = backend;
         }
         if let Ok(endpoints) = std::env::var("BEARDOG_REGISTRY_ENDPOINTS") {
-            config.registry.endpoints = endpoints.split(',').map(|s| Arc::from(s.trim())).collect();
+            config.registry.endpoints = endpoints.split(',').map(|s| s.trim().to_string()).collect();
         }
         if let Ok(ttl) = std::env::var("BEARDOG_REGISTRY_SERVICE_TTL_SECS") {
             if let Ok(secs) = ttl.parse::<u64>() {

@@ -350,6 +350,10 @@ impl EcosystemDiscoveryAdapter {
                 CapabilityType::ContainerOrchestration,
                 CapabilityType::WorkflowOrchestration,
             ],
+            UniversalCapabilityType::Collaboration { .. } => vec![
+                CapabilityType::DataStorage,  // Template storage
+                CapabilityType::Authentication, // User auth
+            ],
         };
 
         // Check if primal has ANY of the required capabilities

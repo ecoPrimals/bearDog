@@ -65,13 +65,7 @@ pub struct EtcdAuth {
 #[serde(default)]
 pub struct ServiceRegistryConfig {
     /// Registry backend type (e.g., "etcd", "consul", "zookeeper", "redis")
-    ///
-    /// Uses `Arc<str>` for fast cloning without heap allocation.
-    #[serde(
-        serialize_with = "crate::canonical::config::utils::serialize_arc_str",
-        deserialize_with = "crate::canonical::config::utils::deserialize_arc_str"
-    )]
-    pub backend: Arc<str>,
+    pub backend: String,
 
     /// Registry endpoint URLs for connecting to the backend
     ///
@@ -121,7 +115,7 @@ impl ServiceRegistryConfig {
     /// Note: Endpoints will be empty; set via builder or Default.
     pub fn const_defaults() -> Self {
         Self {
-            backend: Arc::from(""),
+            backend: String::new(),
             endpoints: Vec::new(),
             service_ttl: Duration::from_secs(300), // 5 minutes
             health_check_interval: Duration::from_secs(30),
@@ -143,7 +137,7 @@ impl ServiceRegistryConfig {
     /// Get the primary endpoint (first in the list)
     ///
     /// Returns None if no endpoints are configured.
-    pub fn primary_endpoint(&self) -> Option<&Arc<str>> {
+    pub fn primary_endpoint(&self) -> Option<&String> {
         self.endpoints.first()
     }
 }
@@ -173,8 +167,8 @@ impl Default for ServiceRegistryConfig {
             });
 
         Self {
-            backend: Arc::from("consul"),
-            endpoints: vec![Arc::from(registry_endpoint.as_str())],
+            backend: "consul".to_string(),
+            endpoints: vec![registry_endpoint],
             service_ttl: Duration::from_secs(300), // 5 minutes
             health_check_interval: Duration::from_secs(30),
             cleanup_interval: Duration::from_secs(60),

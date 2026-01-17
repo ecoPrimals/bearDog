@@ -17,7 +17,7 @@ use hkdf::Hkdf;
 use sha2::Sha256;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use parking_lot::RwLock;
 use zeroize::Zeroizing;
 
 /// Software HSM key material stored securely in memory
@@ -103,14 +103,14 @@ impl SecureSoftwareHsm {
 
     /// Store key material securely (encrypted at rest in memory)
     async fn store_key(&self, key_id: String, material: KeyMaterial) -> Result<(), KmsError> {
-        let mut store = self.key_store.write().await;
+        let mut store = self.key_store.write();
         store.insert(key_id, material);
         Ok(())
     }
 
     /// Retrieve key material
     async fn get_key(&self, key_id: &KeyId) -> Result<KeyMaterial, KmsError> {
-        let store = self.key_store.read().await;
+        let store = self.key_store.read();
         store
             .get(key_id.as_str())
             .cloned()
@@ -388,7 +388,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
     }
 
     async fn delete_key(&self, key_id: &KeyId) -> Result<(), KmsError> {
-        let mut store = self.key_store.write().await;
+        let mut store = self.key_store.write();
         store
             .remove(key_id.as_str())
             .ok_or_else(|| KmsError::KeyNotFound {
@@ -401,7 +401,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
     async fn list_keys(
         &self,
     ) -> Result<Vec<super::key_management_capability::KeyMetadata>, KmsError> {
-        let store = self.key_store.read().await;
+        let store = self.key_store.read();
         let metadata: Vec<_> = store
             .iter()
             .map(|(key_id_str, material)| {

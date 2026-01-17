@@ -373,9 +373,10 @@ impl PrimalDiscovery {
         let socket_path = registry_addr.trim_start_matches("unix://");
         
         // Build JSON-RPC request
-        let capability = match &query.capability {
-            Some(cap) => cap.to_string(),
-            None => "generic".to_string(),
+        let capability = if !query.capabilities.is_empty() {
+            format!("{:?}", query.capabilities[0])
+        } else {
+            "generic".to_string()
         };
         
         let request = serde_json::json!({
@@ -394,7 +395,11 @@ impl PrimalDiscovery {
                 use tokio::io::{AsyncReadExt, AsyncWriteExt};
                 
                 // Send request
-                let request_str = serde_json::to_string(&request)?;
+                let request_str = serde_json::to_string(&request)
+                    .map_err(|e| BearDogError::Network {
+                        message: format!("Failed to serialize UPA request: {}", e),
+                        category: beardog_errors::NetworkErrorCategory::Connection,
+                    })?;
                 stream.write_all(request_str.as_bytes()).await?;
                 stream.write_all(b"\n").await?;
                 
@@ -404,7 +409,11 @@ impl PrimalDiscovery {
                 let response_str = String::from_utf8_lossy(&buffer[..n]);
                 
                 // Parse JSON-RPC response
-                let response: serde_json::Value = serde_json::from_str(&response_str)?;
+                let response: serde_json::Value = serde_json::from_str(&response_str)
+                    .map_err(|e| BearDogError::Network {
+                        message: format!("Failed to parse UPA response: {}", e),
+                        category: beardog_errors::NetworkErrorCategory::Connection,
+                    })?;
                 
                 if let Some(result) = response.get("result") {
                     if let Some(primals_array) = result.as_array() {
