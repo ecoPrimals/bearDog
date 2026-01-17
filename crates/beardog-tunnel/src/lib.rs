@@ -125,13 +125,6 @@ pub mod ipc_server;
 #[cfg(feature = "btsp-api")]
 pub mod btsp_api_server;
 
-// DELETED: Unified API Server (used HTTP client - not needed, BearDog uses Unix sockets!)
-// #[cfg(feature = "http-client")]
-// pub mod api;
-
-// Unix socket IPC server (OLD - being refactored)
-// Removed: unix_socket_ipc_OLD (refactored into unix_socket_ipc/)
-
 // Unix socket IPC server (PRIMARY inter-primal communication)
 pub mod tarpc_service;
 pub mod unix_socket_ipc;
@@ -161,10 +154,6 @@ pub use btsp_provider::{
 
 #[cfg(feature = "btsp-api")]
 pub use btsp_api_server::BtspApiServer;
-
-// DELETED: HTTP client code (not needed for Unix socket architecture!)
-// #[cfg(feature = "http-client")]
-// pub use api::{BearDogApiServer, BearDogApiServerConfig, UpaClient, UpaClientConfig};
 
 // Re-export HSM discovery for CLI usage
 pub use tunnel::hsm::{

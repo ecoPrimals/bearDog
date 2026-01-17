@@ -21,8 +21,6 @@ mod tests;
 
 // Core submodules
 pub mod adapter;
-// DELETED: auth_services (used HTTP client - not needed for Unix architecture!)
-// pub mod auth_services;
 pub mod key_management; // Phase 2: HSM key persistence, public key management
 pub mod monitoring;
 pub mod security;

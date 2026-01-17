@@ -10,11 +10,9 @@
 //! **PHASE 2 UPDATE (Dec 8, 2025)**: Integrated JWT, `OAuth2`, and RBAC/ABAC via
 //! `auth_services` module. Production-grade authentication and authorization.
 //!
-//! **NOTE**: auth_services module deleted (used HTTP client, not needed for Unix sockets!)
+//! **NOTE (Jan 17, 2026)**: auth_services deleted (HTTP-based, not needed for Unix sockets)
+//! Production auth uses Unix socket communication to dedicated auth service.
 
-// DELETED: use super::auth_services (HTTP client not needed!)
-// #[cfg(feature = "http-client")]
-// use super::auth_services::{get_auth_manager, init_auth_manager, Permission};
 use super::key_management::{KeyStorage, KeyStore, KeyUsage};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
