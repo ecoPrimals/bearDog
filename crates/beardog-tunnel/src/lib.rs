@@ -121,10 +121,6 @@ pub mod tls;
 // Generic IPC server - capability-based, primal-agnostic
 pub mod ipc_server;
 
-// BTSP HTTP API Server - Remote access for Songbird (legacy)
-#[cfg(feature = "btsp-api")]
-pub mod btsp_api_server;
-
 // Unix socket IPC server (PRIMARY inter-primal communication)
 pub mod tarpc_service;
 pub mod unix_socket_ipc;
@@ -151,9 +147,6 @@ pub use btsp_provider::{
     BeardogBtspProvider, BtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
     TunnelStatus,
 };
-
-#[cfg(feature = "btsp-api")]
-pub use btsp_api_server::BtspApiServer;
 
 // Re-export HSM discovery for CLI usage
 pub use tunnel::hsm::{
