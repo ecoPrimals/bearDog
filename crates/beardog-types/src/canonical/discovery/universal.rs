@@ -35,6 +35,11 @@ pub enum UniversalCapabilityType {
         /// Orchestration features
         features: Vec<OrchestrationFeature>,
     },
+    /// Collaboration capabilities (template storage, lineage tracking, community features)
+    Collaboration {
+        /// Collaboration functions
+        functions: Vec<CollaborationFunction>,
+    },
 }
 
 /// Compute abilities that any compute provider can offer
@@ -124,6 +129,27 @@ pub enum OrchestrationFeature {
     ConfigurationManagement,
     /// Workflow orchestration
     WorkflowOrchestration,
+}
+
+/// Collaboration functions for template storage, user management, and community features
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum CollaborationFunction {
+    /// Template storage and retrieval
+    TemplateStorage,
+    /// User authentication and identity
+    UserAuthentication,
+    /// Template lineage and version tracking
+    LineageTracking,
+    /// Community metrics and usage statistics
+    CommunityMetrics,
+    /// Security assessment and vulnerability scanning
+    SecurityAssessment,
+    /// Collaborator and permission management
+    PermissionManagement,
+    /// Template rating and feedback
+    RatingSystem,
+    /// Template search and discovery
+    TemplateDiscovery,
 }
 
 /// Discovery request that doesn't specify vendors or primals
