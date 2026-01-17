@@ -105,7 +105,8 @@ pub mod tunnel;
 // Operational modes for UniBin architecture
 pub mod modes;
 
-// Simple HSM client for CLI usage
+// Simple HSM client for CLI usage (PKCS#11 - optional)
+#[cfg(feature = "pkcs11")]
 pub mod simple_hsm_client;
 
 // NOTE: universal_hsm module - RE-ENABLED for Phase 1.2 rebuild (Nov 7, 2025)
@@ -114,9 +115,6 @@ pub mod universal_hsm;
 
 // BTSP Provider - Songbird integration for internet deployment
 pub mod btsp_provider;
-
-// TLS support for mTLS
-pub mod tls;
 
 // Generic IPC server - capability-based, primal-agnostic
 pub mod ipc_server;
@@ -139,6 +137,7 @@ mod unix_socket_ipc_schema_tests;
 mod test_helpers;
 
 // Re-export key types
+#[cfg(feature = "pkcs11")]
 pub use simple_hsm_client::SimplePkcs11Client;
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
 

@@ -32,14 +32,6 @@ clap = { version = "4.4", features = ["derive"] }  # UniBin architecture (ecosys
 hostname = "0.3"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# TLS support for mTLS
-# rustls 0.23 uses aws-lc-rs by default (better than ring, but still has some C)
-# For BearDog we use the default crypto provider for production-quality TLS
-rustls = { version = "0.23", features = ["std"] }  # Default includes aws-lc-rs
-tokio-rustls = "0.26"
-rustls-pemfile = "2.0"
-webpki-roots = "0.26"
-rustls-native-certs = "0.8"
 tarpc = { version = "0.34", features = ["full"] }
 tokio-serde = { version = "0.8", features = ["json"] }
 tokio-tungstenite = "0.20"
@@ -66,7 +58,7 @@ hex = "0.4"
 hkdf = "0.12"
 arrayref = "0.3"
 bincode = "1.3"
-cryptoki = "0.6"
+cryptoki = { version = "0.6", optional = true }  # PKCS#11 HSM support (optional)
 zeroize = "1.7"
 parking_lot = "0.12"
 async-trait = "0.1"
@@ -95,6 +87,7 @@ primal-sovereignty = []
 solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
+pkcs11 = ["cryptoki"]  # Optional PKCS#11 HSM support
 ecosystem = []
 default = []
 android_native = []

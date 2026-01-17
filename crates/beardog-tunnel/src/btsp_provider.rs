@@ -243,9 +243,6 @@ pub struct BeardogBtspProvider {
     /// Peer trust database (peer_id -> TrustRecord)
     trust_db: Arc<RwLock<HashMap<String, PeerTrustRecord>>>,
 
-    /// TLS configuration for mTLS connections
-    tls_config: Arc<crate::tls::TlsConfig>,
-
     /// Metrics: Total tunnels established
     tunnels_established: Arc<AtomicU64>,
 
@@ -275,10 +272,6 @@ impl BeardogBtspProvider {
         genetics: Arc<EcosystemGeneticEngine>,
     ) -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog BTSP Provider with BirdSong genetics");
-
-        // Initialize TLS configuration
-        let tls_config = crate::tls::TlsConfig::new()
-            .map_err(|e| BearDogError::system(format!("Failed to initialize TLS: {}", e)))?;
 
         // Generate master secret from HSM for BirdSong
         use crate::tunnel::hsm::KeyType;
@@ -328,7 +321,6 @@ impl BeardogBtspProvider {
             birdsong: Arc::new(birdsong),
             tunnels: Arc::new(RwLock::new(HashMap::new())),
             trust_db: Arc::new(RwLock::new(HashMap::new())),
-            tls_config: Arc::new(tls_config),
             tunnels_established: Arc::new(AtomicU64::new(0)),
             encryption_count: Arc::new(AtomicU64::new(0)),
             decryption_count: Arc::new(AtomicU64::new(0)),
@@ -583,21 +575,16 @@ impl BeardogBtspProvider {
         peer: &PeerEndpoint,
         _session_key: &[u8],
     ) -> Result<(), BearDogError> {
-        debug!("🔗 Establishing mTLS with peer: {}", peer.endpoint);
+        debug!("🔗 Skipping mTLS (BTSP uses Unix sockets now): {}", peer.endpoint);
 
         // Validate endpoint
         if peer.endpoint.is_empty() {
             return Err(BearDogError::invalid_input("Peer endpoint cannot be empty"));
         }
 
-        // Establish TLS connection
-        self.tls_config.connect(&peer.endpoint).await.map_err(|e| {
-            warn!("mTLS connection failed: {}", e);
-            BearDogError::system(format!("mTLS establishment failed: {}", e))
-        })?;
-
+        // Note: BTSP now uses Unix sockets, so no TLS connection needed
         info!(
-            "✅ mTLS connection established with peer: {}",
+            "✅ Peer endpoint validated (Unix socket): {}",
             peer.endpoint
         );
         Ok(())

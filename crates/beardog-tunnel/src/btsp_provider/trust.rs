@@ -30,8 +30,6 @@ pub struct TrustManager {
     birdsong: Arc<BirdSongManager>,
     /// Peer trust database (peer_id -> TrustRecord)
     trust_db: Arc<RwLock<HashMap<String, PeerTrustRecord>>>,
-    /// TLS configuration for mTLS connections
-    tls_config: Arc<crate::tls::TlsConfig>,
 }
 
 impl TrustManager {
@@ -39,12 +37,10 @@ impl TrustManager {
     pub fn new(
         birdsong: Arc<BirdSongManager>,
         trust_db: Arc<RwLock<HashMap<String, PeerTrustRecord>>>,
-        tls_config: Arc<crate::tls::TlsConfig>,
     ) -> Self {
         Self {
             birdsong,
             trust_db,
-            tls_config,
         }
     }
 
@@ -97,27 +93,22 @@ impl TrustManager {
         Ok(())
     }
 
-    /// Establish mTLS connection with peer
+    /// Establish mTLS connection with peer (Unix socket mode - no TLS needed)
     pub async fn establish_mtls(
         &self,
         peer: &PeerInfo,
         _session_key: &[u8],
     ) -> Result<(), BearDogError> {
-        debug!("🔗 Establishing mTLS with peer: {}", peer.endpoint);
+        debug!("🔗 Skipping mTLS (BTSP uses Unix sockets now): {}", peer.endpoint);
 
         // Validate endpoint
         if peer.endpoint.is_empty() {
             return Err(BearDogError::invalid_input("Peer endpoint cannot be empty"));
         }
 
-        // Establish TLS connection
-        self.tls_config.connect(&peer.endpoint).await.map_err(|e| {
-            warn!("mTLS connection failed: {}", e);
-            BearDogError::system(format!("mTLS establishment failed: {}", e))
-        })?;
-
+        // Note: BTSP now uses Unix sockets, so no TLS connection needed
         info!(
-            "✅ mTLS connection established with peer: {}",
+            "✅ Peer endpoint validated (Unix socket): {}",
             peer.endpoint
         );
         Ok(())
