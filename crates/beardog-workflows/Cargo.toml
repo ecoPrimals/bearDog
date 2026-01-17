@@ -66,5 +66,4 @@ workspace = true
 [dependencies.rand]
 workspace = true
 
-[dependencies.reqwest]
-workspace = true
+# REMOVED: reqwest (HTTP client not needed - Unix sockets only!)

@@ -76,9 +76,10 @@ features = [ "serde",]
 version = "1.0"
 features = [ "v4", "serde",]
 
-[dependencies.reqwest]
-workspace = true  # Updated from 0.11 to workspace 0.12 with rustls-tls
-features = [ "json",]
+# REMOVED: reqwest (HTTP client not needed - BearDog uses Unix sockets!)
+# [dependencies.reqwest]
+# workspace = true
+# features = [ "json",]
 
 [dev-dependencies]
 ed25519-dalek = "2.1"

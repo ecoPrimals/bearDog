@@ -47,7 +47,8 @@ criterion = { version = "0.5", features = ["html_reports"] }
 [features]
 default = [ "config",]
 crypto = [ "ring",]
-network = [ "reqwest", "tokio",]
+# REMOVED: network feature (reqwest not needed!)
+# network = [ "reqwest", "tokio",]
 config = [ "serde_yaml", "toml", "tokio",]
 
 [[bench]]
@@ -81,7 +82,8 @@ optional = true
 version = "0.17"
 optional = true
 
-[dependencies.reqwest]
-version = "0.12"
-features = [ "json",]
-optional = true
+# REMOVED: reqwest (HTTP client not needed!)
+# [dependencies.reqwest]
+# version = "0.12"
+# features = [ "json",]
+# optional = true

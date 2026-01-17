@@ -26,8 +26,8 @@ mdns-sd = "0.11"
 # DNS-SD discovery
 trust-dns-resolver = "0.23"
 
-# HTTP client for service registries
-reqwest = { workspace = true }  # Updated from 0.11 to workspace 0.12 with rustls-tls
+# REMOVED: HTTP client (not needed - Unix sockets + mDNS only!)
+# reqwest = { workspace = true }
 
 # Error handling
 anyhow = "1.0"

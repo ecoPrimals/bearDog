@@ -18,8 +18,8 @@ tokio = { version = "1.35", features = ["full"] }
 async-trait = "0.1"
 futures = "0.3"
 
-# HTTP client with connection pooling
-reqwest = { workspace = true }  # Updated from 0.11 to workspace 0.12
+# REMOVED: HTTP client (BearDog ↔ Songbird uses Unix sockets!)
+# reqwest = { workspace = true }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
