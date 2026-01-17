@@ -78,23 +78,34 @@ impl SocketConfig {
 
         // Tier 1: Check for primal-specific BEARDOG_SOCKET env var (highest priority)
         if let Ok(socket_path) = std::env::var("BEARDOG_SOCKET") {
-            return Self {
-                socket_path: PathBuf::from(socket_path),
-                family_id,
-                node_id,
-                source: SocketPathSource::PrimalEnvVar,
-            };
+            // Validate: reject empty paths (fail fast, no hanging)
+            if socket_path.is_empty() {
+                // Skip to next tier instead of using empty path
+                // This prevents production hangs discovered in testing
+            } else {
+                return Self {
+                    socket_path: PathBuf::from(socket_path),
+                    family_id,
+                    node_id,
+                    source: SocketPathSource::PrimalEnvVar,
+                };
+            }
         }
 
         // Tier 2: Check for generic orchestrator BIOMEOS_SOCKET_PATH
         // This allows Neural API to set a standard path for all primals
         if let Ok(socket_path) = std::env::var("BIOMEOS_SOCKET_PATH") {
-            return Self {
-                socket_path: PathBuf::from(socket_path),
-                family_id,
-                node_id,
-                source: SocketPathSource::OrchestratorEnvVar,
-            };
+            // Validate: reject empty paths (fail fast, no hanging)
+            if socket_path.is_empty() {
+                // Skip to next tier instead of using empty path
+            } else {
+                return Self {
+                    socket_path: PathBuf::from(socket_path),
+                    family_id,
+                    node_id,
+                    source: SocketPathSource::OrchestratorEnvVar,
+                };
+            }
         }
 
         // Tier 3: Try XDG Runtime Directory (more secure, per-user)
@@ -256,9 +267,18 @@ impl std::fmt::Display for SocketConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+    
+    // Global mutex to serialize env var tests
+    // Modern Rust: Tests that mutate global state (env vars) must be serialized
+    // This is a deep debt solution: explicit serialization for correctness
+    static ENV_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_env_var_override_takes_priority() {
+        // Lock to prevent concurrent env var modification
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        
         // Clean slate - remove any existing variables
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BEARDOG_FAMILY_ID");
@@ -292,11 +312,85 @@ mod tests {
     }
 
     #[test]
-    fn test_biomeos_socket_path_tier2() {
+    fn test_empty_socket_path_rejected() {
+        // Lock to prevent concurrent env var modification
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        
+        // Test: Empty socket paths should fall through to next tier
+        // This prevents production hangs discovered in integration testing
+        
         // Clean slate
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
         std::env::remove_var("BEARDOG_FAMILY_ID");
+        std::env::remove_var("BEARDOG_NODE_ID");
+
+        // Set empty socket path (should be rejected)
+        std::env::set_var("BEARDOG_SOCKET", "");
+        std::env::set_var("BEARDOG_FAMILY_ID", "test");
+
+        let config = SocketConfig::from_env();
+
+        // Should NOT use empty path - should fall through to tier 3 or 4
+        assert_ne!(config.socket_path_string(), "");
+        assert_ne!(config.source(), SocketPathSource::PrimalEnvVar);
+        
+        // Should use XDG or /tmp fallback
+        assert!(
+            config.source() == SocketPathSource::XdgRuntime 
+            || config.source() == SocketPathSource::TempDir
+        );
+
+        // Cleanup
+        std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BEARDOG_FAMILY_ID");
+    }
+
+    #[test]
+    fn test_empty_biomeos_socket_rejected() {
+        // Lock to prevent concurrent env var modification
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        
+        // Test: Empty BIOMEOS_SOCKET_PATH should also be rejected
+        
+        // Clean slate
+        std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        std::env::remove_var("BEARDOG_FAMILY_ID");
+
+        // Set empty orchestrator socket (should be rejected)
+        std::env::set_var("BIOMEOS_SOCKET_PATH", "");
+        std::env::set_var("BEARDOG_FAMILY_ID", "test");
+
+        let config = SocketConfig::from_env();
+
+        // Should NOT use empty path - should fall through to tier 3 or 4
+        assert_ne!(config.socket_path_string(), "");
+        assert_ne!(config.source(), SocketPathSource::OrchestratorEnvVar);
+        
+        // Should use XDG or /tmp fallback
+        assert!(
+            config.source() == SocketPathSource::XdgRuntime 
+            || config.source() == SocketPathSource::TempDir
+        );
+
+        // Cleanup
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        std::env::remove_var("BEARDOG_FAMILY_ID");
+    }
+
+    #[test]
+    fn test_biomeos_socket_path_tier2() {
+        // Lock to prevent concurrent env var modification
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        
+        // Clean slate - IMPORTANT: Remove ALL relevant env vars for concurrent test safety
+        std::env::remove_var("BEARDOG_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        std::env::remove_var("BEARDOG_FAMILY_ID");
+        std::env::remove_var("FAMILY_ID");
+        std::env::remove_var("BEARDOG_NODE_ID");
+        std::env::remove_var("NODE_ID");
 
         // Set BIOMEOS_SOCKET_PATH (Tier 2 - Neural API orchestrator)
         std::env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/beardog-default-default.sock");
@@ -315,13 +409,15 @@ mod tests {
             "Source should be OrchestratorEnvVar when BIOMEOS_SOCKET_PATH is set"
         );
 
-        // Cleanup
+        // Cleanup - IMPORTANT: Clean ALL vars we touched
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
         std::env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_beardog_socket_overrides_biomeos_socket_path() {
+        // Lock to prevent concurrent env var modification
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
         // Clean slate
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
@@ -350,6 +446,7 @@ mod tests {
 
     #[test]
     fn test_xdg_runtime_preferred_over_tmp() {
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
         std::env::set_var("BEARDOG_FAMILY_ID", "xdg-test");
@@ -375,6 +472,7 @@ mod tests {
 
     #[test]
     fn test_fallback_to_tmp_with_node_id() {
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::set_var("BEARDOG_FAMILY_ID", "fallback");
         std::env::set_var("BEARDOG_NODE_ID", "node123");
@@ -395,6 +493,7 @@ mod tests {
 
     #[test]
     fn test_default_family_and_node_ids() {
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BEARDOG_FAMILY_ID");
         std::env::remove_var("FAMILY_ID");
@@ -417,6 +516,7 @@ mod tests {
 
     #[test]
     fn test_description_format() {
+        let _lock = ENV_TEST_LOCK.lock().unwrap();
         std::env::set_var("BEARDOG_SOCKET", "/custom/socket.sock");
         let config = SocketConfig::from_env();
 
