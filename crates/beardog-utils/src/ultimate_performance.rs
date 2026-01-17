@@ -364,15 +364,27 @@ impl MemoryPrefetchController {
 
 impl SIMDCapabilities {
     fn detect() -> Self {
-        Self {
-            has_avx2: is_x86_feature_detected!("avx2"),
-            has_avx512: is_x86_feature_detected!("avx512f"),
-            has_sse42: is_x86_feature_detected!("sse4.2"),
-            vector_width: if is_x86_feature_detected!("avx2") {
-                256
-            } else {
-                128
-            },
+        #[cfg(target_arch = "x86_64")]
+        {
+            Self {
+                has_avx2: is_x86_feature_detected!("avx2"),
+                has_avx512: is_x86_feature_detected!("avx512f"),
+                has_sse42: is_x86_feature_detected!("sse4.2"),
+                vector_width: if is_x86_feature_detected!("avx2") {
+                    256
+                } else {
+                    128
+                },
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        {
+            Self {
+                has_avx2: false,
+                has_avx512: false,
+                has_sse42: false,
+                vector_width: 128,  // ARM NEON default
+            }
         }
     }
 }

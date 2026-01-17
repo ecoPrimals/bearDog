@@ -22,11 +22,23 @@ impl SimdCapabilities {
     /// Detect available SIMD capabilities
     #[must_use]
     pub fn detect() -> Self {
-        Self {
-            has_aes_ni: std::arch::is_x86_feature_detected!("aes"),
-            has_avx2: std::arch::is_x86_feature_detected!("avx2"),
-            has_sse42: std::arch::is_x86_feature_detected!("sse4.2"),
-            has_sha_extensions: std::arch::is_x86_feature_detected!("sha"),
+        #[cfg(target_arch = "x86_64")]
+        {
+            Self {
+                has_aes_ni: std::arch::is_x86_feature_detected!("aes"),
+                has_avx2: std::arch::is_x86_feature_detected!("avx2"),
+                has_sse42: std::arch::is_x86_feature_detected!("sse4.2"),
+                has_sha_extensions: std::arch::is_x86_feature_detected!("sha"),
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        {
+            Self {
+                has_aes_ni: false,
+                has_avx2: false,
+                has_sse42: false,
+                has_sha_extensions: false,
+            }
         }
     }
 }

@@ -31,11 +31,23 @@ use tracing::{debug, info};
 impl Default for CpuFeatures {}
 
     fn default() -> Self {
-        Self {
-            avx2: is_x86_feature_detected!("avx2"),
-            avx512: is_x86_feature_detected!("avx512f"),
-            fma: is_x86_feature_detected!("fma"),
-            sse4_1: is_x86_feature_detected!("sse4.1"),
+        #[cfg(target_arch = "x86_64")]
+        {
+            Self {
+                avx2: is_x86_feature_detected!("avx2"),
+                avx512: is_x86_feature_detected!("avx512f"),
+                fma: is_x86_feature_detected!("fma"),
+                sse4_1: is_x86_feature_detected!("sse4.1"),
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        {
+            Self {
+                avx2: false,
+                avx512: false,
+                fma: false,
+                sse4_1: false,
+            }
         }
     }
 impl SimdGeneticsProcessor {

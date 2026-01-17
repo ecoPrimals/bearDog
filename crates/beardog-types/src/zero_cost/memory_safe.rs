@@ -246,14 +246,25 @@ pub struct SafeSimdCapabilities {
 
 impl Default for SafeSimdCapabilities {
     fn default() -> Self {
-        Self {
-            avx2_available: is_x86_feature_detected!("avx2"),
-            sse42_available: is_x86_feature_detected!("sse4.2"),
-            vector_width: if is_x86_feature_detected!("avx2") {
-                32
-            } else {
-                16
-            },
+        #[cfg(target_arch = "x86_64")]
+        {
+            Self {
+                avx2_available: is_x86_feature_detected!("avx2"),
+                sse42_available: is_x86_feature_detected!("sse4.2"),
+                vector_width: if is_x86_feature_detected!("avx2") {
+                    32
+                } else {
+                    16
+                },
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        {
+            Self {
+                avx2_available: false,
+                sse42_available: false,
+                vector_width: 16,  // Default for ARM NEON
+            }
         }
     }
 }
@@ -262,16 +273,27 @@ impl SafeSimdCapabilities {
     /// Create new SIMD capabilities
     /// Creates a new instance
     pub fn new() -> Self {
-        Self {
-            avx2_available: is_x86_feature_detected!("avx2"),
-            sse42_available: is_x86_feature_detected!("sse4.2"),
-            vector_width: if is_x86_feature_detected!("avx2") {
-                32
-            } else if is_x86_feature_detected!("sse4.2") {
-                16
-            } else {
-                8
-            },
+        #[cfg(target_arch = "x86_64")]
+        {
+            Self {
+                avx2_available: is_x86_feature_detected!("avx2"),
+                sse42_available: is_x86_feature_detected!("sse4.2"),
+                vector_width: if is_x86_feature_detected!("avx2") {
+                    32
+                } else if is_x86_feature_detected!("sse4.2") {
+                    16
+                } else {
+                    8
+                },
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        {
+            Self {
+                avx2_available: false,
+                sse42_available: false,
+                vector_width: 16,  // Default for ARM NEON
+            }
         }
     }
 
