@@ -58,7 +58,6 @@ hex = "0.4"
 hkdf = "0.12"
 arrayref = "0.3"
 bincode = "1.3"
-cryptoki = { version = "0.6", optional = true }  # PKCS#11 HSM support (optional)
 zeroize = "1.7"
 parking_lot = "0.12"
 async-trait = "0.1"
@@ -87,7 +86,6 @@ primal-sovereignty = []
 solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
-pkcs11 = ["cryptoki"]  # Optional PKCS#11 HSM support
 ecosystem = []
 default = []
 android_native = []
