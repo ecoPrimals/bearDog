@@ -79,7 +79,8 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
 
 /// Verify creator identity
 async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo, BearDogError> {
-    // TODO: Get actual creator info from NestGate
+    // TODO: Get actual creator info via collaboration capability
+    // Future: Use CollaborationService::get_creator_info() for runtime discovery
     // For now, return placeholder data
     let creator_id = extract_creator_from_template_id(template_id);
 
@@ -109,7 +110,7 @@ async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo
 
 /// Extract creator ID from template ID
 fn extract_creator_from_template_id(template_id: &str) -> String {
-    // Simple extraction - in production would query NestGate
+    // Simple extraction - in production would query via collaboration capability
     if template_id.starts_with("template-") {
         "user-creator".to_string()
     } else {
@@ -121,7 +122,8 @@ fn extract_creator_from_template_id(template_id: &str) -> String {
 async fn get_template_lineage(
     _template_id: &TemplateId,
 ) -> Result<Vec<LineageVersion>, BearDogError> {
-    // TODO: Get actual lineage from NestGate
+    // TODO: Get actual lineage via collaboration capability
+    // Future: Use CollaborationService::get_template_lineage() for runtime discovery
     // For now, return single version
     Ok(vec![LineageVersion {
         version: "1.0.0".to_string(),
@@ -151,7 +153,8 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
 
 /// Get community usage metrics
 async fn get_community_usage(_template_id: &TemplateId) -> Result<CommunityUsage, BearDogError> {
-    // TODO: Get actual usage from NestGate
+    // TODO: Get actual usage via collaboration capability
+    // Future: Use CollaborationService::get_community_usage() for runtime discovery
     // For now, return placeholder data
     Ok(CommunityUsage {
         deployments: 145,

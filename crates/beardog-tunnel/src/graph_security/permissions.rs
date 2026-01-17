@@ -38,7 +38,8 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
         return Ok(UserRole::Owner);
     }
 
-    // TODO: Check collaborator list (requires NestGate integration)
+    // TODO: Check collaborator list via collaboration capability
+    // Future: Use CollaborationService::check_collaborator_list() for runtime discovery
     // For now, non-owners are viewers
     Ok(UserRole::Viewer)
 }
