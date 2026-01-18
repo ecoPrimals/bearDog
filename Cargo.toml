@@ -174,7 +174,6 @@ beardog-traits = { path = "crates/beardog-traits" }
 beardog-utils = { path = "crates/beardog-utils" }
 beardog-workflows = { path = "crates/beardog-workflows" }
 beardog-compliance = { path = "crates/beardog-compliance" }
-beardog-api = { path = "crates/beardog-api" }
 beardog-cli = { path = "crates/beardog-cli" }
 beardog-deploy = { path = "crates/beardog-deploy" }
 beardog-production = { path = "crates/beardog-production" }
@@ -210,7 +209,6 @@ beardog-ipc = { path = "crates/beardog-ipc" }
 hostname = "0.3"
 beardog-security = { workspace = true }
 beardog-traits = { workspace = true }
-beardog-api = { workspace = true }
 beardog-cli = { workspace = true }
 
 tokio = { workspace = true }

@@ -32,9 +32,6 @@ workspace = true
 [dependencies.beardog-auth]
 workspace = true
 
-[dependencies.beardog-api]
-workspace = true
-
 [dependencies.beardog-genetics]
 workspace = true
 
