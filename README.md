@@ -97,7 +97,7 @@ See [START_HERE.md](START_HERE.md) for complete setup instructions.
 - ✅ **Discovery infrastructure**: mDNS, UPA registry, DNS-SD operational!
 - ✅ **Dual protocols**: tarpc (primary) + JSON-RPC (fallback) both functional!
 - ✅ **OpenSSL eliminated**: rustls 0.23 + aws-lc-rs (47% faster builds!)
-- ✅ **All tests passing**: 53/53 tests (5 new crypto tests!)
+- ✅ **All tests passing**: 105/105 tests (53 unit + 52 crypto comprehensive!)
 - ✅ **Chaos & fault tested**: 14 comprehensive tests (NO sleeps!)
 - ✅ **Technical debt eliminated**: ZERO unsafe, ZERO vendor locks!
 - ✅ **TPM 2.0 functional**: Real device discovery (+204 lines)
@@ -268,8 +268,10 @@ cargo llvm-cov --html --open
 ```
 
 ### Test Status
-- **UniBin Tests**: 36/36 passing (0.08s) ✅
-- **Total Duration**: 0.08s (fully concurrent!) ✅
+- **Unit Tests**: 53/53 passing (infrastructure) ✅
+- **Crypto Tests**: 52/52 passing (comprehensive) ✅
+- **Total Tests**: 105/105 passing ✅
+- **Total Duration**: <5s (fully concurrent!) ✅
 - **No Sleeps**: Zero forced delays ✅
 - **No Serialization**: Truly concurrent ✅
 
