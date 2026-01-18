@@ -37,7 +37,7 @@ use tracing::{debug, info};
 /// # Returns
 ///
 /// - `signature`: Base64-encoded Ed25519 signature (64 bytes)
-pub(crate) async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
 
     // Extract parameters
@@ -105,7 +105,7 @@ pub(crate) async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value,
 /// # Returns
 ///
 /// - `valid`: Boolean indicating if signature is valid
-pub(crate) async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.verify_ed25519")?;
 
     // Extract parameters
@@ -170,7 +170,7 @@ pub(crate) async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Valu
 ///
 /// - `public_key`: Base64-encoded X25519 public key (32 bytes)
 /// - `secret_key`: Base64-encoded X25519 secret key (32 bytes)
-pub(crate) async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<Value, String> {
     let purpose = params
         .and_then(|p| p.get("purpose"))
         .and_then(|v| v.as_str())
@@ -214,7 +214,7 @@ pub(crate) async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> 
 /// # Returns
 ///
 /// - `shared_secret`: Base64-encoded shared secret (32 bytes)
-pub(crate) async fn handle_x25519_derive_secret(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_x25519_derive_secret(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.x25519_derive_secret")?;
 
     // Extract parameters
@@ -287,7 +287,7 @@ pub(crate) async fn handle_x25519_derive_secret(params: Option<&Value>) -> Resul
 /// - `ciphertext`: Base64-encoded ciphertext
 /// - `nonce`: Base64-encoded nonce (12 bytes)
 /// - `tag`: Base64-encoded authentication tag (16 bytes)
-pub(crate) async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.chacha20_poly1305_encrypt")?;
 
     // Extract parameters
@@ -373,7 +373,7 @@ pub(crate) async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> 
 /// # Returns
 ///
 /// - `plaintext`: Base64-encoded plaintext
-pub(crate) async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.chacha20_poly1305_decrypt")?;
 
     // Extract parameters
@@ -469,7 +469,7 @@ pub(crate) async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> 
 /// # Returns
 ///
 /// - `hash`: Base64-encoded BLAKE3 hash (32 bytes)
-pub(crate) async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.blake3_hash")?;
 
     // Extract parameters
@@ -513,7 +513,7 @@ pub(crate) async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, 
 /// # Returns
 ///
 /// - `mac`: Base64-encoded HMAC-SHA256 tag (32 bytes)
-pub(crate) async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.hmac_sha256")?;
 
     // Extract parameters
