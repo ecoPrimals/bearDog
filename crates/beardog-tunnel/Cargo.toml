@@ -49,6 +49,7 @@ rand = "0.8"
 rand_core = { version = "0.6", features = ["getrandom"] }  # Pure Rust CSRNG for genetic crypto
 sha2 = "0.10"
 sha3 = "0.10"  # For entropy mixing (evolved from mock)
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }  # Pure Rust X25519 for TLS key exchange (Songbird support)
 hmac = "0.12"  # Pure Rust HMAC for genetic crypto
 blake3 = { version = "1.5", features = ["pure"] }  # Pure Rust (no C assembly) for universal portability
 argon2 = "0.5"

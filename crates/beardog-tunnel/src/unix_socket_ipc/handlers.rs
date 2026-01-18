@@ -254,6 +254,21 @@ async fn handle_method(
                         "version": "1.0",
                         "methods": ["generate_jwt_secret"],
                         "description": "JWT secret generation for authentication systems (e.g., NestGate)"
+                    },
+                    {
+                        "type": "crypto",
+                        "version": "1.0",
+                        "methods": [
+                            "sign_ed25519",
+                            "verify_ed25519",
+                            "x25519_generate_ephemeral",
+                            "x25519_derive_secret",
+                            "chacha20_poly1305_encrypt",
+                            "chacha20_poly1305_decrypt",
+                            "blake3_hash",
+                            "hmac_sha256"
+                        ],
+                        "description": "Pure Rust cryptographic operations for Songbird TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC"
                     }
                 ],
                 "version": env!("CARGO_PKG_VERSION"),
@@ -1055,6 +1070,50 @@ async fn handle_method(
                 "provider": "beardog",
                 "generated_at": Utc::now().to_rfc3339(),
             }))
+        }
+
+        // ========================================================================
+        // CRYPTO OPERATIONS (For Songbird TLS and other primals)
+        // ========================================================================
+
+        ("crypto", "sign_ed25519") => {
+            info!("🔐 Crypto: sign_ed25519");
+            super::crypto_handlers::handle_sign_ed25519(params).await
+        }
+
+        ("crypto", "verify_ed25519") => {
+            info!("🔍 Crypto: verify_ed25519");
+            super::crypto_handlers::handle_verify_ed25519(params).await
+        }
+
+        ("crypto", "x25519_generate_ephemeral") => {
+            info!("🔑 Crypto: x25519_generate_ephemeral");
+            super::crypto_handlers::handle_x25519_generate_ephemeral(params).await
+        }
+
+        ("crypto", "x25519_derive_secret") => {
+            info!("🤝 Crypto: x25519_derive_secret");
+            super::crypto_handlers::handle_x25519_derive_secret(params).await
+        }
+
+        ("crypto", "chacha20_poly1305_encrypt") => {
+            info!("🔒 Crypto: chacha20_poly1305_encrypt");
+            super::crypto_handlers::handle_chacha20_poly1305_encrypt(params).await
+        }
+
+        ("crypto", "chacha20_poly1305_decrypt") => {
+            info!("🔓 Crypto: chacha20_poly1305_decrypt");
+            super::crypto_handlers::handle_chacha20_poly1305_decrypt(params).await
+        }
+
+        ("crypto", "blake3_hash") => {
+            info!("🔨 Crypto: blake3_hash");
+            super::crypto_handlers::handle_blake3_hash(params).await
+        }
+
+        ("crypto", "hmac_sha256") => {
+            info!("🔐 Crypto: hmac_sha256");
+            super::crypto_handlers::handle_hmac_sha256(params).await
         }
 
         // Unknown method
