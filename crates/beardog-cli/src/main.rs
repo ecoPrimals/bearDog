@@ -3,6 +3,7 @@
 
 #![allow(dead_code)] // CLI handlers not all wired up yet
 
+use beardog_cli::{ClientArgs, DaemonArgs, DoctorArgs, ServerArgs};
 use beardog_errors::BearDogError;
 use clap::{Parser, Subcommand};
 
@@ -88,74 +89,6 @@ enum Commands {
 
     /// Health diagnostics
     Doctor(DoctorArgs),
-}
-
-// ============================================================================
-// UNIBIN OPERATIONAL MODES
-// ============================================================================
-
-#[derive(Parser)]
-struct ServerArgs {
-    /// Unix socket path
-    #[arg(long, default_value = "/tmp/beardog.sock")]
-    socket: String,
-
-    /// Family ID for BirdSong
-    #[arg(long)]
-    family_id: Option<String>,
-
-    /// Orchestrator ID
-    #[arg(long)]
-    orchestrator_id: Option<String>,
-}
-
-#[derive(Parser)]
-struct DaemonArgs {
-    /// Unix socket path
-    #[arg(long, default_value = "/tmp/beardog.sock")]
-    socket: String,
-
-    /// PID file path
-    #[arg(long, default_value = "/tmp/beardog.pid")]
-    pid_file: String,
-
-    /// Log file path
-    #[arg(long, default_value = "/tmp/beardog.log")]
-    log_file: String,
-
-    /// Family ID for BirdSong
-    #[arg(long)]
-    family_id: Option<String>,
-
-    /// Orchestrator ID
-    #[arg(long)]
-    orchestrator_id: Option<String>,
-}
-
-#[derive(Parser)]
-struct ClientArgs {
-    /// Unix socket path to connect to
-    #[arg(long, default_value = "/tmp/beardog.sock")]
-    socket: String,
-
-    /// Command to execute (if not provided, starts interactive mode)
-    #[arg(long)]
-    command: Option<String>,
-}
-
-#[derive(Parser)]
-struct DoctorArgs {
-    /// Comprehensive health check
-    #[arg(long)]
-    comprehensive: bool,
-
-    /// Output format (text, json)
-    #[arg(long, default_value = "text")]
-    format: String,
-
-    /// Check specific component
-    #[arg(long)]
-    component: Option<String>,
 }
 
 // ============================================================================

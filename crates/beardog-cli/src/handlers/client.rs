@@ -2,18 +2,12 @@
 //!
 //! Interactive client for connecting to BearDog server.
 
-// ClientArgs is defined in main.rs and passed as a parameter
+use crate::ClientArgs;
 use beardog_errors::BearDogError;
 use serde_json::json;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{error, info};
-
-/// Client arguments
-pub struct ClientArgs {
-    pub socket: String,
-    pub command: Option<String>,
-}
 
 /// Handle client command - interactive REPL
 pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {

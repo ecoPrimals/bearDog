@@ -2,20 +2,11 @@
 //!
 //! This handler runs the server in daemon mode (background process).
 
-// DaemonArgs is defined in main.rs and passed as a parameter
+use crate::DaemonArgs;
 use beardog_errors::BearDogError;
 use std::fs::File;
 use std::io::Write;
 use tracing::{info, warn};
-
-/// Daemon arguments
-pub struct DaemonArgs {
-    pub socket: String,
-    pub pid_file: String,
-    pub log_file: String,
-    pub family_id: Option<String>,
-    pub orchestrator_id: Option<String>,
-}
 
 /// Handle daemon command - run as background service
 pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
@@ -81,7 +72,7 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
     info!("");
 
     // Run server in foreground (systemd/nohup will background it)
-    let server_args = super::server::ServerArgs {
+    let server_args = crate::ServerArgs {
         socket: args.socket,
         family_id: args.family_id,
         orchestrator_id: args.orchestrator_id,

@@ -3,7 +3,7 @@
 //! This handler wires the existing Unix socket IPC server from beardog-tunnel
 //! into the CLI for proper UniBin operation.
 
-// ServerArgs is defined in main.rs and passed as a parameter
+use crate::ServerArgs;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
@@ -13,13 +13,6 @@ use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use std::sync::Arc;
 use tracing::{error, info};
-
-/// Server arguments
-pub struct ServerArgs {
-    pub socket: String,
-    pub family_id: Option<String>,
-    pub orchestrator_id: Option<String>,
-}
 
 /// Handle server command - start long-running service
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {

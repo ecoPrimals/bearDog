@@ -2,17 +2,10 @@
 //!
 //! Comprehensive health checks for BearDog system.
 
-// DoctorArgs is defined in main.rs and passed as a parameter
+use crate::DoctorArgs;
 use beardog_errors::BearDogError;
 use serde_json::json;
 use tracing::info;
-
-/// Doctor arguments
-pub struct DoctorArgs {
-    pub comprehensive: bool,
-    pub format: String,
-    pub component: Option<String>,
-}
 
 /// Handle doctor command - health diagnostics
 pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {

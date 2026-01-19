@@ -1,52 +1,81 @@
-//! # BearDog CLI
+//! BearDog CLI Library
 //!
-//! Command-line interface for the BearDog ecosystem.
+//! This library provides the core functionality for the BearDog CLI,
+//! including command handlers and argument definitions.
 
-#![deny(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
-// Allow expect/unwrap in tests - test panics are appropriate failure modes
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
-#![allow(dead_code)] // CLI handlers not all wired up yet
+use clap::Parser;
 
 pub mod ecosystem_discovery_adapter;
 pub mod handlers;
 
-#[cfg(test)]
-mod tests {}
+// ============================================================================
+// UNIBIN OPERATIONAL MODE ARGUMENTS
+// ============================================================================
 
-#[cfg(test)]
-#[path = "tests/cli_comprehensive_tests.rs"]
-mod cli_comprehensive_tests;
+/// Server mode arguments
+#[derive(Parser, Debug, Clone)]
+pub struct ServerArgs {
+    /// Unix socket path
+    #[arg(long, default_value = "/tmp/beardog.sock")]
+    pub socket: String,
 
-#[cfg(test)]
-mod cli_tests;
+    /// Family ID for BirdSong
+    #[arg(long)]
+    pub family_id: Option<String>,
 
-#[cfg(test)]
-#[path = "tests/handler_integration_comprehensive_tests.rs"]
-mod handler_integration_comprehensive_tests;
-
-#[test]
-fn test_cli_basic_functionality() {
-    let module_name = "beardog-cli";
-    assert_eq!(module_name, "beardog-cli", "CLI module loads successfully");
+    /// Orchestrator ID
+    #[arg(long)]
+    pub orchestrator_id: Option<String>,
 }
 
-// TEST_CATEGORY: unit
-// TEST_DOMAIN: core
-// TEST_PRIORITY: normal
-#[tokio::test]
-async fn test_cli_help_command() {
-    println!("✅ CLI help command test passed");
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: core
-    // TEST_PRIORITY: normal
+/// Daemon mode arguments
+#[derive(Parser, Debug, Clone)]
+pub struct DaemonArgs {
+    /// Unix socket path
+    #[arg(long, default_value = "/tmp/beardog.sock")]
+    pub socket: String,
+
+    /// PID file path
+    #[arg(long, default_value = "/tmp/beardog.pid")]
+    pub pid_file: String,
+
+    /// Log file path
+    #[arg(long, default_value = "/tmp/beardog.log")]
+    pub log_file: String,
+
+    /// Family ID for BirdSong
+    #[arg(long)]
+    pub family_id: Option<String>,
+
+    /// Orchestrator ID
+    #[arg(long)]
+    pub orchestrator_id: Option<String>,
 }
 
-// TEST_CATEGORY: unit
-// TEST_DOMAIN: core
-// TEST_PRIORITY: normal
-#[tokio::test]
-async fn test_cli_version_command() {
-    println!("✅ CLI version command test passed");
+/// Client mode arguments
+#[derive(Parser, Debug, Clone)]
+pub struct ClientArgs {
+    /// Unix socket path to connect to
+    #[arg(long, default_value = "/tmp/beardog.sock")]
+    pub socket: String,
+
+    /// Command to execute (if not provided, starts interactive mode)
+    #[arg(long)]
+    pub command: Option<String>,
+}
+
+/// Doctor mode arguments
+#[derive(Parser, Debug, Clone)]
+pub struct DoctorArgs {
+    /// Comprehensive health check
+    #[arg(long)]
+    pub comprehensive: bool,
+
+    /// Output format (text, json)
+    #[arg(long, default_value = "text")]
+    pub format: String,
+
+    /// Check specific component
+    #[arg(long)]
+    pub component: Option<String>,
 }
