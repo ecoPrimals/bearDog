@@ -6,7 +6,7 @@
 //! - Does NOT know: Who the clients are (Songbird, ToadStool, etc.)
 //! - biomeOS routes capability requests to appropriate endpoints
 
-use beardog_core::capabilities::{CapabilityRequest, CapabilityResponse, ResponseStatus};
+use beardog_core::capabilities::{CapabilityRequest, CapabilityResponse};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;

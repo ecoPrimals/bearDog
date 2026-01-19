@@ -108,11 +108,6 @@ tokio-rustls = "0.26"
 # Database
 sled = "0.34"
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
-
-# HTTP/API REMOVED - BearDog is crypto-only, delegates HTTP to Songbird via Tower Atomic!
-# hyper removed - integration tests use Tower Atomic instead
-# reqwest removed - use Songbird via Tower Atomic for external HTTP
-# axum, tower, tower-http removed - BTSP now uses Unix socket JSON-RPC
 tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
 serde_yaml = "0.9"
 
@@ -239,7 +234,6 @@ ed25519-dalek = { workspace = true }
 base64 = { workspace = true }  # For E2E tests
 tempfile = "3.8"  # For creating temporary Unix sockets in tests
 uuid = { workspace = true }  # For chaos tests
-# reqwest removed - integration tests use Songbird via Tower Atomic instead
 
 [[test]]
 name = "chaos"

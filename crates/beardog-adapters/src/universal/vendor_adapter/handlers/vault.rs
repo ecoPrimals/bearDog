@@ -24,7 +24,8 @@ use std::collections::HashMap;
 use std::time::Duration;
 use uuid::Uuid;
 
-// TODO: Import Tower Atomic client when ready
+// NOTE: Tower Atomic available via beardog-tower-atomic crate
+// Uncomment when implementing Vault adapter Phase 2:
 // use beardog_tower_atomic::Client as AtomicClient;
 
 use crate::universal::vendor_adapter::{
@@ -46,7 +47,7 @@ pub struct VaultHandler {
     base_url: String,
     token: String,
     // NOTE: No reqwest Client! Uses Tower Atomic instead.
-    // client: AtomicClient,  // TODO: Add when Tower Atomic integration is ready
+    // client: AtomicClient,  // Add in Phase 2: Full Vault integration via Songbird
     config: VaultConfig,
 }
 
@@ -67,7 +68,7 @@ impl VaultHandler {
         let base_url = base_url.into();
         let token = token.into();
 
-        // TODO: Connect to Songbird via Tower Atomic
+        // Phase 2: Connect to Songbird via Tower Atomic
         // let client = AtomicClient::connect("songbird").await?;
 
         Ok(Self {
@@ -85,7 +86,8 @@ impl VaultHandler {
         path: &str,
         body: Option<serde_json::Value>,
     ) -> Result<serde_json::Value, BearDogError> {
-        // TODO: Implement Tower Atomic delegation to Songbird
+        // Phase 2: Implement Tower Atomic delegation to Songbird
+        // Example implementation (ready to uncomment):
         // 
         // let mut songbird = AtomicClient::connect("songbird").await?;
         // let response = songbird.call("http.request", json!({
@@ -110,10 +112,10 @@ impl VaultHandler {
     pub async fn read_secret(&self, path: &str) -> Result<HashMap<String, String>, BearDogError> {
         let full_path = format!("/v1/{}/data/{}", self.config.kv_mount, path);
         
-        // TODO: Use Tower Atomic delegation
+        // Phase 2: Use Tower Atomic delegation
         let _response = self.call_vault_api("GET", &full_path, None).await?;
         
-        // Placeholder
+        // Placeholder until Phase 2
         Ok(HashMap::new())
     }
 
@@ -126,7 +128,7 @@ impl VaultHandler {
         let full_path = format!("/v1/{}/data/{}", self.config.kv_mount, path);
         let body = json!({ "data": data });
         
-        // TODO: Use Tower Atomic delegation
+        // Phase 2: Use Tower Atomic delegation
         let _response = self.call_vault_api("POST", &full_path, Some(body)).await?;
         
         Ok(())
@@ -138,7 +140,7 @@ impl VaultHandler {
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(plaintext);
         let body = json!({ "plaintext": plaintext_b64 });
         
-        // TODO: Use Tower Atomic delegation
+        // Phase 2: Use Tower Atomic delegation
         let _response = self.call_vault_api("POST", &full_path, Some(body)).await?;
         
         // Placeholder
@@ -150,7 +152,7 @@ impl VaultHandler {
         let full_path = format!("/v1/{}/decrypt/{}", self.config.transit_mount, key_name);
         let body = json!({ "ciphertext": ciphertext });
         
-        // TODO: Use Tower Atomic delegation
+        // Phase 2: Use Tower Atomic delegation
         let _response = self.call_vault_api("POST", &full_path, Some(body)).await?;
         
         // Placeholder

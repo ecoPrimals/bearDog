@@ -53,8 +53,6 @@ x25519-dalek = { version = "2.0", features = ["static_secrets"] }  # Pure Rust X
 hmac = "0.12"  # Pure Rust HMAC for genetic crypto
 blake3 = { version = "1.5", features = ["pure"] }  # Pure Rust (no C assembly) for universal portability
 argon2 = "0.5"
-# openssl = "0.10"  # REMOVED: Using 100% pure Rust crypto (RustCrypto)
-# ring = "0.17"  # REMOVED (Jan 16, 2026): Evolved to RustCrypto (100% Pure Rust!)
 hex = "0.4"
 hkdf = "0.12"
 arrayref = "0.3"
@@ -67,11 +65,7 @@ async-trait = "0.1"
 ctap-hid-fido2 = { version = "3.5", optional = true }
 hidapi = { version = "2.4", optional = true }
 
-# BTSP HTTP API dependencies (DEPRECATED - evolved to Unix socket JSON-RPC!)
-# axum = { version = "0.7", optional = true }  # REMOVED: BTSP now uses Unix sockets
-# tower = { version = "0.4", optional = true }  # REMOVED: BTSP now uses Unix sockets  
-# tower-http = { version = "0.5", features = ["trace", "cors"], optional = true }  # REMOVED
-base64 = "0.21"  # Required for Unix socket IPC
+base64 = "0.21"  # Required for Unix socket IPC (evolved from HTTP to pure IPC)
 
 [dev-dependencies]
 tokio-test = "0.4"

@@ -22,12 +22,11 @@
 use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
-use std::sync::Arc;
 use tracing::{debug, info};
 
 // Pure Rust crypto imports - ZERO FFI!
 use aes_gcm::{
-    aead::{Aead, KeyInit, Payload},
+    aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
 };
 use blake3; // Faster and more secure than SHA-256

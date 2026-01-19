@@ -38,7 +38,6 @@ use std::time::SystemTime;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 use zeroize::Zeroizing;
 
@@ -76,7 +75,7 @@ pub use beardog_capabilities::traits::TunnelStatus;
 // Internal Types (from types module)
 // =============================================================================
 
-use types::{InternalTunnelHandle, InternalTunnelStatus, PeerTrustRecord};
+use types::PeerTrustRecord;
 
 // =============================================================================
 // Legacy BTSP Provider Trait (Deprecated)
