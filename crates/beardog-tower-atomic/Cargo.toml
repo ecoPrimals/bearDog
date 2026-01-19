@@ -1,0 +1,40 @@
+[package]
+name = "beardog-tower-atomic"
+version = "0.9.0"
+edition = "2021"
+authors = ["BearDog Team"]
+description = "Tower Atomic - Unix socket-based JSON-RPC client for inter-primal communication"
+license = "AGPL-3.0"
+repository = "https://github.com/eastgate-software/beardog"
+readme = "README.md"
+keywords = ["ipc", "json-rpc", "unix-sockets", "inter-primal", "tower-atomic"]
+categories = ["network-programming", "asynchronous"]
+
+[dependencies]
+# Async runtime - Pure Rust!
+tokio = { version = "1.35", features = ["net", "io-util", "rt"] }
+
+# Serialization - Pure Rust!
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling - Pure Rust!
+thiserror = "1.0"
+
+# Logging - Pure Rust!
+tracing = "0.1"
+
+# BearDog types
+beardog-types = { version = "3.0.0", path = "../beardog-types" }
+
+[dev-dependencies]
+tokio = { version = "1.35", features = ["full", "test-util"] }
+tokio-test = "0.4"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tempfile = "3.8"
+
+[features]
+default = []
+# Enable for testing without live primals
+mock-primals = []
+

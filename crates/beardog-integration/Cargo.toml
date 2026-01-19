@@ -18,8 +18,8 @@ tokio = { version = "1.35", features = ["full"] }
 async-trait = "0.1"
 futures = "0.3"
 
-# REMOVED: HTTP client (BearDog ↔ Songbird uses Unix sockets!)
-# reqwest = { workspace = true }
+# Tower Atomic client (Pure Rust IPC via Unix sockets!)
+beardog-tower-atomic = { version = "0.9.0", path = "../beardog-tower-atomic" }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

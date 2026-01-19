@@ -1,12 +1,21 @@
 //! Service registry-based discovery (Consul, etcd)
 //!
+//! **TODO**: Migrate to delegate HTTP to Songbird via Tower Atomic!
+//!
+//! Current implementation: Direct HTTP queries to Consul/etcd (temporary)
+//! Future implementation: Delegate to Songbird for external HTTP
+//!
 //! Complete production implementation for service registry discovery.
 //! Supports Consul HTTP API and can be extended for etcd.
-//! No mocks - real HTTP queries to service registries.
 
 use crate::error::{DiscoveryError, Result};
 use crate::types::{Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint};
-use reqwest::Client;
+
+// TODO: Replace with Tower Atomic delegation to Songbird
+// For now, keep reqwest for external service registry queries (Consul/etcd)
+// These are EXTERNAL infrastructure, not inter-primal, but should still go via Songbird
+#[allow(unused_imports)]
+use serde::Deserialize;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::net::IpAddr;
