@@ -104,6 +104,9 @@ path = "../beardog-types"
 [dependencies.async-trait]
 version = "0.1"
 
+[dependencies.blake3]
+workspace = true
+
 [dev-dependencies]
 tokio = { version = "1.42", features = ["full"] }
 assert_cmd = "2.0"

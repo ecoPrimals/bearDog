@@ -76,6 +76,86 @@ enum Commands {
 
     /// Show system status
     Status,
+
+    /// Start BearDog server (long-running service mode)
+    Server(ServerArgs),
+
+    /// Run as daemon (background service)
+    Daemon(DaemonArgs),
+
+    /// Interactive client mode
+    Client(ClientArgs),
+
+    /// Health diagnostics
+    Doctor(DoctorArgs),
+}
+
+// ============================================================================
+// UNIBIN OPERATIONAL MODES
+// ============================================================================
+
+#[derive(Parser)]
+struct ServerArgs {
+    /// Unix socket path
+    #[arg(long, default_value = "/tmp/beardog.sock")]
+    socket: String,
+
+    /// Family ID for BirdSong
+    #[arg(long)]
+    family_id: Option<String>,
+
+    /// Orchestrator ID
+    #[arg(long)]
+    orchestrator_id: Option<String>,
+}
+
+#[derive(Parser)]
+struct DaemonArgs {
+    /// Unix socket path
+    #[arg(long, default_value = "/tmp/beardog.sock")]
+    socket: String,
+
+    /// PID file path
+    #[arg(long, default_value = "/tmp/beardog.pid")]
+    pid_file: String,
+
+    /// Log file path
+    #[arg(long, default_value = "/tmp/beardog.log")]
+    log_file: String,
+
+    /// Family ID for BirdSong
+    #[arg(long)]
+    family_id: Option<String>,
+
+    /// Orchestrator ID
+    #[arg(long)]
+    orchestrator_id: Option<String>,
+}
+
+#[derive(Parser)]
+struct ClientArgs {
+    /// Unix socket path to connect to
+    #[arg(long, default_value = "/tmp/beardog.sock")]
+    socket: String,
+
+    /// Command to execute (if not provided, starts interactive mode)
+    #[arg(long)]
+    command: Option<String>,
+}
+
+#[derive(Parser)]
+struct DoctorArgs {
+    /// Comprehensive health check
+    #[arg(long)]
+    comprehensive: bool,
+
+    /// Output format (text, json)
+    #[arg(long, default_value = "text")]
+    format: String,
+
+    /// Check specific component
+    #[arg(long)]
+    component: Option<String>,
 }
 
 // ============================================================================
@@ -666,6 +746,18 @@ async fn main() -> Result<(), BearDogError> {
         }
         Commands::Status => {
             handlers::status::show_status().await?;
+        }
+        Commands::Server(args) => {
+            handlers::server::handle_server(args).await?;
+        }
+        Commands::Daemon(args) => {
+            handlers::daemon::handle_daemon(args).await?;
+        }
+        Commands::Client(args) => {
+            handlers::client::handle_client(args).await?;
+        }
+        Commands::Doctor(args) => {
+            handlers::doctor::handle_doctor(args).await?;
         }
     }
 

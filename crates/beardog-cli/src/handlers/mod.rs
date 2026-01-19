@@ -1,8 +1,11 @@
 // Handler module exports
 
 pub mod birdsong; // BirdSong lineage-based encryption
+pub mod client; // Interactive client mode
 pub mod cross_primal; // Cross-primal secure messaging (Workflow 3)
+pub mod daemon; // Daemon mode (background service)
 pub mod decrypt;
+pub mod doctor; // Health diagnostics
 pub mod encrypt;
 pub mod entropy;
 pub mod hsm;
@@ -16,6 +19,7 @@ pub mod key_lineage; // Key lineage tracking
 pub mod key_mix; // Key mixing
 pub mod key_revoke;
 pub mod key_store; // Key storage utilities
+pub mod server; // Server mode (long-running service)
 pub mod status;
 pub mod streaming; // Streaming encryption/decryption for large files
 
