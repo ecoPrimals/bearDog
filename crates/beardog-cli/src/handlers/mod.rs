@@ -30,3 +30,11 @@ mod entropy_tests;
 mod hsm_tests;
 #[cfg(test)]
 mod status_tests;
+#[cfg(test)]
+mod server_tests;
+#[cfg(test)]
+mod daemon_tests;
+#[cfg(test)]
+mod doctor_tests;
+#[cfg(test)]
+mod client_tests;
