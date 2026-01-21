@@ -173,24 +173,23 @@ pub mod mocks {
     ///
     /// # Returns
     /// A properly initialized but minimal BeardogBtspProvider
-    pub fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider> {
+    pub async fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider> {
         use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
-        use hsm_manager::HsmManager;
+        use crate::tunnel::hsm::HsmManager;
         
-        let hsm_manager = Arc::new(HsmManager::new(
-            beardog_types::canonical::config::HsmConfig::default(),
-            Some("/tmp/test-beardog".into()),
-        ));
+        let hsm_manager = Arc::new(HsmManager::new());
         
-        let genetic_engine = Arc::new(EcosystemGeneticEngine::new(
-            "test-node".to_string(),
-            hsm_manager.clone(),
-        ));
+        let genetic_engine = Arc::new(
+            EcosystemGeneticEngine::new()
+                .expect("Failed to create genetic engine")
+        );
         
-        Arc::new(crate::btsp_provider::BeardogBtspProvider::new(
-            hsm_manager,
-            genetic_engine,
-        ))
+        Arc::new(
+            crate::btsp_provider::BeardogBtspProvider::new(
+                hsm_manager,
+                genetic_engine,
+            ).await.expect("Failed to create BTSP provider")
+        )
     }
 }
 

@@ -187,7 +187,7 @@ mod tests {
     #[tokio::test]
     async fn test_capabilities_response() {
         let handler = CapabilitiesHandler;
-        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("capabilities", None, &btsp_provider).await;
 
@@ -204,7 +204,7 @@ mod tests {
     #[tokio::test]
     async fn test_identity_response() {
         let handler = CapabilitiesHandler;
-        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("identity", None, &btsp_provider).await;
 
@@ -220,7 +220,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_capability_aliases() {
         let handler = CapabilitiesHandler;
-        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["capabilities", "get_capabilities"] {
             let result = handler.handle(method, None, &btsp_provider).await;
@@ -231,7 +231,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_identity_aliases() {
         let handler = CapabilitiesHandler;
-        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["identity", "whoami", "get_identity"] {
             let result = handler.handle(method, None, &btsp_provider).await;

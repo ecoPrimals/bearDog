@@ -39,6 +39,9 @@ pub mod health;
 pub mod capabilities;
 pub mod security;
 pub mod btsp;
+pub mod crypto;
+pub mod federation;
+pub mod encryption;
 
 // Re-export legacy handlers during migration
 pub use super::handlers_legacy::{handle_http_request, handle_jsonrpc_request};
@@ -132,8 +135,11 @@ impl HandlerRegistry {
                 Arc::new(capabilities::CapabilitiesHandler),
                 Arc::new(security::SecurityHandler),
                 Arc::new(btsp::BtspHandler),
-                // Crypto handlers are integrated via crypto_handlers.rs
-                // Graph, federation, and encryption handlers remain in legacy for now
+                Arc::new(crypto::CryptoHandler),
+                Arc::new(federation::FederationHandler),
+                Arc::new(encryption::EncryptionHandler),
+                // All handlers now extracted to modular architecture!
+                // Legacy handler will only be used for HTTP fallback
             ],
         }
     }

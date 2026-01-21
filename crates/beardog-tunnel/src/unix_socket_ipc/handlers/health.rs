@@ -66,7 +66,7 @@ mod tests {
         let handler = HealthHandler;
 
         // Use safe mock provider (health handler doesn't actually use it)
-        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("ping", None, &btsp_provider).await;
 
@@ -83,7 +83,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_method_names() {
         let handler = HealthHandler;
-        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["ping", "health", "status", "check"] {
             let result = handler.handle(method, None, &btsp_provider).await;
