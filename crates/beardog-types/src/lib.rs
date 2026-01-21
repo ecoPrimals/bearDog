@@ -481,6 +481,12 @@ pub mod genetics;
 ///
 pub mod capabilities;
 
+/// 🔐 **BTSP** - BearDog Tunnel Security Protocol (Unified)
+///
+/// Unified secure protocol provider for both internal (primal-to-primal)
+/// and external (HTTPS API) communication. Single API, different trust modes!
+pub mod btsp;
+
 /// 📈 **METRICS** - Metrics and monitoring types
 ///
 pub mod metrics;
