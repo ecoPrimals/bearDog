@@ -52,6 +52,9 @@ pub enum DiscoveryError {
     #[error("Not implemented: {0}")]
     NotImplemented(String),
 
+    #[error("Backend unavailable: {provider}, reason: {reason}")]
+    BackendUnavailable { provider: String, reason: String },
+
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }
@@ -62,11 +65,12 @@ impl From<toml::de::Error> for DiscoveryError {
     }
 }
 
-impl From<reqwest::Error> for DiscoveryError {
-    fn from(err: reqwest::Error) -> Self {
-        DiscoveryError::Network(err.to_string())
-    }
-}
+// Tower Atomic Evolution: HTTP removed, all external calls via Songbird
+// impl From<reqwest::Error> for DiscoveryError {
+//     fn from(err: reqwest::Error) -> Self {
+//         DiscoveryError::Network(err.to_string())
+//     }
+// }
 
 impl From<url::ParseError> for DiscoveryError {
     fn from(err: url::ParseError) -> Self {

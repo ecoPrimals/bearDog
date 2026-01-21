@@ -24,8 +24,7 @@
 //! **Result**: Zero vendor hardcoding, works with ANY service registry!
 
 use crate::error::{DiscoveryError, Result};
-use crate::types::{Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint};
-use serde::Deserialize;
+use crate::types::DiscoveredService;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
