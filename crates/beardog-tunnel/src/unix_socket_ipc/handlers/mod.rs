@@ -38,6 +38,7 @@ use std::sync::Arc;
 pub mod health;
 pub mod capabilities;
 pub mod security;
+pub mod btsp;
 
 // Re-export legacy handlers during migration
 pub use super::handlers_legacy::{handle_http_request, handle_jsonrpc_request};
@@ -130,7 +131,9 @@ impl HandlerRegistry {
                 Arc::new(health::HealthHandler),
                 Arc::new(capabilities::CapabilitiesHandler),
                 Arc::new(security::SecurityHandler),
-                // More handlers will be added here as we extract them
+                Arc::new(btsp::BtspHandler),
+                // Crypto handlers are integrated via crypto_handlers.rs
+                // Graph, federation, and encryption handlers remain in legacy for now
             ],
         }
     }
