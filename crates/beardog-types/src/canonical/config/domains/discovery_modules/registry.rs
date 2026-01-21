@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn test_service_registry_defaults() {
         let config = ServiceRegistryConfig::default();
-        assert_eq!(config.backend.as_ref(), "consul");
+        assert_eq!(&config.backend, "consul");
         assert!(!config.endpoints.is_empty());
         assert_eq!(config.service_ttl, Duration::from_secs(300));
         assert_eq!(config.health_check_interval, Duration::from_secs(30));
@@ -226,10 +226,10 @@ mod tests {
         let mut config = ServiceRegistryConfig::const_defaults();
         assert!(!config.is_configured());
 
-        config.backend = Arc::from("consul");
+        config.backend = "consul".to_string();
         assert!(!config.is_configured()); // Still no endpoints
 
-        config.endpoints.push(Arc::from("http://localhost:8500"));
+        config.endpoints.push("http://localhost:8500".to_string());
         assert!(config.is_configured());
     }
 
@@ -238,11 +238,11 @@ mod tests {
         let mut config = ServiceRegistryConfig::const_defaults();
         assert!(config.primary_endpoint().is_none());
 
-        config.endpoints.push(Arc::from("http://primary:8500"));
-        config.endpoints.push(Arc::from("http://secondary:8500"));
+        config.endpoints.push("http://primary:8500".to_string());
+        config.endpoints.push("http://secondary:8500".to_string());
 
         assert_eq!(
-            config.primary_endpoint().unwrap().as_ref(),
+            config.primary_endpoint().unwrap(),
             "http://primary:8500"
         );
     }

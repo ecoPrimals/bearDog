@@ -18,7 +18,7 @@ fn test_default_uses_reasonable_values() {
     assert!(config.enabled);
     assert_eq!(config.service_id.as_ref(), "beardog-discovery");
     assert!(!config.enabled_protocols.is_empty());
-    assert_eq!(config.registry.backend.as_ref(), "consul");
+    assert_eq!(&config.registry.backend, "consul");
     assert!(config.cache.enabled);
 }
 
@@ -111,7 +111,7 @@ fn test_from_env() {
     let config = UnifiedDiscoveryConfig::from_env().unwrap();
     assert!(config.enabled);
     assert_eq!(config.service_id.as_ref(), "env-test");
-    assert_eq!(config.registry.backend.as_ref(), "etcd");
+    assert_eq!(&config.registry.backend, "etcd");
 
     env::remove_var("BEARDOG_DISCOVERY_ENABLED");
     env::remove_var("BEARDOG_DISCOVERY_SERVICE_ID");
@@ -131,9 +131,9 @@ fn test_merge() {
     let base = UnifiedDiscoveryConfig::default();
     let mut override_config = UnifiedDiscoveryConfig::default();
     override_config.service_id = Arc::from("merged-service");
-    override_config.registry.backend = Arc::from("etcd");
+    override_config.registry.backend = "etcd".to_string();
 
     let merged = base.merge(&override_config).unwrap();
     assert_eq!(merged.service_id.as_ref(), "merged-service");
-    assert_eq!(merged.registry.backend.as_ref(), "etcd");
+    assert_eq!(&merged.registry.backend, "etcd");
 }
