@@ -37,6 +37,10 @@ use std::sync::Arc;
 
 pub mod health;
 pub mod capabilities;
+pub mod security;
+
+// Re-export legacy handlers during migration
+pub use super::handlers_legacy::{handle_http_request, handle_jsonrpc_request};
 
 /// Trait for JSON-RPC method handlers
 ///
@@ -125,6 +129,7 @@ impl HandlerRegistry {
             handlers: vec![
                 Arc::new(health::HealthHandler),
                 Arc::new(capabilities::CapabilitiesHandler),
+                Arc::new(security::SecurityHandler),
                 // More handlers will be added here as we extract them
             ],
         }

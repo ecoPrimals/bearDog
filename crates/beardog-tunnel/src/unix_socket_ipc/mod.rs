@@ -17,6 +17,7 @@
 
 pub mod crypto_handlers;
 pub mod handlers;
+pub mod handlers_legacy; // Keep old monolith as reference during migration
 pub mod protocol;
 pub mod server;
 pub mod types;
