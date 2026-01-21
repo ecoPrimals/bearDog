@@ -265,21 +265,35 @@ impl BtspHandler {
 
     /// Handle external mode tunnel establishment (TLS 1.3 + certificate trust)
     ///
-    /// TODO: Phase 3 - Implement full TLS handshake
+    /// # Architectural Note
+    ///
+    /// External mode (HTTPS) is implemented by **Songbird**, not BearDog.
+    /// BearDog provides the crypto primitives, Songbird implements the TLS/HTTP layer.
+    ///
+    /// This follows the **Tower Atomic pattern**: Songbird + BearDog = Secure HTTPS
     async fn handle_tunnel_establish_external(
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         info!("🌐 External tunnel requested: {} → {}", params.peer_id, params.peer_endpoint);
-
-        // TODO: Phase 3 - Implement TLS handshake
-        // For now, return a descriptive "not yet implemented" response
-        warn!("⚠️  External mode not yet implemented (Phase 3)");
+        info!("📡 External mode is handled by Songbird (Tower Atomic pattern)");
 
         Err(format!(
-            "External mode not yet implemented. Requested: {} ({}). \
-             Implementation scheduled for Phase 3 (TLS 1.3 handshake + HTTP/2).",
+            "External mode (HTTPS) is handled by Songbird, not BearDog.\n\
+             \n\
+             BearDog provides crypto primitives via RPC (11 methods already implemented).\n\
+             Songbird implements TLS 1.3 + HTTP/2 using BearDog's crypto.\n\
+             \n\
+             Tower Atomic Pattern: Songbird (HTTP) + BearDog (Crypto) = Secure HTTPS\n\
+             \n\
+             To use external HTTPS:\n\
+             1. Connect to Songbird (HTTP-capable primal)\n\
+             2. Use Songbird's BTSP external mode API\n\
+             3. Songbird will call BearDog's crypto RPC methods\n\
+             \n\
+             Requested: {} ({})\n\
+             Primal Responsibility: BearDog = Internal Mode + Crypto | Songbird = External Mode + HTTP",
             params.peer_id, params.peer_endpoint
         ))
     }
@@ -459,33 +473,39 @@ impl BtspHandler {
 
     /// Handle TLS configuration for external mode tunnels
     ///
-    /// TODO: Phase 3 - Full implementation
+    /// # Architectural Note
+    ///
+    /// TLS configuration is part of external mode, which is handled by **Songbird**.
+    /// Use Songbird's BTSP external mode API for TLS configuration.
     async fn handle_configure_tls(
         &self,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         info!("🔐 BTSP Configure TLS requested");
+        info!("📡 TLS configuration is handled by Songbird (external mode)");
 
         let params_value = params.ok_or("Missing params for configure_tls")?;
 
-        // Parse parameters
+        // Parse parameters for validation
         let _config_params = serde_json::from_value::<beardog_types::btsp::ConfigureTlsParams>(
             params_value.clone()
         ).map_err(|e| format!("Invalid configure_tls params: {}", e))?;
 
-        // TODO: Phase 3 - Implement TLS configuration
-        warn!("⚠️  configure_tls not yet implemented (Phase 3)");
-
-        Err("btsp.configure_tls not yet implemented. \
-             Implementation scheduled for Phase 3 (TLS 1.3 configuration).".into())
+        Err("btsp.configure_tls is part of external mode (HTTPS), handled by Songbird.\n\
+             \n\
+             Use Songbird's BTSP external mode API for TLS configuration.\n\
+             BearDog provides the crypto primitives via RPC.".into())
     }
 
     /// Handle unified trust verification
     ///
-    /// Supports both genetic lineage (internal) and certificate (external) verification.
+    /// # Architectural Note
     ///
-    /// TODO: Phase 3 - Full implementation
+    /// - **Genetic lineage verification**: Handled by BearDog (use existing trust evaluation)
+    /// - **Certificate verification**: Handled by Songbird (external mode)
+    ///
+    /// For certificate trust, use Songbird's BTSP external mode API.
     async fn handle_verify_peer(
         &self,
         params: Option<&serde_json::Value>,
@@ -496,46 +516,58 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for verify_peer")?;
 
         // Parse parameters
-        let _verify_params = serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(
+        let verify_params = serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(
             params_value.clone()
         ).map_err(|e| format!("Invalid verify_peer params: {}", e))?;
 
-        // TODO: Phase 3 - Implement unified trust verification
-        // - For genetic_lineage: Use existing BTSP trust evaluation
-        // - For certificate: Use TLS certificate chain verification
-        warn!("⚠️  verify_peer not yet implemented (Phase 3)");
-
-        Err("btsp.verify_peer not yet implemented. \
-             Implementation scheduled for Phase 3 (unified trust verification).".into())
+        // Route based on trust mode
+        match verify_params.trust_mode.as_str() {
+            "genetic_lineage" => {
+                // TODO: Implement using existing BTSP trust evaluation
+                Err("btsp.verify_peer (genetic_lineage) not yet implemented.\n\
+                     Use existing BTSP internal mode trust evaluation.".into())
+            }
+            "certificate" => {
+                info!("📡 Certificate verification is handled by Songbird (external mode)");
+                Err("btsp.verify_peer (certificate) is part of external mode, handled by Songbird.\n\
+                     \n\
+                     Use Songbird's BTSP external mode API for certificate verification.\n\
+                     BearDog provides crypto primitives (tls.verify_certificate RPC method).".into())
+            }
+            _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode))
+        }
     }
 
     /// Handle HTTP request through external mode tunnel
     ///
-    /// TODO: Phase 3 - Full implementation
+    /// # Architectural Note
+    ///
+    /// HTTP operations are part of external mode, which is handled by **Songbird**.
+    /// Songbird implements HTTP/2 client and uses BearDog for TLS crypto.
     async fn handle_tunnel_send_http(
         &self,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         info!("🌐 BTSP Tunnel Send HTTP requested");
+        info!("📡 HTTP operations are handled by Songbird (external mode)");
 
         let params_value = params.ok_or("Missing params for tunnel_send_http")?;
 
-        // Parse parameters
+        // Parse parameters for validation
         let _http_params = serde_json::from_value::<beardog_types::btsp::TunnelSendHttpParams>(
             params_value.clone()
         ).map_err(|e| format!("Invalid tunnel_send_http params: {}", e))?;
 
-        // TODO: Phase 3 - Implement HTTP over TLS tunnel
-        // - Format HTTP/2 request
-        // - Encrypt via TLS tunnel
-        // - Send over TCP socket
-        // - Receive and decrypt response
-        // - Parse HTTP/2 response
-        warn!("⚠️  tunnel_send_http not yet implemented (Phase 3)");
-
-        Err("btsp.tunnel_send_http not yet implemented. \
-             Implementation scheduled for Phase 3 (HTTP/2 over TLS tunnel).".into())
+        Err("btsp.tunnel_send_http is part of external mode (HTTPS), handled by Songbird.\n\
+             \n\
+             Songbird implements:\n\
+             - HTTP/2 client\n\
+             - TLS 1.3 handshake (using BearDog crypto RPC)\n\
+             - BTSP external mode API\n\
+             \n\
+             BearDog provides crypto primitives only.\n\
+             Use Songbird for all external HTTPS communication.".into())
     }
 }
 
