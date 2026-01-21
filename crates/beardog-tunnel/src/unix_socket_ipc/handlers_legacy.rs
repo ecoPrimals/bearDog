@@ -172,6 +172,13 @@ fn http_error_response(status: u16, message: &str) -> String {
 ///
 /// This function implements capability-based routing that is primal-agnostic.
 /// Identity is discovered from environment variables at runtime.
+///
+/// # Migration Architecture
+///
+/// This function now uses a hybrid approach:
+/// 1. Try the new modular handler registry first
+/// 2. Fall back to legacy handlers for remaining methods
+/// 3. Allows seamless incremental migration
 #[allow(clippy::too_many_lines)]
 async fn handle_method(
     method: &str,
@@ -180,6 +187,25 @@ async fn handle_method(
 ) -> Result<serde_json::Value, String> {
     debug!("📞 Method: {}", method);
 
+    // Try new modular handler registry first
+    use super::handlers::HandlerRegistry;
+    let registry = HandlerRegistry::new();
+    match registry.route(method, params, btsp_provider).await {
+        Ok(result) => {
+            debug!("✅ Handled by modular registry: {}", method);
+            return Ok(result);
+        }
+        Err(e) if e.contains("Unknown method") => {
+            // Method not in registry, try legacy handlers
+            debug!("⏭️  Falling back to legacy handlers for: {}", method);
+        }
+        Err(e) => {
+            // Real error from a handler, propagate it
+            return Err(e);
+        }
+    }
+
+    // Legacy handlers (will be phased out as modules are extracted)
     // Parse method into namespace and action for capability-based routing
     let (namespace, action) = if let Some((ns, act)) = method.split_once('.') {
         (ns, act)
