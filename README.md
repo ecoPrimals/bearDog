@@ -96,8 +96,8 @@ See [START_HERE.md](START_HERE.md) for complete setup instructions.
 - ✅ **Tower Atomic**: Unix socket + JSON-RPC IPC (zero HTTP dependencies!)
 - ✅ **100% Pure Rust**: Verified zero C dependencies (even dev-deps!)
 - ✅ **Zero Vendor Lock-in**: Capability-based discovery (no Consul/etcd hardcoding!)
-- ✅ **Crypto API**: 8 Pure Rust operations for Songbird TLS
-- ✅ **Ed25519**: Sign/verify for TLS certificates
+- ✅ **TLS Crypto API**: 11 Pure Rust RPC methods for Songbird TLS 1.3
+- ✅ **TLS 1.3**: HKDF key derivation, Ed25519 signing, X.509 verification
 - ✅ **X25519**: Key exchange for TLS handshake
 - ✅ **ChaCha20-Poly1305**: AEAD encryption for TLS records
 - ✅ **Blake3 + HMAC**: Hashing and MAC for TLS
