@@ -239,7 +239,7 @@ impl IpcServer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_core::capabilities::{Capability, CapabilityRequest};
+    use beardog_core::capabilities::{Capability, CapabilityRequest, ResponseStatus};
 
     struct TestHandler;
 
