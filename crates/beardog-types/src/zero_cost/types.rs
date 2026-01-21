@@ -334,8 +334,8 @@ mod tests {
             vec!["read".to_string(), "write".to_string()],
         );
 
-        assert_eq!(&service.name, "test-service");
-        assert_eq!(&service.endpoint, "127.0.0.1");
+        assert_eq!(service.name.as_ref(), "test-service");
+        assert_eq!(service.endpoint.as_ref(), "127.0.0.1");
         assert_eq!(service.port, TEST_PORT);
         assert_eq!(service.capabilities.len(), 2);
     }
