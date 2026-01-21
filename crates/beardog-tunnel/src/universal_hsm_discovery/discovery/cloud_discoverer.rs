@@ -19,31 +19,6 @@ use tracing::{debug, info, warn};
 // Re-export canonical CloudProvider from beardog-types
 pub use beardog_types::canonical::hsm_unified::CloudProvider;
 
-/// Legacy CloudProvider enum - DEPRECATED
-///
-/// This enum has been moved to the canonical location.
-/// Use `beardog_types::canonical::hsm_unified::CloudProvider` instead.
-#[deprecated(
-    since = "4.0.0",
-    note = "Use beardog_types::canonical::hsm_unified::CloudProvider instead. \
-            Import from: use beardog_types::canonical::hsm_unified::CloudProvider;"
-)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum LegacyCloudProvider {
-    /// Amazon Web Services
-    Aws,
-    /// Microsoft Azure
-    Azure,
-    /// Google Cloud Platform
-    Gcp,
-    /// Oracle Cloud Infrastructure
-    Oci,
-    /// IBM Cloud
-    Ibm,
-    /// Alibaba Cloud
-    Alibaba,
-}
-
 /// Cloud region information
 #[derive(Debug, Clone)]
 pub struct CloudRegion {
