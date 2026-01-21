@@ -1116,6 +1116,25 @@ async fn handle_method(
             super::crypto_handlers::handle_hmac_sha256(params).await
         }
 
+        // ========================================================================
+        // TLS 1.3 CRYPTO METHODS (for Songbird Pure Rust TLS)
+        // ========================================================================
+
+        ("tls", "derive_secrets") => {
+            info!("🔑 TLS: derive_secrets (HKDF key derivation)");
+            super::crypto_handlers::handle_tls_derive_secrets(params).await
+        }
+
+        ("tls", "sign_handshake") => {
+            info!("✍️  TLS: sign_handshake (Ed25519 handshake signing)");
+            super::crypto_handlers::handle_tls_sign_handshake(params).await
+        }
+
+        ("tls", "verify_certificate") => {
+            info!("🔍 TLS: verify_certificate (X.509 chain verification)");
+            super::crypto_handlers::handle_tls_verify_certificate(params).await
+        }
+
         // Unknown method
         _ => {
             warn!("⚠️  Unknown method: {}.{}", namespace, action);
