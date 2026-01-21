@@ -65,13 +65,8 @@ mod tests {
     async fn test_health_check_response() {
         let handler = HealthHandler;
 
-        // Create a mock provider (not actually used by health handler)
-        // In a real test, we'd need proper initialization
-        let btsp_provider = Arc::new(unsafe {
-            // SAFETY: Health handler doesn't actually access the provider
-            // This is a test-only hack to avoid complex HSM setup
-            std::mem::zeroed()
-        });
+        // Use safe mock provider (health handler doesn't actually use it)
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
 
         let result = handler.handle("ping", None, &btsp_provider).await;
 
@@ -88,7 +83,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_method_names() {
         let handler = HealthHandler;
-        let btsp_provider = Arc::new(unsafe { std::mem::zeroed() });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
 
         for method in &["ping", "health", "status", "check"] {
             let result = handler.handle(method, None, &btsp_provider).await;

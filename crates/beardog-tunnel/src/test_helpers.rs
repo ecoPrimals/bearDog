@@ -165,6 +165,33 @@ pub mod mocks {
     pub fn create_failing_btsp_provider() -> Arc<MockBtspProvider> {
         Arc::new(MockBtspProvider::new_failing())
     }
+    
+    /// Create a minimal safe BeardogBtspProvider for testing
+    ///
+    /// This provides a safe alternative to `unsafe { std::mem::zeroed() }`
+    /// for tests that need to pass a BeardogBtspProvider but don't actually use it.
+    ///
+    /// # Returns
+    /// A properly initialized but minimal BeardogBtspProvider
+    pub fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider> {
+        use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
+        use hsm_manager::HsmManager;
+        
+        let hsm_manager = Arc::new(HsmManager::new(
+            beardog_types::canonical::config::HsmConfig::default(),
+            Some("/tmp/test-beardog".into()),
+        ));
+        
+        let genetic_engine = Arc::new(EcosystemGeneticEngine::new(
+            "test-node".to_string(),
+            hsm_manager.clone(),
+        ));
+        
+        Arc::new(crate::btsp_provider::BeardogBtspProvider::new(
+            hsm_manager,
+            genetic_engine,
+        ))
+    }
 }
 
 #[cfg(test)]

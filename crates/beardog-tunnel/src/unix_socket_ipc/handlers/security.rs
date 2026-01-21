@@ -386,7 +386,7 @@ mod tests {
             "peer_family": "test-family"
         });
 
-        let btsp_provider = Arc::new(unsafe { std::mem::zeroed() });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
         let result = handler.handle("security.evaluate", Some(&params), &btsp_provider).await;
 
         assert!(result.is_ok());
@@ -409,7 +409,7 @@ mod tests {
             "peer_family": "other-family"
         });
 
-        let btsp_provider = Arc::new(unsafe { std::mem::zeroed() });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
         let result = handler.handle("trust.evaluate", Some(&params), &btsp_provider).await;
 
         assert!(result.is_ok());
@@ -427,7 +427,7 @@ mod tests {
         std::env::set_var("FAMILY_ID", "lineage-family");
         std::env::set_var("NODE_ID", "lineage-node");
 
-        let btsp_provider = Arc::new(unsafe { std::mem::zeroed() });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
         let result = handler.handle("security.lineage", None, &btsp_provider).await;
 
         assert!(result.is_ok());
@@ -448,7 +448,7 @@ mod tests {
             "strength": "high"
         });
 
-        let btsp_provider = Arc::new(unsafe { std::mem::zeroed() });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
         let result = handler.handle("security.generate_jwt_secret", Some(&params), &btsp_provider).await;
 
         assert!(result.is_ok());
@@ -468,7 +468,7 @@ mod tests {
     #[tokio::test]
     async fn test_jwt_secret_different_strengths() {
         let handler = SecurityHandler;
-        let btsp_provider = Arc::new(unsafe { std::mem::zeroed() });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider();
 
         // Test high strength
         let params = serde_json::json!({"strength": "high"});
