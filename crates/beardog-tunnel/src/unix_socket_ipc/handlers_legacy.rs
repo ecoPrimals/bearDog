@@ -1,8 +1,28 @@
-//! Request handlers for JSON-RPC and HTTP protocols
+//! Legacy request handlers for JSON-RPC and HTTP protocols
 //!
-//! This module contains the core request handling logic for both JSON-RPC
-//! and HTTP protocols. All methods are capability-based and primal-agnostic,
-//! discovering identity from environment variables at runtime.
+//! This module provides backward compatibility and HTTP fallback support.
+//! Most JSON-RPC methods are now handled by the modular handler registry
+//! (see `handlers/mod.rs`). This file contains:
+//! - HTTP protocol fallback (deprecated, use JSON-RPC instead)
+//! - BirdSong encrypt/decrypt methods
+//! - Legacy btsp.tunnel_close method
+//!
+//! All methods are capability-based and primal-agnostic, discovering
+//! identity from environment variables at runtime.
+//!
+//! # Handler Registry Migration Status
+//!
+//! ✅ **100% Complete!** All handlers migrated to modular registry:
+//! - Health, ping, status → handlers/health.rs
+//! - Capabilities → handlers/capabilities.rs
+//! - Security (trust, JWT) → handlers/security.rs
+//! - BTSP tunnels → handlers/btsp.rs
+//! - Crypto operations → handlers/crypto.rs
+//! - TLS operations → handlers/crypto.rs
+//! - Federation → handlers/federation.rs
+//! - Encryption → handlers/encryption.rs
+//!
+//! **File Size Reduction**: 1,809 → 1,494 lines (-315 lines of dead code)
 
 use super::types::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 use crate::btsp_provider::BeardogBtspProvider;
@@ -764,278 +784,15 @@ async fn handle_method(
         }
 
         // ========================================================================
-        // FEDERATION METHODS (BiomeOS Spore Federation)
+        // FEDERATION & ENCRYPTION METHODS
         // ========================================================================
-
-        // Verify family member - genetic lineage verification
-        ("federation", "verify_family_member") => {
-            info!("🧬 Federation: verify_family_member");
-
-            let params = params.ok_or("Missing params for family verification")?;
-
-            // Extract parameters
-            let peer_family_id = params
-                .get("family_id")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing family_id")?;
-
-            let seed_hash = params
-                .get("seed_hash")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-
-            let peer_node_id = params
-                .get("node_id")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing node_id")?;
-
-            // Get our identity from environment (primal only knows itself)
-            let our_family = std::env::var("FAMILY_ID")
-                .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-                .unwrap_or_else(|_| "unknown".to_string());
-
-            // Determine relationship based on family
-            let (is_family_member, relationship, trust_level) = if peer_family_id == our_family {
-                (true, "sibling", "limited")
-            } else {
-                (false, "unrelated", "none")
-            };
-
-            info!(
-                "🧬 Family verification: peer_family={}, our_family={}, is_member={}",
-                peer_family_id, our_family, is_family_member
-            );
-
-            Ok(serde_json::json!({
-                "is_family_member": is_family_member,
-                "relationship": relationship,
-                "trust_level": trust_level,
-                "verified_at": Utc::now().to_rfc3339(),
-                "verification_method": "genetic_lineage_hkdf",
-                "our_family": our_family,
-                "peer_family": peer_family_id,
-                "peer_node": peer_node_id,
-                "seed_hash": seed_hash,
-            }))
-        }
-
-        // Derive sub-federation key
-        ("federation", "derive_subfed_key") => {
-            info!("🔑 Federation: derive_subfed_key");
-
-            let params = params.ok_or("Missing params for key derivation")?;
-
-            let parent_family = params
-                .get("parent_family")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing parent_family")?;
-
-            let subfed_name = params
-                .get("subfed_name")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing subfed_name")?;
-
-            let purpose = params
-                .get("purpose")
-                .and_then(|v| v.as_str())
-                .unwrap_or("sub-federation-encryption");
-
-            let derivation_info = params
-                .get("derivation_info")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-
-            // Generate key reference (HSM-backed)
-            let key_ref = format!("beardog-hsm-key-{}-{}", subfed_name, uuid::Uuid::new_v4());
-            let key_id = format!("subfed:{}:{}:v1", parent_family, subfed_name);
-
-            info!(
-                "🔑 Derived subfed key: parent={}, subfed={}, purpose={}, key_ref={}",
-                parent_family, subfed_name, purpose, key_ref
-            );
-
-            Ok(serde_json::json!({
-                "key_ref": key_ref,
-                "key_id": key_id,
-                "algorithm": "AES-256-GCM",
-                "derivation_method": "HKDF-SHA256",
-                "hsm_backed": true,
-                "parent_family": parent_family,
-                "subfed_name": subfed_name,
-                "purpose": purpose,
-                "derivation_info": derivation_info,
-                "created_at": Utc::now().to_rfc3339(),
-            }))
-        }
-
+        // NOTE: These methods are now handled by the modular handler registry!
+        // - federation.* → handlers/federation.rs (FederationHandler)
+        // - encryption.* → handlers/encryption.rs (EncryptionHandler)
+        //
+        // The registry is checked FIRST (lines 190-206), so these will never be reached.
+        // Keeping this comment as documentation of the migration.
         // ========================================================================
-        // ENCRYPTION METHODS (Generic encryption/decryption)
-        // ========================================================================
-
-        // Generic encryption method - REAL HSM-backed implementation
-        ("encryption", "encrypt") => {
-            info!("🔒 Encryption: encrypt");
-
-            let params = params.ok_or("Missing params for encryption")?;
-
-            let data_b64 = params
-                .get("data")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing data")?;
-
-            let key_ref = params
-                .get("key_ref")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing key_ref")?;
-
-            let algorithm = params
-                .get("algorithm")
-                .and_then(|v| v.as_str())
-                .unwrap_or("AES-256-GCM");
-
-            // Decode input data
-            let plaintext = base64::engine::general_purpose::STANDARD
-                .decode(data_b64)
-                .map_err(|e| format!("Invalid base64 input: {}", e))?;
-
-            // REAL IMPLEMENTATION: Use ChaCha20-Poly1305 (faster and safer than AES-GCM)
-            // This uses the same encryption that BTSP uses
-            use chacha20poly1305::{
-                aead::{Aead, AeadCore, KeyInit, OsRng},
-                ChaCha20Poly1305,
-            };
-
-            // For sub-federation keys, we derive a session key from the key_ref
-            // In production HSM: this would be backed by HSM key derivation
-            use sha2::{Digest, Sha256};
-            let mut hasher = Sha256::new();
-            hasher.update(key_ref.as_bytes());
-            hasher.update(b"subfederation-encryption-v1");
-            let session_key_bytes = hasher.finalize();
-            let session_key: [u8; 32] = session_key_bytes.into();
-
-            let cipher = ChaCha20Poly1305::new(&session_key.into());
-
-            let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
-
-            let ciphertext = cipher
-                .encrypt(&nonce, plaintext.as_ref())
-                .map_err(|e| format!("Encryption failed: {}", e))?;
-
-            // Encode results
-            let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(&ciphertext);
-            let nonce_b64 = base64::engine::general_purpose::STANDARD.encode(&nonce);
-
-            info!(
-                "🔒 Encrypted {} bytes with key_ref={}, algorithm=ChaCha20-Poly1305 (HSM-backed)",
-                plaintext.len(),
-                key_ref
-            );
-
-            // Note: BiomeOS tests expect 'encrypted_data' and 'tag' fields
-            // ChaCha20-Poly1305 includes the authentication tag in the ciphertext
-            // We provide it separately for compatibility
-            let tag_b64 = if ciphertext.len() >= 16 {
-                // Last 16 bytes are the authentication tag
-                base64::engine::general_purpose::STANDARD
-                    .encode(&ciphertext[ciphertext.len() - 16..])
-            } else {
-                String::new()
-            };
-
-            Ok(serde_json::json!({
-                "encrypted_data": ciphertext_b64,
-                "ciphertext": ciphertext_b64, // Also provide for compatibility
-                "nonce": nonce_b64,
-                "tag": tag_b64, // Authentication tag (part of ChaCha20-Poly1305 output)
-                "algorithm": "ChaCha20-Poly1305", // Real algorithm used
-                "key_ref": key_ref,
-                "success": true,
-            }))
-        }
-
-        // Generic decryption method - REAL HSM-backed implementation
-        ("encryption", "decrypt") => {
-            info!("🔓 Encryption: decrypt");
-
-            let params = params.ok_or("Missing params for decryption")?;
-
-            // Accept both 'encrypted_data' (BiomeOS format) and 'ciphertext' (standard format)
-            let ciphertext_b64 = params
-                .get("encrypted_data")
-                .or_else(|| params.get("ciphertext"))
-                .and_then(|v| v.as_str())
-                .ok_or("Missing encrypted_data/ciphertext")?;
-
-            let nonce_b64 = params
-                .get("nonce")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing nonce")?;
-
-            // Tag is provided separately in BiomeOS format but is embedded in ChaCha20-Poly1305
-            // We'll ignore it for now as it's part of the ciphertext
-            let _tag_b64 = params.get("tag").and_then(|v| v.as_str());
-
-            let key_ref = params
-                .get("key_ref")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing key_ref")?;
-
-            // Decode inputs
-            let ciphertext = base64::engine::general_purpose::STANDARD
-                .decode(ciphertext_b64)
-                .map_err(|e| format!("Invalid base64 ciphertext: {}", e))?;
-
-            let nonce_bytes = base64::engine::general_purpose::STANDARD
-                .decode(nonce_b64)
-                .map_err(|e| format!("Invalid base64 nonce: {}", e))?;
-
-            if nonce_bytes.len() != 12 {
-                return Err(format!(
-                    "Invalid nonce length: expected 12, got {}",
-                    nonce_bytes.len()
-                ));
-            }
-
-            // REAL IMPLEMENTATION: Use ChaCha20-Poly1305
-            use chacha20poly1305::{
-                aead::{Aead, KeyInit},
-                ChaCha20Poly1305, Nonce,
-            };
-
-            // Derive session key from key_ref (same as encryption)
-            use sha2::{Digest, Sha256};
-            let mut hasher = Sha256::new();
-            hasher.update(key_ref.as_bytes());
-            hasher.update(b"subfederation-encryption-v1");
-            let session_key_bytes = hasher.finalize();
-            let session_key: [u8; 32] = session_key_bytes.into();
-
-            let cipher = ChaCha20Poly1305::new(&session_key.into());
-
-            let nonce = Nonce::from_slice(&nonce_bytes);
-
-            let plaintext = cipher
-                .decrypt(nonce, ciphertext.as_ref())
-                .map_err(|e| format!("Decryption failed: {}", e))?;
-
-            // Encode result
-            let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(&plaintext);
-
-            info!(
-                "🔓 Decrypted {} bytes with key_ref={} (HSM-backed)",
-                ciphertext.len(),
-                key_ref
-            );
-
-            Ok(serde_json::json!({
-                "data": plaintext_b64, // BiomeOS format
-                "plaintext": plaintext_b64, // Standard format
-                "verified": true, // Authentication tag verified (implicit in ChaCha20-Poly1305)
-                "key_ref": key_ref,
-                "success": true,
-            }))
-        }
 
         // ========================================================================
         // JWT SECRET GENERATION (Security Provider Capability)
@@ -1099,67 +856,15 @@ async fn handle_method(
         }
 
         // ========================================================================
-        // CRYPTO OPERATIONS (For Songbird TLS and other primals)
+        // CRYPTO & TLS OPERATIONS
         // ========================================================================
-
-        ("crypto", "sign_ed25519") => {
-            info!("🔐 Crypto: sign_ed25519");
-            super::crypto_handlers::handle_sign_ed25519(params).await
-        }
-
-        ("crypto", "verify_ed25519") => {
-            info!("🔍 Crypto: verify_ed25519");
-            super::crypto_handlers::handle_verify_ed25519(params).await
-        }
-
-        ("crypto", "x25519_generate_ephemeral") => {
-            info!("🔑 Crypto: x25519_generate_ephemeral");
-            super::crypto_handlers::handle_x25519_generate_ephemeral(params).await
-        }
-
-        ("crypto", "x25519_derive_secret") => {
-            info!("🤝 Crypto: x25519_derive_secret");
-            super::crypto_handlers::handle_x25519_derive_secret(params).await
-        }
-
-        ("crypto", "chacha20_poly1305_encrypt") => {
-            info!("🔒 Crypto: chacha20_poly1305_encrypt");
-            super::crypto_handlers::handle_chacha20_poly1305_encrypt(params).await
-        }
-
-        ("crypto", "chacha20_poly1305_decrypt") => {
-            info!("🔓 Crypto: chacha20_poly1305_decrypt");
-            super::crypto_handlers::handle_chacha20_poly1305_decrypt(params).await
-        }
-
-        ("crypto", "blake3_hash") => {
-            info!("🔨 Crypto: blake3_hash");
-            super::crypto_handlers::handle_blake3_hash(params).await
-        }
-
-        ("crypto", "hmac_sha256") => {
-            info!("🔐 Crypto: hmac_sha256");
-            super::crypto_handlers::handle_hmac_sha256(params).await
-        }
-
+        // NOTE: These methods are now handled by the modular handler registry!
+        // - crypto.* → handlers/crypto.rs (CryptoHandler)
+        // - tls.* → handlers/crypto.rs (CryptoHandler)
+        //
+        // The registry is checked FIRST (lines 190-206), so these will never be reached.
+        // Keeping this comment as documentation of the migration.
         // ========================================================================
-        // TLS 1.3 CRYPTO METHODS (for Songbird Pure Rust TLS)
-        // ========================================================================
-
-        ("tls", "derive_secrets") => {
-            info!("🔑 TLS: derive_secrets (HKDF key derivation)");
-            super::crypto_handlers::handle_tls_derive_secrets(params).await
-        }
-
-        ("tls", "sign_handshake") => {
-            info!("✍️  TLS: sign_handshake (Ed25519 handshake signing)");
-            super::crypto_handlers::handle_tls_sign_handshake(params).await
-        }
-
-        ("tls", "verify_certificate") => {
-            info!("🔍 TLS: verify_certificate (X.509 chain verification)");
-            super::crypto_handlers::handle_tls_verify_certificate(params).await
-        }
 
         // Unknown method
         _ => {
