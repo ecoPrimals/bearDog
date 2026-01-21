@@ -1,7 +1,15 @@
-//! BTSP (BearDog Tunnel Security Protocol) handlers
+//! BTSP (BearDog Tunnel Security Protocol) handlers - UNIFIED
 //!
-//! Provides secure P2P mesh tunneling via genetic lineage.
-//! No VPN required - uses family-based trust for contact exchange and tunnel establishment.
+//! Provides secure communication for both:
+//! - **Internal Mode**: P2P mesh tunneling via genetic lineage (primals)
+//! - **External Mode**: HTTPS communication via certificate trust (APIs)
+//!
+//! # Architecture
+//!
+//! BTSP Unified consolidates two communication patterns into a single API:
+//! - Trust mode (genetic lineage vs. certificate) is the fundamental difference
+//! - Same crypto foundation (X25519, ChaCha20-Poly1305, Ed25519) for both
+//! - Backward compatible with existing BTSP internal mode calls
 
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
@@ -12,15 +20,27 @@ use chrono::Utc;
 use std::sync::Arc;
 use tracing::{info, warn};
 
-/// Handler for BTSP tunnel methods
+/// Handler for BTSP Unified methods
 ///
-/// Supports all BTSP operations:
+/// # Core Operations (6 methods, internal mode)
+///
 /// - `btsp.contact_exchange` - Exchange contact info via genetic lineage
-/// - `btsp.tunnel_establish` - Establish secure P2P tunnel
+/// - `btsp.tunnel_establish` - **UNIFIED**: Establish secure tunnel (internal OR external)
 /// - `btsp.tunnel_encrypt` - Encrypt data through tunnel
 /// - `btsp.tunnel_decrypt` - Decrypt data from tunnel
 /// - `btsp.tunnel_status` - Get tunnel status
 /// - `btsp.tunnel_close` - Close tunnel gracefully
+///
+/// # Unified Operations (3 new methods, Phase 2+)
+///
+/// - `btsp.configure_tls` - Configure TLS for external mode tunnel (Phase 3)
+/// - `btsp.verify_peer` - Unified trust verification (lineage or certificate) (Phase 3)
+/// - `btsp.tunnel_send_http` - Send HTTP request through external tunnel (Phase 3)
+///
+/// # Backward Compatibility
+///
+/// All existing BTSP calls work unchanged! Old-style calls automatically default
+/// to internal mode (genetic lineage + btsp_native).
 pub struct BtspHandler;
 
 #[async_trait]
@@ -31,7 +51,7 @@ impl MethodHandler for BtspHandler {
             "beardog./btsp/contact/exchange",
             "btsp.contact_exchange",
             "btsp.contact/exchange",
-            // Tunnel establishment
+            // Tunnel establishment (UNIFIED - supports internal + external)
             "beardog./btsp/tunnel/establish",
             "btsp.tunnel_establish",
             "btsp.tunnel/establish",
@@ -51,6 +71,10 @@ impl MethodHandler for BtspHandler {
             "beardog./btsp/tunnel/close",
             "btsp.tunnel_close",
             "btsp.tunnel/close",
+            // NEW: Unified BTSP methods (Phase 2+)
+            "btsp.configure_tls",         // TLS-specific config (external mode)
+            "btsp.verify_peer",           // Unified trust verification
+            "btsp.tunnel_send_http",      // HTTP request wrapper (external mode)
         ]
     }
 
@@ -73,6 +97,12 @@ impl MethodHandler for BtspHandler {
             self.handle_tunnel_status(params, btsp_provider).await
         } else if method.ends_with("tunnel_close") || method.contains("/tunnel/close") {
             self.handle_tunnel_close(params, btsp_provider).await
+        } else if method == "btsp.configure_tls" {
+            self.handle_configure_tls(params, btsp_provider).await
+        } else if method == "btsp.verify_peer" {
+            self.handle_verify_peer(params, btsp_provider).await
+        } else if method == "btsp.tunnel_send_http" {
+            self.handle_tunnel_send_http(params, btsp_provider).await
         } else {
             Err(format!("Unknown BTSP method: {}", method))
         }
@@ -122,25 +152,44 @@ impl BtspHandler {
         }
     }
 
-    /// Handle BTSP tunnel establishment request
+    /// Handle BTSP tunnel establishment request (UNIFIED)
     ///
-    /// Establishes a secure P2P tunnel to a peer endpoint.
+    /// Supports both internal (primal-to-primal) and external (HTTPS API) modes.
+    ///
+    /// # Backward Compatibility
+    ///
+    /// Old-style BTSP calls (without trust_mode/protocol) automatically default
+    /// to internal mode (genetic lineage + btsp_native), ensuring 100% compatibility.
+    ///
+    /// # New Unified Format
+    ///
+    /// External mode requires explicit trust_mode and protocol:
+    /// - trust_mode: "certificate" (for external HTTPS)
+    /// - protocol: "tls_http" (for TLS 1.3 + HTTP/2)
     async fn handle_tunnel_establish(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
-        info!("🔒 BTSP Tunnel Establish requested");
+        info!("🔒 BTSP Tunnel Establish requested (Unified)");
 
-        let params = params.ok_or("Missing params for tunnel establish")?;
+        let params_value = params.ok_or("Missing params for tunnel establish")?;
 
+        // Try parsing as new unified format first
+        if let Ok(unified_params) = serde_json::from_value::<beardog_types::btsp::TunnelEstablishParams>(params_value.clone()) {
+            info!("📋 Parsed as unified BTSP parameters");
+            return self.handle_tunnel_establish_unified(unified_params, btsp_provider).await;
+        }
+
+        // Fall back to legacy format for backward compatibility
+        info!("📋 Falling back to legacy BTSP format (backward compat)");
         let peer: beardog_capabilities::traits::PeerEndpoint =
-            serde_json::from_value(params.clone())
-                .map_err(|e| format!("Invalid peer endpoint: {}", e))?;
+            serde_json::from_value(params_value.clone())
+                .map_err(|e| format!("Invalid peer endpoint (legacy format): {}", e))?;
 
         match btsp_provider.establish_tunnel(peer).await {
             Ok(handle) => {
-                info!("✅ BTSP tunnel established: {}", handle.id);
+                info!("✅ BTSP tunnel established (legacy): {}", handle.id);
                 Ok(serde_json::to_value(handle)
                     .map_err(|e| format!("Serialization error: {}", e))?)
             }
@@ -149,6 +198,90 @@ impl BtspHandler {
                 Err(format!("Tunnel establish failed: {}", e))
             }
         }
+    }
+
+    /// Handle unified BTSP tunnel establishment
+    ///
+    /// Routes to internal or external mode based on trust_mode and protocol.
+    async fn handle_tunnel_establish_unified(
+        &self,
+        params: beardog_types::btsp::TunnelEstablishParams,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        // Detect mode
+        let is_internal = params.is_internal();
+        let is_external = params.is_external();
+
+        if is_internal {
+            info!("🔹 Internal mode: Genetic lineage trust");
+            self.handle_tunnel_establish_internal(params, btsp_provider).await
+        } else if is_external {
+            info!("🔸 External mode: Certificate trust + TLS 1.3");
+            self.handle_tunnel_establish_external(params, btsp_provider).await
+        } else {
+            // Mixed mode (shouldn't happen with proper types, but handle gracefully)
+            warn!("⚠️  Mixed mode detected (trust_mode and protocol mismatch)");
+            Err("Invalid mode: trust_mode and protocol must both be internal or external".into())
+        }
+    }
+
+    /// Handle internal mode tunnel establishment (genetic lineage)
+    async fn handle_tunnel_establish_internal(
+        &self,
+        params: beardog_types::btsp::TunnelEstablishParams,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        info!("🧬 Establishing internal tunnel: {} → {}", params.peer_id, params.peer_endpoint);
+
+        // Convert to legacy PeerEndpoint for now (existing implementation)
+        let peer = beardog_capabilities::traits::PeerEndpoint {
+            id: params.peer_id.clone(),
+            endpoint: params.peer_endpoint.clone(),
+            public_key: None, // Will be discovered during handshake
+        };
+
+        match btsp_provider.establish_tunnel(peer).await {
+            Ok(handle) => {
+                info!("✅ Internal tunnel established: {}", handle.id);
+
+                // Return unified response format
+                let response = beardog_types::btsp::TunnelEstablishResponse {
+                    tunnel_id: handle.id.clone(),
+                    peer_id: handle.peer_id.clone(),
+                    mode: "internal".into(),
+                    protocol: "btsp_native".into(),
+                    established_at: handle.established_at.clone(),
+                };
+
+                Ok(serde_json::to_value(response)
+                    .map_err(|e| format!("Serialization error: {}", e))?)
+            }
+            Err(e) => {
+                warn!("⚠️  Internal tunnel establish failed: {}", e);
+                Err(format!("Internal tunnel establish failed: {}", e))
+            }
+        }
+    }
+
+    /// Handle external mode tunnel establishment (TLS 1.3 + certificate trust)
+    ///
+    /// TODO: Phase 3 - Implement full TLS handshake
+    async fn handle_tunnel_establish_external(
+        &self,
+        params: beardog_types::btsp::TunnelEstablishParams,
+        _btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        info!("🌐 External tunnel requested: {} → {}", params.peer_id, params.peer_endpoint);
+
+        // TODO: Phase 3 - Implement TLS handshake
+        // For now, return a descriptive "not yet implemented" response
+        warn!("⚠️  External mode not yet implemented (Phase 3)");
+
+        Err(format!(
+            "External mode not yet implemented. Requested: {} ({}). \
+             Implementation scheduled for Phase 3 (TLS 1.3 handshake + HTTP/2).",
+            params.peer_id, params.peer_endpoint
+        ))
     }
 
     /// Handle BTSP tunnel encryption request
@@ -319,6 +452,91 @@ impl BtspHandler {
             }
         }
     }
+
+    // =========================================================================
+    // NEW: Unified BTSP Methods (Phase 2+)
+    // =========================================================================
+
+    /// Handle TLS configuration for external mode tunnels
+    ///
+    /// TODO: Phase 3 - Full implementation
+    async fn handle_configure_tls(
+        &self,
+        params: Option<&serde_json::Value>,
+        _btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        info!("🔐 BTSP Configure TLS requested");
+
+        let params_value = params.ok_or("Missing params for configure_tls")?;
+
+        // Parse parameters
+        let _config_params = serde_json::from_value::<beardog_types::btsp::ConfigureTlsParams>(
+            params_value.clone()
+        ).map_err(|e| format!("Invalid configure_tls params: {}", e))?;
+
+        // TODO: Phase 3 - Implement TLS configuration
+        warn!("⚠️  configure_tls not yet implemented (Phase 3)");
+
+        Err("btsp.configure_tls not yet implemented. \
+             Implementation scheduled for Phase 3 (TLS 1.3 configuration).".into())
+    }
+
+    /// Handle unified trust verification
+    ///
+    /// Supports both genetic lineage (internal) and certificate (external) verification.
+    ///
+    /// TODO: Phase 3 - Full implementation
+    async fn handle_verify_peer(
+        &self,
+        params: Option<&serde_json::Value>,
+        _btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        info!("🔍 BTSP Verify Peer requested");
+
+        let params_value = params.ok_or("Missing params for verify_peer")?;
+
+        // Parse parameters
+        let _verify_params = serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(
+            params_value.clone()
+        ).map_err(|e| format!("Invalid verify_peer params: {}", e))?;
+
+        // TODO: Phase 3 - Implement unified trust verification
+        // - For genetic_lineage: Use existing BTSP trust evaluation
+        // - For certificate: Use TLS certificate chain verification
+        warn!("⚠️  verify_peer not yet implemented (Phase 3)");
+
+        Err("btsp.verify_peer not yet implemented. \
+             Implementation scheduled for Phase 3 (unified trust verification).".into())
+    }
+
+    /// Handle HTTP request through external mode tunnel
+    ///
+    /// TODO: Phase 3 - Full implementation
+    async fn handle_tunnel_send_http(
+        &self,
+        params: Option<&serde_json::Value>,
+        _btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        info!("🌐 BTSP Tunnel Send HTTP requested");
+
+        let params_value = params.ok_or("Missing params for tunnel_send_http")?;
+
+        // Parse parameters
+        let _http_params = serde_json::from_value::<beardog_types::btsp::TunnelSendHttpParams>(
+            params_value.clone()
+        ).map_err(|e| format!("Invalid tunnel_send_http params: {}", e))?;
+
+        // TODO: Phase 3 - Implement HTTP over TLS tunnel
+        // - Format HTTP/2 request
+        // - Encrypt via TLS tunnel
+        // - Send over TCP socket
+        // - Receive and decrypt response
+        // - Parse HTTP/2 response
+        warn!("⚠️  tunnel_send_http not yet implemented (Phase 3)");
+
+        Err("btsp.tunnel_send_http not yet implemented. \
+             Implementation scheduled for Phase 3 (HTTP/2 over TLS tunnel).".into())
+    }
 }
 
 #[cfg(test)]
@@ -330,16 +548,24 @@ mod tests {
         let handler = BtspHandler;
         let methods = handler.methods();
 
-        // Should have 6 operations × 3 aliases each = 18 methods
-        assert_eq!(methods.len(), 18);
+        // Should have:
+        // - 6 core operations × 3 aliases each = 18 methods
+        // - 3 new unified methods = 3 methods
+        // Total = 21 methods
+        assert_eq!(methods.len(), 21);
 
-        // Check each operation has its aliases
+        // Check core operations have their aliases
         assert!(methods.contains(&"btsp.contact_exchange"));
         assert!(methods.contains(&"btsp.tunnel_establish"));
         assert!(methods.contains(&"btsp.tunnel_encrypt"));
         assert!(methods.contains(&"btsp.tunnel_decrypt"));
         assert!(methods.contains(&"btsp.tunnel_status"));
         assert!(methods.contains(&"btsp.tunnel_close"));
+
+        // Check new unified methods
+        assert!(methods.contains(&"btsp.configure_tls"));
+        assert!(methods.contains(&"btsp.verify_peer"));
+        assert!(methods.contains(&"btsp.tunnel_send_http"));
     }
 
     // Note: Full integration tests require a working BTSP provider
