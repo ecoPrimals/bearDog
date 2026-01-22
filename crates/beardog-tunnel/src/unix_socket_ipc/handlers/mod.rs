@@ -43,9 +43,6 @@ pub mod crypto;
 pub mod federation;
 pub mod encryption;
 
-// Re-export legacy handlers during migration
-pub use super::handlers_legacy::{handle_http_request, handle_jsonrpc_request};
-
 /// Trait for JSON-RPC method handlers
 ///
 /// Implement this trait to create a new handler that can be registered
@@ -175,8 +172,8 @@ impl HandlerRegistry {
             }
         }
 
-        // No handler found
-        Err(format!("Unknown method: {}", method))
+        // No handler found (JSON-RPC 2.0 error message)
+        Err(format!("Method not found: {}", method))
     }
 }
 

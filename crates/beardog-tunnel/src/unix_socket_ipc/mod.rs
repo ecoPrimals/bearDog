@@ -27,7 +27,6 @@ pub mod crypto_handlers_kdf; // Additional KDFs: bcrypt, scrypt (Phase 7)
 pub mod crypto_handlers_passwords; // Password hashing: Argon2id, PBKDF2 (Phase 6)
 pub mod crypto_handlers_rsa; // RSA signature algorithms (PKCS#1 v1.5, PSS)
 pub mod handlers;
-pub mod handlers_legacy; // Keep old monolith as reference during migration
 pub mod protocol;
 pub mod server;
 pub mod types;

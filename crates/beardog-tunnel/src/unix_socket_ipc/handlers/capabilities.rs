@@ -40,7 +40,7 @@ impl MethodHandler for CapabilitiesHandler {
         match method {
             "capabilities" | "get_capabilities" => self.handle_capabilities().await,
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
-            _ => Err(format!("Unknown method: {}", method)),
+            _ => Err(format!("Method not found: {}", method)),
         }
     }
 }

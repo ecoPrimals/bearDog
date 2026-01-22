@@ -73,7 +73,7 @@ impl MethodHandler for SecurityHandler {
             | "beardog.jwt_secret" | "security.jwt_secret" => {
                 self.handle_generate_jwt_secret(params).await
             }
-            _ => Err(format!("Unknown method: {}", method)),
+            _ => Err(format!("Method not found: {}", method)),
         }
     }
 }

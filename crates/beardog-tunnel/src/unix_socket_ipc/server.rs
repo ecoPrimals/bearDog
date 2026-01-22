@@ -10,8 +10,8 @@
 //! automatic detection and routing to appropriate handlers.
 
 use super::{
-    handlers::{handle_http_request, handle_jsonrpc_request},
-    types::{JsonRpcRequest, JsonRpcResponse, Protocol},
+    handlers::HandlerRegistry,
+    types::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, Protocol},
 };
 use crate::btsp_provider::BeardogBtspProvider;
 use anyhow::{Context, Result};
@@ -28,6 +28,9 @@ pub struct UnixSocketIpcServer {
 
     /// BTSP provider (provides all capabilities)
     btsp_provider: Arc<BeardogBtspProvider>,
+
+    /// Modular handler registry for JSON-RPC methods
+    handler_registry: HandlerRegistry,
 
     /// Server running state (using RwLock for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
@@ -62,6 +65,7 @@ impl UnixSocketIpcServer {
         Ok(Self {
             socket_path,
             btsp_provider,
+            handler_registry: HandlerRegistry::new(),
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
             is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
@@ -403,6 +407,67 @@ impl UnixSocketIpcServer {
         Ok(())
     }
 
+    /// Handle JSON-RPC request via modular handler registry
+    ///
+    /// This method routes requests through the trait-based handler registry,
+    /// bypassing the legacy router for cleaner, more efficient processing.
+    async fn handle_jsonrpc_via_registry(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
+        debug!("→ JSON-RPC Request: {}", request.method);
+
+        // Validate JSON-RPC version
+        if request.jsonrpc != "2.0" {
+            return JsonRpcResponse {
+                jsonrpc: "2.0".to_string(),
+                result: None,
+                error: Some(JsonRpcError {
+                    code: -32600,
+                    message: "Invalid JSON-RPC version (must be 2.0)".to_string(),
+                    data: None,
+                }),
+                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+            };
+        }
+
+        // Route to handler via registry
+        let result = self
+            .handler_registry
+            .route(&request.method, request.params.as_ref(), &self.btsp_provider)
+            .await;
+
+        // Build response with proper error codes
+        match result {
+            Ok(value) => JsonRpcResponse {
+                jsonrpc: "2.0".to_string(),
+                result: Some(value),
+                error: None,
+                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+            },
+            Err(e) => {
+                // Detect error type and use appropriate error code
+                let (code, message) = if e.contains("Method not found")
+                    || e.contains("Unknown method")
+                {
+                    (JsonRpcError::METHOD_NOT_FOUND, e)
+                } else if e.contains("Invalid params") || e.contains("Missing required") {
+                    (JsonRpcError::INVALID_PARAMS, e)
+                } else {
+                    (JsonRpcError::INTERNAL_ERROR, e)
+                };
+
+                JsonRpcResponse {
+                    jsonrpc: "2.0".to_string(),
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code,
+                        message,
+                        data: None,
+                    }),
+                    id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                }
+            }
+        }
+    }
+
     /// Handle a single JSON-RPC request
     async fn handle_one_jsonrpc_request(
         &self,
@@ -415,8 +480,8 @@ impl UnixSocketIpcServer {
 
         debug!("📨 JSON-RPC request: {}", request.method);
 
-        // Handle request
-        let response = handle_jsonrpc_request(&request, &self.btsp_provider).await;
+        // Handle request via modular handler registry
+        let response = self.handle_jsonrpc_via_registry(&request).await;
 
         // Send response
         let response_json = serde_json::to_string(&response)?;
@@ -435,7 +500,7 @@ impl UnixSocketIpcServer {
 
     /// Route request to appropriate handler (shared by JSON-RPC and tarpc)
     async fn route_request(&self, method: &str, request_data: &serde_json::Value) -> Result<serde_json::Value> {
-        // Convert to JsonRpcRequest format for existing handlers
+        // Convert to JsonRpcRequest format for handler registry
         let json_rpc_request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             method: method.to_string(),
@@ -443,8 +508,8 @@ impl UnixSocketIpcServer {
             id: request_data.get("id").cloned(),
         };
         
-        // Use existing handler infrastructure
-        let response = handle_jsonrpc_request(&json_rpc_request, &self.btsp_provider).await;
+        // Use modular handler registry
+        let response = self.handle_jsonrpc_via_registry(&json_rpc_request).await;
         
         // Convert response to Value
         Ok(serde_json::to_value(response)?)
@@ -460,7 +525,7 @@ impl UnixSocketIpcServer {
     pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
         let request: JsonRpcRequest =
             serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
-        Ok(handle_jsonrpc_request(&request, &self.btsp_provider).await)
+        Ok(self.handle_jsonrpc_via_registry(&request).await)
     }
 
     /// Handle HTTP connection
@@ -494,12 +559,27 @@ impl UnixSocketIpcServer {
         let method = parts[0];
         let path = parts[1];
 
-        debug!("📨 HTTP request: {} {}", method, path);
+        debug!("📨 HTTP request: {} {} (DEPRECATED)", method, path);
 
-        // Handle request
-        let response = handle_http_request(method, path, &self.btsp_provider).await;
+        // HTTP is deprecated - return JSON-RPC migration notice
+        let response = format!(
+            "HTTP/1.1 200 OK\r\n\
+             Content-Type: application/json\r\n\
+             \r\n\
+             {{\
+               \"status\": \"deprecated\",\
+               \"message\": \"HTTP protocol is deprecated. Use JSON-RPC 2.0 over Unix socket.\",\
+               \"migration\": {{\
+                 \"protocol\": \"JSON-RPC 2.0\",\
+                 \"transport\": \"Unix socket\",\
+                 \"socket_path\": \"{}\",\
+                 \"example\": {{\"jsonrpc\":\"2.0\",\"method\":\"health\",\"id\":1}}\
+               }}\
+             }}",
+            self.socket_path.display()
+        );
 
-        // Send response
+        // Send deprecation notice
         writer.write_all(response.as_bytes()).await?;
 
         Ok(())
