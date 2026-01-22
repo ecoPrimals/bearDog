@@ -75,11 +75,11 @@ pub fn handle_ecdh_p256_generate(_params: &Value) -> Result<Value, BearDogError>
     
     // Create secret from bytes
     use p256::elliptic_curve::SecretKey;
-    let secret_key = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| BearDogError::operation_failed(&format!("Failed to create P-256 secret key: {}", e)))?;
+    let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&private_key_bytes[..])
+        .map_err(|e| BearDogError::system(format!("Failed to create P-256 secret key: {}", e)))?;
     
-    // Derive public key from secret
-    let public_key = P256PublicKey::from(&secret_key);
+    // Derive public key from secret using scalar multiplication
+    let public_key = secret_key.public_key();
     let public_key_bytes = public_key.to_sec1_bytes();
     
     // Encode as base64
@@ -158,12 +158,12 @@ pub fn handle_ecdh_p256_derive(params: &Value) -> Result<Value, BearDogError> {
     );
     
     // Extract raw shared secret bytes (P-256 produces 32-byte shared secrets)
-    // Use extract() with HKDF to get the bytes, or just copy them directly
+    // FieldBytes<C> is a GenericArray that implements AsRef<[u8]>
     use p256::elliptic_curve::FieldBytes;
     let shared_secret_bytes: &FieldBytes<p256::NistP256> = shared_secret.raw_secret_bytes();
     
-    // Encode as base64
-    let shared_secret_b64 = BASE64.encode(shared_secret_bytes.as_slice());
+    // Encode as base64 (GenericArray implements AsRef<[u8]>)
+    let shared_secret_b64 = BASE64.encode(shared_secret_bytes);
     
     Ok(json!({
         "shared_secret": shared_secret_b64,
@@ -202,11 +202,11 @@ pub fn handle_ecdh_p384_generate(_params: &Value) -> Result<Value, BearDogError>
     
     // Create secret from bytes
     use p384::elliptic_curve::SecretKey;
-    let secret_key = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| BearDogError::operation_failed(&format!("Failed to create P-384 secret key: {}", e)))?;
+    let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&private_key_bytes[..])
+        .map_err(|e| BearDogError::system(format!("Failed to create P-384 secret key: {}", e)))?;
     
-    // Derive public key from secret
-    let public_key = P384PublicKey::from(&secret_key);
+    // Derive public key from secret using scalar multiplication
+    let public_key = secret_key.public_key();
     let public_key_bytes = public_key.to_sec1_bytes();
     
     // Encode as base64
@@ -284,11 +284,12 @@ pub fn handle_ecdh_p384_derive(params: &Value) -> Result<Value, BearDogError> {
     );
     
     // Extract raw shared secret bytes (P-384 produces 48-byte shared secrets)
+    // FieldBytes<C> is a GenericArray that implements AsRef<[u8]>
     use p384::elliptic_curve::FieldBytes;
     let shared_secret_bytes: &FieldBytes<p384::NistP384> = shared_secret.raw_secret_bytes();
     
-    // Encode as base64
-    let shared_secret_b64 = BASE64.encode(shared_secret_bytes.as_slice());
+    // Encode as base64 (GenericArray implements AsRef<[u8]>)
+    let shared_secret_b64 = BASE64.encode(shared_secret_bytes);
     
     Ok(json!({
         "shared_secret": shared_secret_b64,
