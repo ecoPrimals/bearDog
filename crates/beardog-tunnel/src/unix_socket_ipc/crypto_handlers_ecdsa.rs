@@ -53,12 +53,12 @@ use p256::ecdsa::{
     signature::{Signer as P256Signer, Verifier as P256Verifier},
     Signature as P256Signature, SigningKey as P256SigningKey, VerifyingKey as P256VerifyingKey,
 };
-use p256::elliptic_curve::sec1::ToEncodedPoint as P256ToEncodedPoint;
+// Removed unused: ToEncodedPoint (not needed for DER signature format)
 use p384::ecdsa::{
-    signature::{Signer as P384Signer, Verifier as P384Verifier},
+    signature::Signer as P384Signer, // Used in handle_sign_ecdsa_secp384r1
     Signature as P384Signature, SigningKey as P384SigningKey, VerifyingKey as P384VerifyingKey,
 };
-use p384::elliptic_curve::sec1::ToEncodedPoint as P384ToEncodedPoint;
+// Removed unused: Verifier trait, ToEncodedPoint
 // Note: P-521 imports commented out due to rand_core version conflict
 // use p521::ecdsa::{
 //     signature::{Signer as P521Signer, Verifier as P521Verifier},

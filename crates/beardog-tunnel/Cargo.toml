@@ -56,7 +56,18 @@ sha3 = "0.10"  # For entropy mixing (evolved from mock)
 x25519-dalek = { version = "2.0", features = ["static_secrets"] }  # Pure Rust X25519 for TLS key exchange (Songbird support)
 hmac = "0.12"  # Pure Rust HMAC for genetic crypto
 blake3 = { version = "1.5", features = ["pure"] }  # Pure Rust (no C assembly) for universal portability
-argon2 = "0.5"
+argon2 = "0.5"  # Modern password hashing (OWASP recommended, Phase 6)
+pbkdf2 = { version = "0.12", features = ["simple"] }  # Legacy password hashing (Phase 6)
+# Phase 7 dependencies - High-Priority Compatibility
+bcrypt = "0.18"  # Legacy password hashing
+scrypt = "0.12.0-rc.9"    # Memory-hard KDF
+sha1 = "0.10"             # Legacy hashing (Git compatibility)
+# DEFERRED Phase 7: AES legacy modes (like P-521/Ed448) - RC version conflicts
+# aes = "0.9.0-rc.2"        # AES cipher (for CBC/CTR/XTS modes)
+# cipher = "0.5.0-rc.5"     # Cipher traits (for AES modes)
+# cbc = "0.2.0-rc.2"        # AES-CBC mode (TLS 1.2)
+# ctr = "0.10.0-rc.2"       # AES-CTR mode (streaming)
+# xts-mode = "0.5.1"        # AES-XTS mode (disk encryption)
 hex = "0.4"
 hkdf = "0.12"  # HKDF key derivation for TLS 1.3
 x509-parser = "0.16"  # Pure Rust X.509 certificate parsing for TLS
@@ -71,6 +82,15 @@ ctap-hid-fido2 = { version = "3.5", optional = true }
 hidapi = { version = "2.4", optional = true }
 
 base64 = "0.21"  # Required for Unix socket IPC (evolved from HTTP to pure IPC)
+
+# DEFERRED Phase 7: AES legacy modes - RustCrypto RC version conflicts (like P-521/Ed448)
+# These dependencies were added for Phase 7 but deferred due to RC version incompatibilities.
+# The code architecture is complete (~700 lines) and ready to activate when crates stabilize.
+# aes = "0.9.0-rc.2"        # AES cipher (for CBC/CTR/XTS modes)
+# cipher = "0.5.0-rc.5"     # Cipher traits (for AES modes)
+# cbc = "0.2.0-rc.2"        # AES-CBC mode (TLS 1.2)
+# ctr = "0.10.0-rc.2"       # AES-CTR mode (streaming)
+# xts-mode = "0.5.1"        # AES-XTS mode (disk encryption)
 
 [dev-dependencies]
 tokio-test = "0.4"

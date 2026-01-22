@@ -12,6 +12,8 @@
 use beardog_errors::BearDogError;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256, Sha384, Sha512};
+use sha1::Sha1;  // Phase 7: Legacy Git compatibility (INSECURE for crypto!)
+use sha3::Sha3_256;  // Phase 7: Modern quantum-resistant hashing
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 
@@ -171,6 +173,110 @@ pub fn handle_sha512(params: &Value) -> Result<Value, BearDogError> {
         "hash_base64": hash_b64,
         "algorithm": "sha512",
         "output_bits": 512
+    }))
+}
+
+/// Handle `crypto.sha1` - SHA-1 hashing (LEGACY ONLY - INSECURE!)
+///
+/// **⚠️ SECURITY WARNING**: SHA-1 is BROKEN for cryptographic purposes!
+/// - Collision attacks exist (SHAttered, 2017)
+/// - Use ONLY for: Git, legacy checksums, NON-CRYPTO purposes
+/// - For new systems, use SHA-256 or SHA3-256
+///
+/// **Input**:
+/// ```json
+/// {
+///   "data": "base64_encoded_data"
+/// }
+/// ```
+///
+/// **Output**:
+/// ```json
+/// {
+///   "hash": "hex_encoded_sha1_hash",
+///   "hash_base64": "base64_encoded_hash",
+///   "algorithm": "sha1",
+///   "output_bits": 160,
+///   "warning": "SHA-1 is INSECURE for cryptographic purposes!"
+/// }
+/// ```
+pub fn handle_sha1(params: &Value) -> Result<Value, BearDogError> {
+    // Parse and decode data
+    let data_b64 = params
+        .get("data")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'data' parameter"))?;
+
+    let data = BASE64
+        .decode(data_b64)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+
+    // Compute SHA-1 hash
+    let mut hasher = Sha1::new();
+    hasher.update(&data);
+    let hash = hasher.finalize();
+
+    // Encode as hex and base64
+    let hash_hex = hex::encode(&hash);
+    let hash_b64 = BASE64.encode(&hash);
+
+    Ok(json!({
+        "hash": hash_hex,
+        "hash_base64": hash_b64,
+        "algorithm": "sha1",
+        "output_bits": 160,
+        "warning": "SHA-1 is INSECURE for cryptographic purposes!"
+    }))
+}
+
+/// Handle `crypto.sha3_256` - SHA3-256 hashing (Modern quantum-resistant)
+///
+/// SHA3-256 is the modern Keccak-based hash function standardized by NIST.
+/// Different construction than SHA-2, provides quantum resistance (classical security).
+///
+/// **Input**:
+/// ```json
+/// {
+///   "data": "base64_encoded_data"
+/// }
+/// ```
+///
+/// **Output**:
+/// ```json
+/// {
+///   "hash": "hex_encoded_sha3_256_hash",
+///   "hash_base64": "base64_encoded_hash",
+///   "algorithm": "sha3_256",
+///   "output_bits": 256
+/// }
+/// ```
+///
+/// **Performance**: ~1ms (slower than SHA-256, but more secure construction)
+pub fn handle_sha3_256(params: &Value) -> Result<Value, BearDogError> {
+    // Parse and decode data
+    let data_b64 = params
+        .get("data")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'data' parameter"))?;
+
+    let data = BASE64
+        .decode(data_b64)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+
+    // Compute SHA3-256 hash
+    let mut hasher = Sha3_256::new();
+    hasher.update(&data);
+    let hash = hasher.finalize();
+
+    // Encode as hex and base64
+    let hash_hex = hex::encode(&hash);
+    let hash_b64 = BASE64.encode(&hash);
+
+    Ok(json!({
+        "hash": hash_hex,
+        "hash_base64": hash_b64,
+        "algorithm": "sha3_256",
+        "output_bits": 256
     }))
 }
 
@@ -367,6 +473,62 @@ mod tests {
         assert!(sha256_result.get("hash_base64").is_some());
         assert!(sha384_result.get("hash_base64").is_some());
         assert!(sha512_result.get("hash_base64").is_some());
+    }
+    
+    // Phase 7: SHA-1 Tests (Legacy compatibility)
+    
+    #[test]
+    fn test_sha1_hello_world() {
+        let params = json!({"data": BASE64.encode(b"Hello, World!")});
+        let result = handle_sha1(&params).unwrap();
+        let hash = result.get("hash").unwrap().as_str().unwrap();
+        
+        // Known SHA-1 hash
+        assert_eq!(hash, "0a0a9f2a6772942557ab5355d76af442f8f65e01");
+        assert_eq!(hash.len(), 40); // 160 bits
+        assert!(result.get("warning").is_some()); // Security warning
+    }
+    
+    #[test]
+    fn test_sha1_empty() {
+        let params = json!({"data": BASE64.encode(b"")});
+        let result = handle_sha1(&params).unwrap();
+        let hash = result.get("hash").unwrap().as_str().unwrap();
+        assert_eq!(hash, "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+    }
+    
+    // Phase 7: SHA3-256 Tests (Modern quantum-resistant)
+    
+    #[test]
+    fn test_sha3_256_hello_world() {
+        let params = json!({"data": BASE64.encode(b"Hello, World!")});
+        let result = handle_sha3_256(&params).unwrap();
+        let hash = result.get("hash").unwrap().as_str().unwrap();
+        
+        // Known SHA3-256 hash
+        assert_eq!(hash, "1af17a664e3fa8e419b8ba05c2a173169df76162a5a286e0c405b460d478f7ef");
+        assert_eq!(hash.len(), 64); // 256 bits
+    }
+    
+    #[test]
+    fn test_sha3_256_empty() {
+        let params = json!({"data": BASE64.encode(b"")});
+        let result = handle_sha3_256(&params).unwrap();
+        let hash = result.get("hash").unwrap().as_str().unwrap();
+        assert_eq!(hash, "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a");
+    }
+    
+    #[test]
+    fn test_sha3_vs_sha2_different() {
+        // SHA3 and SHA2 produce different hashes
+        let data = BASE64.encode(b"test");
+        let sha2 = handle_sha256(&json!({"data": &data})).unwrap();
+        let sha3 = handle_sha3_256(&json!({"data": &data})).unwrap();
+        
+        assert_ne!(
+            sha2.get("hash").unwrap(),
+            sha3.get("hash").unwrap()
+        );
     }
 }
 

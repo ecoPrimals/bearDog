@@ -2,9 +2,9 @@
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.
 //!
-//! # Methods (30 total: 15 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic)
+//! # Methods (37 total: 19 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic + 3 password)
 //!
-//! ## Core Crypto (15 methods)
+//! ## Core Crypto (19 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
 //! - `crypto.verify_ed25519` - Verify Ed25519 signature
 //! - `crypto.x25519_generate_ephemeral` - Generate ephemeral X25519 keypair
@@ -15,6 +15,10 @@
 //! - `crypto.ecdh_p384_derive` - P-384 ECDH key exchange (Phase 6 - TLS 1.3)
 //! - `crypto.chacha20_poly1305_encrypt` - AEAD encryption
 //! - `crypto.chacha20_poly1305_decrypt` - AEAD decryption
+//! - `crypto.aes256_gcm_encrypt` - AES-256-GCM encryption (Phase 6 - 90%+ of HTTPS!)
+//! - `crypto.aes256_gcm_decrypt` - AES-256-GCM decryption (Phase 6 - 90%+ of HTTPS!)
+//! - `crypto.aes128_gcm_encrypt` - AES-128-GCM encryption (Phase 6 - 80%+ of HTTPS!)
+//! - `crypto.aes128_gcm_decrypt` - AES-128-GCM decryption (Phase 6 - 80%+ of HTTPS!)
 //! - `crypto.blake3_hash` - BLAKE3 hashing
 //! - `crypto.hmac_sha256` - HMAC-SHA256 message authentication
 //! - `crypto.sha256` - SHA-256 hashing (Phase 6)
@@ -45,6 +49,11 @@
 //! - `genetic.mix_entropy` - Mix entropy across three tiers (Human/Supervised/Machine)
 //! - `genetic.verify_lineage` - Verify genetic family relationships
 //! - `genetic.generate_lineage_proof` - Generate lineage proof for verification
+//!
+//! ## Password Hashing - Phase 6 (3 methods)
+//! - `crypto.argon2id_hash` - Modern password hashing (OWASP recommended, memory-hard)
+//! - `crypto.argon2id_verify` - Verify Argon2id password hashes (constant-time)
+//! - `crypto.pbkdf2_sha256` - Legacy PBKDF2 key derivation (iOS/macOS/WiFi)
 //!
 //! # Architecture
 //!
@@ -108,12 +117,31 @@ impl MethodHandler for CryptoHandler {
             // AEAD encryption
             "crypto.chacha20_poly1305_encrypt",
             "crypto.chacha20_poly1305_decrypt",
+            "crypto.aes256_gcm_encrypt",
+            "crypto.aes256_gcm_decrypt",
+            "crypto.aes128_gcm_encrypt",
+            "crypto.aes128_gcm_decrypt",
+            // Note: AES Legacy Modes (CBC/CTR/XTS) deferred due to RustCrypto RC version conflicts
             // Hashing
             "crypto.blake3_hash",
             "crypto.hmac_sha256",
             "crypto.sha256",
             "crypto.sha384",
             "crypto.sha512",
+            "crypto.sha1",      // Phase 7: Legacy (Git compatibility)
+            "crypto.sha3_256",  // Phase 7: Modern quantum-resistant
+            // HMAC variants (Phase 7)
+            "crypto.hmac_sha384",
+            "crypto.hmac_sha512",
+            "crypto.hmac_blake3",
+            // Password hashing
+            "crypto.argon2id_hash",
+            "crypto.argon2id_verify",
+            "crypto.pbkdf2_sha256",
+            // Additional KDFs (Phase 7)
+            "crypto.bcrypt_hash",
+            "crypto.bcrypt_verify",
+            "crypto.scrypt",
             // TLS crypto operations
             "tls.derive_secrets",
             "tls.sign_handshake",
@@ -258,6 +286,34 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers::handle_chacha20_poly1305_decrypt(params).await
             }
 
+            "crypto.aes256_gcm_encrypt" => {
+                info!("🔒 Crypto: aes256_gcm_encrypt (90%+ of HTTPS!)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_aes_gcm::handle_aes256_gcm_encrypt(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.aes256_gcm_decrypt" => {
+                info!("🔓 Crypto: aes256_gcm_decrypt (90%+ of HTTPS!)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_aes_gcm::handle_aes256_gcm_decrypt(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.aes128_gcm_encrypt" => {
+                info!("🔒 Crypto: aes128_gcm_encrypt (80%+ of HTTPS!)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_aes_gcm::handle_aes128_gcm_encrypt(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.aes128_gcm_decrypt" => {
+                info!("🔓 Crypto: aes128_gcm_decrypt (80%+ of HTTPS!)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_aes_gcm::handle_aes128_gcm_decrypt(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
             "crypto.blake3_hash" => {
                 info!("🔍 Crypto: blake3_hash");
                 super::super::crypto_handlers::handle_blake3_hash(params).await
@@ -286,6 +342,91 @@ impl MethodHandler for CryptoHandler {
                 info!("🔍 Crypto: sha512 (SHA-512 hashing)");
                 let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
                 super::super::crypto_handlers_hashing::handle_sha512(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            // Phase 7: SHA-1 (legacy Git compatibility)
+            "crypto.sha1" => {
+                info!("⚠️  Crypto: sha1 (LEGACY - Git compatibility only!)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_sha1(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            // Phase 7: SHA3-256 (modern quantum-resistant)
+            "crypto.sha3_256" => {
+                info!("🔬 Crypto: sha3_256 (modern quantum-resistant hashing)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_sha3_256(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            // Phase 7: HMAC variants
+            "crypto.hmac_sha384" => {
+                info!("🔐 Crypto: hmac_sha384 (high-security MAC)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hmac::handle_hmac_sha384(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            "crypto.hmac_sha512" => {
+                info!("🔐 Crypto: hmac_sha512 (maximum-security MAC)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hmac::handle_hmac_sha512(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            "crypto.hmac_blake3" => {
+                info!("⚡ Crypto: hmac_blake3 (modern high-performance MAC)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hmac::handle_hmac_blake3(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            // ====================================================================
+            // Password Hashing (3 methods - Phase 6)
+            // ====================================================================
+
+            "crypto.argon2id_hash" => {
+                info!("🔒 Crypto: argon2id_hash (OWASP password hashing)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_passwords::handle_argon2id_hash(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.argon2id_verify" => {
+                info!("🔓 Crypto: argon2id_verify (password verification)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_passwords::handle_argon2id_verify(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.pbkdf2_sha256" => {
+                info!("🔑 Crypto: pbkdf2_sha256 (legacy password derivation)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_passwords::handle_pbkdf2_sha256(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            // Phase 7: Additional KDFs (bcrypt, scrypt)
+            "crypto.bcrypt_hash" => {
+                info!("🔐 Crypto: bcrypt_hash (legacy password hashing)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_kdf::handle_bcrypt_hash(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            "crypto.bcrypt_verify" => {
+                info!("🔐 Crypto: bcrypt_verify (legacy password verification)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_kdf::handle_bcrypt_verify(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+            
+            "crypto.scrypt" => {
+                info!("🔑 Crypto: scrypt (memory-hard KDF)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_kdf::handle_scrypt(params_ref)
                     .map_err(|e| e.to_string())
             }
 

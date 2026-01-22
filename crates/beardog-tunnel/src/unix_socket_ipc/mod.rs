@@ -16,10 +16,15 @@
 //! - `server` - Server core and connection management
 
 pub mod crypto_handlers;
+pub mod crypto_handlers_aes_gcm; // AES-GCM encryption (Phase 6 - 90%+ of HTTPS!)
+// pub mod crypto_handlers_aes_legacy; // DEFERRED: AES-CBC/CTR/XTS (RC version conflicts)
 pub mod crypto_handlers_ecdh; // ECDH P-256/P-384 key exchange (Phase 6 - TLS 1.3)
 pub mod crypto_handlers_ecdsa; // ECDSA signature algorithms (P-256, P-384)
 pub mod crypto_handlers_genetic; // Genetic crypto (Phase 5)
 pub mod crypto_handlers_hashing; // SHA-256/384/512 standalone hashing (Phase 6)
+pub mod crypto_handlers_hmac; // HMAC variants: SHA384/512, Blake3 (Phase 7)
+pub mod crypto_handlers_kdf; // Additional KDFs: bcrypt, scrypt (Phase 7)
+pub mod crypto_handlers_passwords; // Password hashing: Argon2id, PBKDF2 (Phase 6)
 pub mod crypto_handlers_rsa; // RSA signature algorithms (PKCS#1 v1.5, PSS)
 pub mod handlers;
 pub mod handlers_legacy; // Keep old monolith as reference during migration

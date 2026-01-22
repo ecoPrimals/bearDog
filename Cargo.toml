@@ -94,12 +94,20 @@ zeroize = { version = "1.7", features = ["derive"] }
 hmac = "0.12"
 sha2 = "0.10"
 sha3 = "0.10"
+sha1 = "0.10"  # Legacy hashing (Git compatibility) - Phase 7
 lettre = "0.11"
 cryptoki = "0.6"
 rsa = "0.9"
 p256 = { version = "0.13", features = ["ecdsa"] }
 p384 = { version = "0.13", features = ["ecdsa"] }  # ECDSA P-384 (Phase 2)
-ed448-goldilocks = "0.9"  # Ed448 signatures (Phase 3)
+ed448-goldilocks = "0.9"  # Ed448 signatures (Phase 3, deferred)
+scrypt = "0.12.0-rc.9"    # Memory-hard KDF - Phase 7
+# DEFERRED Phase 7: AES legacy modes - RustCrypto RC version conflicts (like P-521/Ed448)
+# aes = "0.9.0-rc.2"        # AES cipher (for CBC/CTR/XTS modes)
+# cipher = "0.5.0-rc.5"     # Cipher traits (for AES modes)
+# cbc = "0.2.0-rc.2"        # AES-CBC mode (TLS 1.2)
+# ctr = "0.10.0-rc.2"       # AES-CTR mode (streaming)
+# xts-mode = "0.5.1"        # AES-XTS mode (disk encryption)
 
 # Networking
 quinn = "0.11"
@@ -129,7 +137,7 @@ bytes = "1.5"
 parking_lot = "0.12"
 base64 = "0.22"
 hex = "0.4"
-bcrypt = "0.15"
+bcrypt = "0.18"  # Legacy password hashing - Phase 7
 # JWT: Implemented using RustCrypto (hmac + sha2 + base64) - 100% Pure Rust!
 
 # Configuration
