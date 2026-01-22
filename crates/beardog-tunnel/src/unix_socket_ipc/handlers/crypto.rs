@@ -14,6 +14,10 @@
 //! - `crypto.blake3_hash` - BLAKE3 hashing
 //! - `crypto.hmac_sha256` - HMAC-SHA256 message authentication
 //!
+//! ## ECDSA Signature Algorithms (2 methods)
+//! - `crypto.sign_ecdsa_secp256r1` - ECDSA P-256 signing (TLS 1.3)
+//! - `crypto.verify_ecdsa_secp256r1` - ECDSA P-256 verification (TLS 1.3)
+//!
 //! ## TLS Crypto (3 methods)
 //! - `tls.derive_secrets` - HKDF key derivation for TLS
 //! - `tls.sign_handshake` - Ed25519 handshake signing
@@ -55,13 +59,19 @@ pub struct CryptoHandler;
 impl MethodHandler for CryptoHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![
-            // Core crypto operations
+            // Core crypto operations (EdDSA)
             "crypto.sign_ed25519",
             "crypto.verify_ed25519",
+            // ECDSA signature algorithms (TLS 1.3)
+            "crypto.sign_ecdsa_secp256r1",
+            "crypto.verify_ecdsa_secp256r1",
+            // Key exchange
             "crypto.x25519_generate_ephemeral",
             "crypto.x25519_derive_secret",
+            // AEAD encryption
             "crypto.chacha20_poly1305_encrypt",
             "crypto.chacha20_poly1305_decrypt",
+            // Hashing
             "crypto.blake3_hash",
             "crypto.hmac_sha256",
             // TLS crypto operations
@@ -91,6 +101,24 @@ impl MethodHandler for CryptoHandler {
                 info!("✅ Crypto: verify_ed25519");
                 super::super::crypto_handlers::handle_verify_ed25519(params).await
             }
+
+            // ====================================================================
+            // ECDSA Signature Algorithms (TLS 1.3 Support)
+            // ====================================================================
+
+            "crypto.sign_ecdsa_secp256r1" => {
+                info!("✍️  Crypto: sign_ecdsa_secp256r1 (ECDSA P-256 for TLS 1.3)");
+                super::super::crypto_handlers_ecdsa::handle_sign_ecdsa_secp256r1(params).await
+            }
+
+            "crypto.verify_ecdsa_secp256r1" => {
+                info!("✅ Crypto: verify_ecdsa_secp256r1 (ECDSA P-256 for TLS 1.3)");
+                super::super::crypto_handlers_ecdsa::handle_verify_ecdsa_secp256r1(params).await
+            }
+
+            // ====================================================================
+            // Key Exchange
+            // ====================================================================
 
             "crypto.x25519_generate_ephemeral" => {
                 info!("🔑 Crypto: x25519_generate_ephemeral");

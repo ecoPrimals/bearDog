@@ -19,7 +19,7 @@ BearDog's RPC API follows these principles:
 
 ---
 
-## 📋 Complete Method List (47 Methods)
+## 📋 Complete Method List (49 Methods)
 
 ### Universal Methods (4 methods)
 
@@ -41,7 +41,7 @@ These work with OR without namespaces for maximum compatibility:
 
 ---
 
-### Crypto Methods (8 methods)
+### Crypto Methods (10 methods)
 
 **Namespace**: `crypto.`
 
@@ -49,6 +49,8 @@ These work with OR without namespaces for maximum compatibility:
 |--------|---------|-------|--------|
 | `crypto.sign_ed25519` | Sign data with Ed25519 | `data` (hex/base64) | `signature` (base64) |
 | `crypto.verify_ed25519` | Verify Ed25519 signature | `data`, `signature`, `public_key` | `valid` (boolean) |
+| `crypto.sign_ecdsa_secp256r1` | ECDSA P-256 signing (TLS 1.3) | `data` (base64) | `signature` (base64), `public_key` |
+| `crypto.verify_ecdsa_secp256r1` | ECDSA P-256 verification (TLS 1.3) | `data`, `signature`, `public_key` | `valid` (boolean) |
 | `crypto.x25519_generate_ephemeral` | Generate X25519 keypair | - | `public_key`, `private_key` |
 | `crypto.x25519_derive_secret` | X25519 key exchange | `private_key`, `public_key` | `shared_secret` |
 | `crypto.chacha20_poly1305_encrypt` | AEAD encryption | `plaintext`, `key`, `nonce`, `aad` | `ciphertext` |
@@ -56,13 +58,52 @@ These work with OR without namespaces for maximum compatibility:
 | `crypto.blake3_hash` | BLAKE3 hashing | `data` | `hash` |
 | `crypto.hmac_sha256` | HMAC-SHA256 | `data`, `key` | `hmac` |
 
-**Example**:
+**Example - Ed25519 Signing**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.sign_ed25519",
+  "params": {
+    "data": "SGVsbG8sIFdvcmxkIQ=="
+  },
+  "id": 1
+}
+```
+
+**Example - ECDSA P-256 Signing** (TLS 1.3):
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.sign_ecdsa_secp256r1",
+  "params": {
+    "data": "SGVsbG8sIFRMUyAxLjMh"
+  },
+  "id": 2
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "signature": "base64_encoded_asn1_der_signature",
+    "public_key": "base64_encoded_uncompressed_public_key",
+    "algorithm": "ecdsa_secp256r1",
+    "curve": "P-256",
+    "hash": "SHA-256"
+  },
+  "id": 2
+}
+```
+
+**Example - X25519 Keypair Generation**:
 ```json
 {
   "jsonrpc": "2.0",
   "method": "crypto.x25519_generate_ephemeral",
   "params": {},
-  "id": 1
+  "id": 3
 }
 ```
 
@@ -74,7 +115,7 @@ These work with OR without namespaces for maximum compatibility:
     "public_key": "base64_encoded_public_key",
     "private_key": "base64_encoded_private_key"
   },
-  "id": 1
+  "id": 3
 }
 ```
 

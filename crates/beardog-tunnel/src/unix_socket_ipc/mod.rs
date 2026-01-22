@@ -16,6 +16,7 @@
 //! - `server` - Server core and connection management
 
 pub mod crypto_handlers;
+pub mod crypto_handlers_ecdsa; // ECDSA signature algorithms (P-256, P-384, P-521)
 pub mod handlers;
 pub mod handlers_legacy; // Keep old monolith as reference during migration
 pub mod protocol;
