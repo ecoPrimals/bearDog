@@ -2,17 +2,24 @@
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.
 //!
-//! # Methods (23 total: 8 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic)
+//! # Methods (30 total: 15 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic)
 //!
-//! ## Core Crypto (8 methods)
+//! ## Core Crypto (15 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
 //! - `crypto.verify_ed25519` - Verify Ed25519 signature
 //! - `crypto.x25519_generate_ephemeral` - Generate ephemeral X25519 keypair
 //! - `crypto.x25519_derive_secret` - Derive shared secret via X25519
+//! - `crypto.ecdh_p256_generate` - Generate P-256 ECDH keypair (Phase 6 - TLS 1.3)
+//! - `crypto.ecdh_p256_derive` - P-256 ECDH key exchange (Phase 6 - TLS 1.3)
+//! - `crypto.ecdh_p384_generate` - Generate P-384 ECDH keypair (Phase 6 - TLS 1.3)
+//! - `crypto.ecdh_p384_derive` - P-384 ECDH key exchange (Phase 6 - TLS 1.3)
 //! - `crypto.chacha20_poly1305_encrypt` - AEAD encryption
 //! - `crypto.chacha20_poly1305_decrypt` - AEAD decryption
 //! - `crypto.blake3_hash` - BLAKE3 hashing
 //! - `crypto.hmac_sha256` - HMAC-SHA256 message authentication
+//! - `crypto.sha256` - SHA-256 hashing (Phase 6)
+//! - `crypto.sha384` - SHA-384 hashing (Phase 6)
+//! - `crypto.sha512` - SHA-512 hashing (Phase 6)
 //!
 //! ## ECDSA Signature Algorithms (4 methods)
 //! - `crypto.sign_ecdsa_secp256r1` - ECDSA P-256 signing (TLS 1.3)
@@ -91,15 +98,22 @@ impl MethodHandler for CryptoHandler {
             "crypto.verify_rsa_pkcs1_sha256",
             "crypto.sign_rsa_pss_sha256",
             "crypto.verify_rsa_pss_sha256",
-            // Key exchange
+            // Key exchange (X25519 + ECDH)
             "crypto.x25519_generate_ephemeral",
             "crypto.x25519_derive_secret",
+            "crypto.ecdh_p256_generate",
+            "crypto.ecdh_p256_derive",
+            "crypto.ecdh_p384_generate",
+            "crypto.ecdh_p384_derive",
             // AEAD encryption
             "crypto.chacha20_poly1305_encrypt",
             "crypto.chacha20_poly1305_decrypt",
             // Hashing
             "crypto.blake3_hash",
             "crypto.hmac_sha256",
+            "crypto.sha256",
+            "crypto.sha384",
+            "crypto.sha512",
             // TLS crypto operations
             "tls.derive_secrets",
             "tls.sign_handshake",
@@ -206,6 +220,34 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers::handle_x25519_derive_secret(params).await
             }
 
+            "crypto.ecdh_p256_generate" => {
+                info!("🔑 Crypto: ecdh_p256_generate (P-256 keypair for TLS 1.3)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_ecdh::handle_ecdh_p256_generate(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.ecdh_p256_derive" => {
+                info!("🤝 Crypto: ecdh_p256_derive (P-256 ECDH key exchange for TLS 1.3)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_ecdh::handle_ecdh_p256_derive(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.ecdh_p384_generate" => {
+                info!("🔑 Crypto: ecdh_p384_generate (P-384 keypair for TLS 1.3)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_ecdh::handle_ecdh_p384_generate(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.ecdh_p384_derive" => {
+                info!("🤝 Crypto: ecdh_p384_derive (P-384 ECDH key exchange for TLS 1.3)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_ecdh::handle_ecdh_p384_derive(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
             "crypto.chacha20_poly1305_encrypt" => {
                 info!("🔒 Crypto: chacha20_poly1305_encrypt (AEAD)");
                 super::super::crypto_handlers::handle_chacha20_poly1305_encrypt(params).await
@@ -224,6 +266,27 @@ impl MethodHandler for CryptoHandler {
             "crypto.hmac_sha256" => {
                 info!("🔏 Crypto: hmac_sha256");
                 super::super::crypto_handlers::handle_hmac_sha256(params).await
+            }
+
+            "crypto.sha256" => {
+                info!("🔍 Crypto: sha256 (SHA-256 hashing)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_sha256(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.sha384" => {
+                info!("🔍 Crypto: sha384 (SHA-384 hashing)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_sha384(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "crypto.sha512" => {
+                info!("🔍 Crypto: sha512 (SHA-512 hashing)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_sha512(params_ref)
+                    .map_err(|e| e.to_string())
             }
 
             // ====================================================================

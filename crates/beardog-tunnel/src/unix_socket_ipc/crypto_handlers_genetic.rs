@@ -49,7 +49,7 @@ pub struct DeriveLineageKeyRequest {
 }
 
 /// Response containing the derived lineage key
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DeriveLineageKeyResponse {
     /// Derived key (base64-encoded, 32 bytes)
     pub key: String,
@@ -74,7 +74,7 @@ pub struct MixEntropyRequest {
 }
 
 /// Response containing mixed entropy
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MixEntropyResponse {
     /// Mixed entropy (base64-encoded, 32 bytes)
     pub entropy: String,
@@ -98,7 +98,7 @@ pub struct VerifyLineageRequest {
 }
 
 /// Response containing lineage verification result
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct VerifyLineageResponse {
     /// Whether lineage is valid
     pub valid: bool,
@@ -119,7 +119,7 @@ pub struct GenerateLineageProofRequest {
 }
 
 /// Response containing generated lineage proof
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GenerateLineageProofResponse {
     /// Lineage proof (base64-encoded)
     pub proof: String,

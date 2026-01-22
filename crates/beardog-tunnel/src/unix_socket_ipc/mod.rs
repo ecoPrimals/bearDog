@@ -16,9 +16,11 @@
 //! - `server` - Server core and connection management
 
 pub mod crypto_handlers;
-pub mod crypto_handlers_ecdsa;
-pub mod crypto_handlers_genetic;
-pub mod crypto_handlers_rsa; // ECDSA signature algorithms (P-256, P-384, P-521)
+pub mod crypto_handlers_ecdh; // ECDH P-256/P-384 key exchange (Phase 6 - TLS 1.3)
+pub mod crypto_handlers_ecdsa; // ECDSA signature algorithms (P-256, P-384)
+pub mod crypto_handlers_genetic; // Genetic crypto (Phase 5)
+pub mod crypto_handlers_hashing; // SHA-256/384/512 standalone hashing (Phase 6)
+pub mod crypto_handlers_rsa; // RSA signature algorithms (PKCS#1 v1.5, PSS)
 pub mod handlers;
 pub mod handlers_legacy; // Keep old monolith as reference during migration
 pub mod protocol;
