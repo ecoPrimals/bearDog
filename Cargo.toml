@@ -98,6 +98,8 @@ lettre = "0.11"
 cryptoki = "0.6"
 rsa = "0.9"
 p256 = { version = "0.13", features = ["ecdsa"] }
+p384 = { version = "0.13", features = ["ecdsa"] }  # ECDSA P-384 (Phase 2)
+ed448-goldilocks = "0.9"  # Ed448 signatures (Phase 3)
 
 # Networking
 quinn = "0.11"

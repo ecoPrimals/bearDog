@@ -65,6 +65,8 @@ impl MethodHandler for CryptoHandler {
             // ECDSA signature algorithms (TLS 1.3)
             "crypto.sign_ecdsa_secp256r1",
             "crypto.verify_ecdsa_secp256r1",
+            "crypto.sign_ecdsa_secp384r1",
+            "crypto.verify_ecdsa_secp384r1",
             // Key exchange
             "crypto.x25519_generate_ephemeral",
             "crypto.x25519_derive_secret",
@@ -114,6 +116,16 @@ impl MethodHandler for CryptoHandler {
             "crypto.verify_ecdsa_secp256r1" => {
                 info!("✅ Crypto: verify_ecdsa_secp256r1 (ECDSA P-256 for TLS 1.3)");
                 super::super::crypto_handlers_ecdsa::handle_verify_ecdsa_secp256r1(params).await
+            }
+
+            "crypto.sign_ecdsa_secp384r1" => {
+                info!("✍️  Crypto: sign_ecdsa_secp384r1 (ECDSA P-384 for TLS 1.3)");
+                super::super::crypto_handlers_ecdsa::handle_sign_ecdsa_secp384r1(params).await
+            }
+
+            "crypto.verify_ecdsa_secp384r1" => {
+                info!("✅ Crypto: verify_ecdsa_secp384r1 (ECDSA P-384 for TLS 1.3)");
+                super::super::crypto_handlers_ecdsa::handle_verify_ecdsa_secp384r1(params).await
             }
 
             // ====================================================================
