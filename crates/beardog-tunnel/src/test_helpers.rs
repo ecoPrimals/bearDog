@@ -171,8 +171,11 @@ pub mod mocks {
     /// This provides a safe alternative to `unsafe { std::mem::zeroed() }`
     /// for tests that need to pass a BeardogBtspProvider but don't actually use it.
     ///
+    /// Uses `new_for_testing()` which bypasses HSM initialization, making it suitable
+    /// for handler tests that don't actually invoke BTSP functionality.
+    ///
     /// # Returns
-    /// A properly initialized but minimal BeardogBtspProvider
+    /// A properly initialized but minimal BeardogBtspProvider (suitable for tests only)
     pub async fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider> {
         use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
         use crate::tunnel::hsm::HsmManager;
@@ -185,10 +188,10 @@ pub mod mocks {
         );
         
         Arc::new(
-            crate::btsp_provider::BeardogBtspProvider::new(
+            crate::btsp_provider::BeardogBtspProvider::new_for_testing(
                 hsm_manager,
                 genetic_engine,
-            ).await.expect("Failed to create BTSP provider")
+            ).await.expect("Failed to create test BTSP provider")
         )
     }
 }

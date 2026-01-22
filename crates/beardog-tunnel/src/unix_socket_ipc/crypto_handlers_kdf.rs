@@ -340,13 +340,13 @@ mod tests {
         
         let params1 = json!({
             "password": password,
-            "salt": BASE64.encode(b"salt1"),
+            "salt": BASE64.encode(b"salt1234"),  // 8 bytes minimum for scrypt
             "log_n": 10
         });
         
         let params2 = json!({
             "password": password,
-            "salt": BASE64.encode(b"salt2"),
+            "salt": BASE64.encode(b"salt5678"),  // 8 bytes minimum for scrypt
             "log_n": 10
         });
         

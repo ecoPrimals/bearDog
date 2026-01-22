@@ -92,9 +92,13 @@ async fn test_concurrent_provider_creation() -> Result<(), BearDogError> {
 fn test_is_backend_supported() {
     // Test: Backend support detection (100% Pure Rust! 🦀)
     assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
-    assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
     assert!(is_crypto_backend_supported(&CryptoBackend::GeneticCrypto));
-    // OpenSSL evolved to pure Rust - no longer supported
+    
+    // Ring and OpenSSL evolved to pure Rust - no longer supported
+    assert!(
+        !is_crypto_backend_supported(&CryptoBackend::Ring),
+        "Ring has been evolved out - we're 100% pure Rust now!"
+    );
     assert!(
         !is_crypto_backend_supported(&CryptoBackend::OpenSsl),
         "OpenSSL has been evolved out - we're 100% pure Rust now!"
@@ -109,18 +113,20 @@ fn test_get_backend_by_name() {
         Some(CryptoBackend::RustCrypto)
     );
     assert_eq!(
-        get_crypto_backend_by_name("Ring"),
-        Some(CryptoBackend::Ring)
-    );
-    assert_eq!(
         get_crypto_backend_by_name("Genetic"),
         Some(CryptoBackend::GeneticCrypto)
     );
-    // OpenSSL requests fallback to Ring (backward compatibility + pure Rust!)
+    
+    // Ring and OpenSSL evolved to GeneticCrypto (backward compatibility + pure Rust!)
+    assert_eq!(
+        get_crypto_backend_by_name("Ring"),
+        Some(CryptoBackend::GeneticCrypto),
+        "Ring requests should fallback to GeneticCrypto for backward compatibility"
+    );
     assert_eq!(
         get_crypto_backend_by_name("OpenSsl"),
-        Some(CryptoBackend::Ring),
-        "OpenSSL requests should fallback to Ring for backward compatibility"
+        Some(CryptoBackend::GeneticCrypto),
+        "OpenSSL requests should fallback to GeneticCrypto for backward compatibility"
     );
     assert_eq!(get_crypto_backend_by_name("NonExistent"), None);
 }

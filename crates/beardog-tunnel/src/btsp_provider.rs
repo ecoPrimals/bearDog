@@ -256,6 +256,38 @@ pub struct BeardogBtspProvider {
 }
 
 impl BeardogBtspProvider {
+    /// Create a minimal provider for testing (bypasses HSM initialization)
+    ///
+    /// This constructor is only available in test builds and creates a provider
+    /// with dummy initialization, suitable for tests that need a provider to exist
+    /// but don't actually call its methods.
+    ///
+    /// **DO NOT USE IN PRODUCTION CODE**
+    #[cfg(test)]
+    pub async fn new_for_testing(
+        hsm: Arc<HsmManager>,
+        genetics: Arc<EcosystemGeneticEngine>,
+    ) -> Result<Self, BearDogError> {
+        // Create a dummy BirdSong manager without HSM initialization
+        // This will fail if actually used, but that's fine for handler tests
+        let dummy_master_key = vec![0u8; 32];
+        let birdsong = Arc::new(
+            BirdSongManager::new(dummy_master_key, None).await?
+        );
+
+        Ok(Self {
+            hsm,
+            genetics,
+            birdsong,
+            tunnels: Arc::new(RwLock::new(HashMap::new())),
+            trust_db: Arc::new(RwLock::new(HashMap::new())),
+            tunnels_established: Arc::new(AtomicU64::new(0)),
+            encryption_count: Arc::new(AtomicU64::new(0)),
+            decryption_count: Arc::new(AtomicU64::new(0)),
+            trust_eval_count: Arc::new(AtomicU64::new(0)),
+        })
+    }
+
     /// Create new BearDog BTSP provider
     ///
     /// # Arguments

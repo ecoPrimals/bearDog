@@ -96,17 +96,22 @@ mod tests {
     #[test]
     fn test_capabilities_comparison() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
+        let genetic_caps = get_crypto_provider_capabilities(&CryptoBackend::GeneticCrypto);
+        
         // Ring removed - 100% Pure Rust now!
         // let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
-        let openssl_caps = get_crypto_provider_capabilities(&CryptoBackend::OpenSsl);
+        // OpenSSL removed - 100% Pure Rust now!
+        // let openssl_caps = get_crypto_provider_capabilities(&CryptoBackend::OpenSsl);
 
         assert!(rust_caps.supports_aes);
+        assert!(genetic_caps.supports_aes);
         // assert!(ring_caps.supports_aes);
-        assert!(openssl_caps.supports_aes);
+        // assert!(openssl_caps.supports_aes);
 
         assert!(!rust_caps.supports_hardware_acceleration);
+        assert!(genetic_caps.supports_hardware_acceleration); // GeneticCrypto uses AES-NI, AVX2 CPU intrinsics
         // assert!(ring_caps.supports_hardware_acceleration);
-        assert!(openssl_caps.supports_hardware_acceleration);
+        // assert!(openssl_caps.supports_hardware_acceleration);
         Ok(())
     }
 

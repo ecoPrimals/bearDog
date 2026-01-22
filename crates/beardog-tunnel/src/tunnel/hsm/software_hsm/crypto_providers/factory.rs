@@ -124,10 +124,10 @@ pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProvid
 /// - Ring: ✅ Supported (auto-fallback to RustCrypto for ARM compatibility)
 /// - OpenSsl: ✅ Supported (auto-fallback to RustCrypto for Pure Rust sovereignty)
 pub fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
-    // All backends supported - Ring and OpenSsl auto-fallback to RustCrypto! 🦀
+    // Only Pure Rust backends supported - Ring and OpenSsl evolved out! 🦀
     matches!(
         backend,
-        CryptoBackend::GeneticCrypto | CryptoBackend::RustCrypto | CryptoBackend::Ring | CryptoBackend::OpenSsl
+        CryptoBackend::GeneticCrypto | CryptoBackend::RustCrypto
     )
 }
 
@@ -152,19 +152,19 @@ pub fn get_crypto_backend_by_name(name: &str) -> Option<CryptoBackend> {
     match name.to_lowercase().as_str() {
         "genetic" | "geneticcrypto" | "genetic-crypto" => Some(CryptoBackend::GeneticCrypto),
         "rust" | "rustcrypto" | "rust-crypto" => Some(CryptoBackend::RustCrypto),
-        // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready!)
+        // Ring evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)
         "ring" => {
             tracing::warn!(
-                "Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
+                "Ring backend deprecated - evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)"
             );
-            Some(CryptoBackend::Ring) // Auto-fallback to RustCrypto in create_crypto_provider
+            Some(CryptoBackend::GeneticCrypto) // Direct fallback to GeneticCrypto
         }
-        // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty)
+        // OpenSSL evolved to GeneticCrypto (100% Pure Rust sovereignty)
         "openssl" | "ssl" => {
             tracing::warn!(
-                "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
+                "OpenSSL backend evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)"
             );
-            Some(CryptoBackend::OpenSsl) // Auto-fallback to RustCrypto in create_crypto_provider
+            Some(CryptoBackend::GeneticCrypto) // Direct fallback to GeneticCrypto
         }
         _ => None,
     }
@@ -246,14 +246,14 @@ mod tests {
     fn test_is_crypto_backend_supported() {
         assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
         assert!(is_crypto_backend_supported(&CryptoBackend::GeneticCrypto));
-        // Ring and OpenSSL supported with auto-fallback to RustCrypto (backward compatibility) 🦀
+        // Ring and OpenSSL evolved out - only Pure Rust backends supported! 🦀
         assert!(
-            is_crypto_backend_supported(&CryptoBackend::Ring),
-            "Ring supported with fallback to RustCrypto (100% Pure Rust!)"
+            !is_crypto_backend_supported(&CryptoBackend::Ring),
+            "Ring evolved out - we're 100% Pure Rust now!"
         );
         assert!(
-            is_crypto_backend_supported(&CryptoBackend::OpenSsl),
-            "OpenSSL supported with fallback to RustCrypto (100% Pure Rust!)"
+            !is_crypto_backend_supported(&CryptoBackend::OpenSsl),
+            "OpenSSL evolved out - we're 100% Pure Rust now!"
         );
     }
 
@@ -287,18 +287,18 @@ mod tests {
             Some(CryptoBackend::GeneticCrypto)
         );
 
-        // Ring evolved to RustCrypto (auto-fallback in create_crypto_provider)
+        // Ring evolved to GeneticCrypto (direct fallback for backward compatibility)
         assert_eq!(
             get_crypto_backend_by_name("ring"),
-            Some(CryptoBackend::Ring), // Returns Ring enum, but fallbacks to RustCrypto implementation
-            "Ring returns Ring enum but uses RustCrypto (100% Pure Rust!)"
+            Some(CryptoBackend::GeneticCrypto), // Returns GeneticCrypto directly
+            "Ring returns GeneticCrypto for backward compatibility (100% Pure Rust!)"
         );
 
-        // OpenSSL evolved to RustCrypto (auto-fallback in create_crypto_provider)
+        // OpenSSL evolved to GeneticCrypto (direct fallback for backward compatibility)
         assert_eq!(
             get_crypto_backend_by_name("openssl"),
-            Some(CryptoBackend::OpenSsl), // Returns OpenSsl enum, but fallbacks to RustCrypto implementation
-            "OpenSSL returns OpenSsl enum but uses RustCrypto (100% Pure Rust!)"
+            Some(CryptoBackend::GeneticCrypto), // Returns GeneticCrypto directly
+            "OpenSSL returns GeneticCrypto for backward compatibility (100% Pure Rust!)"
         );
 
         assert_eq!(get_crypto_backend_by_name("unknown"), None);
