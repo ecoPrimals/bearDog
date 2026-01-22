@@ -13,15 +13,59 @@ This directory contains session-specific documentation from major evolution effo
 ```
 archives/
 ├── README.md (this file)
-├── btsp_evolution_jan_16_2026/       (19 docs)
-├── http_evolution_jan_17_2026/       (7 docs)
-├── deep_debt_evolution_jan_17_2026/  (26 docs)
-└── crypto_api_session_jan_18_2026/   (5 docs)
+├── btsp_evolution_jan_16_2026/         (19 docs)
+├── http_evolution_jan_17_2026/         (7 docs)
+├── deep_debt_evolution_jan_17_2026/    (26 docs)
+├── crypto_api_session_jan_18_2026/     (5 docs)
+├── session_11_jan_21_2026/             (16 docs)
+├── session_12_jan_21_2026/             (9 docs)
+└── crypto_genetic_session_jan_22_2026/ (3 docs)
 ```
 
 ---
 
 ## 📖 Archives by Date
+
+### **January 22, 2026** (2 sessions combined)
+
+#### **Crypto Expert & Genetic Crypto Integration**
+**Location**: `crypto_genetic_session_jan_22_2026/`  
+**Focus**: Complete crypto coverage + internal auto-trust  
+**Key Achievements**:
+- ✅ ECDSA P-256 & P-384 (71% server coverage)
+- ✅ RSA PKCS#1 v1.5 & RSA-PSS (25% server coverage)
+- ✅ Genetic lineage key derivation
+- ✅ Three-tier entropy hierarchy
+- ✅ Internal primal auto-trust (zero certificates!)
+- ✅ 59 RPC methods total (47 → 59, +26%)
+- ✅ 27/27 tests passing (100%)
+- ✅ 96% external + internal coverage
+
+**Start Here**: `crypto_genetic_session_jan_22_2026/README.md`
+
+### **January 21, 2026** (2 sessions)
+
+#### **Session 11: UniBin Implementation**
+**Location**: `session_11_jan_21_2026/`  
+**Focus**: Complete UniBin CLI implementation  
+**Key Achievements**:
+- ✅ Server, daemon, client, doctor commands
+- ✅ Comprehensive testing (unit, E2E, chaos, fault)
+- ✅ Production-ready deployment
+- ✅ Documentation complete
+
+**Start Here**: `session_11_jan_21_2026/README.md`
+
+#### **Session 12: BTSP Unified + Handler Registry**
+**Location**: `session_12_jan_21_2026/`  
+**Focus**: Architectural clarity + modular handlers  
+**Key Achievements**:
+- ✅ BTSP unified evolution (BearDog = Crypto, Songbird = HTTP)
+- ✅ Handler registry 100% complete (7 modular handlers)
+- ✅ Dead code cleanup (315 lines removed)
+- ✅ Zero unsafe code verified
+
+**Start Here**: `session_12_jan_21_2026/README.md`
 
 ### **January 18, 2026** (1 session)
 
@@ -103,14 +147,14 @@ archives/
 
 ## 📊 Cumulative Metrics
 
-### **Evolution Stats** (Jan 16-18, 2026)
+### **Evolution Stats** (Jan 16-22, 2026)
 ```
-Total Sessions: 5
-Total Documents: 57 (19 + 7 + 26 + 5)
-Total Commits: 38+
-Files Modified: 163+
-Lines Changed: +18,543 / -9,000
-Net Impact: +9,543 lines of functionality
+Total Sessions: 10
+Total Documents: 85 (19 + 7 + 26 + 5 + 16 + 9 + 3)
+Total Commits: 50+
+Files Modified: 200+
+Lines Changed: +24,000 / -9,300
+Net Impact: +14,700 lines of functionality
 ```
 
 ### **Key Eliminations**
@@ -205,9 +249,9 @@ BearDog's evolution archives demonstrate:
 
 ---
 
-**Last Updated**: January 18, 2026  
-**Total Archives**: 4  
-**Total Documents**: 57  
+**Last Updated**: January 22, 2026  
+**Total Archives**: 7  
+**Total Documents**: 85  
 **Status**: Active & Maintained
 
 *"vendor locks are vendor problems, documentation as fossil record"* 🐻🦀📚
