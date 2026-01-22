@@ -2,7 +2,7 @@
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.
 //!
-//! # Methods
+//! # Methods (12 crypto methods total)
 //!
 //! ## Core Crypto (8 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
@@ -14,9 +14,19 @@
 //! - `crypto.blake3_hash` - BLAKE3 hashing
 //! - `crypto.hmac_sha256` - HMAC-SHA256 message authentication
 //!
-//! ## ECDSA Signature Algorithms (2 methods)
+//! ## ECDSA Signature Algorithms (4 methods)
 //! - `crypto.sign_ecdsa_secp256r1` - ECDSA P-256 signing (TLS 1.3)
 //! - `crypto.verify_ecdsa_secp256r1` - ECDSA P-256 verification (TLS 1.3)
+//! - `crypto.sign_ecdsa_secp384r1` - ECDSA P-384 signing (TLS 1.3)
+//! - `crypto.verify_ecdsa_secp384r1` - ECDSA P-384 verification (TLS 1.3)
+//!
+//! Note: P-521 postponed (< 1% usage, rand_core version conflict with p521 crate)
+//!
+//! ## RSA Signature Algorithms (4 methods)
+//! - `crypto.sign_rsa_pkcs1_sha256` - RSA PKCS#1 v1.5 signing (legacy)
+//! - `crypto.verify_rsa_pkcs1_sha256` - RSA PKCS#1 v1.5 verification (legacy)
+//! - `crypto.sign_rsa_pss_sha256` - RSA-PSS signing (modern, recommended)
+//! - `crypto.verify_rsa_pss_sha256` - RSA-PSS verification (modern, recommended)
 //!
 //! ## TLS Crypto (3 methods)
 //! - `tls.derive_secrets` - HKDF key derivation for TLS
@@ -67,6 +77,14 @@ impl MethodHandler for CryptoHandler {
             "crypto.verify_ecdsa_secp256r1",
             "crypto.sign_ecdsa_secp384r1",
             "crypto.verify_ecdsa_secp384r1",
+            // Note: P-521 methods commented out (< 1% usage, blocked by rand_core conflict)
+            // "crypto.sign_ecdsa_secp521r1",
+            // "crypto.verify_ecdsa_secp521r1",
+            // RSA signature algorithms (legacy + modern)
+            "crypto.sign_rsa_pkcs1_sha256",
+            "crypto.verify_rsa_pkcs1_sha256",
+            "crypto.sign_rsa_pss_sha256",
+            "crypto.verify_rsa_pss_sha256",
             // Key exchange
             "crypto.x25519_generate_ephemeral",
             "crypto.x25519_derive_secret",
@@ -126,6 +144,41 @@ impl MethodHandler for CryptoHandler {
             "crypto.verify_ecdsa_secp384r1" => {
                 info!("✅ Crypto: verify_ecdsa_secp384r1 (ECDSA P-384 for TLS 1.3)");
                 super::super::crypto_handlers_ecdsa::handle_verify_ecdsa_secp384r1(params).await
+            }
+
+            // Note: P-521 match arms commented out (< 1% usage, implementation delayed)
+            // "crypto.sign_ecdsa_secp521r1" => {
+            //     info!("✍️  Crypto: sign_ecdsa_secp521r1 (ECDSA P-521)");
+            //     Err("P-521 not yet implemented (< 1% server usage)".to_string())
+            // }
+            //
+            // "crypto.verify_ecdsa_secp521r1" => {
+            //     info!("✅ Crypto: verify_ecdsa_secp521r1 (ECDSA P-521)");
+            //     Err("P-521 not yet implemented (< 1% server usage)".to_string())
+            // }
+
+            // ====================================================================
+            // RSA Signature Algorithms (Legacy + Modern)
+            // ====================================================================
+
+            "crypto.sign_rsa_pkcs1_sha256" => {
+                info!("✍️  Crypto: sign_rsa_pkcs1_sha256 (RSA PKCS#1 v1.5 - legacy)");
+                super::super::crypto_handlers_rsa::handle_sign_rsa_pkcs1_sha256(params).await
+            }
+
+            "crypto.verify_rsa_pkcs1_sha256" => {
+                info!("✅ Crypto: verify_rsa_pkcs1_sha256 (RSA PKCS#1 v1.5 - legacy)");
+                super::super::crypto_handlers_rsa::handle_verify_rsa_pkcs1_sha256(params).await
+            }
+
+            "crypto.sign_rsa_pss_sha256" => {
+                info!("✍️  Crypto: sign_rsa_pss_sha256 (RSA-PSS - modern, recommended)");
+                super::super::crypto_handlers_rsa::handle_sign_rsa_pss_sha256(params).await
+            }
+
+            "crypto.verify_rsa_pss_sha256" => {
+                info!("✅ Crypto: verify_rsa_pss_sha256 (RSA-PSS - modern, recommended)");
+                super::super::crypto_handlers_rsa::handle_verify_rsa_pss_sha256(params).await
             }
 
             // ====================================================================

@@ -14,13 +14,17 @@
 //! - `crypto.sign_ecdsa_secp256r1` - Sign data with ECDSA P-256
 //! - `crypto.verify_ecdsa_secp256r1` - Verify ECDSA P-256 signature
 //!
-//! ## ECDSA P-384 (secp384r1) - Coming in Phase 2
+//! ## ECDSA P-384 (secp384r1)
 //! - `crypto.sign_ecdsa_secp384r1` - Sign data with ECDSA P-384
 //! - `crypto.verify_ecdsa_secp384r1` - Verify ECDSA P-384 signature
 //!
-//! ## ECDSA P-521 (secp521r1) - Coming in Phase 2
+//! ## ECDSA P-521 (secp521r1) - FUTURE (blocked by rand_core version conflict)
 //! - `crypto.sign_ecdsa_secp521r1` - Sign data with ECDSA P-521
 //! - `crypto.verify_ecdsa_secp521r1` - Verify ECDSA P-521 signature
+//!
+//! Note: P-521 implementation delayed due to p521 crate using rand_core 0.10-rc
+//! while our codebase uses rand_core 0.6. Will implement when p521 reaches stable.
+//! Impact: < 1% of servers, not blocking for 99% compatibility goal.
 //!
 //! # Architecture
 //!
@@ -55,6 +59,12 @@ use p384::ecdsa::{
     Signature as P384Signature, SigningKey as P384SigningKey, VerifyingKey as P384VerifyingKey,
 };
 use p384::elliptic_curve::sec1::ToEncodedPoint as P384ToEncodedPoint;
+// Note: P-521 imports commented out due to rand_core version conflict
+// use p521::ecdsa::{
+//     signature::{Signer as P521Signer, Verifier as P521Verifier},
+//     Signature as P521Signature, SigningKey as P521SigningKey, VerifyingKey as P521VerifyingKey,
+// };
+// use p521::elliptic_curve::sec1::ToEncodedPoint as P521ToEncodedPoint;
 use tracing::{debug, info};
 use zeroize::Zeroizing;
 
@@ -454,6 +464,33 @@ pub async fn handle_verify_ecdsa_secp384r1(
 }
 
 // ============================================================================
+// ECDSA P-521 (secp521r1) - FUTURE IMPLEMENTATION
+// ============================================================================
+//
+// NOTE: P-521 implementation postponed due to rand_core version conflict.
+// The p521 crate (v0.14.0-rc) uses rand_core 0.10-rc, while our codebase
+// uses rand_core 0.6. This creates type incompatibility for OsRng.
+//
+// Impact: < 1% of HTTPS servers use P-521 (ultra-rare)
+// Priority: Low - Ed448 and RSA provide better coverage
+// Status: Will implement when p521 crate reaches stable release
+//
+// Commented out for future reference:
+/*
+pub async fn handle_sign_ecdsa_secp521r1(
+    params: Option<&serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    Err("ECDSA P-521 not yet implemented (< 1% server usage)".to_string())
+}
+
+pub async fn handle_verify_ecdsa_secp521r1(
+    params: Option<&serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    Err("ECDSA P-521 not yet implemented (< 1% server usage)".to_string())
+}
+*/
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -636,5 +673,14 @@ mod tests {
 
         assert_eq!(verify_result["valid"], false);
     }
+
+    // ========================================================================
+    // ECDSA P-521 Tests - FUTURE (commented out due to implementation delay)
+    // ========================================================================
+    //
+    // Note: P-521 tests commented out until implementation is complete
+    // (waiting for p521 crate stable release with compatible rand_core)
+    
+    /* P-521 tests will go here when implemented */
 }
 
