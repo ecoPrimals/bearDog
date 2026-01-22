@@ -2,7 +2,7 @@
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.
 //!
-//! # Methods (37 total: 19 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic + 3 password)
+//! # Methods (38 total: 19 core + 4 ECDSA + 4 RSA + 4 TLS + 4 genetic + 3 password)
 //!
 //! ## Core Crypto (19 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
@@ -39,8 +39,9 @@
 //! - `crypto.sign_rsa_pss_sha256` - RSA-PSS signing (modern, recommended)
 //! - `crypto.verify_rsa_pss_sha256` - RSA-PSS verification (modern, recommended)
 //!
-//! ## TLS Crypto (3 methods)
-//! - `tls.derive_secrets` - HKDF key derivation for TLS
+//! ## TLS Crypto (4 methods)
+//! - `tls.derive_secrets` - HKDF handshake key derivation for TLS (handshake traffic keys)
+//! - `tls.derive_application_secrets` - HKDF application key derivation for TLS (HTTP data keys)
 //! - `tls.sign_handshake` - Ed25519 handshake signing
 //! - `tls.verify_certificate` - X.509 certificate chain verification
 //!
@@ -144,6 +145,7 @@ impl MethodHandler for CryptoHandler {
             "crypto.scrypt",
             // TLS crypto operations
             "tls.derive_secrets",
+            "tls.derive_application_secrets",
             "tls.sign_handshake",
             "tls.verify_certificate",
             // Genetic crypto operations (Phase 5)
@@ -431,12 +433,17 @@ impl MethodHandler for CryptoHandler {
             }
 
             // ====================================================================
-            // TLS Crypto Operations (3 methods)
+            // TLS Crypto Operations (4 methods)
             // ====================================================================
 
             "tls.derive_secrets" => {
-                info!("🔑 TLS: derive_secrets (HKDF key derivation)");
+                info!("🔑 TLS: derive_secrets (HKDF handshake key derivation)");
                 super::super::crypto_handlers::handle_tls_derive_secrets(params).await
+            }
+
+            "tls.derive_application_secrets" => {
+                info!("🔑 TLS: derive_application_secrets (HKDF application key derivation for HTTP)");
+                super::super::crypto_handlers::handle_tls_derive_application_secrets(params).await
             }
 
             "tls.sign_handshake" => {

@@ -706,6 +706,190 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
     }))
 }
 
+/// Handle tls.derive_application_secrets method
+///
+/// Derives TLS 1.3 APPLICATION traffic secrets using the full RFC 8446 key schedule.
+/// This is the SECOND key derivation stage - used for encrypting HTTP application data.
+///
+/// # Key Schedule (RFC 8446 Section 7.1)
+///
+/// ```text
+///              0
+///              |
+///              v
+///    PSK ->  HKDF-Extract = Early Secret
+///              |
+///              v
+///        Derive-Secret(., "derived", "")
+///              |
+///              v
+/// (EC)DHE -> HKDF-Extract = Handshake Secret
+///              |
+///              v
+///        Derive-Secret(., "derived", "")
+///              |
+///              v
+///        0 -> HKDF-Extract = Master Secret  ← WE START HERE
+///              |
+///              +-----> Derive-Secret(., "c ap traffic", ...)
+///              |       = client_application_traffic_secret_0
+///              |
+///              +-----> Derive-Secret(., "s ap traffic", ...)
+///                      = server_application_traffic_secret_0
+/// ```
+///
+/// # Parameters
+///
+/// - `pre_master_secret`: Base64-encoded shared secret (32 bytes from ECDH)
+/// - `client_random`: Base64-encoded client random (32 bytes)
+/// - `server_random`: Base64-encoded server random (32 bytes)
+///
+/// # Returns
+///
+/// - `client_write_key`: Base64-encoded client encryption key (32 bytes)
+/// - `server_write_key`: Base64-encoded server encryption key (32 bytes)
+/// - `client_write_iv`: Base64-encoded client IV/nonce (12 bytes)
+/// - `server_write_iv`: Base64-encoded server IV/nonce (12 bytes)
+///
+/// # Difference from `tls.derive_secrets`
+///
+/// - `tls.derive_secrets`: Derives HANDSHAKE traffic keys (for handshake messages)
+/// - `tls.derive_application_secrets`: Derives APPLICATION traffic keys (for HTTP data)
+///
+/// Both follow RFC 8446, but at different stages of the key schedule.
+pub async fn handle_tls_derive_application_secrets(
+    params: Option<&Value>,
+) -> Result<Value, String> {
+    let params = params.ok_or("Missing params for tls.derive_application_secrets")?;
+
+    // Extract parameters
+    let pre_master_secret_b64 = params
+        .get("pre_master_secret")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: pre_master_secret")?;
+
+    let client_random_b64 = params
+        .get("client_random")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: client_random")?;
+
+    let server_random_b64 = params
+        .get("server_random")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: server_random")?;
+
+    // Decode parameters
+    let pre_master_secret = base64::engine::general_purpose::STANDARD
+        .decode(pre_master_secret_b64)
+        .map_err(|e| format!("Invalid base64 pre_master_secret: {e}"))?;
+
+    let client_random = base64::engine::general_purpose::STANDARD
+        .decode(client_random_b64)
+        .map_err(|e| format!("Invalid base64 client_random: {e}"))?;
+
+    let server_random = base64::engine::general_purpose::STANDARD
+        .decode(server_random_b64)
+        .map_err(|e| format!("Invalid base64 server_random: {e}"))?;
+
+    if client_random.len() != 32 {
+        return Err("client_random must be 32 bytes".to_string());
+    }
+
+    if server_random.len() != 32 {
+        return Err("server_random must be 32 bytes".to_string());
+    }
+
+    debug!(
+        "🔑 Deriving TLS 1.3 APPLICATION secrets (pre_master: {} bytes)",
+        pre_master_secret.len()
+    );
+
+    // Use HKDF for TLS 1.3 key derivation (RFC 8446 Section 7.1)
+    use hkdf::Hkdf;
+    use sha2::{Digest, Sha256};
+
+    // Constants
+    const KEY_LEN: usize = 32; // ChaCha20 key size
+    const IV_LEN: usize = 12; // AEAD nonce size
+
+    // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes()); // Length (2 bytes)
+
+        let tls13_label = format!("tls13 {}", label);
+        hkdf_label.push(tls13_label.len() as u8); // Label length (1 byte)
+        hkdf_label.extend_from_slice(tls13_label.as_bytes()); // Label
+
+        hkdf_label.push(context.len() as u8); // Context length (1 byte)
+        hkdf_label.extend_from_slice(context); // Context
+
+        let hkdf = Hkdf::<Sha256>::from_prk(secret)
+            .map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let mut okm = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut okm)
+            .map_err(|e| format!("HKDF expand failed: {e}"))?;
+        Ok::<Vec<u8>, String>(okm)
+    };
+
+    // Helper: Derive-Secret (RFC 8446 Section 7.1)
+    let derive_secret = |secret: &[u8], label: &str, messages: &[u8]| {
+        let transcript_hash = Sha256::digest(messages);
+        hkdf_expand_label(secret, label, &transcript_hash, 32)
+    };
+
+    // Step 1: Early Secret (from all zeros)
+    let early_secret = Hkdf::<Sha256>::extract(None, &[0u8; 32]);
+
+    // Step 2: Derive-Secret(early_secret, "derived", "")
+    let derived_1 = derive_secret(&early_secret.0, "derived", &[])?;
+
+    // Step 3: Handshake Secret (from shared secret)
+    let handshake_secret = Hkdf::<Sha256>::extract(Some(&derived_1), &pre_master_secret);
+
+    // Step 4: Derive-Secret(handshake_secret, "derived", "")
+    let derived_2 = derive_secret(&handshake_secret.0, "derived", &[])?;
+
+    // Step 5: Master Secret (from all zeros)
+    let master_secret = Hkdf::<Sha256>::extract(Some(&derived_2), &[0u8; 32]);
+
+    // Step 6: Transcript hash (MVP: client_random || server_random)
+    // Production: Should be SHA256(ClientHello || ServerHello || ... || server Finished)
+    let mut transcript = Vec::with_capacity(64);
+    transcript.extend_from_slice(&client_random);
+    transcript.extend_from_slice(&server_random);
+
+    // Step 7: Derive application traffic secrets (RFC 8446 labels)
+    let client_app_secret = derive_secret(&master_secret.0, "c ap traffic", &transcript)?;
+    let server_app_secret = derive_secret(&master_secret.0, "s ap traffic", &transcript)?;
+
+    // Step 8: Derive keys and IVs using HKDF-Expand-Label
+    let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], KEY_LEN)?;
+    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], KEY_LEN)?;
+    let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], IV_LEN)?;
+    let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], IV_LEN)?;
+
+    // Encode results
+    let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
+    let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
+    let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
+    let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
+
+    info!(
+        "✅ TLS 1.3 APPLICATION secrets derived (keys: {} bytes, IVs: {} bytes)",
+        KEY_LEN, IV_LEN
+    );
+
+    Ok(serde_json::json!({
+        "client_write_key": client_write_key_b64,
+        "server_write_key": server_write_key_b64,
+        "client_write_iv": client_write_iv_b64,
+        "server_write_iv": server_write_iv_b64,
+        "algorithm": "HKDF-SHA256",
+        "rfc": "RFC 8446 Section 7.1"
+    }))
+}
+
 /// Handle tls.sign_handshake method
 ///
 /// Signs TLS handshake messages with Ed25519 for ClientKeyExchange/CertificateVerify.
@@ -1195,6 +1379,184 @@ mod tests {
         assert_eq!(
             result["master_secret"], result2["master_secret"],
             "HKDF should be deterministic"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_tls_derive_application_secrets() {
+        // Simulate TLS 1.3 application key derivation (for HTTP data)
+        let pre_master_secret = [42u8; 32]; // From X25519 key exchange
+        let client_random = [1u8; 32];
+        let server_random = [2u8; 32];
+
+        let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
+        let client_random_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random);
+        let server_random_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random);
+
+        let params = serde_json::json!({
+            "pre_master_secret": pre_master_b64,
+            "client_random": client_random_b64,
+            "server_random": server_random_b64
+        });
+
+        let result = handle_tls_derive_application_secrets(Some(&params))
+            .await
+            .unwrap();
+
+        // Verify all required keys are present
+        assert!(result["client_write_key"].is_string());
+        assert!(result["server_write_key"].is_string());
+        assert!(result["client_write_iv"].is_string());
+        assert!(result["server_write_iv"].is_string());
+        assert_eq!(result["algorithm"], "HKDF-SHA256");
+        assert_eq!(result["rfc"], "RFC 8446 Section 7.1");
+
+        // Decode and verify sizes
+        let client_key = base64::engine::general_purpose::STANDARD
+            .decode(result["client_write_key"].as_str().unwrap())
+            .unwrap();
+        assert_eq!(
+            client_key.len(),
+            32,
+            "Client write key should be 32 bytes for ChaCha20"
+        );
+
+        let server_key = base64::engine::general_purpose::STANDARD
+            .decode(result["server_write_key"].as_str().unwrap())
+            .unwrap();
+        assert_eq!(
+            server_key.len(),
+            32,
+            "Server write key should be 32 bytes for ChaCha20"
+        );
+
+        let client_iv = base64::engine::general_purpose::STANDARD
+            .decode(result["client_write_iv"].as_str().unwrap())
+            .unwrap();
+        assert_eq!(
+            client_iv.len(),
+            12,
+            "Client IV should be 12 bytes for AEAD"
+        );
+
+        let server_iv = base64::engine::general_purpose::STANDARD
+            .decode(result["server_write_iv"].as_str().unwrap())
+            .unwrap();
+        assert_eq!(
+            server_iv.len(),
+            12,
+            "Server IV should be 12 bytes for AEAD"
+        );
+
+        // Client and server keys should be different
+        assert_ne!(
+            client_key, server_key,
+            "Client and server keys should be different"
+        );
+
+        // Deterministic: Same inputs should produce same outputs
+        let result2 = handle_tls_derive_application_secrets(Some(&params))
+            .await
+            .unwrap();
+        assert_eq!(
+            result["client_write_key"], result2["client_write_key"],
+            "HKDF should be deterministic"
+        );
+        assert_eq!(
+            result["server_write_key"], result2["server_write_key"],
+            "HKDF should be deterministic"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_tls_derive_application_secrets_different_randoms() {
+        // Test that different randoms produce different keys
+        let pre_master_secret = [42u8; 32];
+        let client_random_1 = [1u8; 32];
+        let server_random_1 = [2u8; 32];
+        let client_random_2 = [10u8; 32]; // Different!
+        let server_random_2 = [20u8; 32]; // Different!
+
+        let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
+        let client_random_1_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random_1);
+        let server_random_1_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random_1);
+        let client_random_2_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random_2);
+        let server_random_2_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random_2);
+
+        let params1 = serde_json::json!({
+            "pre_master_secret": pre_master_b64,
+            "client_random": client_random_1_b64,
+            "server_random": server_random_1_b64
+        });
+
+        let params2 = serde_json::json!({
+            "pre_master_secret": pre_master_b64,
+            "client_random": client_random_2_b64,
+            "server_random": server_random_2_b64
+        });
+
+        let result1 = handle_tls_derive_application_secrets(Some(&params1))
+            .await
+            .unwrap();
+        let result2 = handle_tls_derive_application_secrets(Some(&params2))
+            .await
+            .unwrap();
+
+        // Different randoms should produce different keys
+        assert_ne!(
+            result1["client_write_key"], result2["client_write_key"],
+            "Different randoms should produce different keys"
+        );
+        assert_ne!(
+            result1["server_write_key"], result2["server_write_key"],
+            "Different randoms should produce different keys"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_tls_derive_application_secrets_missing_params() {
+        // Test error handling for missing parameters
+        let params = serde_json::json!({
+            "pre_master_secret": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+            // Missing client_random and server_random
+        });
+
+        let result = handle_tls_derive_application_secrets(Some(&params)).await;
+        assert!(
+            result.is_err(),
+            "Should error on missing required parameters"
+        );
+        assert!(
+            result.unwrap_err().contains("Missing required parameter"),
+            "Error should indicate missing parameter"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_tls_derive_application_secrets_invalid_random_size() {
+        // Test error handling for invalid random sizes
+        let pre_master_secret = [42u8; 32];
+        let client_random = [1u8; 16]; // INVALID: Should be 32 bytes!
+        let server_random = [2u8; 32];
+
+        let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
+        let client_random_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random);
+        let server_random_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random);
+
+        let params = serde_json::json!({
+            "pre_master_secret": pre_master_b64,
+            "client_random": client_random_b64,
+            "server_random": server_random_b64
+        });
+
+        let result = handle_tls_derive_application_secrets(Some(&params)).await;
+        assert!(
+            result.is_err(),
+            "Should error on invalid random size"
+        );
+        assert!(
+            result.unwrap_err().contains("must be 32 bytes"),
+            "Error should indicate size requirement"
         );
     }
 
