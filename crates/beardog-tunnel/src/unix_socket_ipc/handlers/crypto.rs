@@ -2,7 +2,7 @@
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.
 //!
-//! # Methods (12 crypto methods total)
+//! # Methods (23 total: 8 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic)
 //!
 //! ## Core Crypto (8 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
@@ -32,6 +32,12 @@
 //! - `tls.derive_secrets` - HKDF key derivation for TLS
 //! - `tls.sign_handshake` - Ed25519 handshake signing
 //! - `tls.verify_certificate` - X.509 certificate chain verification
+//!
+//! ## Genetic Crypto - Phase 5 (4 methods)
+//! - `genetic.derive_lineage_key` - Derive keys from genetic family lineage
+//! - `genetic.mix_entropy` - Mix entropy across three tiers (Human/Supervised/Machine)
+//! - `genetic.verify_lineage` - Verify genetic family relationships
+//! - `genetic.generate_lineage_proof` - Generate lineage proof for verification
 //!
 //! # Architecture
 //!
@@ -98,6 +104,11 @@ impl MethodHandler for CryptoHandler {
             "tls.derive_secrets",
             "tls.sign_handshake",
             "tls.verify_certificate",
+            // Genetic crypto operations (Phase 5)
+            "genetic.derive_lineage_key",
+            "genetic.mix_entropy",
+            "genetic.verify_lineage",
+            "genetic.generate_lineage_proof",
         ]
     }
 
@@ -234,6 +245,38 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers::handle_tls_verify_certificate(params).await
             }
 
+            // ====================================================================
+            // Genetic Crypto Operations - Phase 5 (4 methods)
+            // ====================================================================
+
+            "genetic.derive_lineage_key" => {
+                info!("🧬 Genetic: derive_lineage_key (lineage-based key derivation)");
+                super::super::crypto_handlers_genetic::handle_derive_lineage_key(
+                    params.ok_or_else(|| "Parameters required for genetic.derive_lineage_key".to_string())?.clone()
+                ).await.map_err(|e| e.to_string())
+            }
+
+            "genetic.mix_entropy" => {
+                info!("🌱 Genetic: mix_entropy (three-tier entropy hierarchy)");
+                super::super::crypto_handlers_genetic::handle_mix_entropy(
+                    params.ok_or_else(|| "Parameters required for genetic.mix_entropy".to_string())?.clone()
+                ).await.map_err(|e| e.to_string())
+            }
+
+            "genetic.verify_lineage" => {
+                info!("🔍 Genetic: verify_lineage (family relationship verification)");
+                super::super::crypto_handlers_genetic::handle_verify_lineage(
+                    params.ok_or_else(|| "Parameters required for genetic.verify_lineage".to_string())?.clone()
+                ).await.map_err(|e| e.to_string())
+            }
+
+            "genetic.generate_lineage_proof" => {
+                info!("🔐 Genetic: generate_lineage_proof (proof generation)");
+                super::super::crypto_handlers_genetic::handle_generate_lineage_proof(
+                    params.ok_or_else(|| "Parameters required for genetic.generate_lineage_proof".to_string())?.clone()
+                ).await.map_err(|e| e.to_string())
+            }
+
             _ => Err(format!("Unknown crypto method: {}", method)),
         }
     }
@@ -248,8 +291,8 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
         
-        // Should have 11 methods (8 crypto + 3 TLS)
-        assert_eq!(methods.len(), 11);
+        // Should have 23 methods (8 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic)
+        assert_eq!(methods.len(), 23);
         
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -261,16 +304,34 @@ mod tests {
         assert!(methods.contains(&"crypto.blake3_hash"));
         assert!(methods.contains(&"crypto.hmac_sha256"));
         
-        // Verify all TLS methods are present
+        // Verify ECDSA methods
+        assert!(methods.contains(&"crypto.sign_ecdsa_secp256r1"));
+        assert!(methods.contains(&"crypto.verify_ecdsa_secp256r1"));
+        assert!(methods.contains(&"crypto.sign_ecdsa_secp384r1"));
+        assert!(methods.contains(&"crypto.verify_ecdsa_secp384r1"));
+        
+        // Verify RSA methods
+        assert!(methods.contains(&"crypto.sign_rsa_pkcs1_sha256"));
+        assert!(methods.contains(&"crypto.verify_rsa_pkcs1_sha256"));
+        assert!(methods.contains(&"crypto.sign_rsa_pss_sha256"));
+        assert!(methods.contains(&"crypto.verify_rsa_pss_sha256"));
+        
+        // Verify TLS methods
         assert!(methods.contains(&"tls.derive_secrets"));
         assert!(methods.contains(&"tls.sign_handshake"));
         assert!(methods.contains(&"tls.verify_certificate"));
+        
+        // Verify genetic methods (Phase 5)
+        assert!(methods.contains(&"genetic.derive_lineage_key"));
+        assert!(methods.contains(&"genetic.mix_entropy"));
+        assert!(methods.contains(&"genetic.verify_lineage"));
+        assert!(methods.contains(&"genetic.generate_lineage_proof"));
     }
 
     #[test]
     fn test_handler_method_count() {
         let handler = CryptoHandler;
-        assert_eq!(handler.methods().len(), 11, "Should have exactly 11 crypto methods");
+        assert_eq!(handler.methods().len(), 23, "Should have exactly 23 crypto methods (8 core + 4 ECDSA + 4 RSA + 3 TLS + 4 genetic)");
     }
 }
 
