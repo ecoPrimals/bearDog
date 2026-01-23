@@ -20,14 +20,14 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_tunnel::unix_socket_ipc::handlers::HandlerRegistry;
 //! use std::sync::Arc;
 //!
 //! // Create registry with all handlers
 //! let registry = HandlerRegistry::new();
 //!
-//! // Route a request
+//! // Route a request (async context required)
 //! let result = registry.route("health", None, &btsp_provider).await;
 //! ```
 
