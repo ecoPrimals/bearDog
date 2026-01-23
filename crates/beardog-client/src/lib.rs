@@ -44,7 +44,6 @@
 //! ```
 
 use beardog_tower_atomic::Client as AtomicClient;
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{debug, info};
 

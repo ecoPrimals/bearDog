@@ -145,6 +145,7 @@ impl MethodHandler for CryptoHandler {
             "crypto.scrypt",
             // TLS crypto operations
             "tls.derive_secrets",
+            "tls.derive_handshake_secrets",
             "tls.derive_application_secrets",
             "tls.sign_handshake",
             "tls.verify_certificate",
@@ -437,12 +438,17 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
 
             "tls.derive_secrets" => {
-                info!("🔑 TLS: derive_secrets (HKDF handshake key derivation)");
+                info!("🔑 TLS: derive_secrets (HKDF handshake key derivation - legacy)");
                 super::super::crypto_handlers::handle_tls_derive_secrets(params).await
             }
 
+            "tls.derive_handshake_secrets" => {
+                info!("🔑 TLS: derive_handshake_secrets (RFC 8446 handshake key derivation)");
+                super::super::crypto_handlers::handle_tls_derive_handshake_secrets(params).await
+            }
+
             "tls.derive_application_secrets" => {
-                info!("🔑 TLS: derive_application_secrets (HKDF application key derivation for HTTP)");
+                info!("🔑 TLS: derive_application_secrets (RFC 8446 application key derivation for HTTP)");
                 super::super::crypto_handlers::handle_tls_derive_application_secrets(params).await
             }
 
@@ -502,9 +508,9 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
         
-        // Should have 46 methods (Phase 1-8 comprehensive crypto coverage)
-        // 8 core + 4 ECDSA + 4 RSA + 4 TLS + 4 genetic + 5 SHA-2 + 2 ECDH + 4 AES-GCM + 4 passwords + 2 KDF + 3 HMAC + 2 legacy
-        assert_eq!(methods.len(), 46);
+        // Should have 47 methods (Phase 1-8 comprehensive crypto coverage + handshake secrets)
+        // 8 core + 4 ECDSA + 4 RSA + 5 TLS + 4 genetic + 5 SHA-2 + 2 ECDH + 4 AES-GCM + 4 passwords + 2 KDF + 3 HMAC + 2 legacy
+        assert_eq!(methods.len(), 47);
         
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -530,6 +536,8 @@ mod tests {
         
         // Verify TLS methods
         assert!(methods.contains(&"tls.derive_secrets"));
+        assert!(methods.contains(&"tls.derive_handshake_secrets"));
+        assert!(methods.contains(&"tls.derive_application_secrets"));
         assert!(methods.contains(&"tls.sign_handshake"));
         assert!(methods.contains(&"tls.verify_certificate"));
         
@@ -543,7 +551,7 @@ mod tests {
     #[test]
     fn test_handler_method_count() {
         let handler = CryptoHandler;
-        assert_eq!(handler.methods().len(), 46, "Should have exactly 46 crypto methods (Phase 1-8 comprehensive coverage)");
+        assert_eq!(handler.methods().len(), 47, "Should have exactly 47 crypto methods (Phase 1-8 + handshake secrets)");
     }
 }
 

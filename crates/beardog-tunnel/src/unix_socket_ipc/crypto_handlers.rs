@@ -953,6 +953,221 @@ pub async fn handle_tls_derive_application_secrets(
     }))
 }
 
+/// Handle tls.derive_handshake_secrets method
+///
+/// Derives TLS 1.3 HANDSHAKE traffic secrets using the full RFC 8446 key schedule.
+/// This is the FIRST key derivation stage - used for encrypting handshake messages.
+///
+/// # Key Schedule (RFC 8446 Section 7.1)
+///
+/// ```text
+///              0
+///              |
+///              v
+///    PSK ->  HKDF-Extract = Early Secret
+///              |
+///              v
+///        Derive-Secret(., "derived", "")
+///              |
+///              v
+/// (EC)DHE -> HKDF-Extract = Handshake Secret  ← WE DERIVE THIS
+///              |
+///              +-----> Derive-Secret(., "c hs traffic", transcript)
+///              |       = client_handshake_traffic_secret
+///              |
+///              +-----> Derive-Secret(., "s hs traffic", transcript)
+///                      = server_handshake_traffic_secret
+/// ```
+///
+/// # Parameters
+///
+/// - `pre_master_secret`: Base64-encoded ECDH shared secret (32 bytes for X25519)
+/// - `client_random`: Base64-encoded ClientHello random (32 bytes)
+/// - `server_random`: Base64-encoded ServerHello random (32 bytes)
+/// - `transcript_hash`: Base64-encoded SHA-256(ClientHello + ServerHello) (32 bytes)
+///
+/// # Returns
+///
+/// - `client_write_key`: Base64-encoded client key (32 bytes for ChaCha20)
+/// - `client_write_iv`: Base64-encoded client IV/nonce (12 bytes)
+/// - `server_write_key`: Base64-encoded server key (32 bytes for ChaCha20)
+/// - `server_write_iv`: Base64-encoded server IV/nonce (12 bytes)
+///
+/// # Difference from `tls.derive_application_secrets`
+///
+/// - `tls.derive_handshake_secrets`: Derives HANDSHAKE traffic keys (for handshake messages)
+/// - `tls.derive_application_secrets`: Derives APPLICATION traffic keys (for HTTP data)
+///
+/// Both follow RFC 8446, but at different stages of the key schedule.
+pub async fn handle_tls_derive_handshake_secrets(
+    params: Option<&Value>,
+) -> Result<Value, String> {
+    let params = params.ok_or("Missing params for tls.derive_handshake_secrets")?;
+
+    // Extract parameters
+    let pre_master_secret_b64 = params
+        .get("pre_master_secret")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: pre_master_secret")?;
+
+    let client_random_b64 = params
+        .get("client_random")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: client_random")?;
+
+    let server_random_b64 = params
+        .get("server_random")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: server_random")?;
+
+    // REQUIRED: transcript_hash (RFC 8446 compliance)
+    let transcript_hash_b64 = params
+        .get("transcript_hash")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: transcript_hash")?;
+
+    // Decode parameters
+    let pre_master_secret = base64::engine::general_purpose::STANDARD
+        .decode(pre_master_secret_b64)
+        .map_err(|e| format!("Invalid base64 pre_master_secret: {e}"))?;
+
+    let client_random = base64::engine::general_purpose::STANDARD
+        .decode(client_random_b64)
+        .map_err(|e| format!("Invalid base64 client_random: {e}"))?;
+
+    let server_random = base64::engine::general_purpose::STANDARD
+        .decode(server_random_b64)
+        .map_err(|e| format!("Invalid base64 server_random: {e}"))?;
+
+    let transcript_hash = base64::engine::general_purpose::STANDARD
+        .decode(transcript_hash_b64)
+        .map_err(|e| format!("Invalid base64 transcript_hash: {e}"))?;
+
+    // Validate parameter sizes
+    if client_random.len() != 32 {
+        return Err("client_random must be 32 bytes".to_string());
+    }
+
+    if server_random.len() != 32 {
+        return Err("server_random must be 32 bytes".to_string());
+    }
+
+    if transcript_hash.len() != 32 {
+        return Err("transcript_hash must be 32 bytes (SHA-256)".to_string());
+    }
+
+    debug!(
+        "🔑 Deriving TLS 1.3 HANDSHAKE secrets (RFC 8446 Section 7.1)"
+    );
+    debug!("  → pre_master: {} bytes (ECDH shared secret)", pre_master_secret.len());
+    debug!("  → client_random: {} bytes", client_random.len());
+    debug!("  → server_random: {} bytes", server_random.len());
+    debug!("  → transcript_hash: {} bytes (ClientHello + ServerHello)", transcript_hash.len());
+
+    // Use HKDF for TLS 1.3 key derivation (RFC 8446 Section 7.1)
+    use hkdf::Hkdf;
+    use sha2::{Digest, Sha256};
+
+    // Constants
+    const KEY_LEN: usize = 32; // ChaCha20 key size
+    const IV_LEN: usize = 12; // AEAD nonce size
+
+    // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes()); // Length (2 bytes)
+
+        let tls13_label = format!("tls13 {}", label);
+        hkdf_label.push(tls13_label.len() as u8); // Label length (1 byte)
+        hkdf_label.extend_from_slice(tls13_label.as_bytes()); // Label
+
+        hkdf_label.push(context.len() as u8); // Context length (1 byte)
+        hkdf_label.extend_from_slice(context); // Context
+
+        let hkdf = Hkdf::<Sha256>::from_prk(secret)
+            .map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let mut okm = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut okm)
+            .map_err(|e| format!("HKDF expand failed: {e}"))?;
+        Ok::<Vec<u8>, String>(okm)
+    };
+
+    // RFC 8446 Section 7.1: Key Schedule for Handshake Keys
+    
+    // Step 1: Early Secret = HKDF-Extract(salt: 0, IKM: 0)
+    let zeros_32 = [0u8; 32];
+    let early_secret = Hkdf::<Sha256>::extract(Some(&zeros_32), &zeros_32);
+    debug!("  Step 1: Early Secret derived");
+
+    // Step 2: Derive-Secret(early_secret, "derived", "")
+    // This is: HKDF-Expand-Label(early_secret, "derived", Hash(""), 32)
+    let empty_hash = Sha256::digest(&[]);
+    let early_derived = hkdf_expand_label(&early_secret.0, "derived", &empty_hash, 32)?;
+    debug!("  Step 2: Early derived secret computed");
+
+    // Step 3: Handshake Secret = HKDF-Extract(salt: early_derived, IKM: ECDH)
+    let handshake_secret = Hkdf::<Sha256>::extract(Some(&early_derived), &pre_master_secret);
+    debug!("  Step 3: Handshake Secret derived from ECDH");
+
+    // Step 4: Client Handshake Traffic Secret
+    // HKDF-Expand-Label(handshake_secret, "c hs traffic", transcript_hash, 32)
+    let client_handshake_secret = hkdf_expand_label(
+        &handshake_secret.0,
+        "c hs traffic",
+        &transcript_hash,
+        32,
+    )?;
+    debug!("  Step 4: Client Handshake Traffic Secret derived");
+
+    // Step 5: Server Handshake Traffic Secret
+    // HKDF-Expand-Label(handshake_secret, "s hs traffic", transcript_hash, 32)
+    let server_handshake_secret = hkdf_expand_label(
+        &handshake_secret.0,
+        "s hs traffic",
+        &transcript_hash,
+        32,
+    )?;
+    debug!("  Step 5: Server Handshake Traffic Secret derived");
+
+    // Step 6: Derive Keys and IVs from Handshake Traffic Secrets
+
+    // Client write key = HKDF-Expand-Label(client_secret, "key", "", 32)
+    let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], KEY_LEN)?;
+
+    // Client write IV = HKDF-Expand-Label(client_secret, "iv", "", 12)
+    let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
+
+    // Server write key = HKDF-Expand-Label(server_secret, "key", "", 32)
+    let server_write_key = hkdf_expand_label(&server_handshake_secret, "key", &[], KEY_LEN)?;
+
+    // Server write IV = HKDF-Expand-Label(server_secret, "iv", "", 12)
+    let server_write_iv = hkdf_expand_label(&server_handshake_secret, "iv", &[], IV_LEN)?;
+
+    debug!("  Step 6: Keys and IVs derived (key: {} bytes, IV: {} bytes)", KEY_LEN, IV_LEN);
+
+    // Encode to base64
+    let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
+    let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
+    let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
+    let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
+
+    info!(
+        "✅ TLS 1.3 HANDSHAKE secrets derived (keys: {} bytes, IVs: {} bytes, RFC 8446 compliant)",
+        KEY_LEN, IV_LEN
+    );
+
+    Ok(serde_json::json!({
+        "client_write_key": client_write_key_b64,
+        "server_write_key": server_write_key_b64,
+        "client_write_iv": client_write_iv_b64,
+        "server_write_iv": server_write_iv_b64,
+        "algorithm": "HKDF-SHA256",
+        "rfc": "RFC 8446 Section 7.1",
+        "stage": "handshake",
+        "mode": "RFC 8446 Full Compliance"
+    }))
+}
+
 /// Handle tls.sign_handshake method
 ///
 /// Signs TLS handshake messages with Ed25519 for ClientKeyExchange/CertificateVerify.

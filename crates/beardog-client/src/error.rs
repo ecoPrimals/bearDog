@@ -8,9 +8,9 @@ pub type ClientResult<T> = Result<T, BearDogClientError>;
 /// BearDog client errors
 #[derive(Debug, Error)]
 pub enum BearDogClientError {
-    /// HTTP request error
-    #[error("HTTP request failed: {0}")]
-    HttpError(#[from] reqwest::Error),
+    /// Tower Atomic connection failed
+    #[error("Connection failed: {0}")]
+    ConnectionFailed(String),
 
     /// API returned an error
     #[error("API error: {0}")]

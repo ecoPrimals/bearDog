@@ -1,11 +1,13 @@
 //! Integration-specific error types
+//!
+//! **EVOLVED**: Removed reqwest dependency (Tower Atomic uses Unix sockets, not HTTP)
 
 use std::fmt;
 
 /// Integration error type
 #[derive(Debug)]
 pub enum IntegrationError {
-    /// Network/HTTP error
+    /// Network/IPC error (Tower Atomic)
     Network(String),
     /// Configuration error
     Config(String),
@@ -25,8 +27,9 @@ impl fmt::Display for IntegrationError {
 
 impl std::error::Error for IntegrationError {}
 
-impl From<reqwest::Error> for IntegrationError {
-    fn from(e: reqwest::Error) -> Self {
-        IntegrationError::Network(e.to_string())
-    }
-}
+// Fossil Record: reqwest::Error conversion removed (Tower Atomic evolution)
+// impl From<reqwest::Error> for IntegrationError {
+//     fn from(e: reqwest::Error) -> Self {
+//         IntegrationError::Network(e.to_string())
+//     }
+// }
