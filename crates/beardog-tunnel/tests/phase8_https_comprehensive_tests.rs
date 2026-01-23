@@ -674,7 +674,8 @@ async fn test_handshake_secrets_basic() {
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash)
+        "transcript_hash": BASE64.encode(&transcript_hash),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let result = handle_tls_derive_handshake_secrets(Some(&params))
@@ -686,6 +687,8 @@ async fn test_handshake_secrets_basic() {
     assert!(result["client_write_iv"].is_string());
     assert!(result["server_write_key"].is_string());
     assert!(result["server_write_iv"].is_string());
+    assert!(result["client_handshake_secret"].is_string());  // NEW: For Finished message
+    assert!(result["server_handshake_secret"].is_string());  // NEW: For Finished message
     assert_eq!(result["algorithm"], "HKDF-SHA256");
     assert_eq!(result["rfc"], "RFC 8446 Section 7.1");
     assert_eq!(result["stage"], "handshake");
@@ -703,6 +706,13 @@ async fn test_handshake_secrets_basic() {
 
     let server_iv = BASE64.decode(result["server_write_iv"].as_str().unwrap()).unwrap();
     assert_eq!(server_iv.len(), 12, "Server IV should be 12 bytes");
+    
+    // Verify traffic secrets (NEW: for Finished message computation)
+    let client_hs_secret = BASE64.decode(result["client_handshake_secret"].as_str().unwrap()).unwrap();
+    assert_eq!(client_hs_secret.len(), 32, "Client handshake secret should be 32 bytes");
+    
+    let server_hs_secret = BASE64.decode(result["server_handshake_secret"].as_str().unwrap()).unwrap();
+    assert_eq!(server_hs_secret.len(), 32, "Server handshake secret should be 32 bytes");
 }
 
 #[tokio::test]
@@ -724,7 +734,8 @@ async fn test_handshake_vs_application_secrets_different() {
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash)
+        "transcript_hash": BASE64.encode(&transcript_hash),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let hs_result = handle_tls_derive_handshake_secrets(Some(&params))
@@ -785,14 +796,16 @@ async fn test_handshake_secrets_transcript_hash_binding() {
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash_1)
+        "transcript_hash": BASE64.encode(&transcript_hash_1),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let params2 = json!({
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash_2)
+        "transcript_hash": BASE64.encode(&transcript_hash_2),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let result1 = handle_tls_derive_handshake_secrets(Some(&params1))
@@ -852,7 +865,8 @@ async fn test_handshake_secrets_invalid_transcript_hash_size() {
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&invalid_transcript)
+        "transcript_hash": BASE64.encode(&invalid_transcript),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let result = handle_tls_derive_handshake_secrets(Some(&params)).await;
@@ -879,7 +893,8 @@ async fn test_handshake_secrets_performance() {
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash)
+        "transcript_hash": BASE64.encode(&transcript_hash),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let start = Instant::now();
@@ -922,7 +937,8 @@ async fn test_handshake_secrets_concurrent() {
                 "pre_master_secret": BASE64.encode(&pre_master_secret),
                 "client_random": BASE64.encode(&client_random),
                 "server_random": BASE64.encode(&server_random),
-                "transcript_hash": BASE64.encode(&transcript_hash)
+                "transcript_hash": BASE64.encode(&transcript_hash),
+                "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
             });
 
             handle_tls_derive_handshake_secrets(Some(&params))
@@ -959,14 +975,16 @@ async fn test_handshake_secrets_avalanche_effect() {
         "pre_master_secret": BASE64.encode(&pre_master_secret_1),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash)
+        "transcript_hash": BASE64.encode(&transcript_hash),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let params2 = json!({
         "pre_master_secret": BASE64.encode(&pre_master_secret_2),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&transcript_hash)
+        "transcript_hash": BASE64.encode(&transcript_hash),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let result1 = handle_tls_derive_handshake_secrets(Some(&params1))
@@ -1012,7 +1030,8 @@ async fn test_handshake_secrets_timing_attack_resistance() {
             "pre_master_secret": BASE64.encode(&pre_master_secret),
             "client_random": BASE64.encode(&client_random),
             "server_random": BASE64.encode(&server_random),
-            "transcript_hash": BASE64.encode(&transcript_hash)
+            "transcript_hash": BASE64.encode(&transcript_hash),
+            "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
         });
 
         let start = Instant::now();
@@ -1079,7 +1098,8 @@ async fn test_full_tls_handshake_flow() {
         "pre_master_secret": BASE64.encode(&pre_master_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&handshake_transcript_hash)
+        "transcript_hash": BASE64.encode(&handshake_transcript_hash),
+        "cipher_suite": 0x1303  // TLS_CHACHA20_POLY1305_SHA256
     });
 
     let hs_result = handle_tls_derive_handshake_secrets(Some(&hs_params))

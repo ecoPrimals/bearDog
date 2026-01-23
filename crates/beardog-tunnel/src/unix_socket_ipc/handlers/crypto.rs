@@ -147,6 +147,7 @@ impl MethodHandler for CryptoHandler {
             "tls.derive_secrets",
             "tls.derive_handshake_secrets",
             "tls.derive_application_secrets",
+            "tls.compute_finished_verify_data",
             "tls.sign_handshake",
             "tls.verify_certificate",
             // Genetic crypto operations (Phase 5)
@@ -450,6 +451,11 @@ impl MethodHandler for CryptoHandler {
             "tls.derive_application_secrets" => {
                 info!("🔑 TLS: derive_application_secrets (RFC 8446 application key derivation for HTTP)");
                 super::super::crypto_handlers::handle_tls_derive_application_secrets(params).await
+            }
+
+            "tls.compute_finished_verify_data" => {
+                info!("🏁 TLS: compute_finished_verify_data (RFC 8446 Section 4.4.4 - Finished message)");
+                super::super::crypto_handlers::handle_tls_compute_finished_verify_data(params).await
             }
 
             "tls.sign_handshake" => {

@@ -22,7 +22,7 @@
 use anyhow::Result;
 use base64::Engine;
 use serde_json::Value;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Handle crypto.sign_ed25519 method
 ///
@@ -796,6 +796,14 @@ pub async fn handle_tls_derive_application_secrets(
         .get("transcript_hash")
         .and_then(|v| v.as_str());
 
+    // Extract cipher_suite (NEW: for dynamic key length derivation)
+    let cipher_suite = params
+        .get("cipher_suite")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0x1303) as u16; // Default to ChaCha20-Poly1305 for backward compat
+
+    info!("🔐 Cipher suite: 0x{:04x}", cipher_suite);
+
     // Decode parameters
     let pre_master_secret = base64::engine::general_purpose::STANDARD
         .decode(pre_master_secret_b64)
@@ -850,9 +858,19 @@ pub async fn handle_tls_derive_application_secrets(
     use hkdf::Hkdf;
     use sha2::{Digest, Sha256};
 
-    // Constants
-    const KEY_LEN: usize = 32; // ChaCha20 key size
-    const IV_LEN: usize = 12; // AEAD nonce size
+    // Dynamic key length based on cipher suite (RFC 8446 Section 7.3)
+    let (key_len, iv_len) = match cipher_suite {
+        0x1301 => (16, 12), // TLS_AES_128_GCM_SHA256
+        0x1302 => (32, 12), // TLS_AES_256_GCM_SHA384
+        0x1303 => (32, 12), // TLS_CHACHA20_POLY1305_SHA256
+        _ => {
+            warn!("⚠️  Unknown cipher suite 0x{:04x}, defaulting to ChaCha20 (32-byte keys)", cipher_suite);
+            (32, 12)
+        }
+    };
+
+    info!("✅ Using key_len={} bytes, iv_len={} bytes for cipher suite 0x{:04x}", 
+          key_len, iv_len, cipher_suite);
 
     // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
@@ -931,11 +949,11 @@ pub async fn handle_tls_derive_application_secrets(
         32
     )?;
 
-    // Step 8: Derive keys and IVs using HKDF-Expand-Label
-    let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], KEY_LEN)?;
-    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], KEY_LEN)?;
-    let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], IV_LEN)?;
-    let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], IV_LEN)?;
+    // Step 8: Derive keys and IVs using HKDF-Expand-Label (with dynamic lengths)
+    let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
+    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
+    let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], iv_len)?;
+    let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], iv_len)?;
 
     // Encode results
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
@@ -950,8 +968,8 @@ pub async fn handle_tls_derive_application_secrets(
     };
 
     info!(
-        "✅ TLS 1.3 APPLICATION secrets derived (keys: {} bytes, IVs: {} bytes, mode: {})",
-        KEY_LEN, IV_LEN, mode
+        "✅ TLS 1.3 APPLICATION secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, mode: {})",
+        cipher_suite, key_len, iv_len, mode
     );
 
     Ok(serde_json::json!({
@@ -961,7 +979,10 @@ pub async fn handle_tls_derive_application_secrets(
         "server_write_iv": server_write_iv_b64,
         "algorithm": "HKDF-SHA256",
         "rfc": "RFC 8446 Section 7.1",
-        "mode": mode
+        "mode": mode,
+        "key_length": key_len,       // NEW: For verification
+        "iv_length": iv_len,         // NEW: For verification
+        "cipher_suite": cipher_suite // NEW: Echo back for debugging
     }))
 }
 
@@ -1198,6 +1219,10 @@ pub async fn handle_tls_derive_handshake_secrets(
     let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
     let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
     let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
+    
+    // Also encode the traffic secrets (needed for Finished message computation, RFC 8446 Section 4.4.4)
+    let client_handshake_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&client_handshake_secret);
+    let server_handshake_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&server_handshake_secret);
 
     info!(
         "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
@@ -1209,6 +1234,8 @@ pub async fn handle_tls_derive_handshake_secrets(
         "server_write_key": server_write_key_b64,
         "client_write_iv": client_write_iv_b64,
         "server_write_iv": server_write_iv_b64,
+        "client_handshake_secret": client_handshake_secret_b64,  // For Finished message (RFC 8446 Section 4.4.4)
+        "server_handshake_secret": server_handshake_secret_b64,  // For Finished message (RFC 8446 Section 4.4.4)
         "algorithm": "HKDF-SHA256",
         "rfc": "RFC 8446 Section 7.1",
         "stage": "handshake",
@@ -2187,5 +2214,98 @@ mod tests {
         println!("\n🎊 TLS 1.3 Handshake Simulation Complete!");
         println!("   All crypto operations successful via BearDog RPC");
     }
+}
+
+/// Handle tls.compute_finished_verify_data method
+///
+/// Computes the TLS 1.3 Finished message verify_data for client or server.
+/// RFC 8446 Section 4.4.4:
+///   finished_key = HKDF-Expand-Label(BaseKey, "finished", "", Hash.length)
+///   verify_data = HMAC(finished_key, Transcript-Hash(messages))
+///
+/// # Parameters
+///
+/// - `base_key`: Base64-encoded handshake traffic secret (client or server)
+/// - `transcript_hash`: Base64-encoded SHA-256 hash of all handshake messages
+///
+/// # Returns
+///
+/// - `verify_data`: Base64-encoded HMAC (32 bytes for SHA-256)
+pub async fn handle_tls_compute_finished_verify_data(params: Option<&Value>) -> Result<Value, String> {
+    use base64::prelude::*;
+    use hkdf::Hkdf;
+    use sha2::{Sha256, Digest};
+    use hmac::{Hmac, Mac};
+    
+    let params = params.ok_or("Missing params for tls.compute_finished_verify_data")?;
+    
+    // Extract parameters
+    let base_key_b64 = params
+        .get("base_key")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: base_key")?;
+    
+    let transcript_hash_b64 = params
+        .get("transcript_hash")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: transcript_hash")?;
+    
+    // Decode from base64
+    let base_key = BASE64_STANDARD
+        .decode(base_key_b64)
+        .map_err(|e| format!("Invalid base64 for base_key: {}", e))?;
+    
+    let transcript_hash = BASE64_STANDARD
+        .decode(transcript_hash_b64)
+        .map_err(|e| format!("Invalid base64 for transcript_hash: {}", e))?;
+    
+    info!("🔐 Computing TLS 1.3 Finished verify_data");
+    info!("   Base key: {} bytes", base_key.len());
+    info!("   Transcript hash: {} bytes", transcript_hash.len());
+    
+    // Validate inputs
+    if transcript_hash.len() != 32 {
+        return Err(format!("Invalid transcript_hash length: {} (expected 32 for SHA-256)", transcript_hash.len()));
+    }
+    
+    // Step 1: Derive finished_key using HKDF-Expand-Label
+    // finished_key = HKDF-Expand-Label(base_key, "finished", "", 32)
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let hkdf = Hkdf::<Sha256>::from_prk(secret)
+            .map_err(|e| format!("HKDF PRK error: {}", e))?;
+        
+        // RFC 8446 Section 7.1: HkdfLabel structure
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+        hkdf_label.push(label.len() as u8);
+        hkdf_label.extend_from_slice(label.as_bytes());
+        hkdf_label.push(context.len() as u8);
+        hkdf_label.extend_from_slice(context);
+        
+        let mut output = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut output)
+            .map_err(|e| format!("HKDF expand error: {}", e))?;
+        
+        Ok::<Vec<u8>, String>(output)
+    };
+    
+    let finished_key = hkdf_expand_label(&base_key, "finished", &[], 32)?;
+    info!("✅ Derived finished_key: {} bytes", finished_key.len());
+    
+    // Step 2: Compute verify_data = HMAC-SHA256(finished_key, transcript_hash)
+    type HmacSha256 = Hmac<Sha256>;
+    let mut mac = HmacSha256::new_from_slice(&finished_key)
+        .map_err(|e| format!("HMAC key error: {}", e))?;
+    
+    mac.update(&transcript_hash);
+    let verify_data = mac.finalize().into_bytes().to_vec();
+    
+    info!("✅ Computed verify_data: {} bytes", verify_data.len());
+    info!("   Verify data (hex): {}", hex::encode(&verify_data));
+    
+    Ok(serde_json::json!({
+        "verify_data": BASE64_STANDARD.encode(&verify_data),
+        "length": verify_data.len(),
+    }))
 }
 
