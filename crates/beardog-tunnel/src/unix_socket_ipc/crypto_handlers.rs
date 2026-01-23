@@ -772,7 +772,11 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
 pub async fn handle_tls_derive_application_secrets(
     params: Option<&Value>,
 ) -> Result<Value, String> {
+    // EXECUTION TRACE: Log immediately to confirm function entry
+    info!("🚀 ENTERED handle_tls_derive_application_secrets");
+    
     let params = params.ok_or("Missing params for tls.derive_application_secrets")?;
+    info!("✅ Parameters parsed successfully");
 
     // Extract parameters
     let pre_master_secret_b64 = params
@@ -817,6 +821,9 @@ pub async fn handle_tls_derive_application_secrets(
         .decode(server_random_b64)
         .map_err(|e| format!("Invalid base64 server_random: {e}"))?;
 
+    info!("✅ Base64 decoding complete: pre_master={} bytes, client_random={} bytes, server_random={} bytes", 
+          pre_master_secret.len(), client_random.len(), server_random.len());
+
     // Optional transcript hash (SHA-256 of all handshake messages)
     let transcript_hash = if let Some(th_b64) = transcript_hash_b64 {
         let th = base64::engine::general_purpose::STANDARD
@@ -825,8 +832,10 @@ pub async fn handle_tls_derive_application_secrets(
         if th.len() != 32 {
             return Err("transcript_hash must be 32 bytes (SHA-256)".to_string());
         }
+        info!("✅ Transcript hash decoded: {} bytes", th.len());
         Some(th)
     } else {
+        info!("⚠️  No transcript_hash provided - will use SIMPLIFIED MODE");
         None
     };
 
@@ -838,6 +847,9 @@ pub async fn handle_tls_derive_application_secrets(
         return Err("server_random must be 32 bytes".to_string());
     }
 
+    // EXECUTION TRACE: About to enter comprehensive debug logging
+    info!("🎯 CHECKPOINT: Starting comprehensive debug output...");
+    
     // VERSION MARKER: This is v0.17.0+ with enhanced debug logging
     info!("════════════════════════════════════════════════════════════");
     info!("🔍 BEARDOG v0.17.0+ APPLICATION KEY DERIVATION - COMPREHENSIVE DEBUG");
