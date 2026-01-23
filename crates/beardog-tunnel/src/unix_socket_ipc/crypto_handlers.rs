@@ -838,20 +838,22 @@ pub async fn handle_tls_derive_application_secrets(
         return Err("server_random must be 32 bytes".to_string());
     }
 
+    // VERSION MARKER: This is v0.17.0+ with enhanced debug logging
+    info!("════════════════════════════════════════════════════════════");
+    info!("🔍 BEARDOG v0.17.0+ APPLICATION KEY DERIVATION - COMPREHENSIVE DEBUG");
+    info!("════════════════════════════════════════════════════════════");
+    
     if let Some(ref th) = transcript_hash {
-        debug!(
-            "🔑 Deriving TLS 1.3 APPLICATION secrets (RFC 8446 FULL MODE)"
-        );
-        debug!("  → pre_master: {} bytes", pre_master_secret.len());
-        debug!("  → client_random: {} bytes", client_random.len());
-        debug!("  → server_random: {} bytes", server_random.len());
-        debug!("  → transcript_hash: {} bytes (SHA-256)", th.len());
+        info!("RFC 8446 FULL MODE - Using actual transcript hash");
+        info!("  • Pre-master secret: {} bytes", pre_master_secret.len());
+        info!("  • Client random: {} bytes", client_random.len());
+        info!("  • Server random: {} bytes", server_random.len());
+        info!("  • Transcript hash: {} bytes (SHA-256)", th.len());
+        info!("  • Transcript hash (hex): {}", hex::encode(th));
     } else {
-        debug!(
-            "🔑 Deriving TLS 1.3 APPLICATION secrets (SIMPLIFIED MODE - backward compat)"
-        );
-        debug!("  → pre_master: {} bytes", pre_master_secret.len());
-        debug!("  → Using simplified transcript: client_random || server_random");
+        info!("SIMPLIFIED MODE (backward compat) - Using client_random || server_random");
+        info!("  • Pre-master secret: {} bytes", pre_master_secret.len());
+        warn!("⚠️  NOT using actual transcript hash - this is not RFC 8446 compliant!");
     }
 
     // Use HKDF for TLS 1.3 key derivation (RFC 8446 Section 7.1)
@@ -936,9 +938,19 @@ pub async fn handle_tls_derive_application_secrets(
 
     // Step 7: Derive application traffic secrets (RFC 8446 labels)
     // Use HKDF-Expand-Label with the transcript hash as context
-    info!("🔑 Deriving application traffic secrets...");
-    info!("   Master secret (first 16 bytes): {}", hex::encode(&master_secret.0[..16]));
-    info!("   Transcript hash: {}", hex::encode(&transcript_for_derivation));
+    info!("────────────────────────────────────────────────────────────");
+    info!("Key Derivation Process:");
+    info!("────────────────────────────────────────────────────────────");
+    info!("  • Master secret (first 16 bytes):");
+    info!("    {}", hex::encode(&master_secret.0[..16]));
+    info!("  • Transcript hash used for derivation ({} bytes):", transcript_for_derivation.len());
+    info!("    {}", hex::encode(&transcript_for_derivation));
+    info!("");
+    info!("  • Deriving with HKDF-Expand-Label:");
+    info!("    - Label for client: 'c ap traffic'");
+    info!("    - Label for server: 's ap traffic'");
+    info!("    - Output length: 32 bytes each");
+    info!("");
     
     let client_app_secret = hkdf_expand_label(
         &master_secret.0,
@@ -946,7 +958,9 @@ pub async fn handle_tls_derive_application_secrets(
         &transcript_for_derivation,
         32
     )?;
-    info!("   Client app secret (full): {}", hex::encode(&client_app_secret));
+    info!("  ✅ Client application secret (CLIENT_TRAFFIC_SECRET_0, full 32 bytes):");
+    info!("    {}", hex::encode(&client_app_secret));
+    info!("");
     
     let server_app_secret = hkdf_expand_label(
         &master_secret.0,
@@ -954,21 +968,28 @@ pub async fn handle_tls_derive_application_secrets(
         &transcript_for_derivation,
         32
     )?;
-    info!("   Server app secret (full): {}", hex::encode(&server_app_secret));
+    info!("  ✅ Server application secret (SERVER_TRAFFIC_SECRET_0, full 32 bytes):");
+    info!("    {}", hex::encode(&server_app_secret));
+    info!("");
 
     // Step 8: Derive keys and IVs using HKDF-Expand-Label (with dynamic lengths)
-    info!("🔐 Expanding traffic secrets to keys and IVs...");
+    info!("────────────────────────────────────────────────────────────");
+    info!("Final Derived Keys:");
+    info!("────────────────────────────────────────────────────────────");
+    info!("  • Expanding client_application_secret → key ({} bytes) + IV ({} bytes)", key_len, iv_len);
     let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
-    info!("   Client write key: {}", hex::encode(&client_write_key));
-    
-    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
-    info!("   Server write key: {}", hex::encode(&server_write_key));
+    info!("    Client write key ({} bytes): {}", client_write_key.len(), hex::encode(&client_write_key));
     
     let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], iv_len)?;
-    info!("   Client write IV: {}", hex::encode(&client_write_iv));
+    info!("    Client write IV ({} bytes): {}", client_write_iv.len(), hex::encode(&client_write_iv));
+    info!("");
+    
+    info!("  • Expanding server_application_secret → key ({} bytes) + IV ({} bytes)", key_len, iv_len);
+    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
+    info!("    Server write key ({} bytes): {}", server_write_key.len(), hex::encode(&server_write_key));
     
     let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], iv_len)?;
-    info!("   Server write IV: {}", hex::encode(&server_write_iv));
+    info!("    Server write IV ({} bytes): {}", server_write_iv.len(), hex::encode(&server_write_iv));
 
     // Encode results
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
@@ -986,10 +1007,12 @@ pub async fn handle_tls_derive_application_secrets(
         "Simplified (backward compat)"
     };
 
+    info!("════════════════════════════════════════════════════════════");
     info!(
-        "✅ TLS 1.3 APPLICATION secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, mode: {})",
-        cipher_suite, key_len, iv_len, mode
-    );
+        "✅ TLS 1.3 APPLICATION secrets derived successfully!");
+    info!("  Cipher: 0x{:04x}, Keys: {} bytes, IVs: {} bytes", cipher_suite, key_len, iv_len);
+    info!("  Mode: {}", mode);
+    info!("════════════════════════════════════════════════════════════");
 
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
