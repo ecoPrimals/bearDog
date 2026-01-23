@@ -435,6 +435,18 @@ pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<
         "🔓 Decrypting {} bytes with ChaCha20-Poly1305",
         ciphertext.len()
     );
+    
+    // HEX DUMPS for deep debugging (cross-verify with Songbird)
+    info!("🔍 BEARDOG RECEIVED - FULL HEX DUMPS:");
+    info!("   Key (32 bytes): {}", hex::encode(&key));
+    info!("   Nonce ({} bytes): {}", nonce.len(), hex::encode(&nonce));
+    info!("   Ciphertext ({} bytes): {}", ciphertext.len(), hex::encode(&ciphertext));
+    info!("   Tag ({} bytes): {}", tag.len(), hex::encode(&tag));
+    if let Some(ref aad_data) = aad {
+        info!("   AAD ({} bytes): {}", aad_data.len(), hex::encode(aad_data));
+    } else {
+        info!("   AAD: None");
+    }
 
     // Use BearDog's crypto service
     use beardog_core::crypto_service::algorithms::symmetric;
@@ -1026,6 +1038,12 @@ pub async fn handle_tls_derive_handshake_secrets(
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: transcript_hash")?;
 
+    // REQUIRED: cipher_suite (RFC 8446 Section 7.3 - determines key length!)
+    let cipher_suite = params
+        .get("cipher_suite")
+        .and_then(|v| v.as_u64())
+        .ok_or("Missing required parameter: cipher_suite")? as u16;
+
     // Decode parameters
     let pre_master_secret = base64::engine::general_purpose::STANDARD
         .decode(pre_master_secret_b64)
@@ -1056,6 +1074,28 @@ pub async fn handle_tls_derive_handshake_secrets(
         return Err("transcript_hash must be 32 bytes (SHA-256)".to_string());
     }
 
+    // Determine key length based on cipher suite (RFC 8446 Section 7.3)
+    let key_len = match cipher_suite {
+        0x1301 => {
+            info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using 16-byte keys");
+            16  // AES-128-GCM uses 16-byte keys
+        }
+        0x1302 => {
+            info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using 32-byte keys");
+            32  // AES-256-GCM uses 32-byte keys
+        }
+        0x1303 => {
+            info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using 32-byte keys");
+            32  // ChaCha20-Poly1305 uses 32-byte keys
+        }
+        _ => {
+            return Err(format!(
+                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301 (AES-128-GCM), 0x1302 (AES-256-GCM), 0x1303 (ChaCha20-Poly1305)",
+                cipher_suite
+            ));
+        }
+    };
+
     debug!(
         "🔑 Deriving TLS 1.3 HANDSHAKE secrets (RFC 8446 Section 7.1)"
     );
@@ -1063,14 +1103,14 @@ pub async fn handle_tls_derive_handshake_secrets(
     debug!("  → client_random: {} bytes", client_random.len());
     debug!("  → server_random: {} bytes", server_random.len());
     debug!("  → transcript_hash: {} bytes (ClientHello + ServerHello)", transcript_hash.len());
+    debug!("  → cipher_suite: 0x{:04x} → key_len: {} bytes", cipher_suite, key_len);
 
     // Use HKDF for TLS 1.3 key derivation (RFC 8446 Section 7.1)
     use hkdf::Hkdf;
     use sha2::{Digest, Sha256};
 
     // Constants
-    const KEY_LEN: usize = 32; // ChaCha20 key size
-    const IV_LEN: usize = 12; // AEAD nonce size
+    const IV_LEN: usize = 12; // AEAD nonce size (same for all cipher suites)
 
     // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
@@ -1130,20 +1170,28 @@ pub async fn handle_tls_derive_handshake_secrets(
     debug!("  Step 5: Server Handshake Traffic Secret derived");
 
     // Step 6: Derive Keys and IVs from Handshake Traffic Secrets
+    // Key length determined by cipher suite (RFC 8446 Section 7.3)
 
-    // Client write key = HKDF-Expand-Label(client_secret, "key", "", 32)
-    let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], KEY_LEN)?;
+    // Client write key = HKDF-Expand-Label(client_secret, "key", "", key_len)
+    let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], key_len)?;
 
     // Client write IV = HKDF-Expand-Label(client_secret, "iv", "", 12)
     let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
 
-    // Server write key = HKDF-Expand-Label(server_secret, "key", "", 32)
-    let server_write_key = hkdf_expand_label(&server_handshake_secret, "key", &[], KEY_LEN)?;
+    // Server write key = HKDF-Expand-Label(server_secret, "key", "", key_len)
+    let server_write_key = hkdf_expand_label(&server_handshake_secret, "key", &[], key_len)?;
 
     // Server write IV = HKDF-Expand-Label(server_secret, "iv", "", 12)
     let server_write_iv = hkdf_expand_label(&server_handshake_secret, "iv", &[], IV_LEN)?;
 
-    debug!("  Step 6: Keys and IVs derived (key: {} bytes, IV: {} bytes)", KEY_LEN, IV_LEN);
+    debug!("  Step 6: Keys and IVs derived (key: {} bytes, IV: {} bytes)", key_len, IV_LEN);
+    
+    // HEX DUMPS for derived keys (cross-verify with Songbird and RFC 8448)
+    info!("🔍 BEARDOG DERIVED HANDSHAKE KEYS - FULL HEX DUMPS:");
+    info!("   client_write_key: {}", hex::encode(&client_write_key));
+    info!("   server_write_key: {}", hex::encode(&server_write_key));
+    info!("   client_write_iv: {}", hex::encode(&client_write_iv));
+    info!("   server_write_iv: {}", hex::encode(&server_write_iv));
 
     // Encode to base64
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
@@ -1152,8 +1200,8 @@ pub async fn handle_tls_derive_handshake_secrets(
     let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
 
     info!(
-        "✅ TLS 1.3 HANDSHAKE secrets derived (keys: {} bytes, IVs: {} bytes, RFC 8446 compliant)",
-        KEY_LEN, IV_LEN
+        "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
+        cipher_suite, key_len, IV_LEN
     );
 
     Ok(serde_json::json!({
