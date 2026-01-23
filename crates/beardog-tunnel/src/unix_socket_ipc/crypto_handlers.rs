@@ -936,30 +936,49 @@ pub async fn handle_tls_derive_application_secrets(
 
     // Step 7: Derive application traffic secrets (RFC 8446 labels)
     // Use HKDF-Expand-Label with the transcript hash as context
+    info!("🔑 Deriving application traffic secrets...");
+    info!("   Master secret (first 16 bytes): {}", hex::encode(&master_secret.0[..16]));
+    info!("   Transcript hash: {}", hex::encode(&transcript_for_derivation));
+    
     let client_app_secret = hkdf_expand_label(
         &master_secret.0,
         "c ap traffic",
         &transcript_for_derivation,
         32
     )?;
+    info!("   Client app secret (full): {}", hex::encode(&client_app_secret));
+    
     let server_app_secret = hkdf_expand_label(
         &master_secret.0,
         "s ap traffic",
         &transcript_for_derivation,
         32
     )?;
+    info!("   Server app secret (full): {}", hex::encode(&server_app_secret));
 
     // Step 8: Derive keys and IVs using HKDF-Expand-Label (with dynamic lengths)
+    info!("🔐 Expanding traffic secrets to keys and IVs...");
     let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
+    info!("   Client write key: {}", hex::encode(&client_write_key));
+    
     let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
+    info!("   Server write key: {}", hex::encode(&server_write_key));
+    
     let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], iv_len)?;
+    info!("   Client write IV: {}", hex::encode(&client_write_iv));
+    
     let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], iv_len)?;
+    info!("   Server write IV: {}", hex::encode(&server_write_iv));
 
     // Encode results
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
     let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
     let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
     let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
+    
+    // Also encode traffic secrets (for key updates and debugging)
+    let client_app_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&client_app_secret);
+    let server_app_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&server_app_secret);
 
     let mode = if transcript_hash.is_some() {
         "RFC 8446 Full Compliance"
@@ -977,6 +996,8 @@ pub async fn handle_tls_derive_application_secrets(
         "server_write_key": server_write_key_b64,
         "client_write_iv": client_write_iv_b64,
         "server_write_iv": server_write_iv_b64,
+        "client_application_secret": client_app_secret_b64,  // For key updates (RFC 8446 Section 7.2)
+        "server_application_secret": server_app_secret_b64,  // For key updates (RFC 8446 Section 7.2)
         "algorithm": "HKDF-SHA256",
         "rfc": "RFC 8446 Section 7.1",
         "mode": mode,
