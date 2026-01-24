@@ -50,11 +50,36 @@
 **Compilation**: ✅ No linter errors
 **Re-exported**: ✅ Available via `crypto::export_to_sslkeylogfile`
 
+### Step 3: Extract tls.rs (2 hours) ✅
+
+**File Created**: `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto/tls.rs`
+
+**Content**:
+- Extracted all 6 TLS handlers from crypto_handlers.rs (lines 708-2499)
+- Comprehensive module-level documentation
+- RFC 8446 key schedule diagram
+- Usage examples and references
+- Re-exported from crypto module
+
+**Lines**: 1,884 lines
+
+**What Was Extracted**:
+1. `handle_tls_derive_secrets` - Legacy combined key derivation
+2. `handle_tls_derive_application_secrets` - Application traffic keys (Stage 2, RFC 8446 Section 7.1)
+3. `handle_tls_derive_handshake_secrets` - Handshake traffic keys (Stage 1, RFC 8446 Section 7.1)
+4. `handle_tls_sign_handshake` - Sign handshake messages with Ed25519
+5. `handle_tls_verify_certificate` - Parse and validate X.509 certificates (large handler ~900 lines)
+6. `handle_tls_compute_finished_verify_data` - Compute TLS Finished MAC
+
+**Status**: ✅ Complete
+**Compilation**: ✅ No linter errors
+**Re-exported**: ✅ All 6 handlers available via crypto module
+
 ---
 
 ## 🔄 IN PROGRESS
 
-### Step 3: Extract tls.rs (2 hours)
+### Step 4: Extract asymmetric.rs (1 hour)
 
 **Target**: Extract SSLKEYLOGFILE export utility
 
@@ -134,12 +159,12 @@
 ## 📊 PROGRESS TRACKER
 
 ```
-Progress: ████████░░░░░░░░░░░░ 2/10 steps (20%)
+Progress: ████████████░░░░░░░░ 3/10 steps (30%)
 
 ✅ Step 1: mod.rs created
 ✅ Step 2: sslkeylog.rs extracted
-⏳ Step 3: tls.rs (next)
-⏳ Step 4: asymmetric.rs
+✅ Step 3: tls.rs extracted (1,884 lines!)
+⏳ Step 4: asymmetric.rs (next)
 ⏳ Step 5: symmetric.rs
 ⏳ Step 6: hash.rs
 ⏳ Step 7: Update imports
@@ -147,20 +172,20 @@ Progress: ████████░░░░░░░░░░░░ 2/10 step
 ⏳ Step 9: Documentation
 ⏳ Step 10: Testing
 
-Estimated time remaining: 7.0 hours
+Estimated time remaining: 5.0 hours
 ```
 
 ---
 
 ## 🎯 CURRENT STATE
 
-**Files Created**: 2
+**Files Created**: 3
 - `handlers/crypto/mod.rs` (67 lines) ✅
 - `handlers/crypto/sslkeylog.rs` (242 lines) ✅
+- `handlers/crypto/tls.rs` (1,884 lines) ✅
 
-**Files To Create**: 5
-- `handlers/crypto/tls.rs` (next)
-- `handlers/crypto/asymmetric.rs`
+**Files To Create**: 4
+- `handlers/crypto/asymmetric.rs` (next)
 - `handlers/crypto/symmetric.rs`
 - `handlers/crypto/hash.rs`
 - `handlers/crypto/README.md`
@@ -234,7 +259,7 @@ grep -n "^fn export_to_sslkeylogfile" crypto_handlers.rs
 
 ---
 
-**Last Updated**: January 24, 2026 - Step 2 Complete  
-**Next Step**: Extract tls.rs (Step 3)  
-**Estimated Time Remaining**: 7.0 hours
+**Last Updated**: January 24, 2026 - Step 3 Complete  
+**Next Step**: Extract asymmetric.rs (Step 4)  
+**Estimated Time Remaining**: 5.0 hours
 

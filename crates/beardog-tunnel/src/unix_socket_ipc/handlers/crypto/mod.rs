@@ -47,7 +47,7 @@
 
 // Module declarations (modules will be added as we extract them from crypto_handlers.rs)
 pub mod sslkeylog;
-// pub mod tls; // Step 3
+pub mod tls; // ✅ Step 3
 // pub mod asymmetric; // Step 4
 // pub mod symmetric; // Step 5
 // pub mod hash; // Step 6
@@ -55,8 +55,17 @@ pub mod sslkeylog;
 // Re-export sslkeylog utility for backward compatibility
 pub use sslkeylog::export_to_sslkeylogfile;
 
+// Re-export TLS handlers for backward compatibility
+pub use tls::{
+    handle_tls_compute_finished_verify_data,
+    handle_tls_derive_application_secrets,
+    handle_tls_derive_handshake_secrets,
+    handle_tls_derive_secrets,
+    handle_tls_sign_handshake,
+    handle_tls_verify_certificate,
+};
+
 // Re-exports for handlers will be added as modules are extracted:
-// pub use tls::*; // Step 3
 // pub use asymmetric::*; // Step 4
 // pub use symmetric::*; // Step 5
 // pub use hash::*; // Step 6
