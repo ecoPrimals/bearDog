@@ -41,8 +41,10 @@ pub struct SocketBufferConfiguration {
 
 impl Default for ServerConfiguration {
     fn default() -> Self {
+        // Use config system for defaults instead of hardcoded constants
+        use beardog_config::global::BEARDOG_CONFIG;
         Self {
-            bind_address: crate::constants::domains::network::addresses::LOCALHOST_IPV4.to_string(),
+            bind_address: BEARDOG_CONFIG.network.api.bind_address.to_string(),
             port: crate::constants::domains::network::defaults::default_api_port(),
             enable_ipv6: true,
             max_connections: crate::constants::domains::system::defaults::DEFAULT_MAX_CONNECTIONS,

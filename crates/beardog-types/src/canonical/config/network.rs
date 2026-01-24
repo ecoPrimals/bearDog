@@ -102,11 +102,14 @@ impl Default for NetworkConfig {
 }
 
 /// Default service host (configurable via `BEARDOG_SERVICE_HOST` environment variable)
+///
+/// **TODO**: Deprecate in favor of direct `BEARDOG_CONFIG` usage
 pub fn default_service_host() -> String {
     std::env::var("BEARDOG_SERVICE_HOST").unwrap_or_else(|_| {
         std::env::var("BEARDOG_HOST").unwrap_or_else(|_| {
-            use crate::constants::domains::network::config::LOCALHOST_NAME;
-            LOCALHOST_NAME.to_string()
+            // Use config system instead of hardcoded constant
+            use beardog_config::global::BEARDOG_CONFIG;
+            BEARDOG_CONFIG.network.api.bind_address.to_string()
         })
     })
 }
