@@ -537,9 +537,9 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
         
-        // Should have 47 methods (Phase 1-8 comprehensive crypto coverage + handshake secrets)
-        // 8 core + 4 ECDSA + 4 RSA + 5 TLS + 4 genetic + 5 SHA-2 + 2 ECDH + 4 AES-GCM + 4 passwords + 2 KDF + 3 HMAC + 2 legacy
-        assert_eq!(methods.len(), 47);
+        // Should have 48 methods (Phase 1-8 comprehensive crypto coverage)
+        // 2 core EdDSA + 4 ECDSA + 4 RSA + 6 key exchange + 6 AEAD + 10 hash/HMAC + 5 password + 6 TLS + 4 genetic + 1 Ed448
+        assert_eq!(methods.len(), 48);
         
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -580,7 +580,7 @@ mod tests {
     #[test]
     fn test_handler_method_count() {
         let handler = CryptoHandler;
-        assert_eq!(handler.methods().len(), 47, "Should have exactly 47 crypto methods (Phase 1-8 + handshake secrets)");
+        assert_eq!(handler.methods().len(), 48, "Should have exactly 48 crypto methods (Phase 1-8 complete)");
     }
 }
 
