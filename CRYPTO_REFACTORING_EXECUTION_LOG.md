@@ -75,11 +75,73 @@
 **Compilation**: ✅ No linter errors
 **Re-exported**: ✅ All 6 handlers available via crypto module
 
+### Step 4: Extract asymmetric.rs (1 hour) ✅
+
+**File Created**: `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto/asymmetric.rs`
+
+**Content**:
+- Extracted 4 asymmetric crypto handlers (lines 154-403)
+- Comprehensive module documentation
+- Ed25519 and X25519 documentation
+- Usage examples and references
+
+**Lines**: 325 lines
+
+**What Was Extracted**:
+1. `handle_sign_ed25519` - Sign messages with Ed25519
+2. `handle_verify_ed25519` - Verify Ed25519 signatures
+3. `handle_x25519_generate_ephemeral` - Generate X25519 keypair
+4. `handle_x25519_derive_secret` - ECDH shared secret derivation
+
+**Status**: ✅ Complete
+**Compilation**: ✅ No linter errors
+**Re-exported**: ✅ All 4 handlers available
+
+### Step 5: Extract symmetric.rs (1 hour) ✅
+
+**File Created**: `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto/symmetric.rs`
+
+**Content**:
+- Extracted 2 symmetric crypto handlers (lines 404-597)
+- ChaCha20-Poly1305 AEAD documentation
+- Security notes on nonce reuse
+- Usage examples and references
+
+**Lines**: 256 lines
+
+**What Was Extracted**:
+1. `handle_chacha20_poly1305_encrypt` - AEAD encryption
+2. `handle_chacha20_poly1305_decrypt` - AEAD decryption + verification
+
+**Status**: ✅ Complete
+**Compilation**: ✅ No linter errors
+**Re-exported**: ✅ All 2 handlers available
+
+### Step 6: Extract hash.rs (30 minutes) ✅
+
+**File Created**: `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto/hash.rs`
+
+**Content**:
+- Extracted 2 hash/MAC handlers (lines 598-707)
+- Blake3 and HMAC-SHA256 documentation
+- Security notes on password hashing
+- Usage examples and references
+
+**Lines**: 186 lines
+
+**What Was Extracted**:
+1. `handle_blake3_hash` - Blake3 cryptographic hashing
+2. `handle_hmac_sha256` - HMAC-SHA256 message authentication
+
+**Status**: ✅ Complete
+**Compilation**: ✅ No linter errors
+**Re-exported**: ✅ All 2 handlers available
+
 ---
 
 ## 🔄 IN PROGRESS
 
-### Step 4: Extract asymmetric.rs (1 hour)
+### Step 7: Update Imports (1 hour)
 
 **Target**: Extract SSLKEYLOGFILE export utility
 
@@ -159,36 +221,38 @@
 ## 📊 PROGRESS TRACKER
 
 ```
-Progress: ████████████░░░░░░░░ 3/10 steps (30%)
+Progress: ████████████████████░ 6/10 steps (60%)
 
 ✅ Step 1: mod.rs created
 ✅ Step 2: sslkeylog.rs extracted
 ✅ Step 3: tls.rs extracted (1,884 lines!)
-⏳ Step 4: asymmetric.rs (next)
-⏳ Step 5: symmetric.rs
-⏳ Step 6: hash.rs
-⏳ Step 7: Update imports
+✅ Step 4: asymmetric.rs extracted
+✅ Step 5: symmetric.rs extracted
+✅ Step 6: hash.rs extracted
+⏳ Step 7: Update imports (next)
 ⏳ Step 8: Remove old file
 ⏳ Step 9: Documentation
 ⏳ Step 10: Testing
 
-Estimated time remaining: 5.0 hours
+Estimated time remaining: 2.5 hours
 ```
 
 ---
 
 ## 🎯 CURRENT STATE
 
-**Files Created**: 3
+**Files Created**: 6
 - `handlers/crypto/mod.rs` (67 lines) ✅
 - `handlers/crypto/sslkeylog.rs` (242 lines) ✅
 - `handlers/crypto/tls.rs` (1,884 lines) ✅
+- `handlers/crypto/asymmetric.rs` (325 lines) ✅
+- `handlers/crypto/symmetric.rs` (256 lines) ✅
+- `handlers/crypto/hash.rs` (186 lines) ✅
 
-**Files To Create**: 4
-- `handlers/crypto/asymmetric.rs` (next)
-- `handlers/crypto/symmetric.rs`
-- `handlers/crypto/hash.rs`
-- `handlers/crypto/README.md`
+**Total Lines Extracted**: 2,960 lines (from 2,499 original + documentation)
+
+**Files To Create**: 1
+- `handlers/crypto/README.md` (Step 9)
 
 **Files To Update**: ~10
 - Handler registry
@@ -259,7 +323,7 @@ grep -n "^fn export_to_sslkeylogfile" crypto_handlers.rs
 
 ---
 
-**Last Updated**: January 24, 2026 - Step 3 Complete  
-**Next Step**: Extract asymmetric.rs (Step 4)  
-**Estimated Time Remaining**: 5.0 hours
+**Last Updated**: January 24, 2026 - Step 6 Complete  
+**Next Step**: Update imports (Step 7)  
+**Estimated Time Remaining**: 2.5 hours
 

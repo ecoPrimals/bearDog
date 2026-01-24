@@ -45,12 +45,12 @@
 //! let hash = handle_blake3_hash(params).await?;
 //! ```
 
-// Module declarations (modules will be added as we extract them from crypto_handlers.rs)
-pub mod sslkeylog;
-pub mod tls; // ✅ Step 3
-// pub mod asymmetric; // Step 4
-// pub mod symmetric; // Step 5
-// pub mod hash; // Step 6
+// Module declarations (modules extracted from crypto_handlers.rs)
+pub mod sslkeylog;    // ✅ Step 2 - SSLKEYLOGFILE export utility
+pub mod tls;          // ✅ Step 3 - TLS 1.3 operations (1,884 lines)
+pub mod asymmetric;   // ✅ Step 4 - Ed25519, X25519 (325 lines)
+pub mod symmetric;    // ✅ Step 5 - ChaCha20-Poly1305 (256 lines)
+pub mod hash;         // ✅ Step 6 - Blake3, HMAC-SHA256 (186 lines)
 
 // Re-export sslkeylog utility for backward compatibility
 pub use sslkeylog::export_to_sslkeylogfile;
@@ -65,8 +65,23 @@ pub use tls::{
     handle_tls_verify_certificate,
 };
 
-// Re-exports for handlers will be added as modules are extracted:
-// pub use asymmetric::*; // Step 4
-// pub use symmetric::*; // Step 5
-// pub use hash::*; // Step 6
+// Re-export asymmetric crypto handlers for backward compatibility
+pub use asymmetric::{
+    handle_sign_ed25519,
+    handle_verify_ed25519,
+    handle_x25519_derive_secret,
+    handle_x25519_generate_ephemeral,
+};
+
+// Re-export symmetric crypto handlers for backward compatibility
+pub use symmetric::{
+    handle_chacha20_poly1305_decrypt,
+    handle_chacha20_poly1305_encrypt,
+};
+
+// Re-export hash handlers for backward compatibility
+pub use hash::{
+    handle_blake3_hash,
+    handle_hmac_sha256,
+};
 
