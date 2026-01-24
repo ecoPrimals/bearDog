@@ -102,6 +102,12 @@
 /// Core tunnel and session management functionality
 pub mod tunnel;
 
+/// Production diagnostics module (FOSSIL RECORD principle)
+///
+/// Enable with: `cargo build --features diagnostics`
+/// All diagnostic logging preserved here, not deleted.
+pub mod diagnostics;
+
 // Operational modes for UniBin architecture
 pub mod modes;
 

@@ -100,12 +100,21 @@ serial_test = "3.0"
 tempfile = "3.8"
 
 [features]
+# Production diagnostics (FOSSIL RECORD principle - preserved, not removed)
+# Enable verbose crypto debugging: cargo build --features diagnostics
+diagnostics = []
+
+# Architecture features
 zero-cost-architecture = []
 universal-discovery = []
 primal-sovereignty = []
+
+# Hardware features
 solo-v2 = ["ctap-hid-fido2", "hidapi"]
 usb-discovery = ["hidapi"]
 ctap2 = ["ctap-hid-fido2"]
+
+# Platform features
 ecosystem = []
 default = []
 android_native = []

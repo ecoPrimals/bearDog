@@ -323,7 +323,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
         nonce
     };
     
-    // Extract optional AAD
+    // Extract optional AAD (CRITICAL for TLS 1.3!)
     let aad_bytes = if let Some(aad_b64) = params.get("aad").and_then(|v| v.as_str()) {
         BASE64
             .decode(aad_b64)
@@ -331,6 +331,9 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     } else {
         Vec::new()
     };
+    
+    // Store key length before moving into Zeroizing wrapper
+    let key_len = key_bytes.len();
     
     // Create cipher
     let key = Zeroizing::new(key_bytes);
@@ -350,6 +353,17 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     let ciphertext = cipher
         .encrypt(nonce, payload)
         .map_err(|e| BearDogError::system(format!("AES-128-GCM encryption failed: {}", e)))?;
+    
+    // EVOLVED: Diagnostic logging moved to diagnostics module (not removed!)
+    // Enable with: cargo build --features diagnostics
+    // This is zero-cost when disabled (completely inlined away)
+    crate::diagnostics::crypto::log_aes128_gcm_encrypt(
+        key_len,
+        nonce_bytes.len(),
+        plaintext.len(),
+        &aad_bytes,
+        ciphertext.len(),
+    );
     
     // Encode outputs
     let ciphertext_b64 = BASE64.encode(&ciphertext);
