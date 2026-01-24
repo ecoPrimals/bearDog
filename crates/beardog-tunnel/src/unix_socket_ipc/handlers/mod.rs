@@ -41,6 +41,7 @@ pub mod crypto; // Refactored crypto handlers module (domain-based organization)
 pub mod crypto_handler; // Crypto RPC handler (routes to crypto module)
 pub mod encryption;
 pub mod federation;
+pub mod graph_security;
 pub mod health;
 pub mod security;
 
@@ -136,6 +137,7 @@ impl HandlerRegistry {
                 Arc::new(crypto_handler::CryptoHandler),
                 Arc::new(federation::FederationHandler),
                 Arc::new(encryption::EncryptionHandler),
+                Arc::new(graph_security::GraphSecurityHandler),
                 // All handlers now extracted to modular architecture!
                 // Legacy handler will only be used for HTTP fallback
             ],

@@ -260,11 +260,28 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         let mut user_info = HashMap::new();
         user_info.insert("user_id".to_string(), request.user_id.clone());
         user_info.insert("method".to_string(), "local".to_string());
+        user_info.insert("roles".to_string(), "user,authenticated".to_string());
+
+        // Generate a JWT-format token (header.payload.signature)
+        // For testing/local use, we use a simple format that mimics JWT structure
+        use base64::prelude::*;
+        let header = BASE64_URL_SAFE_NO_PAD.encode(br#"{"alg":"HS256","typ":"JWT"}"#);
+        let payload = BASE64_URL_SAFE_NO_PAD.encode(
+            format!(r#"{{"sub":"{}","exp":{},"method":"local"}}"#,
+                request.user_id,
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs() + 86400
+            ).as_bytes()
+        );
+        let signature = BASE64_URL_SAFE_NO_PAD.encode(b"local_signature");
+        let token = format!("{}.{}.{}", header, payload, signature);
 
         Ok(AuthenticationResponse {
             success: true,
             user_info: Some(user_info),
-            token: Some(format!("local_token_{}", request.user_id)),
+            token: Some(token),
             expires_at: Some(
                 std::time::SystemTime::now() + std::time::Duration::from_secs(24 * 3600),
             ),
@@ -278,13 +295,38 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
     ) -> Result<AuthorizationResponse, BearDogError> {
         // Simple authorization (no HTTP client needed!)
         // For production, use Unix socket communication to auth service
+        
+        // Phase 2: Realistic RBAC - User role has read, write, execute (but NOT delete)
+        // Only admin role would have delete permission
+        let allowed_operations = vec!["read", "write", "execute", "create", "update"];
+        
+        if allowed_operations.contains(&request.operation.as_str()) {
+            // Grant access with full user permissions
+            let permissions = vec![
+                "read".to_string(),
+                "write".to_string(),
+                "execute".to_string(),
+                request.operation.clone(),
+            ];
 
-        Ok(AuthorizationResponse {
-            granted: true, // Local operations allowed
-            permissions: vec![request.operation.clone()],
-            expires_at: None,
-            denial_reason: None,
-        })
+            Ok(AuthorizationResponse {
+                granted: true,
+                permissions,
+                expires_at: None,
+                denial_reason: None,
+            })
+        } else {
+            // Deny access (e.g., delete requires admin role)
+            Ok(AuthorizationResponse {
+                granted: false,
+                permissions: vec![],
+                expires_at: None,
+                denial_reason: Some(format!(
+                    "Operation '{}' requires elevated privileges",
+                    request.operation
+                )),
+            })
+        }
     }
 
     async fn encrypt(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {

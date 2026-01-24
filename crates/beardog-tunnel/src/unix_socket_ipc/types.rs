@@ -5,32 +5,60 @@
 
 use serde::{Deserialize, Serialize};
 
-/// JSON-RPC 2.0 Request
+/// JSON-RPC 2.0 Request structure
+///
+/// Represents a complete JSON-RPC 2.0 request as defined by the specification.
+/// All BearDog inter-primal communication uses this format over Unix sockets.
 #[derive(Debug, Clone, Deserialize)]
 pub struct JsonRpcRequest {
+    /// JSON-RPC version string, always "2.0"
     pub jsonrpc: String,
+    
+    /// Method name to invoke (e.g., "graph.validate_template")
     pub method: String,
+    
+    /// Optional parameters for the method call
     #[serde(default)]
     pub params: Option<serde_json::Value>,
+    
+    /// Optional request identifier for matching responses
     pub id: Option<serde_json::Value>,
 }
 
-/// JSON-RPC 2.0 Response
+/// JSON-RPC 2.0 Response structure
+///
+/// Either `result` or `error` will be present, never both.
+/// The `id` matches the request that triggered this response.
 #[derive(Debug, Clone, Serialize)]
 pub struct JsonRpcResponse {
+    /// JSON-RPC version string, always "2.0"
     pub jsonrpc: String,
+    
+    /// Result of the method call (present on success)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
+    
+    /// Error details (present on error)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<JsonRpcError>,
+    
+    /// Request identifier
     pub id: serde_json::Value,
 }
 
-/// JSON-RPC 2.0 Error
+/// JSON-RPC 2.0 Error structure
+///
+/// Standard error codes: -32700 (parse), -32600 (invalid request),
+/// -32601 (method not found), -32602 (invalid params), -32603 (internal error)
 #[derive(Debug, Clone, Serialize)]
 pub struct JsonRpcError {
+    /// Error code (standard codes defined by JSON-RPC 2.0)
     pub code: i32,
+    
+    /// Human-readable error message
     pub message: String,
+    
+    /// Optional additional error data
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
 }

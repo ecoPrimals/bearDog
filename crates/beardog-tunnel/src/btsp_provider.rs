@@ -549,7 +549,7 @@ impl BeardogBtspProvider {
     /// 3. Request peer addresses via JSON-RPC
     ///
     /// Zero hardcoding - everything discovered at runtime!
-    /// 
+    ///
     /// Discovery follows this priority:
     /// 1. Environment variable (DISCOVERY_SOCKET)
     /// 2. Capability registry query
@@ -639,7 +639,7 @@ impl BeardogBtspProvider {
             // In production, this would need to be refactored to return Vec<String>
             // For now, document the pattern
         }
-        
+
         // Standard Primal IPC protocol namespace (convention, not hardcoding)
         // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
         vec![

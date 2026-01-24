@@ -124,10 +124,12 @@ pub struct PrimalDiscovery {
     /// Discovery method
     method: DiscoveryMethod,
 
-    /// Cached discoveries
+    /// Cached discoveries (for future use)
+    #[allow(dead_code)]
     cache: HashMap<String, DiscoveredPrimal>,
 
-    /// Cache TTL
+    /// Cache TTL (for future use)
+    #[allow(dead_code)]
     cache_ttl: Duration,
 }
 
@@ -508,7 +510,7 @@ impl PrimalDiscovery {
     /// Discover from DNS-SD (COMPLETE IMPLEMENTATION)
     async fn discover_from_dns_sd(
         &mut self,
-        query: &DiscoveryQuery,
+        _query: &DiscoveryQuery,
         domain: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 DNS-SD discovery in domain: {}", domain);
@@ -521,9 +523,10 @@ impl PrimalDiscovery {
             let dns_sd = DnsSdDiscovery::new(domain)
                 .map_err(|e| BearDogError::system(format!("DNS-SD init failed: {}", e)))?;
 
-            let capability = match &query.capability {
-                Some(cap) => cap.to_string(),
-                None => "generic".to_string(),
+            let capability = if query.capabilities.is_empty() {
+                "generic".to_string()
+            } else {
+                format!("{:?}", query.capabilities[0])
             };
 
             let discovered = dns_sd
@@ -538,16 +541,17 @@ impl PrimalDiscovery {
                 .into_iter()
                 .map(|service| DiscoveredPrimal {
                     name: service.service_id.clone(),
-                    capabilities: vec![capability.clone()],
                     endpoints: vec![Endpoint {
-                        protocol: "unix".to_string(),
-                        address: service.endpoint.primary_url,
-                        port: Some(service.endpoint.port as u16),
-                        metadata: std::collections::HashMap::new(),
+                        protocol: Protocol::UnixSocket,
+                        address: service
+                            .endpoint
+                            .primary_url
+                            .parse()
+                            .unwrap_or_else(|_| "127.0.0.1:8080".parse().unwrap()),
                     }],
-                    trust_score: service.trust_score.unwrap_or(0.5),
-                    last_seen: std::time::SystemTime::now(),
-                    metadata: std::collections::HashMap::new(),
+                    capabilities: vec![SimpleCapability::Discovery],
+                    trust_score: service.trust_score,
+                    discovered_at: std::time::SystemTime::now(),
                 })
                 .collect();
 
