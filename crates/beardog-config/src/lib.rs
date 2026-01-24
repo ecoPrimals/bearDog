@@ -41,6 +41,7 @@ pub mod zero_hardcoding;
 
 pub use error::{ConfigError, ConfigResult};
 pub use global::{config, BEARDOG_CONFIG};
+pub use hierarchy::ConfigHierarchy;
 pub use loader::ConfigLoader;
 
 // Re-export commonly used types
@@ -166,7 +167,7 @@ impl BearDogConfig {
     pub fn load() -> ConfigResult<Self> {
         ConfigLoader::new()
             .with_defaults()
-            .with_platform_detection()
+            .with_platform_defaults()
             .with_config_file()?
             .with_env_vars()
             .build()
