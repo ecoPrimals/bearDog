@@ -1831,15 +1831,18 @@ pub async fn handle_tls_compute_finished_verify_data(params: Option<&Value>) -> 
     
     // Step 1: Derive finished_key using HKDF-Expand-Label
     // finished_key = HKDF-Expand-Label(base_key, "finished", "", 32)
+    // RFC 8446 Section 7.1: Label MUST include "tls13 " prefix!
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let hkdf = Hkdf::<Sha256>::from_prk(secret)
             .map_err(|e| format!("HKDF PRK error: {}", e))?;
         
         // RFC 8446 Section 7.1: HkdfLabel structure
+        // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
+        let tls13_label = format!("tls13 {}", label);
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        hkdf_label.push(label.len() as u8);
-        hkdf_label.extend_from_slice(label.as_bytes());
+        hkdf_label.push(tls13_label.len() as u8);
+        hkdf_label.extend_from_slice(tls13_label.as_bytes());
         hkdf_label.push(context.len() as u8);
         hkdf_label.extend_from_slice(context);
         
@@ -1850,6 +1853,7 @@ pub async fn handle_tls_compute_finished_verify_data(params: Option<&Value>) -> 
         Ok::<Vec<u8>, String>(output)
     };
     
+    // FIX: Use "finished" which becomes "tls13 finished" via hkdf_expand_label
     let finished_key = hkdf_expand_label(&base_key, "finished", &[], 32)?;
     info!("✅ Derived finished_key: {} bytes", finished_key.len());
     
