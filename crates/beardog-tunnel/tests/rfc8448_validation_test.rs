@@ -11,7 +11,7 @@
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
-use beardog_tunnel::unix_socket_ipc::crypto_handlers::handle_tls_derive_handshake_secrets;
+use beardog_tunnel::unix_socket_ipc::handlers::crypto::handle_tls_derive_handshake_secrets;
 use serde_json::json;
 
 /// RFC 8448 Section 3: Simple 1-RTT Handshake

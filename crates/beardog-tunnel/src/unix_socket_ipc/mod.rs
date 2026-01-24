@@ -15,7 +15,9 @@
 //! - `crypto_handlers` - Crypto operation handlers (for Songbird TLS)
 //! - `server` - Server core and connection management
 
-pub mod crypto_handlers;
+// REFACTORED: crypto_handlers.rs has been split into semantic domain modules
+// See: handlers/crypto/ for the new modular structure
+// pub mod crypto_handlers;
 pub mod crypto_handlers_aes_gcm; // AES-GCM encryption (Phase 6 - 90%+ of HTTPS!)
 // pub mod crypto_handlers_aes_legacy; // DEFERRED: AES-CBC/CTR/XTS (RC version conflicts)
 pub mod crypto_handlers_ecdh; // ECDH P-256/P-384 key exchange (Phase 6 - TLS 1.3)

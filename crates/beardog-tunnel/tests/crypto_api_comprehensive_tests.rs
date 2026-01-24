@@ -26,7 +26,7 @@ use serde_json::json;
 #[cfg(test)]
 mod unit_tests {
     use super::*;
-    use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+    use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
     #[tokio::test]
     async fn test_ed25519_empty_message() {
@@ -470,7 +470,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_sign_ed25519() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         let message_b64 = base64::engine::general_purpose::STANDARD.encode(b"test message");
 
@@ -490,7 +490,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_verify_ed25519() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         // For verify test, we need to provide a known public key
         // Since sign doesn't return it, we'll test verify with independent key generation
@@ -521,7 +521,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_x25519_generate() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         let result = handle_x25519_generate_ephemeral(None).await;
 
@@ -533,7 +533,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_x25519_derive_secret() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         // Generate two keypairs
         let keys1 = handle_x25519_generate_ephemeral(None).await.unwrap();
@@ -553,7 +553,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_chacha20_encrypt_decrypt() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(b"secret message");
         let key = base64::engine::general_purpose::STANDARD.encode(&vec![0x42; 32]);
@@ -588,7 +588,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_blake3_hash() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         let data_b64 = base64::engine::general_purpose::STANDARD.encode(b"data to hash");
         let params = json!({"data": data_b64});
@@ -603,7 +603,7 @@ mod e2e_tests {
 
     #[tokio::test]
     async fn test_e2e_hmac_sha256() {
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         let key_b64 = base64::engine::general_purpose::STANDARD.encode(b"secret");
         let data_b64 = base64::engine::general_purpose::STANDARD.encode(b"message");
@@ -624,7 +624,7 @@ mod e2e_tests {
     #[tokio::test]
     async fn test_e2e_full_tls_handshake_simulation() {
         // Simulate a simplified TLS handshake flow using all crypto operations
-        use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+        use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         // 1. Server generates ephemeral ECDH keypair
         let server_keys = handle_x25519_generate_ephemeral(None).await.unwrap();
@@ -689,7 +689,7 @@ mod e2e_tests {
 #[cfg(test)]
 mod chaos_tests {
     use super::*;
-    use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+    use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
     use rand::Rng;
 
     #[tokio::test]
@@ -890,7 +890,7 @@ mod chaos_tests {
 #[cfg(test)]
 mod fault_tests {
     use super::*;
-    use beardog_tunnel::unix_socket_ipc::crypto_handlers::*;
+    use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
     #[tokio::test]
     async fn test_fault_missing_required_param_message() {

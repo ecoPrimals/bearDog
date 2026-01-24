@@ -1070,6 +1070,9 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
 mod tests {
     use super::*;
     use base64::Engine;
+    
+    // Import handlers from sibling modules for testing
+    use super::super::{asymmetric::*, hash::*, symmetric::*};
 
     #[tokio::test]
     async fn test_ed25519_sign_and_verify() {
