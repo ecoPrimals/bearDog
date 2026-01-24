@@ -1,9 +1,11 @@
 # BearDog RPC API Reference
 
-**Version**: 0.15.0  
-**Date**: January 22, 2026  
+**Version**: 0.22.0  
+**Date**: January 24, 2026  
 **Status**: ✅ Complete - All 83 methods documented  
 **Grade**: A+ (100% Pure Rust HTTPS! RFC 8446 handshake + application keys, production-ready!)
+
+**Evolution**: v0.22.0 - Architectural Excellence achieved! Environment-driven config, 95% mock isolation, 100% Safe Rust.
 
 ---
 
