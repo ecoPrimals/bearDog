@@ -310,55 +310,90 @@ impl SafeAndroidKeystore {
 
     /// Signs data safely
     ///
+    /// # Platform Support
+    ///
+    /// **Android Only**: This function is only available on `target_os = "android"`.
+    /// On other platforms, it returns an `Err` indicating the platform limitation.
+    ///
     /// # Errors
-    /// Returns an error if signing fails
+    /// Returns an error if signing fails or platform is not supported
+    #[cfg(target_os = "android")]
     pub fn sign_data_safe(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!("✍️ Safe signing with key: {}", key_id);
+        debug!("✍️ Safe signing with key: {} (Android StrongBox)", key_id);
 
         let keys = self.keys.blocking_read();
-        let metadata = keys
+        let _metadata = keys
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
 
-        // Mock signature based on algorithm
-        let signature_size = match metadata.algorithm {
-            KeyType::EcdsaP256 => 64,
-            KeyType::EcdsaP384 => 96,
-            KeyType::RsaPss2048 => 256,
-            KeyType::Aes256Gcm => 32,
-            _ => 64,
-        };
+        // TODO: Implement actual Android StrongBox JNI call
+        // This requires JNI bindings to Android Keystore API
+        // For now, return error indicating real implementation needed
+        Err(BearDogError::unsupported(
+            "Android StrongBox signing requires JNI integration (not yet implemented). \
+             Use SoftwareHSM provider as fallback."
+        ))
+    }
 
-        Ok(vec![0u8; signature_size])
+    /// Signs data safely (non-Android platforms)
+    ///
+    /// # Platform Limitation
+    ///
+    /// Android StrongBox is hardware-specific and only available on Android devices.
+    /// On other platforms, use `SoftwareHSM` or other available providers.
+    ///
+    /// # Errors
+    /// Always returns an error indicating platform limitation
+    #[cfg(not(target_os = "android"))]
+    pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::unsupported(
+            "Android StrongBox is only available on Android platform. \
+             Use SoftwareHSM or other HSM provider on this platform."
+        ))
     }
 
     /// Verifies a signature safely
     ///
+    /// # Platform Support
+    ///
+    /// **Android Only**: This function is only available on `target_os = "android"`.
+    ///
     /// # Errors
-    /// Returns an error if verification fails
+    /// Returns an error if verification fails or platform is not supported
+    #[cfg(target_os = "android")]
     pub fn verify_signature_safe(
         &self,
         key_id: &str,
         _data: &[u8],
-        signature: &[u8],
+        _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        debug!("🔍 Verifying signature for key: {}", key_id);
+        debug!("🔍 Verifying signature for key: {} (Android StrongBox)", key_id);
 
         let keys = self.keys.blocking_read();
-        let metadata = keys
+        let _metadata = keys
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
 
-        // Check signature size
-        let expected_size = match metadata.algorithm {
-            KeyType::EcdsaP256 => 64,
-            KeyType::EcdsaP384 => 96,
-            KeyType::RsaPss2048 => 256,
-            KeyType::Aes256Gcm => 32,
-            _ => 64,
-        };
+        // TODO: Implement actual Android StrongBox JNI call
+        Err(BearDogError::unsupported(
+            "Android StrongBox signature verification requires JNI integration (not yet implemented)"
+        ))
+    }
 
-        Ok(signature.len() == expected_size)
+    /// Verifies a signature safely (non-Android platforms)
+    ///
+    /// # Errors
+    /// Always returns an error indicating platform limitation
+    #[cfg(not(target_os = "android"))]
+    pub fn verify_signature_safe(
+        &self,
+        _key_id: &str,
+        _data: &[u8],
+        _signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        Err(BearDogError::unsupported(
+            "Android StrongBox is only available on Android platform"
+        ))
     }
 
     /// Deletes a key safely
@@ -382,18 +417,18 @@ impl SafeAndroidKeystore {
 
     /// Detects device information safely
     ///
+    /// # Platform Support
+    ///
+    /// **Android Only**: Device detection is only available on Android.
+    ///
     /// # Errors
-    /// Returns an error if detection fails
+    /// Returns an error if detection fails or platform is not supported
+    #[cfg(target_os = "android")]
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         debug!("📱 Detecting Android device info safely");
 
-        let model = std::env::var("ANDROID_MODEL").unwrap_or_else(|_| {
-            if cfg!(target_os = "android") {
-                "Android Device".to_string()
-            } else {
-                "Non-Android Platform".to_string()
-            }
-        });
+        let model = std::env::var("ANDROID_MODEL")
+            .unwrap_or_else(|_| "Android Device".to_string());
 
         let api_level = std::env::var("ANDROID_API_LEVEL")
             .ok()
@@ -415,11 +450,19 @@ impl SafeAndroidKeystore {
         })
     }
 
-    fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
-        if !cfg!(target_os = "android") {
-            return Ok(None);
-        }
+    /// Detects device information safely (non-Android platforms)
+    ///
+    /// # Errors
+    /// Always returns an error indicating platform limitation
+    #[cfg(not(target_os = "android"))]
+    pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
+        Err(BearDogError::unsupported(
+            "Android device detection is only available on Android platform"
+        ))
+    }
 
+    #[cfg(target_os = "android")]
+    fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
         debug!("🛡️ Safely detecting StrongBox version");
 
         if std::env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
@@ -429,6 +472,12 @@ impl SafeAndroidKeystore {
         }
     }
 
+    #[cfg(not(target_os = "android"))]
+    fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
+        Ok(None)
+    }
+
+    #[cfg(target_os = "android")]
     fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
         debug!("🔒 Safely detecting Titan M version");
 
@@ -437,6 +486,11 @@ impl SafeAndroidKeystore {
         } else {
             Ok(None)
         }
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
+        Ok(None)
     }
 }
 
