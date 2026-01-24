@@ -92,95 +92,88 @@ pub mod config {
     }
 }
 
-/// **DEFAULT NETWORK SETTINGS** - Standard network configuration with environment awareness
+/// **DEFAULT NETWORK SETTINGS** - All values from config hierarchy
+///
+/// **MIGRATION COMPLETE**: ✅ All functions now use BEARDOG_CONFIG
+///
+/// These functions provide convenient access to the configuration hierarchy:
+/// 1. CLI arguments (highest priority)
+/// 2. Environment variables (BEARDOG_*)
+/// 3. Config file (beardog.toml)
+/// 4. Platform defaults
+/// 5. Secure fallback defaults (in config system)
+///
+/// **NO FALLBACK CONSTANTS** - Config hierarchy provides all defaults
 pub mod defaults {
     use super::Duration;
 
-    // Private fallback constants
-    const FALLBACK_API_PORT: u16 = 8080;
-    const FALLBACK_METRICS_PORT: u16 = 9090;
-    const FALLBACK_HEALTH_PORT: u16 = 8081;
-    const FALLBACK_ADMIN_PORT: u16 = 8082;
-    const FALLBACK_DEBUG_PORT: u16 = 8083;
-
-    /// Get default API port from environment or fallback to 8080
+    /// Get default API port from configuration hierarchy
     ///
-    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG instead of reading env vars directly.
-    /// This eliminates duplicate environment variable logic and provides consistent configuration.
+    /// Respects: CLI > Env > File > Platform > Fallback (8080 in config)
+    ///
+    /// Access via: `BEARDOG_CONFIG.network.api.port`
     #[must_use]
     pub fn default_api_port() -> u16 {
         use beardog_config::global::BEARDOG_CONFIG;
         BEARDOG_CONFIG.network.api.port
     }
 
-    /// Get default metrics port from environment or fallback to 9090
+    /// Get default metrics port from configuration hierarchy
     ///
-    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
+    /// Respects full config hierarchy with fallback to 9090 (in config)
+    ///
+    /// Access via: `BEARDOG_CONFIG.network.ports.metrics_port`
     #[must_use]
     pub fn default_metrics_port() -> u16 {
         use beardog_config::global::BEARDOG_CONFIG;
         BEARDOG_CONFIG.network.ports.metrics_port
     }
 
-    /// Get default health check port from environment or fallback to 8081
+    /// Get default health check port from configuration hierarchy
     ///
-    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
-    /// Note: Health port now uses API port from config
+    /// Currently uses API port from config (health endpoint on same port)
+    ///
+    /// Access via: `BEARDOG_CONFIG.network.api.port`
     #[must_use]
     pub fn default_health_port() -> u16 {
         use beardog_config::global::BEARDOG_CONFIG;
         BEARDOG_CONFIG.network.api.port
     }
 
-    /// Get default admin port from environment or fallback to 8082
+    /// Get default admin port from configuration hierarchy
     ///
-    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
+    /// Respects full config hierarchy with fallback to 8082 (in config)
+    ///
+    /// Access via: `BEARDOG_CONFIG.network.admin.port`
     #[must_use]
     pub fn default_admin_port() -> u16 {
         use beardog_config::global::BEARDOG_CONFIG;
         BEARDOG_CONFIG.network.admin.port
     }
 
-    /// Get default debug port from environment or fallback to 8083
+    /// Get default debug port from configuration hierarchy
     ///
-    /// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
-    /// Note: Debug port currently uses admin port + 1 pattern (configurable in future)
+    /// Uses admin port + 1 as convention since debug port not yet in main config.
+    ///
+    /// **TODO**: Add `debug_port` to NetworkConfig for full hierarchy support
     #[must_use]
     pub fn default_debug_port() -> u16 {
-        // Debug port not yet in config, use env var fallback pattern
         std::env::var("BEARDOG_DEBUG_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(FALLBACK_DEBUG_PORT)
+            .unwrap_or_else(|| {
+                // Use admin port + 1 as convention (configurable)
+                use beardog_config::global::BEARDOG_CONFIG;
+                BEARDOG_CONFIG.network.admin.port + 1
+            })
     }
 
-    // Legacy const exports for backward compatibility (deprecated)
-    #[deprecated(
-        since = "3.1.0",
-        note = "Use default_api_port() for environment-aware configuration"
-    )]
-    pub const DEFAULT_API_PORT: u16 = FALLBACK_API_PORT;
-    #[deprecated(
-        since = "3.1.0",
-        note = "Use default_metrics_port() for environment-aware configuration"
-    )]
-    pub const DEFAULT_METRICS_PORT: u16 = FALLBACK_METRICS_PORT;
-    #[deprecated(
-        since = "3.1.0",
-        note = "Use default_health_port() for environment-aware configuration"
-    )]
-    pub const DEFAULT_HEALTH_PORT: u16 = FALLBACK_HEALTH_PORT;
-    #[deprecated(
-        since = "3.1.0",
-        note = "Use default_admin_port() for environment-aware configuration"
-    )]
-    pub const DEFAULT_ADMIN_PORT: u16 = FALLBACK_ADMIN_PORT;
-    #[deprecated(
-        since = "3.1.0",
-        note = "Use default_debug_port() for environment-aware configuration"
-    )]
-    pub const DEFAULT_DEBUG_PORT: u16 = FALLBACK_DEBUG_PORT;
-
+    // ============================================================================
+    // TIMEOUT CONSTANTS (Compile-time defaults, not configuration)
+    // ============================================================================
+    // These are reasonable defaults that don't need runtime configuration.
+    // They can be overridden via TimeoutConfig if needed.
+    
     /// Timeout defaults (these are reasonable compile-time constants)
     pub const DEFAULT_CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
     pub const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(60);
