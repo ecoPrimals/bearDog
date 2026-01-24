@@ -39,4 +39,3 @@ pub async fn run(endpoint: String, command: Option<String>) -> anyhow::Result<()
 
     Ok(())
 }
-

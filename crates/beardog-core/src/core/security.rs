@@ -256,7 +256,7 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
     ) -> Result<AuthenticationResponse, BearDogError> {
         // Simple authentication (no HTTP client needed!)
         // For production, use Unix socket communication to auth service
-        
+
         let mut user_info = HashMap::new();
         user_info.insert("user_id".to_string(), request.user_id.clone());
         user_info.insert("method".to_string(), "local".to_string());
@@ -278,9 +278,9 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
     ) -> Result<AuthorizationResponse, BearDogError> {
         // Simple authorization (no HTTP client needed!)
         // For production, use Unix socket communication to auth service
-        
+
         Ok(AuthorizationResponse {
-            granted: true,  // Local operations allowed
+            granted: true, // Local operations allowed
             permissions: vec![request.operation.clone()],
             expires_at: None,
             denial_reason: None,

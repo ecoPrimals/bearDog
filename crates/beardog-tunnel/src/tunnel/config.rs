@@ -1,16 +1,73 @@
 // Configuration types for tunnel module
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! # Tunnel Configuration Types
+//!
+//! This module provides granular configuration for different aspects of tunnel operation:
+//!
+//! - **Performance**: Latency, throughput, resource limits
+//! - **Security**: Key storage, escrow thresholds
+//! - **Gaming**: Anti-cheat, latency requirements
+//! - **Resilience**: Circuit breakers, retries, health checks
+//! - **Monitoring**: Metrics, tracing, alerting
+//!
+//! ## Philosophy
+//!
+//! Configuration is zero-hardcoded: all values can be overridden via environment
+//! variables or runtime configuration files. Sensible defaults are provided for
+//! immediate use.
+//!
+//! ## Example
+//!
+//! ```rust
+//! use beardog_tunnel::tunnel::config::TunnelConfig;
+//!
+//! // Use defaults
+//! let config = TunnelConfig::default();
+//!
+//! // Customize for specific needs
+//! let mut gaming_config = TunnelConfig::default();
+//! gaming_config.performance.max_decryption_latency = std::time::Duration::from_micros(50);
+//! gaming_config.gaming.max_latency_ms = 30;
+//! ```
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+/// Performance configuration for tunnel operations
+///
+/// Controls latency, throughput, resource limits, and performance optimizations.
+///
+/// # Key Settings
+///
+/// - **Latency**: `max_decryption_latency`, `max_session_setup_time`
+/// - **Throughput**: `min_gaming_throughput`, `bandwidth_limit_mbps`
+/// - **Scaling**: `enable_auto_scaling`, `cpu_threshold`, `memory_threshold`
+/// - **Caching**: `enable_caching`, `cache_size_mb`, `cache_ttl`
+///
+/// # Defaults
+///
+/// Optimized for production use with reasonable limits:
+/// - Max decryption latency: 100 microseconds
+/// - Session setup: 500 milliseconds
+/// - Min throughput: 1 MB/s
+/// - 100 concurrent sessions
+///
+/// # Example
+///
+/// ```rust
+/// use beardog_tunnel::tunnel::config::PerformanceConfig;
+/// use std::time::Duration;
+///
+/// let mut config = PerformanceConfig::default();
+/// // Optimize for low latency
+/// config.max_decryption_latency = Duration::from_micros(50);
+/// config.max_session_setup_time = Duration::from_millis(100);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
     /// The max decryption latency value
     pub max_decryption_latency: Duration,
+    /// Maximum time allowed for session setup
     pub max_session_setup_time: Duration,
     /// Number of `min_gaming_throughput`
     pub min_gaming_throughput: u64,
@@ -30,6 +87,7 @@ pub struct PerformanceConfig {
     pub cpu_threshold: f64,
     /// The memory threshold value
     pub memory_threshold: f64,
+    /// Maximum bandwidth limit in megabits per second
     pub bandwidth_limit_mbps: u64,
     /// Whether `enable_compression` is enabled
     pub enable_compression: bool,
@@ -67,6 +125,30 @@ impl Default for PerformanceConfig {
     }
 }
 
+/// Security configuration for key management and storage
+///
+/// Controls how cryptographic keys are stored and protected.
+///
+/// # Fields
+///
+/// - `key_storage_path`: Filesystem path for key material (should be secure mount)
+/// - `key_escrow_threshold`: Number of key shares required for escrow recovery
+///
+/// # Security Notes
+///
+/// - Key storage path should be on encrypted filesystem
+/// - Escrow threshold implements Shamir's Secret Sharing
+/// - Keys should never be stored in plaintext
+///
+/// # Example
+///
+/// ```rust
+/// use beardog_tunnel::tunnel::config::SecurityConfig;
+///
+/// let mut config = SecurityConfig::default();
+/// config.key_storage_path = "/mnt/secure/keys".to_string();
+/// config.key_escrow_threshold = 5; // 5-of-N threshold
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     /// The key storage path value
@@ -84,8 +166,32 @@ impl Default for SecurityConfig {
     }
 }
 
+/// Gaming-specific configuration
+///
+/// Optimizes tunnel behavior for real-time gaming use cases.
+///
+/// # Fields
+///
+/// - `anti_cheat_provider`: Name of anti-cheat service (discovery-based)
+/// - `max_latency_ms`: Maximum acceptable latency for gaming traffic
+///
+/// # Use Case
+///
+/// - Multiplayer games requiring low latency
+/// - Real-time competitive scenarios
+/// - Latency-sensitive applications
+///
+/// # Example
+///
+/// ```rust
+/// use beardog_tunnel::tunnel::config::GamingConfig;
+///
+/// let mut config = GamingConfig::default();
+/// config.max_latency_ms = 30; // 30ms for competitive gaming
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GamingConfig {
+    /// Anti-cheat provider name (resolved via capability discovery)
     pub anti_cheat_provider: String,
     /// Number of `max_latency_ms`
     pub max_latency_ms: u32,
@@ -100,6 +206,30 @@ impl Default for GamingConfig {
     }
 }
 
+/// Resilience configuration for fault tolerance
+///
+/// Controls circuit breakers, retries, health checks, and recovery mechanisms.
+///
+/// # Resilience Patterns
+///
+/// - **Circuit Breaker**: Prevents cascade failures
+/// - **Retries**: Automatic retry with exponential backoff
+/// - **Health Checks**: Proactive failure detection
+/// - **Graceful Shutdown**: Clean resource cleanup
+/// - **Auto Recovery**: Self-healing after failures
+/// - **Backup Systems**: Redundancy for critical paths
+///
+/// # Example
+///
+/// ```rust
+/// use beardog_tunnel::tunnel::config::ResilienceConfig;
+/// use std::time::Duration;
+///
+/// let mut config = ResilienceConfig::default();
+/// // More aggressive circuit breaker
+/// config.failure_threshold = 3;
+/// config.recovery_timeout = Duration::from_secs(15);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResilienceConfig {
     /// Whether `enable_circuit_breaker` is enabled
@@ -232,6 +362,37 @@ impl Default for TunnelMonitoringConfig {
     }
 }
 
+/// Unified key management processor configuration
+///
+/// Controls cryptographic key lifecycle including generation, derivation,
+/// and rotation policies.
+///
+/// # Key Settings
+///
+/// - `session_key_length`: Symmetric key length in bytes (32 for AES-256)
+/// - `key_derivation_rounds`: PBKDF2/Argon2 iteration count
+/// - `key_rotation_interval`: Automatic rotation period
+/// - `use_hardware_keys`: Enable HSM/TPM for key protection
+///
+/// # Security Considerations
+///
+/// - Longer keys = stronger security, higher latency
+/// - More derivation rounds = slower but more resistant to brute force
+/// - Shorter rotation intervals = better forward secrecy
+/// - Hardware keys prevent key extraction attacks
+///
+/// # Example
+///
+/// ```rust
+/// use beardog_tunnel::tunnel::config::UnifiedProcessorConfig;
+/// use std::time::Duration;
+///
+/// let mut config = UnifiedProcessorConfig::default();
+/// // Maximum security
+/// config.session_key_length = 64; // 512-bit keys
+/// config.key_derivation_rounds = 100_000;
+/// config.key_rotation_interval = Duration::from_secs(1800); // 30 min
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedProcessorConfig {
     /// Number of `session_key_length`
@@ -255,8 +416,39 @@ impl Default for UnifiedProcessorConfig {
     }
 }
 
+/// Complete tunnel configuration
+///
+/// Top-level configuration struct that aggregates all tunnel settings.
+///
+/// # Components
+///
+/// - `performance`: Latency, throughput, resource limits
+/// - `security`: Key storage and escrow
+/// - `gaming`: Gaming-specific optimizations
+/// - `resilience`: Fault tolerance and recovery
+/// - `monitoring`: Observability and alerting
+///
+/// # Usage
+///
+/// Typically loaded from configuration files or environment variables,
+/// with sane defaults for immediate use.
+///
+/// # Example
+///
+/// ```rust
+/// use beardog_tunnel::tunnel::config::TunnelConfig;
+///
+/// // Start with defaults
+/// let config = TunnelConfig::default();
+///
+/// // Verify default settings
+/// assert!(config.performance.enable_monitoring);
+/// assert!(config.resilience.enable_circuit_breaker);
+/// assert!(config.monitoring.enable_metrics);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TunnelConfig {
+    /// Performance and resource configuration
     pub performance: PerformanceConfig,
     /// The security value
     pub security: SecurityConfig,

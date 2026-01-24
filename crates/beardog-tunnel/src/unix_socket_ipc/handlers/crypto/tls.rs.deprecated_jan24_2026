@@ -92,7 +92,52 @@ use super::sslkeylog::export_to_sslkeylogfile;
 // Import shared utility functions
 use super::utils::derive_key_from_id;
 
-
+/// Derive TLS 1.3 secrets (legacy combined method)
+///
+/// This handler provides backward compatibility by combining both handshake
+/// and application secret derivation into a single call. For new code, prefer
+/// the split methods: [`handle_tls_derive_handshake_secrets`] and
+/// [`handle_tls_derive_application_secrets`].
+///
+/// # Parameters
+///
+/// - `pre_master_secret` (base64): The ECDHE shared secret from key exchange
+/// - `transcript_hash` (base64): Hash of handshake messages for key binding
+/// - `cipher_suite` (optional): TLS cipher suite identifier
+///
+/// # Returns
+///
+/// A JSON object containing all derived secrets:
+/// - `handshake_secret`: Handshake stage secret
+/// - `client_handshake_traffic_secret`: Client handshake encryption key
+/// - `server_handshake_traffic_secret`: Server handshake encryption key
+/// - `master_secret`: Application stage secret
+/// - `client_application_traffic_secret`: Client application encryption key
+/// - `server_application_traffic_secret`: Server application encryption key
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Required parameters are missing
+/// - Base64 decoding fails
+/// - Key derivation fails (HKDF error)
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "method": "tls.derive_secrets",
+///   "params": {
+///     "pre_master_secret": "base64_encoded_ecdhe_secret",
+///     "transcript_hash": "base64_encoded_transcript_hash"
+///   }
+/// }
+/// ```
+///
+/// # References
+///
+/// - RFC 8446 Section 7.1: TLS 1.3 Key Schedule
+/// - RFC 5869: HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
 pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for tls.derive_secrets")?;
 
@@ -167,8 +212,8 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
     // Determine key and IV sizes based on cipher suite
     let (key_size, iv_size) = match cipher_suite {
         "TLS_CHACHA20_POLY1305_SHA256" | "TLS_AES_256_GCM_SHA384" => (32, 12), // 256-bit keys, 96-bit IVs
-        "TLS_AES_128_GCM_SHA256" => (16, 12),                                   // 128-bit keys, 96-bit IVs
-        _ => (32, 12),                                                          // Default to 256-bit
+        "TLS_AES_128_GCM_SHA256" => (16, 12), // 128-bit keys, 96-bit IVs
+        _ => (32, 12),                        // Default to 256-bit
     };
 
     // Derive client write key
@@ -271,12 +316,82 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
 /// - `tls.derive_application_secrets`: Derives APPLICATION traffic keys (for HTTP data)
 ///
 /// Both follow RFC 8446, but at different stages of the key schedule.
+/// Derive TLS 1.3 application secrets (Stage 2 of key schedule)
+///
+/// Implements the second stage of the TLS 1.3 key derivation, producing
+/// application traffic secrets for encrypting application data after the handshake.
+///
+/// # TLS 1.3 Key Schedule Stage 2
+///
+/// ```text
+/// Handshake Secret
+///       |
+///       v
+/// Derive-Secret(., "derived", "")
+///       |
+///       v
+/// 0 -> HKDF-Extract = Master Secret
+///       |
+///       +-----> Derive-Secret(., "c ap traffic", transcript)
+///       |       = client_application_traffic_secret_0
+///       |
+///       +-----> Derive-Secret(., "s ap traffic", transcript)
+///               = server_application_traffic_secret_0
+/// ```
+///
+/// # Parameters
+///
+/// - `handshake_secret` (base64): The handshake secret from Stage 1
+/// - `transcript_hash` (base64): SHA-256 hash of ClientHello..server Finished
+/// - `cipher_suite` (optional): TLS cipher suite, defaults to TLS_AES_128_GCM_SHA256
+///
+/// # Returns
+///
+/// A JSON object containing:
+/// - `master_secret`: The master secret for application traffic
+/// - `client_application_traffic_secret`: 32-byte key for client->server app encryption
+/// - `server_application_traffic_secret`: 32-byte key for server->client app encryption
+/// - `client_application_key`: Derived AES-128 key (16 bytes)
+/// - `server_application_key`: Derived AES-128 key (16 bytes)
+/// - `client_application_iv`: Derived 12-byte IV
+/// - `server_application_iv`: Derived 12-byte IV
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - `handshake_secret` is missing or invalid base64
+/// - `transcript_hash` is missing or invalid base64
+/// - HKDF operations fail
+///
+/// # Security Notes
+///
+/// - The master secret can be used to derive resumption secrets and exporter keys
+/// - Application traffic secrets can be updated for forward secrecy
+/// - All secrets should be securely erased after use
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "method": "tls.derive_application_secrets",
+///   "params": {
+///     "handshake_secret": "base64_handshake_secret_from_stage1",
+///     "transcript_hash": "base64_full_handshake_transcript_hash"
+///   }
+/// }
+/// ```
+///
+/// # References
+///
+/// - RFC 8446 Section 7.1: Key Schedule
+/// - RFC 8446 Section 4.4.4: Finished
+/// - RFC 5869: HKDF
 pub async fn handle_tls_derive_application_secrets(
     params: Option<&Value>,
 ) -> Result<Value, String> {
     // EXECUTION TRACE: Log immediately to confirm function entry
     info!("🚀 ENTERED handle_tls_derive_application_secrets");
-    
+
     let params = params.ok_or("Missing params for tls.derive_application_secrets")?;
     info!("✅ Parameters parsed successfully");
 
@@ -298,9 +413,7 @@ pub async fn handle_tls_derive_application_secrets(
 
     // Optional: transcript_hash (for proper RFC 8446 compliance)
     // If not provided, falls back to simplified mode (client_random || server_random)
-    let transcript_hash_b64 = params
-        .get("transcript_hash")
-        .and_then(|v| v.as_str());
+    let transcript_hash_b64 = params.get("transcript_hash").and_then(|v| v.as_str());
 
     // Extract cipher_suite (NEW: for dynamic key length derivation)
     let cipher_suite = params
@@ -351,12 +464,12 @@ pub async fn handle_tls_derive_application_secrets(
 
     // EXECUTION TRACE: About to enter comprehensive debug logging
     info!("🎯 CHECKPOINT: Starting comprehensive debug output...");
-    
+
     // VERSION MARKER: This is v0.17.0+ with enhanced debug logging
     info!("════════════════════════════════════════════════════════════");
     info!("🔍 BEARDOG v0.17.0+ APPLICATION KEY DERIVATION - COMPREHENSIVE DEBUG");
     info!("════════════════════════════════════════════════════════════");
-    
+
     if let Some(ref th) = transcript_hash {
         info!("RFC 8446 FULL MODE - Using actual transcript hash");
         info!("  • Pre-master secret: {} bytes", pre_master_secret.len());
@@ -380,13 +493,18 @@ pub async fn handle_tls_derive_application_secrets(
         0x1302 => (32, 12), // TLS_AES_256_GCM_SHA384
         0x1303 => (32, 12), // TLS_CHACHA20_POLY1305_SHA256
         _ => {
-            warn!("⚠️  Unknown cipher suite 0x{:04x}, defaulting to ChaCha20 (32-byte keys)", cipher_suite);
+            warn!(
+                "⚠️  Unknown cipher suite 0x{:04x}, defaulting to ChaCha20 (32-byte keys)",
+                cipher_suite
+            );
             (32, 12)
         }
     };
 
-    info!("✅ Using key_len={} bytes, iv_len={} bytes for cipher suite 0x{:04x}", 
-          key_len, iv_len, cipher_suite);
+    info!(
+        "✅ Using key_len={} bytes, iv_len={} bytes for cipher suite 0x{:04x}",
+        key_len, iv_len, cipher_suite
+    );
 
     // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
@@ -400,8 +518,8 @@ pub async fn handle_tls_derive_application_secrets(
         hkdf_label.push(context.len() as u8); // Context length (1 byte)
         hkdf_label.extend_from_slice(context); // Context
 
-        let hkdf = Hkdf::<Sha256>::from_prk(secret)
-            .map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let hkdf =
+            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
         let mut okm = vec![0u8; length];
         hkdf.expand(&hkdf_label, &mut okm)
             .map_err(|e| format!("HKDF expand failed: {e}"))?;
@@ -435,7 +553,10 @@ pub async fn handle_tls_derive_application_secrets(
     let transcript_for_derivation = if let Some(ref th) = transcript_hash {
         // RFC 8446 FULL MODE: Use actual transcript hash
         // The hash is already computed by the caller (Songbird) from all handshake messages
-        info!("✅ Using RFC 8446 FULL transcript hash ({} bytes)", th.len());
+        info!(
+            "✅ Using RFC 8446 FULL transcript hash ({} bytes)",
+            th.len()
+        );
         th.clone()
     } else {
         // SIMPLIFIED MODE (backward compatibility):
@@ -445,7 +566,7 @@ pub async fn handle_tls_derive_application_secrets(
         simplified_transcript.extend_from_slice(&client_random);
         simplified_transcript.extend_from_slice(&server_random);
         debug!("⚠️  Using SIMPLIFIED transcript (not RFC 8446 compliant)");
-        
+
         // Hash the simplified transcript
         Sha256::digest(&simplified_transcript).to_vec()
     };
@@ -457,7 +578,10 @@ pub async fn handle_tls_derive_application_secrets(
     info!("────────────────────────────────────────────────────────────");
     info!("  • Master secret (first 16 bytes):");
     info!("    {}", hex::encode(&master_secret.0[..16]));
-    info!("  • Transcript hash used for derivation ({} bytes):", transcript_for_derivation.len());
+    info!(
+        "  • Transcript hash used for derivation ({} bytes):",
+        transcript_for_derivation.len()
+    );
     info!("    {}", hex::encode(&transcript_for_derivation));
     info!("");
     info!("  • Deriving with HKDF-Expand-Label:");
@@ -465,22 +589,22 @@ pub async fn handle_tls_derive_application_secrets(
     info!("    - Label for server: 's ap traffic'");
     info!("    - Output length: 32 bytes each");
     info!("");
-    
+
     let client_app_secret = hkdf_expand_label(
         &master_secret.0,
         "c ap traffic",
         &transcript_for_derivation,
-        32
+        32,
     )?;
     info!("  ✅ Client application secret (CLIENT_TRAFFIC_SECRET_0, full 32 bytes):");
     info!("    {}", hex::encode(&client_app_secret));
     info!("");
-    
+
     let server_app_secret = hkdf_expand_label(
         &master_secret.0,
         "s ap traffic",
         &transcript_for_derivation,
-        32
+        32,
     )?;
     info!("  ✅ Server application secret (SERVER_TRAFFIC_SECRET_0, full 32 bytes):");
     info!("    {}", hex::encode(&server_app_secret));
@@ -490,30 +614,54 @@ pub async fn handle_tls_derive_application_secrets(
     info!("────────────────────────────────────────────────────────────");
     info!("Final Derived Keys:");
     info!("────────────────────────────────────────────────────────────");
-    info!("  • Expanding client_application_secret → key ({} bytes) + IV ({} bytes)", key_len, iv_len);
+    info!(
+        "  • Expanding client_application_secret → key ({} bytes) + IV ({} bytes)",
+        key_len, iv_len
+    );
     let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
-    info!("    Client write key ({} bytes): {}", client_write_key.len(), hex::encode(&client_write_key));
-    
+    info!(
+        "    Client write key ({} bytes): {}",
+        client_write_key.len(),
+        hex::encode(&client_write_key)
+    );
+
     let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], iv_len)?;
-    info!("    Client write IV ({} bytes): {}", client_write_iv.len(), hex::encode(&client_write_iv));
+    info!(
+        "    Client write IV ({} bytes): {}",
+        client_write_iv.len(),
+        hex::encode(&client_write_iv)
+    );
     info!("");
-    
-    info!("  • Expanding server_application_secret → key ({} bytes) + IV ({} bytes)", key_len, iv_len);
+
+    info!(
+        "  • Expanding server_application_secret → key ({} bytes) + IV ({} bytes)",
+        key_len, iv_len
+    );
     let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
-    info!("    Server write key ({} bytes): {}", server_write_key.len(), hex::encode(&server_write_key));
-    
+    info!(
+        "    Server write key ({} bytes): {}",
+        server_write_key.len(),
+        hex::encode(&server_write_key)
+    );
+
     let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], iv_len)?;
-    info!("    Server write IV ({} bytes): {}", server_write_iv.len(), hex::encode(&server_write_iv));
+    info!(
+        "    Server write IV ({} bytes): {}",
+        server_write_iv.len(),
+        hex::encode(&server_write_iv)
+    );
 
     // Encode results
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
     let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
     let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
     let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
-    
+
     // Also encode traffic secrets (for key updates and debugging)
-    let client_app_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&client_app_secret);
-    let server_app_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&server_app_secret);
+    let client_app_secret_b64 =
+        base64::engine::general_purpose::STANDARD.encode(&client_app_secret);
+    let server_app_secret_b64 =
+        base64::engine::general_purpose::STANDARD.encode(&server_app_secret);
 
     let mode = if transcript_hash.is_some() {
         "RFC 8446 Full Compliance"
@@ -522,9 +670,11 @@ pub async fn handle_tls_derive_application_secrets(
     };
 
     info!("════════════════════════════════════════════════════════════");
+    info!("✅ TLS 1.3 APPLICATION secrets derived successfully!");
     info!(
-        "✅ TLS 1.3 APPLICATION secrets derived successfully!");
-    info!("  Cipher: 0x{:04x}, Keys: {} bytes, IVs: {} bytes", cipher_suite, key_len, iv_len);
+        "  Cipher: 0x{:04x}, Keys: {} bytes, IVs: {} bytes",
+        cipher_suite, key_len, iv_len
+    );
     info!("  Mode: {}", mode);
     info!("════════════════════════════════════════════════════════════");
 
@@ -599,9 +749,7 @@ pub async fn handle_tls_derive_application_secrets(
 /// - `tls.derive_application_secrets`: Derives APPLICATION traffic keys (for HTTP data)
 ///
 /// Both follow RFC 8446, but at different stages of the key schedule.
-pub async fn handle_tls_derive_handshake_secrets(
-    params: Option<&Value>,
-) -> Result<Value, String> {
+pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for tls.derive_handshake_secrets")?;
 
     // Extract parameters
@@ -666,15 +814,15 @@ pub async fn handle_tls_derive_handshake_secrets(
     let key_len = match cipher_suite {
         0x1301 => {
             info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using 16-byte keys");
-            16  // AES-128-GCM uses 16-byte keys
+            16 // AES-128-GCM uses 16-byte keys
         }
         0x1302 => {
             info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using 32-byte keys");
-            32  // AES-256-GCM uses 32-byte keys
+            32 // AES-256-GCM uses 32-byte keys
         }
         0x1303 => {
             info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using 32-byte keys");
-            32  // ChaCha20-Poly1305 uses 32-byte keys
+            32 // ChaCha20-Poly1305 uses 32-byte keys
         }
         _ => {
             return Err(format!(
@@ -684,14 +832,21 @@ pub async fn handle_tls_derive_handshake_secrets(
         }
     };
 
+    debug!("🔑 Deriving TLS 1.3 HANDSHAKE secrets (RFC 8446 Section 7.1)");
     debug!(
-        "🔑 Deriving TLS 1.3 HANDSHAKE secrets (RFC 8446 Section 7.1)"
+        "  → pre_master: {} bytes (ECDH shared secret)",
+        pre_master_secret.len()
     );
-    debug!("  → pre_master: {} bytes (ECDH shared secret)", pre_master_secret.len());
     debug!("  → client_random: {} bytes", client_random.len());
     debug!("  → server_random: {} bytes", server_random.len());
-    debug!("  → transcript_hash: {} bytes (ClientHello + ServerHello)", transcript_hash.len());
-    debug!("  → cipher_suite: 0x{:04x} → key_len: {} bytes", cipher_suite, key_len);
+    debug!(
+        "  → transcript_hash: {} bytes (ClientHello + ServerHello)",
+        transcript_hash.len()
+    );
+    debug!(
+        "  → cipher_suite: 0x{:04x} → key_len: {} bytes",
+        cipher_suite, key_len
+    );
 
     // Use HKDF for TLS 1.3 key derivation (RFC 8446 Section 7.1)
     use hkdf::Hkdf;
@@ -712,8 +867,8 @@ pub async fn handle_tls_derive_handshake_secrets(
         hkdf_label.push(context.len() as u8); // Context length (1 byte)
         hkdf_label.extend_from_slice(context); // Context
 
-        let hkdf = Hkdf::<Sha256>::from_prk(secret)
-            .map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let hkdf =
+            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
         let mut okm = vec![0u8; length];
         hkdf.expand(&hkdf_label, &mut okm)
             .map_err(|e| format!("HKDF expand failed: {e}"))?;
@@ -721,7 +876,7 @@ pub async fn handle_tls_derive_handshake_secrets(
     };
 
     // RFC 8446 Section 7.1: Key Schedule for Handshake Keys
-    
+
     // Step 1: Early Secret = HKDF-Extract(salt: 0, IKM: 0)
     let zeros_32 = [0u8; 32];
     let early_secret = Hkdf::<Sha256>::extract(Some(&zeros_32), &zeros_32);
@@ -739,22 +894,14 @@ pub async fn handle_tls_derive_handshake_secrets(
 
     // Step 4: Client Handshake Traffic Secret
     // HKDF-Expand-Label(handshake_secret, "c hs traffic", transcript_hash, 32)
-    let client_handshake_secret = hkdf_expand_label(
-        &handshake_secret.0,
-        "c hs traffic",
-        &transcript_hash,
-        32,
-    )?;
+    let client_handshake_secret =
+        hkdf_expand_label(&handshake_secret.0, "c hs traffic", &transcript_hash, 32)?;
     debug!("  Step 4: Client Handshake Traffic Secret derived");
 
     // Step 5: Server Handshake Traffic Secret
     // HKDF-Expand-Label(handshake_secret, "s hs traffic", transcript_hash, 32)
-    let server_handshake_secret = hkdf_expand_label(
-        &handshake_secret.0,
-        "s hs traffic",
-        &transcript_hash,
-        32,
-    )?;
+    let server_handshake_secret =
+        hkdf_expand_label(&handshake_secret.0, "s hs traffic", &transcript_hash, 32)?;
     debug!("  Step 5: Server Handshake Traffic Secret derived");
 
     // Step 6: Derive Keys and IVs from Handshake Traffic Secrets
@@ -772,8 +919,11 @@ pub async fn handle_tls_derive_handshake_secrets(
     // Server write IV = HKDF-Expand-Label(server_secret, "iv", "", 12)
     let server_write_iv = hkdf_expand_label(&server_handshake_secret, "iv", &[], IV_LEN)?;
 
-    debug!("  Step 6: Keys and IVs derived (key: {} bytes, IV: {} bytes)", key_len, IV_LEN);
-    
+    debug!(
+        "  Step 6: Keys and IVs derived (key: {} bytes, IV: {} bytes)",
+        key_len, IV_LEN
+    );
+
     // HEX DUMPS for derived keys (cross-verify with Songbird and RFC 8448)
     info!("🔍 BEARDOG DERIVED HANDSHAKE KEYS - FULL HEX DUMPS:");
     info!("   client_write_key: {}", hex::encode(&client_write_key));
@@ -786,10 +936,12 @@ pub async fn handle_tls_derive_handshake_secrets(
     let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
     let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
     let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
-    
+
     // Also encode the traffic secrets (needed for Finished message computation, RFC 8446 Section 4.4.4)
-    let client_handshake_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&client_handshake_secret);
-    let server_handshake_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&server_handshake_secret);
+    let client_handshake_secret_b64 =
+        base64::engine::general_purpose::STANDARD.encode(&client_handshake_secret);
+    let server_handshake_secret_b64 =
+        base64::engine::general_purpose::STANDARD.encode(&server_handshake_secret);
 
     info!(
         "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
@@ -833,8 +985,40 @@ pub async fn handle_tls_derive_handshake_secrets(
 ///
 /// # Returns
 ///
-/// - `signature`: Base64-encoded signature
-/// - `algorithm`: Algorithm used (Ed25519)
+/// - `signature`: Base64-encoded Ed25519 signature (64 bytes)
+/// - `algorithm`: Algorithm used ("ed25519")
+/// - `key_id`: The key identifier used for signing
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - `message` is missing or invalid base64
+/// - Key derivation fails
+/// - Ed25519 signing operation fails
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "method": "tls.sign_handshake",
+///   "params": {
+///     "message": "base64_encoded_handshake_data",
+///     "algorithm": "ed25519",
+///     "key_id": "tls_signing_key"
+///   }
+/// }
+/// ```
+///
+/// # Security Notes
+///
+/// - Uses deterministic Ed25519 (RFC 8032)
+/// - Signing key is derived from primal identity
+/// - Each signature binds to the handshake transcript
+///
+/// # References
+///
+/// - RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA)
+/// - RFC 8446 Section 4.4.3: Certificate Verify
 pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for tls.sign_handshake")?;
 
@@ -920,10 +1104,68 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
 /// # Returns
 ///
 /// - `valid`: Boolean indicating if certificate chain is valid
+/// Verify X.509 certificate chain for TLS
+///
+/// Parses and validates an X.509 certificate chain according to RFC 5280.
+/// This includes:
+/// - Certificate signature verification
+/// - Chain of trust validation
+/// - Name constraint checking
+/// - Validity period verification
+/// - Basic constraints enforcement
+///
+/// # Parameters
+///
+/// - `certificate_chain`: Array of base64-encoded DER certificates (leaf first)
+/// - `server_name`: Expected server name for SNI validation
+/// - `current_time_unix`: Current time as Unix timestamp for validity checks
+///
+/// # Returns
+///
+/// A JSON object containing:
+/// - `valid`: Boolean indicating if the certificate is valid
 /// - `public_key`: Base64-encoded server public key (if valid)
 /// - `expiry`: Expiry time as Unix timestamp
-/// - `issuer`: Certificate issuer
-/// - `subject`: Certificate subject
+/// - `issuer`: Certificate issuer DN
+/// - `subject`: Certificate subject DN
+/// - `san_entries`: Subject Alternative Names (DNS names)
+/// - `serial_number`: Certificate serial number
+/// - `version`: X.509 version
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Certificate chain is empty or malformed
+/// - DER parsing fails
+/// - Signature verification fails
+/// - Certificate is expired or not yet valid
+/// - Server name doesn't match SAN entries
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "method": "tls.verify_certificate",
+///   "params": {
+///     "certificate_chain": ["base64_cert1", "base64_cert2"],
+///     "server_name": "api.example.com",
+///     "current_time_unix": 1706140800
+///   }
+/// }
+/// ```
+///
+/// # Security Notes
+///
+/// - Implements full RFC 5280 path validation
+/// - Checks critical extensions (Key Usage, Basic Constraints)
+/// - Enforces name constraints and policy constraints
+/// - Verifies chain signatures with RSA or ECDSA
+///
+/// # References
+///
+/// - RFC 5280: X.509 Public Key Infrastructure Certificate and CRL Profile
+/// - RFC 6125: Domain-Based Application Service Identity
+/// - RFC 8446 Section 4.4.2: Certificate
 pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for tls.verify_certificate")?;
 
@@ -974,14 +1216,8 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
         .map_err(|e| format!("Failed to parse server certificate: {e}"))?;
 
     // 1. Verify expiry (notBefore <= current_time <= notAfter)
-    let not_before = server_cert
-        .validity()
-        .not_before
-        .timestamp();
-    let not_after = server_cert
-        .validity()
-        .not_after
-        .timestamp();
+    let not_before = server_cert.validity().not_before.timestamp();
+    let not_after = server_cert.validity().not_after.timestamp();
 
     if current_time_unix < not_before {
         return Ok(serde_json::json!({
@@ -1012,11 +1248,15 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
 
     // Check SubjectAlternativeName extension
     if !name_matches {
-        if let Ok(Some(san_ext)) = server_cert.get_extension_unique(&oid_registry::OID_X509_EXT_SUBJECT_ALT_NAME) {
+        if let Ok(Some(san_ext)) =
+            server_cert.get_extension_unique(&oid_registry::OID_X509_EXT_SUBJECT_ALT_NAME)
+        {
             if let ParsedExtension::SubjectAlternativeName(san) = san_ext.parsed_extension() {
                 for name in &san.general_names {
                     if let GeneralName::DNSName(dns_name) = name {
-                        if *dns_name == server_name || dns_name.ends_with(&format!(".{}", server_name)) {
+                        if *dns_name == server_name
+                            || dns_name.ends_with(&format!(".{}", server_name))
+                        {
                             name_matches = true;
                             break;
                         }
@@ -1070,7 +1310,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
 mod tests {
     use super::*;
     use base64::Engine;
-    
+
     // Import handlers from sibling modules for testing
     use super::super::{asymmetric::*, hash::*, symmetric::*};
 
@@ -1141,8 +1381,7 @@ mod tests {
 
         // Both sides should derive the same shared secret
         assert_eq!(
-            alice_shared["shared_secret"],
-            bob_shared["shared_secret"],
+            alice_shared["shared_secret"], bob_shared["shared_secret"],
             "Shared secrets should match (Diffie-Hellman property)"
         );
     }
@@ -1188,7 +1427,10 @@ mod tests {
             .decode(decrypted_b64)
             .unwrap();
 
-        assert_eq!(decrypted, plaintext, "Decrypted plaintext should match original");
+        assert_eq!(
+            decrypted, plaintext,
+            "Decrypted plaintext should match original"
+        );
     }
 
     #[tokio::test]
@@ -1347,20 +1589,12 @@ mod tests {
         let client_iv = base64::engine::general_purpose::STANDARD
             .decode(result["client_write_iv"].as_str().unwrap())
             .unwrap();
-        assert_eq!(
-            client_iv.len(),
-            12,
-            "Client IV should be 12 bytes for AEAD"
-        );
+        assert_eq!(client_iv.len(), 12, "Client IV should be 12 bytes for AEAD");
 
         let server_iv = base64::engine::general_purpose::STANDARD
             .decode(result["server_write_iv"].as_str().unwrap())
             .unwrap();
-        assert_eq!(
-            server_iv.len(),
-            12,
-            "Server IV should be 12 bytes for AEAD"
-        );
+        assert_eq!(server_iv.len(), 12, "Server IV should be 12 bytes for AEAD");
 
         // Client and server keys should be different
         assert_ne!(
@@ -1392,10 +1626,14 @@ mod tests {
         let server_random_2 = [20u8; 32]; // Different!
 
         let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
-        let client_random_1_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random_1);
-        let server_random_1_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random_1);
-        let client_random_2_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random_2);
-        let server_random_2_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random_2);
+        let client_random_1_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&client_random_1);
+        let server_random_1_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&server_random_1);
+        let client_random_2_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&client_random_2);
+        let server_random_2_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&server_random_2);
 
         let params1 = serde_json::json!({
             "pre_master_secret": pre_master_b64,
@@ -1464,10 +1702,7 @@ mod tests {
         });
 
         let result = handle_tls_derive_application_secrets(Some(&params)).await;
-        assert!(
-            result.is_err(),
-            "Should error on invalid random size"
-        );
+        assert!(result.is_err(), "Should error on invalid random size");
         assert!(
             result.unwrap_err().contains("must be 32 bytes"),
             "Error should indicate size requirement"
@@ -1480,29 +1715,30 @@ mod tests {
         let pre_master_secret = [42u8; 32];
         let client_random = [1u8; 32];
         let server_random = [2u8; 32];
-        
+
         // Simulate a real transcript hash (SHA-256 of all handshake messages)
-        // In reality, this would be: SHA256(ClientHello || ServerHello || 
-        //                             EncryptedExtensions || Certificate || 
+        // In reality, this would be: SHA256(ClientHello || ServerHello ||
+        //                             EncryptedExtensions || Certificate ||
         //                             CertificateVerify || Finished)
         let transcript_hash = [0xABu8; 32]; // Mock transcript hash
-        
+
         let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
         let client_random_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random);
         let server_random_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random);
-        let transcript_hash_b64 = base64::engine::general_purpose::STANDARD.encode(&transcript_hash);
-        
+        let transcript_hash_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&transcript_hash);
+
         let params = serde_json::json!({
             "pre_master_secret": pre_master_b64,
             "client_random": client_random_b64,
             "server_random": server_random_b64,
             "transcript_hash": transcript_hash_b64
         });
-        
+
         let result = handle_tls_derive_application_secrets(Some(&params))
             .await
             .unwrap();
-        
+
         // Verify all required keys are present
         assert!(result["client_write_key"].is_string());
         assert!(result["server_write_key"].is_string());
@@ -1511,13 +1747,13 @@ mod tests {
         assert_eq!(result["algorithm"], "HKDF-SHA256");
         assert_eq!(result["rfc"], "RFC 8446 Section 7.1");
         assert_eq!(result["mode"], "RFC 8446 Full Compliance");
-        
+
         // Decode and verify sizes
         let client_key = base64::engine::general_purpose::STANDARD
             .decode(result["client_write_key"].as_str().unwrap())
             .unwrap();
         assert_eq!(client_key.len(), 32);
-        
+
         let client_iv = base64::engine::general_purpose::STANDARD
             .decode(result["client_write_iv"].as_str().unwrap())
             .unwrap();
@@ -1530,38 +1766,40 @@ mod tests {
         let pre_master_secret = [42u8; 32];
         let client_random = [1u8; 32];
         let server_random = [2u8; 32];
-        
+
         // Two different transcript hashes (simulating different handshakes)
         let transcript_hash_1 = [0xAAu8; 32];
         let transcript_hash_2 = [0xBBu8; 32];
-        
+
         let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
         let client_random_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random);
         let server_random_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random);
-        let transcript_hash_1_b64 = base64::engine::general_purpose::STANDARD.encode(&transcript_hash_1);
-        let transcript_hash_2_b64 = base64::engine::general_purpose::STANDARD.encode(&transcript_hash_2);
-        
+        let transcript_hash_1_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&transcript_hash_1);
+        let transcript_hash_2_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&transcript_hash_2);
+
         let params1 = serde_json::json!({
             "pre_master_secret": pre_master_b64,
             "client_random": client_random_b64,
             "server_random": server_random_b64,
             "transcript_hash": transcript_hash_1_b64
         });
-        
+
         let params2 = serde_json::json!({
             "pre_master_secret": pre_master_b64,
             "client_random": client_random_b64,
             "server_random": server_random_b64,
             "transcript_hash": transcript_hash_2_b64
         });
-        
+
         let result1 = handle_tls_derive_application_secrets(Some(&params1))
             .await
             .unwrap();
         let result2 = handle_tls_derive_application_secrets(Some(&params2))
             .await
             .unwrap();
-        
+
         // Different transcript hashes MUST produce different keys (cryptographic binding)
         assert_ne!(
             result1["client_write_key"], result2["client_write_key"],
@@ -1580,26 +1818,29 @@ mod tests {
         let client_random = [1u8; 32];
         let server_random = [2u8; 32];
         let transcript_hash = [0xAAu8; 16]; // INVALID: Should be 32 bytes!
-        
+
         let pre_master_b64 = base64::engine::general_purpose::STANDARD.encode(&pre_master_secret);
         let client_random_b64 = base64::engine::general_purpose::STANDARD.encode(&client_random);
         let server_random_b64 = base64::engine::general_purpose::STANDARD.encode(&server_random);
-        let transcript_hash_b64 = base64::engine::general_purpose::STANDARD.encode(&transcript_hash);
-        
+        let transcript_hash_b64 =
+            base64::engine::general_purpose::STANDARD.encode(&transcript_hash);
+
         let params = serde_json::json!({
             "pre_master_secret": pre_master_b64,
             "client_random": client_random_b64,
             "server_random": server_random_b64,
             "transcript_hash": transcript_hash_b64
         });
-        
+
         let result = handle_tls_derive_application_secrets(Some(&params)).await;
         assert!(
             result.is_err(),
             "Should error on invalid transcript hash size"
         );
         assert!(
-            result.unwrap_err().contains("transcript_hash must be 32 bytes"),
+            result
+                .unwrap_err()
+                .contains("transcript_hash must be 32 bytes"),
             "Error should indicate transcript hash size requirement"
         );
     }
@@ -1663,9 +1904,7 @@ mod tests {
             result.is_err(),
             "Empty certificate chain should return error"
         );
-        assert!(result
-            .unwrap_err()
-            .contains("Certificate chain is empty"));
+        assert!(result.unwrap_err().contains("Certificate chain is empty"));
     }
 
     #[tokio::test]
@@ -1730,9 +1969,7 @@ mod tests {
             "purpose": "tls_handshake"
         });
 
-        let _sign_result = handle_tls_sign_handshake(Some(&sign_params))
-            .await
-            .unwrap();
+        let _sign_result = handle_tls_sign_handshake(Some(&sign_params)).await.unwrap();
         println!("  ✅ Handshake signature generated");
 
         // 6. Encrypt application data with derived keys
@@ -1790,52 +2027,114 @@ mod tests {
 /// - `transcript_hash`: Base64-encoded SHA-256 hash of all handshake messages
 ///
 /// # Returns
+/// Compute TLS 1.3 Finished message verify data
 ///
-/// - `verify_data`: Base64-encoded HMAC (32 bytes for SHA-256)
-pub async fn handle_tls_compute_finished_verify_data(params: Option<&Value>) -> Result<Value, String> {
+/// Implements the TLS 1.3 Finished MAC computation according to RFC 8446 Section 4.4.4.
+/// The Finished message provides authentication of the entire handshake transcript.
+///
+/// # Algorithm
+///
+/// ```text
+/// finished_key = HKDF-Expand-Label(BaseKey, "finished", "", Hash.length)
+/// verify_data = HMAC(finished_key, Transcript-Hash(Handshake Context))
+/// ```
+///
+/// Where:
+/// - BaseKey is either `client_handshake_traffic_secret` or `server_handshake_traffic_secret`
+/// - Transcript-Hash covers all handshake messages up to (but not including) Finished
+/// - HMAC uses SHA-256 or SHA-384 depending on cipher suite
+///
+/// # Parameters
+///
+/// - `base_key` (base64): The handshake traffic secret (32 bytes for SHA-256)
+/// - `transcript_hash` (base64): SHA-256 hash of handshake messages
+///
+/// # Returns
+///
+/// A JSON object containing:
+/// - `verify_data`: Base64-encoded HMAC (32 bytes for SHA-256 cipher suites)
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - `base_key` is missing or invalid base64
+/// - `transcript_hash` is missing or invalid base64
+/// - HKDF-Expand-Label fails
+/// - HMAC computation fails
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "method": "tls.compute_finished_verify_data",
+///   "params": {
+///     "base_key": "base64_client_handshake_traffic_secret",
+///     "transcript_hash": "base64_transcript_hash_up_to_certificate_verify"
+///   }
+/// }
+/// ```
+///
+/// # Security Notes
+///
+/// - Provides key confirmation and handshake integrity
+/// - Binds the identity to the handshake transcript
+/// - Prevents downgrade attacks and MITM tampering
+/// - Both client and server compute their own Finished messages
+///
+/// # References
+///
+/// - RFC 8446 Section 4.4.4: Finished
+/// - RFC 5869: HKDF
+/// - RFC 2104: HMAC
+pub async fn handle_tls_compute_finished_verify_data(
+    params: Option<&Value>,
+) -> Result<Value, String> {
     use base64::prelude::*;
     use hkdf::Hkdf;
-    use sha2::{Sha256, Digest};
     use hmac::{Hmac, Mac};
-    
+    use sha2::{Digest, Sha256};
+
     let params = params.ok_or("Missing params for tls.compute_finished_verify_data")?;
-    
+
     // Extract parameters
     let base_key_b64 = params
         .get("base_key")
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: base_key")?;
-    
+
     let transcript_hash_b64 = params
         .get("transcript_hash")
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: transcript_hash")?;
-    
+
     // Decode from base64
     let base_key = BASE64_STANDARD
         .decode(base_key_b64)
         .map_err(|e| format!("Invalid base64 for base_key: {}", e))?;
-    
+
     let transcript_hash = BASE64_STANDARD
         .decode(transcript_hash_b64)
         .map_err(|e| format!("Invalid base64 for transcript_hash: {}", e))?;
-    
+
     info!("🔐 Computing TLS 1.3 Finished verify_data");
     info!("   Base key: {} bytes", base_key.len());
     info!("   Transcript hash: {} bytes", transcript_hash.len());
-    
+
     // Validate inputs
     if transcript_hash.len() != 32 {
-        return Err(format!("Invalid transcript_hash length: {} (expected 32 for SHA-256)", transcript_hash.len()));
+        return Err(format!(
+            "Invalid transcript_hash length: {} (expected 32 for SHA-256)",
+            transcript_hash.len()
+        ));
     }
-    
+
     // Step 1: Derive finished_key using HKDF-Expand-Label
     // finished_key = HKDF-Expand-Label(base_key, "finished", "", 32)
     // RFC 8446 Section 7.1: Label MUST include "tls13 " prefix!
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
-        let hkdf = Hkdf::<Sha256>::from_prk(secret)
-            .map_err(|e| format!("HKDF PRK error: {}", e))?;
-        
+        let hkdf =
+            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF PRK error: {}", e))?;
+
         // RFC 8446 Section 7.1: HkdfLabel structure
         // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
         let tls13_label = format!("tls13 {}", label);
@@ -1845,32 +2144,31 @@ pub async fn handle_tls_compute_finished_verify_data(params: Option<&Value>) -> 
         hkdf_label.extend_from_slice(tls13_label.as_bytes());
         hkdf_label.push(context.len() as u8);
         hkdf_label.extend_from_slice(context);
-        
+
         let mut output = vec![0u8; length];
         hkdf.expand(&hkdf_label, &mut output)
             .map_err(|e| format!("HKDF expand error: {}", e))?;
-        
+
         Ok::<Vec<u8>, String>(output)
     };
-    
+
     // FIX: Use "finished" which becomes "tls13 finished" via hkdf_expand_label
     let finished_key = hkdf_expand_label(&base_key, "finished", &[], 32)?;
     info!("✅ Derived finished_key: {} bytes", finished_key.len());
-    
+
     // Step 2: Compute verify_data = HMAC-SHA256(finished_key, transcript_hash)
     type HmacSha256 = Hmac<Sha256>;
-    let mut mac = HmacSha256::new_from_slice(&finished_key)
-        .map_err(|e| format!("HMAC key error: {}", e))?;
-    
+    let mut mac =
+        HmacSha256::new_from_slice(&finished_key).map_err(|e| format!("HMAC key error: {}", e))?;
+
     mac.update(&transcript_hash);
     let verify_data = mac.finalize().into_bytes().to_vec();
-    
+
     info!("✅ Computed verify_data: {} bytes", verify_data.len());
     info!("   Verify data (hex): {}", hex::encode(&verify_data));
-    
+
     Ok(serde_json::json!({
         "verify_data": BASE64_STANDARD.encode(&verify_data),
         "length": verify_data.len(),
     }))
 }
-

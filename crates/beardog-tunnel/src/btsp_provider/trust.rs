@@ -38,10 +38,7 @@ impl TrustManager {
         birdsong: Arc<BirdSongManager>,
         trust_db: Arc<RwLock<HashMap<String, PeerTrustRecord>>>,
     ) -> Self {
-        Self {
-            birdsong,
-            trust_db,
-        }
+        Self { birdsong, trust_db }
     }
 
     /// Get peer trust level
@@ -99,7 +96,10 @@ impl TrustManager {
         peer: &PeerInfo,
         _session_key: &[u8],
     ) -> Result<(), BearDogError> {
-        debug!("🔗 Skipping mTLS (BTSP uses Unix sockets now): {}", peer.endpoint);
+        debug!(
+            "🔗 Skipping mTLS (BTSP uses Unix sockets now): {}",
+            peer.endpoint
+        );
 
         // Validate endpoint
         if peer.endpoint.is_empty() {

@@ -30,7 +30,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify help output contains expected content
         assert!(stdout.contains("BearDog"));
         assert!(stdout.contains("server"));
@@ -48,7 +48,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify version output
         assert!(stdout.contains("beardog"));
         assert!(stdout.contains("0.9.0") || stdout.contains(env!("CARGO_PKG_VERSION")));
@@ -63,7 +63,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify doctor output contains health check information
         assert!(stdout.contains("Health Check") || stdout.contains("Version"));
         assert!(stdout.contains("✅") || stdout.contains("OK"));
@@ -80,7 +80,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify JSON output
         assert!(stdout.contains("{"));
         assert!(stdout.contains("status"));
@@ -97,7 +97,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify comprehensive output
         assert!(stdout.contains("System") || stdout.contains("Crypto"));
     }
@@ -112,7 +112,7 @@ mod unit_tests {
         // Should fail with error
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Verify error message
         assert!(stderr.contains("error") || stderr.contains("unrecognized"));
     }
@@ -127,7 +127,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify server mode help
         assert!(stdout.contains("server") || stdout.contains("socket"));
         assert!(stdout.contains("--socket") || stdout.contains("--family-id"));
@@ -143,7 +143,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify daemon mode help
         assert!(stdout.contains("daemon") || stdout.contains("background"));
     }
@@ -158,7 +158,7 @@ mod unit_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify client mode help
         assert!(stdout.contains("client") || stdout.contains("endpoint"));
     }
@@ -277,7 +277,7 @@ mod e2e_tests {
     #[test]
     fn test_all_modes_have_help() {
         let modes = vec!["server", "daemon", "client", "doctor"];
-        
+
         for mode in modes {
             let output = Command::new(beardog_bin())
                 .arg(mode)
@@ -300,7 +300,7 @@ mod e2e_tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Should be format: "beardog X.Y.Z"
         assert!(stdout.contains("beardog"));
         assert!(stdout.contains("0.9.0") || stdout.contains("."));
@@ -326,7 +326,7 @@ mod e2e_tests {
     #[test]
     fn test_log_level_all_values() {
         let levels = vec!["trace", "debug", "info", "warn", "error"];
-        
+
         for level in levels {
             let output = Command::new(beardog_bin())
                 .arg("--log-level")
@@ -377,7 +377,11 @@ mod chaos_tests {
 
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("error") || stderr.contains("unrecognized") || stderr.contains("unexpected"));
+        assert!(
+            stderr.contains("error")
+                || stderr.contains("unrecognized")
+                || stderr.contains("unexpected")
+        );
     }
 
     #[test]
@@ -411,7 +415,7 @@ mod chaos_tests {
         // This documents current behavior
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Either succeeds with fallback or fails with error
         assert!(output.status.success() || stderr.contains("error"));
     }
@@ -425,7 +429,9 @@ mod chaos_tests {
         // Should show help or error
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("USAGE") || stderr.contains("required") || stderr.contains("Usage"));
+        assert!(
+            stderr.contains("USAGE") || stderr.contains("required") || stderr.contains("Usage")
+        );
     }
 
     #[test]
@@ -450,10 +456,10 @@ mod chaos_tests {
         //
         // Unit test alternative: Test SocketConfig::from_env() directly
         // See: crates/beardog-core/src/socket_config.rs tests
-        
+
         // This test verifies: --socket "" doesn't cause CLI parsing errors
         // Actual validation: Done in unit tests for SocketConfig
-        
+
         // Skip this test - server startup blocks (expected behavior)
         // Coverage provided by:
         // 1. SocketConfig unit tests (validation logic)
@@ -489,7 +495,7 @@ mod chaos_tests {
     #[test]
     fn test_special_characters_in_args() {
         let special_chars = vec!["$", "<", ">", "|", "&", ";", "`"];
-        
+
         for char in special_chars {
             let output = Command::new(beardog_bin())
                 .arg("--log-level")
@@ -535,7 +541,9 @@ mod fault_tests {
         // Should succeed but report socket not found
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("not found") || stdout.contains("⚠️") || stdout.contains("running"));
+        assert!(
+            stdout.contains("not found") || stdout.contains("⚠️") || stdout.contains("running")
+        );
     }
 
     #[test]
@@ -549,13 +557,13 @@ mod fault_tests {
                 .arg("--socket")
                 .arg("\0invalid")
                 .output();
-            
+
             // Should either panic or return error
             if let Ok(output) = output {
                 assert!(!output.status.success());
             }
         });
-        
+
         // Either panics (which we catch) or fails gracefully
         // Both are acceptable for null bytes
         assert!(result.is_ok() || result.is_err());
@@ -572,7 +580,7 @@ mod fault_tests {
 
         assert!(output.status.success());
         let _stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Should still show version and dependencies info
         // Note: We don't assert on stdout content as it may vary by environment
     }
@@ -580,7 +588,7 @@ mod fault_tests {
     #[test]
     fn test_extremely_long_argument() {
         let long_arg = "a".repeat(10000);
-        
+
         let output = Command::new(beardog_bin())
             .arg("--log-level")
             .arg(&long_arg)
@@ -598,9 +606,9 @@ mod fault_tests {
     #[test]
     fn test_unicode_in_arguments() {
         let unicode_strings = vec![
-            "🐻",           // Emoji
-            "日本語",        // Japanese
-            "Ру́сский",      // Russian with combining char
+            "🐻",      // Emoji
+            "日本語",  // Japanese
+            "Ру́сский", // Russian with combining char
         ];
 
         for unicode in unicode_strings {
@@ -655,7 +663,7 @@ mod fault_tests {
 
 #[cfg(test)]
 mod test_summary {
-    // Total test count: 
+    // Total test count:
     // - Unit Tests: 10 (basic CLI functionality)
     // - E2E Tests: 9 (operational mode testing)
     // - Chaos Tests: 10 (invalid inputs, edge cases)
@@ -680,4 +688,3 @@ mod test_summary {
     // Inspired by: JWT secret generation testing (22/22 passing)
     // Goal: Comprehensive test coverage for UniBin architecture
 }
-

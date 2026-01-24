@@ -2,13 +2,13 @@
 //!
 //! Modern async/concurrent Rust architecture with clean error handling.
 
+use crate::btsp_provider::BeardogBtspProvider;
+use crate::tunnel::hsm::HsmManager;
+use crate::unix_socket_ipc::UnixSocketIpcServer;
 use beardog_core::self_knowledge::PrimalSelfKnowledge;
 use beardog_core::socket_config::SocketConfig;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
-use crate::btsp_provider::BeardogBtspProvider;
-use crate::tunnel::hsm::HsmManager;
-use crate::unix_socket_ipc::UnixSocketIpcServer;
 use std::sync::Arc;
 use tokio::signal;
 use tracing::{error, info, warn};
@@ -243,4 +243,3 @@ async fn wait_for_shutdown() {
         },
     }
 }
-

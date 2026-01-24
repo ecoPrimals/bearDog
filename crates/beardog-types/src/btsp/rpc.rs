@@ -72,7 +72,7 @@ impl TunnelEstablishParams {
     /// Returns the specified trust mode, or defaults to `GeneticLineage`
     /// for backward compatibility with existing internal BTSP usage.
     pub fn trust_mode(&self) -> TrustMode {
-        self.trust_mode.clone().unwrap_or_else(|| {
+        self.trust_mode.clone().unwrap_or({
             TrustMode::GeneticLineage {
                 required_family: None,
                 required_generation: None,
@@ -86,12 +86,12 @@ impl TunnelEstablishParams {
     /// Returns the specified protocol, or defaults to `BtspNative`
     /// for backward compatibility with existing internal BTSP usage.
     pub fn protocol(&self) -> TunnelProtocol {
-        self.protocol.clone().unwrap_or_else(|| {
-            TunnelProtocol::BtspNative {
+        self.protocol
+            .clone()
+            .unwrap_or_else(|| TunnelProtocol::BtspNative {
                 version: "2.0".into(),
                 features: vec![],
-            }
-        })
+            })
     }
 
     /// Parse transport from endpoint
@@ -432,4 +432,3 @@ mod tests {
         assert!(params.protocol().is_internal());
     }
 }
-

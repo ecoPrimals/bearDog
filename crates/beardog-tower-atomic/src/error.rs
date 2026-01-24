@@ -37,4 +37,3 @@ pub enum Error {
 
 /// Result type for Tower Atomic operations
 pub type Result<T> = std::result::Result<T, Error>;
-

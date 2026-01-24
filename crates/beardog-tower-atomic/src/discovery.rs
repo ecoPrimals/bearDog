@@ -14,8 +14,7 @@ use tracing::{debug, warn};
 pub async fn discover_primal_socket(primal_name: &str) -> Result<PathBuf> {
     // 1. Check XDG runtime dir (preferred for user services)
     if let Ok(xdg_runtime) = std::env::var("XDG_RUNTIME_DIR") {
-        let socket_path =
-            PathBuf::from(format!("{}/ecoPrimals/{}.sock", xdg_runtime, primal_name));
+        let socket_path = PathBuf::from(format!("{}/ecoPrimals/{}.sock", xdg_runtime, primal_name));
 
         if socket_path.exists() {
             debug!("✅ Found {} via XDG_RUNTIME_DIR", primal_name);
@@ -94,4 +93,3 @@ mod tests {
         assert!(matches!(result, Err(Error::PrimalNotFound(_))));
     }
 }
-

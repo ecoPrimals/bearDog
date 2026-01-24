@@ -2,8 +2,8 @@
 //
 // This module provides request caching using safe Rust patterns.
 
-use std::collections::HashMap;
 use parking_lot::RwLock;
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Request cache entry

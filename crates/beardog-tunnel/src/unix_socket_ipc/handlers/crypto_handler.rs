@@ -72,15 +72,23 @@
 //! - HKDF: ~50-100μs
 //! - X.509 parsing: ~500-800μs per cert
 
-use async_trait::async_trait;
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
+use async_trait::async_trait;
 use std::sync::Arc;
 use tracing::info;
 
 // Import refactored crypto handlers from the new crypto module
 // The handlers are re-exported from crypto/mod.rs for easy access
 use crate::unix_socket_ipc::handlers::crypto::{
+    // Hash handlers
+    handle_blake3_hash,
+    // Symmetric crypto handlers
+    handle_chacha20_poly1305_decrypt,
+    handle_chacha20_poly1305_encrypt,
+    handle_hmac_sha256,
+    // Asymmetric crypto handlers
+    handle_sign_ed25519,
     // TLS handlers
     handle_tls_compute_finished_verify_data,
     handle_tls_derive_application_secrets,
@@ -88,17 +96,9 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_tls_derive_secrets,
     handle_tls_sign_handshake,
     handle_tls_verify_certificate,
-    // Asymmetric crypto handlers
-    handle_sign_ed25519,
     handle_verify_ed25519,
     handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
-    // Symmetric crypto handlers
-    handle_chacha20_poly1305_decrypt,
-    handle_chacha20_poly1305_encrypt,
-    // Hash handlers
-    handle_blake3_hash,
-    handle_hmac_sha256,
 };
 
 /// Crypto RPC handler
@@ -152,8 +152,8 @@ impl MethodHandler for CryptoHandler {
             "crypto.sha256",
             "crypto.sha384",
             "crypto.sha512",
-            "crypto.sha1",      // Phase 7: Legacy (Git compatibility)
-            "crypto.sha3_256",  // Phase 7: Modern quantum-resistant
+            "crypto.sha1",     // Phase 7: Legacy (Git compatibility)
+            "crypto.sha3_256", // Phase 7: Modern quantum-resistant
             // HMAC variants (Phase 7)
             "crypto.hmac_sha384",
             "crypto.hmac_sha512",
@@ -191,7 +191,6 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // Core Crypto Operations (8 methods)
             // ====================================================================
-
             "crypto.sign_ed25519" => {
                 info!("✍️  Crypto: sign_ed25519");
                 handle_sign_ed25519(params).await
@@ -205,7 +204,6 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // ECDSA Signature Algorithms (TLS 1.3 Support)
             // ====================================================================
-
             "crypto.sign_ecdsa_secp256r1" => {
                 info!("✍️  Crypto: sign_ecdsa_secp256r1 (ECDSA P-256 for TLS 1.3)");
                 super::super::crypto_handlers_ecdsa::handle_sign_ecdsa_secp256r1(params).await
@@ -240,7 +238,6 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // RSA Signature Algorithms (Legacy + Modern)
             // ====================================================================
-
             "crypto.sign_rsa_pkcs1_sha256" => {
                 info!("✍️  Crypto: sign_rsa_pkcs1_sha256 (RSA PKCS#1 v1.5 - legacy)");
                 super::super::crypto_handlers_rsa::handle_sign_rsa_pkcs1_sha256(params).await
@@ -264,7 +261,6 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // Key Exchange
             // ====================================================================
-
             "crypto.x25519_generate_ephemeral" => {
                 info!("🔑 Crypto: x25519_generate_ephemeral");
                 handle_x25519_generate_ephemeral(params).await
@@ -371,7 +367,7 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_hashing::handle_sha512(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             // Phase 7: SHA-1 (legacy Git compatibility)
             "crypto.sha1" => {
                 info!("⚠️  Crypto: sha1 (LEGACY - Git compatibility only!)");
@@ -379,7 +375,7 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_hashing::handle_sha1(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             // Phase 7: SHA3-256 (modern quantum-resistant)
             "crypto.sha3_256" => {
                 info!("🔬 Crypto: sha3_256 (modern quantum-resistant hashing)");
@@ -387,7 +383,7 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_hashing::handle_sha3_256(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             // Phase 7: HMAC variants
             "crypto.hmac_sha384" => {
                 info!("🔐 Crypto: hmac_sha384 (high-security MAC)");
@@ -395,14 +391,14 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_hmac::handle_hmac_sha384(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             "crypto.hmac_sha512" => {
                 info!("🔐 Crypto: hmac_sha512 (maximum-security MAC)");
                 let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
                 super::super::crypto_handlers_hmac::handle_hmac_sha512(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             "crypto.hmac_blake3" => {
                 info!("⚡ Crypto: hmac_blake3 (modern high-performance MAC)");
                 let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
@@ -413,7 +409,6 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // Password Hashing (3 methods - Phase 6)
             // ====================================================================
-
             "crypto.argon2id_hash" => {
                 info!("🔒 Crypto: argon2id_hash (OWASP password hashing)");
                 let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
@@ -434,7 +429,7 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_passwords::handle_pbkdf2_sha256(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             // Phase 7: Additional KDFs (bcrypt, scrypt)
             "crypto.bcrypt_hash" => {
                 info!("🔐 Crypto: bcrypt_hash (legacy password hashing)");
@@ -442,14 +437,14 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_kdf::handle_bcrypt_hash(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             "crypto.bcrypt_verify" => {
                 info!("🔐 Crypto: bcrypt_verify (legacy password verification)");
                 let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
                 super::super::crypto_handlers_kdf::handle_bcrypt_verify(params_ref)
                     .map_err(|e| e.to_string())
             }
-            
+
             "crypto.scrypt" => {
                 info!("🔑 Crypto: scrypt (memory-hard KDF)");
                 let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
@@ -460,7 +455,6 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // TLS Crypto Operations (4 methods)
             // ====================================================================
-
             "tls.derive_secrets" => {
                 info!("🔑 TLS: derive_secrets (HKDF handshake key derivation - legacy)");
                 handle_tls_derive_secrets(params).await
@@ -494,33 +488,54 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // Genetic Crypto Operations - Phase 5 (4 methods)
             // ====================================================================
-
             "genetic.derive_lineage_key" => {
                 info!("🧬 Genetic: derive_lineage_key (lineage-based key derivation)");
                 super::super::crypto_handlers_genetic::handle_derive_lineage_key(
-                    params.ok_or_else(|| "Parameters required for genetic.derive_lineage_key".to_string())?.clone()
-                ).await.map_err(|e| e.to_string())
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.derive_lineage_key".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
             }
 
             "genetic.mix_entropy" => {
                 info!("🌱 Genetic: mix_entropy (three-tier entropy hierarchy)");
                 super::super::crypto_handlers_genetic::handle_mix_entropy(
-                    params.ok_or_else(|| "Parameters required for genetic.mix_entropy".to_string())?.clone()
-                ).await.map_err(|e| e.to_string())
+                    params
+                        .ok_or_else(|| "Parameters required for genetic.mix_entropy".to_string())?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
             }
 
             "genetic.verify_lineage" => {
                 info!("🔍 Genetic: verify_lineage (family relationship verification)");
                 super::super::crypto_handlers_genetic::handle_verify_lineage(
-                    params.ok_or_else(|| "Parameters required for genetic.verify_lineage".to_string())?.clone()
-                ).await.map_err(|e| e.to_string())
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.verify_lineage".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
             }
 
             "genetic.generate_lineage_proof" => {
                 info!("🔐 Genetic: generate_lineage_proof (proof generation)");
                 super::super::crypto_handlers_genetic::handle_generate_lineage_proof(
-                    params.ok_or_else(|| "Parameters required for genetic.generate_lineage_proof".to_string())?.clone()
-                ).await.map_err(|e| e.to_string())
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.generate_lineage_proof".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
             }
 
             _ => Err(format!("Unknown crypto method: {}", method)),
@@ -536,12 +551,12 @@ mod tests {
     fn test_crypto_handler_methods() {
         let handler = CryptoHandler;
         let methods = handler.methods();
-        
+
         // Should have 48 methods (Phase 1-8 comprehensive crypto coverage)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
         //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 10 hash/HMAC + 6 password + 6 TLS + 4 genetic
         assert_eq!(methods.len(), 48);
-        
+
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
         assert!(methods.contains(&"crypto.verify_ed25519"));
@@ -551,26 +566,26 @@ mod tests {
         assert!(methods.contains(&"crypto.chacha20_poly1305_decrypt"));
         assert!(methods.contains(&"crypto.blake3_hash"));
         assert!(methods.contains(&"crypto.hmac_sha256"));
-        
+
         // Verify ECDSA methods
         assert!(methods.contains(&"crypto.sign_ecdsa_secp256r1"));
         assert!(methods.contains(&"crypto.verify_ecdsa_secp256r1"));
         assert!(methods.contains(&"crypto.sign_ecdsa_secp384r1"));
         assert!(methods.contains(&"crypto.verify_ecdsa_secp384r1"));
-        
+
         // Verify RSA methods
         assert!(methods.contains(&"crypto.sign_rsa_pkcs1_sha256"));
         assert!(methods.contains(&"crypto.verify_rsa_pkcs1_sha256"));
         assert!(methods.contains(&"crypto.sign_rsa_pss_sha256"));
         assert!(methods.contains(&"crypto.verify_rsa_pss_sha256"));
-        
+
         // Verify TLS methods
         assert!(methods.contains(&"tls.derive_secrets"));
         assert!(methods.contains(&"tls.derive_handshake_secrets"));
         assert!(methods.contains(&"tls.derive_application_secrets"));
         assert!(methods.contains(&"tls.sign_handshake"));
         assert!(methods.contains(&"tls.verify_certificate"));
-        
+
         // Verify genetic methods (Phase 5)
         assert!(methods.contains(&"genetic.derive_lineage_key"));
         assert!(methods.contains(&"genetic.mix_entropy"));
@@ -581,7 +596,10 @@ mod tests {
     #[test]
     fn test_handler_method_count() {
         let handler = CryptoHandler;
-        assert_eq!(handler.methods().len(), 48, "Should have exactly 48 crypto methods (Phase 1-8 complete)");
+        assert_eq!(
+            handler.methods().len(),
+            48,
+            "Should have exactly 48 crypto methods (Phase 1-8 complete)"
+        );
     }
 }
-

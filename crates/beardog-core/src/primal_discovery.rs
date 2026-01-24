@@ -66,13 +66,22 @@ pub enum DiscoveryMethod {
     Environment,
 
     /// Universal Primal Authority (UPA) registry
-    UniversalPrimalAuthority { registry_addr: String },
+    UniversalPrimalAuthority {
+        /// Registry address (Unix socket or TCP endpoint)
+        registry_addr: String,
+    },
 
     /// Multicast DNS (mDNS) service discovery
-    Mdns { service_type: String },
+    Mdns {
+        /// Service type for mDNS query (e.g., "_primal._tcp.local")
+        service_type: String,
+    },
 
     /// DNS Service Discovery (DNS-SD)
-    DnsSd { domain: String },
+    DnsSd {
+        /// Domain for DNS-SD lookup
+        domain: String,
+    },
 
     /// Multiple methods in priority order
     Multi(Vec<DiscoveryMethod>),
@@ -371,14 +380,14 @@ impl PrimalDiscovery {
 
         // UPA uses Unix socket + JSON-RPC
         let socket_path = registry_addr.trim_start_matches("unix://");
-        
+
         // Build JSON-RPC request
         let capability = if !query.capabilities.is_empty() {
             format!("{:?}", query.capabilities[0])
         } else {
             "generic".to_string()
         };
-        
+
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "upa.discover",
@@ -388,45 +397,48 @@ impl PrimalDiscovery {
             },
             "id": 1
         });
-        
+
         // Connect to UPA registry via Unix socket
         match tokio::net::UnixStream::connect(socket_path).await {
             Ok(mut stream) => {
                 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-                
+
                 // Send request
-                let request_str = serde_json::to_string(&request)
-                    .map_err(|e| BearDogError::Network {
+                let request_str =
+                    serde_json::to_string(&request).map_err(|e| BearDogError::Network {
                         message: format!("Failed to serialize UPA request: {}", e),
                         category: beardog_errors::NetworkErrorCategory::Connection,
                     })?;
                 stream.write_all(request_str.as_bytes()).await?;
                 stream.write_all(b"\n").await?;
-                
+
                 // Read response
                 let mut buffer = vec![0u8; 8192];
                 let n = stream.read(&mut buffer).await?;
                 let response_str = String::from_utf8_lossy(&buffer[..n]);
-                
+
                 // Parse JSON-RPC response
-                let response: serde_json::Value = serde_json::from_str(&response_str)
-                    .map_err(|e| BearDogError::Network {
+                let response: serde_json::Value =
+                    serde_json::from_str(&response_str).map_err(|e| BearDogError::Network {
                         message: format!("Failed to parse UPA response: {}", e),
                         category: beardog_errors::NetworkErrorCategory::Connection,
                     })?;
-                
+
                 if let Some(result) = response.get("result") {
                     if let Some(primals_array) = result.as_array() {
                         info!("✅ UPA discovered {} primals", primals_array.len());
-                        
-                        let primals = primals_array.iter().filter_map(|p| {
-                            serde_json::from_value::<DiscoveredPrimal>(p.clone()).ok()
-                        }).collect();
-                        
+
+                        let primals = primals_array
+                            .iter()
+                            .filter_map(|p| {
+                                serde_json::from_value::<DiscoveredPrimal>(p.clone()).ok()
+                            })
+                            .collect();
+
                         return Ok(primals);
                     }
                 }
-                
+
                 warn!("UPA returned no results");
                 Ok(Vec::new())
             }
@@ -449,23 +461,26 @@ impl PrimalDiscovery {
         #[cfg(feature = "mdns")]
         {
             use beardog_discovery::mdns::MdnsDiscovery;
-            
+
             let mdns = MdnsDiscovery::new()
                 .map_err(|e| BearDogError::system(format!("mDNS init failed: {}", e)))?;
-            
+
             let capability = match &query.capability {
                 Some(cap) => cap.to_string(),
                 None => "generic".to_string(),
             };
-            
-            let discovered = mdns.discover(&capability).await
+
+            let discovered = mdns
+                .discover(&capability)
+                .await
                 .map_err(|e| BearDogError::system(format!("mDNS discovery failed: {}", e)))?;
-            
+
             info!("✅ mDNS discovered {} primals", discovered.len());
-            
+
             // Convert to DiscoveredPrimal format
-            let primals = discovered.into_iter().map(|service| {
-                DiscoveredPrimal {
+            let primals = discovered
+                .into_iter()
+                .map(|service| DiscoveredPrimal {
                     name: service.service_id.clone(),
                     capabilities: vec![capability.clone()],
                     endpoints: vec![Endpoint {
@@ -477,12 +492,12 @@ impl PrimalDiscovery {
                     trust_score: service.trust_score.unwrap_or(0.5),
                     last_seen: std::time::SystemTime::now(),
                     metadata: std::collections::HashMap::new(),
-                }
-            }).collect();
-            
+                })
+                .collect();
+
             Ok(primals)
         }
-        
+
         #[cfg(not(feature = "mdns"))]
         {
             warn!("mDNS feature not enabled, returning empty results");
@@ -502,23 +517,26 @@ impl PrimalDiscovery {
         #[cfg(feature = "mdns")]
         {
             use beardog_discovery::dns_sd::DnsSdDiscovery;
-            
+
             let dns_sd = DnsSdDiscovery::new(domain)
                 .map_err(|e| BearDogError::system(format!("DNS-SD init failed: {}", e)))?;
-            
+
             let capability = match &query.capability {
                 Some(cap) => cap.to_string(),
                 None => "generic".to_string(),
             };
-            
-            let discovered = dns_sd.discover(&capability).await
+
+            let discovered = dns_sd
+                .discover(&capability)
+                .await
                 .map_err(|e| BearDogError::system(format!("DNS-SD discovery failed: {}", e)))?;
-            
+
             info!("✅ DNS-SD discovered {} primals", discovered.len());
-            
+
             // Convert to DiscoveredPrimal format
-            let primals = discovered.into_iter().map(|service| {
-                DiscoveredPrimal {
+            let primals = discovered
+                .into_iter()
+                .map(|service| DiscoveredPrimal {
                     name: service.service_id.clone(),
                     capabilities: vec![capability.clone()],
                     endpoints: vec![Endpoint {
@@ -530,12 +548,12 @@ impl PrimalDiscovery {
                     trust_score: service.trust_score.unwrap_or(0.5),
                     last_seen: std::time::SystemTime::now(),
                     metadata: std::collections::HashMap::new(),
-                }
-            }).collect();
-            
+                })
+                .collect();
+
             Ok(primals)
         }
-        
+
         #[cfg(not(feature = "mdns"))]
         {
             warn!("DNS-SD/mDNS feature not enabled, returning empty results");

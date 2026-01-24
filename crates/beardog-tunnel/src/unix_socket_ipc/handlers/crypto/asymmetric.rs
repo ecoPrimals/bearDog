@@ -75,7 +75,6 @@ use tracing::{debug, info};
 // Import shared utility functions
 use super::utils::derive_key_from_id;
 
-
 pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
 
@@ -215,7 +214,10 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
         .and_then(|v| v.as_str())
         .unwrap_or("key_exchange");
 
-    debug!("🔑 Generating ephemeral X25519 keypair (purpose: {})", purpose);
+    debug!(
+        "🔑 Generating ephemeral X25519 keypair (purpose: {})",
+        purpose
+    );
 
     // Use x25519-dalek for key generation
     use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};

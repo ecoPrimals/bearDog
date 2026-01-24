@@ -9,13 +9,13 @@
 //!
 //! Pure Rust implementation using RustCrypto `sha2` crate (zero C dependencies).
 
-use beardog_errors::BearDogError;
-use serde_json::{json, Value};
-use sha2::{Digest, Sha256, Sha384, Sha512};
-use sha1::Sha1;  // Phase 7: Legacy Git compatibility (INSECURE for crypto!)
-use sha3::Sha3_256;  // Phase 7: Modern quantum-resistant hashing
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use beardog_errors::BearDogError;
+use serde_json::{json, Value};
+use sha1::Sha1; // Phase 7: Legacy Git compatibility (INSECURE for crypto!)
+use sha2::{Digest, Sha256, Sha384, Sha512};
+use sha3::Sha3_256; // Phase 7: Modern quantum-resistant hashing
 
 /// Handle `crypto.sha256` - SHA-256 hashing
 ///
@@ -474,21 +474,21 @@ mod tests {
         assert!(sha384_result.get("hash_base64").is_some());
         assert!(sha512_result.get("hash_base64").is_some());
     }
-    
+
     // Phase 7: SHA-1 Tests (Legacy compatibility)
-    
+
     #[test]
     fn test_sha1_hello_world() {
         let params = json!({"data": BASE64.encode(b"Hello, World!")});
         let result = handle_sha1(&params).unwrap();
         let hash = result.get("hash").unwrap().as_str().unwrap();
-        
+
         // Known SHA-1 hash
         assert_eq!(hash, "0a0a9f2a6772942557ab5355d76af442f8f65e01");
         assert_eq!(hash.len(), 40); // 160 bits
         assert!(result.get("warning").is_some()); // Security warning
     }
-    
+
     #[test]
     fn test_sha1_empty() {
         let params = json!({"data": BASE64.encode(b"")});
@@ -496,39 +496,41 @@ mod tests {
         let hash = result.get("hash").unwrap().as_str().unwrap();
         assert_eq!(hash, "da39a3ee5e6b4b0d3255bfef95601890afd80709");
     }
-    
+
     // Phase 7: SHA3-256 Tests (Modern quantum-resistant)
-    
+
     #[test]
     fn test_sha3_256_hello_world() {
         let params = json!({"data": BASE64.encode(b"Hello, World!")});
         let result = handle_sha3_256(&params).unwrap();
         let hash = result.get("hash").unwrap().as_str().unwrap();
-        
+
         // Known SHA3-256 hash
-        assert_eq!(hash, "1af17a664e3fa8e419b8ba05c2a173169df76162a5a286e0c405b460d478f7ef");
+        assert_eq!(
+            hash,
+            "1af17a664e3fa8e419b8ba05c2a173169df76162a5a286e0c405b460d478f7ef"
+        );
         assert_eq!(hash.len(), 64); // 256 bits
     }
-    
+
     #[test]
     fn test_sha3_256_empty() {
         let params = json!({"data": BASE64.encode(b"")});
         let result = handle_sha3_256(&params).unwrap();
         let hash = result.get("hash").unwrap().as_str().unwrap();
-        assert_eq!(hash, "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a");
+        assert_eq!(
+            hash,
+            "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"
+        );
     }
-    
+
     #[test]
     fn test_sha3_vs_sha2_different() {
         // SHA3 and SHA2 produce different hashes
         let data = BASE64.encode(b"test");
         let sha2 = handle_sha256(&json!({"data": &data})).unwrap();
         let sha3 = handle_sha3_256(&json!({"data": &data})).unwrap();
-        
-        assert_ne!(
-            sha2.get("hash").unwrap(),
-            sha3.get("hash").unwrap()
-        );
+
+        assert_ne!(sha2.get("hash").unwrap(), sha3.get("hash").unwrap());
     }
 }
-

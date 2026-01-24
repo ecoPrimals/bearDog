@@ -31,18 +31,18 @@
 //! let result = registry.route("health", None, &btsp_provider).await;
 //! ```
 
-use async_trait::async_trait;
 use crate::btsp_provider::BeardogBtspProvider;
+use async_trait::async_trait;
 use std::sync::Arc;
 
-pub mod health;
-pub mod capabilities;
-pub mod security;
 pub mod btsp;
-pub mod crypto;          // Refactored crypto handlers module (domain-based organization)
-pub mod crypto_handler;   // Crypto RPC handler (routes to crypto module)
-pub mod federation;
+pub mod capabilities;
+pub mod crypto; // Refactored crypto handlers module (domain-based organization)
+pub mod crypto_handler; // Crypto RPC handler (routes to crypto module)
 pub mod encryption;
+pub mod federation;
+pub mod health;
+pub mod security;
 
 /// Trait for JSON-RPC method handlers
 ///
@@ -232,4 +232,3 @@ mod tests {
 
     // Integration tests will be added as we extract more handlers
 }
-

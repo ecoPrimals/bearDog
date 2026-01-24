@@ -154,7 +154,7 @@ mod chaos_tests {
         for i in 0..100 {
             let success = Arc::clone(&success_count);
             let failure = Arc::clone(&failure_count);
-            
+
             let handle = tokio::spawn(async move {
                 if i % 7 == 0 {
                     // Simulate failure
@@ -183,8 +183,16 @@ mod chaos_tests {
 
         // Verify expected distribution (100 tasks, ~14 failures)
         // Use range to account for potential race conditions in test execution
-        assert!(successes >= 85 && successes <= 87, "Should have ~86 successes, got {}", successes);
-        assert!(failures >= 13 && failures <= 15, "Should have ~14 failures, got {}", failures);
+        assert!(
+            successes >= 85 && successes <= 87,
+            "Should have ~86 successes, got {}",
+            successes
+        );
+        assert!(
+            failures >= 13 && failures <= 15,
+            "Should have ~14 failures, got {}",
+            failures
+        );
         assert_eq!(successes + failures, 100, "Total should be 100");
     }
 
@@ -202,7 +210,12 @@ mod chaos_tests {
                     let current = resources.load(Ordering::SeqCst);
                     if current > 0 {
                         if resources
-                            .compare_exchange(current, current - 1, Ordering::SeqCst, Ordering::SeqCst)
+                            .compare_exchange(
+                                current,
+                                current - 1,
+                                Ordering::SeqCst,
+                                Ordering::SeqCst,
+                            )
                             .is_ok()
                         {
                             // Got resource, use it
@@ -212,11 +225,11 @@ mod chaos_tests {
                             return Ok(());
                         }
                     }
-                    
+
                     // Resource exhausted - back off and retry
                     tokio::task::yield_now().await;
                 }
-                
+
                 Err("Could not acquire resource after retries".to_string())
             });
             handles.push(handle);
@@ -432,7 +445,7 @@ mod chaos_tests {
         for _ in 0..10 {
             let counter_clone = Arc::clone(&counter);
             let mut shutdown_rx_clone = shutdown_tx.subscribe();
-            
+
             let handle = tokio::spawn(async move {
                 loop {
                     tokio::select! {
@@ -458,11 +471,8 @@ mod chaos_tests {
 
         // Wait for all to complete
         for handle in handles {
-            let result = tokio::time::timeout(
-                tokio::time::Duration::from_secs(1),
-                handle
-            ).await;
-            
+            let result = tokio::time::timeout(tokio::time::Duration::from_secs(1), handle).await;
+
             assert!(
                 result.is_ok(),
                 "Task should complete gracefully within timeout"
@@ -501,7 +511,7 @@ mod benchmark_tests {
         }
 
         let elapsed = start.elapsed();
-        
+
         // Spawning 1000 tasks should be fast (< 100ms)
         assert!(
             elapsed.as_millis() < 100,
@@ -513,7 +523,7 @@ mod benchmark_tests {
     #[tokio::test]
     async fn benchmark_concurrent_operations() {
         let start = Instant::now();
-        
+
         let handles: Vec<_> = (0..100)
             .map(|_| {
                 tokio::spawn(async {
@@ -529,7 +539,7 @@ mod benchmark_tests {
         }
 
         let elapsed = start.elapsed();
-        
+
         // 100 tasks * 100 yields should complete in < 1s
         assert!(
             elapsed.as_secs() < 1,
@@ -538,4 +548,3 @@ mod benchmark_tests {
         );
     }
 }
-

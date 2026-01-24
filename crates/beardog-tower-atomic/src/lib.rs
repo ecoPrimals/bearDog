@@ -153,10 +153,7 @@ impl Client {
         self.request_id += 1;
         let id = self.request_id;
 
-        debug!(
-            "📤 Calling {}.{} (id={})",
-            self.primal_name, method, id
-        );
+        debug!("📤 Calling {}.{} (id={})", self.primal_name, method, id);
 
         // Build JSON-RPC 2.0 request
         let request = json!({
@@ -175,29 +172,27 @@ impl Client {
         self.stream
             .write_all(request_str.as_bytes())
             .await
-            .map_err(|e| {
-                Error::ConnectionFailed(format!("Failed to write request: {}", e))
-            })?;
-        self.stream.write_all(b"\n").await.map_err(|e| {
-            Error::ConnectionFailed(format!("Failed to write newline: {}", e))
-        })?;
+            .map_err(|e| Error::ConnectionFailed(format!("Failed to write request: {}", e)))?;
+        self.stream
+            .write_all(b"\n")
+            .await
+            .map_err(|e| Error::ConnectionFailed(format!("Failed to write newline: {}", e)))?;
 
         debug!("📤 Sent: {}", request_str);
 
         // Read response (newline-delimited JSON)
         let mut reader = BufReader::new(&mut self.stream);
         let mut response_str = String::new();
-        reader.read_line(&mut response_str).await.map_err(|e| {
-            Error::ConnectionFailed(format!("Failed to read response: {}", e))
-        })?;
+        reader
+            .read_line(&mut response_str)
+            .await
+            .map_err(|e| Error::ConnectionFailed(format!("Failed to read response: {}", e)))?;
 
         debug!("📥 Received: {}", response_str.trim());
 
         // Parse response
-        let response: JsonRpcResponse =
-            serde_json::from_str(&response_str).map_err(|e| {
-                Error::SerializationFailed(format!("Failed to parse response: {}", e))
-            })?;
+        let response: JsonRpcResponse = serde_json::from_str(&response_str)
+            .map_err(|e| Error::SerializationFailed(format!("Failed to parse response: {}", e)))?;
 
         // Check for JSON-RPC error
         if let Some(error) = response.error {
@@ -310,4 +305,3 @@ mod tests {
         assert_eq!(response["status"], "ok");
     }
 }
-

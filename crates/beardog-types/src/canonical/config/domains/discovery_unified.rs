@@ -848,7 +848,8 @@ impl BearDogConfig for UnifiedDiscoveryConfig {
             config.registry.backend = backend;
         }
         if let Ok(endpoints) = std::env::var("BEARDOG_REGISTRY_ENDPOINTS") {
-            config.registry.endpoints = endpoints.split(',').map(|s| s.trim().to_string()).collect();
+            config.registry.endpoints =
+                endpoints.split(',').map(|s| s.trim().to_string()).collect();
         }
         if let Ok(ttl) = std::env::var("BEARDOG_REGISTRY_SERVICE_TTL_SECS") {
             if let Ok(secs) = ttl.parse::<u64>() {

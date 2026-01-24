@@ -241,10 +241,7 @@ mod tests {
         config.endpoints.push("http://primary:8500".to_string());
         config.endpoints.push("http://secondary:8500".to_string());
 
-        assert_eq!(
-            config.primary_endpoint().unwrap(),
-            "http://primary:8500"
-        );
+        assert_eq!(config.primary_endpoint().unwrap(), "http://primary:8500");
     }
 
     #[test]

@@ -263,7 +263,7 @@ impl Default for SafeSimdCapabilities {
             Self {
                 avx2_available: false,
                 sse42_available: false,
-                vector_width: 16,  // Default for ARM NEON
+                vector_width: 16, // Default for ARM NEON
             }
         }
     }
@@ -292,7 +292,7 @@ impl SafeSimdCapabilities {
             Self {
                 avx2_available: false,
                 sse42_available: false,
-                vector_width: 16,  // Default for ARM NEON
+                vector_width: 16, // Default for ARM NEON
             }
         }
     }

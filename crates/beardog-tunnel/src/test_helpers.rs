@@ -165,7 +165,7 @@ pub mod mocks {
     pub fn create_failing_btsp_provider() -> Arc<MockBtspProvider> {
         Arc::new(MockBtspProvider::new_failing())
     }
-    
+
     /// Create a minimal safe BeardogBtspProvider for testing
     ///
     /// This provides a safe alternative to `unsafe { std::mem::zeroed() }`
@@ -176,22 +176,20 @@ pub mod mocks {
     ///
     /// # Returns
     /// A properly initialized but minimal BeardogBtspProvider (suitable for tests only)
-    pub async fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider> {
-        use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
+    pub async fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider>
+    {
         use crate::tunnel::hsm::HsmManager;
-        
+        use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
+
         let hsm_manager = Arc::new(HsmManager::new());
-        
-        let genetic_engine = Arc::new(
-            EcosystemGeneticEngine::new()
-                .expect("Failed to create genetic engine")
-        );
-        
+
+        let genetic_engine =
+            Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetic engine"));
+
         Arc::new(
-            crate::btsp_provider::BeardogBtspProvider::new_for_testing(
-                hsm_manager,
-                genetic_engine,
-            ).await.expect("Failed to create test BTSP provider")
+            crate::btsp_provider::BeardogBtspProvider::new_for_testing(hsm_manager, genetic_engine)
+                .await
+                .expect("Failed to create test BTSP provider"),
         )
     }
 }

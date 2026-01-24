@@ -21,8 +21,7 @@
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use beardog_tunnel::unix_socket_ipc::handlers::crypto::{
-    handle_tls_derive_application_secrets,
-    handle_tls_derive_handshake_secrets,
+    handle_tls_derive_application_secrets, handle_tls_derive_handshake_secrets,
 };
 use serde_json::json;
 use std::time::Instant;
@@ -55,10 +54,14 @@ async fn test_application_secrets_with_zero_inputs() {
     assert!(result["server_write_iv"].is_string());
 
     // Decode and verify sizes
-    let client_key = BASE64.decode(result["client_write_key"].as_str().unwrap()).unwrap();
+    let client_key = BASE64
+        .decode(result["client_write_key"].as_str().unwrap())
+        .unwrap();
     assert_eq!(client_key.len(), 32);
 
-    let server_key = BASE64.decode(result["server_write_key"].as_str().unwrap()).unwrap();
+    let server_key = BASE64
+        .decode(result["server_write_key"].as_str().unwrap())
+        .unwrap();
     assert_eq!(server_key.len(), 32);
 
     // Keys should still be different even with all-zero inputs
@@ -83,8 +86,12 @@ async fn test_application_secrets_with_max_entropy_inputs() {
         .unwrap();
 
     // Should produce valid keys
-    let client_key = BASE64.decode(result["client_write_key"].as_str().unwrap()).unwrap();
-    let server_key = BASE64.decode(result["server_write_key"].as_str().unwrap()).unwrap();
+    let client_key = BASE64
+        .decode(result["client_write_key"].as_str().unwrap())
+        .unwrap();
+    let server_key = BASE64
+        .decode(result["server_write_key"].as_str().unwrap())
+        .unwrap();
 
     assert_eq!(client_key.len(), 32);
     assert_eq!(server_key.len(), 32);
@@ -108,8 +115,12 @@ async fn test_application_secrets_with_alternating_pattern() {
         .await
         .unwrap();
 
-    let client_key = BASE64.decode(result["client_write_key"].as_str().unwrap()).unwrap();
-    let server_key = BASE64.decode(result["server_write_key"].as_str().unwrap()).unwrap();
+    let client_key = BASE64
+        .decode(result["client_write_key"].as_str().unwrap())
+        .unwrap();
+    let server_key = BASE64
+        .decode(result["server_write_key"].as_str().unwrap())
+        .unwrap();
 
     assert_eq!(client_key.len(), 32);
     assert_eq!(server_key.len(), 32);
@@ -170,8 +181,12 @@ async fn test_application_secrets_single_bit_difference() {
         .unwrap();
 
     // Keys should be completely different (avalanche effect)
-    let key1 = BASE64.decode(result1["client_write_key"].as_str().unwrap()).unwrap();
-    let key2 = BASE64.decode(result2["client_write_key"].as_str().unwrap()).unwrap();
+    let key1 = BASE64
+        .decode(result1["client_write_key"].as_str().unwrap())
+        .unwrap();
+    let key2 = BASE64
+        .decode(result2["client_write_key"].as_str().unwrap())
+        .unwrap();
 
     assert_ne!(key1, key2);
 
@@ -221,7 +236,7 @@ async fn test_e2e_full_tls_key_schedule() {
     // 1. ECDH key exchange
     // 2. Derive handshake secrets (tls.derive_secrets)
     // 3. Derive application secrets (tls.derive_application_secrets)
-    
+
     // Step 1: Simulate ECDH key exchange (would use crypto.ecdh_p256_derive in production)
     let shared_secret = vec![42u8; 32]; // From ECDH
     let client_random = vec![1u8; 32]; // From ClientHello
@@ -229,7 +244,7 @@ async fn test_e2e_full_tls_key_schedule() {
 
     // Step 2: Derive handshake secrets (for encrypted handshake messages)
     // Note: We're testing application secrets here, but in production both would be used
-    
+
     // Step 3: Derive application secrets (for HTTP data)
     let app_params = json!({
         "pre_master_secret": BASE64.encode(&shared_secret),
@@ -250,10 +265,18 @@ async fn test_e2e_full_tls_key_schedule() {
     assert_eq!(app_result["rfc"], "RFC 8446 Section 7.1");
 
     // Decode keys
-    let client_app_key = BASE64.decode(app_result["client_write_key"].as_str().unwrap()).unwrap();
-    let server_app_key = BASE64.decode(app_result["server_write_key"].as_str().unwrap()).unwrap();
-    let client_app_iv = BASE64.decode(app_result["client_write_iv"].as_str().unwrap()).unwrap();
-    let server_app_iv = BASE64.decode(app_result["server_write_iv"].as_str().unwrap()).unwrap();
+    let client_app_key = BASE64
+        .decode(app_result["client_write_key"].as_str().unwrap())
+        .unwrap();
+    let server_app_key = BASE64
+        .decode(app_result["server_write_key"].as_str().unwrap())
+        .unwrap();
+    let client_app_iv = BASE64
+        .decode(app_result["client_write_iv"].as_str().unwrap())
+        .unwrap();
+    let server_app_iv = BASE64
+        .decode(app_result["server_write_iv"].as_str().unwrap())
+        .unwrap();
 
     // Verify sizes
     assert_eq!(client_app_key.len(), 32); // ChaCha20 key
@@ -317,10 +340,18 @@ async fn test_e2e_key_independence() {
         .await
         .unwrap();
 
-    let client_key = BASE64.decode(result["client_write_key"].as_str().unwrap()).unwrap();
-    let server_key = BASE64.decode(result["server_write_key"].as_str().unwrap()).unwrap();
-    let client_iv = BASE64.decode(result["client_write_iv"].as_str().unwrap()).unwrap();
-    let server_iv = BASE64.decode(result["server_write_iv"].as_str().unwrap()).unwrap();
+    let client_key = BASE64
+        .decode(result["client_write_key"].as_str().unwrap())
+        .unwrap();
+    let server_key = BASE64
+        .decode(result["server_write_key"].as_str().unwrap())
+        .unwrap();
+    let client_iv = BASE64
+        .decode(result["client_write_iv"].as_str().unwrap())
+        .unwrap();
+    let server_iv = BASE64
+        .decode(result["server_write_iv"].as_str().unwrap())
+        .unwrap();
 
     // Keys should be different
     assert_ne!(client_key, server_key);
@@ -379,7 +410,7 @@ async fn test_chaos_concurrent_key_derivations() {
 async fn test_chaos_rapid_sequential_derivations() {
     // Test rapid sequential derivations (stress test)
     let start = Instant::now();
-    
+
     for i in 0..1000 {
         let pre_master_secret = vec![(i % 256) as u8; 32];
         let client_random = vec![((i + 1) % 256) as u8; 32];
@@ -400,7 +431,7 @@ async fn test_chaos_rapid_sequential_derivations() {
 
     let duration = start.elapsed();
     println!("1000 derivations in {} ms", duration.as_millis());
-    
+
     // Should complete in reasonable time (< 5 seconds for 1000 operations)
     assert!(
         duration.as_secs() < 5,
@@ -416,7 +447,7 @@ async fn test_chaos_mixed_valid_invalid() {
 
     for i in 0..50 {
         let valid = i % 2 == 0;
-        
+
         let handle = tokio::spawn(async move {
             if valid {
                 let params = json!({
@@ -467,12 +498,12 @@ async fn test_chaos_resource_cleanup() {
     }
 
     let final_allocated = get_rough_memory_usage();
-    
+
     // Memory usage should not grow unboundedly
     // (This is a rough check - may need adjustment)
     let growth = final_allocated.saturating_sub(initial_allocated);
     println!("Memory growth: {} KB", growth / 1024);
-    
+
     // Allow for some growth, but not excessive (< 10 MB)
     assert!(
         growth < 10_000_000,
@@ -518,7 +549,9 @@ async fn test_fault_wrong_key_sizes() {
         // All should succeed (HKDF is flexible), but verify output is correct
         if result.is_ok() {
             let value = result.unwrap();
-            let key = BASE64.decode(value["client_write_key"].as_str().unwrap()).unwrap();
+            let key = BASE64
+                .decode(value["client_write_key"].as_str().unwrap())
+                .unwrap();
             assert_eq!(key.len(), 32, "Output key should always be 32 bytes");
         }
     }
@@ -553,7 +586,7 @@ async fn test_fault_wrong_random_sizes() {
 async fn test_fault_missing_parameters() {
     // Test various combinations of missing parameters
     let test_cases = vec![
-        json!({}), // All missing
+        json!({}),                                                      // All missing
         json!({ "pre_master_secret": BASE64.encode(&vec![42u8; 32]) }), // Missing randoms
         json!({ "client_random": BASE64.encode(&vec![1u8; 32]) }), // Missing secret and server_random
         json!({
@@ -662,7 +695,7 @@ async fn test_handshake_secrets_basic() {
     let pre_master_secret = vec![0x42u8; 32]; // ECDH shared secret
     let client_random = vec![0x01u8; 32];
     let server_random = vec![0x02u8; 32];
-    
+
     // Transcript hash: SHA-256(ClientHello + ServerHello)
     let transcript = vec![0x03u8; 64]; // Simulated ClientHello + ServerHello
     let transcript_hash = {
@@ -687,43 +720,63 @@ async fn test_handshake_secrets_basic() {
     assert!(result["client_write_iv"].is_string());
     assert!(result["server_write_key"].is_string());
     assert!(result["server_write_iv"].is_string());
-    assert!(result["client_handshake_secret"].is_string());  // NEW: For Finished message
-    assert!(result["server_handshake_secret"].is_string());  // NEW: For Finished message
+    assert!(result["client_handshake_secret"].is_string()); // NEW: For Finished message
+    assert!(result["server_handshake_secret"].is_string()); // NEW: For Finished message
     assert_eq!(result["algorithm"], "HKDF-SHA256");
     assert_eq!(result["rfc"], "RFC 8446 Section 7.1");
     assert_eq!(result["stage"], "handshake");
     assert_eq!(result["mode"], "RFC 8446 Full Compliance");
 
     // Verify sizes
-    let client_key = BASE64.decode(result["client_write_key"].as_str().unwrap()).unwrap();
+    let client_key = BASE64
+        .decode(result["client_write_key"].as_str().unwrap())
+        .unwrap();
     assert_eq!(client_key.len(), 32, "Client key should be 32 bytes");
 
-    let client_iv = BASE64.decode(result["client_write_iv"].as_str().unwrap()).unwrap();
+    let client_iv = BASE64
+        .decode(result["client_write_iv"].as_str().unwrap())
+        .unwrap();
     assert_eq!(client_iv.len(), 12, "Client IV should be 12 bytes");
 
-    let server_key = BASE64.decode(result["server_write_key"].as_str().unwrap()).unwrap();
+    let server_key = BASE64
+        .decode(result["server_write_key"].as_str().unwrap())
+        .unwrap();
     assert_eq!(server_key.len(), 32, "Server key should be 32 bytes");
 
-    let server_iv = BASE64.decode(result["server_write_iv"].as_str().unwrap()).unwrap();
+    let server_iv = BASE64
+        .decode(result["server_write_iv"].as_str().unwrap())
+        .unwrap();
     assert_eq!(server_iv.len(), 12, "Server IV should be 12 bytes");
-    
+
     // Verify traffic secrets (NEW: for Finished message computation)
-    let client_hs_secret = BASE64.decode(result["client_handshake_secret"].as_str().unwrap()).unwrap();
-    assert_eq!(client_hs_secret.len(), 32, "Client handshake secret should be 32 bytes");
-    
-    let server_hs_secret = BASE64.decode(result["server_handshake_secret"].as_str().unwrap()).unwrap();
-    assert_eq!(server_hs_secret.len(), 32, "Server handshake secret should be 32 bytes");
+    let client_hs_secret = BASE64
+        .decode(result["client_handshake_secret"].as_str().unwrap())
+        .unwrap();
+    assert_eq!(
+        client_hs_secret.len(),
+        32,
+        "Client handshake secret should be 32 bytes"
+    );
+
+    let server_hs_secret = BASE64
+        .decode(result["server_handshake_secret"].as_str().unwrap())
+        .unwrap();
+    assert_eq!(
+        server_hs_secret.len(),
+        32,
+        "Server handshake secret should be 32 bytes"
+    );
 }
 
 #[tokio::test]
 async fn test_handshake_vs_application_secrets_different() {
     // Verify that handshake and application secrets are DIFFERENT
     // (they should be - different stages of RFC 8446 key schedule)
-    
+
     let pre_master_secret = vec![0x42u8; 32];
     let client_random = vec![0x01u8; 32];
     let server_random = vec![0x02u8; 32];
-    
+
     // Use same transcript hash for both (for comparison)
     let transcript_hash = {
         use sha2::{Digest, Sha256};
@@ -748,26 +801,22 @@ async fn test_handshake_vs_application_secrets_different() {
 
     // Keys MUST be different (different stages of key schedule)
     assert_ne!(
-        hs_result["client_write_key"],
-        app_result["client_write_key"],
+        hs_result["client_write_key"], app_result["client_write_key"],
         "Handshake and application keys must be different!"
     );
-    
+
     assert_ne!(
-        hs_result["server_write_key"],
-        app_result["server_write_key"],
+        hs_result["server_write_key"], app_result["server_write_key"],
         "Handshake and application keys must be different!"
     );
-    
+
     assert_ne!(
-        hs_result["client_write_iv"],
-        app_result["client_write_iv"],
+        hs_result["client_write_iv"], app_result["client_write_iv"],
         "Handshake and application IVs must be different!"
     );
-    
+
     assert_ne!(
-        hs_result["server_write_iv"],
-        app_result["server_write_iv"],
+        hs_result["server_write_iv"], app_result["server_write_iv"],
         "Handshake and application IVs must be different!"
     );
 }
@@ -776,17 +825,17 @@ async fn test_handshake_vs_application_secrets_different() {
 async fn test_handshake_secrets_transcript_hash_binding() {
     // Test that different transcript hashes produce different keys
     // This proves cryptographic binding to specific handshake
-    
+
     let pre_master_secret = vec![0x42u8; 32];
     let client_random = vec![0x01u8; 32];
     let server_random = vec![0x02u8; 32];
-    
+
     // Two different transcripts
     let transcript_hash_1 = {
         use sha2::{Digest, Sha256};
         Sha256::digest(&[0x03u8; 64]).to_vec()
     };
-    
+
     let transcript_hash_2 = {
         use sha2::{Digest, Sha256};
         Sha256::digest(&[0x04u8; 64]).to_vec() // Different!
@@ -818,14 +867,12 @@ async fn test_handshake_secrets_transcript_hash_binding() {
 
     // Different transcript hashes MUST produce different keys
     assert_ne!(
-        result1["client_write_key"],
-        result2["client_write_key"],
+        result1["client_write_key"], result2["client_write_key"],
         "Different transcripts must produce different keys!"
     );
-    
+
     assert_ne!(
-        result1["server_write_key"],
-        result2["server_write_key"],
+        result1["server_write_key"], result2["server_write_key"],
         "Different transcripts must produce different keys!"
     );
 }
@@ -871,7 +918,10 @@ async fn test_handshake_secrets_invalid_transcript_hash_size() {
 
     let result = handle_tls_derive_handshake_secrets(Some(&params)).await;
 
-    assert!(result.is_err(), "Should fail with wrong transcript_hash size");
+    assert!(
+        result.is_err(),
+        "Should fail with wrong transcript_hash size"
+    );
     assert!(
         result.unwrap_err().contains("32 bytes"),
         "Error should mention 32 bytes requirement"
@@ -996,8 +1046,12 @@ async fn test_handshake_secrets_avalanche_effect() {
         .unwrap();
 
     // Decode keys
-    let key1 = BASE64.decode(result1["client_write_key"].as_str().unwrap()).unwrap();
-    let key2 = BASE64.decode(result2["client_write_key"].as_str().unwrap()).unwrap();
+    let key1 = BASE64
+        .decode(result1["client_write_key"].as_str().unwrap())
+        .unwrap();
+    let key2 = BASE64
+        .decode(result2["client_write_key"].as_str().unwrap())
+        .unwrap();
 
     // Count differing bytes (avalanche effect)
     let diff_count = key1.iter().zip(key2.iter()).filter(|(a, b)| a != b).count();
@@ -1076,17 +1130,17 @@ async fn test_full_tls_handshake_flow() {
     // Step 1: Derive handshake secrets
     // Step 2: Derive application secrets
     // Verify both stages work together
-    
+
     let pre_master_secret = vec![0x42u8; 32];
     let client_random = vec![0x01u8; 32];
     let server_random = vec![0x02u8; 32];
-    
+
     // Handshake transcript: ClientHello + ServerHello
     let handshake_transcript_hash = {
         use sha2::{Digest, Sha256};
         Sha256::digest(&[0x03u8; 64]).to_vec()
     };
-    
+
     // Application transcript: ALL handshake messages
     let application_transcript_hash = {
         use sha2::{Digest, Sha256};
@@ -1155,8 +1209,7 @@ fn get_rough_memory_usage() -> usize {
             }
         }
     }
-    
+
     // Fallback: return 0 if we can't measure
     0
 }
-

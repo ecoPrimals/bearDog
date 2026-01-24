@@ -31,9 +31,9 @@
 //! - ✅ Self-documenting help
 //! - ✅ Professional UX
 
+use beardog_tunnel::modes;
 use clap::{Parser, Subcommand};
 use tracing::Level;
-use beardog_tunnel::modes;
 
 /// BearDog - Security & Cryptography Primal
 ///
@@ -139,10 +139,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     // Initialize logging based on CLI arg
-    let log_level: Level = cli
-        .log_level
-        .parse()
-        .unwrap_or(Level::INFO);
+    let log_level: Level = cli.log_level.parse().unwrap_or(Level::INFO);
 
     tracing_subscriber::fmt()
         .with_max_level(log_level)
@@ -194,4 +191,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-

@@ -60,7 +60,7 @@ type HmacSha256 = Hmac<Sha256>;
 pub struct GeneticCryptoProvider {
     /// Provider name for identification
     name: String,
-    
+
     /// Genetic lineage seed (Phase 5)
     /// When present, used for lineage-based key derivation
     lineage_seed: Option<Vec<u8>>,
@@ -81,7 +81,7 @@ impl GeneticCryptoProvider {
             lineage_seed: None,
         })
     }
-    
+
     /// Create new Genetic Crypto provider with lineage seed (Phase 5)
     ///
     /// This constructor enables lineage-based key derivation for internal primal-to-primal crypto.
@@ -99,12 +99,18 @@ impl GeneticCryptoProvider {
                 "Lineage seed cannot be empty".to_string(),
             ));
         }
-        
+
         if lineage_seed.len() < 32 {
-            warn!("⚠️  Lineage seed is shorter than recommended 32 bytes: {} bytes", lineage_seed.len());
+            warn!(
+                "⚠️  Lineage seed is shorter than recommended 32 bytes: {} bytes",
+                lineage_seed.len()
+            );
         }
-        
-        info!("🧬 Initializing GeneticCrypto provider with lineage seed ({} bytes)", lineage_seed.len());
+
+        info!(
+            "🧬 Initializing GeneticCrypto provider with lineage seed ({} bytes)",
+            lineage_seed.len()
+        );
         Ok(Self {
             name: "GeneticCrypto-PureRust-Lineage".to_string(),
             lineage_seed: Some(lineage_seed),
@@ -115,7 +121,7 @@ impl GeneticCryptoProvider {
     pub fn name(&self) -> &str {
         &self.name
     }
-    
+
     /// Check if provider has lineage seed (Phase 5)
     pub fn has_lineage(&self) -> bool {
         self.lineage_seed.is_some()
@@ -582,7 +588,10 @@ impl GeneticCryptoProvider {
         hasher.update(b"TIER1_MACHINE_OSRNG");
         quality_score += 0.4;
         tier_count += 1;
-        debug!("  ✅ Tier 1: Machine entropy ({} bytes)", machine_entropy.len());
+        debug!(
+            "  ✅ Tier 1: Machine entropy ({} bytes)",
+            machine_entropy.len()
+        );
 
         // Calculate average quality
         let final_quality = quality_score / tier_count as f64;
@@ -630,9 +639,10 @@ impl GeneticCryptoProvider {
             lineage_proof.len()
         );
 
-        let lineage_seed = self.lineage_seed.as_ref().ok_or_else(|| {
-            BearDogError::crypto_error("Lineage seed not set".to_string())
-        })?;
+        let lineage_seed = self
+            .lineage_seed
+            .as_ref()
+            .ok_or_else(|| BearDogError::crypto_error("Lineage seed not set".to_string()))?;
 
         // Build expected proof from lineage seed + family IDs
         let mut hasher = blake3::Hasher::new();
@@ -646,9 +656,15 @@ impl GeneticCryptoProvider {
         let is_valid = lineage_proof == expected_proof.as_bytes();
 
         if is_valid {
-            info!("✅ Lineage verified: {} <-> {}", our_family_id, peer_family_id);
+            info!(
+                "✅ Lineage verified: {} <-> {}",
+                our_family_id, peer_family_id
+            );
         } else {
-            warn!("❌ Lineage verification failed: {} <-> {}", our_family_id, peer_family_id);
+            warn!(
+                "❌ Lineage verification failed: {} <-> {}",
+                our_family_id, peer_family_id
+            );
         }
 
         Ok(is_valid)
@@ -862,10 +878,7 @@ mod tests {
     #[tokio::test]
     async fn test_genetic_provider_empty_lineage_fails() {
         let result = GeneticCryptoProvider::new_with_lineage(vec![]);
-        assert!(
-            result.is_err(),
-            "Empty lineage seed should fail"
-        );
+        assert!(result.is_err(), "Empty lineage seed should fail");
     }
 
     #[tokio::test]
@@ -885,7 +898,7 @@ mod tests {
         // Keys are different due to entropy, but both are 32 bytes
         assert_eq!(key1.len(), 32, "Key should be 32 bytes");
         assert_eq!(key2.len(), 32, "Key should be 32 bytes");
-        
+
         // With entropy, they won't match, but that's correct behavior
         // (prevents replay attacks)
 
@@ -991,14 +1004,9 @@ mod tests {
         let provider = GeneticCryptoProvider::new()?;
 
         let short_entropy = b"short".to_vec(); // Too short (< 16 bytes)
-        let result = provider
-            .mix_entropy(Some(&short_entropy), None, None)
-            .await;
+        let result = provider.mix_entropy(Some(&short_entropy), None, None).await;
 
-        assert!(
-            result.is_err(),
-            "Short entropy should fail validation"
-        );
+        assert!(result.is_err(), "Short entropy should fail validation");
 
         Ok(())
     }
@@ -1018,11 +1026,7 @@ mod tests {
         let valid_proof = hasher.finalize();
 
         let is_valid = provider
-            .verify_lineage(
-                "beardog-family",
-                "songbird-family",
-                valid_proof.as_bytes(),
-            )
+            .verify_lineage("beardog-family", "songbird-family", valid_proof.as_bytes())
             .await?;
 
         assert!(is_valid, "Valid lineage proof should verify");

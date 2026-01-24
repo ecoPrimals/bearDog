@@ -349,20 +349,20 @@ impl UnixSocketIpcServer {
         writer: &mut tokio::net::unix::OwnedWriteHalf,
     ) -> Result<()> {
         use tokio::io::AsyncWriteExt;
-        
+
         info!("🚀 tarpc handler - PRIMARY inter-primal protocol");
-        
+
         // tarpc uses bincode serialization after magic bytes
         // For now, we'll decode and handle via JSON-RPC-compatible interface
         // Full tarpc integration would use generated service traits
-        
+
         // Strip tarpc magic bytes ("TRPC")
         let payload = if first_line.starts_with("TRPC") {
             &first_line[4..]
         } else {
             first_line
         };
-        
+
         // Decode bincode to serde_json::Value for routing
         // In production, this would use generated tarpc service definitions
         match bincode::deserialize::<serde_json::Value>(payload.as_bytes()) {
@@ -370,19 +370,19 @@ impl UnixSocketIpcServer {
                 // Route to appropriate handler based on method field
                 if let Some(method) = request_data.get("method").and_then(|m| m.as_str()) {
                     debug!("📨 tarpc request: {}", method);
-                    
+
                     // Handle request using existing handlers
                     let response = self.route_request(method, &request_data).await?;
-                    
+
                     // Serialize response with tarpc magic bytes
                     let response_bytes = bincode::serialize(&response)
                         .context("Failed to serialize tarpc response")?;
-                    
+
                     // Write magic bytes + response
                     writer.write_all(b"TRPC").await?;
                     writer.write_all(&response_bytes).await?;
                     writer.flush().await?;
-                    
+
                     info!("✅ tarpc response sent: {} bytes", response_bytes.len());
                 } else {
                     warn!("⚠️  tarpc request missing method field");
@@ -431,7 +431,11 @@ impl UnixSocketIpcServer {
         // Route to handler via registry
         let result = self
             .handler_registry
-            .route(&request.method, request.params.as_ref(), &self.btsp_provider)
+            .route(
+                &request.method,
+                request.params.as_ref(),
+                &self.btsp_provider,
+            )
             .await;
 
         // Build response with proper error codes
@@ -444,15 +448,14 @@ impl UnixSocketIpcServer {
             },
             Err(e) => {
                 // Detect error type and use appropriate error code
-                let (code, message) = if e.contains("Method not found")
-                    || e.contains("Unknown method")
-                {
-                    (JsonRpcError::METHOD_NOT_FOUND, e)
-                } else if e.contains("Invalid params") || e.contains("Missing required") {
-                    (JsonRpcError::INVALID_PARAMS, e)
-                } else {
-                    (JsonRpcError::INTERNAL_ERROR, e)
-                };
+                let (code, message) =
+                    if e.contains("Method not found") || e.contains("Unknown method") {
+                        (JsonRpcError::METHOD_NOT_FOUND, e)
+                    } else if e.contains("Invalid params") || e.contains("Missing required") {
+                        (JsonRpcError::INVALID_PARAMS, e)
+                    } else {
+                        (JsonRpcError::INTERNAL_ERROR, e)
+                    };
 
                 JsonRpcResponse {
                     jsonrpc: "2.0".to_string(),
@@ -499,7 +502,11 @@ impl UnixSocketIpcServer {
     }
 
     /// Route request to appropriate handler (shared by JSON-RPC and tarpc)
-    async fn route_request(&self, method: &str, request_data: &serde_json::Value) -> Result<serde_json::Value> {
+    async fn route_request(
+        &self,
+        method: &str,
+        request_data: &serde_json::Value,
+    ) -> Result<serde_json::Value> {
         // Convert to JsonRpcRequest format for handler registry
         let json_rpc_request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
@@ -507,10 +514,10 @@ impl UnixSocketIpcServer {
             params: request_data.get("params").cloned(),
             id: request_data.get("id").cloned(),
         };
-        
+
         // Use modular handler registry
         let response = self.handle_jsonrpc_via_registry(&json_rpc_request).await;
-        
+
         // Convert response to Value
         Ok(serde_json::to_value(response)?)
     }

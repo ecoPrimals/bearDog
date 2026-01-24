@@ -59,7 +59,6 @@ use base64::Engine;
 use serde_json::Value;
 use tracing::{debug, info};
 
-
 pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.chacha20_poly1305_encrypt")?;
 
@@ -208,7 +207,7 @@ pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<
         "🔓 Decrypting {} bytes with ChaCha20-Poly1305",
         ciphertext.len()
     );
-    
+
     // EVOLVED: Diagnostic logging moved to diagnostics module (not removed!)
     // Enable with: cargo build --features diagnostics
     // This is zero-cost when disabled (completely inlined away)

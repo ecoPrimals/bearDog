@@ -162,12 +162,7 @@ async fn test_rfc8448_handshake_key_derivation() {
 
     use hkdf::Hkdf;
 
-    fn hkdf_expand_label(
-        secret: &[u8],
-        label: &str,
-        context: &[u8],
-        length: usize,
-    ) -> Vec<u8> {
+    fn hkdf_expand_label(secret: &[u8], label: &str, context: &[u8], length: usize) -> Vec<u8> {
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
 
@@ -193,19 +188,15 @@ async fn test_rfc8448_handshake_key_derivation() {
     // ========================================================================
 
     assert_eq!(
-        client_write_key,
-        expected_client_key,
+        client_write_key, expected_client_key,
         "Client write key mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_client_key,
-        client_write_key
+        expected_client_key, client_write_key
     );
 
     assert_eq!(
-        server_write_key,
-        expected_server_key,
+        server_write_key, expected_server_key,
         "Server write key mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_server_key,
-        server_write_key
+        expected_server_key, server_write_key
     );
 
     println!("✅ Client write key matches RFC 8448!");
@@ -234,19 +225,15 @@ async fn test_rfc8448_handshake_key_derivation() {
     let expected_server_iv = hkdf_expand_label(&expected_server_secret, "iv", &[], 12);
 
     assert_eq!(
-        client_write_iv,
-        expected_client_iv,
+        client_write_iv, expected_client_iv,
         "Client write IV mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_client_iv,
-        client_write_iv
+        expected_client_iv, client_write_iv
     );
 
     assert_eq!(
-        server_write_iv,
-        expected_server_iv,
+        server_write_iv, expected_server_iv,
         "Server write IV mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_server_iv,
-        server_write_iv
+        expected_server_iv, server_write_iv
     );
 
     println!("✅ Client write IV matches RFC 8448!");
@@ -318,7 +305,11 @@ fn test_transcript_hash_computation() {
     let transcript = [client_hello, server_hello].concat();
     let transcript_hash = Sha256::digest(&transcript);
 
-    println!("Transcript ({} bytes): {:02x?}", transcript.len(), transcript);
+    println!(
+        "Transcript ({} bytes): {:02x?}",
+        transcript.len(),
+        transcript
+    );
     println!(
         "Transcript hash ({} bytes): {:02x?}",
         transcript_hash.len(),
@@ -360,4 +351,3 @@ fn test_transcript_without_record_headers() {
     println!("\n⚠️  IMPORTANT: TLS record headers MUST NOT be included in transcript!");
     println!("   Transcript = Handshake messages ONLY (no [16 03 03 LL LL] headers)");
 }
-

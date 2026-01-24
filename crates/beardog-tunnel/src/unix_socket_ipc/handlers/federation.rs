@@ -23,9 +23,9 @@
 //! - Family verification: ~10-50μs (environment lookup + comparison)
 //! - Key derivation: ~100-200μs (HKDF + HSM key generation)
 
-use async_trait::async_trait;
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
+use async_trait::async_trait;
 use chrono::Utc;
 use std::sync::Arc;
 use tracing::info;
@@ -51,12 +51,8 @@ impl MethodHandler for FederationHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         match method {
-            "federation.verify_family_member" => {
-                self.handle_verify_family_member(params).await
-            }
-            "federation.derive_subfed_key" => {
-                self.handle_derive_subfed_key(params).await
-            }
+            "federation.verify_family_member" => self.handle_verify_family_member(params).await,
+            "federation.derive_subfed_key" => self.handle_derive_subfed_key(params).await,
             _ => Err(format!("Unknown federation method: {}", method)),
         }
     }
@@ -201,7 +197,7 @@ mod tests {
     fn test_federation_handler_methods() {
         let handler = FederationHandler;
         let methods = handler.methods();
-        
+
         assert_eq!(methods.len(), 2);
         assert!(methods.contains(&"federation.verify_family_member"));
         assert!(methods.contains(&"federation.derive_subfed_key"));
@@ -210,25 +206,25 @@ mod tests {
     #[tokio::test]
     async fn test_verify_family_member_same_family() {
         let handler = FederationHandler;
-        
+
         // Set our family ID
         std::env::set_var("FAMILY_ID", "test-family");
-        
+
         let params = serde_json::json!({
             "family_id": "test-family",
             "node_id": "test-node",
             "seed_hash": "abc123"
         });
-        
+
         let result = handler
             .handle_verify_family_member(Some(&params))
             .await
             .unwrap();
-        
+
         assert_eq!(result["is_family_member"], true);
         assert_eq!(result["relationship"], "sibling");
         assert_eq!(result["trust_level"], "limited");
-        
+
         // Cleanup
         std::env::remove_var("FAMILY_ID");
     }
@@ -236,24 +232,24 @@ mod tests {
     #[tokio::test]
     async fn test_verify_family_member_different_family() {
         let handler = FederationHandler;
-        
+
         // Set our family ID
         std::env::set_var("FAMILY_ID", "our-family");
-        
+
         let params = serde_json::json!({
             "family_id": "other-family",
             "node_id": "test-node"
         });
-        
+
         let result = handler
             .handle_verify_family_member(Some(&params))
             .await
             .unwrap();
-        
+
         assert_eq!(result["is_family_member"], false);
         assert_eq!(result["relationship"], "unrelated");
         assert_eq!(result["trust_level"], "none");
-        
+
         // Cleanup
         std::env::remove_var("FAMILY_ID");
     }
@@ -261,24 +257,26 @@ mod tests {
     #[tokio::test]
     async fn test_derive_subfed_key() {
         let handler = FederationHandler;
-        
+
         let params = serde_json::json!({
             "parent_family": "parent-fam",
             "subfed_name": "test-subfed",
             "purpose": "testing",
             "derivation_info": "test-info"
         });
-        
+
         let result = handler
             .handle_derive_subfed_key(Some(&params))
             .await
             .unwrap();
-        
-        assert!(result["key_ref"].as_str().unwrap().contains("beardog-hsm-key-"));
+
+        assert!(result["key_ref"]
+            .as_str()
+            .unwrap()
+            .contains("beardog-hsm-key-"));
         assert_eq!(result["key_id"], "subfed:parent-fam:test-subfed:v1");
         assert_eq!(result["algorithm"], "AES-256-GCM");
         assert_eq!(result["derivation_method"], "HKDF-SHA256");
         assert_eq!(result["hsm_backed"], true);
     }
 }
-

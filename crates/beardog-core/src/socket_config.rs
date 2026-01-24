@@ -239,7 +239,10 @@ impl SocketConfig {
                 )
             }
             SocketPathSource::XdgRuntime => {
-                format!("{} (XDG Runtime Directory - Tier 3)", self.socket_path_string())
+                format!(
+                    "{} (XDG Runtime Directory - Tier 3)",
+                    self.socket_path_string()
+                )
             }
             SocketPathSource::TempDir => {
                 format!("{} (fallback to /tmp - Tier 4)", self.socket_path_string())
@@ -268,7 +271,7 @@ impl std::fmt::Display for SocketConfig {
 mod tests {
     use super::*;
     use std::sync::Mutex;
-    
+
     // Global mutex to serialize env var tests
     // Modern Rust: Tests that mutate global state (env vars) must be serialized
     // This is a deep debt solution: explicit serialization for correctness
@@ -278,7 +281,7 @@ mod tests {
     fn test_env_var_override_takes_priority() {
         // Lock to prevent concurrent env var modification
         let _lock = ENV_TEST_LOCK.lock().unwrap();
-        
+
         // Clean slate - remove any existing variables
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BEARDOG_FAMILY_ID");
@@ -315,10 +318,10 @@ mod tests {
     fn test_empty_socket_path_rejected() {
         // Lock to prevent concurrent env var modification
         let _lock = ENV_TEST_LOCK.lock().unwrap();
-        
+
         // Test: Empty socket paths should fall through to next tier
         // This prevents production hangs discovered in integration testing
-        
+
         // Clean slate
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
@@ -334,11 +337,11 @@ mod tests {
         // Should NOT use empty path - should fall through to tier 3 or 4
         assert_ne!(config.socket_path_string(), "");
         assert_ne!(config.source(), SocketPathSource::PrimalEnvVar);
-        
+
         // Should use XDG or /tmp fallback
         assert!(
-            config.source() == SocketPathSource::XdgRuntime 
-            || config.source() == SocketPathSource::TempDir
+            config.source() == SocketPathSource::XdgRuntime
+                || config.source() == SocketPathSource::TempDir
         );
 
         // Cleanup
@@ -350,9 +353,9 @@ mod tests {
     fn test_empty_biomeos_socket_rejected() {
         // Lock to prevent concurrent env var modification
         let _lock = ENV_TEST_LOCK.lock().unwrap();
-        
+
         // Test: Empty BIOMEOS_SOCKET_PATH should also be rejected
-        
+
         // Clean slate
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
@@ -367,11 +370,11 @@ mod tests {
         // Should NOT use empty path - should fall through to tier 3 or 4
         assert_ne!(config.socket_path_string(), "");
         assert_ne!(config.source(), SocketPathSource::OrchestratorEnvVar);
-        
+
         // Should use XDG or /tmp fallback
         assert!(
-            config.source() == SocketPathSource::XdgRuntime 
-            || config.source() == SocketPathSource::TempDir
+            config.source() == SocketPathSource::XdgRuntime
+                || config.source() == SocketPathSource::TempDir
         );
 
         // Cleanup
@@ -383,7 +386,7 @@ mod tests {
     fn test_biomeos_socket_path_tier2() {
         // Lock to prevent concurrent env var modification
         let _lock = ENV_TEST_LOCK.lock().unwrap();
-        
+
         // Clean slate - IMPORTANT: Remove ALL relevant env vars for concurrent test safety
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");

@@ -72,9 +72,9 @@ impl MethodHandler for BtspHandler {
             "btsp.tunnel_close",
             "btsp.tunnel/close",
             // NEW: Unified BTSP methods (Phase 2+)
-            "btsp.configure_tls",         // TLS-specific config (external mode)
-            "btsp.verify_peer",           // Unified trust verification
-            "btsp.tunnel_send_http",      // HTTP request wrapper (external mode)
+            "btsp.configure_tls",    // TLS-specific config (external mode)
+            "btsp.verify_peer",      // Unified trust verification
+            "btsp.tunnel_send_http", // HTTP request wrapper (external mode)
         ]
     }
 
@@ -141,7 +141,10 @@ impl BtspHandler {
             .await
         {
             Ok(contact_info) => {
-                info!("✅ Contact exchange successful for peer: {}", target_peer_id);
+                info!(
+                    "✅ Contact exchange successful for peer: {}",
+                    target_peer_id
+                );
                 Ok(serde_json::to_value(contact_info)
                     .map_err(|e| format!("Serialization error: {}", e))?)
             }
@@ -176,9 +179,14 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for tunnel establish")?;
 
         // Try parsing as new unified format first
-        if let Ok(unified_params) = serde_json::from_value::<beardog_types::btsp::TunnelEstablishParams>(params_value.clone()) {
+        if let Ok(unified_params) = serde_json::from_value::<
+            beardog_types::btsp::TunnelEstablishParams,
+        >(params_value.clone())
+        {
             info!("📋 Parsed as unified BTSP parameters");
-            return self.handle_tunnel_establish_unified(unified_params, btsp_provider).await;
+            return self
+                .handle_tunnel_establish_unified(unified_params, btsp_provider)
+                .await;
         }
 
         // Fall back to legacy format for backward compatibility
@@ -214,10 +222,12 @@ impl BtspHandler {
 
         if is_internal {
             info!("🔹 Internal mode: Genetic lineage trust");
-            self.handle_tunnel_establish_internal(params, btsp_provider).await
+            self.handle_tunnel_establish_internal(params, btsp_provider)
+                .await
         } else if is_external {
             info!("🔸 External mode: Certificate trust + TLS 1.3");
-            self.handle_tunnel_establish_external(params, btsp_provider).await
+            self.handle_tunnel_establish_external(params, btsp_provider)
+                .await
         } else {
             // Mixed mode (shouldn't happen with proper types, but handle gracefully)
             warn!("⚠️  Mixed mode detected (trust_mode and protocol mismatch)");
@@ -231,7 +241,10 @@ impl BtspHandler {
         params: beardog_types::btsp::TunnelEstablishParams,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
-        info!("🧬 Establishing internal tunnel: {} → {}", params.peer_id, params.peer_endpoint);
+        info!(
+            "🧬 Establishing internal tunnel: {} → {}",
+            params.peer_id, params.peer_endpoint
+        );
 
         // Convert to legacy PeerEndpoint for now (existing implementation)
         let peer = beardog_capabilities::traits::PeerEndpoint {
@@ -276,7 +289,10 @@ impl BtspHandler {
         params: beardog_types::btsp::TunnelEstablishParams,
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
-        info!("🌐 External tunnel requested: {} → {}", params.peer_id, params.peer_endpoint);
+        info!(
+            "🌐 External tunnel requested: {} → {}",
+            params.peer_id, params.peer_endpoint
+        );
         info!("📡 External mode is handled by Songbird (Tower Atomic pattern)");
 
         Err(format!(
@@ -310,10 +326,9 @@ impl BtspHandler {
 
         let params = params.ok_or("Missing params for tunnel encrypt")?;
 
-        let tunnel: beardog_capabilities::traits::TunnelHandle = serde_json::from_value(
-            params.get("tunnel").ok_or("Missing tunnel handle")?.clone(),
-        )
-        .map_err(|e| format!("Invalid tunnel handle: {}", e))?;
+        let tunnel: beardog_capabilities::traits::TunnelHandle =
+            serde_json::from_value(params.get("tunnel").ok_or("Missing tunnel handle")?.clone())
+                .map_err(|e| format!("Invalid tunnel handle: {}", e))?;
 
         let data_b64 = params
             .get("data")
@@ -351,10 +366,9 @@ impl BtspHandler {
 
         let params = params.ok_or("Missing params for tunnel decrypt")?;
 
-        let tunnel: beardog_capabilities::traits::TunnelHandle = serde_json::from_value(
-            params.get("tunnel").ok_or("Missing tunnel handle")?.clone(),
-        )
-        .map_err(|e| format!("Invalid tunnel handle: {}", e))?;
+        let tunnel: beardog_capabilities::traits::TunnelHandle =
+            serde_json::from_value(params.get("tunnel").ok_or("Missing tunnel handle")?.clone())
+                .map_err(|e| format!("Invalid tunnel handle: {}", e))?;
 
         let data_b64 = params
             .get("data")
@@ -488,14 +502,17 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for configure_tls")?;
 
         // Parse parameters for validation
-        let _config_params = serde_json::from_value::<beardog_types::btsp::ConfigureTlsParams>(
-            params_value.clone()
-        ).map_err(|e| format!("Invalid configure_tls params: {}", e))?;
+        let _config_params =
+            serde_json::from_value::<beardog_types::btsp::ConfigureTlsParams>(params_value.clone())
+                .map_err(|e| format!("Invalid configure_tls params: {}", e))?;
 
-        Err("btsp.configure_tls is part of external mode (HTTPS), handled by Songbird.\n\
+        Err(
+            "btsp.configure_tls is part of external mode (HTTPS), handled by Songbird.\n\
              \n\
              Use Songbird's BTSP external mode API for TLS configuration.\n\
-             BearDog provides the crypto primitives via RPC.".into())
+             BearDog provides the crypto primitives via RPC."
+                .into(),
+        )
     }
 
     /// Handle unified trust verification
@@ -516,16 +533,17 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for verify_peer")?;
 
         // Parse parameters
-        let verify_params = serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(
-            params_value.clone()
-        ).map_err(|e| format!("Invalid verify_peer params: {}", e))?;
+        let verify_params =
+            serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(params_value.clone())
+                .map_err(|e| format!("Invalid verify_peer params: {}", e))?;
 
         // Route based on trust mode
         match verify_params.trust_mode.as_str() {
             "genetic_lineage" => {
                 // TODO: Implement using existing BTSP trust evaluation
                 Err("btsp.verify_peer (genetic_lineage) not yet implemented.\n\
-                     Use existing BTSP internal mode trust evaluation.".into())
+                     Use existing BTSP internal mode trust evaluation."
+                    .into())
             }
             "certificate" => {
                 info!("📡 Certificate verification is handled by Songbird (external mode)");
@@ -534,7 +552,7 @@ impl BtspHandler {
                      Use Songbird's BTSP external mode API for certificate verification.\n\
                      BearDog provides crypto primitives (tls.verify_certificate RPC method).".into())
             }
-            _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode))
+            _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode)),
         }
     }
 
@@ -556,10 +574,12 @@ impl BtspHandler {
 
         // Parse parameters for validation
         let _http_params = serde_json::from_value::<beardog_types::btsp::TunnelSendHttpParams>(
-            params_value.clone()
-        ).map_err(|e| format!("Invalid tunnel_send_http params: {}", e))?;
+            params_value.clone(),
+        )
+        .map_err(|e| format!("Invalid tunnel_send_http params: {}", e))?;
 
-        Err("btsp.tunnel_send_http is part of external mode (HTTPS), handled by Songbird.\n\
+        Err(
+            "btsp.tunnel_send_http is part of external mode (HTTPS), handled by Songbird.\n\
              \n\
              Songbird implements:\n\
              - HTTP/2 client\n\
@@ -567,7 +587,9 @@ impl BtspHandler {
              - BTSP external mode API\n\
              \n\
              BearDog provides crypto primitives only.\n\
-             Use Songbird for all external HTTPS communication.".into())
+             Use Songbird for all external HTTPS communication."
+                .into(),
+        )
     }
 }
 
@@ -603,4 +625,3 @@ mod tests {
     // Note: Full integration tests require a working BTSP provider
     // These would be added as integration tests in the tunnel crate
 }
-

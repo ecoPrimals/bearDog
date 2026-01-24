@@ -50,7 +50,7 @@ pub mod crypto;
 /// # Example
 /// ```no_run
 /// use beardog_tunnel::diagnostic;
-/// 
+///
 /// diagnostic!("🔍 Debug value: {}", 42);  // Only prints if feature enabled
 /// ```
 #[macro_export]
@@ -63,4 +63,3 @@ macro_rules! diagnostic {
 
 // Re-export for convenience
 pub use crypto::*;
-

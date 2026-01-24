@@ -57,9 +57,10 @@ impl MethodHandler for SecurityHandler {
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         match method {
-            "security.evaluate" | "trust.evaluate" | "security.evaluate_trust" | "trust.evaluate_peer" => {
-                self.handle_trust_evaluation(params).await
-            }
+            "security.evaluate"
+            | "trust.evaluate"
+            | "security.evaluate_trust"
+            | "trust.evaluate_peer" => self.handle_trust_evaluation(params).await,
             "security.lineage" | "trust.lineage" | "security.get_lineage" | "trust.get_lineage" => {
                 self.handle_lineage().await
             }
@@ -69,10 +70,10 @@ impl MethodHandler for SecurityHandler {
             "beardog.birdsong.decrypt" | "birdsong.decrypt" => {
                 self.handle_birdsong_decrypt(params, btsp_provider).await
             }
-            "beardog.generate_jwt_secret" | "security.generate_jwt_secret" 
-            | "beardog.jwt_secret" | "security.jwt_secret" => {
-                self.handle_generate_jwt_secret(params).await
-            }
+            "beardog.generate_jwt_secret"
+            | "security.generate_jwt_secret"
+            | "beardog.jwt_secret"
+            | "security.jwt_secret" => self.handle_generate_jwt_secret(params).await,
             _ => Err(format!("Method not found: {}", method)),
         }
     }
@@ -84,7 +85,10 @@ impl SecurityHandler {
     /// Evaluates trust level based on genetic family matching.
     /// Same family = auto-accept with limited capabilities.
     /// Different/unknown family = reject.
-    async fn handle_trust_evaluation(&self, params: Option<&serde_json::Value>) -> Result<serde_json::Value, String> {
+    async fn handle_trust_evaluation(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
         let params = params.ok_or("Missing params for trust evaluation")?;
 
         // Flexible parameter extraction (works with any primal's naming)
@@ -295,7 +299,10 @@ impl SecurityHandler {
     ///
     /// Generates a cryptographically secure JWT secret for authentication systems.
     /// Supports different strength levels: high (64 bytes), medium (48 bytes), low (32 bytes).
-    async fn handle_generate_jwt_secret(&self, params: Option<&serde_json::Value>) -> Result<serde_json::Value, String> {
+    async fn handle_generate_jwt_secret(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
         info!("🔐 JWT Secret Generation requested");
 
         let params = params.ok_or("Missing params for JWT secret generation")?;
@@ -387,7 +394,9 @@ mod tests {
         });
 
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
-        let result = handler.handle("security.evaluate", Some(&params), &btsp_provider).await;
+        let result = handler
+            .handle("security.evaluate", Some(&params), &btsp_provider)
+            .await;
 
         assert!(result.is_ok());
         let response = result.unwrap();
@@ -410,7 +419,9 @@ mod tests {
         });
 
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
-        let result = handler.handle("trust.evaluate", Some(&params), &btsp_provider).await;
+        let result = handler
+            .handle("trust.evaluate", Some(&params), &btsp_provider)
+            .await;
 
         assert!(result.is_ok());
         let response = result.unwrap();
@@ -428,7 +439,9 @@ mod tests {
         std::env::set_var("NODE_ID", "lineage-node");
 
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
-        let result = handler.handle("security.lineage", None, &btsp_provider).await;
+        let result = handler
+            .handle("security.lineage", None, &btsp_provider)
+            .await;
 
         assert!(result.is_ok());
         let response = result.unwrap();
@@ -449,7 +462,13 @@ mod tests {
         });
 
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
-        let result = handler.handle("security.generate_jwt_secret", Some(&params), &btsp_provider).await;
+        let result = handler
+            .handle(
+                "security.generate_jwt_secret",
+                Some(&params),
+                &btsp_provider,
+            )
+            .await;
 
         assert!(result.is_ok());
         let response = result.unwrap();
@@ -462,7 +481,9 @@ mod tests {
 
         // Verify secret is valid base64
         let secret = response["secret"].as_str().unwrap();
-        assert!(base64::engine::general_purpose::STANDARD.decode(secret).is_ok());
+        assert!(base64::engine::general_purpose::STANDARD
+            .decode(secret)
+            .is_ok());
     }
 
     #[tokio::test]
@@ -472,18 +493,38 @@ mod tests {
 
         // Test high strength
         let params = serde_json::json!({"strength": "high"});
-        let result = handler.handle("security.generate_jwt_secret", Some(&params), &btsp_provider).await.unwrap();
+        let result = handler
+            .handle(
+                "security.generate_jwt_secret",
+                Some(&params),
+                &btsp_provider,
+            )
+            .await
+            .unwrap();
         assert_eq!(result["byte_length"], 64);
 
         // Test medium strength
         let params = serde_json::json!({"strength": "medium"});
-        let result = handler.handle("security.generate_jwt_secret", Some(&params), &btsp_provider).await.unwrap();
+        let result = handler
+            .handle(
+                "security.generate_jwt_secret",
+                Some(&params),
+                &btsp_provider,
+            )
+            .await
+            .unwrap();
         assert_eq!(result["byte_length"], 48);
 
         // Test low strength
         let params = serde_json::json!({"strength": "low"});
-        let result = handler.handle("security.generate_jwt_secret", Some(&params), &btsp_provider).await.unwrap();
+        let result = handler
+            .handle(
+                "security.generate_jwt_secret",
+                Some(&params),
+                &btsp_provider,
+            )
+            .await
+            .unwrap();
         assert_eq!(result["byte_length"], 32);
     }
 }
-

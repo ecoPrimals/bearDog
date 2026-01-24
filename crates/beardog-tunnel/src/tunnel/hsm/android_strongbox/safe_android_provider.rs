@@ -331,7 +331,7 @@ impl SafeAndroidKeystore {
         // For now, return error indicating real implementation needed
         Err(BearDogError::unsupported(
             "Android StrongBox signing requires JNI integration (not yet implemented). \
-             Use SoftwareHSM provider as fallback."
+             Use SoftwareHSM provider as fallback.",
         ))
     }
 
@@ -348,7 +348,7 @@ impl SafeAndroidKeystore {
     pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported(
             "Android StrongBox is only available on Android platform. \
-             Use SoftwareHSM or other HSM provider on this platform."
+             Use SoftwareHSM or other HSM provider on this platform.",
         ))
     }
 
@@ -367,7 +367,10 @@ impl SafeAndroidKeystore {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        debug!("🔍 Verifying signature for key: {} (Android StrongBox)", key_id);
+        debug!(
+            "🔍 Verifying signature for key: {} (Android StrongBox)",
+            key_id
+        );
 
         let keys = self.keys.blocking_read();
         let _metadata = keys
@@ -392,7 +395,7 @@ impl SafeAndroidKeystore {
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
         Err(BearDogError::unsupported(
-            "Android StrongBox is only available on Android platform"
+            "Android StrongBox is only available on Android platform",
         ))
     }
 
@@ -427,8 +430,7 @@ impl SafeAndroidKeystore {
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         debug!("📱 Detecting Android device info safely");
 
-        let model = std::env::var("ANDROID_MODEL")
-            .unwrap_or_else(|_| "Android Device".to_string());
+        let model = std::env::var("ANDROID_MODEL").unwrap_or_else(|_| "Android Device".to_string());
 
         let api_level = std::env::var("ANDROID_API_LEVEL")
             .ok()
@@ -457,7 +459,7 @@ impl SafeAndroidKeystore {
     #[cfg(not(target_os = "android"))]
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         Err(BearDogError::unsupported(
-            "Android device detection is only available on Android platform"
+            "Android device detection is only available on Android platform",
         ))
     }
 

@@ -210,9 +210,8 @@ pub async fn handle_derive_lineage_key(params: Value) -> Result<Value, BearDogEr
 pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
     debug!("🌱 RPC: genetic.mix_entropy");
 
-    let request: MixEntropyRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid mix_entropy params: {}", e))
-    })?;
+    let request: MixEntropyRequest = serde_json::from_value(params)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid mix_entropy params: {}", e)))?;
 
     // Decode base64 entropy inputs
     let tier3 = request
@@ -291,20 +290,24 @@ pub async fn handle_verify_lineage(params: Value) -> Result<Value, BearDogError>
     })?;
 
     // Decode base64 inputs
-    let lineage_proof = BASE64.decode(&request.lineage_proof).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid lineage_proof: {}", e))
-    })?;
+    let lineage_proof = BASE64
+        .decode(&request.lineage_proof)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_proof: {}", e)))?;
 
-    let lineage_seed = BASE64.decode(&request.lineage_seed).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid lineage_seed: {}", e))
-    })?;
+    let lineage_seed = BASE64
+        .decode(&request.lineage_seed)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {}", e)))?;
 
     // Create provider with lineage
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
 
     // Verify lineage
     let is_valid = provider
-        .verify_lineage(&request.our_family_id, &request.peer_family_id, &lineage_proof)
+        .verify_lineage(
+            &request.our_family_id,
+            &request.peer_family_id,
+            &lineage_proof,
+        )
         .await?;
 
     let response = if is_valid {
@@ -356,9 +359,9 @@ pub async fn handle_generate_lineage_proof(params: Value) -> Result<Value, BearD
     })?;
 
     // Decode lineage seed
-    let lineage_seed = BASE64.decode(&request.lineage_seed).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid lineage_seed: {}", e))
-    })?;
+    let lineage_seed = BASE64
+        .decode(&request.lineage_seed)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {}", e)))?;
 
     // Generate proof using Blake3
     use blake3;
@@ -531,4 +534,3 @@ mod tests {
         assert!(result.is_err(), "Invalid base64 should fail");
     }
 }
-

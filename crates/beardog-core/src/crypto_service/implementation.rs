@@ -198,9 +198,9 @@ impl BearDogCryptoService {
     fn store_rsa_key(&self, key_id: &str, private_key_der: &[u8]) -> Result<()> {
         // parking_lot::RwLock never panics, always succeeds!
         let mut keys = self.rsa_keys.write();
-            keys.insert(key_id.to_string(), private_key_der.to_vec());
-            tracing::debug!("Stored RSA private key for key_id: {}", key_id);
-            Ok(())
+        keys.insert(key_id.to_string(), private_key_der.to_vec());
+        tracing::debug!("Stored RSA private key for key_id: {}", key_id);
+        Ok(())
     }
 
     /// Get public key for a given key_id (for signature verification)
@@ -221,8 +221,8 @@ impl BearDogCryptoService {
     fn store_public_key(&self, key_id: &str, public_key: Vec<u8>) {
         // parking_lot::RwLock never panics, always succeeds!
         let mut keys = self.public_keys.write();
-            keys.insert(key_id.to_string(), public_key);
-            tracing::debug!("Stored public key for key_id: {}", key_id);
+        keys.insert(key_id.to_string(), public_key);
+        tracing::debug!("Stored public key for key_id: {}", key_id);
     }
 
     /// Increment operation counter and return operation ID

@@ -33,10 +33,10 @@
 //! - Automatic nonce generation (never reused)
 //! - Authenticated encryption (integrity + confidentiality)
 
-use async_trait::async_trait;
-use base64::engine::Engine;
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
+use async_trait::async_trait;
+use base64::engine::Engine;
 use chacha20poly1305::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
     ChaCha20Poly1305, Nonce,
@@ -53,10 +53,7 @@ pub struct EncryptionHandler;
 #[async_trait]
 impl MethodHandler for EncryptionHandler {
     fn methods(&self) -> Vec<&'static str> {
-        vec![
-            "encryption.encrypt",
-            "encryption.decrypt",
-        ]
+        vec!["encryption.encrypt", "encryption.decrypt"]
     }
 
     async fn handle(
@@ -148,8 +145,7 @@ impl EncryptionHandler {
         // We provide it separately for compatibility
         let tag_b64 = if ciphertext.len() >= 16 {
             // Last 16 bytes are the authentication tag
-            base64::engine::general_purpose::STANDARD
-                .encode(&ciphertext[ciphertext.len() - 16..])
+            base64::engine::general_purpose::STANDARD.encode(&ciphertext[ciphertext.len() - 16..])
         } else {
             String::new()
         };
@@ -266,7 +262,7 @@ mod tests {
     fn test_encryption_handler_methods() {
         let handler = EncryptionHandler;
         let methods = handler.methods();
-        
+
         assert_eq!(methods.len(), 2);
         assert!(methods.contains(&"encryption.encrypt"));
         assert!(methods.contains(&"encryption.decrypt"));
@@ -275,25 +271,25 @@ mod tests {
     #[tokio::test]
     async fn test_encrypt_decrypt_roundtrip() {
         let handler = EncryptionHandler;
-        
+
         let plaintext = "Hello, World!";
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(plaintext.as_bytes());
         let key_ref = "test-key-ref";
-        
+
         // Encrypt
         let encrypt_params = serde_json::json!({
             "data": plaintext_b64,
             "key_ref": key_ref,
             "algorithm": "ChaCha20-Poly1305"
         });
-        
+
         let encrypted = handler.handle_encrypt(Some(&encrypt_params)).await.unwrap();
-        
+
         assert!(encrypted["ciphertext"].is_string());
         assert!(encrypted["nonce"].is_string());
         assert!(encrypted["tag"].is_string());
         assert_eq!(encrypted["success"], true);
-        
+
         // Decrypt
         let decrypt_params = serde_json::json!({
             "encrypted_data": encrypted["ciphertext"],
@@ -301,13 +297,13 @@ mod tests {
             "tag": encrypted["tag"],
             "key_ref": key_ref
         });
-        
+
         let decrypted = handler.handle_decrypt(Some(&decrypt_params)).await.unwrap();
-        
+
         assert_eq!(decrypted["data"], plaintext_b64);
         assert_eq!(decrypted["plaintext"], plaintext_b64);
         assert_eq!(decrypted["verified"], true);
-        
+
         // Verify plaintext matches
         let decrypted_bytes = base64::engine::general_purpose::STANDARD
             .decode(decrypted["data"].as_str().unwrap())
@@ -318,27 +314,27 @@ mod tests {
     #[tokio::test]
     async fn test_decrypt_with_wrong_key() {
         let handler = EncryptionHandler;
-        
+
         let plaintext = "Secret message";
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(plaintext.as_bytes());
-        
+
         // Encrypt with one key
         let encrypt_params = serde_json::json!({
             "data": plaintext_b64,
             "key_ref": "key1",
         });
-        
+
         let encrypted = handler.handle_encrypt(Some(&encrypt_params)).await.unwrap();
-        
+
         // Try to decrypt with different key
         let decrypt_params = serde_json::json!({
             "ciphertext": encrypted["ciphertext"],
             "nonce": encrypted["nonce"],
             "key_ref": "key2"  // Different key!
         });
-        
+
         let result = handler.handle_decrypt(Some(&decrypt_params)).await;
-        
+
         // Should fail due to authentication
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Decryption failed"));
@@ -347,41 +343,41 @@ mod tests {
     #[tokio::test]
     async fn test_decrypt_with_tampered_ciphertext() {
         let handler = EncryptionHandler;
-        
+
         let plaintext = "Original message";
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(plaintext.as_bytes());
-        
+
         // Encrypt
         let encrypt_params = serde_json::json!({
             "data": plaintext_b64,
             "key_ref": "test-key",
         });
-        
+
         let encrypted = handler.handle_encrypt(Some(&encrypt_params)).await.unwrap();
-        
+
         // Tamper with ciphertext
         let mut ciphertext_bytes = base64::engine::general_purpose::STANDARD
             .decode(encrypted["ciphertext"].as_str().unwrap())
             .unwrap();
-        
+
         if !ciphertext_bytes.is_empty() {
             ciphertext_bytes[0] ^= 0xFF; // Flip bits
         }
-        
-        let tampered_ciphertext = base64::engine::general_purpose::STANDARD.encode(&ciphertext_bytes);
-        
+
+        let tampered_ciphertext =
+            base64::engine::general_purpose::STANDARD.encode(&ciphertext_bytes);
+
         // Try to decrypt tampered ciphertext
         let decrypt_params = serde_json::json!({
             "ciphertext": tampered_ciphertext,
             "nonce": encrypted["nonce"],
             "key_ref": "test-key"
         });
-        
+
         let result = handler.handle_decrypt(Some(&decrypt_params)).await;
-        
+
         // Should fail due to authentication
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Decryption failed"));
     }
 }
-

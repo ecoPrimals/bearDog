@@ -141,7 +141,7 @@ impl TrustMode {
     pub fn server_name(&self) -> Option<&str> {
         match self {
             TrustMode::Certificate { server_name, .. } => Some(server_name),
-            _ => None,
+            TrustMode::GeneticLineage { .. } => None,
         }
     }
 
@@ -151,7 +151,7 @@ impl TrustMode {
             TrustMode::GeneticLineage {
                 required_family, ..
             } => required_family.as_deref(),
-            _ => None,
+            TrustMode::Certificate { .. } => None,
         }
     }
 }
@@ -300,4 +300,3 @@ mod tests {
         }
     }
 }
-

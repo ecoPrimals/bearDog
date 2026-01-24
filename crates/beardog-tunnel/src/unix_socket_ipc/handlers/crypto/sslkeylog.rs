@@ -145,70 +145,109 @@ pub fn export_to_sslkeylogfile(
     // ALWAYS log that we're attempting export (for debugging)
     info!("🔐 export_to_sslkeylogfile() called");
     info!("   client_random: {} bytes", client_random.len());
-    info!("   handshake_secrets: {}", if handshake_secrets.is_some() { "provided" } else { "none" });
-    info!("   application_secrets: {}", if application_secrets.is_some() { "provided" } else { "none" });
-    
+    info!(
+        "   handshake_secrets: {}",
+        if handshake_secrets.is_some() {
+            "provided"
+        } else {
+            "none"
+        }
+    );
+    info!(
+        "   application_secrets: {}",
+        if application_secrets.is_some() {
+            "provided"
+        } else {
+            "none"
+        }
+    );
+
     // Check if SSLKEYLOGFILE env var is set
     let keylog_path = match std::env::var("SSLKEYLOGFILE") {
         Ok(path) if !path.is_empty() => {
             info!("   ✅ SSLKEYLOGFILE is set: {}", path);
             path
-        },
+        }
         Ok(_path) => {
             info!("   ⚠️  SSLKEYLOGFILE is set but empty");
             return Ok(());
-        },
+        }
         Err(_) => {
             info!("   ℹ️  SSLKEYLOGFILE not set (this is normal in production)");
             return Ok(());
         }
     };
-    
+
     if client_random.len() != 32 {
-        return Err(format!("client_random must be 32 bytes, got {}", client_random.len()));
+        return Err(format!(
+            "client_random must be 32 bytes, got {}",
+            client_random.len()
+        ));
     }
-    
-    info!("🔐 Exporting TLS session keys to SSLKEYLOGFILE: {}", keylog_path);
-    
+
+    info!(
+        "🔐 Exporting TLS session keys to SSLKEYLOGFILE: {}",
+        keylog_path
+    );
+
     // Open file in append mode
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(&keylog_path)
         .map_err(|e| format!("Failed to open SSLKEYLOGFILE: {}", e))?;
-    
+
     let client_random_hex = hex::encode(client_random);
-    
+
     // Export handshake secrets (for encrypted handshake messages)
     if let Some((client_hs_secret, server_hs_secret)) = handshake_secrets {
-        writeln!(file, "CLIENT_HANDSHAKE_TRAFFIC_SECRET {} {}", 
-                 client_random_hex, hex::encode(client_hs_secret))
-            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
-        
-        writeln!(file, "SERVER_HANDSHAKE_TRAFFIC_SECRET {} {}", 
-                 client_random_hex, hex::encode(server_hs_secret))
-            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
-        
+        writeln!(
+            file,
+            "CLIENT_HANDSHAKE_TRAFFIC_SECRET {} {}",
+            client_random_hex,
+            hex::encode(client_hs_secret)
+        )
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+
+        writeln!(
+            file,
+            "SERVER_HANDSHAKE_TRAFFIC_SECRET {} {}",
+            client_random_hex,
+            hex::encode(server_hs_secret)
+        )
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+
         info!("  ✅ Exported handshake traffic secrets");
     }
-    
+
     // Export application secrets (for HTTP data)
     if let Some((client_app_secret, server_app_secret)) = application_secrets {
-        writeln!(file, "CLIENT_TRAFFIC_SECRET_0 {} {}", 
-                 client_random_hex, hex::encode(client_app_secret))
-            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
-        
-        writeln!(file, "SERVER_TRAFFIC_SECRET_0 {} {}", 
-                 client_random_hex, hex::encode(server_app_secret))
-            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
-        
+        writeln!(
+            file,
+            "CLIENT_TRAFFIC_SECRET_0 {} {}",
+            client_random_hex,
+            hex::encode(client_app_secret)
+        )
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+
+        writeln!(
+            file,
+            "SERVER_TRAFFIC_SECRET_0 {} {}",
+            client_random_hex,
+            hex::encode(server_app_secret)
+        )
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+
         info!("  ✅ Exported application traffic secrets");
     }
-    
+
     info!("🔐 Session keys successfully exported to SSLKEYLOGFILE!");
     info!("   Wireshark can now decrypt this TLS 1.3 session!");
-    info!("   Open {} in Wireshark: Preferences → Protocols → TLS", keylog_path);
-    
+    info!(
+        "   Open {} in Wireshark: Preferences → Protocols → TLS",
+        keylog_path
+    );
+
     Ok(())
 }
 
@@ -220,10 +259,10 @@ mod tests {
     fn test_export_without_env_var() {
         // Should succeed gracefully when SSLKEYLOGFILE is not set
         std::env::remove_var("SSLKEYLOGFILE");
-        
+
         let client_random = vec![0u8; 32];
         let result = export_to_sslkeylogfile(&client_random, None, None);
-        
+
         assert!(result.is_ok());
     }
 
@@ -231,47 +270,46 @@ mod tests {
     fn test_invalid_client_random_length() {
         // Set a temporary keylog file
         std::env::set_var("SSLKEYLOGFILE", "/tmp/test-keylog.log");
-        
+
         let client_random = vec![0u8; 16]; // Wrong length!
         let result = export_to_sslkeylogfile(&client_random, None, None);
-        
+
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("must be 32 bytes"));
-        
+
         std::env::remove_var("SSLKEYLOGFILE");
     }
 
     #[test]
     fn test_export_with_handshake_secrets() {
         use std::fs;
-        
+
         let temp_file = "/tmp/beardog-test-keylog.log";
         std::env::set_var("SSLKEYLOGFILE", temp_file);
-        
+
         // Clean up any existing file
         let _ = fs::remove_file(temp_file);
-        
+
         let client_random = vec![0xAA; 32];
         let client_hs_secret = vec![0xBB; 32];
         let server_hs_secret = vec![0xCC; 32];
-        
+
         let result = export_to_sslkeylogfile(
             &client_random,
             Some((&client_hs_secret, &server_hs_secret)),
             None,
         );
-        
+
         assert!(result.is_ok());
-        
+
         // Verify file was created and contains expected entries
         let content = fs::read_to_string(temp_file).unwrap();
         assert!(content.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET"));
         assert!(content.contains("SERVER_HANDSHAKE_TRAFFIC_SECRET"));
         assert!(content.contains(&hex::encode(&client_random)));
-        
+
         // Clean up
         let _ = fs::remove_file(temp_file);
         std::env::remove_var("SSLKEYLOGFILE");
     }
 }
-

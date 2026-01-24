@@ -18,11 +18,11 @@ use tracing::{error, info};
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Server Mode - Starting...");
     info!("   Socket: {}", args.socket);
-    
+
     if let Some(ref family_id) = args.family_id {
         info!("   Family ID: {}", family_id);
     }
-    
+
     if let Some(ref orchestrator_id) = args.orchestrator_id {
         info!("   Orchestrator ID: {}", orchestrator_id);
     }
@@ -31,38 +31,37 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🔧 Initializing HSM manager...");
     let mut hsm = HsmManager::new();
     let config = SoftwareHsmConfig::default();
-    let software_hsm = RustSoftwareHsm::new(config)
-        .await
-        .map_err(|e| BearDogError::Initialization {
-            message: format!("Failed to create software HSM: {}", e)
-        })?;
-    
+    let software_hsm =
+        RustSoftwareHsm::new(config)
+            .await
+            .map_err(|e| BearDogError::Initialization {
+                message: format!("Failed to create software HSM: {}", e),
+            })?;
+
     hsm.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))
         .map_err(|e| BearDogError::Initialization {
-            message: format!("Failed to register HSM provider: {}", e)
+            message: format!("Failed to register HSM provider: {}", e),
         })?;
     let hsm = Arc::new(hsm);
     info!("✅ HSM manager initialized");
 
     // Create genetics engine
     info!("🔧 Initializing genetics engine...");
-    let genetics = Arc::new(
-        EcosystemGeneticEngine::new()
-            .map_err(|e| BearDogError::Initialization {
-                message: format!("Failed to create genetics engine: {}", e)
-            })?
-    );
+    let genetics =
+        Arc::new(
+            EcosystemGeneticEngine::new().map_err(|e| BearDogError::Initialization {
+                message: format!("Failed to create genetics engine: {}", e),
+            })?,
+        );
     info!("✅ Genetics engine initialized");
 
     // Create BTSP provider (provides all capabilities)
     info!("🔧 Initializing BTSP provider...");
-    let btsp_provider = Arc::new(
-        BeardogBtspProvider::new(hsm, genetics)
-            .await
-            .map_err(|e| BearDogError::Initialization {
-                message: format!("Failed to create BTSP provider: {}", e)
-            })?
-    );
+    let btsp_provider = Arc::new(BeardogBtspProvider::new(hsm, genetics).await.map_err(|e| {
+        BearDogError::Initialization {
+            message: format!("Failed to create BTSP provider: {}", e),
+        }
+    })?);
     info!("✅ BTSP provider initialized");
 
     // Create Unix socket IPC server
@@ -71,8 +70,8 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         UnixSocketIpcServer::new(&args.socket, btsp_provider)
             .await
             .map_err(|e| BearDogError::Initialization {
-                message: format!("Failed to create server: {}", e)
-            })?
+                message: format!("Failed to create server: {}", e),
+            })?,
     );
     info!("✅ Server created");
 
@@ -108,15 +107,11 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     });
 
     // Start server (blocks until stopped)
-    server
-        .start()
-        .await
-        .map_err(|e| BearDogError::System {
-            message: format!("Server error: {}", e),
-            category: Default::default(),
-        })?;
+    server.start().await.map_err(|e| BearDogError::System {
+        message: format!("Server error: {}", e),
+        category: Default::default(),
+    })?;
 
     info!("✅ Server stopped");
     Ok(())
 }
-

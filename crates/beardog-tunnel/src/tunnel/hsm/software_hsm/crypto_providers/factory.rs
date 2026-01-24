@@ -29,7 +29,9 @@ pub async fn create_crypto_provider(
         }
         CryptoBackend::Ring => {
             // Ring evolved to RustCrypto (100% Pure Rust, no C dependencies!)
-            tracing::warn!("Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
+            tracing::warn!(
+                "Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
+            );
             let provider = RustCryptoProvider::new().await?;
             Ok(Arc::new(provider))
         }
@@ -52,8 +54,8 @@ pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     vec![
         CryptoBackend::GeneticCrypto, // RECOMMENDED: 100% Pure Rust + Hardware Acceleration
         CryptoBackend::RustCrypto,    // 100% Pure Rust, ARM Cross-Compile Ready!
-        // Ring removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
-        // OpenSsl removed - evolved to RustCrypto (100% Pure Rust sovereignty)
+                                      // Ring removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
+                                      // OpenSsl removed - evolved to RustCrypto (100% Pure Rust sovereignty)
     ]
 }
 
@@ -161,9 +163,7 @@ pub fn get_crypto_backend_by_name(name: &str) -> Option<CryptoBackend> {
         }
         // OpenSSL evolved to GeneticCrypto (100% Pure Rust sovereignty)
         "openssl" | "ssl" => {
-            tracing::warn!(
-                "OpenSSL backend evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)"
-            );
+            tracing::warn!("OpenSSL backend evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)");
             Some(CryptoBackend::GeneticCrypto) // Direct fallback to GeneticCrypto
         }
         _ => None,
@@ -213,8 +213,14 @@ mod tests {
         assert!(backends.contains(&CryptoBackend::RustCrypto));
         assert!(backends.contains(&CryptoBackend::GeneticCrypto));
         // Ring evolved to RustCrypto - only 100% Pure Rust backends listed! 🦀
-        assert!(!backends.contains(&CryptoBackend::Ring), "Ring evolved to RustCrypto");
-        assert!(!backends.contains(&CryptoBackend::OpenSsl), "OpenSsl evolved to RustCrypto");
+        assert!(
+            !backends.contains(&CryptoBackend::Ring),
+            "Ring evolved to RustCrypto"
+        );
+        assert!(
+            !backends.contains(&CryptoBackend::OpenSsl),
+            "OpenSsl evolved to RustCrypto"
+        );
         assert_eq!(
             backends.len(),
             2,
@@ -233,13 +239,19 @@ mod tests {
         let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
         assert!(ring_caps.supports_aes);
         assert!(ring_caps.supports_ecc);
-        assert!(!ring_caps.supports_hardware_acceleration, "Ring uses RustCrypto now (100% Pure Rust)");
+        assert!(
+            !ring_caps.supports_hardware_acceleration,
+            "Ring uses RustCrypto now (100% Pure Rust)"
+        );
 
         // OpenSSL evolved to RustCrypto - capabilities reflect RustCrypto now
         let openssl_caps = get_crypto_provider_capabilities(&CryptoBackend::OpenSsl);
         assert!(openssl_caps.supports_aes);
         assert!(openssl_caps.supports_ecc);
-        assert!(!openssl_caps.supports_hardware_acceleration, "OpenSSL uses RustCrypto now (100% Pure Rust)");
+        assert!(
+            !openssl_caps.supports_hardware_acceleration,
+            "OpenSSL uses RustCrypto now (100% Pure Rust)"
+        );
     }
 
     #[test]

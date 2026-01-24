@@ -17,21 +17,19 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
 
     // Check if already running
     if std::path::Path::new(&args.pid_file).exists() {
-        let pid_content = std::fs::read_to_string(&args.pid_file)
-            .map_err(|e| BearDogError::System {
+        let pid_content =
+            std::fs::read_to_string(&args.pid_file).map_err(|e| BearDogError::System {
                 message: format!("Failed to read PID file: {}", e),
                 category: Default::default(),
             })?;
-        
+
         if let Ok(pid) = pid_content.trim().parse::<u32>() {
             // Check if process is still running
             #[cfg(unix)]
             {
                 use std::process::Command;
-                let check = Command::new("kill")
-                    .args(["-0", &pid.to_string()])
-                    .output();
-                
+                let check = Command::new("kill").args(["-0", &pid.to_string()]).output();
+
                 if check.is_ok() && check.unwrap().status.success() {
                     return Err(BearDogError::Business {
                         message: format!("BearDog daemon already running (PID: {})", pid),
@@ -40,24 +38,23 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
                 }
             }
         }
-        
+
         // Stale PID file, remove it
         warn!("⚠️  Removing stale PID file");
-        std::fs::remove_file(&args.pid_file)
-            .map_err(|e| BearDogError::System {
-                message: format!("Failed to remove stale PID file: {}", e),
-                category: Default::default(),
-            })?;
+        std::fs::remove_file(&args.pid_file).map_err(|e| BearDogError::System {
+            message: format!("Failed to remove stale PID file: {}", e),
+            category: Default::default(),
+        })?;
     }
 
     // Write PID file
     let pid = std::process::id();
-    let mut pid_file = File::create(&args.pid_file)
-        .map_err(|e| BearDogError::System {
-            message: format!("Failed to create PID file: {}", e),
-            category: Default::default(),
-        })?;
-    pid_file.write_all(pid.to_string().as_bytes())
+    let mut pid_file = File::create(&args.pid_file).map_err(|e| BearDogError::System {
+        message: format!("Failed to create PID file: {}", e),
+        category: Default::default(),
+    })?;
+    pid_file
+        .write_all(pid.to_string().as_bytes())
         .map_err(|e| BearDogError::System {
             message: format!("Failed to write PID file: {}", e),
             category: Default::default(),
@@ -88,4 +85,3 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
 
     result
 }
-

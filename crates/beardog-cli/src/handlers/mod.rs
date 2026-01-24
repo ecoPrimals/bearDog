@@ -25,16 +25,16 @@ pub mod streaming; // Streaming encryption/decryption for large files
 
 // Test modules
 #[cfg(test)]
-mod entropy_tests;
-#[cfg(test)]
-mod hsm_tests;
-#[cfg(test)]
-mod status_tests;
-#[cfg(test)]
-mod server_tests;
+mod client_tests;
 #[cfg(test)]
 mod daemon_tests;
 #[cfg(test)]
 mod doctor_tests;
 #[cfg(test)]
-mod client_tests;
+mod entropy_tests;
+#[cfg(test)]
+mod hsm_tests;
+#[cfg(test)]
+mod server_tests;
+#[cfg(test)]
+mod status_tests;

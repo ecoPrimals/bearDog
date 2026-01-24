@@ -103,10 +103,7 @@ impl Transport {
         } else if let Some(rest) = endpoint.strip_prefix("tcp://") {
             // Find the last colon to handle IPv6 addresses (e.g., ::1:8080)
             let colon_pos = rest.rfind(':').ok_or_else(|| {
-                format!(
-                    "Invalid TCP endpoint format (expected host:port): {}",
-                    rest
-                )
+                format!("Invalid TCP endpoint format (expected host:port): {}", rest)
             })?;
 
             let host = &rest[..colon_pos];
@@ -116,9 +113,9 @@ impl Transport {
                 return Err("TCP endpoint host cannot be empty".into());
             }
 
-            let port = port_str.parse::<u16>().map_err(|e| {
-                format!("Invalid port number '{}': {}", port_str, e)
-            })?;
+            let port = port_str
+                .parse::<u16>()
+                .map_err(|e| format!("Invalid port number '{}': {}", port_str, e))?;
 
             Ok(Transport::TcpSocket {
                 host: host.to_string(),
@@ -146,7 +143,7 @@ impl Transport {
     pub fn socket_path(&self) -> Option<&PathBuf> {
         match self {
             Transport::UnixSocket { path } => Some(path),
-            _ => None,
+            Transport::TcpSocket { .. } => None,
         }
     }
 
@@ -154,7 +151,7 @@ impl Transport {
     pub fn host(&self) -> Option<&str> {
         match self {
             Transport::TcpSocket { host, .. } => Some(host),
-            _ => None,
+            Transport::UnixSocket { .. } => None,
         }
     }
 
@@ -162,7 +159,7 @@ impl Transport {
     pub fn port(&self) -> Option<u16> {
         match self {
             Transport::TcpSocket { port, .. } => Some(*port),
-            _ => None,
+            Transport::UnixSocket { .. } => None,
         }
     }
 
@@ -227,7 +224,8 @@ mod tests {
 
     #[test]
     fn test_parse_tcp_ipv4() {
-        let transport = Transport::from_endpoint("tcp://192.168.1.1:8080").expect("Failed to parse");
+        let transport =
+            Transport::from_endpoint("tcp://192.168.1.1:8080").expect("Failed to parse");
 
         if let Transport::TcpSocket { ref host, port } = transport {
             assert_eq!(host, "192.168.1.1");
@@ -253,9 +251,7 @@ mod tests {
     fn test_invalid_scheme() {
         let result = Transport::from_endpoint("http://example.com");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("Unknown endpoint scheme"));
+        assert!(result.unwrap_err().contains("Unknown endpoint scheme"));
     }
 
     #[test]
@@ -280,9 +276,7 @@ mod tests {
     fn test_empty_host() {
         let result = Transport::from_endpoint("tcp://:443");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("host cannot be empty"));
+        assert!(result.unwrap_err().contains("host cannot be empty"));
     }
 
     #[test]
@@ -339,4 +333,3 @@ mod tests {
         }
     }
 }
-

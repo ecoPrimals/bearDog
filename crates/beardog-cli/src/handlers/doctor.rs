@@ -116,11 +116,11 @@ fn check_version() -> HealthCheck {
 async fn check_entropy() -> HealthCheck {
     // Check if we can generate entropy
     use rand::RngCore;
-    
+
     let mut rng = rand::thread_rng();
     let mut buf = [0u8; 32];
     rng.fill_bytes(&mut buf);
-    
+
     HealthCheck {
         name: "Entropy Sources".to_string(),
         healthy: true,
@@ -132,7 +132,7 @@ async fn check_entropy() -> HealthCheck {
 async fn check_key_storage() -> HealthCheck {
     // Check if key storage directory is accessible
     let key_dir = std::path::Path::new("/tmp/beardog_keys");
-    
+
     if key_dir.exists() || std::fs::create_dir_all(key_dir).is_ok() {
         HealthCheck {
             name: "Key Storage".to_string(),
@@ -153,7 +153,7 @@ async fn check_key_storage() -> HealthCheck {
 async fn check_hsm() -> HealthCheck {
     // Check HSM availability
     use beardog_tunnel::tunnel::hsm::manager::HsmManager;
-    
+
     let _manager = HsmManager::new();
     HealthCheck {
         name: "HSM Devices".to_string(),
@@ -166,7 +166,7 @@ async fn check_hsm() -> HealthCheck {
 async fn check_server_connectivity() -> HealthCheck {
     // Check if server is running
     let socket_path = "/tmp/beardog.sock";
-    
+
     if std::path::Path::new(socket_path).exists() {
         // Try to connect
         match tokio::net::UnixStream::connect(socket_path).await {
@@ -196,10 +196,10 @@ async fn check_server_connectivity() -> HealthCheck {
 async fn check_crypto_operations() -> HealthCheck {
     // Test basic crypto operations - just check that Blake3 is available
     use blake3;
-    
+
     let test_data = b"test";
     let hash = blake3::hash(test_data);
-    
+
     if hash.as_bytes().len() == 32 {
         HealthCheck {
             name: "Crypto Operations".to_string(),
@@ -232,4 +232,3 @@ async fn check_component(component: &str) -> HealthCheck {
         },
     }
 }
-

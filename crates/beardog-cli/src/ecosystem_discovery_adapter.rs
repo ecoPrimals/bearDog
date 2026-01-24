@@ -351,7 +351,7 @@ impl EcosystemDiscoveryAdapter {
                 CapabilityType::WorkflowOrchestration,
             ],
             UniversalCapabilityType::Collaboration { .. } => vec![
-                CapabilityType::DataStorage,  // Template storage
+                CapabilityType::DataStorage,    // Template storage
                 CapabilityType::Authentication, // User auth
             ],
         };

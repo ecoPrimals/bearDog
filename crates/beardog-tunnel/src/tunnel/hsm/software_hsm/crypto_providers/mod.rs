@@ -1,7 +1,7 @@
 pub mod factory;
 pub mod genetic_crypto; // RECOMMENDED: 100% Pure Rust, zero FFI
                         // openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, RustCrypto)
-// pub mod ring_crypto;  // REMOVED: Has C dependencies, use RustCrypto instead (100% Pure Rust!)
+                        // pub mod ring_crypto;  // REMOVED: Has C dependencies, use RustCrypto instead (100% Pure Rust!)
 pub mod rust_crypto;
 
 #[cfg(test)]
@@ -19,7 +19,7 @@ pub use beardog_types::hsm::CryptoProvider;
 // ✅ Export all crypto provider implementations (ordered by recommendation)
 pub use genetic_crypto::GeneticCryptoProvider; // RECOMMENDED (100% Pure Rust)
                                                // OpenSslCryptoProvider removed - pure Rust alternatives available
-// pub use ring_crypto::RingCryptoProvider;  // REMOVED: C dependencies, use RustCryptoProvider instead!
+                                               // pub use ring_crypto::RingCryptoProvider;  // REMOVED: C dependencies, use RustCryptoProvider instead!
 pub use rust_crypto::RustCryptoProvider;
 #[cfg(test)]
 mod tests {
@@ -97,7 +97,7 @@ mod tests {
     fn test_capabilities_comparison() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
         let genetic_caps = get_crypto_provider_capabilities(&CryptoBackend::GeneticCrypto);
-        
+
         // Ring removed - 100% Pure Rust now!
         // let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
         // OpenSSL removed - 100% Pure Rust now!
@@ -110,8 +110,8 @@ mod tests {
 
         assert!(!rust_caps.supports_hardware_acceleration);
         assert!(genetic_caps.supports_hardware_acceleration); // GeneticCrypto uses AES-NI, AVX2 CPU intrinsics
-        // assert!(ring_caps.supports_hardware_acceleration);
-        // assert!(openssl_caps.supports_hardware_acceleration);
+                                                              // assert!(ring_caps.supports_hardware_acceleration);
+                                                              // assert!(openssl_caps.supports_hardware_acceleration);
         Ok(())
     }
 

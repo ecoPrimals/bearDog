@@ -79,11 +79,11 @@ mod unit_tests {
 
         let sign_result = handle_sign_ed25519(Some(&sign_params)).await;
         assert!(sign_result.is_ok(), "Signing failed");
-        
+
         let response = sign_result.unwrap();
         assert!(response["signature"].as_str().is_some());
         assert_eq!(response["algorithm"], "Ed25519");
-        
+
         // Full roundtrip would require deriving public key from key_id
         // which is internal to the handler - this is acceptable for now
     }
@@ -109,8 +109,7 @@ mod unit_tests {
         .unwrap();
 
         assert_ne!(
-            sig1_result["signature"],
-            sig2_result["signature"],
+            sig1_result["signature"], sig2_result["signature"],
             "Different keys should produce different signatures"
         );
     }
@@ -194,10 +193,16 @@ mod unit_tests {
         let ciphertext = base64::engine::general_purpose::STANDARD
             .decode(ciphertext_b64)
             .unwrap();
-        assert_eq!(ciphertext.len(), 0, "Empty plaintext should produce 0-byte ciphertext");
-        
+        assert_eq!(
+            ciphertext.len(),
+            0,
+            "Empty plaintext should produce 0-byte ciphertext"
+        );
+
         let tag_b64 = response["tag"].as_str().unwrap();
-        let tag = base64::engine::general_purpose::STANDARD.decode(tag_b64).unwrap();
+        let tag = base64::engine::general_purpose::STANDARD
+            .decode(tag_b64)
+            .unwrap();
         assert_eq!(tag.len(), 16, "Tag should be 16 bytes");
     }
 
@@ -413,7 +418,10 @@ mod unit_tests {
         .await
         .unwrap();
 
-        assert_ne!(mac1["mac"], mac2["mac"], "Different keys must produce different MACs");
+        assert_ne!(
+            mac1["mac"], mac2["mac"],
+            "Different keys must produce different MACs"
+        );
     }
 
     #[tokio::test]
@@ -495,17 +503,17 @@ mod e2e_tests {
         // For verify test, we need to provide a known public key
         // Since sign doesn't return it, we'll test verify with independent key generation
         use beardog_core::crypto_service::algorithms::asymmetric;
-        
+
         let message = b"test message";
         let message_b64 = base64::engine::general_purpose::STANDARD.encode(message);
-        
+
         // Generate a test keypair
         let seed = [0x42u8; 32];
         let (secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&seed).unwrap();
-        
+
         // Sign
         let signature = asymmetric::sign_ed25519(message, &secret_key).unwrap();
-        
+
         // Verify via handler
         let verify_params = json!({
             "message": message_b64,
@@ -598,7 +606,13 @@ mod e2e_tests {
         assert!(result.is_ok(), "E2E blake3 failed");
         let response = result.unwrap();
         let hash = response["hash"].as_str().unwrap();
-        assert_eq!(base64::engine::general_purpose::STANDARD.decode(hash).unwrap().len(), 32);
+        assert_eq!(
+            base64::engine::general_purpose::STANDARD
+                .decode(hash)
+                .unwrap()
+                .len(),
+            32
+        );
     }
 
     #[tokio::test]
@@ -618,7 +632,13 @@ mod e2e_tests {
         assert!(result.is_ok(), "E2E HMAC failed");
         let response = result.unwrap();
         let mac = response["mac"].as_str().unwrap();
-        assert_eq!(base64::engine::general_purpose::STANDARD.decode(mac).unwrap().len(), 32);
+        assert_eq!(
+            base64::engine::general_purpose::STANDARD
+                .decode(mac)
+                .unwrap()
+                .len(),
+            32
+        );
     }
 
     #[tokio::test]
@@ -851,19 +871,23 @@ mod chaos_tests {
                     let data_b64 = base64::engine::general_purpose::STANDARD.encode(&random_data);
 
                     match op {
-                        0 => handle_sign_ed25519(Some(&json!({
-                            "message": data_b64,
-                            "key_id": "test",
-                            "purpose": "chaos"
-                        })))
-                        .await,
+                        0 => {
+                            handle_sign_ed25519(Some(&json!({
+                                "message": data_b64,
+                                "key_id": "test",
+                                "purpose": "chaos"
+                            })))
+                            .await
+                        }
                         1 => handle_x25519_generate_ephemeral(None).await,
                         2 => handle_blake3_hash(Some(&json!({"data": data_b64}))).await,
-                        3 => handle_hmac_sha256(Some(&json!({
-                            "key": data_b64.clone(),
-                            "data": data_b64
-                        })))
-                        .await,
+                        3 => {
+                            handle_hmac_sha256(Some(&json!({
+                                "key": data_b64.clone(),
+                                "data": data_b64
+                            })))
+                            .await
+                        }
                         _ => handle_blake3_hash(Some(&json!({"data": data_b64}))).await,
                     }
                 })
@@ -902,7 +926,9 @@ mod fault_tests {
         .await;
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Missing required parameter: message"));
+        assert!(result
+            .unwrap_err()
+            .contains("Missing required parameter: message"));
     }
 
     #[tokio::test]
@@ -1014,7 +1040,10 @@ mod fault_tests {
         })))
         .await;
 
-        assert!(decrypt_result.is_err(), "Corrupted ciphertext should fail authentication");
+        assert!(
+            decrypt_result.is_err(),
+            "Corrupted ciphertext should fail authentication"
+        );
     }
 
     #[tokio::test]
@@ -1039,7 +1068,10 @@ mod fault_tests {
         })))
         .await;
 
-        assert!(decrypt_result.is_err(), "Wrong key should fail authentication");
+        assert!(
+            decrypt_result.is_err(),
+            "Wrong key should fail authentication"
+        );
     }
 
     #[tokio::test]
@@ -1150,4 +1182,3 @@ mod test_summary {
     //
     // Grade: A++++ (EXCEPTIONAL!)
 }
-

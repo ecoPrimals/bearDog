@@ -16,8 +16,8 @@ pub mod safe_native_wrapper;
 
 pub use safe_android_provider::*;
 pub use safe_device_detection::*;
-pub use types::*;
 pub use safe_native_wrapper::SafeAndroidKeystore;
+pub use types::*;
 
 pub use beardog_types::constants::domains::security::hsm::{
     MAX_CHALLENGE_SIZE, MAX_KEY_COUNT, SUPPORTED_ANDROID_VERSION, VERSION,

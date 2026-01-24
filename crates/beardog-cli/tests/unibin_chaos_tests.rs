@@ -45,7 +45,7 @@ fn test_server_permission_denied() {
     let temp_dir = TempDir::new().unwrap();
     let restricted_dir = temp_dir.path().join("restricted");
     fs::create_dir(&restricted_dir).unwrap();
-    
+
     // Make directory read-only
     let mut perms = fs::metadata(&restricted_dir).unwrap().permissions();
     perms.set_mode(0o444);
@@ -103,11 +103,13 @@ fn test_server_socket_already_exists() {
     fs::write(&socket_path, "existing file").unwrap();
 
     let mut cmd = Command::cargo_bin("beardog").unwrap();
-    cmd.arg("server").arg("--socket").arg(socket_path.to_str().unwrap());
+    cmd.arg("server")
+        .arg("--socket")
+        .arg(socket_path.to_str().unwrap());
 
     // Server should handle this by removing the old socket
     cmd.timeout(std::time::Duration::from_secs(2));
-    
+
     // Will fail because we timeout, but that's OK - we're testing cleanup
     // The important part is it doesn't crash immediately
 }
@@ -163,7 +165,7 @@ fn test_doctor_stress_comprehensive() {
     for i in 0..3 {
         let mut cmd = Command::cargo_bin("beardog").unwrap();
         cmd.arg("doctor").arg("--comprehensive");
-        
+
         let result = cmd.assert().success();
         eprintln!("Comprehensive check {} completed", i + 1);
     }
@@ -192,7 +194,9 @@ fn test_server_socket_path_with_spaces() {
     let socket_path = temp_dir.path().join("path with spaces.sock");
 
     let mut cmd = Command::cargo_bin("beardog").unwrap();
-    cmd.arg("server").arg("--socket").arg(socket_path.to_str().unwrap());
+    cmd.arg("server")
+        .arg("--socket")
+        .arg(socket_path.to_str().unwrap());
 
     // Should handle paths with spaces
     cmd.timeout(std::time::Duration::from_secs(2));
@@ -205,7 +209,6 @@ fn test_doctor_interrupted_check() {
 
     // Set a very short timeout to simulate interruption
     cmd.timeout(std::time::Duration::from_millis(100));
-    
+
     // May succeed or timeout, either is acceptable
 }
-

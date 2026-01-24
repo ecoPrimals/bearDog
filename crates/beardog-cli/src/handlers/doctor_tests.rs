@@ -34,7 +34,7 @@ mod tests {
     #[test]
     fn test_doctor_args_all_formats() {
         let formats = vec!["text", "json"];
-        
+
         for format in formats {
             let args = DoctorArgs {
                 comprehensive: false,
@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn test_doctor_args_components() {
         let components = vec!["entropy", "storage", "hsm", "server", "crypto"];
-        
+
         for component in components {
             let args = DoctorArgs {
                 comprehensive: false,
@@ -73,4 +73,3 @@ mod tests {
         assert_eq!(args1.component, args2.component);
     }
 }
-

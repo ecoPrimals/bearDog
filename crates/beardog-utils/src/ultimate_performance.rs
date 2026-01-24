@@ -383,7 +383,7 @@ impl SIMDCapabilities {
                 has_avx2: false,
                 has_avx512: false,
                 has_sse42: false,
-                vector_width: 128,  // ARM NEON default
+                vector_width: 128, // ARM NEON default
             }
         }
     }

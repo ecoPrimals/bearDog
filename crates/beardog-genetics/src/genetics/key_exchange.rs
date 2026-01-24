@@ -320,7 +320,7 @@ impl GeneticKeyExchange {
         let shared_secret = Self::derive_shared_secret(peer_id, &peer_key.public_key);
 
         // Update or create lineage
-        let lineage = self.update_lineage(peer_id, &peer_key.lineage_info)?;
+        let lineage = self.update_lineage(peer_id, &peer_key.lineage_info);
 
         debug!("✅ Key exchange completed with peer: {}", peer_id);
 
@@ -431,11 +431,7 @@ impl GeneticKeyExchange {
         hasher.finalize().to_vec()
     }
 
-    fn update_lineage(
-        &self,
-        peer_id: &str,
-        new_lineage: &KeyLineage,
-    ) -> Result<KeyLineage, BearDogError> {
+    fn update_lineage(&self, peer_id: &str, new_lineage: &KeyLineage) -> KeyLineage {
         // parking_lot::RwLock never panics - cleaner API!
         let mut lineages = self.lineages.write();
 
@@ -445,11 +441,11 @@ impl GeneticKeyExchange {
             existing.generation += 1;
             existing.created_at = SystemTime::now();
             existing.expires_at = new_lineage.expires_at;
-            Ok(existing.clone())
+            existing.clone()
         } else {
             // Create new lineage
             lineages.insert(peer_id.to_string(), new_lineage.clone());
-            Ok(new_lineage.clone())
+            new_lineage.clone()
         }
     }
 }

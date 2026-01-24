@@ -73,7 +73,9 @@ impl SoftwareUniversalProvider {
             }
             CryptoProviderType::OpenSsl => {
                 // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty!)
-                tracing::warn!("OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
+                tracing::warn!(
+                    "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
+                );
                 let provider = RustCryptoProvider::new().await?;
                 Arc::new(provider)
             }

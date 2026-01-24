@@ -118,17 +118,15 @@ impl TunnelProtocol {
     pub fn http_version(&self) -> Option<&str> {
         match self {
             TunnelProtocol::TlsHttp { http_version, .. } => Some(http_version),
-            _ => None,
+            TunnelProtocol::BtspNative { .. } => None,
         }
     }
 
     /// Get ALPN protocols (for external mode)
     pub fn alpn_protocols(&self) -> Option<&[String]> {
         match self {
-            TunnelProtocol::TlsHttp {
-                alpn_protocols, ..
-            } => Some(alpn_protocols),
-            _ => None,
+            TunnelProtocol::TlsHttp { alpn_protocols, .. } => Some(alpn_protocols),
+            TunnelProtocol::BtspNative { .. } => None,
         }
     }
 
@@ -136,7 +134,7 @@ impl TunnelProtocol {
     pub fn has_feature(&self, feature: &str) -> bool {
         match self {
             TunnelProtocol::BtspNative { features, .. } => features.contains(&feature.to_string()),
-            _ => false,
+            TunnelProtocol::TlsHttp { .. } => false,
         }
     }
 }
@@ -173,8 +171,7 @@ mod tests {
         assert!(json.contains("2.0"));
         assert!(json.contains("compression"));
 
-        let parsed: TunnelProtocol =
-            serde_json::from_str(&json).expect("Deserialization failed");
+        let parsed: TunnelProtocol = serde_json::from_str(&json).expect("Deserialization failed");
         assert_eq!(protocol, parsed);
     }
 
@@ -205,8 +202,7 @@ mod tests {
         assert!(json.contains("1.3"));
         assert!(json.contains("h2"));
 
-        let parsed: TunnelProtocol =
-            serde_json::from_str(&json).expect("Deserialization failed");
+        let parsed: TunnelProtocol = serde_json::from_str(&json).expect("Deserialization failed");
         assert_eq!(protocol, parsed);
     }
 
@@ -265,10 +261,7 @@ mod tests {
         let protocol: TunnelProtocol = serde_json::from_str(json).expect("Deserialization failed");
 
         if let TunnelProtocol::TlsHttp { tls_version, .. } = protocol {
-            assert_eq!(
-                tls_version, "1.3",
-                "Should default to TLS 1.3 for security"
-            );
+            assert_eq!(tls_version, "1.3", "Should default to TLS 1.3 for security");
         }
     }
 
@@ -293,4 +286,3 @@ mod tests {
         }
     }
 }
-

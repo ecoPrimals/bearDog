@@ -4,8 +4,8 @@
 
 use crate::auth::types::{NodeInfo, NodeRegistry};
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
 use parking_lot::RwLock;
+use std::collections::HashMap;
 
 pub struct InMemoryNodeRegistry {
     nodes: RwLock<HashMap<String, NodeInfo>>,

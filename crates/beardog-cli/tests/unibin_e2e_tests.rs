@@ -155,9 +155,7 @@ fn test_client_requires_server() {
         .arg("help");
 
     // Should fail because server is not running
-    cmd.timeout(Duration::from_secs(2))
-        .assert()
-        .failure();
+    cmd.timeout(Duration::from_secs(2)).assert().failure();
 }
 
 #[test]
@@ -195,4 +193,3 @@ fn test_daemon_custom_paths() {
 
     cmd.assert().success();
 }
-

@@ -157,16 +157,12 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
     let signing_key = Pkcs1SigningKey::<Sha256>::new(private_key);
 
     // Sign data (Pure Rust, memory-safe)
-    let signature = signing_key
-        .sign_with_rng(&mut rng, &data)
-        .to_vec();
+    let signature = signing_key.sign_with_rng(&mut rng, &data).to_vec();
 
     // Encode public key as PEM (standard format for interoperability)
-    let public_key_pem = rsa::pkcs8::EncodePublicKey::to_public_key_pem(
-        &public_key,
-        rsa::pkcs8::LineEnding::LF,
-    )
-    .map_err(|e| format!("Failed to encode public key: {}", e))?;
+    let public_key_pem =
+        rsa::pkcs8::EncodePublicKey::to_public_key_pem(&public_key, rsa::pkcs8::LineEnding::LF)
+            .map_err(|e| format!("Failed to encode public key: {}", e))?;
 
     // Encode signature as base64
     let signature_b64 = BASE64.encode(&signature);
@@ -388,16 +384,12 @@ pub async fn handle_sign_rsa_pss_sha256(
     let signing_key = PssSigningKey::<Sha256>::new(private_key);
 
     // Sign data (Pure Rust, memory-safe, probabilistic padding)
-    let signature = signing_key
-        .sign_with_rng(&mut rng, &data)
-        .to_vec();
+    let signature = signing_key.sign_with_rng(&mut rng, &data).to_vec();
 
     // Encode public key as PEM (standard format for interoperability)
-    let public_key_pem = rsa::pkcs8::EncodePublicKey::to_public_key_pem(
-        &public_key,
-        rsa::pkcs8::LineEnding::LF,
-    )
-    .map_err(|e| format!("Failed to encode public key: {}", e))?;
+    let public_key_pem =
+        rsa::pkcs8::EncodePublicKey::to_public_key_pem(&public_key, rsa::pkcs8::LineEnding::LF)
+            .map_err(|e| format!("Failed to encode public key: {}", e))?;
 
     // Encode signature as base64
     let signature_b64 = BASE64.encode(&signature);
@@ -701,4 +693,3 @@ mod tests {
         assert!(result.unwrap_err().contains("Missing parameters"));
     }
 }
-

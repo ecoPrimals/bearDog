@@ -99,13 +99,28 @@ pub enum Capability {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum IpcEndpoint {
     /// Unix domain socket
-    UnixSocket { path: String, permissions: u32 },
+    UnixSocket {
+        /// Filesystem path to Unix domain socket
+        path: String,
+        /// File permissions (octal, e.g., 0o600)
+        permissions: u32,
+    },
 
     /// HTTP API endpoint
-    Http { bind_addr: String, tls: bool },
+    Http {
+        /// Bind address (IP:port, e.g., "127.0.0.1:8080")
+        bind_addr: String,
+        /// Whether TLS is enabled
+        tls: bool,
+    },
 
     /// Shared memory segment
-    SharedMemory { key: String, size_bytes: usize },
+    SharedMemory {
+        /// Shared memory key identifier
+        key: String,
+        /// Size of shared memory segment in bytes
+        size_bytes: usize,
+    },
 }
 
 /// Capability request from another primal

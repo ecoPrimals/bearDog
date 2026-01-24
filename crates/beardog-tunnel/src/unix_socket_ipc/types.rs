@@ -36,11 +36,34 @@ pub struct JsonRpcError {
 }
 
 impl JsonRpcError {
-    /// Standard JSON-RPC 2.0 error codes
+    /// Parse error code (-32700)
+    ///
+    /// Invalid JSON was received by the server. An error occurred on the server
+    /// while parsing the JSON text. This typically indicates malformed JSON syntax.
     pub const PARSE_ERROR: i32 = -32700;
+
+    /// Invalid Request error code (-32600)
+    ///
+    /// The JSON sent is not a valid Request object according to JSON-RPC 2.0 spec.
+    /// Required fields may be missing or have incorrect types.
     pub const INVALID_REQUEST: i32 = -32600;
+
+    /// Method not found error code (-32601)
+    ///
+    /// The method does not exist or is not available. Check the method name
+    /// and ensure it's supported by this server.
     pub const METHOD_NOT_FOUND: i32 = -32601;
+
+    /// Invalid params error code (-32602)
+    ///
+    /// Invalid method parameter(s). The method exists but the parameters provided
+    /// are invalid - wrong types, missing required parameters, or invalid values.
     pub const INVALID_PARAMS: i32 = -32602;
+
+    /// Internal error code (-32603)
+    ///
+    /// Internal JSON-RPC error. An internal error occurred in the JSON-RPC handler.
+    /// This typically indicates a bug or unexpected condition in the server.
     pub const INTERNAL_ERROR: i32 = -32603;
 
     /// Create a parse error

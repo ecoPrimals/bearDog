@@ -73,7 +73,6 @@ use base64::Engine;
 use serde_json::Value;
 use tracing::{debug, info};
 
-
 pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.blake3_hash")?;
 

@@ -14,10 +14,10 @@ use aes_gcm::{
 use async_trait::async_trait;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hkdf::Hkdf;
+use parking_lot::RwLock;
 use sha2::Sha256;
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
 use zeroize::Zeroizing;
 
 /// Software HSM key material stored securely in memory

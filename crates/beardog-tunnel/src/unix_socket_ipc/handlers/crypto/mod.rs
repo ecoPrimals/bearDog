@@ -46,43 +46,31 @@
 //! ```
 
 // Module declarations (modules extracted from crypto_handlers.rs)
-pub mod sslkeylog;    // ✅ Step 2 - SSLKEYLOGFILE export utility
-pub mod tls;          // ✅ Step 3 - TLS 1.3 operations (1,884 lines)
-pub mod asymmetric;   // ✅ Step 4 - Ed25519, X25519 (325 lines)
-pub mod symmetric;    // ✅ Step 5 - ChaCha20-Poly1305 (256 lines)
-pub mod hash;         // ✅ Step 6 - Blake3, HMAC-SHA256 (186 lines)
-pub mod utils;        // ✅ Step 7 - Shared utility functions (derive_key_from_id)
+pub mod asymmetric; // ✅ Step 4 - Ed25519, X25519 (325 lines)
+pub mod hash; // ✅ Step 6 - Blake3, HMAC-SHA256 (186 lines)
+pub mod sslkeylog; // ✅ Step 2 - SSLKEYLOGFILE export utility
+pub mod symmetric; // ✅ Step 5 - ChaCha20-Poly1305 (256 lines)
+pub mod tls; // ✅ Step 3 - TLS 1.3 operations (1,884 lines)
+pub mod utils; // ✅ Step 7 - Shared utility functions (derive_key_from_id)
 
 // Re-export sslkeylog utility for backward compatibility
 pub use sslkeylog::export_to_sslkeylogfile;
 
 // Re-export TLS handlers for backward compatibility
 pub use tls::{
-    handle_tls_compute_finished_verify_data,
-    handle_tls_derive_application_secrets,
-    handle_tls_derive_handshake_secrets,
-    handle_tls_derive_secrets,
-    handle_tls_sign_handshake,
+    handle_tls_compute_finished_verify_data, handle_tls_derive_application_secrets,
+    handle_tls_derive_handshake_secrets, handle_tls_derive_secrets, handle_tls_sign_handshake,
     handle_tls_verify_certificate,
 };
 
 // Re-export asymmetric crypto handlers for backward compatibility
 pub use asymmetric::{
-    handle_sign_ed25519,
-    handle_verify_ed25519,
-    handle_x25519_derive_secret,
+    handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
 };
 
 // Re-export symmetric crypto handlers for backward compatibility
-pub use symmetric::{
-    handle_chacha20_poly1305_decrypt,
-    handle_chacha20_poly1305_encrypt,
-};
+pub use symmetric::{handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_encrypt};
 
 // Re-export hash handlers for backward compatibility
-pub use hash::{
-    handle_blake3_hash,
-    handle_hmac_sha256,
-};
-
+pub use hash::{handle_blake3_hash, handle_hmac_sha256};

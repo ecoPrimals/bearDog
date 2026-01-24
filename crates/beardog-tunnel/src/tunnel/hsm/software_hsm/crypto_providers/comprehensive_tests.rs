@@ -93,7 +93,7 @@ fn test_is_backend_supported() {
     // Test: Backend support detection (100% Pure Rust! 🦀)
     assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
     assert!(is_crypto_backend_supported(&CryptoBackend::GeneticCrypto));
-    
+
     // Ring and OpenSSL evolved to pure Rust - no longer supported
     assert!(
         !is_crypto_backend_supported(&CryptoBackend::Ring),
@@ -116,7 +116,7 @@ fn test_get_backend_by_name() {
         get_crypto_backend_by_name("Genetic"),
         Some(CryptoBackend::GeneticCrypto)
     );
-    
+
     // Ring and OpenSSL evolved to GeneticCrypto (backward compatibility + pure Rust!)
     assert_eq!(
         get_crypto_backend_by_name("Ring"),

@@ -223,7 +223,9 @@ impl RustSoftwareHsm {
             }
             CryptoBackendType::OpenSsl => {
                 // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty!)
-                tracing::warn!("OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
+                tracing::warn!(
+                    "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
+                );
                 Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
                     as Arc<dyn CryptoProvider<KeyType> + Send + Sync>)
             }

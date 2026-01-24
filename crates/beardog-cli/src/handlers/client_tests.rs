@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn test_client_args_with_command() {
         let commands = vec!["help", "crypto.sign_ed25519", "discovery.capabilities"];
-        
+
         for cmd in commands {
             let args = ClientArgs {
                 socket: "/tmp/beardog.sock".to_string(),
@@ -52,4 +52,3 @@ mod tests {
         assert_eq!(args1.command, args2.command);
     }
 }
-

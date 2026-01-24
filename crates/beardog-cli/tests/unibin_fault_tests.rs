@@ -10,7 +10,7 @@ fn test_doctor_with_corrupted_key_storage() {
     let temp_dir = TempDir::new().unwrap();
     let key_dir = temp_dir.path().join("beardog_keys");
     fs::create_dir(&key_dir).unwrap();
-    
+
     // Create corrupted key file
     fs::write(key_dir.join("corrupted.key"), "invalid data").unwrap();
 
@@ -60,7 +60,7 @@ fn test_client_with_malformed_socket() {
 #[test]
 fn test_daemon_with_full_disk() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     let mut cmd = Command::cargo_bin("beardog").unwrap();
     cmd.arg("daemon")
         .arg("--pid-file")
@@ -138,7 +138,7 @@ fn test_server_rapid_start_stop() {
             .arg(socket_path.to_str().unwrap());
 
         cmd.timeout(std::time::Duration::from_millis(100));
-        
+
         // Clean up socket if it exists
         let _ = fs::remove_file(&socket_path);
     }
@@ -183,7 +183,7 @@ fn test_client_network_interruption_simulation() {
 fn test_doctor_concurrent_executions() {
     // Run multiple doctor checks concurrently to test for race conditions
     use std::thread;
-    
+
     let handles: Vec<_> = (0..3)
         .map(|i| {
             thread::spawn(move || {
@@ -234,4 +234,3 @@ fn test_doctor_resource_exhaustion() {
         .assert()
         .code(predicate::in_iter(vec![0, 1]));
 }
-

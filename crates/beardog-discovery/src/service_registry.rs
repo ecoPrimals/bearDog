@@ -121,10 +121,7 @@ impl ServiceRegistryDiscovery {
                     all_services.append(&mut services);
                 }
                 Err(e) => {
-                    warn!(
-                        "⚠️  Failed to query {} registry: {}",
-                        provider.name, e
-                    );
+                    warn!("⚠️  Failed to query {} registry: {}", provider.name, e);
                 }
             }
         }
@@ -190,10 +187,7 @@ impl ServiceRegistryDiscovery {
         provider: &DiscoveredProvider,
         capability: &str,
     ) -> Result<Vec<DiscoveredService>> {
-        debug!(
-            "🔍 Querying {} registry for: {}",
-            provider.name, capability
-        );
+        debug!("🔍 Querying {} registry for: {}", provider.name, capability);
 
         // Delegate to provider via its advertised interface
         // Provider could be:
@@ -315,8 +309,7 @@ mod tests {
             .map(|i| {
                 let disc = discovery.clone();
                 tokio::spawn(async move {
-                    disc.update_cache(&format!("cap-{}", i), vec![], 300)
-                        .await;
+                    disc.update_cache(&format!("cap-{}", i), vec![], 300).await;
                 })
             })
             .collect();

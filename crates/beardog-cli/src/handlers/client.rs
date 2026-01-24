@@ -57,7 +57,7 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
             Ok(0) => break, // EOF
             Ok(_) => {
                 let input = input.trim();
-                
+
                 if input.is_empty() {
                     continue;
                 }
@@ -102,7 +102,7 @@ async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), Bear
             message: format!("Failed to connect for command: {}", e),
             category: Default::default(),
         })?;
-    
+
     let (reader, mut writer) = new_stream.into_split();
     let mut reader = BufReader::new(reader);
 
@@ -141,18 +141,21 @@ async fn send_command(
     });
 
     // Send request
-    let request_str = serde_json::to_string(&request)
-        .map_err(|e| BearDogError::System {
-            message: format!("Failed to serialize request: {}", e),
-            category: Default::default(),
-        })?;
-    
-    writer.write_all(request_str.as_bytes()).await
+    let request_str = serde_json::to_string(&request).map_err(|e| BearDogError::System {
+        message: format!("Failed to serialize request: {}", e),
+        category: Default::default(),
+    })?;
+
+    writer
+        .write_all(request_str.as_bytes())
+        .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to write request: {}", e),
             category: Default::default(),
         })?;
-    writer.write_all(b"\n").await
+    writer
+        .write_all(b"\n")
+        .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to write newline: {}", e),
             category: Default::default(),
@@ -160,14 +163,16 @@ async fn send_command(
 
     // Read response
     let mut response_line = String::new();
-    reader.read_line(&mut response_line).await
+    reader
+        .read_line(&mut response_line)
+        .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to read response: {}", e),
             category: Default::default(),
         })?;
 
-    let response: serde_json::Value = serde_json::from_str(&response_line)
-        .map_err(|e| BearDogError::System {
+    let response: serde_json::Value =
+        serde_json::from_str(&response_line).map_err(|e| BearDogError::System {
             message: format!("Failed to parse response: {}", e),
             category: Default::default(),
         })?;
@@ -205,4 +210,3 @@ fn print_help() {
     println!("  beardog> discovery.capabilities");
     println!("");
 }
-

@@ -137,7 +137,7 @@ impl BearDogClient {
     /// # async fn example(proof: LineageProof) -> Result<(), Box<dyn std::error::Error>> {
     /// let mut client = BearDogClient::connect().await?;
     /// let verification = client.verify_lineage(&proof).await?;
-    /// 
+    ///
     /// if verification["valid"].as_bool().unwrap_or(false) {
     ///     println!("✅ Valid lineage!");
     /// }

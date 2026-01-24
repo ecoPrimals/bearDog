@@ -101,24 +101,19 @@
 //!
 //! **Total**: 9 public methods (down from 17 in two-pattern architecture!)
 
-mod trust_mode;
 mod protocol;
-mod transport;
 mod rpc;
+mod transport;
+mod trust_mode;
 
 // Re-export all public types
-pub use trust_mode::{TrustMode, CaBundle};
 pub use protocol::TunnelProtocol;
-pub use transport::Transport;
 pub use rpc::{
-    TunnelEstablishParams,
-    TunnelEstablishResponse,
-    ConfigureTlsParams,
-    VerifyPeerParams,
-    VerifyPeerResponse,
-    TunnelSendHttpParams,
-    TunnelSendHttpResponse,
+    ConfigureTlsParams, TunnelEstablishParams, TunnelEstablishResponse, TunnelSendHttpParams,
+    TunnelSendHttpResponse, VerifyPeerParams, VerifyPeerResponse,
 };
+pub use transport::Transport;
+pub use trust_mode::{CaBundle, TrustMode};
 
 #[cfg(test)]
 mod tests {
@@ -183,8 +178,8 @@ mod tests {
             "peer_endpoint": "unix:///tmp/beardog.sock"
         }"#;
 
-        let params: TunnelEstablishParams = serde_json::from_str(json)
-            .expect("Failed to deserialize");
+        let params: TunnelEstablishParams =
+            serde_json::from_str(json).expect("Failed to deserialize");
 
         // Should work unchanged with defaults
         assert!(params.is_internal());
@@ -207,4 +202,3 @@ mod tests {
         let _http_response: TunnelSendHttpResponse;
     }
 }
-
