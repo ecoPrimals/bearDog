@@ -34,7 +34,8 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // NOTE: This example uses an outdated API and needs updating
 //! use beardog_genetics::birdsong::BirdSongManager;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {

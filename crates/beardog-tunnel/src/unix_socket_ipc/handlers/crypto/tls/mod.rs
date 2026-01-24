@@ -63,7 +63,8 @@
 //!
 //! # Usage Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // NOTE: These handlers are internal and called via JSON-RPC
 //! use crate::unix_socket_ipc::handlers::crypto::tls::*;
 //!
 //! // 1. Derive handshake keys (Stage 1)

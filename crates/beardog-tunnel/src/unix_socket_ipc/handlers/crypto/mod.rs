@@ -29,7 +29,8 @@
 //!
 //! All handlers are re-exported at the module level for backward compatibility:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // NOTE: These handlers are internal and called via JSON-RPC
 //! use crate::unix_socket_ipc::handlers::crypto::*;
 //!
 //! // TLS operations

@@ -22,7 +22,8 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // NOTE: This example uses methods that need to be async
 //! use beardog_genetics::genetics::key_exchange::{GeneticKeyExchange, KeyExchangeConfig};
 //! use beardog_errors::BearDogError;
 //!

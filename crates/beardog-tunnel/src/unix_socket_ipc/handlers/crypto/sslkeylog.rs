@@ -117,7 +117,8 @@ use tracing::info;
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
+/// // NOTE: This is an internal utility function
 /// use crate::unix_socket_ipc::handlers::crypto::sslkeylog::export_to_sslkeylogfile;
 ///
 /// let client_random = vec![0u8; 32];

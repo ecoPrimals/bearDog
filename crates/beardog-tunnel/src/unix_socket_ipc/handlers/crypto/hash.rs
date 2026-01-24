@@ -47,7 +47,8 @@
 //!
 //! All handlers are re-exported from the parent `crypto` module:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // NOTE: These handlers are internal and called via JSON-RPC
 //! use crate::unix_socket_ipc::handlers::crypto::*;
 //!
 //! // Compute Blake3 hash
