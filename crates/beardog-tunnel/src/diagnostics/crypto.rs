@@ -122,6 +122,42 @@ pub fn log_chacha20_poly1305_encrypt(
     _ciphertext_len: usize,
 ) {}
 
+/// Diagnostic log for ChaCha20-Poly1305 decryption
+///
+/// **Origin**: `handlers/crypto/symmetric.rs` lines 213-222
+/// **Purpose**: Cross-verify decryption params with Songbird
+#[cfg(feature = "diagnostics")]
+pub fn log_chacha20_poly1305_decrypt(
+    key: &[u8],
+    nonce: &[u8],
+    ciphertext: &[u8],
+    tag: &[u8],
+    aad: Option<&[u8]>,
+) {
+    eprintln!("════════════════════════════════════════════════════════");
+    eprintln!("🔍 BEARDOG RECEIVED - ChaCha20-Poly1305 DECRYPT:");
+    eprintln!("   Key (32 bytes): {}", hex::encode(key));
+    eprintln!("   Nonce ({} bytes): {}", nonce.len(), hex::encode(nonce));
+    eprintln!("   Ciphertext ({} bytes): {}", ciphertext.len(), hex::encode(ciphertext));
+    eprintln!("   Tag ({} bytes): {}", tag.len(), hex::encode(tag));
+    if let Some(aad_data) = aad {
+        eprintln!("   AAD ({} bytes): {}", aad_data.len(), hex::encode(aad_data));
+    } else {
+        eprintln!("   AAD: None");
+    }
+    eprintln!("════════════════════════════════════════════════════════");
+}
+
+#[cfg(not(feature = "diagnostics"))]
+#[inline(always)]
+pub fn log_chacha20_poly1305_decrypt(
+    _key: &[u8],
+    _nonce: &[u8],
+    _ciphertext: &[u8],
+    _tag: &[u8],
+    _aad: Option<&[u8]>,
+) {}
+
 /// Diagnostic log for HKDF key derivation
 #[cfg(feature = "diagnostics")]
 pub fn log_hkdf_derivation(

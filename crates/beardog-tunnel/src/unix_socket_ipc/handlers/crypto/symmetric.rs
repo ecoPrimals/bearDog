@@ -209,17 +209,16 @@ pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<
         ciphertext.len()
     );
     
-    // HEX DUMPS for deep debugging (cross-verify with Songbird)
-    info!("🔍 BEARDOG RECEIVED - FULL HEX DUMPS:");
-    info!("   Key (32 bytes): {}", hex::encode(&key));
-    info!("   Nonce ({} bytes): {}", nonce.len(), hex::encode(&nonce));
-    info!("   Ciphertext ({} bytes): {}", ciphertext.len(), hex::encode(&ciphertext));
-    info!("   Tag ({} bytes): {}", tag.len(), hex::encode(&tag));
-    if let Some(ref aad_data) = aad {
-        info!("   AAD ({} bytes): {}", aad_data.len(), hex::encode(aad_data));
-    } else {
-        info!("   AAD: None");
-    }
+    // EVOLVED: Diagnostic logging moved to diagnostics module (not removed!)
+    // Enable with: cargo build --features diagnostics
+    // This is zero-cost when disabled (completely inlined away)
+    crate::diagnostics::crypto::log_chacha20_poly1305_decrypt(
+        &key,
+        &nonce,
+        &ciphertext,
+        &tag,
+        aad.as_deref(),
+    );
 
     // Use BearDog's crypto service
     use beardog_core::crypto_service::algorithms::symmetric;
