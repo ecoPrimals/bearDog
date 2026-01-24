@@ -23,6 +23,120 @@ use anyhow::Result;
 use base64::Engine;
 use serde_json::Value;
 use tracing::{debug, info, warn};
+use std::fs::OpenOptions;
+use std::io::Write;
+
+/// Export TLS session keys to SSLKEYLOGFILE (for Wireshark decryption)
+///
+/// This function exports TLS 1.3 session secrets in the format required by Wireshark
+/// and other TLS analyzers. The SSLKEYLOGFILE format is documented at:
+/// https://firefox-source-docs.mozilla.org/security/nss/legacy/key_log_format/index.html
+///
+/// # Format for TLS 1.3:
+/// ```text
+/// CLIENT_HANDSHAKE_TRAFFIC_SECRET <client_random_hex> <secret_hex>
+/// SERVER_HANDSHAKE_TRAFFIC_SECRET <client_random_hex> <secret_hex>
+/// CLIENT_TRAFFIC_SECRET_0 <client_random_hex> <secret_hex>
+/// SERVER_TRAFFIC_SECRET_0 <client_random_hex> <secret_hex>
+/// ```
+///
+/// # Parameters
+///
+/// - `client_random`: 32-byte client random from ClientHello
+/// - `handshake_secrets`: Optional tuple of (client_hs_secret, server_hs_secret)
+/// - `application_secrets`: Optional tuple of (client_app_secret, server_app_secret)
+///
+/// # Returns
+///
+/// `Ok(())` if export succeeds or SSLKEYLOGFILE is not set
+/// `Err(String)` if export fails
+///
+/// # Usage
+///
+/// Set environment variable before running:
+/// ```bash
+/// export SSLKEYLOGFILE=/tmp/tls-keys.log
+/// ```
+///
+/// Then in Wireshark:
+/// 1. Edit → Preferences
+/// 2. Protocols → TLS
+/// 3. (Pre)-Master-Secret log filename: /tmp/tls-keys.log
+/// 4. Wireshark will decrypt all TLS 1.3 traffic!
+fn export_to_sslkeylogfile(
+    client_random: &[u8],
+    handshake_secrets: Option<(&[u8], &[u8])>,
+    application_secrets: Option<(&[u8], &[u8])>,
+) -> Result<(), String> {
+    // ALWAYS log that we're attempting export (for debugging)
+    info!("🔐 export_to_sslkeylogfile() called");
+    info!("   client_random: {} bytes", client_random.len());
+    info!("   handshake_secrets: {}", if handshake_secrets.is_some() { "provided" } else { "none" });
+    info!("   application_secrets: {}", if application_secrets.is_some() { "provided" } else { "none" });
+    
+    // Check if SSLKEYLOGFILE env var is set
+    let keylog_path = match std::env::var("SSLKEYLOGFILE") {
+        Ok(path) if !path.is_empty() => {
+            info!("   ✅ SSLKEYLOGFILE is set: {}", path);
+            path
+        },
+        Ok(path) => {
+            info!("   ⚠️  SSLKEYLOGFILE is set but empty");
+            return Ok(());
+        },
+        Err(_) => {
+            info!("   ℹ️  SSLKEYLOGFILE not set (this is normal in production)");
+            return Ok(());
+        }
+    };
+    
+    if client_random.len() != 32 {
+        return Err(format!("client_random must be 32 bytes, got {}", client_random.len()));
+    }
+    
+    info!("🔐 Exporting TLS session keys to SSLKEYLOGFILE: {}", keylog_path);
+    
+    // Open file in append mode
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&keylog_path)
+        .map_err(|e| format!("Failed to open SSLKEYLOGFILE: {}", e))?;
+    
+    let client_random_hex = hex::encode(client_random);
+    
+    // Export handshake secrets (for encrypted handshake messages)
+    if let Some((client_hs_secret, server_hs_secret)) = handshake_secrets {
+        writeln!(file, "CLIENT_HANDSHAKE_TRAFFIC_SECRET {} {}", 
+                 client_random_hex, hex::encode(client_hs_secret))
+            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        
+        writeln!(file, "SERVER_HANDSHAKE_TRAFFIC_SECRET {} {}", 
+                 client_random_hex, hex::encode(server_hs_secret))
+            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        
+        info!("  ✅ Exported handshake traffic secrets");
+    }
+    
+    // Export application secrets (for HTTP data)
+    if let Some((client_app_secret, server_app_secret)) = application_secrets {
+        writeln!(file, "CLIENT_TRAFFIC_SECRET_0 {} {}", 
+                 client_random_hex, hex::encode(client_app_secret))
+            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        
+        writeln!(file, "SERVER_TRAFFIC_SECRET_0 {} {}", 
+                 client_random_hex, hex::encode(server_app_secret))
+            .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        
+        info!("  ✅ Exported application traffic secrets");
+    }
+    
+    info!("🔐 Session keys successfully exported to SSLKEYLOGFILE!");
+    info!("   Wireshark can now decrypt this TLS 1.3 session!");
+    info!("   Open {} in Wireshark: Preferences → Protocols → TLS", keylog_path);
+    
+    Ok(())
+}
 
 /// Handle crypto.sign_ed25519 method
 ///
@@ -1026,6 +1140,15 @@ pub async fn handle_tls_derive_application_secrets(
     info!("  Mode: {}", mode);
     info!("════════════════════════════════════════════════════════════");
 
+    // Export to SSLKEYLOGFILE for Wireshark decryption (if SSLKEYLOGFILE env var is set)
+    if let Err(e) = export_to_sslkeylogfile(
+        &client_random,
+        None, // No handshake secrets here (already exported in handle_tls_derive_handshake_secrets)
+        Some((&client_app_secret, &server_app_secret)),
+    ) {
+        warn!("⚠️  Failed to export to SSLKEYLOGFILE: {}", e);
+    }
+
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
         "server_write_key": server_write_key_b64,
@@ -1284,6 +1407,15 @@ pub async fn handle_tls_derive_handshake_secrets(
         "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
         cipher_suite, key_len, IV_LEN
     );
+
+    // Export to SSLKEYLOGFILE for Wireshark decryption (if SSLKEYLOGFILE env var is set)
+    if let Err(e) = export_to_sslkeylogfile(
+        &client_random,
+        Some((&client_handshake_secret, &server_handshake_secret)),
+        None, // No application secrets yet (will be exported in handle_tls_derive_application_secrets)
+    ) {
+        warn!("⚠️  Failed to export to SSLKEYLOGFILE: {}", e);
+    }
 
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
