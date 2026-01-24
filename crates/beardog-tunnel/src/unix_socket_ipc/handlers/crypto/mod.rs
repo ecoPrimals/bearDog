@@ -45,17 +45,19 @@
 //! let hash = handle_blake3_hash(params).await?;
 //! ```
 
-pub mod tls;
-pub mod asymmetric;
-pub mod symmetric;
-pub mod hash;
+// Module declarations (modules will be added as we extract them from crypto_handlers.rs)
 pub mod sslkeylog;
+// pub mod tls; // Step 3
+// pub mod asymmetric; // Step 4
+// pub mod symmetric; // Step 5
+// pub mod hash; // Step 6
 
-// Re-export all handlers for backward compatibility
-// This ensures existing code using `use crate::unix_socket_ipc::crypto_handlers::*` 
-// continues to work without changes
-pub use tls::*;
-pub use asymmetric::*;
-pub use symmetric::*;
-pub use hash::*;
+// Re-export sslkeylog utility for backward compatibility
+pub use sslkeylog::export_to_sslkeylogfile;
+
+// Re-exports for handlers will be added as modules are extracted:
+// pub use tls::*; // Step 3
+// pub use asymmetric::*; // Step 4
+// pub use symmetric::*; // Step 5
+// pub use hash::*; // Step 6
 

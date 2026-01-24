@@ -25,11 +25,36 @@
 
 **Status**: ✅ Complete
 
+### Step 2: Extract sslkeylog.rs (30 minutes) ✅
+
+**File Created**: `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto/sslkeylog.rs`
+
+**Content**:
+- Extracted `export_to_sslkeylogfile()` function (lines 29-152 from crypto_handlers.rs)
+- Comprehensive module-level documentation
+- Security warnings and usage examples
+- NSS Key Log Format implementation
+- Wireshark integration guide
+- Unit tests (3 test cases)
+
+**Lines**: 242 lines
+
+**What Was Extracted**:
+- SSLKEYLOGFILE export utility for Wireshark TLS decryption
+- Support for handshake secrets (CLIENT_HANDSHAKE_TRAFFIC_SECRET, SERVER_HANDSHAKE_TRAFFIC_SECRET)
+- Support for application secrets (CLIENT_TRAFFIC_SECRET_0, SERVER_TRAFFIC_SECRET_0)
+- Graceful handling when SSLKEYLOGFILE env var is not set
+- Comprehensive logging for debugging
+
+**Status**: ✅ Complete
+**Compilation**: ✅ No linter errors
+**Re-exported**: ✅ Available via `crypto::export_to_sslkeylogfile`
+
 ---
 
 ## 🔄 IN PROGRESS
 
-### Step 2: Extract sslkeylog.rs (30 minutes)
+### Step 3: Extract tls.rs (2 hours)
 
 **Target**: Extract SSLKEYLOGFILE export utility
 
@@ -46,12 +71,6 @@
 3. Add imports (std::fs, std::io, tracing, hex)
 4. Add usage examples
 5. Test compilation
-
----
-
-## ⏳ REMAINING STEPS
-
-### Step 3: Extract tls.rs (2 hours)
 
 **Extract 6 TLS handlers**:
 - `handle_tls_derive_secrets` (legacy)
@@ -115,11 +134,11 @@
 ## 📊 PROGRESS TRACKER
 
 ```
-Progress: ████░░░░░░░░░░░░░░░░ 1/10 steps (10%)
+Progress: ████████░░░░░░░░░░░░ 2/10 steps (20%)
 
 ✅ Step 1: mod.rs created
-⏳ Step 2: sslkeylog.rs (next)
-⏳ Step 3: tls.rs
+✅ Step 2: sslkeylog.rs extracted
+⏳ Step 3: tls.rs (next)
 ⏳ Step 4: asymmetric.rs
 ⏳ Step 5: symmetric.rs
 ⏳ Step 6: hash.rs
@@ -128,19 +147,19 @@ Progress: ████░░░░░░░░░░░░░░░░ 1/10 step
 ⏳ Step 9: Documentation
 ⏳ Step 10: Testing
 
-Estimated time remaining: 7.5 hours
+Estimated time remaining: 7.0 hours
 ```
 
 ---
 
 ## 🎯 CURRENT STATE
 
-**Files Created**: 1
-- `handlers/crypto/mod.rs` (67 lines)
+**Files Created**: 2
+- `handlers/crypto/mod.rs` (67 lines) ✅
+- `handlers/crypto/sslkeylog.rs` (242 lines) ✅
 
-**Files To Create**: 6
-- `handlers/crypto/sslkeylog.rs`
-- `handlers/crypto/tls.rs`
+**Files To Create**: 5
+- `handlers/crypto/tls.rs` (next)
 - `handlers/crypto/asymmetric.rs`
 - `handlers/crypto/symmetric.rs`
 - `handlers/crypto/hash.rs`
@@ -215,7 +234,7 @@ grep -n "^fn export_to_sslkeylogfile" crypto_handlers.rs
 
 ---
 
-**Last Updated**: January 24, 2026 - Step 1 Complete  
-**Next Step**: Extract sslkeylog.rs utility (Step 2)  
-**Estimated Time Remaining**: 7.5 hours
+**Last Updated**: January 24, 2026 - Step 2 Complete  
+**Next Step**: Extract tls.rs (Step 3)  
+**Estimated Time Remaining**: 7.0 hours
 
