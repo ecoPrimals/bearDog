@@ -17,11 +17,20 @@ pub struct SoftwareHsmConfig {
 
 impl Default for SoftwareHsmConfig {
     fn default() -> Self {
+        // Use environment-driven key storage path
+        // Priority: BEARDOG_KEY_STORAGE -> XDG_DATA_HOME/beardog/keys -> /tmp/beardog/keys
+        let key_storage_path = std::env::var("BEARDOG_KEY_STORAGE")
+            .or_else(|_| {
+                std::env::var("XDG_DATA_HOME")
+                    .map(|xdg| format!("{}/beardog/keys", xdg))
+            })
+            .unwrap_or_else(|_| "/tmp/beardog/keys".to_string());
+        
         Self {
             provider_id: "software-hsm".to_string(),
             enable_attestation: true,
             enable_entropy: true,
-            key_storage_path: "/tmp/beardog/keys".to_string(),
+            key_storage_path,
         }
     }
 }

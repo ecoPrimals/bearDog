@@ -13,7 +13,13 @@ pub async fn run(
     socket: Option<String>,
     format: String,
 ) -> anyhow::Result<()> {
-    let socket_path = socket.unwrap_or_else(|| "/tmp/beardog-default.sock".to_string());
+    // Use provided socket or get from environment-driven SocketConfig
+    let socket_path = socket.unwrap_or_else(|| {
+        beardog_core::socket_config::SocketConfig::from_env()
+            .socket_path()
+            .to_string_lossy()
+            .to_string()
+    });
 
     if format == "json" {
         // JSON output for automation
