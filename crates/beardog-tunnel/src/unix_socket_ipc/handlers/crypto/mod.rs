@@ -51,6 +51,7 @@ pub mod tls;          // ✅ Step 3 - TLS 1.3 operations (1,884 lines)
 pub mod asymmetric;   // ✅ Step 4 - Ed25519, X25519 (325 lines)
 pub mod symmetric;    // ✅ Step 5 - ChaCha20-Poly1305 (256 lines)
 pub mod hash;         // ✅ Step 6 - Blake3, HMAC-SHA256 (186 lines)
+pub mod utils;        // ✅ Step 7 - Shared utility functions (derive_key_from_id)
 
 // Re-export sslkeylog utility for backward compatibility
 pub use sslkeylog::export_to_sslkeylogfile;

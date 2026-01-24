@@ -78,6 +78,29 @@ use crate::unix_socket_ipc::handlers::MethodHandler;
 use std::sync::Arc;
 use tracing::info;
 
+// Import refactored crypto handlers from the new crypto module
+// The handlers are re-exported from crypto/mod.rs for easy access
+use crate::unix_socket_ipc::handlers::crypto::{
+    // TLS handlers
+    handle_tls_compute_finished_verify_data,
+    handle_tls_derive_application_secrets,
+    handle_tls_derive_handshake_secrets,
+    handle_tls_derive_secrets,
+    handle_tls_sign_handshake,
+    handle_tls_verify_certificate,
+    // Asymmetric crypto handlers
+    handle_sign_ed25519,
+    handle_verify_ed25519,
+    handle_x25519_derive_secret,
+    handle_x25519_generate_ephemeral,
+    // Symmetric crypto handlers
+    handle_chacha20_poly1305_decrypt,
+    handle_chacha20_poly1305_encrypt,
+    // Hash handlers
+    handle_blake3_hash,
+    handle_hmac_sha256,
+};
+
 /// Crypto RPC handler
 ///
 /// Handles all cryptographic operations for BearDog, including:
@@ -171,12 +194,12 @@ impl MethodHandler for CryptoHandler {
 
             "crypto.sign_ed25519" => {
                 info!("✍️  Crypto: sign_ed25519");
-                super::super::crypto_handlers::handle_sign_ed25519(params).await
+                handle_sign_ed25519(params).await
             }
 
             "crypto.verify_ed25519" => {
                 info!("✅ Crypto: verify_ed25519");
-                super::super::crypto_handlers::handle_verify_ed25519(params).await
+                handle_verify_ed25519(params).await
             }
 
             // ====================================================================
@@ -244,12 +267,12 @@ impl MethodHandler for CryptoHandler {
 
             "crypto.x25519_generate_ephemeral" => {
                 info!("🔑 Crypto: x25519_generate_ephemeral");
-                super::super::crypto_handlers::handle_x25519_generate_ephemeral(params).await
+                handle_x25519_generate_ephemeral(params).await
             }
 
             "crypto.x25519_derive_secret" => {
                 info!("🤝 Crypto: x25519_derive_secret (ECDH key exchange)");
-                super::super::crypto_handlers::handle_x25519_derive_secret(params).await
+                handle_x25519_derive_secret(params).await
             }
 
             "crypto.ecdh_p256_generate" => {
@@ -282,12 +305,12 @@ impl MethodHandler for CryptoHandler {
 
             "crypto.chacha20_poly1305_encrypt" => {
                 info!("🔒 Crypto: chacha20_poly1305_encrypt (AEAD)");
-                super::super::crypto_handlers::handle_chacha20_poly1305_encrypt(params).await
+                handle_chacha20_poly1305_encrypt(params).await
             }
 
             "crypto.chacha20_poly1305_decrypt" => {
                 info!("🔓 Crypto: chacha20_poly1305_decrypt (AEAD)");
-                super::super::crypto_handlers::handle_chacha20_poly1305_decrypt(params).await
+                handle_chacha20_poly1305_decrypt(params).await
             }
 
             "crypto.aes256_gcm_encrypt" => {
@@ -320,12 +343,12 @@ impl MethodHandler for CryptoHandler {
 
             "crypto.blake3_hash" => {
                 info!("🔍 Crypto: blake3_hash");
-                super::super::crypto_handlers::handle_blake3_hash(params).await
+                handle_blake3_hash(params).await
             }
 
             "crypto.hmac_sha256" => {
                 info!("🔏 Crypto: hmac_sha256");
-                super::super::crypto_handlers::handle_hmac_sha256(params).await
+                handle_hmac_sha256(params).await
             }
 
             "crypto.sha256" => {
@@ -440,32 +463,32 @@ impl MethodHandler for CryptoHandler {
 
             "tls.derive_secrets" => {
                 info!("🔑 TLS: derive_secrets (HKDF handshake key derivation - legacy)");
-                super::super::crypto_handlers::handle_tls_derive_secrets(params).await
+                handle_tls_derive_secrets(params).await
             }
 
             "tls.derive_handshake_secrets" => {
                 info!("🔑 TLS: derive_handshake_secrets (RFC 8446 handshake key derivation)");
-                super::super::crypto_handlers::handle_tls_derive_handshake_secrets(params).await
+                handle_tls_derive_handshake_secrets(params).await
             }
 
             "tls.derive_application_secrets" => {
                 info!("🔑 TLS: derive_application_secrets (RFC 8446 application key derivation for HTTP)");
-                super::super::crypto_handlers::handle_tls_derive_application_secrets(params).await
+                handle_tls_derive_application_secrets(params).await
             }
 
             "tls.compute_finished_verify_data" => {
                 info!("🏁 TLS: compute_finished_verify_data (RFC 8446 Section 4.4.4 - Finished message)");
-                super::super::crypto_handlers::handle_tls_compute_finished_verify_data(params).await
+                handle_tls_compute_finished_verify_data(params).await
             }
 
             "tls.sign_handshake" => {
                 info!("✍️  TLS: sign_handshake (Ed25519 handshake signing)");
-                super::super::crypto_handlers::handle_tls_sign_handshake(params).await
+                handle_tls_sign_handshake(params).await
             }
 
             "tls.verify_certificate" => {
                 info!("🔍 TLS: verify_certificate (X.509 chain verification)");
-                super::super::crypto_handlers::handle_tls_verify_certificate(params).await
+                handle_tls_verify_certificate(params).await
             }
 
             // ====================================================================

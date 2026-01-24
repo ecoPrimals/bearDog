@@ -39,7 +39,8 @@ pub mod health;
 pub mod capabilities;
 pub mod security;
 pub mod btsp;
-pub mod crypto;
+pub mod crypto;          // Refactored crypto handlers module (domain-based organization)
+pub mod crypto_handler;   // Crypto RPC handler (routes to crypto module)
 pub mod federation;
 pub mod encryption;
 
@@ -132,7 +133,7 @@ impl HandlerRegistry {
                 Arc::new(capabilities::CapabilitiesHandler),
                 Arc::new(security::SecurityHandler),
                 Arc::new(btsp::BtspHandler),
-                Arc::new(crypto::CryptoHandler),
+                Arc::new(crypto_handler::CryptoHandler),
                 Arc::new(federation::FederationHandler),
                 Arc::new(encryption::EncryptionHandler),
                 // All handlers now extracted to modular architecture!

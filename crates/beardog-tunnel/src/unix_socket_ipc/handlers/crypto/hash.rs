@@ -159,28 +159,3 @@ pub async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String>
         "algorithm": "HMAC-SHA256",
     }))
 }
-
-/// Handle tls.derive_secrets method
-///
-/// Derives TLS 1.3 session secrets using HKDF (HMAC-based Key Derivation Function).
-/// This implements the TLS 1.3 key schedule as specified in RFC 8446.
-///
-/// # Parameters
-///
-/// - `pre_master_secret`: Base64-encoded pre-master secret (from ECDH key exchange)
-/// - `client_random`: Base64-encoded client random (32 bytes)
-/// - `server_random`: Base64-encoded server random (32 bytes)
-/// - `cipher_suite`: Cipher suite identifier (e.g., "TLS_CHACHA20_POLY1305_SHA256")
-///
-/// # Returns
-///
-/// - `master_secret`: Base64-encoded master secret (48 bytes)
-/// - `client_write_key`: Base64-encoded client encryption key
-/// - `server_write_key`: Base64-encoded server encryption key
-/// - `client_write_iv`: Base64-encoded client IV/nonce
-/// - `server_write_iv`: Base64-encoded server IV/nonce
-///
-/// # TLS 1.3 Key Derivation
-///
-/// Uses HKDF-Extract to derive master secret, then HKDF-Expand to derive session keys.
-/// This follows the TLS 1.3 key schedule (RFC 8446 Section 7.1).

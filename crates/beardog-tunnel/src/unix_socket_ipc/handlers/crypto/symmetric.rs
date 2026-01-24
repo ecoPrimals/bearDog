@@ -242,15 +242,3 @@ pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<
         "algorithm": "ChaCha20-Poly1305",
     }))
 }
-
-/// Handle crypto.blake3_hash method
-///
-/// Computes BLAKE3 hash of data.
-///
-/// # Parameters
-///
-/// - `data`: Base64-encoded data to hash
-///
-/// # Returns
-///
-/// - `hash`: Base64-encoded BLAKE3 hash (32 bytes)

@@ -89,6 +89,9 @@ use tracing::{debug, info, warn};
 // Re-export sslkeylog utility for use in TLS handlers
 use super::sslkeylog::export_to_sslkeylogfile;
 
+// Import shared utility functions
+use super::utils::derive_key_from_id;
+
 
 pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for tls.derive_secrets")?;
@@ -1062,24 +1065,6 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
 /// Derive a 32-byte key from a key ID and purpose
 ///
 /// Uses BLAKE3 key derivation for deterministic key generation.
-fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32], String> {
-    use beardog_core::crypto_service::algorithms::hashing;
-
-    // Get master key from environment or generate deterministic key
-    let master_key = std::env::var("BEARDOG_MASTER_KEY")
-        .unwrap_or_else(|_| "beardog_default_master_key_v1".to_string());
-
-    // Derive key using BLAKE3 KDF
-    let context = format!("beardog_crypto_v1:{}:{}", key_id, purpose);
-    let derived = hashing::derive_key_blake3(&context, master_key.as_bytes());
-
-    let key: [u8; 32] = derived
-        .as_slice()
-        .try_into()
-        .map_err(|_| "Key derivation failed".to_string())?;
-
-    Ok(key)
-}
 
 #[cfg(test)]
 mod tests {

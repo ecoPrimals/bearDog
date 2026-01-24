@@ -72,6 +72,9 @@ use base64::Engine;
 use serde_json::Value;
 use tracing::{debug, info};
 
+// Import shared utility functions
+use super::utils::derive_key_from_id;
+
 
 pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
@@ -306,20 +309,3 @@ pub async fn handle_x25519_derive_secret(params: Option<&Value>) -> Result<Value
         "algorithm": "X25519",
     }))
 }
-
-/// Handle crypto.chacha20_poly1305_encrypt method
-///
-/// Encrypts data with ChaCha20-Poly1305 AEAD.
-///
-/// # Parameters
-///
-/// - `plaintext`: Base64-encoded plaintext
-/// - `key`: Base64-encoded 32-byte key
-/// - `nonce`: Base64-encoded 12-byte nonce (optional, generated if not provided)
-/// - `aad`: Base64-encoded additional authenticated data (optional)
-///
-/// # Returns
-///
-/// - `ciphertext`: Base64-encoded ciphertext
-/// - `nonce`: Base64-encoded nonce (12 bytes)
-/// - `tag`: Base64-encoded authentication tag (16 bytes)
