@@ -12,13 +12,13 @@ pub mod android_strongbox;
 #[cfg(feature = "solo-v2")]
 pub mod solo_v2;
 
-// iOS Secure Enclave support (has file corruption in types.rs - needs reconstruction)
+// iOS Secure Enclave support
+// ARCHIVED: ios_secure_enclave needs reconstruction (file corruption)
 // #[cfg(target_os = "ios")]
 // pub mod ios_secure_enclave;
 
 // HSM infrastructure
-// NOTE: capabilities.rs was corrupted and removed - HsmCapabilityDetector is in manager/capability.rs
-// pub mod capabilities;
+// ARCHIVED: capabilities.rs → HsmCapabilityDetector is in manager/capability.rs
 pub mod config;
 pub mod manager;
 pub mod providers;
@@ -37,12 +37,8 @@ pub use universal_discovery::{
 // Crypto system
 pub mod crypto; // NEW: Universal Crypto Provider System
 pub mod crypto_dispatch;
-// NOTE: provider_dispatch is a performance optimization layer
-// DEFERRED(Phase-2): Refactor provider_dispatch to match simplified UniversalHsmProvider trait
-// The old trait had many methods (sign_data, verify_signature, health_check, etc.)
-// The new trait has only: sign, verify, generate_key, get_capabilities, get_provider_info
-// Core HSM functionality works without it - defer to Phase 2 optimization
-// pub mod provider_dispatch;
+// ARCHIVED: provider_dispatch.rs → archives/orphaned_code_jan_24_2026/
+// Performance optimization deferred to Phase 2
 pub mod zero_cost_provider;
 
 // Mobile platform support

@@ -8,9 +8,8 @@ use tracing::info;
 
 pub mod safe_device_detection;
 pub mod types;
-// NOTE: safe_keystore_replacement has file corruption - re-disabled pending cleanup
-// PHASE-2: Reconstruct file from safe_native_wrapper (which provides same functionality)
-// pub mod safe_keystore_replacement;
+// ARCHIVED: safe_keystore_replacement.rs moved to archives/orphaned_code_jan_24_2026/
+// Functionality provided by safe_native_wrapper instead
 pub mod core;
 pub mod safe_android_provider;
 pub mod safe_native_wrapper;
@@ -18,7 +17,6 @@ pub mod safe_native_wrapper;
 pub use safe_android_provider::*;
 pub use safe_device_detection::*;
 pub use types::*;
-// pub use safe_keystore_replacement::SafeAndroidKeystoreOps;
 pub use safe_native_wrapper::SafeAndroidKeystore;
 
 pub use beardog_types::constants::domains::security::hsm::{
