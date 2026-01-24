@@ -44,17 +44,27 @@
 //! ## Example: Provider Side (BearDog)
 //!
 //! ```rust,no_run
-//! use beardog_capabilities::{CapabilityRegistry, SecureTunnelProvider};
+//! use beardog_capabilities::{CapabilityRegistry, CapabilityMetadata};
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // 1. Create capability registry
-//! let mut registry = CapabilityRegistry::new("beardog-instance-1");
+//! let registry = CapabilityRegistry::new(
+//!     "beardog-instance-1",
+//!     "cryptographic_services",
+//!     "http://localhost:8080"
+//! );
 //!
-//! // 2. Register capabilities (generic traits, no primal names)
-//! let tunnel_provider = MySecureTunnelImpl::new();
-//! registry.register("secure_tunnel", tunnel_provider, metadata)?;
+//! // 2. Define capability metadata
+//! let metadata = CapabilityMetadata::new("secure_tunnel", "1.0")
+//!     .with_description("Secure tunnel capability")
+//!     .with_interface("SecureTunnelProvider")
+//!     .with_endpoint("http://localhost:8080/capabilities/secure_tunnel");
 //!
-//! // 3. Advertise capabilities
+//! // 3. Register capabilities (generic traits, no primal names)
+//! // Note: In real implementation, pass actual provider instance
+//! registry.register("secure_tunnel", (), metadata);
+//!
+//! // 4. Advertise capabilities via mDNS/HTTP
 //! registry.advertise().await?;
 //! # Ok(())
 //! # }
@@ -63,20 +73,29 @@
 //! ## Example: Consumer Side (Any Primal)
 //!
 //! ```rust,no_run
-//! use beardog_capabilities::{CapabilityDiscovery, SecureTunnelProvider};
+//! use beardog_capabilities::CapabilityMetadata;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
-//! // 1. Discover capabilities
-//! let mut discovery = CapabilityDiscovery::new();
-//! discovery.discover().await?;
+//! // 1. Discover capabilities via HTTP (conceptual - uses external HTTP client)
+//! // let response = http_client.get("http://discoverable-primal/capabilities").await?;
+//! // let capabilities: Vec<CapabilityMetadata> = response.json().await?;
 //!
-//! // 2. Get capability (provider identity unknown)
-//! let tunnel_provider = discovery
-//!     .find_capability::<dyn SecureTunnelProvider>("secure_tunnel")
-//!     .await?;
+//! // 2. Find desired capability (provider identity discovered at runtime)
+//! let capabilities: Vec<CapabilityMetadata> = vec![
+//!     CapabilityMetadata::new("secure_tunnel", "1.0")
+//!         .with_endpoint("http://localhost:8080/capabilities/secure_tunnel")
+//! ];
 //!
-//! // 3. Use capability
-//! let tunnel = tunnel_provider.establish_tunnel(peer).await?;
+//! let tunnel_capability = capabilities
+//!     .iter()
+//!     .find(|c| c.id == "secure_tunnel")
+//!     .ok_or_else(|| beardog_errors::BearDogError::network(
+//!         "secure_tunnel capability not found".to_string()
+//!     ))?;
+//!
+//! // 3. Use capability endpoint (provider remains sovereign)
+//! // Note: In real implementation, create client proxy from endpoint
+//! let _endpoint = &tunnel_capability.endpoint;
 //! # Ok(())
 //! # }
 //! ```

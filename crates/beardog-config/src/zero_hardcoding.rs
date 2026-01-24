@@ -43,14 +43,16 @@ use std::time::Duration;
 /// ## Usage
 ///
 /// ```rust
+/// use beardog_config::zero_hardcoding::EndpointConfig;
+///
 /// // Environment-driven (production)
 /// let config = EndpointConfig::from_env();
 ///
 /// // Auto-select ports (testing)
 /// let config = EndpointConfig::auto();
 ///
-/// // Explicit (human sovereignty)
-/// let config = EndpointConfig::new(9000, 9001, "0.0.0.0");
+/// // Explicit (human sovereignty) - http, rpc, ws, metrics, bind address
+/// let config = EndpointConfig::new(9000, 9001, 9002, 9003, "0.0.0.0");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointConfig {
@@ -167,13 +169,19 @@ impl Default for EndpointConfig {
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,no_run
+/// use beardog_config::zero_hardcoding::ZeroHardcodingTimeouts;
+///
 /// let config = ZeroHardcodingTimeouts::from_env();
 ///
-/// let client = reqwest::Client::builder()
-///     .connect_timeout(config.connect)
-///     .timeout(config.request)
-///     .build()?;
+/// // Use timeouts with external HTTP client
+/// // let client = reqwest::Client::builder()
+/// //     .connect_timeout(config.connect)
+/// //     .timeout(config.request)
+/// //     .build()?;
+///
+/// println!("Connect timeout: {:?}", config.connect);
+/// println!("Request timeout: {:?}", config.request);
 /// ```
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ZeroHardcodingTimeouts {
@@ -340,20 +348,22 @@ impl Default for RetryConfig {
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,no_run
+/// use beardog_config::ZeroHardcodingConfig;
+///
 /// // Simple: Just use defaults from environment
 /// let config = ZeroHardcodingConfig::default();
 ///
-/// // Start server with auto-selected port
-/// let server = HttpServer::bind(config.endpoints.http_socket_addr())?;
-/// let actual_port = server.local_addr().port();
-/// println!("Listening on port: {}", actual_port);
+/// // Get socket addresses (no hardcoded ports!)
+/// let http_addr = config.endpoints.http_socket_addr();
+/// let rpc_addr = config.endpoints.rpc_socket_addr();
 ///
-/// // Create client with configurable timeouts
-/// let client = reqwest::Client::builder()
-///     .connect_timeout(config.timeouts.connect)
-///     .timeout(config.timeouts.request)
-///     .build()?;
+/// println!("HTTP will bind to: {}", http_addr);
+/// println!("RPC will bind to: {}", rpc_addr);
+///
+/// // Timeouts are configurable via environment
+/// println!("Connect timeout: {:?}", config.timeouts.connect);
+/// println!("Request timeout: {:?}", config.timeouts.request);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroHardcodingConfig {

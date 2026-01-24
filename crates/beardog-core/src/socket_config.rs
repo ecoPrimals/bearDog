@@ -26,7 +26,7 @@
 //! let config = SocketConfig::from_env();
 //! let socket_path = config.socket_path();
 //!
-//! println!("Socket: {}", socket_path);
+//! println!("Socket: {}", socket_path.display());
 //! // Output: /tmp/beardog-default-default.sock (or as set by Neural API)
 //! ```
 

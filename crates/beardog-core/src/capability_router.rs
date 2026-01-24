@@ -32,12 +32,13 @@
 //! let mut router = CapabilityRouter::new().await?;
 //!
 //! // Route by capability, not by service name!
-//! let primal = router.route(
+//! let decision = router.route(
 //!     SimpleCapability::Cryptography,
 //!     RequestContext::default()
 //! ).await?;
 //!
-//! println!("Routing to: {} at {:?}", primal.name, primal.endpoints);
+//! println!("Routing to primal: {:?}", decision.primal);
+//! println!("Reason: {}", decision.reason);
 //! # Ok(())
 //! # }
 //! ```
