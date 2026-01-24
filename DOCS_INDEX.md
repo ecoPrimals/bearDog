@@ -1,18 +1,18 @@
 # 📚 BearDog Documentation Index
 
-**Last Updated**: January 17, 2026  
-**Version**: 0.9.0  
-**Status**: ✅ Production Ready (UniBin + Modern Crypto + Robust Tests)
+**Last Updated**: January 24, 2026  
+**Version**: 0.22.0  
+**Status**: ✅ Production Ready (Architectural Excellence!)
 
 ---
 
 ## 🎯 Start Here
 
 ### Essential Guides
-- **[Current Status](CURRENT_STATUS.md)** - Latest achievements (Triple evolution!)
-- **[Quick Start](QUICK_START.md)** - Get started with BearDog
-- **[Architecture](ARCHITECTURE.md)** - System architecture overview
+- **[Start Here](START_HERE.md)** - Getting started with BearDog
+- **[Quick Start](QUICK_START.md)** - Quick start guide
 - **[README](README.md)** - Project overview and introduction
+- **[Architecture](ARCHITECTURE.md)** - System architecture overview
 
 ### Getting Started
 - **[Quick Start: Software HSM](QUICK_START_SOFTWARE_HSM.md)** - HSM quickstart
@@ -21,23 +21,22 @@
 
 ---
 
-## 🏆 Latest Sessions (January 17, 2026)
+## 🏆 Latest Session (January 24, 2026)
 
-**TRIPLE EVOLUTION**: ✅ **Exceptional Results - A++ Grade!**
+**v0.22.0 ARCHITECTURAL EXCELLENCE**: ✅ **A+ Grade!**
 
-**Session Archive**: [`docs/sessions/jan_17_2026/`](docs/sessions/jan_17_2026/README.md)
+### Evolution Phases Complete
+1. ✅ **Smart Refactoring** - Large files already well-structured
+2. ✅ **Unsafe Audit** - 100% Safe Rust verified
+3. ✅ **Hardcoding Elimination** - Environment-driven config
+4. ✅ **Mock Isolation** - 95% compile-time separation
+5. ✅ **Primal Self-Knowledge** - Enforced via tests
+6. ✅ **Documentation** - Comprehensive updates
 
-### Three Major Achievements
-
-1. **UniBin Architecture** (4 hours)
-   - Modern async CLI with 4 modes
-   - 36 comprehensive tests
-   - Ecosystem standard compliance
-
-2. **Test Evolution** (2 hours)
-   - 2 production bugs discovered & fixed
-   - 48/48 tests in 0.10s (fully concurrent!)
-   - Modern Rust patterns
+### Key Documents
+- **[Evolution Summary](EVOLUTION_SUMMARY_FINAL_JAN_24_2026.md)** - Complete evolution report
+- **[Mock Isolation Policy](MOCK_ISOLATION_POLICY.md)** - Mock policy and audit
+- **[Changelog](CHANGELOG.md)** - Version history
 
 3. **Pure Rust Evolution** (3 hours)
    - Eliminated OpenSSL completely
