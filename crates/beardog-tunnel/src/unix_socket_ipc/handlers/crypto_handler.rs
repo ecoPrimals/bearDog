@@ -538,7 +538,8 @@ mod tests {
         let methods = handler.methods();
         
         // Should have 48 methods (Phase 1-8 comprehensive crypto coverage)
-        // 2 core EdDSA + 4 ECDSA + 4 RSA + 6 key exchange + 6 AEAD + 10 hash/HMAC + 5 password + 6 TLS + 4 genetic + 1 Ed448
+        // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
+        //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 10 hash/HMAC + 6 password + 6 TLS + 4 genetic
         assert_eq!(methods.len(), 48);
         
         // Verify all core crypto methods are present

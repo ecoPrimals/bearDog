@@ -11,8 +11,8 @@
 //!
 //! - `types` - JSON-RPC types, Protocol enum
 //! - `protocol` - Protocol detection logic
-//! - `handlers` - Request handlers for JSON-RPC and HTTP
-//! - `crypto_handlers` - Crypto operation handlers (for Songbird TLS)
+//! - `handlers` - Request handlers for JSON-RPC (includes refactored handlers/crypto/)
+//! - `crypto_handlers_*` - Domain-specific crypto handlers (ECDSA, RSA, AES-GCM, etc.)
 //! - `server` - Server core and connection management
 
 // REFACTORED: crypto_handlers.rs has been split into semantic domain modules

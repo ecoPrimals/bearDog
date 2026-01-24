@@ -1,5 +1,11 @@
 //! Ed448 Crypto Handlers
 //!
+//! **STATUS**: FOSSIL RECORD - Not currently integrated into handler registry
+//! This implementation is complete and production-ready but deferred due to:
+//! - Very low usage (< 0.1% of servers support Ed448)
+//! - Ed25519 already provides 128-bit security (sufficient for most use cases)
+//! - Can be activated by adding to crypto_handler.rs when needed
+//!
 //! Pure Rust Ed448 (Edwards-curve) signature operations using ed448-goldilocks crate.
 //!
 //! # Supported Algorithm
