@@ -1,0 +1,27 @@
+[package]
+name = "beardog-hid"
+version = "0.1.0"
+edition = "2021"
+description = "Pure Rust HID interface - ecoBin compliant, zero C dependencies"
+license = "AGPL-3.0-only"
+repository = "https://github.com/ecoPrimals/beardog"
+authors = ["BearDog Team <team@beardog.dev>"]
+keywords = ["hid", "usb", "fido2", "hardware", "pure-rust"]
+categories = ["hardware-support", "os", "no-std"]
+
+[dependencies]
+beardog-errors = { path = "../beardog-errors" }
+tokio = { version = "1.43", features = ["fs", "io-util"] }
+tracing = "0.1"
+async-trait = "0.1"
+
+# System interface only (acceptable per ecoBin) - used only for O_NONBLOCK flag
+libc = "0.2"
+
+[dev-dependencies]
+tokio = { version = "1.43", features = ["full"] }
+tempfile = "3.8"
+
+[features]
+default = []
+

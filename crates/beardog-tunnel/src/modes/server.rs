@@ -138,6 +138,20 @@ pub async fn run(
     info!("✅ Unix Socket Server started and ready");
     info!("   ✨ Lock-free concurrent readiness verified!\n");
 
+    // Step 7.5: Register with Songbird (Primal IPC Protocol)
+    info!("🐦 Registering with Songbird discovery service...");
+    match register_with_songbird(&socket_config).await {
+        Ok(()) => {
+            info!("✅ Successfully registered with Songbird");
+            info!("   Other primals can now discover BearDog via capabilities\n");
+        }
+        Err(e) => {
+            warn!("⚠️  Failed to register with Songbird: {}", e);
+            warn!("   BearDog will run without discovery service integration");
+            warn!("   This is OK for standalone operation or development\n");
+        }
+    }
+
     // Step 8: HTTP API (deprecated, warn if enabled)
     if http_enabled {
         warn!("⚠️  HTTP API is deprecated!");
@@ -178,6 +192,44 @@ pub async fn run(
 
     info!("✅ Cleanup complete");
     info!("👋 BearDog server stopped gracefully\n");
+
+    Ok(())
+}
+
+/// Register BearDog with Songbird discovery service
+///
+/// Implements Primal IPC Protocol for capability-based discovery.
+/// Returns Ok(()) if successful, Err if Songbird is unavailable.
+async fn register_with_songbird(_socket_config: &SocketConfig) -> anyhow::Result<()> {
+    use beardog_ipc::{Capability, SongbirdClient};
+    use std::time::Duration;
+
+    // Attempt to connect to Songbird
+    // This may fail if Songbird isn't running - that's OK for standalone operation
+    let client = SongbirdClient::connect().await?;
+
+    // Register BearDog with its capabilities
+    // These should match what PrimalSelfKnowledge reports
+    let capabilities = vec![
+        Capability::Crypto,
+        Capability::BTSP,
+        Capability::Ed25519,
+        Capability::X25519,
+        Capability::AesGcm,
+        Capability::ChaCha20Poly1305,
+    ];
+
+    client.register("beardog", capabilities).await?;
+
+    // Start heartbeat to maintain registration
+    // Songbird expects heartbeats every 30-60 seconds
+    let heartbeat_interval = Duration::from_secs(30);
+    tokio::spawn(async move {
+        let _heartbeat = client.start_heartbeat(heartbeat_interval);
+        // Heartbeat task runs until client is dropped
+        // This keeps BearDog registered with Songbird
+        std::future::pending::<()>().await;
+    });
 
     Ok(())
 }

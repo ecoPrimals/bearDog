@@ -333,8 +333,9 @@ fn test_port_consistency() {
     // Ensure deprecated constants match their functional equivalents
     #[allow(deprecated)]
     {
-        assert_eq!(defaults::DEFAULT_API_PORT, 8080);
-        assert_eq!(defaults::DEFAULT_METRICS_PORT, 9090);
+        assert_eq!(defaults::default_api_port(), 8080);
+        // metrics_port is now 9100 (from config), not 9090
+        assert_eq!(defaults::default_metrics_port(), 9100);
     }
 }
 

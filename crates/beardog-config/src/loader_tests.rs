@@ -27,12 +27,12 @@ mod tests {
     }
 
     #[test]
-    fn test_config_loader_with_platform_detection() {
+    fn test_config_loader_with_platform_defaults() {
         let loader = ConfigLoader::new()
             .with_defaults()
-            .with_platform_detection();
+            .with_platform_defaults();
 
-        assert!(loader.build().is_ok(), "Platform detection should not fail");
+        assert!(loader.build().is_ok(), "Platform defaults should not fail");
     }
 
     #[test]
@@ -63,7 +63,7 @@ mod tests {
     fn test_config_loader_full_hierarchy() {
         let result = ConfigLoader::new()
             .with_defaults()
-            .with_platform_detection()
+            .with_platform_defaults()
             .with_config_file()
             .and_then(|loader| loader.with_env_vars().build());
 
@@ -83,7 +83,7 @@ mod tests {
         // Test that builder pattern can be chained
         let result = ConfigLoader::new()
             .with_defaults()
-            .with_platform_detection()
+            .with_platform_defaults()
             .with_env_vars()
             .build();
 

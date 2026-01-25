@@ -173,7 +173,7 @@ pub mod defaults {
     // ============================================================================
     // These are reasonable defaults that don't need runtime configuration.
     // They can be overridden via TimeoutConfig if needed.
-    
+
     /// Timeout defaults (these are reasonable compile-time constants)
     pub const DEFAULT_CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
     pub const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(60);

@@ -26,6 +26,14 @@ pub mod system;
 pub mod timeouts; // NEW - Nov 11, 2025
 pub mod validation;
 
+// Test modules
+#[cfg(test)]
+mod buffers_tests;
+#[cfg(test)]
+mod limits_tests;
+#[cfg(test)]
+mod timeouts_tests;
+
 // Re-export commonly used constants for convenience
 pub use system::{defaults::*, limits::MAX_CONNECTIONS, versions::BEARDOG_VERSION};
 

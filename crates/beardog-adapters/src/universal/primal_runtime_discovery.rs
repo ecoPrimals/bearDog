@@ -114,19 +114,21 @@ impl RuntimePrimalDiscovery {
             let timeout = Duration::from_secs(2);
             if let Ok(event) = receiver.recv_timeout(timeout) {
                 if let ServiceEvent::ServiceResolved(info) = event {
+                    // Get address from mDNS - fail explicitly if none provided
+                    let address = info.get_addresses().iter().next()
+                        .ok_or_else(|| BearDogError::discovery(format!(
+                            "mDNS service {} resolved but provided no address",
+                            info.get_fullname()
+                        )))?;
+                    
                     info!("✅ mDNS discovered: {} at {}:{}", 
                         info.get_fullname(), 
-                        info.get_addresses().iter().next().map(|a| a.to_string()).unwrap_or_default(),
+                        address,
                         info.get_port()
                     );
                     
                     // Convert to service descriptor
-                    let endpoint = format!("http://{}:{}", 
-                        info.get_addresses().iter().next()
-                            .map(|a| a.to_string())
-                            .unwrap_or_else(|| "localhost".to_string()),
-                        info.get_port()
-                    );
+                    let endpoint = format!("http://{}:{}", address, info.get_port());
                     
                     return Ok(Some(UniversalServiceDescriptor {
                         service_type: capability_name(capability),
@@ -322,8 +324,9 @@ mod tests {
         // Should be in cache immediately
         assert!(discovery.check_cache(&capability).is_some());
         
+        // EVOLVED: Use tokio::time for async test, not std::thread::sleep
         // After cache duration, should expire
-        std::thread::sleep(Duration::from_millis(150));
+        tokio::time::sleep(Duration::from_millis(150)).await;
         assert!(discovery.check_cache(&capability).is_none());
     }
 }

@@ -109,8 +109,10 @@ enum Commands {
     /// Connect to BearDog server and perform operations interactively.
     Client {
         /// Server endpoint (Unix socket or HTTP URL)
-        #[arg(long, default_value = "unix:///tmp/beardog-default.sock")]
-        endpoint: String,
+        /// Default prioritizes Primal IPC Protocol standard: /primal/beardog
+        /// Falls back to XDG runtime directory or /tmp based on SocketConfig
+        #[arg(long)]
+        endpoint: Option<String>,
 
         /// Command to execute (if not provided, enter interactive mode)
         #[arg(long)]

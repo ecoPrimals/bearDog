@@ -129,7 +129,7 @@ rmp-serde = "1.1"
 
 # Utilities
 uuid = { version = "1.6", features = ["v4", "serde"] }
-hidapi = "2.6"  # For FIDO2/hardware security token support
+# hidapi = "2.6"  # ❌ REMOVED - C library, replaced with Pure Rust beardog-hid
 chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8"
 rand_core = { version = "0.6", features = ["getrandom"] }
@@ -225,7 +225,8 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 
 # Optional dependencies for examples
-hidapi = { workspace = true, optional = true }
+# hidapi = { workspace = true, optional = true }  # ❌ REMOVED - C library
+beardog-hid = { path = "crates/beardog-hid", optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
@@ -289,8 +290,8 @@ panic = "abort"
 # BTSP evolved to Unix socket JSON-RPC! HTTP API deprecated.
 # default = ["btsp-api"]  # DEPRECATED: BTSP now uses Unix sockets
 default = []
-# FIDO2 support - currently in Phase 2 development
-fido2 = ["beardog-security/fido2", "dep:hidapi"]
+# FIDO2 support - Pure Rust (ecoBin compliant, zero C dependencies)
+fido2 = ["beardog-security/fido2", "dep:beardog-hid"]
 # mDNS discovery support for primal-to-primal runtime discovery
 mdns = ["beardog-core/mdns"]
 # BTSP HTTP API DEPRECATED - evolved to Unix socket JSON-RPC!

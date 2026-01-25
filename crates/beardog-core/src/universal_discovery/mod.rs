@@ -928,12 +928,21 @@ async fn create_modern_discovery(
                 use crate::primal_discovery_mdns::MdnsDiscoveryClient;
                 use std::time::Duration;
 
-                let timeout = Duration::from_millis(*timeout_ms);
+                // Extract timeout and service_type from match pattern
+                let timeout = match protocol {
+                    DiscoveryProtocol::Mdns { timeout_ms, .. } => {
+                        Duration::from_millis(*timeout_ms)
+                    }
+                    _ => Duration::from_secs(5), // Fallback
+                };
+
+                let service = match protocol {
+                    DiscoveryProtocol::Mdns { service_type, .. } => service_type.clone(),
+                    _ => "_services._dns-sd._udp.local.".to_string(), // Default
+                };
+
                 let client = MdnsDiscoveryClient::new().with_timeout(timeout);
-                Ok(Box::new(MdnsProtocolHandler::new(
-                    client,
-                    service_type.clone(),
-                )))
+                Ok(Box::new(MdnsProtocolHandler::new(client, service)))
             }
             #[cfg(not(feature = "mdns"))]
             {

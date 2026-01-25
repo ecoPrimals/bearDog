@@ -2,13 +2,24 @@
 //!
 //! Connect to BearDog server and perform operations.
 
+use beardog_core::socket_config::SocketConfig;
 use tracing::info;
 
 /// Run BearDog in client mode
 ///
 /// Interactive client for connecting to BearDog server.
-pub async fn run(endpoint: String, command: Option<String>) -> anyhow::Result<()> {
+/// Uses intelligent socket discovery following Primal IPC Protocol.
+pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<()> {
     info!("🐻 BearDog Client v{}", env!("CARGO_PKG_VERSION"));
+    
+    // Discover server endpoint using same logic as server
+    let endpoint = endpoint.unwrap_or_else(|| {
+        let config = SocketConfig::from_env();
+        let path = format!("unix://{}", config.socket_path_string());
+        info!("Auto-discovered endpoint: {}", config.description());
+        path
+    });
+    
     info!("Endpoint: {}\n", endpoint);
 
     if let Some(cmd) = command {

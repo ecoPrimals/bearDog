@@ -1,7 +1,7 @@
 //! Graph Security Handler for JSON-RPC
 //!
 //! Implements JSON-RPC methods for graph security validation, authorization, and audit.
-//! 
+//!
 //! # Methods
 //! - `graph.validate_template` - Validate template structure and security
 //! - `graph.audit_origin` - Audit template provenance and trust
@@ -96,7 +96,8 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(report).map_err(|e| format!("Failed to serialize validation report: {}", e))
+        serde_json::to_value(report)
+            .map_err(|e| format!("Failed to serialize validation report: {}", e))
     }
 
     /// Audit the origin and provenance of a template
@@ -140,10 +141,7 @@ impl GraphSecurityHandler {
     /// 3. Validation (structure and safety)
     /// 4. Threat Detection (malicious patterns)
     /// 5. Audit (logging and provenance)
-    async fn authorize_modification(
-        &self,
-        params: Option<&Value>,
-    ) -> Result<Value, String> {
+    async fn authorize_modification(&self, params: Option<&Value>) -> Result<Value, String> {
         let params = params.ok_or("Missing params for graph.authorize_modification")?;
 
         // Parse user_id
@@ -192,7 +190,8 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(result).map_err(|e| format!("Failed to serialize authorization: {}", e))
+        serde_json::to_value(result)
+            .map_err(|e| format!("Failed to serialize authorization: {}", e))
     }
 }
 
@@ -221,9 +220,7 @@ mod tests {
 
         let result = handler.handle("graph.validate_template", None, &btsp).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("Missing params"));
+        assert!(result.unwrap_err().contains("Missing params"));
     }
 
     #[tokio::test]
@@ -237,9 +234,7 @@ mod tests {
             .await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("template_id"));
+        assert!(result.unwrap_err().contains("template_id"));
     }
 
     #[tokio::test]
@@ -274,4 +269,3 @@ mod tests {
         assert!(result.unwrap_err().contains("user_id"));
     }
 }
-

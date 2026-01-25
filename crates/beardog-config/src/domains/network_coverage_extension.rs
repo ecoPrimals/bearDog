@@ -115,14 +115,14 @@ mod network_coverage_extension_tests {
 
     #[test]
     fn test_api_config_from_env_with_max_connections() {
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
-        std::env::set_var("BEARDOG_MAX_CONNECTIONS", "500");
+        std::env::remove_var("BEARDOG_API_MAX_CONNECTIONS");
+        std::env::set_var("BEARDOG_API_MAX_CONNECTIONS", "500");
 
         let config = ApiConfig::from_env();
 
         assert_eq!(config.max_connections, 500);
 
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        std::env::remove_var("BEARDOG_API_MAX_CONNECTIONS");
     }
 
     #[test]

@@ -82,9 +82,9 @@ path = "../beardog-compliance"
 [dependencies.beardog-traits]
 path = "../beardog-traits"
 
-# FIDO2-specific dependencies
-[dependencies.hidapi]
-version = "2.4"
+# FIDO2-specific dependencies (Pure Rust - ecoBin compliant)
+[dependencies.beardog-hid]
+path = "../beardog-hid"
 optional = true
 
 [dependencies.ciborium]
@@ -102,4 +102,4 @@ jni = "0.21"
 libc = "0.2"
 
 [features]
-fido2 = ["dep:hidapi", "dep:ciborium", "dep:base64-url"]
+fido2 = ["dep:beardog-hid", "dep:ciborium", "dep:base64-url"]

@@ -404,6 +404,7 @@ dependencies = [
  "beardog-core",
  "beardog-errors",
  "beardog-genetics",
+ "beardog-hid",
  "beardog-ipc",
  "beardog-monitoring",
  "beardog-security",
@@ -415,7 +416,6 @@ dependencies = [
  "ed25519-dalek",
  "futures",
  "hex",
- "hidapi",
  "hostname 0.3.1",
  "proptest",
  "rand 0.8.5",
@@ -728,6 +728,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "beardog-hid"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "beardog-errors",
+ "libc",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "beardog-integration-tests"
 version = "3.0.0"
 dependencies = [
@@ -748,19 +760,20 @@ dependencies = [
 
 [[package]]
 name = "beardog-ipc"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
+ "anyhow",
  "async-trait",
  "beardog-core",
  "beardog-errors",
  "rand 0.8.5",
  "serde",
  "serde_json",
+ "tarpc",
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",
  "tracing",
- "tracing-test",
 ]
 
 [[package]]
@@ -833,6 +846,7 @@ dependencies = [
  "base64-url",
  "beardog-compliance",
  "beardog-errors",
+ "beardog-hid",
  "beardog-threat",
  "beardog-traits",
  "beardog-types",
@@ -846,7 +860,6 @@ dependencies = [
  "ed25519-dalek",
  "futures",
  "hex",
- "hidapi",
  "hmac 0.12.1",
  "jni",
  "libc",
@@ -953,6 +966,7 @@ dependencies = [
  "beardog-core",
  "beardog-errors",
  "beardog-genetics",
+ "beardog-ipc",
  "beardog-monitoring",
  "beardog-security",
  "beardog-threat",
@@ -5189,27 +5203,6 @@ dependencies = [
  "tracing-core",
  "tracing-log",
  "tracing-serde",
-]
-
-[[package]]
-name = "tracing-test"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "557b891436fe0d5e0e363427fc7f217abf9ccd510d5136549847bdcbcd011d68"
-dependencies = [
- "tracing-core",
- "tracing-subscriber",
- "tracing-test-macro",
-]
-
-[[package]]
-name = "tracing-test-macro"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04659ddb06c87d233c566112c1c9c5b9e98256d9af50ec3bc9c8327f873a7568"
-dependencies = [
- "quote",
- "syn 2.0.106",
 ]
 
 [[package]]

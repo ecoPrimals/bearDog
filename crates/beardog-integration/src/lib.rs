@@ -132,9 +132,17 @@ impl BearDogIntegration {
 
         // Register with UPA
         // Use environment-driven endpoint or construct from config
+        // Configuration hierarchy: BEARDOG_ENDPOINT > BEARDOG_HOST + port > 127.0.0.1 (dev) / 0.0.0.0 (prod)
         let endpoint = std::env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
-            // If no explicit endpoint, use the bind address or localhost fallback
-            let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "localhost".to_string());
+            // If no explicit endpoint, use BEARDOG_HOST or environment-aware default
+            let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| {
+                // Secure default for dev, production default for release
+                if cfg!(debug_assertions) {
+                    "127.0.0.1".to_string()  // Secure localhost for development
+                } else {
+                    "0.0.0.0".to_string()     // Bind all interfaces for production
+                }
+            });
             format!("http://{}:{}", host, config.api_port)
         });
 

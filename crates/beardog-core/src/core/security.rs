@@ -267,13 +267,16 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         use base64::prelude::*;
         let header = BASE64_URL_SAFE_NO_PAD.encode(br#"{"alg":"HS256","typ":"JWT"}"#);
         let payload = BASE64_URL_SAFE_NO_PAD.encode(
-            format!(r#"{{"sub":"{}","exp":{},"method":"local"}}"#,
+            format!(
+                r#"{{"sub":"{}","exp":{},"method":"local"}}"#,
                 request.user_id,
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default()
-                    .as_secs() + 86400
-            ).as_bytes()
+                    .as_secs()
+                    + 86400
+            )
+            .as_bytes(),
         );
         let signature = BASE64_URL_SAFE_NO_PAD.encode(b"local_signature");
         let token = format!("{}.{}.{}", header, payload, signature);
@@ -295,11 +298,11 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
     ) -> Result<AuthorizationResponse, BearDogError> {
         // Simple authorization (no HTTP client needed!)
         // For production, use Unix socket communication to auth service
-        
+
         // Phase 2: Realistic RBAC - User role has read, write, execute (but NOT delete)
         // Only admin role would have delete permission
         let allowed_operations = vec!["read", "write", "execute", "create", "update"];
-        
+
         if allowed_operations.contains(&request.operation.as_str()) {
             // Grant access with full user permissions
             let permissions = vec![

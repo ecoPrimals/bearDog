@@ -20,7 +20,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 /// Configuration loader builder
-/// 
+///
 /// This is a convenience wrapper around `ConfigHierarchy` for backward compatibility.
 /// New code should use `ConfigHierarchy` directly for better control.
 pub struct ConfigLoader {

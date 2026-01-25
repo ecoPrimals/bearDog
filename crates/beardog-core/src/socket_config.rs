@@ -1,15 +1,24 @@
 //! # Unix Socket Configuration
 //!
-//! This module provides a robust, XDG-compliant socket path configuration
-//! with a 4-tier fallback system (TRUE PRIMAL architecture):
+//! This module provides a robust, Primal IPC Protocol compliant socket path configuration
+//! with a 5-tier fallback system (TRUE PRIMAL architecture):
 //!
 //! 1. **Primal-Specific** (highest priority): `BEARDOG_SOCKET`
 //! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH`
-//! 3. **XDG Runtime Directory**: `/run/user/<uid>/beardog-<family>.sock`
-//! 4. **Temp Directory** (last resort): `/tmp/beardog-<family>-<node>.sock`
+//! 3. **Primal IPC Protocol Standard**: `/primal/beardog`
+//! 4. **XDG Runtime Directory**: `/run/user/<uid>/beardog-<family>.sock`
+//! 5. **Temp Directory** (last resort): `/tmp/beardog-<family>-<node>.sock`
+//!
+//! ## Primal IPC Protocol Compliance
+//!
+//! Per `/wateringHole/PRIMAL_IPC_PROTOCOL.md`:
+//! - Standard namespace: `/primal/{primal-name}`
+//! - BearDog standard path: `/primal/beardog`
+//! - This is NOT hardcoding - it's ecosystem standard compliance
 //!
 //! ## Security & Standards
 //!
+//! - ✅ Primal IPC Protocol compliant
 //! - ✅ XDG Base Directory Specification compliant
 //! - ✅ Per-user runtime directories (`/run/user/<uid>/`)
 //! - ✅ Automatic directory creation with proper permissions
@@ -53,6 +62,8 @@ pub enum SocketPathSource {
     PrimalEnvVar,
     /// Generic orchestrator environment variable (BIOMEOS_SOCKET_PATH)
     OrchestratorEnvVar,
+    /// Primal IPC Protocol standard namespace (/primal/beardog)
+    PrimalNamespace,
     /// XDG Runtime Directory (preferred)
     XdgRuntime,
     /// Temp directory (last resort)
@@ -62,11 +73,12 @@ pub enum SocketPathSource {
 impl SocketConfig {
     /// Create socket configuration from environment variables
     ///
-    /// Implements 4-tier fallback (TRUE PRIMAL architecture):
+    /// Implements 5-tier fallback (Primal IPC Protocol compliant):
     /// 1. `BEARDOG_SOCKET` env var (primal-specific, highest priority)
     /// 2. `BIOMEOS_SOCKET_PATH` env var (generic orchestrator, e.g., Neural API)
-    /// 3. `/run/user/<uid>/beardog-<family>.sock` (XDG)
-    /// 4. `/tmp/beardog-<family>-<node>.sock` (fallback)
+    /// 3. `/primal/beardog` (Primal IPC Protocol standard namespace)
+    /// 4. `/run/user/<uid>/beardog-<family>.sock` (XDG)
+    /// 5. `/tmp/beardog-<family>-<node>.sock` (fallback)
     pub fn from_env() -> Self {
         let family_id = std::env::var("BEARDOG_FAMILY_ID")
             .or_else(|_| std::env::var("FAMILY_ID"))
@@ -108,7 +120,19 @@ impl SocketConfig {
             }
         }
 
-        // Tier 3: Try XDG Runtime Directory (more secure, per-user)
+        // Tier 3: Try Primal IPC Protocol standard namespace (/primal/beardog)
+        // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
+        // This is NOT hardcoding - it's following the ecosystem standard
+        if Path::new("/primal").exists() {
+            return Self {
+                socket_path: PathBuf::from("/primal/beardog"),
+                family_id,
+                node_id,
+                source: SocketPathSource::PrimalNamespace,
+            };
+        }
+
+        // Tier 4: Try XDG Runtime Directory (more secure, per-user)
         if let Some(xdg_path) = Self::try_xdg_runtime(&family_id) {
             return Self {
                 socket_path: xdg_path,
@@ -118,7 +142,7 @@ impl SocketConfig {
             };
         }
 
-        // Tier 4: Fallback to /tmp (last resort)
+        // Tier 5: Fallback to /tmp (last resort)
         let tmp_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
         Self {
             socket_path: PathBuf::from(tmp_path),
@@ -238,14 +262,20 @@ impl SocketConfig {
                     self.socket_path_string()
                 )
             }
+            SocketPathSource::PrimalNamespace => {
+                format!(
+                    "{} (Primal IPC Protocol standard namespace - Tier 3)",
+                    self.socket_path_string()
+                )
+            }
             SocketPathSource::XdgRuntime => {
                 format!(
-                    "{} (XDG Runtime Directory - Tier 3)",
+                    "{} (XDG Runtime Directory - Tier 4)",
                     self.socket_path_string()
                 )
             }
             SocketPathSource::TempDir => {
-                format!("{} (fallback to /tmp - Tier 4)", self.socket_path_string())
+                format!("{} (fallback to /tmp - Tier 5)", self.socket_path_string())
             }
         }
     }
@@ -334,13 +364,14 @@ mod tests {
 
         let config = SocketConfig::from_env();
 
-        // Should NOT use empty path - should fall through to tier 3 or 4
+        // Should NOT use empty path - should fall through to tier 3, 4, or 5
         assert_ne!(config.socket_path_string(), "");
         assert_ne!(config.source(), SocketPathSource::PrimalEnvVar);
 
-        // Should use XDG or /tmp fallback
+        // Should use Primal IPC namespace, XDG, or /tmp fallback
         assert!(
-            config.source() == SocketPathSource::XdgRuntime
+            config.source() == SocketPathSource::PrimalNamespace
+                || config.source() == SocketPathSource::XdgRuntime
                 || config.source() == SocketPathSource::TempDir
         );
 
@@ -367,13 +398,14 @@ mod tests {
 
         let config = SocketConfig::from_env();
 
-        // Should NOT use empty path - should fall through to tier 3 or 4
+        // Should NOT use empty path - should fall through to tier 3, 4, or 5
         assert_ne!(config.socket_path_string(), "");
         assert_ne!(config.source(), SocketPathSource::OrchestratorEnvVar);
 
-        // Should use XDG or /tmp fallback
+        // Should use Primal IPC namespace, XDG, or /tmp fallback
         assert!(
-            config.source() == SocketPathSource::XdgRuntime
+            config.source() == SocketPathSource::PrimalNamespace
+                || config.source() == SocketPathSource::XdgRuntime
                 || config.source() == SocketPathSource::TempDir
         );
 
@@ -456,8 +488,11 @@ mod tests {
 
         let config = SocketConfig::from_env();
 
-        // Should use XDG if available, otherwise /tmp
+        // Should use Primal IPC namespace, XDG, or /tmp depending on system
         match config.source() {
+            SocketPathSource::PrimalNamespace => {
+                assert_eq!(config.socket_path_string(), "/primal/beardog");
+            }
             SocketPathSource::XdgRuntime => {
                 assert!(config.socket_path_string().contains("/run/user/"));
                 assert!(config
@@ -482,13 +517,16 @@ mod tests {
 
         let config = SocketConfig::from_env();
 
-        // If XDG is not available, should fall back to /tmp with node ID
+        // If Primal namespace, XDG, or /tmp fallback is used
         if config.source() == SocketPathSource::TempDir {
             assert_eq!(
                 config.socket_path_string(),
                 "/tmp/beardog-fallback-node123.sock"
             );
+        } else if config.source() == SocketPathSource::PrimalNamespace {
+            assert_eq!(config.socket_path_string(), "/primal/beardog");
         }
+        // XDG would have different path, which is fine
 
         std::env::remove_var("BEARDOG_FAMILY_ID");
         std::env::remove_var("BEARDOG_NODE_ID");
@@ -508,13 +546,16 @@ mod tests {
         assert_eq!(config.family_id(), "default");
         assert_eq!(config.node_id(), "default");
 
-        // Should still generate a valid path
+        // Should generate a valid path - could be Primal namespace, XDG, or /tmp
         if config.source() == SocketPathSource::TempDir {
             assert_eq!(
                 config.socket_path_string(),
                 "/tmp/beardog-default-default.sock"
             );
+        } else if config.source() == SocketPathSource::PrimalNamespace {
+            assert_eq!(config.socket_path_string(), "/primal/beardog");
         }
+        // XDG would have different path, which is fine
     }
 
     #[test]

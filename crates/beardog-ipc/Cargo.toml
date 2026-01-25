@@ -1,35 +1,38 @@
 [package]
 name = "beardog-ipc"
-version = "0.1.0"
-edition = "2021"
-description = "Inter-process communication primitives for BearDog primal coordination"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/ecoPrimals/beardog"
-readme = "README.md"
-keywords = ["ipc", "beardog", "primal", "coordination"]
-categories = ["network-programming", "asynchronous"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
 
 [dependencies]
-# Async runtime
-tokio = { version = "1.35", features = ["full"] }
-async-trait = "0.1"
+# BearDog core types
+beardog-core = { path = "../beardog-core" }
+beardog-errors = { path = "../beardog-errors" }
+
+# Core async runtime
+tokio = { workspace = true, features = ["net", "io-util", "time", "sync"] }
+async-trait = { workspace = true }
 
 # Serialization
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Error handling
-thiserror = "1.0"
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Logging
-tracing = "0.1"
+tracing = { workspace = true }
 
-# Local dependencies
-beardog-errors = { path = "../beardog-errors" }
-beardog-core = { path = "../beardog-core" }
+# Optional: Type-safe RPC
+tarpc = { version = "0.34", features = ["tokio1", "serde1"], optional = true }
+
+[features]
+default = ["json-rpc"]
+json-rpc = []
+tarpc = ["dep:tarpc"]
 
 [dev-dependencies]
 tokio-test = "0.4"
-tracing-test = "0.2"
-rand = "0.8"
-
+rand = { workspace = true }

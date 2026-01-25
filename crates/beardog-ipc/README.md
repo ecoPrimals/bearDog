@@ -1,32 +1,79 @@
-# beardog-ipc
+# beardog-ipc - Songbird IPC Client
+**Version**: 0.1.0  
+**Purpose**: Primal IPC Protocol Implementation (JSON-RPC over Unix Sockets)  
+**Standard**: `/wateringHole/PRIMAL_IPC_PROTOCOL.md`
 
-Inter-process communication primitives for BearDog primal coordination.
+## Overview
 
-## Features
-
-- Async IPC client/server primitives
-- JSON-RPC 2.0 protocol support
-- Unix socket and HTTP transport
-- Type-safe message passing
+This crate provides BearDog's implementation of the ecoPrimals Primal IPC Protocol, enabling:
+- Registration with Songbird service registry
+- Capability-based service discovery
+- JSON-RPC 2.0 communication over Unix sockets
+- Runtime primal discovery (zero hardcoded knowledge)
 
 ## Usage
 
 ```rust
-use beardog_ipc::*;
+use beardog_ipc::{SongbirdClient, Capability};
 
-// Create IPC client
-let client = IpcClient::new("http://localhost:9000").await?;
+// Register with Songbird on startup
+let client = SongbirdClient::connect().await?;
+client.register(
+    "beardog",
+    vec![
+        Capability::Crypto,
+        Capability::BTSP,
+        Capability::Ed25519,
+        Capability::X25519,
+    ]
+).await?;
 
-// Make requests
-let response = client.call("method_name", params).await?;
+// Start heartbeat
+let heartbeat = client.start_heartbeat(Duration::from_secs(30));
+
+// Discover services by capability
+let crypto_service = client.find_capability("crypto").await?;
+println!("Found crypto at: {}", crypto_service.endpoint);
+
+// Make RPC call
+let response = client.call(&crypto_service.endpoint, "crypto.sign", params).await?;
 ```
 
-## License
+## Features
 
-Licensed under either of:
+- `tarpc` - Type-safe RPC via tarpc (recommended)
+- `json-rpc` - JSON-RPC 2.0 (always enabled)
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](../../LICENSE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](../../LICENSE) or http://opensource.org/licenses/MIT)
+## Standards Compliance
 
-at your option.
+This crate implements:
+- ✅ `/primal/*` namespace convention
+- ✅ JSON-RPC 2.0 message format
+- ✅ Songbird registration protocol
+- ✅ Capability-based discovery
+- ✅ Heartbeat mechanism
+- ✅ Unix socket transport (tokio)
 
+## Architecture
+
+```
+BearDog Startup
+    ↓
+SongbirdClient::register()
+    ↓ JSON-RPC over /primal/songbird
+Songbird Registry
+    ↓
+Periodic Heartbeat (30s)
+    ↓
+Service Discovery
+    ↓ find_capability("crypto")
+Direct P2P Connection
+    ↓ /primal/{discovered-service}
+JSON-RPC Call
+```
+
+## Standards References
+
+- [Primal IPC Protocol](../../wateringHole/PRIMAL_IPC_PROTOCOL.md)
+- [Inter-Primal Interactions](../../wateringHole/INTER_PRIMAL_INTERACTIONS.md)
+- [UniBin Standard](../../wateringHole/UNIBIN_ARCHITECTURE_STANDARD.md)

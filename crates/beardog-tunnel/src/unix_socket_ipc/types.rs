@@ -13,14 +13,14 @@ use serde::{Deserialize, Serialize};
 pub struct JsonRpcRequest {
     /// JSON-RPC version string, always "2.0"
     pub jsonrpc: String,
-    
+
     /// Method name to invoke (e.g., "graph.validate_template")
     pub method: String,
-    
+
     /// Optional parameters for the method call
     #[serde(default)]
     pub params: Option<serde_json::Value>,
-    
+
     /// Optional request identifier for matching responses
     pub id: Option<serde_json::Value>,
 }
@@ -33,15 +33,15 @@ pub struct JsonRpcRequest {
 pub struct JsonRpcResponse {
     /// JSON-RPC version string, always "2.0"
     pub jsonrpc: String,
-    
+
     /// Result of the method call (present on success)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
-    
+
     /// Error details (present on error)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<JsonRpcError>,
-    
+
     /// Request identifier
     pub id: serde_json::Value,
 }
@@ -54,10 +54,10 @@ pub struct JsonRpcResponse {
 pub struct JsonRpcError {
     /// Error code (standard codes defined by JSON-RPC 2.0)
     pub code: i32,
-    
+
     /// Human-readable error message
     pub message: String,
-    
+
     /// Optional additional error data
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,

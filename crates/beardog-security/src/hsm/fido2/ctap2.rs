@@ -294,7 +294,8 @@ pub struct Ctap2DeviceInfo {
 /// This MUST be called before sending any CTAP2 commands.
 /// Returns the channel ID (CID) to use for all subsequent commands.
 #[cfg(feature = "fido2")]
-pub async fn ctaphid_init(device: &hidapi::HidDevice) -> Result<u32, BearDogError> {
+/// Initialize CTAPHID channel (Pure Rust)
+pub async fn ctaphid_init(device: &mut Box<dyn beardog_hid::HidDevice>) -> Result<u32, BearDogError> {
     info!("🔗 Initializing CTAPHID channel...");
 
     // Generate random nonce (8 bytes)
@@ -319,7 +320,7 @@ pub async fn ctaphid_init(device: &hidapi::HidDevice) -> Result<u32, BearDogErro
 
     // Send packet
     device
-        .write(&packet)
+        .write(&packet).await
         .map_err(|e| BearDogError::system(format!("CTAPHID_INIT write failed: {e}")))?;
 
     debug!("📤 Sent CTAPHID_INIT");
@@ -327,7 +328,7 @@ pub async fn ctaphid_init(device: &hidapi::HidDevice) -> Result<u32, BearDogErro
     // Read response
     let mut response = vec![0u8; 64];
     let bytes_read = device
-        .read_timeout(&mut response, 5000)
+        .read(&mut response).await
         .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
 
     if bytes_read == 0 {
@@ -383,7 +384,7 @@ pub async fn ctaphid_init(device: &hidapi::HidDevice) -> Result<u32, BearDogErro
 /// Uses CTAPHID_CBOR (0x90) command which directly carries CTAP2 commands.
 #[cfg(feature = "fido2")]
 pub async fn send_ctap2_command(
-    device: &hidapi::HidDevice,
+    device: &mut Box<dyn beardog_hid::HidDevice>,
     cid: u32,
     command: Ctap2Command,
     payload: &[u8],
@@ -424,7 +425,7 @@ pub async fn send_ctap2_command(
 
     // Send the packet
     device
-        .write(&hid_packet)
+        .write(&hid_packet).await
         .map_err(|e| BearDogError::system(format!("HID write failed: {e}")))?;
 
     debug!("✅ Sent {} bytes to device", hid_packet.len());
@@ -437,10 +438,7 @@ pub async fn send_ctap2_command(
     for attempt in 1..=MAX_KEEPALIVE_ATTEMPTS {
         let mut response_buf = vec![0u8; HID_PACKET_SIZE];
         let bytes_read = device
-            .read_timeout(
-                &mut response_buf,
-                HID_READ_TIMEOUT_MS.try_into().unwrap_or(1000),
-            )
+            .read(&mut response_buf).await
             .map_err(|e| BearDogError::system(format!("HID read failed: {e}")))?;
 
         if bytes_read == 0 {
@@ -546,7 +544,8 @@ pub async fn send_ctap2_command(
 ///
 /// This function automatically initializes the CTAPHID channel if needed.
 #[cfg(feature = "fido2")]
-pub async fn ctap2_get_info(device: &hidapi::HidDevice) -> Result<Ctap2DeviceInfo, BearDogError> {
+/// Get device information via CTAP2 GetInfo command (Pure Rust)
+pub async fn ctap2_get_info(device: &mut Box<dyn beardog_hid::HidDevice>) -> Result<Ctap2DeviceInfo, BearDogError> {
     info!("🔍 Querying device capabilities (CTAP2 GetInfo)...");
 
     // Initialize channel first

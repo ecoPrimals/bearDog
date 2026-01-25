@@ -33,7 +33,7 @@ pub enum Ctap2Command {
 #[cfg(feature = "fido2")]
 #[allow(dead_code)]
 pub async fn send_ctap2_command(
-    _device: &hidapi::HidDevice,
+    _device: &mut Box<dyn beardog_hid::HidDevice>,
     _command: Ctap2Command,
     _payload: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
@@ -55,7 +55,7 @@ pub async fn send_ctap2_command(
 #[cfg(feature = "fido2")]
 #[allow(dead_code)]
 pub async fn get_device_info(
-    _device: &hidapi::HidDevice,
+    _device: &mut Box<dyn beardog_hid::HidDevice>,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
     // PHASE-2(CTAP2): Send GetInfo command and parse response
     Err(BearDogError::system(
@@ -72,7 +72,7 @@ pub async fn get_device_info(
 #[cfg(feature = "fido2")]
 #[allow(dead_code)]
 pub async fn generate_entropy_via_hmac_secret(
-    _device: &hidapi::HidDevice,
+    _device: &mut Box<dyn beardog_hid::HidDevice>,
     _size: usize,
 ) -> Result<Vec<u8>, BearDogError> {
     // PHASE-2(CTAP2): Implement hmac-secret entropy generation

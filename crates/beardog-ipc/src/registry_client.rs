@@ -18,7 +18,7 @@
 //!
 //! Instead of N primal-specific clients, we have 1 universal client that adapts to any registry
 
-use beardog_core::capabilities::BearDogCapabilities;
+use beardog_core::capabilities::{ BearDogCapabilities, Capability};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -146,16 +146,16 @@ impl PrimalRegistryClient {
             .provides
             .iter()
             .map(|cap| match cap {
-                beardog_core::capabilities::Capability::Encryption { .. } => "encryption",
-                beardog_core::capabilities::Capability::TrustEvaluation { .. } => {
+                Capability::Encryption { .. } => "encryption",
+                Capability::TrustEvaluation { .. } => {
                     "trust_evaluation"
                 }
-                beardog_core::capabilities::Capability::KeyManagement { .. } => "key_management",
-                beardog_core::capabilities::Capability::Signatures { .. } => "signatures",
-                beardog_core::capabilities::Capability::Discovery { .. } => "discovery",
-                beardog_core::capabilities::Capability::Storage { .. } => "storage",
-                beardog_core::capabilities::Capability::Compute { .. } => "compute",
-                beardog_core::capabilities::Capability::Custom { name, .. } => name.as_str(),
+                Capability::KeyManagement { .. } => "key_management",
+                Capability::Signatures { .. } => "signatures",
+                Capability::Discovery { .. } => "discovery",
+                Capability::Storage { .. } => "storage",
+                Capability::Compute { .. } => "compute",
+                Capability::Custom { name, .. } => name.as_str(),
             })
             .map(String::from)
             .collect();
