@@ -547,7 +547,16 @@ impl PrimalDiscovery {
                             .endpoint
                             .primary_url
                             .parse()
-                            .unwrap_or_else(|_| "127.0.0.1:8080".parse().unwrap()),
+                            .unwrap_or_else(|_| {
+                                // Use config fallback instead of hardcoded value
+                                use beardog_config::global::BEARDOG_CONFIG;
+                                use std::net::SocketAddr;
+                                let host = &BEARDOG_CONFIG.network.addresses.api_host;
+                                let port = BEARDOG_CONFIG.network.api.port;
+                                format!("{}:{}", host, port)
+                                    .parse()
+                                    .expect("config values should be valid")
+                            }),
                     }],
                     capabilities: vec![SimpleCapability::Discovery],
                     trust_score: service.trust_score,

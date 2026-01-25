@@ -81,7 +81,8 @@ enum Commands {
         http_enabled: bool,
 
         /// HTTP bind address (only if HTTP enabled)
-        #[arg(long, default_value = "127.0.0.1:9000")]
+        /// Default comes from BEARDOG_CONFIG (no hardcoding)
+        #[arg(long)]
         bind_addr: Option<String>,
     },
 
