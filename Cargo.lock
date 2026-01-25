@@ -391,6 +391,34 @@ dependencies = [
 
 [[package]]
 name = "beardog"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "beardog-adapters",
+ "beardog-auth",
+ "beardog-compliance",
+ "beardog-core",
+ "beardog-errors",
+ "beardog-genetics",
+ "beardog-monitoring",
+ "beardog-node-registry",
+ "beardog-production",
+ "beardog-security",
+ "beardog-threat",
+ "beardog-tunnel",
+ "beardog-types",
+ "beardog-utils",
+ "chrono",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "beardog"
 version = "0.9.0"
 dependencies = [
  "anyhow",
@@ -509,6 +537,7 @@ dependencies = [
  "assert_cmd",
  "async-trait",
  "base64 0.21.7",
+ "beardog 0.1.0",
  "beardog-core",
  "beardog-errors",
  "beardog-genetics",

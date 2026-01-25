@@ -20,65 +20,26 @@ workspace = true
 [package.authors]
 workspace = true
 
-[dependencies.beardog-core]
-workspace = true
-
-[dependencies.beardog-errors]
-workspace = true
-
-[dependencies.beardog-security]
-workspace = true
-
-[dependencies.beardog-auth]
-workspace = true
-
-[dependencies.beardog-genetics]
-workspace = true
-
-[dependencies.beardog-threat]
-workspace = true
-
-[dependencies.beardog-tunnel]
-workspace = true
-
-[dependencies.beardog-adapters]
-workspace = true
-
-[dependencies.beardog-compliance]
-workspace = true
-
-[dependencies.beardog-monitoring]
-workspace = true
-
-[dependencies.beardog-node-registry]
-workspace = true
-
-[dependencies.beardog-production]
-workspace = true
-
-[dependencies.beardog-utils]
-workspace = true
-
-[dependencies.tracing]
-workspace = true
-
-[dependencies.tracing-subscriber]
-workspace = true
-
-[dependencies.tokio]
-workspace = true
-
-[dependencies.serde_json]
-workspace = true
-
-[dependencies.serde]
-workspace = true
-
-[dependencies.uuid]
-workspace = true
-
-[dependencies.chrono]
-workspace = true
-
-[dependencies.anyhow]
-workspace = true
+[dependencies]
+beardog-core = { path = "../beardog-core" }
+beardog-errors = { path = "../beardog-errors" }
+beardog-security = { path = "../beardog-security" }
+beardog-auth = { path = "../beardog-auth" }
+beardog-genetics = { path = "../beardog-genetics" }
+beardog-threat = { path = "../beardog-threat" }
+beardog-tunnel = { path = "../beardog-tunnel" }
+beardog-adapters = { path = "../beardog-adapters" }
+beardog-compliance = { path = "../beardog-compliance" }
+beardog-monitoring = { path = "../beardog-monitoring" }
+beardog-node-registry = { path = "../beardog-node-registry" }
+beardog-production = { path = "../beardog-production" }
+beardog-utils = { path = "../beardog-utils" }
+beardog-types = { path = "../beardog-types" }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"

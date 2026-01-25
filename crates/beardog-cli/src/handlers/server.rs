@@ -4,6 +4,7 @@
 //! into the CLI for proper UniBin operation.
 
 use crate::ServerArgs;
+use beardog::neural_registration::{discover_neural_api_socket, register_with_neural_api};
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
@@ -12,7 +13,7 @@ use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use std::sync::Arc;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 /// Handle server command - start long-running service
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
@@ -74,6 +75,18 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             })?,
     );
     info!("✅ Server created");
+
+    // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
+    if let Some(neural_socket) = discover_neural_api_socket() {
+        info!("🌐 Neural API detected at: {}", neural_socket);
+        
+        match register_with_neural_api(&neural_socket).await {
+            Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
+            Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
+        }
+    } else {
+        info!("ℹ️  No Neural API detected - running in standalone mode");
+    }
 
     // Start server (this blocks until shutdown)
     info!("🚀 Starting server...");
