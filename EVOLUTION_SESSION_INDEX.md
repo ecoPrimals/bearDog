@@ -1,25 +1,90 @@
-# 🚀 Evolution Session Index - January 24, 2026
+# 🚀 Evolution Session Index - January 25, 2026
 
-**Comprehensive documentation for the major evolution session completed today**
-
----
-
-## 📊 Quick Status
-
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Compilation Errors** | 16 | 0 | ✅ 100% |
-| **Tests Passing** | <50% | 99.7% (1044/1047) | ✅ +50% |
-| **Test Coverage** | Unknown | 70.18% | ✅ Baseline established |
-| **JSON-RPC Methods** | 78 | 81+ | ✅ +3 graph security |
-| **Documentation Warnings** | 673 | 642 | ✅ -4.6% |
-| **Production Grade** | A- | A | ✅ Improved |
+**Comprehensive documentation for all major evolution sessions**
 
 ---
 
-## 📚 Session Documentation
+## 📊 Latest Status (Deep Debt Evolution - Week 1)
 
-**Note**: All session documents have been archived to `archives/evolution_jan_24_2026/comprehensive_session/` to keep the root clean. See [archives/evolution_jan_24_2026/README.md](archives/evolution_jan_24_2026/README.md) for complete index.
+| Metric | Before | Current | Target |
+|--------|--------|---------|--------|
+| **Compilation Errors** | 16 | 0 | 0 ✅ |
+| **Tests Passing** | <50% | 99.7% | 100% |
+| **Test Coverage** | Unknown | 70.18% | 90%+ |
+| **Hardcoding Instances** | 527 | ~487 | 0 |
+| **FALLBACK Constants** | 10 | 0 | 0 ✅ |
+| **Core Files Cleaned** | 0 | 5 | ~20 |
+| **Config Hierarchy** | None | Complete | Complete ✅ |
+| **Production Grade** | A | A | A+ |
+
+---
+
+## 🔥 Deep Debt Evolution (January 25, 2026)
+
+### Session 2: Network Hardcoding Core Files
+**[DEEP_DEBT_SESSION_2_SUMMARY.md](DEEP_DEBT_SESSION_2_SUMMARY.md)**  
+Systematic elimination of network hardcoding from core production files.
+
+**Achievements**:
+- ✅ ALL `FALLBACK_*` constants eliminated (10 constants)
+- ✅ Core production files cleaned (5 files)
+- ✅ Config architecture validated
+- ✅ Architecture principles established
+
+**Files Cleaned**:
+1. `beardog-types/src/constants/domains/network.rs` - Zero hardcoding
+2. `beardog-core/src/primal_discovery.rs` - Config fallbacks
+3. `beardog-tunnel/src/main.rs` - No hardcoded defaults
+4. `beardog-types/src/canonical/config/network.rs` - Uses BEARDOG_CONFIG
+5. `beardog-types/src/canonical/config/domains/network/server.rs` - Uses config
+
+---
+
+### Session 1: Config Hierarchy Foundation
+**[DEEP_DEBT_EVOLUTION_SESSION_1.md](DEEP_DEBT_EVOLUTION_SESSION_1.md)**  
+Foundation implementation for zero-hardcoding config system.
+
+**Achievements**:
+- ✅ 5-layer config hierarchy (CLI → Env → File → Platform → Defaults)
+- ✅ 375 lines of production-ready config system
+- ✅ Type-safe, modern idiomatic Rust
+- ✅ Auto-discovery and validation
+- ✅ TOML/JSON support
+
+**Impact**:
+- Enables all future hardcoding elimination
+- Single source of truth for configuration
+- Proper separation of concerns
+
+---
+
+### Cumulative Progress Report
+**[DEEP_DEBT_PROGRESS_SUMMARY.md](DEEP_DEBT_PROGRESS_SUMMARY.md)**  
+Complete tracking of deep debt evolution across all sessions.
+
+**Metrics**:
+- **Hardcoding Eliminated**: ~40 instances (7.6%)
+- **Files Cleaned**: 5 production files
+- **Commits**: 5 major commits (all pushed)
+- **Foundation**: 100% complete
+
+---
+
+### Strategic Planning
+**[NETWORK_HARDCODING_STRATEGY.md](NETWORK_HARDCODING_STRATEGY.md)**  
+Systematic 3-week plan for network hardcoding elimination.
+
+**Structure**:
+- 527 instances mapped across 112 files
+- Top 10 high-impact files identified
+- Week-by-week execution plan
+- Migration patterns documented
+
+---
+
+## 📚 Comprehensive Evolution Session (January 24, 2026)
+
+**Note**: All comprehensive session documents have been archived to `archives/evolution_jan_24_2026/comprehensive_session/` to keep the root clean.
 
 ### Executive Summary
 **[SESSION_FINAL_SUMMARY_JAN_24_2026.md](archives/evolution_jan_24_2026/comprehensive_session/SESSION_FINAL_SUMMARY_JAN_24_2026.md)**  
