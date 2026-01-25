@@ -127,15 +127,19 @@ impl HandlerRegistry {
     ///
     /// This instantiates all handlers and registers them with the registry.
     /// New handlers should be added to this list.
-    pub fn new() -> Self {
+    ///
+    /// # Arguments
+    ///
+    /// * `identity` - Primal identity (family and node) for handlers that need it
+    pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Self {
         Self {
             handlers: vec![
                 Arc::new(health::HealthHandler),
-                Arc::new(capabilities::CapabilitiesHandler),
-                Arc::new(security::SecurityHandler),
+                Arc::new(capabilities::CapabilitiesHandler::new(identity.clone())),
+                Arc::new(security::SecurityHandler::new(identity.clone())),
                 Arc::new(btsp::BtspHandler),
                 Arc::new(crypto_handler::CryptoHandler),
-                Arc::new(federation::FederationHandler),
+                Arc::new(federation::FederationHandler::new(identity.clone())),
                 Arc::new(encryption::EncryptionHandler),
                 Arc::new(graph_security::GraphSecurityHandler),
                 // All handlers now extracted to modular architecture!
@@ -180,9 +184,17 @@ impl HandlerRegistry {
     }
 }
 
+#[cfg(test)]
 impl Default for HandlerRegistry {
+    /// Create a test registry with default test identity
+    ///
+    /// Only available in tests. Production code must provide explicit identity.
     fn default() -> Self {
-        Self::new()
+        let identity = Arc::new(beardog_types::primal_identity::PrimalIdentity::for_test(
+            "test-family",
+            "test-node",
+        ));
+        Self::new(identity)
     }
 }
 

@@ -429,6 +429,7 @@ pub use beardog_errors::BearDogError;
 pub mod canonical;
 
 pub mod adapter_certificates;
+pub mod primal_identity;  // TRUE PRIMAL pattern: explicit identity injection
 /// 🔒 **CONSTRAINTS** - Universal constraint evaluation system
 ///
 /// Philosophy: Users define their own rules. We provide the framework, not the limits.

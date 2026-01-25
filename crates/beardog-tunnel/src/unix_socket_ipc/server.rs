@@ -47,12 +47,14 @@ impl UnixSocketIpcServer {
     /// # Arguments
     /// * `socket_path` - Path to the Unix socket file
     /// * `btsp_provider` - BTSP provider for handling requests
+    /// * `identity` - Primal identity (family and node)
     ///
     /// # Errors
     /// Returns error if unable to remove existing socket file
     pub async fn new(
         socket_path: impl AsRef<Path>,
         btsp_provider: Arc<BeardogBtspProvider>,
+        identity: Arc<beardog_types::primal_identity::PrimalIdentity>,
     ) -> Result<Self> {
         let socket_path = socket_path.as_ref().to_path_buf();
 
@@ -65,7 +67,7 @@ impl UnixSocketIpcServer {
         Ok(Self {
             socket_path,
             btsp_provider,
-            handler_registry: HandlerRegistry::new(),
+            handler_registry: HandlerRegistry::new(identity),
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
             is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })

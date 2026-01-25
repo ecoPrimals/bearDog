@@ -196,6 +196,7 @@ async fn test_e2e_identity_method_with_env_fallback() {
 // ========================================================================
 
 #[tokio::test]
+#[serial_test::serial]  // Serialize to avoid env var conflicts
 async fn test_e2e_complete_trust_evaluation_same_family() {
     // Clear any existing env vars first (avoid test interference)
     env::remove_var("FAMILY_ID");
@@ -228,6 +229,9 @@ async fn test_e2e_complete_trust_evaluation_same_family() {
 
     let peer_family = request["params"]["peer_family"].as_str().unwrap();
     let peer_id = request["params"]["peer_id"].as_str().unwrap();
+
+    // Debug: print values to understand the failure
+    println!("DEBUG: our_family='{}', peer_family='{}', match={}", our_family, peer_family, peer_family == our_family);
 
     let trust_level = if peer_family == our_family { 1 } else { 0 };
     let decision = if trust_level == 0 {
@@ -457,7 +461,14 @@ async fn test_e2e_production_tower_identification() {
 }
 
 #[tokio::test]
+#[serial_test::serial]  // Serialize to avoid env var conflicts
 async fn test_e2e_dual_tower_federation() {
+    // Clear all env vars first
+    env::remove_var("FAMILY_ID");
+    env::remove_var("NODE_ID");
+    env::remove_var("BEARDOG_FAMILY_ID");
+    env::remove_var("BEARDOG_NODE_ID");
+    
     // Tower 1
     env::set_var("BEARDOG_FAMILY_ID", "nat0");
     env::set_var("BEARDOG_NODE_ID", "tower1");

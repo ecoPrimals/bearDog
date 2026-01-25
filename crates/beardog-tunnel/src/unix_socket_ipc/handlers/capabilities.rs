@@ -6,6 +6,7 @@
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
+use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tracing::info;
 
@@ -17,7 +18,9 @@ use tracing::info;
 ///
 /// All responses include genetic lineage (family_id, node_id) discovered
 /// from environment variables at runtime (no hardcoding).
-pub struct CapabilitiesHandler;
+pub struct CapabilitiesHandler {
+    identity: Arc<PrimalIdentity>,
+}
 
 #[async_trait]
 impl MethodHandler for CapabilitiesHandler {
@@ -46,19 +49,19 @@ impl MethodHandler for CapabilitiesHandler {
 }
 
 impl CapabilitiesHandler {
+    /// Create a new CapabilitiesHandler with explicit identity injection
+    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+        Self { identity }
+    }
+
     /// Handle capabilities request
     ///
     /// Returns a comprehensive list of all capabilities provided by BearDog,
     /// including crypto, security, BTSP, graph security, and JWT generation.
     async fn handle_capabilities(&self) -> Result<serde_json::Value, String> {
-        // Get identity from environment (primal only knows itself)
-        // Support both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
-        let family_id = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
-        let node_id = std::env::var("NODE_ID")
-            .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        // Use injected identity (no environment variables!)
+        let family_id = self.identity.family_id();
+        let node_id = self.identity.node_id();
 
         info!("🎯 Capabilities requested - exposing our capabilities");
 
@@ -139,18 +142,12 @@ impl CapabilitiesHandler {
     /// Returns the primal's identity including family and node IDs,
     /// plus an encryption tag for discovery/federation.
     async fn handle_identity(&self) -> Result<serde_json::Value, String> {
-        // Get identity from environment (primal only knows itself)
-        // Support both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
-        let family_id = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
-        let node_id = std::env::var("NODE_ID")
-            .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        // Use injected identity (no environment variables!)
+        let family_id = self.identity.family_id();
+        let node_id = self.identity.node_id();
 
-        // Generate encryption tag for discovery/federation
-        // Format: beardog:family:{family_id} for family-based federation
-        let encryption_tag = format!("beardog:family:{}", family_id);
+        // Generate encryption tag using identity helper
+        let encryption_tag = self.identity.encryption_tag();
 
         info!(
             "🆔 Identity requested - family: {}, node: {}, encryption_tag: {}",
@@ -173,7 +170,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_capabilities_handler_methods() {
-        let handler = CapabilitiesHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = CapabilitiesHandler::new(identity);
         let methods = handler.methods();
 
         assert_eq!(methods.len(), 5);
@@ -186,7 +184,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_capabilities_response() {
-        let handler = CapabilitiesHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("capabilities", None, &btsp_provider).await;
@@ -203,7 +202,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_identity_response() {
-        let handler = CapabilitiesHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("identity", None, &btsp_provider).await;
@@ -219,7 +219,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_capability_aliases() {
-        let handler = CapabilitiesHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["capabilities", "get_capabilities"] {
@@ -230,7 +231,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_identity_aliases() {
-        let handler = CapabilitiesHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["identity", "whoami", "get_identity"] {

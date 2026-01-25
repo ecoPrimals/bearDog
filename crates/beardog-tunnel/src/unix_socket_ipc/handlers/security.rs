@@ -10,6 +10,7 @@ use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use base64::Engine;
+use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
 use std::sync::Arc;
 use tracing::{debug, info};
@@ -21,7 +22,21 @@ use tracing::{debug, info};
 /// - `security.lineage` / `trust.lineage` - Get genetic lineage information
 /// - `birdsong.encrypt` / `birdsong.decrypt` - BirdSong encryption for secure discovery
 /// - `security.generate_jwt_secret` - Generate cryptographically secure JWT secrets
-pub struct SecurityHandler;
+///
+/// # Architecture
+///
+/// Uses explicit `PrimalIdentity` injection (no environment variables).
+/// This enables:
+/// - Concurrent-safe operation (no global state)
+/// - Testable with different identities in parallel
+/// - Explicit dependencies (visible in constructor)
+pub struct SecurityHandler {
+    /// Primal identity (family and node)
+    ///
+    /// Injected at construction, immutable, shared via Arc.
+    /// Following TRUE PRIMAL pattern: primal only knows itself.
+    identity: Arc<PrimalIdentity>,
+}
 
 #[async_trait]
 impl MethodHandler for SecurityHandler {
@@ -80,6 +95,25 @@ impl MethodHandler for SecurityHandler {
 }
 
 impl SecurityHandler {
+    /// Create a new SecurityHandler with explicit identity injection
+    ///
+    /// # Arguments
+    ///
+    /// * `identity` - Primal identity (family and node)
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use beardog_types::primal_identity::PrimalIdentity;
+    /// use std::sync::Arc;
+    ///
+    /// let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
+    /// let handler = SecurityHandler::new(identity);
+    /// ```
+    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+        Self { identity }
+    }
+
     /// Handle trust evaluation request
     ///
     /// Evaluates trust level based on genetic family matching.
@@ -105,14 +139,10 @@ impl SecurityHandler {
             .and_then(|v| v.as_str())
             .unwrap_or("");
 
-        // Get our identity from environment (primal only knows itself)
-        // Support both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
-        let our_family = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
-        let our_node = std::env::var("NODE_ID")
-            .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        // Use injected identity (no environment variables!)
+        // Following TRUE PRIMAL pattern: primal only knows itself
+        let our_family = self.identity.family_id();
+        let our_node = self.identity.node_id();
 
         // Phase 1: Dual representation with capability hints + Songbird decision field
         let (trust_level, trust_level_name, decision, reason, allowed_caps, denied_caps) =
@@ -190,17 +220,12 @@ impl SecurityHandler {
     ///
     /// Returns genetic lineage information for identity verification.
     async fn handle_lineage(&self) -> Result<serde_json::Value, String> {
-        // Get identity from environment (primal only knows itself)
-        // Support both FAMILY_ID and BEARDOG_FAMILY_ID for compatibility
-        let family_id = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
-        let node_id = std::env::var("NODE_ID")
-            .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        // Use injected identity (no environment variables!)
+        let family_id = self.identity.family_id();
+        let node_id = self.identity.node_id();
 
-        // Generate encryption tag for consistency
-        let encryption_tag = format!("beardog:family:{}", family_id);
+        // Generate encryption tag using identity helper
+        let encryption_tag = self.identity.encryption_tag();
 
         info!(
             "🌳 Lineage info requested - family: {}, node: {}",

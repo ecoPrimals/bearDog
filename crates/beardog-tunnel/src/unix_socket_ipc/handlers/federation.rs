@@ -26,6 +26,7 @@
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
 use async_trait::async_trait;
+use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
 use std::sync::Arc;
 use tracing::info;
@@ -33,7 +34,10 @@ use tracing::info;
 /// Federation RPC handler
 ///
 /// Handles genetic lineage verification and sub-federation operations.
-pub struct FederationHandler;
+pub struct FederationHandler {
+    /// Primal identity (family and node)
+    identity: Arc<PrimalIdentity>,
+}
 
 #[async_trait]
 impl MethodHandler for FederationHandler {
@@ -59,6 +63,11 @@ impl MethodHandler for FederationHandler {
 }
 
 impl FederationHandler {
+    /// Create a new FederationHandler with explicit identity injection
+    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+        Self { identity }
+    }
+
     /// Verify family member - genetic lineage verification
     ///
     /// # Parameters
@@ -94,10 +103,8 @@ impl FederationHandler {
             .and_then(|v| v.as_str())
             .ok_or("Missing node_id")?;
 
-        // Get our identity from environment (primal only knows itself)
-        let our_family = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        // Use injected identity (no environment variables!)
+        let our_family = self.identity.family_id();
 
         // Determine relationship based on family
         let (is_family_member, relationship, trust_level) = if peer_family_id == our_family {

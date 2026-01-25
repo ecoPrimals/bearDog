@@ -67,8 +67,19 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     // Create Unix socket IPC server
     info!("🔌 Creating Unix socket IPC server...");
+    
+    // Create primal identity from environment (fail-fast if not configured)
+    let identity = Arc::new(
+        beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
+            BearDogError::Initialization {
+                message: format!("Failed to read primal identity: {}", e),
+            }
+        })?,
+    );
+    info!("🆔 Identity: family={}, node={}", identity.family_id(), identity.node_id());
+    
     let server = Arc::new(
-        UnixSocketIpcServer::new(&args.socket, btsp_provider)
+        UnixSocketIpcServer::new(&args.socket, btsp_provider, identity)
             .await
             .map_err(|e| BearDogError::Initialization {
                 message: format!("Failed to create server: {}", e),
