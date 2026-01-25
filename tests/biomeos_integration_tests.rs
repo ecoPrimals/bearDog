@@ -18,6 +18,7 @@ use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::HsmManager;
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
+use beardog_types::primal_identity::PrimalIdentity;
 
 // Helper to create test socket
 fn test_socket() -> (TempDir, std::path::PathBuf) {
@@ -49,7 +50,7 @@ async fn start_server_ready(
 ) {
     let btsp_provider = create_test_btsp_provider().await;
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider)
+        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .unwrap(),
     );

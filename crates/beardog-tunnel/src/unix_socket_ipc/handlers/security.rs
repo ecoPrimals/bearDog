@@ -386,7 +386,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_security_handler_methods() {
-        let handler = SecurityHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
         let methods = handler.methods();
 
         // Should support trust evaluation
@@ -407,7 +408,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_trust_evaluation_same_family() {
-        let handler = SecurityHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
 
         // Set environment for testing
         std::env::set_var("FAMILY_ID", "test-family");
@@ -434,7 +436,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_trust_evaluation_different_family() {
-        let handler = SecurityHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
 
         std::env::set_var("FAMILY_ID", "our-family");
 
@@ -458,10 +461,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_lineage_information() {
-        let handler = SecurityHandler;
-
-        std::env::set_var("FAMILY_ID", "lineage-family");
-        std::env::set_var("NODE_ID", "lineage-node");
+        let identity = Arc::new(PrimalIdentity::for_test("lineage-family", "lineage-node"));
+        let handler = SecurityHandler::new(identity);
 
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
         let result = handler
@@ -479,7 +480,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_jwt_secret_generation() {
-        let handler = SecurityHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
 
         let params = serde_json::json!({
             "purpose": "testing",
@@ -513,7 +515,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_jwt_secret_different_strengths() {
-        let handler = SecurityHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         // Test high strength

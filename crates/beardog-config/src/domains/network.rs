@@ -168,7 +168,7 @@ impl ApiConfig {
             tls_cert_path: None,
             tls_key_path: None,
 
-            max_connections: std::env::var("BEARDOG_MAX_CONNECTIONS")
+            max_connections: std::env::var("BEARDOG_API_MAX_CONNECTIONS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.max_connections),

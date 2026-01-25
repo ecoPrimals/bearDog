@@ -25,6 +25,7 @@ use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::HsmManager;
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
+use beardog_types::primal_identity::PrimalIdentity;
 
 // Helper to create a test socket path with temp dir
 fn test_socket() -> (TempDir, PathBuf) {
@@ -63,7 +64,7 @@ async fn start_server_ready(
     let btsp_provider = create_test_btsp_provider().await;
 
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider)
+        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .unwrap(),
     );
@@ -111,7 +112,7 @@ async fn test_socket_creation() {
     let (_dir, socket_path) = test_socket();
     let btsp_provider = create_test_btsp_provider().await;
 
-    let server = UnixSocketIpcServer::new(socket_path.clone(), btsp_provider)
+    let server = UnixSocketIpcServer::new(socket_path.clone(), btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
         .await
         .unwrap();
 
@@ -125,7 +126,7 @@ async fn test_readiness_flag() {
     let btsp_provider = create_test_btsp_provider().await;
 
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider)
+        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .unwrap(),
     );
@@ -314,7 +315,7 @@ async fn test_socket_cleanup_on_crash() {
     // Should handle cleanup of stale socket
     let btsp_provider = create_test_btsp_provider().await;
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path.clone(), btsp_provider)
+        UnixSocketIpcServer::new(socket_path.clone(), btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .unwrap(),
     );
@@ -339,7 +340,7 @@ async fn test_wait_ready_timeout() {
     let btsp_provider = create_test_btsp_provider().await;
 
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider)
+        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .unwrap(),
     );

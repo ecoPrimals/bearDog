@@ -66,7 +66,7 @@ async fn test_authorization_throughput() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -148,7 +148,7 @@ async fn test_validation_throughput() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -228,7 +228,7 @@ async fn test_authorization_latency_p95() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -307,7 +307,7 @@ async fn test_concurrent_authorization_requests() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -402,7 +402,7 @@ async fn test_sustained_load() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );

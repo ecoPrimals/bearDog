@@ -66,7 +66,7 @@ async fn test_graph_authorize_modification_via_unix_socket() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -144,7 +144,7 @@ async fn test_graph_validate_template_via_unix_socket() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -221,7 +221,7 @@ async fn test_graph_audit_origin_via_unix_socket() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -277,7 +277,7 @@ async fn test_graph_capabilities_advertised() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -339,7 +339,7 @@ async fn test_petaltongue_user_modifies_graph() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -408,7 +408,7 @@ async fn test_petaltongue_live_graph_visualization() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -477,7 +477,7 @@ async fn test_petaltongue_template_browser() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -524,7 +524,7 @@ async fn test_nestgate_template_storage() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -584,7 +584,7 @@ async fn test_nestgate_template_retrieval() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -626,7 +626,7 @@ async fn test_nestgate_version_control() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -695,7 +695,7 @@ async fn test_squirrel_ai_suggests_modification() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );
@@ -765,7 +765,7 @@ async fn test_squirrel_learns_from_patterns() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp)
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
             .await
             .expect("Server creation"),
     );

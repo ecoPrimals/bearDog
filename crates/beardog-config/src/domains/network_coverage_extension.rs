@@ -120,6 +120,7 @@ mod network_coverage_extension_tests {
 
         let config = ApiConfig::from_env();
 
+        // The from_env() method should read BEARDOG_API_MAX_CONNECTIONS
         assert_eq!(config.max_connections, 500);
 
         std::env::remove_var("BEARDOG_API_MAX_CONNECTIONS");

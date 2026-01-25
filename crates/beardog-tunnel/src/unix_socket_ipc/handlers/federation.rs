@@ -202,7 +202,8 @@ mod tests {
 
     #[test]
     fn test_federation_handler_methods() {
-        let handler = FederationHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = FederationHandler::new(identity);
         let methods = handler.methods();
 
         assert_eq!(methods.len(), 2);
@@ -212,7 +213,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_family_member_same_family() {
-        let handler = FederationHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = FederationHandler::new(identity);
 
         // Set our family ID
         std::env::set_var("FAMILY_ID", "test-family");
@@ -238,7 +240,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_family_member_different_family() {
-        let handler = FederationHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = FederationHandler::new(identity);
 
         // Set our family ID
         std::env::set_var("FAMILY_ID", "our-family");
@@ -263,7 +266,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_derive_subfed_key() {
-        let handler = FederationHandler;
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = FederationHandler::new(identity);
 
         let params = serde_json::json!({
             "parent_family": "parent-fam",
