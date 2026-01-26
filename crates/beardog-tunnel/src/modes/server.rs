@@ -228,14 +228,24 @@ pub async fn run(
 ///
 /// Ok(()) if registered successfully with any service, Err if all methods fail.
 /// Non-fatal - BearDog can operate standalone without discovery.
-async fn register_with_discovery_service(_socket_config: &SocketConfig) -> anyhow::Result<()> {
+async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow::Result<()> {
+    use anyhow::Context;
     use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
+    use beardog_types::primal_identity::PrimalIdentity;
     
     // PHASE 1: Try Neural API (TRUE PRIMAL pattern)
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!("🌐 Neural API detected at: {}", neural_socket);
         
-        match register_with_neural_api(&neural_socket).await {
+        // Get primal identity from environment
+        let identity = PrimalIdentity::from_env()
+            .context("Failed to load primal identity for registration")?;
+        
+        // Construct primal name and socket path
+        let primal_name = format!("beardog-{}", identity.node_id());
+        let socket_path = socket_config.socket_path_string();
+        
+        match register_with_neural_api(&neural_socket, &primal_name, &socket_path).await {
             Ok(_) => {
                 info!("✅ Registered with Neural API (TRUE PRIMAL)");
                 return Ok(());

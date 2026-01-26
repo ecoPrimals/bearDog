@@ -53,19 +53,32 @@ use tracing::{debug, info, warn};
 ///
 /// Each capability includes semantic mappings that translate generic
 /// operation names to BearDog's specific method names.
-pub async fn register_with_neural_api(neural_socket: &str) -> Result<()> {
+///
+/// # Arguments
+///
+/// * `neural_socket` - Path to Neural API Unix socket
+/// * `primal_name` - Primal identifier (e.g., "beardog-nat0")
+/// * `socket_path` - Path to this primal's Unix socket (e.g., "/tmp/beardog-nat0.sock")
+pub async fn register_with_neural_api(
+    neural_socket: &str,
+    primal_name: &str,
+    socket_path: &str,
+) -> Result<()> {
     info!(
         "🔐 Registering BearDog crypto capabilities with Neural API at {}",
         neural_socket
     );
+    info!("   Primal: {}, Socket: {}", primal_name, socket_path);
 
     // Capability definitions with semantic mappings
     let capabilities = vec![
         // Core crypto capability
         json!({
             "capability": "crypto",
+            "primal": primal_name,
+            "socket_path": socket_path,
             "provider": "beardog",
-            "version": "0.1.0",
+            "version": "0.9.0",
             "operations": [
                 "generate_keypair",
                 "ecdh_derive",
@@ -99,8 +112,10 @@ pub async fn register_with_neural_api(neural_socket: &str) -> Result<()> {
         // TLS-specific crypto
         json!({
             "capability": "tls_crypto",
+            "primal": primal_name,
+            "socket_path": socket_path,
             "provider": "beardog",
-            "version": "0.1.0",
+            "version": "0.9.0",
             "operations": [
                 "derive_handshake_secrets",
                 "derive_application_secrets",
@@ -115,8 +130,10 @@ pub async fn register_with_neural_api(neural_socket: &str) -> Result<()> {
         // Genetic lineage
         json!({
             "capability": "genetic_lineage",
+            "primal": primal_name,
+            "socket_path": socket_path,
             "provider": "beardog",
-            "version": "0.1.0",
+            "version": "0.9.0",
             "operations": [
                 "verify_lineage",
                 "generate_lineage_proof"

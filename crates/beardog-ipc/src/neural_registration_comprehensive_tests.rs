@@ -123,7 +123,11 @@ fn test_discover_neural_api_socket_default_paths() {
 #[tokio::test]
 async fn test_register_with_neural_api_nonexistent_socket() {
     // Test graceful handling when Neural API is not running
-    let result = register_with_neural_api("/tmp/nonexistent-neural-api-test-12345.sock").await;
+    let result = register_with_neural_api(
+        "/tmp/nonexistent-neural-api-test-12345.sock",
+        "beardog-test",
+        "/tmp/beardog-test.sock"
+    ).await;
     
     // Should fail gracefully - the important thing is it doesn't panic
     assert!(result.is_err());
@@ -132,7 +136,11 @@ async fn test_register_with_neural_api_nonexistent_socket() {
 #[tokio::test]
 async fn test_register_with_neural_api_invalid_path() {
     // Test handling of invalid socket path
-    let result = register_with_neural_api("/invalid/path/that/does/not/exist.sock").await;
+    let result = register_with_neural_api(
+        "/invalid/path/that/does/not/exist.sock",
+        "beardog-test",
+        "/tmp/beardog-test.sock"
+    ).await;
     
     assert!(result.is_err());
 }
@@ -239,6 +247,8 @@ async fn test_register_capability_network_error() {
     // Test handling of network/connection errors
     let capability = json!({
         "capability": "test",
+        "primal": "beardog-test",
+        "socket_path": "/tmp/beardog-test.sock",
         "provider": "beardog",
         "operations": ["test_op"]
     });
@@ -317,21 +327,26 @@ fn test_discover_socket_with_whitespace() {
 fn test_discover_socket_empty_vs_unset() {
     // Test distinction between empty string and unset variable
     let original = env::var("NEURAL_API_SOCKET").ok();
+    let original_neurals = env::var("NEURALS_SOCKET").ok();
     
-    // Empty string should disable
+    // Empty string should disable (even if defaults exist)
     env::set_var("NEURAL_API_SOCKET", "");
     let empty_result = discover_neural_api_socket();
-    assert_eq!(empty_result, None);
+    assert_eq!(empty_result, None, "Empty string should explicitly disable auto-registration");
     
     // Unset should fall through to default/None
     env::remove_var("NEURAL_API_SOCKET");
+    env::remove_var("NEURALS_SOCKET");
     let unset_result = discover_neural_api_socket();
-    // Could be None or default socket
+    // Could be None or default socket (depends on whether default paths exist)
     assert!(unset_result.is_none() || unset_result.is_some());
     
     // Cleanup
     if let Some(val) = original {
         env::set_var("NEURAL_API_SOCKET", val);
+    }
+    if let Some(val) = original_neurals {
+        env::set_var("NEURALS_SOCKET", val);
     }
 }
 
