@@ -778,10 +778,13 @@ impl DnsHttpDiscovery {
         // Real implementation would use DNS A/AAAA lookups
         // For now, check if it's already an IP or localhost
         if name == "localhost" || name == "127.0.0.1" {
+            // Use canonical network configuration instead of hardcoding
             let default_port = std::env::var("BEARDOG_DEFAULT_SERVICE_PORT")
+                .or_else(|_| std::env::var("BEARDOG_API_PORT"))
                 .unwrap_or_else(|_| "8080".to_string());
-            let host =
-                std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+            let host = std::env::var("BEARDOG_API_HOST")
+                .or_else(|_| std::env::var("BEARDOG_LOCALHOST"))
+                .unwrap_or_else(|_| "127.0.0.1".to_string());
             return Ok(vec![format!("http://{}:{}", host, default_port)]);
         }
 
