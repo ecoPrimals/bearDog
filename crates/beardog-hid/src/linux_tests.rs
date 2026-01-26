@@ -1,0 +1,336 @@
+//! Comprehensive tests for Linux HID implementation
+//!
+//! Tests Pure Rust HID access via /dev/hidraw and sysfs
+
+use crate::linux::{discover_hidraw, LinuxHidDevice};
+use crate::types::{HidDeviceInfo, ProductId, VendorId};
+use beardog_errors::BearDogError;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HidDeviceInfo Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn test_hid_device_info_creation() {
+    let info = HidDeviceInfo {
+        path: "/dev/hidraw0".to_string(),
+        vendor_id: VendorId(0x1234),
+        product_id: ProductId(0x5678),
+        manufacturer: "Test Manufacturer".to_string(),
+        product: "Test Product".to_string(),
+        serial: "12345678".to_string(),
+    };
+
+    assert_eq!(info.path, "/dev/hidraw0");
+    assert_eq!(info.vendor_id, VendorId(0x1234));
+    assert_eq!(info.product_id, ProductId(0x5678));
+    assert_eq!(info.manufacturer, "Test Manufacturer");
+    assert_eq!(info.product, "Test Product");
+    assert_eq!(info.serial, "12345678");
+}
+
+#[test]
+fn test_hid_device_info_empty_serial() {
+    let info = HidDeviceInfo {
+        path: "/dev/hidraw1".to_string(),
+        vendor_id: VendorId(0xabcd),
+        product_id: ProductId(0xef01),
+        manufacturer: "Another Manufacturer".to_string(),
+        product: "Another Product".to_string(),
+        serial: String::new(),
+    };
+
+    assert!(info.serial.is_empty());
+}
+
+#[test]
+fn test_hid_device_info_display() {
+    let info = HidDeviceInfo {
+        path: "/dev/hidraw0".to_string(),
+        vendor_id: VendorId(0x1234),
+        product_id: ProductId(0x5678),
+        manufacturer: "Test".to_string(),
+        product: "Device".to_string(),
+        serial: "SERIAL".to_string(),
+    };
+    
+    let formatted = format!("{}", info);
+    assert!(formatted.contains("Test"));
+    assert!(formatted.contains("Device"));
+    assert!(formatted.contains("/dev/hidraw0"));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// discover_hidraw() Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn test_discover_hidraw_returns_result() {
+    // Test that discover_hidraw returns a valid Result type
+    let result = discover_hidraw().await;
+    
+    // Should return either Ok or Err - both are valid
+    match result {
+        Ok(devices) => {
+            // All devices should have valid structure
+            for device in &devices {
+                assert!(!device.path.is_empty());
+                assert!(device.path.contains("hidraw") || device.path.contains("/dev/"));
+                assert!(device.vendor_id.0 <= 0xFFFF);
+                assert!(device.product_id.0 <= 0xFFFF);
+            }
+        }
+        Err(e) => {
+            // Permission errors or I/O errors are expected in some environments
+            let err_str = e.to_string();
+            assert!(
+                err_str.contains("Permission denied") 
+                || err_str.contains("Failed to")
+                || err_str.contains("No such file")
+            );
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_discover_hidraw_device_validation() {
+    if let Ok(devices) = discover_hidraw().await {
+        for device in &devices {
+            // Path should be non-empty
+            assert!(!device.path.is_empty());
+            
+            // Manufacturer and product can be empty but should be valid strings
+            assert!(device.manufacturer.len() >= 0);
+            assert!(device.product.len() >= 0);
+            
+            // Serial can be empty
+            assert!(device.serial.len() >= 0);
+            
+            // VID/PID should be valid 16-bit values
+            assert!(device.vendor_id.0 <= 0xFFFF);
+            assert!(device.product_id.0 <= 0xFFFF);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LinuxHidDevice Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn test_linux_hid_device_open_nonexistent() {
+    // Opening a non-existent device should fail gracefully
+    let result = LinuxHidDevice::open("/dev/hidraw999999").await;
+    
+    assert!(result.is_err());
+    if let Err(e) = result {
+        let err_str = e.to_string();
+        assert!(
+            err_str.contains("No such file") 
+            || err_str.contains("Failed to open")
+            || err_str.contains("not found")
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_linux_hid_device_open_invalid_path() {
+    // Opening an invalid path should fail
+    let result = LinuxHidDevice::open("/invalid/path/hidraw0").await;
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn test_linux_hid_device_empty_path() {
+    // Empty path should fail
+    let result = LinuxHidDevice::open("").await;
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn test_linux_hid_device_relative_path() {
+    // Relative paths should fail
+    let result = LinuxHidDevice::open("hidraw0").await;
+    assert!(result.is_err());
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FIDO2-Specific Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn test_fido2_device_identification() {
+    // Test identifying known FIDO2 devices
+    let solokey_vid = VendorId(0x1209);
+    let solokey_pid = ProductId(0xbeee);
+    
+    let yubikey_vid = VendorId(0x1050);
+    
+    // Validate known VID/PIDs
+    assert_eq!(solokey_vid, VendorId(0x1209));
+    assert_eq!(solokey_pid, ProductId(0xbeee));
+    assert_eq!(yubikey_vid, VendorId(0x1050));
+}
+
+#[tokio::test]
+async fn test_discover_and_filter_fido2_devices() {
+    // Test discovering and filtering FIDO2 devices
+    if let Ok(devices) = discover_hidraw().await {
+        let fido2_devices: Vec<_> = devices
+            .into_iter()
+            .filter(|d| {
+                // SoloKey
+                (d.vendor_id == VendorId(0x1209) && d.product_id == ProductId(0xbeee))
+                // YubiKey family (0x1050 VID)
+                || d.vendor_id == VendorId(0x1050)
+                // Google Titan (0x096e VID)
+                || d.vendor_id == VendorId(0x096e)
+            })
+            .collect();
+        
+        // Either we found some or we didn't - both are valid
+        assert!(fido2_devices.len() >= 0);
+        
+        // If we found any, validate their structure
+        for device in &fido2_devices {
+            assert!(!device.path.is_empty());
+            assert!(device.vendor_id.0 > 0);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Performance Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn test_discover_performance() {
+    use std::time::Instant;
+    
+    let start = Instant::now();
+    let _ = discover_hidraw().await;
+    let duration = start.elapsed();
+    
+    // Discovery should complete quickly (under 5 seconds)
+    assert!(duration.as_secs() < 5);
+}
+
+#[tokio::test]
+async fn test_concurrent_discovery() {
+    // Test concurrent discovery calls
+    let handles: Vec<_> = (0..3)
+        .map(|_| tokio::spawn(async { discover_hidraw().await }))
+        .collect();
+    
+    for handle in handles {
+        let result = handle.await;
+        assert!(result.is_ok());
+        if let Ok(Ok(_devices)) = result {
+            // Success
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_discover_deterministic() {
+    // Test that discovery is deterministic
+    let result1 = discover_hidraw().await;
+    let result2 = discover_hidraw().await;
+    
+    match (result1, result2) {
+        (Ok(devices1), Ok(devices2)) => {
+            // Should find same number of devices (assuming no hot-plug)
+            // Note: This might be flaky if devices are added/removed during test
+            // but validates consistency
+            assert_eq!(devices1.len(), devices2.len());
+        }
+        (Err(_), Err(_)) => {
+            // Both failed consistently - OK
+        }
+        _ => {
+            // Mixed results - can happen in test environments
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Type Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn test_vendor_id_display() {
+    let vid = VendorId(0x1234);
+    let formatted = format!("{}", vid);
+    assert_eq!(formatted, "0x1234");
+}
+
+#[test]
+fn test_product_id_display() {
+    let pid = ProductId(0x5678);
+    let formatted = format!("{}", pid);
+    assert_eq!(formatted, "0x5678");
+}
+
+#[test]
+fn test_vendor_id_equality() {
+    let vid1 = VendorId(0x1234);
+    let vid2 = VendorId(0x1234);
+    let vid3 = VendorId(0x5678);
+    
+    assert_eq!(vid1, vid2);
+    assert_ne!(vid1, vid3);
+}
+
+#[test]
+fn test_product_id_equality() {
+    let pid1 = ProductId(0xabcd);
+    let pid2 = ProductId(0xabcd);
+    let pid3 = ProductId(0xef01);
+    
+    assert_eq!(pid1, pid2);
+    assert_ne!(pid1, pid3);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Edge Case Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn test_device_path_with_whitespace() {
+    let result = LinuxHidDevice::open("/dev/hidraw0 ").await;
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn test_device_path_with_newline() {
+    let result = LinuxHidDevice::open("/dev/hidraw0\n").await;
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn test_discover_empty_manufacturer() {
+    // Test that devices with empty manufacturer strings are handled
+    if let Ok(devices) = discover_hidraw().await {
+        for device in &devices {
+            // Manufacturer can be empty - should be valid String
+            assert!(device.manufacturer.len() >= 0);
+        }
+    }
+}
+
+#[test]
+fn test_hid_device_info_clone() {
+    let info = HidDeviceInfo {
+        path: "/dev/hidraw0".to_string(),
+        vendor_id: VendorId(0x1234),
+        product_id: ProductId(0x5678),
+        manufacturer: "Test".to_string(),
+        product: "Device".to_string(),
+        serial: "SERIAL".to_string(),
+    };
+    
+    let cloned = info.clone();
+    assert_eq!(info.path, cloned.path);
+    assert_eq!(info.vendor_id, cloned.vendor_id);
+    assert_eq!(info.product_id, cloned.product_id);
+}

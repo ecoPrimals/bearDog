@@ -97,6 +97,9 @@
 pub mod linux;
 pub mod types;
 
+#[cfg(test)]
+mod linux_tests;
+
 pub use types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 
 /// Discover all HID devices on the system
