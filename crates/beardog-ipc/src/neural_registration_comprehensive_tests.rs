@@ -88,8 +88,8 @@ fn test_discover_neural_api_socket_empty_string() {
 }
 
 #[test]
-fn test_discover_neural_api_socket_default_nonexistent() {
-    // Test that non-existent default socket returns None
+fn test_discover_neural_api_socket_default_paths() {
+    // Test that default socket paths are checked in priority order
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
     let original_neurals = env::var("NEURALS_SOCKET").ok();
     
@@ -98,8 +98,10 @@ fn test_discover_neural_api_socket_default_nonexistent() {
     
     let result = discover_neural_api_socket();
     
-    // If default socket exists, should return Some, otherwise None
-    if Path::new("/tmp/neural-api-nat0.sock").exists() {
+    // Check default paths in priority order
+    if Path::new("/tmp/neural-api.sock").exists() {
+        assert_eq!(result, Some("/tmp/neural-api.sock".to_string()));
+    } else if Path::new("/tmp/neural-api-nat0.sock").exists() {
         assert_eq!(result, Some("/tmp/neural-api-nat0.sock".to_string()));
     } else {
         assert_eq!(result, None);

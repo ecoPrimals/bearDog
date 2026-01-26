@@ -189,32 +189,67 @@ async fn register_capability(
 /// Discover Neural API socket from environment
 ///
 /// Checks in order:
-/// 1. `NEURAL_API_SOCKET` environment variable
-/// 2. `NEURALS_SOCKET` environment variable (alternate name)
-/// 3. Default: `/tmp/neural-api-nat0.sock` (if file exists)
+/// 1. `NEURAL_API_SOCKET` environment variable (if empty, disables auto-registration)
+/// 2. `NEURALS_SOCKET` environment variable (alternate name, if empty, disables)
+/// 3. Default paths (checked in order):
+///    - `/tmp/neural-api.sock` (primary default)
+///    - `/tmp/neural-api-nat0.sock` (legacy compatibility)
 ///
 /// Returns `None` if:
 /// - Explicitly set to empty string (disables auto-registration)
-/// - Default socket path doesn't exist (Neural API not running)
+/// - No default socket paths exist (Neural API not running)
 pub fn discover_neural_api_socket() -> Option<String> {
     use std::path::Path;
     
-    // Check env vars first
-    std::env::var("NEURAL_API_SOCKET")
-        .ok()
-        .or_else(|| std::env::var("NEURALS_SOCKET").ok())
-        .or_else(|| {
-            // Check if default socket exists
-            let default = "/tmp/neural-api-nat0.sock";
-            if Path::new(default).exists() {
-                debug!("Using default Neural API socket: {}", default);
-                Some(default.to_string())
-            } else {
-                debug!("Default Neural API socket not found: {}", default);
-                None
-            }
-        })
-        .and_then(|s| if s.is_empty() { None } else { Some(s) })
+    // Check NEURAL_API_SOCKET first (highest priority)
+    match std::env::var("NEURAL_API_SOCKET") {
+        Ok(socket) if !socket.is_empty() => {
+            info!("🔍 Using NEURAL_API_SOCKET: {}", socket);
+            return Some(socket);
+        }
+        Ok(_) => {
+            // Empty string explicitly disables auto-registration
+            debug!("NEURAL_API_SOCKET is empty - auto-registration disabled");
+            return None;
+        }
+        Err(_) => {
+            // Not set, try next option
+        }
+    }
+    
+    // Check NEURALS_SOCKET (fallback)
+    match std::env::var("NEURALS_SOCKET") {
+        Ok(socket) if !socket.is_empty() => {
+            info!("🔍 Using NEURALS_SOCKET: {}", socket);
+            return Some(socket);
+        }
+        Ok(_) => {
+            // Empty string explicitly disables auto-registration
+            debug!("NEURALS_SOCKET is empty - auto-registration disabled");
+            return None;
+        }
+        Err(_) => {
+            // Not set, try defaults
+        }
+    }
+    
+    // Try default paths in priority order
+    let default_paths = [
+        "/tmp/neural-api.sock",          // Primary default (biomeOS standard)
+        "/tmp/neural-api-nat0.sock",     // Legacy compatibility
+    ];
+    
+    for path in &default_paths {
+        if Path::new(path).exists() {
+            info!("🔍 Found Neural API socket at default path: {}", path);
+            return Some(path.to_string());
+        } else {
+            debug!("Checked default path (not found): {}", path);
+        }
+    }
+    
+    info!("ℹ️  No Neural API socket found (checked env vars and {} default paths)", default_paths.len());
+    None
 }
 
 #[cfg(test)]
