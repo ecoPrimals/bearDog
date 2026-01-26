@@ -2,6 +2,18 @@
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.
 //!
+//! # Semantic Method Support (TRUE PRIMAL Pattern)
+//!
+//! **Primary**: Actual method names (e.g., `crypto.x25519_generate_ephemeral`)
+//! **Optional**: Semantic aliases (e.g., `generate_keypair`)
+//!
+//! Semantic names allow direct testing without Neural API, but in production,
+//! Neural API handles all translation via the graph (`tower_atomic_bootstrap.toml`).
+//!
+//! Both forms route to the same handler:
+//! - `crypto.x25519_generate_ephemeral` (actual) → handle_x25519_generate
+//! - `generate_keypair` (semantic) → handle_x25519_generate
+//!
 //! # Methods (38 total: 19 core + 4 ECDSA + 4 RSA + 4 TLS + 4 genetic + 3 password)
 //!
 //! ## Core Crypto (19 methods)

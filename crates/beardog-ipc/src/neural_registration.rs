@@ -76,7 +76,7 @@ pub async fn register_with_neural_api(
         json!({
             "capability": "crypto",
             "primal": primal_name,
-            "socket_path": socket_path,
+            "socket": socket_path,
             "provider": "beardog",
             "version": "0.9.0",
             "operations": [
@@ -93,27 +93,16 @@ pub async fn register_with_neural_api(
                 "hkdf_extract",
                 "hkdf_expand"
             ],
-            "semantic_mappings": {
-                // Map semantic names to BearDog's actual method names
-                "crypto.generate_keypair": "crypto.x25519_generate_ephemeral",
-                "crypto.ecdh_derive": "crypto.x25519_derive_secret",
-                "crypto.encrypt": "crypto.chacha20_poly1305_encrypt",
-                "crypto.decrypt": "crypto.chacha20_poly1305_decrypt",
-                "crypto.encrypt_aes_128_gcm": "crypto.aes128_gcm_encrypt",
-                "crypto.decrypt_aes_128_gcm": "crypto.aes128_gcm_decrypt",
-                "crypto.encrypt_aes_256_gcm": "crypto.aes256_gcm_encrypt",
-                "crypto.decrypt_aes_256_gcm": "crypto.aes256_gcm_decrypt",
-                "crypto.sha256": "crypto.sha256",
-                "crypto.sha384": "crypto.sha384",
-                "crypto.hkdf_extract": "crypto.hkdf_extract",
-                "crypto.hkdf_expand": "crypto.hkdf_expand"
-            }
+            // NOTE: semantic_mappings are now handled by Neural API's graph-based
+            // translation system (tower_atomic_bootstrap.toml). BearDog just exposes
+            // its API, and the graph wires everything together at runtime.
+            // This enables TRUE PRIMAL pattern with zero coupling!
         }),
         // TLS-specific crypto
         json!({
             "capability": "tls_crypto",
             "primal": primal_name,
-            "socket_path": socket_path,
+            "socket": socket_path,
             "provider": "beardog",
             "version": "0.9.0",
             "operations": [
@@ -121,17 +110,13 @@ pub async fn register_with_neural_api(
                 "derive_application_secrets",
                 "compute_finished_verify_data"
             ],
-            "semantic_mappings": {
-                "tls.derive_handshake_secrets": "tls.derive_handshake_secrets",
-                "tls.derive_application_secrets": "tls.derive_application_secrets",
-                "tls.compute_finished_verify_data": "tls.compute_finished_verify_data"
-            }
+            // Semantic mappings handled by graph (see tower_atomic_bootstrap.toml)
         }),
         // Genetic lineage
         json!({
             "capability": "genetic_lineage",
             "primal": primal_name,
-            "socket_path": socket_path,
+            "socket": socket_path,
             "provider": "beardog",
             "version": "0.9.0",
             "operations": [
@@ -139,8 +124,8 @@ pub async fn register_with_neural_api(
                 "generate_lineage_proof"
             ],
             "semantic_mappings": {
-                "genetic.verify_lineage": "genetic.verify_lineage",
-                "genetic.generate_lineage_proof": "genetic.generate_lineage_proof"
+                "verify_lineage": "genetic.verify_lineage",
+                "generate_lineage_proof": "genetic.generate_lineage_proof"
             }
         }),
     ];
@@ -174,6 +159,7 @@ async fn register_capability(
     });
 
     let request_str = serde_json::to_string(&request)?;
+    debug!("📤 Sending registration: {}", request_str);
 
     // Connect to Neural API
     let mut stream = UnixStream::connect(neural_socket).await.context(
