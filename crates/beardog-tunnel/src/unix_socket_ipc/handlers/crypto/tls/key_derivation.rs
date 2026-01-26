@@ -473,121 +473,121 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
 /// Derives TLS 1.3 APPLICATION traffic secrets using the full RFC 8446 key schedule.
 /// This is the SECOND key derivation stage - used for encrypting HTTP application data.
 ///
-/// # Parameters
+/// # RFC 8446 Compliance
 ///
-/// - `pre_master_secret`: Base64-encoded shared secret (32 bytes from ECDH)
-/// - `client_random`: Base64-encoded client random (32 bytes)
-/// - `server_random`: Base64-encoded server random (32 bytes)
+/// This function implements the **application secret derivation stage** of the TLS 1.3
+/// key schedule (RFC 8446 Section 7.1):
+///
+/// ```text
+/// Handshake Secret (input)
+///     ↓
+/// Derive-Secret("derived", "")
+///     ↓
+/// HKDF-Extract(0) → Master Secret
+///     ↓
+/// Derive-Secret("c ap traffic", transcript) → Client App Secret
+/// Derive-Secret("s ap traffic", transcript) → Server App Secret
+///     ↓
+/// HKDF-Expand-Label("key") → Encryption Keys
+/// HKDF-Expand-Label("iv") → IVs
+/// ```
+///
+/// # Parameters (RFC 8446 Compliant)
+///
+/// - `handshake_secret`: Base64-encoded handshake secret (32 bytes) from previous stage
+/// - `transcript_hash`: Base64-encoded SHA-256 of all handshake messages (32 bytes)
+/// - `cipher_suite` (optional): TLS cipher suite ID (default: 0x1303 = ChaCha20-Poly1305)
 ///
 /// # Returns
 ///
-/// - `client_write_key`: Base64-encoded client encryption key (32 bytes)
-/// - `server_write_key`: Base64-encoded server encryption key (32 bytes)
+/// - `client_write_key`: Base64-encoded client encryption key (16 or 32 bytes)
+/// - `server_write_key`: Base64-encoded server encryption key (16 or 32 bytes)
 /// - `client_write_iv`: Base64-encoded client IV/nonce (12 bytes)
 /// - `server_write_iv`: Base64-encoded server IV/nonce (12 bytes)
+/// - `client_application_secret`: Base64-encoded client traffic secret (32 bytes)
+/// - `server_application_secret`: Base64-encoded server traffic secret (32 bytes)
 ///
-/// # Difference from `tls.derive_secrets`
+/// # Difference from `tls.derive_handshake_secrets`
 ///
-/// - `tls.derive_secrets`: Derives HANDSHAKE traffic keys (for handshake messages)
-/// - `tls.derive_application_secrets`: Derives APPLICATION traffic keys (for HTTP data)
+/// - `tls.derive_handshake_secrets`: ECDH → Handshake Secret → Handshake Keys
+/// - `tls.derive_application_secrets`: Handshake Secret → Master Secret → App Keys
 ///
 /// Both follow RFC 8446, but at different stages of the key schedule.
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "method": "tls.derive_application_secrets",
+///   "params": {
+///     "handshake_secret": "base64_encoded_32_bytes",
+///     "transcript_hash": "base64_encoded_sha256_of_all_handshake_messages",
+///     "cipher_suite": 4865
+///   }
+/// }
+/// ```
 pub async fn handle_tls_derive_application_secrets(
     params: Option<&Value>,
 ) -> Result<Value, String> {
     // EXECUTION TRACE: Log immediately to confirm function entry
-    info!("🚀 ENTERED handle_tls_derive_application_secrets");
+    info!("🚀 ENTERED handle_tls_derive_application_secrets (RFC 8446 Compliant)");
 
     let params = params.ok_or("Missing params for tls.derive_application_secrets")?;
     info!("✅ Parameters parsed successfully");
 
-    // Extract parameters
-    let pre_master_secret_b64 = params
-        .get("pre_master_secret")
+    // Extract RFC 8446 compliant parameters
+    let handshake_secret_b64 = params
+        .get("handshake_secret")
         .and_then(|v| v.as_str())
-        .ok_or("Missing required parameter: pre_master_secret")?;
+        .ok_or("Missing required parameter: handshake_secret (from derive_handshake_secrets)")?;
 
-    let client_random_b64 = params
-        .get("client_random")
+    // REQUIRED: transcript_hash (RFC 8446 Section 7.1)
+    let transcript_hash_b64 = params
+        .get("transcript_hash")
         .and_then(|v| v.as_str())
-        .ok_or("Missing required parameter: client_random")?;
+        .ok_or("Missing required parameter: transcript_hash (SHA-256 of all handshake messages)")?;
 
-    let server_random_b64 = params
-        .get("server_random")
-        .and_then(|v| v.as_str())
-        .ok_or("Missing required parameter: server_random")?;
-
-    // Optional: transcript_hash (for proper RFC 8446 compliance)
-    // If not provided, falls back to simplified mode (client_random || server_random)
-    let transcript_hash_b64 = params.get("transcript_hash").and_then(|v| v.as_str());
-
-    // Extract cipher_suite (NEW: for dynamic key length derivation)
+    // Extract cipher_suite (for dynamic key length derivation)
     let cipher_suite = params
         .get("cipher_suite")
         .and_then(|v| v.as_u64())
-        .unwrap_or(0x1303) as u16; // Default to ChaCha20-Poly1305 for backward compat
+        .unwrap_or(0x1303) as u16; // Default to ChaCha20-Poly1305
 
     info!("🔐 Cipher suite: 0x{:04x}", cipher_suite);
 
-    // Decode parameters
-    let pre_master_secret = base64::engine::general_purpose::STANDARD
-        .decode(pre_master_secret_b64)
-        .map_err(|e| format!("Invalid base64 pre_master_secret: {e}"))?;
+    // Decode RFC 8446 compliant parameters
+    let handshake_secret = base64::engine::general_purpose::STANDARD
+        .decode(handshake_secret_b64)
+        .map_err(|e| format!("Invalid base64 handshake_secret: {e}"))?;
 
-    let client_random = base64::engine::general_purpose::STANDARD
-        .decode(client_random_b64)
-        .map_err(|e| format!("Invalid base64 client_random: {e}"))?;
+    let transcript_hash = base64::engine::general_purpose::STANDARD
+        .decode(transcript_hash_b64)
+        .map_err(|e| format!("Invalid base64 transcript_hash: {e}"))?;
 
-    let server_random = base64::engine::general_purpose::STANDARD
-        .decode(server_random_b64)
-        .map_err(|e| format!("Invalid base64 server_random: {e}"))?;
-
-    info!("✅ Base64 decoding complete: pre_master={} bytes, client_random={} bytes, server_random={} bytes", 
-          pre_master_secret.len(), client_random.len(), server_random.len());
-
-    // Optional transcript hash (SHA-256 of all handshake messages)
-    let transcript_hash = if let Some(th_b64) = transcript_hash_b64 {
-        let th = base64::engine::general_purpose::STANDARD
-            .decode(th_b64)
-            .map_err(|e| format!("Invalid base64 transcript_hash: {e}"))?;
-        if th.len() != 32 {
-            return Err("transcript_hash must be 32 bytes (SHA-256)".to_string());
-        }
-        info!("✅ Transcript hash decoded: {} bytes", th.len());
-        Some(th)
-    } else {
-        info!("⚠️  No transcript_hash provided - will use SIMPLIFIED MODE");
-        None
-    };
-
-    if client_random.len() != 32 {
-        return Err("client_random must be 32 bytes".to_string());
+    // Validate parameter sizes (RFC 8446)
+    if handshake_secret.len() != 32 {
+        return Err("handshake_secret must be 32 bytes (output from derive_handshake_secrets)".to_string());
     }
 
-    if server_random.len() != 32 {
-        return Err("server_random must be 32 bytes".to_string());
+    if transcript_hash.len() != 32 {
+        return Err("transcript_hash must be 32 bytes (SHA-256 of all handshake messages)".to_string());
     }
+
+    info!("✅ Base64 decoding complete: handshake_secret={} bytes, transcript_hash={} bytes", 
+          handshake_secret.len(), transcript_hash.len());
 
     // EXECUTION TRACE: About to enter comprehensive debug logging
-    info!("🎯 CHECKPOINT: Starting comprehensive debug output...");
+    info!("🎯 CHECKPOINT: Starting RFC 8446 compliant key derivation...");
 
-    // VERSION MARKER: This is v0.17.0+ with enhanced debug logging
+    // VERSION MARKER: v0.18.0+ RFC 8446 Compliant Application Secret Derivation
     info!("════════════════════════════════════════════════════════════");
-    info!("🔍 BEARDOG v0.17.0+ APPLICATION KEY DERIVATION - COMPREHENSIVE DEBUG");
+    info!("🔍 BEARDOG v0.18.0+ APPLICATION KEY DERIVATION - RFC 8446 COMPLIANT");
     info!("════════════════════════════════════════════════════════════");
-
-    if let Some(ref th) = transcript_hash {
-        info!("RFC 8446 FULL MODE - Using actual transcript hash");
-        info!("  • Pre-master secret: {} bytes", pre_master_secret.len());
-        info!("  • Client random: {} bytes", client_random.len());
-        info!("  • Server random: {} bytes", server_random.len());
-        info!("  • Transcript hash: {} bytes (SHA-256)", th.len());
-        info!("  • Transcript hash (hex): {}", hex::encode(th));
-    } else {
-        info!("SIMPLIFIED MODE (backward compat) - Using client_random || server_random");
-        info!("  • Pre-master secret: {} bytes", pre_master_secret.len());
-        warn!("⚠️  NOT using actual transcript hash - this is not RFC 8446 compliant!");
-    }
+    info!("RFC 8446 Section 7.1: Application Secret Derivation");
+    info!("  • Handshake secret: {} bytes (from derive_handshake_secrets)", handshake_secret.len());
+    info!("  • Transcript hash: {} bytes (SHA-256 of all handshake messages)", transcript_hash.len());
+    info!("  • Transcript hash (hex): {}", hex::encode(&transcript_hash));
+    info!("  • Cipher suite: 0x{:04x}", cipher_suite);
 
     // Dynamic key length based on cipher suite (RFC 8446 Section 7.3)
     let (key_len, iv_len) = match cipher_suite {
@@ -628,166 +628,102 @@ pub async fn handle_tls_derive_application_secrets(
         Ok::<Vec<u8>, String>(okm)
     };
 
-    // Helper: Derive-Secret (RFC 8446 Section 7.1)
-    let derive_secret = |secret: &[u8], label: &str, messages: &[u8]| {
-        let transcript_hash = Sha256::digest(messages);
-        hkdf_expand_label(secret, label, &transcript_hash, 32)
-    };
+    // Step 1: Derive-Secret(handshake_secret, "derived", "")
+    // This is: HKDF-Expand-Label(handshake_secret, "derived", Hash(""), 32)
+    let empty_hash = Sha256::digest(&[]);
+    let handshake_derived = hkdf_expand_label(&handshake_secret, "derived", &empty_hash, 32)?;
+    debug!("  Step 1: Handshake derived secret computed (for master secret derivation)");
 
-    // Step 1: Early Secret (from all zeros)
-    let early_secret = Hkdf::<Sha256>::extract(None, &[0u8; 32]);
+    // Step 2: Master Secret = HKDF-Extract(salt: handshake_derived, IKM: 0)
+    // RFC 8446 Section 7.1: Master Secret is derived from handshake_secret with zero IKM
+    let zeros_32 = [0u8; 32];
+    let master_secret = Hkdf::<Sha256>::extract(Some(&handshake_derived), &zeros_32);
+    debug!("  Step 2: Master Secret derived from handshake secret");
 
-    // Step 2: Derive-Secret(early_secret, "derived", "")
-    let derived_1 = derive_secret(&early_secret.0, "derived", &[])?;
+    info!("────────────────────────────────────────────────────────────");
+    info!("RFC 8446 Key Schedule - Application Stage:");
+    info!("────────────────────────────────────────────────────────────");
+    info!("  Input: Handshake Secret (32 bytes)");
+    info!("         {}", hex::encode(&handshake_secret));
+    info!("  Step 1: Derive-Secret('derived', '') → handshake_derived");
+    info!("         {}", hex::encode(&handshake_derived));
+    info!("  Step 2: HKDF-Extract(handshake_derived, 0) → Master Secret");
+    info!("         {}", hex::encode(&master_secret.0));
 
-    // Step 3: Handshake Secret (from shared secret)
-    let handshake_secret = Hkdf::<Sha256>::extract(Some(&derived_1), &pre_master_secret);
-
-    // Step 4: Derive-Secret(handshake_secret, "derived", "")
-    let derived_2 = derive_secret(&handshake_secret.0, "derived", &[])?;
-
-    // Step 5: Master Secret (from all zeros)
-    let master_secret = Hkdf::<Sha256>::extract(Some(&derived_2), &[0u8; 32]);
-
-    // Step 6: Prepare transcript for key derivation
-    // RFC 8446 Mode: Use provided transcript_hash directly (already SHA-256 hashed)
-    // Simplified Mode: Hash(client_random || server_random) for backward compatibility
-    let transcript_for_derivation = if let Some(ref th) = transcript_hash {
-        // RFC 8446 FULL MODE: Use actual transcript hash
-        // The hash is already computed by the caller (Songbird) from all handshake messages
-        info!(
-            "✅ Using RFC 8446 FULL transcript hash ({} bytes)",
-            th.len()
-        );
-        th.clone()
-    } else {
-        // SIMPLIFIED MODE (backward compatibility):
-        // Use client_random || server_random as a simplified transcript
-        // This is NOT RFC 8446 compliant but works for initial testing
-        let mut simplified_transcript = Vec::with_capacity(64);
-        simplified_transcript.extend_from_slice(&client_random);
-        simplified_transcript.extend_from_slice(&server_random);
-        debug!("⚠️  Using SIMPLIFIED transcript (not RFC 8446 compliant)");
-
-        // Hash the simplified transcript
-        Sha256::digest(&simplified_transcript).to_vec()
-    };
-
-    // Step 7: Derive application traffic secrets (RFC 8446 labels)
+    // Step 3: Derive application traffic secrets (RFC 8446 labels)
     // Use HKDF-Expand-Label with the transcript hash as context
-    info!("────────────────────────────────────────────────────────────");
-    info!("Key Derivation Process:");
-    info!("────────────────────────────────────────────────────────────");
-    info!("  • Master secret (first 16 bytes):");
-    info!("    {}", hex::encode(&master_secret.0[..16]));
-    info!(
-        "  • Transcript hash used for derivation ({} bytes):",
-        transcript_for_derivation.len()
-    );
-    info!("    {}", hex::encode(&transcript_for_derivation));
-    info!("");
-    info!("  • Deriving with HKDF-Expand-Label:");
-    info!("    - Label for client: 'c ap traffic'");
-    info!("    - Label for server: 's ap traffic'");
-    info!("    - Output length: 32 bytes each");
+    info!("  Step 3: Derive Application Traffic Secrets");
+    info!("         Using HKDF-Expand-Label with transcript hash:");
+    info!("         {}", hex::encode(&transcript_hash));
     info!("");
 
     let client_app_secret = hkdf_expand_label(
         &master_secret.0,
         "c ap traffic",
-        &transcript_for_derivation,
+        &transcript_hash,
         32,
     )?;
-    info!("  ✅ Client application secret (CLIENT_TRAFFIC_SECRET_0, full 32 bytes):");
-    info!("    {}", hex::encode(&client_app_secret));
+    info!("  ✅ Client Application Traffic Secret (CLIENT_TRAFFIC_SECRET_0):");
+    info!("         {}", hex::encode(&client_app_secret));
     info!("");
 
     let server_app_secret = hkdf_expand_label(
         &master_secret.0,
         "s ap traffic",
-        &transcript_for_derivation,
+        &transcript_hash,
         32,
     )?;
-    info!("  ✅ Server application secret (SERVER_TRAFFIC_SECRET_0, full 32 bytes):");
-    info!("    {}", hex::encode(&server_app_secret));
+    info!("  ✅ Server Application Traffic Secret (SERVER_TRAFFIC_SECRET_0):");
+    info!("         {}", hex::encode(&server_app_secret));
     info!("");
 
-    // Step 8: Derive keys and IVs using HKDF-Expand-Label (with dynamic lengths)
-    info!("────────────────────────────────────────────────────────────");
-    info!("Final Derived Keys:");
-    info!("────────────────────────────────────────────────────────────");
-    info!(
-        "  • Expanding client_application_secret → key ({} bytes) + IV ({} bytes)",
-        key_len, iv_len
-    );
+    // Step 4: Derive keys and IVs using HKDF-Expand-Label (with dynamic lengths)
+    info!("  Step 4: Derive Final Encryption Keys and IVs");
+    info!("         Key length: {} bytes (cipher suite 0x{:04x})", key_len, cipher_suite);
+    info!("         IV length: {} bytes", iv_len);
+    info!("");
+
     let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
-    info!(
-        "    Client write key ({} bytes): {}",
-        client_write_key.len(),
-        hex::encode(&client_write_key)
-    );
+    info!("  ✅ Client Write Key ({} bytes):", client_write_key.len());
+    info!("         {}", hex::encode(&client_write_key));
 
     let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], iv_len)?;
-    info!(
-        "    Client write IV ({} bytes): {}",
-        client_write_iv.len(),
-        hex::encode(&client_write_iv)
-    );
+    info!("  ✅ Client Write IV ({} bytes):", client_write_iv.len());
+    info!("         {}", hex::encode(&client_write_iv));
     info!("");
 
-    info!(
-        "  • Expanding server_application_secret → key ({} bytes) + IV ({} bytes)",
-        key_len, iv_len
-    );
     let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
-    info!(
-        "    Server write key ({} bytes): {}",
-        server_write_key.len(),
-        hex::encode(&server_write_key)
-    );
+    info!("  ✅ Server Write Key ({} bytes):", server_write_key.len());
+    info!("         {}", hex::encode(&server_write_key));
 
     let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], iv_len)?;
-    info!(
-        "    Server write IV ({} bytes): {}",
-        server_write_iv.len(),
-        hex::encode(&server_write_iv)
-    );
+    info!("  ✅ Server Write IV ({} bytes):", server_write_iv.len());
+    info!("         {}", hex::encode(&server_write_iv));
 
-    // Encode results
+    // Encode results to base64
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
     let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
     let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);
     let server_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_iv);
 
-    // Also encode traffic secrets (for key updates and debugging)
+    // Also encode traffic secrets (for key updates and debugging, RFC 8446 Section 7.2)
     let client_app_secret_b64 =
         base64::engine::general_purpose::STANDARD.encode(&client_app_secret);
     let server_app_secret_b64 =
         base64::engine::general_purpose::STANDARD.encode(&server_app_secret);
 
-    let mode = if transcript_hash.is_some() {
-        "RFC 8446 Full Compliance"
-    } else {
-        "Simplified (backward compat)"
-    };
-
     info!("════════════════════════════════════════════════════════════");
-    info!("✅ TLS 1.3 APPLICATION secrets derived successfully!");
-    info!(
-        "  Cipher: 0x{:04x}, Keys: {} bytes, IVs: {} bytes",
-        cipher_suite, key_len, iv_len
-    );
-    info!("  Mode: {}", mode);
+    info!("✅ TLS 1.3 APPLICATION secrets derived successfully! (RFC 8446 Section 7.1)");
+    info!("   Cipher suite: 0x{:04x}", cipher_suite);
+    info!("   Key length: {} bytes", key_len);
+    info!("   IV length: {} bytes", iv_len);
+    info!("   Mode: RFC 8446 Full Compliance");
     info!("════════════════════════════════════════════════════════════");
 
-    // Export to SSLKEYLOGFILE for Wireshark decryption (if SSLKEYLOGFILE env var is set)
-    if let Err(e) = export_to_sslkeylogfile(
-        &client_random,
-        None, // No handshake secrets here (already exported in handle_tls_derive_handshake_secrets)
-        Some((&client_app_secret, &server_app_secret)),
-    ) {
-        warn!("⚠️  Failed to export to SSLKEYLOGFILE: {}", e);
-    }
+    // NOTE: SSLKEYLOGFILE export requires client_random, which is not available in this
+    // RFC 8446 compliant API. If you need Wireshark decryption, export from
+    // handle_tls_derive_handshake_secrets or pass client_random as an optional parameter.
+    debug!("ℹ️  SSLKEYLOGFILE export skipped (client_random not in RFC 8446 compliant API)");
 
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
@@ -798,9 +734,10 @@ pub async fn handle_tls_derive_application_secrets(
         "server_application_secret": server_app_secret_b64,  // For key updates (RFC 8446 Section 7.2)
         "algorithm": "HKDF-SHA256",
         "rfc": "RFC 8446 Section 7.1",
-        "mode": mode,
-        "key_length": key_len,       // NEW: For verification
-        "iv_length": iv_len,         // NEW: For verification
-        "cipher_suite": cipher_suite // NEW: Echo back for debugging
+        "mode": "RFC 8446 Full Compliance",
+        "stage": "application",
+        "key_length": key_len,
+        "iv_length": iv_len,
+        "cipher_suite": cipher_suite
     }))
 }

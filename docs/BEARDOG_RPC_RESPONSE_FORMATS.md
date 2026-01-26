@@ -44,20 +44,20 @@
 
 ---
 
-### `tls.derive_application_secrets` - Application Key Derivation ✨ RFC 8446 UPDATED!
+### `tls.derive_application_secrets` - Application Key Derivation ✨✨ v0.18.0+ RFC 8446 COMPLIANT!
 
 **Purpose**: Derive application traffic secrets (for HTTP data encryption)
 
-**Parameters** (RFC 8446 Full Mode):
-- `pre_master_secret`: base64 (ECDH shared secret)
-- `client_random`: base64 (32 bytes)
-- `server_random`: base64 (32 bytes)
-- `transcript_hash`: base64 (32 bytes, SHA-256) - **✨ NEW! Optional for RFC 8446 compliance**
+**🔥 BREAKING CHANGE (v0.18.0+)**: Now RFC 8446 compliant!
 
-**Parameters** (Simplified Mode - backward compatible):
-- `pre_master_secret`: base64 (ECDH shared secret)
-- `client_random`: base64 (32 bytes)
-- `server_random`: base64 (32 bytes)
+**Parameters** (RFC 8446 Compliant):
+- `handshake_secret`: base64 (32 bytes) - **✨ CHANGED from `pre_master_secret`!**
+  - This is the output from `tls.derive_handshake_secrets`
+  - Represents the Handshake Secret stage in the RFC 8446 key schedule
+- `transcript_hash`: base64 (32 bytes, SHA-256) - **✨ REQUIRED!**
+  - SHA-256 hash of ALL handshake messages (ClientHello through ServerFinished)
+- `cipher_suite`: number (optional, default: 0x1303 = ChaCha20-Poly1305)
+  - Determines key length: 0x1301 (AES-128) = 16 bytes, 0x1302/0x1303 = 32 bytes
 
 **Response**:
 ```json
@@ -66,27 +66,39 @@
   "server_write_key": "OYSAPFlf/NAvJTpBtx45lnsFtRu3VEOK5tO/EK3kbx8=",
   "client_write_iv": "rkCk3xt3l2SBFeNu",
   "server_write_iv": "otHQEpR5P+EVqd9V",
+  "client_application_secret": "base64_32_bytes",
+  "server_application_secret": "base64_32_bytes",
   "algorithm": "HKDF-SHA256",
   "rfc": "RFC 8446 Section 7.1",
-  "mode": "RFC 8446 Full Compliance"
+  "mode": "RFC 8446 Full Compliance",
+  "stage": "application",
+  "key_length": 32,
+  "iv_length": 12,
+  "cipher_suite": 4865
 }
 ```
 
 **Field Types**:
-- `client_write_key`: String (base64, 44 chars = 32 bytes encoded)
-- `server_write_key`: String (base64, 44 chars = 32 bytes encoded)
-- `client_write_iv`: String (base64, 16 chars = 12 bytes encoded)
-- `server_write_iv`: String (base64, 16 chars = 12 bytes encoded)
+- `client_write_key`: String (base64, length depends on cipher suite: 16 or 32 bytes)
+- `server_write_key`: String (base64, length depends on cipher suite: 16 or 32 bytes)
+- `client_write_iv`: String (base64, always 16 chars = 12 bytes)
+- `server_write_iv`: String (base64, always 16 chars = 12 bytes)
+- `client_application_secret`: String (base64, 44 chars = 32 bytes) - **✨ NEW!**
+- `server_application_secret`: String (base64, 44 chars = 32 bytes) - **✨ NEW!**
 - `algorithm`: String (always "HKDF-SHA256")
 - `rfc`: String (always "RFC 8446 Section 7.1")
-- `mode`: String ("RFC 8446 Full Compliance" or "Simplified (backward compat)")
+- `mode`: String (always "RFC 8446 Full Compliance")
+- `stage`: String (always "application")
+- `key_length`: Number (16 or 32) - **✨ NEW!**
+- `iv_length`: Number (always 12) - **✨ NEW!**
+- `cipher_suite`: Number (echoes input) - **✨ NEW!**
 
 **Notes**:
-- ✅ NO numeric fields - all strings
-- ✅ All fields always present
-- ✅ **NEW**: `transcript_hash` parameter for RFC 8446 compliance
-- ✅ **NEW**: `mode` field indicates which mode was used
-- ✅ Backward compatible: old calls without transcript_hash still work
+- ✅ RFC 8446 compliant key schedule (Handshake Secret → Master Secret → App Secrets)
+- ✅ Proper two-stage derivation (use `tls.derive_handshake_secrets` first!)
+- ✅ Returns application traffic secrets for key updates (RFC 8446 Section 7.2)
+- ⚠️ **BREAKING**: No longer accepts `pre_master_secret`, `client_random`, `server_random`
+- ⚠️ **MIGRATION**: Pass `handshake_secret` from `tls.derive_handshake_secrets` output
 - Used for HTTP data encryption/decryption (GET/POST/PUT/DELETE)
 - Response size: ~290-310 characters (with mode field)
 

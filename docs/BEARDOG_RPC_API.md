@@ -297,8 +297,8 @@ These work with OR without namespaces for maximum compatibility:
 | Method | Purpose | Input | Output |
 |--------|---------|-------|--------|
 | `tls.derive_secrets` | HKDF key derivation (legacy) | `secret`, `salt`, `info`, `length` | `derived_key` |
-| `tls.derive_handshake_secrets` | **NEW!** Handshake key derivation (RFC 8446) | `pre_master_secret`, `client_random`, `server_random`, `transcript_hash` | `client_write_key`, `server_write_key`, `client_write_iv`, `server_write_iv`, `client_handshake_secret`, `server_handshake_secret` |
-| `tls.derive_application_secrets` | Application key derivation (RFC 8446) | `pre_master_secret`, `client_random`, `server_random`, `transcript_hash` (opt) | `client_write_key`, `server_write_key`, `client_write_iv`, `server_write_iv` |
+| `tls.derive_handshake_secrets` | **Handshake key derivation (RFC 8446)** | `pre_master_secret`, `client_random`, `server_random`, `transcript_hash`, `cipher_suite` | `client_write_key`, `server_write_key`, `client_write_iv`, `server_write_iv`, `client_handshake_secret`, `server_handshake_secret` |
+| `tls.derive_application_secrets` | **✨ UPDATED! Application key derivation (RFC 8446)** | `handshake_secret`, `transcript_hash`, `cipher_suite` (opt) | `client_write_key`, `server_write_key`, `client_write_iv`, `server_write_iv`, `client_application_secret`, `server_application_secret` |
 | `tls.sign_handshake` | Sign TLS handshake | `message` | `signature` |
 | `tls.verify_certificate` | Verify X.509 cert chain | `certificates`, `trusted_roots` | `valid`, `chain` |
 
@@ -334,16 +334,33 @@ These work with OR without namespaces for maximum compatibility:
 }
 ```
 
-**Example - Application Secrets**:
+**Example - Application Secrets (✨ RFC 8446 Compliant!)**:
 ```json
 {
   "jsonrpc": "2.0",
   "method": "tls.derive_application_secrets",
   "params": {
-    "pre_master_secret": "base64_ecdh_shared_secret",
-    "client_random": "base64_32_bytes",
-    "server_random": "base64_32_bytes",
-    "transcript_hash": "base64_sha256_of_all_handshake_messages"
+    "handshake_secret": "base64_handshake_secret_from_derive_handshake_secrets",
+    "transcript_hash": "base64_sha256_of_all_handshake_messages",
+    "cipher_suite": 4865
+  },
+  "id": 1
+}
+
+// Response includes application traffic secrets (RFC 8446 Section 7.1)
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "client_write_key": "base64_key",
+    "server_write_key": "base64_key",
+    "client_write_iv": "base64_iv",
+    "server_write_iv": "base64_iv",
+    "client_application_secret": "base64_secret",  // For key updates (RFC 8446 Section 7.2)
+    "server_application_secret": "base64_secret",  // For key updates (RFC 8446 Section 7.2)
+    "algorithm": "HKDF-SHA256",
+    "rfc": "RFC 8446 Section 7.1",
+    "mode": "RFC 8446 Full Compliance",
+    "stage": "application"
   },
   "id": 1
 }
