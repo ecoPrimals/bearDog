@@ -50,25 +50,13 @@ fn test_discover_neural_api_socket_from_neurals_env() {
 
 #[test]
 fn test_discover_neural_api_socket_priority() {
-    // Test that NEURAL_API_SOCKET takes priority over NEURALS_SOCKET
-    let original_neural = env::var("NEURAL_API_SOCKET").ok();
-    let original_neurals = env::var("NEURALS_SOCKET").ok();
+    // ✅ Concurrent-safe: Explicit configuration, no global state modification
+    let mut env_vars = std::collections::HashMap::new();
+    env_vars.insert("NEURAL_API_SOCKET".to_string(), "/tmp/priority.sock".to_string());
+    env_vars.insert("NEURALS_SOCKET".to_string(), "/tmp/fallback.sock".to_string());
     
-    env::set_var("NEURAL_API_SOCKET", "/tmp/priority.sock");
-    env::set_var("NEURALS_SOCKET", "/tmp/fallback.sock");
-    
-    let result = discover_neural_api_socket();
+    let result = discover_neural_api_socket_with_env(&env_vars);
     assert_eq!(result, Some("/tmp/priority.sock".to_string()));
-    
-    // Cleanup
-    env::remove_var("NEURAL_API_SOCKET");
-    env::remove_var("NEURALS_SOCKET");
-    if let Some(val) = original_neural {
-        env::set_var("NEURAL_API_SOCKET", val);
-    }
-    if let Some(val) = original_neurals {
-        env::set_var("NEURALS_SOCKET", val);
-    }
 }
 
 #[test]

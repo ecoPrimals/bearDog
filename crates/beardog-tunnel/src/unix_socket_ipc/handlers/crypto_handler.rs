@@ -572,10 +572,11 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 48 methods (Phase 1-8 comprehensive crypto coverage)
+        // Should have 49 methods (Phase 1-8 + SHA-384 evolution)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
-        //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 10 hash/HMAC + 6 password + 6 TLS + 4 genetic
-        assert_eq!(methods.len(), 48);
+        //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
+        //           + 6 password + 6 TLS + 4 genetic
+        assert_eq!(methods.len(), 49);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -618,8 +619,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            48,
-            "Should have exactly 48 crypto methods (Phase 1-8 complete)"
+            49,
+            "Should have exactly 49 crypto methods (Phase 1-8 + SHA-384 evolution)"
         );
     }
 }
