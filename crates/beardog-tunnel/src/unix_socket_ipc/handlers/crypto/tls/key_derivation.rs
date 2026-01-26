@@ -49,11 +49,241 @@
 use base64::Engine;
 use hkdf::Hkdf;
 use serde_json::Value;
-use sha2::{Digest, Sha256};
+use sha2::{Digest, Sha256, Sha384};
 use tracing::{debug, info, warn};
 
 // Re-export sslkeylog utility for key export
 use super::super::sslkeylog::export_to_sslkeylogfile;
+
+/// Helper: Derive TLS 1.3 application secrets using SHA-256
+///
+/// Used for cipher suites 0x1301 (AES-128-GCM-SHA256) and 0x1303 (ChaCha20-Poly1305-SHA256)
+fn derive_application_secrets_sha256(
+    handshake_secret: &[u8],
+    transcript_hash: &[u8],
+    hash_len: usize,
+    key_len: usize,
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>), String> {
+    const IV_LEN: usize = 12;
+
+    // Helper: HKDF-Expand-Label for SHA-256
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+        let tls13_label = format!("tls13 {}", label);
+        hkdf_label.push(tls13_label.len() as u8);
+        hkdf_label.extend_from_slice(tls13_label.as_bytes());
+        hkdf_label.push(context.len() as u8);
+        hkdf_label.extend_from_slice(context);
+
+        let hkdf =
+            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let mut okm = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut okm)
+            .map_err(|e| format!("HKDF expand failed: {e}"))?;
+        Ok::<Vec<u8>, String>(okm)
+    };
+
+    // RFC 8446 Section 7.1: Key Schedule for Application Keys (SHA-256)
+    let empty_hash = Sha256::digest(&[]);
+    let handshake_derived = hkdf_expand_label(handshake_secret, "derived", &empty_hash, hash_len)?;
+
+    let zeros = vec![0u8; hash_len];
+    let master_secret = Hkdf::<Sha256>::extract(Some(&handshake_derived), &zeros);
+
+    let client_app_secret =
+        hkdf_expand_label(&master_secret.0, "c ap traffic", transcript_hash, hash_len)?;
+    let server_app_secret =
+        hkdf_expand_label(&master_secret.0, "s ap traffic", transcript_hash, hash_len)?;
+
+    let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
+    let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], IV_LEN)?;
+    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
+    let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], IV_LEN)?;
+
+    Ok((
+        client_app_secret,
+        server_app_secret,
+        client_write_key,
+        server_write_key,
+        client_write_iv,
+        server_write_iv,
+    ))
+}
+
+/// Helper: Derive TLS 1.3 application secrets using SHA-384
+///
+/// Used for cipher suite 0x1302 (AES-256-GCM-SHA384)
+fn derive_application_secrets_sha384(
+    handshake_secret: &[u8],
+    transcript_hash: &[u8],
+    hash_len: usize,
+    key_len: usize,
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>), String> {
+    const IV_LEN: usize = 12;
+
+    // Helper: HKDF-Expand-Label for SHA-384
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+        let tls13_label = format!("tls13 {}", label);
+        hkdf_label.push(tls13_label.len() as u8);
+        hkdf_label.extend_from_slice(tls13_label.as_bytes());
+        hkdf_label.push(context.len() as u8);
+        hkdf_label.extend_from_slice(context);
+
+        let hkdf =
+            Hkdf::<Sha384>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let mut okm = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut okm)
+            .map_err(|e| format!("HKDF expand failed: {e}"))?;
+        Ok::<Vec<u8>, String>(okm)
+    };
+
+    // RFC 8446 Section 7.1: Key Schedule for Application Keys (SHA-384)
+    let empty_hash = Sha384::digest(&[]);
+    let handshake_derived = hkdf_expand_label(handshake_secret, "derived", &empty_hash, hash_len)?;
+
+    let zeros = vec![0u8; hash_len];
+    let master_secret = Hkdf::<Sha384>::extract(Some(&handshake_derived), &zeros);
+
+    let client_app_secret =
+        hkdf_expand_label(&master_secret.0, "c ap traffic", transcript_hash, hash_len)?;
+    let server_app_secret =
+        hkdf_expand_label(&master_secret.0, "s ap traffic", transcript_hash, hash_len)?;
+
+    let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
+    let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], IV_LEN)?;
+    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
+    let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], IV_LEN)?;
+
+    Ok((
+        client_app_secret,
+        server_app_secret,
+        client_write_key,
+        server_write_key,
+        client_write_iv,
+        server_write_iv,
+    ))
+}
+
+/// Helper: Derive TLS 1.3 handshake secrets using SHA-256
+///
+/// Used for cipher suites 0x1301 (AES-128-GCM-SHA256) and 0x1303 (ChaCha20-Poly1305-SHA256)
+fn derive_handshake_secrets_sha256(
+    pre_master_secret: &[u8],
+    transcript_hash: &[u8],
+    hash_len: usize,
+    key_len: usize,
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>), String> {
+    const IV_LEN: usize = 12;
+
+    // Helper: HKDF-Expand-Label for SHA-256
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+        let tls13_label = format!("tls13 {}", label);
+        hkdf_label.push(tls13_label.len() as u8);
+        hkdf_label.extend_from_slice(tls13_label.as_bytes());
+        hkdf_label.push(context.len() as u8);
+        hkdf_label.extend_from_slice(context);
+
+        let hkdf =
+            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let mut okm = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut okm)
+            .map_err(|e| format!("HKDF expand failed: {e}"))?;
+        Ok::<Vec<u8>, String>(okm)
+    };
+
+    // RFC 8446 Section 7.1: Key Schedule for Handshake Keys (SHA-256)
+    let zeros = vec![0u8; hash_len];
+    let early_secret = Hkdf::<Sha256>::extract(Some(&zeros), &zeros);
+
+    let empty_hash = Sha256::digest(&[]);
+    let early_derived = hkdf_expand_label(&early_secret.0, "derived", &empty_hash, hash_len)?;
+
+    let handshake_secret = Hkdf::<Sha256>::extract(Some(&early_derived), pre_master_secret);
+
+    let client_handshake_secret =
+        hkdf_expand_label(&handshake_secret.0, "c hs traffic", transcript_hash, hash_len)?;
+    let server_handshake_secret =
+        hkdf_expand_label(&handshake_secret.0, "s hs traffic", transcript_hash, hash_len)?;
+
+    let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], key_len)?;
+    let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
+    let server_write_key = hkdf_expand_label(&server_handshake_secret, "key", &[], key_len)?;
+    let server_write_iv = hkdf_expand_label(&server_handshake_secret, "iv", &[], IV_LEN)?;
+
+    Ok((
+        handshake_secret.0.to_vec(),
+        client_handshake_secret,
+        server_handshake_secret,
+        client_write_key,
+        server_write_key,
+        client_write_iv,
+        server_write_iv,
+    ))
+}
+
+/// Helper: Derive TLS 1.3 handshake secrets using SHA-384
+///
+/// Used for cipher suite 0x1302 (AES-256-GCM-SHA384)
+fn derive_handshake_secrets_sha384(
+    pre_master_secret: &[u8],
+    transcript_hash: &[u8],
+    hash_len: usize,
+    key_len: usize,
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>), String> {
+    const IV_LEN: usize = 12;
+
+    // Helper: HKDF-Expand-Label for SHA-384
+    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+        let tls13_label = format!("tls13 {}", label);
+        hkdf_label.push(tls13_label.len() as u8);
+        hkdf_label.extend_from_slice(tls13_label.as_bytes());
+        hkdf_label.push(context.len() as u8);
+        hkdf_label.extend_from_slice(context);
+
+        let hkdf =
+            Hkdf::<Sha384>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
+        let mut okm = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut okm)
+            .map_err(|e| format!("HKDF expand failed: {e}"))?;
+        Ok::<Vec<u8>, String>(okm)
+    };
+
+    // RFC 8446 Section 7.1: Key Schedule for Handshake Keys (SHA-384)
+    let zeros = vec![0u8; hash_len];
+    let early_secret = Hkdf::<Sha384>::extract(Some(&zeros), &zeros);
+
+    let empty_hash = Sha384::digest(&[]);
+    let early_derived = hkdf_expand_label(&early_secret.0, "derived", &empty_hash, hash_len)?;
+
+    let handshake_secret = Hkdf::<Sha384>::extract(Some(&early_derived), pre_master_secret);
+
+    let client_handshake_secret =
+        hkdf_expand_label(&handshake_secret.0, "c hs traffic", transcript_hash, hash_len)?;
+    let server_handshake_secret =
+        hkdf_expand_label(&handshake_secret.0, "s hs traffic", transcript_hash, hash_len)?;
+
+    let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], key_len)?;
+    let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
+    let server_write_key = hkdf_expand_label(&server_handshake_secret, "key", &[], key_len)?;
+    let server_write_iv = hkdf_expand_label(&server_handshake_secret, "iv", &[], IV_LEN)?;
+
+    Ok((
+        handshake_secret.0.to_vec(),
+        client_handshake_secret,
+        server_handshake_secret,
+        client_write_key,
+        server_write_key,
+        client_write_iv,
+        server_write_iv,
+    ))
+}
 
 /// Derive TLS 1.3 secrets (legacy combined method)
 ///
@@ -307,31 +537,37 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         return Err("server_random must be 32 bytes".to_string());
     }
 
-    if transcript_hash.len() != 32 {
-        return Err("transcript_hash must be 32 bytes (SHA-256)".to_string());
-    }
-
-    // Determine key length based on cipher suite (RFC 8446 Section 7.3)
-    let key_len = match cipher_suite {
+    // Determine hash algorithm and key length based on cipher suite (RFC 8446)
+    let (hash_algo, hash_len, key_len) = match cipher_suite {
         0x1301 => {
-            info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using 16-byte keys");
-            16 // AES-128-GCM uses 16-byte keys
+            info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using SHA-256, 16-byte keys");
+            ("SHA-256", 32, 16) // SHA-256 hash (32 bytes), AES-128-GCM keys (16 bytes)
         }
         0x1302 => {
-            info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using 32-byte keys");
-            32 // AES-256-GCM uses 32-byte keys
+            info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using SHA-384, 32-byte keys");
+            ("SHA-384", 48, 32) // SHA-384 hash (48 bytes), AES-256-GCM keys (32 bytes)
         }
         0x1303 => {
-            info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using 32-byte keys");
-            32 // ChaCha20-Poly1305 uses 32-byte keys
+            info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using SHA-256, 32-byte keys");
+            ("SHA-256", 32, 32) // SHA-256 hash (32 bytes), ChaCha20-Poly1305 keys (32 bytes)
         }
         _ => {
             return Err(format!(
-                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301 (AES-128-GCM), 0x1302 (AES-256-GCM), 0x1303 (ChaCha20-Poly1305)",
+                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301 (AES-128-GCM-SHA256), 0x1302 (AES-256-GCM-SHA384), 0x1303 (ChaCha20-Poly1305-SHA256)",
                 cipher_suite
             ));
         }
     };
+
+    // Validate transcript_hash size based on hash algorithm
+    if transcript_hash.len() != hash_len {
+        return Err(format!(
+            "transcript_hash must be {} bytes for {} (got {} bytes)",
+            hash_len,
+            hash_algo,
+            transcript_hash.len()
+        ));
+    }
 
     debug!("🔑 Deriving TLS 1.3 HANDSHAKE secrets (RFC 8446 Section 7.1)");
     debug!(
@@ -341,84 +577,52 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
     debug!("  → client_random: {} bytes", client_random.len());
     debug!("  → server_random: {} bytes", server_random.len());
     debug!(
-        "  → transcript_hash: {} bytes (ClientHello + ServerHello)",
-        transcript_hash.len()
+        "  → transcript_hash: {} bytes ({})",
+        transcript_hash.len(),
+        hash_algo
     );
     debug!(
-        "  → cipher_suite: 0x{:04x} → key_len: {} bytes",
-        cipher_suite, key_len
+        "  → cipher_suite: 0x{:04x} → hash: {}, key_len: {} bytes",
+        cipher_suite, hash_algo, key_len
     );
 
     // Constants
     const IV_LEN: usize = 12; // AEAD nonce size (same for all cipher suites)
 
-    // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
-    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
-        let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes()); // Length (2 bytes)
-
-        let tls13_label = format!("tls13 {}", label);
-        hkdf_label.push(tls13_label.len() as u8); // Label length (1 byte)
-        hkdf_label.extend_from_slice(tls13_label.as_bytes()); // Label
-
-        hkdf_label.push(context.len() as u8); // Context length (1 byte)
-        hkdf_label.extend_from_slice(context); // Context
-
-        let hkdf =
-            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
-        let mut okm = vec![0u8; length];
-        hkdf.expand(&hkdf_label, &mut okm)
-            .map_err(|e| format!("HKDF expand failed: {e}"))?;
-        Ok::<Vec<u8>, String>(okm)
+    // Dispatch to hash-specific derivation based on cipher suite
+    let (
+        handshake_secret_bytes,
+        client_handshake_secret,
+        server_handshake_secret,
+        client_write_key,
+        server_write_key,
+        client_write_iv,
+        server_write_iv,
+    ) = match cipher_suite {
+        0x1301 | 0x1303 => {
+            // SHA-256 based cipher suites
+            derive_handshake_secrets_sha256(
+                &pre_master_secret,
+                &transcript_hash,
+                hash_len,
+                key_len,
+            )?
+        }
+        0x1302 => {
+            // SHA-384 based cipher suite
+            derive_handshake_secrets_sha384(
+                &pre_master_secret,
+                &transcript_hash,
+                hash_len,
+                key_len,
+            )?
+        }
+        _ => unreachable!("Cipher suite already validated"),
     };
 
-    // RFC 8446 Section 7.1: Key Schedule for Handshake Keys
-
-    // Step 1: Early Secret = HKDF-Extract(salt: 0, IKM: 0)
-    let zeros_32 = [0u8; 32];
-    let early_secret = Hkdf::<Sha256>::extract(Some(&zeros_32), &zeros_32);
-    debug!("  Step 1: Early Secret derived");
-
-    // Step 2: Derive-Secret(early_secret, "derived", "")
-    // This is: HKDF-Expand-Label(early_secret, "derived", Hash(""), 32)
-    let empty_hash = Sha256::digest(&[]);
-    let early_derived = hkdf_expand_label(&early_secret.0, "derived", &empty_hash, 32)?;
-    debug!("  Step 2: Early derived secret computed");
-
-    // Step 3: Handshake Secret = HKDF-Extract(salt: early_derived, IKM: ECDH)
-    let handshake_secret = Hkdf::<Sha256>::extract(Some(&early_derived), &pre_master_secret);
-    debug!("  Step 3: Handshake Secret derived from ECDH");
-
-    // Step 4: Client Handshake Traffic Secret
-    // HKDF-Expand-Label(handshake_secret, "c hs traffic", transcript_hash, 32)
-    let client_handshake_secret =
-        hkdf_expand_label(&handshake_secret.0, "c hs traffic", &transcript_hash, 32)?;
-    debug!("  Step 4: Client Handshake Traffic Secret derived");
-
-    // Step 5: Server Handshake Traffic Secret
-    // HKDF-Expand-Label(handshake_secret, "s hs traffic", transcript_hash, 32)
-    let server_handshake_secret =
-        hkdf_expand_label(&handshake_secret.0, "s hs traffic", &transcript_hash, 32)?;
-    debug!("  Step 5: Server Handshake Traffic Secret derived");
-
-    // Step 6: Derive Keys and IVs from Handshake Traffic Secrets
-    // Key length determined by cipher suite (RFC 8446 Section 7.3)
-
-    // Client write key = HKDF-Expand-Label(client_secret, "key", "", key_len)
-    let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], key_len)?;
-
-    // Client write IV = HKDF-Expand-Label(client_secret, "iv", "", 12)
-    let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
-
-    // Server write key = HKDF-Expand-Label(server_secret, "key", "", key_len)
-    let server_write_key = hkdf_expand_label(&server_handshake_secret, "key", &[], key_len)?;
-
-    // Server write IV = HKDF-Expand-Label(server_secret, "iv", "", 12)
-    let server_write_iv = hkdf_expand_label(&server_handshake_secret, "iv", &[], IV_LEN)?;
-
     debug!(
-        "  Step 6: Keys and IVs derived (key: {} bytes, IV: {} bytes)",
-        key_len, IV_LEN
+        "  ✅ Keys and IVs derived (hash: {}, key: {} bytes, IV: {} bytes)",
+        hash_algo, key_len, IV_LEN
     );
 
     // HEX DUMPS for derived keys (cross-verify with Songbird and RFC 8448)
@@ -443,11 +647,11 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
     // CRITICAL: Also encode the raw handshake_secret (needed for application secrets derivation!)
     // This is the intermediate value in the TLS 1.3 key schedule that feeds into Master Secret
     let handshake_secret_b64 =
-        base64::engine::general_purpose::STANDARD.encode(&handshake_secret.0);
+        base64::engine::general_purpose::STANDARD.encode(&handshake_secret_bytes);
 
     info!(
-        "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
-        cipher_suite, key_len, IV_LEN
+        "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, hash: {}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
+        cipher_suite, hash_algo, key_len, IV_LEN
     );
 
     // Export to SSLKEYLOGFILE for Wireshark decryption (if SSLKEYLOGFILE env var is set)
@@ -459,6 +663,8 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         warn!("⚠️  Failed to export to SSLKEYLOGFILE: {}", e);
     }
 
+    let algorithm = format!("HKDF-{}", hash_algo);
+
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
         "server_write_key": server_write_key_b64,
@@ -467,9 +673,13 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         "client_handshake_secret": client_handshake_secret_b64,  // For Finished message (RFC 8446 Section 4.4.4)
         "server_handshake_secret": server_handshake_secret_b64,  // For Finished message (RFC 8446 Section 4.4.4)
         "handshake_secret": handshake_secret_b64,  // CRITICAL: For application secrets derivation (RFC 8446 Section 7.1)
-        "algorithm": "HKDF-SHA256",
+        "algorithm": algorithm,
+        "hash_algorithm": hash_algo,
+        "hash_length": hash_len,
+        "key_length": key_len,
         "rfc": "RFC 8446 Section 7.1",
         "stage": "handshake",
+        "cipher_suite": cipher_suite,
         "mode": "RFC 8446 Full Compliance"
     }))
 }
@@ -500,9 +710,12 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
 ///
 /// # Parameters (RFC 8446 Compliant)
 ///
-/// - `handshake_secret`: Base64-encoded handshake secret (32 bytes) from previous stage
-/// - `transcript_hash`: Base64-encoded SHA-256 of all handshake messages (32 bytes)
+/// - `handshake_secret`: Base64-encoded handshake secret (32 or 48 bytes depending on cipher) from previous stage
+/// - `transcript_hash`: Base64-encoded hash of all handshake messages (32 or 48 bytes depending on cipher)
 /// - `cipher_suite` (optional): TLS cipher suite ID (default: 0x1303 = ChaCha20-Poly1305)
+///   - 0x1301: Uses SHA-256 (32-byte hashes)
+///   - 0x1302: Uses SHA-384 (48-byte hashes)
+///   - 0x1303: Uses SHA-256 (32-byte hashes)
 ///
 /// # Returns
 ///
@@ -570,13 +783,45 @@ pub async fn handle_tls_derive_application_secrets(
         .decode(transcript_hash_b64)
         .map_err(|e| format!("Invalid base64 transcript_hash: {e}"))?;
 
+    // Determine hash algorithm and key length based on cipher suite (RFC 8446)
+    let (hash_algo, hash_len, key_len, iv_len) = match cipher_suite {
+        0x1301 => {
+            info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using SHA-256, 16-byte keys");
+            ("SHA-256", 32, 16, 12)
+        }
+        0x1302 => {
+            info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using SHA-384, 32-byte keys");
+            ("SHA-384", 48, 32, 12)
+        }
+        0x1303 => {
+            info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using SHA-256, 32-byte keys");
+            ("SHA-256", 32, 32, 12)
+        }
+        _ => {
+            return Err(format!(
+                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301, 0x1302, 0x1303",
+                cipher_suite
+            ));
+        }
+    };
+
     // Validate parameter sizes (RFC 8446)
-    if handshake_secret.len() != 32 {
-        return Err("handshake_secret must be 32 bytes (output from derive_handshake_secrets)".to_string());
+    if handshake_secret.len() != hash_len {
+        return Err(format!(
+            "handshake_secret must be {} bytes for {} (got {} bytes)",
+            hash_len,
+            hash_algo,
+            handshake_secret.len()
+        ));
     }
 
-    if transcript_hash.len() != 32 {
-        return Err("transcript_hash must be 32 bytes (SHA-256 of all handshake messages)".to_string());
+    if transcript_hash.len() != hash_len {
+        return Err(format!(
+            "transcript_hash must be {} bytes for {} (got {} bytes)",
+            hash_len,
+            hash_algo,
+            transcript_hash.len()
+        ));
     }
 
     info!("✅ Base64 decoding complete: handshake_secret={} bytes, transcript_hash={} bytes", 
@@ -585,124 +830,52 @@ pub async fn handle_tls_derive_application_secrets(
     // EXECUTION TRACE: About to enter comprehensive debug logging
     info!("🎯 CHECKPOINT: Starting RFC 8446 compliant key derivation...");
 
-    // VERSION MARKER: v0.18.0+ RFC 8446 Compliant Application Secret Derivation
+    // VERSION MARKER: v0.19.0+ RFC 8446 Compliant Application Secret Derivation with SHA-384 Support
     info!("════════════════════════════════════════════════════════════");
-    info!("🔍 BEARDOG v0.18.0+ APPLICATION KEY DERIVATION - RFC 8446 COMPLIANT");
+    info!("🔍 BEARDOG v0.19.0+ APPLICATION KEY DERIVATION - RFC 8446 COMPLIANT (SHA-384 READY)");
     info!("════════════════════════════════════════════════════════════");
     info!("RFC 8446 Section 7.1: Application Secret Derivation");
     info!("  • Handshake secret: {} bytes (from derive_handshake_secrets)", handshake_secret.len());
-    info!("  • Transcript hash: {} bytes (SHA-256 of all handshake messages)", transcript_hash.len());
+    info!("  • Transcript hash: {} bytes ({} of all handshake messages)", transcript_hash.len(), hash_algo);
     info!("  • Transcript hash (hex): {}", hex::encode(&transcript_hash));
-    info!("  • Cipher suite: 0x{:04x}", cipher_suite);
+    info!("  • Cipher suite: 0x{:04x} → hash: {}, key_len: {} bytes", cipher_suite, hash_algo, key_len);
 
-    // Dynamic key length based on cipher suite (RFC 8446 Section 7.3)
-    let (key_len, iv_len) = match cipher_suite {
-        0x1301 => (16, 12), // TLS_AES_128_GCM_SHA256
-        0x1302 => (32, 12), // TLS_AES_256_GCM_SHA384
-        0x1303 => (32, 12), // TLS_CHACHA20_POLY1305_SHA256
-        _ => {
-            warn!(
-                "⚠️  Unknown cipher suite 0x{:04x}, defaulting to ChaCha20 (32-byte keys)",
-                cipher_suite
-            );
-            (32, 12)
+    // Dispatch to hash-specific derivation based on cipher suite
+    let (
+        client_app_secret,
+        server_app_secret,
+        client_write_key,
+        server_write_key,
+        client_write_iv,
+        server_write_iv,
+    ) = match cipher_suite {
+        0x1301 | 0x1303 => {
+            // SHA-256 based cipher suites
+            derive_application_secrets_sha256(&handshake_secret, &transcript_hash, hash_len, key_len)?
         }
+        0x1302 => {
+            // SHA-384 based cipher suite
+            derive_application_secrets_sha384(&handshake_secret, &transcript_hash, hash_len, key_len)?
+        }
+        _ => unreachable!("Cipher suite already validated"),
     };
 
-    info!(
-        "✅ Using key_len={} bytes, iv_len={} bytes for cipher suite 0x{:04x}",
-        key_len, iv_len, cipher_suite
-    );
-
-    // Helper: HKDF-Expand-Label (RFC 8446 Section 7.1)
-    let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
-        let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes()); // Length (2 bytes)
-
-        let tls13_label = format!("tls13 {}", label);
-        hkdf_label.push(tls13_label.len() as u8); // Label length (1 byte)
-        hkdf_label.extend_from_slice(tls13_label.as_bytes()); // Label
-
-        hkdf_label.push(context.len() as u8); // Context length (1 byte)
-        hkdf_label.extend_from_slice(context); // Context
-
-        let hkdf =
-            Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
-        let mut okm = vec![0u8; length];
-        hkdf.expand(&hkdf_label, &mut okm)
-            .map_err(|e| format!("HKDF expand failed: {e}"))?;
-        Ok::<Vec<u8>, String>(okm)
-    };
-
-    // Step 1: Derive-Secret(handshake_secret, "derived", "")
-    // This is: HKDF-Expand-Label(handshake_secret, "derived", Hash(""), 32)
-    let empty_hash = Sha256::digest(&[]);
-    let handshake_derived = hkdf_expand_label(&handshake_secret, "derived", &empty_hash, 32)?;
-    debug!("  Step 1: Handshake derived secret computed (for master secret derivation)");
-
-    // Step 2: Master Secret = HKDF-Extract(salt: handshake_derived, IKM: 0)
-    // RFC 8446 Section 7.1: Master Secret is derived from handshake_secret with zero IKM
-    let zeros_32 = [0u8; 32];
-    let master_secret = Hkdf::<Sha256>::extract(Some(&handshake_derived), &zeros_32);
-    debug!("  Step 2: Master Secret derived from handshake secret");
-
     info!("────────────────────────────────────────────────────────────");
-    info!("RFC 8446 Key Schedule - Application Stage:");
+    info!("RFC 8446 Key Schedule - Application Stage ({}):", hash_algo);
     info!("────────────────────────────────────────────────────────────");
-    info!("  Input: Handshake Secret (32 bytes)");
-    info!("         {}", hex::encode(&handshake_secret));
-    info!("  Step 1: Derive-Secret('derived', '') → handshake_derived");
-    info!("         {}", hex::encode(&handshake_derived));
-    info!("  Step 2: HKDF-Extract(handshake_derived, 0) → Master Secret");
-    info!("         {}", hex::encode(&master_secret.0));
-
-    // Step 3: Derive application traffic secrets (RFC 8446 labels)
-    // Use HKDF-Expand-Label with the transcript hash as context
-    info!("  Step 3: Derive Application Traffic Secrets");
-    info!("         Using HKDF-Expand-Label with transcript hash:");
-    info!("         {}", hex::encode(&transcript_hash));
-    info!("");
-
-    let client_app_secret = hkdf_expand_label(
-        &master_secret.0,
-        "c ap traffic",
-        &transcript_hash,
-        32,
-    )?;
-    info!("  ✅ Client Application Traffic Secret (CLIENT_TRAFFIC_SECRET_0):");
+    info!("  ✅ Client Application Traffic Secret ({} bytes):", client_app_secret.len());
     info!("         {}", hex::encode(&client_app_secret));
     info!("");
-
-    let server_app_secret = hkdf_expand_label(
-        &master_secret.0,
-        "s ap traffic",
-        &transcript_hash,
-        32,
-    )?;
-    info!("  ✅ Server Application Traffic Secret (SERVER_TRAFFIC_SECRET_0):");
+    info!("  ✅ Server Application Traffic Secret ({} bytes):", server_app_secret.len());
     info!("         {}", hex::encode(&server_app_secret));
     info!("");
-
-    // Step 4: Derive keys and IVs using HKDF-Expand-Label (with dynamic lengths)
-    info!("  Step 4: Derive Final Encryption Keys and IVs");
-    info!("         Key length: {} bytes (cipher suite 0x{:04x})", key_len, cipher_suite);
-    info!("         IV length: {} bytes", iv_len);
-    info!("");
-
-    let client_write_key = hkdf_expand_label(&client_app_secret, "key", &[], key_len)?;
     info!("  ✅ Client Write Key ({} bytes):", client_write_key.len());
     info!("         {}", hex::encode(&client_write_key));
-
-    let client_write_iv = hkdf_expand_label(&client_app_secret, "iv", &[], iv_len)?;
     info!("  ✅ Client Write IV ({} bytes):", client_write_iv.len());
     info!("         {}", hex::encode(&client_write_iv));
     info!("");
-
-    let server_write_key = hkdf_expand_label(&server_app_secret, "key", &[], key_len)?;
     info!("  ✅ Server Write Key ({} bytes):", server_write_key.len());
     info!("         {}", hex::encode(&server_write_key));
-
-    let server_write_iv = hkdf_expand_label(&server_app_secret, "iv", &[], iv_len)?;
     info!("  ✅ Server Write IV ({} bytes):", server_write_iv.len());
     info!("         {}", hex::encode(&server_write_iv));
 
@@ -721,15 +894,18 @@ pub async fn handle_tls_derive_application_secrets(
     info!("════════════════════════════════════════════════════════════");
     info!("✅ TLS 1.3 APPLICATION secrets derived successfully! (RFC 8446 Section 7.1)");
     info!("   Cipher suite: 0x{:04x}", cipher_suite);
+    info!("   Hash algorithm: {}", hash_algo);
     info!("   Key length: {} bytes", key_len);
     info!("   IV length: {} bytes", iv_len);
-    info!("   Mode: RFC 8446 Full Compliance");
+    info!("   Mode: RFC 8446 Full Compliance (SHA-384 Ready)");
     info!("════════════════════════════════════════════════════════════");
 
     // NOTE: SSLKEYLOGFILE export requires client_random, which is not available in this
     // RFC 8446 compliant API. If you need Wireshark decryption, export from
     // handle_tls_derive_handshake_secrets or pass client_random as an optional parameter.
     debug!("ℹ️  SSLKEYLOGFILE export skipped (client_random not in RFC 8446 compliant API)");
+
+    let algorithm = format!("HKDF-{}", hash_algo);
 
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
@@ -738,9 +914,11 @@ pub async fn handle_tls_derive_application_secrets(
         "server_write_iv": server_write_iv_b64,
         "client_application_secret": client_app_secret_b64,  // For key updates (RFC 8446 Section 7.2)
         "server_application_secret": server_app_secret_b64,  // For key updates (RFC 8446 Section 7.2)
-        "algorithm": "HKDF-SHA256",
+        "algorithm": algorithm,
+        "hash_algorithm": hash_algo,
+        "hash_length": hash_len,
         "rfc": "RFC 8446 Section 7.1",
-        "mode": "RFC 8446 Full Compliance",
+        "mode": "RFC 8446 Full Compliance (SHA-384 Ready)",
         "stage": "application",
         "key_length": key_len,
         "iv_length": iv_len,
