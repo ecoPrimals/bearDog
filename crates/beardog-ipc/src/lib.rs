@@ -41,11 +41,16 @@ pub mod client;
 pub mod types;
 pub mod error;
 pub mod protocol;
+pub mod neural_registration;  // Neural API auto-registration (Tower Atomic)
 pub mod registry_client;
 
 pub use client::SongbirdClient;
 pub use types::{Capability, ServiceInfo, DiscoveryQuery};
 pub use error::{IpcError, IpcResult};
+// Neural API auto-registration (Tower Atomic TRUE PRIMAL)
+pub use neural_registration::{discover_neural_api_socket, register_with_neural_api};
+
+// Registry client for JSON-RPC registration
 pub use registry_client::{PrimalRegistryClient, JsonRpcRequest};
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
 

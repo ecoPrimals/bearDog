@@ -23,11 +23,12 @@ workspace = true
 [dependencies]
 beardog-core = { path = "../beardog-core" }
 beardog-errors = { path = "../beardog-errors" }
+beardog-ipc = { path = "../beardog-ipc" }  # For neural_registration
 beardog-security = { path = "../beardog-security" }
 beardog-auth = { path = "../beardog-auth" }
 beardog-genetics = { path = "../beardog-genetics" }
 beardog-threat = { path = "../beardog-threat" }
-beardog-tunnel = { path = "../beardog-tunnel" }
+# beardog-tunnel removed to break circular dependency
 beardog-adapters = { path = "../beardog-adapters" }
 beardog-compliance = { path = "../beardog-compliance" }
 beardog-monitoring = { path = "../beardog-monitoring" }

@@ -4,9 +4,9 @@
 //! into the CLI for proper UniBin operation.
 
 use crate::ServerArgs;
-use beardog::neural_registration::{discover_neural_api_socket, register_with_neural_api};
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
+use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
