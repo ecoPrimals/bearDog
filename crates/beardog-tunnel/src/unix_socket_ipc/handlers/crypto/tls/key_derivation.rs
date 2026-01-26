@@ -440,6 +440,11 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
     let server_handshake_secret_b64 =
         base64::engine::general_purpose::STANDARD.encode(&server_handshake_secret);
 
+    // CRITICAL: Also encode the raw handshake_secret (needed for application secrets derivation!)
+    // This is the intermediate value in the TLS 1.3 key schedule that feeds into Master Secret
+    let handshake_secret_b64 =
+        base64::engine::general_purpose::STANDARD.encode(&handshake_secret.0);
+
     info!(
         "✅ TLS 1.3 HANDSHAKE secrets derived (cipher: 0x{:04x}, keys: {} bytes, IVs: {} bytes, RFC 8446 Section 7.3 compliant)",
         cipher_suite, key_len, IV_LEN
@@ -461,6 +466,7 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         "server_write_iv": server_write_iv_b64,
         "client_handshake_secret": client_handshake_secret_b64,  // For Finished message (RFC 8446 Section 4.4.4)
         "server_handshake_secret": server_handshake_secret_b64,  // For Finished message (RFC 8446 Section 4.4.4)
+        "handshake_secret": handshake_secret_b64,  // CRITICAL: For application secrets derivation (RFC 8446 Section 7.1)
         "algorithm": "HKDF-SHA256",
         "rfc": "RFC 8446 Section 7.1",
         "stage": "handshake",
