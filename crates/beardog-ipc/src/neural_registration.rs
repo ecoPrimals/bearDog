@@ -123,10 +123,10 @@ pub async fn register_with_neural_api(
                 "verify_lineage",
                 "generate_lineage_proof"
             ],
-            "semantic_mappings": {
-                "verify_lineage": "genetic.verify_lineage",
-                "generate_lineage_proof": "genetic.generate_lineage_proof"
-            }
+            // NOTE: semantic_mappings are now handled by Neural API's graph-based
+            // translation system (tower_atomic_bootstrap.toml). BearDog just exposes
+            // its API, and the graph wires everything together at runtime.
+            // This enables TRUE PRIMAL pattern with zero coupling!
         }),
     ];
 
