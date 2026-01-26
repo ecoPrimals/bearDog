@@ -14,9 +14,9 @@
 //! - `crypto.x25519_generate_ephemeral` (actual) → handle_x25519_generate
 //! - `generate_keypair` (semantic) → handle_x25519_generate
 //!
-//! # Methods (38 total: 19 core + 4 ECDSA + 4 RSA + 4 TLS + 4 genetic + 3 password)
+//! # Methods (39 total: 20 core + 4 ECDSA + 4 RSA + 4 TLS + 4 genetic + 3 password)
 //!
-//! ## Core Crypto (19 methods)
+//! ## Core Crypto (20 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
 //! - `crypto.verify_ed25519` - Verify Ed25519 signature
 //! - `crypto.x25519_generate_ephemeral` - Generate ephemeral X25519 keypair
@@ -33,6 +33,7 @@
 //! - `crypto.aes128_gcm_decrypt` - AES-128-GCM decryption (Phase 6 - 80%+ of HTTPS!)
 //! - `crypto.blake3_hash` - BLAKE3 hashing
 //! - `crypto.hmac_sha256` - HMAC-SHA256 message authentication
+//! - `crypto.hash_for_cipher` - Cipher-aware hashing for TLS 1.3 (SHA-256 or SHA-384)
 //! - `crypto.sha256` - SHA-256 hashing (Phase 6)
 //! - `crypto.sha384` - SHA-384 hashing (Phase 6)
 //! - `crypto.sha512` - SHA-512 hashing (Phase 6)
@@ -95,6 +96,7 @@ use tracing::info;
 use crate::unix_socket_ipc::handlers::crypto::{
     // Hash handlers
     handle_blake3_hash,
+    handle_hash_for_cipher,
     // Symmetric crypto handlers
     handle_chacha20_poly1305_decrypt,
     handle_chacha20_poly1305_encrypt,
@@ -161,6 +163,7 @@ impl MethodHandler for CryptoHandler {
             // Hashing
             "crypto.blake3_hash",
             "crypto.hmac_sha256",
+            "crypto.hash_for_cipher", // SHA-384 evolution: cipher-aware hashing
             "crypto.sha256",
             "crypto.sha384",
             "crypto.sha512",
@@ -357,6 +360,11 @@ impl MethodHandler for CryptoHandler {
             "crypto.hmac_sha256" => {
                 info!("🔏 Crypto: hmac_sha256");
                 handle_hmac_sha256(params).await
+            }
+
+            "crypto.hash_for_cipher" => {
+                info!("🎯 Crypto: hash_for_cipher (cipher-aware hashing for TLS 1.3)");
+                handle_hash_for_cipher(params).await
             }
 
             "crypto.sha256" => {
