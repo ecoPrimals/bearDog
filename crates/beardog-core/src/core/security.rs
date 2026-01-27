@@ -10,7 +10,7 @@
 //! **PHASE 2 UPDATE (Dec 8, 2025)**: Integrated JWT, `OAuth2`, and RBAC/ABAC via
 //! `auth_services` module. Production-grade authentication and authorization.
 //!
-//! **NOTE (Jan 17, 2026)**: auth_services deleted (HTTP-based, not needed for Unix sockets)
+//! **NOTE (Jan 17, 2026)**: `auth_services` deleted (HTTP-based, not needed for Unix sockets)
 //! Production auth uses Unix socket communication to dedicated auth service.
 
 use super::key_management::{KeyStorage, KeyStore, KeyUsage};
@@ -262,9 +262,10 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         user_info.insert("method".to_string(), "local".to_string());
         user_info.insert("roles".to_string(), "user,authenticated".to_string());
 
+        use base64::prelude::*;
+
         // Generate a JWT-format token (header.payload.signature)
         // For testing/local use, we use a simple format that mimics JWT structure
-        use base64::prelude::*;
         let header = BASE64_URL_SAFE_NO_PAD.encode(br#"{"alg":"HS256","typ":"JWT"}"#);
         let payload = BASE64_URL_SAFE_NO_PAD.encode(
             format!(
@@ -279,7 +280,7 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
             .as_bytes(),
         );
         let signature = BASE64_URL_SAFE_NO_PAD.encode(b"local_signature");
-        let token = format!("{}.{}.{}", header, payload, signature);
+        let token = format!("{header}.{payload}.{signature}");
 
         Ok(AuthenticationResponse {
             success: true,

@@ -36,10 +36,10 @@ pub struct HidDeviceInfo {
     /// USB Product ID
     pub product_id: ProductId,
 
-    /// Manufacturer name (e.g., "SoloKeys", "Yubico")
+    /// Manufacturer name (e.g., `SoloKeys`, `Yubico`)
     pub manufacturer: String,
 
-    /// Product name (e.g., "Solo 2", "YubiKey 5")
+    /// Product name (e.g., `Solo 2`, `YubiKey 5`)
     pub product: String,
 
     /// Serial number (may be empty)
@@ -111,10 +111,10 @@ pub trait HidDevice: Send + Sync {
 pub mod fido2_vendors {
     use super::VendorId;
 
-    /// SoloKeys (Solo 2, etc.)
+    /// `SoloKeys` (Solo 2, etc.)
     pub const SOLOKEYS: VendorId = VendorId(0x1209);
 
-    /// Yubico (YubiKey 5 series, etc.)
+    /// `Yubico` (`YubiKey` 5 series, etc.)
     pub const YUBICO: VendorId = VendorId(0x1050);
 
     /// Google (Titan Security Key)
@@ -145,22 +145,13 @@ pub mod fido2_products {
 /// ```
 #[must_use]
 pub fn is_fido2_device(vendor_id: VendorId, product_id: ProductId) -> bool {
-    use fido2_products::*;
-    use fido2_vendors::*;
+    use fido2_products::SOLO2;
+    use fido2_vendors::{FEITIAN, GOOGLE, SOLOKEYS, YUBICO};
 
     match (vendor_id, product_id) {
         // SoloKeys
-        (SOLOKEYS, SOLO2) => true,
-
-        // Yubico (all YubiKey models support FIDO2)
-        (YUBICO, _) => true,
-
-        // Google Titan (specific products)
-        (GOOGLE, ProductId(0x0858)) => true, // Titan Security Key
-        (GOOGLE, ProductId(0x0859)) => true, // Titan Security Key (BLE)
-
-        // Feitian
-        (FEITIAN, _) => true,
+        // SoloKeys Solo 2, Yubico (all models), Google Titan, Feitian (all models)
+        (SOLOKEYS, SOLO2) | (YUBICO, _) | (FEITIAN, _) | (GOOGLE, ProductId(0x0858 | 0x0859)) => true,
 
         // Unknown
         _ => false,

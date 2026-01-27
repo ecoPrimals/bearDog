@@ -39,7 +39,7 @@ mod tests {
     fn test_from_env_respects_current_env() {
         // ✅ CONCURRENT-SAFE: Only READ environment, never WRITE
         // This test is safe to run in parallel because it doesn't mutate global state
-        
+
         let config = MonitoringConfig::from_env();
 
         // Verify config is valid (will use either env vars or defaults)
@@ -73,9 +73,7 @@ mod tests {
     #[test]
     fn test_builder_with_metrics_port() {
         // ✅ CONCURRENT-SAFE: Use builder pattern, no env vars
-        let config = MonitoringConfig::builder()
-            .metrics_port(8080)
-            .build();
+        let config = MonitoringConfig::builder().metrics_port(8080).build();
 
         assert_eq!(config.metrics_port, 8080);
     }
@@ -83,9 +81,7 @@ mod tests {
     #[test]
     fn test_builder_with_health_port() {
         // ✅ CONCURRENT-SAFE: Use builder pattern, no env vars
-        let config = MonitoringConfig::builder()
-            .health_check_port(8081)
-            .build();
+        let config = MonitoringConfig::builder().health_check_port(8081).build();
 
         assert_eq!(config.health_check_port, 8081);
     }
@@ -93,9 +89,7 @@ mod tests {
     #[test]
     fn test_builder_with_tracing_rate() {
         // ✅ CONCURRENT-SAFE: Use builder pattern, no env vars
-        let config = MonitoringConfig::builder()
-            .tracing_sample_rate(0.5)
-            .build();
+        let config = MonitoringConfig::builder().tracing_sample_rate(0.5).build();
 
         assert_eq!(config.tracing_sample_rate, 0.5);
     }

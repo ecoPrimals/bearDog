@@ -6,6 +6,7 @@ description = "Pure Rust HID interface - ecoBin compliant, zero C dependencies"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
 authors = ["BearDog Team <team@beardog.dev>"]
+readme = "README.md"
 keywords = ["hid", "usb", "fido2", "hardware", "pure-rust"]
 categories = ["hardware-support", "os", "no-std"]
 

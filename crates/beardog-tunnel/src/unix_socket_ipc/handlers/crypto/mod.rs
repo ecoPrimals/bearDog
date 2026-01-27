@@ -6,6 +6,7 @@
 //! # Organization
 //!
 //! - [`tls`] - TLS 1.3 crypto operations (handshake keys, application keys, signatures, certificates)
+//! - [`tls12`] - TLS 1.2 crypto operations (ECDHE P-256/P-384, AES-GCM, TLS 1.2 PRF)
 //! - [`asymmetric`] - Asymmetric cryptography (Ed25519 signatures, X25519 key exchange)
 //! - [`symmetric`] - Symmetric cryptography (ChaCha20-Poly1305, AES-GCM AEAD)
 //! - [`hash`] - Hashing operations (Blake3, HMAC-SHA256)
@@ -52,6 +53,7 @@ pub mod hash; // ✅ Step 6 - Blake3, HMAC-SHA256 (186 lines)
 pub mod sslkeylog; // ✅ Step 2 - SSLKEYLOGFILE export utility
 pub mod symmetric; // ✅ Step 5 - ChaCha20-Poly1305 (256 lines)
 pub mod tls; // ✅ Step 3 - TLS 1.3 operations (1,884 lines)
+pub mod tls12; // ✅ Jan 27, 2026 - TLS 1.2 operations (ECDHE, AES-GCM, PRF)
 pub mod utils; // ✅ Step 7 - Shared utility functions (derive_key_from_id)
 
 // Re-export sslkeylog utility for backward compatibility
@@ -75,3 +77,10 @@ pub use symmetric::{handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_e
 
 // Re-export hash handlers for backward compatibility
 pub use hash::{handle_blake3_hash, handle_hash_for_cipher, handle_hmac_sha256};
+
+// Re-export TLS 1.2 handlers for Tower Atomic pattern (Songbird integration)
+pub use tls12::{
+    handle_aes_128_gcm_decrypt, handle_aes_128_gcm_encrypt, handle_aes_256_gcm_decrypt,
+    handle_aes_256_gcm_encrypt, handle_ecdhe_p256_compute_shared, handle_ecdhe_p256_generate,
+    handle_ecdhe_p384_compute_shared, handle_ecdhe_p384_generate, handle_tls12_prf,
+};

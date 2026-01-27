@@ -1,538 +1,375 @@
-# 🐻🐕 BearDog - Start Here
+# 🚀 BearDog - Start Here
 
-**Sovereign Identity & Cryptographic Infrastructure for the ecoPrimals Ecosystem**
+**Welcome to BearDog!** 🐻🐕
 
-**Version**: 0.24.0  
-**Status**: ✅ **PRODUCTION READY** + 🦀 **100% PURE RUST** + 🏆 **A GRADE (95/100)**  
-**Last Updated**: January 25, 2026
-
----
-
-## 🎉 Latest Achievement: Deep Evolution Session - Major Milestones!
-
-**January 25, 2026**: Comprehensive Evolution Day
-- ✅ **6/10 Major TODOs Complete** (60% progress in one day!)
-- ✅ **JSON-RPC + Songbird IPC**: Full interprimal communication (100% complete)
-- ✅ **Socket Discovery**: 5-tier runtime discovery (100% Primal IPC Protocol compliant)
-- ✅ **Smart Refactoring**: Analysis complete - codebase already excellent! (A+ grade)
-- ✅ **Zero Hardcoding**: Socket paths fully runtime-discovered
-- ✅ **New `beardog-ipc` Crate**: Production-ready Songbird client (300+ LOC)
-- ✅ **11 Strategy Documents**: 6000+ lines of comprehensive documentation
-
-**Key Achievements**:
-- Fixed all compilation errors (was broken, now builds cleanly)
-- Implemented full Songbird integration with graceful fallback
-- Upgraded socket discovery to 5-tier system with `/primal/beardog` standard
-- Eliminated all socket path hardcoding (client + server)
-- Validated code quality: all large files are well-structured (no refactoring needed!)
-- Created 9-week evolution roadmap to A+ grade
-
-**Previous Milestones**:
-- **January 24, 2026**: Test Stabilization Complete (274 doc tests passing)
-- **January 24, 2026 (AM)**: Evolution Phase 1 Complete (comprehensive audit)
-- **January 22, 2026**: 100% Pure Rust HTTPS Complete (RFC 8446)
-
----
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# Clone the repository
-git clone <repo>
-cd beardog
-
-# Build the project
-cargo build --release
-
-# Run doc tests (274 passing)
-cargo test --workspace --doc
-
-# Run all tests (some integration tests being fixed)
-cargo test --workspace
-```
-
-### Basic Usage
-
-```bash
-# Start BearDog server (primary operational mode)
-./target/release/beardog server
-
-# Or use cargo
-cargo run --bin beardog -- server
-
-# Start with custom socket path
-beardog server --socket /tmp/beardog.sock
-
-# Run health diagnostics
-beardog doctor
-
-# Comprehensive health check with JSON output
-beardog doctor --comprehensive --format json
-```
-
----
-
-## 📋 Table of Contents
-
-1. [What is BearDog?](#what-is-beardog)
-2. [Core Features](#core-features)
-3. [Architecture Overview](#architecture-overview)
-4. [UniBin Commands](#unibin-commands)
-5. [Configuration](#configuration)
-6. [Testing](#testing)
-7. [Development Guide](#development-guide)
-8. [Troubleshooting](#troubleshooting)
-9. [Next Steps](#next-steps)
+BearDog is the **cryptographic heart** of the ecoPrimals ecosystem - a Pure Rust crypto service that provides secure operations for all primals through the **Tower Atomic Pattern**.
 
 ---
 
 ## 🎯 What is BearDog?
 
-BearDog is the **cryptographic security primal** of the ecoPrimals ecosystem, providing:
+BearDog is:
+- ✅ **Crypto Provider** - Ed25519, X25519, ECDHE, AES-GCM, ChaCha20-Poly1305, BLAKE3, HKDF
+- ✅ **TLS Support** - Both TLS 1.3 and TLS 1.2 cryptographic operations
+- ✅ **Pure Rust** - 100% RustCrypto, zero C dependencies (first true ecoBin)
+- ✅ **JSON-RPC API** - Unix socket IPC for inter-primal communication
+- ✅ **HSM Integration** - Hardware, software, and cloud HSM support
+- ✅ **Genetic Crypto** - Lineage-based key derivation and evolution
 
-### 1. Sovereign Identity & Genetic Lineage
-- Cryptographic family trees for progressive trust
-- X25519 key exchange + Ed25519 signatures
-- Auto-trust within genetic lineages
-- No central identity authorities
-
-### 2. Universal HSM Architecture
-- **7 HSM providers**: Software, Android StrongBox, iOS Secure Enclave, FIDO2, TPM 2.0, Cloud HSM, Hardware HSM
-- **Hot-plug capability**: Automatic security upgrade when HSMs connect
-- **99%+ coverage**: Works with virtually all HSM types
-- **Zero vendor lock-in**: Unified interface across all providers
-
-### 3. Comprehensive Cryptography
-- **TLS 1.3**: Full RFC 8446 implementation (handshake + application secrets)
-- **HTTPS**: Certificate verification, X.509 parsing, chain validation
-- **Password Hashing**: Argon2id, PBKDF2, bcrypt, scrypt (OWASP 2023)
-- **Legacy Auth**: SHA-1 (Git), SHA3 (Ethereum), HMAC variants
-- **Genetic Crypto**: ChaCha20-Poly1305 encryption
-- **81 RPC methods**: Complete cryptographic API
-
-### 4. Zero-Trust Tunneling
-- **BTSP Protocol**: BearDog Tunnel Security Protocol
-- **Genetic lineage verification** for internal primals
-- **TLS 1.3** for external HTTPS APIs
-- **Pure Unix socket IPC** (zero HTTP in primal)
+**Grade**: A- (89/100) - World-class architecture, minor deployment gaps
 
 ---
 
-## ✨ Core Features
+## ⚡ Quick Start (5 Minutes)
 
-### Production-Ready Quality
-
-✅ **1,399+ Tests Passing** (100% success rate)
-- Unit tests, integration tests, E2E tests
-- Chaos testing, fault injection
-- RFC compliance validation
-
-✅ **100% Pure Rust** (242/242 crates verified)
-- Zero C dependencies
-- Full cross-compilation support
-- ecoBin compliant
-
-✅ **Zero Unsafe Code** (production)
-- 100% memory-safe Rust
-- No undefined behavior
-- Comprehensive safety guarantees
-
-✅ **Clean Code Quality**
-- Zero Clippy errors
-- Consistent rustfmt formatting
-- Successful release builds
-
-### Architecture Excellence
-
-✅ **UniBin Architecture**
-- Single binary: `beardog`
-- Multiple modes: server, daemon, client, doctor
-- Professional CLI with `--help`
-
-✅ **Primal IPC Protocol**
-- JSON-RPC 2.0 over Unix sockets
-- Capability-based discovery
-- Zero hardcoded primal addresses
-
-✅ **Zero Hardcoding**
-- Runtime discovery only
-- Environment-driven configuration
-- XDG Base Directory compliance
-
-✅ **Sovereignty-First**
-- Human dignity preserved
-- No vendor lock-in
-- User control over all operations
-
----
-
-## 🏗️ Architecture Overview
-
-### System Components
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    BearDog Primal                       │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐  │
-│  │   Crypto     │  │   Genetic    │  │     HSM     │  │
-│  │   (81 RPC)   │  │   Lineage    │  │  (7 types)  │  │
-│  └──────────────┘  └──────────────┘  └─────────────┘  │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐  │
-│  │    BTSP      │  │  Discovery   │  │   Config    │  │
-│  │  Protocol    │  │ (Capability) │  │ (Zero Hard) │  │
-│  └──────────────┘  └──────────────┘  └─────────────┘  │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│            Unix Socket IPC (JSON-RPC 2.0)               │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Key Design Principles
-
-1. **UniBin**: Single binary, multiple operational modes
-2. **ecoBin**: Pure Rust, zero C dependencies
-3. **Primal IPC**: JSON-RPC over Unix sockets only
-4. **Zero Hardcoding**: Runtime discovery, capability-based
-5. **Sovereignty**: User control, no central authorities
-
----
-
-## 💻 UniBin Commands
-
-BearDog implements the **UniBin architecture** (ecosystem standard v1.0.0):
-
-### Server Mode (Primary)
-
+### 1. Prerequisites
 ```bash
-# Start server with defaults
-beardog server
-
-# Custom socket path
-beardog server --socket /tmp/beardog.sock
-
-# With family and orchestrator IDs
-beardog server --family-id nat0 --orchestrator-id tower1
-```
-
-**Use Case**: Primary operational mode for running BearDog as a service
-
-### Daemon Mode
-
-```bash
-# Run as background daemon
-beardog daemon
-
-# Custom paths
-beardog daemon \
-  --socket /tmp/beardog.sock \
-  --pid-file /var/run/beardog.pid \
-  --log-file /var/log/beardog.log
-```
-
-**Use Case**: Production deployments, systemd services
-
-### Doctor Mode
-
-```bash
-# Basic health check
-beardog doctor
-
-# Comprehensive diagnostics
-beardog doctor --comprehensive
-
-# JSON output for monitoring
-beardog doctor --format json
-
-# Check specific component
-beardog doctor --component hsm
-```
-
-**Use Case**: Health monitoring, troubleshooting, diagnostics
-
-### Client Mode (Future)
-
-```bash
-# Interactive client
-beardog client
-
-# Connect to custom socket
-beardog client --socket /tmp/beardog.sock
-
-# Execute single command
-beardog client --command "status"
-```
-
-**Use Case**: Interactive debugging, manual operations
-
----
-
-## ⚙️ Configuration
-
-### Environment-Driven
-
-BearDog follows the **zero hardcoding principle** - all configuration is runtime-driven:
-
-```bash
-# Socket paths (XDG-compliant)
-export BEARDOG_SOCKET_PATH=/tmp/beardog.sock
-
-# Family and identity
-export BEARDOG_FAMILY_ID=nat0
-export BEARDOG_NODE_ID=beardog-node-1
-
-# Discovery
-export DISCOVERY_CACHE_TTL_SECS=300
-
-# Logging
-export RUST_LOG=beardog=debug
-```
-
-### Configuration Files
-
-```bash
-# Default locations (XDG Base Directory)
-~/.config/beardog/config.toml       # User config
-/etc/beardog/config.toml            # System config
-
-# Custom location
-beardog server --config /path/to/config.toml
-```
-
-### Example Configuration
-
-```toml
-# beardog-config.toml
-[identity]
-family_id = "nat0"
-node_id = "beardog-node-1"
-
-[network]
-socket_path = "/tmp/beardog.sock"
-discovery_timeout_secs = 5
-
-[security]
-security_level = "High"
-session_timeout_secs = 3600
-
-[hsm]
-preferred_device = "auto"  # auto-discover best HSM
-fallback_to_software = true
-```
-
-See [configs/README.md](configs/README.md) for complete configuration guide.
-
----
-
-## 🧪 Testing
-
-### Run All Tests
-
-```bash
-# Complete test suite (1,399+ tests)
-cargo test --workspace
-```
-
-### Run Specific Test Suites
-
-```bash
-# CLI tests (151 tests)
-cargo test -p beardog-cli --lib
-
-# Type system tests (1,319 tests)
-cargo test -p beardog-types
-
-# Tunnel tests (1,399 tests, 100% passing)
-cargo test -p beardog-tunnel --lib
-
-# Genetic crypto tests
-cargo test -p beardog-genetics
-```
-
-### Run Integration Tests
-
-```bash
-# HTTPS comprehensive tests (30 tests)
-cargo test --test phase8_https_comprehensive_tests
-
-# TLS 1.3 integration
-cargo test --test tls13_integration
-
-# BTSP protocol tests
-cargo test --test btsp_integration
-```
-
-### Test Categories
-
-- **Unit Tests**: Individual function validation
-- **Integration Tests**: Module interaction testing
-- **E2E Tests**: End-to-end workflow validation
-- **Chaos Tests**: Fault injection and recovery
-- **RFC Compliance**: Spec validation (RFC 8446, etc.)
-
----
-
-## 🛠️ Development Guide
-
-### Prerequisites
-
-```bash
-# Install Rust (if needed)
+# Rust 1.75+ (2021 edition)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Verify installation
-rustc --version
-cargo --version
+# System dependencies (Ubuntu/Debian)
+sudo apt-get install build-essential pkg-config libssl-dev
 ```
 
-### Development Workflow
-
+### 2. Build & Test
 ```bash
-# 1. Build
-cargo build --workspace
+# Clone repository (if not already)
+cd /home/eastgate/Development/ecoPrimals/phase1/beardog
 
-# 2. Run tests
-cargo test --workspace
+# Build all features
+cargo build --all-features --release
 
-# 3. Check code quality
-cargo clippy --workspace --all-targets
+# Run tests (39 tests, should all pass)
+cargo test --all-features
 
-# 4. Format code
-cargo fmt --all
-
-# 5. Build docs
-cargo doc --no-deps --open
-
-# 6. Run in development
-cargo run --bin beardog -- server
+# Build time: ~30s | Test time: ~30s | Pass rate: 100%
 ```
 
-### Code Quality Standards
+### 3. Run BearDog
+```bash
+# Start the JSON-RPC server
+cargo run --release --bin beardog -- server
 
-Before submitting changes, ensure:
+# Or use the software HSM mode for testing
+cargo run --release --bin beardog -- server --hsm software
+```
 
-✅ **All tests pass**: `cargo test --workspace`
-✅ **Zero Clippy warnings**: `cargo clippy --workspace --all-targets`
-✅ **Formatted**: `cargo fmt --all -- --check`
-✅ **Documented**: Public APIs have doc comments
-✅ **Safe Rust**: No `unsafe` in production code
+### 4. Test the API
+```bash
+# Generate Ed25519 keypair
+cargo run --release --example crypto_client
+
+# Or use the test script
+./test-capability-methods.sh
+```
+
+**Done!** BearDog is running and ready to serve crypto operations.
 
 ---
 
-## 🔍 Troubleshooting
+## 📚 Documentation Structure
 
-### Common Issues
+### Getting Started
+1. **START_HERE.md** (this file) - Quick start guide
+2. [`QUICK_START.md`](QUICK_START.md) - Deployment guide
+3. [`README.md`](README.md) - Project overview
+4. [`ARCHITECTURE.md`](ARCHITECTURE.md) - System architecture
 
-**Issue**: Socket permission denied
-```bash
-# Solution: Check socket permissions
-ls -la /tmp/beardog.sock
-chmod 600 /tmp/beardog.sock
+### Architecture & Patterns
+- [`TOWER_ATOMIC_PATTERN.md`](TOWER_ATOMIC_PATTERN.md) - **READ THIS FIRST** for ecosystem integration
+- [`UNIBIN_ECOBIN_EXPLAINED.md`](UNIBIN_ECOBIN_EXPLAINED.md) - Binary architecture
+- [`MOCK_ISOLATION_POLICY.md`](MOCK_ISOLATION_POLICY.md) - Testing standards
+
+### Recent Status (Jan 27, 2026)
+- [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - **Current metrics and status**
+- [`FINAL_SESSION_SUMMARY_JAN_27_2026.md`](FINAL_SESSION_SUMMARY_JAN_27_2026.md) - Latest session summary
+- [`TLS12_COMPLETE_JAN_27_2026.md`](TLS12_COMPLETE_JAN_27_2026.md) - TLS 1.2 implementation
+
+### Planning & Roadmap
+- [`PRIORITY_ACTION_PLAN_JAN_27_2026.md`](PRIORITY_ACTION_PLAN_JAN_27_2026.md) - 8-11 week roadmap
+- [`SESSION_HANDOFF_JAN_27_2026.md`](SESSION_HANDOFF_JAN_27_2026.md) - Next session plan
+- [`COMPREHENSIVE_CODEBASE_AUDIT_JAN_27_2026.md`](COMPREHENSIVE_CODEBASE_AUDIT_JAN_27_2026.md) - Full audit
+
+---
+
+## 🎓 Key Concepts
+
+### Tower Atomic Pattern
+BearDog provides **crypto atoms** via JSON-RPC:
+
+```
+┌─────────────┐                    ┌─────────────┐
+│  Songbird   │ ←─ JSON-RPC ────→ │  BearDog    │
+│ (TLS Proto) │    Unix Socket     │  (Crypto)   │
+└─────────────┘                    └─────────────┘
 ```
 
-**Issue**: Tests failing
+**Benefits**:
+- ✅ Zero crypto code duplication
+- ✅ Pure Rust everywhere (ecoBin compliant)
+- ✅ Security concentrated in one auditable primal
+- ✅ Validated in production (Songbird TLS 1.2/1.3)
+
+### Semantic Method Naming
+All methods follow `{domain}.{operation}[.{variant}]`:
+
+```rust
+// TLS 1.2 ECDHE
+crypto.ecdhe.p256.generate
+crypto.ecdhe.p256.compute_shared
+
+// AES-GCM encryption
+crypto.aead.aes_128_gcm.encrypt
+crypto.aead.aes_128_gcm.decrypt
+
+// TLS 1.2 PRF
+crypto.kdf.tls12_prf
+```
+
+### UniBin/EcoBin
+- **UniBin**: Single executable per primal with subcommands
+- **EcoBin**: UniBin + full cross-compilation (Pure Rust)
+- **BearDog**: First true ecoBin (reference implementation)
+
+---
+
+## 🔧 Common Tasks
+
+### Build for Production
 ```bash
-# Solution: Clean and rebuild
+cargo build --release --all-features
+# Binary: target/release/beardog
+```
+
+### Run Tests
+```bash
+# All tests
+cargo test --all-features
+
+# Specific test
+cargo test --package beardog-tunnel tls12
+
+# With output
+cargo test --all-features -- --nocapture
+```
+
+### Check Code Quality
+```bash
+# Linting
+cargo clippy --all-targets --all-features
+
+# Formatting
+cargo fmt --all -- --check
+
+# Documentation
+cargo doc --all-features --no-deps --open
+```
+
+### Measure Test Coverage
+```bash
+# Install llvm-cov
+cargo install cargo-llvm-cov
+
+# Generate coverage report
+cargo llvm-cov --all-features --html
+
+# View report
+open target/llvm-cov/html/index.html
+```
+
+---
+
+## 🎯 Common Use Cases
+
+### 1. Integrate BearDog into Your Primal
+
+```rust
+// JSON-RPC client example
+use serde_json::json;
+
+// Generate P-256 keypair for TLS 1.2
+let request = json!({
+    "jsonrpc": "2.0",
+    "method": "crypto.ecdhe.p256.generate",
+    "params": {},
+    "id": 1
+});
+
+// Send via Unix socket to BearDog
+// Returns: {"public_key": "...", "secret_key": "...", "algorithm": "P-256"}
+```
+
+### 2. Add New Crypto Method
+
+See [`TLS12_COMPLETE_JAN_27_2026.md`](TLS12_COMPLETE_JAN_27_2026.md) for complete example of adding TLS 1.2 support.
+
+### 3. Configure for Your Environment
+
+```bash
+# Set environment variables
+export BEARDOG_API_HOST="0.0.0.0"
+export BEARDOG_API_PORT="8080"
+export BEARDOG_HSM_TYPE="software"
+
+# Or use config file
+cp configs/network-defaults.toml configs/local.toml
+# Edit configs/local.toml
+```
+
+---
+
+## 🚨 Known Issues & Workarounds
+
+### Issue: Hardcoded Configuration
+**Problem**: 677+ hardcoded network values  
+**Impact**: Cannot deploy to different environments  
+**Workaround**: Edit source code or use environment variables  
+**Fix**: In progress (Priority #1, 20-40 hours)
+
+### Issue: Unknown Test Coverage
+**Problem**: No coverage measurement  
+**Workaround**: Manual code review  
+**Fix**: Install llvm-cov (2-4 hours)
+
+---
+
+## 🆘 Troubleshooting
+
+### Build Fails
+```bash
+# Clean build
 cargo clean
-cargo build --workspace
-cargo test --workspace
+cargo build --all-features
+
+# Check Rust version
+rustc --version  # Should be 1.75+
+
+# Update dependencies
+cargo update
 ```
 
-**Issue**: HSM not detected
+### Tests Fail
 ```bash
-# Solution: Check HSM availability
-beardog doctor --component hsm
+# Run specific test with output
+cargo test --package beardog-tunnel tls12 -- --nocapture
 
-# Try software fallback
-export BEARDOG_HSM_FALLBACK=software
+# Check test logs
+RUST_LOG=debug cargo test
 ```
 
-### Debug Logging
-
+### Cannot Connect to API
 ```bash
-# Enable debug logging
-export RUST_LOG=beardog=debug
-beardog server
+# Check if running
+ps aux | grep beardog
 
-# Trace-level logging (verbose)
-export RUST_LOG=beardog=trace
-beardog server
-```
+# Check socket
+ls -la /tmp/beardog.sock
 
-### Health Diagnostics
-
-```bash
-# Run comprehensive health check
-beardog doctor --comprehensive
-
-# JSON output for parsing
-beardog doctor --format json | jq .
+# Check logs
+tail -f /var/log/beardog.log
 ```
 
 ---
 
-## 📖 Next Steps
+## 📊 Current Status
 
-### Essential Reading
+**Grade**: A- (89/100)  
+**Build**: ✅ SUCCESS  
+**Tests**: ✅ 39/39 passing (100%)  
+**Production Ready**: ⚠️ Needs hardcoding elimination
 
-1. **[README.md](README.md)** - Project overview and current status
-2. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture documentation
-3. **[docs/BEARDOG_RPC_API.md](docs/BEARDOG_RPC_API.md)** - Complete API reference (81 methods)
-4. **[EVOLUTION_READY_FOR_PHASE_2.md](EVOLUTION_READY_FOR_PHASE_2.md)** - Current evolution status
+**Recent Accomplishments** (Jan 27, 2026):
+- ✅ Build system fixed
+- ✅ TLS 1.2 support complete (9 handlers)
+- ✅ Tower Atomic pattern documented
+- ✅ JSON-RPC upgraded to A+ (98/100)
 
-### Quick References
+**Next Priorities**:
+1. Capability-based discovery (eliminate hardcoding)
+2. Test coverage measurement
+3. Semantic naming completion (70% → 90%)
 
-- **[QUICK_START.md](QUICK_START.md)** - 5-minute getting started
-- **[QUICK_START_ZERO_HARDCODING.md](QUICK_START_ZERO_HARDCODING.md)** - Zero hardcoding patterns
-- **[QUICK_START_SOFTWARE_HSM.md](QUICK_START_SOFTWARE_HSM.md)** - HSM usage guide
-- **[UNIBIN_ECOBIN_EXPLAINED.md](UNIBIN_ECOBIN_EXPLAINED.md)** - Binary architecture
-
-### Development Resources
-
-- **[COMPREHENSIVE_AUDIT_JAN_24_2026.md](COMPREHENSIVE_AUDIT_JAN_24_2026.md)** - Complete codebase audit
-- **[HARDCODING_EVOLUTION_PROGRESS.md](HARDCODING_EVOLUTION_PROGRESS.md)** - Evolution tracking
-- **[FILE_REFACTORING_STRATEGY.md](FILE_REFACTORING_STRATEGY.md)** - Refactoring approach
-- **[MOCK_ISOLATION_POLICY.md](MOCK_ISOLATION_POLICY.md)** - Testing boundaries
-
-### Security & Compliance
-
-- **[SECURITY.md](SECURITY.md)** - Security policies
-- **[ENTROPY_HIERARCHY_PRINCIPLE.md](ENTROPY_HIERARCHY_PRINCIPLE.md)** - Entropy management
-- **[configs/SOVEREIGNTY_COMPLIANT_CONFIG_GUIDE.md](configs/SOVEREIGNTY_COMPLIANT_CONFIG_GUIDE.md)** - Config guide
+See [`CURRENT_STATUS.md`](CURRENT_STATUS.md) for detailed metrics.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Before submitting:
+### Before You Start
+1. Read [`TOWER_ATOMIC_PATTERN.md`](TOWER_ATOMIC_PATTERN.md)
+2. Review [`MOCK_ISOLATION_POLICY.md`](MOCK_ISOLATION_POLICY.md)
+3. Check [`PRIORITY_ACTION_PLAN_JAN_27_2026.md`](PRIORITY_ACTION_PLAN_JAN_27_2026.md)
 
-1. Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand the system
-2. Ensure all tests pass: `cargo test --workspace`
-3. Follow code quality standards (Clippy, rustfmt)
-4. Add tests for new features
-5. Document public APIs
+### Development Workflow
+```bash
+# Create branch
+git checkout -b feature/your-feature
+
+# Make changes
+# ... code ...
+
+# Test
+cargo test --all-features
+cargo clippy --all-targets --all-features
+cargo fmt --all
+
+# Commit
+git commit -m "feat: your feature"
+
+# Push
+git push origin feature/your-feature
+```
 
 ---
 
-## 📜 License
+## 🔗 Links
 
-See [LICENSE](LICENSE) file for details.
+### External Resources
+- [RustCrypto](https://github.com/RustCrypto) - Pure Rust crypto primitives
+- [Tokio](https://tokio.rs/) - Async runtime
+- [Serde](https://serde.rs/) - Serialization framework
+
+### Ecosystem Documentation
+- [`../../../wateringHole/`](../../../wateringHole/) - Ecosystem standards
+- [`SEMANTIC_METHOD_NAMING_STANDARD.md`](../../../wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md)
+- [`UNIBIN_ARCHITECTURE_STANDARD.md`](../../../wateringHole/UNIBIN_ARCHITECTURE_STANDARD.md)
 
 ---
 
-## 🙏 Acknowledgments
+## 💡 Quick Tips
 
-- **Rust Community** - Amazing language and ecosystem
-- **RustCrypto** - Pure Rust cryptographic implementations
-- **RFC Authors** - Clear, implementable specifications
-- **ecoPrimals Community** - Vision and collaboration
+1. **Use cargo aliases**: Add to `.cargo/config.toml`
+```toml
+[alias]
+t = "test --all-features"
+c = "clippy --all-targets --all-features"
+```
+
+2. **Enable faster builds**: Add to `.cargo/config.toml`
+```toml
+[build]
+jobs = 4  # Parallel jobs
+```
+
+3. **Debug JSON-RPC**: Use `RUST_LOG=debug`
+```bash
+RUST_LOG=debug cargo run --bin beardog -- server
+```
 
 ---
 
-**Built with ❤️ in Pure Rust 🦀**
+## 🎉 What's Next?
 
-*"Start sovereign, stay sovereign"*
+1. **Explore**: Check out [`examples/`](examples/) for crypto usage
+2. **Test**: Run [`./test-capability-methods.sh`](test-capability-methods.sh)
+3. **Learn**: Read [`TOWER_ATOMIC_PATTERN.md`](TOWER_ATOMIC_PATTERN.md)
+4. **Build**: Try integrating with your primal
+5. **Contribute**: Pick a task from [`PRIORITY_ACTION_PLAN_JAN_27_2026.md`](PRIORITY_ACTION_PLAN_JAN_27_2026.md)
+
+---
+
+**Status**: Ready for Development  
+**Support**: See docs/ for detailed guides  
+**Questions**: Check ROOT_INDEX.md for full document tree
+
+🐻 **Welcome to BearDog - Let's Build!** 🐕

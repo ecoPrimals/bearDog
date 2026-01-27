@@ -119,13 +119,13 @@ async fn test_e2e_port_zero_for_random_assignment() {
 #[tokio::test]
 async fn test_e2e_socket_path_construction() {
     // ✅ CONCURRENT-SAFE: Test socket path formatting without env vars
-    
+
     let family_id = "nat0";
     let node_id = "tower1";
 
     let socket_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
     assert_eq!(socket_path, "/tmp/beardog-nat0-tower1.sock");
-    
+
     // Test with different values
     let socket_path2 = format!("/tmp/beardog-{}-{}.sock", "prod", "node5");
     assert_eq!(socket_path2, "/tmp/beardog-prod-node5.sock");
@@ -273,15 +273,15 @@ async fn test_e2e_concurrent_service_spawn() {
 async fn test_e2e_config_defaults() {
     // ✅ CONCURRENT-SAFE: Test config defaults without touching environment
     // This tests the actual config system, not env var behavior
-    
+
     use beardog_config::BearDogConfig;
-    
+
     let config = BearDogConfig::default();
-    
+
     // Verify config has valid structure
     assert!(config.monitoring.metrics_port > 0);
     assert!(!config.monitoring.log_level.is_empty());
-    
+
     // Test that config can be constructed explicitly
     let explicit_config = BearDogConfig::default();
     assert!(explicit_config.timeouts.health_check_secs > 0);
@@ -291,20 +291,23 @@ async fn test_e2e_config_defaults() {
 async fn test_e2e_config_construction() {
     // ✅ CONCURRENT-SAFE: Test explicit config construction
     // No environment variable mutation
-    
+
     use beardog_config::BearDogConfig;
-    
+
     let config = BearDogConfig::default();
-    
+
     // Verify config structure is valid
     assert!(config.monitoring.metrics_port > 0);
     assert!(config.monitoring.health_check_port > 0);
-    
+
     // Test config can be cloned and modified independently
     let mut config2 = config.clone();
     config2.monitoring.metrics_port = 7777;
-    
-    assert_ne!(config.monitoring.metrics_port, config2.monitoring.metrics_port);
+
+    assert_ne!(
+        config.monitoring.metrics_port,
+        config2.monitoring.metrics_port
+    );
     assert_eq!(config2.monitoring.metrics_port, 7777);
 }
 

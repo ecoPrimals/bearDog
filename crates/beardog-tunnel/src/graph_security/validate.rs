@@ -171,17 +171,18 @@ async fn verify_signature(
     template: &GraphTemplate,
 ) -> Result<Option<ValidationIssue>, BearDogError> {
     use base64::Engine;
-    
+
     // Extract signature
-    let signature_b64 = template.signature.as_ref().ok_or_else(|| {
-        BearDogError::validation("verify_signature called without signature")
-    })?;
-    
+    let signature_b64 = template
+        .signature
+        .as_ref()
+        .ok_or_else(|| BearDogError::validation("verify_signature called without signature"))?;
+
     // Decode signature
     let signature = base64::engine::general_purpose::STANDARD
         .decode(signature_b64)
         .map_err(|e| BearDogError::validation(&format!("Invalid base64 signature: {e}")))?;
-    
+
     // Validate signature length (Ed25519 signatures are 64 bytes)
     if signature.len() != 64 {
         return Ok(Some(ValidationIssue {
@@ -194,11 +195,11 @@ async fn verify_signature(
             location: Some("template.signature".to_string()),
         }));
     }
-    
+
     // TODO: Get creator's public key via collaboration capability
     // Future: Use CollaborationService::get_user_public_key(&template.creator)
     // For now, we can't verify signatures without the collaboration service
-    
+
     // Return low-severity issue noting signature can't be verified yet
     Ok(Some(ValidationIssue {
         severity: IssueSeverity::Low,
@@ -211,7 +212,7 @@ async fn verify_signature(
         ),
         location: Some("template.signature".to_string()),
     }))
-    
+
     // NOTE: Full implementation will look like this once collaboration service exists:
     //
     // // Get creator's public key

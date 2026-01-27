@@ -229,7 +229,6 @@ async fn test_e2e_complete_contact_exchange_flow() {
         .as_array()
         .unwrap()
         .is_empty());
-
 }
 
 // ========================================================================

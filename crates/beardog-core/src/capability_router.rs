@@ -143,6 +143,7 @@ pub struct CapabilityRouter {
     rr_counters: HashMap<SimpleCapability, usize>,
 
     /// Default selection strategy
+    #[allow(dead_code)] // Reserved for future load balancing strategies
     default_strategy: SelectionStrategy,
 }
 

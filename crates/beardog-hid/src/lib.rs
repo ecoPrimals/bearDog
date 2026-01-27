@@ -66,7 +66,7 @@
 //!
 //! # FIDO2/CTAP2 Usage
 //!
-//! This crate is designed specifically for BearDog's FIDO2 support:
+//! This crate is designed specifically for `BearDog`'s FIDO2 support:
 //!
 //! ```rust,ignore
 //! use beardog_hid::{discover, open_device, HidDevice};
@@ -106,7 +106,7 @@ pub use types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 ///
 /// This function is platform-specific but always Pure Rust:
 /// - **Linux**: Scans `/dev/hidraw*` and reads `/sys/class/hidraw/` (Pure Rust file I/O)
-/// - **Android**: Uses existing StrongBox integration (JNI, Pure Rust)
+/// - **Android**: Uses existing `StrongBox` integration (JNI, Pure Rust)
 ///
 /// # Errors
 ///

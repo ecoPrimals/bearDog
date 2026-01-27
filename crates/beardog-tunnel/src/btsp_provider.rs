@@ -54,12 +54,16 @@ use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 mod contact;
 mod metrics;
 mod trust;
+mod tunnel;
 pub mod types;
 
 // Re-exports
 pub use contact::ContactInfo;
 pub use metrics::BtspMetrics;
 pub use types::{Direction, PeerInfo, SecurityContext, TrustLevel};
+
+// Internal imports
+use tunnel::Tunnel;
 
 // =============================================================================
 // Re-export Capability Types (Primary Public Interface)
@@ -125,99 +129,10 @@ pub trait BtspProvider: Send + Sync {
 // TrustLevel and PeerTrustRecord are now in the types module
 
 // =============================================================================
-// Tunnel State
+// Tunnel State (Extracted to tunnel module)
 // =============================================================================
 
-/// Active tunnel state
-struct Tunnel {
-    pub id: String,
-    pub peer_id: String,
-    pub peer_endpoint: String,
-    pub established_at: DateTime<Utc>,
-
-    // Genetic crypto session key (derived with key lineage)
-    pub session_key: Zeroizing<Vec<u8>>,
-
-    // Statistics
-    pub bytes_sent: Arc<parking_lot::Mutex<u64>>,
-    pub bytes_received: Arc<parking_lot::Mutex<u64>>,
-    pub last_activity: Arc<parking_lot::Mutex<SystemTime>>,
-
-    // Trust level
-    pub trust_level: TrustLevel,
-}
-
-impl Tunnel {
-    /// Create new tunnel
-    fn new(
-        id: String,
-        peer_id: String,
-        peer_endpoint: String,
-        session_key: Vec<u8>,
-        trust_level: TrustLevel,
-    ) -> Self {
-        Self {
-            id,
-            peer_id,
-            peer_endpoint,
-            established_at: Utc::now(),
-            session_key: Zeroizing::new(session_key),
-            bytes_sent: Arc::new(parking_lot::Mutex::new(0)),
-            bytes_received: Arc::new(parking_lot::Mutex::new(0)),
-            last_activity: Arc::new(parking_lot::Mutex::new(SystemTime::now())),
-            trust_level,
-        }
-    }
-
-    /// Check if tunnel is active (activity within last 5 minutes)
-    fn is_active(&self) -> bool {
-        let last = *self.last_activity.lock();
-        SystemTime::now()
-            .duration_since(last)
-            .map(|d| d.as_secs() < 300)
-            .unwrap_or(false)
-    }
-
-    /// Get bytes sent
-    fn bytes_sent(&self) -> u64 {
-        *self.bytes_sent.lock()
-    }
-
-    /// Get bytes received
-    fn bytes_received(&self) -> u64 {
-        *self.bytes_received.lock()
-    }
-
-    /// Get last activity time
-    fn last_activity(&self) -> DateTime<Utc> {
-        let last = *self.last_activity.lock();
-        DateTime::from(last)
-    }
-
-    /// Update activity timestamp
-    fn update_activity(&self) {
-        *self.last_activity.lock() = SystemTime::now();
-    }
-
-    /// Increment bytes sent
-    fn add_bytes_sent(&self, bytes: u64) {
-        *self.bytes_sent.lock() += bytes;
-        self.update_activity();
-    }
-
-    /// Increment bytes received
-    fn add_bytes_received(&self, bytes: u64) {
-        *self.bytes_received.lock() += bytes;
-        self.update_activity();
-    }
-}
-
-// Implement Drop to ensure keys are zeroized
-impl Drop for Tunnel {
-    fn drop(&mut self) {
-        debug!("Tunnel {} dropped - keys zeroized", self.id);
-    }
-}
+// Tunnel struct and impl extracted to tunnel.rs for better modularity
 
 // Contact exchange types are re-exported at the top
 
@@ -649,10 +564,13 @@ impl BeardogBtspProvider {
     }
 
     /// Get tunnel by ID (public API for handlers)
-    /// 
+    ///
     /// Returns a reference to the tunnel if it exists.
     pub fn get_tunnel(&self, tunnel_id: &str) -> Option<(String, String)> {
-        self.tunnels.read().get(tunnel_id).map(|t| (t.id.clone(), t.peer_id.clone()))
+        self.tunnels
+            .read()
+            .get(tunnel_id)
+            .map(|t| (t.id.clone(), t.peer_id.clone()))
     }
 
     /// Get peer trust record (public API for handlers)

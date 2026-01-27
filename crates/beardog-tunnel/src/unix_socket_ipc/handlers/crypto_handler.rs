@@ -103,7 +103,7 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_hmac_sha256,
     // Asymmetric crypto handlers
     handle_sign_ed25519,
-    // TLS handlers
+    // TLS 1.3 handlers
     handle_tls_compute_finished_verify_data,
     handle_tls_derive_application_secrets,
     handle_tls_derive_handshake_secrets,
@@ -113,6 +113,16 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_verify_ed25519,
     handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
+    // TLS 1.2 handlers (Jan 27, 2026 - Tower Atomic Pattern for Songbird)
+    handle_aes_128_gcm_decrypt,
+    handle_aes_128_gcm_encrypt,
+    handle_aes_256_gcm_decrypt,
+    handle_aes_256_gcm_encrypt,
+    handle_ecdhe_p256_compute_shared,
+    handle_ecdhe_p256_generate,
+    handle_ecdhe_p384_compute_shared,
+    handle_ecdhe_p384_generate,
+    handle_tls12_prf,
 };
 
 /// Crypto RPC handler
@@ -188,6 +198,16 @@ impl MethodHandler for CryptoHandler {
             "tls.compute_finished_verify_data",
             "tls.sign_handshake",
             "tls.verify_certificate",
+            // TLS 1.2 crypto operations (Semantic Naming - Jan 27, 2026)
+            "crypto.ecdhe.p256.generate",
+            "crypto.ecdhe.p256.compute_shared",
+            "crypto.ecdhe.p384.generate",
+            "crypto.ecdhe.p384.compute_shared",
+            "crypto.aead.aes_128_gcm.encrypt",
+            "crypto.aead.aes_128_gcm.decrypt",
+            "crypto.aead.aes_256_gcm.encrypt",
+            "crypto.aead.aes_256_gcm.decrypt",
+            "crypto.kdf.tls12_prf",
             // Genetic crypto operations (Phase 5)
             "genetic.derive_lineage_key",
             "genetic.mix_entropy",
@@ -506,6 +526,55 @@ impl MethodHandler for CryptoHandler {
             }
 
             // ====================================================================
+            // TLS 1.2 Crypto Operations (9 methods - Jan 27, 2026)
+            // Tower Atomic Pattern for Songbird integration
+            // ====================================================================
+            "crypto.ecdhe.p256.generate" => {
+                info!("🔑 Crypto: ecdhe.p256.generate (TLS 1.2 P-256 keypair for Songbird)");
+                handle_ecdhe_p256_generate(params).await
+            }
+
+            "crypto.ecdhe.p256.compute_shared" => {
+                info!("🤝 Crypto: ecdhe.p256.compute_shared (TLS 1.2 P-256 ECDH for Songbird)");
+                handle_ecdhe_p256_compute_shared(params).await
+            }
+
+            "crypto.ecdhe.p384.generate" => {
+                info!("🔑 Crypto: ecdhe.p384.generate (TLS 1.2 P-384 keypair for Songbird)");
+                handle_ecdhe_p384_generate(params).await
+            }
+
+            "crypto.ecdhe.p384.compute_shared" => {
+                info!("🤝 Crypto: ecdhe.p384.compute_shared (TLS 1.2 P-384 ECDH for Songbird)");
+                handle_ecdhe_p384_compute_shared(params).await
+            }
+
+            "crypto.aead.aes_128_gcm.encrypt" => {
+                info!("🔒 Crypto: aead.aes_128_gcm.encrypt (TLS 1.2 AES-128-GCM for Songbird)");
+                handle_aes_128_gcm_encrypt(params).await
+            }
+
+            "crypto.aead.aes_128_gcm.decrypt" => {
+                info!("🔓 Crypto: aead.aes_128_gcm.decrypt (TLS 1.2 AES-128-GCM for Songbird)");
+                handle_aes_128_gcm_decrypt(params).await
+            }
+
+            "crypto.aead.aes_256_gcm.encrypt" => {
+                info!("🔒 Crypto: aead.aes_256_gcm.encrypt (TLS 1.2 AES-256-GCM for Songbird)");
+                handle_aes_256_gcm_encrypt(params).await
+            }
+
+            "crypto.aead.aes_256_gcm.decrypt" => {
+                info!("🔓 Crypto: aead.aes_256_gcm.decrypt (TLS 1.2 AES-256-GCM for Songbird)");
+                handle_aes_256_gcm_decrypt(params).await
+            }
+
+            "crypto.kdf.tls12_prf" => {
+                info!("🔑 Crypto: kdf.tls12_prf (TLS 1.2 PRF key expansion for Songbird)");
+                handle_tls12_prf(params).await
+            }
+
+            // ====================================================================
             // Genetic Crypto Operations - Phase 5 (4 methods)
             // ====================================================================
             "genetic.derive_lineage_key" => {
@@ -572,11 +641,11 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 49 methods (Phase 1-8 + SHA-384 evolution)
+        // Should have 58 methods (Phase 1-8 + TLS 1.2 - Jan 27, 2026)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
         //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
-        //           + 6 password + 6 TLS + 4 genetic
-        assert_eq!(methods.len(), 49);
+        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 4 genetic
+        assert_eq!(methods.len(), 58);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -619,8 +688,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            49,
-            "Should have exactly 49 crypto methods (Phase 1-8 + SHA-384 evolution)"
+            58,
+            "Should have exactly 58 crypto methods (Phase 1-8 + TLS 1.2 - Jan 27, 2026)"
         );
     }
 }

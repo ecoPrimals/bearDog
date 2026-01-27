@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+description = "Inter-process communication layer for BearDog - Unix sockets, JSON-RPC"
+repository = "https://github.com/ecoPrimals/beardog"
+keywords = ["ipc", "json-rpc", "unix-socket", "beardog"]
+categories = ["network-programming", "asynchronous"]
 
 [dependencies]
 # BearDog core types

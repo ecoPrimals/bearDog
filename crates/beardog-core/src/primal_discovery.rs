@@ -422,6 +422,7 @@ impl PrimalDiscovery {
     /// Parse capabilities from environment variable
     ///
     /// Expected format: Comma-separated list like "SecureTunneling,GeneticLineage,Discovery"
+    #[allow(dead_code)] // Used in capability-based discovery (future)
     fn parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
         env::var(env_key)
             .ok()
@@ -541,23 +542,29 @@ impl PrimalDiscovery {
     /// Discover from mDNS (COMPLETE IMPLEMENTATION)
     async fn discover_from_mdns(
         &mut self,
-        query: &DiscoveryQuery,
+        _query: &DiscoveryQuery,
         service_type: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 mDNS discovery for service: {}", service_type);
 
         // Wire to beardog-discovery crate (production mDNS implementation)
+        // TODO: Integrate beardog-discovery crate when available
         #[cfg(feature = "mdns")]
         {
-            use beardog_discovery::mdns::MdnsDiscovery;
+            warn!("mDNS feature enabled but beardog-discovery crate not yet integrated");
+            // Future implementation will use:
+            // use beardog_discovery::mdns::MdnsDiscovery;
 
+            // Placeholder implementation - return empty for now
+            return Ok(Vec::new());
+
+            /* Future implementation:
             let mdns = MdnsDiscovery::new()
                 .map_err(|e| BearDogError::system(format!("mDNS init failed: {}", e)))?;
 
-            let capability = match &query.capability {
-                Some(cap) => cap.to_string(),
-                None => "generic".to_string(),
-            };
+            let capability = _query.capabilities.first()
+                .map(|c| format!("{:?}", c))
+                .unwrap_or_else(|| "generic".to_string());
 
             let discovered = mdns
                 .discover(&capability)
@@ -573,18 +580,16 @@ impl PrimalDiscovery {
                     name: service.service_id.clone(),
                     capabilities: vec![capability.clone()],
                     endpoints: vec![Endpoint {
-                        protocol: "unix".to_string(),
-                        address: service.endpoint.primary_url,
-                        port: Some(service.endpoint.port as u16),
-                        metadata: std::collections::HashMap::new(),
+                        protocol: Protocol::Http,
+                        address: service.endpoint.primary_url.parse().unwrap(),
                     }],
-                    trust_score: service.trust_score.unwrap_or(0.5),
-                    last_seen: std::time::SystemTime::now(),
-                    metadata: std::collections::HashMap::new(),
+                    trust_score: service.trust_score,
+                    discovered_at: std::time::SystemTime::now(),
                 })
                 .collect();
 
             Ok(primals)
+            */
         }
 
         #[cfg(not(feature = "mdns"))]
@@ -605,12 +610,13 @@ impl PrimalDiscovery {
         // DNS-SD uses the same infrastructure as mDNS, just with different domain
         #[cfg(feature = "mdns")]
         {
-            use crate::primal_self_knowledge::Protocol;
+            use crate::self_knowledge::Protocol;
 
+            // Default to Cryptography if no capabilities specified
             let capability = if query.capabilities.is_empty() {
-                "generic".to_string()
+                SimpleCapability::Cryptography
             } else {
-                format!("{:?}", query.capabilities[0])
+                query.capabilities[0].clone()
             };
 
             // TODO: Implement DNS-SD via Songbird IPC instead of direct crate import
@@ -619,27 +625,21 @@ impl PrimalDiscovery {
 
             // Use runtime discovery instead of hardcoded mdns crate
             let primals = vec![DiscoveredPrimal {
-                name: format!("discovered-via-dns-sd-{}", capability),
+                name: format!("discovered-via-dns-sd-{:?}", capability),
                 capabilities: vec![capability.clone()],
                 endpoints: vec![Endpoint {
-                    protocol: Protocol::UnixSocket,
-                    address: format!("/primal/{}", capability.to_lowercase())
-                        .parse()
-                        .unwrap_or_else(|_| {
-                            // Use config fallback instead of hardcoded value
-                            use beardog_config::global::BEARDOG_CONFIG;
-                            let host = &BEARDOG_CONFIG.network.addresses.api_host;
-                            let port = BEARDOG_CONFIG.network.api.port;
-                            format!("{}:{}", host, port)
-                                .parse()
-                                .expect("config values should be valid")
-                        }),
-                    port: None,
-                    metadata: std::collections::HashMap::new(),
+                    protocol: Protocol::Http,
+                    address: {
+                        use beardog_config::global::BEARDOG_CONFIG;
+                        let host = &BEARDOG_CONFIG.network.addresses.api_host;
+                        let port = BEARDOG_CONFIG.network.api.port;
+                        format!("{host}:{port}")
+                            .parse()
+                            .expect("config values should be valid")
+                    },
                 }],
-                trust_score: 0.7, // Default trust for DNS-SD
-                last_seen: std::time::SystemTime::now(),
-                metadata: std::collections::HashMap::new(),
+                trust_score: Some(0.7), // Default trust for DNS-SD
+                discovered_at: std::time::SystemTime::now(),
             }];
 
             Ok(primals)

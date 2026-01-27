@@ -544,25 +544,25 @@ impl BtspHandler {
                 let (_tunnel_id, peer_id) = btsp_provider
                     .get_tunnel(&verify_params.tunnel_id)
                     .ok_or_else(|| format!("Tunnel not found: {}", verify_params.tunnel_id))?;
-                
+
                 // Get peer trust record
                 let trust_record = btsp_provider.get_peer_trust_record(&peer_id);
-                
+
                 match trust_record {
                     Some(record) => {
                         use crate::btsp_provider::types::TrustLevel;
                         let is_trusted = record.trust_level == TrustLevel::Verified
                             || record.trust_level == TrustLevel::Trusted;
-                        
+
                         let trust_level_str = format!("{:?}", record.trust_level);
-                        
+
                         info!(
                             "✅ Peer {} trust evaluation: {} (level: {})",
                             peer_id,
                             if is_trusted { "TRUSTED" } else { "NOT TRUSTED" },
                             trust_level_str
                         );
-                        
+
                         Ok(serde_json::json!({
                             "valid": is_trusted,
                             "trust_level": trust_level_str.to_lowercase(),

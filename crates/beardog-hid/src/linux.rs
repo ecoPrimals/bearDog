@@ -92,10 +92,9 @@ impl LinuxHidDevice {
             .open(path)
             .await
             .map_err(|e| {
-                BearDogError::io_error(&format!(
-                    "Failed to open HID device {}: {}. \
-                     Check permissions and udev rules.",
-                    path, e
+                  BearDogError::io_error(&format!(
+                    "Failed to open HID device {path}: {e}. \
+                     Check permissions and udev rules."
                 ))
             })?;
 
@@ -124,16 +123,15 @@ impl LinuxHidDevice {
         trace!("Reading device info for: {}", dev_name);
 
         // Sysfs paths
-        let hidraw_path = format!("/sys/class/hidraw/{}", dev_name);
-        let device_path = format!("{}/device", hidraw_path);
+        let hidraw_path = format!("/sys/class/hidraw/{dev_name}");
+        let device_path = format!("{hidraw_path}/device");
 
         // Read IDs from uevent file (Pure Rust file I/O)
-        let uevent_path = format!("{}/uevent", device_path);
+        let uevent_path = format!("{device_path}/uevent");
         let uevent_content = read_to_string(&uevent_path).await.map_err(|e| {
             BearDogError::io_error(&format!(
-                "Failed to read uevent file {}: {}. \
-                 Device may not be USB HID.",
-                uevent_path, e
+                "Failed to read uevent file {uevent_path}: {e}. \
+                 Device may not be USB HID."
             ))
         })?;
 
@@ -142,15 +140,15 @@ impl LinuxHidDevice {
         let (vendor_id, product_id) = parse_hid_id(&uevent_content)?;
 
         // Read string descriptors (may fail for some devices)
-        let manufacturer = read_string_file(&format!("{}/manufacturer", device_path))
+        let manufacturer = read_string_file(&format!("{device_path}/manufacturer"))
             .await
             .unwrap_or_else(|_| "Unknown".to_string());
 
-        let product = read_string_file(&format!("{}/product", device_path))
+        let product = read_string_file(&format!("{device_path}/product"))
             .await
             .unwrap_or_else(|_| "Unknown".to_string());
 
-        let serial = read_string_file(&format!("{}/serial", device_path))
+        let serial = read_string_file(&format!("{device_path}/serial"))
             .await
             .unwrap_or_else(|_| String::new());
 
@@ -174,7 +172,7 @@ impl HidDevice for LinuxHidDevice {
         self.device
             .write_all(report)
             .await
-            .map_err(|e| BearDogError::io_error(&format!("HID write failed: {}", e)))?;
+            .map_err(|e| BearDogError::io_error(&format!("HID write failed: {e}")))?;
 
         Ok(report.len())
     }
@@ -187,7 +185,7 @@ impl HidDevice for LinuxHidDevice {
             .device
             .read(buf)
             .await
-            .map_err(|e| BearDogError::io_error(&format!("HID read failed: {}", e)))?;
+            .map_err(|e| BearDogError::io_error(&format!("HID read failed: {e}")))?;
 
         trace!("Read {} bytes from HID device", n);
         Ok(n)
@@ -229,12 +227,12 @@ pub async fn discover_hidraw() -> Result<Vec<HidDeviceInfo>, BearDogError> {
     // Pure Rust directory iteration
     let mut entries = read_dir("/dev")
         .await
-        .map_err(|e| BearDogError::io_error(&format!("Failed to read /dev: {}", e)))?;
+        .map_err(|e| BearDogError::io_error(&format!("Failed to read /dev: {e}")))?;
 
     while let Some(entry) = entries
         .next_entry()
         .await
-        .map_err(|e| BearDogError::io_error(&format!("Failed to iterate /dev: {}", e)))?
+        .map_err(|e| BearDogError::io_error(&format!("Failed to iterate /dev: {e}")))?
     {
         let file_name = entry.file_name();
         let name = file_name.to_string_lossy();
@@ -266,11 +264,11 @@ pub async fn discover_hidraw() -> Result<Vec<HidDeviceInfo>, BearDogError> {
 // Helper Functions (Pure Rust)
 // ============================================================================
 
-/// Parse HID_ID from uevent file
+/// Parse `HID_ID` from uevent file
 ///
 /// Format: `HID_ID=0003:00001209:0000BEEE` (bus:vendor:product)
 ///
-/// Returns (vendor_id, product_id)
+/// Returns `(vendor_id, product_id)`
 fn parse_hid_id(uevent_content: &str) -> Result<(u16, u16), BearDogError> {
     for line in uevent_content.lines() {
         if let Some(hid_id) = line.strip_prefix("HID_ID=") {
@@ -281,14 +279,11 @@ fn parse_hid_id(uevent_content: &str) -> Result<(u16, u16), BearDogError> {
                 let product_str = parts[2];
 
                 let vendor_id = u16::from_str_radix(vendor_str, 16).map_err(|e| {
-                    BearDogError::invalid_input(&format!("Invalid vendor ID {}: {}", vendor_str, e))
+                    BearDogError::invalid_input(&format!("Invalid vendor ID {vendor_str}: {e}"))
                 })?;
 
                 let product_id = u16::from_str_radix(product_str, 16).map_err(|e| {
-                    BearDogError::invalid_input(&format!(
-                        "Invalid product ID {}: {}",
-                        product_str, e
-                    ))
+                    BearDogError::invalid_input(&format!("Invalid product ID {product_str}: {e}"))
                 })?;
 
                 return Ok((vendor_id, product_id));
@@ -305,7 +300,7 @@ fn parse_hid_id(uevent_content: &str) -> Result<(u16, u16), BearDogError> {
 async fn read_string_file(path: &str) -> Result<String, BearDogError> {
     let content = read_to_string(path)
         .await
-        .map_err(|e| BearDogError::io_error(&format!("Failed to read {}: {}", path, e)))?;
+        .map_err(|e| BearDogError::io_error(&format!("Failed to read {path}: {e}")))?;
 
     Ok(content.trim().to_string())
 }

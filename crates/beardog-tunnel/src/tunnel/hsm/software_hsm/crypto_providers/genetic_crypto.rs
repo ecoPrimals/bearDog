@@ -135,7 +135,7 @@ impl GeneticCryptoProvider {
     /// - Windows: `BCryptGenRandom()`
     ///
     /// All implementations are Pure Rust syscall wrappers.
-    fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
+    pub fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
         let mut bytes = vec![0u8; count];
         OsRng.fill_bytes(&mut bytes);
         Ok(bytes)

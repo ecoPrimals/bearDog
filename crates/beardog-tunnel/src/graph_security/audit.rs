@@ -151,12 +151,12 @@ async fn get_template_lineage(
 /// public key, ensuring complete chain of custody.
 async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, BearDogError> {
     use base64::Engine;
-    
+
     // Check if lineage is continuous (no gaps in versions)
     if lineage.is_empty() {
         return Ok(false);
     }
-    
+
     // Check if all versions are properly signed (when signatures present)
     for (idx, version) in lineage.iter().enumerate() {
         if let Some(signature_b64) = &version.signature {
@@ -169,7 +169,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                         version.version
                     ))
                 })?;
-            
+
             // Validate Ed25519 signature length
             if signature.len() != 64 {
                 tracing::warn!(
@@ -179,7 +179,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                 );
                 return Ok(false);
             }
-            
+
             // TODO: Verify Ed25519 signature against modifier's public key
             // Future: Get public key from CollaborationService
             //
@@ -196,7 +196,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
             // if !asymmetric::verify_ed25519(&canonical_json, &signature, &public_key)? {
             //     return Ok(false);
             // }
-            
+
             tracing::debug!(
                 "✓ Lineage version {} signature format valid (verification pending CollaborationService)",
                 version.version

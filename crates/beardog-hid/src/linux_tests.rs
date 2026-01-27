@@ -76,8 +76,8 @@ async fn test_discover_hidraw_returns_result() {
             for device in &devices {
                 assert!(!device.path.is_empty());
                 assert!(device.path.contains("hidraw") || device.path.contains("/dev/"));
-                assert!(device.vendor_id.0 <= 0xFFFF);
-                assert!(device.product_id.0 <= 0xFFFF);
+                // VID/PID are u16, always <= 0xFFFF by type definition
+                let _ = (device.vendor_id.0, device.product_id.0);
             }
         }
         Err(e) => {
@@ -100,15 +100,17 @@ async fn test_discover_hidraw_device_validation() {
             assert!(!device.path.is_empty());
 
             // Manufacturer and product can be empty but should be valid strings
-            assert!(device.manufacturer.len() >= 0);
-            assert!(device.product.len() >= 0);
+            // (len() is always >= 0 by type definition, just verify fields exist)
+            let _ = device.manufacturer.len();
+            let _ = device.product.len();
 
             // Serial can be empty
-            assert!(device.serial.len() >= 0);
+            let _ = device.serial.len();
 
-            // VID/PID should be valid 16-bit values
-            assert!(device.vendor_id.0 <= 0xFFFF);
-            assert!(device.product_id.0 <= 0xFFFF);
+            // VID/PID are u16, always <= 0xFFFF by type definition
+            let _ = device.vendor_id.0;
+            // Product ID already checked above
+            let _ = device.product_id.0;
         }
     }
 }
@@ -189,7 +191,8 @@ async fn test_discover_and_filter_fido2_devices() {
             .collect();
 
         // Either we found some or we didn't - both are valid
-        assert!(fido2_devices.len() >= 0);
+        // Length is usize, always >= 0 by type definition
+        let _ = fido2_devices.len(); // Verify we can get length
 
         // If we found any, validate their structure
         for device in &fido2_devices {
@@ -313,7 +316,7 @@ async fn test_discover_empty_manufacturer() {
     if let Ok(devices) = discover_hidraw().await {
         for device in &devices {
             // Manufacturer can be empty - should be valid String
-            assert!(device.manufacturer.len() >= 0);
+            let _ = device.manufacturer.len(); // Length always >= 0
         }
     }
 }
