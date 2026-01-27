@@ -128,7 +128,10 @@ impl BeardogBtspProvider {
     }
 
     /// Get tunnel by ID
-    pub(super) fn get_tunnel(&self, tunnel_id: &str) -> Option<Tunnel> {
+    /// Get tunnel by ID
+    ///
+    /// Returns a clone of the tunnel if it exists.
+    pub fn get_tunnel(&self, tunnel_id: &str) -> Option<Tunnel> {
         let tunnels = self.tunnels.read();
         tunnels.get(tunnel_id).cloned()
     }
@@ -150,7 +153,10 @@ impl BeardogBtspProvider {
     }
 
     /// Get trust record for peer
-    pub(super) fn get_peer_trust(&self, peer_id: &str) -> Option<PeerTrustRecord> {
+    /// Get peer trust record
+    ///
+    /// Returns a clone of the trust record if it exists.
+    pub fn get_peer_trust(&self, peer_id: &str) -> Option<PeerTrustRecord> {
         let trust_records = self.peer_trust.read();
         trust_records.get(peer_id).cloned()
     }

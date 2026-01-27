@@ -526,7 +526,7 @@ impl BtspHandler {
     async fn handle_verify_peer(
         &self,
         params: Option<&serde_json::Value>,
-        _btsp_provider: &Arc<BeardogBtspProvider>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         info!("🔍 BTSP Verify Peer requested");
 
@@ -540,10 +540,48 @@ impl BtspHandler {
         // Route based on trust mode
         match verify_params.trust_mode.as_str() {
             "genetic_lineage" => {
-                // TODO: Implement using existing BTSP trust evaluation
-                Err("btsp.verify_peer (genetic_lineage) not yet implemented.\n\
-                     Use existing BTSP internal mode trust evaluation."
-                    .into())
+                // Get tunnel to find peer_id
+                let (_tunnel_id, peer_id) = btsp_provider
+                    .get_tunnel(&verify_params.tunnel_id)
+                    .ok_or_else(|| format!("Tunnel not found: {}", verify_params.tunnel_id))?;
+                
+                // Get peer trust record
+                let trust_record = btsp_provider.get_peer_trust_record(&peer_id);
+                
+                match trust_record {
+                    Some(record) => {
+                        use crate::btsp_provider::types::TrustLevel;
+                        let is_trusted = record.trust_level == TrustLevel::Verified
+                            || record.trust_level == TrustLevel::Trusted;
+                        
+                        let trust_level_str = format!("{:?}", record.trust_level);
+                        
+                        info!(
+                            "✅ Peer {} trust evaluation: {} (level: {})",
+                            peer_id,
+                            if is_trusted { "TRUSTED" } else { "NOT TRUSTED" },
+                            trust_level_str
+                        );
+                        
+                        Ok(serde_json::json!({
+                            "valid": is_trusted,
+                            "trust_level": trust_level_str.to_lowercase(),
+                            "peer_id": peer_id,
+                            "connection_count": record.connection_count,
+                            "first_seen": record.first_seen.to_rfc3339(),
+                            "last_seen": record.last_seen.to_rfc3339(),
+                        }))
+                    }
+                    None => {
+                        warn!("⚠️  No trust record found for peer: {}", peer_id);
+                        Ok(serde_json::json!({
+                            "valid": false,
+                            "trust_level": "unknown",
+                            "peer_id": peer_id,
+                            "error": "No trust record found for peer",
+                        }))
+                    }
+                }
             }
             "certificate" => {
                 info!("📡 Certificate verification is handled by Songbird (external mode)");

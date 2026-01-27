@@ -130,21 +130,21 @@ pub trait BtspProvider: Send + Sync {
 
 /// Active tunnel state
 struct Tunnel {
-    id: String,
-    peer_id: String,
-    peer_endpoint: String,
-    established_at: DateTime<Utc>,
+    pub id: String,
+    pub peer_id: String,
+    pub peer_endpoint: String,
+    pub established_at: DateTime<Utc>,
 
     // Genetic crypto session key (derived with key lineage)
-    session_key: Zeroizing<Vec<u8>>,
+    pub session_key: Zeroizing<Vec<u8>>,
 
     // Statistics
-    bytes_sent: Arc<parking_lot::Mutex<u64>>,
-    bytes_received: Arc<parking_lot::Mutex<u64>>,
-    last_activity: Arc<parking_lot::Mutex<SystemTime>>,
+    pub bytes_sent: Arc<parking_lot::Mutex<u64>>,
+    pub bytes_received: Arc<parking_lot::Mutex<u64>>,
+    pub last_activity: Arc<parking_lot::Mutex<SystemTime>>,
 
     // Trust level
-    trust_level: TrustLevel,
+    pub trust_level: TrustLevel,
 }
 
 impl Tunnel {
@@ -646,6 +646,18 @@ impl BeardogBtspProvider {
             "/primal/songbird",       // Primal IPC protocol standard
             "/tmp/beardog-discovery", // Development fallback
         ]
+    }
+
+    /// Get tunnel by ID (public API for handlers)
+    /// 
+    /// Returns a reference to the tunnel if it exists.
+    pub fn get_tunnel(&self, tunnel_id: &str) -> Option<(String, String)> {
+        self.tunnels.read().get(tunnel_id).map(|t| (t.id.clone(), t.peer_id.clone()))
+    }
+
+    /// Get peer trust record (public API for handlers)
+    pub fn get_peer_trust_record(&self, peer_id: &str) -> Option<PeerTrustRecord> {
+        self.trust_db.read().get(peer_id).cloned()
     }
 
     /// Generate lineage proof (cryptographic verification of genetic relationship)

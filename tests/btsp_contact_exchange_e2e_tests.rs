@@ -78,22 +78,16 @@ async fn test_e2e_contact_info_fields() {
 
 #[tokio::test]
 async fn test_e2e_lineage_path_same_family() {
-    env::set_var("BEARDOG_FAMILY_ID", "nat0");
-
-    let our_family = env::var("FAMILY_ID")
-        .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
-        .unwrap();
+    // ✅ CONCURRENT-SAFE: Use explicit values, no env vars
+    let our_family = "nat0";
     let peer_family = "nat0";
 
     // Same family should have a lineage path
     assert_eq!(our_family, peer_family);
 
-    let lineage_path = [our_family.clone(), "tower-b".to_string()];
+    let lineage_path = [our_family.to_string(), "tower-b".to_string()];
     assert_eq!(lineage_path.len(), 2);
     assert_eq!(lineage_path[0], "nat0");
-
-    // Cleanup
-    env::remove_var("BEARDOG_FAMILY_ID");
 }
 
 #[tokio::test]
@@ -177,9 +171,9 @@ async fn test_e2e_search_depth_limits() {
 
 #[tokio::test]
 async fn test_e2e_complete_contact_exchange_flow() {
-    // Setup: Tower A wants to contact Tower B
-    env::set_var("BEARDOG_FAMILY_ID", "nat0");
-    env::set_var("BEARDOG_NODE_ID", "tower-a");
+    // ✅ CONCURRENT-SAFE: Use explicit values, no env vars
+    let our_family = "nat0";
+    let our_node_id = "tower-a";
 
     // Step 1: Tower A sends request
     let request = json!({
@@ -189,16 +183,12 @@ async fn test_e2e_complete_contact_exchange_flow() {
     });
 
     // Step 2: BearDog processes request (simulated)
-    let our_family = env::var("FAMILY_ID")
-        .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
-        .unwrap();
-
     let peer_family = "nat0"; // Tower B is in same family
     let same_family = peer_family == our_family;
 
     // Step 3: Find lineage path (simulated)
     let lineage_path = if same_family {
-        vec![our_family, "tower-b".to_string()]
+        vec![our_family.to_string(), "tower-b".to_string()]
     } else {
         vec![]
     };
@@ -240,9 +230,6 @@ async fn test_e2e_complete_contact_exchange_flow() {
         .unwrap()
         .is_empty());
 
-    // Cleanup
-    env::remove_var("BEARDOG_FAMILY_ID");
-    env::remove_var("BEARDOG_NODE_ID");
 }
 
 // ========================================================================

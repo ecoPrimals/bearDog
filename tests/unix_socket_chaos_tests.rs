@@ -178,9 +178,7 @@ async fn chaos_test_readiness_race_condition() {
     // Test: Multiple threads racing to check readiness
     let (_dir, socket_path) = test_socket();
     let btsp_provider = create_test_btsp_provider().await;
-    let primal_identity = Arc::new(
-        PrimalIdentity::for_test("BearDog", "test-instance")
-    );
+    let primal_identity = Arc::new(PrimalIdentity::for_test("BearDog", "test-instance"));
     let server = Arc::new(
         UnixSocketIpcServer::new(socket_path, btsp_provider, primal_identity)
             .await
@@ -343,9 +341,7 @@ async fn chaos_test_atomic_readiness_under_load() {
     // Test: Verify atomic readiness flag remains consistent under load
     let (_dir, socket_path) = test_socket();
     let btsp_provider = create_test_btsp_provider().await;
-    let primal_identity = Arc::new(
-        PrimalIdentity::for_test("BearDog", "test-instance")
-    );
+    let primal_identity = Arc::new(PrimalIdentity::for_test("BearDog", "test-instance"));
     let server = Arc::new(
         UnixSocketIpcServer::new(socket_path.clone(), btsp_provider, primal_identity)
             .await

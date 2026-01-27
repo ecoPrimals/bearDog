@@ -48,6 +48,8 @@ pub enum TrustLevel {
     Tentative = 1,
     /// Trusted peer (multiple successful connections)
     Trusted = 2,
+    /// Verified peer (cryptographically verified via genetic lineage or certificate)
+    Verified = 3,
 }
 
 /// Peer trust record

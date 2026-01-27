@@ -94,7 +94,7 @@ async fn test_e2e_env_var_fallback_family_id() {
     // Test fallback logic without mutating global env vars
     let primary: Option<&str> = None;
     let fallback = Some("prod-family");
-    
+
     let family = primary.or(fallback).unwrap();
     let node = "prod-node";
 
@@ -121,7 +121,7 @@ async fn test_e2e_env_var_primary_precedence() {
     // Test fallback logic: primary takes precedence
     let primary = Some("primary");
     let fallback = Some("fallback");
-    
+
     let family = primary.or(fallback).unwrap();
 
     assert_eq!(family, "primary");

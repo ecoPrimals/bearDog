@@ -155,12 +155,90 @@ fn validate_structure(template: &GraphTemplate) -> Vec<ValidationIssue> {
 }
 
 /// Verify template signature
+///
+/// # Current Limitations
+///
+/// Signature verification requires the creator's public key, which will be
+/// retrieved via the CollaborationService once available. Until then, we
+/// issue a warning for signed templates without verification capability.
+///
+/// # Future Implementation
+///
+/// 1. Query CollaborationService for creator's Ed25519 public key
+/// 2. Canonicalize template (excluding signature field)
+/// 3. Verify Ed25519 signature against canonical form
 async fn verify_signature(
-    _template: &GraphTemplate,
+    template: &GraphTemplate,
 ) -> Result<Option<ValidationIssue>, BearDogError> {
-    // TODO: Implement Ed25519 signature verification
-    // For now, accept any signature
-    Ok(None)
+    use base64::Engine;
+    
+    // Extract signature
+    let signature_b64 = template.signature.as_ref().ok_or_else(|| {
+        BearDogError::validation("verify_signature called without signature")
+    })?;
+    
+    // Decode signature
+    let signature = base64::engine::general_purpose::STANDARD
+        .decode(signature_b64)
+        .map_err(|e| BearDogError::validation(&format!("Invalid base64 signature: {e}")))?;
+    
+    // Validate signature length (Ed25519 signatures are 64 bytes)
+    if signature.len() != 64 {
+        return Ok(Some(ValidationIssue {
+            severity: IssueSeverity::High,
+            category: ThreatCategory::Signature,
+            description: format!(
+                "Invalid Ed25519 signature length: {} bytes (expected 64)",
+                signature.len()
+            ),
+            location: Some("template.signature".to_string()),
+        }));
+    }
+    
+    // TODO: Get creator's public key via collaboration capability
+    // Future: Use CollaborationService::get_user_public_key(&template.creator)
+    // For now, we can't verify signatures without the collaboration service
+    
+    // Return low-severity issue noting signature can't be verified yet
+    Ok(Some(ValidationIssue {
+        severity: IssueSeverity::Low,
+        category: ThreatCategory::Signature,
+        description: format!(
+            "Template signature present but verification requires CollaborationService \
+            (creator: {}, signature: {} bytes)",
+            template.creator,
+            signature.len()
+        ),
+        location: Some("template.signature".to_string()),
+    }))
+    
+    // NOTE: Full implementation will look like this once collaboration service exists:
+    //
+    // // Get creator's public key
+    // let public_key = collaboration_service
+    //     .get_user_public_key(&template.creator)
+    //     .await?;
+    //
+    // // Create canonical form (template without signature)
+    // let mut canonical_template = template.clone();
+    // canonical_template.signature = None;
+    // let canonical_json = serde_json::to_vec(&canonical_template)
+    //     .map_err(|e| BearDogError::validation(format!("JSON serialization failed: {e}")))?;
+    //
+    // // Verify signature
+    // use beardog_core::crypto_service::algorithms::asymmetric;
+    // let valid = asymmetric::verify_ed25519(&canonical_json, &signature, &public_key)?;
+    //
+    // if !valid {
+    //     return Ok(Some(ValidationIssue {
+    //         severity: IssueSeverity::Critical,
+    //         category: ThreatCategory::Signature,
+    //         description: "Ed25519 signature verification FAILED".to_string(),
+    //         location: Some("template.signature".to_string()),
+    //     }));
+    // }
+    //
+    // Ok(None) // Signature valid
 }
 
 /// Scan for known vulnerabilities

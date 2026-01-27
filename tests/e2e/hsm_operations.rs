@@ -313,6 +313,7 @@ mod tests {
     /// - All detected HSMs initialize successfully
     /// - Key generation works on primary HSM
     #[tokio::test]
+    #[ignore] // Hardware detection may hang - run explicitly with: cargo test -- --ignored
     async fn test_e2e_hsm_001_hardware_detection_and_initialization() {
         info!("🧪 E2E-HSM-001: Hardware HSM Detection & Initialization");
 
@@ -402,6 +403,7 @@ mod tests {
     /// - All crypto operations succeed
     /// - Performance acceptable
     #[tokio::test]
+    #[ignore] // Hardware detection may hang - run explicitly with: cargo test -- --ignored
     async fn test_e2e_hsm_002_softhsm2_fallback_and_operations() {
         info!("🧪 E2E-HSM-002: SoftHSM2 Fallback & Operations");
 
@@ -688,6 +690,7 @@ mod tests {
     /// - Zero operation failures during failover
     /// - Recovery to primary succeeds
     #[tokio::test]
+    #[ignore] // Hardware detection may hang - run explicitly with: cargo test -- --ignored
     async fn test_e2e_hsm_005_failure_and_recovery() {
         info!("🧪 E2E-HSM-005: HSM Failure & Recovery");
 

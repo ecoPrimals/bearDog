@@ -6,6 +6,7 @@
 //! - Concurrent service spawning
 //! - Environment variable handling
 
+use serial_test::serial;
 use std::time::Duration;
 
 // ============================================================================
@@ -116,19 +117,18 @@ async fn test_e2e_port_zero_for_random_assignment() {
 // ============================================================================
 
 #[tokio::test]
-async fn test_e2e_socket_path_with_family_and_node() {
-    std::env::set_var("BEARDOG_FAMILY_ID", "nat0");
-    std::env::set_var("BEARDOG_NODE_ID", "tower1");
+async fn test_e2e_socket_path_construction() {
+    // ✅ CONCURRENT-SAFE: Test socket path formatting without env vars
+    
+    let family_id = "nat0";
+    let node_id = "tower1";
 
-    let family_id = std::env::var("BEARDOG_FAMILY_ID").unwrap();
-    let node_id = std::env::var("BEARDOG_NODE_ID").unwrap();
-
-    let expected_socket = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
-    assert_eq!(expected_socket, "/tmp/beardog-nat0-tower1.sock");
-
-    // Cleanup
-    std::env::remove_var("BEARDOG_FAMILY_ID");
-    std::env::remove_var("BEARDOG_NODE_ID");
+    let socket_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
+    assert_eq!(socket_path, "/tmp/beardog-nat0-tower1.sock");
+    
+    // Test with different values
+    let socket_path2 = format!("/tmp/beardog-{}-{}.sock", "prod", "node5");
+    assert_eq!(socket_path2, "/tmp/beardog-prod-node5.sock");
 }
 
 #[tokio::test]
@@ -270,35 +270,42 @@ async fn test_e2e_concurrent_service_spawn() {
 // ============================================================================
 
 #[tokio::test]
-async fn test_e2e_env_var_defaults() {
-    std::env::remove_var("BEARDOG_FAMILY_ID");
-    std::env::remove_var("BEARDOG_NODE_ID");
-    std::env::remove_var("BEARDOG_HTTP_ENABLED");
-
-    // Test defaults
-    let family_id = std::env::var("BEARDOG_FAMILY_ID").ok();
-    assert!(family_id.is_none(), "Should default to None");
-
-    let http_enabled =
-        std::env::var("BEARDOG_HTTP_ENABLED").unwrap_or_else(|_| "false".to_string());
-    assert_eq!(http_enabled, "false", "Should default to false");
+async fn test_e2e_config_defaults() {
+    // ✅ CONCURRENT-SAFE: Test config defaults without touching environment
+    // This tests the actual config system, not env var behavior
+    
+    use beardog_config::BearDogConfig;
+    
+    let config = BearDogConfig::default();
+    
+    // Verify config has valid structure
+    assert!(config.monitoring.metrics_port > 0);
+    assert!(!config.monitoring.log_level.is_empty());
+    
+    // Test that config can be constructed explicitly
+    let explicit_config = BearDogConfig::default();
+    assert!(explicit_config.timeouts.health_check_secs > 0);
 }
 
 #[tokio::test]
-async fn test_e2e_env_var_overrides() {
-    std::env::set_var("BEARDOG_FAMILY_ID", "prod");
-    std::env::set_var("BEARDOG_NODE_ID", "node5");
-    std::env::set_var("BEARDOG_HTTP_ENABLED", "true");
-
-    // Test overrides
-    assert_eq!(std::env::var("BEARDOG_FAMILY_ID").unwrap(), "prod");
-    assert_eq!(std::env::var("BEARDOG_NODE_ID").unwrap(), "node5");
-    assert_eq!(std::env::var("BEARDOG_HTTP_ENABLED").unwrap(), "true");
-
-    // Cleanup
-    std::env::remove_var("BEARDOG_FAMILY_ID");
-    std::env::remove_var("BEARDOG_NODE_ID");
-    std::env::remove_var("BEARDOG_HTTP_ENABLED");
+async fn test_e2e_config_construction() {
+    // ✅ CONCURRENT-SAFE: Test explicit config construction
+    // No environment variable mutation
+    
+    use beardog_config::BearDogConfig;
+    
+    let config = BearDogConfig::default();
+    
+    // Verify config structure is valid
+    assert!(config.monitoring.metrics_port > 0);
+    assert!(config.monitoring.health_check_port > 0);
+    
+    // Test config can be cloned and modified independently
+    let mut config2 = config.clone();
+    config2.monitoring.metrics_port = 7777;
+    
+    assert_ne!(config.monitoring.metrics_port, config2.monitoring.metrics_port);
+    assert_eq!(config2.monitoring.metrics_port, 7777);
 }
 
 // ============================================================================
