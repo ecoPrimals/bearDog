@@ -213,6 +213,22 @@ impl MethodHandler for CryptoHandler {
             "genetic.mix_entropy",
             "genetic.verify_lineage",
             "genetic.generate_lineage_proof",
+            // ═══════════════════════════════════════════════════════════════
+            // Semantic Aliases (Phase 2 - wateringHole Standard)
+            // Added: January 27, 2026
+            // ═══════════════════════════════════════════════════════════════
+            // These provide semantic names for common operations, routing to
+            // the most commonly-used algorithms as sensible defaults.
+            // Production systems should use Neural API translation for
+            // full semantic flexibility.
+            "crypto.hash",             // → blake3_hash (default, fastest)
+            "crypto.hmac",             // → hmac_sha256 (default, widely used)
+            "crypto.sign",             // → sign_ed25519 (default, modern)
+            "crypto.verify",           // → verify_ed25519 (default, modern)
+            "crypto.encrypt",          // → chacha20_poly1305_encrypt (default, fast)
+            "crypto.decrypt",          // → chacha20_poly1305_decrypt (default, fast)
+            "crypto.generate_keypair", // → x25519_generate_ephemeral (default, ECDH)
+            "crypto.derive_secret",    // → x25519_derive_secret (default, ECDH)
         ]
     }
 
@@ -627,6 +643,53 @@ impl MethodHandler for CryptoHandler {
                 .map_err(|e| e.to_string())
             }
 
+            // ====================================================================
+            // Semantic Aliases (Phase 2 - wateringHole Standard)
+            // Added: January 27, 2026
+            // ====================================================================
+            // These route to the most commonly-used algorithm as a sensible default.
+            // Neural API provides full semantic flexibility in production.
+            
+            "crypto.hash" => {
+                info!("🔐 Crypto: hash (semantic → blake3_hash)");
+                handle_blake3_hash(params).await
+            }
+            
+            "crypto.hmac" => {
+                info!("🔐 Crypto: hmac (semantic → hmac_sha256)");
+                handle_hmac_sha256(params).await
+            }
+            
+            "crypto.sign" => {
+                info!("✍️  Crypto: sign (semantic → sign_ed25519)");
+                handle_sign_ed25519(params).await
+            }
+            
+            "crypto.verify" => {
+                info!("✅ Crypto: verify (semantic → verify_ed25519)");
+                handle_verify_ed25519(params).await
+            }
+            
+            "crypto.encrypt" => {
+                info!("🔒 Crypto: encrypt (semantic → chacha20_poly1305_encrypt)");
+                handle_chacha20_poly1305_encrypt(params).await
+            }
+            
+            "crypto.decrypt" => {
+                info!("🔓 Crypto: decrypt (semantic → chacha20_poly1305_decrypt)");
+                handle_chacha20_poly1305_decrypt(params).await
+            }
+            
+            "crypto.generate_keypair" => {
+                info!("🔑 Crypto: generate_keypair (semantic → x25519_generate_ephemeral)");
+                handle_x25519_generate_ephemeral(params).await
+            }
+            
+            "crypto.derive_secret" => {
+                info!("🔐 Crypto: derive_secret (semantic → x25519_derive_secret)");
+                handle_x25519_derive_secret(params).await
+            }
+
             _ => Err(format!("Unknown crypto method: {}", method)),
         }
     }
@@ -641,11 +704,11 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 58 methods (Phase 1-8 + TLS 1.2 - Jan 27, 2026)
+        // Should have 66 methods (Phase 1-8 + TLS 1.2 + Semantic Aliases - Jan 27, 2026)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
         //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
-        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 4 genetic
-        assert_eq!(methods.len(), 58);
+        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 4 genetic + 8 semantic aliases
+        assert_eq!(methods.len(), 66);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -681,6 +744,16 @@ mod tests {
         assert!(methods.contains(&"genetic.mix_entropy"));
         assert!(methods.contains(&"genetic.verify_lineage"));
         assert!(methods.contains(&"genetic.generate_lineage_proof"));
+
+        // Verify semantic aliases (Phase 2 - Jan 27, 2026)
+        assert!(methods.contains(&"crypto.hash"));
+        assert!(methods.contains(&"crypto.hmac"));
+        assert!(methods.contains(&"crypto.sign"));
+        assert!(methods.contains(&"crypto.verify"));
+        assert!(methods.contains(&"crypto.encrypt"));
+        assert!(methods.contains(&"crypto.decrypt"));
+        assert!(methods.contains(&"crypto.generate_keypair"));
+        assert!(methods.contains(&"crypto.derive_secret"));
     }
 
     #[test]
@@ -688,8 +761,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            58,
-            "Should have exactly 58 crypto methods (Phase 1-8 + TLS 1.2 - Jan 27, 2026)"
+            66,
+            "Should have exactly 66 crypto methods (Phase 1-8 + TLS 1.2 + Semantic Aliases - Jan 27, 2026)"
         );
     }
 }
