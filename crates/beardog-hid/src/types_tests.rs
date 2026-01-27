@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn test_fido2_device_yubico() {
         let vid = fido2_vendors::YUBICO;
-        
+
         // All Yubico devices support FIDO2
         assert!(is_fido2_device(vid, ProductId(0x0407)));
         assert!(is_fido2_device(vid, ProductId(0x0410)));
@@ -121,14 +121,14 @@ mod tests {
         // Specific Titan models
         assert!(is_fido2_device(vid, ProductId(0x0858)));
         assert!(is_fido2_device(vid, ProductId(0x0859)));
-        
+
         // Note: VID 0x096e is shared with Feitian, so other products may also be FIDO2
     }
 
     #[test]
     fn test_fido2_device_feitian() {
         let vid = fido2_vendors::FEITIAN;
-        
+
         // Feitian devices support FIDO2
         assert!(is_fido2_device(vid, ProductId(0x0850)));
     }
@@ -219,18 +219,18 @@ mod tests {
     fn test_is_fido2_device_comprehensive() {
         // SoloKeys
         assert!(is_fido2_device(VendorId(0x1209), ProductId(0xbeee)));
-        
+
         // Yubico (any product)
         assert!(is_fido2_device(VendorId(0x1050), ProductId(0x0001)));
         assert!(is_fido2_device(VendorId(0x1050), ProductId(0xFFFF)));
-        
+
         // Google Titan (specific) - VID 0x096e is shared with Feitian
         assert!(is_fido2_device(VendorId(0x096e), ProductId(0x0858)));
         assert!(is_fido2_device(VendorId(0x096e), ProductId(0x0859)));
-        
+
         // Feitian (any product) - shares VID 0x096e with Google
         assert!(is_fido2_device(VendorId(0x096e), ProductId(0x0850)));
-        
+
         // Unknown vendors
         assert!(!is_fido2_device(VendorId(0x0000), ProductId(0x0000)));
         assert!(!is_fido2_device(VendorId(0xFFFF), ProductId(0xFFFF)));
@@ -252,4 +252,3 @@ mod tests {
         assert!(debug_str.contains("beee") || debug_str.contains("48878")); // hex or decimal
     }
 }
-

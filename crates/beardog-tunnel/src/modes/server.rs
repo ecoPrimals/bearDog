@@ -104,7 +104,7 @@ pub async fn run(
 
     // Step 6: Create Unix Socket IPC Server
     info!("\n🔌 Creating Unix Socket IPC Server...");
-    
+
     // Create primal identity from environment (fail-fast if not configured)
     let identity = Arc::new(
         beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
@@ -112,15 +112,23 @@ pub async fn run(
             BearDogError::configuration(&e.to_string())
         })?,
     );
-    info!("🆔 Identity: family={}, node={}", identity.family_id(), identity.node_id());
-    
+    info!(
+        "🆔 Identity: family={}, node={}",
+        identity.family_id(),
+        identity.node_id()
+    );
+
     let unix_server = Arc::new(
-        UnixSocketIpcServer::new(socket_config.socket_path_string(), btsp_provider.clone(), identity)
-            .await
-            .map_err(|e| {
-                error!("Failed to create Unix socket server: {}", e);
-                BearDogError::configuration(&format!("Failed to create Unix socket server: {}", e))
-            })?,
+        UnixSocketIpcServer::new(
+            socket_config.socket_path_string(),
+            btsp_provider.clone(),
+            identity,
+        )
+        .await
+        .map_err(|e| {
+            error!("Failed to create Unix socket server: {}", e);
+            BearDogError::configuration(&format!("Failed to create Unix socket server: {}", e))
+        })?,
     );
     info!("✅ Unix Socket IPC Server created\n");
 
@@ -232,19 +240,19 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
     use anyhow::Context;
     use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
     use beardog_types::primal_identity::PrimalIdentity;
-    
+
     // PHASE 1: Try Neural API (TRUE PRIMAL pattern)
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!("🌐 Neural API detected at: {}", neural_socket);
-        
+
         // Get primal identity from environment
         let identity = PrimalIdentity::from_env()
             .context("Failed to load primal identity for registration")?;
-        
+
         // Construct primal name and socket path
         let primal_name = format!("beardog-{}", identity.node_id());
         let socket_path = socket_config.socket_path_string();
-        
+
         match register_with_neural_api(&neural_socket, &primal_name, &socket_path).await {
             Ok(_) => {
                 info!("✅ Registered with Neural API (TRUE PRIMAL)");
@@ -258,7 +266,7 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
     } else {
         debug!("ℹ️  Neural API not detected, trying legacy Songbird...");
     }
-    
+
     // PHASE 2: Fallback to legacy Songbird (DEPRECATED)
     // This will be removed after full Neural API adoption
     match register_with_legacy_songbird().await {
@@ -267,7 +275,10 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
             Ok(())
         }
         Err(e) => {
-            warn!("⚠️  No discovery service available (Neural API or Songbird): {}", e);
+            warn!(
+                "⚠️  No discovery service available (Neural API or Songbird): {}",
+                e
+            );
             Err(e)
         }
     }

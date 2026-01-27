@@ -44,10 +44,17 @@ mod btsp_jsonrpc_unit_tests {
         let (_dir, socket_path) = test_socket();
         let provider = create_test_btsp_provider().await;
 
-        let server = UnixSocketIpcServer::new(&socket_path, provider, Arc::new(PrimalIdentity::for_test("test", "node1")))
-            .await
-            .unwrap();
+        let server = UnixSocketIpcServer::new(
+            &socket_path,
+            provider,
+            Arc::new(PrimalIdentity::for_test("test", "node1")),
+        )
+        .await
+        .unwrap();
 
-        assert_eq!(server.socket_path().to_str().unwrap(), socket_path.to_str().unwrap());
+        assert_eq!(
+            server.socket_path().to_str().unwrap(),
+            socket_path.to_str().unwrap()
+        );
     }
 }

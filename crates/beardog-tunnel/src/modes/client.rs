@@ -11,7 +11,7 @@ use tracing::info;
 /// Uses intelligent socket discovery following Primal IPC Protocol.
 pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<()> {
     info!("🐻 BearDog Client v{}", env!("CARGO_PKG_VERSION"));
-    
+
     // Discover server endpoint using same logic as server
     let endpoint = endpoint.unwrap_or_else(|| {
         let config = SocketConfig::from_env();
@@ -19,7 +19,7 @@ pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::R
         info!("Auto-discovered endpoint: {}", config.description());
         path
     });
-    
+
     info!("Endpoint: {}\n", endpoint);
 
     if let Some(cmd) = command {

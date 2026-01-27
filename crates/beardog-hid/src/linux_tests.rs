@@ -53,7 +53,7 @@ fn test_hid_device_info_display() {
         product: "Device".to_string(),
         serial: "SERIAL".to_string(),
     };
-    
+
     let formatted = format!("{}", info);
     assert!(formatted.contains("Test"));
     assert!(formatted.contains("Device"));
@@ -68,7 +68,7 @@ fn test_hid_device_info_display() {
 async fn test_discover_hidraw_returns_result() {
     // Test that discover_hidraw returns a valid Result type
     let result = discover_hidraw().await;
-    
+
     // Should return either Ok or Err - both are valid
     match result {
         Ok(devices) => {
@@ -84,9 +84,9 @@ async fn test_discover_hidraw_returns_result() {
             // Permission errors or I/O errors are expected in some environments
             let err_str = e.to_string();
             assert!(
-                err_str.contains("Permission denied") 
-                || err_str.contains("Failed to")
-                || err_str.contains("No such file")
+                err_str.contains("Permission denied")
+                    || err_str.contains("Failed to")
+                    || err_str.contains("No such file")
             );
         }
     }
@@ -98,14 +98,14 @@ async fn test_discover_hidraw_device_validation() {
         for device in &devices {
             // Path should be non-empty
             assert!(!device.path.is_empty());
-            
+
             // Manufacturer and product can be empty but should be valid strings
             assert!(device.manufacturer.len() >= 0);
             assert!(device.product.len() >= 0);
-            
+
             // Serial can be empty
             assert!(device.serial.len() >= 0);
-            
+
             // VID/PID should be valid 16-bit values
             assert!(device.vendor_id.0 <= 0xFFFF);
             assert!(device.product_id.0 <= 0xFFFF);
@@ -121,14 +121,14 @@ async fn test_discover_hidraw_device_validation() {
 async fn test_linux_hid_device_open_nonexistent() {
     // Opening a non-existent device should fail gracefully
     let result = LinuxHidDevice::open("/dev/hidraw999999").await;
-    
+
     assert!(result.is_err());
     if let Err(e) = result {
         let err_str = e.to_string();
         assert!(
-            err_str.contains("No such file") 
-            || err_str.contains("Failed to open")
-            || err_str.contains("not found")
+            err_str.contains("No such file")
+                || err_str.contains("Failed to open")
+                || err_str.contains("not found")
         );
     }
 }
@@ -163,9 +163,9 @@ async fn test_fido2_device_identification() {
     // Test identifying known FIDO2 devices
     let solokey_vid = VendorId(0x1209);
     let solokey_pid = ProductId(0xbeee);
-    
+
     let yubikey_vid = VendorId(0x1050);
-    
+
     // Validate known VID/PIDs
     assert_eq!(solokey_vid, VendorId(0x1209));
     assert_eq!(solokey_pid, ProductId(0xbeee));
@@ -187,10 +187,10 @@ async fn test_discover_and_filter_fido2_devices() {
                 || d.vendor_id == VendorId(0x096e)
             })
             .collect();
-        
+
         // Either we found some or we didn't - both are valid
         assert!(fido2_devices.len() >= 0);
-        
+
         // If we found any, validate their structure
         for device in &fido2_devices {
             assert!(!device.path.is_empty());
@@ -206,11 +206,11 @@ async fn test_discover_and_filter_fido2_devices() {
 #[tokio::test]
 async fn test_discover_performance() {
     use std::time::Instant;
-    
+
     let start = Instant::now();
     let _ = discover_hidraw().await;
     let duration = start.elapsed();
-    
+
     // Discovery should complete quickly (under 5 seconds)
     assert!(duration.as_secs() < 5);
 }
@@ -221,7 +221,7 @@ async fn test_concurrent_discovery() {
     let handles: Vec<_> = (0..3)
         .map(|_| tokio::spawn(async { discover_hidraw().await }))
         .collect();
-    
+
     for handle in handles {
         let result = handle.await;
         assert!(result.is_ok());
@@ -236,7 +236,7 @@ async fn test_discover_deterministic() {
     // Test that discovery is deterministic
     let result1 = discover_hidraw().await;
     let result2 = discover_hidraw().await;
-    
+
     match (result1, result2) {
         (Ok(devices1), Ok(devices2)) => {
             // Should find same number of devices (assuming no hot-plug)
@@ -276,7 +276,7 @@ fn test_vendor_id_equality() {
     let vid1 = VendorId(0x1234);
     let vid2 = VendorId(0x1234);
     let vid3 = VendorId(0x5678);
-    
+
     assert_eq!(vid1, vid2);
     assert_ne!(vid1, vid3);
 }
@@ -286,7 +286,7 @@ fn test_product_id_equality() {
     let pid1 = ProductId(0xabcd);
     let pid2 = ProductId(0xabcd);
     let pid3 = ProductId(0xef01);
-    
+
     assert_eq!(pid1, pid2);
     assert_ne!(pid1, pid3);
 }
@@ -328,7 +328,7 @@ fn test_hid_device_info_clone() {
         product: "Device".to_string(),
         serial: "SERIAL".to_string(),
     };
-    
+
     let cloned = info.clone();
     assert_eq!(info.path, cloned.path);
     assert_eq!(info.vendor_id, cloned.vendor_id);

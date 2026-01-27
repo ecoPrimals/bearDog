@@ -64,7 +64,12 @@ async fn test_hash_for_cipher_all_suites() {
     assert_eq!(result_1303["cipher_suite"], 0x1303);
 
     // Verify SHA-256 hashes are identical for 0x1301 and 0x1303
-    assert_eq!(hash_1301, BASE64.decode(result_1303["hash"].as_str().unwrap()).unwrap());
+    assert_eq!(
+        hash_1301,
+        BASE64
+            .decode(result_1303["hash"].as_str().unwrap())
+            .unwrap()
+    );
 
     // Verify SHA-384 hash is different from SHA-256
     assert_ne!(hash_1301.len(), hash_1302.len());
@@ -79,7 +84,7 @@ async fn test_handshake_secrets_sha384() {
     let pre_master_secret = vec![42u8; 32];
     let client_random = vec![1u8; 32];
     let server_random = vec![2u8; 32];
-    
+
     // SHA-384 produces 48-byte hashes
     let transcript_hash = vec![0xAAu8; 48];
 
@@ -332,4 +337,3 @@ async fn test_sha256_vs_sha384_produces_different_keys() {
 
     println!("✅ SHA-256 and SHA-384 produce cryptographically independent keys!");
 }
-

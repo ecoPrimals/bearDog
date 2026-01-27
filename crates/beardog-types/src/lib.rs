@@ -429,7 +429,6 @@ pub use beardog_errors::BearDogError;
 pub mod canonical;
 
 pub mod adapter_certificates;
-pub mod primal_identity;  // TRUE PRIMAL pattern: explicit identity injection
 /// 🔒 **CONSTRAINTS** - Universal constraint evaluation system
 ///
 /// Philosophy: Users define their own rules. We provide the framework, not the limits.
@@ -444,6 +443,7 @@ pub mod primal_identity;  // TRUE PRIMAL pattern: explicit identity injection
 pub mod constraints;
 pub mod genetics_constraints;
 pub mod genetics_constraints_helpers;
+pub mod primal_identity; // TRUE PRIMAL pattern: explicit identity injection
 
 // Core types with HSM support
 pub mod hsm;

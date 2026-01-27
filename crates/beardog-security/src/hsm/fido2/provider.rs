@@ -23,7 +23,7 @@ use beardog_hid::{open_device, HidDevice};
 /// FIDO2/CTAP2 HSM Provider (Pure Rust)
 ///
 /// Provides hardware security operations using FIDO2-compliant security keys.
-/// 
+///
 /// # Example
 ///
 /// ```rust,no_run
@@ -90,19 +90,20 @@ impl Fido2HsmProvider {
     #[cfg(feature = "fido2")]
     async fn ensure_device_open(&self) -> Result<(), BearDogError> {
         let mut device_lock = self.device.lock().await;
-        
+
         if device_lock.is_none() {
-            debug!("Opening HID device: {}", self.device_info.device_path.display());
-            
-            let device = open_device(
-                &self.device_info.device_path.to_string_lossy()
-            ).await?;
-            
+            debug!(
+                "Opening HID device: {}",
+                self.device_info.device_path.display()
+            );
+
+            let device = open_device(&self.device_info.device_path.to_string_lossy()).await?;
+
             *device_lock = Some(device);
-            
+
             info!("✅ FIDO2 device opened (Pure Rust)");
         }
-        
+
         Ok(())
     }
 
@@ -147,12 +148,15 @@ impl Fido2HsmProvider {
             ));
         }
 
-        debug!("Generating {} bytes of entropy from FIDO2 device (Pure Rust)", size);
+        debug!(
+            "Generating {} bytes of entropy from FIDO2 device (Pure Rust)",
+            size
+        );
 
         #[cfg(feature = "fido2")]
         {
             self.ensure_device_open().await?;
-            
+
             // TODO: Implement CTAP2 hmac-secret entropy generation
             // Universal CTAP2 hmac-secret protocol works with any compliant device
             Err(BearDogError::not_implemented(
@@ -185,12 +189,15 @@ impl Fido2HsmProvider {
             ));
         }
 
-        debug!("Generating resident key with algorithm: {:?} (Pure Rust)", algorithm);
+        debug!(
+            "Generating resident key with algorithm: {:?} (Pure Rust)",
+            algorithm
+        );
 
         #[cfg(feature = "fido2")]
         {
             self.ensure_device_open().await?;
-            
+
             // TODO: Implement CTAP2 makeCredential command
             // Works with any CTAP2-compliant device
             Err(BearDogError::not_implemented(
@@ -221,7 +228,7 @@ impl Fido2HsmProvider {
         #[cfg(feature = "fido2")]
         {
             self.ensure_device_open().await?;
-            
+
             // TODO: Implement CTAP2 getAssertion command
             Err(BearDogError::not_implemented(
                 "FIDO2 signing: Universal CTAP2 getAssertion pending (Phase 2)",
@@ -248,7 +255,7 @@ impl Fido2HsmProvider {
         #[cfg(feature = "fido2")]
         {
             self.ensure_device_open().await?;
-            
+
             // TODO: Implement CTAP2 getAssertion for presence
             Err(BearDogError::not_implemented(
                 "FIDO2 presence: Universal CTAP2 pending (Phase 2)",
@@ -270,17 +277,20 @@ mod tests {
     #[ignore] // Requires physical FIDO2 device
     async fn test_fido2_provider_creation() {
         use crate::hsm::fido2::discover_fido2_devices;
-        
+
         let devices = discover_fido2_devices().await.unwrap();
-        
+
         if let Some(device_info) = devices.first() {
             let provider = Fido2HsmProvider::new(device_info.clone()).await;
             assert!(provider.is_ok());
-            
+
             let provider = provider.unwrap();
             println!("Provider created for: {}", provider.name());
             println!("Supports hmac-secret: {}", provider.supports_hmac_secret());
-            println!("Supports resident keys: {}", provider.supports_resident_keys());
+            println!(
+                "Supports resident keys: {}",
+                provider.supports_resident_keys()
+            );
         }
     }
 }

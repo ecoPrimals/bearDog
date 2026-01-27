@@ -96,10 +96,10 @@ use tracing::info;
 use crate::unix_socket_ipc::handlers::crypto::{
     // Hash handlers
     handle_blake3_hash,
-    handle_hash_for_cipher,
     // Symmetric crypto handlers
     handle_chacha20_poly1305_decrypt,
     handle_chacha20_poly1305_encrypt,
+    handle_hash_for_cipher,
     handle_hmac_sha256,
     // Asymmetric crypto handlers
     handle_sign_ed25519,

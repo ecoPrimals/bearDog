@@ -243,8 +243,8 @@ pub async fn handle_tls_compute_finished_verify_data(
 
     // Validate hash length based on cipher suite
     let (expected_len, hash_algo) = match cipher_suite {
-        0x1301 | 0x1303 => (32, "SHA-256"),  // TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256
-        0x1302 => (48, "SHA-384"),           // TLS_AES_256_GCM_SHA384
+        0x1301 | 0x1303 => (32, "SHA-256"), // TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256
+        0x1302 => (48, "SHA-384"),          // TLS_AES_256_GCM_SHA384
         _ => {
             return Err(format!(
                 "Unsupported TLS 1.3 cipher suite for finished verify_data: 0x{:04x}",
@@ -266,33 +266,37 @@ pub async fn handle_tls_compute_finished_verify_data(
     // Step 1: Derive finished_key using cipher-aware HKDF-Expand-Label
     // finished_key = HKDF-Expand-Label(base_key, "finished", "", hash_len)
     // RFC 8446 Section 7.1: Label MUST include "tls13 " prefix!
-    
+
     let (finished_key, verify_data) = match cipher_suite {
         0x1301 | 0x1303 => {
             // SHA-256 path
-            let hkdf_expand_label_sha256 = |secret: &[u8], label: &str, context: &[u8], length: usize| {
-                let hkdf =
-                    Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF PRK error: {}", e))?;
+            let hkdf_expand_label_sha256 =
+                |secret: &[u8], label: &str, context: &[u8], length: usize| {
+                    let hkdf = Hkdf::<Sha256>::from_prk(secret)
+                        .map_err(|e| format!("HKDF PRK error: {}", e))?;
 
-                // RFC 8446 Section 7.1: HkdfLabel structure
-                // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
-                let tls13_label = format!("tls13 {}", label);
-                let mut hkdf_label = Vec::new();
-                hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-                hkdf_label.push(tls13_label.len() as u8);
-                hkdf_label.extend_from_slice(tls13_label.as_bytes());
-                hkdf_label.push(context.len() as u8);
-                hkdf_label.extend_from_slice(context);
+                    // RFC 8446 Section 7.1: HkdfLabel structure
+                    // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
+                    let tls13_label = format!("tls13 {}", label);
+                    let mut hkdf_label = Vec::new();
+                    hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+                    hkdf_label.push(tls13_label.len() as u8);
+                    hkdf_label.extend_from_slice(tls13_label.as_bytes());
+                    hkdf_label.push(context.len() as u8);
+                    hkdf_label.extend_from_slice(context);
 
-                let mut output = vec![0u8; length];
-                hkdf.expand(&hkdf_label, &mut output)
-                    .map_err(|e| format!("HKDF expand error: {}", e))?;
+                    let mut output = vec![0u8; length];
+                    hkdf.expand(&hkdf_label, &mut output)
+                        .map_err(|e| format!("HKDF expand error: {}", e))?;
 
-                Ok::<Vec<u8>, String>(output)
-            };
+                    Ok::<Vec<u8>, String>(output)
+                };
 
             let finished_key = hkdf_expand_label_sha256(&base_key, "finished", &[], 32)?;
-            info!("✅ Derived finished_key (SHA-256): {} bytes", finished_key.len());
+            info!(
+                "✅ Derived finished_key (SHA-256): {} bytes",
+                finished_key.len()
+            );
 
             // Compute verify_data = HMAC-SHA256(finished_key, transcript_hash)
             type HmacSha256 = Hmac<Sha256>;
@@ -305,29 +309,33 @@ pub async fn handle_tls_compute_finished_verify_data(
         }
         0x1302 => {
             // SHA-384 path
-            let hkdf_expand_label_sha384 = |secret: &[u8], label: &str, context: &[u8], length: usize| {
-                let hkdf =
-                    Hkdf::<Sha384>::from_prk(secret).map_err(|e| format!("HKDF PRK error: {}", e))?;
+            let hkdf_expand_label_sha384 =
+                |secret: &[u8], label: &str, context: &[u8], length: usize| {
+                    let hkdf = Hkdf::<Sha384>::from_prk(secret)
+                        .map_err(|e| format!("HKDF PRK error: {}", e))?;
 
-                // RFC 8446 Section 7.1: HkdfLabel structure
-                // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
-                let tls13_label = format!("tls13 {}", label);
-                let mut hkdf_label = Vec::new();
-                hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-                hkdf_label.push(tls13_label.len() as u8);
-                hkdf_label.extend_from_slice(tls13_label.as_bytes());
-                hkdf_label.push(context.len() as u8);
-                hkdf_label.extend_from_slice(context);
+                    // RFC 8446 Section 7.1: HkdfLabel structure
+                    // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
+                    let tls13_label = format!("tls13 {}", label);
+                    let mut hkdf_label = Vec::new();
+                    hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+                    hkdf_label.push(tls13_label.len() as u8);
+                    hkdf_label.extend_from_slice(tls13_label.as_bytes());
+                    hkdf_label.push(context.len() as u8);
+                    hkdf_label.extend_from_slice(context);
 
-                let mut output = vec![0u8; length];
-                hkdf.expand(&hkdf_label, &mut output)
-                    .map_err(|e| format!("HKDF expand error: {}", e))?;
+                    let mut output = vec![0u8; length];
+                    hkdf.expand(&hkdf_label, &mut output)
+                        .map_err(|e| format!("HKDF expand error: {}", e))?;
 
-                Ok::<Vec<u8>, String>(output)
-            };
+                    Ok::<Vec<u8>, String>(output)
+                };
 
             let finished_key = hkdf_expand_label_sha384(&base_key, "finished", &[], 48)?;
-            info!("✅ Derived finished_key (SHA-384): {} bytes", finished_key.len());
+            info!(
+                "✅ Derived finished_key (SHA-384): {} bytes",
+                finished_key.len()
+            );
 
             // Compute verify_data = HMAC-SHA384(finished_key, transcript_hash)
             type HmacSha384 = Hmac<Sha384>;

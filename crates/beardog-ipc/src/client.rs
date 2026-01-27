@@ -40,12 +40,17 @@ impl SongbirdClient {
     /// Connect to Songbird (validates socket exists)
     pub async fn connect() -> IpcResult<Self> {
         let client = Self::new();
-        
+
         // Test connection
         let _stream = UnixStream::connect(&client.socket_path)
             .await
-            .map_err(|e| IpcError::Connection(format!("Cannot connect to Songbird at {}: {}", client.socket_path, e)))?;
-        
+            .map_err(|e| {
+                IpcError::Connection(format!(
+                    "Cannot connect to Songbird at {}: {}",
+                    client.socket_path, e
+                ))
+            })?;
+
         info!("✅ Connected to Songbird at {}", client.socket_path);
         Ok(client)
     }
@@ -70,7 +75,10 @@ impl SongbirdClient {
         primal_name: &str,
         capabilities: Vec<Capability>,
     ) -> IpcResult<()> {
-        info!("📝 Registering {} with capabilities: {:?}", primal_name, capabilities);
+        info!(
+            "📝 Registering {} with capabilities: {:?}",
+            primal_name, capabilities
+        );
 
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
@@ -90,7 +98,11 @@ impl SongbirdClient {
         let response = self.send_request(request).await?;
 
         if let Some(result) = response.result {
-            if result.get("registered").and_then(|v| v.as_bool()).unwrap_or(false) {
+            if result
+                .get("registered")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
                 *self.primal_name.write().await = Some(primal_name.to_string());
                 info!("✅ Successfully registered {} with Songbird", primal_name);
                 Ok(())
@@ -98,9 +110,14 @@ impl SongbirdClient {
                 Err(IpcError::Protocol("Registration failed".to_string()))
             }
         } else if let Some(error) = response.error {
-            Err(IpcError::Protocol(format!("Registration error: {:?}", error)))
+            Err(IpcError::Protocol(format!(
+                "Registration error: {:?}",
+                error
+            )))
         } else {
-            Err(IpcError::Protocol("Invalid registration response".to_string()))
+            Err(IpcError::Protocol(
+                "Invalid registration response".to_string(),
+            ))
         }
     }
 
@@ -134,7 +151,8 @@ impl SongbirdClient {
         let response = self.send_request(request).await?;
 
         if let Some(result) = response.result {
-            let services = result.get("services")
+            let services = result
+                .get("services")
                 .and_then(|s| s.as_array())
                 .ok_or_else(|| IpcError::Protocol("Invalid services format".to_string()))?;
 
@@ -143,12 +161,21 @@ impl SongbirdClient {
                 .filter_map(|s| serde_json::from_value(s.clone()).ok())
                 .collect();
 
-            debug!("✅ Found {} services with capability '{}'", services.len(), capability);
+            debug!(
+                "✅ Found {} services with capability '{}'",
+                services.len(),
+                capability
+            );
             Ok(service_infos)
         } else if let Some(error) = response.error {
-            Err(IpcError::Protocol(format!("Find capability error: {:?}", error)))
+            Err(IpcError::Protocol(format!(
+                "Find capability error: {:?}",
+                error
+            )))
         } else {
-            Err(IpcError::Protocol("Invalid find capability response".to_string()))
+            Err(IpcError::Protocol(
+                "Invalid find capability response".to_string(),
+            ))
         }
     }
 
@@ -180,7 +207,8 @@ impl SongbirdClient {
     /// Send heartbeat to maintain registration
     pub async fn heartbeat(&self) -> IpcResult<()> {
         let primal_name = self.primal_name.read().await;
-        let name = primal_name.as_ref()
+        let name = primal_name
+            .as_ref()
             .ok_or_else(|| IpcError::Protocol("Not registered yet".to_string()))?;
 
         let request = JsonRpcRequest {
@@ -248,17 +276,20 @@ impl SongbirdClient {
             .map_err(|e| IpcError::Connection(format!("Failed to connect: {}", e)))?;
 
         // Serialize and send request
-        let request_json = serde_json::to_vec(&request)
-            .map_err(|e| IpcError::Serialization(e.to_string()))?;
-        
-        stream.write_all(&request_json).await
+        let request_json =
+            serde_json::to_vec(&request).map_err(|e| IpcError::Serialization(e.to_string()))?;
+
+        stream
+            .write_all(&request_json)
+            .await
             .map_err(|e| IpcError::Io(e))?;
-        stream.write_all(b"\n").await
-            .map_err(|e| IpcError::Io(e))?;
+        stream.write_all(b"\n").await.map_err(|e| IpcError::Io(e))?;
 
         // Read response
         let mut buffer = vec![0u8; 8192];
-        let n = stream.read(&mut buffer).await
+        let n = stream
+            .read(&mut buffer)
+            .await
             .map_err(|e| IpcError::Io(e))?;
 
         // Deserialize response
@@ -303,4 +334,3 @@ mod tests {
         assert_eq!(client.next_request_id(), 3);
     }
 }
-

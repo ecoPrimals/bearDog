@@ -411,7 +411,7 @@ mod tests {
         std::env::set_var("PRIMAL_NAME", "BearDog");
         std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
         std::env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9999");
-        std::env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery,Query");  // Multiple capabilities
+        std::env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery,Query"); // Multiple capabilities
 
         let adapter = UniversalAdapter::new().await.unwrap();
 
@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn test_self_knowledge_access() {
-        std::env::set_var("PRIMAL_NAME", "beardog");  // lowercase to match actual primal name
+        std::env::set_var("PRIMAL_NAME", "beardog"); // lowercase to match actual primal name
         std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
 
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -488,7 +488,7 @@ mod tests {
             let adapter = UniversalAdapter::new().await.unwrap();
 
             let sk = adapter.self_knowledge();
-            assert_eq!(sk.my_name(), "beardog");  // actual primal name is lowercase
+            assert_eq!(sk.my_name(), "beardog"); // actual primal name is lowercase
         });
 
         std::env::remove_var("PRIMAL_NAME");

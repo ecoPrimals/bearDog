@@ -49,12 +49,12 @@
 //!     let devices = discover().await?;
 //!     
 //!     for device_info in devices {
-//!         println!("Found: {} - {}", 
-//!             device_info.manufacturer, 
+//!         println!("Found: {} - {}",
+//!             device_info.manufacturer,
 //!             device_info.product
 //!         );
-//!         println!("  VID: 0x{:04x}, PID: 0x{:04x}", 
-//!             device_info.vendor_id.0, 
+//!         println!("  VID: 0x{:04x}, PID: 0x{:04x}",
+//!             device_info.vendor_id.0,
 //!             device_info.product_id.0
 //!         );
 //!         println!("  Path: {}", device_info.path);
@@ -89,7 +89,7 @@
 //! let n = device.read(&mut response).await?;
 //! ```
 
-#![forbid(unsafe_code)]  // 100% safe Rust to start
+#![forbid(unsafe_code)] // 100% safe Rust to start
 #![warn(missing_docs)]
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
@@ -189,9 +189,7 @@ pub async fn discover() -> Result<Vec<HidDeviceInfo>, beardog_errors::BearDogErr
 ///     Ok(())
 /// }
 /// ```
-pub async fn open_device(
-    path: &str,
-) -> Result<Box<dyn HidDevice>, beardog_errors::BearDogError> {
+pub async fn open_device(path: &str) -> Result<Box<dyn HidDevice>, beardog_errors::BearDogError> {
     #[cfg(target_os = "linux")]
     {
         let device = linux::LinuxHidDevice::open(path).await?;
@@ -206,4 +204,3 @@ pub async fn open_device(
         ))
     }
 }
-

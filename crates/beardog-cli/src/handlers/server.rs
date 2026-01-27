@@ -67,7 +67,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     // Create Unix socket IPC server
     info!("🔌 Creating Unix socket IPC server...");
-    
+
     // Create primal identity from environment (fail-fast if not configured)
     let identity = Arc::new(
         beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
@@ -76,12 +76,16 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             }
         })?,
     );
-    info!("🆔 Identity: family={}, node={}", identity.family_id(), identity.node_id());
-    
+    info!(
+        "🆔 Identity: family={}, node={}",
+        identity.family_id(),
+        identity.node_id()
+    );
+
     // Construct primal name for registration (before identity is moved)
     let primal_name = format!("beardog-{}", identity.node_id());
     let socket_path = args.socket.clone();
-    
+
     let server = Arc::new(
         UnixSocketIpcServer::new(&args.socket, btsp_provider, identity)
             .await
@@ -94,7 +98,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!("🌐 Neural API detected at: {}", neural_socket);
-        
+
         match register_with_neural_api(&neural_socket, &primal_name, &socket_path).await {
             Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
             Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),

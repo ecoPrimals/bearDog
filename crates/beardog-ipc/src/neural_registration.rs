@@ -142,13 +142,8 @@ pub async fn register_with_neural_api(
 }
 
 /// Register a single capability with Neural API
-async fn register_capability(
-    neural_socket: &str,
-    capability: serde_json::Value,
-) -> Result<()> {
-    let cap_name = capability["capability"]
-        .as_str()
-        .unwrap_or("unknown");
+async fn register_capability(neural_socket: &str, capability: serde_json::Value) -> Result<()> {
+    let cap_name = capability["capability"].as_str().unwrap_or("unknown");
     debug!("📤 Registering capability: {}", cap_name);
 
     let request = json!({
@@ -162,9 +157,10 @@ async fn register_capability(
     debug!("📤 Sending registration: {}", request_str);
 
     // Connect to Neural API
-    let mut stream = UnixStream::connect(neural_socket).await.context(
-        format!("Failed to connect to Neural API at {}", neural_socket),
-    )?;
+    let mut stream = UnixStream::connect(neural_socket).await.context(format!(
+        "Failed to connect to Neural API at {}",
+        neural_socket
+    ))?;
 
     // Send registration request
     stream.write_all(request_str.as_bytes()).await?;
@@ -174,8 +170,8 @@ async fn register_capability(
     let mut response = String::new();
     stream.read_to_string(&mut response).await?;
 
-    let response_json: serde_json::Value = serde_json::from_str(&response)
-        .context("Failed to parse Neural API response")?;
+    let response_json: serde_json::Value =
+        serde_json::from_str(&response).context("Failed to parse Neural API response")?;
 
     if response_json.get("error").is_some() {
         warn!(
@@ -209,7 +205,7 @@ pub fn discover_neural_api_socket_with_env(
     env_vars: &std::collections::HashMap<String, String>,
 ) -> Option<String> {
     use std::path::Path;
-    
+
     // Check NEURAL_API_SOCKET first (highest priority)
     if let Some(socket) = env_vars.get("NEURAL_API_SOCKET") {
         if !socket.is_empty() {
@@ -221,7 +217,7 @@ pub fn discover_neural_api_socket_with_env(
             return None;
         }
     }
-    
+
     // Check NEURALS_SOCKET (fallback)
     if let Some(socket) = env_vars.get("NEURALS_SOCKET") {
         if !socket.is_empty() {
@@ -233,27 +229,27 @@ pub fn discover_neural_api_socket_with_env(
             return None;
         }
     }
-    
+
     // Try default paths in priority order
     let default_paths = [
-        "/tmp/neural-api.sock",          // Primary default (biomeOS standard)
-        "/tmp/neural-api-nat0.sock",     // Legacy compatibility
+        "/tmp/neural-api.sock",      // Primary default (biomeOS standard)
+        "/tmp/neural-api-nat0.sock", // Legacy compatibility
     ];
-    
+
     for path in &default_paths {
         if Path::new(path).exists() {
             info!("🔍 Found Neural API at default path: {}", path);
             return Some(path.to_string());
         }
     }
-    
+
     info!("🔍 No Neural API socket found");
     None
 }
 
 pub fn discover_neural_api_socket() -> Option<String> {
     use std::path::Path;
-    
+
     // Check NEURAL_API_SOCKET first (highest priority)
     match std::env::var("NEURAL_API_SOCKET") {
         Ok(socket) if !socket.is_empty() => {
@@ -269,7 +265,7 @@ pub fn discover_neural_api_socket() -> Option<String> {
             // Not set, try next option
         }
     }
-    
+
     // Check NEURALS_SOCKET (fallback)
     match std::env::var("NEURALS_SOCKET") {
         Ok(socket) if !socket.is_empty() => {
@@ -285,13 +281,13 @@ pub fn discover_neural_api_socket() -> Option<String> {
             // Not set, try defaults
         }
     }
-    
+
     // Try default paths in priority order
     let default_paths = [
-        "/tmp/neural-api.sock",          // Primary default (biomeOS standard)
-        "/tmp/neural-api-nat0.sock",     // Legacy compatibility
+        "/tmp/neural-api.sock",      // Primary default (biomeOS standard)
+        "/tmp/neural-api-nat0.sock", // Legacy compatibility
     ];
-    
+
     for path in &default_paths {
         if Path::new(path).exists() {
             info!("🔍 Found Neural API socket at default path: {}", path);
@@ -300,8 +296,11 @@ pub fn discover_neural_api_socket() -> Option<String> {
             debug!("Checked default path (not found): {}", path);
         }
     }
-    
-    info!("ℹ️  No Neural API socket found (checked env vars and {} default paths)", default_paths.len());
+
+    info!(
+        "ℹ️  No Neural API socket found (checked env vars and {} default paths)",
+        default_paths.len()
+    );
     None
 }
 
@@ -337,4 +336,3 @@ mod tests {
 #[cfg(test)]
 #[path = "neural_registration_comprehensive_tests.rs"]
 mod comprehensive_tests;
-

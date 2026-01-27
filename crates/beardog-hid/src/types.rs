@@ -32,19 +32,19 @@ impl fmt::Display for ProductId {
 pub struct HidDeviceInfo {
     /// USB Vendor ID
     pub vendor_id: VendorId,
-    
+
     /// USB Product ID
     pub product_id: ProductId,
-    
+
     /// Manufacturer name (e.g., "SoloKeys", "Yubico")
     pub manufacturer: String,
-    
+
     /// Product name (e.g., "Solo 2", "YubiKey 5")
     pub product: String,
-    
+
     /// Serial number (may be empty)
     pub serial: String,
-    
+
     /// System-specific device path
     /// - Linux: `/dev/hidraw0`, `/dev/hidraw1`, etc.
     /// - Android: USB device path
@@ -170,4 +170,3 @@ pub fn is_fido2_device(vendor_id: VendorId, product_id: ProductId) -> bool {
 #[cfg(test)]
 #[path = "types_tests.rs"]
 mod tests;
-

@@ -175,7 +175,18 @@ fn derive_handshake_secrets_sha256(
     transcript_hash: &[u8],
     hash_len: usize,
     key_len: usize,
-) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>), String> {
+) -> Result<
+    (
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+    ),
+    String,
+> {
     const IV_LEN: usize = 12;
 
     // Helper: HKDF-Expand-Label for SHA-256
@@ -205,10 +216,18 @@ fn derive_handshake_secrets_sha256(
 
     let handshake_secret = Hkdf::<Sha256>::extract(Some(&early_derived), pre_master_secret);
 
-    let client_handshake_secret =
-        hkdf_expand_label(&handshake_secret.0, "c hs traffic", transcript_hash, hash_len)?;
-    let server_handshake_secret =
-        hkdf_expand_label(&handshake_secret.0, "s hs traffic", transcript_hash, hash_len)?;
+    let client_handshake_secret = hkdf_expand_label(
+        &handshake_secret.0,
+        "c hs traffic",
+        transcript_hash,
+        hash_len,
+    )?;
+    let server_handshake_secret = hkdf_expand_label(
+        &handshake_secret.0,
+        "s hs traffic",
+        transcript_hash,
+        hash_len,
+    )?;
 
     let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], key_len)?;
     let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
@@ -234,7 +253,18 @@ fn derive_handshake_secrets_sha384(
     transcript_hash: &[u8],
     hash_len: usize,
     key_len: usize,
-) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>), String> {
+) -> Result<
+    (
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+        Vec<u8>,
+    ),
+    String,
+> {
     const IV_LEN: usize = 12;
 
     // Helper: HKDF-Expand-Label for SHA-384
@@ -264,10 +294,18 @@ fn derive_handshake_secrets_sha384(
 
     let handshake_secret = Hkdf::<Sha384>::extract(Some(&early_derived), pre_master_secret);
 
-    let client_handshake_secret =
-        hkdf_expand_label(&handshake_secret.0, "c hs traffic", transcript_hash, hash_len)?;
-    let server_handshake_secret =
-        hkdf_expand_label(&handshake_secret.0, "s hs traffic", transcript_hash, hash_len)?;
+    let client_handshake_secret = hkdf_expand_label(
+        &handshake_secret.0,
+        "c hs traffic",
+        transcript_hash,
+        hash_len,
+    )?;
+    let server_handshake_secret = hkdf_expand_label(
+        &handshake_secret.0,
+        "s hs traffic",
+        transcript_hash,
+        hash_len,
+    )?;
 
     let client_write_key = hkdf_expand_label(&client_handshake_secret, "key", &[], key_len)?;
     let client_write_iv = hkdf_expand_label(&client_handshake_secret, "iv", &[], IV_LEN)?;
@@ -540,11 +578,15 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
     // Determine hash algorithm and key length based on cipher suite (RFC 8446)
     let (hash_algo, hash_len, key_len) = match cipher_suite {
         0x1301 => {
-            info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using SHA-256, 16-byte keys");
+            info!(
+                "  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using SHA-256, 16-byte keys"
+            );
             ("SHA-256", 32, 16) // SHA-256 hash (32 bytes), AES-128-GCM keys (16 bytes)
         }
         0x1302 => {
-            info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using SHA-384, 32-byte keys");
+            info!(
+                "  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using SHA-384, 32-byte keys"
+            );
             ("SHA-384", 48, 32) // SHA-384 hash (48 bytes), AES-256-GCM keys (32 bytes)
         }
         0x1303 => {
@@ -786,11 +828,15 @@ pub async fn handle_tls_derive_application_secrets(
     // Determine hash algorithm and key length based on cipher suite (RFC 8446)
     let (hash_algo, hash_len, key_len, iv_len) = match cipher_suite {
         0x1301 => {
-            info!("  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using SHA-256, 16-byte keys");
+            info!(
+                "  → Cipher suite: 0x1301 (TLS_AES_128_GCM_SHA256) - using SHA-256, 16-byte keys"
+            );
             ("SHA-256", 32, 16, 12)
         }
         0x1302 => {
-            info!("  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using SHA-384, 32-byte keys");
+            info!(
+                "  → Cipher suite: 0x1302 (TLS_AES_256_GCM_SHA384) - using SHA-384, 32-byte keys"
+            );
             ("SHA-384", 48, 32, 12)
         }
         0x1303 => {
@@ -824,8 +870,11 @@ pub async fn handle_tls_derive_application_secrets(
         ));
     }
 
-    info!("✅ Base64 decoding complete: handshake_secret={} bytes, transcript_hash={} bytes", 
-          handshake_secret.len(), transcript_hash.len());
+    info!(
+        "✅ Base64 decoding complete: handshake_secret={} bytes, transcript_hash={} bytes",
+        handshake_secret.len(),
+        transcript_hash.len()
+    );
 
     // EXECUTION TRACE: About to enter comprehensive debug logging
     info!("🎯 CHECKPOINT: Starting RFC 8446 compliant key derivation...");
@@ -835,10 +884,23 @@ pub async fn handle_tls_derive_application_secrets(
     info!("🔍 BEARDOG v0.19.0+ APPLICATION KEY DERIVATION - RFC 8446 COMPLIANT (SHA-384 READY)");
     info!("════════════════════════════════════════════════════════════");
     info!("RFC 8446 Section 7.1: Application Secret Derivation");
-    info!("  • Handshake secret: {} bytes (from derive_handshake_secrets)", handshake_secret.len());
-    info!("  • Transcript hash: {} bytes ({} of all handshake messages)", transcript_hash.len(), hash_algo);
-    info!("  • Transcript hash (hex): {}", hex::encode(&transcript_hash));
-    info!("  • Cipher suite: 0x{:04x} → hash: {}, key_len: {} bytes", cipher_suite, hash_algo, key_len);
+    info!(
+        "  • Handshake secret: {} bytes (from derive_handshake_secrets)",
+        handshake_secret.len()
+    );
+    info!(
+        "  • Transcript hash: {} bytes ({} of all handshake messages)",
+        transcript_hash.len(),
+        hash_algo
+    );
+    info!(
+        "  • Transcript hash (hex): {}",
+        hex::encode(&transcript_hash)
+    );
+    info!(
+        "  • Cipher suite: 0x{:04x} → hash: {}, key_len: {} bytes",
+        cipher_suite, hash_algo, key_len
+    );
 
     // Dispatch to hash-specific derivation based on cipher suite
     let (
@@ -851,11 +913,21 @@ pub async fn handle_tls_derive_application_secrets(
     ) = match cipher_suite {
         0x1301 | 0x1303 => {
             // SHA-256 based cipher suites
-            derive_application_secrets_sha256(&handshake_secret, &transcript_hash, hash_len, key_len)?
+            derive_application_secrets_sha256(
+                &handshake_secret,
+                &transcript_hash,
+                hash_len,
+                key_len,
+            )?
         }
         0x1302 => {
             // SHA-384 based cipher suite
-            derive_application_secrets_sha384(&handshake_secret, &transcript_hash, hash_len, key_len)?
+            derive_application_secrets_sha384(
+                &handshake_secret,
+                &transcript_hash,
+                hash_len,
+                key_len,
+            )?
         }
         _ => unreachable!("Cipher suite already validated"),
     };
@@ -863,10 +935,16 @@ pub async fn handle_tls_derive_application_secrets(
     info!("────────────────────────────────────────────────────────────");
     info!("RFC 8446 Key Schedule - Application Stage ({}):", hash_algo);
     info!("────────────────────────────────────────────────────────────");
-    info!("  ✅ Client Application Traffic Secret ({} bytes):", client_app_secret.len());
+    info!(
+        "  ✅ Client Application Traffic Secret ({} bytes):",
+        client_app_secret.len()
+    );
     info!("         {}", hex::encode(&client_app_secret));
     info!("");
-    info!("  ✅ Server Application Traffic Secret ({} bytes):", server_app_secret.len());
+    info!(
+        "  ✅ Server Application Traffic Secret ({} bytes):",
+        server_app_secret.len()
+    );
     info!("         {}", hex::encode(&server_app_secret));
     info!("");
     info!("  ✅ Client Write Key ({} bytes):", client_write_key.len());

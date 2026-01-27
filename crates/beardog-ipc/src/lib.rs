@@ -30,29 +30,31 @@
 //!     ).await?;
 //!     
 //!     // Discover crypto service
-//!     let crypto = client.find_capability("crypto").await?;
-//!     println!("Found crypto service at: {}", crypto.endpoint);
+//!     let services = client.find_capability("crypto").await?;
+//!     if let Some(crypto) = services.first() {
+//!         println!("Found crypto service at: {}", crypto.endpoint);
+//!     }
 //!     
 //!     Ok(())
 //! }
 //! ```
 
 pub mod client;
-pub mod types;
 pub mod error;
+pub mod neural_registration; // Neural API auto-registration (Tower Atomic)
 pub mod protocol;
-pub mod neural_registration;  // Neural API auto-registration (Tower Atomic)
 pub mod registry_client;
+pub mod types;
 
 pub use client::SongbirdClient;
-pub use types::{Capability, ServiceInfo, DiscoveryQuery};
 pub use error::{IpcError, IpcResult};
+pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 // Neural API auto-registration (Tower Atomic TRUE PRIMAL)
 pub use neural_registration::{discover_neural_api_socket, register_with_neural_api};
 
 // Registry client for JSON-RPC registration
-pub use registry_client::{PrimalRegistryClient, JsonRpcRequest};
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
+pub use registry_client::{JsonRpcRequest, PrimalRegistryClient};
 
 /// Primal IPC Protocol version
 pub const PROTOCOL_VERSION: &str = "1.0";

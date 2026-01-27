@@ -32,4 +32,3 @@ pub enum IpcError {
 
 /// Result type for IPC operations
 pub type IpcResult<T> = Result<T, IpcError>;
-

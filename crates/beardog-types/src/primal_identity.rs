@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn test_for_test_constructor() {
         let identity = PrimalIdentity::for_test("test-family", "test-node");
-        
+
         assert_eq!(identity.family_id(), "test-family");
         assert_eq!(identity.node_id(), "test-node");
     }
@@ -157,7 +157,7 @@ mod tests {
     #[test]
     fn test_encryption_tag() {
         let identity = PrimalIdentity::for_test("nat0", "tower1");
-        
+
         assert_eq!(identity.encryption_tag(), "beardog:family:nat0");
     }
 
@@ -165,7 +165,7 @@ mod tests {
     fn test_clone_and_equality() {
         let identity1 = PrimalIdentity::for_test("family1", "node1");
         let identity2 = identity1.clone();
-        
+
         assert_eq!(identity1, identity2);
     }
 
@@ -173,19 +173,19 @@ mod tests {
     fn test_different_identities_not_equal() {
         let identity1 = PrimalIdentity::for_test("family1", "node1");
         let identity2 = PrimalIdentity::for_test("family2", "node2");
-        
+
         assert_ne!(identity1, identity2);
     }
 
     #[test]
-    #[serial_test::serial]  // Only this test needs serial (env vars)
+    #[serial_test::serial] // Only this test needs serial (env vars)
     fn test_from_env_success() {
         // Set environment variables
         std::env::set_var("FAMILY_ID", "env-family");
         std::env::set_var("NODE_ID", "env-node");
 
         let identity = PrimalIdentity::from_env().expect("Should read from env");
-        
+
         assert_eq!(identity.family_id(), "env-family");
         assert_eq!(identity.node_id(), "env-node");
 
@@ -195,18 +195,18 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]  // Only this test needs serial (env vars)
+    #[serial_test::serial] // Only this test needs serial (env vars)
     fn test_from_env_beardog_prefix() {
         // Clear standard vars
         std::env::remove_var("FAMILY_ID");
         std::env::remove_var("NODE_ID");
-        
+
         // Set BEARDOG_ prefixed vars
         std::env::set_var("BEARDOG_FAMILY_ID", "beardog-family");
         std::env::set_var("BEARDOG_NODE_ID", "beardog-node");
 
         let identity = PrimalIdentity::from_env().expect("Should read BEARDOG_ vars");
-        
+
         assert_eq!(identity.family_id(), "beardog-family");
         assert_eq!(identity.node_id(), "beardog-node");
 
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]  // Only this test needs serial (env vars)
+    #[serial_test::serial] // Only this test needs serial (env vars)
     fn test_from_env_missing_family_id() {
         // Clear all relevant env vars
         std::env::remove_var("FAMILY_ID");
@@ -224,7 +224,7 @@ mod tests {
         std::env::set_var("NODE_ID", "test-node");
 
         let result = PrimalIdentity::from_env();
-        
+
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.to_string().contains("FAMILY_ID"));
@@ -234,7 +234,7 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]  // Only this test needs serial (env vars)
+    #[serial_test::serial] // Only this test needs serial (env vars)
     fn test_from_env_missing_node_id() {
         // Clear all relevant env vars
         std::env::set_var("FAMILY_ID", "test-family");
@@ -242,7 +242,7 @@ mod tests {
         std::env::remove_var("BEARDOG_NODE_ID");
 
         let result = PrimalIdentity::from_env();
-        
+
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.to_string().contains("NODE_ID"));
@@ -251,4 +251,3 @@ mod tests {
         std::env::remove_var("FAMILY_ID");
     }
 }
-

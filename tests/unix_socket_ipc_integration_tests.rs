@@ -64,9 +64,13 @@ async fn start_server_ready(
     let btsp_provider = create_test_btsp_provider().await;
 
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .unwrap(),
     );
     let ready_flag = server.readiness_flag();
     let server_clone = Arc::clone(&server);
@@ -112,9 +116,13 @@ async fn test_socket_creation() {
     let (_dir, socket_path) = test_socket();
     let btsp_provider = create_test_btsp_provider().await;
 
-    let server = UnixSocketIpcServer::new(socket_path.clone(), btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-        .await
-        .unwrap();
+    let server = UnixSocketIpcServer::new(
+        socket_path.clone(),
+        btsp_provider,
+        Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+    )
+    .await
+    .unwrap();
 
     assert_eq!(server.socket_path(), socket_path);
     // Note: Socket is created on start(), not new()
@@ -126,9 +134,13 @@ async fn test_readiness_flag() {
     let btsp_provider = create_test_btsp_provider().await;
 
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .unwrap(),
     );
 
     // Should not be ready initially
@@ -315,9 +327,13 @@ async fn test_socket_cleanup_on_crash() {
     // Should handle cleanup of stale socket
     let btsp_provider = create_test_btsp_provider().await;
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path.clone(), btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path.clone(),
+            btsp_provider,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .unwrap(),
     );
 
     let server_clone = Arc::clone(&server);
@@ -340,9 +356,13 @@ async fn test_wait_ready_timeout() {
     let btsp_provider = create_test_btsp_provider().await;
 
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .unwrap(),
     );
 
     // Don't start server, just try to wait

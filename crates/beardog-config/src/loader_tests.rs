@@ -28,9 +28,7 @@ mod tests {
 
     #[test]
     fn test_config_loader_with_platform_defaults() {
-        let loader = ConfigLoader::new()
-            .with_defaults()
-            .with_platform_defaults();
+        let loader = ConfigLoader::new().with_defaults().with_platform_defaults();
 
         assert!(loader.build().is_ok(), "Platform defaults should not fail");
     }

@@ -68,8 +68,8 @@ use std::env;
 ///
 /// // Without environment variables set, uses safe defaults from NetworkConfig
 /// let config = RuntimeNetworkConfig::from_env();
-/// // The default host comes from NetworkConfig which uses "localhost"
-/// assert_eq!(config.api_url(), "https://localhost:8080");
+/// // The default host comes from NetworkConfig which uses "127.0.0.1"
+/// assert_eq!(config.api_url(), "https://127.0.0.1:8080");
 /// ```
 ///
 /// ## Using Defaults
@@ -79,7 +79,7 @@ use std::env;
 ///
 /// // Without environment variables, uses safe defaults from NetworkConfig
 /// let config = RuntimeNetworkConfig::default();
-/// assert_eq!(config.api_host, "localhost");
+/// assert_eq!(config.api_host, "127.0.0.1");
 /// assert_eq!(config.api_port, 8080);
 /// ```
 ///

@@ -275,7 +275,7 @@ impl PrimalDiscovery {
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         // Clone method to avoid borrow conflicts
         let method = self.method.clone();
-        
+
         match method {
             DiscoveryMethod::Environment => self.discover_from_env_vars(&env_vars, &query).await,
             DiscoveryMethod::Multi(methods) => {
@@ -329,7 +329,8 @@ impl PrimalDiscovery {
         &mut self,
         query: &DiscoveryQuery,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
-        self.discover_from_env_vars(&env::vars().collect(), query).await
+        self.discover_from_env_vars(&env::vars().collect(), query)
+            .await
     }
 
     /// Discover from explicit environment map
@@ -378,7 +379,8 @@ impl PrimalDiscovery {
 
                         // Also check for capabilities: PRIMAL_<NAME>_CAPABILITIES
                         let caps_key = format!("PRIMAL_{}_CAPABILITIES", name.to_uppercase());
-                        let capabilities = Self::parse_capabilities_from_env_map(env_vars, &caps_key);
+                        let capabilities =
+                            Self::parse_capabilities_from_env_map(env_vars, &caps_key);
 
                         discovered.push(DiscoveredPrimal {
                             name: name.to_lowercase(),
@@ -724,9 +726,12 @@ mod tests {
     async fn test_discover_from_env_specific_primal() {
         // ✅ Concurrent-safe: Explicit configuration, no global state modification
         let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-        
+
         let mut env_vars = HashMap::new();
-        env_vars.insert("PRIMAL_SONGBIRD_ADDR".to_string(), "127.0.0.1:9100".to_string());
+        env_vars.insert(
+            "PRIMAL_SONGBIRD_ADDR".to_string(),
+            "127.0.0.1:9100".to_string(),
+        );
 
         let query = DiscoveryQuery::by_name("Songbird");
         let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
@@ -746,10 +751,16 @@ mod tests {
     async fn test_discover_from_env_scan_all() {
         // ✅ Concurrent-safe: Explicit configuration, no global state modification
         let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-        
+
         let mut env_vars = HashMap::new();
-        env_vars.insert("PRIMAL_SONGBIRD_ADDR".to_string(), "127.0.0.1:9100".to_string());
-        env_vars.insert("PRIMAL_BEARDOG_ADDR".to_string(), "127.0.0.1:8900".to_string());
+        env_vars.insert(
+            "PRIMAL_SONGBIRD_ADDR".to_string(),
+            "127.0.0.1:9100".to_string(),
+        );
+        env_vars.insert(
+            "PRIMAL_BEARDOG_ADDR".to_string(),
+            "127.0.0.1:8900".to_string(),
+        );
 
         // Query without capability filter to test scanning all primals
         let query = DiscoveryQuery {
@@ -793,9 +804,8 @@ mod tests {
     #[test]
     fn test_discovery_method_detection_multi_default() {
         // ✅ Concurrent-safe: Explicit configuration, no env var modification
-        let discovery = PrimalDiscovery::new(DiscoveryMethod::Multi(vec![
-            DiscoveryMethod::Environment,
-        ]));
+        let discovery =
+            PrimalDiscovery::new(DiscoveryMethod::Multi(vec![DiscoveryMethod::Environment]));
         assert!(matches!(discovery.method, DiscoveryMethod::Multi(_)));
     }
 
@@ -803,9 +813,12 @@ mod tests {
     async fn test_discovered_primal_trust_score() {
         // ✅ Concurrent-safe: Explicit configuration, no global state modification
         let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-        
+
         let mut env_vars = HashMap::new();
-        env_vars.insert("PRIMAL_TRUSTED_ADDR".to_string(), "127.0.0.1:9999".to_string());
+        env_vars.insert(
+            "PRIMAL_TRUSTED_ADDR".to_string(),
+            "127.0.0.1:9999".to_string(),
+        );
 
         let query = DiscoveryQuery::by_name("Trusted");
         let primals = discovery.discover_with_env(query, env_vars).await.unwrap();

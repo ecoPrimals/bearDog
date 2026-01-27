@@ -235,7 +235,7 @@ mod tests {
     fn test_registry_creation() {
         use beardog_types::primal_identity::PrimalIdentity;
         use std::sync::Arc;
-        
+
         let identity = Arc::new(PrimalIdentity::for_test("test", "node1"));
         let registry = HandlerRegistry::new(identity);
         assert!(!registry.handlers.is_empty());

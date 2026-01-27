@@ -25,14 +25,18 @@ mod limit_tests {
     fn test_connection_limit_relationships() {
         // Compile-time assertion: min < max
         const _: () = assert!(MIN_CONNECTION_POOL_SIZE < MAX_CONNECTION_POOL_SIZE);
-        
+
         // Per-client limit should be less than total
-        assert!(MAX_CONNECTIONS_PER_CLIENT < MAX_CONNECTIONS,
-            "Per-client limit should be less than total to allow multiple clients");
-        
+        assert!(
+            MAX_CONNECTIONS_PER_CLIENT < MAX_CONNECTIONS,
+            "Per-client limit should be less than total to allow multiple clients"
+        );
+
         // Pool max should be reasonable fraction of total
-        assert!(MAX_CONNECTION_POOL_SIZE <= MAX_CONNECTIONS,
-            "Pool size should not exceed total connections");
+        assert!(
+            MAX_CONNECTION_POOL_SIZE <= MAX_CONNECTIONS,
+            "Pool size should not exceed total connections"
+        );
     }
 
     // ============================================================================
@@ -50,16 +54,22 @@ mod limit_tests {
     #[test]
     fn test_size_limit_relationships() {
         // Response can be larger than request (common pattern)
-        assert!(MAX_RESPONSE_SIZE > MAX_REQUEST_SIZE,
-            "Response size limit should be >= request size limit");
-        
+        assert!(
+            MAX_RESPONSE_SIZE > MAX_REQUEST_SIZE,
+            "Response size limit should be >= request size limit"
+        );
+
         // Headers should be much smaller than body
-        assert!(MAX_HEADER_SIZE < MAX_REQUEST_SIZE,
-            "Headers should be smaller than request body");
-        
+        assert!(
+            MAX_HEADER_SIZE < MAX_REQUEST_SIZE,
+            "Headers should be smaller than request body"
+        );
+
         // Message size should be reasonable
-        assert!(MAX_MESSAGE_SIZE >= MAX_REQUEST_SIZE || MAX_MESSAGE_SIZE <= MAX_RESPONSE_SIZE,
-            "Message size should be between request and response sizes");
+        assert!(
+            MAX_MESSAGE_SIZE >= MAX_REQUEST_SIZE || MAX_MESSAGE_SIZE <= MAX_RESPONSE_SIZE,
+            "Message size should be between request and response sizes"
+        );
     }
 
     // ============================================================================
@@ -101,10 +111,12 @@ mod limit_tests {
     fn test_concurrency_relationships() {
         // Min < Max for parallel tasks
         const _: () = assert!(MIN_PARALLEL_TASKS < MAX_PARALLEL_TASKS);
-        
+
         // Per-client should be less than total
-        assert!(MAX_CONCURRENT_OPERATIONS_PER_CLIENT < MAX_CONCURRENT_REQUESTS,
-            "Per-client concurrency should be less than total");
+        assert!(
+            MAX_CONCURRENT_OPERATIONS_PER_CLIENT < MAX_CONCURRENT_REQUESTS,
+            "Per-client concurrency should be less than total"
+        );
     }
 
     // ============================================================================
@@ -139,12 +151,16 @@ mod limit_tests {
     #[test]
     fn test_rate_limit_consistency() {
         // Per-minute should be >= per-second * 10 (allows bursts)
-        assert!(MAX_REQUESTS_PER_MINUTE >= MAX_REQUESTS_PER_SECOND * 10,
-            "Per-minute rate should allow reasonable bursts");
-        
+        assert!(
+            MAX_REQUESTS_PER_MINUTE >= MAX_REQUESTS_PER_SECOND * 10,
+            "Per-minute rate should allow reasonable bursts"
+        );
+
         // Per-hour should be >= per-minute * 10
-        assert!(MAX_REQUESTS_PER_HOUR >= MAX_REQUESTS_PER_MINUTE * 10,
-            "Per-hour rate should be reasonable");
+        assert!(
+            MAX_REQUESTS_PER_HOUR >= MAX_REQUESTS_PER_MINUTE * 10,
+            "Per-hour rate should be reasonable"
+        );
     }
 
     // ============================================================================
@@ -179,12 +195,17 @@ mod limit_tests {
     #[test]
     fn test_queue_warning_threshold() {
         // Warning should be 70% of max
-        assert_eq!(QUEUE_WARNING_THRESHOLD, (MAX_QUEUE_SIZE * 70) / 100,
-            "Warning threshold should be 70% of max queue size");
-        
+        assert_eq!(
+            QUEUE_WARNING_THRESHOLD,
+            (MAX_QUEUE_SIZE * 70) / 100,
+            "Warning threshold should be 70% of max queue size"
+        );
+
         // Warning should be less than max
-        assert!(QUEUE_WARNING_THRESHOLD < MAX_QUEUE_SIZE,
-            "Warning should trigger before queue is full");
+        assert!(
+            QUEUE_WARNING_THRESHOLD < MAX_QUEUE_SIZE,
+            "Warning should trigger before queue is full"
+        );
     }
 
     // ============================================================================
@@ -200,8 +221,10 @@ mod limit_tests {
     #[test]
     fn test_timeout_duration_relationship() {
         // Min < Max
-        assert!(MIN_TIMEOUT_DURATION < MAX_TIMEOUT_DURATION,
-            "Min timeout should be less than max timeout");
+        assert!(
+            MIN_TIMEOUT_DURATION < MAX_TIMEOUT_DURATION,
+            "Min timeout should be less than max timeout"
+        );
     }
 
     // ============================================================================
@@ -218,8 +241,10 @@ mod limit_tests {
     #[test]
     fn test_collection_limits_reasonable() {
         // Array length should be greater than map size (different use cases)
-        assert!(MAX_ARRAY_LENGTH > MAX_MAP_SIZE,
-            "Arrays typically hold more items than maps");
+        assert!(
+            MAX_ARRAY_LENGTH > MAX_MAP_SIZE,
+            "Arrays typically hold more items than maps"
+        );
     }
 
     // ============================================================================
@@ -238,14 +263,18 @@ mod limit_tests {
     fn test_security_limit_relationships() {
         // Min < Max for passwords
         const _: () = assert!(MIN_PASSWORD_LENGTH < MAX_PASSWORD_LENGTH);
-        
+
         // API keys can be longer than passwords
-        assert!(MAX_API_KEY_LENGTH > MAX_PASSWORD_LENGTH,
-            "API keys can be longer than passwords");
-        
+        assert!(
+            MAX_API_KEY_LENGTH > MAX_PASSWORD_LENGTH,
+            "API keys can be longer than passwords"
+        );
+
         // Minimum password should meet modern security standards (>= 12)
-        assert!(MIN_PASSWORD_LENGTH >= 12,
-            "Minimum password length should meet NIST SP 800-63B recommendations");
+        assert!(
+            MIN_PASSWORD_LENGTH >= 12,
+            "Minimum password length should meet NIST SP 800-63B recommendations"
+        );
     }
 
     // ============================================================================
@@ -296,12 +325,18 @@ mod limit_tests {
     #[test]
     fn test_limits_prevent_dos() {
         // Limits should be reasonable to prevent DoS
-        assert!(MAX_REQUEST_SIZE <= 100 * 1024 * 1024,
-            "Request size should have reasonable upper limit");
-        assert!(MAX_CONNECTIONS <= 10000,
-            "Connection limit should prevent resource exhaustion");
-        assert!(MAX_RETRIES <= 10,
-            "Retry limit should prevent infinite loops");
+        assert!(
+            MAX_REQUEST_SIZE <= 100 * 1024 * 1024,
+            "Request size should have reasonable upper limit"
+        );
+        assert!(
+            MAX_CONNECTIONS <= 10000,
+            "Connection limit should prevent resource exhaustion"
+        );
+        assert!(
+            MAX_RETRIES <= 10,
+            "Retry limit should prevent infinite loops"
+        );
     }
 
     // ============================================================================
@@ -311,21 +346,30 @@ mod limit_tests {
     #[test]
     fn test_connection_pool_invariants() {
         // Pool size must be between min and max connections
-        assert!(MIN_CONNECTION_POOL_SIZE >= 1,
-            "Pool must have at least 1 connection");
-        assert!(MAX_CONNECTION_POOL_SIZE <= MAX_CONNECTIONS,
-            "Pool cannot exceed total connection limit");
+        assert!(
+            MIN_CONNECTION_POOL_SIZE >= 1,
+            "Pool must have at least 1 connection"
+        );
+        assert!(
+            MAX_CONNECTION_POOL_SIZE <= MAX_CONNECTIONS,
+            "Pool cannot exceed total connection limit"
+        );
     }
 
     #[test]
     fn test_batch_size_invariants() {
         // Batch sizes must be practical
-        assert!(RECOMMENDED_BATCH_SIZE >= 1,
-            "Recommended batch must be at least 1");
-        assert!(MAX_BATCH_SIZE >= RECOMMENDED_BATCH_SIZE,
-            "Max batch must be >= recommended");
-        assert!(MAX_BULK_OPERATION_SIZE >= MAX_BATCH_SIZE,
-            "Bulk operations must be >= regular batch");
+        assert!(
+            RECOMMENDED_BATCH_SIZE >= 1,
+            "Recommended batch must be at least 1"
+        );
+        assert!(
+            MAX_BATCH_SIZE >= RECOMMENDED_BATCH_SIZE,
+            "Max batch must be >= recommended"
+        );
+        assert!(
+            MAX_BULK_OPERATION_SIZE >= MAX_BATCH_SIZE,
+            "Bulk operations must be >= regular batch"
+        );
     }
 }
-

@@ -5,9 +5,9 @@
 //! # Pure Rust Implementation
 //!
 //! Uses `beardog-hid` for 100% Pure Rust HID access (no C dependencies).
-//! 
+//!
 //! # Evolution History
-//! 
+//!
 //! - **Jan 25, 2026**: Evolved from hidapi (C library) to beardog-hid (Pure Rust)
 //!   - Eliminated C dependency
 //!   - Direct /dev/hidraw access on Linux
@@ -56,7 +56,10 @@ pub async fn discover_fido2_devices() -> Result<Vec<Fido2DeviceInfo>, BearDogErr
         // Discover all HID devices (Pure Rust!)
         let hid_devices = discover().await?;
 
-        debug!("Found {} HID devices, filtering for FIDO2...", hid_devices.len());
+        debug!(
+            "Found {} HID devices, filtering for FIDO2...",
+            hid_devices.len()
+        );
 
         // Filter for FIDO2-compatible devices
         for hid_dev in hid_devices {
@@ -71,12 +74,12 @@ pub async fn discover_fido2_devices() -> Result<Vec<Fido2DeviceInfo>, BearDogErr
 
                 // Convert to FIDO2 device info
                 let fido_info = convert_to_fido2_info(hid_dev).await?;
-                
+
                 info!(
                     "✅ Detected FIDO2 device: {} ({})",
                     fido_info.product, fido_info.manufacturer
                 );
-                
+
                 fido2_devices.push(fido_info);
             }
         }
@@ -92,9 +95,7 @@ pub async fn discover_fido2_devices() -> Result<Vec<Fido2DeviceInfo>, BearDogErr
 }
 
 #[cfg(feature = "fido2")]
-async fn convert_to_fido2_info(
-    hid_dev: HidDeviceInfo,
-) -> Result<Fido2DeviceInfo, BearDogError> {
+async fn convert_to_fido2_info(hid_dev: HidDeviceInfo) -> Result<Fido2DeviceInfo, BearDogError> {
     Ok(Fido2DeviceInfo {
         device_path: PathBuf::from(hid_dev.path.clone()),
         vendor_id: hid_dev.vendor_id.0,
@@ -148,14 +149,15 @@ mod tests {
     async fn test_discover_fido2_devices() {
         let result = discover_fido2_devices().await;
         assert!(result.is_ok());
-        
+
         let devices = result.unwrap();
         if !devices.is_empty() {
             println!("Found {} FIDO2 device(s):", devices.len());
             for dev in devices {
-                println!("  {} {} (VID:{:04x}, PID:{:04x})",
-                    dev.manufacturer, dev.product,
-                    dev.vendor_id, dev.product_id);
+                println!(
+                    "  {} {} (VID:{:04x}, PID:{:04x})",
+                    dev.manufacturer, dev.product, dev.vendor_id, dev.product_id
+                );
             }
         }
     }

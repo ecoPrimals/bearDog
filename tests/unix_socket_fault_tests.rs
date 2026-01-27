@@ -49,9 +49,13 @@ async fn start_server_ready(
 ) {
     let btsp_provider = create_test_btsp_provider().await;
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .unwrap(),
     );
     let ready_flag = server.readiness_flag();
     let server_clone = Arc::clone(&server);
@@ -278,9 +282,13 @@ async fn fault_test_readiness_check_before_start() {
     let (_dir, socket_path) = test_socket();
     let btsp_provider = create_test_btsp_provider().await;
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .unwrap(),
     );
 
     // Should not be ready

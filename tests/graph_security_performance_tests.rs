@@ -8,6 +8,8 @@ use std::time::{Duration, Instant};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
+use beardog_types::primal_identity::PrimalIdentity;
+
 /// Test helper: Create a test BTSP provider
 async fn create_test_btsp_provider() -> Arc<beardog_tunnel::btsp_provider::BeardogBtspProvider> {
     use beardog_genetics::EcosystemGeneticEngine;
@@ -66,9 +68,13 @@ async fn test_authorization_throughput() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .expect("Server creation"),
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(
+            socket_path,
+            btsp,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .expect("Server creation"),
     );
 
     let ready_flag = server.readiness_flag();
@@ -148,9 +154,13 @@ async fn test_validation_throughput() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .expect("Server creation"),
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(
+            socket_path,
+            btsp,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .expect("Server creation"),
     );
 
     let ready_flag = server.readiness_flag();
@@ -228,9 +238,13 @@ async fn test_authorization_latency_p95() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .expect("Server creation"),
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(
+            socket_path,
+            btsp,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .expect("Server creation"),
     );
 
     let ready_flag = server.readiness_flag();
@@ -307,9 +321,13 @@ async fn test_concurrent_authorization_requests() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .expect("Server creation"),
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(
+            socket_path,
+            btsp,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .expect("Server creation"),
     );
 
     let ready_flag = server.readiness_flag();
@@ -402,9 +420,13 @@ async fn test_sustained_load() {
     let _ = std::fs::remove_file(socket_path);
 
     let server = Arc::new(
-        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(socket_path, btsp, Arc::new(PrimalIdentity::for_test("test-family", "test-node")))
-            .await
-            .expect("Server creation"),
+        beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer::new(
+            socket_path,
+            btsp,
+            Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+        )
+        .await
+        .expect("Server creation"),
     );
 
     let ready_flag = server.readiness_flag();

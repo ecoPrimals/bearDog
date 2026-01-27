@@ -145,12 +145,11 @@ mod tests {
 
     #[test]
     fn test_discovery_query_builder() {
-        let query = DiscoveryQuery::capability(Capability::Crypto)
-            .with_capability(Capability::Ed25519);
+        let query =
+            DiscoveryQuery::capability(Capability::Crypto).with_capability(Capability::Ed25519);
 
         assert_eq!(query.capabilities.len(), 2);
         assert!(query.capabilities.contains(&"crypto".to_string()));
         assert!(query.capabilities.contains(&"ed25519".to_string()));
     }
 }
-

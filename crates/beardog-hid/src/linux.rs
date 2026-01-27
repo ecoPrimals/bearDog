@@ -40,7 +40,7 @@
 use super::types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 use beardog_errors::BearDogError;
 use std::path::PathBuf;
-use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
+use tokio::fs::{read_dir, read_to_string, File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, trace, warn};
 
@@ -142,10 +142,9 @@ impl LinuxHidDevice {
         let (vendor_id, product_id) = parse_hid_id(&uevent_content)?;
 
         // Read string descriptors (may fail for some devices)
-        let manufacturer =
-            read_string_file(&format!("{}/manufacturer", device_path))
-                .await
-                .unwrap_or_else(|_| "Unknown".to_string());
+        let manufacturer = read_string_file(&format!("{}/manufacturer", device_path))
+            .await
+            .unwrap_or_else(|_| "Unknown".to_string());
 
         let product = read_string_file(&format!("{}/product", device_path))
             .await
@@ -286,7 +285,10 @@ fn parse_hid_id(uevent_content: &str) -> Result<(u16, u16), BearDogError> {
                 })?;
 
                 let product_id = u16::from_str_radix(product_str, 16).map_err(|e| {
-                    BearDogError::invalid_input(&format!("Invalid product ID {}: {}", product_str, e))
+                    BearDogError::invalid_input(&format!(
+                        "Invalid product ID {}: {}",
+                        product_str, e
+                    ))
                 })?;
 
                 return Ok((vendor_id, product_id));
@@ -344,4 +346,3 @@ mod tests {
         assert!(parse_hid_id(uevent).is_err());
     }
 }
-

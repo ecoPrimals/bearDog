@@ -26,16 +26,22 @@ mod timeout_tests {
     #[test]
     fn test_network_timeout_relationships() {
         // Connection timeout should be shorter than read/write
-        assert!(NETWORK_CONNECTION_TIMEOUT < NETWORK_READ_TIMEOUT,
-            "Connection should timeout faster than reads");
-        
+        assert!(
+            NETWORK_CONNECTION_TIMEOUT < NETWORK_READ_TIMEOUT,
+            "Connection should timeout faster than reads"
+        );
+
         // Read and write timeouts should be equal (symmetry)
-        assert_eq!(NETWORK_READ_TIMEOUT, NETWORK_WRITE_TIMEOUT,
-            "Read and write timeouts should match");
-        
+        assert_eq!(
+            NETWORK_READ_TIMEOUT, NETWORK_WRITE_TIMEOUT,
+            "Read and write timeouts should match"
+        );
+
         // Idle timeout should be longer than operation timeout
-        assert!(IDLE_CONNECTION_TIMEOUT > DEFAULT_OPERATION_TIMEOUT,
-            "Idle connections can wait longer than active operations");
+        assert!(
+            IDLE_CONNECTION_TIMEOUT > DEFAULT_OPERATION_TIMEOUT,
+            "Idle connections can wait longer than active operations"
+        );
     }
 
     // ============================================================================
@@ -52,12 +58,16 @@ mod timeout_tests {
     #[test]
     fn test_http_grpc_timeout_relationships() {
         // gRPC can take longer than HTTP (more complex operations)
-        assert!(GRPC_REQUEST_TIMEOUT >= HTTP_REQUEST_TIMEOUT,
-            "gRPC timeout should be >= HTTP timeout");
-        
+        assert!(
+            GRPC_REQUEST_TIMEOUT >= HTTP_REQUEST_TIMEOUT,
+            "gRPC timeout should be >= HTTP timeout"
+        );
+
         // Streaming should have much longer timeout
-        assert!(STREAMING_TIMEOUT > GRPC_REQUEST_TIMEOUT,
-            "Streaming operations need longer timeouts");
+        assert!(
+            STREAMING_TIMEOUT > GRPC_REQUEST_TIMEOUT,
+            "Streaming operations need longer timeouts"
+        );
     }
 
     // ============================================================================
@@ -75,12 +85,16 @@ mod timeout_tests {
     #[test]
     fn test_health_check_relationships() {
         // Health checks should be fast
-        assert!(HEALTH_CHECK_TIMEOUT < READINESS_CHECK_TIMEOUT,
-            "Health checks should be faster than readiness checks");
-        
+        assert!(
+            HEALTH_CHECK_TIMEOUT < READINESS_CHECK_TIMEOUT,
+            "Health checks should be faster than readiness checks"
+        );
+
         // Interval should be longer than timeout
-        assert!(HEALTH_CHECK_INTERVAL > HEALTH_CHECK_TIMEOUT,
-            "Check interval should be longer than check timeout");
+        assert!(
+            HEALTH_CHECK_INTERVAL > HEALTH_CHECK_TIMEOUT,
+            "Check interval should be longer than check timeout"
+        );
     }
 
     // ============================================================================
@@ -98,16 +112,22 @@ mod timeout_tests {
     #[test]
     fn test_discovery_timeout_relationships() {
         // DNS should be fastest
-        assert!(DNS_RESOLUTION_TIMEOUT < PROVIDER_DISCOVERY_TIMEOUT,
-            "DNS resolution should be fastest");
-        
+        assert!(
+            DNS_RESOLUTION_TIMEOUT < PROVIDER_DISCOVERY_TIMEOUT,
+            "DNS resolution should be fastest"
+        );
+
         // Provider discovery < service discovery (provider is subset)
-        assert!(PROVIDER_DISCOVERY_TIMEOUT <= SERVICE_DISCOVERY_TIMEOUT,
-            "Provider discovery should be <= service discovery");
-        
+        assert!(
+            PROVIDER_DISCOVERY_TIMEOUT <= SERVICE_DISCOVERY_TIMEOUT,
+            "Provider discovery should be <= service discovery"
+        );
+
         // Registration can take longest (validation overhead)
-        assert!(REGISTRATION_TIMEOUT >= SERVICE_DISCOVERY_TIMEOUT,
-            "Registration can take longer than discovery");
+        assert!(
+            REGISTRATION_TIMEOUT >= SERVICE_DISCOVERY_TIMEOUT,
+            "Registration can take longer than discovery"
+        );
     }
 
     // ============================================================================
@@ -125,16 +145,22 @@ mod timeout_tests {
     #[test]
     fn test_hsm_timeout_relationships() {
         // Probe should be fastest (just checking availability)
-        assert!(HSM_PROBE_TIMEOUT < HSM_OPERATION_TIMEOUT,
-            "HSM probe should be faster than operations");
-        
+        assert!(
+            HSM_PROBE_TIMEOUT < HSM_OPERATION_TIMEOUT,
+            "HSM probe should be faster than operations"
+        );
+
         // Crypto operations can take longer than basic HSM ops
-        assert!(CRYPTO_OPERATION_TIMEOUT >= HSM_OPERATION_TIMEOUT,
-            "Crypto operations can take longer");
-        
+        assert!(
+            CRYPTO_OPERATION_TIMEOUT >= HSM_OPERATION_TIMEOUT,
+            "Crypto operations can take longer"
+        );
+
         // Key rotation is most complex
-        assert!(KEY_ROTATION_TIMEOUT > CRYPTO_OPERATION_TIMEOUT,
-            "Key rotation is more complex than single operations");
+        assert!(
+            KEY_ROTATION_TIMEOUT > CRYPTO_OPERATION_TIMEOUT,
+            "Key rotation is more complex than single operations"
+        );
     }
 
     // ============================================================================
@@ -151,10 +177,14 @@ mod timeout_tests {
     #[test]
     fn test_ai_timeout_progression() {
         // Decision < Request < Batch
-        assert!(AI_DECISION_TIMEOUT < AI_REQUEST_TIMEOUT,
-            "AI decisions should be quick for UX");
-        assert!(AI_REQUEST_TIMEOUT < AI_BATCH_TIMEOUT,
-            "Batch processing can take longer");
+        assert!(
+            AI_DECISION_TIMEOUT < AI_REQUEST_TIMEOUT,
+            "AI decisions should be quick for UX"
+        );
+        assert!(
+            AI_REQUEST_TIMEOUT < AI_BATCH_TIMEOUT,
+            "Batch processing can take longer"
+        );
     }
 
     // ============================================================================
@@ -172,12 +202,16 @@ mod timeout_tests {
     #[test]
     fn test_database_timeout_relationships() {
         // Connection should be faster than queries
-        assert!(DATABASE_CONNECTION_TIMEOUT < DATABASE_QUERY_TIMEOUT,
-            "Connection should be faster than queries");
-        
+        assert!(
+            DATABASE_CONNECTION_TIMEOUT < DATABASE_QUERY_TIMEOUT,
+            "Connection should be faster than queries"
+        );
+
         // Transactions can span multiple queries
-        assert!(TRANSACTION_TIMEOUT >= DATABASE_QUERY_TIMEOUT,
-            "Transactions can take longer than single queries");
+        assert!(
+            TRANSACTION_TIMEOUT >= DATABASE_QUERY_TIMEOUT,
+            "Transactions can take longer than single queries"
+        );
     }
 
     // ============================================================================
@@ -193,12 +227,16 @@ mod timeout_tests {
     #[test]
     fn test_cache_timeout_relationships() {
         // Cache ops should be very fast
-        assert!(CACHE_OPERATION_TIMEOUT < NETWORK_CONNECTION_TIMEOUT,
-            "Cache should be faster than network");
-        
+        assert!(
+            CACHE_OPERATION_TIMEOUT < NETWORK_CONNECTION_TIMEOUT,
+            "Cache should be faster than network"
+        );
+
         // Warmup can take much longer
-        assert!(CACHE_WARMUP_TIMEOUT > CACHE_OPERATION_TIMEOUT * 10,
-            "Warmup involves many operations");
+        assert!(
+            CACHE_WARMUP_TIMEOUT > CACHE_OPERATION_TIMEOUT * 10,
+            "Warmup involves many operations"
+        );
     }
 
     // ============================================================================
@@ -215,12 +253,16 @@ mod timeout_tests {
     #[test]
     fn test_workflow_timeout_relationships() {
         // Total workflow should be longer than single step
-        assert!(WORKFLOW_TOTAL_TIMEOUT > WORKFLOW_STEP_TIMEOUT,
-            "Total workflow timeout should exceed single step");
-        
+        assert!(
+            WORKFLOW_TOTAL_TIMEOUT > WORKFLOW_STEP_TIMEOUT,
+            "Total workflow timeout should exceed single step"
+        );
+
         // Background jobs can run long
-        assert!(BACKGROUND_JOB_TIMEOUT >= WORKFLOW_STEP_TIMEOUT,
-            "Background jobs can be complex");
+        assert!(
+            BACKGROUND_JOB_TIMEOUT >= WORKFLOW_STEP_TIMEOUT,
+            "Background jobs can be complex"
+        );
     }
 
     // ============================================================================
@@ -237,12 +279,16 @@ mod timeout_tests {
     #[test]
     fn test_retry_timeout_relationships() {
         // Initial < Max
-        assert!(INITIAL_RETRY_DELAY < MAX_RETRY_DELAY,
-            "Initial retry delay should be less than max");
-        
+        assert!(
+            INITIAL_RETRY_DELAY < MAX_RETRY_DELAY,
+            "Initial retry delay should be less than max"
+        );
+
         // Total retry timeout should allow multiple max delays
-        assert!(RETRY_TIMEOUT > MAX_RETRY_DELAY * 3,
-            "Retry timeout should allow multiple attempts at max delay");
+        assert!(
+            RETRY_TIMEOUT > MAX_RETRY_DELAY * 3,
+            "Retry timeout should allow multiple attempts at max delay"
+        );
     }
 
     // ============================================================================
@@ -258,8 +304,10 @@ mod timeout_tests {
     #[test]
     fn test_shutdown_timeout_relationships() {
         // Graceful should be longer than force
-        assert!(GRACEFUL_SHUTDOWN_TIMEOUT > FORCE_SHUTDOWN_TIMEOUT,
-            "Graceful shutdown should have more time than force");
+        assert!(
+            GRACEFUL_SHUTDOWN_TIMEOUT > FORCE_SHUTDOWN_TIMEOUT,
+            "Graceful shutdown should have more time than force"
+        );
     }
 
     // ============================================================================
@@ -295,10 +343,9 @@ mod timeout_tests {
             DATABASE_QUERY_TIMEOUT,
             CACHE_OPERATION_TIMEOUT,
         ];
-        
+
         for timeout in &timeouts {
-            assert!(timeout.as_secs() > 0,
-                "Timeout {:?} must be > 0", timeout);
+            assert!(timeout.as_secs() > 0, "Timeout {:?} must be > 0", timeout);
         }
     }
 
@@ -314,11 +361,14 @@ mod timeout_tests {
             AI_REQUEST_TIMEOUT,
             DATABASE_QUERY_TIMEOUT,
         ];
-        
+
         const ONE_HOUR: Duration = Duration::from_secs(3600);
         for timeout in &timeouts {
-            assert!(timeout < &ONE_HOUR,
-                "Timeout {:?} should be < 1 hour", timeout);
+            assert!(
+                timeout < &ONE_HOUR,
+                "Timeout {:?} should be < 1 hour",
+                timeout
+            );
         }
     }
 
@@ -331,19 +381,24 @@ mod timeout_tests {
             CACHE_OPERATION_TIMEOUT,
             DNS_RESOLUTION_TIMEOUT,
         ];
-        
+
         const TEN_SECONDS: Duration = Duration::from_secs(10);
         for timeout in &fast_timeouts {
-            assert!(timeout <= &TEN_SECONDS,
-                "Fast timeout {:?} should be <= 10 seconds", timeout);
+            assert!(
+                timeout <= &TEN_SECONDS,
+                "Fast timeout {:?} should be <= 10 seconds",
+                timeout
+            );
         }
     }
 
     #[test]
     fn test_timeout_consistency_with_intervals() {
         // Intervals should be longer than timeouts
-        assert!(HEALTH_CHECK_INTERVAL > HEALTH_CHECK_TIMEOUT * 2,
-            "Check interval should allow timeout + buffer");
+        assert!(
+            HEALTH_CHECK_INTERVAL > HEALTH_CHECK_TIMEOUT * 2,
+            "Check interval should allow timeout + buffer"
+        );
     }
 
     // ============================================================================
@@ -353,29 +408,36 @@ mod timeout_tests {
     #[test]
     fn test_streaming_timeout_appropriate() {
         // Streaming should be at least 5x longer than regular requests
-        assert!(STREAMING_TIMEOUT >= HTTP_REQUEST_TIMEOUT * 5,
-            "Streaming needs much longer timeout than regular requests");
+        assert!(
+            STREAMING_TIMEOUT >= HTTP_REQUEST_TIMEOUT * 5,
+            "Streaming needs much longer timeout than regular requests"
+        );
     }
 
     #[test]
     fn test_idle_timeout_appropriate() {
         // Idle should be at least 5x longer than operation timeout
-        assert!(IDLE_CONNECTION_TIMEOUT >= DEFAULT_OPERATION_TIMEOUT * 5,
-            "Idle connections should wait much longer");
+        assert!(
+            IDLE_CONNECTION_TIMEOUT >= DEFAULT_OPERATION_TIMEOUT * 5,
+            "Idle connections should wait much longer"
+        );
     }
 
     #[test]
     fn test_health_check_fast() {
         // Health checks must be fast for quick failure detection
-        assert!(HEALTH_CHECK_TIMEOUT.as_secs() <= 5,
-            "Health checks should complete within 5 seconds");
+        assert!(
+            HEALTH_CHECK_TIMEOUT.as_secs() <= 5,
+            "Health checks should complete within 5 seconds"
+        );
     }
 
     #[test]
     fn test_dns_timeout_fast() {
         // DNS should be very fast
-        assert!(DNS_RESOLUTION_TIMEOUT.as_secs() <= 5,
-            "DNS resolution should complete within 5 seconds");
+        assert!(
+            DNS_RESOLUTION_TIMEOUT.as_secs() <= 5,
+            "DNS resolution should complete within 5 seconds"
+        );
     }
 }
-
