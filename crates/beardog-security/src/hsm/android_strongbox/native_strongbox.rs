@@ -42,10 +42,8 @@
 // Modern Android system property access via std::env (100% safe)
 #![forbid(unsafe_code)]
 
-use beardog_errors::BearDogError;
-use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_int, c_void};
-use tracing::{debug, info, warn};
+use beardog_errors::{phase2_not_implemented, BearDogError};
+use tracing::{debug, info};
 
 // ============================================================================
 // ANDROID NDK C FFI DECLARATIONS (Safe Wrapper)
@@ -124,11 +122,6 @@ mod system_properties {
 #[cfg(target_os = "android")]
 use system_properties as props;
 
-// For now, we'll use libc for basic operations
-// In Phase 2, we'll add direct keystore2 Binder IPC
-#[cfg(target_os = "android")]
-use libc::size_t;
-
 // ============================================================================
 // NATIVE STRONGBOX PROVIDER (Pure Rust!)
 // ============================================================================
@@ -153,11 +146,17 @@ pub struct NativeStrongBox {
 /// Device information gathered via pure native APIs
 #[derive(Debug, Clone)]
 pub struct NativeDeviceInfo {
+    /// Device manufacturer (e.g., "Google", "Samsung")
     pub manufacturer: String,
+    /// Device model (e.g., "Pixel 8a", "Galaxy S24")
     pub model: String,
+    /// Android OS version (e.g., "14", "13")
     pub android_version: String,
+    /// Security patch level (e.g., "2026-01-05")
     pub security_patch: String,
+    /// Whether StrongBox (hardware-backed keystore) is available
     pub strongbox_available: bool,
+    /// Hardware keystore version (300+ indicates StrongBox support)
     pub hardware_keystore_version: u32,
 }
 
@@ -268,6 +267,9 @@ impl NativeStrongBox {
     /// ```
     ///
     /// **No Java. No JNI. Pure performance.**
+    ///
+    /// # Errors
+    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
     pub fn generate_key_native(
         &self,
         alias: &str,
@@ -275,36 +277,34 @@ impl NativeStrongBox {
         require_user_auth: bool,
     ) -> Result<Vec<u8>, BearDogError> {
         info!(
-            "🔑 Generating key (native): alias={}, algo={}",
+            "🔑 Generate key (native): alias={}, algo={}",
             alias, algorithm
         );
-
-        // PHASE-2(Android-Binder): Implement direct Binder IPC to keystore2
-        //
-        // This will:
-        // 1. Open Binder connection to "/dev/hwbinder"
-        // 2. Call keystore2.generateKey() via AIDL protocol
-        // 3. Specify StrongBox backend explicitly
-        // 4. Get public key bytes directly
-        //
-        // Implementation references:
-        // - Android source: system/security/keystore2/
-        // - AIDL interface: android.system.keystore2.IKeystoreService
-        // - Binder protocol: Android IPC mechanism
-
         debug!("   Require user auth: {}", require_user_auth);
-        debug!("   ⚙️  Phase 2: Direct Binder IPC not yet implemented");
 
-        warn!("⚠️  Using placeholder - Phase 2 will implement direct Binder IPC");
+        Err(phase2_not_implemented(
+            "Android StrongBox Native Key Generation",
+            "\
+1. Open Binder connection to /dev/hwbinder
+2. Call keystore2.generateKey() via AIDL protocol:
+   - android.system.keystore2.IKeystoreService
+3. Specify StrongBox backend explicitly via SecurityLevel::STRONGBOX
+4. Get public key bytes directly
 
-        Err(BearDogError::system(format!(
-            "Native key generation not yet implemented (Phase 2). \
-             Would generate '{}' key with algorithm '{}' directly via Binder IPC to keystore2",
-            alias, algorithm
-        )))
+Implementation references:
+- Android source: system/security/keystore2/
+- AIDL: android.system.keystore2.IKeystoreService
+- Binder: Android IPC mechanism (see ndk-rs/binder)
+
+Estimated effort: 8-16 hours",
+            Some("Use Software HSM or FIDO2 provider for testing"),
+        ).into())
     }
 
     /// Sign data using hardware-backed key (pure native)
+    ///
+    /// # Errors
+    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
     pub fn sign_native(
         &self,
         alias: &str,
@@ -312,22 +312,25 @@ impl NativeStrongBox {
         algorithm: &str,
     ) -> Result<Vec<u8>, BearDogError> {
         info!(
-            "✍️  Signing (native): alias={}, data_len={}",
+            "✍️  Sign (native): alias={}, data_len={}",
             alias,
             data.len()
         );
-
-        // PHASE-2(Android-Binder): Direct Binder IPC to keystore2
-
         debug!("   Algorithm: {}", algorithm);
-        debug!("   ⚙️  Phase 2: Direct Binder IPC not yet implemented");
 
-        Err(BearDogError::system(format!(
-            "Native signing not yet implemented (Phase 2). \
-             Would sign {} bytes with key '{}' via Binder IPC",
-            data.len(),
-            alias
-        )))
+        Err(phase2_not_implemented(
+            "Android StrongBox Native Signing",
+            "\
+1. Call keystore2.sign() via Binder IPC
+2. Use hardware-backed key by alias
+3. Specify algorithm (e.g., SHA256withECDSA)
+4. Return signature bytes directly
+
+Implementation note: Uses same Binder connection as key generation.
+
+Estimated effort: 4-8 hours",
+            Some("Use Software HSM or FIDO2 provider for signing operations"),
+        ).into())
     }
 
     /// Generate hardware entropy using native SecureRandom
@@ -361,14 +364,22 @@ impl NativeStrongBox {
     /// Create a new native StrongBox provider.
     ///
     /// # Platform Support
-    /// This always fails on non-Android platforms as StrongBox is Android-specific.
+    /// This always fails on non-Android platforms as StrongBox is Android-specific hardware.
     ///
     /// # Errors
-    /// Returns `BearDogError::system` on non-Android platforms.
+    /// Returns an `UnsupportedPlatform` error with alternatives.
     pub fn new() -> Result<Self, BearDogError> {
-        Err(BearDogError::system(
-            "Native StrongBox only available on Android".to_string(),
-        ))
+        use beardog_errors::AndroidError;
+        
+        Err(AndroidError::UnsupportedPlatform {
+            platform: std::env::consts::OS.to_string(),
+            feature: "Android StrongBox / Titan M2",
+            alternatives: vec![
+                "FIDO2 HSM (SoloKeys, YubiKey)",
+                "Software HSM (Pure Rust)",
+                "TPM 2.0 (if available)",
+            ],
+        }.into())
     }
 
     /// Get device information.
@@ -378,40 +389,52 @@ impl NativeStrongBox {
     /// Note: This method should never be called since `new()` always fails on non-Android.
     ///
     /// # Errors
-    /// Returns `BearDogError::system` on non-Android platforms.
+    /// Returns an `UnsupportedPlatform` error.
     pub fn device_info(&self) -> Result<&NativeDeviceInfo, BearDogError> {
-        Err(BearDogError::system(
-            "Device info only available on Android".to_string(),
-        ))
+        use beardog_errors::AndroidError;
+        
+        Err(AndroidError::UnsupportedPlatform {
+            platform: std::env::consts::OS.to_string(),
+            feature: "Android Device Info",
+            alternatives: vec!["Use platform-specific device info APIs"],
+        }.into())
     }
 
     /// Generate a native key.
     ///
     /// # Errors
-    /// Returns `BearDogError::system` on non-Android platforms.
+    /// Returns an `UnsupportedPlatform` error.
     pub fn generate_key_native(
         &self,
         _alias: &str,
         _algorithm: &str,
         _require_attestation: bool,
     ) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::system(
-            "Key generation only available on Android".to_string(),
-        ))
+        use beardog_errors::AndroidError;
+        
+        Err(AndroidError::UnsupportedPlatform {
+            platform: std::env::consts::OS.to_string(),
+            feature: "Android StrongBox Key Generation",
+            alternatives: vec!["Use Software HSM or FIDO2 provider"],
+        }.into())
     }
 
     /// Sign data using native key.
     ///
     /// # Errors
-    /// Returns `BearDogError::system` on non-Android platforms.
+    /// Returns an `UnsupportedPlatform` error.
     pub fn sign_native(
         &self,
         _alias: &str,
         _data: &[u8],
         _algorithm: &str,
     ) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::system(
-            "Signing only available on Android".to_string(),
-        ))
+        use beardog_errors::AndroidError;
+        
+        Err(AndroidError::UnsupportedPlatform {
+            platform: std::env::consts::OS.to_string(),
+            feature: "Android StrongBox Signing",
+            alternatives: vec!["Use Software HSM or FIDO2 provider"],
+        }.into())
     }
 }

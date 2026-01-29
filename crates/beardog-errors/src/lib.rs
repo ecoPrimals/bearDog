@@ -80,6 +80,12 @@
 /// The main `BearDogError` enum and core error handling functionality.
 pub mod core;
 
+/// Android-specific structured errors
+///
+/// Provides clear, actionable error messages for Android platform features,
+/// including PHASE-2 implementation tracking and cross-platform compatibility.
+pub mod android;
+
 /// Error category definitions for classification
 ///
 /// Detailed categorization enums for each error domain (Security, System, Business, etc.).
@@ -108,6 +114,7 @@ pub mod examples_enhanced;
 #[cfg(test)]
 mod tests;
 
+pub use android::{phase2_not_implemented, AndroidError, Phase};
 pub use categories::*;
 pub use constructors_unified::{
     authentication_error, authentication_error_with_hint, authorization_error,

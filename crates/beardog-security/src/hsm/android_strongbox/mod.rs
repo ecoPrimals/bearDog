@@ -19,15 +19,10 @@
 //! - Zero-cost abstractions
 //! - No Java garbage collector overhead
 
-/// Pure Rust native implementation (RECOMMENDED - 100x faster than JNI!)
+/// Pure Rust native implementation (100x faster than JNI!)
+/// Direct NDK access to Android StrongBox/Titan M2 hardware
 #[cfg(target_os = "android")]
 pub mod native_strongbox;
-
-/// JNI bridge (DEPRECATED - use native_strongbox instead)
-/// Only available when NOT using the android-native feature
-#[deprecated(note = "Use native_strongbox for 100x better performance")]
-#[cfg(all(target_os = "android", not(feature = "android-native")))]
-pub mod jni_bridge;
 
 pub mod multi_credential_provider;
 
