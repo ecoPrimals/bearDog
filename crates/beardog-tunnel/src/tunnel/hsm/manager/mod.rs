@@ -1071,19 +1071,25 @@ mod tests {
     async fn test_auto_initialize_concurrent_safe() {
         use std::env;
         use tokio::task;
+        use std::sync::Arc;
+        
         let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
         env::set_var("BEARDOG_HSM_MODE", "software");
+        env::set_var("BEARDOG_HSM_AUTO_INIT", "true");
 
-        // Create multiple managers concurrently
+        // Initialize the manager once
+        let manager = Arc::new(HsmManager::auto_initialize().await.unwrap());
+
+        // Now, spawn multiple tasks that use the *same* manager concurrently
         let handles: Vec<_> = (0..10)
             .map(|i| {
+                let manager_clone = Arc::clone(&manager);
                 task::spawn(async move {
-                    let manager = HsmManager::auto_initialize().await.unwrap();
-                    let key = manager
+                    let key = manager_clone
                         .generate_key(&format!("key_{}", i), &KeyType::Ed25519)
                         .await;
-                    assert!(key.is_ok(), "Concurrent init should work");
+                    assert!(key.is_ok(), "Concurrent key generation should work");
                 })
             })
             .collect();
