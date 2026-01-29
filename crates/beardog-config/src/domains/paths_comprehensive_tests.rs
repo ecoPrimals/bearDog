@@ -16,6 +16,7 @@ mod tests {
     // Default Configuration Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_default_config() {
         let config = PathConfig::default();
@@ -27,6 +28,7 @@ mod tests {
         assert!(config.pkcs11_library.is_none());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_default_paths_are_absolute() {
         let config = PathConfig::default();
@@ -82,6 +84,7 @@ mod tests {
     // PKCS#11 Library Discovery Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_discover_pkcs11_libraries() {
         let libraries = PathConfig::discover_pkcs11_libraries();
@@ -92,6 +95,7 @@ mod tests {
         let _ = libraries.len();
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_discover_pkcs11_libraries_platform_specific() {
         let libraries = PathConfig::discover_pkcs11_libraries();
@@ -111,6 +115,7 @@ mod tests {
     // get_pkcs11_library() Priority Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_explicit() {
         let config = PathConfig {
@@ -128,6 +133,7 @@ mod tests {
         );
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_from_paths() {
         let config = PathConfig {
@@ -148,6 +154,7 @@ mod tests {
         );
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_discovery() {
         let config = PathConfig {
@@ -165,6 +172,7 @@ mod tests {
         println!("Discovery result: {:?}", result);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_priority() {
         // Test priority: explicit > configured paths > discovery
@@ -200,6 +208,7 @@ mod tests {
     // Validation Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_validate_default() {
         let config = PathConfig::default();
@@ -208,6 +217,7 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_validate_with_nonexistent_pkcs11_library() {
         let config = PathConfig {
@@ -225,6 +235,7 @@ mod tests {
         assert!(err.to_string().contains("/nonexistent/lib.so"));
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_validate_without_pkcs11_library() {
         let config = PathConfig {
@@ -243,6 +254,7 @@ mod tests {
     // Trait Implementation Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_clone() {
         let config1 = PathConfig {
@@ -262,6 +274,7 @@ mod tests {
         assert_eq!(config1.pkcs11_library_paths, config2.pkcs11_library_paths);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_debug() {
         let config = PathConfig::default();
@@ -274,6 +287,7 @@ mod tests {
     // Serialization Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_serialization() {
         let config = PathConfig {
@@ -293,6 +307,7 @@ mod tests {
         assert_eq!(config.pkcs11_library, deserialized.pkcs11_library);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_serialization_default() {
         let config = PathConfig::default();
@@ -307,6 +322,7 @@ mod tests {
     // Platform-Specific Scenarios
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_linux_paths() {
         // Test Linux-specific path patterns
@@ -325,6 +341,7 @@ mod tests {
         }
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_macos_paths() {
         // Test macOS-specific path patterns
@@ -343,6 +360,7 @@ mod tests {
         }
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_windows_paths() {
         // Test Windows-specific path patterns
@@ -365,6 +383,7 @@ mod tests {
     // Realistic Configuration Scenarios
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_production_linux_config() {
         let config = PathConfig {
@@ -380,6 +399,7 @@ mod tests {
         assert!(config.log_dir.is_absolute());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_development_local_config() {
         let config = PathConfig {
@@ -395,6 +415,7 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_docker_container_config() {
         let config = PathConfig {
@@ -413,6 +434,7 @@ mod tests {
     // Edge Cases and Boundary Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_empty_pkcs11_library_paths() {
         let config = PathConfig {
@@ -427,6 +449,7 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_multiple_pkcs11_library_paths() {
         let config = PathConfig {
@@ -449,6 +472,7 @@ mod tests {
         );
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_paths_with_special_characters() {
         let config = PathConfig {

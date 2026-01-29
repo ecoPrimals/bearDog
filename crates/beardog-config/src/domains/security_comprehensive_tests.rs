@@ -11,6 +11,7 @@ mod tests {
     // SecurityConfig Default and Construction Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_const_defaults() {
         let config = SecurityConfig::const_defaults();
@@ -25,6 +26,7 @@ mod tests {
         assert!(config.require_authentication);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_default_has_tls_version() {
         let config = SecurityConfig::default();
@@ -32,6 +34,7 @@ mod tests {
         assert_eq!(config.min_tls_version, "1.2");
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_from_env_no_variables() {
         std::env::remove_var("BEARDOG_MIN_TLS_VERSION");
@@ -64,6 +67,7 @@ mod tests {
     // Builder Pattern Comprehensive Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_new() {
         let builder = SecurityConfigBuilder::new();
@@ -72,6 +76,7 @@ mod tests {
         assert_eq!(config, SecurityConfig::default());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_default() {
         let builder = SecurityConfigBuilder::default();
@@ -80,6 +85,7 @@ mod tests {
         assert_eq!(config, SecurityConfig::default());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_strict_mode_enabled() {
         let config = SecurityConfig::builder().strict_mode(true).build();
@@ -87,6 +93,7 @@ mod tests {
         assert!(config.strict_mode);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_strict_mode_disabled() {
         let config = SecurityConfig::builder().strict_mode(false).build();
@@ -94,6 +101,7 @@ mod tests {
         assert!(!config.strict_mode);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_require_mtls_enabled() {
         let config = SecurityConfig::builder().require_mtls(true).build();
@@ -101,6 +109,7 @@ mod tests {
         assert!(config.require_mtls);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_require_mtls_disabled() {
         let config = SecurityConfig::builder().require_mtls(false).build();
@@ -108,6 +117,7 @@ mod tests {
         assert!(!config.require_mtls);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_min_tls_version_1_2() {
         let config = SecurityConfig::builder()
@@ -117,6 +127,7 @@ mod tests {
         assert_eq!(config.min_tls_version, "1.2");
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_min_tls_version_1_3() {
         let config = SecurityConfig::builder()
@@ -126,6 +137,7 @@ mod tests {
         assert_eq!(config.min_tls_version, "1.3");
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_allow_localhost_bypass_enabled() {
         let config = SecurityConfig::builder()
@@ -135,6 +147,7 @@ mod tests {
         assert!(config.allow_localhost_bypass);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_allow_localhost_bypass_disabled() {
         let config = SecurityConfig::builder()
@@ -144,6 +157,7 @@ mod tests {
         assert!(!config.allow_localhost_bypass);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_enable_audit_log_enabled() {
         let config = SecurityConfig::builder().enable_audit_log(true).build();
@@ -151,6 +165,7 @@ mod tests {
         assert!(config.enable_audit_log);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_enable_audit_log_disabled() {
         let config = SecurityConfig::builder().enable_audit_log(false).build();
@@ -158,6 +173,7 @@ mod tests {
         assert!(!config.enable_audit_log);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_enable_rate_limiting_enabled() {
         let config = SecurityConfig::builder().enable_rate_limiting(true).build();
@@ -165,6 +181,7 @@ mod tests {
         assert!(config.enable_rate_limiting);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_enable_rate_limiting_disabled() {
         let config = SecurityConfig::builder()
@@ -174,6 +191,7 @@ mod tests {
         assert!(!config.enable_rate_limiting);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_auto_block_suspicious_ips_enabled() {
         let config = SecurityConfig::builder()
@@ -183,6 +201,7 @@ mod tests {
         assert!(config.auto_block_suspicious_ips);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_auto_block_suspicious_ips_disabled() {
         let config = SecurityConfig::builder()
@@ -192,6 +211,7 @@ mod tests {
         assert!(!config.auto_block_suspicious_ips);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_require_authentication_enabled() {
         let config = SecurityConfig::builder()
@@ -201,6 +221,7 @@ mod tests {
         assert!(config.require_authentication);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_require_authentication_disabled() {
         let config = SecurityConfig::builder()
@@ -210,6 +231,7 @@ mod tests {
         assert!(!config.require_authentication);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_all_fields() {
         let config = SecurityConfig::builder()
@@ -237,12 +259,14 @@ mod tests {
     // Validation Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_validate_default_config() {
         let config = SecurityConfig::default();
         assert!(config.validate().is_ok());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_validate_strict_config() {
         let config = SecurityConfig::builder()
@@ -254,6 +278,7 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_validate_permissive_config() {
         let config = SecurityConfig::builder()
@@ -270,6 +295,7 @@ mod tests {
     // Configuration Scenarios
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_development_config() {
         let config = SecurityConfig::builder()
@@ -287,6 +313,7 @@ mod tests {
         assert!(!config.auto_block_suspicious_ips);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_staging_config() {
         let config = SecurityConfig::builder()
@@ -305,6 +332,7 @@ mod tests {
         assert!(config.enable_audit_log);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_maximum_security_config() {
         let config = SecurityConfig::builder()
@@ -330,6 +358,7 @@ mod tests {
     // Serialization Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_serialization() {
         let config = SecurityConfig::default();
@@ -340,6 +369,7 @@ mod tests {
         assert_eq!(config, deserialized);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_serialization_with_custom_values() {
         let config = SecurityConfig::builder()
@@ -359,6 +389,7 @@ mod tests {
     // Trait Implementation Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_clone() {
         let config1 = SecurityConfig::default();
@@ -367,6 +398,7 @@ mod tests {
         assert_eq!(config1, config2);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_debug() {
         let config = SecurityConfig::default();
@@ -375,6 +407,7 @@ mod tests {
         assert!(debug_str.contains("SecurityConfig"));
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_partial_eq() {
         let config1 = SecurityConfig::default();
@@ -389,6 +422,7 @@ mod tests {
     // Builder Chaining Tests
     // ============================================================================
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_chaining_multiple_calls() {
         let config = SecurityConfig::builder()
@@ -404,6 +438,7 @@ mod tests {
         assert!(config.enable_rate_limiting);
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_builder_partial_configuration() {
         let config = SecurityConfig::builder().strict_mode(true).build();
