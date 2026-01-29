@@ -39,6 +39,62 @@ pub use operation_router::{
 
 pub use performance::{HsmPerformanceTracker, OperationMetrics};
 
+/// Configuration for HSM auto-initialization
+///
+/// This struct provides explicit configuration for HSM initialization,
+/// eliminating the need for global environment variable reads in tests.
+/// This ensures thread-safe, concurrent testing without race conditions.
+///
+/// # Fields
+///
+/// * `mode` - The HSM mode to initialize ("software", "hardware", "android_strongbox", etc.)
+/// * `auto_init` - Whether auto-initialization is enabled
+///
+/// # Example
+///
+/// ```ignore
+/// use beardog_tunnel::tunnel::hsm::manager::{HsmManager, HsmAutoInitConfig};
+///
+/// // Explicit configuration (thread-safe, no env vars)
+/// let config = HsmAutoInitConfig {
+///     mode: "software".to_string(),
+///     auto_init: true,
+/// };
+/// let manager = HsmManager::auto_initialize_with_config(config).await?;
+/// ```
+#[derive(Debug, Clone)]
+pub struct HsmAutoInitConfig {
+    /// HSM mode ("software", "hardware", "android_strongbox", "ios_secure_enclave")
+    pub mode: String,
+    /// Whether auto-initialization is enabled
+    pub auto_init: bool,
+}
+
+impl Default for HsmAutoInitConfig {
+    fn default() -> Self {
+        Self {
+            mode: "software".to_string(),
+            auto_init: true,
+        }
+    }
+}
+
+impl HsmAutoInitConfig {
+    /// Create config from environment variables (for production use)
+    pub fn from_env() -> Self {
+        use std::env;
+        Self {
+            mode: env::var("BEARDOG_HSM_MODE")
+                .unwrap_or_else(|_| "software".to_string())
+                .to_lowercase(),
+            auto_init: env::var("BEARDOG_HSM_AUTO_INIT")
+                .unwrap_or_else(|_| "true".to_string())
+                .parse::<bool>()
+                .unwrap_or(true),
+        }
+    }
+}
+
 /// HSM Provider Selection Result
 ///
 /// Represents the result of selecting an HSM provider for an operation.
@@ -246,32 +302,63 @@ impl HsmManager {
     /// println!("HSM Manager auto-initialized successfully");
     /// ```
     pub async fn auto_initialize() -> Result<Self, BearDogError> {
+        let config = HsmAutoInitConfig::from_env();
+        Self::auto_initialize_with_config(config).await
+    }
+
+    /// Auto-initialize HSM Manager with explicit configuration (thread-safe)
+    ///
+    /// This method provides explicit configuration for HSM initialization,
+    /// eliminating global environment variable dependencies. This ensures
+    /// thread-safe, concurrent operation without race conditions.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Explicit HSM initialization configuration
+    ///
+    /// # Returns
+    ///
+    /// Returns an initialized `HsmManager` with the configured provider,
+    /// or an error if initialization fails.
+    ///
+    /// # Concurrency
+    ///
+    /// This method is fully thread-safe and can be called concurrently
+    /// from multiple threads without any risk of race conditions.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use beardog_tunnel::tunnel::hsm::manager::{HsmManager, HsmAutoInitConfig};
+    ///
+    /// // Explicit configuration (thread-safe)
+    /// let config = HsmAutoInitConfig {
+    ///     mode: "software".to_string(),
+    ///     auto_init: true,
+    /// };
+    /// let manager = HsmManager::auto_initialize_with_config(config).await?;
+    /// ```
+    pub async fn auto_initialize_with_config(
+        config: HsmAutoInitConfig,
+    ) -> Result<Self, BearDogError> {
         use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
         use crate::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
-        use std::env;
         use tracing::{info, warn};
 
         // Check if auto-init is enabled
-        let auto_init = env::var("BEARDOG_HSM_AUTO_INIT")
-            .unwrap_or_else(|_| "true".to_string())
-            .parse::<bool>()
-            .unwrap_or(true);
-
-        if !auto_init {
-            info!("HSM auto-initialization disabled via BEARDOG_HSM_AUTO_INIT");
+        if !config.auto_init {
+            info!("HSM auto-initialization disabled via config");
             return Ok(Self::new());
         }
 
-        // Detect HSM mode from environment
-        let hsm_mode = env::var("BEARDOG_HSM_MODE")
-            .unwrap_or_else(|_| "software".to_string())
-            .to_lowercase();
-
-        info!("🔐 Auto-initializing HSM Manager (mode: {})", hsm_mode);
+        info!("🔐 Auto-initializing HSM Manager (mode: {})", config.mode);
 
         let mut manager = Self::new();
 
-        match hsm_mode.as_str() {
+        // Normalize mode to lowercase for case-insensitive matching
+        let mode_normalized = config.mode.to_lowercase();
+
+        match mode_normalized.as_str() {
             "software" => {
                 // Initialize software HSM
                 let config = SoftwareHsmConfig::default();
@@ -323,8 +410,8 @@ impl HsmManager {
             }
             _ => {
                 let error_msg = format!(
-                    "Invalid BEARDOG_HSM_MODE: '{}'. Valid modes: software, hardware, android_strongbox, ios_secure_enclave",
-                    hsm_mode
+                    "Invalid HSM mode: '{}'. Valid modes: software, hardware, android_strongbox, ios_secure_enclave",
+                    config.mode
                 );
                 return Err(BearDogError::invalid_input(&error_msg));
             }
@@ -916,13 +1003,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_auto_initialize_explicit_software_mode() {
-        use std::env;
-        let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+        let config = HsmAutoInitConfig {
+            mode: "software".to_string(),
+            auto_init: true,
+        };
 
-        env::set_var("BEARDOG_HSM_MODE", "software");
-        env::set_var("BEARDOG_HSM_AUTO_INIT", "true");
-
-        let manager = HsmManager::auto_initialize().await;
+        let manager = HsmManager::auto_initialize_with_config(config).await;
         assert!(
             manager.is_ok(),
             "Auto-initialize should succeed with explicit software mode"
@@ -935,18 +1021,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_auto_initialize_case_insensitive() {
-        use std::env;
-        let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-
         // Test uppercase
-        env::set_var("BEARDOG_HSM_MODE", "SOFTWARE");
-        let manager = HsmManager::auto_initialize().await;
+        let config = HsmAutoInitConfig {
+            mode: "SOFTWARE".to_string(),
+            auto_init: true,
+        };
+        let manager = HsmManager::auto_initialize_with_config(config).await;
         assert!(manager.is_ok(), "Should handle uppercase mode");
-        env::remove_var("BEARDOG_HSM_MODE");
 
         // Test mixed case
-        env::set_var("BEARDOG_HSM_MODE", "SoftWare");
-        let manager = HsmManager::auto_initialize().await;
+        let config = HsmAutoInitConfig {
+            mode: "SoftWare".to_string(),
+            auto_init: true,
+        };
+        let manager = HsmManager::auto_initialize_with_config(config).await;
         assert!(manager.is_ok(), "Should handle mixed case mode");
     }
 
@@ -1002,17 +1090,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_auto_initialize_invalid_mode() {
-        use std::env;
-        let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+        let config = HsmAutoInitConfig {
+            mode: "invalid_mode".to_string(),
+            auto_init: true,
+        };
 
-        env::set_var("BEARDOG_HSM_MODE", "invalid_mode");
-
-        let result = HsmManager::auto_initialize().await;
+        let result = HsmManager::auto_initialize_with_config(config).await;
         assert!(result.is_err(), "Should fail with invalid HSM mode");
 
         let error = result.err().unwrap();
         assert!(
-            error.to_string().contains("Invalid BEARDOG_HSM_MODE"),
+            error.to_string().contains("Invalid"),
             "Error should mention invalid mode: {}",
             error
         );
@@ -1069,17 +1157,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_auto_initialize_concurrent_safe() {
-        use std::env;
         use tokio::task;
         use std::sync::Arc;
-        
-        let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
-        env::set_var("BEARDOG_HSM_MODE", "software");
-        env::set_var("BEARDOG_HSM_AUTO_INIT", "true");
+        let config = HsmAutoInitConfig {
+            mode: "software".to_string(),
+            auto_init: true,
+        };
 
         // Initialize the manager once
-        let manager = Arc::new(HsmManager::auto_initialize().await.unwrap());
+        let manager = Arc::new(HsmManager::auto_initialize_with_config(config).await.unwrap());
 
         // Now, spawn multiple tasks that use the *same* manager concurrently
         let handles: Vec<_> = (0..10)
@@ -1115,32 +1202,23 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_auto_initialize_bool_parsing() {
-        use std::env;
-        let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    async fn test_auto_initialize_bool_states() {
+        // Test enabled state
+        let config = HsmAutoInitConfig {
+            mode: "software".to_string(),
+            auto_init: true,
+        };
+        let manager = HsmManager::auto_initialize_with_config(config).await.unwrap();
+        let key_result = manager.generate_key("test", &KeyType::Ed25519).await;
+        assert!(key_result.is_ok(), "Should have provider when enabled");
 
-        // Test various boolean representations
-        let bool_values = vec![
-            ("true", true),
-            ("false", false),
-            ("TRUE", false), // Invalid - parse will fail, default to false
-            ("1", false),    // Invalid - parse will fail, default to false
-            ("", false),     // Invalid - parse will fail, default to false
-        ];
-
-        for (value, should_have_provider) in bool_values {
-            env::set_var("BEARDOG_HSM_AUTO_INIT", value);
-            env::set_var("BEARDOG_HSM_MODE", "software");
-
-            let manager = HsmManager::auto_initialize().await.unwrap();
-            let key_result = manager.generate_key("test", &KeyType::Ed25519).await;
-
-            if should_have_provider {
-                assert!(key_result.is_ok(), "Should have provider for: {}", value);
-            } // else: no assertion - behavior depends on parse result
-
-            env::remove_var("BEARDOG_HSM_AUTO_INIT");
-            env::remove_var("BEARDOG_HSM_MODE");
-        }
+        // Test disabled state
+        let config = HsmAutoInitConfig {
+            mode: "software".to_string(),
+            auto_init: false,
+        };
+        let manager = HsmManager::auto_initialize_with_config(config).await.unwrap();
+        let key_result = manager.generate_key("test", &KeyType::Ed25519).await;
+        assert!(key_result.is_err(), "Should not have provider when disabled");
     }
 }
