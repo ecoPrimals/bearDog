@@ -346,6 +346,7 @@ mod tests {
     // ============================================================================
 
     #[test]
+    #[serial_test::serial]
     fn test_from_env_no_variables() {
         std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
         std::env::remove_var("BEARDOG_AES_KEY_SIZE");
