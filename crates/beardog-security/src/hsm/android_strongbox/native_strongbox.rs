@@ -127,7 +127,7 @@ use system_properties as props;
 // For now, we'll use libc for basic operations
 // In Phase 2, we'll add direct keystore2 Binder IPC
 #[cfg(target_os = "android")]
-use libc::{size_t, uint8_t};
+use libc::size_t;
 
 // ============================================================================
 // NATIVE STRONGBOX PROVIDER (Pure Rust!)

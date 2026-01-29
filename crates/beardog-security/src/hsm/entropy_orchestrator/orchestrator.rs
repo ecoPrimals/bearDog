@@ -129,12 +129,11 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        let total_devices = 0;
+        let mut total_devices = 0;
 
         #[cfg(feature = "fido2")]
         {
-            #[allow(unused_variables)]
-            let total_devices = total_devices + fido2_providers.len();
+            total_devices += fido2_providers.len();
         }
 
         #[cfg(target_os = "android")]

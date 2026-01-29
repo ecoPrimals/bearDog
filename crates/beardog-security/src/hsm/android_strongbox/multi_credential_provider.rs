@@ -183,7 +183,7 @@ impl StrongBoxMultiCredentialProvider {
         &self,
         alias: &str,
         data: &[u8],
-        require_auth: bool,
+        _require_auth: bool,
     ) -> Result<Vec<u8>, BearDogError> {
         debug!("Signing {} bytes with Android key: {}", data.len(), alias);
 

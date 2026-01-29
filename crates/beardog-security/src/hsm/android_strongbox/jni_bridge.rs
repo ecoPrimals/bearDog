@@ -28,11 +28,7 @@ use beardog_errors::BearDogError;
 use tracing::{debug, info, warn};
 
 #[cfg(target_os = "android")]
-use jni::objects::{JClass, JObject, JString, JValue};
-#[cfg(target_os = "android")]
-use jni::{JNIEnv, JavaVM};
-#[cfg(target_os = "android")]
-use std::sync::Once;
+use jni::{AttachGuard, JNIEnv, JavaVM};
 
 // ============================================================================
 // JNI INITIALIZATION
@@ -75,10 +71,13 @@ pub fn init_jni(env: JNIEnv) -> Result<(), BearDogError> {
 
 /// Get JNI environment
 ///
+/// Returns an AttachGuard that automatically derefs to JNIEnv.
+/// The guard ensures the thread stays attached for the lifetime of the guard.
+///
 /// This function is now 100% safe using OnceLock!
 /// No unsafe code required - the Rust compiler guarantees thread safety.
 #[cfg(target_os = "android")]
-fn get_env() -> Result<JNIEnv<'static>, BearDogError> {
+fn get_env() -> Result<AttachGuard<'static>, BearDogError> {
     // Safe! OnceLock provides thread-safe access
     match JAVA_VM.get() {
         Some(vm) => vm
@@ -137,7 +136,7 @@ pub fn strongbox_generate_key(
         alias, algorithm
     );
 
-    let env = get_env()?;
+    let _env = get_env()?;
 
     // PHASE-2(Android-JNI): Implement JNI calls to Android Keystore for key generation
     //
@@ -212,7 +211,7 @@ pub fn strongbox_sign(alias: &str, data: &[u8], algorithm: &str) -> Result<Vec<u
         data.len()
     );
 
-    let env = get_env()?;
+    let _env = get_env()?;
 
     // PHASE-2(Android-JNI): Implement JNI calls to Android Keystore for signing
     //
@@ -276,7 +275,7 @@ pub fn strongbox_verify(
         data.len()
     );
 
-    let env = get_env()?;
+    let _env = get_env()?;
 
     // PHASE-2(Android-JNI): Implement JNI calls to Android Keystore for signature verification
     //
@@ -330,7 +329,7 @@ pub fn strongbox_verify(
 pub fn strongbox_generate_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
     info!("🎲 Generating {} bytes of hardware entropy", size);
 
-    let env = get_env()?;
+    let _env = get_env()?;
 
     // PHASE-2(Android-JNI): Implement JNI calls to Android SecureRandom
     //
@@ -376,7 +375,7 @@ pub fn strongbox_generate_entropy(size: usize) -> Result<Vec<u8>, BearDogError> 
 pub fn strongbox_get_attestation(alias: &str) -> Result<Vec<Vec<u8>>, BearDogError> {
     info!("📜 Getting attestation for key: {}", alias);
 
-    let env = get_env()?;
+    let _env = get_env()?;
 
     // PHASE-2(Android-JNI): Implement JNI calls to get attestation certificate chain
     //
@@ -417,7 +416,7 @@ pub fn strongbox_get_attestation(alias: &str) -> Result<Vec<Vec<u8>>, BearDogErr
 pub fn strongbox_get_device_info() -> Result<StrongBoxDeviceInfo, BearDogError> {
     info!("📱 Querying StrongBox device info");
 
-    let env = get_env()?;
+    let _env = get_env()?;
 
     // PHASE-2(Android-JNI): Implement JNI calls to query device info
     //
