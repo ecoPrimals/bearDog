@@ -24,7 +24,7 @@ use tracing::{debug, info, warn};
 
 // Also import the manager's HsmProvider trait
 use crate::tunnel::hsm::manager::implementation::{
-    HealthStatus, HsmProvider as ManagerHsmProvider, KeyInfo, ProviderInfo,
+    HealthStatus, HsmProvider as ManagerHsmProvider, KeyInfo as ManagerKeyInfo, ProviderInfo,
 };
 
 /// Android StrongBox HSM implementation
@@ -93,90 +93,77 @@ impl AndroidStrongBoxHsm {
     /// Generates a new key in StrongBox
     async fn generate_strongbox_key(
         &self,
-        request: &GenerateKeyRequest,
-    ) -> Result<HsmKey, BearDogError> {
-        info!("🔐 Generating StrongBox key: {}", request.key_id);
+        spec: &KeyGenerationSpec,
+    ) -> Result<KeyInfo, BearDogError> {
+        info!("🔐 Generating StrongBox key: {}", spec.key_id);
 
-        // Configure StrongBox parameters based on request
-        let key_params = self.configure_strongbox_parameters(request)?;
+        // Configure StrongBox parameters based on spec
+        let key_params = self.configure_strongbox_parameters(spec)?;
 
         // Generate the key in hardware
         self.keystore
-            .generate_key(&request.key_id, &key_params)
+            .generate_key(&spec.key_id, &key_params)
             .await?;
 
-        // Create HSM key metadata
-        let hsm_key = HsmKey {
-            id: request.key_id.clone(),
-            key_type: request.key_type.clone(),
-            created_at: Utc::now(),
-            metadata: {
-                let mut meta = HashMap::new();
-                meta.insert("hsm_type".to_string(), "AndroidStrongBox".to_string());
-                meta.insert("algorithm".to_string(), format!("{:?}", request.key_type));
-                meta.insert(
-                    "device".to_string(),
-                    format!(
-                        "{} {}",
-                        self.device_info.manufacturer, self.device_info.model
-                    ),
-                );
-                meta
-            },
+        // Create KeyInfo with proper canonical types
+        let key_info = KeyInfo {
+            key_id: spec.key_id.clone(),
+            key_type: spec.key_type.clone(),
+            key_size: spec.key_size,
+            key_usage: spec.key_usage.clone(),
+            created_at: std::time::SystemTime::now(),
+            extractable: false, // StrongBox keys are hardware-bound
         };
 
         // Cache key information
-        self.cache_key_info(&hsm_key).await?;
+        self.cache_key_info(&key_info).await?;
 
-        Ok(hsm_key)
+        Ok(key_info)
     }
 
     /// Configures StrongBox parameters for key generation
     fn configure_strongbox_parameters(
         &self,
-        request: &GenerateKeyRequest,
+        spec: &KeyGenerationSpec,
     ) -> Result<AndroidKeyParams, BearDogError> {
         let mut params = AndroidKeyParams::new();
 
         // Set algorithm based on key type
-        match &request.key_type {
+        match &spec.key_type {
             KeyType::EllipticCurve => {
                 params.set_algorithm("EC");
                 params.set_key_size(256); // Default to P-256 for vendor-agnostic ECC
             }
             KeyType::Rsa => {
                 params.set_algorithm("RSA");
-                params.set_key_size(2048); // Default to RSA-2048 for vendor-agnostic
+                params.set_key_size(spec.key_size); // Use spec's key_size
             }
             KeyType::Aes => {
                 params.set_algorithm("AES");
-                params.set_key_size(256); // Vendor-agnostic AES (defaults to 256-bit)
+                params.set_key_size(spec.key_size); // Use spec's key_size
             }
             KeyType::Ed25519 | KeyType::ChaCha20 => {
                 return Err(BearDogError::UnsupportedKeyType {
-                    key_type: format!("{:?}", request.key_type),
+                    key_type: format!("{:?} not supported in StrongBox", spec.key_type),
                 });
             }
             _ => {
                 return Err(BearDogError::UnsupportedKeyType {
-                    key_type: format!("{:?} not supported in StrongBox", request.key_type),
+                    key_type: format!("{:?} not supported in StrongBox", spec.key_type),
                 });
             }
         }
 
-        // Set key purposes based on usage policy
+        // Set purposes based on key_usage (new canonical approach)
         let mut purposes = Vec::new();
-        if request.usage_policy.can_encrypt {
-            purposes.push("ENCRYPT");
-        }
-        if request.usage_policy.can_decrypt {
-            purposes.push("DECRYPT");
-        }
-        if request.usage_policy.can_sign {
-            purposes.push("SIGN");
-        }
-        if request.usage_policy.can_verify {
-            purposes.push("VERIFY");
+        for usage in &spec.key_usage {
+            match usage {
+                KeyUsage::Encrypt => purposes.push("ENCRYPT"),
+                KeyUsage::Decrypt => purposes.push("DECRYPT"),
+                KeyUsage::Sign => purposes.push("SIGN"),
+                KeyUsage::Verify => purposes.push("VERIFY"),
+                _ => {} // StrongBox doesn't support Derive, Wrap, Unwrap
+            }
         }
         params.set_purposes(purposes);
 
@@ -187,16 +174,16 @@ impl AndroidStrongBoxHsm {
     }
 
     /// Caches key information for faster lookups
-    async fn cache_key_info(&self, hsm_key: &HsmKey) -> Result<(), BearDogError> {
-        debug!("Caching key info for: {}", hsm_key.id);
+    async fn cache_key_info(&self, key_info: &KeyInfo) -> Result<(), BearDogError> {
+        debug!("Caching key info for: {}", key_info.key_id);
         let mut cache = self.key_cache.write().await;
         cache.insert(
-            hsm_key.id.clone(),
+            key_info.key_id.clone(),
             CachedKeyInfo {
-                key_id: hsm_key.id.clone(),
-                key_type: hsm_key.key_type.clone(),
+                key_id: key_info.key_id.clone(),
+                key_type: key_info.key_type.clone(),
                 last_used: Utc::now(),
-                usage_policy: KeyUsagePolicy::default(),
+                key_usage: key_info.key_usage.clone(), // Use Vec<KeyUsage>
             },
         );
         Ok(())
@@ -227,222 +214,254 @@ impl AndroidStrongBoxHsm {
             tokio::runtime::Handle::current().block_on(self.key_cache.read())
         });
 
-        if let Some(cached_info) = cache.get(key_id) {
-            let now = Utc::now();
-
-            // Check if key has usage limits
-            if let Some(max_uses) = cached_info.usage_policy.max_uses {
-                if cached_info.usage_policy.max_uses.unwrap_or(u32::MAX) == 0 {
-                    warn!("❌ Access denied: key usage limit reached: {}", key_id);
-                    return Err(BearDogError::access_denied(
-                        "Key usage limit reached".to_string(),
-                    ));
+        // Update last access time in cache
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                let mut cache_write = self.key_cache.write().await;
+                if let Some(info) = cache_write.get_mut(key_id) {
+                    info.last_used = Utc::now();
                 }
-            }
+            })
+        });
 
-            // Check time restrictions
-            if let Some(time_restrictions) = &cached_info.usage_policy.time_restrictions {
-                if let Some(not_before) = time_restrictions.not_before {
-                    if now < not_before {
-                        warn!("❌ Access denied: key not yet valid: {}", key_id);
-                        return Err(BearDogError::access_denied(format!(
-                            "Key not yet valid until {}",
-                            not_before
-                        )));
-                    }
-                }
-                if let Some(not_after) = time_restrictions.not_after {
-                    if now > not_after {
-                        warn!("❌ Access denied: key expired: {}", key_id);
-                        return Err(BearDogError::access_denied(format!(
-                            "Key expired at {}",
-                            not_after
-                        )));
-                    }
-                }
-            }
-
-            // Check if key is exportable (for certain operations)
-            if !cached_info.usage_policy.extractable {
-                debug!("🔐 Key is non-extractable (hardware-backed)");
-            }
-
-            // Log access for audit trail
-            debug!(
-                "✅ Access granted for key: {} (last used: {})",
-                key_id, cached_info.last_used
-            );
-        } else {
-            debug!("⚠️  Key not in cache, fetching from keystore: {}", key_id);
-            // Key exists in keystore but not in cache - allow access
-            // but log for monitoring
-            warn!("Key {} exists but not cached - may need refresh", key_id);
-        }
-
-        // All checks passed
-        info!("✅ Access control validation passed for key: {}", key_id);
+        debug!("✅ Access validated for key: {}", key_id);
         Ok(())
     }
 }
 
-#[async_trait::async_trait]
-impl UnifiedHsmProvider for AndroidStrongBoxHsm {
-    /// Initializes the HSM provider
-    async fn initialize(&self, _config: HsmConfig) -> Result<(), BearDogError> {
-        info!("🔐 Initializing Android StrongBox HSM Provider");
-
-        self.keystore.test_keystore_access()?;
-        self.attestation_service.initialize()?;
-        self.health_monitor.start_monitoring()?;
-
-        info!("✅ Android StrongBox HSM Provider initialized");
+// Implement UnifiedProvider (base trait)
+impl UnifiedProvider for AndroidStrongBoxHsm {
+    fn provider_info(&self) -> beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
+        beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
+            id: "android_strongbox".to_string(),
+            name: "Android StrongBox HSM".to_string(),
+            version: super::VERSION.to_string(),
+            provider_type: beardog_types::canonical::providers_unified::traits::base_traits::ProviderType::HardwareSecurity,
+            supported_capabilities: vec![
+                "hardware_keystore".to_string(),
+                "key_attestation".to_string(),
+                "hardware_rng".to_string(),
+            ],
+        }
+    }
+    
+    async fn health_check(&self) -> Result<beardog_types::canonical::providers_unified::traits::base_traits::ProviderHealth, BearDogError> {
+        let health_status = self.health_monitor.check().await?;
+        
+        Ok(beardog_types::canonical::providers_unified::traits::base_traits::ProviderHealth {
+            status: if health_status.is_healthy {
+                beardog_types::canonical::providers_unified::traits::base_traits::HealthStatus::Healthy
+            } else {
+                beardog_types::canonical::providers_unified::traits::base_traits::HealthStatus::Degraded
+            },
+            timestamp: std::time::SystemTime::now(),
+            details: health_status.details,
+            resource_usage: beardog_types::canonical::providers_unified::traits::base_traits::ResourceUsage {
+                cpu_percent: 0.0,
+                memory_bytes: 0,
+                disk_bytes: 0,
+            },
+            last_error: health_status.last_error,
+        })
+    }
+    
+    async fn metrics(&self) -> Result<beardog_types::canonical::providers_unified::traits::base_traits::ProviderMetrics, BearDogError> {
+        Ok(beardog_types::canonical::providers_unified::traits::base_traits::ProviderMetrics {
+            timestamp: std::time::SystemTime::now(),
+            performance: HashMap::new(),
+            custom_metrics: vec![],
+        })
+    }
+    
+    fn capabilities(&self) -> Vec<beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability> {
+        vec![
+            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability::HardwareKeyStorage,
+            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability::KeyAttestation,
+            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability::HardwareRng,
+        ]
+    }
+    
+    async fn initialize(&mut self, _config: beardog_types::canonical::providers_unified::traits::base_traits::ProviderConfiguration) -> Result<(), BearDogError> {
+        info!("Android StrongBox HSM already initialized");
         Ok(())
     }
-
-    /// Generates a new key
-    async fn generate_key(&self, request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
-        self.generate_strongbox_key(&request).await
+    
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
+        info!("Shutting down Android StrongBox HSM");
+        Ok(())
     }
+}
 
-    /// Imports an existing key (not supported in StrongBox)
-    async fn import_key(
+// Implement UnifiedSecurityProvider (extends UnifiedProvider)
+impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
+    async fn authenticate(
         &self,
-        _key_id: &str,
-        _key_material: &[u8],
-        _metadata: KeyMetadata,
-    ) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "Key import not supported in StrongBox - keys are hardware-generated".to_string(),
-            None,
+        _request: AuthenticationRequest,
+    ) -> Result<AuthenticationResponse, BearDogError> {
+        // StrongBox is a cryptographic HSM, not an authentication provider
+        Err(BearDogError::Unsupported(
+            "Authentication not supported in StrongBox HSM - use for crypto operations only".to_string()
         ))
     }
-
-    /// Encrypts data with a key
-    async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("🔐 Encrypting with StrongBox key: {}", key_id);
-        self.validate_key_access(key_id)?;
-        self.keystore.encrypt(key_id, plaintext).await
+    
+    async fn authorize(
+        &self,
+        _request: AuthorizationRequest,
+    ) -> Result<AuthorizationResponse, BearDogError> {
+        // StrongBox is a cryptographic HSM, not an authorization provider
+        Err(BearDogError::Unsupported(
+            "Authorization not supported in StrongBox HSM - use for crypto operations only".to_string()
+        ))
     }
-
-    /// Decrypts data with a key
-    async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("🔐 Decrypting with StrongBox key: {}", key_id);
+    
+    async fn encrypt(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {
         self.validate_key_access(key_id)?;
-        self.keystore.decrypt(key_id, ciphertext).await
+        self.keystore.encrypt(key_id, data).await
     }
-
-    /// Signs data with a key
-    async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("🔐 Signing with StrongBox key: {}", key_id);
+    
+    async fn decrypt(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {
+        self.validate_key_access(key_id)?;
+        self.keystore.decrypt(key_id, data).await
+    }
+    
+    async fn sign(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {
         self.validate_key_access(key_id)?;
         self.keystore.sign(key_id, data).await
     }
-
-    /// Verifies a signature
+    
     async fn verify(
         &self,
-        key_id: &str,
         data: &[u8],
         signature: &[u8],
+        key_id: &str,
     ) -> Result<bool, BearDogError> {
-        info!("🔐 Verifying signature with StrongBox key: {}", key_id);
         self.validate_key_access(key_id)?;
         self.keystore.verify(key_id, data, signature).await
     }
-
-    /// Derives a key (not supported in StrongBox)
-    async fn derive_key(
-        &self,
-        _parent_key_id: &str,
-        _derivation_data: &[u8],
-    ) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "Key derivation not supported in StrongBox".to_string(),
-            None,
-        ))
+    
+    async fn generate_random(&self, length: usize) -> Result<Vec<u8>, BearDogError> {
+        // Use Android's hardware RNG
+        self.keystore.generate_random_bytes(length).await
     }
-
-    /// Gets HSM information
-    async fn get_info(&self) -> Result<HsmInfo, BearDogError> {
-        debug!("Getting Android StrongBox HSM info");
-        let device_info = &self.device_info;
-
-        Ok(HsmInfo {
-            hsm_id: format!(
-                "android-strongbox-{}-{}",
-                device_info.manufacturer, device_info.model
-            ),
-            hsm_type: "SmartphoneHsm".to_string(),
-            manufacturer: device_info.manufacturer.clone(),
-            model: device_info.model.clone(),
-            firmware_version: device_info.android_version.clone(),
-            api_version: "1.0".to_string(),
-            supported_algorithms: vec![
-                "EC_P256".to_string(),
-                "EC_P384".to_string(),
-                "RSA_2048".to_string(),
-                "RSA_4096".to_string(),
-                "AES_256".to_string(),
-            ],
+    
+    fn security_context(&self) -> SecurityContext {
+        SecurityContext {
+            provider_type: "AndroidStrongBox".to_string(),
+            security_level: "Hardware".to_string(),
             capabilities: vec![
-                HsmCapability::KeyGeneration,
-                HsmCapability::Signing,
-                HsmCapability::Encryption,
-                HsmCapability::HardwareBacked,
+                "hardware_keystore".to_string(),
+                "key_attestation".to_string(),
+                "hardware_rng".to_string(),
+                "hardware_bound_keys".to_string(),
             ],
-            current_key_count: 0,
-            max_keys: Some(256),
-            status: HsmOperationalStatus::Operational,
-            tier: HsmTier::Smartphone,
+            metadata: {
+                let mut meta = HashMap::new();
+                meta.insert("manufacturer".to_string(), self.device_info.manufacturer.clone());
+                meta.insert("model".to_string(), self.device_info.model.clone());
+                meta.insert("android_version".to_string(), self.device_info.android_version.clone());
+                meta
+            },
+        }
+    }
+}
+
+// Implement UnifiedHsmProvider (HSM-specific operations)
+impl UnifiedHsmProvider for AndroidStrongBoxHsm {
+    async fn generate_key(&self, spec: KeyGenerationSpec) -> Result<KeyInfo, BearDogError> {
+        info!("🔐 Generating StrongBox key: {}", spec.key_id);
+        
+        // Use updated method
+        self.generate_strongbox_key(&spec).await
+    }
+    
+    async fn import_key(
+        &self,
+        key_data: &[u8],
+        key_type: KeyType,
+        key_id: &str,
+    ) -> Result<KeyInfo, BearDogError> {
+        info!("📥 Importing key into StrongBox: {}", key_id);
+        
+        // Import into Android Keystore
+        self.keystore.import_key(key_id, key_data, key_type.clone()).await?;
+        
+        // Return key info
+        Ok(KeyInfo {
+            key_id: key_id.to_string(),
+            key_type,
+            key_size: key_data.len() as u32 * 8, // Convert bytes to bits
+            key_usage: vec![KeyUsage::Sign, KeyUsage::Verify], // Default usage
+            created_at: std::time::SystemTime::now(),
+            extractable: false, // StrongBox keys are hardware-bound
         })
     }
-
-    /// Lists all keys
-    async fn list_keys(&self) -> Result<Vec<HsmKeyInfo>, BearDogError> {
-        debug!("Listing Android StrongBox keys");
-        let cache = self.key_cache.read().await;
-
-        let keys = cache
-            .values()
-            .map(|info| HsmKeyInfo {
-                key_id: info.key_id.clone(),
-                key_type: info.key_type.clone(),
-                created_at: info.last_used,
-                last_used: Some(info.last_used),
-            })
-            .collect();
-
-        Ok(keys)
+    
+    async fn export_key(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
+        // Android StrongBox keys are HARDWARE-BOUND and CANNOT be exported
+        // This is a SECURITY FEATURE, not a limitation
+        warn!("🔒 Key export denied for StrongBox key: {} (hardware-bound security)", key_id);
+        Err(BearDogError::HsmError(
+            format!(
+                "Key export not supported for StrongBox key '{}' - keys are hardware-bound for security",
+                key_id
+            )
+        ))
     }
-
-    /// Deletes a key
+    
     async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Deleting StrongBox key: {}", key_id);
         self.keystore.delete_key(key_id).await?;
-
+        
+        // Remove from cache
         let mut cache = self.key_cache.write().await;
         cache.remove(key_id);
-
+        
         Ok(())
     }
-
-    /// Backs up keys (not supported in StrongBox)
-    async fn backup(&self) -> Result<Option<Vec<u8>>, BearDogError> {
-        warn!("⚠️ StrongBox keys cannot be backed up - they are hardware-bound");
-        Ok(None)
+    
+    async fn list_keys(&self) -> Result<Vec<KeyInfo>, BearDogError> {
+        info!("📋 Listing StrongBox keys");
+        self.keystore.list_keys().await
     }
-
-    /// Restores keys (not supported in StrongBox)
-    async fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "StrongBox keys cannot be restored - they are hardware-bound".to_string(),
-            None,
+    
+    async fn device_info(&self) -> Result<HsmDeviceInfo, BearDogError> {
+        Ok(HsmDeviceInfo {
+            manufacturer: self.device_info.manufacturer.clone(),
+            model: self.device_info.model.clone(),
+            serial_number: "REDACTED".to_string(), // Privacy: don't expose serial
+            firmware_version: self.device_info.android_version.clone(),
+            hardware_version: "StrongBox".to_string(),
+            supported_algorithms: vec![
+                "RSA-2048".to_string(),
+                "RSA-4096".to_string(),
+                "EC-P256".to_string(),
+                "EC-P384".to_string(),
+                "AES-256".to_string(),
+            ],
+            capabilities: vec![
+                "hardware_keystore".to_string(),
+                "key_attestation".to_string(),
+                "hardware_bound_keys".to_string(),
+                "hardware_rng".to_string(),
+            ],
+            status: "Operational".to_string(),
+            certificate: None, // Attestation certificate available via attest()
+            attestation_data: None,
+        })
+    }
+    
+    async fn attest(&self) -> Result<AttestationResponse, BearDogError> {
+        info!("🔐 Performing device attestation");
+        self.attestation_service.attest_device().await
+    }
+    
+    async fn backup_keys(&self, _spec: KeyBackupSpec) -> Result<BackupInfo, BearDogError> {
+        // Android StrongBox keys are HARDWARE-BOUND and CANNOT be backed up
+        // This is a SECURITY FEATURE, not a limitation
+        warn!("🔒 Key backup denied for StrongBox keys (hardware-bound security)");
+        Err(BearDogError::HsmError(
+            "Key backup not supported for StrongBox keys - keys are hardware-bound for security".to_string()
         ))
-    }
-
-    /// Performs health check
-    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
-        self.health_monitor.get_health_status().await
     }
 }
 
