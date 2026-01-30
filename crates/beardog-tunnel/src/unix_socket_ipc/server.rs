@@ -14,6 +14,7 @@ use super::{
     types::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, Protocol},
 };
 use crate::btsp_provider::BeardogBtspProvider;
+use crate::platform::{PlatformSocket, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -183,10 +184,27 @@ impl UnixSocketIpcServer {
             self.socket_path.display()
         );
 
-        // Bind Unix socket
-        let listener = UnixListener::bind(&self.socket_path).context(format!(
-            "Failed to bind Unix socket: {}",
-            self.socket_path.display()
+        // Platform-agnostic socket binding (ecoBin v2.0)
+        // Automatically selects:
+        // - Android: Abstract sockets (@biomeos_beardog)
+        // - Linux/macOS: Filesystem sockets (/run/user/UID/biomeos/beardog.sock)
+        let platform_type = if cfg!(target_os = "android") {
+            "Android (abstract socket)"
+        } else {
+            "Unix (filesystem)"
+        };
+        info!("   Platform: {}", platform_type);
+
+        // Create platform-appropriate endpoint
+        let endpoint = Socket::create_endpoint("beardog").map_err(|e| {
+            anyhow::anyhow!("Failed to create socket endpoint: {}", e)
+        })?;
+
+        // Bind with platform-specific logic
+        let listener = Socket::bind(&endpoint).context(format!(
+            "Failed to bind socket on {}: {}",
+            platform_type,
+            endpoint.display()
         ))?;
 
         // Mark server as ready atomically (no locks needed!)
@@ -196,7 +214,7 @@ impl UnixSocketIpcServer {
 
         info!(
             "✅ Unix socket IPC server listening: {}",
-            self.socket_path.display()
+            endpoint.display()
         );
         info!("   Status: READY ✅ (atomic flag set)");
 

@@ -130,6 +130,10 @@ pub mod ipc_server;
 // tarpc_service removed - JSON-RPC first architecture (see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md)
 pub mod unix_socket_ipc;
 
+// Platform-specific socket implementations (Android abstract sockets, Unix filesystem)
+// Enables TRUE ecoBin v2.0 platform-agnostic IPC
+pub mod platform;
+
 // Graph Security for Collaborative Intelligence
 pub mod graph_security;
 
