@@ -129,7 +129,7 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        let total_devices = 0;
+        let mut total_devices = 0;
 
         #[cfg(feature = "fido2")]
         {

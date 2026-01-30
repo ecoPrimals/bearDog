@@ -6,6 +6,18 @@
 use beardog_errors::BearDogError;
 use tracing::info;
 
+/// Maximum challenge size for StrongBox attestation (bytes)
+pub const MAX_CHALLENGE_SIZE: usize = 64;
+
+/// Maximum number of keys supported in StrongBox
+pub const MAX_KEY_COUNT: usize = 256;
+
+/// Minimum Android version for StrongBox support (Android 11+)
+pub const SUPPORTED_ANDROID_VERSION: u32 = 11;
+
+/// Module version
+pub const VERSION: &str = "1.0.0";
+
 pub mod safe_device_detection;
 pub mod types;
 // ARCHIVED: safe_keystore_replacement.rs moved to archives/orphaned_code_jan_24_2026/
@@ -14,14 +26,11 @@ pub mod core;
 pub mod safe_android_provider;
 pub mod safe_native_wrapper;
 
-pub use safe_android_provider::*;
+// Explicit imports to avoid ambiguity
+pub use safe_android_provider::{SafeAndroidProvider};
 pub use safe_device_detection::*;
-pub use safe_native_wrapper::SafeAndroidKeystore;
-pub use types::*;
-
-pub use beardog_types::constants::domains::security::hsm::{
-    MAX_CHALLENGE_SIZE, MAX_KEY_COUNT, SUPPORTED_ANDROID_VERSION, VERSION,
-};
+pub use safe_native_wrapper::SafeAndroidKeystore as SafeStrongBoxKeystore;
+pub use types::{AndroidDeviceInfo as StrongBoxDeviceInfo};
 
 /// Safe Android StrongBox Manager
 ///

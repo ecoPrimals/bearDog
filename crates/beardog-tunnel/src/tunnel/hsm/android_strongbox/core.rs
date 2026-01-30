@@ -3,14 +3,19 @@
 //! Provides hardware-backed cryptographic operations using Android's StrongBox
 //! HSM (official Android API: KeyMaster) for Pixel and other compatible devices.
 
-use super::super::types::{AndroidHsmConfig, HsmCapability, HsmTier, KeyType};
+use super::super::types::{AndroidHsmConfig, HsmCapability, HsmTier};
 use super::types::{
     AndroidAttestationService, AndroidDeviceInfo, AndroidHealthMonitor, AndroidKeystore,
 };
 use crate::tunnel::hsm::types::*;
-use beardog_core::{HsmHealthStatus, HsmKey};
 use beardog_errors::BearDogError;
-use beardog_types::canonical::providers_unified::traits::UnifiedHsmProvider;
+use beardog_types::canonical::providers_unified::traits::{
+    UnifiedHsmProvider, UnifiedSecurityProvider, KeyGenerationSpec, KeyInfo, KeyType,
+    KeyUsage, HsmDeviceInfo, AttestationResponse, KeyBackupSpec, BackupInfo,
+    AuthenticationRequest, AuthenticationResponse, AuthorizationRequest, AuthorizationResponse,
+    SecurityContext,
+};
+use beardog_types::canonical::UnifiedProvider;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -37,7 +42,7 @@ struct CachedKeyInfo {
     key_id: String,
     key_type: KeyType,
     last_used: chrono::DateTime<Utc>,
-    usage_policy: KeyUsagePolicy,
+    key_usage: Vec<KeyUsage>,
 }
 
 impl AndroidStrongBoxHsm {
