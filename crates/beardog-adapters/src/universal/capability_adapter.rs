@@ -21,17 +21,10 @@ use super::{
 
 pub use super::http_adapter::ServiceMeshConnector;
 
-#[derive(Debug, Clone)]
-    /// The version value
-    pub version: String,
-    /// Collection of endpoints
-    pub endpoints: Vec<String>,
-}
-
 pub struct BearDogCapabilityAdapter {
     service_registration: Arc<RwLock<Option<UniversalServiceRegistration>>>,
     extraction_detector: Arc<RwLock<CommercialExtractionDetector>>,
-    #[allow(Arc<RwLock<std::collections::HashMap<String, serde_json::Value>>>,
+    custom_capabilities: Arc<RwLock<std::collections::HashMap<String, serde_json::Value>>>,
 }
 
 impl BearDogCapabilityAdapter {
