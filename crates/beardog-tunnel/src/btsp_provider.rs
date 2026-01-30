@@ -33,13 +33,11 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::SystemTime;
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use parking_lot::RwLock;
 use tracing::{debug, info, warn};
-use zeroize::Zeroizing;
 
 use crate::tunnel::hsm::manager::HsmManager;
 use beardog_capabilities::traits::{

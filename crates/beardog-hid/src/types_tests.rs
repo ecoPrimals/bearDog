@@ -1,6 +1,6 @@
 //! Comprehensive tests for HID types
 //!
-//! Tests VendorId, ProductId, HidDeviceInfo, and FIDO2 device detection.
+//! Tests `VendorId`, `ProductId`, `HidDeviceInfo`, and FIDO2 device detection.
 
 #[cfg(test)]
 mod tests {
@@ -9,19 +9,19 @@ mod tests {
     #[test]
     fn test_vendor_id_display() {
         let vid = VendorId(0x1209);
-        assert_eq!(format!("{}", vid), "0x1209");
+        assert_eq!(format!("{vid}"), "0x1209");
 
         let vid2 = VendorId(0x00ab);
-        assert_eq!(format!("{}", vid2), "0x00ab");
+        assert_eq!(format!("{vid2}"), "0x00ab");
     }
 
     #[test]
     fn test_product_id_display() {
         let pid = ProductId(0xbeee);
-        assert_eq!(format!("{}", pid), "0xbeee");
+        assert_eq!(format!("{pid}"), "0xbeee");
 
         let pid2 = ProductId(0x0001);
-        assert_eq!(format!("{}", pid2), "0x0001");
+        assert_eq!(format!("{pid2}"), "0x0001");
     }
 
     #[test]
@@ -74,7 +74,7 @@ mod tests {
             path: "/dev/hidraw0".to_string(),
         };
 
-        let display = format!("{}", info);
+        let display = format!("{info}");
         assert!(display.contains("SoloKeys"));
         assert!(display.contains("Solo 2"));
         assert!(display.contains("0x1209"));
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn test_vendor_id_clone() {
         let vid1 = VendorId(0x1209);
-        let vid2 = vid1.clone();
+        let vid2 = vid1;
 
         assert_eq!(vid1, vid2);
     }
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn test_product_id_clone() {
         let pid1 = ProductId(0xbeee);
-        let pid2 = pid1.clone();
+        let pid2 = pid1;
 
         assert_eq!(pid1, pid2);
     }
@@ -239,7 +239,7 @@ mod tests {
     #[test]
     fn test_vendor_id_debug() {
         let vid = VendorId(0x1209);
-        let debug_str = format!("{:?}", vid);
+        let debug_str = format!("{vid:?}");
         assert!(debug_str.contains("VendorId"));
         assert!(debug_str.contains("1209") || debug_str.contains("4617")); // hex or decimal
     }
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn test_product_id_debug() {
         let pid = ProductId(0xbeee);
-        let debug_str = format!("{:?}", pid);
+        let debug_str = format!("{pid:?}");
         assert!(debug_str.contains("ProductId"));
         assert!(debug_str.contains("beee") || debug_str.contains("48878")); // hex or decimal
     }

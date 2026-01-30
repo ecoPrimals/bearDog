@@ -270,7 +270,7 @@ mod unit_tests {
     async fn test_chacha20_poly1305_different_nonces() {
         // Same key + plaintext, nonces are generated randomly = different ciphertexts
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(b"test");
-        let key = base64::engine::general_purpose::STANDARD.encode(&vec![0x42; 32]);
+        let key = base64::engine::general_purpose::STANDARD.encode(vec![0x42; 32]);
 
         let result1 = handle_chacha20_poly1305_encrypt(Some(&json!({
             "plaintext": plaintext_b64,
@@ -518,7 +518,7 @@ mod e2e_tests {
         let verify_params = json!({
             "message": message_b64,
             "signature": base64::engine::general_purpose::STANDARD.encode(&signature),
-            "public_key": base64::engine::general_purpose::STANDARD.encode(&public_key)
+            "public_key": base64::engine::general_purpose::STANDARD.encode(public_key)
         });
 
         let verify_result = handle_verify_ed25519(Some(&verify_params)).await;
@@ -564,7 +564,7 @@ mod e2e_tests {
         use beardog_tunnel::unix_socket_ipc::handlers::crypto::*;
 
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(b"secret message");
-        let key = base64::engine::general_purpose::STANDARD.encode(&vec![0x42; 32]);
+        let key = base64::engine::general_purpose::STANDARD.encode(vec![0x42; 32]);
 
         // Encrypt
         let encrypt_params = json!({
@@ -936,7 +936,7 @@ mod fault_tests {
         // Ed25519 keys are 32 bytes, provide wrong length
         let wrong_key = vec![0u8; 16]; // Only 16 bytes
         let message_b64 = base64::engine::general_purpose::STANDARD.encode(b"test");
-        let signature_b64 = base64::engine::general_purpose::STANDARD.encode(&vec![0u8; 64]);
+        let signature_b64 = base64::engine::general_purpose::STANDARD.encode(vec![0u8; 64]);
 
         let result = handle_verify_ed25519(Some(&json!({
             "message": message_b64,
@@ -952,8 +952,8 @@ mod fault_tests {
     async fn test_fault_invalid_signature_verification() {
         // Valid format but wrong signature
         let message_b64 = base64::engine::general_purpose::STANDARD.encode(b"original message");
-        let wrong_signature = base64::engine::general_purpose::STANDARD.encode(&vec![0u8; 64]);
-        let public_key = base64::engine::general_purpose::STANDARD.encode(&vec![1u8; 32]);
+        let wrong_signature = base64::engine::general_purpose::STANDARD.encode(vec![0u8; 64]);
+        let public_key = base64::engine::general_purpose::STANDARD.encode(vec![1u8; 32]);
 
         let result = handle_verify_ed25519(Some(&json!({
             "message": message_b64,
@@ -973,7 +973,7 @@ mod fault_tests {
 
         let result = handle_x25519_derive_secret(Some(&json!({
             "our_secret": base64::engine::general_purpose::STANDARD.encode(&wrong_key),
-            "their_public": base64::engine::general_purpose::STANDARD.encode(&vec![1u8; 32])
+            "their_public": base64::engine::general_purpose::STANDARD.encode(vec![1u8; 32])
         })))
         .await;
 
@@ -985,7 +985,7 @@ mod fault_tests {
     async fn test_fault_chacha20_invalid_key_length() {
         let wrong_key = vec![0u8; 16]; // Should be 32 bytes
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(b"test");
-        let nonce = base64::engine::general_purpose::STANDARD.encode(&vec![0u8; 12]);
+        let nonce = base64::engine::general_purpose::STANDARD.encode(vec![0u8; 12]);
 
         let result = handle_chacha20_poly1305_encrypt(Some(&json!({
             "plaintext": plaintext_b64,

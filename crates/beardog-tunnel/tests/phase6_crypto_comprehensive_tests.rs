@@ -15,7 +15,6 @@
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
-use hex;
 use serde_json::json;
 
 // Re-export handlers for testing
@@ -239,14 +238,13 @@ fn test_argon2id_unicode_password() {
     }));
 
     assert!(verify_result.is_ok());
-    assert_eq!(
+    assert!(
         verify_result
             .unwrap()
             .get("valid")
             .unwrap()
             .as_bool()
-            .unwrap(),
-        true
+            .unwrap()
     );
 }
 
@@ -336,14 +334,13 @@ fn test_argon2id_very_long_password() {
     }));
 
     assert!(verify_result.is_ok());
-    assert_eq!(
+    assert!(
         verify_result
             .unwrap()
             .get("valid")
             .unwrap()
             .as_bool()
-            .unwrap(),
-        true
+            .unwrap()
     );
 }
 
@@ -460,7 +457,7 @@ fn test_e2e_password_registration_and_login_flow() {
     }))
     .unwrap();
 
-    assert_eq!(login_result.get("valid").unwrap().as_bool().unwrap(), true);
+    assert!(login_result.get("valid").unwrap().as_bool().unwrap());
 
     // Step 3: User attempts login with wrong password
     let wrong_login = handle_argon2id_verify(&json!({
@@ -469,7 +466,7 @@ fn test_e2e_password_registration_and_login_flow() {
     }))
     .unwrap();
 
-    assert_eq!(wrong_login.get("valid").unwrap().as_bool().unwrap(), false);
+    assert!(!wrong_login.get("valid").unwrap().as_bool().unwrap());
 }
 
 #[test]
@@ -770,14 +767,14 @@ fn test_fault_invalid_key_sizes() {
     // AES-256 with 16-byte key (should fail)
     let result = handle_aes256_gcm_encrypt(&json!({
         "plaintext": BASE64.encode(b"test"),
-        "key": BASE64.encode(&vec![0u8; 16])
+        "key": BASE64.encode(vec![0u8; 16])
     }));
     assert!(result.is_err());
 
     // AES-128 with 32-byte key (should fail)
     let result = handle_aes128_gcm_encrypt(&json!({
         "plaintext": BASE64.encode(b"test"),
-        "key": BASE64.encode(&vec![0u8; 32])
+        "key": BASE64.encode(vec![0u8; 32])
     }));
     assert!(result.is_err());
 }
@@ -832,8 +829,8 @@ fn test_fault_wrong_nonce_size() {
 fn test_fault_invalid_private_key_format() {
     // Test ECDH with corrupted private key
     let result = handle_ecdh_p256_derive(&json!({
-        "private_key": BASE64.encode(&vec![0u8; 10]), // Too short
-        "peer_public_key": BASE64.encode(&vec![0u8; 65])
+        "private_key": BASE64.encode(vec![0u8; 10]), // Too short
+        "peer_public_key": BASE64.encode(vec![0u8; 65])
     }));
 
     assert!(result.is_err());
@@ -847,7 +844,7 @@ fn test_fault_invalid_public_key_format() {
 
     let result = handle_ecdh_p256_derive(&json!({
         "private_key": private_key,
-        "peer_public_key": BASE64.encode(&vec![0xFF; 33]) // Invalid format
+        "peer_public_key": BASE64.encode(vec![0xFF; 33]) // Invalid format
     }));
 
     assert!(result.is_err());

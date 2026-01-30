@@ -59,8 +59,8 @@ pub fn handle_sha256(params: &Value) -> Result<Value, BearDogError> {
     let hash = hasher.finalize();
 
     // Encode as hex and base64
-    let hash_hex = hex::encode(&hash);
-    let hash_b64 = BASE64.encode(&hash);
+    let hash_hex = hex::encode(hash);
+    let hash_b64 = BASE64.encode(hash);
 
     Ok(json!({
         "hash": hash_hex,
@@ -112,8 +112,8 @@ pub fn handle_sha384(params: &Value) -> Result<Value, BearDogError> {
     let hash = hasher.finalize();
 
     // Encode as hex and base64
-    let hash_hex = hex::encode(&hash);
-    let hash_b64 = BASE64.encode(&hash);
+    let hash_hex = hex::encode(hash);
+    let hash_b64 = BASE64.encode(hash);
 
     Ok(json!({
         "hash": hash_hex,
@@ -165,8 +165,8 @@ pub fn handle_sha512(params: &Value) -> Result<Value, BearDogError> {
     let hash = hasher.finalize();
 
     // Encode as hex and base64
-    let hash_hex = hex::encode(&hash);
-    let hash_b64 = BASE64.encode(&hash);
+    let hash_hex = hex::encode(hash);
+    let hash_b64 = BASE64.encode(hash);
 
     Ok(json!({
         "hash": hash_hex,
@@ -217,8 +217,8 @@ pub fn handle_sha1(params: &Value) -> Result<Value, BearDogError> {
     let hash = hasher.finalize();
 
     // Encode as hex and base64
-    let hash_hex = hex::encode(&hash);
-    let hash_b64 = BASE64.encode(&hash);
+    let hash_hex = hex::encode(hash);
+    let hash_b64 = BASE64.encode(hash);
 
     Ok(json!({
         "hash": hash_hex,
@@ -269,8 +269,8 @@ pub fn handle_sha3_256(params: &Value) -> Result<Value, BearDogError> {
     let hash = hasher.finalize();
 
     // Encode as hex and base64
-    let hash_hex = hex::encode(&hash);
-    let hash_b64 = BASE64.encode(&hash);
+    let hash_hex = hex::encode(hash);
+    let hash_b64 = BASE64.encode(hash);
 
     Ok(json!({
         "hash": hash_hex,

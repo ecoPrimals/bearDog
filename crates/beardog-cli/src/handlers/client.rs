@@ -190,23 +190,23 @@ async fn send_command(
 }
 
 fn print_help() {
-    println!("");
+    println!();
     println!("Available Commands:");
     println!("  help                    - Show this help message");
     println!("  exit, quit              - Exit client");
-    println!("");
+    println!();
     println!("Crypto Operations:");
     println!("  crypto.sign_ed25519     - Sign with Ed25519");
     println!("  crypto.verify_ed25519   - Verify Ed25519 signature");
     println!("  crypto.blake3_hash      - Blake3 hash");
     println!("  crypto.hmac_sha256      - HMAC-SHA256");
-    println!("");
+    println!();
     println!("Discovery:");
     println!("  discovery.capabilities  - List available capabilities");
     println!("  discovery.health        - Server health check");
-    println!("");
+    println!();
     println!("Examples:");
     println!("  beardog> crypto.blake3_hash");
     println!("  beardog> discovery.capabilities");
-    println!("");
+    println!();
 }

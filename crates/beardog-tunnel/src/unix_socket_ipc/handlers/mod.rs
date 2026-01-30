@@ -174,7 +174,7 @@ impl HandlerRegistry {
     ) -> Result<serde_json::Value, String> {
         // Try each handler in order
         for handler in &self.handlers {
-            if handler.methods().iter().any(|m| *m == method) {
+            if handler.methods().contains(&method) {
                 return handler.handle(method, params, btsp_provider).await;
             }
         }

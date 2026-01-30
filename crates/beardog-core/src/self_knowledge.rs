@@ -204,7 +204,7 @@ impl PrimalSelfKnowledge {
 /// Primal identity (discovered, never hardcoded)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalIdentity {
-    /// Primal name (from PRIMAL_NAME env or config)
+    /// Primal name (from `PRIMAL_NAME` env or config)
     pub name: String,
 
     /// Instance ID (unique identifier for this instance)
@@ -228,7 +228,7 @@ impl PrimalIdentity {
             .unwrap_or_else(|_| "unknown".to_string());
 
         let pid = std::process::id();
-        let instance_id = format!("{}-{}", hostname, pid);
+        let instance_id = format!("{hostname}-{pid}");
 
         Ok(Self { name, instance_id })
     }
@@ -264,7 +264,7 @@ impl Endpoint {
 
         // Parse socket address
         let address = addr_str.parse::<SocketAddr>().map_err(|e| {
-            BearDogError::network(format!("Invalid endpoint address '{}': {}", addr_str, e))
+            BearDogError::network(format!("Invalid endpoint address '{addr_str}': {e}"))
         })?;
 
         Ok(Self { protocol, address })
@@ -345,8 +345,8 @@ fn discover_capabilities() -> Vec<SimpleCapability> {
 /// Discover endpoints where this primal listens
 ///
 /// Priority order:
-/// 1. Explicit BEARDOG_LISTEN_ADDR environment variable
-/// 2. BEARDOG_PORT environment variable (with 127.0.0.1)
+/// 1. Explicit `BEARDOG_LISTEN_ADDR` environment variable
+/// 2. `BEARDOG_PORT` environment variable (with 127.0.0.1)
 /// 3. Configuration file
 /// 4. Default: 127.0.0.1:0 (let OS assign port)
 fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
@@ -359,13 +359,12 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
         let addr = addr_str
             .to_socket_addrs()
             .map_err(|e| {
-                BearDogError::network(format!("Invalid BEARDOG_LISTEN_ADDR '{}': {}", addr_str, e))
+                BearDogError::network(format!("Invalid BEARDOG_LISTEN_ADDR '{addr_str}': {e}"))
             })?
             .next()
             .ok_or_else(|| {
                 BearDogError::network(format!(
-                    "Could not resolve BEARDOG_LISTEN_ADDR '{}'",
-                    addr_str
+                    "Could not resolve BEARDOG_LISTEN_ADDR '{addr_str}'"
                 ))
             })?;
 
@@ -380,7 +379,7 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
     // Try BEARDOG_PORT
     if let Ok(port_str) = env::var("BEARDOG_PORT") {
         let port: u16 = port_str.parse().map_err(|e| {
-            BearDogError::network(format!("Invalid BEARDOG_PORT '{}': {}", port_str, e))
+            BearDogError::network(format!("Invalid BEARDOG_PORT '{port_str}': {e}"))
         })?;
 
         debug!("Using BEARDOG_PORT: {}", port);

@@ -9,7 +9,6 @@ use beardog_core::self_knowledge::PrimalSelfKnowledge;
 use beardog_core::socket_config::SocketConfig;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
-use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tokio::signal;
 use tracing::{debug, error, info, warn};

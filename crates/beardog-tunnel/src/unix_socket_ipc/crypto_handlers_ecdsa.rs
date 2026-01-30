@@ -46,7 +46,7 @@
 //!
 //! All operations target < 1ms for TLS compatibility.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use p256::ecdsa::{

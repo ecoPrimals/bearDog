@@ -233,7 +233,7 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
 
     // Encode keys
     let public_key_b64 = base64::engine::general_purpose::STANDARD.encode(public.as_bytes());
-    let secret_key_b64 = base64::engine::general_purpose::STANDARD.encode(&secret_bytes);
+    let secret_key_b64 = base64::engine::general_purpose::STANDARD.encode(secret_bytes);
 
     info!("✅ Ephemeral X25519 keypair generated");
 

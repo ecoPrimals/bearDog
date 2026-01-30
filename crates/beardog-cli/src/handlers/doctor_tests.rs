@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use super::super::doctor::*;
+    
     use crate::DoctorArgs;
 
     #[test]

@@ -450,7 +450,7 @@ mod tests {
         // Test with invalid private key
         let params = json!({
             "private_key": "invalid_base64!!!",
-            "peer_public_key": BASE64.encode(&[0u8; 65])
+            "peer_public_key": BASE64.encode([0u8; 65])
         });
 
         let result = handle_ecdh_p256_derive(&params);
@@ -461,7 +461,7 @@ mod tests {
     fn test_ecdh_p256_missing_parameters() {
         // Test with missing private_key
         let params = json!({
-            "peer_public_key": BASE64.encode(&[0u8; 65])
+            "peer_public_key": BASE64.encode([0u8; 65])
         });
 
         let result = handle_ecdh_p256_derive(&params);

@@ -10,7 +10,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// BearDog's capabilities advertised to the ecosystem
+/// `BearDog`'s capabilities advertised to the ecosystem
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogCapabilities {
     /// Primal identity
@@ -168,7 +168,8 @@ pub enum ResponseStatus {
 }
 
 impl BearDogCapabilities {
-    /// Create BearDog's capability manifest
+    /// Create `BearDog`'s capability manifest
+    #[must_use] 
     pub fn new(family_id: Option<String>, node_id: String) -> Self {
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
@@ -204,7 +205,7 @@ impl BearDogCapabilities {
         }
     }
 
-    /// Default capabilities BearDog provides
+    /// Default capabilities `BearDog` provides
     fn default_capabilities() -> Vec<Capability> {
         vec![
             Capability::Encryption {
@@ -233,15 +234,16 @@ impl BearDogCapabilities {
     }
 
     /// Check if this primal provides a capability
+    #[must_use] 
     pub fn provides_capability(&self, cap: &Capability) -> bool {
         self.provides
             .iter()
             .any(|c| Self::capability_matches(c, cap))
     }
 
-    /// Fuzzy match capabilities (e.g., "any encryption" matches "ChaCha20")
+    /// Fuzzy match capabilities (e.g., "any encryption" matches "`ChaCha20`")
     fn capability_matches(provided: &Capability, requested: &Capability) -> bool {
-        use Capability::*;
+        use Capability::{Encryption, TrustEvaluation, KeyManagement, Signatures, Discovery, Storage, Compute, Custom};
         match (provided, requested) {
             (Encryption { .. }, Encryption { .. }) => true,
             (TrustEvaluation { .. }, TrustEvaluation { .. }) => true,

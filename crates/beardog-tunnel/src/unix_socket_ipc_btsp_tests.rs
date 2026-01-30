@@ -7,7 +7,6 @@
 //! - Chaos/fault injection tests
 
 use beardog_types::primal_identity::PrimalIdentity;
-use std::sync::Arc;
 
 #[cfg(test)]
 mod btsp_jsonrpc_unit_tests {
@@ -16,7 +15,7 @@ mod btsp_jsonrpc_unit_tests {
     use crate::tunnel::hsm::HsmManager;
     use crate::unix_socket_ipc::UnixSocketIpcServer;
     use beardog_genetics::EcosystemGeneticEngine;
-    use serde_json::json;
+    
     use std::path::PathBuf;
     use std::sync::Arc;
     use tempfile::TempDir;

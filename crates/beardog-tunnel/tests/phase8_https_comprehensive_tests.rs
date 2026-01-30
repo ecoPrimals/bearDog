@@ -139,8 +139,8 @@ async fn test_application_secrets_boundary_values() {
 
     let params = json!({
         "pre_master_secret": BASE64.encode(&pre_master_secret),
-        "client_random": BASE64.encode(&vec![1u8; 32]),
-        "server_random": BASE64.encode(&vec![2u8; 32])
+        "client_random": BASE64.encode(vec![1u8; 32]),
+        "server_random": BASE64.encode(vec![2u8; 32])
     });
 
     let result = handle_tls_derive_application_secrets(Some(&params))
@@ -451,15 +451,15 @@ async fn test_chaos_mixed_valid_invalid() {
         let handle = tokio::spawn(async move {
             if valid {
                 let params = json!({
-                    "pre_master_secret": BASE64.encode(&vec![i as u8; 32]),
-                    "client_random": BASE64.encode(&vec![(i + 1) as u8; 32]),
-                    "server_random": BASE64.encode(&vec![(i + 2) as u8; 32])
+                    "pre_master_secret": BASE64.encode(vec![i as u8; 32]),
+                    "client_random": BASE64.encode(vec![(i + 1) as u8; 32]),
+                    "server_random": BASE64.encode(vec![(i + 2) as u8; 32])
                 });
                 handle_tls_derive_application_secrets(Some(&params)).await
             } else {
                 // Invalid: missing parameter
                 let params = json!({
-                    "pre_master_secret": BASE64.encode(&vec![i as u8; 32]),
+                    "pre_master_secret": BASE64.encode(vec![i as u8; 32]),
                     // Missing client_random and server_random
                 });
                 handle_tls_derive_application_secrets(Some(&params)).await
@@ -487,9 +487,9 @@ async fn test_chaos_resource_cleanup() {
     // Perform many operations
     for _ in 0..500 {
         let params = json!({
-            "pre_master_secret": BASE64.encode(&vec![42u8; 32]),
-            "client_random": BASE64.encode(&vec![1u8; 32]),
-            "server_random": BASE64.encode(&vec![2u8; 32])
+            "pre_master_secret": BASE64.encode(vec![42u8; 32]),
+            "client_random": BASE64.encode(vec![1u8; 32]),
+            "server_random": BASE64.encode(vec![2u8; 32])
         });
 
         let _ = handle_tls_derive_application_secrets(Some(&params))
@@ -521,8 +521,8 @@ async fn test_fault_corrupted_base64() {
     // Test with invalid base64 encoding
     let params = json!({
         "pre_master_secret": "NOT_VALID_BASE64!!!",
-        "client_random": BASE64.encode(&vec![1u8; 32]),
-        "server_random": BASE64.encode(&vec![2u8; 32])
+        "client_random": BASE64.encode(vec![1u8; 32]),
+        "server_random": BASE64.encode(vec![2u8; 32])
     });
 
     let result = handle_tls_derive_application_secrets(Some(&params)).await;
@@ -539,8 +539,8 @@ async fn test_fault_wrong_key_sizes() {
         let pre_master_secret = vec![42u8; size];
         let params = json!({
             "pre_master_secret": BASE64.encode(&pre_master_secret),
-            "client_random": BASE64.encode(&vec![1u8; 32]),
-            "server_random": BASE64.encode(&vec![2u8; 32])
+            "client_random": BASE64.encode(vec![1u8; 32]),
+            "server_random": BASE64.encode(vec![2u8; 32])
         });
 
         // Small sizes should still work (HKDF can handle any input size)
@@ -565,9 +565,9 @@ async fn test_fault_wrong_random_sizes() {
     for size in wrong_sizes {
         let client_random = vec![1u8; size];
         let params = json!({
-            "pre_master_secret": BASE64.encode(&vec![42u8; 32]),
+            "pre_master_secret": BASE64.encode(vec![42u8; 32]),
             "client_random": BASE64.encode(&client_random),
-            "server_random": BASE64.encode(&vec![2u8; 32])
+            "server_random": BASE64.encode(vec![2u8; 32])
         });
 
         let result = handle_tls_derive_application_secrets(Some(&params)).await;
@@ -587,11 +587,11 @@ async fn test_fault_missing_parameters() {
     // Test various combinations of missing parameters
     let test_cases = vec![
         json!({}),                                                      // All missing
-        json!({ "pre_master_secret": BASE64.encode(&vec![42u8; 32]) }), // Missing randoms
-        json!({ "client_random": BASE64.encode(&vec![1u8; 32]) }), // Missing secret and server_random
+        json!({ "pre_master_secret": BASE64.encode(vec![42u8; 32]) }), // Missing randoms
+        json!({ "client_random": BASE64.encode(vec![1u8; 32]) }), // Missing secret and server_random
         json!({
-            "pre_master_secret": BASE64.encode(&vec![42u8; 32]),
-            "client_random": BASE64.encode(&vec![1u8; 32])
+            "pre_master_secret": BASE64.encode(vec![42u8; 32]),
+            "client_random": BASE64.encode(vec![1u8; 32])
         }), // Missing server_random
     ];
 
@@ -618,8 +618,8 @@ async fn test_fault_empty_strings() {
     // Test with empty base64 strings (decode to zero-length)
     let params = json!({
         "pre_master_secret": "",
-        "client_random": BASE64.encode(&vec![1u8; 32]),
-        "server_random": BASE64.encode(&vec![2u8; 32])
+        "client_random": BASE64.encode(vec![1u8; 32]),
+        "server_random": BASE64.encode(vec![2u8; 32])
     });
 
     // Empty string is valid base64, decodes to zero-length
@@ -780,7 +780,7 @@ async fn test_handshake_vs_application_secrets_different() {
     // Use same transcript hash for both (for comparison)
     let transcript_hash = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x03u8; 64]).to_vec()
+        Sha256::digest([0x03u8; 64]).to_vec()
     };
 
     let params = json!({
@@ -833,12 +833,12 @@ async fn test_handshake_secrets_transcript_hash_binding() {
     // Two different transcripts
     let transcript_hash_1 = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x03u8; 64]).to_vec()
+        Sha256::digest([0x03u8; 64]).to_vec()
     };
 
     let transcript_hash_2 = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x04u8; 64]).to_vec() // Different!
+        Sha256::digest([0x04u8; 64]).to_vec() // Different!
     };
 
     let params1 = json!({
@@ -936,7 +936,7 @@ async fn test_handshake_secrets_performance() {
     let server_random = vec![0x02u8; 32];
     let transcript_hash = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x03u8; 64]).to_vec()
+        Sha256::digest([0x03u8; 64]).to_vec()
     };
 
     let params = json!({
@@ -980,7 +980,7 @@ async fn test_handshake_secrets_concurrent() {
             let server_random = vec![0x02u8; 32];
             let transcript_hash = {
                 use sha2::{Digest, Sha256};
-                Sha256::digest(&[i as u8; 64]).to_vec()
+                Sha256::digest([i as u8; 64]).to_vec()
             };
 
             let params = json!({
@@ -1018,7 +1018,7 @@ async fn test_handshake_secrets_avalanche_effect() {
     let server_random = vec![0x02u8; 32];
     let transcript_hash = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x03u8; 64]).to_vec()
+        Sha256::digest([0x03u8; 64]).to_vec()
     };
 
     let params1 = json!({
@@ -1071,7 +1071,7 @@ async fn test_handshake_secrets_timing_attack_resistance() {
     let server_random = vec![0x02u8; 32];
     let transcript_hash = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x03u8; 64]).to_vec()
+        Sha256::digest([0x03u8; 64]).to_vec()
     };
 
     let mut durations = Vec::new();
@@ -1138,13 +1138,13 @@ async fn test_full_tls_handshake_flow() {
     // Handshake transcript: ClientHello + ServerHello
     let handshake_transcript_hash = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x03u8; 64]).to_vec()
+        Sha256::digest([0x03u8; 64]).to_vec()
     };
 
     // Application transcript: ALL handshake messages
     let application_transcript_hash = {
         use sha2::{Digest, Sha256};
-        Sha256::digest(&[0x04u8; 128]).to_vec()
+        Sha256::digest([0x04u8; 128]).to_vec()
     };
 
     // Step 1: Derive handshake secrets

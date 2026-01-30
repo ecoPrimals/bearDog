@@ -132,7 +132,7 @@ impl EncryptionHandler {
 
         // Encode results
         let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(&ciphertext);
-        let nonce_b64 = base64::engine::general_purpose::STANDARD.encode(&nonce);
+        let nonce_b64 = base64::engine::general_purpose::STANDARD.encode(nonce);
 
         info!(
             "🔒 Encrypted {} bytes with key_ref={}, algorithm=ChaCha20-Poly1305 (HSM-backed)",

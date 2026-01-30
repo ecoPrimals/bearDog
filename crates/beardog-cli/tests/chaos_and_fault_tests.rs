@@ -184,12 +184,12 @@ mod chaos_tests {
         // Verify expected distribution (100 tasks, ~14 failures)
         // Use range to account for potential race conditions in test execution
         assert!(
-            successes >= 85 && successes <= 87,
+            (85..=87).contains(&successes),
             "Should have ~86 successes, got {}",
             successes
         );
         assert!(
-            failures >= 13 && failures <= 15,
+            (13..=15).contains(&failures),
             "Should have ~14 failures, got {}",
             failures
         );
@@ -208,8 +208,8 @@ mod chaos_tests {
                 // Try to acquire resource
                 for _attempt in 0..1000 {
                     let current = resources.load(Ordering::SeqCst);
-                    if current > 0 {
-                        if resources
+                    if current > 0
+                        && resources
                             .compare_exchange(
                                 current,
                                 current - 1,
@@ -224,7 +224,6 @@ mod chaos_tests {
                             resources.fetch_add(1, Ordering::SeqCst);
                             return Ok(());
                         }
-                    }
 
                     // Resource exhausted - back off and retry
                     tokio::task::yield_now().await;

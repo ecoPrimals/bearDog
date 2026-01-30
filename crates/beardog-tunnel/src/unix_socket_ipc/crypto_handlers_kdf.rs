@@ -71,7 +71,7 @@ pub fn handle_bcrypt_hash(params: &Value) -> Result<Value, BearDogError> {
     // Parse cost (default: 12, range: 4-31)
     let cost = params.get("cost").and_then(|v| v.as_u64()).unwrap_or(12) as u32;
 
-    if cost < 4 || cost > 31 {
+    if !(4..=31).contains(&cost) {
         return Err(BearDogError::business(
             "bcrypt cost must be between 4 and 31".to_string(),
         ));
@@ -215,7 +215,7 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
         .unwrap_or(32) as usize;
 
     // Validate parameters
-    if log_n < 1 || log_n > 20 {
+    if !(1..=20).contains(&log_n) {
         return Err(BearDogError::business(
             "log_n must be between 1 and 20".to_string(),
         ));
@@ -273,7 +273,7 @@ mod tests {
             "hash": hash
         });
         let verify_result = handle_bcrypt_verify(&verify_params).unwrap();
-        assert_eq!(verify_result.get("valid").unwrap().as_bool().unwrap(), true);
+        assert!(verify_result.get("valid").unwrap().as_bool().unwrap());
 
         // Verify wrong password
         let wrong_password = BASE64.encode(b"wrong_password");
@@ -282,7 +282,7 @@ mod tests {
             "hash": hash
         });
         let wrong_result = handle_bcrypt_verify(&wrong_verify_params).unwrap();
-        assert_eq!(wrong_result.get("valid").unwrap().as_bool().unwrap(), false);
+        assert!(!wrong_result.get("valid").unwrap().as_bool().unwrap());
     }
 
     #[test]

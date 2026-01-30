@@ -134,28 +134,33 @@ impl Default for CapabilityIntegrationConfig {
 
 impl CapabilityIntegrationConfig {
     /// Check if security capability is enabled
+    #[must_use] 
     pub fn has_security_capability(&self) -> bool {
         self.enabled_capabilities
             .contains(&CapabilityType::Security)
     }
 
     /// Check if storage capability is enabled
+    #[must_use] 
     pub fn has_storage_capability(&self) -> bool {
         self.enabled_capabilities.contains(&CapabilityType::Storage)
     }
 
     /// Check if compute capability is enabled
+    #[must_use] 
     pub fn has_compute_capability(&self) -> bool {
         self.enabled_capabilities.contains(&CapabilityType::Compute)
     }
 
     /// Check if networking capability is enabled
+    #[must_use] 
     pub fn has_networking_capability(&self) -> bool {
         self.enabled_capabilities
             .contains(&CapabilityType::Networking)
     }
 
     /// Check if AI capability is enabled
+    #[must_use] 
     pub fn has_ai_capability(&self) -> bool {
         self.enabled_capabilities.contains(&CapabilityType::AI)
     }

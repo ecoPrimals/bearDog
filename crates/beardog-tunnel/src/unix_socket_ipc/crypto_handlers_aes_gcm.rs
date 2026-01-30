@@ -507,13 +507,12 @@ mod tests {
         let decrypted = BASE64.decode(decrypted_b64).unwrap();
 
         assert_eq!(&decrypted, plaintext);
-        assert_eq!(
+        assert!(
             decrypt_result
                 .get("authenticated")
                 .unwrap()
                 .as_bool()
-                .unwrap(),
-            true
+                .unwrap()
         );
     }
 
@@ -657,7 +656,7 @@ mod tests {
         // Test that wrong key size is rejected
         let params = json!({
             "plaintext": BASE64.encode(b"test"),
-            "key": BASE64.encode(&vec![0u8; 16]) // Wrong size for AES-256
+            "key": BASE64.encode(vec![0u8; 16]) // Wrong size for AES-256
         });
 
         let result = handle_aes256_gcm_encrypt(&params);
@@ -670,7 +669,7 @@ mod tests {
         // Test that wrong key size is rejected
         let params = json!({
             "plaintext": BASE64.encode(b"test"),
-            "key": BASE64.encode(&vec![0u8; 32]) // Wrong size for AES-128
+            "key": BASE64.encode(vec![0u8; 32]) // Wrong size for AES-128
         });
 
         let result = handle_aes128_gcm_encrypt(&params);

@@ -9,7 +9,7 @@
 #[tokio::test]
 async fn test_e2e_tarpc_is_primary_protocol() {
     // tarpc should be detected as the highest priority protocol
-    let tarpc_frame = vec![0x00, 0x00, 0x00, 0x10, 0x01, 0x02, 0x03, 0x04];
+    let tarpc_frame = [0x00, 0x00, 0x00, 0x10, 0x01, 0x02, 0x03, 0x04];
 
     // Verify this looks like tarpc (length-delimited bincode)
     assert!(tarpc_frame.len() >= 4);

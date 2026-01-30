@@ -287,7 +287,7 @@ mod tests {
         });
 
         let verify_result = handle_argon2id_verify(&verify_params).unwrap();
-        assert_eq!(verify_result.get("valid").unwrap().as_bool().unwrap(), true);
+        assert!(verify_result.get("valid").unwrap().as_bool().unwrap());
     }
 
     #[test]
@@ -311,9 +311,8 @@ mod tests {
         });
 
         let verify_result = handle_argon2id_verify(&verify_params).unwrap();
-        assert_eq!(
-            verify_result.get("valid").unwrap().as_bool().unwrap(),
-            false
+        assert!(
+            !verify_result.get("valid").unwrap().as_bool().unwrap()
         );
     }
 

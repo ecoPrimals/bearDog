@@ -85,7 +85,7 @@ fn derive_application_secrets_sha256(
     };
 
     // RFC 8446 Section 7.1: Key Schedule for Application Keys (SHA-256)
-    let empty_hash = Sha256::digest(&[]);
+    let empty_hash = Sha256::digest([]);
     let handshake_derived = hkdf_expand_label(handshake_secret, "derived", &empty_hash, hash_len)?;
 
     let zeros = vec![0u8; hash_len];
@@ -141,7 +141,7 @@ fn derive_application_secrets_sha384(
     };
 
     // RFC 8446 Section 7.1: Key Schedule for Application Keys (SHA-384)
-    let empty_hash = Sha384::digest(&[]);
+    let empty_hash = Sha384::digest([]);
     let handshake_derived = hkdf_expand_label(handshake_secret, "derived", &empty_hash, hash_len)?;
 
     let zeros = vec![0u8; hash_len];
@@ -211,7 +211,7 @@ fn derive_handshake_secrets_sha256(
     let zeros = vec![0u8; hash_len];
     let early_secret = Hkdf::<Sha256>::extract(Some(&zeros), &zeros);
 
-    let empty_hash = Sha256::digest(&[]);
+    let empty_hash = Sha256::digest([]);
     let early_derived = hkdf_expand_label(&early_secret.0, "derived", &empty_hash, hash_len)?;
 
     let handshake_secret = Hkdf::<Sha256>::extract(Some(&early_derived), pre_master_secret);
@@ -289,7 +289,7 @@ fn derive_handshake_secrets_sha384(
     let zeros = vec![0u8; hash_len];
     let early_secret = Hkdf::<Sha384>::extract(Some(&zeros), &zeros);
 
-    let empty_hash = Sha384::digest(&[]);
+    let empty_hash = Sha384::digest([]);
     let early_derived = hkdf_expand_label(&early_secret.0, "derived", &empty_hash, hash_len)?;
 
     let handshake_secret = Hkdf::<Sha384>::extract(Some(&early_derived), pre_master_secret);
@@ -469,7 +469,7 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
         .map_err(|e| format!("HKDF expand failed for server write IV: {e}"))?;
 
     // Encode results
-    let master_secret_b64 = base64::engine::general_purpose::STANDARD.encode(&master_secret);
+    let master_secret_b64 = base64::engine::general_purpose::STANDARD.encode(master_secret);
     let client_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_key);
     let server_write_key_b64 = base64::engine::general_purpose::STANDARD.encode(&server_write_key);
     let client_write_iv_b64 = base64::engine::general_purpose::STANDARD.encode(&client_write_iv);

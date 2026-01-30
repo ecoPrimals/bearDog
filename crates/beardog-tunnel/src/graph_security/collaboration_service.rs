@@ -21,6 +21,12 @@ pub struct CollaborationService {
     // Future: Will hold Arc<UniversalPrimalAdapter> when available
 }
 
+impl Default for CollaborationService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CollaborationService {
     /// Create new collaboration service
     pub fn new() -> Self {

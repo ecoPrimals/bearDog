@@ -187,8 +187,7 @@ impl UniversalAdapter {
         let default_cache_ttl = std::env::var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
-            .map(Duration::from_secs)
-            .unwrap_or(Duration::from_secs(300));
+            .map_or(Duration::from_secs(300), Duration::from_secs);
 
         info!("✅ Universal Adapter initialized (zero hardcoded knowledge)");
 
@@ -366,18 +365,20 @@ impl UniversalAdapter {
     /// Check if adapter knows about any primals providing capability
     ///
     /// **Non-blocking**: Checks cache only, doesn't trigger discovery
+    #[must_use] 
     pub fn has_capability(&self, capability: &SimpleCapability) -> bool {
         self.get_cached_capability(capability).is_some()
     }
 
     /// Get number of known primals providing capability
+    #[must_use] 
     pub fn count_capability_providers(&self, capability: &SimpleCapability) -> usize {
         self.get_cached_capability(capability)
-            .map(|primals| primals.len())
-            .unwrap_or(0)
+            .map_or(0, |primals| primals.len())
     }
 
     /// Get all capabilities currently in cache
+    #[must_use] 
     pub fn cached_capabilities(&self) -> Vec<SimpleCapability> {
         self.capability_cache.read().keys().cloned().collect()
     }
@@ -463,7 +464,12 @@ mod tests {
 
         // EVOLUTION: Accept empty results during beardog-discovery integration
         // The important behavior is: (1) discovery doesn't error, (2) caching works when results exist
-        if !primals.is_empty() {
+        if primals.is_empty() {
+            eprintln!(
+                "⚠️  Discovery returned no results - beardog-discovery integration in progress"
+            );
+            eprintln!("   This is expected during evolution - see primal_discovery.rs:551");
+        } else {
             assert_eq!(
                 primals.len(),
                 1,
@@ -477,11 +483,6 @@ mod tests {
             // Clear specific cache
             adapter.clear_capability_cache(&SimpleCapability::Discovery);
             assert!(!adapter.has_capability(&SimpleCapability::Discovery));
-        } else {
-            eprintln!(
-                "⚠️  Discovery returned no results - beardog-discovery integration in progress"
-            );
-            eprintln!("   This is expected during evolution - see primal_discovery.rs:551");
         }
 
         std::env::remove_var("PRIMAL_NAME");

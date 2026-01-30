@@ -307,8 +307,8 @@ mod capability_unit_tests {
 
     #[test]
     fn test_empty_family_id() {
-        let caps = BearDogCapabilities::new(Some("".to_string()), "node1".to_string());
-        assert_eq!(caps.family_id, Some("".to_string()));
+        let caps = BearDogCapabilities::new(Some(String::new()), "node1".to_string());
+        assert_eq!(caps.family_id, Some(String::new()));
     }
 
     #[test]
@@ -526,8 +526,7 @@ mod capability_chaos_tests {
             let result = serde_json::from_str::<BearDogCapabilities>(json);
             assert!(
                 result.is_err(),
-                "Should fail to parse malformed JSON: {}",
-                json
+                "Should fail to parse malformed JSON: {json}"
             );
         }
     }
@@ -583,7 +582,7 @@ mod capability_chaos_tests {
         let mut provides = vec![];
         for i in 0..1000 {
             provides.push(Capability::Custom {
-                name: format!("capability_{}", i),
+                name: format!("capability_{i}"),
                 version: "1.0.0".to_string(),
                 properties: std::collections::HashMap::new(),
             });
@@ -691,7 +690,7 @@ mod capability_fault_tests {
     fn test_fault_very_large_json() {
         let mut large_metadata = std::collections::HashMap::new();
         for i in 0..10000 {
-            large_metadata.insert(format!("key_{}", i), format!("value_{}", i));
+            large_metadata.insert(format!("key_{i}"), format!("value_{i}"));
         }
 
         let caps = BearDogCapabilities {

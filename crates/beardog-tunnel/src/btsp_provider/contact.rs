@@ -180,8 +180,8 @@ impl ContactExchange {
 
         // For initial implementation, generate placeholder addresses
         // In production, this would query actual discovery service via capability
-        addresses.push(format!("192.168.1.5:10000")); // Local network
-        addresses.push(format!("10.0.0.3:10001")); // Another local network
+        addresses.push("192.168.1.5:10000".to_string()); // Local network
+        addresses.push("10.0.0.3:10001".to_string()); // Another local network
 
         // Future: Query discovery service via capability
         // let discovery_service = self.discover_capability("peer_discovery").await?;

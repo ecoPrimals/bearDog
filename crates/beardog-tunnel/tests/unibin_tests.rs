@@ -183,7 +183,7 @@ mod unit_tests {
 #[cfg(test)]
 mod e2e_tests {
     use std::process::Command;
-    use std::time::Duration;
+    
 
     fn beardog_bin() -> String {
         let mut path = std::env::current_exe().unwrap();
@@ -283,7 +283,7 @@ mod e2e_tests {
                 .arg(mode)
                 .arg("--help")
                 .output()
-                .expect(&format!("Failed to run {} --help", mode));
+                .unwrap_or_else(|_| panic!("Failed to run {} --help", mode));
 
             assert!(output.status.success(), "Mode {} should have help", mode);
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -333,7 +333,7 @@ mod e2e_tests {
                 .arg(level)
                 .arg("doctor")
                 .output()
-                .expect(&format!("Failed with log level {}", level));
+                .unwrap_or_else(|_| panic!("Failed with log level {}", level));
 
             assert!(output.status.success(), "Log level {} should work", level);
         }

@@ -181,7 +181,7 @@ mod tests {
         );
 
         if let Err(e) = result {
-            let error_msg = format!("{}", e);
+            let error_msg = format!("{e}");
             assert!(
                 error_msg.contains("Public key not found"),
                 "Error message should indicate key not found"

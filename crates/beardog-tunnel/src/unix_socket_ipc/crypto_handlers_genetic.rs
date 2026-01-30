@@ -242,9 +242,9 @@ pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
     let provider = GeneticCryptoProvider::new()?;
     let (mixed, quality) = provider
         .mix_entropy(
-            tier3.as_ref().map(|v| v.as_slice()),
-            tier2.as_ref().map(|v| v.as_slice()),
-            tier1.as_ref().map(|v| v.as_slice()),
+            tier3.as_deref(),
+            tier2.as_deref(),
+            tier1.as_deref(),
         )
         .await?;
 

@@ -52,7 +52,7 @@ use base64::Engine;
 use rand::rngs::OsRng;
 use rsa::pkcs1v15::{SigningKey as Pkcs1SigningKey, VerifyingKey as Pkcs1VerifyingKey};
 use rsa::pss::{SigningKey as PssSigningKey, VerifyingKey as PssVerifyingKey};
-use rsa::signature::{Keypair, RandomizedSigner, SignatureEncoding, Verifier};
+use rsa::signature::{RandomizedSigner, SignatureEncoding, Verifier};
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use tracing::{debug, info};

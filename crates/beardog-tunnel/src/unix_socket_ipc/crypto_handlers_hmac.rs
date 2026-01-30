@@ -88,8 +88,8 @@ pub fn handle_hmac_sha384(params: &Value) -> Result<Value, BearDogError> {
     let mac_bytes = result.into_bytes();
 
     // Encode as hex and base64
-    let mac_hex = hex::encode(&mac_bytes);
-    let mac_b64 = BASE64.encode(&mac_bytes);
+    let mac_hex = hex::encode(mac_bytes);
+    let mac_b64 = BASE64.encode(mac_bytes);
 
     Ok(json!({
         "mac": mac_hex,
@@ -152,8 +152,8 @@ pub fn handle_hmac_sha512(params: &Value) -> Result<Value, BearDogError> {
     let mac_bytes = result.into_bytes();
 
     // Encode as hex and base64
-    let mac_hex = hex::encode(&mac_bytes);
-    let mac_b64 = BASE64.encode(&mac_bytes);
+    let mac_hex = hex::encode(mac_bytes);
+    let mac_b64 = BASE64.encode(mac_bytes);
 
     Ok(json!({
         "mac": mac_hex,

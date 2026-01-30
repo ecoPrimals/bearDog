@@ -37,7 +37,7 @@ pub struct BearDogCryptoService {
     algorithms: discovery::AlgorithmRegistry,
 
     /// Public key storage for signature verification
-    /// Maps key_id -> public_key_bytes
+    /// Maps `key_id` -> `public_key_bytes`
     ///
     /// # Security Note
     ///
@@ -46,7 +46,7 @@ pub struct BearDogCryptoService {
     public_keys: Arc<parking_lot::RwLock<std::collections::HashMap<String, Vec<u8>>>>,
 
     /// RSA key storage (private keys)
-    /// Maps key_id -> DER-encoded PKCS#8 private key
+    /// Maps `key_id` -> DER-encoded PKCS#8 private key
     ///
     /// # Security Note
     ///
@@ -99,26 +99,25 @@ impl BearDogCryptoService {
         // Validate key size
         if bits != 2048 && bits != 3072 && bits != 4096 {
             return Err(BearDogError::validation(&format!(
-                "Invalid RSA key size: {} (must be 2048, 3072, or 4096)",
-                bits
+                "Invalid RSA key size: {bits} (must be 2048, 3072, or 4096)"
             )));
         }
 
         // Generate RSA key pair
         let mut rng = rand::thread_rng();
         let private_key = RsaPrivateKey::new(&mut rng, bits)
-            .map_err(|e| BearDogError::hsm(format!("RSA key generation failed: {}", e)))?;
+            .map_err(|e| BearDogError::hsm(format!("RSA key generation failed: {e}")))?;
 
         let public_key = RsaPublicKey::from(&private_key);
 
         // Encode keys to DER
         let private_key_der = private_key
             .to_pkcs8_der()
-            .map_err(|e| BearDogError::hsm(format!("RSA private key encoding failed: {}", e)))?;
+            .map_err(|e| BearDogError::hsm(format!("RSA private key encoding failed: {e}")))?;
 
         let public_key_der = public_key
             .to_public_key_der()
-            .map_err(|e| BearDogError::hsm(format!("RSA public key encoding failed: {}", e)))?;
+            .map_err(|e| BearDogError::hsm(format!("RSA public key encoding failed: {e}")))?;
 
         // Store keys
         self.store_rsa_key(key_id, private_key_der.as_bytes())?;
@@ -203,7 +202,7 @@ impl BearDogCryptoService {
         Ok(())
     }
 
-    /// Get public key for a given key_id (for signature verification)
+    /// Get public key for a given `key_id` (for signature verification)
     ///
     /// # Security Note
     ///
@@ -213,7 +212,7 @@ impl BearDogCryptoService {
         // parking_lot::RwLock never panics, cleaner API!
         let keys = self.public_keys.read();
         keys.get(key_id).cloned().ok_or_else(|| {
-            BearDogError::security(format!("Public key not found for key_id: {}", key_id))
+            BearDogError::security(format!("Public key not found for key_id: {key_id}"))
         })
     }
 

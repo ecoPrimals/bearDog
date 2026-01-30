@@ -279,7 +279,7 @@ mod tests {
         {
             assert_eq!(http_version, "2", "Should default to HTTP/2");
             assert_eq!(
-                alpn_protocols.first().map(|s| s.as_str()),
+                alpn_protocols.first().map(std::string::String::as_str),
                 Some("h2"),
                 "Should prefer h2 in ALPN"
             );

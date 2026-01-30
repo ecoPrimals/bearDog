@@ -123,11 +123,10 @@ fn has_cycles(nodes: &[GraphNode], edges: &[crate::graph_security::types::GraphE
     let mut rec_stack = HashSet::new();
 
     for node in nodes {
-        if !visited.contains(&node.id) {
-            if has_cycle_dfs(&node.id, &adj, &mut visited, &mut rec_stack) {
+        if !visited.contains(&node.id)
+            && has_cycle_dfs(&node.id, &adj, &mut visited, &mut rec_stack) {
                 return true;
             }
-        }
     }
 
     false

@@ -302,7 +302,7 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
 
         // Phase 2: Realistic RBAC - User role has read, write, execute (but NOT delete)
         // Only admin role would have delete permission
-        let allowed_operations = vec!["read", "write", "execute", "create", "update"];
+        let allowed_operations = ["read", "write", "execute", "create", "update"];
 
         if allowed_operations.contains(&request.operation.as_str()) {
             // Grant access with full user permissions

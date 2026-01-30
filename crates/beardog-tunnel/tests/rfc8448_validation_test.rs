@@ -125,7 +125,7 @@ async fn test_rfc8448_handshake_key_derivation() {
         "pre_master_secret": BASE64.encode(&ecdh_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(&computed_transcript_hash)
+        "transcript_hash": BASE64.encode(computed_transcript_hash)
     });
 
     let result = handle_tls_derive_handshake_secrets(Some(&params))

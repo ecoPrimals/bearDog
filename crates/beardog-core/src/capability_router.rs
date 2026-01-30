@@ -248,8 +248,7 @@ impl CapabilityRouter {
 
         if primals.is_empty() {
             return Err(BearDogError::not_found(format!(
-                "No primals found providing capability: {:?}",
-                capability
+                "No primals found providing capability: {capability:?}"
             )));
         }
 
@@ -290,8 +289,7 @@ impl CapabilityRouter {
         if let Some(min_trust) = context.min_trust_score {
             primals.retain(|p| {
                 p.trust_score
-                    .map(|score| score >= min_trust)
-                    .unwrap_or(false)
+                    .is_some_and(|score| score >= min_trust)
             });
         }
 
@@ -301,8 +299,7 @@ impl CapabilityRouter {
                 self.load_tracker
                     .get(&p.name)
                     .and_then(|load| load.avg_latency_ms)
-                    .map(|latency| latency <= max_latency as f64)
-                    .unwrap_or(true) // Keep if no latency data
+                    .map_or(true, |latency| latency <= max_latency as f64) // Keep if no latency data
             });
         }
 
@@ -331,11 +328,10 @@ impl CapabilityRouter {
                             .partial_cmp(&b_trust)
                             .unwrap_or(std::cmp::Ordering::Equal)
                     })
-                    .map(|(i, _)| i)
-                    .unwrap_or(0);
+                    .map_or(0, |(i, _)| i);
 
                 let trust = primals[idx].trust_score.unwrap_or(0.0);
-                (idx, format!("highest trust score: {:.2}", trust))
+                (idx, format!("highest trust score: {trust:.2}"))
             }
 
             SelectionStrategy::LeastLoaded => {
@@ -345,18 +341,15 @@ impl CapabilityRouter {
                     .min_by_key(|(_, p)| {
                         self.load_tracker
                             .get(&p.name)
-                            .map(|load| load.active_requests)
-                            .unwrap_or(0)
+                            .map_or(0, |load| load.active_requests)
                     })
-                    .map(|(i, _)| i)
-                    .unwrap_or(0);
+                    .map_or(0, |(i, _)| i);
 
                 let load = self
                     .load_tracker
                     .get(&primals[idx].name)
-                    .map(|l| l.active_requests)
-                    .unwrap_or(0);
-                (idx, format!("least loaded: {} active requests", load))
+                    .map_or(0, |l| l.active_requests);
+                (idx, format!("least loaded: {load} active requests"))
             }
 
             SelectionStrategy::LowestLatency => {
@@ -378,16 +371,13 @@ impl CapabilityRouter {
                             .partial_cmp(&b_latency)
                             .unwrap_or(std::cmp::Ordering::Equal)
                     })
-                    .map(|(i, _)| i)
-                    .unwrap_or(0);
+                    .map_or(0, |(i, _)| i);
 
                 let latency = self
                     .load_tracker
                     .get(&primals[idx].name)
-                    .and_then(|l| l.avg_latency_ms)
-                    .map(|lat| format!("{:.1}ms", lat))
-                    .unwrap_or_else(|| "unknown".to_string());
-                (idx, format!("lowest latency: {}", latency))
+                    .and_then(|l| l.avg_latency_ms).map_or_else(|| "unknown".to_string(), |lat| format!("{lat:.1}ms"));
+                (idx, format!("lowest latency: {latency}"))
             }
 
             SelectionStrategy::RoundRobin => {
@@ -397,17 +387,17 @@ impl CapabilityRouter {
                     .or_insert(0);
                 let idx = *counter % primals.len();
                 *counter = (*counter + 1) % primals.len();
-                (idx, format!("round-robin (counter: {})", counter))
+                (idx, format!("round-robin (counter: {counter})"))
             }
 
             SelectionStrategy::Random => {
                 use std::collections::hash_map::RandomState;
-                use std::hash::{BuildHasher, Hash, Hasher};
+                use std::hash::BuildHasher;
 
                 let s = RandomState::new();
-                let mut hasher = s.build_hasher();
-                Instant::now().hash(&mut hasher);
-                let idx = (hasher.finish() as usize) % primals.len();
+                
+                
+                let idx = (s.hash_one(&Instant::now()) as usize) % primals.len();
                 (idx, "random selection".to_string())
             }
 
@@ -487,7 +477,7 @@ mod tests {
     #[test]
     fn test_selection_strategy_highest_trust() {
         use crate::primal_discovery::DiscoveredPrimal;
-        use crate::self_knowledge::Endpoint;
+        
         use std::time::SystemTime;
 
         let mut primals = vec![

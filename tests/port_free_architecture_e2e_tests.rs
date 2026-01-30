@@ -6,7 +6,6 @@
 //! - Concurrent service spawning
 //! - Environment variable handling
 
-use serial_test::serial;
 use std::time::Duration;
 
 // ============================================================================

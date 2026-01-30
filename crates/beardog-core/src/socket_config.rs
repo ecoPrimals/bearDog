@@ -58,9 +58,9 @@ pub struct SocketConfig {
 /// Indicates which tier of fallback logic was used
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SocketPathSource {
-    /// Primal-specific environment variable (BEARDOG_SOCKET, highest priority)
+    /// Primal-specific environment variable (`BEARDOG_SOCKET`, highest priority)
     PrimalEnvVar,
-    /// Generic orchestrator environment variable (BIOMEOS_SOCKET_PATH)
+    /// Generic orchestrator environment variable (`BIOMEOS_SOCKET_PATH`)
     OrchestratorEnvVar,
     /// Primal IPC Protocol standard namespace (/primal/beardog)
     PrimalNamespace,
@@ -79,6 +79,7 @@ impl SocketConfig {
     /// 3. `/primal/beardog` (Primal IPC Protocol standard namespace)
     /// 4. `/run/user/<uid>/biomeos/beardog.sock` (XDG Runtime Directory, biomeOS standard)
     /// 5. `/tmp/beardog-<family>-<node>.sock` (fallback)
+    #[must_use] 
     pub fn from_env() -> Self {
         let family_id = std::env::var("BEARDOG_FAMILY_ID")
             .or_else(|_| std::env::var("FAMILY_ID"))
@@ -153,7 +154,7 @@ impl SocketConfig {
         }
 
         // Tier 5: Fallback to /tmp (last resort)
-        let tmp_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
+        let tmp_path = format!("/tmp/beardog-{family_id}-{node_id}.sock");
         Self {
             socket_path: PathBuf::from(tmp_path),
             family_id,
@@ -174,13 +175,12 @@ impl SocketConfig {
         let uid = Self::get_uid();
 
         // Check if XDG runtime directory exists
-        let xdg_runtime_dir = format!("/run/user/{}", uid);
+        let xdg_runtime_dir = format!("/run/user/{uid}");
         if Path::new(&xdg_runtime_dir).exists() {
             // Use biomeOS subdirectory for ecosystem integration
             // Path: /run/user/<uid>/biomeos/beardog.sock
             Some(PathBuf::from(format!(
-                "{}/biomeos/beardog.sock",
-                xdg_runtime_dir
+                "{xdg_runtime_dir}/biomeos/beardog.sock"
             )))
         } else {
             None
@@ -204,26 +204,31 @@ impl SocketConfig {
     }
 
     /// Get the resolved socket path
+    #[must_use] 
     pub fn socket_path(&self) -> &Path {
         &self.socket_path
     }
 
     /// Get socket path as string
+    #[must_use] 
     pub fn socket_path_string(&self) -> String {
         self.socket_path.display().to_string()
     }
 
     /// Get family ID
+    #[must_use] 
     pub fn family_id(&self) -> &str {
         &self.family_id
     }
 
     /// Get node ID
+    #[must_use] 
     pub fn node_id(&self) -> &str {
         &self.node_id
     }
 
     /// Get the source tier that was used
+    #[must_use] 
     pub fn source(&self) -> SocketPathSource {
         self.source
     }
@@ -264,6 +269,7 @@ impl SocketConfig {
     }
 
     /// Get a descriptive string for logging
+    #[must_use] 
     pub fn description(&self) -> String {
         match self.source {
             SocketPathSource::PrimalEnvVar => {

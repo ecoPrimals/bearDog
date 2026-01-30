@@ -74,7 +74,7 @@
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde_json::Value;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 // =============================================================================
 // ECDHE with NIST P-256 (secp256r1)
@@ -961,8 +961,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_aes_128_gcm_roundtrip() {
-        let key_b64 = BASE64.encode(&[0u8; 16]); // 128-bit key
-        let nonce_b64 = BASE64.encode(&[1u8; 12]); // 96-bit nonce
+        let key_b64 = BASE64.encode([0u8; 16]); // 128-bit key
+        let nonce_b64 = BASE64.encode([1u8; 12]); // 96-bit nonce
         let plaintext_b64 = BASE64.encode(b"Hello, TLS 1.2!");
 
         // Encrypt

@@ -4,7 +4,6 @@
 
 use crate::linux::{discover_hidraw, LinuxHidDevice};
 use crate::types::{HidDeviceInfo, ProductId, VendorId};
-use beardog_errors::BearDogError;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HidDeviceInfo Tests
@@ -54,7 +53,7 @@ fn test_hid_device_info_display() {
         serial: "SERIAL".to_string(),
     };
 
-    let formatted = format!("{}", info);
+    let formatted = format!("{info}");
     assert!(formatted.contains("Test"));
     assert!(formatted.contains("Device"));
     assert!(formatted.contains("/dev/hidraw0"));
@@ -263,14 +262,14 @@ async fn test_discover_deterministic() {
 #[test]
 fn test_vendor_id_display() {
     let vid = VendorId(0x1234);
-    let formatted = format!("{}", vid);
+    let formatted = format!("{vid}");
     assert_eq!(formatted, "0x1234");
 }
 
 #[test]
 fn test_product_id_display() {
     let pid = ProductId(0x5678);
-    let formatted = format!("{}", pid);
+    let formatted = format!("{pid}");
     assert_eq!(formatted, "0x5678");
 }
 

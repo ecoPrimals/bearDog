@@ -211,8 +211,7 @@ impl PrimalDiscovery {
         let cache_ttl = env::var("DISCOVERY_CACHE_TTL_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
-            .map(Duration::from_secs)
-            .unwrap_or(Duration::from_secs(300)); // 5 minutes default
+            .map_or(Duration::from_secs(300), Duration::from_secs); // 5 minutes default
 
         Ok(Self {
             method,
@@ -257,8 +256,7 @@ impl PrimalDiscovery {
                 ]))
             }
             Some(other) => Err(BearDogError::invalid_input(&format!(
-                "Unknown discovery method: {}",
-                other
+                "Unknown discovery method: {other}"
             ))),
         }
     }
@@ -395,7 +393,9 @@ impl PrimalDiscovery {
         }
 
         // Filter by capabilities if specified in query
-        let discovered = if !query.capabilities.is_empty() {
+        let discovered = if query.capabilities.is_empty() {
+            discovered
+        } else {
             discovered
                 .into_iter()
                 .filter(|primal| {
@@ -406,8 +406,6 @@ impl PrimalDiscovery {
                         .all(|req_cap| primal.capabilities.contains(req_cap))
                 })
                 .collect()
-        } else {
-            discovered
         };
 
         if discovered.is_empty() {
@@ -425,8 +423,7 @@ impl PrimalDiscovery {
     #[allow(dead_code)] // Used in capability-based discovery (future)
     fn parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
         env::var(env_key)
-            .ok()
-            .and_then(|caps_str| Some(Self::parse_capabilities_str(&caps_str, env_key)))
+            .ok().map(|caps_str| Self::parse_capabilities_str(&caps_str, env_key))
             .unwrap_or_default()
     }
 
@@ -472,10 +469,10 @@ impl PrimalDiscovery {
         let socket_path = registry_addr.trim_start_matches("unix://");
 
         // Build JSON-RPC request
-        let capability = if !query.capabilities.is_empty() {
-            format!("{:?}", query.capabilities[0])
-        } else {
+        let capability = if query.capabilities.is_empty() {
             "generic".to_string()
+        } else {
+            format!("{:?}", query.capabilities[0])
         };
 
         let request = serde_json::json!({
@@ -496,7 +493,7 @@ impl PrimalDiscovery {
                 // Send request
                 let request_str =
                     serde_json::to_string(&request).map_err(|e| BearDogError::Network {
-                        message: format!("Failed to serialize UPA request: {}", e),
+                        message: format!("Failed to serialize UPA request: {e}"),
                         category: beardog_errors::NetworkErrorCategory::Connection,
                     })?;
                 stream.write_all(request_str.as_bytes()).await?;
@@ -510,7 +507,7 @@ impl PrimalDiscovery {
                 // Parse JSON-RPC response
                 let response: serde_json::Value =
                     serde_json::from_str(&response_str).map_err(|e| BearDogError::Network {
-                        message: format!("Failed to parse UPA response: {}", e),
+                        message: format!("Failed to parse UPA response: {e}"),
                         category: beardog_errors::NetworkErrorCategory::Connection,
                     })?;
 

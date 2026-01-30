@@ -4,9 +4,8 @@
 //! TEST_DOMAIN: multi_component
 //! TEST_PRIORITY: high
 
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::Mutex;
 
 #[tokio::test]
@@ -204,7 +203,7 @@ async fn test_graceful_shutdown_sequence() {
     use tokio::sync::watch;
 
     let services_running = Arc::new(AtomicUsize::new(3));
-    let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+    let (shutdown_tx, shutdown_rx) = watch::channel(false);
 
     // Spawn services that listen for shutdown
     let mut service_handles = vec![];
