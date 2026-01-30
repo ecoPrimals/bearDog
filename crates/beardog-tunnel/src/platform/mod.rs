@@ -33,6 +33,9 @@ pub mod windows;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 pub mod ios;
 
+#[cfg(target_family = "wasm")]
+pub mod wasm;
+
 use std::path::PathBuf;
 use tokio::net::UnixListener;
 
@@ -52,6 +55,10 @@ pub enum SocketEndpoint {
     /// iOS XPC service (iOS only, documented for future)
     #[cfg(target_os = "ios")]
     XPC(String),
+    
+    /// In-process channel (WASM only, no true IPC in browser)
+    #[cfg(target_family = "wasm")]
+    InProcess(String),
 }
 
 impl SocketEndpoint {
@@ -64,6 +71,8 @@ impl SocketEndpoint {
             SocketEndpoint::NamedPipe(name) => name.clone(),
             #[cfg(target_os = "ios")]
             SocketEndpoint::XPC(service) => service.clone(),
+            #[cfg(target_family = "wasm")]
+            SocketEndpoint::InProcess(channel) => channel.clone(),
         }
     }
 }
@@ -104,6 +113,9 @@ pub use unix::UnixSocket as Socket;
 #[cfg(windows)]
 pub use windows::WindowsSocket as Socket;
 
+#[cfg(target_family = "wasm")]
+pub use wasm::WASMSocket as Socket;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -135,6 +147,11 @@ mod tests {
         {
             println!("Platform: Windows (named pipes)");
         }
+        
+        #[cfg(target_family = "wasm")]
+        {
+            println!("Platform: WASM (in-process channels, no true IPC)");
+        }
     }
     
     #[test]
@@ -160,6 +177,11 @@ mod tests {
                 assert!(service.contains("test_beardog"));
                 assert!(service.starts_with("org.biomeos."));
                 println!("XPC service endpoint: {}", service);
+            }
+            #[cfg(target_family = "wasm")]
+            SocketEndpoint::InProcess(channel) => {
+                assert!(channel.contains("test_beardog"));
+                println!("In-process channel endpoint: {}", channel);
             }
         }
     }
