@@ -27,6 +27,9 @@
 pub mod android;
 pub mod unix;
 
+#[cfg(windows)]
+pub mod windows;
+
 use std::path::PathBuf;
 use tokio::net::UnixListener;
 
@@ -38,6 +41,10 @@ pub enum SocketEndpoint {
     
     /// Abstract Unix socket (Android, also works on Linux)
     Abstract(String),
+    
+    /// Windows named pipe (Windows all architectures)
+    #[cfg(windows)]
+    NamedPipe(String),
 }
 
 impl SocketEndpoint {
@@ -46,6 +53,8 @@ impl SocketEndpoint {
         match self {
             SocketEndpoint::Filesystem(path) => format!("{}", path.display()),
             SocketEndpoint::Abstract(name) => name.clone(),
+            #[cfg(windows)]
+            SocketEndpoint::NamedPipe(name) => name.clone(),
         }
     }
 }
@@ -80,6 +89,9 @@ pub use android::AndroidSocket as Socket;
 #[cfg(all(unix, not(target_os = "android")))]
 pub use unix::UnixSocket as Socket;
 
+#[cfg(windows)]
+pub use windows::WindowsSocket as Socket;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,6 +108,11 @@ mod tests {
         {
             println!("Platform: Unix (filesystem sockets)");
         }
+        
+        #[cfg(windows)]
+        {
+            println!("Platform: Windows (named pipes)");
+        }
     }
     
     #[test]
@@ -110,6 +127,11 @@ mod tests {
             SocketEndpoint::Filesystem(path) => {
                 assert!(path.to_str().unwrap().contains("test_beardog"));
                 println!("Filesystem endpoint: {}", path.display());
+            }
+            #[cfg(windows)]
+            SocketEndpoint::NamedPipe(name) => {
+                assert!(name.contains("test_beardog"));
+                println!("Named pipe endpoint: {}", name);
             }
         }
     }
