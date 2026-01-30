@@ -30,6 +30,9 @@ pub mod unix;
 #[cfg(windows)]
 pub mod windows;
 
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+pub mod ios;
+
 use std::path::PathBuf;
 use tokio::net::UnixListener;
 
@@ -45,6 +48,10 @@ pub enum SocketEndpoint {
     /// Windows named pipe (Windows all architectures)
     #[cfg(windows)]
     NamedPipe(String),
+    
+    /// iOS XPC service (iOS only, documented for future)
+    #[cfg(target_os = "ios")]
+    XPC(String),
 }
 
 impl SocketEndpoint {
@@ -55,6 +62,8 @@ impl SocketEndpoint {
             SocketEndpoint::Abstract(name) => name.clone(),
             #[cfg(windows)]
             SocketEndpoint::NamedPipe(name) => name.clone(),
+            #[cfg(target_os = "ios")]
+            SocketEndpoint::XPC(service) => service.clone(),
         }
     }
 }
@@ -86,7 +95,10 @@ pub trait PlatformSocket {
 #[cfg(target_os = "android")]
 pub use android::AndroidSocket as Socket;
 
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+pub use ios::IOSSocket as Socket;
+
+#[cfg(all(unix, not(target_os = "android"), not(target_os = "macos"), not(target_os = "ios")))]
 pub use unix::UnixSocket as Socket;
 
 #[cfg(windows)]
@@ -104,7 +116,17 @@ mod tests {
             println!("Platform: Android (abstract sockets)");
         }
         
-        #[cfg(all(unix, not(target_os = "android")))]
+        #[cfg(target_os = "macos")]
+        {
+            println!("Platform: macOS (filesystem sockets via iOS module)");
+        }
+        
+        #[cfg(target_os = "ios")]
+        {
+            println!("Platform: iOS (XPC documented, awaiting Pure Rust bindings)");
+        }
+        
+        #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos"), not(target_os = "ios")))]
         {
             println!("Platform: Unix (filesystem sockets)");
         }
@@ -132,6 +154,12 @@ mod tests {
             SocketEndpoint::NamedPipe(name) => {
                 assert!(name.contains("test_beardog"));
                 println!("Named pipe endpoint: {}", name);
+            }
+            #[cfg(target_os = "ios")]
+            SocketEndpoint::XPC(service) => {
+                assert!(service.contains("test_beardog"));
+                assert!(service.starts_with("org.biomeos."));
+                println!("XPC service endpoint: {}", service);
             }
         }
     }
