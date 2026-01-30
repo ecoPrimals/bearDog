@@ -103,7 +103,12 @@ impl Default for NetworkConfig {
 
 /// Default service host (configurable via `BEARDOG_SERVICE_HOST` environment variable)
 ///
-/// **TODO**: Deprecate in favor of direct `BEARDOG_CONFIG` usage
+/// **Deprecated**: Use `BEARDOG_CONFIG.network.api.bind_address` directly instead.
+/// This function will be removed in v0.11.0.
+#[deprecated(
+    since = "0.10.0",
+    note = "Use BEARDOG_CONFIG.network.api.bind_address directly"
+)]
 pub fn default_service_host() -> String {
     std::env::var("BEARDOG_SERVICE_HOST").unwrap_or_else(|_| {
         std::env::var("BEARDOG_HOST").unwrap_or_else(|_| {
@@ -162,6 +167,9 @@ pub struct ServicePorts {
     /// Admin interface port
     /// Number of `admin_port`
     pub admin_port: u16,
+    /// Debug/diagnostics port
+    /// Number of `debug_port`
+    pub debug_port: u16,
     /// Metrics port
     /// Number of `metrics_port`
     pub metrics_port: u16,
@@ -195,7 +203,7 @@ impl Default for ServicePorts {
     fn default() -> Self {
         use beardog_config::domains::network_ports::{
             DEFAULT_ADMIN_PORT, DEFAULT_AI_PORT, DEFAULT_API_PORT, DEFAULT_COMPUTE_PORT,
-            DEFAULT_DATABASE_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_GRAFANA_PORT,
+            DEFAULT_DATABASE_PORT, DEFAULT_DEBUG_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_GRAFANA_PORT,
             DEFAULT_HEALTH_PORT, DEFAULT_JAEGER_PORT, DEFAULT_MESH_PORT, DEFAULT_METRICS_PORT,
             DEFAULT_SECURITY_PORT, DEFAULT_STORAGE_PORT, DEFAULT_WEBSOCKET_PORT,
         };
@@ -209,6 +217,10 @@ impl Default for ServicePorts {
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_ADMIN_PORT),
+            debug_port: std::env::var("BEARDOG_DEBUG_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(DEFAULT_DEBUG_PORT),
             metrics_port: std::env::var("BEARDOG_METRICS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

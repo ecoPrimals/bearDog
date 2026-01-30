@@ -92,6 +92,10 @@ pub const DEFAULT_DISCOVERY_PORT: u16 = 9090;
 /// Default admin endpoint port (9091)
 pub const DEFAULT_ADMIN_PORT: u16 = 9091;
 
+/// Default debug/diagnostics port (9092)
+/// By convention, admin_port + 1 for diagnostic endpoints
+pub const DEFAULT_DEBUG_PORT: u16 = 9092;
+
 /// Default HTTPS API port (8443)
 pub const DEFAULT_HTTPS_PORT: u16 = 8443;
 

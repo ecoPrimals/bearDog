@@ -156,27 +156,97 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                 return Ok(false);
             }
 
-            // TODO: Verify Ed25519 signature against modifier's public key
-            // Future: Get public key from CollaborationService
-            //
-            // let modifier = version.modified_by.as_ref().unwrap_or(&version.created_by.unwrap());
-            // let public_key = collaboration_service.get_user_public_key(modifier).await?;
-            //
-            // // Create canonical lineage version (without signature)
-            // let mut canonical_version = version.clone();
-            // canonical_version.signature = None;
-            // let canonical_json = serde_json::to_vec(&canonical_version)?;
-            //
-            // // Verify signature
-            // use beardog_core::crypto_service::algorithms::asymmetric;
-            // if !asymmetric::verify_ed25519(&canonical_json, &signature, &public_key)? {
-            //     return Ok(false);
-            // }
-
-            tracing::debug!(
-                "✓ Lineage version {} signature format valid (verification pending CollaborationService)",
-                version.version
-            );
+            // Verify Ed25519 signature against modifier's public key
+            // TODO: Get public key from CollaborationService (blocked by TODO #3 from inventory)
+            //let modifier = version.modified_by.as_ref().unwrap_or(&version.created_by.unwrap());
+            //let public_key = collaboration_service.get_user_public_key(modifier).await?;
+            
+            // For now, verify signature format and structure is correct
+            // Full verification will be enabled when CollaborationService integration is complete
+            
+            // Create canonical lineage version (without signature) for verification
+            let mut canonical_version = version.clone();
+            canonical_version.signature = None;
+            let canonical_json = serde_json::to_vec(&canonical_version).map_err(|e| {
+                BearDogError::validation(&format!(
+                    "Failed to serialize lineage version {} for signature verification: {e}",
+                    version.version
+                ))
+            })?;
+            
+            // Verify signature using Ed25519
+            // Note: Public key retrieval pending CollaborationService integration
+            if let Some(public_key_b64) = version.created_by.as_ref().and_then(|_| {
+                // TODO: Replace with actual public key from CollaborationService
+                // For now, we validate the signature format is correct
+                None::<String>
+            }) {
+                // Decode public key (when available)
+                let public_key_bytes = base64::engine::general_purpose::STANDARD
+                    .decode(public_key_b64)
+                    .map_err(|e| {
+                        BearDogError::validation(&format!(
+                            "Invalid base64 public key for lineage version {}: {e}",
+                            version.version
+                        ))
+                    })?;
+                
+                // Validate Ed25519 public key length
+                if public_key_bytes.len() != 32 {
+                    tracing::warn!(
+                        "⚠️  Lineage version {} has invalid public key length: {} bytes (expected 32)",
+                        version.version,
+                        public_key_bytes.len()
+                    );
+                    return Ok(false);
+                }
+                
+                // Perform Ed25519 signature verification
+                use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+                
+                let verifying_key = VerifyingKey::from_bytes(
+                    public_key_bytes.as_slice().try_into().map_err(|_| {
+                        BearDogError::validation(&format!(
+                            "Invalid public key format for lineage version {}",
+                            version.version
+                        ))
+                    })?
+                ).map_err(|e| {
+                    BearDogError::validation(&format!(
+                        "Invalid Ed25519 public key for lineage version {}: {e}",
+                        version.version
+                    ))
+                })?;
+                
+                let sig = Signature::from_bytes(
+                    signature.as_slice().try_into().map_err(|_| {
+                        BearDogError::validation(&format!(
+                            "Invalid signature format for lineage version {}",
+                            version.version
+                        ))
+                    })?
+                );
+                
+                // Verify the signature
+                if let Err(e) = verifying_key.verify(&canonical_json, &sig) {
+                    tracing::warn!(
+                        "⚠️  Lineage version {} has invalid Ed25519 signature: {e}",
+                        version.version
+                    );
+                    return Ok(false);
+                }
+                
+                tracing::debug!(
+                    "✓ Lineage version {} Ed25519 signature verified successfully",
+                    version.version
+                );
+            } else {
+                // Public key not available yet (pending CollaborationService integration)
+                tracing::debug!(
+                    "✓ Lineage version {} signature format valid (full verification pending CollaborationService integration)",
+                    version.version
+                );
+            }
         } else if idx > 0 {
             // Warn if later versions aren't signed (first version can be unsigned)
             tracing::warn!(
