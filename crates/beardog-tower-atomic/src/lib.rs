@@ -49,9 +49,8 @@
 //!   ChaCha20, Blake3                       APIs, AI providers
 //! ```
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
-use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, info, warn};
@@ -230,11 +229,14 @@ impl Client {
 /// JSON-RPC 2.0 Response
 #[derive(Debug, Deserialize)]
 struct JsonRpcResponse {
+    #[allow(dead_code)]
     jsonrpc: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[allow(dead_code)]
     result: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<JsonRpcError>,
+    #[allow(dead_code)]
     id: Value,
 }
 

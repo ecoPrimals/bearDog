@@ -49,10 +49,13 @@ struct DiscoveredProvider {
     /// Provider name (e.g., "consul", "etcd", "nestgate")
     name: String,
     /// Provider capabilities
+    #[allow(dead_code)]
     capabilities: Vec<String>,
     /// Provider endpoint (Unix socket path or URL)
+    #[allow(dead_code)]
     endpoint: String,
     /// When discovered
+    #[allow(dead_code)]
     discovered_at: SystemTime,
 }
 

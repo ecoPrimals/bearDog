@@ -174,49 +174,95 @@ impl CollaborationService {
 
 use serde::{Deserialize, Serialize};
 
+/// Template information from collaboration capability
+///
+/// Contains creator identity, trust metrics, and genetic family information
+/// for a template discovered via runtime capability-based discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TemplateInfo {
+    /// Unique template identifier
     pub template_id: String,
+    /// Creator's user ID
     pub creator_id: String,
+    /// Whether creator's identity has been verified
     pub identity_verified: bool,
+    /// Trust score (0.0-1.0)
     pub trust_score: f64,
+    /// Reputation level (e.g., "trusted", "new", "verified")
     pub reputation: String,
+    /// ISO 8601 timestamp of when creator joined
     pub member_since: String,
+    /// Optional genetic family identifier
     pub genetic_family: Option<String>,
 }
 
+/// User permissions for a resource
+///
+/// Returned from collaboration capability to determine user roles
+/// and permissions for graph security authorization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPermissions {
+    /// User identifier
     pub user_id: String,
+    /// User's role (e.g., "owner", "collaborator", "viewer")
     pub role: String,
+    /// Whether user is a collaborator
     pub is_collaborator: bool,
+    /// List of specific permissions granted
     pub permissions: Vec<String>,
 }
 
+/// Template lineage version information
+///
+/// Represents a single version in the template's evolution history,
+/// including change metadata and optional cryptographic signatures.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageVersion {
+    /// Version identifier (e.g., "1.0.0", "v2")
     pub version: String,
+    /// ISO 8601 timestamp of creation
     pub created_at: Option<String>,
+    /// ISO 8601 timestamp of last modification
     pub modified_at: Option<String>,
+    /// User ID of creator
     pub created_by: Option<String>,
+    /// User ID of last modifier
     pub modified_by: Option<String>,
+    /// Type of change (e.g., "create", "update", "fork")
     pub change_type: String,
+    /// Optional list of specific changes made
     pub changes: Option<Vec<String>>,
+    /// Optional Ed25519 signature of version
     pub signature: Option<String>,
 }
 
+/// Community usage metrics for a template
+///
+/// Aggregated metrics from the collaboration capability showing
+/// deployment success rates and community ratings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommunityMetrics {
+    /// Total number of deployments
     pub deployments: u64,
+    /// Success rate as a ratio (0.0-1.0)
     pub success_rate: Option<f64>,
+    /// Average rating (0.0-5.0)
     pub avg_rating: Option<f64>,
+    /// Total number of ratings received
     pub total_ratings: u64,
 }
 
+/// Security assessment results
+///
+/// Summary of recent security scans and threat analysis
+/// from the collaboration capability's security validation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAssessment {
+    /// ISO 8601 timestamp of last security scan
     pub last_scan: String,
+    /// Number of vulnerabilities found
     pub vulnerabilities_found: u32,
+    /// Threat level assessment (e.g., "none", "low", "medium", "high")
     pub threat_level: String,
 }
 
