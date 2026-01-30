@@ -971,6 +971,7 @@ dependencies = [
  "base64 0.21.7",
  "bcrypt",
  "beardog 0.1.0",
+ "beardog-adapters",
  "beardog-auth",
  "beardog-capabilities",
  "beardog-config",

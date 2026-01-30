@@ -1,19 +1,24 @@
-# 🔴 Pre-Existing File Corruption - capability_adapter.rs
+# 🔴 Pre-Existing File Corruption - beardog-adapters Module
 
-**Document Version**: 1.0  
+**Document Version**: 2.0  
 **Date**: January 31, 2026  
 **Priority**: HIGH - Blocks UniversalPrimalAdapter integration  
-**Status**: Discovered during TODO quick wins execution
+**Status**: Discovered during TODO quick wins execution  
+**Scope**: MULTIPLE FILES AFFECTED
 
 ---
 
 ## 🎯 Summary
 
-Discovered pre-existing syntax errors in `crates/beardog-adapters/src/universal/capability_adapter.rs` that prevent compilation. This blocks the UniversalPrimalAdapter integration in CollaborationService.
+Discovered pre-existing syntax errors in **multiple files** within `crates/beardog-adapters/src/universal/` that prevent compilation when those modules are enabled. This blocks the UniversalPrimalAdapter integration in CollaborationService.
 
-**File**: `crates/beardog-adapters/src/universal/capability_adapter.rs`  
+**Affected Files**:
+1. `capability_adapter.rs` - ❌ Multiple syntax errors
+2. `extensible_adapter.rs` - ❌ Multiple syntax errors
+3. Possibly others (not fully explored)
+
 **Last Modified**: Commit `9a2dae527` (Nov 2025)  
-**Status**: ❌ **DOES NOT COMPILE**
+**Status**: ❌ **WIDESPREAD FILE CORRUPTION**
 
 ---
 
@@ -113,11 +118,79 @@ Since primal_capability_adapter.rs is clean and functional, proceed with Univers
 
 ---
 
+## 📋 Discovery Process
+
+**Attempt 1**: Fixed capability_adapter.rs (orphaned struct) ✅
+**Attempt 2**: Disabled capability_adapter.rs → exposed extensible_adapter.rs errors ❌
+**Attempt 3**: Disabled both → exposed 199 compilation errors across crate ❌
+
+**Root Cause**: Widespread file corruption across beardog-adapters/universal/ directory
+
+---
+
+## 🔍 Full Scope of Corruption
+
+### **Files With Confirmed Errors**
+
+1. **capability_adapter.rs**:
+   - Orphaned struct definitions
+   - Malformed function signatures
+   - Incomplete function calls
+   - 6+ syntax errors
+
+2. **extensible_adapter.rs**:
+   - Unclosed delimiters throughout
+   - Malformed HashMap::with_capacity calls
+   - Invalid function signatures
+   - 6+ syntax errors
+
+3. **Other files** (when above are disabled):
+   - 199 additional compilation errors
+   - Suggests cascading dependency issues
+
+---
+
+## 📊 Impact Analysis
+
+**Why beardog-adapters Compiled Before**:
+- Modules weren't being fully enabled/imported
+- `primal_capability_adapter.rs` (the module we need) IS clean
+- Other modules had compilation disabled or weren't imported
+
+**Current Status**:
+- ✅ `primal_capability_adapter.rs`: CLEAN (the one we actually need!)
+- ❌ `capability_adapter.rs`: CORRUPTED (not needed)
+- ❌ `extensible_adapter.rs`: CORRUPTED (not needed)
+- ❓ Other modules: Unknown (not tested)
+
+---
+
+## ✅ Resolution Strategy
+
+**Decision**: Document and defer
+
+**Rationale**:
+1. Core functionality (primal_capability_adapter.rs) is clean ✅
+2. Corrupted files appear to be experimental/incomplete
+3. Fixing 199+ errors would take 10-20 hours
+4. Higher value work available (quick wins delivered value)
+
+**Actions Taken**:
+1. ✅ Fixed one syntax error in capability_adapter.rs (orphaned struct)
+2. ✅ Documented full scope of corruption
+3. ✅ Reverted UniversalPrimalAdapter integration (blocked by corruption)
+4. ✅ Cancelled TODO item (dependency unavailable)
+
+---
+
 ## 📋 Decision
 
-**Status**: Documented as pre-existing issue  
-**Action**: Continue with UniversalPrimalAdapter integration using primal_capability_adapter.rs  
-**Follow-up**: File GitHub issue for capability_adapter.rs cleanup
+**Status**: Documented as widespread pre-existing issue  
+**Action**: DEFER UniversalPrimalAdapter integration until beardog-adapters is repaired  
+**Priority**: Medium (CollaborationService works with fallback data)  
+**Follow-up**: File GitHub issue for beardog-adapters complete audit & repair
+
+**Estimated Repair Effort**: 10-20 hours (full crate audit)
 
 ---
 
