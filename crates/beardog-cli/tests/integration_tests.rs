@@ -47,6 +47,7 @@ fn test_hsm_discover() {
 }
 
 #[tokio::test]
+#[ignore = "Requires interactive TTY for human entropy collection"]
 async fn test_entropy_collection_workflow() {
     let temp_dir = TempDir::new().unwrap();
     let seed_path = temp_dir.path().join("test-seed.json");
@@ -164,6 +165,7 @@ fn test_key_list() {
 }
 
 #[tokio::test]
+#[ignore = "Requires interactive TTY for human entropy collection"]
 async fn test_entropy_info() {
     let temp_dir = TempDir::new().unwrap();
     let seed_path = temp_dir.path().join("info-test-seed.json");
