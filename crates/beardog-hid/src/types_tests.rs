@@ -3,8 +3,7 @@
 //! Tests `VendorId`, `ProductId`, `HidDeviceInfo`, and FIDO2 device detection.
 
 #[cfg(test)]
-mod tests {
-    use super::super::*;
+use super::*;
 
     #[test]
     fn test_vendor_id_display() {
@@ -251,4 +250,3 @@ mod tests {
         assert!(debug_str.contains("ProductId"));
         assert!(debug_str.contains("beee") || debug_str.contains("48878")); // hex or decimal
     }
-}

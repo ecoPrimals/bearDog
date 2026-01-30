@@ -144,19 +144,17 @@ pub mod fido2_products {
 /// assert!(is_fido2_device(vid, pid));
 /// ```
 #[must_use]
+#[allow(clippy::unnested_or_patterns)] // Cannot nest: GOOGLE has specific product IDs, others match all
 pub fn is_fido2_device(vendor_id: VendorId, product_id: ProductId) -> bool {
     use fido2_products::SOLO2;
     use fido2_vendors::{FEITIAN, GOOGLE, SOLOKEYS, YUBICO};
 
     match (vendor_id, product_id) {
-        // SoloKeys Solo 2
-        (SOLOKEYS, SOLO2) => true,
-        // Yubico (all models)
-        (YUBICO, _) => true,
-        // Google Titan (specific product IDs)
-        (GOOGLE, ProductId(0x0858 | 0x0859)) => true,
-        // Feitian (all models) - must come after Google to avoid unreachable pattern
-        (FEITIAN, _) => true,
+        // SoloKeys Solo 2, Yubico (all models), Google Titan (specific), Feitian (all models)
+        (SOLOKEYS, SOLO2)
+        | (YUBICO, _)
+        | (GOOGLE, ProductId(0x0858 | 0x0859))
+        | (FEITIAN, _) => true,
         // Unknown
         _ => false,
     }

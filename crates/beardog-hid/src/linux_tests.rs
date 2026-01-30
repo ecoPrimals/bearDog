@@ -162,15 +162,15 @@ async fn test_linux_hid_device_relative_path() {
 #[tokio::test]
 async fn test_fido2_device_identification() {
     // Test identifying known FIDO2 devices
-    let solokey_vid = VendorId(0x1209);
-    let solokey_pid = ProductId(0xbeee);
+    let solo_vendor = VendorId(0x1209);
+    let solo_product = ProductId(0xbeee);
 
-    let yubikey_vid = VendorId(0x1050);
+    let yubi_vendor = VendorId(0x1050);
 
     // Validate known VID/PIDs
-    assert_eq!(solokey_vid, VendorId(0x1209));
-    assert_eq!(solokey_pid, ProductId(0xbeee));
-    assert_eq!(yubikey_vid, VendorId(0x1050));
+    assert_eq!(solo_vendor, VendorId(0x1209));
+    assert_eq!(solo_product, ProductId(0xbeee));
+    assert_eq!(yubi_vendor, VendorId(0x1050));
 }
 
 #[tokio::test]
@@ -239,19 +239,13 @@ async fn test_discover_deterministic() {
     let result1 = discover_hidraw().await;
     let result2 = discover_hidraw().await;
 
-    match (result1, result2) {
-        (Ok(devices1), Ok(devices2)) => {
-            // Should find same number of devices (assuming no hot-plug)
-            // Note: This might be flaky if devices are added/removed during test
-            // but validates consistency
-            assert_eq!(devices1.len(), devices2.len());
-        }
-        (Err(_), Err(_)) => {
-            // Both failed consistently - OK
-        }
-        _ => {
-            // Mixed results - can happen in test environments
-        }
+    if let (Ok(devices1), Ok(devices2)) = (result1, result2) {
+        // Should find same number of devices (assuming no hot-plug)
+        // Note: This might be flaky if devices are added/removed during test
+        // but validates consistency
+        assert_eq!(devices1.len(), devices2.len());
+    } else {
+        // Both failed consistently or mixed results - OK in test environments
     }
 }
 
