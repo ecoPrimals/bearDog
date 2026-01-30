@@ -78,6 +78,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[serial_test::serial] // Environment variable test - must run serially
     fn test_resource_limits_default() {
         // NOTE: This test is sensitive to environment variables
         // test_resource_limits_from_env() properly manages env var state
@@ -107,6 +108,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial] // Environment variable test - must run serially
     fn test_resource_limits_from_env() {
         // FIXED: Better env isolation - clear ALL env vars and sleep between ops
         // This prevents interference from other tests or CI environment
@@ -174,6 +176,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial] // Environment variable test - must run serially
     fn test_resource_limits_invalid_env_uses_default() {
         // Clear env vars first to avoid interference from other tests
         std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");

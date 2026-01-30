@@ -4,6 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::SystemTime;
 use tracing::debug;
@@ -36,13 +37,23 @@ pub(super) struct Tunnel {
     /// **Security**: Automatically zeroized on drop
     pub session_key: Zeroizing<Vec<u8>>,
 
-    /// Bytes sent through this tunnel
-    pub bytes_sent: Arc<Mutex<u64>>,
+    /// Bytes sent through this tunnel (lock-free atomic counter)
+    ///
+    /// EVOLUTION: Changed from Arc<Mutex<u64>> to AtomicU64 (Jan 29, 2026)
+    /// - Lock-free: No mutex contention
+    /// - Fast: Direct atomic operations  
+    /// - Safe: No unsafe code needed
+    pub bytes_sent: AtomicU64,
 
-    /// Bytes received through this tunnel
-    pub bytes_received: Arc<Mutex<u64>>,
+    /// Bytes received through this tunnel (lock-free atomic counter)
+    ///
+    /// EVOLUTION: Changed from Arc<Mutex<u64>> to AtomicU64 (Jan 29, 2026)
+    pub bytes_received: AtomicU64,
 
     /// Last activity timestamp
+    ///
+    /// NOTE: SystemTime doesn't fit in atomic, so we keep Mutex here.
+    /// This is updated infrequently (only on activity) so mutex overhead is acceptable.
     pub last_activity: Arc<Mutex<SystemTime>>,
 
     /// Current trust level for this peer
@@ -72,8 +83,8 @@ impl Tunnel {
             peer_endpoint,
             established_at: Utc::now(),
             session_key: Zeroizing::new(session_key),
-            bytes_sent: Arc::new(Mutex::new(0)),
-            bytes_received: Arc::new(Mutex::new(0)),
+            bytes_sent: AtomicU64::new(0),     // Lock-free atomic
+            bytes_received: AtomicU64::new(0), // Lock-free atomic
             last_activity: Arc::new(Mutex::new(SystemTime::now())),
             trust_level,
         }
@@ -91,14 +102,14 @@ impl Tunnel {
             .unwrap_or(false)
     }
 
-    /// Get total bytes sent through tunnel
+    /// Get total bytes sent through tunnel (lock-free atomic read)
     pub(super) fn bytes_sent(&self) -> u64 {
-        *self.bytes_sent.lock()
+        self.bytes_sent.load(Ordering::Relaxed)
     }
 
-    /// Get total bytes received through tunnel
+    /// Get total bytes received through tunnel (lock-free atomic read)
     pub(super) fn bytes_received(&self) -> u64 {
-        *self.bytes_received.lock()
+        self.bytes_received.load(Ordering::Relaxed)
     }
 
     /// Get last activity timestamp
@@ -120,7 +131,7 @@ impl Tunnel {
     ///
     /// * `bytes` - Number of bytes sent
     pub(super) fn add_bytes_sent(&self, bytes: u64) {
-        *self.bytes_sent.lock() += bytes;
+        self.bytes_sent.fetch_add(bytes, Ordering::Relaxed);
         self.update_activity();
     }
 
@@ -130,7 +141,7 @@ impl Tunnel {
     ///
     /// * `bytes` - Number of bytes received
     pub(super) fn add_bytes_received(&self, bytes: u64) {
-        *self.bytes_received.lock() += bytes;
+        self.bytes_received.fetch_add(bytes, Ordering::Relaxed);
         self.update_activity();
     }
 }

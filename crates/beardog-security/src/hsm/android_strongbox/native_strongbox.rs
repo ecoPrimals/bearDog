@@ -298,7 +298,8 @@ Implementation references:
 
 Estimated effort: 8-16 hours",
             Some("Use Software HSM or FIDO2 provider for testing"),
-        ).into())
+        )
+        .into())
     }
 
     /// Sign data using hardware-backed key (pure native)
@@ -330,7 +331,8 @@ Implementation note: Uses same Binder connection as key generation.
 
 Estimated effort: 4-8 hours",
             Some("Use Software HSM or FIDO2 provider for signing operations"),
-        ).into())
+        )
+        .into())
     }
 
     /// Generate hardware entropy using native SecureRandom
@@ -370,7 +372,7 @@ impl NativeStrongBox {
     /// Returns an `UnsupportedPlatform` error with alternatives.
     pub fn new() -> Result<Self, BearDogError> {
         use beardog_errors::AndroidError;
-        
+
         Err(AndroidError::UnsupportedPlatform {
             platform: std::env::consts::OS.to_string(),
             feature: "Android StrongBox / Titan M2",
@@ -379,7 +381,8 @@ impl NativeStrongBox {
                 "Software HSM (Pure Rust)",
                 "TPM 2.0 (if available)",
             ],
-        }.into())
+        }
+        .into())
     }
 
     /// Get device information.
@@ -392,12 +395,13 @@ impl NativeStrongBox {
     /// Returns an `UnsupportedPlatform` error.
     pub fn device_info(&self) -> Result<&NativeDeviceInfo, BearDogError> {
         use beardog_errors::AndroidError;
-        
+
         Err(AndroidError::UnsupportedPlatform {
             platform: std::env::consts::OS.to_string(),
             feature: "Android Device Info",
             alternatives: vec!["Use platform-specific device info APIs"],
-        }.into())
+        }
+        .into())
     }
 
     /// Generate a native key.
@@ -411,12 +415,13 @@ impl NativeStrongBox {
         _require_attestation: bool,
     ) -> Result<Vec<u8>, BearDogError> {
         use beardog_errors::AndroidError;
-        
+
         Err(AndroidError::UnsupportedPlatform {
             platform: std::env::consts::OS.to_string(),
             feature: "Android StrongBox Key Generation",
             alternatives: vec!["Use Software HSM or FIDO2 provider"],
-        }.into())
+        }
+        .into())
     }
 
     /// Sign data using native key.
@@ -430,11 +435,12 @@ impl NativeStrongBox {
         _algorithm: &str,
     ) -> Result<Vec<u8>, BearDogError> {
         use beardog_errors::AndroidError;
-        
+
         Err(AndroidError::UnsupportedPlatform {
             platform: std::env::consts::OS.to_string(),
             feature: "Android StrongBox Signing",
             alternatives: vec!["Use Software HSM or FIDO2 provider"],
-        }.into())
+        }
+        .into())
     }
 }

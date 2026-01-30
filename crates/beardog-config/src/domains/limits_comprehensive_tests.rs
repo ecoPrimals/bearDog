@@ -424,6 +424,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial] // Environment variable test - must run serially
     fn test_from_env_with_overrides() {
         let _lock = ENV_MUTEX.lock().unwrap();
         std::env::remove_var("BEARDOG_BUFFER_SIZE");

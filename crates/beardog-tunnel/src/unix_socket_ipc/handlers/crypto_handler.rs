@@ -94,15 +94,25 @@ use tracing::info;
 // Import refactored crypto handlers from the new crypto module
 // The handlers are re-exported from crypto/mod.rs for easy access
 use crate::unix_socket_ipc::handlers::crypto::{
+    // TLS 1.2 handlers (Jan 27, 2026 - Tower Atomic Pattern for Songbird)
+    handle_aes_128_gcm_decrypt,
+    handle_aes_128_gcm_encrypt,
+    handle_aes_256_gcm_decrypt,
+    handle_aes_256_gcm_encrypt,
     // Hash handlers
     handle_blake3_hash,
     // Symmetric crypto handlers
     handle_chacha20_poly1305_decrypt,
     handle_chacha20_poly1305_encrypt,
+    handle_ecdhe_p256_compute_shared,
+    handle_ecdhe_p256_generate,
+    handle_ecdhe_p384_compute_shared,
+    handle_ecdhe_p384_generate,
     handle_hash_for_cipher,
     handle_hmac_sha256,
     // Asymmetric crypto handlers
     handle_sign_ed25519,
+    handle_tls12_prf,
     // TLS 1.3 handlers
     handle_tls_compute_finished_verify_data,
     handle_tls_derive_application_secrets,
@@ -113,16 +123,6 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_verify_ed25519,
     handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
-    // TLS 1.2 handlers (Jan 27, 2026 - Tower Atomic Pattern for Songbird)
-    handle_aes_128_gcm_decrypt,
-    handle_aes_128_gcm_encrypt,
-    handle_aes_256_gcm_decrypt,
-    handle_aes_256_gcm_encrypt,
-    handle_ecdhe_p256_compute_shared,
-    handle_ecdhe_p256_generate,
-    handle_ecdhe_p384_compute_shared,
-    handle_ecdhe_p384_generate,
-    handle_tls12_prf,
 };
 
 /// Crypto RPC handler
@@ -649,42 +649,41 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             // These route to the most commonly-used algorithm as a sensible default.
             // Neural API provides full semantic flexibility in production.
-            
             "crypto.hash" => {
                 info!("🔐 Crypto: hash (semantic → blake3_hash)");
                 handle_blake3_hash(params).await
             }
-            
+
             "crypto.hmac" => {
                 info!("🔐 Crypto: hmac (semantic → hmac_sha256)");
                 handle_hmac_sha256(params).await
             }
-            
+
             "crypto.sign" => {
                 info!("✍️  Crypto: sign (semantic → sign_ed25519)");
                 handle_sign_ed25519(params).await
             }
-            
+
             "crypto.verify" => {
                 info!("✅ Crypto: verify (semantic → verify_ed25519)");
                 handle_verify_ed25519(params).await
             }
-            
+
             "crypto.encrypt" => {
                 info!("🔒 Crypto: encrypt (semantic → chacha20_poly1305_encrypt)");
                 handle_chacha20_poly1305_encrypt(params).await
             }
-            
+
             "crypto.decrypt" => {
                 info!("🔓 Crypto: decrypt (semantic → chacha20_poly1305_decrypt)");
                 handle_chacha20_poly1305_decrypt(params).await
             }
-            
+
             "crypto.generate_keypair" => {
                 info!("🔑 Crypto: generate_keypair (semantic → x25519_generate_ephemeral)");
                 handle_x25519_generate_ephemeral(params).await
             }
-            
+
             "crypto.derive_secret" => {
                 info!("🔐 Crypto: derive_secret (semantic → x25519_derive_secret)");
                 handle_x25519_derive_secret(params).await

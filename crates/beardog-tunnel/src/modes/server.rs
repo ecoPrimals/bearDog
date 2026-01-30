@@ -92,9 +92,11 @@ pub async fn run(
     info!("🔌 Configuring Unix Socket IPC...");
     let socket_config = SocketConfig::from_env();
 
-    info!("   Socket Path: {}", socket_config.description());
-    info!("   Family ID: {}", socket_config.family_id());
-    info!("   Node ID: {}", socket_config.node_id());
+    info!("   Socket: {}", socket_config.socket_path().display());
+    info!("   Source: {}", socket_config.description());
+    info!("   Family: {}", socket_config.family_id());
+    info!("   Node: {}", socket_config.node_id());
+    info!("   PID: {}", std::process::id());
 
     // Prepare socket (create parent dir, remove old socket)
     socket_config.prepare().map_err(|e| {

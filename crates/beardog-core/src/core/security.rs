@@ -257,12 +257,12 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         // Simple authentication (no HTTP client needed!)
         // For production, use Unix socket communication to auth service
 
+        use base64::prelude::*;
+
         let mut user_info = HashMap::new();
         user_info.insert("user_id".to_string(), request.user_id.clone());
         user_info.insert("method".to_string(), "local".to_string());
         user_info.insert("roles".to_string(), "user,authenticated".to_string());
-
-        use base64::prelude::*;
 
         // Generate a JWT-format token (header.payload.signature)
         // For testing/local use, we use a simple format that mimics JWT structure

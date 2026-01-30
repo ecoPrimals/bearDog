@@ -51,6 +51,7 @@ fn test_infant_pattern_config_with_defaults() {
 }
 
 #[test]
+#[serial_test::serial]  // Environment variable test - must run serially
 fn test_infant_pattern_config_from_env() {
     let _g1 = EnvGuard::set("BEARDOG_PATTERN_MAX_AGE_SECS", "7200");
     let _g2 = EnvGuard::set("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS", "600");

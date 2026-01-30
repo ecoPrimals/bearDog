@@ -619,30 +619,22 @@ impl PrimalDiscovery {
                 query.capabilities[0].clone()
             };
 
-            // TODO: Implement DNS-SD via Songbird IPC instead of direct crate import
-            // For now, return mock results until beardog-discovery is properly implemented
-            warn!("DNS-SD feature not fully implemented - using capability-based discovery");
+            // EVOLUTION: DNS-SD discovery via Songbird IPC (capability-based)
+            // This is the proper implementation using inter-primal communication
+            // instead of hardcoded mock data.
+            //
+            // TODO: Complete beardog-discovery crate integration (in progress)
+            // For now, return empty until beardog-discovery is available.
+            // This is honest about current capabilities.
+            warn!(
+                "DNS-SD discovery via Songbird IPC not yet complete - beardog-discovery crate pending"
+            );
+            warn!("Returning empty discovery results until integration is complete");
+            warn!("See: specs/IMPLEMENTATION_GAPS_NOV_2025.md for beardog-discovery timeline");
 
-            // Use runtime discovery instead of hardcoded mdns crate
-            let primals = vec![DiscoveredPrimal {
-                name: format!("discovered-via-dns-sd-{:?}", capability),
-                capabilities: vec![capability.clone()],
-                endpoints: vec![Endpoint {
-                    protocol: Protocol::Http,
-                    address: {
-                        use beardog_config::global::BEARDOG_CONFIG;
-                        let host = &BEARDOG_CONFIG.network.addresses.api_host;
-                        let port = BEARDOG_CONFIG.network.api.port;
-                        format!("{host}:{port}")
-                            .parse()
-                            .expect("config values should be valid")
-                    },
-                }],
-                trust_score: Some(0.7), // Default trust for DNS-SD
-                discovered_at: std::time::SystemTime::now(),
-            }];
-
-            Ok(primals)
+            // Return empty - honest about current state
+            // Tests that depend on discovery should use explicit test-only mocks
+            Ok(vec![])
         }
 
         #[cfg(not(feature = "mdns"))]

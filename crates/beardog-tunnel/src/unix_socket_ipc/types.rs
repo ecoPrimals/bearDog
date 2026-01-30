@@ -142,32 +142,29 @@ impl JsonRpcError {
 
 /// Protocol detection result
 ///
-/// Priority order (from upstream evolution debt):
-/// 1. tarpc (PRIMARY) - Type-safe, efficient, modern Rust
-/// 2. JSON-RPC (FALLBACK) - Universal adapter
-/// 3. HTTP (LEGACY) - Less secure, less reliable, less fractal
+/// Priority order:
+/// 1. JSON-RPC (PRIMARY) - Universal, comprehensive, production-ready
+/// 2. HTTP (LEGACY) - Compatibility only, less secure
+///
+/// Note: TARPC was removed (Jan 29, 2026) - see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md
+/// JSON-RPC provides all needed functionality with 8+ handler modules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
-    /// Primary: Type-safe inter-primal (security level 5)
-    Tarpc,
-    /// Fallback: Universal adapter (security level 4)
+    /// Primary: Universal JSON-RPC 2.0 (security level 4)
     JsonRpc,
-    /// Legacy: Compatibility only (security level 2)
+    /// Legacy: HTTP compatibility (security level 2)
     Http,
 }
 
 impl Protocol {
     /// Detect protocol from first bytes
     ///
-    /// Deep debt solution: Pattern matching on actual bytes, not magic numbers
-    ///
     /// Detection logic:
-    /// - tarpc: Begins with tarpc magic bytes (TBD: document exact format)
-    /// - JSON-RPC: Begins with `{` (JSON object)
-    /// - HTTP: Begins with HTTP verbs (GET, POST, etc.)
+    /// - JSON-RPC: Begins with `{` (JSON object) - PRIMARY protocol
+    /// - HTTP: Begins with HTTP verbs (GET, POST, etc.) - LEGACY compatibility
     pub fn detect_from_bytes(first_bytes: &[u8]) -> Self {
         if first_bytes.is_empty() {
-            return Protocol::JsonRpc; // Default fallback
+            return Protocol::JsonRpc; // Default to primary protocol
         }
 
         // Check for HTTP verbs (legacy protocol)
@@ -185,20 +182,13 @@ impl Protocol {
             return Protocol::JsonRpc;
         }
 
-        // Check for tarpc magic bytes: 0x54 0x52 0x50 0x43 ("TRPC" in ASCII)
-        // tarpc uses bincode serialization with magic header
-        if first_bytes.len() >= 4 && first_bytes.starts_with(b"TRPC") {
-            return Protocol::Tarpc;
-        }
-
-        // Default: JSON-RPC (universal fallback)
+        // Default: JSON-RPC (primary protocol)
         Protocol::JsonRpc
     }
 
     /// Get protocol name for logging
     pub fn name(&self) -> &'static str {
         match self {
-            Protocol::Tarpc => "tarpc",
             Protocol::JsonRpc => "json-rpc",
             Protocol::Http => "http",
         }
@@ -207,9 +197,8 @@ impl Protocol {
     /// Get security level (5 = highest, 1 = lowest)
     pub fn security_level(&self) -> u8 {
         match self {
-            Protocol::Tarpc => 5,   // Type-safe, encrypted
-            Protocol::JsonRpc => 4, // Structured, can be encrypted
-            Protocol::Http => 2,    // Plain text, less secure
+            Protocol::JsonRpc => 4, // Structured, comprehensive, production-ready
+            Protocol::Http => 2,    // Plain text, less secure, legacy
         }
     }
 }
@@ -260,7 +249,6 @@ mod tests {
 
     #[test]
     fn test_protocol_security_levels() {
-        assert_eq!(Protocol::Tarpc.security_level(), 5);
         assert_eq!(Protocol::JsonRpc.security_level(), 4);
         assert_eq!(Protocol::Http.security_level(), 2);
     }

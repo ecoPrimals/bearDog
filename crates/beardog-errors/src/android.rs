@@ -1,7 +1,7 @@
-///! Android-specific structured errors
-///!
-///! These errors provide clear, actionable information about Android platform limitations
-///! and PHASE-2 work.
+//! Android-specific structured errors
+//!
+//! These errors provide clear, actionable information about Android platform limitations
+//! and PHASE-2 work.
 
 use std::fmt;
 
@@ -85,13 +85,13 @@ impl fmt::Display for AndroidError {
                 writeln!(f)?;
                 writeln!(f, "📝 Implementation Notes:")?;
                 writeln!(f, "{}", implementation_notes)?;
-                
+
                 if let Some(work) = workaround {
                     writeln!(f)?;
                     writeln!(f, "💡 Workaround:")?;
                     writeln!(f, "{}", work)?;
                 }
-                
+
                 Ok(())
             }
             AndroidError::UnsupportedPlatform {
@@ -123,8 +123,14 @@ impl fmt::Display for AndroidError {
                 writeln!(f, "Android: {}", android_version)?;
                 writeln!(f)?;
                 if *tee_fallback_available {
-                    writeln!(f, "💡 TEE (Trusted Execution Environment) fallback available")?;
-                    writeln!(f, "   (less secure than StrongBox but still hardware-backed)")?;
+                    writeln!(
+                        f,
+                        "💡 TEE (Trusted Execution Environment) fallback available"
+                    )?;
+                    writeln!(
+                        f,
+                        "   (less secure than StrongBox but still hardware-backed)"
+                    )?;
                 } else {
                     writeln!(f, "⚠️  No hardware-backed keystore available")?;
                     writeln!(f, "   Software HSM will be used (less secure)")?;
@@ -158,4 +164,3 @@ impl From<AndroidError> for crate::BearDogError {
         Self::system(err.to_string())
     }
 }
-

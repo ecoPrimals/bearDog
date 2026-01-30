@@ -127,7 +127,7 @@ pub mod btsp_provider;
 pub mod ipc_server;
 
 // Unix socket IPC server (PRIMARY inter-primal communication)
-pub mod tarpc_service;
+// tarpc_service removed - JSON-RPC first architecture (see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md)
 pub mod unix_socket_ipc;
 
 // Graph Security for Collaborative Intelligence

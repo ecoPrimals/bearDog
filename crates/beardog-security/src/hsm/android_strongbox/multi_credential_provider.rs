@@ -190,7 +190,8 @@ JNI approach (Fallback):
 
 Estimated effort: 12-20 hours",
             Some("Use Software HSM with deterministic key derivation"),
-        ).into())
+        )
+        .into())
     }
 
     /// Sign using Android Keystore key
@@ -226,7 +227,8 @@ Note: BiometricPrompt integration requires UI context.
 
 Estimated effort: 8-12 hours",
             Some("Use Software HSM signing"),
-        ).into())
+        )
+        .into())
     }
 
     /// List all keys in Android Keystore
@@ -262,7 +264,8 @@ JNI approach (fallback):
 
 Estimated effort: 4-6 hours",
             Some("Keys in Software HSM can be deleted via provider API"),
-        ).into())
+        )
+        .into())
     }
 
     /// Generate hardware entropy using Android SecureRandom
@@ -279,7 +282,7 @@ Estimated effort: 4-6 hours",
         use rand::RngCore;
         let mut entropy = vec![0u8; size];
         rand::thread_rng().fill_bytes(&mut entropy);
-        
+
         Ok(entropy)
     }
 }
@@ -496,12 +499,12 @@ impl MultiCredentialHsmProvider for StrongBoxMultiCredentialProvider {
             current_credentials: 0, // NOTE: Uses in-memory count; PHASE-2 will query keystore
             supports_hierarchical_credentials: true,
             supports_deterministic_derivation: true, // Via SecureRandom seeding
-            supports_hardware_entropy: true, // ✅ WORKING via getrandom()
-            max_entropy_bytes: Some(65536), // Reasonable limit
+            supports_hardware_entropy: true,         // ✅ WORKING via getrandom()
+            max_entropy_bytes: Some(65536),          // Reasonable limit
             supported_algorithms: vec!["EC".to_string(), "RSA".to_string()],
-            supports_user_presence: true,     // PHASE-2: Via BiometricPrompt
+            supports_user_presence: true, // PHASE-2: Via BiometricPrompt
             supports_user_verification: true, // PHASE-2: Via BiometricPrompt or PIN
-            supports_metadata: true,          // Android keystore supports metadata
+            supports_metadata: true,      // Android keystore supports metadata
             protocol: HsmProtocol::AndroidStrongBox,
         }
     }

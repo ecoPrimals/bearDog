@@ -1157,8 +1157,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_auto_initialize_concurrent_safe() {
-        use tokio::task;
         use std::sync::Arc;
+        use tokio::task;
 
         let config = HsmAutoInitConfig {
             mode: "software".to_string(),
@@ -1166,7 +1166,11 @@ mod tests {
         };
 
         // Initialize the manager once
-        let manager = Arc::new(HsmManager::auto_initialize_with_config(config).await.unwrap());
+        let manager = Arc::new(
+            HsmManager::auto_initialize_with_config(config)
+                .await
+                .unwrap(),
+        );
 
         // Now, spawn multiple tasks that use the *same* manager concurrently
         let handles: Vec<_> = (0..10)
@@ -1208,7 +1212,9 @@ mod tests {
             mode: "software".to_string(),
             auto_init: true,
         };
-        let manager = HsmManager::auto_initialize_with_config(config).await.unwrap();
+        let manager = HsmManager::auto_initialize_with_config(config)
+            .await
+            .unwrap();
         let key_result = manager.generate_key("test", &KeyType::Ed25519).await;
         assert!(key_result.is_ok(), "Should have provider when enabled");
 
@@ -1217,8 +1223,13 @@ mod tests {
             mode: "software".to_string(),
             auto_init: false,
         };
-        let manager = HsmManager::auto_initialize_with_config(config).await.unwrap();
+        let manager = HsmManager::auto_initialize_with_config(config)
+            .await
+            .unwrap();
         let key_result = manager.generate_key("test", &KeyType::Ed25519).await;
-        assert!(key_result.is_err(), "Should not have provider when disabled");
+        assert!(
+            key_result.is_err(),
+            "Should not have provider when disabled"
+        );
     }
 }

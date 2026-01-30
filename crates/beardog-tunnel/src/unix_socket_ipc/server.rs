@@ -251,16 +251,9 @@ impl UnixSocketIpcServer {
 
                 // Log security level
                 match protocol {
-                    Protocol::Tarpc => {
-                        info!(
-                            "🎯 tarpc connection (security level: {}) - PRIMARY protocol!",
-                            protocol.security_level()
-                        );
-                        info!("✅ Type-safe, efficient, modern Rust inter-primal communication");
-                    }
                     Protocol::JsonRpc => {
-                        debug!(
-                            "🔐 JSON-RPC connection (security level: {}) - FALLBACK protocol",
+                        info!(
+                            "📡 JSON-RPC connection (security level: {}) - PRIMARY protocol",
                             protocol.security_level()
                         );
                     }
@@ -269,18 +262,15 @@ impl UnixSocketIpcServer {
                             "⚠️  HTTP connection (security level: {})",
                             protocol.security_level()
                         );
-                        warn!("⚠️  HTTP is less secure, less reliable, less fractal than tarpc/JSON-RPC");
-                        warn!("⚠️  Consider migrating to tarpc for inter-primal communication");
+                        warn!(
+                            "⚠️  HTTP is less secure than JSON-RPC for inter-primal communication"
+                        );
+                        warn!("⚠️  Consider migrating to JSON-RPC 2.0 over Unix sockets");
                     }
                 }
 
                 // Route to appropriate handler
                 match protocol {
-                    Protocol::Tarpc => {
-                        info!("✅ tarpc protocol detected - routing to tarpc handler");
-                        self.handle_tarpc_persistent(&first_line, &mut reader, &mut writer)
-                            .await?;
-                    }
                     Protocol::JsonRpc => {
                         self.handle_jsonrpc_persistent(&first_line, &mut reader, &mut writer)
                             .await?;
@@ -340,74 +330,8 @@ impl UnixSocketIpcServer {
         Ok(())
     }
 
-    /// Handle tarpc connection persistently (COMPLETE IMPLEMENTATION)
-    ///
-    /// tarpc uses bincode serialization with efficient binary protocol.
-    /// This is the PRIMARY protocol for inter-primal communication.
-    async fn handle_tarpc_persistent(
-        &self,
-        first_line: &str,
-        reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
-        writer: &mut tokio::net::unix::OwnedWriteHalf,
-    ) -> Result<()> {
-        use tokio::io::AsyncWriteExt;
-
-        info!("🚀 tarpc handler - PRIMARY inter-primal protocol");
-
-        // tarpc uses bincode serialization after magic bytes
-        // For now, we'll decode and handle via JSON-RPC-compatible interface
-        // Full tarpc integration would use generated service traits
-
-        // Strip tarpc magic bytes ("TRPC")
-        let payload = if first_line.starts_with("TRPC") {
-            &first_line[4..]
-        } else {
-            first_line
-        };
-
-        // Decode bincode to serde_json::Value for routing
-        // In production, this would use generated tarpc service definitions
-        match bincode::deserialize::<serde_json::Value>(payload.as_bytes()) {
-            Ok(request_data) => {
-                // Route to appropriate handler based on method field
-                if let Some(method) = request_data.get("method").and_then(|m| m.as_str()) {
-                    debug!("📨 tarpc request: {}", method);
-
-                    // Handle request using existing handlers
-                    let response = self.route_request(method, &request_data).await?;
-
-                    // Serialize response with tarpc magic bytes
-                    let response_bytes = bincode::serialize(&response)
-                        .context("Failed to serialize tarpc response")?;
-
-                    // Write magic bytes + response
-                    writer.write_all(b"TRPC").await?;
-                    writer.write_all(&response_bytes).await?;
-                    writer.flush().await?;
-
-                    info!("✅ tarpc response sent: {} bytes", response_bytes.len());
-                } else {
-                    warn!("⚠️  tarpc request missing method field");
-                }
-            }
-            Err(e) => {
-                warn!("⚠️  Failed to decode tarpc request: {}", e);
-                // Send error response
-                let error_response = serde_json::json!({
-                    "error": {
-                        "code": -32700,
-                        "message": "Parse error"
-                    }
-                });
-                let error_bytes = bincode::serialize(&error_response)?;
-                writer.write_all(b"TRPC").await?;
-                writer.write_all(&error_bytes).await?;
-                writer.flush().await?;
-            }
-        }
-
-        Ok(())
-    }
+    // handle_tarpc_persistent() removed - see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md
+    // JSON-RPC provides comprehensive functionality (8+ handler modules, 30+ methods)
 
     /// Handle JSON-RPC request via modular handler registry
     ///

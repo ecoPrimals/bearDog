@@ -34,7 +34,8 @@ clap = { version = "4.4", features = ["derive"] }  # UniBin architecture (ecosys
 hostname = "0.3"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-tarpc = { version = "0.34", features = ["full"] }
+# tarpc removed (Jan 29, 2026) - see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md
+# JSON-RPC provides comprehensive functionality (8+ handler modules)
 tokio-serde = { version = "0.8", features = ["json"] }
 tokio-tungstenite = "0.20"
 serde_json = "1.0"

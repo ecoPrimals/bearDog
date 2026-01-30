@@ -4,9 +4,9 @@
 //! with a 5-tier fallback system (TRUE PRIMAL architecture):
 //!
 //! 1. **Primal-Specific** (highest priority): `BEARDOG_SOCKET`
-//! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH`
+//! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH` or `BIOMEOS_SOCKET_DIR`
 //! 3. **Primal IPC Protocol Standard**: `/primal/beardog`
-//! 4. **XDG Runtime Directory**: `/run/user/<uid>/beardog-<family>.sock`
+//! 4. **XDG Runtime Directory**: `/run/user/<uid>/biomeos/beardog.sock` (biomeOS standard)
 //! 5. **Temp Directory** (last resort): `/tmp/beardog-<family>-<node>.sock`
 //!
 //! ## Primal IPC Protocol Compliance
@@ -75,9 +75,9 @@ impl SocketConfig {
     ///
     /// Implements 5-tier fallback (Primal IPC Protocol compliant):
     /// 1. `BEARDOG_SOCKET` env var (primal-specific, highest priority)
-    /// 2. `BIOMEOS_SOCKET_PATH` env var (generic orchestrator, e.g., Neural API)
+    /// 2. `BIOMEOS_SOCKET_PATH` or `BIOMEOS_SOCKET_DIR` env var (generic orchestrator, e.g., Neural API)
     /// 3. `/primal/beardog` (Primal IPC Protocol standard namespace)
-    /// 4. `/run/user/<uid>/beardog-<family>.sock` (XDG)
+    /// 4. `/run/user/<uid>/biomeos/beardog.sock` (XDG Runtime Directory, biomeOS standard)
     /// 5. `/tmp/beardog-<family>-<node>.sock` (fallback)
     pub fn from_env() -> Self {
         let family_id = std::env::var("BEARDOG_FAMILY_ID")
@@ -104,15 +104,25 @@ impl SocketConfig {
             }
         }
 
-        // Tier 2: Check for generic orchestrator BIOMEOS_SOCKET_PATH
+        // Tier 2: Check for generic orchestrator BIOMEOS_SOCKET_PATH or BIOMEOS_SOCKET_DIR
         // This allows Neural API to set a standard path for all primals
+        // BIOMEOS_SOCKET_PATH: Full path to socket file
+        // BIOMEOS_SOCKET_DIR: Directory where beardog.sock will be created
         if let Ok(socket_path) = std::env::var("BIOMEOS_SOCKET_PATH") {
             // Validate: reject empty paths (fail fast, no hanging)
-            if socket_path.is_empty() {
-                // Skip to next tier instead of using empty path
-            } else {
+            if !socket_path.is_empty() {
                 return Self {
                     socket_path: PathBuf::from(socket_path),
+                    family_id,
+                    node_id,
+                    source: SocketPathSource::OrchestratorEnvVar,
+                };
+            }
+        } else if let Ok(socket_dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+            // Validate: reject empty paths
+            if !socket_dir.is_empty() {
+                return Self {
+                    socket_path: PathBuf::from(socket_dir).join("beardog.sock"),
                     family_id,
                     node_id,
                     source: SocketPathSource::OrchestratorEnvVar,
@@ -155,16 +165,22 @@ impl SocketConfig {
     /// Try to use XDG Runtime Directory
     ///
     /// Returns `Some(path)` if `/run/user/<uid>/` exists, otherwise `None`
-    fn try_xdg_runtime(family_id: &str) -> Option<PathBuf> {
+    ///
+    /// Creates socket at `/run/user/<uid>/biomeos/beardog.sock` for biomeOS integration.
+    /// The `/biomeos/` subdirectory groups all biomeOS primal sockets together for
+    /// easy discovery and management.
+    fn try_xdg_runtime(_family_id: &str) -> Option<PathBuf> {
         // Get current user ID
         let uid = Self::get_uid();
 
         // Check if XDG runtime directory exists
         let xdg_runtime_dir = format!("/run/user/{}", uid);
         if Path::new(&xdg_runtime_dir).exists() {
+            // Use biomeOS subdirectory for ecosystem integration
+            // Path: /run/user/<uid>/biomeos/beardog.sock
             Some(PathBuf::from(format!(
-                "{}/beardog-{}.sock",
-                xdg_runtime_dir, family_id
+                "{}/biomeos/beardog.sock",
+                xdg_runtime_dir
             )))
         } else {
             None
@@ -495,9 +511,8 @@ mod tests {
             }
             SocketPathSource::XdgRuntime => {
                 assert!(config.socket_path_string().contains("/run/user/"));
-                assert!(config
-                    .socket_path_string()
-                    .contains("beardog-xdg-test.sock"));
+                // biomeOS standard: /run/user/$UID/biomeos/beardog.sock
+                assert!(config.socket_path_string().contains("biomeos/beardog.sock"));
             }
             SocketPathSource::TempDir => {
                 assert!(config.socket_path_string().starts_with("/tmp/beardog-"));

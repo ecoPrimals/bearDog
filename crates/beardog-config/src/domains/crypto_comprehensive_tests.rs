@@ -366,6 +366,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial] // Environment variable test - must run serially
     fn test_from_env_with_rsa_key_size() {
         std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
         std::env::set_var("BEARDOG_RSA_KEY_SIZE", "4096");

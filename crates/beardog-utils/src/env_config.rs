@@ -154,13 +154,27 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial] // Environment variable test - must run serially
     fn test_network_config_defaults() {
+        // Clear any env vars that might interfere
+        std::env::remove_var("TEST_SERVICE_HOST");
+        std::env::remove_var("TEST_SERVICE_PORT");
+        std::env::remove_var("BEARDOG_API_HOST");
+        std::env::remove_var("BEARDOG_API_PORT");
+
         let config = NetworkConfig::from_env("TEST_SERVICE");
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        assert_eq!(config.host, "localhost"); // Updated to match actual default from NetworkConfig
+        // Actual default from RuntimeNetworkConfig is 127.0.0.1 (not "localhost")
+        assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.port, TEST_DEFAULT_PORT);
+
+        // Clean up
+        std::env::remove_var("TEST_SERVICE_HOST");
+        std::env::remove_var("TEST_SERVICE_PORT");
+        std::env::remove_var("BEARDOG_API_HOST");
+        std::env::remove_var("BEARDOG_API_PORT");
     }
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core

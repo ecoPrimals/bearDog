@@ -99,7 +99,10 @@ pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value,
         .and_then(|v| v.as_str())
         .unwrap_or("tls12_ecdhe");
 
-    debug!("🔑 Generating ephemeral P-256 keypair (purpose: {})", purpose);
+    debug!(
+        "🔑 Generating ephemeral P-256 keypair (purpose: {})",
+        purpose
+    );
 
     use p256::elliptic_curve::{rand_core::RngCore, SecretKey};
     use rand::rngs::OsRng;
@@ -121,7 +124,10 @@ pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value,
     let private_b64 = BASE64.encode(&private_key_bytes[..]);
     let public_b64 = BASE64.encode(&public_key_bytes);
 
-    info!("✅ Ephemeral P-256 keypair generated ({} bytes public)", public_key_bytes.len());
+    info!(
+        "✅ Ephemeral P-256 keypair generated ({} bytes public)",
+        public_key_bytes.len()
+    );
 
     Ok(serde_json::json!({
         "public_key": public_b64,
@@ -216,7 +222,10 @@ pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value,
         .and_then(|v| v.as_str())
         .unwrap_or("tls12_ecdhe");
 
-    debug!("🔑 Generating ephemeral P-384 keypair (purpose: {})", purpose);
+    debug!(
+        "🔑 Generating ephemeral P-384 keypair (purpose: {})",
+        purpose
+    );
 
     use p384::elliptic_curve::{rand_core::RngCore, SecretKey};
     use rand::rngs::OsRng;
@@ -238,7 +247,10 @@ pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value,
     let private_b64 = BASE64.encode(&private_key_bytes[..]);
     let public_b64 = BASE64.encode(&public_key_bytes);
 
-    info!("✅ Ephemeral P-384 keypair generated ({} bytes public)", public_key_bytes.len());
+    info!(
+        "✅ Ephemeral P-384 keypair generated ({} bytes public)",
+        public_key_bytes.len()
+    );
 
     Ok(serde_json::json!({
         "public_key": public_b64,
@@ -352,9 +364,7 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
         .and_then(|v| v.as_str())
         .ok_or("Missing 'plaintext' parameter")?;
 
-    let aad_b64 = params
-        .get("aad")
-        .and_then(|v| v.as_str());
+    let aad_b64 = params.get("aad").and_then(|v| v.as_str());
 
     debug!("🔒 AES-128-GCM encryption");
 
@@ -362,17 +372,23 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     let key_bytes = BASE64
         .decode(key_b64)
         .map_err(|e| format!("Invalid key base64: {e}"))?;
-    
+
     if key_bytes.len() != 16 {
-        return Err(format!("Invalid AES-128 key length: {} (expected 16)", key_bytes.len()));
+        return Err(format!(
+            "Invalid AES-128 key length: {} (expected 16)",
+            key_bytes.len()
+        ));
     }
 
     let nonce_bytes = BASE64
         .decode(nonce_b64)
         .map_err(|e| format!("Invalid nonce base64: {e}"))?;
-    
+
     if nonce_bytes.len() != 12 {
-        return Err(format!("Invalid GCM nonce length: {} (expected 12)", nonce_bytes.len()));
+        return Err(format!(
+            "Invalid GCM nonce length: {} (expected 12)",
+            nonce_bytes.len()
+        ));
     }
 
     let plaintext_bytes = BASE64
@@ -388,17 +404,20 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     };
 
     // Perform encryption
-    use aes_gcm::{Aes128Gcm, KeyInit, Nonce, aead::Aead};
+    use aes_gcm::{aead::Aead, Aes128Gcm, KeyInit, Nonce};
 
     let key = aes_gcm::Key::<Aes128Gcm>::from_slice(&key_bytes);
     let cipher = Aes128Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let ciphertext = cipher
-        .encrypt(nonce, aes_gcm::aead::Payload {
-            msg: &plaintext_bytes,
-            aad: &aad_bytes,
-        })
+        .encrypt(
+            nonce,
+            aes_gcm::aead::Payload {
+                msg: &plaintext_bytes,
+                aad: &aad_bytes,
+            },
+        )
         .map_err(|e| format!("AES-128-GCM encryption failed: {e}"))?;
 
     // Split ciphertext and tag (GCM appends 16-byte tag)
@@ -409,8 +428,11 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     let ciphertext_b64 = BASE64.encode(ciphertext_only);
     let tag_b64 = BASE64.encode(tag);
 
-    info!("✅ AES-128-GCM encryption complete ({} bytes → {} bytes)", 
-          plaintext_bytes.len(), ciphertext_only.len());
+    info!(
+        "✅ AES-128-GCM encryption complete ({} bytes → {} bytes)",
+        plaintext_bytes.len(),
+        ciphertext_only.len()
+    );
 
     Ok(serde_json::json!({
         "ciphertext": ciphertext_b64,
@@ -459,9 +481,7 @@ pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value,
         .and_then(|v| v.as_str())
         .ok_or("Missing 'tag' parameter")?;
 
-    let aad_b64 = params
-        .get("aad")
-        .and_then(|v| v.as_str());
+    let aad_b64 = params.get("aad").and_then(|v| v.as_str());
 
     debug!("🔓 AES-128-GCM decryption");
 
@@ -495,22 +515,28 @@ pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     ciphertext_with_tag.extend_from_slice(&tag_bytes);
 
     // Perform decryption
-    use aes_gcm::{Aes128Gcm, KeyInit, Nonce, aead::Aead};
+    use aes_gcm::{aead::Aead, Aes128Gcm, KeyInit, Nonce};
 
     let key = aes_gcm::Key::<Aes128Gcm>::from_slice(&key_bytes);
     let cipher = Aes128Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let plaintext = cipher
-        .decrypt(nonce, aes_gcm::aead::Payload {
-            msg: &ciphertext_with_tag,
-            aad: &aad_bytes,
-        })
+        .decrypt(
+            nonce,
+            aes_gcm::aead::Payload {
+                msg: &ciphertext_with_tag,
+                aad: &aad_bytes,
+            },
+        )
         .map_err(|e| format!("AES-128-GCM decryption/verification failed: {e}"))?;
 
     let plaintext_b64 = BASE64.encode(&plaintext);
 
-    info!("✅ AES-128-GCM decryption verified ({} bytes)", plaintext.len());
+    info!(
+        "✅ AES-128-GCM decryption verified ({} bytes)",
+        plaintext.len()
+    );
 
     Ok(serde_json::json!({
         "plaintext": plaintext_b64,
@@ -548,9 +574,7 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
         .and_then(|v| v.as_str())
         .ok_or("Missing 'plaintext' parameter")?;
 
-    let aad_b64 = params
-        .get("aad")
-        .and_then(|v| v.as_str());
+    let aad_b64 = params.get("aad").and_then(|v| v.as_str());
 
     debug!("🔒 AES-256-GCM encryption");
 
@@ -558,17 +582,23 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     let key_bytes = BASE64
         .decode(key_b64)
         .map_err(|e| format!("Invalid key base64: {e}"))?;
-    
+
     if key_bytes.len() != 32 {
-        return Err(format!("Invalid AES-256 key length: {} (expected 32)", key_bytes.len()));
+        return Err(format!(
+            "Invalid AES-256 key length: {} (expected 32)",
+            key_bytes.len()
+        ));
     }
 
     let nonce_bytes = BASE64
         .decode(nonce_b64)
         .map_err(|e| format!("Invalid nonce base64: {e}"))?;
-    
+
     if nonce_bytes.len() != 12 {
-        return Err(format!("Invalid GCM nonce length: {} (expected 12)", nonce_bytes.len()));
+        return Err(format!(
+            "Invalid GCM nonce length: {} (expected 12)",
+            nonce_bytes.len()
+        ));
     }
 
     let plaintext_bytes = BASE64
@@ -584,17 +614,20 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     };
 
     // Perform encryption
-    use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
+    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
 
     let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let ciphertext = cipher
-        .encrypt(nonce, aes_gcm::aead::Payload {
-            msg: &plaintext_bytes,
-            aad: &aad_bytes,
-        })
+        .encrypt(
+            nonce,
+            aes_gcm::aead::Payload {
+                msg: &plaintext_bytes,
+                aad: &aad_bytes,
+            },
+        )
         .map_err(|e| format!("AES-256-GCM encryption failed: {e}"))?;
 
     // Split ciphertext and tag
@@ -605,8 +638,11 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     let ciphertext_b64 = BASE64.encode(ciphertext_only);
     let tag_b64 = BASE64.encode(tag);
 
-    info!("✅ AES-256-GCM encryption complete ({} bytes → {} bytes)", 
-          plaintext_bytes.len(), ciphertext_only.len());
+    info!(
+        "✅ AES-256-GCM encryption complete ({} bytes → {} bytes)",
+        plaintext_bytes.len(),
+        ciphertext_only.len()
+    );
 
     Ok(serde_json::json!({
         "ciphertext": ciphertext_b64,
@@ -649,9 +685,7 @@ pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value,
         .and_then(|v| v.as_str())
         .ok_or("Missing 'tag' parameter")?;
 
-    let aad_b64 = params
-        .get("aad")
-        .and_then(|v| v.as_str());
+    let aad_b64 = params.get("aad").and_then(|v| v.as_str());
 
     debug!("🔓 AES-256-GCM decryption");
 
@@ -685,22 +719,28 @@ pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     ciphertext_with_tag.extend_from_slice(&tag_bytes);
 
     // Perform decryption
-    use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
+    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
 
     let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let plaintext = cipher
-        .decrypt(nonce, aes_gcm::aead::Payload {
-            msg: &ciphertext_with_tag,
-            aad: &aad_bytes,
-        })
+        .decrypt(
+            nonce,
+            aes_gcm::aead::Payload {
+                msg: &ciphertext_with_tag,
+                aad: &aad_bytes,
+            },
+        )
         .map_err(|e| format!("AES-256-GCM decryption/verification failed: {e}"))?;
 
     let plaintext_b64 = BASE64.encode(&plaintext);
 
-    info!("✅ AES-256-GCM decryption verified ({} bytes)", plaintext.len());
+    info!(
+        "✅ AES-256-GCM decryption verified ({} bytes)",
+        plaintext.len()
+    );
 
     Ok(serde_json::json!({
         "plaintext": plaintext_b64,
@@ -771,7 +811,10 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
         .and_then(|v| v.as_str())
         .unwrap_or("sha256");
 
-    debug!("🔑 TLS 1.2 PRF: label='{}', hash={}, output_len={}", label, hash_alg, output_len);
+    debug!(
+        "🔑 TLS 1.2 PRF: label='{}', hash={}, output_len={}",
+        label, hash_alg, output_len
+    );
 
     // Decode inputs
     let secret = BASE64
@@ -786,12 +829,21 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
     let output = match hash_alg {
         "sha256" => tls12_prf_sha256(&secret, label.as_bytes(), &seed, output_len)?,
         "sha384" => tls12_prf_sha384(&secret, label.as_bytes(), &seed, output_len)?,
-        _ => return Err(format!("Unsupported hash algorithm: {} (use 'sha256' or 'sha384')", hash_alg)),
+        _ => {
+            return Err(format!(
+                "Unsupported hash algorithm: {} (use 'sha256' or 'sha384')",
+                hash_alg
+            ))
+        }
     };
 
     let output_b64 = BASE64.encode(&output);
 
-    info!("✅ TLS 1.2 PRF complete ({} bytes output, {})", output_len, hash_alg.to_uppercase());
+    info!(
+        "✅ TLS 1.2 PRF complete ({} bytes output, {})",
+        output_len,
+        hash_alg.to_uppercase()
+    );
 
     Ok(serde_json::json!({
         "output": output_b64,
@@ -800,7 +852,12 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
 }
 
 /// TLS 1.2 PRF with SHA-256
-fn tls12_prf_sha256(secret: &[u8], label: &[u8], seed: &[u8], output_len: usize) -> Result<Vec<u8>, String> {
+fn tls12_prf_sha256(
+    secret: &[u8],
+    label: &[u8],
+    seed: &[u8],
+    output_len: usize,
+) -> Result<Vec<u8>, String> {
     use hmac::{Hmac, Mac};
     use sha2::Sha256;
 
@@ -837,7 +894,12 @@ fn tls12_prf_sha256(secret: &[u8], label: &[u8], seed: &[u8], output_len: usize)
 }
 
 /// TLS 1.2 PRF with SHA-384
-fn tls12_prf_sha384(secret: &[u8], label: &[u8], seed: &[u8], output_len: usize) -> Result<Vec<u8>, String> {
+fn tls12_prf_sha384(
+    secret: &[u8],
+    label: &[u8],
+    seed: &[u8],
+    output_len: usize,
+) -> Result<Vec<u8>, String> {
     use hmac::{Hmac, Mac};
     use sha2::Sha384;
 
@@ -910,7 +972,9 @@ mod tests {
             "plaintext": plaintext_b64,
         });
 
-        let encrypted = handle_aes_128_gcm_encrypt(Some(&encrypt_params)).await.unwrap();
+        let encrypted = handle_aes_128_gcm_encrypt(Some(&encrypt_params))
+            .await
+            .unwrap();
         let ciphertext_b64 = encrypted.get("ciphertext").unwrap().as_str().unwrap();
         let tag_b64 = encrypted.get("tag").unwrap().as_str().unwrap();
 
@@ -922,8 +986,13 @@ mod tests {
             "tag": tag_b64,
         });
 
-        let decrypted = handle_aes_128_gcm_decrypt(Some(&decrypt_params)).await.unwrap();
-        assert_eq!(decrypted.get("plaintext").unwrap().as_str().unwrap(), plaintext_b64);
+        let decrypted = handle_aes_128_gcm_decrypt(Some(&decrypt_params))
+            .await
+            .unwrap();
+        assert_eq!(
+            decrypted.get("plaintext").unwrap().as_str().unwrap(),
+            plaintext_b64
+        );
         assert_eq!(decrypted.get("verified").unwrap(), true);
     }
 
@@ -943,9 +1012,8 @@ mod tests {
         let result = handle_tls12_prf(Some(&params)).await.unwrap();
         let output_b64 = result.get("output").unwrap().as_str().unwrap();
         let output = BASE64.decode(output_b64).unwrap();
-        
+
         assert_eq!(output.len(), 48);
         assert_eq!(result.get("algorithm").unwrap(), "TLS12-PRF-SHA256");
     }
 }
-
