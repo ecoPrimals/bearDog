@@ -20,10 +20,14 @@
 
 pub mod audit;
 pub mod authorize;
+pub mod collaboration_service;
 pub mod permissions;
 pub mod threats;
 pub mod types;
 pub mod validate;
+
+// Internal helpers (not public API)
+pub(crate) mod internal;
 
 #[cfg(test)]
 mod tests;

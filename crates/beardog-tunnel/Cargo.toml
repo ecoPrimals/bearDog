@@ -33,6 +33,7 @@ chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.4", features = ["derive"] }  # UniBin architecture (ecosystem standard)
 hostname = "0.3"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+once_cell = "1.19"  # Module-level lazy statics (graph security CollaborationService)
 
 # tarpc removed (Jan 29, 2026) - see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md
 # JSON-RPC provides comprehensive functionality (8+ handler modules)

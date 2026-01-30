@@ -1004,6 +1004,7 @@ dependencies = [
  "jni",
  "ndk",
  "ndk-sys",
+ "once_cell",
  "p256",
  "p384",
  "parking_lot",

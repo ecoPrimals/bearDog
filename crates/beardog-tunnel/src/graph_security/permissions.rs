@@ -38,10 +38,23 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
         return Ok(UserRole::Owner);
     }
 
-    // TODO: Check collaborator list via collaboration capability
-    // Future: Use CollaborationService::check_collaborator_list() for runtime discovery
-    // For now, non-owners are viewers
-    Ok(UserRole::Viewer)
+    // Check collaborator status via collaboration capability (runtime discovery)
+    match crate::graph_security::internal::get_user_permissions(user_id, &graph.id).await {
+        Ok(permissions) => {
+            // Map permissions role to UserRole
+            match permissions.role.as_str() {
+                "owner" => Ok(UserRole::Owner),
+                "collaborator" | "editor" => Ok(UserRole::Collaborator),
+                "viewer" | "reader" => Ok(UserRole::Viewer),
+                _ => Ok(UserRole::Public),
+            }
+        }
+        Err(e) => {
+            // Fallback: If collaboration capability not available, default to Viewer
+            tracing::warn!("⚠️  Could not determine user role via collaboration capability: {}", e);
+            Ok(UserRole::Viewer)
+        }
+    }
 }
 
 /// Check if a role allows a specific action

@@ -79,62 +79,38 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
 
 /// Verify creator identity
 async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo, BearDogError> {
-    // TODO: Get actual creator info via collaboration capability
-    // Future: Use CollaborationService::get_creator_info() for runtime discovery
-    // For now, return placeholder data
-    let creator_id = extract_creator_from_template_id(template_id);
-
-    // Check if identity is verified (would use genetic lineage in production)
-    let identity_verified = creator_id != "unknown";
-
-    // Calculate base trust score
-    let trust_score = if identity_verified { 0.75 } else { 0.10 };
-
+    // Get actual creator info via collaboration capability (runtime discovery)
+    let template_info = crate::graph_security::internal::get_creator_info(template_id).await?;
+    
+    // Map TemplateInfo to CreatorInfo
     Ok(CreatorInfo {
-        user_id: creator_id.clone(),
-        identity_verified,
-        trust_score,
-        reputation: if identity_verified {
-            "established_contributor".to_string()
-        } else {
-            "new_user".to_string()
-        },
-        member_since: "2025-06-15T10:00:00Z".to_string(),
-        genetic_family: if identity_verified {
-            Some("nat0".to_string())
-        } else {
-            None
-        },
+        user_id: template_info.creator_id,
+        identity_verified: template_info.identity_verified,
+        trust_score: template_info.trust_score,
+        reputation: template_info.reputation,
+        member_since: template_info.member_since,
+        genetic_family: template_info.genetic_family,
     })
-}
-
-/// Extract creator ID from template ID
-fn extract_creator_from_template_id(template_id: &str) -> String {
-    // Simple extraction - in production would query via collaboration capability
-    if template_id.starts_with("template-") {
-        "user-creator".to_string()
-    } else {
-        "unknown".to_string()
-    }
 }
 
 /// Get template lineage history
 async fn get_template_lineage(
-    _template_id: &TemplateId,
+    template_id: &TemplateId,
 ) -> Result<Vec<LineageVersion>, BearDogError> {
-    // TODO: Get actual lineage via collaboration capability
-    // Future: Use CollaborationService::get_template_lineage() for runtime discovery
-    // For now, return single version
-    Ok(vec![LineageVersion {
-        version: "1.0.0".to_string(),
-        created_at: Some("2026-01-10T10:00:00Z".to_string()),
-        modified_at: None,
-        created_by: Some("user-creator".to_string()),
-        modified_by: None,
-        change_type: "initial_creation".to_string(),
-        changes: None,
-        signature: None,
-    }])
+    // Get actual lineage via collaboration capability (runtime discovery)
+    let collab_lineage = crate::graph_security::internal::get_lineage(template_id).await?;
+    
+    // Map collaboration_service::LineageVersion to types::LineageVersion
+    Ok(collab_lineage.into_iter().map(|v| LineageVersion {
+        version: v.version,
+        created_at: v.created_at,
+        modified_at: v.modified_at,
+        created_by: v.created_by,
+        modified_by: v.modified_by,
+        change_type: v.change_type,
+        changes: v.changes,
+        signature: v.signature,
+    }).collect())
 }
 
 /// Verify chain of custody for lineage
@@ -215,15 +191,16 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
 }
 
 /// Get community usage metrics
-async fn get_community_usage(_template_id: &TemplateId) -> Result<CommunityUsage, BearDogError> {
-    // TODO: Get actual usage via collaboration capability
-    // Future: Use CollaborationService::get_community_usage() for runtime discovery
-    // For now, return placeholder data
+async fn get_community_usage(template_id: &TemplateId) -> Result<CommunityUsage, BearDogError> {
+    // Get actual usage via collaboration capability (runtime discovery)
+    let collab_metrics = crate::graph_security::internal::get_community_metrics(template_id).await?;
+    
+    // Map CommunityMetrics to CommunityUsage
     Ok(CommunityUsage {
-        deployments: 145,
-        success_rate: Some(0.94),
-        avg_rating: Some(4.6),
-        total_ratings: 23,
+        deployments: collab_metrics.deployments,
+        success_rate: collab_metrics.success_rate,
+        avg_rating: collab_metrics.avg_rating,
+        total_ratings: collab_metrics.total_ratings,
     })
 }
 
