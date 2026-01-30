@@ -52,6 +52,11 @@
 18. `TEST_POLLUTION_FIX_PLAN.md` - Original pollution fix plan (superseded)
 19. `SESSION_COMPLETE_JAN_27_2026.md` - Session completion marker
 
+### Post-Session Documentation (Added Jan 30)
+20. `ARCHIVE_CODE_REVIEW_JAN_28_2026.md` - Archive code review and cleanup analysis
+21. `CONCURRENT_SAFE_REFACTORING_JAN_28_2026.md` - Concurrent-safe refactoring summary
+22. `ROOT_DOCS_CLEANED_JAN_28_2026.md` - Root documentation cleanup summary
+
 ---
 
 ## Key Achievements
