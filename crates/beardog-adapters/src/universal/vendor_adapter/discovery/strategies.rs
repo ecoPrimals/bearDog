@@ -312,18 +312,18 @@ impl HardwareDiscoveryStrategy {
 
 
     fn scan_hsm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
-
-        let pkcs11_paths = vec![
-            "/usr/lib/softhsm/libsofthsm2.so",
-            "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so",
-            "/usr/local/lib/softhsm/libsofthsm2.so",
-            "/opt/nfast/toolkits/pkcs11/libcknfast.so",
-            "/usr/lib/libCryptoki2_64.so",
-        ];
-        for pkcs11_path in pkcs11_paths {
-            if std::path::Path::new(pkcs11_path).exists() {
+        use super::pkcs11_discovery::discover_pkcs11_libraries;
+        
+        // ✅ EVOLVED: Capability-based PKCS#11 discovery (zero hardcoding)
+        // Uses environment variables, XDG standards, and runtime detection
+        // Replaces hardcoded paths with platform-agnostic discovery
+        let pkcs11_paths = discover_pkcs11_libraries();
+        
+        for pkcs11_path in &pkcs11_paths {
+            let pkcs11_path_str = pkcs11_path.to_string_lossy().to_string();
+            if pkcs11_path.exists() {
                     connection: ConnectionSpec::NativeLibrary {
-                        library_path: pkcs11_path.to_string(),
+                        library_path: pkcs11_path_str.clone(),
                         initialization: LibraryInitSpec {
                             init_function: "C_Initialize".to_string(),
                             init_params: HashMap::with_capacity(16),
@@ -331,11 +331,12 @@ impl HardwareDiscoveryStrategy {
                         performance_rating: 7,
                             serde_json::Value::String("pkcs11".to_string()),
                             "library_path".to_string(),
-                            serde_json::Value::String(pkcs11_path.to_string()),
+                            serde_json::Value::String(pkcs11_path_str.clone()),
                 tracing::info!(
                     "🔧 Hardware discovery found PKCS#11 library at {}",
-                    pkcs11_path
+                    pkcs11_path_str
                 );
+            }
 impl DiscoveryStrategy for HardwareDiscoveryStrategy {
 
         capabilities.extend(self.scan_tpm_devices()?);
