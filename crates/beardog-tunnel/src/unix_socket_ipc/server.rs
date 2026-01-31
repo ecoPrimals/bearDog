@@ -186,9 +186,10 @@ impl UnixSocketIpcServer {
         );
 
         // Platform-agnostic socket binding (ecoBin v2.0)
-        // Automatically selects:
-        // - Android: Abstract sockets (@biomeos_beardog)
-        // - Linux/macOS: Filesystem sockets (/run/user/UID/biomeos/beardog.sock)
+        // Automatically selects based on:
+        // 1. BEARDOG_ABSTRACT_SOCKET env var (Android/mobile)
+        // 2. BEARDOG_SOCKET env var (custom path)
+        // 3. Platform default (compile-time selection)
         let platform_type = if cfg!(target_os = "android") {
             "Android (abstract socket)"
         } else {
@@ -196,8 +197,8 @@ impl UnixSocketIpcServer {
         };
         info!("   Platform: {}", platform_type);
 
-        // Create platform-appropriate endpoint
-        let endpoint = Socket::create_endpoint("beardog").map_err(|e| {
+        // Create platform-appropriate endpoint with env var support
+        let endpoint = crate::platform::get_socket_endpoint().map_err(|e| {
             anyhow::anyhow!("Failed to create socket endpoint: {}", e)
         })?;
 
