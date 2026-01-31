@@ -750,6 +750,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "beardog-installer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "directories",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "beardog-integration-tests"
 version = "3.0.0"
 dependencies = [
@@ -971,7 +990,6 @@ dependencies = [
  "base64 0.21.7",
  "bcrypt",
  "beardog 0.1.0",
- "beardog-adapters",
  "beardog-auth",
  "beardog-capabilities",
  "beardog-config",
@@ -1913,6 +1931,15 @@ dependencies = [
  "block-buffer 0.11.0",
  "crypto-common 0.2.0-rc.13",
  "subtle",
+]
+
+[[package]]
+name = "directories"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a49173b84e034382284f27f1af4dcbbd231ffa358c0fe316541a7337f376a35"
+dependencies = [
+ "dirs-sys",
 ]
 
 [[package]]
