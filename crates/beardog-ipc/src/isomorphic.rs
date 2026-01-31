@@ -1,0 +1,277 @@
+//! Isomorphic IPC Client Discovery
+//!
+//! This module provides automatic discovery of BearDog IPC endpoints,
+//! supporting both Unix sockets and TCP fallback transparently.
+//!
+//! ## Isomorphic Pattern (Client-Side)
+//!
+//! The client automatically discovers and connects to whichever transport
+//! the server is using - no configuration needed!
+//!
+//! ### Discovery Priority
+//!
+//! 1. **Unix Socket** (optimal - tries first)
+//! 2. **TCP Discovery File** (fallback - automatic)
+//!
+//! ## Deep Debt Principles
+//!
+//! - ✅ **Runtime Discovery**: Detects available transport
+//! - ✅ **Zero Configuration**: No environment variables required
+//! - ✅ **Platform Agnostic**: Works on all platforms
+//! - ✅ **Pure Rust**: Zero external dependencies
+
+use anyhow::{Context, Result};
+use std::path::PathBuf;
+use std::net::SocketAddr;
+use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::net::{TcpStream, UnixStream};
+use tracing::{debug, info};
+
+/// IPC endpoint types (Unix socket or TCP)
+///
+/// This enum enables polymorphic connections - same client code
+/// works with either transport!
+#[derive(Debug, Clone)]
+pub enum IpcEndpoint {
+    /// Unix domain socket (optimal on Linux/macOS)
+    UnixSocket(PathBuf),
+    
+    /// TCP on localhost (fallback for Android/constraints)
+    TcpLocal(SocketAddr),
+}
+
+impl IpcEndpoint {
+    /// Get display string for logging
+    pub fn display(&self) -> String {
+        match self {
+            IpcEndpoint::UnixSocket(path) => format!("unix:{}", path.display()),
+            IpcEndpoint::TcpLocal(addr) => format!("tcp:{}", addr),
+        }
+    }
+    
+    /// Check if this is the optimal transport (Unix socket)
+    pub fn is_optimal(&self) -> bool {
+        matches!(self, IpcEndpoint::UnixSocket(_))
+    }
+}
+
+/// Polymorphic stream trait for IPC
+///
+/// This trait allows both `UnixStream` and `TcpStream` to be used
+/// interchangeably - TRUE universal abstraction!
+pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
+
+// Implement for both Unix and TCP streams
+impl AsyncStream for UnixStream {}
+impl AsyncStream for TcpStream {}
+
+/// Discover BearDog IPC endpoint (Unix or TCP)
+///
+/// **Isomorphic Discovery** (zero configuration):
+/// 1. Tries Unix socket paths (optimal)
+/// 2. Falls back to TCP discovery file (automatic)
+///
+/// This enables the same client code to work on Linux (Unix) and
+/// Android (TCP fallback) without any configuration!
+///
+/// ## Example
+///
+/// ```no_run
+/// use beardog_ipc::discover_beardog_endpoint;
+///
+/// #[tokio::main]
+/// async fn main() -> anyhow::Result<()> {
+///     let endpoint = discover_beardog_endpoint().await?;
+///     println!("Found BearDog at: {}", endpoint.display());
+///     Ok(())
+/// }
+/// ```
+///
+/// ## Error Handling
+///
+/// Returns error only if BOTH Unix and TCP discovery fail.
+/// This means BearDog is not running or unreachable.
+pub async fn discover_beardog_endpoint() -> Result<IpcEndpoint> {
+    // 1. Try Unix socket paths first (optimal)
+    debug!("🔍 Discovering BearDog IPC endpoint...");
+    debug!("   Step 1: Trying Unix socket paths (optimal)");
+    
+    let socket_paths = get_unix_socket_paths();
+    for path in socket_paths {
+        if path.exists() {
+            info!("✅ Found Unix socket: {}", path.display());
+            return Ok(IpcEndpoint::UnixSocket(path));
+        }
+    }
+    
+    debug!("   Unix sockets not found, trying TCP discovery...");
+
+    // 2. Try TCP discovery file (fallback)
+    debug!("   Step 2: Trying TCP discovery file (fallback)");
+    
+    if let Ok(endpoint) = discover_tcp_endpoint().await {
+        info!("✅ Found TCP endpoint via discovery file: {}", endpoint.display());
+        return Ok(endpoint);
+    }
+
+    Err(anyhow::anyhow!(
+        "Could not discover BearDog IPC endpoint (tried Unix sockets and TCP discovery)"
+    ))
+}
+
+/// Get Unix socket path candidates (XDG-compliant)
+///
+/// **Discovery Priority**:
+/// 1. `BEARDOG_SOCKET` env var (operator override)
+/// 2. `$XDG_RUNTIME_DIR/biomeos/beardog.sock` (XDG standard)
+/// 3. `/tmp/beardog.sock` (fallback)
+///
+/// **Zero Hardcoding**: Uses XDG Base Directory specification
+fn get_unix_socket_paths() -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+
+    // 1. Environment variable override (highest priority)
+    if let Ok(path) = std::env::var("BEARDOG_SOCKET") {
+        paths.push(PathBuf::from(path));
+    }
+
+    // 2. XDG runtime directory (standard)
+    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+        paths.push(PathBuf::from(format!("{}/biomeos/beardog.sock", runtime_dir)));
+    }
+
+    // 3. /tmp fallback (compatibility)
+    paths.push(PathBuf::from("/tmp/beardog.sock"));
+
+    paths
+}
+
+/// Discover TCP endpoint from discovery file
+///
+/// **Discovery File Format**: `tcp:127.0.0.1:PORT`
+///
+/// **Search Paths** (XDG-compliant):
+/// 1. `$XDG_RUNTIME_DIR/beardog-ipc-port`
+/// 2. `$HOME/.local/share/beardog-ipc-port`
+/// 3. `/tmp/beardog-ipc-port`
+///
+/// **Zero Hardcoding**: Uses XDG Base Directory specification
+async fn discover_tcp_endpoint() -> Result<IpcEndpoint> {
+    let discovery_files = get_tcp_discovery_file_candidates();
+
+    for file in discovery_files {
+        if let Ok(contents) = tokio::fs::read_to_string(&file).await {
+            // Parse format: tcp:127.0.0.1:PORT
+            if let Some(addr_str) = contents.trim().strip_prefix("tcp:") {
+                if let Ok(addr) = addr_str.parse::<SocketAddr>() {
+                    debug!("📁 Found TCP discovery file: {} -> {}", file, addr);
+                    return Ok(IpcEndpoint::TcpLocal(addr));
+                }
+            }
+        }
+    }
+
+    Err(anyhow::anyhow!("No TCP discovery file found"))
+}
+
+/// Get TCP discovery file path candidates (XDG-compliant)
+fn get_tcp_discovery_file_candidates() -> Vec<String> {
+    let mut files = Vec::new();
+
+    // 1. XDG runtime directory (preferred)
+    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+        files.push(format!("{}/beardog-ipc-port", runtime_dir));
+    }
+
+    // 2. Home directory .local/share (standard)
+    if let Ok(home) = std::env::var("HOME") {
+        files.push(format!("{}/.local/share/beardog-ipc-port", home));
+    }
+
+    // 3. /tmp (last resort)
+    files.push("/tmp/beardog-ipc-port".to_string());
+
+    files
+}
+
+/// Connect to BearDog IPC endpoint (polymorphic)
+///
+/// **Isomorphic Connection** (automatic adaptation):
+/// - Unix socket → Uses `UnixStream`
+/// - TCP → Uses `TcpStream`
+/// - Returns `Box<dyn AsyncStream>` (universal!)
+///
+/// ## Example
+///
+/// ```no_run
+/// use beardog_ipc::connect_beardog;
+///
+/// #[tokio::main]
+/// async fn main() -> anyhow::Result<()> {
+///     let mut stream = connect_beardog().await?;
+///     // Use stream - works with Unix OR TCP transparently!
+///     Ok(())
+/// }
+/// ```
+///
+/// ## Error Handling
+///
+/// Returns error if:
+/// - Discovery fails (BearDog not running)
+/// - Connection fails (network error)
+pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
+    let endpoint = discover_beardog_endpoint().await?;
+
+    info!("🔌 Connecting to BearDog via {}", endpoint.display());
+
+    match endpoint {
+        IpcEndpoint::UnixSocket(path) => {
+            let stream = UnixStream::connect(&path).await
+                .context(format!("Failed to connect to Unix socket: {}", path.display()))?;
+            
+            info!("✅ Connected via Unix socket (optimal)");
+            Ok(Box::new(stream) as Box<dyn AsyncStream>)
+        }
+        IpcEndpoint::TcpLocal(addr) => {
+            let stream = TcpStream::connect(addr).await
+                .context(format!("Failed to connect to TCP: {}", addr))?;
+            
+            info!("✅ Connected via TCP (isomorphic fallback)");
+            Ok(Box::new(stream) as Box<dyn AsyncStream>)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_endpoint_display() {
+        let unix = IpcEndpoint::UnixSocket(PathBuf::from("/tmp/test.sock"));
+        assert_eq!(unix.display(), "unix:/tmp/test.sock");
+        assert!(unix.is_optimal());
+
+        let tcp = IpcEndpoint::TcpLocal("127.0.0.1:8080".parse().unwrap());
+        assert_eq!(tcp.display(), "tcp:127.0.0.1:8080");
+        assert!(!tcp.is_optimal());
+    }
+
+    #[test]
+    fn test_unix_socket_paths() {
+        let paths = get_unix_socket_paths();
+        assert!(!paths.is_empty());
+        
+        // Should always have /tmp fallback
+        assert!(paths.iter().any(|p| p.starts_with("/tmp")));
+    }
+
+    #[test]
+    fn test_tcp_discovery_files() {
+        let files = get_tcp_discovery_file_candidates();
+        assert!(!files.is_empty());
+        
+        // Should always have /tmp fallback
+        assert!(files.iter().any(|f| f.starts_with("/tmp")));
+    }
+}

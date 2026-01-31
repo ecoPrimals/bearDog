@@ -41,6 +41,7 @@
 
 pub mod client;
 pub mod error;
+pub mod isomorphic; // Isomorphic IPC client discovery (Jan 31, 2026)
 pub mod neural_registration; // Neural API auto-registration (Tower Atomic)
 pub mod protocol;
 pub mod registry_client;
@@ -51,6 +52,11 @@ pub use error::{IpcError, IpcResult};
 pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 // Neural API auto-registration (Tower Atomic TRUE PRIMAL)
 pub use neural_registration::{discover_neural_api_socket, register_with_neural_api};
+
+// Isomorphic IPC discovery (automatic Unix or TCP)
+pub use isomorphic::{
+    discover_beardog_endpoint, connect_beardog, IpcEndpoint, AsyncStream,
+};
 
 // Registry client for JSON-RPC registration
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
