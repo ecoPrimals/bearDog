@@ -58,10 +58,12 @@ impl UnixSocketIpcServer {
     ) -> Result<Self> {
         let socket_path = socket_path.as_ref().to_path_buf();
 
-        // Remove existing socket file if present
+        // Remove existing socket file if present (ASYNC - non-blocking!)
         if socket_path.exists() {
             info!("🧹 Removing existing socket: {}", socket_path.display());
-            std::fs::remove_file(&socket_path).context("Failed to remove existing socket")?;
+            tokio::fs::remove_file(&socket_path)
+                .await
+                .context("Failed to remove existing socket")?;
         }
 
         Ok(Self {

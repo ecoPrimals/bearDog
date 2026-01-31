@@ -82,6 +82,13 @@ impl PlatformListener for UnixPlatformListener {
 
 impl PlatformSocket for UnixSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
+        // NOTE: This function contains blocking filesystem operations (std::fs::create_dir_all)
+        // during directory creation. This is acceptable as:
+        // 1. It runs only during initialization (not in hot path)
+        // 2. Directory creation is infrequent (usually already exists)
+        // 3. Making the trait async would require larger refactoring
+        // TODO(Phase 3): Consider making PlatformSocket trait async for full non-blocking operation
+        
         // Priority 1: Environment variable (operator control)
         if let Ok(custom_socket) = std::env::var("BEARDOG_SOCKET") {
             info!("📡 Using BEARDOG_SOCKET override: {}", custom_socket);
@@ -93,7 +100,7 @@ impl PlatformSocket for UnixSocket {
             // XDG compliant: /run/user/$UID/biomeos/beardog.sock
             let biomeos_dir = std::path::PathBuf::from(&runtime_dir).join("biomeos");
             
-            // Ensure directory exists (create if needed)
+            // Ensure directory exists (BLOCKING - acceptable for initialization)
             if !biomeos_dir.exists() {
                 std::fs::create_dir_all(&biomeos_dir)?;
             }
@@ -103,6 +110,7 @@ impl PlatformSocket for UnixSocket {
             // Priority 3: /tmp fallback (compatibility)
             let tmp_dir = std::path::PathBuf::from("/tmp/biomeos");
             
+            // Ensure directory exists (BLOCKING - acceptable for initialization)
             if !tmp_dir.exists() {
                 std::fs::create_dir_all(&tmp_dir)?;
             }
