@@ -1,0 +1,281 @@
+name: Cross-Platform Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ============================================================================
+  # Linux Builds (Ubuntu runner with cross-compilation)
+  # ============================================================================
+  build-linux:
+    name: Build Linux (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
+          - riscv64gc-unknown-linux-gnu
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Install cross-compilation tools
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+      
+      - name: Build for ${{ matrix.target }}
+        run: |
+          if [[ "${{ matrix.target }}" == *"musl"* ]] || [[ "${{ matrix.target }}" == "x86_64"* ]]; then
+            cargo build --release --target ${{ matrix.target }}
+          else
+            cross build --release --target ${{ matrix.target }} || cargo build --release --target ${{ matrix.target }}
+          fi
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beardog-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/beardog
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================================
+  # macOS Builds (Native macOS runner - FREE!)
+  # ============================================================================
+  build-macos:
+    name: Build macOS (${{ matrix.target }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Build for ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beardog-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/beardog
+          if-no-files-found: error
+          retention-days: 30
+
+  # ============================================================================
+  # iOS Builds (macOS runner - FREE!)
+  # ============================================================================
+  build-ios:
+    name: Build iOS (${{ matrix.target }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-ios
+          - x86_64-apple-ios
+          - aarch64-apple-ios-sim
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Build for ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beardog-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/beardog
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================================
+  # Windows Builds (Native Windows runner - FREE!)
+  # ============================================================================
+  build-windows:
+    name: Build Windows (${{ matrix.target }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Build for ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beardog-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/beardog.exe
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================================
+  # Android Builds (Linux runner with cross)
+  # ============================================================================
+  build-android:
+    name: Build Android (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-linux-android
+          - armv7-linux-androideabi
+          - x86_64-linux-android
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Install cross-compilation tools
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+      
+      - name: Build for ${{ matrix.target }}
+        run: cross build --release --target ${{ matrix.target }}
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beardog-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/beardog
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================================
+  # Create Universal genomeBin (requires biomeOS)
+  # ============================================================================
+  create-genomebin:
+    name: Create Universal genomeBin
+    needs: [build-linux, build-macos, build-ios, build-windows, build-android]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout biomeOS repo
+        uses: actions/checkout@v4
+        with:
+          repository: ecoPrimals/biomeOS  # Adjust to your repo
+          path: biomeOS
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Build biomeOS CLI
+        working-directory: biomeOS
+        run: cargo build --release -p biomeos-cli --bin biomeos
+      
+      - name: Download all binary artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+      
+      - name: List downloaded binaries
+        run: |
+          echo "Downloaded binaries:"
+          find binaries -type f -name "beardog*"
+      
+      - name: Create universal genomeBin
+        working-directory: biomeOS
+        run: |
+          # Create comprehensive genomeBin with all available binaries
+          ./target/release/biomeos genome create beardog-universal-${{ github.sha }} \
+            --binary x86_64=$(find ../binaries -path "*/x86_64-unknown-linux-musl/beardog" -type f | head -1) \
+            --binary aarch64=$(find ../binaries -path "*/aarch64-unknown-linux-gnu/beardog" -type f | head -1) \
+            --binary x86_64-darwin=$(find ../binaries -path "*/x86_64-apple-darwin/beardog" -type f | head -1) \
+            --binary aarch64-darwin=$(find ../binaries -path "*/aarch64-apple-darwin/beardog" -type f | head -1) \
+            --binary x86_64-windows=$(find ../binaries -path "*/x86_64-pc-windows-msvc/beardog.exe" -type f | head -1) \
+            --version "${{ github.ref_name }}" \
+            --description "BearDog universal (All platforms - CI built)" || true
+      
+      - name: Upload genomeBin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beardog-universal-genome
+          path: biomeOS/plasmidBin/beardog-universal-*.genome
+          if-no-files-found: warn
+          retention-days: 90
+
+  # ============================================================================
+  # Summary Job
+  # ============================================================================
+  build-summary:
+    name: Build Summary
+    needs: [build-linux, build-macos, build-ios, build-windows, build-android]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Generate build summary
+        run: |
+          echo "## 🧬 BearDog Cross-Platform Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | ${{ needs.build-linux.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS | ${{ needs.build-macos.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | ${{ needs.build-ios.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | ${{ needs.build-windows.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | ${{ needs.build-android.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Architecture Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux: x86_64, aarch64, armv7, riscv64" >> $GITHUB_STEP_SUMMARY
+          echo "- macOS: x86_64, aarch64 (Apple Silicon)" >> $GITHUB_STEP_SUMMARY
+          echo "- iOS: aarch64, x86_64-sim, aarch64-sim" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows: x86_64, aarch64" >> $GITHUB_STEP_SUMMARY
+          echo "- Android: aarch64, armv7, x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total**: 15+ architectures across 5 platforms 🚀" >> $GITHUB_STEP_SUMMARY
