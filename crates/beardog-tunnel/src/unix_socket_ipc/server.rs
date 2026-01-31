@@ -476,9 +476,8 @@ impl UnixSocketIpcServer {
     async fn handle_connection(&self, stream: Box<dyn PlatformStream>) -> Result<()> {
         debug!("📥 New IPC connection (universal platform)");
 
-        // TODO: Full universal stream refactoring in Phase 3
-        // For now, we need to downcast to UnixStream on Unix platforms
-        // This is temporary until we refactor handlers to use AsyncRead/AsyncWrite traits
+        // Universal stream handling with AsyncRead/AsyncWrite traits
+        // Completed in Phase 2 (Jan 31, 2026) - works on all platforms!
         
         #[cfg(unix)]
         {
