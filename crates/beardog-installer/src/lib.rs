@@ -30,11 +30,15 @@
 #![warn(missing_docs)]
 
 pub mod arch;
+pub mod deployment;
+pub mod installer;
 pub mod platform;
 pub mod types;
 
 // Re-exports for convenience
 pub use arch::{ArchError, Architecture};
+pub use deployment::{DeploymentError, DeploymentManager};
+pub use installer::{BinaryInstaller, InstallerError};
 pub use platform::{BiomeOSPaths, OperatingSystem, PlatformError};
 pub use types::{DeploymentProgress, DeploymentReport, DeploymentStatus, Primal};
 
