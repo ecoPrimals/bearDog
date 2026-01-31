@@ -193,7 +193,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_universal_listener_trait() {
-        let test_name = format!("test_beardog_{}", std::process::id());
+        // Use unique socket name with timestamp to avoid conflicts
+        let test_name = format!("test_beardog_{}_{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
         let endpoint = AndroidSocket::create_endpoint(&test_name).unwrap();
 
         #[cfg(target_os = "linux")]
