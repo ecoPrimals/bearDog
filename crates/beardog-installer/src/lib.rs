@@ -34,6 +34,7 @@ pub mod deployment;
 pub mod installer;
 pub mod platform;
 pub mod types;
+pub mod validator;
 
 // Re-exports for convenience
 pub use arch::{ArchError, Architecture};
@@ -41,6 +42,7 @@ pub use deployment::{DeploymentError, DeploymentManager};
 pub use installer::{BinaryInstaller, InstallerError};
 pub use platform::{BiomeOSPaths, OperatingSystem, PlatformError};
 pub use types::{DeploymentProgress, DeploymentReport, DeploymentStatus, Primal};
+pub use validator::{BinaryValidator, ValidationError, ValidationReport};
 
 /// Installer version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

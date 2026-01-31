@@ -30,7 +30,8 @@ pub struct DeploymentManager {
     arch: Architecture,
     os: OperatingSystem,
     paths: BiomeOSPaths,
-    installer: Arc<BinaryInstaller>,
+    /// Binary installer (public for uninstallation)
+    pub installer: Arc<BinaryInstaller>,
     progress: Arc<RwLock<Vec<DeploymentProgress>>>,
 }
 
