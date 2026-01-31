@@ -4,6 +4,11 @@
 //! **Transport:** Abstract Unix domain sockets (Linux namespace)
 //! **Path Format:** `@biomeos_beardog` (@ indicates abstract namespace)
 //!
+//! ## Modern Idiomatic Rust Evolution (Jan 31, 2026)
+//!
+//! **Updated**: Now implements universal `PlatformListener` trait for
+//! cross-platform compatibility. Same trait works on Unix, Windows, Android, WASM!
+//!
 //! ## Why Abstract Sockets?
 //!
 //! Android uses SELinux which blocks filesystem-based Unix sockets in user-space.
@@ -24,24 +29,72 @@
 //!
 //! - ✅ Pure Rust (zero unsafe code)
 //! - ✅ Zero C dependencies (tokio handles syscalls)
-//! - ✅ Platform-agnostic (same `UnixListener` API)
+//! - ✅ Platform-agnostic (universal trait)
 //! - ✅ No hardcoding (primal name from runtime)
-//!
-//! ## Reference Implementation
-//!
-//! Based on Songbird's production-tested implementation:
-//! `songbird/crates/songbird-universal-ipc/src/platform/android.rs`
-//!
-//! ## Validation
-//!
-//! Tested on Pixel 8a (GrapheneOS, Android 16, ARM64)
 
-use super::{PlatformSocket, SocketEndpoint};
-use tokio::net::UnixListener;
+use super::{PlatformListener, PlatformSocket, PlatformStream, SocketEndpoint};
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tokio::net::{UnixListener, UnixStream};
 use tracing::{debug, info};
 
 /// Android abstract socket implementation
 pub struct AndroidSocket;
+
+/// Wrapper to make UnixStream implement PlatformStream
+pub struct AndroidPlatformStream(UnixStream);
+
+impl PlatformStream for AndroidPlatformStream {}
+
+impl AsyncRead for AndroidPlatformStream {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut self.0).poll_read(cx, buf)
+    }
+}
+
+impl AsyncWrite for AndroidPlatformStream {
+    fn poll_write(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<std::io::Result<usize>> {
+        Pin::new(&mut self.0).poll_write(cx, buf)
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut self.0).poll_flush(cx)
+    }
+
+    fn poll_shutdown(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut self.0).poll_shutdown(cx)
+    }
+}
+
+/// Universal listener wrapper for Android abstract sockets
+pub struct AndroidPlatformListener {
+    listener: UnixListener,
+    name: String,
+}
+
+#[async_trait::async_trait]
+impl PlatformListener for AndroidPlatformListener {
+    async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>> {
+        let (stream, _addr) = self.listener.accept().await?;
+        Ok(Box::new(AndroidPlatformStream(stream)))
+    }
+
+    fn local_addr(&self) -> std::io::Result<String> {
+        Ok(self.name.clone())
+    }
+}
 
 impl PlatformSocket for AndroidSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
@@ -62,7 +115,7 @@ impl PlatformSocket for AndroidSocket {
         Ok(SocketEndpoint::Abstract(abstract_name))
     }
     
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>> {
         match endpoint {
             SocketEndpoint::Abstract(name) => {
                 debug!("Binding abstract socket: {}", name);
@@ -74,7 +127,10 @@ impl PlatformSocket for AndroidSocket {
                 
                 info!("✅ Abstract socket bound: {} (Android-optimized)", name);
                 
-                Ok(listener)
+                Ok(Box::new(AndroidPlatformListener {
+                    listener,
+                    name: name.clone(),
+                }))
             }
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
@@ -127,9 +183,34 @@ mod tests {
         let listener = AndroidSocket::bind(&endpoint);
         assert!(listener.is_ok(), "Abstract socket binding failed");
         
-        if let Ok(listener) = listener {
-            println!("✅ Abstract socket bound successfully: {}", endpoint.display());
-            drop(listener); // Auto-cleanup
+        if let Ok(mut listener) = listener {
+            // Verify local_addr works
+            let addr = listener.local_addr().unwrap();
+            assert!(addr.starts_with('@'));
+            println!("✅ Abstract socket bound successfully: {}", addr);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_universal_listener_trait() {
+        let test_name = format!("test_beardog_{}", std::process::id());
+        let endpoint = AndroidSocket::create_endpoint(&test_name).unwrap();
+
+        #[cfg(target_os = "linux")]
+        {
+            // Only test binding on Linux (where abstract sockets work)
+            let mut listener = AndroidSocket::bind(&endpoint).unwrap();
+
+            // Verify universal trait methods
+            let addr = listener.local_addr().unwrap();
+            assert!(addr.starts_with('@'));
+
+            println!("✅ Universal PlatformListener trait working on Android!");
+        }
+
+        #[cfg(not(target_os = "linux"))]
+        {
+            println!("⚠️  Skipping Android abstract socket test on non-Linux platform");
         }
     }
 }

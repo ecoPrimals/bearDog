@@ -5,7 +5,9 @@
 //!
 //! - **Android**: Abstract Unix sockets (`@biomeos_beardog`)
 //! - **Linux/macOS**: Filesystem Unix sockets (`/run/user/UID/biomeos/beardog.sock`)
-//! - **Windows** (future): Named pipes (`\\.\pipe\biomeos_beardog`)
+//! - **Windows**: Named pipes (`\\.\pipe\biomeos_beardog`)
+//! - **iOS**: XPC services (documented, awaiting Pure Rust bindings)
+//! - **WASM**: In-process channels (BroadcastChannel)
 //!
 //! ## TRUE ecoBin v2.0 Compliance
 //!
@@ -13,11 +15,20 @@
 //! - ✅ Zero C dependencies
 //! - ✅ Platform-agnostic (automatic detection)
 //! - ✅ No hardcoding (runtime discovery)
+//! - ✅ Universal trait-based abstraction
 //!
 //! ## Architecture
 //!
-//! Uses Rust's `#[cfg(target_os)]` for compile-time platform selection.
-//! No runtime overhead - the correct implementation is chosen at compile time.
+//! Uses Rust's `#[cfg(target_os)]` for compile-time platform selection with
+//! universal trait-based abstraction for runtime polymorphism.
+//!
+//! ## Modern Idiomatic Rust Evolution (Jan 31, 2026)
+//!
+//! **Problem**: Original `PlatformSocket` trait returned `UnixListener` which
+//! is incompatible with Windows `NamedPipeServer`.
+//!
+//! **Solution**: Generic `PlatformListener` and `PlatformStream` traits that
+//! work across all platforms - true universal abstraction!
 //!
 //! ## Reference
 //!
@@ -37,7 +48,9 @@ pub mod ios;
 pub mod wasm;
 
 use std::path::PathBuf;
-use tokio::net::UnixListener;
+use std::pin::Pin;
+use tokio::io::{AsyncRead, AsyncWrite};
+use std::task::{Context, Poll};
 
 /// Platform-specific socket endpoint types
 #[derive(Debug, Clone)]
@@ -77,9 +90,49 @@ impl SocketEndpoint {
     }
 }
 
+/// Universal platform stream trait (replaces platform-specific types)
+///
+/// **Modern Idiomatic Rust**: This trait abstracts over platform-specific stream types:
+/// - `tokio::net::UnixStream` (Unix, Android, macOS)
+/// - `tokio::net::windows::named_pipe::NamedPipeServer` (Windows)
+/// - `web_sys::MessagePort` (WASM)
+///
+/// All platforms provide async read/write through this unified interface.
+pub trait PlatformStream: AsyncRead + AsyncWrite + Send + Sync + Unpin {}
+
+/// Universal platform listener trait (replaces UnixListener)
+///
+/// **Modern Idiomatic Rust**: This trait abstracts over platform-specific listener types:
+/// - `tokio::net::UnixListener` (Unix, Android, macOS)
+/// - `tokio::net::windows::named_pipe::ServerOptions` (Windows)  
+/// - Custom BroadcastChannel listener (WASM)
+///
+/// **Philosophy**: "1 unified codebase" - same API works everywhere!
+#[async_trait::async_trait]
+pub trait PlatformListener: Send + Sync {
+    /// Accept incoming connection
+    ///
+    /// Returns a boxed stream that can be used for bidirectional communication.
+    /// Platform-specific implementations provide their native stream type.
+    async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>>;
+    
+    /// Get the local address/identifier of this listener
+    ///
+    /// Returns platform-appropriate identifier:
+    /// - Unix: File path
+    /// - Android: Abstract socket name
+    /// - Windows: Named pipe path
+    /// - WASM: Channel identifier
+    fn local_addr(&self) -> std::io::Result<String>;
+}
+
 /// Platform-specific socket operations
 ///
-/// Implementations handle platform-specific binding logic
+/// **Modern Idiomatic Rust Evolution**: Now returns generic `PlatformListener`
+/// instead of Unix-specific `UnixListener`. This enables true universal support!
+///
+/// Implementations handle platform-specific binding logic while exposing
+/// a unified interface through trait objects.
 pub trait PlatformSocket {
     /// Create platform-appropriate socket endpoint
     ///
@@ -90,14 +143,28 @@ pub trait PlatformSocket {
     /// Platform-specific socket endpoint
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint>;
     
-    /// Bind listener to endpoint
+    /// Bind listener to endpoint (EVOLVED: Now universal!)
+    ///
+    /// **Modern Idiomatic Rust**: Returns `Box<dyn PlatformListener>` which works
+    /// across all platforms. Callers don't need to know about platform specifics!
     ///
     /// # Arguments
     /// * `endpoint` - Socket endpoint to bind
     ///
     /// # Returns
-    /// Bound Unix listener ready to accept connections
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener>;
+    /// Boxed platform listener ready to accept connections
+    ///
+    /// # Example
+    /// ```no_run
+    /// use beardog_tunnel::platform::Socket;
+    ///
+    /// let endpoint = Socket::create_endpoint("beardog")?;
+    /// let mut listener = Socket::bind(&endpoint)?;
+    ///
+    /// // Works on Unix, Windows, Android, iOS, WASM!
+    /// let stream = listener.accept().await?;
+    /// ```
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>>;
 }
 
 /// Select platform implementation at compile time
