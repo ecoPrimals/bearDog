@@ -176,21 +176,40 @@ impl UnixSocketIpcServer {
     /// **Isomorphic IPC Pattern** (biological adaptation):
     /// - Platform constraints → Automatic adaptation (TCP fallback)
     /// - Real errors → Propagate for handling
+    ///
+    /// **DEEP DEBT FIX** (Feb 1, 2026): Now checks error chain to handle
+    /// wrapped errors from `.context()`. This allows proper detection even
+    /// when errors are enriched with context information.
     fn is_platform_constraint(&self, error: &anyhow::Error) -> bool {
-        if let Some(io_err) = error.downcast_ref::<std::io::Error>() {
-            match io_err.kind() {
-                // Permission denied often means SELinux blocking Unix sockets
-                std::io::ErrorKind::PermissionDenied => {
-                    // Check if SELinux is the cause
-                    self.is_selinux_enforcing()
+        // Check the entire error chain, not just the top-level error
+        // This handles cases where io::Error is wrapped with .context()
+        for cause in error.chain() {
+            if let Some(io_err) = cause.downcast_ref::<std::io::Error>() {
+                match io_err.kind() {
+                    // Permission denied often means SELinux blocking Unix sockets
+                    std::io::ErrorKind::PermissionDenied => {
+                        // Check if SELinux is the cause
+                        return self.is_selinux_enforcing();
+                    }
+                    // Address family not supported (platform lacks Unix sockets)
+                    std::io::ErrorKind::Unsupported => return true,
+                    _ => {}
                 }
-                // Address family not supported (platform lacks Unix sockets)
-                std::io::ErrorKind::Unsupported => true,
-                _ => false,
             }
-        } else {
-            false
         }
+        
+        // Fallback: Check error message for common platform constraint patterns
+        // This handles edge cases where the error type doesn't match but message is clear
+        let error_str = error.to_string().to_lowercase();
+        if error_str.contains("permission denied") && self.is_selinux_enforcing() {
+            return true;
+        }
+        if error_str.contains("address family not supported") 
+            || error_str.contains("protocol not supported") {
+            return true;
+        }
+        
+        false
     }
 
     /// Check if SELinux is enforcing (Android constraint detection)
