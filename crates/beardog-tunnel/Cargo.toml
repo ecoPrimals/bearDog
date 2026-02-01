@@ -148,6 +148,10 @@ security-framework-sys = "2.9"
 core-foundation = "0.9"
 core-foundation-sys = "0.8"
 
-[[bin]]
-name = "beardog"  # UniBin architecture (ecosystem standard v1.0.0)
-path = "src/main.rs"
+# [[bin]]
+# name = "beardog"  # REMOVED: Duplicate UniBin violation!
+# path = "src/main.rs"
+# 
+# EVOLUTION (Feb 1, 2026): beardog-tunnel is now a LIBRARY ONLY
+# The TRUE UniBin is in beardog-cli (full functionality)
+# This ensures ONE binary with ALL functionality (UniBin compliant)
