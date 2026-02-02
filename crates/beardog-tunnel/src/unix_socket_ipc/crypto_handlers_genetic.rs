@@ -8,6 +8,9 @@
 //! - `genetic.mix_entropy` - Mix entropy across three tiers
 //! - `genetic.verify_lineage` - Verify genetic family relationships
 //! - `genetic.generate_lineage_proof` - Generate lineage proof for verification
+//! - `genetic.generate_challenge` - Generate challenge for lineage verification
+//! - `genetic.respond_to_challenge` - Respond to lineage challenge
+//! - `genetic.verify_challenge_response` - Verify challenge response
 //!
 //! # Architecture
 //!
@@ -30,6 +33,7 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{debug, info, warn};
+use subtle::ConstantTimeEq;  // For constant-time comparisons
 
 // ============================================================================
 // REQUEST/RESPONSE TYPES
@@ -125,6 +129,78 @@ pub struct GenerateLineageProofResponse {
     pub proof: String,
     /// Proof generation timestamp
     pub timestamp: u64,
+}
+
+/// Request to generate a challenge
+#[derive(Debug, Deserialize)]
+pub struct GenerateChallengeRequest {
+    /// Challenger node ID
+    pub challenger_node_id: String,
+    /// Target family ID
+    pub target_family_id: String,
+}
+
+/// Response containing challenge
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GenerateChallengeResponse {
+    /// Challenge nonce (hex-encoded, 32 bytes)
+    pub nonce: String,
+    /// Challenge ID
+    pub challenge_id: String,
+    /// Challenger node ID
+    pub challenger: String,
+    /// Target family ID
+    pub target: String,
+}
+
+/// Request to respond to challenge
+#[derive(Debug, Deserialize)]
+pub struct RespondToChallengeRequest {
+    /// Challenge nonce (hex-encoded)
+    pub nonce: String,
+    /// Our family seed path
+    pub our_family_seed_path: String,
+    /// Our node ID
+    pub our_node_id: String,
+}
+
+/// Response containing challenge response
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RespondToChallengeResponse {
+    /// Challenge response (hex-encoded HMAC-SHA512)
+    pub response: String,
+    /// Lineage proof
+    pub lineage_proof: String,
+    /// Seed hash prefix (hex-encoded, 16 bytes)
+    pub seed_hash_prefix: String,
+    /// Responder node ID
+    pub responder_node_id: String,
+}
+
+/// Request to verify challenge response
+#[derive(Debug, Deserialize)]
+pub struct VerifyChallengeResponseRequest {
+    /// Challenge nonce (hex-encoded)
+    pub nonce: String,
+    /// Response to verify (hex-encoded)
+    pub response: String,
+    /// Responder node ID
+    pub responder_node_id: String,
+    /// Lineage proof
+    pub lineage_proof: String,
+    /// Our family seed path
+    pub our_family_seed_path: String,
+}
+
+/// Response containing verification result
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyChallengeResponseResponse {
+    /// Whether response is valid
+    pub valid: bool,
+    /// Relationship type
+    pub relationship: String,
+    /// Trust level
+    pub trust_level: String,
 }
 
 // ============================================================================
@@ -389,6 +465,239 @@ pub async fn handle_generate_lineage_proof(params: Value) -> Result<Value, BearD
     Ok(json!(GenerateLineageProofResponse {
         proof: proof_b64,
         timestamp,
+    }))
+}
+
+/// Handle `genetic.generate_challenge` RPC method
+///
+/// Generates a cryptographic challenge for lineage verification.
+///
+/// # Performance
+///
+/// - Expected: < 100μs
+/// - Method: Secure random nonce generation
+///
+/// # Example
+///
+/// ```json
+/// {
+///     "challenger_node_id": "usb_node1",
+///     "target_family_id": "pixel_tower"
+/// }
+/// ```
+pub async fn handle_generate_challenge(params: Value) -> Result<Value, BearDogError> {
+    debug!("🎲 RPC: genetic.generate_challenge");
+
+    let request: GenerateChallengeRequest = serde_json::from_value(params).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid generate_challenge params: {}", e))
+    })?;
+
+    // Generate 32-byte nonce
+    let mut nonce = [0u8; 32];
+    use rand::RngCore;
+    rand::thread_rng().fill_bytes(&mut nonce);
+    let nonce_hex = hex::encode(&nonce);
+
+    // Generate challenge ID
+    use uuid::Uuid;
+    let challenge_id = Uuid::new_v4().to_string();
+
+    info!(
+        "✅ Generated challenge: {} → {}",
+        request.challenger_node_id, request.target_family_id
+    );
+
+    Ok(json!(GenerateChallengeResponse {
+        nonce: nonce_hex,
+        challenge_id,
+        challenger: request.challenger_node_id,
+        target: request.target_family_id,
+    }))
+}
+
+/// Handle `genetic.respond_to_challenge` RPC method
+///
+/// Responds to a lineage challenge by generating HMAC proof.
+///
+/// # Performance
+///
+/// - Expected: < 500μs
+/// - Method: HMAC-SHA512 with lineage key
+///
+/// # Example
+///
+/// ```json
+/// {
+///     "nonce": "hex_encoded_nonce...",
+///     "our_family_seed_path": "/path/to/.family.seed",
+///     "our_node_id": "pixel_node1"
+/// }
+/// ```
+pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDogError> {
+    debug!("🔐 RPC: genetic.respond_to_challenge");
+
+    let request: RespondToChallengeRequest = serde_json::from_value(params).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid respond_to_challenge params: {}", e))
+    })?;
+
+    // Read family seed
+    let seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
+        BearDogError::system(format!(
+            "Failed to read family seed from {}: {}",
+            request.our_family_seed_path, e
+        ))
+    })?;
+    let seed_b64 = BASE64.encode(&seed_bytes);
+
+    // Derive lineage key
+    let provider = GeneticCryptoProvider::new_with_lineage(seed_bytes.clone())?;
+    let lineage_key = provider
+        .derive_lineage_key("family", "challenger", b"lineage-challenge-v1")
+        .await?;
+
+    // Decode nonce
+    let nonce_bytes = hex::decode(&request.nonce).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid nonce (not hex): {}", e))
+    })?;
+
+    // Compute HMAC-SHA512(nonce, lineage_key)
+    use hmac::{Hmac, Mac};
+    use sha2::Sha512;
+    type HmacSha512 = Hmac<Sha512>;
+
+    let mut mac = HmacSha512::new_from_slice(&lineage_key).map_err(|e| {
+        BearDogError::system(format!("Failed to create HMAC: {}", e))
+    })?;
+    mac.update(&nonce_bytes);
+    let response_bytes = mac.finalize().into_bytes();
+    let response_hex = hex::encode(&response_bytes);
+
+    // Generate lineage proof
+    let mut hasher = blake3::Hasher::new();
+    hasher.update(&seed_bytes);
+    hasher.update(b"family");
+    hasher.update(b"challenger");
+    hasher.update(b"GENETIC_LINEAGE_PROOF_V1");
+    let proof = hasher.finalize();
+    let proof_b64 = BASE64.encode(proof.as_bytes());
+
+    // Generate seed hash prefix (16 bytes)
+    let seed_hash = blake3::hash(&seed_bytes);
+    let prefix_hex = hex::encode(&seed_hash.as_bytes()[..16]);
+
+    info!(
+        "✅ Generated challenge response for node: {}",
+        request.our_node_id
+    );
+
+    Ok(json!(RespondToChallengeResponse {
+        response: response_hex,
+        lineage_proof: proof_b64,
+        seed_hash_prefix: prefix_hex,
+        responder_node_id: request.our_node_id,
+    }))
+}
+
+/// Handle `genetic.verify_challenge_response` RPC method
+///
+/// Verifies a challenge response for lineage authentication.
+///
+/// # Performance
+///
+/// - Expected: < 600μs
+/// - Method: Constant-time HMAC comparison + lineage verification
+///
+/// # Example
+///
+/// ```json
+/// {
+///     "nonce": "hex_encoded_nonce...",
+///     "response": "hex_encoded_response...",
+///     "responder_node_id": "pixel_node1",
+///     "lineage_proof": "base64_proof...",
+///     "our_family_seed_path": "/path/to/.family.seed"
+/// }
+/// ```
+pub async fn handle_verify_challenge_response(params: Value) -> Result<Value, BearDogError> {
+    debug!("🔍 RPC: genetic.verify_challenge_response");
+
+    let request: VerifyChallengeResponseRequest = serde_json::from_value(params).map_err(|e| {
+        BearDogError::invalid_input(&format!(
+            "Invalid verify_challenge_response params: {}",
+            e
+        ))
+    })?;
+
+    // Read our family seed
+    let our_seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
+        BearDogError::system(format!(
+            "Failed to read family seed from {}: {}",
+            request.our_family_seed_path, e
+        ))
+    })?;
+
+    // Derive our lineage key
+    let provider = GeneticCryptoProvider::new_with_lineage(our_seed_bytes.clone())?;
+    let lineage_key = provider
+        .derive_lineage_key("family", "responder", b"lineage-challenge-v1")
+        .await?;
+
+    // Decode nonce and response
+    let nonce_bytes = hex::decode(&request.nonce).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid nonce (not hex): {}", e))
+    })?;
+
+    let response_bytes = hex::decode(&request.response).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid response (not hex): {}", e))
+    })?;
+
+    // Compute expected response
+    use hmac::{Hmac, Mac};
+    use sha2::Sha512;
+    type HmacSha512 = Hmac<Sha512>;
+
+    let mut mac = HmacSha512::new_from_slice(&lineage_key).map_err(|e| {
+        BearDogError::system(format!("Failed to create HMAC: {}", e))
+    })?;
+    mac.update(&nonce_bytes);
+    let expected_bytes = mac.finalize().into_bytes();
+
+    // Constant-time comparison
+    use subtle::ConstantTimeEq;
+    let response_valid = response_bytes.ct_eq(&expected_bytes[..]).into();
+
+    // Verify lineage proof
+    let lineage_proof = BASE64.decode(&request.lineage_proof).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid lineage_proof (not base64): {}", e))
+    })?;
+
+    let proof_valid = provider
+        .verify_lineage("family", "responder", &lineage_proof)
+        .await?;
+
+    let valid = response_valid && proof_valid;
+    let (relationship, trust_level) = if valid {
+        ("verified_sibling", "family")
+    } else {
+        ("unrelated", "none")
+    };
+
+    if valid {
+        info!(
+            "✅ Challenge response verified: {}",
+            request.responder_node_id
+        );
+    } else {
+        warn!(
+            "❌ Challenge response FAILED: {}",
+            request.responder_node_id
+        );
+    }
+
+    Ok(json!(VerifyChallengeResponseResponse {
+        valid,
+        relationship: relationship.to_string(),
+        trust_level: trust_level.to_string(),
     }))
 }
 

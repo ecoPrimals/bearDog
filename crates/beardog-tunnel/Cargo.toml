@@ -80,6 +80,7 @@ bincode = "1.3"
 zeroize = "1.7"
 parking_lot = "0.12"
 async-trait = "0.1"
+subtle = "2.5"  # Constant-time comparisons for Dark Forest challenge-response
 
 # Solo V2 USB security key support
 ctap-hid-fido2 = { version = "3.5", optional = true }

@@ -58,11 +58,14 @@
 //! - `tls.sign_handshake` - Ed25519 handshake signing
 //! - `tls.verify_certificate` - X.509 certificate chain verification
 //!
-//! ## Genetic Crypto - Phase 5 (4 methods)
+//! ## Genetic Crypto - Phase 5 (7 methods)
 //! - `genetic.derive_lineage_key` - Derive keys from genetic family lineage
 //! - `genetic.mix_entropy` - Mix entropy across three tiers (Human/Supervised/Machine)
 //! - `genetic.verify_lineage` - Verify genetic family relationships
 //! - `genetic.generate_lineage_proof` - Generate lineage proof for verification
+//! - `genetic.generate_challenge` - Generate challenge for lineage verification (Dark Forest)
+//! - `genetic.respond_to_challenge` - Respond to lineage challenge (Dark Forest)
+//! - `genetic.verify_challenge_response` - Verify challenge response (Dark Forest)
 //!
 //! ## Password Hashing - Phase 6 (3 methods)
 //! - `crypto.argon2id_hash` - Modern password hashing (OWASP recommended, memory-hard)
@@ -213,6 +216,9 @@ impl MethodHandler for CryptoHandler {
             "genetic.mix_entropy",
             "genetic.verify_lineage",
             "genetic.generate_lineage_proof",
+            "genetic.generate_challenge",
+            "genetic.respond_to_challenge",
+            "genetic.verify_challenge_response",
             // ═══════════════════════════════════════════════════════════════
             // Semantic Aliases (Phase 2 - wateringHole Standard)
             // Added: January 27, 2026
@@ -636,6 +642,45 @@ impl MethodHandler for CryptoHandler {
                     params
                         .ok_or_else(|| {
                             "Parameters required for genetic.generate_lineage_proof".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            "genetic.generate_challenge" => {
+                info!("🎲 Genetic: generate_challenge (challenge generation)");
+                super::super::crypto_handlers_genetic::handle_generate_challenge(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.generate_challenge".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            "genetic.respond_to_challenge" => {
+                info!("🔐 Genetic: respond_to_challenge (challenge response)");
+                super::super::crypto_handlers_genetic::handle_respond_to_challenge(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.respond_to_challenge".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            "genetic.verify_challenge_response" => {
+                info!("🔍 Genetic: verify_challenge_response (response verification)");
+                super::super::crypto_handlers_genetic::handle_verify_challenge_response(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.verify_challenge_response".to_string()
                         })?
                         .clone(),
                 )
