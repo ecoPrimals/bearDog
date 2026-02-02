@@ -29,7 +29,18 @@ use super::metrics::BtspMetrics;
 /// - Universal HSM architecture for cryptographic operations
 /// - Genetic lineage for trust establishment
 /// - TOFU (Trust On First Use) for peer verification
+///
+/// # Thread Safety
+///
+/// This struct is thread-safe via interior mutability (Arc<RwLock<T>>).
+/// Send + Sync are auto-derived since all fields are Send + Sync.
+#[derive(Clone)]
 pub struct BeardogBtspProvider {
+    inner: Arc<BtspProviderInner>,
+}
+
+/// Inner provider state (all fields are Send + Sync)
+struct BtspProviderInner {
     /// HSM manager for cryptographic operations
     hsm_manager: Arc<HsmManager>,
 
@@ -64,13 +75,15 @@ impl BeardogBtspProvider {
         info!("Initializing BearDog BTSP Provider");
 
         Self {
-            hsm_manager,
-            birdsong_manager: None,
-            genetic_engine: None,
-            tunnels: Arc::new(RwLock::new(HashMap::new())),
-            peer_trust: Arc::new(RwLock::new(HashMap::new())),
-            lifecycle: TunnelLifecycleManager::default(),
-            metrics: Arc::new(BtspMetrics::new()),
+            inner: Arc::new(BtspProviderInner {
+                hsm_manager,
+                birdsong_manager: None,
+                genetic_engine: None,
+                tunnels: Arc::new(RwLock::new(HashMap::new())),
+                peer_trust: Arc::new(RwLock::new(HashMap::new())),
+                lifecycle: TunnelLifecycleManager::default(),
+                metrics: Arc::new(BtspMetrics::new()),
+            }),
         }
     }
 
@@ -78,50 +91,57 @@ impl BeardogBtspProvider {
     ///
     /// This enables the provider to use BirdSong for peer discovery
     /// with genetic lineage encryption.
-    pub fn with_birdsong(mut self, manager: Arc<BirdSongManager>) -> Self {
+    pub fn with_birdsong(self, manager: Arc<BirdSongManager>) -> Self {
         debug!("Configuring BirdSong manager");
-        self.birdsong_manager = Some(manager);
-        self
+        // Clone the Arc to get mutable access
+        let mut inner = (*self.inner).clone();
+        inner.birdsong_manager = Some(manager);
+        Self {
+            inner: Arc::new(inner),
+        }
     }
 
     /// Set genetic engine for lineage verification
     ///
     /// This enables genetic lineage-based trust decisions.
-    pub fn with_genetic_engine(mut self, engine: Arc<EcosystemGeneticEngine>) -> Self {
+    pub fn with_genetic_engine(self, engine: Arc<EcosystemGeneticEngine>) -> Self {
         debug!("Configuring genetic engine");
-        self.genetic_engine = Some(engine);
-        self
+        let mut inner = (*self.inner).clone();
+        inner.genetic_engine = Some(engine);
+        Self {
+            inner: Arc::new(inner),
+        }
     }
 
     /// Get reference to HSM manager
     pub(super) fn hsm(&self) -> &Arc<HsmManager> {
-        &self.hsm_manager
+        &self.inner.hsm_manager
     }
 
     /// Get reference to BirdSong manager if configured
     pub(super) fn birdsong(&self) -> Option<&Arc<BirdSongManager>> {
-        self.birdsong_manager.as_ref()
+        self.inner.birdsong_manager.as_ref()
     }
 
     /// Get reference to genetic engine if configured
     pub(super) fn genetic_engine(&self) -> Option<&Arc<EcosystemGeneticEngine>> {
-        self.genetic_engine.as_ref()
+        self.inner.genetic_engine.as_ref()
     }
 
     /// Get reference to lifecycle manager
     pub(super) fn lifecycle(&self) -> &TunnelLifecycleManager {
-        &self.lifecycle
+        &self.inner.lifecycle
     }
 
     /// Get reference to metrics
     pub(super) fn metrics(&self) -> &Arc<BtspMetrics> {
-        &self.metrics
+        &self.inner.metrics
     }
 
     /// Add tunnel to active tunnels
     pub(super) fn add_tunnel(&self, tunnel: Tunnel) -> String {
         let tunnel_id = tunnel.id.clone();
-        let mut tunnels = self.tunnels.write();
+        let mut tunnels = self.inner.tunnels.write();
         tunnels.insert(tunnel_id.clone(), tunnel);
         debug!(tunnel_id = %tunnel_id, "Tunnel added");
         tunnel_id
@@ -132,13 +152,13 @@ impl BeardogBtspProvider {
     ///
     /// Returns a clone of the tunnel if it exists.
     pub fn get_tunnel(&self, tunnel_id: &str) -> Option<Tunnel> {
-        let tunnels = self.tunnels.read();
+        let tunnels = self.inner.tunnels.read();
         tunnels.get(tunnel_id).cloned()
     }
 
     /// Remove tunnel by ID
     pub(super) fn remove_tunnel(&self, tunnel_id: &str) -> Option<Tunnel> {
-        let mut tunnels = self.tunnels.write();
+        let mut tunnels = self.inner.tunnels.write();
         let tunnel = tunnels.remove(tunnel_id);
         if tunnel.is_some() {
             debug!(tunnel_id = %tunnel_id, "Tunnel removed");
@@ -148,7 +168,7 @@ impl BeardogBtspProvider {
 
     /// Get all active tunnel IDs
     pub(super) fn active_tunnel_ids(&self) -> Vec<String> {
-        let tunnels = self.tunnels.read();
+        let tunnels = self.inner.tunnels.read();
         tunnels.keys().cloned().collect()
     }
 
@@ -157,13 +177,13 @@ impl BeardogBtspProvider {
     ///
     /// Returns a clone of the trust record if it exists.
     pub fn get_peer_trust(&self, peer_id: &str) -> Option<PeerTrustRecord> {
-        let trust_records = self.peer_trust.read();
+        let trust_records = self.inner.peer_trust.read();
         trust_records.get(peer_id).cloned()
     }
 
     /// Update or create trust record for peer
     pub(super) fn update_peer_trust(&self, peer_id: String, record: PeerTrustRecord) {
-        let mut trust_records = self.peer_trust.write();
+        let mut trust_records = self.inner.peer_trust.write();
         trust_records.insert(peer_id, record);
     }
 
@@ -181,10 +201,10 @@ impl BeardogBtspProvider {
     ///
     /// Removes tunnels that have been idle beyond the configured threshold.
     pub fn cleanup_idle_tunnels(&self) -> usize {
-        let mut tunnels = self.tunnels.write();
+        let mut tunnels = self.inner.tunnels.write();
         let idle_tunnels: Vec<String> = tunnels
             .iter()
-            .filter(|(_, tunnel)| self.lifecycle.should_cleanup(tunnel))
+            .filter(|(_, tunnel)| self.inner.lifecycle.should_cleanup(tunnel))
             .map(|(id, _)| id.clone())
             .collect();
 
@@ -202,19 +222,41 @@ impl BeardogBtspProvider {
 
     /// Get total number of active tunnels
     pub fn active_tunnel_count(&self) -> usize {
-        let tunnels = self.tunnels.read();
+        let tunnels = self.inner.tunnels.read();
         tunnels.len()
     }
 
     /// Check if at maximum tunnel capacity
     pub(super) fn at_capacity(&self) -> bool {
-        self.active_tunnel_count() >= self.lifecycle.max_tunnels()
+        self.active_tunnel_count() >= self.inner.lifecycle.max_tunnels()
     }
 }
 
 // Thread-safe: All interior mutability is protected by RwLock
-unsafe impl Send for BeardogBtspProvider {}
-unsafe impl Sync for BeardogBtspProvider {}
+
+// Add Clone impl for BtspProviderInner (needed for builder pattern)
+impl Clone for BtspProviderInner {
+    fn clone(&self) -> Self {
+        Self {
+            hsm_manager: Arc::clone(&self.hsm_manager),
+            birdsong_manager: self.birdsong_manager.clone(),
+            genetic_engine: self.genetic_engine.clone(),
+            tunnels: Arc::clone(&self.tunnels),
+            peer_trust: Arc::clone(&self.peer_trust),
+            lifecycle: self.lifecycle.clone(),
+            metrics: Arc::clone(&self.metrics),
+        }
+    }
+}
+
+// ✅ ZERO UNSAFE CODE! Send + Sync auto-derived from Arc<T>
+// All fields in BtspProviderInner are Send + Sync:
+// - Arc<HsmManager>: Send + Sync
+// - Option<Arc<BirdSongManager>>: Send + Sync
+// - Option<Arc<EcosystemGeneticEngine>>: Send + Sync
+// - Arc<RwLock<HashMap<...>>>: Send + Sync
+// - TunnelLifecycleManager: Send + Sync
+// - Arc<BtspMetrics>: Send + Sync
 
 #[cfg(test)]
 mod tests {
