@@ -209,7 +209,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_primal_info_structure() {
-        let registry = Arc::new(HandlerRegistry::new());
+        let registry = HandlerRegistry::default();
         let handler = IntrospectionHandler::new(registry);
 
         let result = handler.handle_primal_info().await.unwrap();
@@ -225,7 +225,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_primal_capabilities_structure() {
-        let registry = Arc::new(HandlerRegistry::new());
+        let registry = HandlerRegistry::default();
         let handler = IntrospectionHandler::new(registry);
 
         let result = handler.handle_primal_capabilities().await.unwrap();
@@ -243,7 +243,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_methods_list() {
-        let registry = Arc::new(HandlerRegistry::new());
+        let registry = HandlerRegistry::default();
         let handler = IntrospectionHandler::new(registry);
 
         let methods = handler.methods();

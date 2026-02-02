@@ -211,11 +211,11 @@ impl HandlerRegistry {
 }
 
 #[cfg(test)]
-impl Default for HandlerRegistry {
+impl HandlerRegistry {
     /// Create a test registry with default test identity
     ///
     /// Only available in tests. Production code must provide explicit identity.
-    fn default() -> Arc<Self> {
+    pub fn default() -> Arc<Self> {
         let identity = Arc::new(beardog_types::primal_identity::PrimalIdentity::for_test(
             "test-family",
             "test-node",
