@@ -43,6 +43,7 @@ pub mod encryption;
 pub mod federation;
 pub mod graph_security;
 pub mod health;
+pub mod introspection; // Primal introspection (primal.info, rpc.methods)
 pub mod security;
 
 /// Trait for JSON-RPC method handlers
@@ -119,7 +120,7 @@ pub trait MethodHandler: Send + Sync {
 /// The registry is `Send + Sync` and can be safely shared across threads.
 /// All handlers must also be `Send + Sync`.
 pub struct HandlerRegistry {
-    handlers: Vec<Arc<dyn MethodHandler>>,
+    handlers: tokio::sync::RwLock<Vec<Arc<dyn MethodHandler>>>,
 }
 
 impl HandlerRegistry {
@@ -131,9 +132,10 @@ impl HandlerRegistry {
     /// # Arguments
     ///
     /// * `identity` - Primal identity (family and node) for handlers that need it
-    pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Self {
-        Self {
-            handlers: vec![
+    pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
+        // Create registry with all handlers
+        let registry = Arc::new(Self {
+            handlers: tokio::sync::RwLock::new(vec![
                 Arc::new(health::HealthHandler),
                 Arc::new(capabilities::CapabilitiesHandler::new(identity.clone())),
                 Arc::new(security::SecurityHandler::new(identity.clone())),
@@ -142,10 +144,19 @@ impl HandlerRegistry {
                 Arc::new(federation::FederationHandler::new(identity.clone())),
                 Arc::new(encryption::EncryptionHandler),
                 Arc::new(graph_security::GraphSecurityHandler),
-                // All handlers now extracted to modular architecture!
-                // Legacy handler will only be used for HTTP fallback
-            ],
-        }
+            ]),
+        });
+
+        // Initialize introspection handler
+        // Note: This creates a weak cycle that's acceptable (registry -> introspection -> Arc<registry>)
+        // The introspection handler only reads from registry, doesn't own it exclusively
+        let registry_clone = registry.clone();
+        let introspection = Arc::new(introspection::IntrospectionHandler::new(registry_clone));
+        
+        // Use blocking call in sync context (fine during initialization)
+        registry.handlers.blocking_write().push(introspection);
+
+        registry
     }
 
     /// Route a request to the appropriate handler
@@ -173,7 +184,8 @@ impl HandlerRegistry {
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         // Try each handler in order
-        for handler in &self.handlers {
+        let handlers = self.handlers.read().await;
+        for handler in handlers.iter() {
             if handler.methods().contains(&method) {
                 return handler.handle(method, params, btsp_provider).await;
             }
@@ -182,6 +194,20 @@ impl HandlerRegistry {
         // No handler found (JSON-RPC 2.0 error message)
         Err(format!("Method not found: {}", method))
     }
+
+    /// Get all methods from all handlers
+    ///
+    /// Returns a sorted list of all method names exposed by all handlers.
+    /// Used by introspection handler for `rpc.methods`.
+    pub async fn all_methods(&self) -> Vec<String> {
+        let handlers = self.handlers.read().await;
+        let mut methods = Vec::new();
+        for handler in handlers.iter() {
+            methods.extend(handler.methods().iter().map(|s| s.to_string()));
+        }
+        methods.sort();
+        methods
+    }
 }
 
 #[cfg(test)]
@@ -189,7 +215,7 @@ impl Default for HandlerRegistry {
     /// Create a test registry with default test identity
     ///
     /// Only available in tests. Production code must provide explicit identity.
-    fn default() -> Self {
+    fn default() -> Arc<Self> {
         let identity = Arc::new(beardog_types::primal_identity::PrimalIdentity::for_test(
             "test-family",
             "test-node",

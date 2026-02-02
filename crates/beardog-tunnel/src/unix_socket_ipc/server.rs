@@ -30,7 +30,7 @@ pub struct UnixSocketIpcServer {
     btsp_provider: Arc<BeardogBtspProvider>,
 
     /// Modular handler registry for JSON-RPC methods
-    handler_registry: HandlerRegistry,
+    handler_registry: Arc<HandlerRegistry>,
 
     /// Server running state (using RwLock for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
