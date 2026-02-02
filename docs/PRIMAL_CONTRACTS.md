@@ -1,0 +1,826 @@
+# 🔌 BearDog Primal Contracts - JSON-RPC API Specification
+
+**Version**: 1.0.0  
+**Date**: February 2, 2026  
+**Status**: Production Stable  
+**Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
+
+═══════════════════════════════════════════════════════════════════
+
+## 🎯 **OVERVIEW**
+
+BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.0 interface over Unix domain sockets. This allows any primal to discover and use BearDog's services at runtime without compile-time dependencies.
+
+### **Philosophy: Primal Self-Knowledge**
+
+- **BearDog knows**: Its own capabilities (crypto, genetics, HSM)
+- **BearDog discovers**: Other primals via Dark Forest beacons (runtime)
+- **No compile-time coupling**: Primals communicate via JSON-RPC
+
+### **Transport**
+
+**Primary**: Unix Domain Sockets
+- Path: `/run/user/$UID/biomeos/beardog.sock` (Linux)
+- Protocol: JSON-RPC 2.0
+- Encoding: UTF-8 JSON
+- Authentication: Family lineage (genetic)
+
+**Fallback**: TCP (Android/constraints)
+- Discovered via: `~/.config/biomeos/beardog.sock` (contains `tcp:IP:PORT`)
+- Protocol: Same JSON-RPC 2.0
+- Use case: Android devices without Unix socket support
+
+═══════════════════════════════════════════════════════════════════
+
+## 📚 **API CATEGORIES**
+
+BearDog provides **46 JSON-RPC methods** across 5 categories:
+
+### **1. Core Cryptography** (20 methods)
+- Signatures: Ed25519, ECDSA (P-256, P-384), RSA
+- Key Exchange: X25519, ECDH (P-256, P-384)
+- Encryption: ChaCha20-Poly1305, AES-GCM (128, 256)
+- Hashing: BLAKE3, SHA-256, SHA-384, SHA-512
+- Authentication: HMAC-SHA256
+
+### **2. Genetic Cryptography** (8 methods)
+- Lineage key derivation (family-based)
+- Beacon key derivation (TRUE Dark Forest)
+- Entropy mixing (3-tier: Human/Supervised/Machine)
+- Lineage verification
+- Challenge-response authentication
+
+### **3. TLS/HTTPS Support** (4 methods)
+- Handshake secret derivation (HKDF)
+- Application secret derivation (HKDF)
+- Certificate verification (X.509)
+- Handshake signing (Ed25519)
+
+### **4. Password Hashing** (3 methods)
+- Argon2id (OWASP recommended, memory-hard)
+- PBKDF2-SHA256 (legacy compatibility)
+- Constant-time verification
+
+### **5. HSM Management** (11 methods)
+- Key generation (ephemeral, persistent)
+- Key storage (StrongBox on Android)
+- Entropy management
+- Session management
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔐 **CORE CRYPTOGRAPHY**
+
+### **Ed25519 Signature**
+
+**Method**: `crypto.sign_ed25519`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.sign_ed25519",
+  "params": {
+    "data": "base64_encoded_data",
+    "key": "base64_encoded_private_key_32_bytes"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "signature": "base64_encoded_signature_64_bytes"
+  },
+  "id": 1
+}
+```
+
+**Performance**: ~50-100μs
+
+---
+
+### **ChaCha20-Poly1305 Encryption**
+
+**Method**: `crypto.chacha20_poly1305_encrypt`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.chacha20_poly1305_encrypt",
+  "params": {
+    "key": "hex_encoded_key_32_bytes",
+    "plaintext": "base64_encoded_plaintext"
+  },
+  "id": 2
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "ciphertext": "base64_encoded_ciphertext",
+    "nonce": "base64_encoded_nonce_12_bytes",
+    "tag": "base64_encoded_tag_16_bytes"
+  },
+  "id": 2
+}
+```
+
+**Performance**: ~500-800μs per 1KB
+
+---
+
+### **BLAKE3 Hashing**
+
+**Method**: `crypto.blake3_hash`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.blake3_hash",
+  "params": {
+    "data": "base64_encoded_data"
+  },
+  "id": 3
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "hash": "hex_encoded_hash_32_bytes"
+  },
+  "id": 3
+}
+```
+
+**Performance**: ~300-500μs per 1KB
+
+═══════════════════════════════════════════════════════════════════
+
+## 🧬 **GENETIC CRYPTOGRAPHY**
+
+### **Derive Lineage Key**
+
+**Method**: `genetic.derive_lineage_key`
+
+**Purpose**: Derive symmetric key from family lineage for encrypted communication
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "genetic.derive_lineage_key",
+  "params": {
+    "our_family_id": "family",
+    "peer_family_id": "peer",
+    "context": "session-id-12345",
+    "lineage_seed": "base64_encoded_family_seed"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "key": "base64_encoded_key_32_bytes",
+    "method": "Blake3-Lineage-KDF",
+    "quality_score": 0.8
+  },
+  "id": 1
+}
+```
+
+**Performance**: ~500μs
+
+---
+
+### **Derive Lineage Beacon Key** (TRUE Dark Forest)
+
+**Method**: `genetic.derive_lineage_beacon_key`
+
+**Purpose**: Derive dedicated key for BirdSong beacons (pure noise, zero metadata)
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "genetic.derive_lineage_beacon_key",
+  "params": {
+    "lineage_seed": "base64_encoded_seed"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "beacon_key": "hex_encoded_key_64_chars",
+    "algorithm": "HKDF-SHA256+ChaCha20-Poly1305",
+    "domain": "birdsong_beacon_v1",
+    "key_size_bytes": 32,
+    "deterministic": true,
+    "purpose": "TRUE Dark Forest beacon encryption (zero metadata)"
+  },
+  "id": 1
+}
+```
+
+**Security**:
+- Domain-separated from other genetic keys
+- Deterministic (same lineage = same key)
+- All family members derive identical keys
+- Enables pure noise beacons (indistinguishable from random)
+
+**Performance**: ~100μs
+
+---
+
+### **Mix Entropy** (Three-Tier Hierarchy)
+
+**Method**: `genetic.mix_entropy`
+
+**Purpose**: Mix entropy from multiple tiers for enhanced security
+
+**Tiers**:
+1. **Tier 3**: Human Lived Experience (highest quality)
+2. **Tier 2**: Human Supervised Machine
+3. **Tier 1**: Store Bought Machine (default)
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "genetic.mix_entropy",
+  "params": {
+    "tier3_human": "base64_human_entropy",
+    "tier2_supervised": "base64_supervised_entropy",
+    "tier1_machine": null
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "entropy": "base64_encoded_mixed_32_bytes",
+    "quality_score": 0.9,
+    "tiers_used": 3
+  },
+  "id": 1
+}
+```
+
+**Quality Scores**:
+- Tier 1 only: 0.4
+- Tier 1+2: 0.6
+- Tier 1+2+3: 0.9-1.0
+
+**Performance**: ~200μs
+
+---
+
+### **Generate Challenge** (Dark Forest Authentication)
+
+**Method**: `genetic.generate_challenge`
+
+**Purpose**: Generate cryptographic challenge for lineage verification
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "genetic.generate_challenge",
+  "params": {
+    "challenger_node_id": "usb_node1",
+    "target_family_id": "pixel_tower"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "nonce": "hex_encoded_nonce_32_bytes",
+    "challenge_id": "uuid_v4",
+    "challenger": "usb_node1",
+    "target": "pixel_tower"
+  },
+  "id": 1
+}
+```
+
+**Performance**: ~100μs
+
+---
+
+### **Respond to Challenge**
+
+**Method**: `genetic.respond_to_challenge`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "genetic.respond_to_challenge",
+  "params": {
+    "nonce": "hex_encoded_nonce",
+    "our_family_seed_path": "/path/to/.family.seed",
+    "our_node_id": "pixel_node1"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "response": "hex_encoded_hmac_sha512",
+    "lineage_proof": "base64_encoded_proof",
+    "seed_hash_prefix": "hex_16_bytes",
+    "responder_node_id": "pixel_node1"
+  },
+  "id": 1
+}
+```
+
+**Performance**: ~500μs
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔒 **TLS/HTTPS SUPPORT**
+
+### **Derive Handshake Secrets**
+
+**Method**: `tls.derive_secrets`
+
+**Purpose**: HKDF-based key derivation for TLS 1.3 handshake
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tls.derive_secrets",
+  "params": {
+    "shared_secret": "hex_encoded_ecdh_secret",
+    "cipher_suite": "TLS_CHACHA20_POLY1305_SHA256",
+    "hello_hash": "hex_encoded_sha256"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "client_handshake_traffic_secret": "hex_encoded_32_bytes",
+    "server_handshake_traffic_secret": "hex_encoded_32_bytes"
+  },
+  "id": 1
+}
+```
+
+**Cipher Suites Supported**:
+- `TLS_CHACHA20_POLY1305_SHA256`
+- `TLS_AES_256_GCM_SHA384`
+- `TLS_AES_128_GCM_SHA256`
+
+**Performance**: ~200μs
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔑 **PASSWORD HASHING**
+
+### **Argon2id Hash** (OWASP Recommended)
+
+**Method**: `crypto.argon2id_hash`
+
+**Purpose**: Memory-hard password hashing (recommended for new systems)
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.argon2id_hash",
+  "params": {
+    "password": "base64_encoded_password",
+    "memory_kb": 19456,
+    "iterations": 2,
+    "parallelism": 1
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "hash": "argon2id$v=19$m=19456,t=2,p=1$...",
+    "algorithm": "argon2id",
+    "version": 19
+  },
+  "id": 1
+}
+```
+
+**Security**:
+- Memory-hard (19MB default)
+- Resistant to GPU/ASIC attacks
+- OWASP recommended parameters
+
+**Performance**: ~100-200ms (intentionally slow)
+
+---
+
+### **Argon2id Verify**
+
+**Method**: `crypto.argon2id_verify`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.argon2id_verify",
+  "params": {
+    "password": "base64_encoded_password",
+    "hash": "argon2id$v=19$m=19456,t=2,p=1$..."
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "valid": true
+  },
+  "id": 1
+}
+```
+
+**Security**: Constant-time comparison (timing-attack resistant)
+
+═══════════════════════════════════════════════════════════════════
+
+## 📡 **DISCOVERY PROTOCOL**
+
+### **How Primals Find BearDog**
+
+**1. Unix Socket Discovery** (Primary):
+```bash
+# Standard path (XDG-compliant)
+/run/user/$UID/biomeos/beardog.sock
+
+# Fallback paths
+~/.local/share/biomeos/beardog.sock
+/tmp/biomeos.$UID/beardog.sock
+```
+
+**2. TCP Fallback Discovery** (Android):
+```bash
+# Discovery file contains: tcp:127.0.0.1:PORT
+~/.config/biomeos/beardog.sock
+
+# Example content:
+tcp:127.0.0.1:8765
+```
+
+**3. Dark Forest Discovery** (Encrypted):
+```
+BirdSong beacons (UDP broadcast):
+  • Format: Pure noise (indistinguishable from random)
+  • Encryption: ChaCha20-Poly1305 with beacon key
+  • Only family members can decrypt
+  • Contains: node_id, socket_path, capabilities
+```
+
+### **Capability Advertisement**
+
+BearDog advertises capabilities via Dark Forest beacons:
+
+```json
+{
+  "node_id": "beardog_usb_node1",
+  "socket_path": "/run/user/1000/biomeos/beardog.sock",
+  "capabilities": [
+    "crypto.ed25519",
+    "crypto.chacha20_poly1305",
+    "crypto.blake3",
+    "genetic.lineage",
+    "genetic.beacon",
+    "hsm.strongbox",
+    "tls.1.3"
+  ],
+  "timestamp": 1738531200
+}
+```
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔧 **ERROR HANDLING**
+
+### **Error Response Format**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32600,
+    "message": "Invalid Request",
+    "data": {
+      "details": "Missing required parameter: 'data'"
+    }
+  },
+  "id": 1
+}
+```
+
+### **Error Codes**
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| -32700 | Parse error | Invalid JSON |
+| -32600 | Invalid Request | Missing/invalid params |
+| -32601 | Method not found | Unknown method |
+| -32602 | Invalid params | Parameter validation failed |
+| -32603 | Internal error | Crypto operation failed |
+| -32000 | HSM error | Hardware security module error |
+| -32001 | Lineage error | Genetic verification failed |
+
+### **Best Practices**
+
+1. **Always check `error` field** before accessing `result`
+2. **Handle timeout** (default 30s for crypto operations)
+3. **Retry logic** for transient errors (-32603)
+4. **Don't retry** authentication failures (-32001)
+
+═══════════════════════════════════════════════════════════════════
+
+## 📊 **PERFORMANCE GUARANTEES**
+
+| Operation Category | Target Latency | Notes |
+|-------------------|----------------|-------|
+| Ed25519 signing | < 100μs | Fastest signature |
+| X25519 key exchange | < 200μs | DH key agreement |
+| ChaCha20 encryption | < 1ms | Per 1KB payload |
+| BLAKE3 hashing | < 500μs | Per 1KB payload |
+| Lineage key derivation | < 500μs | Blake3 KDF |
+| Beacon key derivation | < 100μs | HKDF-SHA256 |
+| Argon2id hashing | 100-200ms | Intentionally slow (security) |
+| TLS handshake | < 1ms | Full HKDF derivation |
+
+### **Scalability**
+
+- **Concurrent connections**: Unlimited (async Tokio)
+- **Request queueing**: Automatic via Tokio runtime
+- **Backpressure**: TCP flow control
+- **Memory**: O(1) per request (streaming)
+
+═══════════════════════════════════════════════════════════════════
+
+## 🧪 **TESTING**
+
+### **Integration Test Example**
+
+```bash
+#!/bin/bash
+# Test BearDog crypto.blake3_hash
+
+echo '{
+  "jsonrpc":"2.0",
+  "method":"crypto.blake3_hash",
+  "params":{"data":"'$(echo -n "test" | base64)'"},
+  "id":1
+}' | nc -U /run/user/$(id -u)/biomeos/beardog.sock
+
+# Expected response:
+{
+  "jsonrpc":"2.0",
+  "result":{
+    "hash":"4878ca0425c739fa427f7eda20fe845f6b2e46ba5fe2a14df5b1e32f50603215"
+  },
+  "id":1
+}
+```
+
+### **Client Library Examples**
+
+**Rust**:
+```rust
+use tokio::net::UnixStream;
+use serde_json::json;
+
+let socket_path = "/run/user/1000/biomeos/beardog.sock";
+let mut stream = UnixStream::connect(socket_path).await?;
+
+let request = json!({
+    "jsonrpc": "2.0",
+    "method": "crypto.blake3_hash",
+    "params": {"data": base64::encode(b"test")},
+    "id": 1
+});
+
+stream.write_all(serde_json::to_vec(&request)?.as_slice()).await?;
+// Read response...
+```
+
+**Python**:
+```python
+import socket
+import json
+import base64
+
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+sock.connect('/run/user/1000/biomeos/beardog.sock')
+
+request = {
+    "jsonrpc": "2.0",
+    "method": "crypto.blake3_hash",
+    "params": {"data": base64.b64encode(b"test").decode()},
+    "id": 1
+}
+
+sock.sendall(json.dumps(request).encode())
+response = json.loads(sock.recv(4096).decode())
+print(response['result']['hash'])
+```
+
+═══════════════════════════════════════════════════════════════════
+
+## 📚 **COMPLETE METHOD INDEX**
+
+### **Core Cryptography (20 methods)**
+
+1. `crypto.sign_ed25519` - Ed25519 signature
+2. `crypto.verify_ed25519` - Ed25519 verification
+3. `crypto.sign_ecdsa_secp256r1` - ECDSA P-256 signing
+4. `crypto.verify_ecdsa_secp256r1` - ECDSA P-256 verification
+5. `crypto.sign_ecdsa_secp384r1` - ECDSA P-384 signing
+6. `crypto.verify_ecdsa_secp384r1` - ECDSA P-384 verification
+7. `crypto.sign_rsa_pkcs1_sha256` - RSA PKCS#1 signing
+8. `crypto.verify_rsa_pkcs1_sha256` - RSA PKCS#1 verification
+9. `crypto.sign_rsa_pss_sha256` - RSA-PSS signing
+10. `crypto.verify_rsa_pss_sha256` - RSA-PSS verification
+11. `crypto.x25519_generate_ephemeral` - X25519 keypair generation
+12. `crypto.x25519_derive_secret` - X25519 key exchange
+13. `crypto.ecdh_p256_generate` - P-256 ECDH keypair
+14. `crypto.ecdh_p256_derive` - P-256 key exchange
+15. `crypto.chacha20_poly1305_encrypt` - ChaCha20 encryption
+16. `crypto.chacha20_poly1305_decrypt` - ChaCha20 decryption
+17. `crypto.aes256_gcm_encrypt` - AES-256-GCM encryption
+18. `crypto.aes256_gcm_decrypt` - AES-256-GCM decryption
+19. `crypto.blake3_hash` - BLAKE3 hashing
+20. `crypto.hmac_sha256` - HMAC-SHA256
+
+### **Genetic Cryptography (8 methods)**
+
+21. `genetic.derive_lineage_key` - Lineage-based key derivation
+22. `genetic.derive_lineage_beacon_key` - Beacon key (TRUE Dark Forest)
+23. `genetic.mix_entropy` - Three-tier entropy mixing
+24. `genetic.verify_lineage` - Lineage verification
+25. `genetic.generate_lineage_proof` - Proof generation
+26. `genetic.generate_challenge` - Challenge generation
+27. `genetic.respond_to_challenge` - Challenge response
+28. `genetic.verify_challenge_response` - Response verification
+
+### **TLS/HTTPS (4 methods)**
+
+29. `tls.derive_secrets` - Handshake secret derivation
+30. `tls.derive_application_secrets` - Application secret derivation
+31. `tls.sign_handshake` - Handshake signing
+32. `tls.verify_certificate` - Certificate verification
+
+### **Password Hashing (3 methods)**
+
+33. `crypto.argon2id_hash` - Argon2id password hashing
+34. `crypto.argon2id_verify` - Argon2id verification
+35. `crypto.pbkdf2_sha256` - PBKDF2 key derivation
+
+### **Total**: **46 JSON-RPC methods**
+
+═══════════════════════════════════════════════════════════════════
+
+## 🎯 **VERSIONING**
+
+### **API Version**: 1.0.0
+
+**Semantic Versioning**:
+- **Major**: Breaking changes to existing methods
+- **Minor**: New methods added (backward compatible)
+- **Patch**: Bug fixes, performance improvements
+
+**Version Negotiation**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "system.version",
+  "params": {},
+  "id": 1
+}
+
+Response:
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "api_version": "1.0.0",
+    "beardog_version": "0.9.0",
+    "protocol": "json-rpc-2.0"
+  },
+  "id": 1
+}
+```
+
+### **Deprecation Policy**
+
+1. **Announce**: 1 minor version before removal
+2. **Warning**: Return warning in response
+3. **Remove**: Next major version
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔐 **SECURITY CONSIDERATIONS**
+
+### **Authentication**
+
+BearDog uses **genetic lineage** for authentication:
+1. Family members share a `.family.seed` file
+2. Challenge-response proves lineage knowledge
+3. No passwords, no tokens
+4. Perfect forward secrecy
+
+### **Authorization**
+
+- **Family members**: Full access to all methods
+- **Non-family**: Cannot connect (Dark Forest)
+- **Capabilities**: Self-declared in beacons
+
+### **Transport Security**
+
+- **Unix sockets**: Kernel-enforced access control
+- **TCP fallback**: localhost only (127.0.0.1)
+- **No TLS wrapper**: Not needed (local IPC)
+
+### **Attack Surface**
+
+- **Exposed**: Unix socket (local only)
+- **Not exposed**: Network sockets (unless TCP fallback)
+- **Mitigation**: Family lineage authentication
+
+═══════════════════════════════════════════════════════════════════
+
+## 📖 **REFERENCES**
+
+### **Standards**
+
+- JSON-RPC 2.0: https://www.jsonrpc.org/specification
+- Ed25519: RFC 8032
+- X25519: RFC 7748
+- ChaCha20-Poly1305: RFC 8439
+- BLAKE3: https://github.com/BLAKE3-team/BLAKE3-specs
+- Argon2: RFC 9106
+- TLS 1.3: RFC 8446
+
+### **Implementation**
+
+- BearDog source: `phase1/beardog/crates/beardog-tunnel/`
+- Crypto handlers: `src/unix_socket_ipc/handlers/crypto/`
+- Genetic handlers: `src/unix_socket_ipc/crypto_handlers_genetic.rs`
+
+═══════════════════════════════════════════════════════════════════
+
+**Document Version**: 1.0.0  
+**Last Updated**: February 2, 2026  
+**Maintainer**: BearDog Security Primal  
+**License**: Documented interface (implementation MIT-licensed)
+
+🔌 **Primal Contracts: Enabling Runtime Discovery & Composition**
