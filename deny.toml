@@ -1,0 +1,85 @@
+# 🔒 BearDog Cargo Deny Configuration
+# Enforces dependency security and quality standards
+
+# ═══════════════════════════════════════════════════════════════════
+# Security Advisories
+# ═══════════════════════════════════════════════════════════════════
+[advisories]
+# Fail build on security vulnerabilities
+vulnerability = "deny"
+# Warn on unmaintained crates
+unmaintained = "warn"
+# Warn on yanked crates
+yanked = "warn"
+# Deny specific advisories (none currently)
+ignore = []
+
+# ═══════════════════════════════════════════════════════════════════
+# License Policy
+# ═══════════════════════════════════════════════════════════════════
+[licenses]
+# Fail build on unlicensed dependencies
+unlicensed = "deny"
+# Allow common permissive licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-DFS-2016",
+]
+# Deny copyleft licenses (GPL, AGPL, etc.)
+deny = [
+    "GPL-2.0",
+    "GPL-3.0",
+    "AGPL-3.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+]
+# Confidence threshold for license detection
+confidence-threshold = 0.8
+
+# ═══════════════════════════════════════════════════════════════════
+# Dependency Sources
+# ═══════════════════════════════════════════════════════════════════
+[sources]
+# Only allow crates from crates.io
+unknown-registry = "deny"
+unknown-git = "deny"
+# Allow git dependencies for development (warn in production)
+allow-git = []
+
+# ═══════════════════════════════════════════════════════════════════
+# Banned Dependencies (Known Issues)
+# ═══════════════════════════════════════════════════════════════════
+[bans]
+# Fail on multiple versions of the same crate
+multiple-versions = "warn"
+# Warn on wildcard dependencies
+wildcards = "warn"
+# Allow specific duplicate versions (if needed for compatibility)
+skip = []
+# Deny specific crates
+deny = [
+    # Deny outdated crypto libraries
+    # { name = "md5", wrappers = [] },
+    # { name = "sha1", wrappers = [] },
+]
+# Allowed duplicate versions (empty = strict)
+skip-tree = []
+
+# ═══════════════════════════════════════════════════════════════════
+# Dependency Tree Depth (prevent bloat)
+# ═══════════════════════════════════════════════════════════════════
+[graph]
+# Warn on dependencies with many transitive dependencies
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "aarch64-linux-android",
+]
+all-features = false
