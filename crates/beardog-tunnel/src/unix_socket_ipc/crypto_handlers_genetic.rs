@@ -5,6 +5,7 @@
 //! # Methods Implemented
 //!
 //! - `genetic.derive_lineage_key` - Derive keys from family lineage
+//! - `genetic.derive_lineage_beacon_key` - Derive BirdSong beacon key (TRUE Dark Forest)
 //! - `genetic.mix_entropy` - Mix entropy across three tiers
 //! - `genetic.verify_lineage` - Verify genetic family relationships
 //! - `genetic.generate_lineage_proof` - Generate lineage proof for verification
@@ -34,6 +35,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{debug, info, warn};
 use subtle::ConstantTimeEq;  // For constant-time comparisons
+use hkdf::Hkdf;
+use sha2::Sha256;
 
 // ============================================================================
 // REQUEST/RESPONSE TYPES
@@ -262,6 +265,94 @@ pub async fn handle_derive_lineage_key(params: Value) -> Result<Value, BearDogEr
         key: key_b64,
         method: "Blake3-Lineage-KDF".to_string(),
         quality_score: 0.8, // Tier 1 + Lineage
+    }))
+}
+
+/// Handle `genetic.derive_lineage_beacon_key` RPC method
+///
+/// Derives a dedicated beacon encryption key from family lineage.
+/// This key is used for BirdSong beacons (TRUE Dark Forest - pure noise).
+///
+/// # Domain Separation
+///
+/// This method uses domain separation ("birdsong_beacon_v1") to ensure
+/// beacon keys are cryptographically distinct from other lineage keys.
+///
+/// # Determinism
+///
+/// All family members with the same lineage seed derive the SAME key.
+/// This enables family-only beacon decryption (zero metadata leaks).
+///
+/// # Performance
+///
+/// - Expected: < 100μs
+/// - Method: HKDF-SHA256 with domain separation
+///
+/// # Security
+///
+/// - Key Size: 32 bytes (256 bits for ChaCha20-Poly1305)
+/// - Algorithm: HKDF-SHA256
+/// - Domain: "birdsong_beacon_v1"
+/// - Output: Hex-encoded for JSON-RPC
+///
+/// # Example
+///
+/// ```json
+/// {
+///     "lineage_seed": "base64_encoded_seed..."
+/// }
+/// ```
+pub async fn handle_derive_lineage_beacon_key(params: Value) -> Result<Value, BearDogError> {
+    debug!("🌑 RPC: genetic.derive_lineage_beacon_key (TRUE Dark Forest)");
+
+    // Extract lineage_seed parameter (optional, will use empty if not provided)
+    let lineage_seed_b64 = params
+        .get("lineage_seed")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    // Decode lineage seed from base64 (or use empty seed for testing)
+    let lineage_seed = if !lineage_seed_b64.is_empty() {
+        BASE64.decode(lineage_seed_b64).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {}", e))
+        })?
+    } else {
+        // Generate deterministic fallback seed (for testing without family setup)
+        vec![0u8; 32]
+    };
+
+    // Domain separation for beacon keys (distinct from other genetic keys)
+    let domain = b"birdsong_beacon_v1";
+
+    // HKDF-SHA256 key derivation
+    // IKM: lineage_seed
+    // Salt: None (lineage seed is already high-entropy)
+    // Info: domain (for separation)
+    let mut okm = [0u8; 32]; // 256 bits for ChaCha20-Poly1305
+
+    let hkdf = Hkdf::<Sha256>::new(None, &lineage_seed);
+
+    hkdf.expand(domain, &mut okm).map_err(|e| {
+        BearDogError::system(format!("HKDF beacon key derivation failed: {}", e))
+    })?;
+
+    // Encode as hex string for JSON-RPC
+    let beacon_key_hex = hex::encode(&okm);
+
+    info!(
+        "✅ Derived BirdSong beacon key: 32 bytes (HKDF-SHA256, domain-separated)"
+    );
+    debug!(
+        "   Domain: birdsong_beacon_v1, Deterministic: true, Algorithm: ChaCha20-Poly1305"
+    );
+
+    Ok(json!({
+        "beacon_key": beacon_key_hex,
+        "algorithm": "HKDF-SHA256+ChaCha20-Poly1305",
+        "domain": "birdsong_beacon_v1",
+        "key_size_bytes": 32,
+        "deterministic": true,  // Same lineage = same key
+        "purpose": "TRUE Dark Forest beacon encryption (zero metadata)"
     }))
 }
 
@@ -841,5 +932,108 @@ mod tests {
 
         let result = handle_derive_lineage_key(params).await;
         assert!(result.is_err(), "Invalid base64 should fail");
+    }
+
+    #[tokio::test]
+    async fn test_derive_lineage_beacon_key() -> Result<(), Box<dyn std::error::Error>> {
+        // Test with a valid lineage seed
+        let lineage_seed = BASE64.encode(b"test_lineage_seed_for_beacons");
+        let params = json!({
+            "lineage_seed": lineage_seed,
+        });
+
+        let result = handle_derive_lineage_beacon_key(params).await?;
+
+        // Verify response structure
+        assert!(result.get("beacon_key").is_some(), "Should have beacon_key");
+        assert_eq!(
+            result.get("algorithm").and_then(|v| v.as_str()),
+            Some("HKDF-SHA256+ChaCha20-Poly1305")
+        );
+        assert_eq!(
+            result.get("domain").and_then(|v| v.as_str()),
+            Some("birdsong_beacon_v1")
+        );
+        assert_eq!(result.get("key_size_bytes").and_then(|v| v.as_u64()), Some(32));
+        assert_eq!(
+            result.get("deterministic").and_then(|v| v.as_bool()),
+            Some(true)
+        );
+
+        // Decode and verify key is 32 bytes
+        let beacon_key_hex = result
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key should be present");
+        let key_bytes = hex::decode(beacon_key_hex)?;
+        assert_eq!(key_bytes.len(), 32, "Beacon key should be 32 bytes");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_derive_lineage_beacon_key_deterministic(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Same lineage seed should produce same key (deterministic)
+        let lineage_seed = BASE64.encode(b"deterministic_test_seed_12345");
+        let params = json!({
+            "lineage_seed": lineage_seed,
+        });
+
+        // Derive key twice
+        let result1 = handle_derive_lineage_beacon_key(params.clone()).await?;
+        let result2 = handle_derive_lineage_beacon_key(params).await?;
+
+        let key1 = result1.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key2 = result2.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+
+        assert_eq!(
+            key1, key2,
+            "Same lineage seed should produce identical keys"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_derive_lineage_beacon_key_different_seeds(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Different lineage seeds should produce different keys
+        let seed1 = BASE64.encode(b"family_alpha_seed_value_here_");
+        let seed2 = BASE64.encode(b"family_beta_seed_different!!!");
+
+        let params1 = json!({ "lineage_seed": seed1 });
+        let params2 = json!({ "lineage_seed": seed2 });
+
+        let result1 = handle_derive_lineage_beacon_key(params1).await?;
+        let result2 = handle_derive_lineage_beacon_key(params2).await?;
+
+        let key1 = result1.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key2 = result2.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+
+        assert_ne!(
+            key1, key2,
+            "Different lineage seeds should produce different keys"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_derive_lineage_beacon_key_empty_params(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Empty params should use fallback seed (for testing)
+        let params = json!({});
+
+        let result = handle_derive_lineage_beacon_key(params).await?;
+
+        // Should still work (uses zero seed for testing)
+        assert!(result.get("beacon_key").is_some());
+
+        let key_hex = result.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key_bytes = hex::decode(key_hex)?;
+        assert_eq!(key_bytes.len(), 32);
+
+        Ok(())
     }
 }

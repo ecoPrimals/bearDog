@@ -58,8 +58,9 @@
 //! - `tls.sign_handshake` - Ed25519 handshake signing
 //! - `tls.verify_certificate` - X.509 certificate chain verification
 //!
-//! ## Genetic Crypto - Phase 5 (7 methods)
+//! ## Genetic Crypto - Phase 5 (8 methods)
 //! - `genetic.derive_lineage_key` - Derive keys from genetic family lineage
+//! - `genetic.derive_lineage_beacon_key` - Derive BirdSong beacon key (TRUE Dark Forest)
 //! - `genetic.mix_entropy` - Mix entropy across three tiers (Human/Supervised/Machine)
 //! - `genetic.verify_lineage` - Verify genetic family relationships
 //! - `genetic.generate_lineage_proof` - Generate lineage proof for verification
@@ -605,6 +606,19 @@ impl MethodHandler for CryptoHandler {
                     params
                         .ok_or_else(|| {
                             "Parameters required for genetic.derive_lineage_key".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            "genetic.derive_lineage_beacon_key" => {
+                info!("🌑 Genetic: derive_lineage_beacon_key (TRUE Dark Forest beacon key)");
+                super::super::crypto_handlers_genetic::handle_derive_lineage_beacon_key(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.derive_lineage_beacon_key".to_string()
                         })?
                         .clone(),
                 )
