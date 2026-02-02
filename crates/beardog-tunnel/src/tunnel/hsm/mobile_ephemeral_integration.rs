@@ -8,9 +8,8 @@ use super::{
     types::{HsmKey, KeyType},
 };
 
-// DEEP DEBT: Android StrongBox temporarily disabled (see mod.rs)
-// #[cfg(target_os = "android")]
-// use super::android_strongbox::SafeAndroidKeystore;
+#[cfg(target_os = "android")]
+use super::android_strongbox::SafeAndroidKeystore;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

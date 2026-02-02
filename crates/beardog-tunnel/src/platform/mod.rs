@@ -183,53 +183,6 @@ pub use windows::WindowsSocket as Socket;
 #[cfg(target_family = "wasm")]
 pub use wasm::WASMSocket as Socket;
 
-/// Get socket endpoint with environment variable support
-///
-/// **Deep Debt Principle**: "No hardcoding - use runtime discovery"
-///
-/// Priority order:
-/// 1. `BEARDOG_ABSTRACT_SOCKET` env var → Abstract socket (Android/mobile)
-/// 2. `BEARDOG_SOCKET` env var → Custom path (operator control)
-/// 3. Platform default → Compile-time platform selection
-///
-/// # Example
-/// ```bash
-/// # Force abstract socket (Android, cross-platform testing)
-/// export BEARDOG_ABSTRACT_SOCKET='beardog_nucleus'
-///
-/// # Force custom filesystem socket
-/// export BEARDOG_SOCKET='/custom/path/beardog.sock'
-///
-/// # Use platform default (automatic)
-/// unset BEARDOG_ABSTRACT_SOCKET BEARDOG_SOCKET
-/// ```
-///
-/// # Returns
-/// Platform-appropriate socket endpoint
-pub fn get_socket_endpoint() -> std::io::Result<SocketEndpoint> {
-    // 1. Check for abstract socket override (highest priority - Android/mobile)
-    if let Ok(abstract_name) = std::env::var("BEARDOG_ABSTRACT_SOCKET") {
-        // Ensure @ prefix for abstract socket (required by Unix kernel)
-        let name_with_prefix = if abstract_name.starts_with('@') {
-            abstract_name
-        } else {
-            format!("@{}", abstract_name)
-        };
-        tracing::info!("📡 Using abstract socket from BEARDOG_ABSTRACT_SOCKET: {}", name_with_prefix);
-        return Ok(SocketEndpoint::Abstract(name_with_prefix));
-    }
-    
-    // 2. Check for custom socket path (operator control)
-    if let Ok(socket_path) = std::env::var("BEARDOG_SOCKET") {
-        tracing::info!("📡 Using filesystem socket from BEARDOG_SOCKET: {}", socket_path);
-        return Ok(SocketEndpoint::Filesystem(PathBuf::from(socket_path)));
-    }
-    
-    // 3. Platform default (compile-time selection)
-    tracing::debug!("📡 Using platform default socket endpoint");
-    Socket::create_endpoint("beardog")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
