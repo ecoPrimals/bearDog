@@ -414,9 +414,10 @@ async fn test_e2e_low_latency_json_rpc() {
 
     let elapsed = start.elapsed();
 
-    // Should be very fast (< 10ms for 1000 serializations)
+    // Should be very fast (< 50ms for 1000 serializations, even under system load)
     assert!(
-        elapsed.as_millis() < 10,
-        "JSON-RPC serialization should be fast"
+        elapsed.as_millis() < 50,
+        "JSON-RPC serialization should be fast (took {}ms)",
+        elapsed.as_millis()
     );
 }

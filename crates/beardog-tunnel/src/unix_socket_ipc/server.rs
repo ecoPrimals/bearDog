@@ -186,10 +186,7 @@ impl UnixSocketIpcServer {
         );
 
         // Platform-agnostic socket binding (ecoBin v2.0)
-        // Automatically selects based on:
-        // 1. BEARDOG_ABSTRACT_SOCKET env var (Android/mobile)
-        // 2. BEARDOG_SOCKET env var (custom path)
-        // 3. Platform default (compile-time selection)
+        // Use socket_path provided in constructor
         let platform_type = if cfg!(target_os = "android") {
             "Android (abstract socket)"
         } else {
@@ -197,16 +194,14 @@ impl UnixSocketIpcServer {
         };
         info!("   Platform: {}", platform_type);
 
-        // Create platform-appropriate endpoint with env var support
-        let endpoint = crate::platform::get_socket_endpoint().map_err(|e| {
-            anyhow::anyhow!("Failed to create socket endpoint: {}", e)
-        })?;
+        // Create endpoint from stored socket_path
+        let endpoint = SocketEndpoint::Filesystem(self.socket_path.clone());
 
         // Bind with platform-specific logic (universal listener!)
         let mut listener = Socket::bind(&endpoint).context(format!(
             "Failed to bind socket on {}: {}",
             platform_type,
-            endpoint.display()
+            self.socket_path.display()
         ))?;
 
         // Mark server as ready atomically (no locks needed!)
