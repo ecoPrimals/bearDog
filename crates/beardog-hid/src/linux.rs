@@ -73,6 +73,7 @@ impl LinuxHidDevice {
     ///
     /// ```rust,no_run
     /// use beardog_hid::linux::LinuxHidDevice;
+    /// use beardog_hid::HidDevice;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -748,11 +748,11 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 66 methods (Phase 1-8 + TLS 1.2 + Semantic Aliases - Jan 27, 2026)
+        // Should have 69 methods (Phase 1-8 + TLS 1.2 + Dark Forest - Feb 1, 2026)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
         //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
-        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 4 genetic + 8 semantic aliases
-        assert_eq!(methods.len(), 66);
+        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 7 genetic (added Dark Forest!) + 8 semantic aliases
+        assert_eq!(methods.len(), 69);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -783,11 +783,14 @@ mod tests {
         assert!(methods.contains(&"tls.sign_handshake"));
         assert!(methods.contains(&"tls.verify_certificate"));
 
-        // Verify genetic methods (Phase 5)
+        // Verify genetic methods (Phase 5 + Dark Forest)
         assert!(methods.contains(&"genetic.derive_lineage_key"));
         assert!(methods.contains(&"genetic.mix_entropy"));
         assert!(methods.contains(&"genetic.verify_lineage"));
         assert!(methods.contains(&"genetic.generate_lineage_proof"));
+        assert!(methods.contains(&"genetic.generate_challenge"));  // Dark Forest!
+        assert!(methods.contains(&"genetic.respond_to_challenge"));  // Dark Forest!
+        assert!(methods.contains(&"genetic.verify_challenge_response"));  // Dark Forest!
 
         // Verify semantic aliases (Phase 2 - Jan 27, 2026)
         assert!(methods.contains(&"crypto.hash"));
@@ -805,8 +808,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            66,
-            "Should have exactly 66 crypto methods (Phase 1-8 + TLS 1.2 + Semantic Aliases - Jan 27, 2026)"
+            69,
+            "Should have exactly 69 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest - Feb 1, 2026)"
         );
     }
 }
