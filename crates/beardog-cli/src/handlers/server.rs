@@ -2,12 +2,17 @@
 //!
 //! This handler wires the existing Unix socket IPC server from beardog-tunnel
 //! into the CLI for proper UniBin operation.
+//!
+//! Supports two transport modes:
+//! - **Tier 1**: Unix sockets (Linux, macOS) - preferred
+//! - **Tier 2**: TCP (Android, Windows, cross-device) - universal fallback
 
 use crate::ServerArgs;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
+use beardog_tunnel::tcp_ipc::TcpIpcServer;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
@@ -18,7 +23,16 @@ use tracing::{error, info, warn};
 /// Handle server command - start long-running service
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Server Mode - Starting...");
-    info!("   Socket: {}", args.socket);
+    
+    // Determine transport mode
+    let use_tcp = args.listen.is_some();
+    if use_tcp {
+        info!("   Transport: TCP (Tier 2 - Universal)");
+        info!("   Listen: {}", args.listen.as_ref().unwrap());
+    } else {
+        info!("   Transport: Unix Socket (Tier 1 - Native)");
+        info!("   Socket: {}", args.socket);
+    }
 
     if let Some(ref family_id) = args.family_id {
         info!("   Family ID: {}", family_id);
@@ -65,9 +79,6 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     })?);
     info!("✅ BTSP provider initialized");
 
-    // Create Unix socket IPC server
-    info!("🔌 Creating Unix socket IPC server...");
-
     // Create primal identity from environment (fail-fast if not configured)
     let identity = Arc::new(
         beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
@@ -85,6 +96,61 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Construct primal name for registration (before identity is moved)
     let primal_name = format!("beardog-{}", identity.node_id());
     let socket_path = args.socket.clone();
+
+    // Create server based on transport mode
+    if let Some(ref listen_addr) = args.listen {
+        // TCP mode (Tier 2 - Android, Windows, universal)
+        info!("🌐 Creating TCP IPC server...");
+        
+        let bind_addr: std::net::SocketAddr = listen_addr.parse().map_err(|e| {
+            BearDogError::Initialization {
+                message: format!("Invalid listen address '{}': {}", listen_addr, e),
+            }
+        })?;
+
+        let tcp_server = TcpIpcServer::new(bind_addr, btsp_provider, identity);
+        info!("✅ TCP server created");
+
+        // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
+        if let Some(neural_socket) = discover_neural_api_socket() {
+            info!("🌐 Neural API detected at: {}", neural_socket);
+            match register_with_neural_api(&neural_socket, &primal_name, listen_addr).await {
+                Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
+                Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
+            }
+        } else {
+            info!("ℹ️  No Neural API detected - running in standalone mode");
+        }
+
+        // Start TCP server
+        info!("🚀 Starting TCP server...");
+        info!("");
+        info!("╔════════════════════════════════════════════════════════════════╗");
+        info!("║                                                                ║");
+        info!("║        🐻🐕 BearDog Server READY - TCP Mode (Tier 2)          ║");
+        info!("║                                                                ║");
+        info!("╚════════════════════════════════════════════════════════════════╝");
+        info!("");
+        info!("📡 Listening on: {}", listen_addr);
+        info!("🔐 Crypto API: Ed25519, X25519, ChaCha20-Poly1305, Blake3");
+        info!("🔌 Protocol: JSON-RPC 2.0 over TCP");
+        info!("🏗️  Architecture: Tower Atomic (BearDog + Songbird)");
+        info!("📱 Platform: Universal (Android, Windows, Linux, macOS)");
+        info!("");
+        info!("Press Ctrl+C to stop");
+        info!("");
+
+        tcp_server.start().await.map_err(|e| BearDogError::System {
+            message: format!("TCP server error: {}", e),
+            category: Default::default(),
+        })?;
+
+        info!("✅ TCP server stopped");
+        return Ok(());
+    }
+
+    // Unix socket mode (Tier 1 - Native)
+    info!("🔌 Creating Unix socket IPC server...");
 
     let server = Arc::new(
         UnixSocketIpcServer::new(&args.socket, btsp_provider, identity)

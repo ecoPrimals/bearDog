@@ -134,6 +134,10 @@ pub mod unix_socket_ipc;
 // Enables TRUE ecoBin v2.0 platform-agnostic IPC
 pub mod platform;
 
+// TCP IPC for universal platform support (Android, Windows, cross-device)
+// Tier 2 transport when Unix sockets are not available
+pub mod tcp_ipc;
+
 // Graph Security for Collaborative Intelligence
 pub mod graph_security;
 

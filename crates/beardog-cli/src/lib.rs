@@ -15,9 +15,14 @@ pub mod handlers;
 /// Server mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct ServerArgs {
-    /// Unix socket path
+    /// Unix socket path (default mode)
     #[arg(long, default_value = "/tmp/beardog.sock")]
     pub socket: String,
+
+    /// TCP listen address (alternative to Unix socket for Android/Windows)
+    /// Example: --listen 127.0.0.1:9900
+    #[arg(long)]
+    pub listen: Option<String>,
 
     /// Family ID for BirdSong
     #[arg(long)]
