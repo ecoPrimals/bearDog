@@ -129,6 +129,7 @@ pub mod ipc_server;
 // Unix socket IPC server (PRIMARY inter-primal communication)
 // tarpc_service removed - JSON-RPC first architecture (see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md)
 pub mod unix_socket_ipc;
+pub mod tcp_ipc;  // Universal transport (Android, Windows, cross-platform)
 
 // Platform-specific socket implementations (Android abstract sockets, Unix filesystem)
 // Enables TRUE ecoBin v2.0 platform-agnostic IPC

@@ -209,8 +209,14 @@ pub use wasm::WASMSocket as Socket;
 pub fn get_socket_endpoint() -> std::io::Result<SocketEndpoint> {
     // 1. Check for abstract socket override (highest priority - Android/mobile)
     if let Ok(abstract_name) = std::env::var("BEARDOG_ABSTRACT_SOCKET") {
-        tracing::info!("📡 Using abstract socket from BEARDOG_ABSTRACT_SOCKET: @{}", abstract_name);
-        return Ok(SocketEndpoint::Abstract(abstract_name));
+        // Ensure @ prefix for abstract socket (required by Unix kernel)
+        let name_with_prefix = if abstract_name.starts_with('@') {
+            abstract_name
+        } else {
+            format!("@{}", abstract_name)
+        };
+        tracing::info!("📡 Using abstract socket from BEARDOG_ABSTRACT_SOCKET: {}", name_with_prefix);
+        return Ok(SocketEndpoint::Abstract(name_with_prefix));
     }
     
     // 2. Check for custom socket path (operator control)

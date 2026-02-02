@@ -21,7 +21,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::{UnixListener, UnixStream};
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Unix filesystem socket implementation
 pub struct UnixSocket;
@@ -154,10 +154,33 @@ impl PlatformSocket for UnixSocket {
                     path: path_str,
                 }))
             }
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "UnixSocket requires Filesystem endpoint",
-            )),
+            SocketEndpoint::Abstract(name) => {
+                // DEEP DEBT FIX (Feb 2, 2026): Abstract sockets work on Linux too!
+                // Linux kernel supports abstract sockets (not Android-only feature)
+                // Use cases:
+                //   - Android (bypass SELinux filesystem restrictions)
+                //   - Containers (no filesystem cleanup needed)
+                //   - Testing (isolated namespaces)
+                // Format: @name (@ prefix indicates abstract namespace in Linux/Android)
+                info!("🔷 Binding abstract socket: {} (kernel namespace, no filesystem)", name);
+                
+                match UnixListener::bind(name) {
+                    Ok(listener) => {
+                        info!("✅ Abstract socket bound: {} (namespace-only, works on Android+Linux)", name);
+                        Ok(Box::new(UnixPlatformListener {
+                            listener,
+                            path: name.clone(),
+                        }))
+                    }
+                    Err(e) => {
+                        // Log detailed error for debugging
+                        warn!("❌ Abstract socket bind failed: {} (error: {}, kind: {:?})", name, e, e.kind());
+                        warn!("   Attempted: UnixListener::bind(\"{}\")", name);
+                        warn!("   Error code: {}", e.raw_os_error().unwrap_or(-1));
+                        Err(e)
+                    }
+                }
+            }
         }
     }
 }

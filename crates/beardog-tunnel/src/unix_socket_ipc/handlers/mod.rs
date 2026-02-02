@@ -133,7 +133,8 @@ impl HandlerRegistry {
     ///
     /// * `identity` - Primal identity (family and node) for handlers that need it
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
-        // Create registry with all handlers
+        // DEEP DEBT FIX (Feb 2, 2026): Create registry in two phases to avoid blocking_write panic
+        // Phase 1: Create registry with placeholder for introspection
         let registry = Arc::new(Self {
             handlers: tokio::sync::RwLock::new(vec![
                 Arc::new(health::HealthHandler),
@@ -147,14 +148,17 @@ impl HandlerRegistry {
             ]),
         });
 
-        // Initialize introspection handler
+        // Phase 2: Add introspection handler that references registry
         // Note: This creates a weak cycle that's acceptable (registry -> introspection -> Arc<registry>)
         // The introspection handler only reads from registry, doesn't own it exclusively
-        let registry_clone = registry.clone();
-        let introspection = Arc::new(introspection::IntrospectionHandler::new(registry_clone));
+        let introspection = Arc::new(introspection::IntrospectionHandler::new(registry.clone()));
         
-        // Use blocking call in sync context (fine during initialization)
-        registry.handlers.blocking_write().push(introspection);
+        // Add introspection synchronously to the vec (before async runtime starts)
+        // This is safe because we're still in sync context during HandlerRegistry::new()
+        // FIXED: Use try_write() instead of blocking_write() to avoid panic in async context
+        registry.handlers.try_write()
+            .expect("Failed to acquire write lock during initialization (no contention expected)")
+            .push(introspection);
 
         registry
     }
@@ -257,14 +261,14 @@ mod tests {
         unimplemented!("Test provider creation needs HSM setup")
     }
 
-    #[test]
-    fn test_registry_creation() {
+    #[tokio::test]
+    async fn test_registry_creation() {
         use beardog_types::primal_identity::PrimalIdentity;
         use std::sync::Arc;
 
         let identity = Arc::new(PrimalIdentity::for_test("test", "node1"));
         let registry = HandlerRegistry::new(identity);
-        assert!(!registry.handlers.is_empty());
+        assert!(!registry.handlers.read().await.is_empty());
     }
 
     #[test]
