@@ -141,6 +141,10 @@ pub mod tcp_ipc;
 // Graph Security for Collaborative Intelligence
 pub mod graph_security;
 
+// Multi-Transport Server - Universal IPC (Phase 3: Deep Debt Evolution)
+// Binds ALL available transports simultaneously for universal deployment
+pub mod multi_transport_server;
+
 #[cfg(test)]
 mod unix_socket_ipc_btsp_tests;
 #[cfg(test)]

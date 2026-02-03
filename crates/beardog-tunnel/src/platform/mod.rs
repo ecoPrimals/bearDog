@@ -90,6 +90,62 @@ impl SocketEndpoint {
     }
 }
 
+/// Get platform-native default socket endpoint
+///
+/// **Deep Debt Principle #4 & #5**: Runtime discovery, platform-agnostic
+///
+/// This function returns the optimal socket type for the current platform:
+/// - **Android**: Abstract sockets (bypasses SELinux)
+/// - **Linux/macOS**: Filesystem Unix sockets
+/// - **Windows**: Named pipes
+/// - **iOS**: XPC services
+/// - **WASM**: In-process channels
+///
+/// ## Evolution from Hardcoding
+///
+/// **Before**: Hardcoded `/tmp/beardog.sock` everywhere
+/// **After**: Platform-native discovery at runtime
+///
+/// This enables universal deployment without user intervention.
+#[cfg(target_os = "android")]
+pub fn default_socket_endpoint() -> SocketEndpoint {
+    // Android: Use abstract sockets to bypass SELinux restrictions
+    // Abstract sockets exist in a separate namespace and don't require filesystem access
+    SocketEndpoint::Abstract("@biomeos_beardog".to_string())
+}
+
+#[cfg(all(unix, not(target_os = "android")))]
+pub fn default_socket_endpoint() -> SocketEndpoint {
+    // Linux/macOS: Use filesystem Unix sockets
+    // These provide best performance on traditional Unix systems
+    SocketEndpoint::Filesystem(PathBuf::from("/tmp/beardog.sock"))
+}
+
+#[cfg(windows)]
+pub fn default_socket_endpoint() -> SocketEndpoint {
+    // Windows: Use named pipes (Windows' IPC mechanism)
+    SocketEndpoint::NamedPipe(r"\\.\pipe\biomeos_beardog".to_string())
+}
+
+#[cfg(target_os = "ios")]
+pub fn default_socket_endpoint() -> SocketEndpoint {
+    // iOS: Use XPC services (Apple's recommended IPC)
+    SocketEndpoint::XPC("com.ecoprimals.beardog".to_string())
+}
+
+#[cfg(target_family = "wasm")]
+pub fn default_socket_endpoint() -> SocketEndpoint {
+    // WASM: Use in-process channels (no true IPC in browser)
+    SocketEndpoint::InProcess("beardog".to_string())
+}
+
+/// Convert socket endpoint to string path (for CLI defaults)
+///
+/// **Deep Debt Principle #4**: Capability-based, not hardcoded
+pub fn default_socket_path() -> String {
+    default_socket_endpoint().display()
+}
+
 /// Universal platform stream trait (replaces platform-specific types)
 ///
 /// **Modern Idiomatic Rust**: This trait abstracts over platform-specific stream types:

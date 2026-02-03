@@ -12,13 +12,12 @@ use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
-use beardog_tunnel::tcp_ipc::TcpIpcServer;
+use beardog_tunnel::multi_transport_server::MultiTransportServer;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
-use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 /// Handle server command - start long-running service
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
@@ -96,8 +95,71 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Construct primal name for registration (before identity is moved)
     let primal_name = format!("beardog-{}", identity.node_id());
     let socket_path = args.socket.clone();
+    let tcp_addr = args.listen.clone();
 
-    // Create server based on transport mode
+    // ================================================================
+    // PHASE 3: MULTI-TRANSPORT SERVER (Deep Debt Evolution)
+    // ================================================================
+    
+    info!("🌐 Creating multi-transport server...");
+    info!("   Platform: Universal (all available transports)");
+    info!("   Deep Debt: Agnostic + Runtime Discovery");
+    
+    // Create multi-transport server (binds all available)
+    let server = MultiTransportServer::bind_all_available(
+        btsp_provider,
+        identity,
+        &socket_path,
+        tcp_addr.as_deref(),
+    )
+    .await?;
+
+    info!("✅ Multi-transport server created: {} transport(s)", server.transport_count());
+
+    // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
+    if let Some(neural_socket) = discover_neural_api_socket() {
+        info!("🌐 Neural API detected at: {}", neural_socket);
+        
+        // Register primary socket path
+        let registration_addr = if let Some(ref tcp) = tcp_addr {
+            tcp.as_str()
+        } else {
+            &socket_path
+        };
+        
+        match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
+            Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
+            Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
+        }
+    } else {
+        info!("ℹ️  No Neural API detected - running in standalone mode");
+    }
+
+    // Start all transports (runs until Ctrl+C)
+    server.start_all().await?;
+
+    Ok(())
+}
+
+/*
+/// OLD IMPLEMENTATION: Single transport mode (DEPRECATED by Phase 3)
+///
+/// This code remains for reference but is no longer used.
+/// Phase 3 evolution: Single → Multi-transport
+fn _old_single_transport_server_code() {
+    // This function exists purely for documentation - shows evolution path
+    //
+    // Before Phase 3:
+    // - User chose EITHER Unix socket OR TCP
+    // - Manual selection required
+    // - Not universal
+    //
+    // After Phase 3:
+    // - Server binds ALL available transports
+    // - Automatic platform detection
+    // - Universal deployment
+    
+    /*
     if let Some(ref listen_addr) = args.listen {
         // TCP mode (Tier 2 - Android, Windows, universal)
         info!("🌐 Creating TCP IPC server...");
@@ -212,4 +274,6 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     info!("✅ Server stopped");
     Ok(())
+    */
 }
+*/

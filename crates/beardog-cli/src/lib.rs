@@ -15,12 +15,26 @@ pub mod handlers;
 /// Server mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct ServerArgs {
-    /// Unix socket path (default mode)
-    #[arg(long, default_value = "/tmp/beardog.sock")]
+    /// Socket path (platform-native default)
+    ///
+    /// **Deep Debt Evolution**: Platform-agnostic runtime discovery!
+    ///
+    /// Defaults:
+    /// - Android: @biomeos_beardog (abstract socket, bypasses SELinux)
+    /// - Linux/macOS: /tmp/beardog.sock (filesystem Unix socket)
+    /// - Windows: \\.\pipe\biomeos_beardog (named pipe)
+    ///
+    /// Override with --socket for custom path
+    #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 
-    /// TCP listen address (alternative to Unix socket for Android/Windows)
+    /// TCP listen address (Tier 2 - Universal fallback)
     /// Example: --listen 127.0.0.1:9900
+    ///
+    /// Use for:
+    /// - Cross-device communication
+    /// - When native IPC unavailable
+    /// - Testing/development
     #[arg(long)]
     pub listen: Option<String>,
 
@@ -31,6 +45,35 @@ pub struct ServerArgs {
     /// Orchestrator ID
     #[arg(long)]
     pub orchestrator_id: Option<String>,
+}
+
+/// Get platform-native default socket path
+///
+/// **Deep Debt Principle #4 & #5**: Agnostic + Runtime Discovery
+///
+/// Automatically selects optimal IPC mechanism per platform
+fn default_socket_path() -> String {
+    // Platform detection at compile-time, returns appropriate default
+    #[cfg(target_os = "android")]
+    {
+        "@biomeos_beardog".to_string()
+    }
+    #[cfg(all(unix, not(target_os = "android")))]
+    {
+        "/tmp/beardog.sock".to_string()
+    }
+    #[cfg(windows)]
+    {
+        r"\\.\pipe\biomeos_beardog".to_string()
+    }
+    #[cfg(target_os = "ios")]
+    {
+        "com.ecoprimals.beardog".to_string()
+    }
+    #[cfg(target_family = "wasm")]
+    {
+        "beardog".to_string()
+    }
 }
 
 /// Daemon mode arguments
