@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["ecoPrimals Team"]
 description = "Universal genomeBin installer - Pure Rust, async, platform-agnostic"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/ecoPrimals/bearDog"
+keywords = ["installer", "security", "platform-agnostic", "genomeBin", "ecoBin"]
+categories = ["command-line-utilities", "cryptography", "development-tools"]
 
 [dependencies]
 # Async runtime

@@ -198,7 +198,7 @@ impl BinaryValidator {
         })?
         .map_err(|e| ValidationError::IoError {
             path: path.to_path_buf(),
-            source: std::io::Error::new(std::io::ErrorKind::Other, e.to_string()),
+            source: std::io::Error::other(e.to_string()),
         })?
         .map_err(|e| ValidationError::IoError {
             path: path.to_path_buf(),
