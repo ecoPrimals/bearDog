@@ -279,10 +279,13 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             performance: HashMap::new(),
             custom_metrics: vec![],
             system_metrics: beardog_types::workflow::SystemMetrics {
-                cpu_cores: 8,
-                total_memory_bytes: 8 * 1024 * 1024 * 1024, // 8GB
-                available_memory_bytes: 4 * 1024 * 1024 * 1024, // 4GB
-                platform: "android".to_string(),
+                uptime_seconds: 0,
+                total_requests: 0,
+                successful_requests: 0,
+                failed_requests: 0,
+                avg_response_time_ms: 0.0,
+                active_connections: 0,
+                error_rate: 0.0,
             },
         })
     }
@@ -590,6 +593,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
                 key_size: 256, // Default for StrongBox
                 extractable: false, // StrongBox keys are non-extractable
                 created_at: chrono::Utc::now(), // Placeholder
+                key_usage: vec!["sign".to_string(), "verify".to_string()], // Default usage
                 // algorithm field not available in workflow::KeyInfo
                 // is_hardware_backed field not available in workflow::KeyInfo
             })

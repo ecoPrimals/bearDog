@@ -281,7 +281,7 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
         Ok(HsmKey {
             id: request.key_id.clone(), // UniversalKey uses "id", not "key_id"
             key_type: KeyType::from(request.algorithm),
-            material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference {
+            key_material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference { // UniversalKey uses "key_material", not "material"
                 reference: safe_handle.key_id,
                 hsm_location: "android_strongbox".to_string(),
             },
