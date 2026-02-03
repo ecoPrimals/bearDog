@@ -261,8 +261,13 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
                 cpu_percent: 0.0,
                 memory_bytes: 0,
                 memory_percent: 0.0,
-                disk_io: 0,
-                network_io: 0,
+                disk_io: HashMap::new(), // HashMap<String, u64>
+                network_io: beardog_types::canonical::providers_unified::traits::base_traits::NetworkIoMetrics {
+                    bytes_sent: 0,
+                    bytes_received: 0,
+                    packets_sent: 0,
+                    packets_received: 0,
+                },
             },
             last_error: health_status.last_error,
         })
@@ -273,7 +278,12 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             timestamp: std::time::SystemTime::now(),
             performance: HashMap::new(),
             custom_metrics: vec![],
-            system_metrics: HashMap::new(), // System-level metrics
+            system_metrics: beardog_types::workflow::SystemMetrics {
+                cpu_cores: 8,
+                total_memory_bytes: 8 * 1024 * 1024 * 1024, // 8GB
+                available_memory_bytes: 4 * 1024 * 1024 * 1024, // 4GB
+                platform: "android".to_string(),
+            },
         })
     }
     
