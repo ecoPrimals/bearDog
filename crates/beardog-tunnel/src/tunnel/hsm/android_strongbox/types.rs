@@ -88,6 +88,28 @@ impl AndroidDeviceInfo {
             verified_boot_state: VerifiedBootState::Verified,
         })
     }
+    
+    /// Returns whether StrongBox is available on this device
+    pub fn strongbox_available(&self) -> bool {
+        self.strongbox_version.is_some()
+    }
+    
+    /// Returns whether TEE (Trusted Execution Environment) is available
+    pub fn tee_available(&self) -> bool {
+        // TEE is generally available on Android 9+ (API 28+)
+        self.api_level >= 28
+    }
+    
+    /// Returns whether hardware attestation is supported
+    pub fn hardware_attestation_supported(&self) -> bool {
+        // Hardware attestation requires Android 8+ and StrongBox/TEE
+        self.api_level >= 26 && (self.strongbox_available() || self.tee_available())
+    }
+    
+    /// Returns the device model (alias for backward compatibility)
+    pub fn device_model(&self) -> &str {
+        &self.model
+    }
 
     /// Detect device information from system
     ///
@@ -412,6 +434,8 @@ impl AndroidHealthMonitor {
             keystore_status: keystore,
             strongbox_status: strongbox,
             attestation_status: attestation,
+            last_error: None,
+            details: std::collections::HashMap::new(),
         })
     }
     
@@ -428,6 +452,8 @@ pub struct HealthCheckResult {
     pub keystore_status: HsmHealthStatus,
     pub strongbox_status: HsmHealthStatus,
     pub attestation_status: HsmHealthStatus,
+    pub last_error: Option<String>,
+    pub details: std::collections::HashMap<String, String>,
 }
 
 /// HSM health status

@@ -32,6 +32,24 @@ impl GlobalBufferPools {
             _marker: std::marker::PhantomData,
         }
     }
+    
+    /// Get a medium-sized buffer (4KB)
+    #[must_use]
+    pub fn get_medium(&self) -> SafePinnedBuffer {
+        SafePinnedBuffer::new(4096)
+    }
+    
+    /// Get a large buffer (64KB)
+    #[must_use]
+    pub fn get_large(&self) -> SafePinnedBuffer {
+        SafePinnedBuffer::new(65536)
+    }
+    
+    /// Get a small buffer (1KB)
+    #[must_use]
+    pub fn get_small(&self) -> SafePinnedBuffer {
+        SafePinnedBuffer::new(1024)
+    }
 }
 
 impl Default for GlobalBufferPools {
@@ -53,6 +71,21 @@ impl SafePinnedBuffer {
             data: vec![0u8; size],
             size,
         }
+    }
+    
+    /// Creates a buffer from existing Vec
+    #[must_use]
+    pub fn from_vec(data: Vec<u8>) -> Self {
+        let size = data.len();
+        Self { data, size }
+    }
+    
+    /// Execute a closure with access to buffer contents
+    pub fn with_buffer<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&[u8]) -> R,
+    {
+        f(&self.data)
     }
 
     #[must_use]
