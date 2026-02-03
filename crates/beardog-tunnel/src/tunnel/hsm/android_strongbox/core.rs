@@ -580,7 +580,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
                 key_size: 256, // Default for StrongBox
                 extractable: false, // StrongBox keys are non-extractable
                 created_at: chrono::Utc::now(), // Placeholder
-                algorithm: "ECDSA-P256".to_string(), // Default
+                // algorithm field not available in workflow::KeyInfo
                 // is_hardware_backed field not available in workflow::KeyInfo
             })
         } else {
