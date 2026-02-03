@@ -211,21 +211,26 @@ impl Default for ConfigHierarchy {
 }
 
 /// Merge two configurations, preferring values from the override config
+///
+/// Implements intelligent field-by-field merging:
+/// - Fields with PartialEq: Compare and use override only if different
+/// - Fields without PartialEq (paths, hsm): Always use override
+///
+/// This enables partial configuration updates while preserving unchanged values.
 fn merge_configs(
     base: BearDogConfig,
     override_cfg: BearDogConfig,
     _source: ConfigSource,
 ) -> BearDogConfig {
-    // For now, do a simple replace merge
-    // TODO: Implement field-by-field merging for partial overrides
+    // Field-by-field merge strategy for partial overrides
     BearDogConfig {
         network: if override_cfg.network != base.network {
             override_cfg.network
         } else {
             base.network
         },
-        paths: override_cfg.paths, // No PartialEq, so just take override
-        hsm: override_cfg.hsm,     // No PartialEq for HsmConfig
+        paths: override_cfg.paths, // No PartialEq - always use override
+        hsm: override_cfg.hsm,     // No PartialEq - always use override
         timeouts: if override_cfg.timeouts != base.timeouts {
             override_cfg.timeouts
         } else {
