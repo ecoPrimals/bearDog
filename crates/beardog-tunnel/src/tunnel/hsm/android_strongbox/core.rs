@@ -5,7 +5,7 @@
 
 use super::super::types::{AndroidHsmConfig, HsmCapability, HsmTier};
 use super::types::{
-    AndroidAttestationService, AndroidDeviceInfo, AndroidHealthMonitor, AndroidKeystore,
+    AndroidAttestationService, AndroidDeviceInfo, AndroidHealthMonitor,
 };
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
