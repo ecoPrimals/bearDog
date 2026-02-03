@@ -48,9 +48,7 @@ pub mod ios;
 pub mod wasm;
 
 use std::path::PathBuf;
-use std::pin::Pin;
 use tokio::io::{AsyncRead, AsyncWrite};
-use std::task::{Context, Poll};
 
 /// Platform-specific socket endpoint types
 #[derive(Debug, Clone)]

@@ -550,7 +550,7 @@ impl BeardogBtspProvider {
     /// Primal IPC protocol compliance.
     fn get_discovery_socket_paths() -> Vec<&'static str> {
         // Check environment first (highest priority)
-        if let Ok(custom_socket) = std::env::var("DISCOVERY_SOCKET") {
+        if let Ok(_custom_socket) = std::env::var("DISCOVERY_SOCKET") {
             // Note: This returns static str slice, so we can't include the env var directly
             // In production, this would need to be refactored to return Vec<String>
             // For now, document the pattern

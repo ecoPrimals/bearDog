@@ -267,7 +267,7 @@ pub async fn handle_tls_compute_finished_verify_data(
     // finished_key = HKDF-Expand-Label(base_key, "finished", "", hash_len)
     // RFC 8446 Section 7.1: Label MUST include "tls13 " prefix!
 
-    let (finished_key, verify_data) = match cipher_suite {
+    let (_finished_key, verify_data) = match cipher_suite {
         0x1301 | 0x1303 => {
             // SHA-256 path
             let hkdf_expand_label_sha256 =

@@ -638,7 +638,7 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
             request.our_family_seed_path, e
         ))
     })?;
-    let seed_b64 = BASE64.encode(&seed_bytes);
+    let _seed_b64 = BASE64.encode(&seed_bytes);
 
     // Derive lineage key
     // NOTE: Role is "responder" to match verifier expectations
