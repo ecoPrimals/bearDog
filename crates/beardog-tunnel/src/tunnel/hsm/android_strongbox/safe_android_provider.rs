@@ -17,34 +17,70 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
-// Stub types to replace archived safe_keystore_replacement
+// Complete types to replace archived safe_keystore_replacement
 #[derive(Debug, Clone)]
 pub struct KeyGenerationRequest {
-    pub key_size: usize,
-    pub algorithm: Algorithm,
+    pub key_id: String,                    // Unique key identifier
+    pub key_size: usize,                   // Key size in bits
+    pub algorithm: Algorithm,              // Crypto algorithm
+    pub hardware_backed: bool,             // Require hardware backing
+    pub purposes: Vec<KeyPurpose>,         // Intended key usage
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeyPurpose {
+    Encrypt,
+    Decrypt,
+    Sign,
+    Verify,
+    WrapKey,
+    DeriveKey,
 }
 
 #[derive(Debug, Clone)]
 pub struct KeyInfo {
     pub id: String,
     pub algorithm: Algorithm,
+    pub hardware_backed: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct SigningRequest {
-    pub data: Vec<u8>,
-    pub algorithm: Algorithm,
+    pub key_id: String,                    // Key to use for signing
+    pub data: Vec<u8>,                     // Data to sign
+    pub algorithm: Algorithm,              // Signature algorithm
 }
 
 #[derive(Debug, Clone)]
 pub struct VerificationRequest {
-    pub data: Vec<u8>,
-    pub signature: Vec<u8>,
-    pub algorithm: Algorithm,
+    pub key_id: String,                    // Key to use for verification
+    pub data: Vec<u8>,                     // Original data
+    pub signature: Vec<u8>,                // Signature to verify
+    pub algorithm: Algorithm,              // Signature algorithm
 }
 
+/// Safe hardware provider trait - complete definition
 pub trait SafeHardwareProvider: Send + Sync {
-    // Stub trait
+    /// Check if StrongBox is available
+    fn supports_strongbox(&self) -> bool;
+    
+    /// Generate a new key
+    fn generate_key(&self, request: &KeyGenerationRequest) -> Result<HsmKey, BearDogError>;
+    
+    /// Sign data
+    fn sign(&self, request: &SigningRequest) -> Result<SafePinnedBuffer, BearDogError>;
+    
+    /// Verify signature
+    fn verify(&self, request: &VerificationRequest) -> Result<bool, BearDogError>;
+    
+    /// Delete a key
+    fn delete_key(&self, key_id: &str) -> Result<(), BearDogError>;
+    
+    /// Check if key exists
+    fn key_exists(&self, key_id: &str) -> Result<bool, BearDogError>;
+    
+    /// Get key information
+    fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError>;
 }
 
 /// Trait for Android security capabilities

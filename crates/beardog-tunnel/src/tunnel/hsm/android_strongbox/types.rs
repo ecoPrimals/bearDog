@@ -39,15 +39,30 @@ impl Default for StrongBoxImplementation {
     }
 }
 
-/// Android device information
+/// Android device information - canonical definition
+///
+/// Single source of truth for Android device metadata across the codebase.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidDeviceInfo {
+    // Core identification
     pub manufacturer: String,
     pub model: String,
-    pub android_version: String,
+    pub device: String,                    // Device codename (e.g., "shiba" for Pixel 8)
+    
+    // Hardware details
+    pub hardware: Option<String>,          // Hardware platform (e.g., "google_tensor_g3")
+    pub board: Option<String>,             // Board name
+    pub brand: Option<String>,             // Brand name
+    
+    // Android version info
+    pub android_version: String,           // Human readable (e.g., "14")
+    pub api_level: u32,                    // Android API level (e.g., 34)
+    pub security_patch: Option<String>,    // Security patch date
+    pub security_patch_level: String,      // Alias for compatibility
+    
+    // Security features
     pub strongbox_version: Option<String>,
     pub titan_m_version: Option<String>,
-    pub security_patch_level: String,
     pub verified_boot_state: VerifiedBootState,
 }
 
@@ -60,10 +75,16 @@ impl AndroidDeviceInfo {
         Ok(Self {
             manufacturer: "Google".to_string(),
             model: "Pixel 8".to_string(),
+            device: "shiba".to_string(),
+            hardware: Some("google_tensor_g3".to_string()),
+            board: Some("shiba".to_string()),
+            brand: Some("google".to_string()),
             android_version: "14".to_string(),
+            api_level: 34,
+            security_patch: Some("2024-01-01".to_string()),
+            security_patch_level: "2024-01-01".to_string(),
             strongbox_version: Some("1.0".to_string()),
             titan_m_version: Some("1.0".to_string()),
-            security_patch_level: "2024-01-01".to_string(),
             verified_boot_state: VerifiedBootState::Verified,
         })
     }
@@ -95,9 +116,12 @@ impl Default for AndroidDeviceInfo {
             hardware: None,
             board: None,
             brand: None,
-            android_version: 0,
+            android_version: "0".to_string(),
             api_level: 0,
             security_patch: None,
+            security_patch_level: "unknown".to_string(),
+            strongbox_version: None,
+            titan_m_version: None,
             verified_boot_state: VerifiedBootState::Unverified,
         })
     }

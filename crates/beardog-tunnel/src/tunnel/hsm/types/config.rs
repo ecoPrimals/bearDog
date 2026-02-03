@@ -152,18 +152,9 @@ pub struct UniversalHsmConfig {
 // Re-export canonical HsmProviderType
 pub use beardog_types::canonical::hsm::HsmProviderType;
 
-/// Security levels
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum SecurityLevel {
-    /// Low security
-    Low,
-    /// Medium security
-    Medium,
-    /// High security
-    High,
-    /// Maximum security
-    Maximum,
-}
+// SecurityLevel moved to security_level.rs for canonical definition
+// Import it for use in this module
+use super::security_level::SecurityLevel;
 
 /// Software HSM configuration  
 #[derive(Debug, Clone)]

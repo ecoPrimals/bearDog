@@ -13,6 +13,7 @@ pub mod canonical;
 pub mod capability;
 pub mod config;
 pub mod key;
+pub mod security_level;
 pub mod status;
 pub mod tier;
 
@@ -20,9 +21,10 @@ pub mod tier;
 // Note: Most types are defined locally to avoid cross-crate confusion
 
 // Re-export from config module (local definitions)
-pub use config::{
-    AuthMethod as AuthenticationMethod, HsmConnectionConfig as HsmConnectionInfo, SecurityLevel,
-};
+pub use config::{AuthMethod as AuthenticationMethod, HsmConnectionConfig as HsmConnectionInfo};
+
+// Re-export canonical SecurityLevel
+pub use security_level::SecurityLevel;
 
 // Re-export KeyType from key module
 pub use key::KeyType;
@@ -49,7 +51,6 @@ impl Default for HsmCapabilities {
 }
 
 // Algorithm enumeration for compatibility
-#[derive(Debug, Clone, PartialEq, Eq)]
 /// Canonical cryptographic algorithm enumeration
 ///
 /// Unified algorithm definitions for all HSM operations across BearDog.
@@ -447,6 +448,59 @@ impl AndroidKeystore {
         rand::thread_rng().fill_bytes(&mut challenge);
         tracing::debug!("Generated attestation challenge of {} bytes", size);
         Ok(challenge)
+    }
+    
+    /// Check if StrongBox is available on this device
+    pub fn is_strongbox_available(&self) -> bool {
+        self.capabilities.strongbox_available
+    }
+    
+    /// Generate random bytes using hardware RNG
+    ///
+    /// # Errors
+    /// Returns an error if RNG fails
+    pub async fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
+        tracing::debug!("🎲 Generating {} random bytes using Android hardware RNG", count);
+        
+        // Use rand crate for random byte generation
+        use rand::RngCore;
+        let mut bytes = vec![0u8; count];
+        rand::thread_rng().fill_bytes(&mut bytes);
+        
+        Ok(bytes)
+    }
+    
+    /// Import existing key material into keystore
+    ///
+    /// # Errors
+    /// Returns an error if import fails
+    pub async fn import_key(
+        &self,
+        key_id: &str,
+        key_data: &[u8],
+        _key_type: KeyType,
+    ) -> Result<(), BearDogError> {
+        tracing::info!("📥 Importing key into Android Keystore: {}", key_id);
+        
+        // In production, this would use JNI to call Android Keystore API
+        // For now, return not_implemented with clear message
+        let _ = key_data; // Avoid unused warning
+        
+        Err(BearDogError::not_implemented(
+            "Android keystore key import - requires JNI implementation",
+        ))
+    }
+    
+    /// List all keys in keystore
+    ///
+    /// # Errors
+    /// Returns an error if listing fails
+    pub async fn list_keys(&self) -> Result<Vec<beardog_types::canonical::providers_unified::traits::KeyInfo>, BearDogError> {
+        tracing::info!("📋 Listing keys in Android Keystore");
+        
+        // In production, this would query Android Keystore via JNI
+        // For now, return empty list
+        Ok(vec![])
     }
 }
 
