@@ -800,6 +800,11 @@ impl BeardogBtspProvider {
     }
 }
 
+/// Internal implementation of deprecated BtspProvider trait
+///
+/// This implementation is maintained for backward compatibility.
+/// New code should use `SecureTunnelProvider` instead.
+#[allow(deprecated)]
 #[async_trait]
 impl BtspProvider for BeardogBtspProvider {
     async fn establish_tunnel(&self, peer: &PeerEndpoint) -> Result<TunnelHandle, BearDogError> {
@@ -982,6 +987,9 @@ impl BtspProvider for BeardogBtspProvider {
 /// This is the primary interface for BearDog's secure tunnel capability.
 /// It provides the same functionality as `BtspProvider` but uses generic
 /// capability types for primal sovereignty.
+///
+/// **Deep Debt Principle #6**: Modern production implementation!
+#[allow(deprecated)] // Delegates to BtspProvider internally for backward compat
 #[async_trait]
 impl SecureTunnelProvider for BeardogBtspProvider {
     async fn establish_tunnel(
