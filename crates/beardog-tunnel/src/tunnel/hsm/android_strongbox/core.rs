@@ -605,7 +605,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         if let Some(cached) = cache.get(key_id) {
             Ok(KeyInfo {
                 key_id: cached.key_id.clone(),
-                key_type: cached.key_type, // Use KeyType directly, not formatted string
+                key_type: cached.key_type.clone(), // Clone to avoid moving from shared reference
                 key_size: 256, // Default for StrongBox
                 extractable: false, // StrongBox keys are non-extractable
                 created_at: std::time::SystemTime::now(), // Use SystemTime, not DateTime
