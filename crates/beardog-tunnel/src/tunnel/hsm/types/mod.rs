@@ -260,6 +260,25 @@ impl Default for AndroidKeyParams {
 
 /// Android HSM configuration
 #[derive(Debug, Clone)]
+/// Android keystore configuration
+pub struct AndroidKeystoreConfig {
+    /// Use hardware-backed keys
+    pub hardware_backed: bool,
+    /// Maximum key count
+    pub max_keys: usize,
+}
+
+impl Default for AndroidKeystoreConfig {
+    fn default() -> Self {
+        Self {
+            hardware_backed: true,
+            max_keys: 256,
+        }
+    }
+}
+
+/// Android HSM configuration - canonical definition
+#[derive(Debug, Clone)]
 pub struct AndroidHsmConfig {
     /// Enable StrongBox hardware security
     pub strongbox_enabled: bool,
@@ -269,6 +288,10 @@ pub struct AndroidHsmConfig {
     pub attestation_level: AttestationLevel,
     /// Security level (0-3)
     pub security_level: u8,
+    /// Keystore configuration
+    pub keystore_config: AndroidKeystoreConfig,
+    /// Attestation configuration (using default for now)
+    pub attestation_config: String, // Placeholder - will use proper type once AttestationConfig is accessible
 }
 
 impl Default for AndroidHsmConfig {
@@ -276,6 +299,8 @@ impl Default for AndroidHsmConfig {
         Self {
             strongbox_enabled: true,
             key_params: AndroidKeyParams::new(),
+            keystore_config: AndroidKeystoreConfig::default(),
+            attestation_config: "default".to_string(),
             attestation_level: AttestationLevel::Hardware,
             security_level: 2,
         }
@@ -387,7 +412,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if encryption fails
-    pub fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub async fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::not_implemented(
             "Android keystore encryption not yet implemented",
         ))
@@ -397,7 +422,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if decryption fails
-    pub fn decrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub async fn decrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::not_implemented(
             "Android keystore decryption not yet implemented",
         ))
@@ -407,7 +432,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if signing fails
-    pub fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub async fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::not_implemented(
             "Android keystore signing not yet implemented",
         ))
@@ -417,7 +442,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if verification fails
-    pub fn verify(
+    pub async fn verify(
         &self,
         _key_id: &str,
         _data: &[u8],
@@ -432,10 +457,19 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if deletion fails
-    pub fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
+    pub async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
         Err(BearDogError::not_implemented(
             "Android keystore key deletion not yet implemented",
         ))
+    }
+    
+    /// Check if key exists
+    ///
+    /// # Errors
+    /// Returns an error if check fails
+    pub async fn key_exists(&self, _key_id: &str) -> Result<bool, BearDogError> {
+        // For now, return false
+        Ok(false)
     }
 
     /// Generate attestation challenge
