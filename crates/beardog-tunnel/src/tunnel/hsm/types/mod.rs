@@ -50,16 +50,67 @@ impl Default for HsmCapabilities {
 
 // Algorithm enumeration for compatibility
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Canonical cryptographic algorithm enumeration
+///
+/// Unified algorithm definitions for all HSM operations across BearDog.
+/// This enum consolidates algorithm specifications from multiple sources.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Algorithm {
+    // Symmetric encryption
     Aes256Gcm,
     ChaCha20Poly1305,
+    
+    // Elliptic curve (key exchange and general)
     EccP256,
     EccP384,
-    EcdsaSha256,
+    
+    // ECDSA signatures (explicit signature variants)
+    EcdsaP256,      // ECDSA with P-256 curve
+    EcdsaP384,      // ECDSA with P-384 curve
+    EcdsaSha256,    // ECDSA with SHA-256 hash
+    
+    // RSA variants
     RsaSha256,
+    RsaPss2048,     // RSA-PSS with 2048-bit key
+    RsaPss3072,     // RSA-PSS with 3072-bit key
+    RsaPss4096,     // RSA-PSS with 4096-bit key
+    
+    // Key derivation
     HkdfSha256,
+    
+    // Modern signatures and key exchange
     Ed25519,
     X25519,
+}
+
+impl Algorithm {
+    /// Returns the security strength in bits
+    pub const fn security_bits(&self) -> usize {
+        match self {
+            Self::Aes256Gcm | Self::EccP256 | Self::EcdsaP256 | Self::Ed25519 | Self::X25519 => 256,
+            Self::EccP384 | Self::EcdsaP384 => 384,
+            Self::RsaPss2048 | Self::RsaSha256 => 112,  // Effective security
+            Self::RsaPss3072 => 128,
+            Self::RsaPss4096 => 152,
+            Self::ChaCha20Poly1305 => 256,
+            Self::HkdfSha256 | Self::EcdsaSha256 => 256,
+        }
+    }
+    
+    /// Returns whether this is a signature algorithm
+    pub const fn is_signature_algorithm(&self) -> bool {
+        matches!(
+            self,
+            Self::EcdsaP256 | Self::EcdsaP384 | Self::EcdsaSha256 | 
+            Self::RsaSha256 | Self::RsaPss2048 | Self::RsaPss3072 | Self::RsaPss4096 |
+            Self::Ed25519
+        )
+    }
+    
+    /// Returns whether this is an encryption algorithm
+    pub const fn is_encryption_algorithm(&self) -> bool {
+        matches!(self, Self::Aes256Gcm | Self::ChaCha20Poly1305)
+    }
 }
 
 // Re-exports from tier module
@@ -76,6 +127,27 @@ pub use key::{
 
 // Also re-export HsmKeyMetadata at top level for convenience
 pub use key::HsmKeyMetadata as HsmKeyMeta;
+
+// Algorithm to KeyType conversion for compatibility
+impl From<Algorithm> for KeyType {
+    fn from(algo: Algorithm) -> Self {
+        match algo {
+            Algorithm::EcdsaP256 | Algorithm::EccP256 | Algorithm::EcdsaSha256 => {
+                KeyType::EllipticCurve
+            }
+            Algorithm::EcdsaP384 | Algorithm::EccP384 => KeyType::EllipticCurve,
+            Algorithm::RsaPss2048
+            | Algorithm::RsaPss3072
+            | Algorithm::RsaPss4096
+            | Algorithm::RsaSha256 => KeyType::Rsa,
+            Algorithm::Aes256Gcm => KeyType::Aes,
+            Algorithm::ChaCha20Poly1305 => KeyType::ChaCha20,
+            Algorithm::Ed25519 => KeyType::Ed25519,
+            Algorithm::X25519 => KeyType::X25519,
+            Algorithm::HkdfSha256 => KeyType::Generic, // KDF doesn't map directly to key type
+        }
+    }
+}
 
 // Re-exports from status module
 pub use status::{HsmHealthStatus, PerformanceMetrics};
