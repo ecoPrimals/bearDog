@@ -260,7 +260,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             resource_usage: beardog_types::canonical::providers_unified::traits::base_traits::ResourceUsage {
                 cpu_percent: 0.0,
                 memory_bytes: 0,
-                disk_bytes: 0,
+                // disk_bytes field not available in ResourceUsage
             },
             last_error: health_status.last_error,
         })
@@ -347,22 +347,23 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
     }
     
     fn security_context(&self) -> SecurityContext {
+        // Use available SecurityContext fields for Android StrongBox
         SecurityContext {
-            provider_type: "AndroidStrongBox".to_string(),
-            security_level: "Hardware".to_string(),
-            capabilities: vec![
-                "hardware_keystore".to_string(),
-                "key_attestation".to_string(),
-                "hardware_rng".to_string(),
-                "hardware_bound_keys".to_string(),
+            encryption_algorithms: vec![
+                "AES-256-GCM".to_string(),
+                "ChaCha20-Poly1305".to_string(),
             ],
-            metadata: {
-                let mut meta = HashMap::new();
-                meta.insert("manufacturer".to_string(), self.device_info.manufacturer.clone());
-                meta.insert("model".to_string(), self.device_info.model.clone());
-                meta.insert("android_version".to_string(), self.device_info.android_version.clone());
-                meta
-            },
+            signature_algorithms: vec![
+                "ECDSA-P256".to_string(),
+                "ECDSA-P384".to_string(),
+                "RSA-PSS-2048".to_string(),
+            ],
+            key_derivation_functions: vec![
+                "HKDF-SHA256".to_string(),
+            ],
+            random_generators: vec![
+                "Hardware-RNG-StrongBox".to_string(),
+            ],
         }
     }
 }
@@ -572,7 +573,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
             Ok(KeyInfo {
                 key_id: cached.key_id.clone(),
                 key_type: format!("{:?}", cached.key_type),
-                is_hardware_backed: true,
+                // is_hardware_backed field not available in workflow::KeyInfo
             })
         } else {
             Err(BearDogError::not_found(format!(

@@ -279,7 +279,7 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
         let safe_handle = self.generate_key_safe(key_id, algorithm)?;
 
         Ok(HsmKey {
-            key_id: request.key_id.clone(),
+            id: request.key_id.clone(), // UniversalKey uses "id", not "key_id"
             key_type: KeyType::from(request.algorithm),
             material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference {
                 reference: safe_handle.key_id,
