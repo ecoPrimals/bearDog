@@ -195,12 +195,17 @@ pub use providers_unified::{
     CoreProviderSettings,
     DiscoveryConfig,
     HealthConfig,
+    KeyType, // Key type enumeration for HSM operations
     LoadBalancingConfig,
     PerformanceConfig,
     ProviderConfig, // Primary provider config type
     ProviderMonitoringConfig,
     ProviderSecurityConfig,
     ResilienceConfig,
+    // Re-export provider traits for Android StrongBox and other implementations
+    UnifiedHsmProvider,
+    UnifiedProvider,
+    UnifiedSecurityProvider,
 };
 
 // Export the canonical MonitoringConfig

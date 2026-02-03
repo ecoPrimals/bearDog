@@ -143,14 +143,14 @@ impl AndroidStrongBoxHsm {
                 params.set_key_size(spec.key_size); // Use spec's key_size
             }
             KeyType::Ed25519 | KeyType::ChaCha20 => {
-                return Err(BearDogError::UnsupportedKeyType {
-                    key_type: format!("{:?} not supported in StrongBox", spec.key_type),
-                });
+                return Err(BearDogError::unsupported_operation(
+                    &format!("{:?} not supported in StrongBox", spec.key_type)
+                ));
             }
             _ => {
-                return Err(BearDogError::UnsupportedKeyType {
-                    key_type: format!("{:?} not supported in StrongBox", spec.key_type),
-                });
+                return Err(BearDogError::unsupported_operation(
+                    &format!("{:?} not supported in StrongBox", spec.key_type)
+                ));
             }
         }
 
@@ -299,8 +299,8 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
         _request: AuthenticationRequest,
     ) -> Result<AuthenticationResponse, BearDogError> {
         // StrongBox is a cryptographic HSM, not an authentication provider
-        Err(BearDogError::Unsupported(
-            "Authentication not supported in StrongBox HSM - use for crypto operations only".to_string()
+        Err(BearDogError::unsupported_operation(
+            "Authentication not supported in StrongBox HSM - use for crypto operations only"
         ))
     }
     
@@ -309,8 +309,8 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
         _request: AuthorizationRequest,
     ) -> Result<AuthorizationResponse, BearDogError> {
         // StrongBox is a cryptographic HSM, not an authorization provider
-        Err(BearDogError::Unsupported(
-            "Authorization not supported in StrongBox HSM - use for crypto operations only".to_string()
+        Err(BearDogError::unsupported_operation(
+            "Authorization not supported in StrongBox HSM - use for crypto operations only"
         ))
     }
     
@@ -400,7 +400,7 @@ impl UnifiedHsmProvider for AndroidStrongBoxHsm {
         // Android StrongBox keys are HARDWARE-BOUND and CANNOT be exported
         // This is a SECURITY FEATURE, not a limitation
         warn!("🔒 Key export denied for StrongBox key: {} (hardware-bound security)", key_id);
-        Err(BearDogError::HsmError(
+        Err(BearDogError::hsm(
             format!(
                 "Key export not supported for StrongBox key '{}' - keys are hardware-bound for security",
                 key_id
@@ -459,7 +459,7 @@ impl UnifiedHsmProvider for AndroidStrongBoxHsm {
         // Android StrongBox keys are HARDWARE-BOUND and CANNOT be backed up
         // This is a SECURITY FEATURE, not a limitation
         warn!("🔒 Key backup denied for StrongBox keys (hardware-bound security)");
-        Err(BearDogError::HsmError(
+        Err(BearDogError::hsm(
             "Key backup not supported for StrongBox keys - keys are hardware-bound for security".to_string()
         ))
     }

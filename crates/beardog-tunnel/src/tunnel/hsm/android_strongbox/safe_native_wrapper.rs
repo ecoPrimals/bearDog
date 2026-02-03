@@ -21,6 +21,9 @@ pub struct SafeAndroidStrongBoxWrapper {
     native_handle_initialized: bool,
 }
 
+// Type alias for backward compatibility
+pub type SafeAndroidKeystore = SafeAndroidStrongBoxWrapper;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceCapabilities {
     /// Whether strongbox_available is enabled

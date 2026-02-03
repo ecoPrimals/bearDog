@@ -3,9 +3,11 @@
 //! This module provides safe Android hardware-backed cryptographic operations.
 
 use super::super::SecurityLevel;
-use super::safe_keystore_replacement::{
-    KeyGenerationRequest, KeyInfo, SafeHardwareProvider, SigningRequest, VerificationRequest,
-};
+// ARCHIVED: safe_keystore_replacement module moved to archives
+// TODO: Restore or replace with alternative implementation
+// use super::safe_keystore_replacement::{
+//     KeyGenerationRequest, KeyInfo, SafeHardwareProvider, SigningRequest, VerificationRequest,
+// };
 use crate::tunnel::hsm::types::{Algorithm, HsmKey, KeyType};
 use beardog_errors::BearDogError;
 use beardog_utils::utils::safe_memory_enhanced::{GlobalBufferPools, SafePinnedBuffer};
@@ -14,6 +16,36 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
+
+// Stub types to replace archived safe_keystore_replacement
+#[derive(Debug, Clone)]
+pub struct KeyGenerationRequest {
+    pub key_size: usize,
+    pub algorithm: Algorithm,
+}
+
+#[derive(Debug, Clone)]
+pub struct KeyInfo {
+    pub id: String,
+    pub algorithm: Algorithm,
+}
+
+#[derive(Debug, Clone)]
+pub struct SigningRequest {
+    pub data: Vec<u8>,
+    pub algorithm: Algorithm,
+}
+
+#[derive(Debug, Clone)]
+pub struct VerificationRequest {
+    pub data: Vec<u8>,
+    pub signature: Vec<u8>,
+    pub algorithm: Algorithm,
+}
+
+pub trait SafeHardwareProvider: Send + Sync {
+    // Stub trait
+}
 
 /// Trait for Android security capabilities
 pub trait AndroidCapability: Send + Sync + 'static {
@@ -83,20 +115,8 @@ impl AndroidCapability for SoftwareFallback {
     }
 }
 
-/// Android device information
-#[derive(Debug, Clone)]
-pub struct AndroidDeviceInfo {
-    /// Device model
-    pub model: String,
-    /// Android API level
-    pub api_level: u32,
-    /// Security patch level
-    pub security_patch: String,
-    /// StrongBox version if available
-    pub strongbox_version: Option<String>,
-    /// Titan M version if available
-    pub titan_m_version: Option<String>,
-}
+// AndroidDeviceInfo is now imported from types module to avoid duplication
+use super::types::AndroidDeviceInfo;
 
 /// Safe mobile hardware provider
 pub struct SafeMobileHardwareProvider<C: AndroidCapability> {

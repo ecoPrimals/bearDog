@@ -70,6 +70,7 @@ pub use core::{CoreProviderSettings, ProviderRegistryEntry, ProviderStatus};
 //     ProviderMigrationReport, ProviderMigrationResult, ProviderMigrationService,
 // };
 pub use traits::{
+    KeyType, // Key type enumeration for HSM operations
     ProviderCapability as TraitProviderCapability,
     ProviderHealth as TraitProviderHealth,
     // Use trait-specific types to avoid conflicts

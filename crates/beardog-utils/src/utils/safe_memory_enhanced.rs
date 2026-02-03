@@ -17,6 +17,29 @@ pub mod buffer_sizes {
     };
 }
 
+/// Global buffer pool manager for reusable memory buffers
+///
+/// This is a stub implementation. Full buffer pooling will be implemented in future.
+pub struct GlobalBufferPools {
+    _marker: std::marker::PhantomData<()>,
+}
+
+impl GlobalBufferPools {
+    /// Creates a new buffer pool
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            _marker: std::marker::PhantomData,
+        }
+    }
+}
+
+impl Default for GlobalBufferPools {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct SafePinnedBuffer {
     data: Vec<u8>,
     size: usize,

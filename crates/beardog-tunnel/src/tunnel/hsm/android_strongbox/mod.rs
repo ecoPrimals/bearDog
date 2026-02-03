@@ -27,10 +27,10 @@ pub mod safe_android_provider;
 pub mod safe_native_wrapper;
 
 // Explicit imports to avoid ambiguity
-pub use safe_android_provider::{SafeAndroidProvider};
+pub use safe_android_provider::SafeAndroidProvider;
 pub use safe_device_detection::*;
-pub use safe_native_wrapper::SafeAndroidKeystore as SafeStrongBoxKeystore;
-pub use types::{AndroidDeviceInfo as StrongBoxDeviceInfo};
+pub use safe_native_wrapper::SafeAndroidKeystore;
+pub use types::AndroidDeviceInfo;
 
 /// Safe Android StrongBox Manager
 ///
