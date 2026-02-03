@@ -641,9 +641,10 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
     let seed_b64 = BASE64.encode(&seed_bytes);
 
     // Derive lineage key
+    // NOTE: Role is "responder" to match verifier expectations
     let provider = GeneticCryptoProvider::new_with_lineage(seed_bytes.clone())?;
     let lineage_key = provider
-        .derive_lineage_key("family", "challenger", b"lineage-challenge-v1")
+        .derive_lineage_key("family", "responder", b"lineage-challenge-v1")
         .await?;
 
     // Decode nonce
@@ -664,10 +665,11 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
     let response_hex = hex::encode(&response_bytes);
 
     // Generate lineage proof
+    // NOTE: Role is "responder" to match verifier expectations
     let mut hasher = blake3::Hasher::new();
     hasher.update(&seed_bytes);
     hasher.update(b"family");
-    hasher.update(b"challenger");
+    hasher.update(b"responder");
     hasher.update(b"GENETIC_LINEAGE_PROOF_V1");
     let proof = hasher.finalize();
     let proof_b64 = BASE64.encode(proof.as_bytes());

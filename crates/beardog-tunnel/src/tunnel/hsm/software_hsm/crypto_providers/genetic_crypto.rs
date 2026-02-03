@@ -480,10 +480,9 @@ impl GeneticCryptoProvider {
         // Add context
         derivation_input.extend_from_slice(context);
 
-        // Add fresh entropy (Tier 1: OsRng for now, Tier 3 Human in future)
-        let mut entropy = vec![0u8; 32];
-        OsRng.fill_bytes(&mut entropy);
-        derivation_input.extend_from_slice(&entropy);
+        // NOTE: Key derivation MUST be deterministic for challenge-response to work.
+        // Fresh entropy is added at the challenge generation layer (via nonce),
+        // not at the key derivation layer.
 
         // Use Blake3 for fast, secure key derivation
         let mut hasher = blake3::Hasher::new();
