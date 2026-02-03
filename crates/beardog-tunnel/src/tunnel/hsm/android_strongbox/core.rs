@@ -260,7 +260,9 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             resource_usage: beardog_types::canonical::providers_unified::traits::base_traits::ResourceUsage {
                 cpu_percent: 0.0,
                 memory_bytes: 0,
-                // disk_bytes field not available in ResourceUsage
+                memory_percent: 0.0,
+                disk_io: 0,
+                network_io: 0,
             },
             last_error: health_status.last_error,
         })
@@ -271,6 +273,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             timestamp: std::time::SystemTime::now(),
             performance: HashMap::new(),
             custom_metrics: vec![],
+            system_metrics: HashMap::new(), // System-level metrics
         })
     }
     
@@ -349,6 +352,7 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
     fn security_context(&self) -> SecurityContext {
         // Use available SecurityContext fields for Android StrongBox
         SecurityContext {
+            security_level: "StrongBox".to_string(),
             encryption_algorithms: vec![
                 "AES-256-GCM".to_string(),
                 "ChaCha20-Poly1305".to_string(),
@@ -573,6 +577,10 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
             Ok(KeyInfo {
                 key_id: cached.key_id.clone(),
                 key_type: cached.key_type, // Use KeyType directly, not formatted string
+                key_size: 256, // Default for StrongBox
+                extractable: false, // StrongBox keys are non-extractable
+                created_at: chrono::Utc::now(), // Placeholder
+                algorithm: "ECDSA-P256".to_string(), // Default
                 // is_hardware_backed field not available in workflow::KeyInfo
             })
         } else {

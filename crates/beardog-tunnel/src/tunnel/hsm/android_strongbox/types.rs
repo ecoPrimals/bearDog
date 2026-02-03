@@ -295,9 +295,8 @@ impl StrongBoxError {
 
 impl From<StrongBoxError> for BearDogError {
     fn from(err: StrongBoxError) -> Self {
-        BearDogError::Hsm {
-            message: format!("StrongBox error (code {}): {}", err.code, err.message),
-        }
+        // Use modern error constructor
+        BearDogError::hsm(format!("StrongBox error (code {}): {}", err.code, err.message))
     }
 }
 

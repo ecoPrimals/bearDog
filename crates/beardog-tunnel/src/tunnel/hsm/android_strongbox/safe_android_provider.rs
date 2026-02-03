@@ -320,7 +320,8 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
         info!("📋 Safe Android: Getting key info for \"{}\"", key_id);
 
         Ok(KeyInfo {
-            key_id: key_id.to_string(),
+            id: key_id.to_string(),
+            key_id: key_id.to_string(), // Alias for compatibility
             algorithm: Algorithm::EcdsaP256, // Placeholder
             hardware_backed: C::hardware_backed(),
         })
@@ -505,11 +506,19 @@ impl SafeAndroidKeystore {
         let titan_m_version = Self::detect_titan_m_version_safe()?;
 
         Ok(AndroidDeviceInfo {
+            manufacturer: "Google".to_string(),
             model,
+            device: "unknown".to_string(),
+            hardware: None,
+            board: None,
+            brand: Some("google".to_string()),
+            android_version: api_level.to_string(),
             api_level,
-            security_patch,
+            security_patch: security_patch.clone(),
+            security_patch_level: security_patch.unwrap_or_else(|| "unknown".to_string()),
             strongbox_version,
             titan_m_version,
+            verified_boot_state: VerifiedBootState::Verified,
         })
     }
 
