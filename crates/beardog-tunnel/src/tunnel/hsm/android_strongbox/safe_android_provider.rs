@@ -393,7 +393,7 @@ impl SafeAndroidKeystore {
         let keys = self.keys.blocking_read();
         let _metadata = keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
         // TODO: Implement actual Android StrongBox JNI call
         // This requires JNI bindings to Android Keystore API
@@ -444,7 +444,7 @@ impl SafeAndroidKeystore {
         let keys = self.keys.blocking_read();
         let _metadata = keys
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
+            .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
         // TODO: Implement actual Android StrongBox JNI call
         Err(BearDogError::not_implemented(

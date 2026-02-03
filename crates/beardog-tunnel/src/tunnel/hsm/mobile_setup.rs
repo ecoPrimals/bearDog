@@ -105,7 +105,7 @@ async fn initialize_mobile_hsm(
     }
 
     let _ = config; // Suppress unused warning
-    let strongbox_hsm = AndroidStrongBoxHsm::with_defaults();
+    let strongbox_hsm = AndroidStrongBoxHsm::with_defaults()?;
     info!("✅ Android StrongBox HSM initialized and ready (mock)");
     Ok(strongbox_hsm)
 }
