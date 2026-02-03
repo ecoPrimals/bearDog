@@ -41,18 +41,21 @@ impl AndroidStrongBoxHsm {
     }
 
     /// Creates a StrongBox HSM with default ID and device info
-    #[must_use]
-    pub fn with_defaults() -> Self {
-        Self {
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails (mock implementation always succeeds)
+    pub fn with_defaults() -> Result<Self, beardog_errors::BearDogError> {
+        Ok(Self {
             id: "android-strongbox".to_string(),
             device_info: super::AndroidDeviceInfo::default(),
-        }
+        })
     }
 }
 
 impl Default for AndroidStrongBoxHsm {
     fn default() -> Self {
-        Self::with_defaults()
+        // Mock implementation: unwrap is safe since mock always succeeds
+        Self::with_defaults().expect("Mock with_defaults should never fail")
     }
 }
 
@@ -138,6 +141,16 @@ mod tests {
     fn test_android_strongbox_default() {
         let hsm = AndroidStrongBoxHsm::default();
         assert_eq!(hsm.id, "android-strongbox");
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
+    }
+
+    #[test]
+    fn test_android_strongbox_with_defaults() -> Result<(), beardog_errors::BearDogError> {
+        let hsm = AndroidStrongBoxHsm::with_defaults()?;
+        assert_eq!(hsm.id, "android-strongbox");
+        Ok(())
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
