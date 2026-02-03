@@ -92,8 +92,9 @@ pub struct NetworkConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
+        use beardog_config::global::BEARDOG_CONFIG;
         Self {
-            default_host: default_service_host(),
+            default_host: BEARDOG_CONFIG.network.api.bind_address.to_string(),
             service_ports: ServicePorts::default(),
             timeouts: NetworkTimeouts::default(),
             endpoints: ServiceEndpoints::default(),
@@ -349,7 +350,8 @@ pub struct ServiceEndpoints {
 
 impl Default for ServiceEndpoints {
     fn default() -> Self {
-        let host = default_service_host();
+        use beardog_config::global::BEARDOG_CONFIG;
+        let host = BEARDOG_CONFIG.network.api.bind_address.to_string();
         let ports = ServicePorts::default();
 
         Self {

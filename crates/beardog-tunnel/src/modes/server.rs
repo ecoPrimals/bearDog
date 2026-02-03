@@ -270,6 +270,8 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
 
     // PHASE 2: Fallback to legacy Songbird (DEPRECATED)
     // This will be removed after full Neural API adoption
+    // Intentional use of deprecated function for backward compatibility
+    #[allow(deprecated)]
     match register_with_legacy_songbird().await {
         Ok(_) => {
             info!("✅ Registered with Songbird (legacy, will migrate to Neural API)");
