@@ -5,6 +5,7 @@
 
 use beardog_errors::BearDogError;
 use tracing::info;
+use types::VerifiedBootState;
 
 /// Maximum challenge size for StrongBox attestation (bytes)
 pub const MAX_CHALLENGE_SIZE: usize = 64;
