@@ -389,9 +389,9 @@ impl SafeAndroidKeystore {
         // TODO: Implement actual Android StrongBox JNI call
         // This requires JNI bindings to Android Keystore API
         // For now, return error indicating real implementation needed
-        Err(BearDogError::unsupported(
+        Err(BearDogError::not_implemented(
             "Android StrongBox signing requires JNI integration (not yet implemented). \
-             Use SoftwareHSM provider as fallback.",
+             Use SoftwareHSM provider as fallback."
         ))
     }
 
@@ -406,9 +406,9 @@ impl SafeAndroidKeystore {
     /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
     pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::unsupported(
+        Err(BearDogError::unsupported_operation(
             "Android StrongBox is only available on Android platform. \
-             Use SoftwareHSM or other HSM provider on this platform.",
+             Use SoftwareHSM or other HSM provider on this platform."
         ))
     }
 
@@ -438,7 +438,7 @@ impl SafeAndroidKeystore {
             .ok_or_else(|| BearDogError::not_found(&format!("Key {key_id} not found")))?;
 
         // TODO: Implement actual Android StrongBox JNI call
-        Err(BearDogError::unsupported(
+        Err(BearDogError::not_implemented(
             "Android StrongBox signature verification requires JNI integration (not yet implemented)"
         ))
     }
@@ -454,8 +454,8 @@ impl SafeAndroidKeystore {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        Err(BearDogError::unsupported(
-            "Android StrongBox is only available on Android platform",
+        Err(BearDogError::unsupported_operation(
+            "Android StrongBox is only available on Android platform"
         ))
     }
 
@@ -518,8 +518,8 @@ impl SafeAndroidKeystore {
     /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
-        Err(BearDogError::unsupported(
-            "Android device detection is only available on Android platform",
+        Err(BearDogError::unsupported_operation(
+            "Android device detection is only available on Android platform"
         ))
     }
 

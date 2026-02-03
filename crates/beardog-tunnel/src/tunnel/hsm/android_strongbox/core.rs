@@ -62,9 +62,9 @@ impl AndroidStrongBoxHsm {
         let keystore = Arc::new(AndroidKeystore::new(config.keystore_config.clone())?);
 
         if !keystore.is_strongbox_available() {
-            return Err(BearDogError::Unavailable {
-                message: "StrongBox HSM is not available on this device".to_string(),
-            });
+            return Err(BearDogError::system(
+                "StrongBox HSM is not available on this device".to_string()
+            ));
         }
 
         let attestation_service = Arc::new(AndroidAttestationService::new(
@@ -230,7 +230,7 @@ impl AndroidStrongBoxHsm {
 }
 
 // Implement UnifiedProvider (base trait)
-#[async_trait]
+// Note: UnifiedProvider uses RPITIT (native async), not #[async_trait]
 impl UnifiedProvider for AndroidStrongBoxHsm {
     fn provider_info(&self) -> beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
         beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
@@ -294,7 +294,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
 }
 
 // Implement UnifiedSecurityProvider (extends UnifiedProvider)
-#[async_trait]
+// Note: UnifiedSecurityProvider uses RPITIT (native async), not #[async_trait]
 impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
     async fn authenticate(
         &self,
@@ -368,7 +368,8 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
 }
 
 // Implement UnifiedHsmProvider (HSM-specific operations)
-#[async_trait]
+// Implement UnifiedHsmProvider (extends UnifiedSecurityProvider)
+// Note: UnifiedHsmProvider uses RPITIT (native async), not #[async_trait]
 impl UnifiedHsmProvider for AndroidStrongBoxHsm {
     async fn generate_key(&self, spec: KeyGenerationSpec) -> Result<KeyInfo, BearDogError> {
         info!("🔐 Generating StrongBox key: {}", spec.key_id);
@@ -556,8 +557,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         // StrongBox doesn't support key import - keys are hardware-generated
         let _ = (key_data, key_id);
         Err(BearDogError::unsupported_operation(
-            "Key import not supported in StrongBox - keys are hardware-generated".to_string(),
-            None,
+            "Key import not supported in StrongBox - keys are hardware-generated"
         ))
     }
 

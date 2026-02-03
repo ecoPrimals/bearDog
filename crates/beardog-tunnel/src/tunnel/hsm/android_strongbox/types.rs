@@ -313,6 +313,38 @@ pub struct AndroidAttestationService {
     pub challenge_generator: Arc<ChallengeGenerator>,
 }
 
+impl AndroidAttestationService {
+    /// Creates a new attestation service
+    pub fn new(config: AttestationConfig) -> Self {
+        Self {
+            config,
+            trusted_certificates: Vec::new(),
+            challenge_generator: Arc::new(ChallengeGenerator::new()),
+        }
+    }
+    
+    /// Attest device integrity
+    ///
+    /// # Errors
+    /// Returns error if attestation fails
+    pub async fn attest_device(
+        &self,
+        challenge: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
+        tracing::info!("🔐 Performing device attestation with {} byte challenge", challenge.len());
+        
+        // In production, this would:
+        // 1. Call Android KeyStore attestation API via JNI
+        // 2. Generate hardware-backed attestation certificate
+        // 3. Return signed certificate chain
+        
+        // For now, return placeholder attestation
+        Err(BearDogError::not_implemented(
+            "Device attestation - requires JNI implementation"
+        ))
+    }
+}
+
 /// Challenge generator for attestation
 #[derive(Debug)]
 pub struct ChallengeGenerator {
@@ -350,6 +382,52 @@ pub struct AndroidHealthMonitor {
     pub keystore_health: Arc<RwLock<HsmHealthStatus>>,
     pub strongbox_health: Arc<RwLock<HsmHealthStatus>>,
     pub attestation_health: Arc<RwLock<HsmHealthStatus>>,
+}
+
+impl AndroidHealthMonitor {
+    /// Creates a new health monitor
+    pub fn new() -> Self {
+        Self {
+            keystore_health: Arc::new(RwLock::new(HsmHealthStatus::Unknown)),
+            strongbox_health: Arc::new(RwLock::new(HsmHealthStatus::Unknown)),
+            attestation_health: Arc::new(RwLock::new(HsmHealthStatus::Unknown)),
+        }
+    }
+    
+    /// Check overall health status
+    ///
+    /// # Errors
+    /// Returns error if health check fails
+    pub async fn check(&self) -> Result<HealthCheckResult, BearDogError> {
+        let keystore = *self.keystore_health.read().await;
+        let strongbox = *self.strongbox_health.read().await;
+        let attestation = *self.attestation_health.read().await;
+        
+        let is_healthy = matches!(keystore, HsmHealthStatus::Healthy)
+            && matches!(strongbox, HsmHealthStatus::Healthy | HsmHealthStatus::Unknown)
+            && matches!(attestation, HsmHealthStatus::Healthy | HsmHealthStatus::Unknown);
+        
+        Ok(HealthCheckResult {
+            is_healthy,
+            keystore_status: keystore,
+            strongbox_status: strongbox,
+            attestation_status: attestation,
+        })
+    }
+    
+    /// Returns whether the monitor is reporting healthy status
+    pub async fn is_healthy(&self) -> bool {
+        self.check().await.map(|r| r.is_healthy).unwrap_or(false)
+    }
+}
+
+/// Health check result
+#[derive(Debug, Clone)]
+pub struct HealthCheckResult {
+    pub is_healthy: bool,
+    pub keystore_status: HsmHealthStatus,
+    pub strongbox_status: HsmHealthStatus,
+    pub attestation_status: HsmHealthStatus,
 }
 
 /// HSM health status
