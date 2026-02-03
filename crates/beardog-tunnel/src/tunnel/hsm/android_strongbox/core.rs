@@ -592,7 +592,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
                 key_type: cached.key_type, // Use KeyType directly, not formatted string
                 key_size: 256, // Default for StrongBox
                 extractable: false, // StrongBox keys are non-extractable
-                created_at: chrono::Utc::now(), // Placeholder
+                created_at: std::time::SystemTime::now(), // Use SystemTime, not DateTime
                 key_usage: vec!["sign".to_string(), "verify".to_string()], // Default usage
                 // algorithm field not available in workflow::KeyInfo
                 // is_hardware_backed field not available in workflow::KeyInfo

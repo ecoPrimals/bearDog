@@ -294,6 +294,9 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
             ]),
             hsm_tier: "production".to_string(),
             created_at: chrono::Utc::now(),
+            hsm_type: "AndroidStrongBox".to_string(),
+            attestation: None, // Hardware attestation optional
+            health_status: "healthy".to_string(),
         })
     }
 
@@ -515,7 +518,7 @@ impl SafeAndroidKeystore {
             android_version: api_level.to_string(),
             api_level,
             security_patch: security_patch.clone(),
-            security_patch_level: security_patch.clone().unwrap_or_else(|| "unknown".to_string()),
+            security_patch_level: security_patch.clone().unwrap_or_else(|| "unknown".to_string()), // security_patch is Option<String>
             strongbox_version,
             titan_m_version,
             verified_boot_state: VerifiedBootState::Verified,
@@ -597,7 +600,7 @@ impl SafeKeyHandle {
 
     /// Returns the algorithm
     pub fn algorithm(&self) -> KeyType {
-        self.algorithm
+        self.algorithm.clone() // Clone to avoid moving from shared reference
     }
 }
 
