@@ -237,7 +237,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             id: "android_strongbox".to_string(),
             name: "Android StrongBox HSM".to_string(),
             version: super::VERSION.to_string(),
-            provider_type: beardog_types::canonical::providers_unified::traits::base_traits::ProviderType::HardwareSecurity,
+            provider_type: beardog_types::canonical::providers_unified::traits::base_traits::ProviderType::Security, // HSM is a security provider
             supported_capabilities: vec![
                 "hardware_keystore".to_string(),
                 "key_attestation".to_string(),
@@ -292,9 +292,25 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
     
     fn capabilities(&self) -> Vec<beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability> {
         vec![
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability::HardwareKeyStorage,
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability::KeyAttestation,
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability::HardwareRng,
+            // ProviderCapability is now a struct, not enum
+            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability {
+                name: "HardwareKeyStorage".to_string(),
+                description: "Hardware-backed key storage in StrongBox".to_string(),
+                parameters: vec![],
+                enabled: true,
+            },
+            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability {
+                name: "KeyAttestation".to_string(),
+                description: "Hardware key attestation".to_string(),
+                parameters: vec![],
+                enabled: true,
+            },
+            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability {
+                name: "HardwareRng".to_string(),
+                description: "Hardware random number generation".to_string(),
+                parameters: vec![],
+                enabled: true,
+            },
         ]
     }
     

@@ -151,8 +151,8 @@ impl AndroidCapability for SoftwareFallback {
     }
 }
 
-// AndroidDeviceInfo is now imported from types module to avoid duplication
-use super::types::AndroidDeviceInfo;
+// AndroidDeviceInfo and VerifiedBootState imported from types module
+use super::types::{AndroidDeviceInfo, VerifiedBootState};
 
 /// Safe mobile hardware provider
 pub struct SafeMobileHardwareProvider<C: AndroidCapability> {
