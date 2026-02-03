@@ -40,6 +40,7 @@ pub enum KeyPurpose {
 #[derive(Debug, Clone)]
 pub struct KeyInfo {
     pub id: String,
+    pub key_id: String, // Alias for compatibility
     pub algorithm: Algorithm,
     pub hardware_backed: bool,
 }

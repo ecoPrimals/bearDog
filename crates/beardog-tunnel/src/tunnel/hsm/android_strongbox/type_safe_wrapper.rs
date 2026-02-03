@@ -103,7 +103,7 @@ impl TypeSafeAndroidKeystore {
 
         let has_strongbox = device_info.api_level >= 28 && // Android 9+
                            device_info.has_hardware_keystore &&
-                           device_info.device_model.contains("Pixel");
+                           device_info.device_model().contains("Pixel"); // Method, not field
         Ok(has_strongbox)
 
     /// Gets safe_device_info

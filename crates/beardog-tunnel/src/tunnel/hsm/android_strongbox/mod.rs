@@ -77,18 +77,23 @@ pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDog
     info!("📱 Safe Android device detection starting");
 
     let device_info = AndroidDeviceInfo {
-        device_model: std::env::var("ANDROID_DEVICE_MODEL")
-            .unwrap_or_else(|_| "Android Device".to_string()),
+        manufacturer: std::env::var("ANDROID_MANUFACTURER").unwrap_or_else(|_| "Unknown".to_string()),
+        model: std::env::var("ANDROID_MODEL").unwrap_or_else(|_| "Android Device".to_string()),
+        device: std::env::var("ANDROID_DEVICE").unwrap_or_else(|_| "unknown".to_string()),
+        hardware: std::env::var("ANDROID_HARDWARE").ok(),
+        board: std::env::var("ANDROID_BOARD").ok(),
+        brand: std::env::var("ANDROID_BRAND").ok(),
         android_version: std::env::var("ANDROID_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
-        strongbox_available: std::env::var("ANDROID_STRONGBOX_AVAILABLE")
-            .map(|v| v == "true")
-            .unwrap_or(false),
-        tee_available: std::env::var("ANDROID_TEE_AVAILABLE")
-            .map(|v| v == "true")
-            .unwrap_or(true), // TEE is generally available on modern Android
-        hardware_attestation_supported: std::env::var("ANDROID_HARDWARE_ATTESTATION")
-            .map(|v| v == "true")
-            .unwrap_or(false),
+        api_level: std::env::var("ANDROID_API_LEVEL")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(29),
+        security_patch: std::env::var("ANDROID_SECURITY_PATCH").ok(),
+        security_patch_level: std::env::var("ANDROID_SECURITY_PATCH")
+            .unwrap_or_else(|_| "unknown".to_string()),
+        strongbox_version: std::env::var("ANDROID_STRONGBOX_VERSION").ok(),
+        titan_m_version: std::env::var("ANDROID_TITAN_M_VERSION").ok(),
+        verified_boot_state: VerifiedBootState::Unverified, // Runtime discovery
     };
 
     info!("✅ Safe Android device detection completed");
@@ -117,7 +122,7 @@ mod tests {
     #[tokio::test]
     async fn test_safe_device_info_detection() -> Result<(), BearDogError> {
         let device_info = safe_get_android_device_info().await?;
-        assert!(!device_info.device_model.is_empty());
+        assert!(!device_info.device_model().is_empty()); // Method, not field
         assert!(!device_info.android_version.is_empty());
         Ok(())
     }
