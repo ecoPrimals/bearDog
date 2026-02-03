@@ -59,7 +59,7 @@ impl AndroidStrongBoxHsm {
             info!("📱 Detected Pixel device - excellent StrongBox support");
         }
 
-        let keystore = Arc::new(AndroidKeystore::new(config.keystore_config.clone())?);
+        let keystore = Arc::new(AndroidKeystore::new(config.clone())?);
 
         if !keystore.is_strongbox_available() {
             return Err(BearDogError::system(
@@ -67,10 +67,10 @@ impl AndroidStrongBoxHsm {
             ));
         }
 
-        let attestation_service = Arc::new(AndroidAttestationService::new(
-            config.attestation_config.clone(),
-        )?);
-        let health_monitor = Arc::new(AndroidHealthMonitor::new()?);
+        // Create attestation config from string placeholder
+        let attestation_config = super::types::AttestationConfig::default();
+        let attestation_service = Arc::new(AndroidAttestationService::new(attestation_config));
+        let health_monitor = Arc::new(AndroidHealthMonitor::new());
 
         let hsm = Self {
             config,
