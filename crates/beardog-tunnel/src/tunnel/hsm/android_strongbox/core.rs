@@ -185,7 +185,7 @@ impl AndroidStrongBoxHsm {
                     &format!("{:?} not supported in StrongBox", spec.key_type)
                 ));
             }
-        }
+        }; // Semicolon required after match expression
 
         // Set purposes based on key_usage (new canonical approach)
         let mut purposes = Vec::new();
@@ -601,7 +601,41 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         &self,
         request: crate::tunnel::hsm::GenerateKeyRequest,
     ) -> Result<HsmKey, BearDogError> {
-        self.generate_strongbox_key(&request).await
+        // Convert GenerateKeyRequest to KeyGenerationSpec
+        let spec = KeyGenerationSpec {
+            key_id: request.key_id.clone(),
+            key_type: request.key_type,
+            key_size: 256, // Default for StrongBox
+            key_usage: vec![KeyUsage::Sign, KeyUsage::Verify], // Default
+            extractable: false, // StrongBox keys are non-extractable by design
+        };
+        
+        // Generate the key
+        let key_info = self.generate_strongbox_key(&spec).await?;
+        
+        // Convert KeyInfo to UniversalKey (HsmKey)
+        let key_type_clone = key_info.key_type.clone();
+        Ok(HsmKey {
+            id: key_info.key_id.clone(),
+            hsm_type: "AndroidStrongBox".to_string(),
+            key_type: key_type_clone.clone(),
+            metadata: KeyMetadata {
+                key_id: key_info.key_id,
+                key_type: key_type_clone,
+                alias: None,
+                created_at: chrono::Utc::now(),
+                expires_at: None,
+                tags: HashMap::new(),
+            },
+            key_material: KeyMaterial::HardwareReference {
+                reference: request.key_id,
+                hsm_location: "android_strongbox".to_string(),
+            },
+            hsm_tier: "production".to_string(),
+            created_at: chrono::Utc::now(),
+            health_status: KeyHealthStatus::Healthy,
+            attestation: None,
+        })
     }
 
     async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
@@ -646,21 +680,14 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         self.keystore.delete_key(key_id).await
     }
 
-    async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
+    async fn get_key_info(&self, key_id: &str) -> Result<ManagerKeyInfo, BearDogError> {
         let cache = self.key_cache.read().await;
         if let Some(cached) = cache.get(key_id) {
-            Ok(KeyInfo {
+            // Use ManagerKeyInfo (from manager::implementation) which has: key_id, key_type (String), is_hardware_backed
+            Ok(ManagerKeyInfo {
                 key_id: cached.key_id.clone(),
-                key_type: cached.key_type.clone(), // Clone to avoid moving from shared reference
-                key_size: 256, // Default for StrongBox
-                extractable: false, // StrongBox keys are non-extractable
-                created_at: std::time::SystemTime::now(), // Use SystemTime, not DateTime
-                key_usage: vec![
-                    beardog_types::workflow::KeyUsage::Sign,
-                    beardog_types::workflow::KeyUsage::Verify,
-                ], // Default usage for StrongBox keys
-                // algorithm field not available in workflow::KeyInfo
-                // is_hardware_backed field not available in workflow::KeyInfo
+                key_type: format!("{:?}", cached.key_type), // Convert KeyType enum to String
+                is_hardware_backed: true, // StrongBox is always hardware-backed
             })
         } else {
             Err(BearDogError::not_found(format!(

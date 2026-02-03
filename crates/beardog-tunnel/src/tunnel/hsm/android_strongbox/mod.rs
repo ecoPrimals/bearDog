@@ -53,7 +53,7 @@ impl SafeAndroidStrongBoxManager {
         info!("🤖 Initializing SafeAndroidStrongBoxManager - ZERO UNSAFE CODE");
 
         let device_info = safe_get_android_device_info().await?;
-        let keystore = SafeAndroidKeystore::new()?;
+        let keystore = SafeAndroidKeystore::new(); // Returns SafeAndroidStrongBoxWrapper directly, not Result
 
         Ok(Self {
             keystore,

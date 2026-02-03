@@ -233,14 +233,8 @@ impl<C: AndroidCapability> SafeMobileHardwareProvider<C> {
             C::security_level()
         );
 
-        let mut buffer = self.buffer_pools.get_medium();
-        let signature = buffer.with_buffer(|buf| {
-            buf.with_mut_slice(|slice| {
-                let copy_len = std::cmp::min(data.len(), slice.len());
-                slice[..copy_len].copy_from_slice(&data[..copy_len]);
-                self.keystore.sign_data_safe(key_id, &slice[..copy_len])
-            })
-        })?;
+        // Use SafePinnedBuffer for secure memory handling (direct call, no complex buffer wrapping)
+        let signature = self.keystore.sign_data_safe(key_id, data)?;
 
         Ok(signature)
     }
