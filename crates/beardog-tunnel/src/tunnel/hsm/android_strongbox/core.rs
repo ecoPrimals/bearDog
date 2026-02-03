@@ -572,7 +572,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         if let Some(cached) = cache.get(key_id) {
             Ok(KeyInfo {
                 key_id: cached.key_id.clone(),
-                key_type: format!("{:?}", cached.key_type),
+                key_type: cached.key_type, // Use KeyType directly, not formatted string
                 // is_hardware_backed field not available in workflow::KeyInfo
             })
         } else {
