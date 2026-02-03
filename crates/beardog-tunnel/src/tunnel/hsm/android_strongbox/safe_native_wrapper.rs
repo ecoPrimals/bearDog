@@ -175,8 +175,8 @@ impl SafeAndroidStrongBoxWrapper {
 
     fn record_operation_attempt(&self, operation: &str) {
         let mut metrics = self.operation_metrics.write();
-        let entry = metrics
-            .entry(operation.to_string())
+        let mut guard = metrics.await;
+        let entry = guard.entry(operation.to_string())
             .or_insert(OperationMetrics {
                 success_count: 0,
                 failure_count: 0,
@@ -188,7 +188,8 @@ impl SafeAndroidStrongBoxWrapper {
     /// Record successful operation
     fn record_operation_success(&self, operation: &str) {
         let mut metrics = self.operation_metrics.write();
-        if let Some(entry) = metrics.get_mut(operation) {
+        let mut guard = metrics.await;
+        if let Some(entry) = guard.get_mut(operation) {
             entry.success_count += 1;
         }
     }
@@ -197,7 +198,7 @@ impl SafeAndroidStrongBoxWrapper {
     /// Gets operation_metrics
     /// Gets operation_metrics
     pub fn get_operation_metrics(&self) -> HashMap<String, OperationMetrics> {
-        self.operation_metrics.read().clone()
+        self.operation_metrics.read().await.clone()
     }
 }
 

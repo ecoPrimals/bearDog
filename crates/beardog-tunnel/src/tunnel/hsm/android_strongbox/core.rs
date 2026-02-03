@@ -583,7 +583,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
     }
 
     async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
-        let is_healthy = self.keystore.is_strongbox_available() && self.health_monitor.is_healthy();
+        let is_healthy = self.keystore.is_strongbox_available() && self.health_monitor.is_healthy().await;
 
         Ok(HealthStatus {
             is_healthy,
