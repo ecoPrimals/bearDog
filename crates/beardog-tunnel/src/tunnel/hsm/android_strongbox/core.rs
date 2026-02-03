@@ -610,8 +610,8 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
                 extractable: false, // StrongBox keys are non-extractable
                 created_at: std::time::SystemTime::now(), // Use SystemTime, not DateTime
                 key_usage: vec![
-                    beardog_types::canonical::hsm::keys::KeyUsage::Sign,
-                    beardog_types::canonical::hsm::keys::KeyUsage::Verify,
+                    beardog_types::workflow::KeyUsage::Sign,
+                    beardog_types::workflow::KeyUsage::Verify,
                 ], // Default usage for StrongBox keys
                 // algorithm field not available in workflow::KeyInfo
                 // is_hardware_backed field not available in workflow::KeyInfo

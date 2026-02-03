@@ -203,7 +203,7 @@ impl<C: AndroidCapability> SafeMobileHardwareProvider<C> {
         algorithm: Algorithm,
     ) -> Result<SafeKeyHandle, BearDogError> {
         if !self.supports_algorithm(algorithm) {
-            return Err(BearDogError::internal(&format!(
+            return Err(BearDogError::internal(format!(
                 "Algorithm {:?} not supported by {:?} security level",
                 algorithm,
                 C::security_level()
@@ -282,21 +282,25 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
             id: request.key_id.clone(), // UniversalKey uses "id", not "key_id"
             key_type: KeyType::from(request.algorithm),
             key_material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference { // UniversalKey uses "key_material", not "material"
-                reference: safe_handle.key_id,
+                reference: safe_handle.key_id.clone(),
                 hsm_location: "android_strongbox".to_string(),
             },
-            metadata: HashMap::from([
-                ("hsm_type".to_string(), "android_strongbox".to_string()),
-                (
-                    "is_hardware_backed".to_string(),
-                    request.hardware_backed.to_string(),
-                ),
-            ]),
+            metadata: crate::tunnel::hsm::types::KeyMetadata {
+                key_id: safe_handle.key_id,
+                key_type: KeyType::from(request.algorithm),
+                alias: Some(request.key_id.clone()),
+                created_at: chrono::Utc::now(),
+                expires_at: None,
+                tags: HashMap::from([
+                    ("hsm_type".to_string(), "android_strongbox".to_string()),
+                    ("is_hardware_backed".to_string(), request.hardware_backed.to_string()),
+                ]),
+            },
             hsm_tier: "production".to_string(),
             created_at: chrono::Utc::now(),
             hsm_type: "AndroidStrongBox".to_string(),
             attestation: None, // Hardware attestation optional
-            health_status: "healthy".to_string(),
+            health_status: crate::tunnel::hsm::types::KeyHealthStatus::Healthy,
         })
     }
 
