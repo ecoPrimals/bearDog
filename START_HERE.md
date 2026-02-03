@@ -56,12 +56,43 @@ cargo test --workspace
 ```
 
 ### 3. Run BearDog
-```bash
-# Start the JSON-RPC server (software HSM mode)
-cargo run --release --bin beardog -- server --hsm software
 
-# Or with hardware HSM
-cargo run --release --bin beardog -- server --hsm pkcs11 --pkcs11-lib /path/to/lib.so
+**Choose your transport** based on platform:
+
+#### **Option A: Unix Socket (Linux/macOS - Default)**
+```bash
+# Best performance, native OS support
+cargo run --release --bin beardog -- server --socket /tmp/beardog.sock
+```
+
+#### **Option B: TCP (Android/Windows/Cross-Device)**
+```bash
+# Universal transport, works everywhere
+cargo run --release --bin beardog -- server --listen 127.0.0.1:9900
+```
+
+#### **Platform-Specific Guides**
+
+**🤖 Android (Pixel, GrapheneOS)**:
+```bash
+# SELinux may block filesystem Unix sockets
+# Use TCP mode:
+./beardog server --listen 127.0.0.1:9900
+
+# Or use abstract sockets (recommended):
+BEARDOG_SOCKET=@biomeos_beardog ./beardog server
+```
+
+**🪟 Windows**:
+```bash
+# Use TCP mode (Unix sockets not available)
+beardog.exe server --listen 127.0.0.1:9900
+```
+
+**🍎 macOS/Linux**:
+```bash
+# Unix sockets work great (default)
+./beardog server --socket /tmp/beardog.sock
 ```
 
 ### 4. Test the API

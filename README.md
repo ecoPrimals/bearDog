@@ -88,11 +88,46 @@ cargo test --workspace
 ### Run BearDog
 
 ```bash
-# Run server (software HSM mode)
-cargo run --release --bin beardog -- server --hsm software
+# Run server (software HSM mode, Unix socket - default)
+cargo run --release --bin beardog -- server --socket /tmp/beardog.sock
+
+# Or use TCP mode (Android, Windows, cross-device)
+cargo run --release --bin beardog -- server --listen 127.0.0.1:9900
 
 # Test the API
 ./test-capability-methods.sh
+```
+
+#### **Transport Selection**
+
+BearDog supports multiple IPC transports for universal deployment:
+
+| Transport | Platforms | Performance | Use Case |
+|-----------|-----------|-------------|----------|
+| **Unix Sockets** | Linux, macOS | ⚡ Best | Default (Tier 1) |
+| **TCP** | All platforms | ✅ Good | Android, Windows, cross-device (Tier 2) |
+| **Abstract Sockets** | Android, Linux | ⚡ Best | Android (bypasses SELinux) |
+
+**Tier 1 (Native - Default)**:
+```bash
+# Linux/macOS: Unix socket
+./beardog server --socket /tmp/beardog.sock
+```
+
+**Tier 2 (Universal - Android/Windows)**:
+```bash
+# TCP mode (works everywhere, including Android/Windows)
+./beardog server --listen 127.0.0.1:9900
+```
+
+**Android Deployment** (Pixel, GrapheneOS):
+```bash
+# SELinux may block filesystem Unix sockets on Android
+# Use TCP mode instead:
+./beardog server --listen 127.0.0.1:9900
+
+# Or use abstract sockets (recommended for Android):
+BEARDOG_SOCKET=@biomeos_beardog ./beardog server
 ```
 
 **For detailed instructions, see [START_HERE.md](START_HERE.md)**

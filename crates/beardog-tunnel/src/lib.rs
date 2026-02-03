@@ -157,18 +157,8 @@ mod test_helpers;
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
 
 // Re-export BTSP types for Songbird integration
-// Primary: Modern SecureTunnelProvider (from beardog_capabilities)
-pub use beardog_capabilities::SecureTunnelProvider;
-// Backward compatibility: Deprecated BtspProvider (will be removed in v0.11.0)
-#[allow(deprecated)] // Intentional re-export for backward compatibility
-#[deprecated(
-    since = "0.10.0",
-    note = "Use SecureTunnelProvider from beardog_capabilities"
-)]
-pub use btsp_provider::BtspProvider;
-// Implementation and supporting types
 pub use btsp_provider::{
-    BeardogBtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
+    BeardogBtspProvider, BtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
     TunnelStatus,
 };
 
