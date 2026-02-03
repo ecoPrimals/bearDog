@@ -8,12 +8,12 @@ use super::types::{
     AndroidAttestationService, AndroidDeviceInfo, AndroidHealthMonitor, AndroidKeystore,
 };
 use crate::tunnel::hsm::types::*;
+use async_trait::async_trait;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::{
-    UnifiedHsmProvider, UnifiedSecurityProvider, KeyGenerationSpec, KeyInfo, KeyType,
-    KeyUsage, HsmDeviceInfo, AttestationResponse, KeyBackupSpec, BackupInfo,
-    AuthenticationRequest, AuthenticationResponse, AuthorizationRequest, AuthorizationResponse,
-    SecurityContext,
+    AttestationResponse, AuthenticationRequest, AuthenticationResponse, AuthorizationRequest,
+    AuthorizationResponse, BackupInfo, HsmDeviceInfo, KeyBackupSpec, KeyGenerationSpec, KeyInfo,
+    KeyType, KeyUsage, SecurityContext, UnifiedHsmProvider, UnifiedSecurityProvider,
 };
 use beardog_types::canonical::UnifiedProvider;
 use chrono::Utc;
@@ -230,6 +230,7 @@ impl AndroidStrongBoxHsm {
 }
 
 // Implement UnifiedProvider (base trait)
+#[async_trait]
 impl UnifiedProvider for AndroidStrongBoxHsm {
     fn provider_info(&self) -> beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
         beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
@@ -293,6 +294,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
 }
 
 // Implement UnifiedSecurityProvider (extends UnifiedProvider)
+#[async_trait]
 impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
     async fn authenticate(
         &self,
@@ -366,6 +368,7 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
 }
 
 // Implement UnifiedHsmProvider (HSM-specific operations)
+#[async_trait]
 impl UnifiedHsmProvider for AndroidStrongBoxHsm {
     async fn generate_key(&self, spec: KeyGenerationSpec) -> Result<KeyInfo, BearDogError> {
         info!("🔐 Generating StrongBox key: {}", spec.key_id);

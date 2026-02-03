@@ -64,15 +64,14 @@ pub struct StrongBoxAvailable;
 
 impl AndroidCapability for StrongBoxAvailable {
     fn security_level() -> SecurityLevel {
-        SecurityLevel::StrongBox
+        SecurityLevel::HardwareSecurityModule
     }
 
     fn supported_algorithms() -> &'static [Algorithm] {
         &[
-            Algorithm::EcdsaP256,
-            Algorithm::EcdsaP384,
+            Algorithm::EccP256,
+            Algorithm::EccP384,
             Algorithm::Aes256Gcm,
-            Algorithm::RsaPss2048,
         ]
     }
 
@@ -86,11 +85,11 @@ pub struct TeeAvailable;
 
 impl AndroidCapability for TeeAvailable {
     fn security_level() -> SecurityLevel {
-        SecurityLevel::Tee
+        SecurityLevel::TrustedExecutionEnvironment
     }
 
     fn supported_algorithms() -> &'static [Algorithm] {
-        &[Algorithm::EcdsaP256, Algorithm::Aes256Gcm]
+        &[Algorithm::EccP256, Algorithm::Aes256Gcm]
     }
 
     fn hardware_backed() -> bool {
@@ -107,7 +106,7 @@ impl AndroidCapability for SoftwareFallback {
     }
 
     fn supported_algorithms() -> &'static [Algorithm] {
-        &[Algorithm::EcdsaP256, Algorithm::Aes256Gcm]
+        &[Algorithm::EccP256, Algorithm::Aes256Gcm]
     }
 
     fn hardware_backed() -> bool {
@@ -231,11 +230,16 @@ impl<C: AndroidCapability> SafeMobileHardwareProvider<C> {
 
 impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C> {
     fn supports_strongbox(&self) -> bool {
-        C::security_level() >= SecurityLevel::High
+        matches!(
+            C::security_level(),
+            SecurityLevel::HardwareSecurityModule | SecurityLevel::SecureEnclave
+        )
     }
 
     fn generate_key(&self, request: &KeyGenerationRequest) -> Result<HsmKey, BearDogError> {
-        let safe_handle = self.generate_key_safe(&request.key_id, request.algorithm)?;
+        let key_id = &request.key_size.to_string(); // Use key_size as key_id for now
+        let algorithm = request.algorithm;
+        let safe_handle = self.generate_key_safe(key_id, algorithm)?;
 
         Ok(HsmKey {
             key_id: request.key_id.clone(),
