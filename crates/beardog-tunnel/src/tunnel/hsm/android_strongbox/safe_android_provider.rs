@@ -517,8 +517,8 @@ impl SafeAndroidKeystore {
             brand: Some("google".to_string()),
             android_version: api_level.to_string(),
             api_level,
-            security_patch: security_patch.clone(),
-            security_patch_level: security_patch.clone().unwrap_or_else(|| "unknown".to_string()), // security_patch is Option<String>
+            security_patch: Some(security_patch.clone()),
+            security_patch_level: security_patch, // security_patch is String from env::var
             strongbox_version,
             titan_m_version,
             verified_boot_state: VerifiedBootState::Verified,
