@@ -58,10 +58,10 @@ use crate::capability_router::{CapabilityRouter, RequestContext, SelectionStrate
 use crate::primal_discovery::{DiscoveredPrimal, DiscoveryQuery, PrimalDiscovery};
 use crate::self_knowledge::{PrimalSelfKnowledge, SimpleCapability};
 use beardog_errors::BearDogError;
-use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 // =============================================================================
@@ -232,14 +232,14 @@ impl UniversalAdapter {
         debug!("🔍 Discovering primals with capability: {:?}", capability);
 
         // Check cache first
-        if let Some(cached) = self.get_cached_capability(&capability) {
+        if let Some(cached) = self.get_cached_capability(&capability).await {
             debug!("💾 Using cached results for {:?}", capability);
             return Ok(cached);
         }
 
         // Discover primals providing this capability
         let query = DiscoveryQuery::by_capability(capability.clone());
-        let primals = self.discovery.write().discover(query).await?;
+        let primals = self.discovery.write().await.discover(query).await?;
 
         info!(
             "✅ Discovered {} primals providing {:?}",
@@ -248,7 +248,7 @@ impl UniversalAdapter {
         );
 
         // Cache results
-        self.cache_capability(capability, primals.clone());
+        self.cache_capability(capability, primals.clone()).await;
 
         Ok(primals)
     }
@@ -285,6 +285,7 @@ impl UniversalAdapter {
         let decision = self
             .router
             .write()
+            .await
             .route(
                 capability.clone(),
                 RequestContext::new(capability).with_strategy(SelectionStrategy::HighestTrust),
@@ -306,23 +307,23 @@ impl UniversalAdapter {
     }
 
     /// Clear capability cache (force re-discovery)
-    pub fn clear_cache(&self) {
-        self.capability_cache.write().clear();
+    pub async fn clear_cache(&self) {
+        self.capability_cache.write().await.clear();
         info!("🗑️  Capability cache cleared");
     }
 
     /// Clear cache for specific capability
-    pub fn clear_capability_cache(&self, capability: &SimpleCapability) {
-        self.capability_cache.write().remove(capability);
+    pub async fn clear_capability_cache(&self, capability: &SimpleCapability) {
+        self.capability_cache.write().await.remove(capability);
         debug!("🗑️  Cleared cache for {:?}", capability);
     }
 
     // Internal: Get cached capability results
-    fn get_cached_capability(
+    async fn get_cached_capability(
         &self,
         capability: &SimpleCapability,
     ) -> Option<Vec<DiscoveredPrimal>> {
-        let cache = self.capability_cache.read();
+        let cache = self.capability_cache.read().await;
 
         if let Some(cached_primals) = cache.get(capability) {
             // Filter out expired entries
@@ -341,7 +342,7 @@ impl UniversalAdapter {
     }
 
     // Internal: Cache capability results
-    fn cache_capability(&self, capability: SimpleCapability, primals: Vec<DiscoveredPrimal>) {
+    async fn cache_capability(&self, capability: SimpleCapability, primals: Vec<DiscoveredPrimal>) {
         let cached_primals: Vec<CachedPrimal> = primals
             .into_iter()
             .map(|primal| CachedPrimal {
@@ -353,6 +354,7 @@ impl UniversalAdapter {
 
         self.capability_cache
             .write()
+            .await
             .insert(capability, cached_primals);
     }
 }
@@ -364,23 +366,24 @@ impl UniversalAdapter {
 impl UniversalAdapter {
     /// Check if adapter knows about any primals providing capability
     ///
-    /// **Non-blocking**: Checks cache only, doesn't trigger discovery
+    /// **Checks cache only**: Doesn't trigger discovery
     #[must_use] 
-    pub fn has_capability(&self, capability: &SimpleCapability) -> bool {
-        self.get_cached_capability(capability).is_some()
+    pub async fn has_capability(&self, capability: &SimpleCapability) -> bool {
+        self.get_cached_capability(capability).await.is_some()
     }
 
     /// Get number of known primals providing capability
     #[must_use] 
-    pub fn count_capability_providers(&self, capability: &SimpleCapability) -> usize {
+    pub async fn count_capability_providers(&self, capability: &SimpleCapability) -> usize {
         self.get_cached_capability(capability)
+            .await
             .map_or(0, |primals| primals.len())
     }
 
     /// Get all capabilities currently in cache
     #[must_use] 
-    pub fn cached_capabilities(&self) -> Vec<SimpleCapability> {
-        self.capability_cache.read().keys().cloned().collect()
+    pub async fn cached_capabilities(&self) -> Vec<SimpleCapability> {
+        self.capability_cache.read().await.keys().cloned().collect()
     }
 }
 
@@ -402,7 +405,7 @@ mod tests {
         let adapter = UniversalAdapter::new().await.unwrap();
 
         assert_eq!(adapter.self_knowledge().my_name(), "BearDog");
-        assert_eq!(adapter.cached_capabilities().len(), 0); // Empty cache initially
+        assert_eq!(adapter.cached_capabilities().await.len(), 0); // Empty cache initially
 
         std::env::remove_var("PRIMAL_NAME");
         std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
@@ -451,7 +454,7 @@ mod tests {
         let adapter = UniversalAdapter::new().await.unwrap();
 
         // Initially no cached capabilities
-        assert_eq!(adapter.cached_capabilities().len(), 0);
+        assert_eq!(adapter.cached_capabilities().await.len(), 0);
 
         // Discover triggers caching
         // NOTE: This test is being evolved as part of beardog-discovery integration
@@ -477,12 +480,12 @@ mod tests {
             );
 
             // Now should have cached capability (only test if discovery worked)
-            assert_eq!(adapter.cached_capabilities().len(), 1);
-            assert!(adapter.has_capability(&SimpleCapability::Discovery));
+            assert_eq!(adapter.cached_capabilities().await.len(), 1);
+            assert!(adapter.has_capability(&SimpleCapability::Discovery).await);
 
             // Clear specific cache
-            adapter.clear_capability_cache(&SimpleCapability::Discovery);
-            assert!(!adapter.has_capability(&SimpleCapability::Discovery));
+            adapter.clear_capability_cache(&SimpleCapability::Discovery).await;
+            assert!(!adapter.has_capability(&SimpleCapability::Discovery).await);
         }
 
         std::env::remove_var("PRIMAL_NAME");
