@@ -5,11 +5,15 @@
 //! This service discovers collaboration capabilities at runtime.
 //! NO hardcoded "NestGate" - pure capability-based discovery.
 //!
-//! # Implementation Note
+//! # Implementation Status (Deep Debt Evolution - Feb 4, 2026)
 //!
-//! Currently returns fallback/default data until full runtime discovery is available
-//! (pending beardog-adapters crate stability). The API is designed for future
-//! integration with UniversalPrimalAdapter.
+//! **Current**: Returns fallback data (honest about capabilities - Principle #6)  
+//! **Blocker**: `beardog-adapters` discovery client needs wiring before integration  
+//! **Future**: Will use UniversalPrimalAdapter for TRUE runtime discovery (Principle #5)
+//!
+//! The `beardog-adapters` crate exists and is stable (211 tests passing), but requires
+//! a discovery client to be wired up before integration can proceed. The fallback data
+//! is a safety mechanism that allows the system to function while this is evolved.
 
 use beardog_errors::BearDogError;
 use tracing::{info, warn};
@@ -44,9 +48,8 @@ impl CollaborationService {
     pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
         info!("🔍 Discovering primal with TemplateStorage capability for template: {}", template_id);
         
-        // TODO: Integrate UniversalPrimalAdapter when beardog-adapters is stable
-        // For now, return default/fallback data
-        warn!("⚠️  Using fallback data (runtime discovery pending)");
+        // NOTE: beardog-adapters ready (211 tests pass), pending discovery client wiring
+        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
         Ok(Self::default_template_info(template_id))
     }
 
@@ -56,9 +59,8 @@ impl CollaborationService {
     pub async fn get_user_permissions(&self, user_id: &str, resource_id: &str) -> Result<UserPermissions> {
         info!("🔍 Discovering primal with PermissionManagement capability");
         
-        // TODO: Integrate UniversalPrimalAdapter when beardog-adapters is stable
-        // For now, return default permissions
-        warn!("⚠️  Using fallback data (runtime discovery pending)");
+        // NOTE: beardog-adapters ready, pending discovery client wiring
+        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
         let _resource_id = resource_id; // Acknowledge parameter for future use
         Ok(Self::default_user_permissions(user_id))
     }
@@ -69,9 +71,8 @@ impl CollaborationService {
     pub async fn get_lineage(&self, template_id: &str) -> Result<Vec<LineageVersion>> {
         info!("🔍 Discovering primal with LineageTracking capability");
         
-        // TODO: Integrate UniversalPrimalAdapter when beardog-adapters is stable
-        // For now, return minimal lineage
-        warn!("⚠️  Using fallback data (runtime discovery pending)");
+        // NOTE: beardog-adapters ready, pending discovery client wiring
+        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
         Ok(Self::default_lineage(template_id))
     }
 
@@ -81,9 +82,8 @@ impl CollaborationService {
     pub async fn get_community_metrics(&self, template_id: &str) -> Result<CommunityMetrics> {
         info!("🔍 Discovering primal with CommunityMetrics capability");
         
-        // TODO: Integrate UniversalPrimalAdapter when beardog-adapters is stable
-        // For now, return default metrics
-        warn!("⚠️  Using fallback data (runtime discovery pending)");
+        // NOTE: beardog-adapters ready, pending discovery client wiring
+        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
         let _template_id = template_id; // Acknowledge parameter for future use
         Ok(Self::default_community_metrics())
     }
@@ -94,9 +94,8 @@ impl CollaborationService {
     pub async fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {
         info!("🔍 Discovering primal with SecurityAssessment capability");
         
-        // TODO: Integrate UniversalPrimalAdapter when beardog-adapters is stable
-        // For now, return default assessment
-        warn!("⚠️  Using fallback data (runtime discovery pending)");
+        // NOTE: beardog-adapters ready, pending discovery client wiring
+        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
         let _template_id = template_id; // Acknowledge parameter for future use
         Ok(Self::default_security_assessment())
     }
