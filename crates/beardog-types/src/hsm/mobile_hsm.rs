@@ -54,8 +54,11 @@ impl AndroidStrongBoxHsm {
 
 impl Default for AndroidStrongBoxHsm {
     fn default() -> Self {
-        // Mock implementation: unwrap is safe since mock always succeeds
-        Self::with_defaults().expect("Mock with_defaults should never fail")
+        // Mock implementation: construct directly to avoid panic paths (Deep Debt Principle #3)
+        Self {
+            id: "android-strongbox".to_string(),
+            device_info: super::AndroidDeviceInfo::default(),
+        }
     }
 }
 
