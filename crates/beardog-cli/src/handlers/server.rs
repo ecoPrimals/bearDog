@@ -23,14 +23,26 @@ use tracing::{info, warn};
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Server Mode - Starting...");
     
+    // Determine socket path - use abstract socket if --abstract flag is set
+    let socket_path = if args.r#abstract {
+        // Abstract socket format: @biomeos_beardog_{family_id}
+        let family = args.family_id.as_deref().unwrap_or("default");
+        let abstract_name = format!("@biomeos_beardog_{}", family);
+        info!("   Transport: Abstract Socket (SELinux-safe)");
+        info!("   Socket: {} (no filesystem)", abstract_name);
+        abstract_name
+    } else {
+        args.socket.clone()
+    };
+    
     // Determine transport mode
     let use_tcp = args.listen.is_some();
     if use_tcp {
         info!("   Transport: TCP (Tier 2 - Universal)");
         info!("   Listen: {}", args.listen.as_ref().unwrap());
-    } else {
+    } else if !args.r#abstract {
         info!("   Transport: Unix Socket (Tier 1 - Native)");
-        info!("   Socket: {}", args.socket);
+        info!("   Socket: {}", socket_path);
     }
 
     if let Some(ref family_id) = args.family_id {
@@ -94,7 +106,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     // Construct primal name for registration (before identity is moved)
     let primal_name = format!("beardog-{}", identity.node_id());
-    let socket_path = args.socket.clone();
+    // socket_path is already determined above based on --abstract flag
     let tcp_addr = args.listen.clone();
 
     // ================================================================

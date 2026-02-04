@@ -28,6 +28,16 @@ pub struct ServerArgs {
     #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 
+    /// Use abstract socket (Linux/Android SELinux-safe)
+    ///
+    /// Forces abstract socket mode regardless of platform detection.
+    /// Abstract sockets bypass SELinux restrictions on Android.
+    /// Format: @biomeos_beardog_{family_id}
+    ///
+    /// Use when deploying to Android with aarch64-linux-musl target.
+    #[arg(long)]
+    pub r#abstract: bool,
+
     /// TCP listen address (Tier 2 - Universal fallback)
     /// Example: --listen 127.0.0.1:9900
     ///
