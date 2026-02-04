@@ -3,11 +3,6 @@
 //! This module provides safe Android hardware-backed cryptographic operations.
 
 use super::super::SecurityLevel;
-// ARCHIVED: safe_keystore_replacement module moved to archives
-// TODO: Restore or replace with alternative implementation
-// use super::safe_keystore_replacement::{
-//     KeyGenerationRequest, KeyInfo, SafeHardwareProvider, SigningRequest, VerificationRequest,
-// };
 use crate::tunnel::hsm::types::{Algorithm, HsmKey, KeyType};
 use beardog_errors::BearDogError;
 use beardog_utils::utils::safe_memory_enhanced::{GlobalBufferPools, SafePinnedBuffer};
