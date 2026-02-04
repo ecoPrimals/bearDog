@@ -57,6 +57,10 @@
 //! # }
 //! ```
 
+// Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
+pub mod beacon_seed;
+
+// Lineage & Encryption (Existing)
 pub mod encryption;
 pub mod genesis;
 pub mod genesis_types;
@@ -67,7 +71,10 @@ pub mod lineage_proof;
 pub mod manager;
 pub mod types;
 
-// Re-exports
+// Re-exports - Beacon (Dark Forest)
+pub use beacon_seed::{BeaconCiphertext, BeaconId, BeaconSeed};
+
+// Re-exports - Lineage (Existing)
 pub use encryption::BirdSongEncryption;
 pub use genesis::GenesisLineageProvider;
 pub use genesis_types::{

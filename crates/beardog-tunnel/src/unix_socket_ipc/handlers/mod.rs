@@ -35,6 +35,10 @@ use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use std::sync::Arc;
 
+// Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
+pub mod beacon;
+
+// Existing handlers
 pub mod btsp;
 pub mod capabilities;
 pub mod crypto; // Refactored crypto handlers module (domain-based organization)
