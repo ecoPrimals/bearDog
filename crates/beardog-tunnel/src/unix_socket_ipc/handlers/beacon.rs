@@ -20,7 +20,7 @@
 //! - **Principle #6**: Production crypto (real AEAD, no mocks)
 
 use beardog_errors::BearDogError;
-use beardog_genetics::birdsong::{BeaconCiphertext, BeaconId, BeaconSeed};
+use beardog_genetics::birdsong::{BeaconCiphertext, BeaconSeed};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
