@@ -18,6 +18,9 @@ pub mod entropy_capability_adapter;
 
 pub mod vendor_adapter;
 
+// Discovery client wiring (Deep Debt Principle #5)
+pub mod beardog_discovery_client;
+
 pub use adapter_types::*;
 pub use capability_based_adapter::*;
 pub use primal_capability_adapter::*;
@@ -34,6 +37,9 @@ pub use entropy_capability_adapter::{
     UniversalEntropyCapability, EntropyRequest, EntropyResponse,
     EntropyRateLimits, OwnershipRequirements,
 };
+
+/// Export discovery client (bridges beardog-discovery with beardog-adapters)
+pub use beardog_discovery_client::BearDogDiscoveryClient;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ErrorInfo {

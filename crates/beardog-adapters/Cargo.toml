@@ -42,6 +42,9 @@ workspace = true
 [dependencies.beardog-config]
 path = "../beardog-config"
 
+[dependencies.beardog-discovery]
+path = "../beardog-discovery"
+
 [dependencies.beardog-errors]
 path = "../beardog-errors"
 
