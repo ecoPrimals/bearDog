@@ -13,20 +13,15 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
 /// Supported encryption algorithms
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum EncryptionAlgorithm {
     #[serde(rename = "AES-256-GCM")]
     /// Represents aes256 gcm variant
+    #[default]
     Aes256Gcm,
     #[serde(rename = "ChaCha20-Poly1305")]
     /// Represents cha cha20 poly1305 variant
     ChaCha20Poly1305,
-}
-
-impl Default for EncryptionAlgorithm {
-    fn default() -> Self {
-        Self::Aes256Gcm
-    }
 }
 
 /// Encryption configuration

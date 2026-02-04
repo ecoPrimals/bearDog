@@ -249,7 +249,7 @@ fn test_error_propagation() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_multiple_error_types() {
-    let errors = vec![
+    let errors = [
         BearDogError::security("Security issue".to_string()),
         BearDogError::system("System issue".to_string()),
         BearDogError::network("Network issue".to_string()), // Returns System

@@ -553,7 +553,7 @@ impl PrimalDiscovery {
             // use beardog_discovery::mdns::MdnsDiscovery;
 
             // Placeholder implementation - return empty for now
-            return Ok(Vec::new());
+            Ok(Vec::new())
 
             /* Future implementation:
             let mdns = MdnsDiscovery::new()
@@ -607,15 +607,6 @@ impl PrimalDiscovery {
         // DNS-SD uses the same infrastructure as mDNS, just with different domain
         #[cfg(feature = "mdns")]
         {
-            use crate::self_knowledge::Protocol;
-
-            // Default to Cryptography if no capabilities specified
-            let capability = if query.capabilities.is_empty() {
-                SimpleCapability::Cryptography
-            } else {
-                query.capabilities[0].clone()
-            };
-
             // EVOLUTION: DNS-SD discovery via Songbird IPC (capability-based)
             // This is the proper implementation using inter-primal communication
             // instead of hardcoded mock data.

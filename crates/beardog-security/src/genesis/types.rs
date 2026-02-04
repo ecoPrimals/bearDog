@@ -80,12 +80,13 @@ impl PhysicalChannelType {
 ///
 /// Trust levels determine how much confidence we have in the genesis ceremony.
 /// Higher trust levels may grant more privileges or skip additional verification steps.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum TrustLevel {
     /// ⭐ - Low trust (not used for genesis, reserved for future)
     Low = 1,
 
     /// ⭐⭐⭐ - Medium trust (Bluetooth)
+    #[default]
     Medium = 3,
 
     /// ⭐⭐⭐⭐ - High trust (QR+OOB, NFC)
@@ -126,12 +127,6 @@ impl TrustLevel {
     /// Check if this trust level meets or exceeds the threshold
     pub fn meets_threshold(self, threshold: TrustLevel) -> bool {
         self >= threshold
-    }
-}
-
-impl Default for TrustLevel {
-    fn default() -> Self {
-        Self::Medium
     }
 }
 

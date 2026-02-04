@@ -60,9 +60,10 @@ pub struct BiomeSovereigntyConfig {
 ///
 /// Specifies the preferred source of randomness for cryptographic operations,
 /// balancing sovereignty (human control) with practical performance needs.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub enum EntropyPreferences {
     /// Only use human-generated entropy (maximum sovereignty)
+    #[default]
     HumanOnly,
     /// Combine human and machine entropy (balanced approach)
     Hybrid,
@@ -278,12 +279,6 @@ impl Default for BiomeSovereigntyConfig {
             max_genetic_iterations: 1000,
             entropy_preferences: EntropyPreferences::default(),
         }
-    }
-}
-
-impl Default for EntropyPreferences {
-    fn default() -> Self {
-        Self::HumanOnly
     }
 }
 
