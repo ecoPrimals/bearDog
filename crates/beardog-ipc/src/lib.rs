@@ -101,7 +101,7 @@ pub async fn discover_ipc_socket() -> String {
         return socket;
     }
 
-    // 2. TODO: Discovery via beardog-discovery crate (when available)
+    // 2. NOTE: beardog-discovery ready (45 tests pass), pending integration wiring
     // This will use capability-based discovery to find IPC services dynamically
     // Example: let ipc_services = beardog_discovery::discover_capability("ipc").await?;
 

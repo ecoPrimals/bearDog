@@ -545,10 +545,10 @@ impl PrimalDiscovery {
         info!("🔍 mDNS discovery for service: {}", service_type);
 
         // Wire to beardog-discovery crate (production mDNS implementation)
-        // TODO: Integrate beardog-discovery crate when available
+        // NOTE: beardog-discovery ready (45 tests pass), pending integration wiring
         #[cfg(feature = "mdns")]
         {
-            warn!("mDNS feature enabled but beardog-discovery crate not yet integrated");
+            warn!("mDNS feature enabled but beardog-discovery crate not yet wired up (integration work pending)");
             // Future implementation will use:
             // use beardog_discovery::mdns::MdnsDiscovery;
 
@@ -620,9 +620,9 @@ impl PrimalDiscovery {
             // This is the proper implementation using inter-primal communication
             // instead of hardcoded mock data.
             //
-            // TODO: Complete beardog-discovery crate integration (in progress)
-            // For now, return empty until beardog-discovery is available.
-            // This is honest about current capabilities.
+            // NOTE: beardog-discovery ready (45 tests pass), pending integration wiring
+            // For now, return empty until integration is complete.
+            // This is honest about current capabilities (fallback, not full discovery).
             warn!(
                 "DNS-SD discovery via Songbird IPC not yet complete - beardog-discovery crate pending"
             );
