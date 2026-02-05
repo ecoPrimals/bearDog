@@ -18,7 +18,7 @@ use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, error, info, warn};
 
 /// Unix socket IPC server for inter-primal communication
@@ -248,22 +248,19 @@ impl UnixSocketIpcServer {
         // TODO: Full universal stream refactoring in Phase 3
         // For now, we need to downcast to UnixStream on Unix platforms
         // This is temporary until we refactor handlers to use AsyncRead/AsyncWrite traits
-        
+
         #[cfg(unix)]
         {
             // On Unix platforms, downcast the stream
             // This is safe because we know the platform at compile time
-            
-            
-            
+
             // SAFETY: We can't directly downcast Box<dyn PlatformStream>,
             // so we need a different approach. Let's use AsyncRead/AsyncWrite directly!
-            
+
             // Read first line using AsyncRead trait
-            let mut first_line = String::new();
             let mut buffer = Vec::new();
             let mut stream = stream; // Make mutable
-            
+
             // Read until newline
             loop {
                 let mut byte = [0u8; 1];
@@ -287,9 +284,9 @@ impl UnixSocketIpcServer {
                     }
                 }
             }
-            
-            first_line = String::from_utf8_lossy(&buffer).to_string();
-            
+
+            let first_line = String::from_utf8_lossy(&buffer).to_string();
+
             if first_line.trim().is_empty() {
                 debug!("📤 Empty request, ignoring");
                 return Ok(());
@@ -311,9 +308,7 @@ impl UnixSocketIpcServer {
                         "⚠️  HTTP connection (security level: {})",
                         protocol.security_level()
                     );
-                    warn!(
-                        "⚠️  HTTP is less secure than JSON-RPC for inter-primal communication"
-                    );
+                    warn!("⚠️  HTTP is less secure than JSON-RPC for inter-primal communication");
                     warn!("⚠️  Consider migrating to JSON-RPC 2.0 over Unix sockets");
                 }
             }
@@ -328,17 +323,19 @@ impl UnixSocketIpcServer {
                 }
             }
         }
-        
+
         #[cfg(not(unix))]
         {
             // For non-Unix platforms, implement similar logic
             warn!("⚠️  Non-Unix platform handler not yet fully implemented");
-            return Err(anyhow::anyhow!("Platform not yet supported in this handler"));
+            return Err(anyhow::anyhow!(
+                "Platform not yet supported in this handler"
+            ));
         }
 
         Ok(())
     }
-    
+
     /// Handle JSON-RPC requests using universal platform stream
     ///
     /// **Phase 2 Universal Handler** (Jan 31, 2026):
@@ -349,7 +346,9 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
         // Handle first request
-        let response = self.handle_one_jsonrpc_request_universal(first_line).await?;
+        let response = self
+            .handle_one_jsonrpc_request_universal(first_line)
+            .await?;
         stream.write_all(response.as_bytes()).await?;
         stream.write_all(b"\n").await?;
 
@@ -357,7 +356,7 @@ impl UnixSocketIpcServer {
         loop {
             let mut line_buf = Vec::new();
             let mut byte = [0u8; 1];
-            
+
             loop {
                 match stream.read_exact(&mut byte).await {
                     Ok(_) => {
@@ -379,12 +378,12 @@ impl UnixSocketIpcServer {
                     }
                 }
             }
-            
+
             let line = String::from_utf8_lossy(&line_buf).to_string();
             if line.trim().is_empty() {
                 continue;
             }
-            
+
             match self.handle_one_jsonrpc_request_universal(&line).await {
                 Ok(response) => {
                     if let Err(e) = stream.write_all(response.as_bytes()).await {
@@ -405,7 +404,7 @@ impl UnixSocketIpcServer {
 
         Ok(())
     }
-    
+
     /// Handle HTTP requests using universal platform stream
     async fn handle_http_universal(
         &self,
@@ -417,7 +416,7 @@ impl UnixSocketIpcServer {
         stream.write_all(response).await?;
         Ok(())
     }
-    
+
     /// Process one JSON-RPC request and return response string
     async fn handle_one_jsonrpc_request_universal(&self, line: &str) -> Result<String> {
         // Parse JSON-RPC request
@@ -444,7 +443,11 @@ impl UnixSocketIpcServer {
         // Process request through handler registry
         let response = match self
             .handler_registry
-            .route(&request.method, request.params.as_ref(), &self.btsp_provider)
+            .route(
+                &request.method,
+                request.params.as_ref(),
+                &self.btsp_provider,
+            )
             .await
         {
             Ok(result) => JsonRpcResponse {
@@ -464,53 +467,12 @@ impl UnixSocketIpcServer {
                 id: request.id.clone().unwrap_or(serde_json::Value::Null),
             },
         };
-        
+
         Ok(serde_json::to_string(&response)?)
     }
 
-    /// Handle JSON-RPC connection persistently (multiple requests)
-    ///
-    /// Modern JSON-RPC supports persistent connections with multiple
-    /// requests over a single connection. This reduces overhead and
-    /// enables better performance for inter-primal communication.
-    async fn handle_jsonrpc_persistent(
-        &self,
-        first_line: &str,
-        reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
-        writer: &mut tokio::net::unix::OwnedWriteHalf,
-    ) -> Result<()> {
-        // Handle first request
-        self.handle_one_jsonrpc_request(first_line, writer).await?;
-
-        // Continue handling requests until connection closes
-        loop {
-            let mut line = String::new();
-            match reader.read_line(&mut line).await {
-                Ok(0) => {
-                    debug!("📤 Client disconnected gracefully");
-                    break;
-                }
-                Ok(_) => {
-                    if line.trim().is_empty() {
-                        continue;
-                    }
-                    if let Err(e) = self.handle_one_jsonrpc_request(&line, writer).await {
-                        warn!("⚠️  Error handling request: {}", e);
-                        break;
-                    }
-                }
-                Err(e) => {
-                    debug!("📤 Connection closed: {}", e);
-                    break;
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    // handle_tarpc_persistent() removed - see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md
-    // JSON-RPC provides comprehensive functionality (8+ handler modules, 30+ methods)
+    // Legacy handle_jsonrpc_persistent() removed - superseded by handle_jsonrpc_via_registry()
+    // See TARPC_REMOVAL_RATIONALE_JAN_29_2026.md for context
 
     /// Handle JSON-RPC request via modular handler registry
     ///
@@ -576,56 +538,8 @@ impl UnixSocketIpcServer {
         }
     }
 
-    /// Handle a single JSON-RPC request
-    async fn handle_one_jsonrpc_request(
-        &self,
-        line: &str,
-        writer: &mut tokio::net::unix::OwnedWriteHalf,
-    ) -> Result<()> {
-        // Parse JSON-RPC request
-        let request: JsonRpcRequest =
-            serde_json::from_str(line).context("Failed to parse JSON-RPC request")?;
-
-        debug!("📨 JSON-RPC request: {}", request.method);
-
-        // Handle request via modular handler registry
-        let response = self.handle_jsonrpc_via_registry(&request).await;
-
-        // Send response
-        let response_json = serde_json::to_string(&response)?;
-        writer
-            .write_all(response_json.as_bytes())
-            .await
-            .context("Failed to write JSON-RPC response")?;
-        writer
-            .write_all(b"\n")
-            .await
-            .context("Failed to write newline")?;
-        writer.flush().await.context("Failed to flush writer")?;
-
-        Ok(())
-    }
-
-    /// Route request to appropriate handler (shared by JSON-RPC and tarpc)
-    async fn route_request(
-        &self,
-        method: &str,
-        request_data: &serde_json::Value,
-    ) -> Result<serde_json::Value> {
-        // Convert to JsonRpcRequest format for handler registry
-        let json_rpc_request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: method.to_string(),
-            params: request_data.get("params").cloned(),
-            id: request_data.get("id").cloned(),
-        };
-
-        // Use modular handler registry
-        let response = self.handle_jsonrpc_via_registry(&json_rpc_request).await;
-
-        // Convert response to Value
-        Ok(serde_json::to_value(response)?)
-    }
+    // Legacy handle_one_jsonrpc_request() and route_request() removed
+    // Superseded by handle_jsonrpc_via_registry() - cleaner, more efficient
 
     /// Handle JSON-RPC request (public for testing)
     ///
@@ -640,60 +554,6 @@ impl UnixSocketIpcServer {
         Ok(self.handle_jsonrpc_via_registry(&request).await)
     }
 
-    /// Handle HTTP connection
-    async fn handle_http_connection(
-        &self,
-        first_line: &str,
-        reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
-        writer: &mut tokio::net::unix::OwnedWriteHalf,
-    ) -> Result<()> {
-        // Read HTTP headers
-        let mut headers = vec![first_line.to_string()];
-        let mut header_line = String::new();
-
-        loop {
-            header_line.clear();
-            reader.read_line(&mut header_line).await?;
-            if header_line.trim().is_empty() {
-                break;
-            }
-            headers.push(header_line.clone());
-        }
-
-        // Parse request line (e.g., "GET /health HTTP/1.1")
-        let parts: Vec<&str> = first_line.split_whitespace().collect();
-        if parts.len() < 2 {
-            let error_response = b"HTTP/1.1 400 Bad Request\r\n\r\n";
-            writer.write_all(error_response).await?;
-            return Ok(());
-        }
-
-        let method = parts[0];
-        let path = parts[1];
-
-        debug!("📨 HTTP request: {} {} (DEPRECATED)", method, path);
-
-        // HTTP is deprecated - return JSON-RPC migration notice
-        let response = format!(
-            "HTTP/1.1 200 OK\r\n\
-             Content-Type: application/json\r\n\
-             \r\n\
-             {{\
-               \"status\": \"deprecated\",\
-               \"message\": \"HTTP protocol is deprecated. Use JSON-RPC 2.0 over Unix socket.\",\
-               \"migration\": {{\
-                 \"protocol\": \"JSON-RPC 2.0\",\
-                 \"transport\": \"Unix socket\",\
-                 \"socket_path\": \"{}\",\
-                 \"example\": {{\"jsonrpc\":\"2.0\",\"method\":\"health\",\"id\":1}}\
-               }}\
-             }}",
-            self.socket_path.display()
-        );
-
-        // Send deprecation notice
-        writer.write_all(response.as_bytes()).await?;
-
-        Ok(())
-    }
+    // Legacy handle_http_connection() removed - HTTP protocol deprecated
+    // All clients should use JSON-RPC 2.0 over Unix socket
 }

@@ -149,6 +149,8 @@ impl HandlerRegistry {
                 Arc::new(federation::FederationHandler::new(identity.clone())),
                 Arc::new(encryption::EncryptionHandler),
                 Arc::new(graph_security::GraphSecurityHandler),
+                // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
+                Arc::new(beacon::BeaconHandler::new()),
             ]),
         });
 
@@ -156,11 +158,13 @@ impl HandlerRegistry {
         // Note: This creates a weak cycle that's acceptable (registry -> introspection -> Arc<registry>)
         // The introspection handler only reads from registry, doesn't own it exclusively
         let introspection = Arc::new(introspection::IntrospectionHandler::new(registry.clone()));
-        
+
         // Add introspection synchronously to the vec (before async runtime starts)
         // This is safe because we're still in sync context during HandlerRegistry::new()
         // FIXED: Use try_write() instead of blocking_write() to avoid panic in async context
-        registry.handlers.try_write()
+        registry
+            .handlers
+            .try_write()
             .expect("Failed to acquire write lock during initialization (no contention expected)")
             .push(introspection);
 
