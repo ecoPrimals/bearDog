@@ -55,18 +55,18 @@ use tokio::io::{AsyncRead, AsyncWrite};
 pub enum SocketEndpoint {
     /// Filesystem-based Unix socket (Linux, macOS, BSD)
     Filesystem(PathBuf),
-    
+
     /// Abstract Unix socket (Android, also works on Linux)
     Abstract(String),
-    
+
     /// Windows named pipe (Windows all architectures)
     #[cfg(windows)]
     NamedPipe(String),
-    
+
     /// iOS XPC service (iOS only, documented for future)
     #[cfg(target_os = "ios")]
     XPC(String),
-    
+
     /// In-process channel (WASM only, no true IPC in browser)
     #[cfg(target_family = "wasm")]
     InProcess(String),
@@ -116,7 +116,11 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 pub fn default_socket_endpoint() -> SocketEndpoint {
     // Linux/macOS: Use filesystem Unix sockets
     // These provide best performance on traditional Unix systems
-    SocketEndpoint::Filesystem(PathBuf::from("/tmp/beardog.sock"))
+    // Use primal name from environment for self-knowledge pattern
+    let primal_name = std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string());
+    SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{}.sock", primal_name)))
 }
 
 #[cfg(windows)]
@@ -169,7 +173,7 @@ pub trait PlatformListener: Send + Sync {
     /// Returns a boxed stream that can be used for bidirectional communication.
     /// Platform-specific implementations provide their native stream type.
     async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>>;
-    
+
     /// Get the local address/identifier of this listener
     ///
     /// Returns platform-appropriate identifier:
@@ -196,7 +200,7 @@ pub trait PlatformSocket {
     /// # Returns
     /// Platform-specific socket endpoint
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint>;
-    
+
     /// Bind listener to endpoint (EVOLVED: Now universal!)
     ///
     /// **Modern Idiomatic Rust**: Returns `Box<dyn PlatformListener>` which works
@@ -228,7 +232,12 @@ pub use android::AndroidSocket as Socket;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 pub use ios::IOSSocket as Socket;
 
-#[cfg(all(unix, not(target_os = "android"), not(target_os = "macos"), not(target_os = "ios")))]
+#[cfg(all(
+    unix,
+    not(target_os = "android"),
+    not(target_os = "macos"),
+    not(target_os = "ios")
+))]
 pub use unix::UnixSocket as Socket;
 
 #[cfg(windows)]
@@ -240,7 +249,7 @@ pub use wasm::WASMSocket as Socket;
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_platform_selection() {
         // Verify correct platform is selected at compile time
@@ -248,37 +257,42 @@ mod tests {
         {
             println!("Platform: Android (abstract sockets)");
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             println!("Platform: macOS (filesystem sockets via iOS module)");
         }
-        
+
         #[cfg(target_os = "ios")]
         {
             println!("Platform: iOS (XPC documented, awaiting Pure Rust bindings)");
         }
-        
-        #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos"), not(target_os = "ios")))]
+
+        #[cfg(all(
+            unix,
+            not(target_os = "android"),
+            not(target_os = "macos"),
+            not(target_os = "ios")
+        ))]
         {
             println!("Platform: Unix (filesystem sockets)");
         }
-        
+
         #[cfg(windows)]
         {
             println!("Platform: Windows (named pipes)");
         }
-        
+
         #[cfg(target_family = "wasm")]
         {
             println!("Platform: WASM (in-process channels, no true IPC)");
         }
     }
-    
+
     #[test]
     fn test_endpoint_creation() {
         let endpoint = Socket::create_endpoint("test_beardog").unwrap();
-        
+
         match endpoint {
             SocketEndpoint::Abstract(name) => {
                 assert!(name.starts_with('@'), "Abstract socket should start with @");
