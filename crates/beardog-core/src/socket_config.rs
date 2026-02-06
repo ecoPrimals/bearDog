@@ -5,16 +5,20 @@
 //!
 //! 1. **Primal-Specific** (highest priority): `BEARDOG_SOCKET`
 //! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH` or `BIOMEOS_SOCKET_DIR`
-//! 3. **Primal IPC Protocol Standard**: `/primal/beardog`
-//! 4. **XDG Runtime Directory**: `/run/user/<uid>/biomeos/beardog.sock` (biomeOS standard)
-//! 5. **Temp Directory** (last resort): `/tmp/beardog-<family>-<node>.sock`
+//! 3. **Primal IPC Protocol Standard**: `/primal/{PRIMAL_NAME}` (discovery-based)
+//! 4. **XDG Runtime Directory**: `/run/user/<uid>/biomeos/{PRIMAL_NAME}.sock` (biomeOS standard)
+//! 5. **Temp Directory** (last resort): `/tmp/{PRIMAL_NAME}-<family>-<node>.sock`
+//!
+//! ## Self-Knowledge via PRIMAL_NAME
+//!
+//! The primal name is discovered via the `PRIMAL_NAME` environment variable (defaults to "beardog").
+//! This follows the TRUE PRIMAL principle: primals only know themselves and discover others at runtime.
 //!
 //! ## Primal IPC Protocol Compliance
 //!
 //! Per `/wateringHole/PRIMAL_IPC_PROTOCOL.md`:
 //! - Standard namespace: `/primal/{primal-name}`
-//! - BearDog standard path: `/primal/beardog`
-//! - This is NOT hardcoding - it's ecosystem standard compliance
+//! - Path is constructed from PRIMAL_NAME (capability-based, not hardcoded)
 //!
 //! ## Security & Standards
 //!
@@ -79,7 +83,7 @@ impl SocketConfig {
     /// 3. `/primal/beardog` (Primal IPC Protocol standard namespace)
     /// 4. `/run/user/<uid>/biomeos/beardog.sock` (XDG Runtime Directory, biomeOS standard)
     /// 5. `/tmp/beardog-<family>-<node>.sock` (fallback)
-    #[must_use] 
+    #[must_use]
     pub fn from_env() -> Self {
         let family_id = std::env::var("BEARDOG_FAMILY_ID")
             .or_else(|_| std::env::var("FAMILY_ID"))
@@ -131,12 +135,13 @@ impl SocketConfig {
             }
         }
 
-        // Tier 3: Try Primal IPC Protocol standard namespace (/primal/beardog)
+        // Tier 3: Try Primal IPC Protocol standard namespace (/primal/{primal-name})
         // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
-        // This is NOT hardcoding - it's following the ecosystem standard
+        // Uses PRIMAL_NAME env var for self-knowledge, defaults to "beardog"
         if Path::new("/primal").exists() {
+            let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
             return Self {
-                socket_path: PathBuf::from("/primal/beardog"),
+                socket_path: PathBuf::from(format!("/primal/{}", primal_name)),
                 family_id,
                 node_id,
                 source: SocketPathSource::PrimalNamespace,
@@ -154,7 +159,9 @@ impl SocketConfig {
         }
 
         // Tier 5: Fallback to /tmp (last resort)
-        let tmp_path = format!("/tmp/beardog-{family_id}-{node_id}.sock");
+        // Uses PRIMAL_NAME env var for self-knowledge, defaults to "beardog"
+        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+        let tmp_path = format!("/tmp/{}-{family_id}-{node_id}.sock", primal_name);
         Self {
             socket_path: PathBuf::from(tmp_path),
             family_id,
@@ -204,31 +211,31 @@ impl SocketConfig {
     }
 
     /// Get the resolved socket path
-    #[must_use] 
+    #[must_use]
     pub fn socket_path(&self) -> &Path {
         &self.socket_path
     }
 
     /// Get socket path as string
-    #[must_use] 
+    #[must_use]
     pub fn socket_path_string(&self) -> String {
         self.socket_path.display().to_string()
     }
 
     /// Get family ID
-    #[must_use] 
+    #[must_use]
     pub fn family_id(&self) -> &str {
         &self.family_id
     }
 
     /// Get node ID
-    #[must_use] 
+    #[must_use]
     pub fn node_id(&self) -> &str {
         &self.node_id
     }
 
     /// Get the source tier that was used
-    #[must_use] 
+    #[must_use]
     pub fn source(&self) -> SocketPathSource {
         self.source
     }
@@ -269,7 +276,7 @@ impl SocketConfig {
     }
 
     /// Get a descriptive string for logging
-    #[must_use] 
+    #[must_use]
     pub fn description(&self) -> String {
         match self.source {
             SocketPathSource::PrimalEnvVar => {
