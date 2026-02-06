@@ -22,7 +22,7 @@ use tracing::{info, warn};
 /// Handle server command - start long-running service
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Server Mode - Starting...");
-    
+
     // Determine socket path - use abstract socket if --abstract flag is set
     let socket_path = if args.r#abstract {
         // Abstract socket format: @biomeos_beardog_{family_id}
@@ -34,12 +34,11 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     } else {
         args.socket.clone()
     };
-    
+
     // Determine transport mode
-    let use_tcp = args.listen.is_some();
-    if use_tcp {
+    if let Some(ref addr) = args.listen {
         info!("   Transport: TCP (Tier 2 - Universal)");
-        info!("   Listen: {}", args.listen.as_ref().unwrap());
+        info!("   Listen: {}", addr);
     } else if !args.r#abstract {
         info!("   Transport: Unix Socket (Tier 1 - Native)");
         info!("   Socket: {}", socket_path);
@@ -112,11 +111,11 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // ================================================================
     // PHASE 3: MULTI-TRANSPORT SERVER (Deep Debt Evolution)
     // ================================================================
-    
+
     info!("🌐 Creating multi-transport server...");
     info!("   Platform: Universal (all available transports)");
     info!("   Deep Debt: Agnostic + Runtime Discovery");
-    
+
     // Create multi-transport server (binds all available)
     let server = MultiTransportServer::bind_all_available(
         btsp_provider,
@@ -126,19 +125,22 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     )
     .await?;
 
-    info!("✅ Multi-transport server created: {} transport(s)", server.transport_count());
+    info!(
+        "✅ Multi-transport server created: {} transport(s)",
+        server.transport_count()
+    );
 
     // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!("🌐 Neural API detected at: {}", neural_socket);
-        
+
         // Register primary socket path
         let registration_addr = if let Some(ref tcp) = tcp_addr {
             tcp.as_str()
         } else {
             &socket_path
         };
-        
+
         match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
             Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
             Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
@@ -170,12 +172,12 @@ fn _old_single_transport_server_code() {
     // - Server binds ALL available transports
     // - Automatic platform detection
     // - Universal deployment
-    
+
     /*
     if let Some(ref listen_addr) = args.listen {
         // TCP mode (Tier 2 - Android, Windows, universal)
         info!("🌐 Creating TCP IPC server...");
-        
+
         let bind_addr: std::net::SocketAddr = listen_addr.parse().map_err(|e| {
             BearDogError::Initialization {
                 message: format!("Invalid listen address '{}': {}", listen_addr, e),

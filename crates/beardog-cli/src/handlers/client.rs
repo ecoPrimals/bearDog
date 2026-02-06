@@ -49,7 +49,9 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     loop {
         // Print prompt
         print!("beardog> ");
-        std::io::Write::flush(&mut std::io::stdout()).unwrap();
+        if std::io::Write::flush(&mut std::io::stdout()).is_err() {
+            // Flush failure is non-fatal, continue
+        }
 
         // Read user input
         let mut input = String::new();
@@ -75,7 +77,9 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
                 // Send command to server
                 match send_command(&mut writer, &mut reader, input).await {
                     Ok(response) => {
-                        println!("{}", serde_json::to_string_pretty(&response).unwrap());
+                        let output = serde_json::to_string_pretty(&response)
+                            .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {}\"}}", e));
+                        println!("{}", output);
                     }
                     Err(e) => {
                         error!("❌ Error: {}", e);
@@ -107,7 +111,9 @@ async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), Bear
     let mut reader = BufReader::new(reader);
 
     let response = send_command(&mut writer, &mut reader, command).await?;
-    println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    let output = serde_json::to_string_pretty(&response)
+        .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {}\"}}", e));
+    println!("{}", output);
 
     Ok(())
 }
