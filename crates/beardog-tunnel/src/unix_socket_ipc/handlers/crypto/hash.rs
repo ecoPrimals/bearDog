@@ -265,3 +265,211 @@ pub async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String>
         "algorithm": "HMAC-SHA256",
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::engine::general_purpose::STANDARD as BASE64;
+    use serde_json::json;
+
+    // ========================================================================
+    // BLAKE3 HASH TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_blake3_hash_basic() {
+        let data = BASE64.encode(b"Hello, BearDog!");
+        let params = json!({ "data": data });
+
+        let result = handle_blake3_hash(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "BLAKE3");
+        assert!(value["hash"].is_string());
+
+        // Decode and verify hash length (32 bytes)
+        let hash = BASE64.decode(value["hash"].as_str().unwrap()).unwrap();
+        assert_eq!(hash.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_blake3_hash_empty_data() {
+        let data = BASE64.encode(b"");
+        let params = json!({ "data": data });
+
+        let result = handle_blake3_hash(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        let hash = BASE64.decode(value["hash"].as_str().unwrap()).unwrap();
+        assert_eq!(hash.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_blake3_hash_deterministic() {
+        let data = BASE64.encode(b"Test data for BLAKE3");
+        let params = json!({ "data": data });
+
+        let result1 = handle_blake3_hash(Some(&params)).await.unwrap();
+        let result2 = handle_blake3_hash(Some(&params)).await.unwrap();
+
+        assert_eq!(result1["hash"], result2["hash"]);
+    }
+
+    #[tokio::test]
+    async fn test_blake3_hash_missing_params() {
+        let result = handle_blake3_hash(None).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Missing params"));
+    }
+
+    #[tokio::test]
+    async fn test_blake3_hash_missing_data() {
+        let params = json!({});
+        let result = handle_blake3_hash(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("data"));
+    }
+
+    #[tokio::test]
+    async fn test_blake3_hash_invalid_base64() {
+        let params = json!({ "data": "!!!not-valid-base64!!!" });
+        let result = handle_blake3_hash(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid base64"));
+    }
+
+    // ========================================================================
+    // HMAC-SHA256 TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_hmac_sha256_basic() {
+        let key = BASE64.encode(b"secret-key-32-bytes-long-0000000");
+        let data = BASE64.encode(b"Message to authenticate");
+        let params = json!({ "key": key, "data": data });
+
+        let result = handle_hmac_sha256(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "HMAC-SHA256");
+        assert!(value["mac"].is_string());
+
+        // Decode and verify MAC length (32 bytes)
+        let mac = BASE64.decode(value["mac"].as_str().unwrap()).unwrap();
+        assert_eq!(mac.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_hmac_sha256_deterministic() {
+        let key = BASE64.encode(b"test-key");
+        let data = BASE64.encode(b"test-data");
+        let params = json!({ "key": key, "data": data });
+
+        let result1 = handle_hmac_sha256(Some(&params)).await.unwrap();
+        let result2 = handle_hmac_sha256(Some(&params)).await.unwrap();
+
+        assert_eq!(result1["mac"], result2["mac"]);
+    }
+
+    #[tokio::test]
+    async fn test_hmac_sha256_different_keys_different_macs() {
+        let data = BASE64.encode(b"same data");
+
+        let params1 = json!({ "key": BASE64.encode(b"key1"), "data": data });
+        let params2 = json!({ "key": BASE64.encode(b"key2"), "data": data });
+
+        let result1 = handle_hmac_sha256(Some(&params1)).await.unwrap();
+        let result2 = handle_hmac_sha256(Some(&params2)).await.unwrap();
+
+        assert_ne!(result1["mac"], result2["mac"]);
+    }
+
+    #[tokio::test]
+    async fn test_hmac_sha256_missing_key() {
+        let data = BASE64.encode(b"data");
+        let params = json!({ "data": data });
+
+        let result = handle_hmac_sha256(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("key"));
+    }
+
+    #[tokio::test]
+    async fn test_hmac_sha256_missing_data() {
+        let key = BASE64.encode(b"key");
+        let params = json!({ "key": key });
+
+        let result = handle_hmac_sha256(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("data"));
+    }
+
+    // ========================================================================
+    // HASH FOR CIPHER TESTS (TLS 1.3)
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_hash_for_cipher_sha256() {
+        let data = BASE64.encode(b"TLS 1.3 data");
+        let params = json!({ "data": data, "cipher_suite": 0x1301 });
+
+        let result = handle_hash_for_cipher(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "SHA-256");
+        assert_eq!(value["cipher_suite"], 0x1301);
+        assert_eq!(value["hash_length"], 32);
+    }
+
+    #[tokio::test]
+    async fn test_hash_for_cipher_sha384() {
+        let data = BASE64.encode(b"TLS 1.3 data");
+        let params = json!({ "data": data, "cipher_suite": 0x1302 });
+
+        let result = handle_hash_for_cipher(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "SHA-384");
+        assert_eq!(value["cipher_suite"], 0x1302);
+        assert_eq!(value["hash_length"], 48);
+    }
+
+    #[tokio::test]
+    async fn test_hash_for_cipher_chacha20() {
+        let data = BASE64.encode(b"TLS 1.3 data");
+        let params = json!({ "data": data, "cipher_suite": 0x1303 });
+
+        let result = handle_hash_for_cipher(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "SHA-256");
+        assert_eq!(value["cipher_suite"], 0x1303);
+        assert_eq!(value["hash_length"], 32);
+    }
+
+    #[tokio::test]
+    async fn test_hash_for_cipher_unsupported() {
+        let data = BASE64.encode(b"data");
+        let params = json!({ "data": data, "cipher_suite": 0x9999 });
+
+        let result = handle_hash_for_cipher(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unsupported"));
+    }
+
+    #[tokio::test]
+    async fn test_hash_for_cipher_missing_cipher_suite() {
+        let data = BASE64.encode(b"data");
+        let params = json!({ "data": data });
+
+        let result = handle_hash_for_cipher(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("cipher_suite"));
+    }
+}

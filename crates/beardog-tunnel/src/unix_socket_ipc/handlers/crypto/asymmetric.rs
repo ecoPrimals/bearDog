@@ -312,3 +312,205 @@ pub async fn handle_x25519_derive_secret(params: Option<&Value>) -> Result<Value
         "algorithm": "X25519",
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::engine::general_purpose::STANDARD as BASE64;
+    use serde_json::json;
+
+    // ========================================================================
+    // ED25519 SIGNATURE TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_ed25519_sign_basic() {
+        let message = BASE64.encode(b"Hello, BearDog!");
+        let params = json!({ "message": message });
+
+        let result = handle_sign_ed25519(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "Ed25519");
+        assert!(value["signature"].is_string());
+        assert!(value["key_id"].is_string());
+
+        // Verify signature is 64 bytes
+        let signature = BASE64.decode(value["signature"].as_str().unwrap()).unwrap();
+        assert_eq!(signature.len(), 64);
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_sign_with_key_id() {
+        let message = BASE64.encode(b"Signed message");
+        let params = json!({ "message": message, "key_id": "my-custom-key" });
+
+        let result = handle_sign_ed25519(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["key_id"], "my-custom-key");
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_sign_deterministic_same_key() {
+        let message = BASE64.encode(b"Same message");
+        let params = json!({ "message": message, "key_id": "test-key-1" });
+
+        let result1 = handle_sign_ed25519(Some(&params)).await.unwrap();
+        let result2 = handle_sign_ed25519(Some(&params)).await.unwrap();
+
+        // Same key, same message = same signature
+        assert_eq!(result1["signature"], result2["signature"]);
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_sign_different_keys_different_signatures() {
+        let message = BASE64.encode(b"Same message");
+
+        let params1 = json!({ "message": message, "key_id": "key-a" });
+        let params2 = json!({ "message": message, "key_id": "key-b" });
+
+        let result1 = handle_sign_ed25519(Some(&params1)).await.unwrap();
+        let result2 = handle_sign_ed25519(Some(&params2)).await.unwrap();
+
+        // Different keys = different signatures
+        assert_ne!(result1["signature"], result2["signature"]);
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_sign_missing_message() {
+        let params = json!({ "key_id": "some-key" });
+        let result = handle_sign_ed25519(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("message"));
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_sign_invalid_base64() {
+        let params = json!({ "message": "!!!invalid-base64!!!" });
+        let result = handle_sign_ed25519(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid base64"));
+    }
+
+    // ========================================================================
+    // ED25519 VERIFICATION TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_ed25519_verify_missing_params() {
+        let message = BASE64.encode(b"msg");
+        let signature = BASE64.encode(&[0u8; 64]);
+
+        let params = json!({ "message": message, "signature": signature });
+        let result = handle_verify_ed25519(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("public_key"));
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_verify_missing_signature() {
+        let message = BASE64.encode(b"msg");
+        let public_key = BASE64.encode(&[0u8; 32]);
+
+        let params = json!({ "message": message, "public_key": public_key });
+        let result = handle_verify_ed25519(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("signature"));
+    }
+
+    // ========================================================================
+    // X25519 KEY EXCHANGE TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_x25519_generate_ephemeral() {
+        let result = handle_x25519_generate_ephemeral(None).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "X25519");
+        assert!(value["public_key"].is_string());
+        assert!(value["secret_key"].is_string());
+
+        // Verify key sizes (32 bytes each)
+        let public_key = BASE64.decode(value["public_key"].as_str().unwrap()).unwrap();
+        let secret_key = BASE64.decode(value["secret_key"].as_str().unwrap()).unwrap();
+        assert_eq!(public_key.len(), 32);
+        assert_eq!(secret_key.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_x25519_generate_unique_keys() {
+        let result1 = handle_x25519_generate_ephemeral(None).await.unwrap();
+        let result2 = handle_x25519_generate_ephemeral(None).await.unwrap();
+
+        // Each generation should produce unique keys
+        assert_ne!(result1["public_key"], result2["public_key"]);
+        assert_ne!(result1["secret_key"], result2["secret_key"]);
+    }
+
+    #[tokio::test]
+    async fn test_x25519_key_exchange_roundtrip() {
+        // Alice generates her keypair
+        let alice_keypair = handle_x25519_generate_ephemeral(None).await.unwrap();
+
+        // Bob generates his keypair
+        let bob_keypair = handle_x25519_generate_ephemeral(None).await.unwrap();
+
+        // Alice derives shared secret with Bob's public key
+        let alice_params = json!({
+            "our_secret": alice_keypair["secret_key"],
+            "their_public": bob_keypair["public_key"]
+        });
+        let alice_secret = handle_x25519_derive_secret(Some(&alice_params))
+            .await
+            .expect("Alice derive failed");
+
+        // Bob derives shared secret with Alice's public key
+        let bob_params = json!({
+            "our_secret": bob_keypair["secret_key"],
+            "their_public": alice_keypair["public_key"]
+        });
+        let bob_secret = handle_x25519_derive_secret(Some(&bob_params))
+            .await
+            .expect("Bob derive failed");
+
+        // Both should arrive at the same shared secret
+        assert_eq!(alice_secret["shared_secret"], bob_secret["shared_secret"]);
+        assert_eq!(alice_secret["algorithm"], "X25519");
+    }
+
+    #[tokio::test]
+    async fn test_x25519_derive_missing_our_secret() {
+        let their_public = BASE64.encode(&[0u8; 32]);
+        let params = json!({ "their_public": their_public });
+
+        let result = handle_x25519_derive_secret(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("our_secret"));
+    }
+
+    #[tokio::test]
+    async fn test_x25519_derive_missing_their_public() {
+        let our_secret = BASE64.encode(&[0u8; 32]);
+        let params = json!({ "our_secret": our_secret });
+
+        let result = handle_x25519_derive_secret(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("their_public"));
+    }
+
+    #[tokio::test]
+    async fn test_x25519_derive_wrong_key_length() {
+        let our_secret = BASE64.encode(&[0u8; 16]); // Wrong: 16 bytes
+        let their_public = BASE64.encode(&[0u8; 32]);
+        let params = json!({ "our_secret": our_secret, "their_public": their_public });
+
+        let result = handle_x25519_derive_secret(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("32 bytes"));
+    }
+}

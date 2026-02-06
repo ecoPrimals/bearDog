@@ -241,3 +241,256 @@ pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<
         "algorithm": "ChaCha20-Poly1305",
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::engine::general_purpose::STANDARD as BASE64;
+    use serde_json::json;
+
+    // ========================================================================
+    // CHACHA20-POLY1305 ENCRYPTION TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_basic() {
+        let plaintext = BASE64.encode(b"Hello, BearDog!");
+        let key = BASE64.encode(&[0u8; 32]); // 32-byte key
+        let params = json!({ "plaintext": plaintext, "key": key });
+
+        let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(value["algorithm"], "ChaCha20-Poly1305");
+        assert!(value["ciphertext"].is_string());
+        assert!(value["nonce"].is_string());
+        assert!(value["tag"].is_string());
+
+        // Verify nonce is 12 bytes
+        let nonce = BASE64.decode(value["nonce"].as_str().unwrap()).unwrap();
+        assert_eq!(nonce.len(), 12);
+
+        // Verify tag is 16 bytes
+        let tag = BASE64.decode(value["tag"].as_str().unwrap()).unwrap();
+        assert_eq!(tag.len(), 16);
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_with_aad() {
+        let plaintext = BASE64.encode(b"Secret message");
+        let key = BASE64.encode(&[0xAB; 32]);
+        let aad = BASE64.encode(b"Additional authenticated data");
+        let params = json!({ "plaintext": plaintext, "key": key, "aad": aad });
+
+        let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_empty_plaintext() {
+        let plaintext = BASE64.encode(b"");
+        let key = BASE64.encode(&[0u8; 32]);
+        let params = json!({ "plaintext": plaintext, "key": key });
+
+        let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        let ciphertext = BASE64.decode(value["ciphertext"].as_str().unwrap()).unwrap();
+        assert_eq!(ciphertext.len(), 0); // Empty plaintext = empty ciphertext
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_wrong_key_length() {
+        let plaintext = BASE64.encode(b"data");
+        let key = BASE64.encode(&[0u8; 16]); // Wrong: 16 bytes instead of 32
+        let params = json!({ "plaintext": plaintext, "key": key });
+
+        let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("32 bytes"));
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_missing_plaintext() {
+        let key = BASE64.encode(&[0u8; 32]);
+        let params = json!({ "key": key });
+
+        let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("plaintext"));
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_missing_key() {
+        let plaintext = BASE64.encode(b"data");
+        let params = json!({ "plaintext": plaintext });
+
+        let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("key"));
+    }
+
+    // ========================================================================
+    // CHACHA20-POLY1305 DECRYPTION TESTS
+    // ========================================================================
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_decrypt_roundtrip() {
+        let original = b"Test message for roundtrip!";
+        let plaintext = BASE64.encode(original);
+        let key = BASE64.encode(&[0x42; 32]);
+
+        // Encrypt
+        let encrypt_params = json!({ "plaintext": plaintext, "key": key });
+        let encrypted = handle_chacha20_poly1305_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encryption failed");
+
+        // Decrypt
+        let decrypt_params = json!({
+            "ciphertext": encrypted["ciphertext"],
+            "key": key,
+            "nonce": encrypted["nonce"],
+            "tag": encrypted["tag"]
+        });
+        let decrypted = handle_chacha20_poly1305_decrypt(Some(&decrypt_params))
+            .await
+            .expect("decryption failed");
+
+        // Verify roundtrip
+        let result = BASE64.decode(decrypted["plaintext"].as_str().unwrap()).unwrap();
+        assert_eq!(result, original);
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_encrypt_decrypt_with_aad() {
+        let original = b"Authenticated message";
+        let plaintext = BASE64.encode(original);
+        let key = BASE64.encode(&[0x55; 32]);
+        let aad = BASE64.encode(b"context data");
+
+        // Encrypt with AAD
+        let encrypt_params = json!({ "plaintext": plaintext, "key": key, "aad": aad });
+        let encrypted = handle_chacha20_poly1305_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encryption failed");
+
+        // Decrypt with same AAD
+        let decrypt_params = json!({
+            "ciphertext": encrypted["ciphertext"],
+            "key": key,
+            "nonce": encrypted["nonce"],
+            "tag": encrypted["tag"],
+            "aad": aad
+        });
+        let decrypted = handle_chacha20_poly1305_decrypt(Some(&decrypt_params))
+            .await
+            .expect("decryption failed");
+
+        let result = BASE64.decode(decrypted["plaintext"].as_str().unwrap()).unwrap();
+        assert_eq!(result, original);
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_decrypt_wrong_key_fails() {
+        let plaintext = BASE64.encode(b"Secret data");
+        let key1 = BASE64.encode(&[0x11; 32]);
+        let key2 = BASE64.encode(&[0x22; 32]); // Different key
+
+        // Encrypt with key1
+        let encrypt_params = json!({ "plaintext": plaintext, "key": key1 });
+        let encrypted = handle_chacha20_poly1305_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encryption failed");
+
+        // Decrypt with key2 - should fail
+        let decrypt_params = json!({
+            "ciphertext": encrypted["ciphertext"],
+            "key": key2,
+            "nonce": encrypted["nonce"],
+            "tag": encrypted["tag"]
+        });
+        let result = handle_chacha20_poly1305_decrypt(Some(&decrypt_params)).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_decrypt_modified_ciphertext_fails() {
+        let plaintext = BASE64.encode(b"Integrity test");
+        let key = BASE64.encode(&[0x33; 32]);
+
+        // Encrypt
+        let encrypt_params = json!({ "plaintext": plaintext, "key": key });
+        let encrypted = handle_chacha20_poly1305_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encryption failed");
+
+        // Modify ciphertext
+        let mut ciphertext = BASE64.decode(encrypted["ciphertext"].as_str().unwrap()).unwrap();
+        if !ciphertext.is_empty() {
+            ciphertext[0] ^= 0xFF; // Flip bits
+        }
+        let modified_ciphertext = BASE64.encode(&ciphertext);
+
+        // Decrypt modified ciphertext - should fail
+        let decrypt_params = json!({
+            "ciphertext": modified_ciphertext,
+            "key": key,
+            "nonce": encrypted["nonce"],
+            "tag": encrypted["tag"]
+        });
+        let result = handle_chacha20_poly1305_decrypt(Some(&decrypt_params)).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_decrypt_wrong_aad_fails() {
+        let plaintext = BASE64.encode(b"AAD test");
+        let key = BASE64.encode(&[0x44; 32]);
+        let aad1 = BASE64.encode(b"correct aad");
+        let aad2 = BASE64.encode(b"wrong aad");
+
+        // Encrypt with aad1
+        let encrypt_params = json!({ "plaintext": plaintext, "key": key, "aad": aad1 });
+        let encrypted = handle_chacha20_poly1305_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encryption failed");
+
+        // Decrypt with aad2 - should fail
+        let decrypt_params = json!({
+            "ciphertext": encrypted["ciphertext"],
+            "key": key,
+            "nonce": encrypted["nonce"],
+            "tag": encrypted["tag"],
+            "aad": aad2
+        });
+        let result = handle_chacha20_poly1305_decrypt(Some(&decrypt_params)).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_decrypt_missing_nonce() {
+        let ciphertext = BASE64.encode(b"ciphertext");
+        let key = BASE64.encode(&[0u8; 32]);
+        let tag = BASE64.encode(&[0u8; 16]);
+        let params = json!({ "ciphertext": ciphertext, "key": key, "tag": tag });
+
+        let result = handle_chacha20_poly1305_decrypt(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("nonce"));
+    }
+
+    #[tokio::test]
+    async fn test_chacha20_decrypt_missing_tag() {
+        let ciphertext = BASE64.encode(b"ciphertext");
+        let key = BASE64.encode(&[0u8; 32]);
+        let nonce = BASE64.encode(&[0u8; 12]);
+        let params = json!({ "ciphertext": ciphertext, "key": key, "nonce": nonce });
+
+        let result = handle_chacha20_poly1305_decrypt(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("tag"));
+    }
+}
