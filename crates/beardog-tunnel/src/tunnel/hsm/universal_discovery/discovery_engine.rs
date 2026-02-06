@@ -124,7 +124,7 @@ impl DiscoveryEngine {
     ///
     /// # Errors
     /// Returns an error if any discoverer fails to initialize.
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🔍 Initializing HSM Discovery Engine");
 
         Ok(Self {
@@ -504,7 +504,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_engine_creation() -> Result<(), Box<dyn std::error::Error>> {
-        let engine = DiscoveryEngine::new().await;
+        let engine = DiscoveryEngine::new();
         assert!(engine.is_ok());
         Ok(())
     }
@@ -554,7 +554,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_engine_full_scan() -> Result<(), Box<dyn std::error::Error>> {
-        let engine = DiscoveryEngine::new().await?;
+        let engine = DiscoveryEngine::new()?;
 
         // Test all discovery methods
         let pkcs11_result = engine.discover_pkcs11_hsms();
@@ -652,7 +652,7 @@ mod tests {
         let mut handles = vec![];
 
         for _ in 0..5 {
-            let handle = tokio::spawn(async { DiscoveryEngine::new().await });
+            let handle = tokio::spawn(async { DiscoveryEngine::new() });
             handles.push(handle);
         }
 
@@ -777,7 +777,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_engine_repeated_scans() -> Result<(), Box<dyn std::error::Error>> {
-        let engine = DiscoveryEngine::new().await?;
+        let engine = DiscoveryEngine::new()?;
 
         // Test that we can run discoveries multiple times
         for _ in 0..3 {

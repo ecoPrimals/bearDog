@@ -104,6 +104,15 @@ impl HumanEntropyClassifier {
         Ok(classifier)
     }
 
+    /// Convenience method to check if a discovered HSM supports human entropy
+    ///
+    /// Returns true if the HSM meets criteria for human entropy ephemeral seeds.
+    /// This is a simplified wrapper that handles errors gracefully.
+    pub fn supports_human_entropy(&self, hsm: &super::DiscoveredHsm) -> bool {
+        self.classify_human_entropy_support(&hsm.capabilities)
+            .unwrap_or(false)
+    }
+
     /// Classifies human entropy support
     pub fn classify_human_entropy_support(
         &self,

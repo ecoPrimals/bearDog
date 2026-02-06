@@ -18,7 +18,7 @@ mod discovery_tests {
     /// Test Discovery Engine initialization
     #[tokio::test]
     async fn test_discovery_engine_initialization() -> Result<(), BearDogError> {
-        let _engine = DiscoveryEngine::new().await?;
+        let _engine = DiscoveryEngine::new()?;
         // Test passes if engine creation succeeds
         Ok(())
     }
@@ -166,7 +166,7 @@ mod discovery_tests {
     /// Test Discovery Engine - discover all discoverers
     #[tokio::test]
     async fn test_discovery_engine_discover_all() -> Result<(), BearDogError> {
-        let engine = DiscoveryEngine::new().await?;
+        let engine = DiscoveryEngine::new()?;
 
         // Test each discovery method
         let _pkcs11_hsms = engine.discover_pkcs11_hsms()?;
@@ -331,12 +331,12 @@ mod discovery_tests {
     async fn test_concurrent_discovery() -> Result<(), BearDogError> {
         // Run multiple discoveries concurrently
         let handle1 = tokio::spawn(async {
-            let engine = DiscoveryEngine::new().await.unwrap();
+            let engine = DiscoveryEngine::new().unwrap();
             engine.discover_software_hsms()
         });
 
         let handle2 = tokio::spawn(async {
-            let engine = DiscoveryEngine::new().await.unwrap();
+            let engine = DiscoveryEngine::new().unwrap();
             engine.discover_software_hsms()
         });
 
