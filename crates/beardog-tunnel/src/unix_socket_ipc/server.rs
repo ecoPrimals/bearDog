@@ -440,6 +440,21 @@ impl UnixSocketIpcServer {
 
         debug!("📨 JSON-RPC request: {}", request.method);
 
+        // Validate JSON-RPC version
+        if request.jsonrpc != "2.0" {
+            let error_response = JsonRpcResponse {
+                jsonrpc: "2.0".to_string(),
+                result: None,
+                error: Some(JsonRpcError {
+                    code: -32600,
+                    message: "Invalid JSON-RPC version (must be 2.0)".to_string(),
+                    data: None,
+                }),
+                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+            };
+            return Ok(serde_json::to_string(&error_response)?);
+        }
+
         // Process request through handler registry
         let response = match self
             .handler_registry
