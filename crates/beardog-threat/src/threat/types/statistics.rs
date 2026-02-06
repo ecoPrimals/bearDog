@@ -1,180 +1,77 @@
+//! # Threat Statistics
+//!
+//! This module provides types for tracking threat detection statistics
+//! including detection rates, trends, and geographic distribution.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use super::core::ThreatSeverity;
 
-#[derive(Debug, Clone)]
-    /// Number of false_positives
-    /// Number of false_positives
+// ============================================================
+// Detection Stats
+// ============================================================
+
+/// Threat detection statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatDetectionStats {
+    /// Number of detections
+    pub detections: u64,
+
+    /// Number of false positives
     pub false_positives: u64,
-    /// The accuracy value
-    /// The accuracy value
+
+    /// Detection accuracy (0.0 - 1.0)
     pub accuracy: f64,
+
+    /// Average confidence score
     pub avg_confidence: f64,
-    /// The last updated value
-    /// The last updated value
+
+    /// Last update timestamp
     pub last_updated: DateTime<Utc>,
 
-    /// Number of blocked_sources
-    /// Number of blocked_sources
+    /// Number of blocked sources
     pub blocked_sources: u64,
-    /// Number of quarantined_systems
-    /// Number of quarantined_systems
+
+    /// Number of quarantined systems
     pub quarantined_systems: u64,
-    /// Number of total_threats
-    /// Number of total_threats
+
+    /// Total threats detected
     pub total_threats: u64,
 }
 
 impl Default for ThreatDetectionStats {
-    fn default(0,
+    fn default() -> Self {
+        Self {
+            detections: 0,
             false_positives: 0,
             accuracy: 0.0,
             avg_confidence: 0.0,
-            last_updated: Utc::now(0,
+            last_updated: Utc::now(),
+            blocked_sources: 0,
             quarantined_systems: 0,
             total_threats: 0,
         }
     }
-}
-
-#[derive(Debug, Clone)]
-    /// Number of detections
-    /// Number of detections
-    pub detections: u64,
-    /// Number of false_positives
-    /// Number of false_positives
-    pub false_positives: u64,
-    /// The accuracy value
-    /// The accuracy value
-    pub accuracy: f64,
-    pub avg_confidence: f64,
-}
-
-impl Default for DetectionMethodStats {
-    fn default() -> Self {
-        Self {
-            method_name: String::with_capacity(0,
-            false_positives: 0,
-            accuracy: 0.0,
-            avg_confidence: 0.0,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-    /// Mapping of severity distribution
-    /// Mapping of severity distribution
-    pub severity_distribution: HashMap<ThreatSeverity, u64>,
-    pub time_period: String,
-    /// The trend direction value
-    /// The trend direction value
-    pub trend_direction: TrendDirection,
-}
-
-impl Default for ThreatTrend {
-    fn default(0,
-            severity_distribution: HashMap::with_capacity(16),
-            time_period: "24h".to_string(), Deserialize)]
-pub enum TrendDirection {
-    /// Currently increasing
-    Increasing,
-    /// Currently decreasing
-    Decreasing,
-    /// Represents stable variant
-    Stable,
-    /// Represents volatile variant
-    Volatile,
-}
-
-impl Default for TrendDirection {
-    fn default() -> Self {
-        Self::Stable
-    }
-}
-
-#[derive(Debug, Clone)]
-    /// Number of high_severity_threats
-    /// Number of high_severity_threats
-    pub high_severity_threats: usize,
-    /// Number of medium_severity_threats
-    /// Number of medium_severity_threats
-    pub medium_severity_threats: usize,
-    /// Number of low_severity_threats
-    /// Number of low_severity_threats
-    pub low_severity_threats: usize,
-    /// Number of false_positives
-    /// Number of false_positives
-    pub false_positives: u64,
-    /// The detection accuracy value
-    /// The detection accuracy value
-    pub detection_accuracy: f64,
-    pub avg_response_time_ms: f64,
-    /// Number of threats_blocked
-    /// Number of threats_blocked
-    pub threats_blocked: u64,
-    /// Number of threats_mitigated
-    /// Number of threats_mitigated
-    pub threats_mitigated: u64,
-    /// Number of active_threats
-    /// Number of active_threats
-    pub active_threats: u64,
-    /// Number of resolved_threats
-    /// Number of resolved_threats
-    pub resolved_threats: u64,
-    /// Collection of threat trends
-    /// Collection of threat trends
-    pub threat_trends: Vec<ThreatTrend>,
-    /// Mapping of detection methods
-    /// Mapping of detection methods
-    pub detection_methods: HashMap<String, DetectionMethodStats>,
-    /// Mapping of geographic distribution
-    /// Mapping of geographic distribution
-    pub geographic_distribution: HashMap<String, u64>,
-    /// Mapping of threat sources
-    /// Mapping of threat sources
-    pub threat_sources: HashMap<String, u64>,
-    /// Collection of hourly statistics
-    /// Collection of hourly statistics
-    pub hourly_statistics: Vec<ThreatDetectionStats>,
-    /// Collection of daily statistics
-    /// Collection of daily statistics
-    pub daily_statistics: Vec<ThreatDetectionStats>,
-    /// Collection of weekly statistics
-    /// Collection of weekly statistics
-    pub weekly_statistics: Vec<ThreatDetectionStats>,
-    /// Collection of monthly statistics
-    /// Collection of monthly statistics
-    pub monthly_statistics: Vec<ThreatDetectionStats>,
-    /// The last updated value
-    /// The last updated value
-    pub last_updated: DateTime<Utc>,
 }
 
 impl ThreatDetectionStats {
-    /// New operation.
-    /// Creates a new instance
-    pub fn new(0,
-            false_positives: 0,
-            accuracy: 0.0,
-            avg_confidence: 0.0,
-            last_updated: Utc::now(0,
-            quarantined_systems: 0,
-            total_threats: 0,
-        }
+    /// Create new stats
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    /// Accuracy operation.
-    pub fn accuracy(&self) -> f64 {
+    /// Calculate accuracy
+    pub fn calculate_accuracy(&self) -> f64 {
         if self.detections == 0 {
             return 0.0;
         }
-        let true_positives = self.detections - self.false_positives;
+        let true_positives = self.detections.saturating_sub(self.false_positives);
         true_positives as f64 / self.detections as f64
     }
 
-    /// False Positive Rate operation.
+    /// Calculate false positive rate
     pub fn false_positive_rate(&self) -> f64 {
         if self.detections == 0 {
             return 0.0;
@@ -182,9 +79,7 @@ impl ThreatDetectionStats {
         self.false_positives as f64 / self.detections as f64
     }
 
-    /// Update Confidence operation.
-    /// Updates confidence
-    /// Updates confidence
+    /// Update confidence average
     pub fn update_confidence(&mut self, confidence: f64) {
         if self.detections == 0 {
             self.avg_confidence = confidence;
@@ -194,25 +89,127 @@ impl ThreatDetectionStats {
         }
     }
 
+    /// Check if performing well
     pub fn is_performing_well(&self) -> bool {
         self.accuracy > 0.8 && self.false_positive_rate() < 0.2
     }
 }
 
+// ============================================================
+// Detection Method Stats
+// ============================================================
+
+/// Statistics for a detection method
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DetectionMethodStats {
+    /// Method name
+    pub method_name: String,
+
+    /// Number of detections
+    pub detections: u64,
+
+    /// Number of false positives
+    pub false_positives: u64,
+
+    /// Accuracy (0.0 - 1.0)
+    pub accuracy: f64,
+
+    /// Average confidence
+    pub avg_confidence: f64,
+}
+
+impl Default for DetectionMethodStats {
+    fn default() -> Self {
+        Self {
+            method_name: String::new(),
+            detections: 0,
+            false_positives: 0,
+            accuracy: 0.0,
+            avg_confidence: 0.0,
+        }
+    }
+}
+
+impl DetectionMethodStats {
+    /// Create new method stats
+    pub fn new(method_name: &str) -> Self {
+        Self {
+            method_name: method_name.to_string(),
+            ..Default::default()
+        }
+    }
+}
+
+// ============================================================
+// Trend Types
+// ============================================================
+
+/// Trend direction
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TrendDirection {
+    /// Increasing trend
+    Increasing,
+
+    /// Decreasing trend
+    Decreasing,
+
+    /// Stable trend
+    Stable,
+
+    /// Volatile trend
+    Volatile,
+}
+
+impl Default for TrendDirection {
+    fn default() -> Self {
+        Self::Stable
+    }
+}
+
+/// Threat trend over time
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatTrend {
+    /// Number of threats in period
+    pub threat_count: u64,
+
+    /// Distribution by severity
+    pub severity_distribution: HashMap<ThreatSeverity, u64>,
+
+    /// Time period description
+    pub time_period: String,
+
+    /// Trend direction
+    pub trend_direction: TrendDirection,
+}
+
+impl Default for ThreatTrend {
+    fn default() -> Self {
+        Self {
+            threat_count: 0,
+            severity_distribution: HashMap::with_capacity(16),
+            time_period: "24h".to_string(),
+            trend_direction: TrendDirection::Stable,
+        }
+    }
+}
+
 impl ThreatTrend {
-    /// New operation.
-    /// Creates a new instance
+    /// Create new trend
     pub fn new(threat_count: u64) -> Self {
         Self {
             threat_count,
             severity_distribution: HashMap::with_capacity(16),
-            time_period: "24h".to_string(), count: u64) {
+            time_period: "24h".to_string(),
+            trend_direction: TrendDirection::Stable,
+        }
+    }
+
+    /// Add severity count
+    pub fn add_severity(&mut self, severity: ThreatSeverity, count: u64) {
         self.severity_distribution.insert(severity, count);
     }
 
-    /// Get Severity Percentage operation.
-    /// Gets severity_percentage
-    /// Gets severity_percentage
+    /// Get severity percentage
     pub fn get_severity_percentage(&self, severity: &ThreatSeverity) -> f64 {
         if self.threat_count == 0 {
             return 0.0;
@@ -221,23 +218,95 @@ impl ThreatTrend {
         (*count as f64 / self.threat_count as f64) * 100.0
     }
 
-    /// Is Recent operation.
-    /// Checks if recent
-    /// Checks if recent
+    /// Check if trend is recent
     pub fn is_recent(&self, _minutes: i64) -> bool {
         true // Placeholder - always consider recent for now
     }
 }
 
+// ============================================================
+// Overall Statistics
+// ============================================================
+
+/// Overall threat statistics
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ThreatStatistics {
+    /// Total threats detected
+    pub total_threats: u64,
+
+    /// High severity threats
+    pub high_severity_threats: usize,
+
+    /// Medium severity threats
+    pub medium_severity_threats: usize,
+
+    /// Low severity threats
+    pub low_severity_threats: usize,
+
+    /// False positives
+    pub false_positives: u64,
+
+    /// Detection accuracy
+    pub detection_accuracy: f64,
+
+    /// Average response time in ms
+    pub avg_response_time_ms: f64,
+
+    /// Threats blocked
+    pub threats_blocked: u64,
+
+    /// Threats mitigated
+    pub threats_mitigated: u64,
+
+    /// Active threats
+    pub active_threats: u64,
+
+    /// Resolved threats
+    pub resolved_threats: u64,
+
+    /// Threat trends
+    pub threat_trends: Vec<ThreatTrend>,
+
+    /// Detection methods statistics
+    pub detection_methods: HashMap<String, DetectionMethodStats>,
+
+    /// Geographic distribution
+    pub geographic_distribution: HashMap<String, u64>,
+
+    /// Threat sources
+    pub threat_sources: HashMap<String, u64>,
+
+    /// Hourly statistics
+    pub hourly_statistics: Vec<ThreatDetectionStats>,
+
+    /// Daily statistics
+    pub daily_statistics: Vec<ThreatDetectionStats>,
+
+    /// Weekly statistics
+    pub weekly_statistics: Vec<ThreatDetectionStats>,
+
+    /// Monthly statistics
+    pub monthly_statistics: Vec<ThreatDetectionStats>,
+
+    /// Last update timestamp
+    pub last_updated: DateTime<Utc>,
+}
+
 impl ThreatStatistics {
-    /// Get Critical Threats operation.
-    /// Gets critical_threats
-    /// Gets critical_threats
+    /// Create new statistics
+    pub fn new() -> Self {
+        Self {
+            last_updated: Utc::now(),
+            ..Default::default()
+        }
+    }
+
+    /// Get critical threats count
     pub fn get_critical_threats(&self) -> usize {
         self.high_severity_threats
     }
 
-    /// High Severity Ratio operation.
+    /// Calculate high severity ratio
     pub fn high_severity_ratio(&self) -> f64 {
         if self.total_threats == 0 {
             return 0.0;
@@ -245,10 +314,83 @@ impl ThreatStatistics {
         self.high_severity_threats as f64 / self.total_threats as f64
     }
 
-    /// Is Concerning Threat Level operation.
-    /// Checks if concerning threat level
-    /// Checks if concerning threat level
+    /// Check if threat level is concerning
     pub fn is_concerning_threat_level(&self) -> bool {
         self.high_severity_ratio() > 0.3
+    }
+
+    /// Calculate mitigation rate
+    pub fn mitigation_rate(&self) -> f64 {
+        if self.total_threats == 0 {
+            return 0.0;
+        }
+        (self.threats_blocked + self.threats_mitigated) as f64 / self.total_threats as f64
+    }
+
+    /// Record a threat detection
+    pub fn record_threat(&mut self, severity: ThreatSeverity) {
+        self.total_threats += 1;
+        match severity {
+            ThreatSeverity::High | ThreatSeverity::Critical => {
+                self.high_severity_threats += 1;
+            }
+            ThreatSeverity::Medium => {
+                self.medium_severity_threats += 1;
+            }
+            ThreatSeverity::Low | ThreatSeverity::None => {
+                self.low_severity_threats += 1;
+            }
+        }
+        self.last_updated = Utc::now();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_detection_stats_default() {
+        let stats = ThreatDetectionStats::default();
+        assert_eq!(stats.detections, 0);
+        assert_eq!(stats.false_positives, 0);
+    }
+
+    #[test]
+    fn test_false_positive_rate() {
+        let stats = ThreatDetectionStats {
+            detections: 100,
+            false_positives: 10,
+            ..Default::default()
+        };
+        assert_eq!(stats.false_positive_rate(), 0.1);
+    }
+
+    #[test]
+    fn test_trend_direction_default() {
+        assert_eq!(TrendDirection::default(), TrendDirection::Stable);
+    }
+
+    #[test]
+    fn test_threat_trend() {
+        let mut trend = ThreatTrend::new(100);
+        trend.add_severity(ThreatSeverity::High, 20);
+        assert_eq!(trend.get_severity_percentage(&ThreatSeverity::High), 20.0);
+    }
+
+    #[test]
+    fn test_threat_statistics() {
+        let mut stats = ThreatStatistics::new();
+        stats.record_threat(ThreatSeverity::High);
+        assert_eq!(stats.total_threats, 1);
+        assert_eq!(stats.high_severity_threats, 1);
+    }
+
+    #[test]
+    fn test_high_severity_ratio() {
+        let mut stats = ThreatStatistics::new();
+        stats.record_threat(ThreatSeverity::High);
+        stats.record_threat(ThreatSeverity::Low);
+        assert_eq!(stats.high_severity_ratio(), 0.5);
     }
 }
