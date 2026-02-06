@@ -220,6 +220,10 @@ impl MethodHandler for CryptoHandler {
             "genetic.generate_challenge",
             "genetic.respond_to_challenge",
             "genetic.verify_challenge_response",
+            // Device enrollment (Deep Debt: DERIVE, not COPY)
+            "genetic.derive_device_seed",
+            "genetic.sign_lineage_certificate",
+            "genetic.verify_lineage_certificate",
             // ═══════════════════════════════════════════════════════════════
             // Semantic Aliases (Phase 2 - wateringHole Standard)
             // Added: January 27, 2026
@@ -236,6 +240,21 @@ impl MethodHandler for CryptoHandler {
             "crypto.decrypt",          // → chacha20_poly1305_decrypt (default, fast)
             "crypto.generate_keypair", // → x25519_generate_ephemeral (default, ECDH)
             "crypto.derive_secret",    // → x25519_derive_secret (default, ECDH)
+            // ═══════════════════════════════════════════════════════════════
+            // Cross-Primal Namespace (beardog.crypto.*)
+            // Added: February 6, 2026
+            // Purpose: Support Songbird's Sovereign Onion Service crypto delegation
+            // Pattern: Same as TLS 1.3 delegation (TRUE PRIMAL compliance)
+            // ═══════════════════════════════════════════════════════════════
+            "beardog.crypto.sha3_256",               // Onion address derivation (Tor v3)
+            "beardog.crypto.sign_ed25519",           // Onion identity keys
+            "beardog.crypto.verify_ed25519",         // Identity verification
+            "beardog.crypto.x25519_generate_ephemeral", // Session key generation
+            "beardog.crypto.x25519_derive_secret",   // ECDH shared secret
+            "beardog.crypto.chacha20_poly1305_encrypt", // Data encryption
+            "beardog.crypto.chacha20_poly1305_decrypt", // Data decryption
+            "beardog.crypto.hmac_sha256",            // HKDF for session keys
+            "beardog.crypto.blake3_hash",            // General hashing
         ]
     }
 
@@ -703,6 +722,49 @@ impl MethodHandler for CryptoHandler {
             }
 
             // ====================================================================
+            // Device Enrollment (Deep Debt: DERIVE, not COPY)
+            // Added: February 5, 2026
+            // ====================================================================
+            "genetic.derive_device_seed" => {
+                info!("🧬 Genetic: derive_device_seed (unique device derivation)");
+                super::super::crypto_handlers_genetic::handle_derive_device_seed(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.derive_device_seed".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            "genetic.sign_lineage_certificate" => {
+                info!("🧬 Genetic: sign_lineage_certificate (device enrollment)");
+                super::super::crypto_handlers_genetic::handle_sign_lineage_certificate(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.sign_lineage_certificate".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            "genetic.verify_lineage_certificate" => {
+                info!("🔍 Genetic: verify_lineage_certificate (certificate verification)");
+                super::super::crypto_handlers_genetic::handle_verify_lineage_certificate(
+                    params
+                        .ok_or_else(|| {
+                            "Parameters required for genetic.verify_lineage_certificate".to_string()
+                        })?
+                        .clone(),
+                )
+                .await
+                .map_err(|e| e.to_string())
+            }
+
+            // ====================================================================
             // Semantic Aliases (Phase 2 - wateringHole Standard)
             // Added: January 27, 2026
             // ====================================================================
@@ -748,6 +810,59 @@ impl MethodHandler for CryptoHandler {
                 handle_x25519_derive_secret(params).await
             }
 
+            // ====================================================================
+            // Cross-Primal Namespace (beardog.crypto.*)
+            // Added: February 6, 2026
+            // Purpose: Support Songbird's Sovereign Onion Service crypto delegation
+            // Pattern: Same as TLS 1.3 delegation (TRUE PRIMAL compliance)
+            // ====================================================================
+            "beardog.crypto.sha3_256" => {
+                info!("🧅 Crypto: beardog.crypto.sha3_256 (Songbird Onion Service)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_sha3_256(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "beardog.crypto.sign_ed25519" => {
+                info!("🧅 Crypto: beardog.crypto.sign_ed25519 (Songbird Onion Service)");
+                handle_sign_ed25519(params).await
+            }
+
+            "beardog.crypto.verify_ed25519" => {
+                info!("🧅 Crypto: beardog.crypto.verify_ed25519 (Songbird Onion Service)");
+                handle_verify_ed25519(params).await
+            }
+
+            "beardog.crypto.x25519_generate_ephemeral" => {
+                info!("🧅 Crypto: beardog.crypto.x25519_generate_ephemeral (Songbird Onion Service)");
+                handle_x25519_generate_ephemeral(params).await
+            }
+
+            "beardog.crypto.x25519_derive_secret" => {
+                info!("🧅 Crypto: beardog.crypto.x25519_derive_secret (Songbird Onion Service)");
+                handle_x25519_derive_secret(params).await
+            }
+
+            "beardog.crypto.chacha20_poly1305_encrypt" => {
+                info!("🧅 Crypto: beardog.crypto.chacha20_poly1305_encrypt (Songbird Onion Service)");
+                handle_chacha20_poly1305_encrypt(params).await
+            }
+
+            "beardog.crypto.chacha20_poly1305_decrypt" => {
+                info!("🧅 Crypto: beardog.crypto.chacha20_poly1305_decrypt (Songbird Onion Service)");
+                handle_chacha20_poly1305_decrypt(params).await
+            }
+
+            "beardog.crypto.hmac_sha256" => {
+                info!("🧅 Crypto: beardog.crypto.hmac_sha256 (Songbird Onion Service)");
+                handle_hmac_sha256(params).await
+            }
+
+            "beardog.crypto.blake3_hash" => {
+                info!("🧅 Crypto: beardog.crypto.blake3_hash (Songbird Onion Service)");
+                handle_blake3_hash(params).await
+            }
+
             _ => Err(format!("Unknown crypto method: {}", method)),
         }
     }
@@ -762,11 +877,12 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 69 methods (Phase 1-8 + TLS 1.2 + Dark Forest - Feb 1, 2026)
+        // Should have 81 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
         //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
-        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 7 genetic (added Dark Forest!) + 8 semantic aliases
-        assert_eq!(methods.len(), 69);
+        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 10 genetic (added device enrollment!)
+        //           + 8 semantic aliases + 9 beardog.crypto.* (Songbird Onion Service)
+        assert_eq!(methods.len(), 81);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -802,9 +918,14 @@ mod tests {
         assert!(methods.contains(&"genetic.mix_entropy"));
         assert!(methods.contains(&"genetic.verify_lineage"));
         assert!(methods.contains(&"genetic.generate_lineage_proof"));
-        assert!(methods.contains(&"genetic.generate_challenge"));  // Dark Forest!
-        assert!(methods.contains(&"genetic.respond_to_challenge"));  // Dark Forest!
-        assert!(methods.contains(&"genetic.verify_challenge_response"));  // Dark Forest!
+        assert!(methods.contains(&"genetic.generate_challenge")); // Dark Forest!
+        assert!(methods.contains(&"genetic.respond_to_challenge")); // Dark Forest!
+        assert!(methods.contains(&"genetic.verify_challenge_response")); // Dark Forest!
+        
+        // Verify device enrollment methods (Feb 5, 2026 - Deep Debt: DERIVE, not COPY)
+        assert!(methods.contains(&"genetic.derive_device_seed"));
+        assert!(methods.contains(&"genetic.sign_lineage_certificate"));
+        assert!(methods.contains(&"genetic.verify_lineage_certificate"));
 
         // Verify semantic aliases (Phase 2 - Jan 27, 2026)
         assert!(methods.contains(&"crypto.hash"));
@@ -815,6 +936,17 @@ mod tests {
         assert!(methods.contains(&"crypto.decrypt"));
         assert!(methods.contains(&"crypto.generate_keypair"));
         assert!(methods.contains(&"crypto.derive_secret"));
+
+        // Verify beardog.crypto.* namespace (Feb 6, 2026 - Songbird Onion Service)
+        assert!(methods.contains(&"beardog.crypto.sha3_256"));
+        assert!(methods.contains(&"beardog.crypto.sign_ed25519"));
+        assert!(methods.contains(&"beardog.crypto.verify_ed25519"));
+        assert!(methods.contains(&"beardog.crypto.x25519_generate_ephemeral"));
+        assert!(methods.contains(&"beardog.crypto.x25519_derive_secret"));
+        assert!(methods.contains(&"beardog.crypto.chacha20_poly1305_encrypt"));
+        assert!(methods.contains(&"beardog.crypto.chacha20_poly1305_decrypt"));
+        assert!(methods.contains(&"beardog.crypto.hmac_sha256"));
+        assert!(methods.contains(&"beardog.crypto.blake3_hash"));
     }
 
     #[test]
@@ -822,8 +954,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            69,
-            "Should have exactly 69 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest - Feb 1, 2026)"
+            81,
+            "Should have exactly 81 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service - Feb 6, 2026)"
         );
     }
 }
