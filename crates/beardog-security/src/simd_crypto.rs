@@ -1,6 +1,22 @@
-// Safe SIMD Cryptography Implementation
-//
-// Provides SIMD-accelerated cryptographic operations with zero unsafe code.
+//! Safe SIMD Cryptography Implementation
+//!
+//! **⚠️ EXPERIMENTAL MODULE - NOT FOR PRODUCTION USE**
+//!
+//! This module was created for SIMD acceleration exploration. Production crypto
+//! uses the RPC handlers in `beardog-tunnel::unix_socket_ipc::crypto_handlers_*`
+//! which use proper RustCrypto implementations (`chacha20poly1305`, `aes-gcm`, etc.).
+//!
+//! # Current Limitations
+//!
+//! - `safe_chacha20()` is a placeholder (XOR, not real ChaCha20)
+//! - For production encryption, use `crypto.chacha20_poly1305_encrypt` RPC method
+//!
+//! # TODO: Evolution Path
+//!
+//! If SIMD acceleration is needed in the future:
+//! 1. Use `simd-crypto` or `ring` crate for hardware-accelerated primitives
+//! 2. Or let LLVM auto-vectorize with `-C target-cpu=native`
+//! 3. RustCrypto's `chacha20poly1305` already uses SIMD when available
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;

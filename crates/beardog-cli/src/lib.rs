@@ -2,7 +2,19 @@
 //!
 //! This library provides the core functionality for the BearDog CLI,
 //! including command handlers and argument definitions.
+//!
+//! # Socket Path Discovery (TRUE PRIMAL)
+//!
+//! All socket paths use `SocketConfig::from_env()` which implements
+//! 5-tier fallback per Primal IPC Protocol:
+//!
+//! 1. `BEARDOG_SOCKET` env var (primal-specific)
+//! 2. `BIOMEOS_SOCKET_PATH` env var (orchestrator)
+//! 3. `/primal/beardog` (Primal IPC Protocol standard)
+//! 4. XDG Runtime Directory
+//! 5. Temp directory (last resort)
 
+use beardog_core::socket_config::SocketConfig;
 use clap::Parser;
 
 pub mod ecosystem_discovery_adapter;
@@ -57,48 +69,60 @@ pub struct ServerArgs {
     pub orchestrator_id: Option<String>,
 }
 
-/// Get platform-native default socket path
+/// Get platform-native default socket path via SocketConfig
 ///
-/// **Deep Debt Principle #4 & #5**: Agnostic + Runtime Discovery
+/// **TRUE PRIMAL**: Uses SocketConfig's 5-tier discovery instead of hardcoding
 ///
-/// Automatically selects optimal IPC mechanism per platform
+/// Discovery order (per Primal IPC Protocol):
+/// 1. `BEARDOG_SOCKET` env var
+/// 2. `BIOMEOS_SOCKET_PATH` env var (Neural API orchestration)
+/// 3. `/primal/beardog` (Primal IPC Protocol standard)
+/// 4. XDG Runtime Directory
+/// 5. Temp directory (platform-specific fallback)
 fn default_socket_path() -> String {
-    // Platform detection at compile-time, returns appropriate default
-    #[cfg(target_os = "android")]
-    {
-        "@biomeos_beardog".to_string()
-    }
-    #[cfg(all(unix, not(target_os = "android")))]
-    {
-        "/tmp/beardog.sock".to_string()
-    }
-    #[cfg(windows)]
-    {
-        r"\\.\pipe\biomeos_beardog".to_string()
-    }
-    #[cfg(target_os = "ios")]
-    {
-        "com.ecoprimals.beardog".to_string()
-    }
-    #[cfg(target_family = "wasm")]
-    {
-        "beardog".to_string()
-    }
+    SocketConfig::from_env()
+        .socket_path()
+        .to_string_lossy()
+        .to_string()
+}
+
+/// Get platform-native PID file path
+///
+/// Uses `std::env::temp_dir()` for cross-platform compatibility
+fn default_pid_path() -> String {
+    let mut path = std::env::temp_dir();
+    path.push("beardog.pid");
+    path.to_string_lossy().to_string()
+}
+
+/// Get platform-native log file path
+///
+/// Uses `std::env::temp_dir()` for cross-platform compatibility
+fn default_log_path() -> String {
+    let mut path = std::env::temp_dir();
+    path.push("beardog.log");
+    path.to_string_lossy().to_string()
 }
 
 /// Daemon mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct DaemonArgs {
-    /// Unix socket path
-    #[arg(long, default_value = "/tmp/beardog.sock")]
+    /// Socket path (uses SocketConfig discovery)
+    ///
+    /// **TRUE PRIMAL**: Automatic 5-tier discovery via SocketConfig
+    #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 
     /// PID file path
-    #[arg(long, default_value = "/tmp/beardog.pid")]
+    ///
+    /// Uses platform temp directory by default
+    #[arg(long, default_value_t = default_pid_path())]
     pub pid_file: String,
 
     /// Log file path
-    #[arg(long, default_value = "/tmp/beardog.log")]
+    ///
+    /// Uses platform temp directory by default
+    #[arg(long, default_value_t = default_log_path())]
     pub log_file: String,
 
     /// Family ID for BirdSong
@@ -113,8 +137,10 @@ pub struct DaemonArgs {
 /// Client mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct ClientArgs {
-    /// Unix socket path to connect to
-    #[arg(long, default_value = "/tmp/beardog.sock")]
+    /// Socket path to connect to (uses SocketConfig discovery)
+    ///
+    /// **TRUE PRIMAL**: Automatic 5-tier discovery via SocketConfig
+    #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 
     /// Command to execute (if not provided, starts interactive mode)
