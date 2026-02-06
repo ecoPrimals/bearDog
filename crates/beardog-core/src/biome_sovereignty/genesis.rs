@@ -111,35 +111,35 @@ impl Default for PrivacyProtectionSettings {
 
 impl PrivacyProtectionSettings {
     /// Check if zero-knowledge proofs are enabled
-    #[must_use] 
+    #[must_use]
     pub fn uses_zero_knowledge_proofs(&self) -> bool {
         self.enabled_mechanisms
             .contains(&PrivacyMechanism::ZeroKnowledgeProofs)
     }
 
     /// Check if homomorphic encryption is enabled
-    #[must_use] 
+    #[must_use]
     pub fn uses_homomorphic_encryption(&self) -> bool {
         self.enabled_mechanisms
             .contains(&PrivacyMechanism::HomomorphicEncryption)
     }
 
     /// Check if secure multiparty computation is enabled
-    #[must_use] 
+    #[must_use]
     pub fn uses_secure_multiparty_computation(&self) -> bool {
         self.enabled_mechanisms
             .contains(&PrivacyMechanism::SecureMultipartyComputation)
     }
 
     /// Check if data minimization is enabled
-    #[must_use] 
+    #[must_use]
     pub fn uses_data_minimization(&self) -> bool {
         self.enabled_mechanisms
             .contains(&PrivacyMechanism::DataMinimization)
     }
 
     /// Check if anonymous credentials are enabled
-    #[must_use] 
+    #[must_use]
     pub fn uses_anonymous_credentials(&self) -> bool {
         self.enabled_mechanisms
             .contains(&PrivacyMechanism::AnonymousCredentials)

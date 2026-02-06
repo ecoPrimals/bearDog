@@ -287,10 +287,7 @@ impl SongbirdClient {
 
         // Read response
         let mut buffer = vec![0u8; 8192];
-        let n = stream
-            .read(&mut buffer)
-            .await
-            .map_err(IpcError::Io)?;
+        let n = stream.read(&mut buffer).await.map_err(IpcError::Io)?;
 
         // Deserialize response
         let response: JsonRpcResponse = serde_json::from_slice(&buffer[..n])

@@ -586,7 +586,7 @@ async fn test_fault_wrong_random_sizes() {
 async fn test_fault_missing_parameters() {
     // Test various combinations of missing parameters
     let test_cases = vec![
-        json!({}),                                                      // All missing
+        json!({}),                                                     // All missing
         json!({ "pre_master_secret": BASE64.encode(vec![42u8; 32]) }), // Missing randoms
         json!({ "client_random": BASE64.encode(vec![1u8; 32]) }), // Missing secret and server_random
         json!({

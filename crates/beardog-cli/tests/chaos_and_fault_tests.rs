@@ -217,13 +217,13 @@ mod chaos_tests {
                                 Ordering::SeqCst,
                             )
                             .is_ok()
-                        {
-                            // Got resource, use it
-                            tokio::task::yield_now().await;
-                            // Release resource
-                            resources.fetch_add(1, Ordering::SeqCst);
-                            return Ok(());
-                        }
+                    {
+                        // Got resource, use it
+                        tokio::task::yield_now().await;
+                        // Release resource
+                        resources.fetch_add(1, Ordering::SeqCst);
+                        return Ok(());
+                    }
 
                     // Resource exhausted - back off and retry
                     tokio::task::yield_now().await;

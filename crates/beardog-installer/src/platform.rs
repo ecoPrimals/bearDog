@@ -53,11 +53,11 @@ impl OperatingSystem {
             if Self::is_android() {
                 return Ok(Self::Android);
             }
-            
+
             // Check if using musl libc
             #[cfg(target_env = "musl")]
             return Ok(Self::LinuxMusl);
-            
+
             #[cfg(not(target_env = "musl"))]
             return Ok(Self::Linux);
         }
@@ -93,7 +93,7 @@ impl OperatingSystem {
                 || std::env::var("ANDROID_ROOT").is_ok()
                 || std::env::var("ANDROID_DATA").is_ok()
         }
-        
+
         #[cfg(not(target_os = "linux"))]
         false
     }
@@ -166,8 +166,8 @@ impl BiomeOSPaths {
     /// # Errors
     /// Returns `PlatformError::NoHomeDir` if home directory cannot be determined.
     pub fn discover() -> Result<Self, PlatformError> {
-        let project = ProjectDirs::from("org", "biomeos", "nucleus")
-            .ok_or(PlatformError::NoHomeDir)?;
+        let project =
+            ProjectDirs::from("org", "biomeos", "nucleus").ok_or(PlatformError::NoHomeDir)?;
 
         let base = BaseDirs::new().ok_or(PlatformError::NoHomeDir)?;
 
@@ -181,10 +181,7 @@ impl BiomeOSPaths {
     }
 
     /// Discover binary installation directory (prefers user-space, no sudo)
-    fn discover_bin_dir(
-        project: &ProjectDirs,
-        base: &BaseDirs,
-    ) -> Result<PathBuf, PlatformError> {
+    fn discover_bin_dir(project: &ProjectDirs, base: &BaseDirs) -> Result<PathBuf, PlatformError> {
         // 1. Try $HOME/.local/bin (most common, usually in PATH)
         let local_bin = base.home_dir().join(".local").join("bin");
         if local_bin.exists() {
@@ -245,10 +242,12 @@ impl BiomeOSPaths {
             &self.runtime_dir,
             &self.cache_dir,
         ] {
-            fs::create_dir_all(dir).await.map_err(|e| PlatformError::IoError {
-                path: dir.clone(),
-                source: e,
-            })?;
+            fs::create_dir_all(dir)
+                .await
+                .map_err(|e| PlatformError::IoError {
+                    path: dir.clone(),
+                    source: e,
+                })?;
         }
 
         Ok(())
@@ -317,28 +316,36 @@ mod tests {
         let paths = BiomeOSPaths::discover().unwrap();
 
         // Paths should be valid and contain expected patterns
-        assert!(paths
-            .bin_dir
-            .to_str()
-            .unwrap()
-            .contains("biomeos") || paths.bin_dir.to_str().unwrap().contains(".local/bin"));
-        
+        assert!(
+            paths.bin_dir.to_str().unwrap().contains("biomeos")
+                || paths.bin_dir.to_str().unwrap().contains(".local/bin")
+        );
+
         // data_dir should contain either "biomeos" or "nucleus" (from ProjectDirs)
         let data_str = paths.data_dir.to_str().unwrap();
-        assert!(data_str.contains("biomeos") || data_str.contains("nucleus"), 
-                "data_dir should contain biomeos or nucleus, got: {}", data_str);
-        
+        assert!(
+            data_str.contains("biomeos") || data_str.contains("nucleus"),
+            "data_dir should contain biomeos or nucleus, got: {}",
+            data_str
+        );
+
         // config_dir should contain either "biomeos" or "nucleus"
         let config_str = paths.config_dir.to_str().unwrap();
-        assert!(config_str.contains("biomeos") || config_str.contains("nucleus"),
-                "config_dir should contain biomeos or nucleus, got: {}", config_str);
-        
+        assert!(
+            config_str.contains("biomeos") || config_str.contains("nucleus"),
+            "config_dir should contain biomeos or nucleus, got: {}",
+            config_str
+        );
+
         assert!(paths.runtime_dir.to_str().unwrap().contains("biomeos"));
-        
+
         // cache_dir should contain either "biomeos" or "nucleus"
         let cache_str = paths.cache_dir.to_str().unwrap();
-        assert!(cache_str.contains("biomeos") || cache_str.contains("nucleus"),
-                "cache_dir should contain biomeos or nucleus, got: {}", cache_str);
+        assert!(
+            cache_str.contains("biomeos") || cache_str.contains("nucleus"),
+            "cache_dir should contain biomeos or nucleus, got: {}",
+            cache_str
+        );
     }
 
     #[tokio::test]
@@ -368,7 +375,7 @@ mod tests {
     fn test_all_dirs() {
         let paths = BiomeOSPaths::discover().unwrap();
         let all = paths.all_dirs();
-        
+
         assert_eq!(all.len(), 5);
         assert!(all.contains(&&paths.bin_dir));
         assert!(all.contains(&&paths.data_dir));

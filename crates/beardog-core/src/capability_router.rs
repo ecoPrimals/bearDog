@@ -287,10 +287,7 @@ impl CapabilityRouter {
 
         // Filter by minimum trust score
         if let Some(min_trust) = context.min_trust_score {
-            primals.retain(|p| {
-                p.trust_score
-                    .is_some_and(|score| score >= min_trust)
-            });
+            primals.retain(|p| p.trust_score.is_some_and(|score| score >= min_trust));
         }
 
         // Filter by maximum latency (if we have latency data)
@@ -376,7 +373,8 @@ impl CapabilityRouter {
                 let latency = self
                     .load_tracker
                     .get(&primals[idx].name)
-                    .and_then(|l| l.avg_latency_ms).map_or_else(|| "unknown".to_string(), |lat| format!("{lat:.1}ms"));
+                    .and_then(|l| l.avg_latency_ms)
+                    .map_or_else(|| "unknown".to_string(), |lat| format!("{lat:.1}ms"));
                 (idx, format!("lowest latency: {latency}"))
             }
 
@@ -395,8 +393,7 @@ impl CapabilityRouter {
                 use std::hash::BuildHasher;
 
                 let s = RandomState::new();
-                
-                
+
                 let idx = (s.hash_one(&Instant::now()) as usize) % primals.len();
                 (idx, "random selection".to_string())
             }
@@ -477,7 +474,7 @@ mod tests {
     #[test]
     fn test_selection_strategy_highest_trust() {
         use crate::primal_discovery::DiscoveredPrimal;
-        
+
         use std::time::SystemTime;
 
         let mut primals = vec![

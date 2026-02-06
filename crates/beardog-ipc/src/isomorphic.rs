@@ -21,8 +21,8 @@
 //! - ✅ **Pure Rust**: Zero external dependencies
 
 use anyhow::{Context, Result};
-use std::path::PathBuf;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::{TcpStream, UnixStream};
 use tracing::{debug, info};
@@ -35,7 +35,7 @@ use tracing::{debug, info};
 pub enum IpcEndpoint {
     /// Unix domain socket (optimal on Linux/macOS)
     UnixSocket(PathBuf),
-    
+
     /// TCP on localhost (fallback for Android/constraints)
     TcpLocal(SocketAddr),
 }
@@ -48,7 +48,7 @@ impl IpcEndpoint {
             IpcEndpoint::TcpLocal(addr) => format!("tcp:{}", addr),
         }
     }
-    
+
     /// Check if this is the optimal transport (Unix socket)
     pub fn is_optimal(&self) -> bool {
         matches!(self, IpcEndpoint::UnixSocket(_))
@@ -95,7 +95,7 @@ pub async fn discover_beardog_endpoint() -> Result<IpcEndpoint> {
     // 1. Try Unix socket paths first (optimal)
     debug!("🔍 Discovering BearDog IPC endpoint...");
     debug!("   Step 1: Trying Unix socket paths (optimal)");
-    
+
     let socket_paths = get_unix_socket_paths();
     for path in socket_paths {
         if path.exists() {
@@ -103,14 +103,17 @@ pub async fn discover_beardog_endpoint() -> Result<IpcEndpoint> {
             return Ok(IpcEndpoint::UnixSocket(path));
         }
     }
-    
+
     debug!("   Unix sockets not found, trying TCP discovery...");
 
     // 2. Try TCP discovery file (fallback)
     debug!("   Step 2: Trying TCP discovery file (fallback)");
-    
+
     if let Ok(endpoint) = discover_tcp_endpoint().await {
-        info!("✅ Found TCP endpoint via discovery file: {}", endpoint.display());
+        info!(
+            "✅ Found TCP endpoint via discovery file: {}",
+            endpoint.display()
+        );
         return Ok(endpoint);
     }
 
@@ -137,7 +140,10 @@ fn get_unix_socket_paths() -> Vec<PathBuf> {
 
     // 2. XDG runtime directory (standard)
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        paths.push(PathBuf::from(format!("{}/biomeos/beardog.sock", runtime_dir)));
+        paths.push(PathBuf::from(format!(
+            "{}/biomeos/beardog.sock",
+            runtime_dir
+        )));
     }
 
     // 3. /tmp fallback (compatibility)
@@ -226,16 +232,19 @@ pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
 
     match endpoint {
         IpcEndpoint::UnixSocket(path) => {
-            let stream = UnixStream::connect(&path).await
-                .context(format!("Failed to connect to Unix socket: {}", path.display()))?;
-            
+            let stream = UnixStream::connect(&path).await.context(format!(
+                "Failed to connect to Unix socket: {}",
+                path.display()
+            ))?;
+
             info!("✅ Connected via Unix socket (optimal)");
             Ok(Box::new(stream) as Box<dyn AsyncStream>)
         }
         IpcEndpoint::TcpLocal(addr) => {
-            let stream = TcpStream::connect(addr).await
+            let stream = TcpStream::connect(addr)
+                .await
                 .context(format!("Failed to connect to TCP: {}", addr))?;
-            
+
             info!("✅ Connected via TCP (isomorphic fallback)");
             Ok(Box::new(stream) as Box<dyn AsyncStream>)
         }
@@ -261,7 +270,7 @@ mod tests {
     fn test_unix_socket_paths() {
         let paths = get_unix_socket_paths();
         assert!(!paths.is_empty());
-        
+
         // Should always have /tmp fallback
         assert!(paths.iter().any(|p| p.starts_with("/tmp")));
     }
@@ -270,7 +279,7 @@ mod tests {
     fn test_tcp_discovery_files() {
         let files = get_tcp_discovery_file_candidates();
         assert!(!files.is_empty());
-        
+
         // Should always have /tmp fallback
         assert!(files.iter().any(|f| f.starts_with("/tmp")));
     }

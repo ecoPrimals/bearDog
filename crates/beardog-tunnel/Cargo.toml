@@ -84,7 +84,11 @@ subtle = "2.5"  # Constant-time comparisons for Dark Forest challenge-response
 
 # Solo V2 USB security key support
 ctap-hid-fido2 = { version = "3.5", optional = true }
-hidapi = { version = "2.4", optional = true }
+# NOTE: hidapi removed - evolved to Pure Rust beardog-hid (ecoBin compliant)
+# hidapi = { version = "2.4", optional = true }
+
+# Pure Rust HID implementation (ecoBin compliant - no C dependencies)
+beardog-hid = { path = "../beardog-hid", optional = true }
 
 base64 = "0.21"  # Required for Unix socket IPC (evolved from HTTP to pure IPC)
 
@@ -114,9 +118,9 @@ zero-cost-architecture = []
 universal-discovery = []
 primal-sovereignty = []
 
-# Hardware features
-solo-v2 = ["ctap-hid-fido2", "hidapi"]
-usb-discovery = ["hidapi"]
+# Hardware features (evolved to Pure Rust - ecoBin compliant)
+solo-v2 = ["ctap-hid-fido2", "beardog-hid"]
+usb-discovery = ["beardog-hid"]
 ctap2 = ["ctap-hid-fido2"]
 
 # Platform features

@@ -78,6 +78,14 @@ pub struct NetworkPortsConfig {
     /// Override with `BEARDOG_HEALTH_PORT` environment variable.
     #[serde(default = "default_health_port")]
     pub health_port: u16,
+
+    /// TCP IPC fallback port
+    ///
+    /// Used when Unix sockets aren't available (Android, Windows containers).
+    /// This is the TCP endpoint for JSON-RPC IPC. Defaults to 9900.
+    /// Override with `BEARDOG_TCP_IPC_PORT` environment variable.
+    #[serde(default = "default_tcp_ipc_port")]
+    pub tcp_ipc_port: u16,
 }
 
 // Default port constants (documented fallbacks)
@@ -132,6 +140,10 @@ pub const DEFAULT_DATABASE_PORT: u16 = 5432;
 /// Default Grafana port (3000)
 pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 
+/// Default TCP IPC fallback port (9900)
+/// Used when Unix sockets aren't available (Android, containers, Windows)
+pub const DEFAULT_TCP_IPC_PORT: u16 = 9900;
+
 /// Default Jaeger port (14268)
 pub const DEFAULT_JAEGER_PORT: u16 = 14268;
 
@@ -177,6 +189,13 @@ fn default_health_port() -> u16 {
         .unwrap_or(DEFAULT_HEALTH_PORT)
 }
 
+fn default_tcp_ipc_port() -> u16 {
+    std::env::var("BEARDOG_TCP_IPC_PORT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_TCP_IPC_PORT)
+}
+
 impl Default for NetworkPortsConfig {
     fn default() -> Self {
         Self::with_defaults()
@@ -206,6 +225,7 @@ impl NetworkPortsConfig {
             https_port: default_https_port(),
             metrics_port: default_metrics_port(),
             health_port: default_health_port(),
+            tcp_ipc_port: default_tcp_ipc_port(),
         }
     }
 
@@ -237,6 +257,7 @@ impl NetworkPortsConfig {
             ("https_port", self.https_port),
             ("metrics_port", self.metrics_port),
             ("health_port", self.health_port),
+            ("tcp_ipc_port", self.tcp_ipc_port),
         ];
 
         for (name, port) in ports {

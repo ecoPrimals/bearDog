@@ -1,16 +1,7 @@
-#![allow(
-    unused_imports,
-    unused_variables,
-    dead_code,
-    unused_comparisons,
-    clippy::all
-)]
-
-//! Debug CTAPHID_INIT Communication
+//! Debug CTAPHID_INIT Communication - Pure Rust Implementation
 //!
 //! This is a minimal test to debug the CTAPHID_INIT handshake.
-
-// Dependencies are available through workspace
+//! Uses Pure Rust beardog-hid for HID communication (ecoBin compliant).
 
 #[cfg(feature = "fido2")]
 use beardog_security::hsm::fido2::discovery;
@@ -22,14 +13,17 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    println!("╔═══════════════════════════════════════════════════════╗");
-    println!("║    CTAPHID_INIT Debug - Minimal Communication Test    ║");
-    println!("╚═══════════════════════════════════════════════════════╝");
+    println!("╔═══════════════════════════════════════════════════════════╗");
+    println!("║    CTAPHID_INIT Debug - Minimal Communication Test        ║");
+    println!("║    (Pure Rust - ecoBin Compliant)                         ║");
+    println!("╚═══════════════════════════════════════════════════════════╝");
     println!();
 
     #[cfg(not(feature = "fido2"))]
     {
         println!("⚠️  FIDO2 feature not enabled!");
+        println!("   Run with: cargo run --example test_ctaphid_init_debug --features fido2");
+        return Ok(());
     }
 
     #[cfg(feature = "fido2")]
@@ -51,29 +45,30 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         println!("   Path: {}", device_info.device_path.display());
         println!();
 
-        // Open device
-        println!("🔓 Opening HID device...");
-        let path_str = device_info.device_path.to_string_lossy();
-        let api = hidapi::HidApi::new().map_err(|e| {
-            beardog_errors::BearDogError::system(format!("HID API init failed: {}", e))
-        })?;
+        // Open device using beardog-hid (Pure Rust)
+        println!("🔓 Opening HID device with beardog-hid (Pure Rust)...");
 
-        let device = api
-            .open_path(
-                std::ffi::CString::new(path_str.as_bytes())
-                    .unwrap()
-                    .as_c_str(),
-            )
-            .map_err(|e| {
-                beardog_errors::BearDogError::system(format!("Device open failed: {}", e))
+        let hid_devices = beardog_hid::discover()
+            .await
+            .map_err(|e| beardog_errors::BearDogError::system(format!("HID discovery: {}", e)))?;
+
+        let hid_info = hid_devices
+            .iter()
+            .find(|d| d.path.contains(&device_info.device_path.to_string_lossy().to_string()))
+            .ok_or_else(|| {
+                beardog_errors::BearDogError::system("Device not found in HID list".to_string())
             })?;
+
+        let mut hid_device = beardog_hid::open_device(&hid_info.path)
+            .await
+            .map_err(|e| beardog_errors::BearDogError::system(format!("Device open: {}", e)))?;
 
         println!("✅ Device opened\n");
 
         // Generate nonce
         let mut nonce = [0u8; 8];
-        for i in 0..8 {
-            nonce[i] = (i * 17 + 42) as u8; // Deterministic for debugging
+        for (i, byte) in nonce.iter_mut().enumerate() {
+            *byte = ((i * 17 + 42) & 0xFF) as u8; // Deterministic for debugging
         }
 
         println!("📋 Building CTAPHID_INIT packet:");
@@ -98,7 +93,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
         // Send packet
         println!("📤 Sending CTAPHID_INIT...");
-        match device.write(&packet) {
+        match hid_device.write(&packet).await {
             Ok(bytes_written) => {
                 println!("✅ Sent {} bytes", bytes_written);
             }
@@ -108,7 +103,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
             }
         }
 
-        // Try multiple read attempts
+        // Try to read response with timeout using tokio
         println!();
         println!("📥 Attempting to read response...");
 
@@ -116,10 +111,18 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
             println!("   Attempt {}/5...", attempt);
 
             let mut response = vec![0u8; 64];
-            match device.read_timeout(&mut response, 1000) {
-                Ok(bytes_read) if bytes_read > 0 => {
+
+            // Use tokio timeout for read
+            let read_result =
+                tokio::time::timeout(tokio::time::Duration::from_secs(1), hid_device.read(&mut response)).await;
+
+            match read_result {
+                Ok(Ok(bytes_read)) if bytes_read > 0 => {
                     println!("   ✅ Got {} bytes!", bytes_read);
-                    println!("   Response hex: {:02x?}", &response[..bytes_read.min(32)]);
+                    println!(
+                        "   Response hex: {:02x?}",
+                        &response[..bytes_read.min(32)]
+                    );
                     println!();
 
                     // Parse response
@@ -131,7 +134,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                             response[3],
                         ]);
                         let cmd = response[4];
-                        let len = ((response[5] as usize) << 8) | (response[6] as usize);
+                        let len = (usize::from(response[5]) << 8) | usize::from(response[6]);
 
                         println!("📊 Parsed response:");
                         println!("   CID: 0x{:08X}", cid);
@@ -168,23 +171,24 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                             println!();
                             println!("🎉 CTAPHID_INIT SUCCESS!");
                             return Ok(());
-                        } else if cmd == 0xBF {
+                        } else if cmd == 0xBF && bytes_read >= 8 {
                             // Error response
-                            if bytes_read >= 8 {
-                                let error_code = response[7];
-                                println!("   ❌ Device returned error: 0x{:02X}", error_code);
-                            }
+                            let error_code = response[7];
+                            println!("   ❌ Device returned error: 0x{:02X}", error_code);
                         }
                     }
 
                     return Ok(());
                 }
-                Ok(_) => {
+                Ok(Ok(_)) => {
                     println!("   ⏱️  Timeout (no data)");
                 }
-                Err(e) => {
+                Ok(Err(e)) => {
                     println!("   ❌ Read error: {}", e);
                     return Ok(());
+                }
+                Err(_) => {
+                    println!("   ⏱️  Read timeout");
                 }
             }
 

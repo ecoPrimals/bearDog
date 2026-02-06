@@ -72,7 +72,7 @@ impl BinaryInstaller {
             // 2. Release directory (same-arch compilation)
             self.source_dir.join(&binary_name),
         ];
-        
+
         // 3. Parent's target directory (if parent exists)
         if let Some(parent) = self.source_dir.parent() {
             candidates.push(parent.join(&target).join(&binary_name));
@@ -123,13 +123,13 @@ impl BinaryInstaller {
         info!("Installing {} to {}", primal.display_name(), dest.display());
 
         // Copy binary (atomic operation)
-        fs::copy(source, &dest).await.map_err(|e| {
-            InstallerError::CopyFailed {
+        fs::copy(source, &dest)
+            .await
+            .map_err(|e| InstallerError::CopyFailed {
                 from: source.to_path_buf(),
                 to: dest.clone(),
                 source: e,
-            }
-        })?;
+            })?;
 
         // Set executable permissions (Unix-like systems)
         #[cfg(unix)]
@@ -162,11 +162,19 @@ impl BinaryInstaller {
         let binary_path = self.paths.bin_dir.join(primal.name());
 
         if !binary_path.exists() {
-            warn!("{} not found at {}", primal.display_name(), binary_path.display());
+            warn!(
+                "{} not found at {}",
+                primal.display_name(),
+                binary_path.display()
+            );
             return Ok(());
         }
 
-        info!("Uninstalling {} from {}", primal.display_name(), binary_path.display());
+        info!(
+            "Uninstalling {} from {}",
+            primal.display_name(),
+            binary_path.display()
+        );
 
         fs::remove_file(&binary_path)
             .await
@@ -197,23 +205,31 @@ pub enum InstallerError {
     /// Binary not found in source tree
     #[error("Binary not found for {primal:?} (target: {target}). Searched:\n{}", searched.join("\n"))]
     BinaryNotFound {
+        /// The primal being installed
         primal: Primal,
+        /// Target triple (e.g., x86_64-unknown-linux-gnu)
         target: String,
+        /// Paths that were searched
         searched: Vec<String>,
     },
 
     /// Copy operation failed
     #[error("Failed to copy binary from {from:?} to {to:?}: {source}")]
     CopyFailed {
+        /// Source path
         from: PathBuf,
+        /// Destination path
         to: PathBuf,
+        /// Underlying IO error
         source: std::io::Error,
     },
 
     /// IO error
     #[error("IO error for path {path:?}: {source}")]
     IoError {
+        /// Path that caused the error
         path: PathBuf,
+        /// Underlying IO error
         source: std::io::Error,
     },
 }

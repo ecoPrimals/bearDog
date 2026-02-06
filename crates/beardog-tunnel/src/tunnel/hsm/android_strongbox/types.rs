@@ -47,19 +47,19 @@ pub struct AndroidDeviceInfo {
     // Core identification
     pub manufacturer: String,
     pub model: String,
-    pub device: String,                    // Device codename (e.g., "shiba" for Pixel 8)
-    
+    pub device: String, // Device codename (e.g., "shiba" for Pixel 8)
+
     // Hardware details
-    pub hardware: Option<String>,          // Hardware platform (e.g., "google_tensor_g3")
-    pub board: Option<String>,             // Board name
-    pub brand: Option<String>,             // Brand name
-    
+    pub hardware: Option<String>, // Hardware platform (e.g., "google_tensor_g3")
+    pub board: Option<String>,    // Board name
+    pub brand: Option<String>,    // Brand name
+
     // Android version info
-    pub android_version: String,           // Human readable (e.g., "14")
-    pub api_level: u32,                    // Android API level (e.g., 34)
-    pub security_patch: Option<String>,    // Security patch date
-    pub security_patch_level: String,      // Alias for compatibility
-    
+    pub android_version: String,        // Human readable (e.g., "14")
+    pub api_level: u32,                 // Android API level (e.g., 34)
+    pub security_patch: Option<String>, // Security patch date
+    pub security_patch_level: String,   // Alias for compatibility
+
     // Security features
     pub strongbox_version: Option<String>,
     pub titan_m_version: Option<String>,
@@ -88,24 +88,24 @@ impl AndroidDeviceInfo {
             verified_boot_state: VerifiedBootState::Verified,
         })
     }
-    
+
     /// Returns whether StrongBox is available on this device
     pub fn strongbox_available(&self) -> bool {
         self.strongbox_version.is_some()
     }
-    
+
     /// Returns whether TEE (Trusted Execution Environment) is available
     pub fn tee_available(&self) -> bool {
         // TEE is generally available on Android 9+ (API 28+)
         self.api_level >= 28
     }
-    
+
     /// Returns whether hardware attestation is supported
     pub fn hardware_attestation_supported(&self) -> bool {
         // Hardware attestation requires Android 8+ and StrongBox/TEE
         self.api_level >= 26 && (self.strongbox_available() || self.tee_available())
     }
-    
+
     /// Returns the device model (alias for backward compatibility)
     pub fn device_model(&self) -> &str {
         &self.model
@@ -296,7 +296,10 @@ impl StrongBoxError {
 impl From<StrongBoxError> for BearDogError {
     fn from(err: StrongBoxError) -> Self {
         // Use modern error constructor
-        BearDogError::hsm(format!("StrongBox error (code {}): {}", err.code, err.message))
+        BearDogError::hsm(format!(
+            "StrongBox error (code {}): {}",
+            err.code, err.message
+        ))
     }
 }
 
@@ -343,25 +346,25 @@ impl AndroidAttestationService {
             challenge_generator: Arc::new(ChallengeGenerator::new()),
         }
     }
-    
+
     /// Attest device integrity
     ///
     /// # Errors
     /// Returns error if attestation fails
-    pub async fn attest_device(
-        &self,
-        challenge: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        tracing::info!("🔐 Performing device attestation with {} byte challenge", challenge.len());
-        
+    pub async fn attest_device(&self, challenge: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        tracing::info!(
+            "🔐 Performing device attestation with {} byte challenge",
+            challenge.len()
+        );
+
         // In production, this would:
         // 1. Call Android KeyStore attestation API via JNI
         // 2. Generate hardware-backed attestation certificate
         // 3. Return signed certificate chain
-        
+
         // For now, return placeholder attestation
         Err(BearDogError::not_implemented(
-            "Device attestation - requires JNI implementation"
+            "Device attestation - requires JNI implementation",
         ))
     }
 }
@@ -414,7 +417,7 @@ impl AndroidHealthMonitor {
             attestation_health: Arc::new(RwLock::new(HsmHealthStatus::Unknown)),
         }
     }
-    
+
     /// Check overall health status
     ///
     /// # Errors
@@ -423,11 +426,17 @@ impl AndroidHealthMonitor {
         let keystore = *self.keystore_health.read().await;
         let strongbox = *self.strongbox_health.read().await;
         let attestation = *self.attestation_health.read().await;
-        
+
         let is_healthy = matches!(keystore, HsmHealthStatus::Healthy)
-            && matches!(strongbox, HsmHealthStatus::Healthy | HsmHealthStatus::Unknown)
-            && matches!(attestation, HsmHealthStatus::Healthy | HsmHealthStatus::Unknown);
-        
+            && matches!(
+                strongbox,
+                HsmHealthStatus::Healthy | HsmHealthStatus::Unknown
+            )
+            && matches!(
+                attestation,
+                HsmHealthStatus::Healthy | HsmHealthStatus::Unknown
+            );
+
         Ok(HealthCheckResult {
             is_healthy,
             keystore_status: keystore,
@@ -437,7 +446,7 @@ impl AndroidHealthMonitor {
             details: std::collections::HashMap::new(),
         })
     }
-    
+
     /// Returns whether the monitor is reporting healthy status
     pub async fn is_healthy(&self) -> bool {
         self.check().await.map(|r| r.is_healthy).unwrap_or(false)

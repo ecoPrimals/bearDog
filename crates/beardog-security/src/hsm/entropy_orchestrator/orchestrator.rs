@@ -129,6 +129,7 @@ impl HsmEntropyOrchestrator {
             None
         };
 
+        #[allow(unused_mut)] // Mutated conditionally by feature flags
         let mut total_devices = 0;
 
         #[cfg(feature = "fido2")]

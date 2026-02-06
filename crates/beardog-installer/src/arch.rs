@@ -75,36 +75,36 @@ impl Architecture {
     /// ```
     pub fn to_rust_target(&self, os: &crate::platform::OperatingSystem) -> String {
         use crate::platform::OperatingSystem::*;
-        
+
         match (self, os) {
             // Linux (GNU)
             (Self::X86_64, Linux) => "x86_64-unknown-linux-gnu",
             (Self::Aarch64, Linux) => "aarch64-unknown-linux-gnu",
             (Self::Riscv64, Linux) => "riscv64gc-unknown-linux-gnu",
-            
+
             // Linux (musl - static linking)
             (Self::X86_64, LinuxMusl) => "x86_64-unknown-linux-musl",
             (Self::Aarch64, LinuxMusl) => "aarch64-unknown-linux-musl",
             (Self::Riscv64, LinuxMusl) => "riscv64gc-unknown-linux-musl",
-            
+
             // Android
             (Self::Aarch64, Android) => "aarch64-linux-android",
             (Self::X86_64, Android) => "x86_64-linux-android",
-            
+
             // macOS (Darwin)
             (Self::X86_64, MacOS) => "x86_64-apple-darwin",
             (Self::Aarch64, MacOS) => "aarch64-apple-darwin",
-            
+
             // iOS
             (Self::Aarch64, Ios) => "aarch64-apple-ios",
-            
+
             // Windows (GNU toolchain)
             (Self::X86_64, Windows) => "x86_64-pc-windows-gnu",
             (Self::Aarch64, Windows) => "aarch64-pc-windows-gnullvm",
-            
+
             // WebAssembly (platform-independent)
             (Self::Wasm32, _) => "wasm32-unknown-unknown",
-            
+
             // Unsupported combinations
             _ => "unknown",
         }
@@ -167,7 +167,7 @@ mod tests {
     fn test_detect_architecture() {
         let arch = Architecture::detect();
         assert!(arch.is_ok(), "Should detect current architecture");
-        
+
         // Verify it's one of the supported architectures
         let arch = arch.unwrap();
         assert!(Architecture::all().contains(&arch));
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_rust_target_linux_gnu() {
         use crate::platform::OperatingSystem;
-        
+
         let os = OperatingSystem::Linux;
         assert_eq!(
             Architecture::X86_64.to_rust_target(&os),
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn test_rust_target_linux_musl() {
         use crate::platform::OperatingSystem;
-        
+
         let os = OperatingSystem::LinuxMusl;
         assert_eq!(
             Architecture::X86_64.to_rust_target(&os),
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn test_rust_target_android() {
         use crate::platform::OperatingSystem;
-        
+
         let os = OperatingSystem::Android;
         assert_eq!(
             Architecture::Aarch64.to_rust_target(&os),
@@ -233,7 +233,7 @@ mod tests {
     #[test]
     fn test_rust_target_macos() {
         use crate::platform::OperatingSystem;
-        
+
         let os = OperatingSystem::MacOS;
         assert_eq!(
             Architecture::X86_64.to_rust_target(&os),
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     fn test_rust_target_windows() {
         use crate::platform::OperatingSystem;
-        
+
         let os = OperatingSystem::Windows;
         assert_eq!(
             Architecture::X86_64.to_rust_target(&os),
@@ -259,7 +259,7 @@ mod tests {
     #[test]
     fn test_rust_target_wasm() {
         use crate::platform::OperatingSystem;
-        
+
         // WASM is platform-independent
         let os = OperatingSystem::Linux;
         assert_eq!(
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn test_binary_extension() {
         use crate::platform::OperatingSystem;
-        
+
         let arch = Architecture::X86_64;
         assert_eq!(arch.binary_extension(&OperatingSystem::Windows), ".exe");
         assert_eq!(arch.binary_extension(&OperatingSystem::Linux), "");
@@ -294,7 +294,7 @@ mod tests {
         let arch = Architecture::X86_64;
         let json = serde_json::to_string(&arch).unwrap();
         assert_eq!(json, "\"x86_64\"");
-        
+
         let deserialized: Architecture = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized, Architecture::X86_64);
     }

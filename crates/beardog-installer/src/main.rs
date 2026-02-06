@@ -26,7 +26,7 @@ use beardog_installer::{
     deployment::DeploymentManager, validator::BinaryValidator, BiomeOSPaths, Primal,
 };
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
@@ -89,7 +89,11 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Initialize tracing
-    let level = if cli.verbose { Level::DEBUG } else { Level::INFO };
+    let level = if cli.verbose {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
     let subscriber = FmtSubscriber::builder()
         .with_max_level(level)
         .with_target(false)
@@ -99,7 +103,7 @@ async fn main() -> Result<()> {
     match cli.command {
         Commands::Install { primals, dry_run } => {
             let primals = parse_primals(primals)?;
-            
+
             if dry_run {
                 println!("🔍 Dry run mode - no actual installation");
                 println!("Would install: {}", primals_to_string(&primals));
@@ -124,7 +128,11 @@ async fn main() -> Result<()> {
         }
 
         Commands::Version => {
-            println!("{} v{}", beardog_installer::NAME, beardog_installer::VERSION);
+            println!(
+                "{} v{}",
+                beardog_installer::NAME,
+                beardog_installer::VERSION
+            );
             println!("Universal genomeBin installer - Pure Rust, async, platform-agnostic");
         }
     }
@@ -139,7 +147,7 @@ fn parse_primals(primals_str: Option<String>) -> Result<Vec<Primal>> {
             let mut primals = Vec::new();
             for name in s.split(',') {
                 let name = name.trim();
-                match Primal::from_str(name) {
+                match Primal::parse_name(name) {
                     Some(primal) => primals.push(primal),
                     None => anyhow::bail!("Unknown primal: {}", name),
                 }
@@ -160,12 +168,12 @@ fn primals_to_string(primals: &[Primal]) -> String {
 }
 
 /// Install primals
-async fn install_primals(source_dir: &PathBuf, primals: &[Primal]) -> Result<()> {
+async fn install_primals(source_dir: &Path, primals: &[Primal]) -> Result<()> {
     println!("🧬 Installing {} primals...", primals.len());
     println!("   Source: {}", source_dir.display());
     println!("   Primals: {}\n", primals_to_string(primals));
 
-    let manager = DeploymentManager::new(source_dir.clone()).await?;
+    let manager = DeploymentManager::new(source_dir.to_path_buf()).await?;
     let report = manager.deploy_primals(primals).await?;
 
     println!("\n{}", report);
@@ -212,11 +220,11 @@ async fn validate_primals(primals: &[Primal]) -> Result<()> {
 }
 
 /// Uninstall primals
-async fn uninstall_primals(source_dir: &PathBuf, primals: &[Primal]) -> Result<()> {
+async fn uninstall_primals(source_dir: &Path, primals: &[Primal]) -> Result<()> {
     println!("🗑️  Uninstalling {} primals...", primals.len());
     println!("   Primals: {}\n", primals_to_string(primals));
 
-    let manager = DeploymentManager::new(source_dir.clone()).await?;
+    let manager = DeploymentManager::new(source_dir.to_path_buf()).await?;
 
     for primal in primals {
         manager.installer.uninstall_binary(*primal).await?;

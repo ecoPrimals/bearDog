@@ -44,7 +44,6 @@ pub enum BoundTransport {
 
     /// TCP socket (all platforms)
     Tcp(Arc<TcpIpcServer>),
-
     // Abstract sockets handled as Unix variant with @ prefix
     // Named pipes (Windows) - future enhancement
     // XPC (iOS) - future enhancement
@@ -92,15 +91,17 @@ impl MultiTransportServer {
         // ================================================================
 
         // Try native socket (Unix or Abstract)
-        match UnixSocketIpcServer::new(socket_path, btsp_provider.clone(), identity.clone()).await
-        {
+        match UnixSocketIpcServer::new(socket_path, btsp_provider.clone(), identity.clone()).await {
             Ok(server) => {
                 let transport_type = if socket_path.starts_with('@') {
                     "Abstract socket"
                 } else {
                     "Unix socket"
                 };
-                info!("   ✅ Tier 1 (Native): {} bound: {}", transport_type, socket_path);
+                info!(
+                    "   ✅ Tier 1 (Native): {} bound: {}",
+                    transport_type, socket_path
+                );
                 transports.push(BoundTransport::Unix(Arc::new(server)));
             }
             Err(e) => {
@@ -116,7 +117,12 @@ impl MultiTransportServer {
         // TIER 2: TCP Universal Fallback
         // ================================================================
 
-        let tcp_address = tcp_addr.unwrap_or("127.0.0.1:9900");
+        // Use config-based port discovery instead of hardcoded value
+        let default_tcp_addr = {
+            use beardog_config::global::BEARDOG_CONFIG;
+            format!("127.0.0.1:{}", BEARDOG_CONFIG.network.ports.tcp_ipc_port)
+        };
+        let tcp_address = tcp_addr.unwrap_or(&default_tcp_addr);
 
         match tcp_address.parse::<SocketAddr>() {
             Ok(addr) => {
@@ -125,7 +131,10 @@ impl MultiTransportServer {
                 transports.push(BoundTransport::Tcp(Arc::new(tcp_server)));
             }
             Err(e) => {
-                warn!("   ⚠️  Tier 2 (TCP): Invalid address {}: {}", tcp_address, e);
+                warn!(
+                    "   ⚠️  Tier 2 (TCP): Invalid address {}: {}",
+                    tcp_address, e
+                );
             }
         }
 
@@ -164,13 +173,10 @@ impl MultiTransportServer {
                 BoundTransport::Unix(server) => {
                     let server_clone = Arc::clone(&server);
                     let task = tokio::spawn(async move {
-                        server_clone
-                            .start()
-                            .await
-                            .map_err(|e| {
-                                error!("Unix socket server error: {}", e);
-                                anyhow::anyhow!("Unix server failed: {}", e)
-                            })
+                        server_clone.start().await.map_err(|e| {
+                            error!("Unix socket server error: {}", e);
+                            anyhow::anyhow!("Unix server failed: {}", e)
+                        })
                     });
                     self.tasks.push(task);
                 }
@@ -209,9 +215,7 @@ impl MultiTransportServer {
 
         let mut join_set = JoinSet::new();
         for task in self.tasks {
-            join_set.spawn(async move {
-                task.await
-            });
+            join_set.spawn(async move { task.await });
         }
 
         // Wait for all tasks to complete

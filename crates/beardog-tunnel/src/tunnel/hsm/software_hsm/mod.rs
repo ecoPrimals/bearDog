@@ -9,73 +9,107 @@ pub use core::RustSoftwareHsm as SoftwareHsm;
 // Re-export the canonical type for convenience
 pub use crate::tunnel::hsm::types::config::CryptoBackend;
 
-/// Algorithm enumeration.
+/// Cryptographic algorithms supported by the software HSM
 ///
-/// Represents different variants and states.
+/// Represents the algorithms available for key generation, encryption,
+/// signing, and key derivation operations.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Algorithm {
+    /// AES-256-GCM authenticated encryption
     Aes256Gcm,
+    /// ChaCha20-Poly1305 authenticated encryption
     ChaCha20Poly1305,
+    /// ECDSA on NIST P-256 curve
     EccP256,
+    /// ECDSA on NIST P-384 curve
     EccP384,
+    /// ECDSA with SHA-256 hash
     EcdsaSha256,
+    /// RSA with SHA-256 hash
     RsaSha256,
+    /// HKDF with SHA-256 key derivation
     HkdfSha256,
 }
 
-/// KeyStoreConfig configuration and state.
+/// Key store configuration
 ///
-/// Provides comprehensive functionality for the beardog ecosystem.
+/// Configures how keys are stored and managed by the software HSM.
 pub struct KeyStoreConfig {
+    /// Type of key storage backend (memory, file, database)
     pub storage_type: KeyStorageType,
+    /// Source of the encryption key for key wrapping
     pub encryption_key_source: KeySource,
+    /// Whether automatic backups are enabled
     pub backup_enabled: bool,
+    /// Maximum number of keys to cache in memory
     pub cache_size: usize,
+    /// File-based storage configuration (if applicable)
     pub file_config: Option<FileConfig>,
+    /// Database storage configuration (if applicable)
     pub db_config: Option<DatabaseConfig>,
 }
 
-/// KeySource enumeration.
+/// Key encryption key source
 ///
-/// Represents different variants and states.
+/// Specifies where the master key for encrypting stored keys comes from.
 pub enum KeySource {
+    /// Key derived from password or other secret
     Derived,
+    /// Key from hardware source (HSM, TPM)
     Hardware,
+    /// Key provided externally
     External,
 }
 
-/// MemoryConfig configuration and state.
+/// Secure memory configuration
 ///
-/// Provides comprehensive functionality for the beardog ecosystem.
+/// Controls memory protection features for key material in memory.
 pub struct MemoryConfig {
+    /// Memory protection level
     pub protection_level: MemoryProtectionLevel,
+    /// Use secure memory allocation
     pub secure_allocation: bool,
+    /// Zero memory on deallocation
     pub clear_on_dealloc: bool,
+    /// Lock memory to prevent swapping (mlock)
     pub lock_memory: bool,
+    /// Use guard pages around sensitive memory
     pub guard_pages: bool,
 }
 
-/// FileConfig configuration and state.
+/// File storage configuration
 ///
-/// Provides comprehensive functionality for the beardog ecosystem.
+/// Configuration for file-based key storage.
 pub struct FileConfig {
+    /// Base directory path for key files
     pub base_path: String,
+    /// Unix file permissions for key files
     pub file_permissions: u32,
+    /// Optional path for backup storage
     pub backup_path: Option<String>,
 }
 
-/// SoftwareHsmConfig configuration and state.
+/// Software HSM configuration
 ///
-/// Provides comprehensive functionality for the beardog ecosystem.
+/// Complete configuration for a software-based HSM instance.
 pub struct SoftwareHsmConfig {
+    /// HSM implementation name
     pub implementation: String,
+    /// Cryptographic backend library
     pub crypto_backend: CryptoBackend,
+    /// Memory protection level for key material
     pub memory_protection: MemoryProtectionLevel,
+    /// Enable in-memory key caching
     pub enable_key_caching: bool,
+    /// Maximum number of keys to cache
     pub max_cached_keys: usize,
+    /// Key storage configuration
     pub key_storage: KeyStoreConfig,
+    /// Secure memory configuration
     pub memory_config: MemoryConfig,
+    /// Key store configuration (alternative reference)
     pub key_store_config: KeyStoreConfig,
+    /// Default encryption algorithm
     pub encryption_algorithm: Algorithm,
 }
 
@@ -228,38 +262,39 @@ pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-/// SoftwareHsmCapabilities configuration and state.
+/// Software HSM capabilities summary
 ///
-/// Provides comprehensive functionality for the beardog ecosystem.
+/// Describes all features and limitations of the software HSM implementation.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SoftwareHsmCapabilities {
+    /// Supported key types for generation
     pub supported_key_types: Vec<KeyType>,
-
+    /// Supported cryptographic algorithms
     pub supported_algorithms: Vec<Algorithm>,
-
+    /// Available crypto library backends
     pub supported_crypto_backends: Vec<CryptoBackend>,
-
+    /// Available key storage backends
     pub supported_storage_backends: Vec<KeyStorageType>,
-
+    /// Maximum supported key size in bits
     pub max_key_size: u32,
-
+    /// Whether key generation is supported
     pub supports_key_generation: bool,
-
+    /// Whether key import is supported
     pub supports_key_import: bool,
-
+    /// Whether key export is supported (usually disabled for security)
     pub supports_key_export: bool,
-
+    /// Whether key derivation functions are supported
     pub supports_key_derivation: bool,
-
+    /// Whether key backup is supported
     pub supports_backup: bool,
-
+    /// Whether key restore is supported
     pub supports_restore: bool,
-
+    /// Whether audit logging is available
     pub supports_audit_logging: bool,
-
+    /// Whether health monitoring is available
     pub supports_health_monitoring: bool,
-
+    /// Whether memory protection features are available
     pub memory_protection_available: bool,
-
+    /// Whether keys are hardware-backed (always false for software HSM)
     pub hardware_backed: bool,
 }

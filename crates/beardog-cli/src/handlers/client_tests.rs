@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    
+
     use crate::ClientArgs;
 
     #[test]

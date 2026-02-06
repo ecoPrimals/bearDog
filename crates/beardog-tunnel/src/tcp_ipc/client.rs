@@ -25,9 +25,9 @@ impl TcpIpcClient {
         debug!("📞 Calling {}", method);
 
         // Connect to server
-        let stream = TcpStream::connect(self.server_addr)
-            .await
-            .map_err(|e| BearDogError::system(format!("Failed to connect to {}: {}", self.server_addr, e)))?;
+        let stream = TcpStream::connect(self.server_addr).await.map_err(|e| {
+            BearDogError::system(format!("Failed to connect to {}: {}", self.server_addr, e))
+        })?;
 
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
@@ -40,8 +40,10 @@ impl TcpIpcClient {
             "id": 1
         });
 
-        // Send request
-        let request_str = serde_json::to_string(&request).unwrap() + "\n";
+        // Send request (serialization of valid json! macro value is infallible, but handle gracefully)
+        let request_str = serde_json::to_string(&request)
+            .map_err(|e| BearDogError::system(format!("Failed to serialize request: {}", e)))?
+            + "\n";
         writer
             .write_all(request_str.as_bytes())
             .await

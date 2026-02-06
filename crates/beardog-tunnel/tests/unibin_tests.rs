@@ -183,7 +183,6 @@ mod unit_tests {
 #[cfg(test)]
 mod e2e_tests {
     use std::process::Command;
-    
 
     fn beardog_bin() -> String {
         let mut path = std::env::current_exe().unwrap();

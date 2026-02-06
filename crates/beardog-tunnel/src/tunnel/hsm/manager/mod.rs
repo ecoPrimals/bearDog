@@ -269,10 +269,12 @@ impl HsmManager {
             config: HsmManagerConfig::default(),
             health_monitor: Arc::new(DefaultHsmHealthMonitor::default()),
             failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
-            capability_detector: Arc::new(DefaultHsmCapabilityDetector::new()
-                .unwrap_or_else(|e| {
-                    panic!("CRITICAL: DefaultHsmCapabilityDetector::new() failed - this should never happen as it only creates a HashMap: {e}")
-                })),
+            // Capability detector creation is infallible (just HashMap)
+            // Using expect since this should never fail in practice
+            capability_detector: Arc::new(
+                DefaultHsmCapabilityDetector::new()
+                    .expect("DefaultHsmCapabilityDetector::new() is infallible"),
+            ),
             performance_tracker: Arc::new(HsmPerformanceTracker::default()),
             operation_router: Arc::new(RwLock::new(HsmOperationRouter::default())),
         }

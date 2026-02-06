@@ -661,14 +661,14 @@ impl AIMonitoringConfig {
     }
 
     /// Check if model performance tracking is enabled
-    #[must_use] 
+    #[must_use]
     pub fn tracks_model_performance(&self) -> bool {
         self.enabled_metrics
             .contains(&AIMetricType::ModelPerformance)
     }
 
     /// Check if resource usage monitoring is enabled
-    #[must_use] 
+    #[must_use]
     pub fn monitors_resource_usage(&self) -> bool {
         self.enabled_metrics.contains(&AIMetricType::ResourceUsage)
     }

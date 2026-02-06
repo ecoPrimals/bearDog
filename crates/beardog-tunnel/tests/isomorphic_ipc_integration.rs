@@ -6,21 +6,21 @@
 // Integration testing with full server requires more setup.
 // These tests focus on the client-side discovery APIs.
 
-use beardog_ipc::{discover_beardog_endpoint, IpcEndpoint};
 use anyhow::Result;
+use beardog_ipc::{discover_beardog_endpoint, IpcEndpoint};
 
 #[tokio::test]
 async fn test_isomorphic_discovery_apis() -> Result<()> {
     println!("\n🧪 Testing Isomorphic IPC Discovery APIs...");
-    
+
     // Test 1: Endpoint display
     println!("\n📊 Test 1: Endpoint display formatting");
     let unix_endpoint = IpcEndpoint::UnixSocket("/tmp/test.sock".into());
     let tcp_endpoint = IpcEndpoint::TcpLocal("127.0.0.1:8080".parse().unwrap());
-    
+
     println!("   Unix: {}", unix_endpoint.display());
     println!("   TCP: {}", tcp_endpoint.display());
-    
+
     assert_eq!(unix_endpoint.display(), "unix:/tmp/test.sock");
     assert_eq!(tcp_endpoint.display(), "tcp:127.0.0.1:8080");
     println!("   ✅ Display formatting correct");
@@ -55,26 +55,25 @@ async fn test_isomorphic_discovery_apis() -> Result<()> {
 #[tokio::test]
 async fn test_isomorphic_compilation() -> Result<()> {
     println!("\n🧪 Testing Isomorphic IPC Compilation...");
-    
+
     // This test verifies that all isomorphic IPC code compiles
     // Including server-side Try→Detect→Adapt pattern
-    
+
     println!("✅ Server-side isomorphic IPC compiled:");
     println!("   • is_platform_constraint()");
     println!("   • is_selinux_enforcing()");
     println!("   • try_unix_server()");
     println!("   • start_tcp_fallback()");
     println!("   • start() with Try→Detect→Adapt");
-    
+
     println!("\n✅ Client-side isomorphic IPC compiled:");
     println!("   • IpcEndpoint enum");
     println!("   • discover_beardog_endpoint()");
     println!("   • connect_beardog()");
     println!("   • AsyncStream trait");
-    
+
     println!("\n✅ ISOMORPHIC IPC COMPILATION VERIFIED!");
     println!("   All 5 phases compiled successfully!\n");
 
     Ok(())
 }
-

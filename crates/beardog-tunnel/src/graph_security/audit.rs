@@ -81,7 +81,7 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
 async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo, BearDogError> {
     // Get actual creator info via collaboration capability (runtime discovery)
     let template_info = crate::graph_security::internal::get_creator_info(template_id).await?;
-    
+
     // Map TemplateInfo to CreatorInfo
     Ok(CreatorInfo {
         user_id: template_info.creator_id,
@@ -99,18 +99,21 @@ async fn get_template_lineage(
 ) -> Result<Vec<LineageVersion>, BearDogError> {
     // Get actual lineage via collaboration capability (runtime discovery)
     let collab_lineage = crate::graph_security::internal::get_lineage(template_id).await?;
-    
+
     // Map collaboration_service::LineageVersion to types::LineageVersion
-    Ok(collab_lineage.into_iter().map(|v| LineageVersion {
-        version: v.version,
-        created_at: v.created_at,
-        modified_at: v.modified_at,
-        created_by: v.created_by,
-        modified_by: v.modified_by,
-        change_type: v.change_type,
-        changes: v.changes,
-        signature: v.signature,
-    }).collect())
+    Ok(collab_lineage
+        .into_iter()
+        .map(|v| LineageVersion {
+            version: v.version,
+            created_at: v.created_at,
+            modified_at: v.modified_at,
+            created_by: v.created_by,
+            modified_by: v.modified_by,
+            change_type: v.change_type,
+            changes: v.changes,
+            signature: v.signature,
+        })
+        .collect())
 }
 
 /// Verify chain of custody for lineage
@@ -160,10 +163,10 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
             // TODO: Get public key from CollaborationService (blocked by TODO #3 from inventory)
             //let modifier = version.modified_by.as_ref().unwrap_or(&version.created_by.unwrap());
             //let public_key = collaboration_service.get_user_public_key(modifier).await?;
-            
+
             // For now, verify signature format and structure is correct
             // Full verification will be enabled when CollaborationService integration is complete
-            
+
             // Create canonical lineage version (without signature) for verification
             let mut canonical_version = version.clone();
             canonical_version.signature = None;
@@ -173,7 +176,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                     version.version
                 ))
             })?;
-            
+
             // Verify signature using Ed25519
             // Note: Public key retrieval pending CollaborationService integration
             if let Some(public_key_b64) = version.created_by.as_ref().and_then(|_| {
@@ -190,7 +193,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                             version.version
                         ))
                     })?;
-                
+
                 // Validate Ed25519 public key length
                 if public_key_bytes.len() != 32 {
                     tracing::warn!(
@@ -200,33 +203,32 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                     );
                     return Ok(false);
                 }
-                
+
                 // Perform Ed25519 signature verification
                 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-                
+
                 let verifying_key = VerifyingKey::from_bytes(
                     public_key_bytes.as_slice().try_into().map_err(|_| {
                         BearDogError::validation(&format!(
                             "Invalid public key format for lineage version {}",
                             version.version
                         ))
-                    })?
-                ).map_err(|e| {
+                    })?,
+                )
+                .map_err(|e| {
                     BearDogError::validation(&format!(
                         "Invalid Ed25519 public key for lineage version {}: {e}",
                         version.version
                     ))
                 })?;
-                
-                let sig = Signature::from_bytes(
-                    signature.as_slice().try_into().map_err(|_| {
-                        BearDogError::validation(&format!(
-                            "Invalid signature format for lineage version {}",
-                            version.version
-                        ))
-                    })?
-                );
-                
+
+                let sig = Signature::from_bytes(signature.as_slice().try_into().map_err(|_| {
+                    BearDogError::validation(&format!(
+                        "Invalid signature format for lineage version {}",
+                        version.version
+                    ))
+                })?);
+
                 // Verify the signature
                 if let Err(e) = verifying_key.verify(&canonical_json, &sig) {
                     tracing::warn!(
@@ -235,7 +237,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                     );
                     return Ok(false);
                 }
-                
+
                 tracing::debug!(
                     "✓ Lineage version {} Ed25519 signature verified successfully",
                     version.version
@@ -263,8 +265,9 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
 /// Get community usage metrics
 async fn get_community_usage(template_id: &TemplateId) -> Result<CommunityUsage, BearDogError> {
     // Get actual usage via collaboration capability (runtime discovery)
-    let collab_metrics = crate::graph_security::internal::get_community_metrics(template_id).await?;
-    
+    let collab_metrics =
+        crate::graph_security::internal::get_community_metrics(template_id).await?;
+
     // Map CommunityMetrics to CommunityUsage
     Ok(CommunityUsage {
         deployments: collab_metrics.deployments,

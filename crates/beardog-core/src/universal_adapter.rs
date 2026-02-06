@@ -367,13 +367,13 @@ impl UniversalAdapter {
     /// Check if adapter knows about any primals providing capability
     ///
     /// **Checks cache only**: Doesn't trigger discovery
-    #[must_use] 
+    #[must_use]
     pub async fn has_capability(&self, capability: &SimpleCapability) -> bool {
         self.get_cached_capability(capability).await.is_some()
     }
 
     /// Get number of known primals providing capability
-    #[must_use] 
+    #[must_use]
     pub async fn count_capability_providers(&self, capability: &SimpleCapability) -> usize {
         self.get_cached_capability(capability)
             .await
@@ -381,7 +381,7 @@ impl UniversalAdapter {
     }
 
     /// Get all capabilities currently in cache
-    #[must_use] 
+    #[must_use]
     pub async fn cached_capabilities(&self) -> Vec<SimpleCapability> {
         self.capability_cache.read().await.keys().cloned().collect()
     }
@@ -484,7 +484,9 @@ mod tests {
             assert!(adapter.has_capability(&SimpleCapability::Discovery).await);
 
             // Clear specific cache
-            adapter.clear_capability_cache(&SimpleCapability::Discovery).await;
+            adapter
+                .clear_capability_cache(&SimpleCapability::Discovery)
+                .await;
             assert!(!adapter.has_capability(&SimpleCapability::Discovery).await);
         }
 

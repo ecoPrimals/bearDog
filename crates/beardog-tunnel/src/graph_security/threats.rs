@@ -124,9 +124,10 @@ fn has_cycles(nodes: &[GraphNode], edges: &[crate::graph_security::types::GraphE
 
     for node in nodes {
         if !visited.contains(&node.id)
-            && has_cycle_dfs(&node.id, &adj, &mut visited, &mut rec_stack) {
-                return true;
-            }
+            && has_cycle_dfs(&node.id, &adj, &mut visited, &mut rec_stack)
+        {
+            return true;
+        }
     }
 
     false

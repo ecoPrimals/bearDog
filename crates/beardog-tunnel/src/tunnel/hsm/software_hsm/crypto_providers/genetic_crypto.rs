@@ -670,7 +670,6 @@ impl GeneticCryptoProvider {
     }
 }
 
-
 #[cfg(test)]
 #[path = "genetic/tests.rs"]
 mod tests;

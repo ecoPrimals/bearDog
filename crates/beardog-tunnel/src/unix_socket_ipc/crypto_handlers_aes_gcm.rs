@@ -507,13 +507,11 @@ mod tests {
         let decrypted = BASE64.decode(decrypted_b64).unwrap();
 
         assert_eq!(&decrypted, plaintext);
-        assert!(
-            decrypt_result
-                .get("authenticated")
-                .unwrap()
-                .as_bool()
-                .unwrap()
-        );
+        assert!(decrypt_result
+            .get("authenticated")
+            .unwrap()
+            .as_bool()
+            .unwrap());
     }
 
     #[test]

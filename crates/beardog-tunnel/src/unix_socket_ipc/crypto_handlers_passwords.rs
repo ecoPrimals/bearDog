@@ -311,9 +311,7 @@ mod tests {
         });
 
         let verify_result = handle_argon2id_verify(&verify_params).unwrap();
-        assert!(
-            !verify_result.get("valid").unwrap().as_bool().unwrap()
-        );
+        assert!(!verify_result.get("valid").unwrap().as_bool().unwrap());
     }
 
     #[test]

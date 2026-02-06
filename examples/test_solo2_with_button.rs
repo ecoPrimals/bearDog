@@ -1,14 +1,15 @@
-#![allow(
-    unused_imports,
-    unused_variables,
-    dead_code,
-    unused_comparisons,
-    clippy::all
-)]
-
-//! Solo 2 Button Press Test
+//! Solo 2 Button Press Test - Pure Rust Implementation
 //!
-//! This test will prompt you to press the button and see if GetInfo responds.
+//! # Overview
+//!
+//! Tests Solo2 FIDO2 device with user presence verification.
+//! Uses Pure Rust beardog-hid for HID communication (ecoBin compliant).
+//!
+//! # Usage
+//!
+//! ```bash
+//! cargo run --example test_solo2_with_button --features fido2
+//! ```
 
 #[cfg(feature = "fido2")]
 use beardog_security::hsm::fido2::{ctap2, discovery};
@@ -21,18 +22,20 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
     println!("╔═══════════════════════════════════════════════════════════╗");
     println!("║     Solo 2 Button Press Test - User Interaction          ║");
+    println!("║     (Pure Rust - ecoBin Compliant)                        ║");
     println!("╚═══════════════════════════════════════════════════════════╝");
     println!();
 
     #[cfg(not(feature = "fido2"))]
     {
         println!("⚠️  FIDO2 feature not enabled!");
+        println!("   Run with: cargo run --example test_solo2_with_button --features fido2");
         return Ok(());
     }
 
     #[cfg(feature = "fido2")]
     {
-        // Discover devices
+        // Discover devices using beardog-hid (Pure Rust)
         println!("🔍 Discovering FIDO2 devices...");
         let devices = discovery::discover_fido2_devices().await?;
 
@@ -49,18 +52,23 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         println!("   Path: {}", device_info.device_path.display());
         println!();
 
-        // Open device
-        println!("🔓 Opening HID device...");
-        let path_str = device_info.device_path.to_string_lossy();
-        let api = hidapi::HidApi::new()
-            .map_err(|e| beardog_errors::BearDogError::system(format!("HID API init: {}", e)))?;
+        // Open device using beardog-hid (Pure Rust)
+        println!("🔓 Opening HID device with beardog-hid (Pure Rust)...");
 
-        let device = api
-            .open_path(
-                std::ffi::CString::new(path_str.as_bytes())
-                    .unwrap()
-                    .as_c_str(),
-            )
+        // Discover and open device
+        let hid_devices = beardog_hid::discover()
+            .await
+            .map_err(|e| beardog_errors::BearDogError::system(format!("HID discovery: {}", e)))?;
+
+        let hid_info = hid_devices
+            .iter()
+            .find(|d| d.path.contains(&device_info.device_path.to_string_lossy().to_string()))
+            .ok_or_else(|| {
+                beardog_errors::BearDogError::system("Device not found in HID list".to_string())
+            })?;
+
+        let mut hid_device = beardog_hid::open_device(&hid_info.path)
+            .await
             .map_err(|e| beardog_errors::BearDogError::system(format!("Device open: {}", e)))?;
 
         println!("✅ Device opened\n");
@@ -79,7 +87,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         println!();
 
         // Try GetInfo
-        match ctap2::ctap2_get_info(&device).await {
+        match ctap2::ctap2_get_info(&mut hid_device).await {
             Ok(info) => {
                 println!();
                 println!("╔═══════════════════════════════════════════════════════════╗");
@@ -87,7 +95,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                 println!("╚═══════════════════════════════════════════════════════════╝");
                 println!();
                 println!("📊 Device Capabilities:");
-                println!("   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                println!("   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 println!();
 
                 println!("   🔹 Supported Versions:");

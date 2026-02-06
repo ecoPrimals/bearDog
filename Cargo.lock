@@ -926,29 +926,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "beardog-security-registry"
-version = "3.0.0"
-dependencies = [
- "beardog-auth",
- "beardog-core",
- "beardog-errors",
- "beardog-security",
- "beardog-types",
- "chrono",
- "ed25519-dalek",
- "hex",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "beardog-threat"
 version = "0.9.0"
 dependencies = [

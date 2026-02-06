@@ -347,4 +347,96 @@ mod tests {
             .iter()
             .any(|c| c.id == "lineage_signing"));
     }
+
+    #[test]
+    fn test_get_metadata() {
+        let registry = CapabilityRegistry::new(
+            "test-primal-1",
+            "cryptographic_services",
+            "http://localhost:8080",
+        );
+
+        let metadata = CapabilityMetadata::new("test_cap", "2.0")
+            .with_description("Test capability")
+            .with_rate_limit(100);
+
+        registry.register("test_cap", MockCapability, metadata);
+
+        let retrieved = registry.get_metadata("test_cap");
+        assert!(retrieved.is_some());
+        let retrieved = retrieved.unwrap();
+        assert_eq!(retrieved.id, "test_cap");
+        assert_eq!(retrieved.version, "2.0");
+        assert_eq!(retrieved.description, "Test capability");
+        assert_eq!(retrieved.rate_limit, Some(100));
+
+        // Non-existent capability
+        assert!(registry.get_metadata("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_discovery_config() {
+        let registry = CapabilityRegistry::new(
+            "my-primal",
+            "storage",
+            "http://localhost:9000",
+        );
+
+        let config = registry.discovery_config();
+        assert_eq!(config.http, "http://localhost:9000/capabilities");
+        assert_eq!(config.ttl, 300);
+        assert!(config.mdns.is_some());
+        assert!(config.mdns.as_ref().unwrap().contains("my-primal"));
+    }
+
+    #[test]
+    fn test_empty_registry() {
+        let registry = CapabilityRegistry::new(
+            "empty-primal",
+            "test",
+            "http://localhost:8080",
+        );
+
+        assert!(registry.list_capabilities().is_empty());
+        let advertisement = registry.build_advertisement();
+        assert!(advertisement.capabilities.is_empty());
+        assert_eq!(advertisement.primal.id, "empty-primal");
+    }
+
+    #[test]
+    fn test_register_multiple_and_query() {
+        let registry = CapabilityRegistry::new(
+            "multi-cap-primal",
+            "compute",
+            "http://localhost:8080",
+        );
+
+        for i in 1..=5 {
+            let id = format!("capability_{}", i);
+            let metadata = CapabilityMetadata::new(&id, "1.0");
+            registry.register(&id, MockCapability, metadata);
+        }
+
+        assert_eq!(registry.list_capabilities().len(), 5);
+        for i in 1..=5 {
+            let id = format!("capability_{}", i);
+            assert!(registry.has_capability(&id));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_advertise() {
+        let registry = CapabilityRegistry::new(
+            "advertise-test",
+            "test",
+            "http://localhost:8080",
+        );
+
+        let metadata = CapabilityMetadata::new("test", "1.0");
+        registry.register("test", MockCapability, metadata);
+
+        // Advertise should succeed (no-op without mdns feature)
+        let result = registry.advertise().await;
+        assert!(result.is_ok());
+    }
 }

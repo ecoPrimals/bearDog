@@ -15,11 +15,11 @@ use tracing::{debug, info};
 // Complete types to replace archived safe_keystore_replacement
 #[derive(Debug, Clone)]
 pub struct KeyGenerationRequest {
-    pub key_id: String,                    // Unique key identifier
-    pub key_size: usize,                   // Key size in bits
-    pub algorithm: Algorithm,              // Crypto algorithm
-    pub hardware_backed: bool,             // Require hardware backing
-    pub purposes: Vec<KeyPurpose>,         // Intended key usage
+    pub key_id: String,            // Unique key identifier
+    pub key_size: usize,           // Key size in bits
+    pub algorithm: Algorithm,      // Crypto algorithm
+    pub hardware_backed: bool,     // Require hardware backing
+    pub purposes: Vec<KeyPurpose>, // Intended key usage
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,39 +42,39 @@ pub struct KeyInfo {
 
 #[derive(Debug, Clone)]
 pub struct SigningRequest {
-    pub key_id: String,                    // Key to use for signing
-    pub data: Vec<u8>,                     // Data to sign
-    pub algorithm: Algorithm,              // Signature algorithm
+    pub key_id: String,       // Key to use for signing
+    pub data: Vec<u8>,        // Data to sign
+    pub algorithm: Algorithm, // Signature algorithm
 }
 
 #[derive(Debug, Clone)]
 pub struct VerificationRequest {
-    pub key_id: String,                    // Key to use for verification
-    pub data: Vec<u8>,                     // Original data
-    pub signature: Vec<u8>,                // Signature to verify
-    pub algorithm: Algorithm,              // Signature algorithm
+    pub key_id: String,       // Key to use for verification
+    pub data: Vec<u8>,        // Original data
+    pub signature: Vec<u8>,   // Signature to verify
+    pub algorithm: Algorithm, // Signature algorithm
 }
 
 /// Safe hardware provider trait - complete definition
 pub trait SafeHardwareProvider: Send + Sync {
     /// Check if StrongBox is available
     fn supports_strongbox(&self) -> bool;
-    
+
     /// Generate a new key
     fn generate_key(&self, request: &KeyGenerationRequest) -> Result<HsmKey, BearDogError>;
-    
+
     /// Sign data
     fn sign(&self, request: &SigningRequest) -> Result<SafePinnedBuffer, BearDogError>;
-    
+
     /// Verify signature
     fn verify(&self, request: &VerificationRequest) -> Result<bool, BearDogError>;
-    
+
     /// Delete a key
     fn delete_key(&self, key_id: &str) -> Result<(), BearDogError>;
-    
+
     /// Check if key exists
     fn key_exists(&self, key_id: &str) -> Result<bool, BearDogError>;
-    
+
     /// Get key information
     fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError>;
 }
@@ -100,11 +100,7 @@ impl AndroidCapability for StrongBoxAvailable {
     }
 
     fn supported_algorithms() -> &'static [Algorithm] {
-        &[
-            Algorithm::EccP256,
-            Algorithm::EccP384,
-            Algorithm::Aes256Gcm,
-        ]
+        &[Algorithm::EccP256, Algorithm::EccP384, Algorithm::Aes256Gcm]
     }
 
     fn hardware_backed() -> bool {
@@ -270,7 +266,8 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
         Ok(HsmKey {
             id: request.key_id.clone(), // UniversalKey uses "id", not "key_id"
             key_type: KeyType::from(request.algorithm),
-            key_material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference { // UniversalKey uses "key_material", not "material"
+            key_material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference {
+                // UniversalKey uses "key_material", not "material"
                 reference: safe_handle.key_id.clone(),
                 hsm_location: "android_strongbox".to_string(),
             },
@@ -282,7 +279,10 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
                 expires_at: None,
                 tags: HashMap::from([
                     ("hsm_type".to_string(), "android_strongbox".to_string()),
-                    ("is_hardware_backed".to_string(), request.hardware_backed.to_string()),
+                    (
+                        "is_hardware_backed".to_string(),
+                        request.hardware_backed.to_string(),
+                    ),
                 ]),
             },
             hsm_tier: "production".to_string(),
@@ -317,7 +317,7 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
 
         Ok(KeyInfo {
             id: key_id.to_string(),
-            key_id: key_id.to_string(), // Alias for compatibility
+            key_id: key_id.to_string(),      // Alias for compatibility
             algorithm: Algorithm::EcdsaP256, // Placeholder
             hardware_backed: C::hardware_backed(),
         })
@@ -389,7 +389,7 @@ impl SafeAndroidKeystore {
         // For now, return error indicating real implementation needed
         Err(BearDogError::not_implemented(
             "Android StrongBox signing requires JNI integration (not yet implemented). \
-             Use SoftwareHSM provider as fallback."
+             Use SoftwareHSM provider as fallback.",
         ))
     }
 
@@ -406,7 +406,7 @@ impl SafeAndroidKeystore {
     pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
             "Android StrongBox is only available on Android platform. \
-             Use SoftwareHSM or other HSM provider on this platform."
+             Use SoftwareHSM or other HSM provider on this platform.",
         ))
     }
 
@@ -453,7 +453,7 @@ impl SafeAndroidKeystore {
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "Android StrongBox is only available on Android platform"
+            "Android StrongBox is only available on Android platform",
         ))
     }
 
@@ -525,7 +525,7 @@ impl SafeAndroidKeystore {
     #[cfg(not(target_os = "android"))]
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         Err(BearDogError::unsupported_operation(
-            "Android device detection is only available on Android platform"
+            "Android device detection is only available on Android platform",
         ))
     }
 

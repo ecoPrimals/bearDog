@@ -47,13 +47,13 @@ impl PlatformSocket for WindowsSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
         // Named pipe naming: \\.\pipe\biomeos_{primal_name}
         // The \\.\pipe\ prefix is Windows' named pipe namespace
-        
+
         // Priority 1: Exact override (for testing)
         if let Ok(pipe_path) = std::env::var("BEARDOG_PIPE") {
             info!("Using BEARDOG_PIPE override: {}", pipe_path);
             return Ok(SocketEndpoint::NamedPipe(pipe_path));
         }
-        
+
         // Priority 2: Custom pipe directory prefix
         let pipe_name = if let Ok(custom_prefix) = std::env::var("BIOMEOS_PIPE_DIR") {
             debug!("Using BIOMEOS_PIPE_DIR: {}", custom_prefix);
@@ -62,12 +62,15 @@ impl PlatformSocket for WindowsSocket {
             // Priority 3: Standard Windows named pipe path
             format!(r"\\.\pipe\biomeos_{}", primal_name)
         };
-        
-        info!("🪟 Windows named pipe (kernel-managed): {} (no filesystem)", pipe_name);
-        
+
+        info!(
+            "🪟 Windows named pipe (kernel-managed): {} (no filesystem)",
+            pipe_name
+        );
+
         Ok(SocketEndpoint::NamedPipe(pipe_name))
     }
-    
+
     fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
@@ -75,17 +78,17 @@ impl PlatformSocket for WindowsSocket {
                 #[cfg(windows)]
                 {
                     use tokio::net::windows::named_pipe::ServerOptions;
-                    
+
                     debug!("Creating named pipe server: {}", name);
-                    
+
                     // Create named pipe server (first instance)
                     // tokio provides Pure Rust interface to Windows API
                     let _server = ServerOptions::new()
                         .first_pipe_instance(true)
                         .create(name)?;
-                    
+
                     info!("✅ Named pipe server created: {} (Windows-optimized)", name);
-                    
+
                     // NOTE: Windows named pipes are different from UnixListener
                     // This is a temporary limitation - in production, we'd need to
                     // refactor the PlatformSocket trait to return a generic listener type
@@ -95,11 +98,14 @@ impl PlatformSocket for WindowsSocket {
                         "Windows named pipes require trait refactoring (use tokio::net::windows::named_pipe directly)",
                     ))
                 }
-                
+
                 // On non-Windows: Return error
                 #[cfg(not(windows))]
                 {
-                    warn!("Attempted to use Windows named pipe on non-Windows platform: {}", name);
+                    warn!(
+                        "Attempted to use Windows named pipe on non-Windows platform: {}",
+                        name
+                    );
                     Err(std::io::Error::new(
                         std::io::ErrorKind::Unsupported,
                         "Named pipes require Windows platform",
@@ -117,7 +123,7 @@ impl PlatformSocket for WindowsSocket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_named_pipe_format() {
         let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
@@ -129,14 +135,14 @@ mod tests {
             _ => panic!("Expected NamedPipe endpoint"),
         }
     }
-    
+
     #[test]
     fn test_environment_variable_override() {
         // Test BEARDOG_PIPE override
         std::env::set_var("BEARDOG_PIPE", r"\\.\pipe\test_override");
         let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
         std::env::remove_var("BEARDOG_PIPE");
-        
+
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
                 assert_eq!(name, r"\\.\pipe\test_override");
@@ -145,17 +151,17 @@ mod tests {
             _ => panic!("Expected NamedPipe endpoint"),
         }
     }
-    
+
     #[test]
     fn test_biomeos_pipe_dir() {
         // Clear override first
         std::env::remove_var("BEARDOG_PIPE");
-        
+
         // Test BIOMEOS_PIPE_DIR
         std::env::set_var("BIOMEOS_PIPE_DIR", r"\\.\pipe\custom");
         let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
         std::env::remove_var("BIOMEOS_PIPE_DIR");
-        
+
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
                 assert!(name.contains(r"\\.\pipe\custom"));
@@ -165,7 +171,7 @@ mod tests {
             _ => panic!("Expected NamedPipe endpoint"),
         }
     }
-    
+
     #[test]
     fn test_primal_name_variations() {
         for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {

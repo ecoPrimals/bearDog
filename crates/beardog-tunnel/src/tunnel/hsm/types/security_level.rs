@@ -75,11 +75,11 @@ impl SecurityLevel {
     /// Returns the minimum recommended security bits for this level
     pub const fn security_bits(&self) -> usize {
         match self {
-            Self::Software => 128,                     // Minimum acceptable
-            Self::TrustedExecutionEnvironment => 192,  // TEE-protected
-            Self::SecureEnclave => 256,                // Hardware isolated
-            Self::HardwareSecurityModule => 256,       // Dedicated HSM
-            Self::StrongBox => 256,                    // Maximum security
+            Self::Software => 128,                    // Minimum acceptable
+            Self::TrustedExecutionEnvironment => 192, // TEE-protected
+            Self::SecureEnclave => 256,               // Hardware isolated
+            Self::HardwareSecurityModule => 256,      // Dedicated HSM
+            Self::StrongBox => 256,                   // Maximum security
         }
     }
 

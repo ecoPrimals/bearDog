@@ -11,6 +11,7 @@ use std::path::Path;
 // ═══════════════════════════════════════════════════════════════════════════
 
 #[test]
+#[serial_test::serial]
 fn test_discover_neural_api_socket_from_env() {
     // Test explicit NEURAL_API_SOCKET environment variable
     let original = env::var("NEURAL_API_SOCKET").ok();
@@ -27,6 +28,7 @@ fn test_discover_neural_api_socket_from_env() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_discover_neural_api_socket_from_neurals_env() {
     // Test fallback to NEURALS_SOCKET environment variable
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
@@ -66,6 +68,7 @@ fn test_discover_neural_api_socket_priority() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_discover_neural_api_socket_empty_string() {
     // Test that empty string explicitly disables auto-registration
     let original = env::var("NEURAL_API_SOCKET").ok();
@@ -82,6 +85,7 @@ fn test_discover_neural_api_socket_empty_string() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_discover_neural_api_socket_default_paths() {
     // Test that default socket paths are checked in priority order
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
@@ -211,6 +215,7 @@ fn test_genetic_lineage_capability() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 #[test]
+#[serial_test::serial]
 fn test_discover_socket_handles_permission_errors() {
     // Test that permission errors don't crash discovery
     // This validates the function is resilient
@@ -255,6 +260,7 @@ async fn test_register_capability_network_error() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 #[test]
+#[serial_test::serial]
 fn test_discover_socket_deterministic() {
     // Test that socket discovery is deterministic
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
@@ -297,6 +303,7 @@ fn test_all_capabilities_have_provider() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 #[test]
+#[serial_test::serial]
 fn test_discover_socket_with_whitespace() {
     // Test handling of whitespace in environment variables
     let original = env::var("NEURAL_API_SOCKET").ok();
@@ -315,6 +322,7 @@ fn test_discover_socket_with_whitespace() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_discover_socket_empty_vs_unset() {
     // Test distinction between empty string and unset variable
     let original = env::var("NEURAL_API_SOCKET").ok();

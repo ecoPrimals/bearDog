@@ -238,14 +238,12 @@ fn test_argon2id_unicode_password() {
     }));
 
     assert!(verify_result.is_ok());
-    assert!(
-        verify_result
-            .unwrap()
-            .get("valid")
-            .unwrap()
-            .as_bool()
-            .unwrap()
-    );
+    assert!(verify_result
+        .unwrap()
+        .get("valid")
+        .unwrap()
+        .as_bool()
+        .unwrap());
 }
 
 #[test]
@@ -334,14 +332,12 @@ fn test_argon2id_very_long_password() {
     }));
 
     assert!(verify_result.is_ok());
-    assert!(
-        verify_result
-            .unwrap()
-            .get("valid")
-            .unwrap()
-            .as_bool()
-            .unwrap()
-    );
+    assert!(verify_result
+        .unwrap()
+        .get("valid")
+        .unwrap()
+        .as_bool()
+        .unwrap());
 }
 
 #[test]

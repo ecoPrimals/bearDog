@@ -70,10 +70,7 @@ impl AsyncWrite for AndroidPlatformStream {
         Pin::new(&mut self.0).poll_flush(cx)
     }
 
-    fn poll_shutdown(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<std::io::Result<()>> {
+    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
         Pin::new(&mut self.0).poll_shutdown(cx)
     }
 }
@@ -101,32 +98,32 @@ impl PlatformSocket for AndroidSocket {
         // Abstract socket naming: @biomeos_{primal_name}
         // The @ prefix tells UnixListener to use abstract namespace
         let abstract_name = format!("@biomeos_{}", primal_name);
-        
+
         debug!(
             "Creating abstract socket endpoint for '{}': {}",
             primal_name, abstract_name
         );
-        
+
         info!(
             "🤖 Android abstract socket (SELinux-safe): {} (no filesystem)",
             abstract_name
         );
-        
+
         Ok(SocketEndpoint::Abstract(abstract_name))
     }
-    
+
     fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>> {
         match endpoint {
             SocketEndpoint::Abstract(name) => {
                 debug!("Binding abstract socket: {}", name);
-                
+
                 // The magic: UnixListener::bind with @ prefix
                 // Tokio/libc automatically converts @ to \0 (null byte)
                 // Kernel recognizes \0 prefix as abstract socket
                 let listener = UnixListener::bind(name)?;
-                
+
                 info!("✅ Abstract socket bound: {} (Android-optimized)", name);
-                
+
                 Ok(Box::new(AndroidPlatformListener {
                     listener,
                     name: name.clone(),
@@ -143,7 +140,7 @@ impl PlatformSocket for AndroidSocket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_abstract_socket_format() {
         let endpoint = AndroidSocket::create_endpoint("beardog").unwrap();
@@ -156,7 +153,7 @@ mod tests {
             _ => panic!("Expected Abstract endpoint"),
         }
     }
-    
+
     #[test]
     fn test_primal_name_variations() {
         for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
@@ -171,18 +168,18 @@ mod tests {
             }
         }
     }
-    
+
     #[tokio::test]
     #[cfg(target_os = "linux")] // Abstract sockets work on Linux too!
     async fn test_socket_binding() {
         // Use unique name to avoid conflicts
         let test_name = format!("test_beardog_{}", std::process::id());
         let endpoint = AndroidSocket::create_endpoint(&test_name).unwrap();
-        
+
         // Bind should succeed on Linux (abstract sockets are Linux feature)
         let listener = AndroidSocket::bind(&endpoint);
         assert!(listener.is_ok(), "Abstract socket binding failed");
-        
+
         if let Ok(mut listener) = listener {
             // Verify local_addr works
             let addr = listener.local_addr().unwrap();
@@ -194,7 +191,14 @@ mod tests {
     #[tokio::test]
     async fn test_universal_listener_trait() {
         // Use unique socket name with timestamp to avoid conflicts
-        let test_name = format!("test_beardog_{}_{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+        let test_name = format!(
+            "test_beardog_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
         let endpoint = AndroidSocket::create_endpoint(&test_name).unwrap();
 
         #[cfg(target_os = "linux")]

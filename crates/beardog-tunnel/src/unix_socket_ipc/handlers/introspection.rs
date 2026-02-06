@@ -7,7 +7,7 @@
 //! These methods enable runtime capability discovery by allowing other primals
 //! and services to query what this primal provides without manual configuration.
 
-use super::{MethodHandler, HandlerRegistry};
+use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use serde_json::{json, Value};
@@ -107,11 +107,7 @@ impl IntrospectionHandler {
             std::collections::HashMap::new();
 
         for method in &all_methods {
-            let namespace = method
-                .split('.')
-                .next()
-                .unwrap_or("unknown")
-                .to_string();
+            let namespace = method.split('.').next().unwrap_or("unknown").to_string();
 
             by_namespace
                 .entry(namespace)

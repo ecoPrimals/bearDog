@@ -24,15 +24,34 @@ where
         .unwrap_or(default)
 }
 
-/// Get a required environment variable or panic with a helpful message
-pub fn get_env_required(key: &str) -> String {
-    env::var(key).unwrap_or_else(|_| {
-        panic!(
-            "Required environment variable {key} is not set. \
+/// Get a required environment variable, returning Result for graceful error handling
+///
+/// # Errors
+///
+/// Returns `BearDogError::configuration` if the environment variable is not set.
+pub fn try_get_env_required(key: &str) -> Result<String, beardog_errors::BearDogError> {
+    env::var(key).map_err(|_| {
+        let message = format!(
+            "Required environment variable '{key}' is not set. \
              Please set it in your .env file or environment. \
              See .env.example for reference."
-        )
+        );
+        beardog_errors::BearDogError::configuration(&message)
     })
+}
+
+/// Get a required environment variable or panic with a helpful message
+///
+/// # Panics
+///
+/// Panics if the environment variable is not set. Prefer `try_get_env_required`
+/// for graceful error handling.
+#[deprecated(
+    since = "0.10.0",
+    note = "Use try_get_env_required for Result-based error handling"
+)]
+pub fn get_env_required(key: &str) -> String {
+    try_get_env_required(key).unwrap_or_else(|e| panic!("{}", e))
 }
 
 /// Configuration for network endpoints

@@ -69,15 +69,35 @@ impl ValidationReport {
 impl std::fmt::Display for ValidationReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Validation Report for {}:", self.primal.display_name())?;
-        writeln!(f, "  File exists:    {}", if self.file_exists { "✓" } else { "✗" })?;
-        writeln!(f, "  Executable:     {}", if self.is_executable { "✓" } else { "✗" })?;
+        writeln!(
+            f,
+            "  File exists:    {}",
+            if self.file_exists { "✓" } else { "✗" }
+        )?;
+        writeln!(
+            f,
+            "  Executable:     {}",
+            if self.is_executable { "✓" } else { "✗" }
+        )?;
         writeln!(f, "  Size:           {} bytes", self.size_bytes)?;
-        writeln!(f, "  Size reasonable: {}", if self.size_reasonable { "✓" } else { "✗" })?;
+        writeln!(
+            f,
+            "  Size reasonable: {}",
+            if self.size_reasonable { "✓" } else { "✗" }
+        )?;
         if let Some(ref checksum) = self.checksum {
             writeln!(f, "  SHA-256:        {}...", &checksum[..16])?;
         }
         writeln!(f, "  Runs:           {}", if self.runs { "✓" } else { "✗" })?;
-        writeln!(f, "  Overall:        {}", if self.healthy { "✓ HEALTHY" } else { "✗ UNHEALTHY" })?;
+        writeln!(
+            f,
+            "  Overall:        {}",
+            if self.healthy {
+                "✓ HEALTHY"
+            } else {
+                "✗ UNHEALTHY"
+            }
+        )?;
         Ok(())
     }
 }
@@ -105,7 +125,7 @@ impl BinaryValidator {
     /// let validator = BinaryValidator::new();
     /// let binary_path = std::path::Path::new("/usr/local/bin/beardog");
     /// let report = validator.validate_binary(Primal::BearDog, binary_path).await?;
-    /// 
+    ///
     /// if report.is_healthy() {
     ///     println!("Binary is healthy!");
     /// }
@@ -126,10 +146,12 @@ impl BinaryValidator {
         }
 
         // 2. Check size
-        let metadata = fs::metadata(path).await.map_err(|e| ValidationError::IoError {
-            path: path.to_path_buf(),
-            source: e,
-        })?;
+        let metadata = fs::metadata(path)
+            .await
+            .map_err(|e| ValidationError::IoError {
+                path: path.to_path_buf(),
+                source: e,
+            })?;
         report.size_bytes = metadata.len();
         report.size_reasonable = report.size_bytes > 1_000_000 && report.size_bytes < 100_000_000;
 
@@ -156,8 +178,15 @@ impl BinaryValidator {
         // 6. Overall health
         report.healthy = report.is_healthy();
 
-        info!("Validated {}: {}", primal.display_name(), 
-              if report.healthy { "✓ HEALTHY" } else { "✗ UNHEALTHY" });
+        info!(
+            "Validated {}: {}",
+            primal.display_name(),
+            if report.healthy {
+                "✓ HEALTHY"
+            } else {
+                "✗ UNHEALTHY"
+            }
+        );
 
         Ok(report)
     }
@@ -185,11 +214,7 @@ impl BinaryValidator {
             Duration::from_secs(5),
             tokio::task::spawn_blocking({
                 let path = path.to_path_buf();
-                move || {
-                    Command::new(&path)
-                        .arg("--version")
-                        .output()
-                }
+                move || Command::new(&path).arg("--version").output()
             }),
         )
         .await

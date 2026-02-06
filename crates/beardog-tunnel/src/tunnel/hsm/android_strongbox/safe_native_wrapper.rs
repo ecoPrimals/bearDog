@@ -175,7 +175,8 @@ impl SafeAndroidStrongBoxWrapper {
 
     async fn record_operation_attempt(&self, operation: &str) {
         let mut guard = self.operation_metrics.write().await;
-        let entry = guard.entry(operation.to_string())
+        let entry = guard
+            .entry(operation.to_string())
             .or_insert(OperationMetrics {
                 success_count: 0,
                 failure_count: 0,

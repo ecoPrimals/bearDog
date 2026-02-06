@@ -285,11 +285,15 @@ mod tests {
     fn test_export_with_handshake_secrets() {
         use std::fs;
 
-        let temp_file = "/tmp/beardog-test-keylog.log";
-        std::env::set_var("SSLKEYLOGFILE", temp_file);
+        // Use a temp directory that's guaranteed to exist
+        let temp_dir = std::env::temp_dir();
+        let temp_file = temp_dir.join("beardog-test-keylog.log");
+        let temp_file_str = temp_file.to_string_lossy().to_string();
+        
+        std::env::set_var("SSLKEYLOGFILE", &temp_file_str);
 
         // Clean up any existing file
-        let _ = fs::remove_file(temp_file);
+        let _ = fs::remove_file(&temp_file);
 
         let client_random = vec![0xAA; 32];
         let client_hs_secret = vec![0xBB; 32];
@@ -301,16 +305,17 @@ mod tests {
             None,
         );
 
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "export_to_sslkeylogfile failed: {:?}", result);
 
         // Verify file was created and contains expected entries
-        let content = fs::read_to_string(temp_file).unwrap();
+        let content = fs::read_to_string(&temp_file)
+            .expect(&format!("Failed to read temp file: {}", temp_file_str));
         assert!(content.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET"));
         assert!(content.contains("SERVER_HANDSHAKE_TRAFFIC_SECRET"));
         assert!(content.contains(&hex::encode(&client_random)));
 
         // Clean up
-        let _ = fs::remove_file(temp_file);
+        let _ = fs::remove_file(&temp_file);
         std::env::remove_var("SSLKEYLOGFILE");
     }
 }

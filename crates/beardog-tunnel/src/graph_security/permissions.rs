@@ -51,7 +51,10 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
         }
         Err(e) => {
             // Fallback: If collaboration capability not available, default to Viewer
-            tracing::warn!("⚠️  Could not determine user role via collaboration capability: {}", e);
+            tracing::warn!(
+                "⚠️  Could not determine user role via collaboration capability: {}",
+                e
+            );
             Ok(UserRole::Viewer)
         }
     }

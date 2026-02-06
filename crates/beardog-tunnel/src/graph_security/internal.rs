@@ -132,7 +132,7 @@ mod tests {
         // Multiple calls should return the same underlying service
         let service1 = collaboration_service();
         let service2 = collaboration_service();
-        
+
         // Both should point to the same Arc (different clones)
         assert!(Arc::ptr_eq(&service1, &service2));
     }
@@ -141,7 +141,7 @@ mod tests {
     async fn test_get_creator_info_integration() {
         // Integration test - should not panic
         let result = get_creator_info("test-template").await;
-        
+
         // Should return either success or a graceful error
         assert!(result.is_ok() || result.is_err());
     }
@@ -150,7 +150,7 @@ mod tests {
     async fn test_get_lineage_integration() {
         // Integration test - should not panic
         let result = get_lineage("test-template").await;
-        
+
         // Should return either success or a graceful error
         assert!(result.is_ok() || result.is_err());
     }
@@ -159,7 +159,7 @@ mod tests {
     async fn test_get_community_metrics_integration() {
         // Integration test - should not panic
         let result = get_community_metrics("test-template").await;
-        
+
         // Should return either success or a graceful error
         assert!(result.is_ok() || result.is_err());
     }
@@ -168,7 +168,7 @@ mod tests {
     async fn test_get_user_permissions_integration() {
         // Integration test - should not panic
         let result = get_user_permissions("user-1", "graph-1").await;
-        
+
         // Should return either success or a graceful error
         assert!(result.is_ok() || result.is_err());
     }

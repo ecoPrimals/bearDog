@@ -178,6 +178,41 @@ mod tests {
     }
 
     #[test]
+    fn test_capability_metadata_all_builders() {
+        let metadata = CapabilityMetadata::new("lineage_signing", "2.0")
+            .with_description("Lineage signing capability")
+            .with_interface("LineageSigningProvider")
+            .with_endpoint("http://localhost:9000/sign")
+            .with_protocols(vec!["http".to_string(), "grpc".to_string()])
+            .with_rate_limit(500)
+            .with_auth(true);
+
+        assert_eq!(metadata.id, "lineage_signing");
+        assert_eq!(metadata.version, "2.0");
+        assert_eq!(metadata.description, "Lineage signing capability");
+        assert_eq!(metadata.interface, "LineageSigningProvider");
+        assert_eq!(metadata.endpoint, "http://localhost:9000/sign");
+        assert_eq!(metadata.protocols, vec!["http", "grpc"]);
+        assert_eq!(metadata.rate_limit, Some(500));
+        assert!(metadata.requires_auth);
+    }
+
+    #[test]
+    fn test_capability_metadata_defaults() {
+        let metadata = CapabilityMetadata::new("test_cap", "0.1");
+
+        assert_eq!(metadata.id, "test_cap");
+        assert_eq!(metadata.version, "0.1");
+        assert!(metadata.description.is_empty());
+        assert!(metadata.interface.is_empty());
+        assert!(metadata.endpoint.is_empty());
+        assert_eq!(metadata.protocols, vec!["http"]);
+        assert_eq!(metadata.rate_limit, None);
+        assert!(!metadata.requires_auth);
+        assert!(metadata.extra.is_empty());
+    }
+
+    #[test]
     fn test_capability_advertisement() {
         let primal = PrimalInfo {
             id: "beardog-test-1".to_string(),
@@ -200,5 +235,70 @@ mod tests {
 
         assert_eq!(advertisement.primal.id, "beardog-test-1");
         assert_eq!(advertisement.discovery.ttl, 300);
+    }
+
+    #[test]
+    fn test_capability_endpoint_creation() {
+        let metadata = CapabilityMetadata::new("tunnel", "1.0")
+            .with_endpoint("http://localhost:8080/tunnel");
+
+        let primal = PrimalInfo {
+            id: "primal-001".to_string(),
+            primal_type: "network".to_string(),
+            description: "Network primal".to_string(),
+            version: "1.0.0".to_string(),
+        };
+
+        let endpoint = CapabilityEndpoint::new(
+            metadata,
+            primal,
+            "http://localhost:8080/tunnel".to_string(),
+        );
+
+        assert_eq!(endpoint.metadata.id, "tunnel");
+        assert_eq!(endpoint.provider.id, "primal-001");
+        assert_eq!(endpoint.url, "http://localhost:8080/tunnel");
+        assert!(!endpoint.discovered_at.is_empty());
+    }
+
+    #[test]
+    fn test_primal_info_serialization() {
+        let primal = PrimalInfo {
+            id: "test-primal".to_string(),
+            primal_type: "storage".to_string(),
+            description: "Storage primal".to_string(),
+            version: "2.0.0".to_string(),
+        };
+
+        let json = serde_json::to_string(&primal).unwrap();
+        let deserialized: PrimalInfo = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.id, primal.id);
+        assert_eq!(deserialized.primal_type, primal.primal_type);
+        assert_eq!(deserialized.description, primal.description);
+        assert_eq!(deserialized.version, primal.version);
+    }
+
+    #[test]
+    fn test_discovery_config_without_mdns() {
+        let discovery = DiscoveryConfig {
+            mdns: None,
+            http: "http://localhost:8080/discover".to_string(),
+            ttl: 600,
+        };
+
+        assert!(discovery.mdns.is_none());
+        assert_eq!(discovery.http, "http://localhost:8080/discover");
+        assert_eq!(discovery.ttl, 600);
+    }
+
+    #[test]
+    fn test_capability_metadata_with_extra() {
+        let mut metadata = CapabilityMetadata::new("custom", "1.0");
+        metadata.extra.insert("custom_key".to_string(), "custom_value".to_string());
+        metadata.extra.insert("another_key".to_string(), "another_value".to_string());
+
+        assert_eq!(metadata.extra.len(), 2);
+        assert_eq!(metadata.extra.get("custom_key"), Some(&"custom_value".to_string()));
     }
 }

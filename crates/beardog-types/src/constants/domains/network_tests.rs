@@ -118,12 +118,11 @@ fn test_multicast_address() {
 #[test]
 fn test_dns_settings() {
     assert_eq!(addresses::DEFAULT_DNS_PORT, 53);
-    // Verify DNS servers array is populated
-    #[allow(clippy::len_zero)] // Const arrays don't have is_empty() at compile time
-    {
-        assert!(addresses::DEFAULT_DNS_SERVERS.len() > 0);
-    }
-    assert!(addresses::DEFAULT_DNS_SERVERS.contains(&"8.8.8.8"));
+    // Verify DNS servers function returns valid servers
+    let dns_servers = addresses::dns_servers();
+    assert!(!dns_servers.is_empty());
+    // Fallback should include Google DNS
+    assert!(addresses::FALLBACK_DNS_SERVERS.contains(&"8.8.8.8"));
 }
 
 // Ports module tests

@@ -23,6 +23,7 @@ pub mod crypto_handlers_aes_gcm; // AES-GCM encryption (Phase 6 - 90%+ of HTTPS!
 pub mod crypto_handlers_ecdh; // ECDH P-256/P-384 key exchange (Phase 6 - TLS 1.3)
 pub mod crypto_handlers_ecdsa; // ECDSA signature algorithms (P-256, P-384)
 pub mod crypto_handlers_genetic; // Genetic crypto (Phase 5)
+pub mod crypto_handlers_genetic_types; // Genetic crypto types (split for maintainability)
 pub mod crypto_handlers_hashing; // SHA-256/384/512 standalone hashing (Phase 6)
 pub mod crypto_handlers_hmac; // HMAC variants: SHA384/512, Blake3 (Phase 7)
 pub mod crypto_handlers_kdf; // Additional KDFs: bcrypt, scrypt (Phase 7)

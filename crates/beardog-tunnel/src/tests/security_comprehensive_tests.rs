@@ -3,9 +3,9 @@
 //! Purpose: Week 2 test expansion - Security and encryption comprehensive coverage
 
 use crate::tunnel::hsm::types::config::{
-    AuthMethod, CryptoBackendType, MemoryConfig, MemoryProtectionLevel, SecurityLevel,
-    SoftwareHsmConfig,
+    AuthMethod, CryptoBackendType, MemoryConfig, MemoryProtectionLevel, SoftwareHsmConfig,
 };
+use crate::tunnel::hsm::types::SecurityLevel;
 
 #[cfg(test)]
 #[allow(clippy::module_inception)]
@@ -93,27 +93,45 @@ mod security_comprehensive_tests {
 
     #[test]
     fn test_security_level_enumeration() {
+        // Canonical hardware-based security levels (lowest to highest)
         let levels = [
-            SecurityLevel::Low,
-            SecurityLevel::Medium,
-            SecurityLevel::High,
-            SecurityLevel::Maximum,
+            SecurityLevel::Software,
+            SecurityLevel::TrustedExecutionEnvironment,
+            SecurityLevel::SecureEnclave,
+            SecurityLevel::HardwareSecurityModule,
+            SecurityLevel::StrongBox,
         ];
 
-        assert_eq!(levels.len(), 4, "Should have 4 security levels");
+        assert_eq!(levels.len(), 5, "Should have 5 security levels");
     }
 
     #[test]
     fn test_security_level_equality() {
-        let level1 = SecurityLevel::High;
-        let level2 = SecurityLevel::High;
-        let level3 = SecurityLevel::Medium;
+        let level1 = SecurityLevel::HardwareSecurityModule;
+        let level2 = SecurityLevel::HardwareSecurityModule;
+        let level3 = SecurityLevel::SecureEnclave;
 
         assert_eq!(level1, level2, "Same security levels should be equal");
         assert_ne!(
             level1, level3,
             "Different security levels should not be equal"
         );
+    }
+
+    #[test]
+    fn test_security_level_ordering() {
+        // Verify proper ordering from lowest to highest
+        assert!(SecurityLevel::StrongBox > SecurityLevel::HardwareSecurityModule);
+        assert!(SecurityLevel::HardwareSecurityModule > SecurityLevel::SecureEnclave);
+        assert!(SecurityLevel::SecureEnclave > SecurityLevel::TrustedExecutionEnvironment);
+        assert!(SecurityLevel::TrustedExecutionEnvironment > SecurityLevel::Software);
+    }
+
+    #[test]
+    fn test_security_level_hardware_backing() {
+        assert!(!SecurityLevel::Software.is_hardware_backed());
+        assert!(SecurityLevel::TrustedExecutionEnvironment.is_hardware_backed());
+        assert!(SecurityLevel::StrongBox.is_hardware_backed());
     }
 
     // ============================================================================
@@ -123,12 +141,13 @@ mod security_comprehensive_tests {
     #[test]
     fn test_crypto_backend_type_enumeration() {
         let backends = [
+            CryptoBackendType::GeneticCrypto, // 100% Pure Rust (RECOMMENDED)
             CryptoBackendType::RustCrypto,
             CryptoBackendType::Ring,
             CryptoBackendType::OpenSsl,
         ];
 
-        assert_eq!(backends.len(), 3, "Should have 3 crypto backend types");
+        assert_eq!(backends.len(), 4, "Should have 4 crypto backend types");
     }
 
     #[test]

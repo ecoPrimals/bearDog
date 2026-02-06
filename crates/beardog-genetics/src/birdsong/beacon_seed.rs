@@ -206,7 +206,10 @@ impl BeaconSeed {
     ///
     /// Returns error only on system failures (key derivation, etc).
     /// Decryption failure returns Ok(None) - that's expected behavior.
-    pub fn try_decrypt(&self, encrypted: &BeaconCiphertext) -> Result<Option<Vec<u8>>, BearDogError> {
+    pub fn try_decrypt(
+        &self,
+        encrypted: &BeaconCiphertext,
+    ) -> Result<Option<Vec<u8>>, BearDogError> {
         let key = self.derive_encryption_key()?;
 
         let cipher = ChaCha20Poly1305::new_from_slice(&key)
@@ -348,7 +351,10 @@ mod tests {
 
         // Different beacon cannot decrypt (TRUE Dark Forest!)
         let result = beacon2.try_decrypt(&encrypted).expect("should not error");
-        assert!(result.is_none(), "Different beacon should not be able to decrypt");
+        assert!(
+            result.is_none(),
+            "Different beacon should not be able to decrypt"
+        );
     }
 
     #[test]

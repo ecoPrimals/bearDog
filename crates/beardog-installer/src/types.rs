@@ -77,16 +77,16 @@ impl Primal {
         ]
     }
 
-    /// Parse from string
+    /// Parse primal name from string
     ///
     /// # Examples
     /// ```
     /// use beardog_installer::types::Primal;
     ///
-    /// assert_eq!(Primal::from_str("beardog"), Some(Primal::BearDog));
-    /// assert_eq!(Primal::from_str("invalid"), None);
+    /// assert_eq!(Primal::parse_name("beardog"), Some(Primal::BearDog));
+    /// assert_eq!(Primal::parse_name("invalid"), None);
     /// ```
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse_name(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "beardog" => Some(Self::BearDog),
             "songbird" => Some(Self::Songbird),
@@ -266,11 +266,11 @@ mod tests {
 
     #[test]
     fn test_primal_from_str() {
-        assert_eq!(Primal::from_str("beardog"), Some(Primal::BearDog));
-        assert_eq!(Primal::from_str("BearDog"), Some(Primal::BearDog));
-        assert_eq!(Primal::from_str("BEARDOG"), Some(Primal::BearDog));
-        assert_eq!(Primal::from_str("songbird"), Some(Primal::Songbird));
-        assert_eq!(Primal::from_str("invalid"), None);
+        assert_eq!(Primal::parse_name("beardog"), Some(Primal::BearDog));
+        assert_eq!(Primal::parse_name("BearDog"), Some(Primal::BearDog));
+        assert_eq!(Primal::parse_name("BEARDOG"), Some(Primal::BearDog));
+        assert_eq!(Primal::parse_name("songbird"), Some(Primal::Songbird));
+        assert_eq!(Primal::parse_name("invalid"), None);
     }
 
     #[test]

@@ -75,7 +75,7 @@ pub struct WASMSocket;
 impl PlatformSocket for WASMSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
         let channel_name = format!("beardog_channel_{}", primal_name);
-        
+
         info!("🌐 WASM in-process channel: {}", channel_name);
         warn!("⚠️  WASM deployment uses in-process channels (no true IPC)");
         warn!("   Browser limitation: No access to filesystem or network sockets");
@@ -84,11 +84,11 @@ impl PlatformSocket for WASMSocket {
         warn!("   2. PostMessage API (browser window communication)");
         warn!("   3. WebSocket to server-side primal (distributed deployment)");
         warn!("   4. SharedArrayBuffer for zero-copy (when available)");
-        
+
         // Document the in-process channel for future implementation
         Ok(SocketEndpoint::InProcess(channel_name))
     }
-    
+
     fn bind(_endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
         warn!("WASM socket binding not implemented");
         warn!("WebAssembly cannot bind traditional sockets due to sandbox");
@@ -97,7 +97,7 @@ impl PlatformSocket for WASMSocket {
         warn!("  2. In-process message channels (mpsc, broadcast)");
         warn!("  3. PostMessage API bindings (for browser)");
         warn!("  4. WebSocket client (for distributed primals)");
-        
+
         Err(std::io::Error::new(
             std::io::ErrorKind::Unsupported,
             "WASM deployment requires in-process channels or WebSocket (traditional sockets not available in browser sandbox)",
@@ -108,7 +108,7 @@ impl PlatformSocket for WASMSocket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_wasm_channel_format() {
         let endpoint = WASMSocket::create_endpoint("beardog").unwrap();
@@ -121,7 +121,7 @@ mod tests {
             _ => panic!("Expected InProcess endpoint for WASM"),
         }
     }
-    
+
     #[test]
     fn test_primal_name_variations() {
         for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
@@ -135,12 +135,12 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn test_wasm_binding_returns_unsupported() {
         let endpoint = WASMSocket::create_endpoint("beardog").unwrap();
         let result = WASMSocket::bind(&endpoint);
-        
+
         assert!(result.is_err(), "WASM binding should return error");
         assert_eq!(result.unwrap_err().kind(), std::io::ErrorKind::Unsupported);
         println!("✅ WASM correctly returns Unsupported (expected for browser sandbox)");

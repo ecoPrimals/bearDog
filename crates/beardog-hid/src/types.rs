@@ -151,10 +151,9 @@ pub fn is_fido2_device(vendor_id: VendorId, product_id: ProductId) -> bool {
 
     match (vendor_id, product_id) {
         // SoloKeys Solo 2, Yubico (all models), Google Titan (specific), Feitian (all models)
-        (SOLOKEYS, SOLO2)
-        | (YUBICO, _)
-        | (GOOGLE, ProductId(0x0858 | 0x0859))
-        | (FEITIAN, _) => true,
+        (SOLOKEYS, SOLO2) | (YUBICO, _) | (GOOGLE, ProductId(0x0858 | 0x0859)) | (FEITIAN, _) => {
+            true
+        }
         // Unknown
         _ => false,
     }

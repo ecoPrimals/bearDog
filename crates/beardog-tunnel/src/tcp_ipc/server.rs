@@ -21,13 +21,13 @@ use tracing::{debug, error, info, warn};
 pub struct TcpIpcServer {
     /// Bind address
     bind_addr: SocketAddr,
-    
+
     /// BTSP provider (provides crypto/genetics capabilities)
     btsp_provider: Arc<BeardogBtspProvider>,
-    
+
     /// Handler registry (shared with Unix socket implementation)
     handler_registry: Arc<HandlerRegistry>,
-    
+
     /// Actual bound address (after OS assigns port if using :0)
     bound_addr: Arc<RwLock<Option<SocketAddr>>>,
 }
@@ -77,10 +77,10 @@ impl TcpIpcServer {
             match listener.accept().await {
                 Ok((stream, peer_addr)) => {
                     debug!("📥 New connection from: {}", peer_addr);
-                    
+
                     let registry = self.handler_registry.clone();
                     let btsp = self.btsp_provider.clone();
-                    
+
                     // Spawn task to handle connection
                     tokio::spawn(async move {
                         if let Err(e) = Self::handle_connection(stream, registry, btsp).await {
@@ -142,8 +142,11 @@ impl TcpIpcServer {
                                 },
                                 "id": null
                             });
-                            let response = serde_json::to_string(&error_response).unwrap() + "\n";
-                            writer.write_all(response.as_bytes()).await.ok();
+                            // Serialization of json! macro is infallible, but handle gracefully
+                            if let Ok(response) = serde_json::to_string(&error_response) {
+                                let response = response + "\n";
+                                writer.write_all(response.as_bytes()).await.ok();
+                            }
                             continue;
                         }
                     };
@@ -156,7 +159,9 @@ impl TcpIpcServer {
                     debug!("📥 Request: {} (id: {:?})", method, id);
 
                     // Route through handler registry
-                    let response = registry.route(method, params.as_ref(), &btsp_provider).await;
+                    let response = registry
+                        .route(method, params.as_ref(), &btsp_provider)
+                        .await;
 
                     // Build JSON-RPC response
                     let json_response = match response {
@@ -175,8 +180,14 @@ impl TcpIpcServer {
                         }),
                     };
 
-                    // Send response
-                    let response_str = serde_json::to_string(&json_response).unwrap() + "\n";
+                    // Send response (serialization of json! macro is infallible, but handle gracefully)
+                    let response_str = match serde_json::to_string(&json_response) {
+                        Ok(s) => s + "\n",
+                        Err(e) => {
+                            error!("Failed to serialize response: {}", e);
+                            continue;
+                        }
+                    };
                     if let Err(e) = writer.write_all(response_str.as_bytes()).await {
                         error!("Failed to write response to {}: {}", peer_addr, e);
                         break;

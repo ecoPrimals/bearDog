@@ -1,7 +1,7 @@
 //! iOS/macOS platform implementation for BearDog
 //!
 //! **Platform:** iOS, macOS (Apple platforms)
-//! **Transport:** 
+//! **Transport:**
 //! - macOS: Unix domain sockets (delegates to unix.rs)
 //! - iOS: XPC framework (documented for future implementation)
 //!
@@ -72,60 +72,71 @@ impl PlatformSocket for IOSSocket {
                 .ok()
                 .and_then(|d| {
                     let path = std::path::PathBuf::from(d);
-                    if path.exists() { Some(path) } else { None }
+                    if path.exists() {
+                        Some(path)
+                    } else {
+                        None
+                    }
                 })
                 .unwrap_or_else(|| std::path::PathBuf::from("/var/tmp/biomeos"));
-            
+
             // Ensure directory exists
             if let Err(e) = std::fs::create_dir_all(&socket_dir) {
-                warn!("Failed to create socket directory {}: {}", socket_dir.display(), e);
+                warn!(
+                    "Failed to create socket directory {}: {}",
+                    socket_dir.display(),
+                    e
+                );
             }
-            
+
             let socket_path = socket_dir.join(format!("{}.sock", primal_name));
-            
-            info!("🍎 macOS Unix socket (filesystem): {}", socket_path.display());
-            
+
+            info!(
+                "🍎 macOS Unix socket (filesystem): {}",
+                socket_path.display()
+            );
+
             Ok(SocketEndpoint::Filesystem(socket_path))
         }
-        
+
         // iOS: XPC is preferred but requires platform-specific bindings
         #[cfg(target_os = "ios")]
         {
             let xpc_service = format!("org.biomeos.{}", primal_name);
-            
+
             info!("📱 iOS XPC service identifier: {}", xpc_service);
             warn!("⚠️  iOS XPC transport requires platform-specific bindings");
             warn!("   Options:");
             warn!("   1. Pure Rust XPC bindings (when available)");
             warn!("   2. launchd + Unix sockets (with proper entitlements)");
             warn!("   3. TCP localhost fallback (works but not optimal)");
-            
+
             // For now, document the XPC endpoint
             // Future implementation will use XPC framework bindings
             Ok(SocketEndpoint::XPC(xpc_service))
         }
     }
-    
+
     fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
         match endpoint {
             // macOS: Bind Unix socket
             #[cfg(target_os = "macos")]
             SocketEndpoint::Filesystem(path) => {
                 debug!("Binding macOS Unix socket: {}", path.display());
-                
+
                 // Remove stale socket if exists
                 if path.exists() {
                     debug!("Removing stale socket: {}", path.display());
                     std::fs::remove_file(path)?;
                 }
-                
+
                 let listener = UnixListener::bind(path)?;
-                
+
                 info!("✅ macOS Unix socket bound: {}", path.display());
-                
+
                 Ok(listener)
             }
-            
+
             // iOS: XPC endpoint (not yet implemented)
             #[cfg(target_os = "ios")]
             SocketEndpoint::XPC(service) => {
@@ -134,13 +145,13 @@ impl PlatformSocket for IOSSocket {
                 warn!("  1. Pure Rust XPC bindings (e.g., xpc-sys crate)");
                 warn!("  2. iOS entitlements configuration");
                 warn!("  3. XPC service registration with launchd");
-                
+
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Unsupported,
                     format!("iOS XPC transport not yet implemented ({}). Use TCP localhost fallback or wait for Pure Rust XPC bindings.", service),
                 ))
             }
-            
+
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "IOSSocket requires Filesystem (macOS) or XPC (iOS) endpoint",
@@ -152,7 +163,7 @@ impl PlatformSocket for IOSSocket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     #[cfg(target_os = "macos")]
     fn test_macos_socket_format() {
@@ -167,7 +178,7 @@ mod tests {
             _ => panic!("Expected Filesystem endpoint on macOS"),
         }
     }
-    
+
     #[test]
     #[cfg(target_os = "ios")]
     fn test_ios_xpc_format() {
@@ -181,12 +192,12 @@ mod tests {
             _ => panic!("Expected XPC endpoint on iOS"),
         }
     }
-    
+
     #[test]
     fn test_primal_name_variations() {
         for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
             let endpoint = IOSSocket::create_endpoint(primal).unwrap();
-            
+
             #[cfg(target_os = "macos")]
             match endpoint {
                 SocketEndpoint::Filesystem(path) => {
@@ -195,7 +206,7 @@ mod tests {
                 }
                 _ => panic!("Expected Filesystem endpoint on macOS"),
             }
-            
+
             #[cfg(target_os = "ios")]
             match endpoint {
                 SocketEndpoint::XPC(service) => {
@@ -207,32 +218,32 @@ mod tests {
             }
         }
     }
-    
+
     #[tokio::test]
     #[cfg(target_os = "macos")]
     async fn test_macos_socket_binding() {
         use std::env;
-        
+
         // Use temp directory for test
         let test_dir = env::temp_dir().join("beardog_ios_test");
         env::set_var("BIOMEOS_SOCKET_DIR", &test_dir);
-        
+
         let test_name = format!("test_beardog_{}", std::process::id());
         let endpoint = IOSSocket::create_endpoint(&test_name).unwrap();
-        
+
         let listener = IOSSocket::bind(&endpoint);
         assert!(listener.is_ok(), "Socket binding failed on macOS");
-        
+
         if let Ok(listener) = listener {
             println!("✅ macOS socket bound successfully");
             drop(listener);
-            
+
             // Cleanup
             if let SocketEndpoint::Filesystem(path) = endpoint {
                 let _ = std::fs::remove_file(&path);
             }
         }
-        
+
         env::remove_var("BIOMEOS_SOCKET_DIR");
         let _ = std::fs::remove_dir_all(&test_dir);
     }

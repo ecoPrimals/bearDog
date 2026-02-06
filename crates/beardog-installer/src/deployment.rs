@@ -167,21 +167,22 @@ impl DeploymentManager {
         self.update_progress(primal, DeploymentStatus::Downloading, 10, "Locating binary")
             .await;
 
-        let binary_path = self
-            .installer
-            .locate_binary(primal, &self.arch, &self.os)?;
+        let binary_path = self.installer.locate_binary(primal, &self.arch, &self.os)?;
 
         // 2. Update status: Installing
         self.update_progress(primal, DeploymentStatus::Installing, 40, "Copying binary")
             .await;
 
-        self.installer
-            .install_binary(primal, &binary_path)
-            .await?;
+        self.installer.install_binary(primal, &binary_path).await?;
 
         // 3. Update status: Validating
-        self.update_progress(primal, DeploymentStatus::Validating, 70, "Validating installation")
-            .await;
+        self.update_progress(
+            primal,
+            DeploymentStatus::Validating,
+            70,
+            "Validating installation",
+        )
+        .await;
 
         // Basic validation: check binary exists and is executable
         let installed_path = self.installer.binary_path(primal);
@@ -193,8 +194,13 @@ impl DeploymentManager {
         }
 
         // 4. Update status: Complete
-        self.update_progress(primal, DeploymentStatus::Complete, 100, "Deployment successful")
-            .await;
+        self.update_progress(
+            primal,
+            DeploymentStatus::Complete,
+            100,
+            "Deployment successful",
+        )
+        .await;
 
         Ok(())
     }
@@ -268,7 +274,12 @@ pub enum DeploymentError {
 
     /// Validation failed
     #[error("Validation failed for {primal:?}: {reason}")]
-    ValidationFailed { primal: Primal, reason: String },
+    ValidationFailed {
+        /// The primal that failed validation
+        primal: Primal,
+        /// Reason for validation failure
+        reason: String,
+    },
 }
 
 #[cfg(test)]

@@ -54,10 +54,7 @@ impl AsyncWrite for UnixPlatformStream {
         Pin::new(&mut self.0).poll_flush(cx)
     }
 
-    fn poll_shutdown(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<std::io::Result<()>> {
+    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
         Pin::new(&mut self.0).poll_shutdown(cx)
     }
 }
@@ -88,7 +85,7 @@ impl PlatformSocket for UnixSocket {
         // 2. Directory creation is infrequent (usually already exists)
         // 3. Making the trait async would require larger refactoring
         // TODO(Phase 3): Consider making PlatformSocket trait async for full non-blocking operation
-        
+
         // Priority 1: Environment variable (operator control)
         if let Ok(custom_socket) = std::env::var("BEARDOG_SOCKET") {
             info!("📡 Using BEARDOG_SOCKET override: {}", custom_socket);
@@ -99,29 +96,26 @@ impl PlatformSocket for UnixSocket {
         let socket_path = if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
             // XDG compliant: /run/user/$UID/biomeos/beardog.sock
             let biomeos_dir = std::path::PathBuf::from(&runtime_dir).join("biomeos");
-            
+
             // Ensure directory exists (BLOCKING - acceptable for initialization)
             if !biomeos_dir.exists() {
                 std::fs::create_dir_all(&biomeos_dir)?;
             }
-            
+
             biomeos_dir.join(format!("{}.sock", primal_name))
         } else {
             // Priority 3: /tmp fallback (compatibility)
             let tmp_dir = std::path::PathBuf::from("/tmp/biomeos");
-            
+
             // Ensure directory exists (BLOCKING - acceptable for initialization)
             if !tmp_dir.exists() {
                 std::fs::create_dir_all(&tmp_dir)?;
             }
-            
+
             tmp_dir.join(format!("{}.sock", primal_name))
         };
 
-        debug!(
-            "Creating Unix filesystem socket: {}",
-            socket_path.display()
-        );
+        debug!("Creating Unix filesystem socket: {}", socket_path.display());
         info!(
             "🐧 Unix filesystem socket (XDG-compliant): {} (automatic cleanup)",
             socket_path.display()
@@ -170,9 +164,9 @@ mod tests {
     fn test_xdg_socket_path() {
         // Set XDG_RUNTIME_DIR
         std::env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
-        
+
         let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
-        
+
         std::env::remove_var("XDG_RUNTIME_DIR");
 
         match endpoint {
@@ -188,9 +182,9 @@ mod tests {
     #[test]
     fn test_environment_override() {
         std::env::set_var("BEARDOG_SOCKET", "/custom/path/beardog.sock");
-        
+
         let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
-        
+
         std::env::remove_var("BEARDOG_SOCKET");
 
         match endpoint {

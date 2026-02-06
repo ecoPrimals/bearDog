@@ -79,25 +79,23 @@ impl SoloV2Provider {
     ///
     /// # Note
     ///
-    /// Real implementation strategy:
-    /// 1. USB HID enumeration via `hidapi` crate (vendor-agnostic)
+    /// Real implementation strategy (Pure Rust - ecoBin compliant):
+    /// 1. USB HID enumeration via `beardog-hid` crate (Pure Rust, vendor-agnostic)
     /// 2. CTAP2/FIDO2 capability detection (ANY compliant device)
     /// 3. Device feature querying via authenticatorGetInfo
     ///
     /// Current: Returns empty vec if no devices found (graceful degradation)
     #[cfg(feature = "solo-v2")]
     pub fn discover_devices() -> Result<Vec<SoloV2DeviceInfo>, BearDogError> {
-        // Real implementation: USB HID device enumeration
-        // When hidapi is integrated, this will discover ANY FIDO2 token
+        // Real implementation: USB HID device enumeration using Pure Rust beardog-hid
 
         #[cfg(feature = "usb-discovery")]
         {
-            // Use hidapi to discover FIDO2-compliant devices
+            // Use beardog-hid to discover FIDO2-compliant devices (Pure Rust - ecoBin compliant)
             // This is vendor-agnostic and works with ANY CTAP2/FIDO2 token
-            use hidapi::HidApi;
 
-            let api = HidApi::new().map_err(|e| {
-                BearDogError::system(format!("Failed to initialize USB HID: {}", e))
+            let hid_devices = beardog_hid::discover().map_err(|e| {
+                BearDogError::system(format!("Failed to discover HID devices: {}", e))
             })?;
 
             let mut devices = Vec::new();
@@ -106,27 +104,27 @@ impl SoloV2Provider {
             const FIDO_USAGE_PAGE: u16 = 0xF1D0;
             const FIDO_USAGE: u16 = 0x01;
 
-            for device in api.device_list() {
+            for device in &hid_devices {
                 // Check if device implements FIDO2/CTAP2
-                if device.usage_page() == FIDO_USAGE_PAGE && device.usage() == FIDO_USAGE {
+                if device.usage_page == FIDO_USAGE_PAGE && device.usage == FIDO_USAGE {
                     let device_info = SoloV2DeviceInfo {
                         device_id: device
-                            .serial_number()
-                            .map(|s| s.to_string())
+                            .serial_number
+                            .clone()
                             .unwrap_or_else(|| {
-                                format!("{:04x}:{:04x}", device.vendor_id(), device.product_id())
+                                format!("{:04x}:{:04x}", device.vendor_id, device.product_id)
                             }),
                         product_name: device
-                            .product_string()
-                            .map(|s| s.to_string())
+                            .product
+                            .clone()
                             .unwrap_or_else(|| "Unknown FIDO2 Device".to_string()),
                         firmware_version: device
-                            .product_string()
-                            .map(|s| s.to_string())
+                            .product
+                            .clone()
                             .unwrap_or_else(|| "unknown".to_string()),
                         is_connected: true,
-                        vendor_id: device.vendor_id(),
-                        product_id: device.product_id(),
+                        vendor_id: device.vendor_id,
+                        product_id: device.product_id,
                     };
                     devices.push(device_info);
                 }
@@ -140,7 +138,7 @@ impl SoloV2Provider {
         {
             // Graceful degradation: No USB discovery feature enabled
             // Return empty vector (not an error - allows software fallback)
-            debug!("USB discovery feature not enabled, no hardware devices available");
+            tracing::debug!("USB discovery feature not enabled, no hardware devices available");
             Ok(Vec::new())
         }
     }

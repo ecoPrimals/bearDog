@@ -1,171 +1,162 @@
-#![allow(
-    unused_imports,
-    unused_variables,
-    dead_code,
-    unused_comparisons,
-    clippy::all
-)]
-
-//! Test CTAP2 GetInfo Command with Real Hardware
+//! Test CTAP2 GetInfo Command with Real Hardware (Pure Rust)
 //!
 //! This example tests the CTAP2 GetInfo command implementation
 //! with actual FIDO2 devices (SoloKeys, YubiKey, etc.).
-
-#[cfg(feature = "fido2")]
-use beardog_security::hsm::fido2::{ctap2, discovery};
+//!
+//! # ecoBin Compliance
+//!
+//! Uses `beardog-hid` (100% Pure Rust) instead of `hidapi` (C library).
+//!
+//! # Usage
+//!
+//! ```bash
+//! cargo run --example test_ctap2_getinfo --features fido2
+//! ```
 
 #[tokio::main]
 async fn main() -> Result<(), beardog_errors::BearDogError> {
     // Initialize logging
     tracing_subscriber::fmt::init();
 
-    println!("╔════════════════════════════════════════════════════════════════╗");
-    println!("║       CTAP2 GetInfo Test - Real Hardware Verification         ║");
-    println!("║                   November 9, 2025                             ║");
-    println!("╚════════════════════════════════════════════════════════════════╝");
+    println!("CTAP2 GetInfo Test - Real Hardware Verification");
+    println!("Pure Rust (ecoBin Compliant)");
     println!();
 
     #[cfg(not(feature = "fido2"))]
     {
-        println!("⚠️  FIDO2 feature not enabled!");
-        println!("💡 Run with: cargo run --example test_ctap2_getinfo --features fido2");
+        println!("FIDO2 feature not enabled!");
+        println!("Run with: cargo run --example test_ctap2_getinfo --features fido2");
+        return Ok(());
     }
 
     #[cfg(feature = "fido2")]
     {
-        // Step 1: Discover FIDO2 devices
-        println!("🔍 Step 1: Discovering FIDO2 devices...");
-        let devices = discovery::discover_fido2_devices().await?;
+        run_ctap2_test().await
+    }
+}
 
-        if devices.is_empty() {
-            println!("⚠️  No FIDO2 devices found!");
-            println!("💡 Please connect a SoloKeys, YubiKey, or other FIDO2 security key");
-            return Ok(());
-        }
+#[cfg(feature = "fido2")]
+async fn run_ctap2_test() -> Result<(), beardog_errors::BearDogError> {
+    use beardog_hid::{discover, open_device, HidDevice};
 
-        println!("✅ Found {} device(s)\n", devices.len());
+    // Step 1: Discover HID devices using Pure Rust
+    println!("Step 1: Discovering HID devices (Pure Rust /dev/hidraw)...");
+    let devices = discover().await?;
 
-        // Step 2: Test each device
-        for (idx, device_info) in devices.iter().enumerate() {
-            println!("─────────────────────────────────────────────────────────");
-            println!("📱 Device #{}: {}", idx + 1, device_info.product);
-            println!("   Manufacturer: {}", device_info.manufacturer);
-            println!("   Path: {}", device_info.device_path.display());
+    if devices.is_empty() {
+        println!("No HID devices found!");
+        println!("Please connect a SoloKeys, YubiKey, or other FIDO2 security key");
+        return Ok(());
+    }
+
+    println!("Found {} HID device(s)\n", devices.len());
+
+    // Filter for likely FIDO2 devices
+    let fido2_devices: Vec<_> = devices
+        .iter()
+        .filter(|d| {
+            // Common FIDO2 vendor IDs
+            let vid = d.vendor_id.0;
+            matches!(
+                vid,
+                0x1050 | // Yubico
+                0x1209 | // SoloKeys
+                0x20A0 | // Nitrokey
+                0x096E | // Feitian
+                0x2581 // Ledger
+            )
+        })
+        .collect();
+
+    if fido2_devices.is_empty() {
+        println!(
+            "No FIDO2 devices found among {} HID devices!",
+            devices.len()
+        );
+        println!("Listing all HID devices for debugging:");
+        for dev in &devices {
             println!(
-                "   VID:PID: 0x{:04x}:0x{:04x}",
-                device_info.vendor_id, device_info.product_id
+                "  VID:0x{:04x} PID:0x{:04x} - {} {}",
+                dev.vendor_id.0, dev.product_id.0, dev.manufacturer, dev.product
             );
-            println!();
+        }
+        return Ok(());
+    }
 
-            // Open HID device
-            println!("🔓 Opening device...");
-            let path_str = device_info.device_path.to_string_lossy();
-            let api = hidapi::HidApi::new().map_err(|e| {
-                beardog_errors::BearDogError::system(format!("HID API init failed: {}", e))
-            })?;
+    println!("Found {} FIDO2 device(s)\n", fido2_devices.len());
 
-            let device = api
-                .open_path(
-                    std::ffi::CString::new(path_str.as_bytes())
-                        .unwrap()
-                        .as_c_str(),
-                )
-                .map_err(|e| {
-                    beardog_errors::BearDogError::system(format!("Device open failed: {}", e))
-                })?;
+    // Step 2: Test each FIDO2 device
+    for (idx, device_info) in fido2_devices.iter().enumerate() {
+        println!("-----------------------------------------------------------");
+        println!(
+            "Device #{}: {} - {}",
+            idx + 1,
+            device_info.manufacturer,
+            device_info.product
+        );
+        println!(
+            "   VID:PID: 0x{:04x}:0x{:04x}",
+            device_info.vendor_id.0, device_info.product_id.0
+        );
+        println!("   Path: {}", device_info.path);
+        println!();
 
-            println!("✅ Device opened successfully");
-            println!();
+        // Open device using Pure Rust beardog-hid
+        println!("Opening device (Pure Rust)...");
+        match open_device(&device_info.path).await {
+            Ok(mut device) => {
+                println!("Device opened successfully");
+                println!();
 
-            // Send CTAP2 GetInfo
-            println!("📤 Sending CTAP2 GetInfo command...");
-            match ctap2::ctap2_get_info(&device).await {
-                Ok(info) => {
-                    println!("✅ GetInfo SUCCESS!");
-                    println!();
-                    println!("📊 Device Capabilities:");
-                    println!("   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                // Send CTAP2 GetInfo command (0x04)
+                println!("Sending CTAP2 GetInfo command...");
 
-                    println!("   🔹 Supported Versions:");
-                    for version in &info.versions {
-                        println!("      - {}", version);
-                    }
-
-                    if !info.extensions.is_empty() {
-                        println!("   🔹 Supported Extensions:");
-                        for ext in &info.extensions {
-                            println!("      - {}", ext);
-                            if ext == "hmac-secret" {
-                                println!("         └─ ✅ Can generate hardware entropy!");
-                            }
-                        }
-                    }
-
-                    if !info.options.is_empty() {
-                        println!("   🔹 Device Options:");
-                        for (key, value) in &info.options {
-                            println!("      - {}: {}", key, if *value { "YES" } else { "NO" });
-                        }
-                    }
-
-                    if let Some(max_msg) = info.max_msg_size {
-                        println!("   🔹 Max Message Size: {} bytes", max_msg);
-                    }
-
-                    if let Some(protocols) = &info.pin_protocols {
-                        println!("   🔹 PIN Protocols: {:?}", protocols);
-                    }
-
-                    println!("   🔹 AAGUID: {}", hex::encode(&info.aaguid));
-
-                    println!();
-                    println!("🎯 Key Findings:");
-
-                    // Check for CTAP2 support
-                    if info.versions.iter().any(|v| v.starts_with("FIDO_2")) {
-                        println!("   ✅ FIDO2/CTAP2 supported");
-                    }
-
-                    // Check for hmac-secret
-                    if info.extensions.contains(&"hmac-secret".to_string()) {
-                        println!("   ✅ hmac-secret extension available (can generate entropy)");
-                    } else {
-                        println!("   ⚠️  hmac-secret not available (entropy generation limited)");
-                    }
-
-                    // Check for resident key support
-                    if info.options.get("rk").copied().unwrap_or(false) {
-                        println!("   ✅ Resident keys supported (can store credentials)");
-                    }
-
-                    // Check for user verification
-                    if info.options.get("uv").copied().unwrap_or(false) {
-                        println!("   ✅ User verification available (PIN/biometric)");
-                    }
-
-                    println!();
+                // CTAP2 GetInfo: [CTAP2_CMD_GET_INFO]
+                let ctap2_getinfo = vec![0x04];
+                if let Err(e) = device.write(&ctap2_getinfo).await {
+                    println!("Failed to send command: {}", e);
+                    continue;
                 }
-                Err(e) => {
-                    println!("❌ GetInfo FAILED: {}", e);
-                    println!("💡 This might be:");
-                    println!("   - Device not in FIDO mode");
-                    println!("   - Permission issues");
-                    println!("   - Device in use by another process");
-                    println!();
+
+                // Read response
+                let mut response = vec![0u8; 1024];
+                match device.read(&mut response).await {
+                    Ok(n) if n > 0 => {
+                        let status = response[0];
+                        if status == 0x00 {
+                            println!("GetInfo SUCCESS! (status: 0x{:02x})", status);
+                            println!("Response: {} bytes", n);
+                            // Full CBOR parsing would go here
+                            // For now, just show raw response
+                            println!("Raw (first 64 bytes): {:02x?}", &response[..n.min(64)]);
+                        } else {
+                            println!("GetInfo returned error status: 0x{:02x}", status);
+                        }
+                    }
+                    Ok(_) => println!("No response received"),
+                    Err(e) => println!("Read error: {}", e),
                 }
             }
+            Err(e) => {
+                println!("Failed to open device: {}", e);
+                println!("This might be:");
+                println!(
+                    "   - Permission issues (try: sudo chmod 666 {})",
+                    device_info.path
+                );
+                println!("   - Device is in use by another process");
+            }
         }
-
-        println!("╔════════════════════════════════════════════════════════════════╗");
-        println!("║                     Test Complete!                             ║");
-        println!("╚════════════════════════════════════════════════════════════════╝");
         println!();
-        println!("🎉 Next Steps:");
-        println!("   1. Implement MakeCredential (create credentials)");
-        println!("   2. Implement GetAssertion (sign with credentials)");
-        println!("   3. Implement hmac-secret entropy generation");
-        println!("   4. Test multi-credential operations");
     }
+
+    println!("Test Complete!");
+    println!();
+    println!("Next Steps:");
+    println!("   1. Implement full CBOR response parsing");
+    println!("   2. Implement MakeCredential (create credentials)");
+    println!("   3. Implement GetAssertion (sign with credentials)");
+    println!("   4. Implement hmac-secret entropy generation");
 
     Ok(())
 }

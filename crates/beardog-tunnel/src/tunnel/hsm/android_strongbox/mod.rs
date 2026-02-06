@@ -80,7 +80,8 @@ pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDog
     info!("📱 Safe Android device detection starting");
 
     let device_info = AndroidDeviceInfo {
-        manufacturer: std::env::var("ANDROID_MANUFACTURER").unwrap_or_else(|_| "Unknown".to_string()),
+        manufacturer: std::env::var("ANDROID_MANUFACTURER")
+            .unwrap_or_else(|_| "Unknown".to_string()),
         model: std::env::var("ANDROID_MODEL").unwrap_or_else(|_| "Android Device".to_string()),
         device: std::env::var("ANDROID_DEVICE").unwrap_or_else(|_| "unknown".to_string()),
         hardware: std::env::var("ANDROID_HARDWARE").ok(),

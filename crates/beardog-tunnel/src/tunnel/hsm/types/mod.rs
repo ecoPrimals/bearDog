@@ -60,25 +60,25 @@ pub enum Algorithm {
     // Symmetric encryption
     Aes256Gcm,
     ChaCha20Poly1305,
-    
+
     // Elliptic curve (key exchange and general)
     EccP256,
     EccP384,
-    
+
     // ECDSA signatures (explicit signature variants)
-    EcdsaP256,      // ECDSA with P-256 curve
-    EcdsaP384,      // ECDSA with P-384 curve
-    EcdsaSha256,    // ECDSA with SHA-256 hash
-    
+    EcdsaP256,   // ECDSA with P-256 curve
+    EcdsaP384,   // ECDSA with P-384 curve
+    EcdsaSha256, // ECDSA with SHA-256 hash
+
     // RSA variants
     RsaSha256,
-    RsaPss2048,     // RSA-PSS with 2048-bit key
-    RsaPss3072,     // RSA-PSS with 3072-bit key
-    RsaPss4096,     // RSA-PSS with 4096-bit key
-    
+    RsaPss2048, // RSA-PSS with 2048-bit key
+    RsaPss3072, // RSA-PSS with 3072-bit key
+    RsaPss4096, // RSA-PSS with 4096-bit key
+
     // Key derivation
     HkdfSha256,
-    
+
     // Modern signatures and key exchange
     Ed25519,
     X25519,
@@ -90,24 +90,29 @@ impl Algorithm {
         match self {
             Self::Aes256Gcm | Self::EccP256 | Self::EcdsaP256 | Self::Ed25519 | Self::X25519 => 256,
             Self::EccP384 | Self::EcdsaP384 => 384,
-            Self::RsaPss2048 | Self::RsaSha256 => 112,  // Effective security
+            Self::RsaPss2048 | Self::RsaSha256 => 112, // Effective security
             Self::RsaPss3072 => 128,
             Self::RsaPss4096 => 152,
             Self::ChaCha20Poly1305 => 256,
             Self::HkdfSha256 | Self::EcdsaSha256 => 256,
         }
     }
-    
+
     /// Returns whether this is a signature algorithm
     pub const fn is_signature_algorithm(&self) -> bool {
         matches!(
             self,
-            Self::EcdsaP256 | Self::EcdsaP384 | Self::EcdsaSha256 | 
-            Self::RsaSha256 | Self::RsaPss2048 | Self::RsaPss3072 | Self::RsaPss4096 |
-            Self::Ed25519
+            Self::EcdsaP256
+                | Self::EcdsaP384
+                | Self::EcdsaSha256
+                | Self::RsaSha256
+                | Self::RsaPss2048
+                | Self::RsaPss3072
+                | Self::RsaPss4096
+                | Self::Ed25519
         )
     }
-    
+
     /// Returns whether this is an encryption algorithm
     pub const fn is_encryption_algorithm(&self) -> bool {
         matches!(self, Self::Aes256Gcm | Self::ChaCha20Poly1305)
@@ -462,7 +467,7 @@ impl AndroidKeystore {
             "Android keystore key deletion not yet implemented",
         ))
     }
-    
+
     /// Check if key exists
     ///
     /// # Errors
@@ -483,27 +488,30 @@ impl AndroidKeystore {
         tracing::debug!("Generated attestation challenge of {} bytes", size);
         Ok(challenge)
     }
-    
+
     /// Check if StrongBox is available on this device
     pub fn is_strongbox_available(&self) -> bool {
         self.capabilities.strongbox_available
     }
-    
+
     /// Generate random bytes using hardware RNG
     ///
     /// # Errors
     /// Returns an error if RNG fails
     pub async fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
-        tracing::debug!("🎲 Generating {} random bytes using Android hardware RNG", count);
-        
+        tracing::debug!(
+            "🎲 Generating {} random bytes using Android hardware RNG",
+            count
+        );
+
         // Use rand crate for random byte generation
         use rand::RngCore;
         let mut bytes = vec![0u8; count];
         rand::thread_rng().fill_bytes(&mut bytes);
-        
+
         Ok(bytes)
     }
-    
+
     /// Import existing key material into keystore
     ///
     /// # Errors
@@ -515,23 +523,26 @@ impl AndroidKeystore {
         _key_type: KeyType,
     ) -> Result<(), BearDogError> {
         tracing::info!("📥 Importing key into Android Keystore: {}", key_id);
-        
+
         // In production, this would use JNI to call Android Keystore API
         // For now, return not_implemented with clear message
         let _ = key_data; // Avoid unused warning
-        
+
         Err(BearDogError::not_implemented(
             "Android keystore key import - requires JNI implementation",
         ))
     }
-    
+
     /// List all keys in keystore
     ///
     /// # Errors
     /// Returns an error if listing fails
-    pub async fn list_keys(&self) -> Result<Vec<beardog_types::canonical::providers_unified::traits::KeyInfo>, BearDogError> {
+    pub async fn list_keys(
+        &self,
+    ) -> Result<Vec<beardog_types::canonical::providers_unified::traits::KeyInfo>, BearDogError>
+    {
         tracing::info!("📋 Listing keys in Android Keystore");
-        
+
         // In production, this would query Android Keystore via JNI
         // For now, return empty list
         Ok(vec![])

@@ -15,7 +15,7 @@ mod btsp_jsonrpc_unit_tests {
     use crate::tunnel::hsm::HsmManager;
     use crate::unix_socket_ipc::UnixSocketIpcServer;
     use beardog_genetics::EcosystemGeneticEngine;
-    
+
     use std::path::PathBuf;
     use std::sync::Arc;
     use tempfile::TempDir;

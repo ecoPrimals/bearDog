@@ -106,19 +106,11 @@ impl HsmProvider for MockHsmProvider {
         Ok(vec![])
     }
 
-    async fn decrypt(
-        &self,
-        _key_id: &str,
-        _ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
+    async fn decrypt(&self, _key_id: &str, _ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![])
     }
 
-    async fn import_key(
-        &self,
-        _key_data: &[u8],
-        _key_id: &str,
-    ) -> Result<HsmKey, BearDogError> {
+    async fn import_key(&self, _key_data: &[u8], _key_id: &str) -> Result<HsmKey, BearDogError> {
         Err(BearDogError::not_implemented("Mock import_key"))
     }
 

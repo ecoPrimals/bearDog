@@ -214,7 +214,7 @@ pub fn handle_hmac_blake3(params: &Value) -> Result<Value, BearDogError> {
     let key_array: [u8; 32] = blake3::hash(&key).as_bytes()[..32]
         .try_into()
         .map_err(|_| BearDogError::system("Failed to create HMAC-Blake3 key array".to_string()))?;
-    
+
     let hash = blake3::keyed_hash(&key_array, &message);
     let mac_bytes = hash.as_bytes();
 

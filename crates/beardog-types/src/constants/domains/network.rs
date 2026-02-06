@@ -309,8 +309,27 @@ pub mod addresses {
 
     /// DNS settings (these can remain as compile-time constants)
     pub const DEFAULT_DNS_PORT: u16 = 53;
-    /// Configuration constant: default dns servers
-    pub const DEFAULT_DNS_SERVERS: &[&str] = &["8.8.8.8", "8.8.4.4", "1.1.1.1"];
+
+    /// Fallback DNS servers (well-known public DNS)
+    /// These are used when BEARDOG_DNS_SERVERS environment variable is not set.
+    /// Format: Google DNS (8.8.8.8, 8.8.4.4), Cloudflare DNS (1.1.1.1)
+    pub const FALLBACK_DNS_SERVERS: &[&str] = &["8.8.8.8", "8.8.4.4", "1.1.1.1"];
+
+    /// Get DNS servers from environment or use fallback
+    ///
+    /// Reads from `BEARDOG_DNS_SERVERS` environment variable (comma-separated).
+    /// Falls back to well-known public DNS servers if not set.
+    pub fn dns_servers() -> Vec<String> {
+        std::env::var("BEARDOG_DNS_SERVERS").map_or_else(
+            |_| {
+                FALLBACK_DNS_SERVERS
+                    .iter()
+                    .map(|s| (*s).to_string())
+                    .collect()
+            },
+            |s| s.split(',').map(str::trim).map(String::from).collect(),
+        )
+    }
 }
 
 pub mod ports {
