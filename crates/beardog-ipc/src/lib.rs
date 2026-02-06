@@ -47,6 +47,10 @@ pub mod protocol;
 pub mod registry_client;
 pub mod types;
 
+// tarpc high-performance RPC (Protocol Graduation: JSON-RPC → tarpc)
+#[cfg(feature = "tarpc")]
+pub mod tarpc_types;
+
 pub use client::SongbirdClient;
 pub use error::{IpcError, IpcResult};
 pub use types::{Capability, DiscoveryQuery, ServiceInfo};
@@ -54,13 +58,15 @@ pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 pub use neural_registration::{discover_neural_api_socket, register_with_neural_api};
 
 // Isomorphic IPC discovery (automatic Unix or TCP)
-pub use isomorphic::{
-    discover_beardog_endpoint, connect_beardog, IpcEndpoint, AsyncStream,
-};
+pub use isomorphic::{connect_beardog, discover_beardog_endpoint, AsyncStream, IpcEndpoint};
 
 // Registry client for JSON-RPC registration
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
 pub use registry_client::{JsonRpcRequest, PrimalRegistryClient};
+
+// tarpc types and trait (when feature enabled)
+#[cfg(feature = "tarpc")]
+pub use tarpc_types::*;
 
 /// Primal IPC Protocol version
 pub const PROTOCOL_VERSION: &str = "1.0";
