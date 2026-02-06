@@ -171,17 +171,47 @@ impl ServiceRegistryDiscovery {
     }
 
     /// Discover providers via mDNS (capability-based)
+    ///
+    /// Uses the MdnsDiscovery module to find services advertising the capability.
+    /// Returns providers that can be queried for services.
     async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredProvider>> {
-        // For Phase 2: Use actual mDNS/DNS-SD discovery
-        // For now, check for local primals that might provide service registry
         debug!("🔍 mDNS discovery for capability: {}", capability);
 
-        // Check if NestGate is available (it might provide service registry capability)
-        // Check if any other primal provides service registry
-        // This is runtime discovery - NO hardcoding!
+        // Initialize mDNS discovery (no hardcoding - runtime discovery!)
+        let mdns = match crate::mdns::MdnsDiscovery::new() {
+            Ok(m) => m,
+            Err(e) => {
+                warn!("⚠️ mDNS initialization failed: {} - using fallback discovery", e);
+                return Ok(Vec::new());
+            }
+        };
 
-        // Placeholder: Return empty for now (will use mDNS in Phase 2)
-        Ok(Vec::new())
+        // Discover services advertising this capability
+        let services = match mdns.discover(capability).await {
+            Ok(s) => s,
+            Err(e) => {
+                warn!("⚠️ mDNS discovery failed: {} - continuing with empty results", e);
+                return Ok(Vec::new());
+            }
+        };
+
+        // Convert discovered services to providers
+        let providers: Vec<DiscoveredProvider> = services
+            .into_iter()
+            .map(|service| DiscoveredProvider {
+                name: service.id.clone(),
+                capabilities: service
+                    .capabilities
+                    .iter()
+                    .map(|c| format!("{:?}", c))
+                    .collect(),
+                endpoint: service.endpoint.primary_url.clone(),
+                discovered_at: SystemTime::now(),
+            })
+            .collect();
+
+        info!("✅ mDNS discovered {} providers for {}", providers.len(), capability);
+        Ok(providers)
     }
 
     /// Query a discovered provider for services
