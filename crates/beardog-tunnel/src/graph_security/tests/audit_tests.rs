@@ -159,11 +159,9 @@ async fn test_audit_with_high_usage_count() {
         .await
         .expect("Audit should succeed");
 
-    // Popular templates should have higher trust scores
-    assert!(
-        result.community_usage.deployments >= 0,
-        "Should have deployments count"
-    );
+    // Popular templates should have community usage tracked
+    // Note: deployments is u64, always >= 0, just check field exists
+    let _ = result.community_usage.deployments;
 }
 
 #[tokio::test]
@@ -184,7 +182,8 @@ async fn test_audit_lineage_depth() {
         .await
         .expect("Audit should succeed");
 
-    assert!(result.lineage.len() >= 0, "Should have lineage information");
+    // Verify lineage field exists (Vec::len() is always >= 0)
+    let _ = result.lineage.len();
 }
 
 #[tokio::test]
@@ -210,10 +209,8 @@ async fn test_audit_security_flags() {
         .await
         .expect("Audit should succeed");
 
-    assert!(
-        result.security_assessment.vulnerabilities_found >= 0,
-        "Should track vulnerabilities"
-    );
+    // Verify security assessment field exists (u64 is always >= 0)
+    let _ = result.security_assessment.vulnerabilities_found;
 }
 
 #[tokio::test]
