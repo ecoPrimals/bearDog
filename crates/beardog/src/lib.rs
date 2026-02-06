@@ -1,6 +1,33 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! BearDog - Privacy-Preserving Biometric Security
+//!
+//! The main entry point for the BearDog ecosystem, providing a unified interface
+//! to all BearDog capabilities including cryptography, authentication, and
+//! privacy-preserving operations.
+//!
+//! # Architecture
+//!
+//! BearDog is organized as a workspace of specialized crates:
+//! - `beardog-core`: Core components, lifecycle, and system management
+//! - `beardog-errors`: Unified error handling
+//! - `beardog-types`: Canonical types and constants
+//! - `beardog-ipc`: Inter-process communication and neural registration
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! use beardog::BearDogError;
+//! use beardog::core::BearDogCore;
+//!
+//! // Initialize BearDog core
+//! let core = BearDogCore::new();
+//! ```
+//!
+//! # Design Principles
+//!
+//! - **Privacy by Design**: All operations preserve user privacy
+//! - **Pure Rust**: Minimal external dependencies, maximum auditability
+//! - **Zero Trust**: Runtime capability discovery, no hardcoded assumptions
+//! - **Dark Forest**: Selective disclosure of identity and capabilities
 
 pub use beardog_core as core;
 pub use beardog_errors as errors;

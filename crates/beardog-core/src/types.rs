@@ -1,6 +1,7 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Core Types - BearDog Configuration
+//!
+//! Provides legacy configuration types for backward compatibility.
+//! New code should prefer `beardog-types` canonical types.
 
 use serde::{Deserialize, Serialize};
 
@@ -11,9 +12,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogConfig {
     /// Environment in which the system is running (development, production, etc.)
-    /// The environment value
     pub environment: String,
-    /// The version value
+    /// BearDog system version
     pub version: String,
     /// Unique identifier for this node instance
     pub node_id: String,

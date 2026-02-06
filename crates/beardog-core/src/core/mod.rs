@@ -1,3 +1,28 @@
+//! Core Module - System Components and Lifecycle Management
+//!
+//! The core module provides foundational system components for BearDog including:
+//!
+//! - **Components**: Component registration, health checking, and coordination
+//! - **Lifecycle**: Service state transitions and shutdown handling
+//! - **Monitoring**: System metrics, alerts, and health reporting
+//! - **Security**: Core security provider and cryptographic operations
+//! - **State**: System-wide state management
+//!
+//! # Architecture
+//!
+//! The core module follows a modular design where each subsystem can operate
+//! independently while integrating through well-defined interfaces. The
+//! `BearDogCore` struct serves as the main entry point for system initialization.
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! use beardog_core::core::BearDogCore;
+//!
+//! let core = BearDogCore::new();
+//! core.initialize()?;
+//! ```
+
 /// Core component implementations and lifecycle management
 ///
 /// Provides component registration, health checking, and lifecycle management

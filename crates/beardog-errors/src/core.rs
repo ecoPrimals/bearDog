@@ -1,6 +1,20 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Core Error Types - `BearDogError` Taxonomy
+//!
+//! Provides the primary error type for the BearDog ecosystem with comprehensive
+//! domain categorization and rich error context.
+//!
+//! # Quick Start
+//!
+//! ```rust
+//! use beardog_errors::BearDogError;
+//!
+//! fn validate_input(input: &str) -> Result<(), BearDogError> {
+//!     if input.is_empty() {
+//!         return Err(BearDogError::validation("Input cannot be empty"));
+//!     }
+//!     Ok(())
+//! }
+//! ```
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

@@ -55,7 +55,6 @@ use p256::ecdsa::{
 };
 // Removed unused: ToEncodedPoint (not needed for DER signature format)
 use p384::ecdsa::{
-    signature::Signer as P384Signer, // Used in handle_sign_ecdsa_secp384r1
     Signature as P384Signature,
     SigningKey as P384SigningKey,
     VerifyingKey as P384VerifyingKey,

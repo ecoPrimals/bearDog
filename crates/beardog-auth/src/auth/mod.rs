@@ -1,6 +1,13 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Authentication Module - Identity and Access Management
+//!
+//! Provides authentication, authorization, and consensus mechanisms for the
+//! BearDog ecosystem including:
+//!
+//! - **Handlers**: Authentication request processing
+//! - **Node Registry**: Cross-node authentication management
+//! - **Proof Verification**: Cryptographic proof validation
+//! - **Genetics**: Lineage-based authentication
+//! - **Workflow**: Multi-step authentication flows
 
 pub use handlers::AuthenticationHandler;
 pub use types::ConsensusResult as HandlerConsensusResult;

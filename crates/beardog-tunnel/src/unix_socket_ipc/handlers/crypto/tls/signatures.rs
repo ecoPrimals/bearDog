@@ -19,7 +19,7 @@ use base64::Engine;
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use serde_json::Value;
-use sha2::{Digest, Sha256, Sha384};
+use sha2::{Sha256, Sha384};
 use tracing::{debug, info};
 
 // Import shared utility for key derivation

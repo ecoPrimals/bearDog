@@ -27,6 +27,7 @@ pub(super) struct Tunnel {
     pub peer_id: String,
 
     /// Peer's endpoint (e.g., "unix:///tmp/peer.sock")
+    #[allow(dead_code)]
     pub peer_endpoint: String,
 
     /// When the tunnel was established
@@ -57,6 +58,7 @@ pub(super) struct Tunnel {
     pub last_activity: Arc<Mutex<SystemTime>>,
 
     /// Current trust level for this peer
+    #[allow(dead_code)]
     pub trust_level: TrustLevel,
 }
 

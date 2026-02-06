@@ -143,10 +143,12 @@ pub trait BtspProvider: Send + Sync {
 
 /// BearDog's implementation of BTSP using genetic cryptography
 pub struct BeardogBtspProvider {
-    /// HSM manager for cryptographic operations
+    /// HSM manager for cryptographic operations (reserved for lineage verification)
+    #[allow(dead_code)]
     hsm: Arc<HsmManager>,
 
-    /// Genetics engine for key lineage and evolution
+    /// Genetics engine for key lineage and evolution (reserved for multi-hop paths)
+    #[allow(dead_code)]
     genetics: Arc<EcosystemGeneticEngine>,
 
     /// BirdSong manager for lineage-aware encryption
@@ -1040,4 +1042,3 @@ impl SecureTunnelProvider for BeardogBtspProvider {
         <Self as BtspProvider>::close_tunnel(self, handle).await
     }
 }
-

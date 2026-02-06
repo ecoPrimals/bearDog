@@ -1,8 +1,26 @@
-// BearDog Deployment Crate
-//
-// This crate provides comprehensive deployment capabilities for the BearDog ecosystem,
-// including platform-specific deployment strategies, environment validation, and
-// optimization features for production deployments.
+//! BearDog Deployment - Platform Deployment Automation
+//!
+//! Comprehensive deployment capabilities for the BearDog ecosystem including
+//! platform-specific deployment strategies, environment validation, and
+//! optimization features for production deployments.
+//!
+//! # Features
+//!
+//! - Android deployment with hardware security module integration
+//! - Environment validation and verification
+//! - Deployment optimization and performance tuning
+//! - Device-specific configuration management
+//! - Error handling and recovery mechanisms
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use beardog_deploy::{DeploymentConfig, DeploymentManager};
+//!
+//! let config = DeploymentConfig::default();
+//! let manager = DeploymentManager::new(config);
+//! manager.initialize().expect("deployment init");
+//! ```
 
 // Production code must use proper error handling - deny panicking methods
 #![deny(clippy::unwrap_used)]
@@ -11,25 +29,6 @@
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
-//
-// # Features
-//
-// - Android deployment with hardware security module integration
-// - Environment validation and verification
-// - Deployment optimization and performance tuning
-// - Device-specific configuration management
-// - Error handling and recovery mechanisms
-//
-// # Examples
-//
-// ```rust,no_run
-// use beardog_deploy::{AndroidDeployer, DeploymentConfig};
-//
-// let config = DeploymentConfig::default();
-// let deployer = AndroidDeployer::new(config);
-// // deployer.deploy()?;
-// ```
-
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
@@ -37,8 +36,7 @@ pub mod android;
 pub mod builder;
 pub mod device;
 
-/// Error types and handling
-/// Error types and handling
+/// Error types and handling for deployment operations
 pub mod error;
 pub mod optimization;
 #[cfg(test)]
@@ -56,12 +54,10 @@ mod deploy_comprehensive_tests;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
     /// Target deployment environment (dev, staging, prod)
-    /// The environment value
     pub environment: String,
-    /// The region value
+    /// Target deployment region
     pub region: String,
     /// Number of instances to deploy
-    /// Number of instance
     pub instance_count: u32,
     /// Whether monitoring is enabled
     pub monitoring_enabled: bool,
@@ -96,12 +92,13 @@ impl DeploymentManager {
         Self { config }
     }
 
-    /// Initialize operation.
+    /// Initialize the deployment environment.
+    ///
+    /// Validates configuration and prepares the deployment target.
     ///
     /// # Errors
-    /// Returns an error if the operation fails.
-    /// Initializes componentialize
-    /// Initializes componentialize
+    ///
+    /// Returns an error if configuration validation fails.
     pub fn initialize(&self) -> Result<(), BearDogError> {
         println!("🚀 Initializing BearDog deployment environment");
 
@@ -110,14 +107,11 @@ impl DeploymentManager {
         Ok(())
     }
 
-    /// Validates the deployment configuration
-    ///
-    /// # Returns
-    /// `Ok(())` if configuration is valid
+    /// Validates the deployment configuration.
     ///
     /// # Errors
-    /// Returns error if configuration is invalid or incomplete
-    /// Validates config
+    ///
+    /// Returns error if configuration is invalid or incomplete.
     fn validate_config(&self) -> Result<(), BearDogError> {
         if self.config.environment.is_empty() {
             return Err(BearDogError::system(

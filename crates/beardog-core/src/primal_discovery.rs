@@ -423,7 +423,8 @@ impl PrimalDiscovery {
     #[allow(dead_code)] // Used in capability-based discovery (future)
     fn parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
         env::var(env_key)
-            .ok().map(|caps_str| Self::parse_capabilities_str(&caps_str, env_key))
+            .ok()
+            .map(|caps_str| Self::parse_capabilities_str(&caps_str, env_key))
             .unwrap_or_default()
     }
 
@@ -599,7 +600,7 @@ impl PrimalDiscovery {
     /// Discover from DNS-SD (COMPLETE IMPLEMENTATION)
     async fn discover_from_dns_sd(
         &mut self,
-        query: &DiscoveryQuery, // Remove underscore - we use this
+        _query: &DiscoveryQuery, // TODO: Use for capability filtering
         domain: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 DNS-SD discovery in domain: {}", domain);

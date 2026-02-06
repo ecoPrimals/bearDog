@@ -1,6 +1,9 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Security Types - Authentication and Authorization
+//!
+//! Provides security-related types including:
+//! - Rate limiting and policy decisions
+//! - Session management and audit logging
+//! - Security contexts and rules
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
@@ -20,14 +23,15 @@ pub struct AuthConfig {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SecurityProviderConfig {
-    /// Number of max_failed_attempts
+    /// Maximum failed authentication attempts before lockout
     pub max_failed_attempts: u32,
-    /// Number of lockout_duration_minutes
+    /// Lockout duration in minutes after max attempts exceeded
     pub lockout_duration_minutes: u32,
+    /// Session timeout in minutes
     pub session_timeout_minutes: u32,
-    /// Whether enable_audit_logging is enabled
+    /// Enable audit logging for security events
     pub enable_audit_logging: bool,
-    /// Whether require_mfa is enabled
+    /// Require multi-factor authentication
     pub require_mfa: bool,
 }
 
@@ -56,65 +60,69 @@ pub type RateLimitConfig = beardog_types::canonical::config::domains::network::R
 
 #[derive(Debug, Clone)]
 pub struct BearDogSecurityProvider {
+    /// Security provider configuration
     pub config: SecurityProviderConfig,
-    /// The rate limiter value
+    /// Rate limiter for request throttling
     pub rate_limiter: RateLimiter,
-    /// The security rules value
+    /// Security rules for policy evaluation
     pub security_rules: SecurityRules,
-    /// Number of locked_acitemss
+    /// Map of locked account IDs to unlock times
     pub locked_accounts: Arc<RwLock<HashMap<String, DateTime<Utc>>>>,
-    /// The failed attempts value
+    /// Map of user IDs to failed attempt counts
     pub failed_attempts: Arc<RwLock<HashMap<String, u32>>>,
-    /// The metrics value
+    /// Security metrics counters
     pub metrics: SecurityProviderMetrics,
-    /// The session store value
+    /// Session store for active sessions
     pub session_store: SessionStore,
-    /// The audit manager value
+    /// Audit manager for security event logging
     pub audit_manager: AuditManager,
 }
 
 #[derive(Debug, Clone)]
 pub struct RateLimiter {
+    /// Rate limit configuration
     pub config: RateLimitConfig,
-    /// Mapping of state
+    /// Per-identifier rate limit state
     pub state: HashMap<String, RateLimiterState>,
 }
 
 #[derive(Debug, Clone)]
 pub struct RateLimiterState {
-    /// Number of requests
+    /// Number of requests in current window
     pub requests: u32,
-    /// The last reset value
+    /// Timestamp when the window last reset
     pub last_reset: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone)]
 pub struct SecurityRules {
-    /// Collection of rules
+    /// Active security rules
     pub rules: Vec<SecurityRule>,
-    /// The default policy value
+    /// Default policy when no rule matches
     pub default_policy: PolicyDecision,
-    /// The context value
+    /// Current security context
     pub context: SecurityContext,
 }
 
 #[derive(Debug, Clone)]
 pub struct SecurityRule {
-    /// Name of the item
+    /// Rule identifier
     pub name: String,
-    /// The condition value
+    /// Condition expression for rule matching
     pub condition: String,
-    /// The action value
+    /// Action to take when rule matches
     pub action: PolicyDecision,
 }
 
 #[derive(Debug, Clone)]
 pub struct SecurityContext {
+    /// Authenticated user ID (if any)
     pub user_id: Option<String>,
-    /// Optional ip address
+    /// Client IP address
     pub ip_address: Option<String>,
-    /// Optional user agent
+    /// Client user agent string
     pub user_agent: Option<String>,
+    /// Context creation timestamp
     pub timestamp: DateTime<Utc>,
 }
 
@@ -131,93 +139,99 @@ impl Default for SecurityContext {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
 pub struct SecurityProviderMetrics {
-    /// Number of successful_authentications
+    /// Total successful authentication attempts
     pub successful_authentications: u64,
-    /// Number of failed_authentications
+    /// Total failed authentication attempts
     pub failed_authentications: u64,
-    /// Number of blocked_requests
+    /// Total requests blocked by rate limiter
     pub blocked_requests: u64,
-    /// Number of active_sessions
+    /// Current number of active sessions
     pub active_sessions: u64,
-    /// Number of security_events
+    /// Total security events logged
     pub security_events: u64,
 }
 
 #[derive(Debug, Clone)]
 pub struct SessionStore {
-    /// The sessions value
+    /// Active sessions by session ID
     pub sessions: Arc<RwLock<HashMap<String, SessionData>>>,
+    /// Authentication configuration
     pub config: AuthConfig,
 }
 
 #[derive(Debug, Clone)]
 pub struct SessionData {
+    /// User ID associated with this session
     pub user_id: String,
-    /// The created at value
+    /// Session creation timestamp
     pub created_at: DateTime<Utc>,
-    /// The last accessed value
+    /// Last activity timestamp
     pub last_accessed: DateTime<Utc>,
-    /// The ip address value
+    /// Client IP address at session creation
     pub ip_address: String,
-    /// The user agent value
+    /// Client user agent at session creation
     pub user_agent: String,
-    /// Whether is_authenticated is enabled
+    /// Whether session is currently authenticated
     pub is_authenticated: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct AuditManager {
+    /// Audit logging configuration
     pub config: AuditConfig,
-    /// The events value
+    /// In-memory audit event buffer
     pub events: Arc<RwLock<Vec<AuditEvent>>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct AuditConfig {
-    /// Whether feature is enabled
+    /// Whether audit logging is enabled
     pub enabled: bool,
-    /// The log level value
+    /// Minimum severity level to log
     pub log_level: AuditLevel,
-    /// Number of retention_days
+    /// Event retention period in days
     pub retention_days: u32,
-    /// Number of max_events
+    /// Maximum events to keep in memory buffer
     pub max_events: usize,
 }
 
 #[derive(Debug, Clone)]
 pub struct AuditEvent {
+    /// Unique event identifier
     pub id: String,
-    /// The event type value
+    /// Event type (e.g., "login", "access_denied")
     pub event_type: String,
+    /// Associated user ID (if applicable)
     pub user_id: Option<String>,
+    /// Event timestamp
     pub timestamp: DateTime<Utc>,
-    /// Mapping of details
+    /// Additional event details as key-value pairs
     pub details: HashMap<String, String>,
-    /// The level value
+    /// Event severity level
     pub level: AuditLevel,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuditLevel {
-    /// Represents debug variant
+    /// Debugging/trace level events
     Debug,
-    /// Represents low variant
+    /// Low importance informational events
     Low,
-    /// Represents medium variant
+    /// Normal operational events
     Medium,
-    /// Represents high variant
+    /// Important security-relevant events
     High,
-    /// Represents critical variant
+    /// Critical security events requiring attention
     Critical,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PolicyDecision {
-    /// Represents allow variant
+    /// Allow the request to proceed
     Allow,
-    /// Represents deny variant
+    /// Deny the request
     Deny,
-    /// Represents challenge variant
+    /// Require additional authentication challenge
     Challenge,
 }
 
@@ -233,8 +247,7 @@ impl Default for AuditConfig {
 }
 
 impl BearDogSecurityProvider {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new security provider with the given configuration.
     pub fn new(config: SecurityProviderConfig) -> Self {
         Self {
             config: config.clone(),
@@ -248,9 +261,7 @@ impl BearDogSecurityProvider {
         }
     }
 
-    /// Is Account Locked operation.
-    /// Checks if account locked
-    /// Checks if account locked
+    /// Checks if the given user account is currently locked.
     pub async fn is_account_locked(&self, user_id: &str) -> bool {
         let locked_accounts = self.locked_accounts.read().await;
         if let Some(locked_until) = locked_accounts.get(user_id) {
@@ -260,7 +271,7 @@ impl BearDogSecurityProvider {
         }
     }
 
-    /// Record Failed Attempt operation.
+    /// Records a failed authentication attempt for rate limiting.
     pub async fn record_failed_attempt(&mut self, user_id: &str) {
         let mut failed_attempts = self.failed_attempts.write().await;
         let attempts = failed_attempts.entry(user_id.to_string()).or_insert(0);
@@ -278,7 +289,7 @@ impl BearDogSecurityProvider {
         }
     }
 
-    /// Record Successful Auth operation.
+    /// Records a successful authentication, clearing failed attempt counter.
     pub async fn record_successful_auth(&mut self, user_id: &str) {
         let mut failed_attempts = self.failed_attempts.write().await;
         failed_attempts.remove(user_id);
@@ -288,8 +299,7 @@ impl BearDogSecurityProvider {
 }
 
 impl RateLimiter {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new rate limiter with the given configuration.
     pub fn new(config: RateLimitConfig) -> Self {
         Self {
             config,
@@ -297,9 +307,7 @@ impl RateLimiter {
         }
     }
 
-    /// Is Rate Limited operation.
-    /// Checks if rate limited
-    /// Checks if rate limited
+    /// Checks if the given identifier is currently rate limited.
     pub fn is_rate_limited(&mut self, identifier: &str) -> bool {
         let now = Utc::now();
         let state = self
@@ -333,8 +341,7 @@ impl Default for SecurityRules {
 }
 
 impl SessionStore {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new session store with the given configuration.
     pub fn new(config: AuthConfig) -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::with_capacity(beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE))),
@@ -342,9 +349,7 @@ impl SessionStore {
         }
     }
 
-    /// Create Session operation.
-    /// Creates session
-    /// Creates session
+    /// Creates a new authenticated session, returning the session ID.
     pub async fn create_session(
         &self,
         user_id: &str,
@@ -366,9 +371,7 @@ impl SessionStore {
         session_id
     }
 
-    /// Validate Session operation.
-    /// Validates session
-    /// Validates session
+    /// Validates a session and returns its data if valid.
     pub async fn validate_session(&self, session_id: &str) -> Option<SessionData> {
         let sessions = self.sessions.read().await;
         sessions.get(session_id).cloned()
@@ -376,8 +379,7 @@ impl SessionStore {
 }
 
 impl AuditManager {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new audit manager with the given configuration.
     pub fn new(config: AuditConfig) -> Self {
         Self {
             config,
@@ -385,8 +387,8 @@ impl AuditManager {
         }
     }
 
+    /// Logs a security audit event with the given details.
     #[allow(clippy::too_many_arguments)]
-    /// Log Event operation.
     pub async fn log_event(
         &self,
         event_type: &str,
