@@ -131,7 +131,7 @@ impl CapabilitiesHandler {
                 }
             ],
             "version": env!("CARGO_PKG_VERSION"),
-            "protocols": ["json-rpc", "http"],
+            "protocols": ["tarpc", "json-rpc", "http"],
             "btsp_enabled": true,
             "collaborative_intelligence": true,
         }))

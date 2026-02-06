@@ -1,7 +1,7 @@
 //! # Crypto Service Types
 //!
 //! Protocol-agnostic types for crypto service operations.
-//! These types are designed to work across HTTP, JSON-RPC, and any future protocols.
+//! These types are designed to work across HTTP, JSON-RPC, tarpc, and any future protocols.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

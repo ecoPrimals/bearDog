@@ -59,7 +59,7 @@ pub struct EndpointConfig {
     /// HTTP/REST API port (0 = OS auto-select)
     pub http_port: u16,
 
-    /// RPC port (0 = OS auto-select)
+    /// RPC/tarpc port (0 = OS auto-select)
     pub rpc_port: u16,
 
     /// WebSocket port (0 = OS auto-select)

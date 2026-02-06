@@ -6,7 +6,7 @@
 //! - Atomic readiness tracking
 //! - Connection acceptance and protocol routing
 //!
-//! The server supports multiple protocols (JSON-RPC, HTTP) with
+//! The server supports multiple protocols (tarpc, JSON-RPC, HTTP) with
 //! automatic detection and routing to appropriate handlers.
 
 use super::{

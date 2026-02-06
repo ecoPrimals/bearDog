@@ -13,7 +13,7 @@ pub type Result<T> = std::result::Result<T, BearDogError>;
 /// Main crypto service implementation
 ///
 /// Provides protocol-agnostic cryptographic operations that can be
-/// exposed via HTTP, JSON-RPC, or any other protocol.
+/// exposed via HTTP, JSON-RPC, tarpc, or any other protocol.
 pub struct BearDogCryptoService {
     /// Service configuration
     pub(super) config: Arc<CryptoServiceConfig>,
