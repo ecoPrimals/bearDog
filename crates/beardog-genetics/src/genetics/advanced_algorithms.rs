@@ -1,4 +1,7 @@
-
+//! # Advanced Genetic Algorithms
+//!
+//! This module provides advanced genetic algorithm implementations for
+//! evolutionary optimization in the BearDog ecosystem.
 
 use crate::genetics::biome_genetics::{BiomeIdentity, GeneticSignature, TrustLevel};
 use crate::genetics::entropy_hierarchy::EntropyClass;
@@ -10,29 +13,35 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-    population_manager: Arc<PopulationManager>,
-    fitness_evaluator: Arc<FitnessEvaluator>,
-    mutation_engine: Arc<MutationEngine>,
-    crossover_engine: Arc<CrossoverEngine>,
-    selection_engine: Arc<SelectionEngine>,
-    evolution_metrics: Arc<EvolutionMetrics>,
-}
+// ============================================================
+// Configuration Types
+// ============================================================
 
-#[derive(Debug, Clone)]
-    /// The mutation rate value
+/// Evolution configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EvolutionConfig {
+    /// Population size
+    pub population_size: usize,
+
+    /// Mutation rate (0.0 - 1.0)
     pub mutation_rate: f64,
-    /// The crossover rate value
+
+    /// Crossover rate (0.0 - 1.0)
     pub crossover_rate: f64,
-    /// The elitism percentage value
+
+    /// Elitism percentage (0.0 - 1.0)
     pub elitism_percentage: f64,
-    /// Number of max_generations
+
+    /// Maximum generations
     pub max_generations: u32,
-    /// The fitness threshold value
+
+    /// Fitness threshold for convergence
     pub fitness_threshold: f64,
-    /// Whether diversity_preservation is enabled
+
+    /// Enable diversity preservation
     pub diversity_preservation: bool,
-    /// Whether adaptive_parameters is enabled
+
+    /// Enable adaptive parameters
     pub adaptive_parameters: bool,
 }
 
@@ -72,327 +81,166 @@ impl Default for EvolutionConfig {
     }
 }
 
-#[derive(Debug, Clone)]
-    population_history: parking_lot::RwLock<Vec<GenerationSnapshot>>,
-    diversity_metrics: Arc<DiversityMetrics>,
-}
+// ============================================================
+// Individual and Population Types
+// ============================================================
 
-#[derive(Debug, Clone)]
-    /// The genetic signature value
+/// Genetic individual
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneticIndividual {
+    /// Unique ID
+    pub id: String,
+
+    /// Genetic signature
     pub genetic_signature: GeneticSignature,
-    /// The fitness score value
+
+    /// Fitness score (0.0 - 1.0)
     pub fitness_score: f64,
-    /// Number of age
+
+    /// Age in generations
     pub age: u32,
+
+    /// Parent IDs
     pub parent_ids: Vec<String>,
-    /// Collection of mutation history
+
+    /// Mutation history
     pub mutation_history: Vec<MutationRecord>,
+
+    /// Performance metrics
     pub performance_metrics: PerformanceMetrics,
-    /// Collection of specialization traits
+
+    /// Specialization traits
     pub specialization_traits: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
+impl Default for GeneticIndividual {
+    fn default() -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            genetic_signature: GeneticSignature::default(),
+            fitness_score: 0.0,
+            age: 0,
+            parent_ids: Vec::new(),
+            mutation_history: Vec::new(),
+            performance_metrics: PerformanceMetrics::default(),
+            specialization_traits: Vec::new(),
+        }
+    }
+}
+
+/// Generation snapshot
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerationSnapshot {
+    /// Generation number
+    pub generation: u32,
+
+    /// Timestamp
     pub timestamp: DateTime<Utc>,
-    /// Number of population_size
+
+    /// Population size
     pub population_size: usize,
-    /// The average fitness value
+
+    /// Average fitness
     pub average_fitness: f64,
-    /// The best fitness value
+
+    /// Best fitness
     pub best_fitness: f64,
-    /// The diversity index value
+
+    /// Diversity index
     pub diversity_index: f64,
-    /// The convergence rate value
+
+    /// Convergence rate
     pub convergence_rate: f64,
 }
 
-#[derive(Debug, Clone)]
+impl Default for GenerationSnapshot {
+    fn default() -> Self {
+        Self {
+            generation: 0,
+            timestamp: Utc::now(),
+            population_size: 0,
+            average_fitness: 0.0,
+            best_fitness: 0.0,
+            diversity_index: 0.0,
+            convergence_rate: 0.0,
+        }
+    }
+}
+
+/// Mutation record
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MutationRecord {
+    /// Mutation type
+    pub mutation_type: MutationType,
+
+    /// Timestamp
     pub timestamp: DateTime<Utc>,
-    /// The fitness impact value
+
+    /// Fitness impact
     pub fitness_impact: f64,
-    /// The success rate value
+
+    /// Success rate
     pub success_rate: f64,
 }
 
-#[derive(Debug, Clone)]
-    /// The operation efficiency value
+impl Default for MutationRecord {
+    fn default() -> Self {
+        Self {
+            mutation_type: MutationType::Random,
+            timestamp: Utc::now(),
+            fitness_impact: 0.0,
+            success_rate: 0.0,
+        }
+    }
+}
+
+/// Mutation type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MutationType {
+    /// Random mutation
+    Random,
+    /// Entropy quality adjustment
+    EntropyQualityAdjustment,
+    /// Trust level shift
+    TrustLevelShift,
+    /// Specialization change
+    SpecializationChange,
+    /// Performance optimization
+    PerformanceOptimization,
+}
+
+impl Default for MutationType {
+    fn default() -> Self {
+        Self::Random
+    }
+}
+
+/// Performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceMetrics {
+    /// Authorization success rate
+    pub authorization_success_rate: f64,
+
+    /// Operation efficiency
     pub operation_efficiency: f64,
-    /// The collaboration score value
+
+    /// Collaboration score
     pub collaboration_score: f64,
-    /// The security rating value
+
+    /// Security rating
     pub security_rating: f64,
-    /// The adaptability index value
+
+    /// Adaptability index
     pub adaptability_index: f64,
-    /// The resource utilization value
+
+    /// Resource utilization
     pub resource_utilization: f64,
 }
 
-#[derive(Debug, Clone)]
-    weights: HashMap<String, f64>,
-    adaptive_weights: Arc<AtomicU64>, // For dynamic weight adjustment
-}
-
-#[derive(Debug, Clone)]
-    /// The weight value
-    pub weight: f64,
-    /// The evaluation function value
-    pub evaluation_function: String, // Function identifier for evaluation
-    /// The target value value
-    pub target_value: f64,
-    /// The tolerance value
-    pub tolerance: f64,
-}
-
-#[derive(HashMap<MutationType, Box<dyn MutationStrategy + Send + Sync>>,
-    adaptive_rates: HashMap<String, f64>,
-    mutation_history: parking_lot::RwLock<Vec<MutationRecord>>,
-}
-
-pub trait MutationStrategy: Send + Sync + std::fmt::Debug {
-    fn mutate(&mut GeneticIndividual, rate: f64) -> Result<bool, BearDogError>;
-    fn calculate_impact(&GeneticIndividual, after: &GeneticIndividual) -> f64;
-}
-
-#[derive(HashMap<String, Box<dyn CrossoverStrategy + Send + Sync>>,
-    compatibility_matrix: HashMap<(String, String), f64>,
-}
-
-pub trait CrossoverStrategy: Send + Sync + std::fmt::Debug {
-    fn crossover(&GeneticIndividual,
-        parent2: &GeneticIndividual,
-    ) -> Result<Vec<GeneticIndividual>, BearDogError>> + Send;
-
-
-    fn compatibility_score(&GeneticIndividual, parent2: &GeneticIndividual) -> f64;
-}
-
-#[derive(HashMap<String, Box<dyn SelectionStrategy + Send + Sync>>,
-    current_method: String,
-    pressure_adjustment: f64,
-}
-
-pub trait SelectionStrategy: Send + Sync + std::fmt::Debug {
-    fn select_parents(&[GeneticIndividual],
-        num_parents: usize,
-    ) -> Result<Vec<usize>, BearDogError>> + Send;
-
-
-    fn select_survivors(&[GeneticIndividual],
-        num_survivors: usize,
-    ) -> Result<Vec<usize>, BearDogError>> + Send;
-}
-
-#[derive(Debug, Clone)]
-    /// The successful mutations value
-    pub successful_mutations: AtomicU64,
-    /// The successful crossovers value
-    pub successful_crossovers: AtomicU64,
-    /// The convergence events value
-    pub convergence_events: AtomicU64,
-    /// The diversity events value
-    pub diversity_events: AtomicU64,
-    /// The fitness improvements value
-    pub fitness_improvements: AtomicU64,
-}
-
-#[derive(AtomicU64, // Stored as fixed-point
-    /// The phenotypic diversity value
-    pub phenotypic_diversity: AtomicU64,
-    /// The behavioral diversity value
-    pub behavioral_diversity: AtomicU64,
-    /// The specialization spread value
-    pub specialization_spread: AtomicU64,
-}
-
-impl GeneticEvolutionEngine {
-
-/// New operation.
-    /// Creates a new instance
-    pub fn new(config: EvolutionConfig) -> Self {
-        let population_manager = Arc::new(PopulationManager::new(config.population_size));
-        let fitness_evaluator = Arc::new(FitnessEvaluator::new());
-        let mutation_engine = Arc::new(MutationEngine::new());
-        let crossover_engine = Arc::new(CrossoverEngine::new());
-        let selection_engine = Arc::new(SelectionEngine::new());
-        let evolution_metrics = Arc::new(EvolutionMetrics::new(config,
-            population_manager,
-            fitness_evaluator,
-            mutation_engine,
-            crossover_engine,
-            selection_engine,
-            evolution_metrics,
-        }
-    }
-
-/// Evolve Biome Genetics operation.
-    pub fn evolve_biome_genetics(Vec<GeneticSignature>,
-        target_fitness: f64,
-    ) -> Result<Vec<GeneticIndividual>, BearDogError> {
-
-        let mut population = self.initialize_population(&GeneticSignature,
-        optimization_goals: &[OptimizationGoal],
-    ) -> Result<GeneticSignature, BearDogError> {
-        let individual = GeneticIndividual {
-            id: Uuid::new_v4().to_string(),
-            genetic_signature: signature.clone(0.0,
-            age: 0,
-            parent_ids: vec![],
-            mutation_history: vec![],
-            performance_metrics: PerformanceMetrics::default(vec![],
-        };
-
-        let mut optimized_individual = individual;
-
-        for goal in optimization_goals {
-            optimized_individual = self
-                .apply_targeted_optimization(Vec<GeneticSignature>,
-    ) -> Result<Vec<GeneticIndividual>, BearDogError> {
-        let mut population = Vec::with_capacity(format!("gen0_ind{}", i),
-                genetic_signature: signature,
-                fitness_score: 0.0,
-                age: 0,
-                parent_ids: vec![],
-                mutation_history: vec![],
-                performance_metrics: PerformanceMetrics::default(vec![],
-            };
-            population.push(&mut [GeneticIndividual],
-    ) -> Result<(), BearDogError> {
-        for individual in population.iter_mut(&[GeneticIndividual],
-        target_fitness: f64,
-    ) -> Result<bool, BearDogError> {
-        let best_fitness = population
-            .iter()
-            .map(|ind| ind.fitness_score)
-            .fold(0.0, f64::max);
-
-        let average_fitness: f64 =
-            population.iter().map(|ind| ind.fitness_score).sum::<f64>() / population.len() as f64;
-
-        if best_fitness >= target_fitness {
-            return Ok(true);
-        }
-
-        let fitness_variance = population
-            .iter()
-            .map(|ind| (ind.fitness_score - average_fitness).powi(2))
-            .sum::<f64>()
-            / population.len(&[GeneticIndividual],
-        parent_indices: &[usize],
-    ) -> Result<Vec<GeneticIndividual>, BearDogError> {
-        let mut offspring = Vec::new();
-
-        for chunk in parent_indices.chunks(2) {
-            if chunk.len() == 2 {
-                let parent1 = &population[chunk[0]];
-                let parent2 = &population[chunk[1]];
-
-                let strategy_name = self.select_crossover_strategy(parent1, parent2)?;
-                let strategy = self
-                    .crossover_engine
-                    .crossover_strategies
-                    .get(&strategy_name)
-                    .ok_or_else(|| BearDogError::system(&mut [GeneticIndividual],
-    ) -> Result<(), BearDogError> {
-        for individual in offspring.iter_mut() {
-            if fastrand::f64() < self.evolution_config.mutation_rate {
-                let mutation_type = self.select_mutation_type(individual)?;
-
-                if let Some(strategy) = self.mutation_engine.mutation_strategies.get(&mutation_type)
-                {
-                    let before = individual.clone();
-                    let mutated =
-                        strategy.mutate(individual, self.evolution_config.mutation_rate)?;
-
-                    if mutated {
-                        let impact = strategy.calculate_impact(&before, individual);
-                        let mutation_record = MutationRecord {
-                            mutation_type,
-                            timestamp: Utc::now(impact,
-                            success_rate: 1.0, // Will be updated based on fitness evaluation
-                        };
-                        individual.mutation_history.push(mutation_record);
-
-                        self.evolution_metrics
-                            .successful_mutations
-                            .fetch_add(1, Ordering::Relaxed);
-                    }
-                }
-            }
-        }
-
-        Ok(u32,
-        population: &[GeneticIndividual],
-    ) -> Result<(), BearDogError> {
-        let average_fitness =
-            population.iter().map(|ind| ind.fitness_score).sum::<f64>() / population.len() as f64;
-
-        let best_fitness = population
-            .iter()
-            .map(|ind| ind.fitness_score)
-            .fold(0.0, f64::max);
-
-        let diversity_index = self.calculate_diversity_index(generation,
-            timestamp: Utc::now(),
-            population_size: population.len(),
-            average_fitness,
-            best_fitness,
-            diversity_index,
-            convergence_rate,
-        };
-
-        self.population_manager
-            .population_history
-            .write()
-            .push(snapshot);
-        self.evolution_metrics
-            .total_generations
-            .fetch_add(1, Ordering::Relaxed);
-
-        Ok(&mut GeneticIndividual,
-    ) -> Result<(), BearDogError> {
-
-        Ok(&GeneticIndividual,
-        _parent2: &GeneticIndividual,
-    ) -> Result<String, BearDogError> {
-        Ok(&GeneticIndividual,
-    ) -> Result<MutationType, BearDogError> {
-        Ok(MutationType::EntropyQualityAdjustment)
-    }
-
-
-    fn calculate_diversity_index(&[GeneticIndividual],
-    ) -> Result<f64, BearDogError> {
-        Ok(&[GeneticIndividual],
-    ) -> Result<f64, BearDogError> {
-        Ok(u32,
-        _population: &[GeneticIndividual],
-    ) -> Result<(), BearDogError> {
-
-        Ok(GeneticIndividual,
-        _goal: &OptimizationGoal,
-    ) -> Result<GeneticIndividual, BearDogError> {
-        Ok(&GeneticIndividual,
-    ) -> Result<(), BearDogError> {
-        Ok(String,
-    /// The target value value
-    pub target_value: f64,
-    /// The optimization strategy value
-    pub optimization_strategy: String,
-    /// Collection of constraints
-    pub constraints: Vec<OptimizationConstraint>,
-}
-
-#[derive(Debug, Clone)]
-    /// Optional min value
-    pub min_value: Option<f64>,
-    /// Optional max value
-    pub max_value: Option<f64>,
-    /// Optional fixed value
-    pub fixed_value: Option<f64>,
-}
-
 impl Default for PerformanceMetrics {
-    fn default(0.5,
+    fn default() -> Self {
+        Self {
+            authorization_success_rate: 0.5,
             operation_efficiency: 0.5,
             collaboration_score: 0.5,
             security_rating: 0.5,
@@ -402,85 +250,413 @@ impl Default for PerformanceMetrics {
     }
 }
 
+// ============================================================
+// Fitness Types
+// ============================================================
+
+/// Fitness criterion
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FitnessCriterion {
+    /// Criterion name
+    pub name: String,
+
+    /// Weight (0.0 - 1.0)
+    pub weight: f64,
+
+    /// Evaluation function identifier
+    pub evaluation_function: String,
+
+    /// Target value
+    pub target_value: f64,
+
+    /// Tolerance
+    pub tolerance: f64,
+}
+
+impl Default for FitnessCriterion {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            weight: 1.0,
+            evaluation_function: String::new(),
+            target_value: 1.0,
+            tolerance: 0.1,
+        }
+    }
+}
+
+// ============================================================
+// Optimization Types
+// ============================================================
+
+/// Optimization goal
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OptimizationGoal {
+    /// Goal name
+    pub name: String,
+
+    /// Target value
+    pub target_value: f64,
+
+    /// Optimization strategy
+    pub optimization_strategy: String,
+
+    /// Constraints
+    pub constraints: Vec<OptimizationConstraint>,
+}
+
+impl Default for OptimizationGoal {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            target_value: 1.0,
+            optimization_strategy: "maximize".to_string(),
+            constraints: Vec::new(),
+        }
+    }
+}
+
+/// Optimization constraint
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OptimizationConstraint {
+    /// Constraint name
+    pub name: String,
+
+    /// Minimum value
+    pub min_value: Option<f64>,
+
+    /// Maximum value
+    pub max_value: Option<f64>,
+
+    /// Fixed value
+    pub fixed_value: Option<f64>,
+}
+
+impl Default for OptimizationConstraint {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            min_value: None,
+            max_value: None,
+            fixed_value: None,
+        }
+    }
+}
+
+// ============================================================
+// Engine Components
+// ============================================================
+
+/// Population manager
+#[derive(Debug)]
+pub struct PopulationManager {
+    /// Current population
+    current_population: parking_lot::RwLock<Vec<GeneticIndividual>>,
+
+    /// Population history
+    population_history: parking_lot::RwLock<Vec<GenerationSnapshot>>,
+
+    /// Diversity metrics
+    diversity_metrics: Arc<DiversityMetrics>,
+}
+
 impl PopulationManager {
-    fn new(capacity: usize) -> Self {
+    /// Create new manager
+    pub fn new(capacity: usize) -> Self {
         Self {
             current_population: parking_lot::RwLock::new(Vec::with_capacity(capacity)),
             population_history: parking_lot::RwLock::new(Vec::new()),
-            diversity_metrics: Arc::new(DiversityMetrics::new(vec![],
+            diversity_metrics: Arc::new(DiversityMetrics::new()),
+        }
+    }
+
+    /// Get population size
+    pub fn population_size(&self) -> usize {
+        self.current_population.read().len()
+    }
+
+    /// Get current population
+    pub fn get_population(&self) -> Vec<GeneticIndividual> {
+        self.current_population.read().clone()
+    }
+
+    /// Set population
+    pub fn set_population(&self, population: Vec<GeneticIndividual>) {
+        *self.current_population.write() = population;
+    }
+}
+
+impl Clone for PopulationManager {
+    fn clone(&self) -> Self {
+        Self {
+            current_population: parking_lot::RwLock::new(self.current_population.read().clone()),
+            population_history: parking_lot::RwLock::new(self.population_history.read().clone()),
+            diversity_metrics: self.diversity_metrics.clone(),
+        }
+    }
+}
+
+/// Fitness evaluator
+#[derive(Debug)]
+pub struct FitnessEvaluator {
+    /// Weights by criterion
+    weights: HashMap<String, f64>,
+
+    /// Adaptive weights (stored as fixed-point)
+    adaptive_weights: Arc<AtomicU64>,
+}
+
+impl FitnessEvaluator {
+    /// Create new evaluator
+    pub fn new() -> Self {
+        Self {
             weights: HashMap::with_capacity(16),
             adaptive_weights: Arc::new(AtomicU64::new(0)),
         }
     }
 
-
-    fn evaluate_fitness(&self, individual: &GeneticIndividual) -> Result<f64, BearDogError> {
-
+    /// Evaluate fitness
+    pub fn evaluate_fitness(&self, individual: &GeneticIndividual) -> Result<f64, BearDogError> {
         let base_fitness = individual.genetic_signature.quality_score;
         let performance_bonus = individual.performance_metrics.authorization_success_rate * 0.2;
         Ok((base_fitness + performance_bonus).min(1.0))
     }
 }
 
-impl MutationEngine {
-    fn new() -> Self {
+impl Clone for FitnessEvaluator {
+    fn clone(&self) -> Self {
         Self {
-            mutation_strategies: HashMap::with_capacity(16),
+            weights: self.weights.clone(),
+            adaptive_weights: Arc::new(AtomicU64::new(
+                self.adaptive_weights.load(Ordering::Relaxed),
+            )),
+        }
+    }
+}
+
+impl Default for FitnessEvaluator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Mutation engine
+#[derive(Debug)]
+pub struct MutationEngine {
+    /// Adaptive rates
+    adaptive_rates: HashMap<String, f64>,
+
+    /// Mutation history
+    mutation_history: parking_lot::RwLock<Vec<MutationRecord>>,
+}
+
+impl MutationEngine {
+    /// Create new engine
+    pub fn new() -> Self {
+        Self {
             adaptive_rates: HashMap::with_capacity(16),
             mutation_history: parking_lot::RwLock::new(Vec::new()),
         }
     }
+
+    /// Apply mutation
+    pub fn apply_mutation(
+        &self,
+        individual: &mut GeneticIndividual,
+        rate: f64,
+    ) -> Result<bool, BearDogError> {
+        if fastrand::f64() < rate {
+            // Apply random mutation
+            individual.fitness_score *= 0.9 + fastrand::f64() * 0.2;
+            individual.mutation_history.push(MutationRecord::default());
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
+impl Clone for MutationEngine {
+    fn clone(&self) -> Self {
+        Self {
+            adaptive_rates: self.adaptive_rates.clone(),
+            mutation_history: parking_lot::RwLock::new(self.mutation_history.read().clone()),
+        }
+    }
+}
+
+impl Default for MutationEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Crossover engine
+#[derive(Debug)]
+pub struct CrossoverEngine {
+    /// Compatibility matrix
+    compatibility_matrix: HashMap<(String, String), f64>,
 }
 
 impl CrossoverEngine {
-    fn new() -> Self {
+    /// Create new engine
+    pub fn new() -> Self {
         Self {
-            crossover_strategies: HashMap::with_capacity(16),
             compatibility_matrix: HashMap::with_capacity(16),
+        }
+    }
+
+    /// Perform crossover
+    pub fn crossover(
+        &self,
+        parent1: &GeneticIndividual,
+        parent2: &GeneticIndividual,
+    ) -> Result<Vec<GeneticIndividual>, BearDogError> {
+        // Simple single-point crossover
+        let mut child1 = parent1.clone();
+        let mut child2 = parent2.clone();
+
+        child1.id = Uuid::new_v4().to_string();
+        child2.id = Uuid::new_v4().to_string();
+        child1.parent_ids = vec![parent1.id.clone(), parent2.id.clone()];
+        child2.parent_ids = vec![parent1.id.clone(), parent2.id.clone()];
+        child1.age = 0;
+        child2.age = 0;
+
+        // Swap some traits
+        std::mem::swap(
+            &mut child1.performance_metrics,
+            &mut child2.performance_metrics,
+        );
+
+        Ok(vec![child1, child2])
+    }
+}
+
+impl Clone for CrossoverEngine {
+    fn clone(&self) -> Self {
+        Self {
+            compatibility_matrix: self.compatibility_matrix.clone(),
         }
     }
 }
 
+impl Default for CrossoverEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Selection engine
+#[derive(Debug)]
+pub struct SelectionEngine {
+    /// Current selection method
+    current_method: String,
+
+    /// Selection pressure adjustment
+    pressure_adjustment: f64,
+}
+
 impl SelectionEngine {
-    fn new() -> Self {
+    /// Create new engine
+    pub fn new() -> Self {
         Self {
-            selection_methods: HashMap::with_capacity(16),
-            current_method: "tournament".to_string(1.0,
+            current_method: "tournament".to_string(),
+            pressure_adjustment: 1.0,
         }
     }
 
-
-    fn select_parents(&[GeneticIndividual],
+    /// Select parents using tournament selection
+    pub fn select_parents(
+        &self,
+        population: &[GeneticIndividual],
         num_parents: usize,
     ) -> Result<Vec<usize>, BearDogError> {
+        if population.is_empty() {
+            return Ok(Vec::new());
+        }
 
-        let mut parents = Vec::new();
+        let mut parents = Vec::with_capacity(num_parents);
+        let tournament_size = 3;
+
         for _ in 0..num_parents {
-            let tournament_size = 3;
             let mut best_idx = fastrand::usize(..population.len());
             let mut best_fitness = population[best_idx].fitness_score;
 
             for _ in 1..tournament_size {
-                let idx = fastrand::usize(&[GeneticIndividual],
+                let idx = fastrand::usize(..population.len());
+                if population[idx].fitness_score > best_fitness {
+                    best_fitness = population[idx].fitness_score;
+                    best_idx = idx;
+                }
+            }
+            parents.push(best_idx);
+        }
+
+        Ok(parents)
+    }
+
+    /// Select survivors
+    pub fn select_survivors(
+        &self,
+        population: &[GeneticIndividual],
         num_survivors: usize,
     ) -> Result<Vec<usize>, BearDogError> {
-
         let mut indices: Vec<usize> = (0..population.len()).collect();
         indices.sort_by(|&a, &b| {
             population[b]
                 .fitness_score
                 .partial_cmp(&population[a].fitness_score)
-                .map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
-})?
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
         Ok(indices.into_iter().take(num_survivors).collect())
     }
 }
 
+impl Clone for SelectionEngine {
+    fn clone(&self) -> Self {
+        Self {
+            current_method: self.current_method.clone(),
+            pressure_adjustment: self.pressure_adjustment,
+        }
+    }
+}
+
+impl Default for SelectionEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================
+// Metrics Types
+// ============================================================
+
+/// Evolution metrics
+#[derive(Debug)]
+pub struct EvolutionMetrics {
+    /// Total generations
+    pub total_generations: AtomicU64,
+
+    /// Successful mutations
+    pub successful_mutations: AtomicU64,
+
+    /// Successful crossovers
+    pub successful_crossovers: AtomicU64,
+
+    /// Convergence events
+    pub convergence_events: AtomicU64,
+
+    /// Diversity events
+    pub diversity_events: AtomicU64,
+
+    /// Fitness improvements
+    pub fitness_improvements: AtomicU64,
+}
+
 impl EvolutionMetrics {
-    fn new() -> Self {
+    /// Create new metrics
+    pub fn new() -> Self {
         Self {
             total_generations: AtomicU64::new(0),
             successful_mutations: AtomicU64::new(0),
@@ -492,8 +668,46 @@ impl EvolutionMetrics {
     }
 }
 
+impl Clone for EvolutionMetrics {
+    fn clone(&self) -> Self {
+        Self {
+            total_generations: AtomicU64::new(self.total_generations.load(Ordering::Relaxed)),
+            successful_mutations: AtomicU64::new(self.successful_mutations.load(Ordering::Relaxed)),
+            successful_crossovers: AtomicU64::new(
+                self.successful_crossovers.load(Ordering::Relaxed),
+            ),
+            convergence_events: AtomicU64::new(self.convergence_events.load(Ordering::Relaxed)),
+            diversity_events: AtomicU64::new(self.diversity_events.load(Ordering::Relaxed)),
+            fitness_improvements: AtomicU64::new(self.fitness_improvements.load(Ordering::Relaxed)),
+        }
+    }
+}
+
+impl Default for EvolutionMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Diversity metrics
+#[derive(Debug)]
+pub struct DiversityMetrics {
+    /// Genetic diversity
+    pub genetic_diversity: AtomicU64,
+
+    /// Phenotypic diversity
+    pub phenotypic_diversity: AtomicU64,
+
+    /// Behavioral diversity
+    pub behavioral_diversity: AtomicU64,
+
+    /// Specialization spread
+    pub specialization_spread: AtomicU64,
+}
+
 impl DiversityMetrics {
-    fn new() -> Self {
+    /// Create new metrics
+    pub fn new() -> Self {
         Self {
             genetic_diversity: AtomicU64::new(0),
             phenotypic_diversity: AtomicU64::new(0),
@@ -503,39 +717,238 @@ impl DiversityMetrics {
     }
 }
 
+impl Clone for DiversityMetrics {
+    fn clone(&self) -> Self {
+        Self {
+            genetic_diversity: AtomicU64::new(self.genetic_diversity.load(Ordering::Relaxed)),
+            phenotypic_diversity: AtomicU64::new(self.phenotypic_diversity.load(Ordering::Relaxed)),
+            behavioral_diversity: AtomicU64::new(self.behavioral_diversity.load(Ordering::Relaxed)),
+            specialization_spread: AtomicU64::new(
+                self.specialization_spread.load(Ordering::Relaxed),
+            ),
+        }
+    }
+}
+
+impl Default for DiversityMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================
+// Main Engine
+// ============================================================
+
+/// Genetic evolution engine
+#[derive(Debug, Clone)]
+pub struct GeneticEvolutionEngine {
+    /// Evolution configuration
+    pub evolution_config: EvolutionConfig,
+
+    /// Population manager
+    population_manager: Arc<PopulationManager>,
+
+    /// Fitness evaluator
+    fitness_evaluator: Arc<FitnessEvaluator>,
+
+    /// Mutation engine
+    mutation_engine: Arc<MutationEngine>,
+
+    /// Crossover engine
+    crossover_engine: Arc<CrossoverEngine>,
+
+    /// Selection engine
+    selection_engine: Arc<SelectionEngine>,
+
+    /// Evolution metrics
+    evolution_metrics: Arc<EvolutionMetrics>,
+}
+
+impl GeneticEvolutionEngine {
+    /// Create new evolution engine
+    pub fn new(config: EvolutionConfig) -> Self {
+        Self {
+            evolution_config: config.clone(),
+            population_manager: Arc::new(PopulationManager::new(config.population_size)),
+            fitness_evaluator: Arc::new(FitnessEvaluator::new()),
+            mutation_engine: Arc::new(MutationEngine::new()),
+            crossover_engine: Arc::new(CrossoverEngine::new()),
+            selection_engine: Arc::new(SelectionEngine::new()),
+            evolution_metrics: Arc::new(EvolutionMetrics::new()),
+        }
+    }
+
+    /// Initialize population
+    pub fn initialize_population(
+        &self,
+        signatures: Vec<GeneticSignature>,
+    ) -> Result<Vec<GeneticIndividual>, BearDogError> {
+        let population: Vec<GeneticIndividual> = signatures
+            .into_iter()
+            .map(|sig| GeneticIndividual {
+                id: Uuid::new_v4().to_string(),
+                genetic_signature: sig,
+                fitness_score: 0.0,
+                age: 0,
+                parent_ids: Vec::new(),
+                mutation_history: Vec::new(),
+                performance_metrics: PerformanceMetrics::default(),
+                specialization_traits: Vec::new(),
+            })
+            .collect();
+
+        self.population_manager.set_population(population.clone());
+        Ok(population)
+    }
+
+    /// Run one generation
+    pub fn evolve_generation(&self) -> Result<GenerationSnapshot, BearDogError> {
+        let population = self.population_manager.get_population();
+        let generation = self
+            .evolution_metrics
+            .total_generations
+            .fetch_add(1, Ordering::Relaxed) as u32;
+
+        // Calculate fitness for all individuals
+        let mut evaluated: Vec<_> = population
+            .into_iter()
+            .map(|mut ind| {
+                ind.fitness_score = self.fitness_evaluator.evaluate_fitness(&ind).unwrap_or(0.0);
+                ind.age += 1;
+                ind
+            })
+            .collect();
+
+        // Selection
+        let num_elite = (evaluated.len() as f64 * self.evolution_config.elitism_percentage) as usize;
+        let elite_indices = self
+            .selection_engine
+            .select_survivors(&evaluated, num_elite)?;
+
+        // Keep elite individuals
+        let mut next_gen: Vec<_> = elite_indices.iter().map(|&i| evaluated[i].clone()).collect();
+
+        // Generate offspring
+        while next_gen.len() < self.evolution_config.population_size {
+            let parent_indices = self.selection_engine.select_parents(&evaluated, 2)?;
+            if parent_indices.len() >= 2 {
+                let offspring = self.crossover_engine.crossover(
+                    &evaluated[parent_indices[0]],
+                    &evaluated[parent_indices[1]],
+                )?;
+                for mut child in offspring {
+                    self.mutation_engine
+                        .apply_mutation(&mut child, self.evolution_config.mutation_rate)?;
+                    next_gen.push(child);
+                    if next_gen.len() >= self.evolution_config.population_size {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Calculate statistics
+        let avg_fitness = next_gen.iter().map(|i| i.fitness_score).sum::<f64>() / next_gen.len() as f64;
+        let best_fitness = next_gen
+            .iter()
+            .map(|i| i.fitness_score)
+            .fold(0.0f64, |a, b| a.max(b));
+
+        self.population_manager.set_population(next_gen);
+
+        Ok(GenerationSnapshot {
+            generation,
+            timestamp: Utc::now(),
+            population_size: self.evolution_config.population_size,
+            average_fitness: avg_fitness,
+            best_fitness,
+            diversity_index: 0.5, // Placeholder
+            convergence_rate: 0.0,
+        })
+    }
+
+    /// Get best individual
+    pub fn get_best_individual(&self) -> Option<GeneticIndividual> {
+        let population = self.population_manager.get_population();
+        population
+            .into_iter()
+            .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap())
+    }
+}
+
+impl Default for GeneticEvolutionEngine {
+    fn default() -> Self {
+        Self::new(EvolutionConfig::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::genetics::biome_genetics::GeneticSignature;
-    use chrono::Utc;
 
-    #[tokio::test]
-    fn test_genetic_evolution_engine_creation() {
+    #[test]
+    fn test_evolution_config_default() {
         let config = EvolutionConfig::default();
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: genetics
-        // TEST_PRIORITY: normal
-        let engine = GeneticEvolutionEngine::new(config);
-
-        assert_eq!(engine.evolution_config.population_size, 100);
-        assert_eq!(engine.evolution_config.mutation_rate, 0.05);
+        assert_eq!(config.population_size, 100);
+        assert_eq!(config.mutation_rate, 0.05);
+        assert!(config.diversity_preservation);
     }
 
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: genetics
-    // TEST_PRIORITY: normal
-    #[tokio::test]
-    fn test_population_initialization(10,
+    #[test]
+    fn test_genetic_individual_default() {
+        let individual = GeneticIndividual::default();
+        assert_eq!(individual.fitness_score, 0.0);
+        assert_eq!(individual.age, 0);
+    }
+
+    #[test]
+    fn test_performance_metrics_default() {
+        let metrics = PerformanceMetrics::default();
+        assert_eq!(metrics.authorization_success_rate, 0.5);
+        assert_eq!(metrics.operation_efficiency, 0.5);
+    }
+
+    #[test]
+    fn test_genetic_evolution_engine_creation() {
+        let config = EvolutionConfig::default();
+        let engine = GeneticEvolutionEngine::new(config);
+        assert_eq!(engine.evolution_config.population_size, 100);
+    }
+
+    #[test]
+    fn test_population_initialization() {
+        let config = EvolutionConfig {
+            population_size: 10,
             ..Default::default()
         };
         let engine = GeneticEvolutionEngine::new(config);
 
-        let signatures = vec![GeneticSignature {
-            biome_id: "test1".to_string(),
-            signature_hash: "hash1".to_string().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
-})?;
+        let signatures = vec![GeneticSignature::default(); 10];
+        let population = engine.initialize_population(signatures).unwrap();
         assert_eq!(population.len(), 10);
+    }
+
+    #[test]
+    fn test_selection_engine() {
+        let engine = SelectionEngine::new();
+        let population = vec![
+            GeneticIndividual {
+                fitness_score: 0.8,
+                ..Default::default()
+            },
+            GeneticIndividual {
+                fitness_score: 0.5,
+                ..Default::default()
+            },
+            GeneticIndividual {
+                fitness_score: 0.3,
+                ..Default::default()
+            },
+        ];
+
+        let survivors = engine.select_survivors(&population, 2).unwrap();
+        assert_eq!(survivors.len(), 2);
+        assert_eq!(survivors[0], 0); // Highest fitness first
     }
 }
