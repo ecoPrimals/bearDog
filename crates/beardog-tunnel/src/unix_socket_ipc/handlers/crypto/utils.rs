@@ -2,8 +2,21 @@
 //!
 //! This module contains shared helper functions used across multiple
 //! crypto handler domains.
+//!
+//! # Helpers Provided
+//!
+//! - `derive_key_from_id()` - BLAKE3 key derivation from key ID + purpose
+//! - `decode_base64_field()` - Base64 decode with field-specific error messages
+//! - `require_params()` - Extract required JSON-RPC parameters
+//! - `extract_str_param()` - Extract optional string parameter from JSON
+//! - `deserialize_request()` - Deserialize JSON params with method-specific errors
 
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::Engine;
 use beardog_core::crypto_service::algorithms::hashing;
+use beardog_errors::BearDogError;
+use serde::de::DeserializeOwned;
+use serde_json::Value;
 
 /// Derive a 32-byte key from a key ID and purpose
 ///
@@ -49,9 +62,121 @@ pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32]
     Ok(key)
 }
 
+// ============================================================================
+// Base64 Helpers
+// ============================================================================
+
+/// Decode base64 with a descriptive field name for error messages
+///
+/// # Example
+///
+/// ```rust,ignore
+/// let data = decode_base64_field("ciphertext", &request.ciphertext)?;
+/// ```
+pub fn decode_base64_field(field_name: &str, input: &str) -> Result<Vec<u8>, BearDogError> {
+    BASE64.decode(input).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid {} (not valid base64): {}", field_name, e))
+    })
+}
+
+/// Decode base64 returning String error (for handlers using Result<_, String>)
+///
+/// This is a transition helper while migrating to proper error types.
+pub fn decode_base64_field_str(field_name: &str, input: &str) -> Result<Vec<u8>, String> {
+    BASE64
+        .decode(input)
+        .map_err(|e| format!("Invalid {} (not valid base64): {}", field_name, e))
+}
+
+// ============================================================================
+// Parameter Extraction Helpers
+// ============================================================================
+
+/// Require parameters from a JSON-RPC request
+///
+/// # Example
+///
+/// ```rust,ignore
+/// let params = require_params(params)?;
+/// let key_id = extract_str_param(&params, "key_id")?;
+/// ```
+pub fn require_params(params: Option<&Value>) -> Result<&Value, String> {
+    params.ok_or_else(|| "Missing required parameters".to_string())
+}
+
+/// Extract an optional string parameter from JSON
+///
+/// Returns `None` if the field doesn't exist or isn't a string.
+pub fn extract_str_param<'a>(params: &'a Value, field: &str) -> Option<&'a str> {
+    params.get(field).and_then(|v| v.as_str())
+}
+
+/// Extract a required string parameter from JSON
+///
+/// Returns an error if the field doesn't exist or isn't a string.
+pub fn require_str_param<'a>(params: &'a Value, field: &str) -> Result<&'a str, String> {
+    extract_str_param(params, field)
+        .ok_or_else(|| format!("Missing or invalid '{}' parameter", field))
+}
+
+/// Extract an optional integer parameter from JSON
+pub fn extract_u64_param(params: &Value, field: &str) -> Option<u64> {
+    params.get(field).and_then(|v| v.as_u64())
+}
+
+// ============================================================================
+// Deserialization Helpers
+// ============================================================================
+
+/// Deserialize JSON parameters into a typed request with method-specific errors
+///
+/// # Example
+///
+/// ```rust,ignore
+/// let request: SignRequest = deserialize_request(params, "crypto.sign_ed25519")?;
+/// ```
+pub fn deserialize_request<T: DeserializeOwned>(
+    params: Value,
+    method_name: &str,
+) -> Result<T, BearDogError> {
+    serde_json::from_value(params).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid {} params: {}", method_name, e))
+    })
+}
+
+/// Deserialize with String error (transition helper)
+pub fn deserialize_request_str<T: DeserializeOwned>(
+    params: Value,
+    method_name: &str,
+) -> Result<T, String> {
+    serde_json::from_value(params).map_err(|e| format!("Invalid {} params: {}", method_name, e))
+}
+
+// ============================================================================
+// Error Conversion Helpers
+// ============================================================================
+
+/// Convert any Display error to a BearDogError with context
+///
+/// # Example
+///
+/// ```rust,ignore
+/// let result = operation().map_err(|e| to_security_error("encryption", e))?;
+/// ```
+pub fn to_security_error<E: std::fmt::Display>(operation: &str, error: E) -> BearDogError {
+    BearDogError::security(format!("{} failed: {}", operation, error))
+}
+
+/// Convert any Display error to String with context (transition helper)
+pub fn to_error_string<E: std::fmt::Display>(operation: &str, error: E) -> String {
+    format!("{} failed: {}", operation, error)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::Deserialize;
+    use serde_json::json;
 
     #[test]
     fn test_derive_key_from_id() {
@@ -65,5 +190,101 @@ mod tests {
         // Different inputs should produce different keys
         let key3 = derive_key_from_id("test_key", "different").unwrap();
         assert_ne!(key, key3);
+    }
+
+    #[test]
+    fn test_decode_base64_field_valid() {
+        let encoded = BASE64.encode(b"hello world");
+        let result = decode_base64_field("test_data", &encoded);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), b"hello world");
+    }
+
+    #[test]
+    fn test_decode_base64_field_invalid() {
+        let result = decode_base64_field("test_data", "not-valid-base64!!!");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("test_data"));
+        assert!(err.to_string().contains("not valid base64"));
+    }
+
+    #[test]
+    fn test_require_params_some() {
+        let value = json!({"key": "value"});
+        let result = require_params(Some(&value));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_require_params_none() {
+        let result = require_params(None);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Missing"));
+    }
+
+    #[test]
+    fn test_extract_str_param() {
+        let params = json!({"name": "test", "count": 42});
+
+        assert_eq!(extract_str_param(&params, "name"), Some("test"));
+        assert_eq!(extract_str_param(&params, "count"), None); // Not a string
+        assert_eq!(extract_str_param(&params, "missing"), None);
+    }
+
+    #[test]
+    fn test_require_str_param() {
+        let params = json!({"name": "test"});
+
+        assert_eq!(require_str_param(&params, "name").unwrap(), "test");
+        assert!(require_str_param(&params, "missing").is_err());
+    }
+
+    #[test]
+    fn test_extract_u64_param() {
+        let params = json!({"count": 42, "name": "test"});
+
+        assert_eq!(extract_u64_param(&params, "count"), Some(42));
+        assert_eq!(extract_u64_param(&params, "name"), None);
+        assert_eq!(extract_u64_param(&params, "missing"), None);
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct TestRequest {
+        key_id: String,
+        data: String,
+    }
+
+    #[test]
+    fn test_deserialize_request_valid() {
+        let params = json!({"key_id": "test", "data": "hello"});
+        let result: Result<TestRequest, _> = deserialize_request(params, "test.method");
+        assert!(result.is_ok());
+        let req = result.unwrap();
+        assert_eq!(req.key_id, "test");
+        assert_eq!(req.data, "hello");
+    }
+
+    #[test]
+    fn test_deserialize_request_invalid() {
+        let params = json!({"wrong_field": "test"});
+        let result: Result<TestRequest, _> = deserialize_request(params, "test.method");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("test.method"));
+    }
+
+    #[test]
+    fn test_to_security_error() {
+        let err = to_security_error("encryption", "key not found");
+        assert!(err.to_string().contains("encryption"));
+        assert!(err.to_string().contains("key not found"));
+    }
+
+    #[test]
+    fn test_to_error_string() {
+        let err = to_error_string("decryption", "invalid tag");
+        assert!(err.contains("decryption"));
+        assert!(err.contains("invalid tag"));
     }
 }
