@@ -1,9 +1,7 @@
-
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! # Sovereignty Module
+//!
+//! This module provides security sovereignty operations for the BearDog ecosystem.
+//! It handles cryptographic sovereignty, access control, compliance, and trust management.
 
 pub mod access_control;
 pub mod compliance_sovereignty;
@@ -15,72 +13,162 @@ pub use compliance_sovereignty::ComplianceSovereignty;
 pub use crypto_sovereignty::CryptoSovereignty;
 pub use trust_management::TrustManager;
 
+use crate::BearDogSecurityError;
+
+// ============================================================
+// Sovereignty Operations Trait
+// ============================================================
+
+/// Security sovereignty operations
 pub trait SecuritySovereigntyOps: Send + Sync {
+    /// Establish cryptographic sovereignty for an identity
+    fn establish_crypto_sovereignty(
+        &self,
+        identity: &str,
+    ) -> impl std::future::Future<Output = Result<CryptoSovereigntyResult, BearDogSecurityError>> + Send;
 
-
-    fn establish_crypto_sovereignty(&str,
-    ) -> impl std::future::Future<
-        Output = Result<CryptoSovereigntyResult, crate::BearDogSecurityError>,
-    ;
-
-
-    fn verify_trust(&str,
-    ) -> impl std::future::Future<
-        Output = Result<TrustVerificationResult, crate::BearDogSecurityError>,
-    ;
+    /// Verify trust for an entity
+    fn verify_trust(
+        &self,
+        entity: &str,
+    ) -> impl std::future::Future<Output = Result<TrustVerificationResult, BearDogSecurityError>> + Send;
 }
 
+// ============================================================
+// Result Types
+// ============================================================
+
+/// Result of establishing cryptographic sovereignty
 #[derive(Debug, Clone)]
-    /// The crypto keys value
+pub struct CryptoSovereigntyResult {
+    /// Unique identifier for this sovereignty
+    pub sovereignty_id: String,
+
+    /// Cryptographic keys for the sovereignty
     pub crypto_keys: CryptoKeySet,
-    /// The established at value
+
+    /// When the sovereignty was established
     pub established_at: chrono::DateTime<chrono::Utc>,
-    /// The sovereignty level value
+
+    /// Level of sovereignty achieved
     pub sovereignty_level: SovereigntyLevel,
 }
 
+/// Cryptographic key set for sovereignty
 #[derive(Debug, Clone)]
-    /// Collection of signing key
+pub struct CryptoKeySet {
+    /// Signing key (private)
     pub signing_key: Vec<u8>,
-    /// Collection of encryption key
+
+    /// Encryption key (private)
     pub encryption_key: Vec<u8>,
-    /// Collection of key derivation salt
+
+    /// Key derivation salt
     pub key_derivation_salt: Vec<u8>,
+
+    /// Public signing key
+    pub public_signing_key: Option<Vec<u8>>,
+
+    /// Public encryption key
+    pub public_encryption_key: Option<Vec<u8>>,
 }
 
+/// Result of trust verification
 #[derive(Debug, Clone)]
-    /// The trust level value
+pub struct TrustVerificationResult {
+    /// Entity that was verified
+    pub entity: String,
+
+    /// Trust level determined
     pub trust_level: TrustLevel,
-    /// Collection of verification proof
+
+    /// Cryptographic proof of verification
     pub verification_proof: Vec<u8>,
-    /// The verified at value
+
+    /// When the verification occurred
     pub verified_at: chrono::DateTime<chrono::Utc>,
+
+    /// Additional verification metadata
+    pub metadata: Option<std::collections::HashMap<String, String>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+// ============================================================
+// Level Enums
+// ============================================================
 
+/// Sovereignty level
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SovereigntyLevel {
-    /// Represents basic variant
+    /// Basic sovereignty - minimal guarantees
     Basic,
-    /// State indicating enhanced
+
+    /// Enhanced sovereignty - standard security
     Enhanced,
-    /// Represents maximum variant
+
+    /// Maximum sovereignty - high security
     Maximum,
-    /// Represents absolute variant
+
+    /// Absolute sovereignty - highest possible
     Absolute,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+impl Default for SovereigntyLevel {
+    fn default() -> Self {
+        Self::Enhanced
+    }
+}
 
+/// Trust level for entities
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TrustLevel {
-    /// State indicating untrusted
+    /// Untrusted entity
     Untrusted,
-    /// State indicating limited
+
+    /// Limited trust
     Limited,
-    /// State indicating trusted
+
+    /// Trusted entity
     Trusted,
-    /// State indicating highlytrusted
+
+    /// Highly trusted entity
     HighlyTrusted,
-    /// Represents absolute variant
+
+    /// Absolute trust (e.g., self)
     Absolute,
+}
+
+impl Default for TrustLevel {
+    fn default() -> Self {
+        Self::Limited
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sovereignty_level_ordering() {
+        assert!(SovereigntyLevel::Absolute > SovereigntyLevel::Maximum);
+        assert!(SovereigntyLevel::Maximum > SovereigntyLevel::Enhanced);
+        assert!(SovereigntyLevel::Enhanced > SovereigntyLevel::Basic);
+    }
+
+    #[test]
+    fn test_trust_level_ordering() {
+        assert!(TrustLevel::Absolute > TrustLevel::HighlyTrusted);
+        assert!(TrustLevel::HighlyTrusted > TrustLevel::Trusted);
+        assert!(TrustLevel::Trusted > TrustLevel::Limited);
+        assert!(TrustLevel::Limited > TrustLevel::Untrusted);
+    }
+
+    #[test]
+    fn test_sovereignty_level_default() {
+        assert_eq!(SovereigntyLevel::default(), SovereigntyLevel::Enhanced);
+    }
+
+    #[test]
+    fn test_trust_level_default() {
+        assert_eq!(TrustLevel::default(), TrustLevel::Limited);
+    }
 }
