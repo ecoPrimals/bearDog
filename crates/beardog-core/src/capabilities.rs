@@ -169,19 +169,25 @@ pub enum ResponseStatus {
 
 impl BearDogCapabilities {
     /// Create `BearDog`'s capability manifest
-    #[must_use] 
+    #[must_use]
     pub fn new(family_id: Option<String>, node_id: String) -> Self {
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
         metadata.insert("primal_type".to_string(), "security".to_string());
 
+        // Self-knowledge pattern: discover primal name from environment
+        let primal_name = std::env::var("PRIMAL_NAME")
+            .or_else(|_| std::env::var("BEARDOG_NAME"))
+            .unwrap_or_else(|_| "beardog".to_string());
+
         let socket_path = format!(
-            "/tmp/beardog-{}.sock",
+            "/tmp/{}-{}.sock",
+            primal_name,
             family_id.as_deref().unwrap_or("default")
         );
 
         Self {
-            primal_id: "beardog".to_string(),
+            primal_id: primal_name,
             family_id,
             node_id,
             provides: Self::default_capabilities(),
@@ -197,7 +203,11 @@ impl BearDogCapabilities {
                     permissions: 0o600,
                 },
                 IpcEndpoint::Http {
-                    bind_addr: "127.0.0.1:9000".to_string(),
+                    // Use config-based port instead of hardcoded value
+                    bind_addr: {
+                        use beardog_config::global::BEARDOG_CONFIG;
+                        format!("127.0.0.1:{}", BEARDOG_CONFIG.network.ports.api_port)
+                    },
                     tls: false,
                 },
             ],
@@ -234,7 +244,7 @@ impl BearDogCapabilities {
     }
 
     /// Check if this primal provides a capability
-    #[must_use] 
+    #[must_use]
     pub fn provides_capability(&self, cap: &Capability) -> bool {
         self.provides
             .iter()
@@ -243,7 +253,10 @@ impl BearDogCapabilities {
 
     /// Fuzzy match capabilities (e.g., "any encryption" matches "`ChaCha20`")
     fn capability_matches(provided: &Capability, requested: &Capability) -> bool {
-        use Capability::{Encryption, TrustEvaluation, KeyManagement, Signatures, Discovery, Storage, Compute, Custom};
+        use Capability::{
+            Compute, Custom, Discovery, Encryption, KeyManagement, Signatures, Storage,
+            TrustEvaluation,
+        };
         match (provided, requested) {
             (Encryption { .. }, Encryption { .. }) => true,
             (TrustEvaluation { .. }, TrustEvaluation { .. }) => true,
@@ -262,11 +275,19 @@ impl BearDogCapabilities {
 mod tests {
     use super::*;
 
+    /// Helper to get expected primal name from environment or default
+    fn expected_primal_name() -> String {
+        std::env::var("PRIMAL_NAME")
+            .or_else(|_| std::env::var("BEARDOG_NAME"))
+            .unwrap_or_else(|_| "beardog".to_string())
+    }
+
     #[test]
     fn test_capability_manifest_creation() {
         let caps = BearDogCapabilities::new(Some("test_family".to_string()), "node1".to_string());
 
-        assert_eq!(caps.primal_id, "beardog");
+        // Primal ID is discovered from environment or defaults to "beardog"
+        assert_eq!(caps.primal_id, expected_primal_name());
         assert_eq!(caps.family_id, Some("test_family".to_string()));
         assert_eq!(caps.node_id, "node1");
         assert!(!caps.provides.is_empty());
@@ -311,11 +332,13 @@ mod tests {
         let caps = BearDogCapabilities::new(Some("test".to_string()), "node1".to_string());
 
         let json = serde_json::to_string_pretty(&caps).unwrap();
-        assert!(json.contains("beardog"));
+        // Primal name comes from environment or defaults
+        let expected_name = expected_primal_name();
+        assert!(json.contains(&expected_name));
         assert!(json.contains("encryption"));
 
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized.primal_id, "beardog");
+        assert_eq!(deserialized.primal_id, expected_name);
     }
 }
 

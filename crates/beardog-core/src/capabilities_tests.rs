@@ -2,9 +2,17 @@
 //!
 //! Covers: Unit, E2E, Chaos, and Fault testing
 
+/// Helper to get expected primal name from environment or default
+fn expected_primal_name() -> String {
+    std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string())
+}
+
 #[cfg(test)]
 mod capability_unit_tests {
     use super::super::*;
+    use super::expected_primal_name;
     use std::collections::HashMap;
 
     // ============================================================================
@@ -15,7 +23,7 @@ mod capability_unit_tests {
     fn test_capability_manifest_creation() {
         let caps = BearDogCapabilities::new(Some("test_family".to_string()), "node1".to_string());
 
-        assert_eq!(caps.primal_id, "beardog");
+        assert_eq!(caps.primal_id, expected_primal_name());
         assert_eq!(caps.family_id, Some("test_family".to_string()));
         assert_eq!(caps.node_id, "node1");
         assert!(!caps.provides.is_empty());
@@ -26,7 +34,7 @@ mod capability_unit_tests {
     fn test_capability_manifest_no_family() {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
 
-        assert_eq!(caps.primal_id, "beardog");
+        assert_eq!(caps.primal_id, expected_primal_name());
         assert_eq!(caps.family_id, None);
         assert_eq!(caps.node_id, "node1");
     }
@@ -115,12 +123,12 @@ mod capability_unit_tests {
         let caps = BearDogCapabilities::new(Some("test".to_string()), "node1".to_string());
 
         let json = serde_json::to_string_pretty(&caps).unwrap();
-        assert!(json.contains("beardog"));
+        assert!(json.contains(&expected_primal_name()));
         assert!(json.contains("encryption"));
         assert!(json.contains("trust_evaluation"));
 
         let deserialized: BearDogCapabilities = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized.primal_id, "beardog");
+        assert_eq!(deserialized.primal_id, expected_primal_name());
         assert_eq!(deserialized.family_id, Some("test".to_string()));
     }
 
@@ -387,7 +395,7 @@ mod capability_e2e_tests {
         let discovered_caps: BearDogCapabilities = serde_json::from_str(&json).unwrap();
 
         // Verify discovered capabilities match
-        assert_eq!(discovered_caps.primal_id, "beardog");
+        assert_eq!(discovered_caps.primal_id, super::expected_primal_name());
         assert_eq!(discovered_caps.provides.len(), beardog_caps.provides.len());
     }
 
