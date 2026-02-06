@@ -58,7 +58,11 @@ pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
             "checks": checks,
             "timestamp": chrono::Utc::now().to_rfc3339(),
         });
-        println!("{}", serde_json::to_string_pretty(&result).unwrap());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&result)
+                .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {}\"}}", e))
+        );
     } else {
         // Text output
         info!("╔════════════════════════════════════════════════════════════════╗");
@@ -230,5 +234,86 @@ async fn check_component(component: &str) -> HealthCheck {
             message: "Unknown component".to_string(),
             details: Some("Valid components: entropy, storage, hsm, server, crypto".to_string()),
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_health_check_serialization() {
+        let check = HealthCheck {
+            name: "Test".to_string(),
+            healthy: true,
+            message: "All good".to_string(),
+            details: Some("Details here".to_string()),
+        };
+
+        let json = serde_json::to_string(&check).unwrap();
+        assert!(json.contains("\"name\":\"Test\""));
+        assert!(json.contains("\"healthy\":true"));
+        assert!(json.contains("\"message\":\"All good\""));
+    }
+
+    #[test]
+    fn test_check_version() {
+        let result = check_version();
+        assert!(result.healthy);
+        assert_eq!(result.name, "Version");
+        assert!(result.message.contains("BearDog"));
+        assert!(result.details.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_check_entropy() {
+        let result = check_entropy().await;
+        assert!(result.healthy);
+        assert_eq!(result.name, "Entropy Sources");
+    }
+
+    #[tokio::test]
+    async fn test_check_key_storage() {
+        let result = check_key_storage().await;
+        // Should succeed as /tmp is usually writable
+        assert_eq!(result.name, "Key Storage");
+        // Don't assert healthy as it depends on filesystem permissions
+    }
+
+    #[tokio::test]
+    async fn test_check_crypto_operations() {
+        let result = check_crypto_operations().await;
+        assert!(result.healthy);
+        assert_eq!(result.name, "Crypto Operations");
+        assert!(result.details.as_ref().unwrap().contains("Blake3"));
+    }
+
+    #[tokio::test]
+    async fn test_check_component_valid() {
+        let result = check_component("entropy").await;
+        assert!(result.healthy);
+        assert_eq!(result.name, "Entropy Sources");
+    }
+
+    #[tokio::test]
+    async fn test_check_component_invalid() {
+        let result = check_component("invalid_component").await;
+        assert!(!result.healthy);
+        assert!(result.name.contains("invalid_component"));
+        assert_eq!(result.message, "Unknown component");
+    }
+
+    #[tokio::test]
+    async fn test_check_hsm() {
+        let result = check_hsm().await;
+        assert!(result.healthy);
+        assert_eq!(result.name, "HSM Devices");
+    }
+
+    #[tokio::test]
+    async fn test_check_server_connectivity() {
+        let result = check_server_connectivity().await;
+        // Server may or may not be running, but check should complete
+        assert_eq!(result.name, "Server Connectivity");
     }
 }

@@ -28,13 +28,14 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
             #[cfg(unix)]
             {
                 use std::process::Command;
-                let check = Command::new("kill").args(["-0", &pid.to_string()]).output();
-
-                if check.is_ok() && check.unwrap().status.success() {
-                    return Err(BearDogError::Business {
-                        message: format!("BearDog daemon already running (PID: {})", pid),
-                        category: Default::default(),
-                    });
+                // Use if let instead of is_ok().unwrap() pattern
+                if let Ok(output) = Command::new("kill").args(["-0", &pid.to_string()]).output() {
+                    if output.status.success() {
+                        return Err(BearDogError::Business {
+                            message: format!("BearDog daemon already running (PID: {})", pid),
+                            category: Default::default(),
+                        });
+                    }
                 }
             }
         }
@@ -72,7 +73,7 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
     let server_args = crate::ServerArgs {
         socket: args.socket,
         r#abstract: false, // Daemon mode uses filesystem sockets
-        listen: None, // Daemon mode uses Unix sockets
+        listen: None,      // Daemon mode uses Unix sockets
         family_id: args.family_id,
         orchestrator_id: args.orchestrator_id,
     };
