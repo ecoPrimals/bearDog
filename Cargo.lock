@@ -427,7 +427,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "serial_test",
+ "serial_test 3.3.1",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -480,7 +480,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "serial_test",
+ "serial_test 3.3.1",
  "sha3",
  "thiserror 1.0.69",
  "tokio",
@@ -591,7 +591,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "serial_test",
+ "serial_test 3.3.1",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -640,7 +640,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "serial_test",
+ "serial_test 3.3.1",
  "sha2 0.10.9",
  "sha3",
  "tempfile",
@@ -792,18 +792,32 @@ dependencies = [
 name = "beardog-ipc"
 version = "0.9.0"
 dependencies = [
+ "aes-gcm",
  "anyhow",
  "async-trait",
  "beardog-core",
  "beardog-errors",
+ "blake3",
+ "chacha20poly1305",
+ "ed25519-dalek",
+ "futures",
+ "hex",
+ "hkdf",
+ "hmac 0.12.1",
+ "p256",
+ "p384",
  "rand 0.8.5",
  "serde",
  "serde_json",
+ "serial_test 2.0.0",
+ "sha2 0.10.9",
  "tarpc",
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",
+ "tokio-util",
  "tracing",
+ "x25519-dalek",
 ]
 
 [[package]]
@@ -820,7 +834,7 @@ dependencies = [
  "chrono",
  "serde",
  "serde_json",
- "serial_test",
+ "serial_test 3.3.1",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -997,6 +1011,7 @@ dependencies = [
  "beardog-core",
  "beardog-errors",
  "beardog-genetics",
+ "beardog-hid",
  "beardog-ipc",
  "beardog-monitoring",
  "beardog-security",
@@ -1017,7 +1032,6 @@ dependencies = [
  "ed448-goldilocks",
  "futures",
  "hex",
- "hidapi",
  "hkdf",
  "hmac 0.12.1",
  "hostname 0.3.1",
@@ -1037,7 +1051,7 @@ dependencies = [
  "security-framework-sys",
  "serde",
  "serde_json",
- "serial_test",
+ "serial_test 3.3.1",
  "sha1",
  "sha2 0.10.9",
  "sha3",
@@ -1079,7 +1093,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "serial_test",
+ "serial_test 3.3.1",
  "sha2 0.10.9",
  "sha3",
  "thiserror 1.0.69",
@@ -1111,7 +1125,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "serial_test",
+ "serial_test 3.3.1",
  "sha2 0.10.9",
  "thiserror 1.0.69",
  "tokio",
@@ -4528,6 +4542,20 @@ dependencies = [
 
 [[package]]
 name = "serial_test"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e56dd856803e253c8f298af3f4d7eb0ae5e23a737252cd90bb4f3b435033b2d"
+dependencies = [
+ "dashmap",
+ "futures",
+ "lazy_static",
+ "log",
+ "parking_lot",
+ "serial_test_derive 2.0.0",
+]
+
+[[package]]
+name = "serial_test"
 version = "3.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d0b343e184fc3b7bb44dff0705fffcf4b3756ba6aff420dddd8b24ca145e555"
@@ -4538,7 +4566,18 @@ dependencies = [
  "once_cell",
  "parking_lot",
  "scc",
- "serial_test_derive",
+ "serial_test_derive 3.3.1",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91d129178576168c589c9ec973feedf7d3126c01ac2bf08795109aa35b69fb8f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
 ]
 
 [[package]]
@@ -4855,6 +4894,7 @@ dependencies = [
  "tarpc-plugins",
  "thiserror 1.0.69",
  "tokio",
+ "tokio-serde",
  "tokio-util",
  "tracing",
  "tracing-opentelemetry",
@@ -5049,6 +5089,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "911a61637386b789af998ee23f50aa30d5fd7edcec8d6d3dedae5e5815205466"
 dependencies = [
+ "bincode",
  "bytes",
  "educe",
  "futures-core",

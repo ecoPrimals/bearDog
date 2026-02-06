@@ -29,14 +29,49 @@ anyhow = { workspace = true }
 # Logging
 tracing = { workspace = true }
 
-# Optional: Type-safe RPC
-tarpc = { version = "0.34", features = ["tokio1", "serde1"], optional = true }
+# Optional: Type-safe RPC (tarpc for high-performance)
+# Full feature includes: serde-transport, tokio1, serde1, and bincode codec
+tarpc = { version = "0.34", features = ["full"], optional = true }
+tokio-util = { version = "0.7", features = ["codec"], optional = true }
+futures = { workspace = true, optional = true }
+
+# Crypto (for tarpc server implementation)
+# Using direct versions for deps not in workspace.dependencies
+ed25519-dalek = { version = "2.1", optional = true }
+x25519-dalek = { version = "2.0", features = ["static_secrets"], optional = true }
+p256 = { version = "0.13", features = ["ecdsa", "ecdh"], optional = true }
+p384 = { version = "0.13", features = ["ecdsa", "ecdh"], optional = true }
+chacha20poly1305 = { version = "0.10", optional = true }
+aes-gcm = { version = "0.10", optional = true }
+blake3 = { version = "1.5", features = ["pure"], optional = true }
+sha2 = { version = "0.10", optional = true }
+hmac = { version = "0.12", optional = true }
+hkdf = { version = "0.12", optional = true }
+hex = { version = "0.4", optional = true }
+rand = { version = "0.8", optional = true }
 
 [features]
 default = ["json-rpc"]
 json-rpc = []
-tarpc = ["dep:tarpc"]
+tarpc = [
+    "dep:tarpc",
+    "dep:tokio-util",
+    "dep:futures",
+    "dep:ed25519-dalek",
+    "dep:x25519-dalek",
+    "dep:p256",
+    "dep:p384",
+    "dep:chacha20poly1305",
+    "dep:aes-gcm",
+    "dep:blake3",
+    "dep:sha2",
+    "dep:hmac",
+    "dep:hkdf",
+    "dep:hex",
+    "dep:rand",
+]
 
 [dev-dependencies]
 tokio-test = "0.4"
 rand = { workspace = true }
+serial_test = "2.0"
