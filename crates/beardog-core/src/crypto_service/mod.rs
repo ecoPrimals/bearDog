@@ -1,7 +1,7 @@
 //! # Protocol-Agnostic Crypto Service
 //!
 //! Core cryptographic service that can be exposed via any protocol
-//! (HTTP, JSON-RPC, tarpc, etc.) without protocol-specific dependencies.
+//! (HTTP, JSON-RPC, etc.) without protocol-specific dependencies.
 //!
 //! ## Design Principles
 //!
@@ -20,7 +20,7 @@
 //!       ↓
 //! Algorithm modules (AES, ChaCha, Ed25519, etc.)
 //!       ↓
-//! Exposed via HTTP, JSON-RPC, tarpc
+//! Exposed via HTTP, JSON-RPC
 //! ```
 //!
 //! ## Module Organization
