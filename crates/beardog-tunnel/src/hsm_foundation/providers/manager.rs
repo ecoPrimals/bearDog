@@ -1,15 +1,15 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! # HSM Provider Manager
+//!
+//! This module provides management of HSM providers, including
+//! primary/fallback selection, health monitoring, and metrics collection.
 
 use beardog_errors::BearDogError;
 
 use super::super::traits::HsmManager;
 use super::super::{
-    error::HsmResult, 
-    traits::ProviderInfo, 
-    types::{HsmProviderType, HsmTier, BearDogError, HsmHealth, HsmHealthStatus}
+    error::HsmResult,
+    traits::ProviderInfo,
+    types::{HsmHealth, HsmHealthStatus, HsmProviderType, HsmTier},
 };
 use beardog_types::canonical::hsm::status::HealthMetrics;
 use beardog_types::canonical::providers_unified::traits::UnifiedHsmProvider as HsmProvider;
@@ -17,30 +17,30 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-pub struct HsmProviderManager<P: HsmProvider + Clone + 'static> {
+// ============================================================
+// Configuration
+// ============================================================
 
-    primary_provider: P,
-
-    fallback_providers: HashMap<HsmProviderType, P>,
-
-    config: Arc<RwLock<Option<ManagerConfig>>>,
-
-    metrics: Arc<RwLock<HashMap<String, ProviderMetrics>>>,
-}
-
+/// Manager configuration
 #[derive(Debug, Clone)]
-    /// The min security tier value
+pub struct ManagerConfig {
+    /// Preferred provider types in order
+    pub preferred_providers: Vec<HsmProviderType>,
+
+    /// Minimum required security tier
     pub min_security_tier: HsmTier,
 
-    /// Whether enable_discovery is enabled
+    /// Enable auto-discovery of providers
     pub enable_discovery: bool,
 
-    /// Number of health_check_interval_secs
+    /// Health check interval in seconds
     pub health_check_interval_secs: u64,
 }
 
 impl Default for ManagerConfig {
-    fn default(vec![HsmProviderType::Software],
+    fn default() -> Self {
+        Self {
+            preferred_providers: vec![HsmProviderType::Software],
             min_security_tier: HsmTier::Software,
             enable_discovery: true,
             health_check_interval_secs: 300,
@@ -48,18 +48,50 @@ impl Default for ManagerConfig {
     }
 }
 
-#[derive(Debug, Clone)]
+// ============================================================
+// Metrics
+// ============================================================
+
+/// Provider metrics
+#[derive(Debug, Clone, Default)]
+pub struct ProviderMetrics {
+    /// Total operations count
+    pub operations_count: u64,
+
+    /// Average response time in milliseconds
     pub avg_response_time_ms: f64,
-    /// Number of error
+
+    /// Error count
     pub error_count: u64,
-    /// The success rate value
+
+    /// Success rate (0.0 - 1.0)
     pub success_rate: f64,
+
+    /// Last operation timestamp
+    pub last_operation_time: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+// ============================================================
+// HSM Provider Manager
+// ============================================================
+
+/// HSM Provider Manager
+pub struct HsmProviderManager<P: HsmProvider + Clone + 'static> {
+    /// Primary HSM provider
+    primary_provider: P,
+
+    /// Fallback providers by type
+    fallback_providers: HashMap<HsmProviderType, P>,
+
+    /// Configuration
+    config: Arc<RwLock<Option<ManagerConfig>>>,
+
+    /// Provider metrics
+    metrics: Arc<RwLock<HashMap<String, ProviderMetrics>>>,
 }
 
 impl<P: HsmProvider + Clone + 'static> HsmProviderManager<P> {
-
-/// New operation.
-    /// Creates a new instance
+    /// Create a new HSM provider manager
     pub fn new(primary_provider: P) -> Self {
         Self {
             primary_provider,
@@ -69,32 +101,54 @@ impl<P: HsmProvider + Clone + 'static> HsmProviderManager<P> {
         }
     }
 
-/// Initialize operation.
-    /// Initializes componentialize
-    /// Initializes componentialize
-    pub fn initialize(&self, config: ManagerConfig) -> HsmResult<()> {
-        let mut config_guard = self.config.write();
+    /// Initialize the manager with configuration
+    pub async fn initialize(&self, config: ManagerConfig) -> HsmResult<()> {
+        let mut config_guard = self.config.write().await;
         *config_guard = Some(config);
 
-        let mut metrics = self.metrics.write();
-        metrics.insert("primary".to_string(), ProviderMetrics::default(HsmProviderType, provider: P) {
+        let mut metrics = self.metrics.write().await;
+        metrics.insert("primary".to_string(), ProviderMetrics::default());
+
+        Ok(())
+    }
+
+    /// Add a fallback provider
+    pub async fn add_fallback_provider(&mut self, provider_type: HsmProviderType, provider: P) {
         self.fallback_providers.insert(provider_type, provider);
 
-        let mut metrics = self.metrics.write();
-        metrics.insert(format!("fallback_{:?}", provider_type), ProviderMetrics::default(&ProviderInfo, config: &ManagerConfig) -> f64 {
-        let mut score = 0f64;
+        let mut metrics = self.metrics.write().await;
+        metrics.insert(
+            format!("fallback_{:?}", provider_type),
+            ProviderMetrics::default(),
+        );
+    }
 
+    /// Get provider score based on info and config
+    pub fn get_provider_score(&self, provider_info: &ProviderInfo, config: &ManagerConfig) -> f64 {
+        let mut score = 0.0_f64;
+
+        // Score based on tier
         score += match provider_info.tier {
-            HsmTier::Software => 10f64,
-            HsmTier::BasicHardware => 20f64,
-            HsmTier::CertifiedHardware => 30f64,
-            HsmTier::HighSecurity => 40f64,
-            HsmTier::HumanEntropyPremium => 50f64,
-            _ => 1f64, // Default score for unknown tiers
+            HsmTier::Software => 10.0,
+            HsmTier::BasicHardware => 20.0,
+            HsmTier::CertifiedHardware => 30.0,
+            HsmTier::HighSecurity => 40.0,
+            HsmTier::HumanEntropyPremium => 50.0,
+            _ => 1.0, // Default score for unknown tiers
         };
 
-        if let Some(&ProviderInfo, config: &ManagerConfig) -> bool {
+        // Bonus for preferred providers
+        if let Some(provider_type) = &provider_info.provider_type {
+            if config.preferred_providers.contains(provider_type) {
+                score += 20.0;
+            }
+        }
 
+        score
+    }
+
+    /// Check if provider meets minimum requirements
+    pub fn meets_requirements(&self, provider_info: &ProviderInfo, config: &ManagerConfig) -> bool {
         let tier_order = |tier: &HsmTier| match tier {
             HsmTier::Software => 0,
             HsmTier::BasicHardware => 1,
@@ -103,41 +157,84 @@ impl<P: HsmProvider + Clone + 'static> HsmProviderManager<P> {
             HsmTier::HumanEntropyPremium => 4,
             _ => 0, // Default order for unknown tiers
         };
-        
-        tier_order(&str, operation_time_ms: f64, success: bool) {
-        let mut metrics = self.metrics.write();
+
+        tier_order(&provider_info.tier) >= tier_order(&config.min_security_tier)
+    }
+
+    /// Update metrics for a provider
+    pub async fn update_metrics(
+        &self,
+        provider_id: &str,
+        operation_time_ms: f64,
+        success: bool,
+    ) {
+        let mut metrics = self.metrics.write().await;
         if let Some(provider_metrics) = metrics.get_mut(provider_id) {
             provider_metrics.operations_count += 1;
 
+            // Update average response time using running average
             let count = provider_metrics.operations_count as f64;
-            provider_metrics.avg_response_time_ms = 
+            provider_metrics.avg_response_time_ms =
                 (provider_metrics.avg_response_time_ms * (count - 1.0) + operation_time_ms) / count;
-            
+
             if !success {
                 provider_metrics.error_count += 1;
             }
-            
-            provider_metrics.success_rate = 
+
+            // Update success rate
+            provider_metrics.success_rate =
                 (provider_metrics.operations_count - provider_metrics.error_count) as f64 / count;
+
+            provider_metrics.last_operation_time = Some(chrono::Utc::now());
         }
+    }
+
+    /// Get metrics for a provider
+    pub async fn get_metrics(&self, provider_id: &str) -> Option<ProviderMetrics> {
+        let metrics = self.metrics.read().await;
+        metrics.get(provider_id).cloned()
+    }
+
+    /// Get all provider metrics
+    pub async fn get_all_metrics(&self) -> HashMap<String, ProviderMetrics> {
+        let metrics = self.metrics.read().await;
+        metrics.clone()
+    }
+
+    /// Get the primary provider
+    pub fn primary(&self) -> &P {
+        &self.primary_provider
+    }
+
+    /// Get a fallback provider by type
+    pub fn fallback(&self, provider_type: &HsmProviderType) -> Option<&P> {
+        self.fallback_providers.get(provider_type)
     }
 }
 
-impl<P: HsmProvider + Clone + 'static> Default for HsmProviderManager<P> 
-where 
-    P: Default
+impl<P: HsmProvider + Clone + 'static> Default for HsmProviderManager<P>
+where
+    P: Default,
 {
     fn default() -> Self {
         Self::new(P::default())
     }
 }
 
-pub type DefaultHsmProviderManager = HsmProviderManager<crate::hsm_foundation::providers::software::SoftwareHsmProvider>;
+impl<P: HsmProvider + Clone + 'static> std::fmt::Debug for HsmProviderManager<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HsmProviderManager")
+            .field("fallback_count", &self.fallback_providers.len())
+            .finish()
+    }
+}
 
-/// Create Default Manager operation.
-    /// Creates default_manager
-    /// Creates default_manager
-    pub fn create_default_manager() -> DefaultHsmProviderManager {
+/// Type alias for default manager
+pub type DefaultHsmProviderManager =
+    HsmProviderManager<crate::hsm_foundation::providers::software::SoftwareHsmProvider>;
+
+/// Create a default HSM provider manager
+pub fn create_default_manager() -> DefaultHsmProviderManager {
     let software_provider = crate::hsm_foundation::providers::software::SoftwareHsmProvider::new();
     HsmProviderManager::new(software_provider)
 }
@@ -147,57 +244,54 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_manager_initialization() -> Result<(), BearDogError> {
+    async fn test_manager_initialization() -> Result<(), BearDogError> {
         let manager = create_default_manager();
         let config = ManagerConfig::default();
-        
-        manager.initialize(config).map_err(|e| {
-            beardog_errors::BearDogError::system(format!("Error: {:?}", e))
-        })?;
-        
+
+        manager
+            .initialize(config)
+            .await
+            .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
+
         Ok(())
     }
 
     #[tokio::test]
-    fn test_provider_scoring(vec![HsmProviderType::Hardware, HsmProviderType::Software],
-            min_security_tier: HsmTier::Software,
-            enable_discovery: true,
-            health_check_interval_secs: 60,
-        };
-        
-        let provider_info_1 = ProviderInfo {
-            name: "Software HSM Provider".to_string(),
-            version: "1.0.0".to_string(),
-            description: "BearDog Software HSM Implementation".to_string(),
-        };
-        
-        let provider_info_2 = ProviderInfo {
-            name: "Hardware HSM Provider".to_string(),
-            version: "1.0.0".to_string(),
-            description: "Hardware HSM Implementation".to_string(),
-        };
-        
-        let score_1 = manager.get_provider_score(&provider_info_1, &config);
-        let score_2 = manager.get_provider_score(&provider_info_2, &config);
+    async fn test_metrics_update() -> Result<(), BearDogError> {
+        let manager = create_default_manager();
+        let config = ManagerConfig::default();
 
-        assert!(score_2 > score_1);
-        
+        manager
+            .initialize(config)
+            .await
+            .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
+
+        // Update metrics
+        manager.update_metrics("primary", 10.0, true).await;
+        manager.update_metrics("primary", 15.0, true).await;
+        manager.update_metrics("primary", 20.0, false).await;
+
+        let metrics = manager.get_metrics("primary").await.unwrap_or_default();
+
+        assert_eq!(metrics.operations_count, 3);
+        assert_eq!(metrics.error_count, 1);
+        assert!((metrics.avg_response_time_ms - 15.0).abs() < 0.1);
+        assert!((metrics.success_rate - 2.0 / 3.0).abs() < 0.1);
+
         Ok(())
     }
 
-    #[tokio::test]
-    fn test_metrics_update(0,
-                    success_rate: 0.0,
-                    avg_response_time_ms: 0.0,
-                    last_operation_time: None,
-                }
-            });
-        
-        assert_eq!(primary_metrics.operations_count, 3);
-        assert_eq!(primary_metrics.error_count, 1);
-        assert!((primary_metrics.avg_response_time_ms - 15.0).abs() < 0.1);
-        assert!((primary_metrics.success_rate - 2.0/3.0).abs() < 0.1);
-        
-        Ok(())
+    #[test]
+    fn test_config_default() {
+        let config = ManagerConfig::default();
+        assert!(config.enable_discovery);
+        assert_eq!(config.health_check_interval_secs, 300);
+    }
+
+    #[test]
+    fn test_provider_metrics_default() {
+        let metrics = ProviderMetrics::default();
+        assert_eq!(metrics.operations_count, 0);
+        assert_eq!(metrics.error_count, 0);
     }
 }
