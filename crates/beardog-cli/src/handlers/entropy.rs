@@ -51,7 +51,7 @@ pub async fn handle_entropy_collect(
     println!("🔍 Discovering available HSMs...");
 
     // Use actual HSM discovery engine (evolved from placeholder)
-    let discovery = DiscoveryEngine::new().await?;
+    let discovery = DiscoveryEngine::new()?;
 
     // Discover all types of HSMs (zero hardcoding - discovers what's available)
     let mut discovered_hsms = Vec::new();

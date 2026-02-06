@@ -85,7 +85,7 @@ impl From<DiscoveredHsm> for CliHsmInfo {
 
 /// Discover all available HSMs using universal discovery
 pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
-    let engine = DiscoveryEngine::new().await?;
+    let engine = DiscoveryEngine::new()?;
 
     let mut all_hsms = Vec::new();
 
