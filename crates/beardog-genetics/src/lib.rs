@@ -11,7 +11,7 @@
 
 #![deny(unsafe_code)]
 #![deny(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
+#![deny(clippy::expect_used)]
 // Allow expect/unwrap in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]

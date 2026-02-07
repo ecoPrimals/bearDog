@@ -68,10 +68,6 @@
 //! config.session_timeout_seconds = 7200; // 2 hours
 //! config.max_concurrent_sessions = 5000;
 //! ```
-
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
-
 //!
 //! ## Example
 //!
