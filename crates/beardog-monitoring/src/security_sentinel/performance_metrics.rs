@@ -266,12 +266,12 @@ impl PerformanceMetricsCollector {
             return Ok(PerformanceTrends::default());
         }
 
-        let window_minutes = if recent_metrics.len() >= 2 {
-            let first_ts = recent_metrics.first().unwrap().timestamp;
-            let last_ts = recent_metrics.last().unwrap().timestamp;
-            (last_ts - first_ts).num_minutes() as u64
-        } else {
-            0
+        // PANIC SAFETY: Use if-let for defensive coding even though len() >= 2 is checked
+        let window_minutes = match (recent_metrics.first(), recent_metrics.last()) {
+            (Some(first), Some(last)) => {
+                (last.timestamp - first.timestamp).num_minutes().unsigned_abs()
+            }
+            _ => 0, // Should never happen given len() >= 2 check above
         };
 
         Ok(PerformanceTrends {

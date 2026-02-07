@@ -626,15 +626,31 @@ struct CircuitKeys {
 }
 
 /// Derive circuit keys from KEY_SEED using HKDF
+///
+/// # Panics
+/// This function uses defensive assertions. It should never panic because
+/// hkdf_expand always returns exactly the requested length.
 fn derive_circuit_keys(key_seed: &[u8]) -> CircuitKeys {
     // Expand to get: Df (20) + Db (20) + Kf (16) + Kb (16) = 72 bytes
     let expanded = hkdf_expand(key_seed, NTOR_T_EXPAND, 72);
+    
+    // Defensive: verify length before slicing
+    debug_assert_eq!(expanded.len(), 72, "HKDF expansion should produce exactly 72 bytes");
 
+    // These conversions are safe because hkdf_expand guarantees the length
     CircuitKeys {
-        df: expanded[0..20].try_into().unwrap(),
-        db: expanded[20..40].try_into().unwrap(),
-        kf: expanded[40..56].try_into().unwrap(),
-        kb: expanded[56..72].try_into().unwrap(),
+        df: expanded[0..20]
+            .try_into()
+            .expect("slice is exactly 20 bytes"),
+        db: expanded[20..40]
+            .try_into()
+            .expect("slice is exactly 20 bytes"),
+        kf: expanded[40..56]
+            .try_into()
+            .expect("slice is exactly 16 bytes"),
+        kb: expanded[56..72]
+            .try_into()
+            .expect("slice is exactly 16 bytes"),
     }
 }
 
@@ -669,15 +685,24 @@ fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Vec<u8> {
 }
 
 /// ChaCha20 counter mode (for cell encryption)
+///
+/// # Panics
+/// Panics if `key` is not exactly 32 bytes. Callers must validate key length.
 fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) {
     use chacha20::cipher::{KeyIvInit, StreamCipher};
     use chacha20::ChaCha20;
+
+    // Defensive: verify key length
+    debug_assert_eq!(key.len(), 32, "ChaCha20 requires exactly 32-byte key");
 
     // Construct nonce from counter (12 bytes)
     let mut nonce = [0u8; 12];
     nonce[4..12].copy_from_slice(&counter.to_le_bytes());
 
-    let key_arr: [u8; 32] = key.try_into().expect("Key must be 32 bytes");
+    // Safe: callers validate key is 32 bytes before calling
+    let key_arr: [u8; 32] = key
+        .try_into()
+        .expect("caller must provide exactly 32-byte key");
     let mut cipher = ChaCha20::new(&key_arr.into(), &nonce.into());
     cipher.apply_keystream(data);
 }

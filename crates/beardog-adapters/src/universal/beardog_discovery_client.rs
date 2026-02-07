@@ -120,10 +120,11 @@ impl BearDogDiscoveryClient {
             health_status: "unknown".to_string(), // Default until health probe (Phase 3)
             response_time_ms: None,
             success_rate: 1.0, // Assume healthy until proven otherwise
+            // PANIC SAFETY: Use unwrap_or(0) for system clocks before UNIX_EPOCH
             last_seen: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
+                .map(|d| d.as_secs())
+                .unwrap_or(0),
         }
     }
 }
