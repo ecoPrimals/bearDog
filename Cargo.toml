@@ -97,13 +97,13 @@ hmac = "0.12"
 sha2 = "0.10"
 sha3 = "0.10"
 sha1 = "0.10"  # Legacy hashing (Git compatibility) - Phase 7
-lettre = "0.11"
-cryptoki = "0.6"
+# REMOVED: lettre = "0.11"  # Email - unused
+# REMOVED: cryptoki = "0.6"  # PKCS#11 FFI - unused (have our own pkcs11_provider.rs)
 rsa = "0.9"
 p256 = { version = "0.13", features = ["ecdsa"] }
 p384 = { version = "0.13", features = ["ecdsa"] }  # ECDSA P-384 (Phase 2)
 ed448-goldilocks = "0.9"  # Ed448 signatures (Phase 3, deferred)
-scrypt = "0.12.0-rc.9"    # Memory-hard KDF - Phase 7
+scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 # DEFERRED Phase 7: AES legacy modes - RustCrypto RC version conflicts (like P-521/Ed448)
 # aes = "0.9.0-rc.2"        # AES cipher (for CBC/CTR/XTS modes)
 # cipher = "0.5.0-rc.5"     # Cipher traits (for AES modes)

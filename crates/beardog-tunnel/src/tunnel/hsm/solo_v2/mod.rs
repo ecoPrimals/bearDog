@@ -25,9 +25,9 @@
 //!    ↓
 //! Solo V2 Provider (this module)
 //!    ↓
-//! CTAP2 Protocol (ctap-hid-fido2 crate)
+//! CTAP2 Protocol (beardog-hid - pure Rust, ecoBin compliant)
 //!    ↓
-//! USB HID Layer (hidapi)
+//! USB HID Layer (beardog-hid - no C dependencies)
 //!    ↓
 //! Solo V2 Hardware
 //! ```
