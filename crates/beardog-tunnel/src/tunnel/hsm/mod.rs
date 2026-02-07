@@ -37,7 +37,7 @@ pub use universal_discovery::{
 // Crypto system
 pub mod crypto; // NEW: Universal Crypto Provider System
 pub mod crypto_dispatch;
-// ARCHIVED: provider_dispatch.rs → archives/orphaned_code_jan_24_2026/
+// NOTE: provider_dispatch.rs was removed (Jan 2026)
 // Performance optimization deferred to Phase 2
 pub mod zero_cost_provider;
 

@@ -117,7 +117,7 @@ impl BearDogDiscoveryClient {
             capabilities: vec![], // Filled by caller based on query
             endpoint_url: service.endpoint.primary_url.clone(),
             protocol_version: service.endpoint.protocol_version.clone(),
-            health_status: "unknown".to_string(), // TODO: Add health check
+            health_status: "unknown".to_string(), // Default until health probe (Phase 3)
             response_time_ms: None,
             success_rate: 1.0, // Assume healthy until proven otherwise
             last_seen: std::time::SystemTime::now()

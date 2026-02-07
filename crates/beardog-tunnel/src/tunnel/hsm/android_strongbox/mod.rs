@@ -21,7 +21,7 @@ pub const VERSION: &str = "1.0.0";
 
 pub mod safe_device_detection;
 pub mod types;
-// ARCHIVED: safe_keystore_replacement.rs moved to archives/orphaned_code_jan_24_2026/
+// NOTE: safe_keystore_replacement.rs was removed (Jan 2026)
 // Functionality provided by safe_native_wrapper instead
 pub mod core;
 pub mod safe_android_provider;
