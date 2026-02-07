@@ -14,7 +14,8 @@
 //! - `crypto.x25519_generate_ephemeral` (actual) → handle_x25519_generate
 //! - `generate_keypair` (semantic) → handle_x25519_generate
 //!
-//! # Methods (39 total: 20 core + 4 ECDSA + 4 RSA + 4 TLS + 4 genetic + 3 password)
+//! # Methods (91 total - Feb 2026 Deep Debt Evolution)
+//! ## See test_crypto_handler_methods() for full breakdown
 //!
 //! ## Core Crypto (20 methods)
 //! - `crypto.sign_ed25519` - Sign data with Ed25519
@@ -261,6 +262,16 @@ impl MethodHandler for CryptoHandler {
             // Tor v3 Onion Address Operations (Feb 7, 2026)
             "beardog.crypto.derive_onion_address",   // Tor v3 onion address from Ed25519 pubkey
             "beardog.crypto.generate_onion_identity", // Generate identity + derive address
+            // ═══════════════════════════════════════════════════════════════
+            // Tor Phase 2: Pure Rust Tor Protocol (Feb 2026)
+            // ntor handshake, cell encryption, Tor-specific KDF
+            // ═══════════════════════════════════════════════════════════════
+            "beardog.crypto.tor_ntor_client_init",    // Initialize client ntor handshake
+            "beardog.crypto.tor_ntor_client_finish",  // Complete client ntor handshake
+            "beardog.crypto.tor_ntor_server_respond", // Server-side ntor response
+            "beardog.crypto.tor_cell_encrypt",        // ChaCha20 cell encryption
+            "beardog.crypto.tor_cell_decrypt",        // ChaCha20 cell decryption
+            "beardog.crypto.tor_kdf",                 // Tor-specific HKDF expansion
         ]
     }
 
@@ -892,6 +903,40 @@ impl MethodHandler for CryptoHandler {
                 super::super::crypto_handlers_hashing::handle_generate_onion_identity(params).await
             }
 
+            // ====================================================================
+            // Tor Phase 2: Pure Rust Tor Protocol (6 methods)
+            // ntor handshake, cell encryption, Tor-specific KDF
+            // ====================================================================
+            "beardog.crypto.tor_ntor_client_init" => {
+                info!("🧅 Crypto: tor_ntor_client_init (Tor ntor handshake - client init)");
+                super::super::crypto_handlers_tor::handle_tor_ntor_client_init(params).await
+            }
+
+            "beardog.crypto.tor_ntor_client_finish" => {
+                info!("🧅 Crypto: tor_ntor_client_finish (Tor ntor handshake - client finish)");
+                super::super::crypto_handlers_tor::handle_tor_ntor_client_finish(params).await
+            }
+
+            "beardog.crypto.tor_ntor_server_respond" => {
+                info!("🧅 Crypto: tor_ntor_server_respond (Tor ntor handshake - server)");
+                super::super::crypto_handlers_tor::handle_tor_ntor_server_respond(params).await
+            }
+
+            "beardog.crypto.tor_cell_encrypt" => {
+                info!("🧅 Crypto: tor_cell_encrypt (Tor relay cell encryption)");
+                super::super::crypto_handlers_tor::handle_tor_cell_encrypt(params).await
+            }
+
+            "beardog.crypto.tor_cell_decrypt" => {
+                info!("🧅 Crypto: tor_cell_decrypt (Tor relay cell decryption)");
+                super::super::crypto_handlers_tor::handle_tor_cell_decrypt(params).await
+            }
+
+            "beardog.crypto.tor_kdf" => {
+                info!("🧅 Crypto: tor_kdf (Tor key derivation)");
+                super::super::crypto_handlers_tor::handle_tor_kdf(params).await
+            }
+
             _ => Err(format!("Unknown crypto method: {}", method)),
         }
     }
@@ -906,7 +951,7 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 85 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3)
+        // Should have 91 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2)
         // Breakdown (Feb 2026 - Deep Debt Evolution):
         //   - 3 Ed25519 (generate, sign, verify)
         //   - 4 ECDSA (P-256 + P-384 sign/verify)
@@ -920,8 +965,9 @@ mod tests {
         //   - 10 genetic (derive_lineage_key, mix_entropy, verify_lineage, generate_lineage_proof, challenge x3, device x3)
         //   - 8 semantic aliases (hash, hmac, sign, verify, encrypt, decrypt, generate_keypair, derive_secret)
         //   - 10 beardog.crypto.* (Songbird Onion Service)
-        //   - 2 Tor v3 (derive_onion_address, generate_onion_identity)
-        assert_eq!(methods.len(), 85);
+        //   - 2 Tor v3 Phase 1 (derive_onion_address, generate_onion_identity)
+        //   - 6 Tor Phase 2 (ntor_client_init, ntor_client_finish, ntor_server_respond, cell_encrypt, cell_decrypt, tor_kdf)
+        assert_eq!(methods.len(), 91);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -991,6 +1037,14 @@ mod tests {
         // Verify Tor v3 methods (Feb 7, 2026 - Phase 1 Tor Integration)
         assert!(methods.contains(&"beardog.crypto.derive_onion_address"));
         assert!(methods.contains(&"beardog.crypto.generate_onion_identity"));
+
+        // Verify Tor Phase 2 methods (Feb 2026 - Pure Rust Tor Protocol)
+        assert!(methods.contains(&"beardog.crypto.tor_ntor_client_init"));
+        assert!(methods.contains(&"beardog.crypto.tor_ntor_client_finish"));
+        assert!(methods.contains(&"beardog.crypto.tor_ntor_server_respond"));
+        assert!(methods.contains(&"beardog.crypto.tor_cell_encrypt"));
+        assert!(methods.contains(&"beardog.crypto.tor_cell_decrypt"));
+        assert!(methods.contains(&"beardog.crypto.tor_kdf"));
     }
 
     #[test]
@@ -998,8 +1052,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            85,
-            "Should have exactly 85 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 - Feb 2026 Deep Debt Evolution)"
+            91,
+            "Should have exactly 91 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 - Feb 2026 Deep Debt Evolution)"
         );
     }
 }

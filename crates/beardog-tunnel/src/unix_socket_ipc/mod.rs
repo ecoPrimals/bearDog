@@ -29,6 +29,7 @@ pub mod crypto_handlers_hmac; // HMAC variants: SHA384/512, Blake3 (Phase 7)
 pub mod crypto_handlers_kdf; // Additional KDFs: bcrypt, scrypt (Phase 7)
 pub mod crypto_handlers_passwords; // Password hashing: Argon2id, PBKDF2 (Phase 6)
 pub mod crypto_handlers_rsa; // RSA signature algorithms (PKCS#1 v1.5, PSS)
+pub mod crypto_handlers_tor; // Tor ntor handshake, cell crypto (Phase 2 Pure Rust Tor)
 pub mod handlers;
 pub mod protocol;
 pub mod server;

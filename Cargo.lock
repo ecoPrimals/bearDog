@@ -970,6 +970,7 @@ dependencies = [
  "beardog-utils",
  "bincode",
  "blake3",
+ "chacha20",
  "chacha20poly1305",
  "chrono",
  "clap",

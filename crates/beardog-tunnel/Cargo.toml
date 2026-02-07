@@ -45,6 +45,7 @@ tracing = "0.1"
 thiserror = { workspace = true }
 # CLEANED: anyhow removed - unused dependency (October 2025)
 aes-gcm = "0.10"
+chacha20 = "0.9"  # ChaCha20 counter mode for Tor cell encryption
 chacha20poly1305 = "0.10"
 ed25519-dalek = "2.0"
 p256 = { version = "0.13", features = ["ecdsa", "ecdh", "pem"] }  # ECDSA + ECDH for TLS 1.3
