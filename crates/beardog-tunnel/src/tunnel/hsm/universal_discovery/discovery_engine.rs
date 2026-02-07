@@ -222,7 +222,26 @@ impl Pkcs11Discoverer {
     }
 
     /// Gets default search paths for PKCS#11 libraries
+    ///
+    /// Paths can be overridden via BEARDOG_HSM_LIBRARY_PATHS environment variable
+    /// (colon-separated on Unix, semicolon-separated on Windows)
     fn get_default_search_paths() -> Vec<PathBuf> {
+        // Check for environment override first
+        if let Ok(env_paths) = std::env::var("BEARDOG_HSM_LIBRARY_PATHS") {
+            let separator = if cfg!(windows) { ';' } else { ':' };
+            let custom_paths: Vec<PathBuf> = env_paths
+                .split(separator)
+                .filter(|p| !p.is_empty())
+                .map(PathBuf::from)
+                .collect();
+            
+            if !custom_paths.is_empty() {
+                tracing::debug!("Using custom HSM library paths from BEARDOG_HSM_LIBRARY_PATHS");
+                return custom_paths;
+            }
+        }
+        
+        // Platform-appropriate default paths
         vec![
             PathBuf::from("/usr/lib"),
             PathBuf::from("/usr/lib64"),

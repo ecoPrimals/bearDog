@@ -149,10 +149,22 @@ async fn check_entropy() -> HealthCheck {
 }
 
 async fn check_key_storage() -> HealthCheck {
-    // Check if key storage directory is accessible
-    let key_dir = std::path::Path::new("/tmp/beardog_keys");
+    // Get key storage directory from environment or XDG-compliant default
+    let key_dir = std::env::var("BEARDOG_KEY_STORAGE_DIR")
+        .map(std::path::PathBuf::from)
+        .or_else(|_| {
+            // Use XDG_DATA_HOME/beardog/keys if available
+            std::env::var("XDG_DATA_HOME")
+                .map(|xdg| std::path::PathBuf::from(xdg).join("beardog").join("keys"))
+        })
+        .or_else(|_| {
+            // Fall back to ~/.local/share/beardog/keys (XDG default)
+            std::env::var("HOME")
+                .map(|home| std::path::PathBuf::from(home).join(".local/share/beardog/keys"))
+        })
+        .unwrap_or_else(|_| std::path::PathBuf::from("/tmp/beardog_keys")); // Last resort
 
-    if key_dir.exists() || std::fs::create_dir_all(key_dir).is_ok() {
+    if key_dir.exists() || std::fs::create_dir_all(&key_dir).is_ok() {
         HealthCheck {
             name: "Key Storage".to_string(),
             healthy: true,
@@ -164,7 +176,7 @@ async fn check_key_storage() -> HealthCheck {
             name: "Key Storage".to_string(),
             healthy: false,
             message: "Key storage not accessible".to_string(),
-            details: Some("Cannot create key storage directory".to_string()),
+            details: Some(format!("Cannot create key storage directory: {}", key_dir.display())),
         }
     }
 }
