@@ -5,15 +5,43 @@
 use crate::ClientArgs;
 use beardog_errors::BearDogError;
 use serde_json::json;
+use std::sync::OnceLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{error, info};
+
+/// Store the active socket path for command execution
+static ACTIVE_SOCKET: OnceLock<String> = OnceLock::new();
+
+/// Get the socket path using self-knowledge pattern.
+/// Priority: ACTIVE_SOCKET > BEARDOG_SOCKET > PRIMAL_NAME-based > default
+fn discover_socket_path() -> String {
+    // First check if we have an active socket from initial connection
+    if let Some(path) = ACTIVE_SOCKET.get() {
+        return path.clone();
+    }
+
+    // Check environment variable
+    if let Ok(path) = std::env::var("BEARDOG_SOCKET") {
+        return path;
+    }
+
+    // Use primal name pattern
+    let primal_name = std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string());
+
+    format!("/tmp/{}.sock", primal_name)
+}
 
 /// Handle client command - interactive REPL
 pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Client Mode");
     info!("   Connecting to: {}", args.socket);
     info!("");
+
+    // Store the socket path for later use
+    let _ = ACTIVE_SOCKET.set(args.socket.clone());
 
     // Connect to server
     let stream = UnixStream::connect(&args.socket)
@@ -99,8 +127,8 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
 async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), BearDogError> {
     // We need to create a new connection for the command
     // Unix streams don't support try_clone in the same way as TCP streams
-    let socket_path = "/tmp/beardog.sock"; // Default path
-    let new_stream = UnixStream::connect(socket_path)
+    let socket_path = discover_socket_path();
+    let new_stream = UnixStream::connect(&socket_path)
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to connect for command: {}", e),

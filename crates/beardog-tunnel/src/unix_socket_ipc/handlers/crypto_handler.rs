@@ -906,13 +906,22 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 83 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3)
-        // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
-        //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
-        //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 10 genetic (added device enrollment!)
-        //           + 8 semantic aliases + 9 beardog.crypto.* (Songbird Onion Service)
-        //           + 2 Tor v3 (derive_onion_address, generate_onion_identity)
-        assert_eq!(methods.len(), 83);
+        // Should have 85 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3)
+        // Breakdown (Feb 2026 - Deep Debt Evolution):
+        //   - 3 Ed25519 (generate, sign, verify)
+        //   - 4 ECDSA (P-256 + P-384 sign/verify)
+        //   - 4 RSA (PKCS1 + PSS sign/verify)
+        //   - 6 key exchange (X25519 x2, ECDH x4)
+        //   - 6 AEAD (ChaCha20 x2, AES-GCM x4)
+        //   - 11 hash (blake3, sha256, sha384, sha512, sha1, sha3_256, hash_for_cipher + hmac variants + hmac_blake3)
+        //   - 6 password (argon2id x2, pbkdf2, bcrypt x2, scrypt)
+        //   - 6 TLS 1.3 (derive_secrets, derive_handshake_secrets, derive_application_secrets, compute_finished_verify_data, sign_handshake, verify_certificate)
+        //   - 9 TLS 1.2 semantic (ecdhe x4, aead x4, tls12_prf)
+        //   - 10 genetic (derive_lineage_key, mix_entropy, verify_lineage, generate_lineage_proof, challenge x3, device x3)
+        //   - 8 semantic aliases (hash, hmac, sign, verify, encrypt, decrypt, generate_keypair, derive_secret)
+        //   - 10 beardog.crypto.* (Songbird Onion Service)
+        //   - 2 Tor v3 (derive_onion_address, generate_onion_identity)
+        assert_eq!(methods.len(), 85);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -989,8 +998,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            83,
-            "Should have exactly 83 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 - Feb 7, 2026)"
+            85,
+            "Should have exactly 85 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 - Feb 2026 Deep Debt Evolution)"
         );
     }
 }

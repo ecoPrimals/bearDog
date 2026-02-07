@@ -122,14 +122,15 @@ mod tests {
         assert_ne!(encrypted, data.to_vec());
     }
 
-    /// Test 9: ChaCha20 reversibility (XOR twice returns original)
+    /// Test 9: ChaCha20 reversibility (encrypt then decrypt returns original)
     #[test]
     fn test_safe_chacha20_reversibility() {
         let config = SafeCryptoConfig::default();
         let mut engine = SafeCryptoEngine::new(config);
 
         let original = b"test data for encryption";
-        let key = b"key";
+        // ChaCha20 requires 32-byte key
+        let key = b"01234567890123456789012345678901"; // 32 bytes
 
         let encrypted = engine.safe_chacha20(original, key).unwrap();
         let decrypted = engine.safe_chacha20(&encrypted, key).unwrap();
@@ -144,7 +145,7 @@ mod tests {
         let mut engine = SafeCryptoEngine::new(config);
 
         let data = b"";
-        let key = b"key";
+        let key = b"01234567890123456789012345678901"; // 32 bytes
 
         let result = engine.safe_chacha20(data, key).unwrap();
         assert!(result.is_empty());
@@ -157,7 +158,7 @@ mod tests {
         let mut engine = SafeCryptoEngine::new(config);
 
         let large_data = vec![1u8; 50_000];
-        let key = b"key";
+        let key = b"01234567890123456789012345678901"; // 32 bytes
 
         let encrypted = engine.safe_chacha20(&large_data, key).unwrap();
         assert_eq!(encrypted.len(), large_data.len());
@@ -171,16 +172,30 @@ mod tests {
     fn test_stats_tracking() {
         let config = SafeCryptoConfig::default();
         let mut engine = SafeCryptoEngine::new(config);
+        let key = b"01234567890123456789012345678901"; // 32 bytes
 
         engine.safe_hash(b"test1").unwrap();
         engine.safe_hash(b"test2").unwrap();
-        engine.safe_chacha20(b"data", b"key").unwrap();
+        engine.safe_chacha20(b"data", key).unwrap();
 
         let stats = engine.get_stats();
         assert_eq!(stats.get("operations").unwrap(), "3");
 
         let bytes_processed: u64 = stats.get("bytes_processed").unwrap().parse().unwrap();
         assert_eq!(bytes_processed, 5 + 5 + 4); // test1 + test2 + data
+    }
+
+    /// Test: ChaCha20 rejects invalid key length
+    #[test]
+    fn test_safe_chacha20_invalid_key_length() {
+        let config = SafeCryptoConfig::default();
+        let mut engine = SafeCryptoEngine::new(config);
+
+        let data = b"test data";
+        let short_key = b"too_short"; // Only 9 bytes
+
+        let result = engine.safe_chacha20(data, short_key);
+        assert!(result.is_err());
     }
 
     /// Test 13: Default config values
@@ -247,7 +262,7 @@ mod tests {
         let mut engine = SafeCryptoEngine::new(config);
 
         let binary_data = vec![0xFF, 0x00, 0xAB, 0xCD];
-        let key = b"binary_key";
+        let key = b"01234567890123456789012345678901"; // 32 bytes
 
         let encrypted = engine.safe_chacha20(&binary_data, key).unwrap();
         assert_eq!(encrypted.len(), binary_data.len());

@@ -13,6 +13,14 @@ use async_trait::async_trait;
 use serde_json::{json, Value};
 use std::sync::Arc;
 
+/// Get the primal name using self-knowledge pattern.
+/// Uses PRIMAL_NAME or BEARDOG_NAME env var, falls back to "beardog".
+fn get_primal_name() -> String {
+    std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string())
+}
+
 /// Handler for primal introspection methods
 pub struct IntrospectionHandler {
     /// Reference to handler registry for method listing
@@ -57,7 +65,7 @@ impl IntrospectionHandler {
     /// - Protocol version
     async fn handle_primal_info(&self) -> Result<Value, String> {
         Ok(json!({
-            "name": "beardog",
+            "name": get_primal_name(),
             "version": env!("CARGO_PKG_VERSION"),
             "description": "Cryptographic heart of ecoPrimals - Pure Rust crypto service",
             "capabilities": [

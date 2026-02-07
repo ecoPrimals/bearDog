@@ -180,6 +180,9 @@ pub struct ThreatTrend {
 
     /// Trend direction
     pub trend_direction: TrendDirection,
+
+    /// Last updated timestamp
+    pub last_updated: DateTime<Utc>,
 }
 
 impl Default for ThreatTrend {
@@ -189,6 +192,7 @@ impl Default for ThreatTrend {
             severity_distribution: HashMap::with_capacity(16),
             time_period: "24h".to_string(),
             trend_direction: TrendDirection::Stable,
+            last_updated: Utc::now(),
         }
     }
 }
@@ -201,6 +205,7 @@ impl ThreatTrend {
             severity_distribution: HashMap::with_capacity(16),
             time_period: "24h".to_string(),
             trend_direction: TrendDirection::Stable,
+            last_updated: Utc::now(),
         }
     }
 
@@ -218,9 +223,15 @@ impl ThreatTrend {
         (*count as f64 / self.threat_count as f64) * 100.0
     }
 
-    /// Check if trend is recent
-    pub fn is_recent(&self, _minutes: i64) -> bool {
-        true // Placeholder - always consider recent for now
+    /// Check if trend is recent (within specified minutes)
+    pub fn is_recent(&self, minutes: i64) -> bool {
+        let cutoff = Utc::now() - chrono::Duration::minutes(minutes);
+        self.last_updated > cutoff
+    }
+
+    /// Update the last_updated timestamp to now
+    pub fn touch(&mut self) {
+        self.last_updated = Utc::now();
     }
 }
 

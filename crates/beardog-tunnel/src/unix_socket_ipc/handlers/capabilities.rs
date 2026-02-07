@@ -10,6 +10,14 @@ use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tracing::info;
 
+/// Get the primal name using self-knowledge pattern.
+/// Uses PRIMAL_NAME or BEARDOG_NAME env var, falls back to "beardog".
+fn get_primal_name() -> String {
+    std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string())
+}
+
 /// Handler for capabilities and identity methods
 ///
 /// Supports:
@@ -66,7 +74,7 @@ impl CapabilitiesHandler {
         info!("🎯 Capabilities requested - exposing our capabilities");
 
         Ok(serde_json::json!({
-            "primal": "beardog",
+            "primal": get_primal_name(),
             "family_id": family_id,
             "node_id": node_id,
             "provided_capabilities": [

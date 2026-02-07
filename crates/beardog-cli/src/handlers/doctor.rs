@@ -7,6 +7,21 @@ use beardog_errors::BearDogError;
 use serde_json::json;
 use tracing::info;
 
+/// Discover socket path using self-knowledge pattern.
+fn discover_socket_path() -> String {
+    // Check environment variable first
+    if let Ok(path) = std::env::var("BEARDOG_SOCKET") {
+        return path;
+    }
+
+    // Use primal name pattern
+    let primal_name = std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string());
+
+    format!("/tmp/{}.sock", primal_name)
+}
+
 /// Handle doctor command - health diagnostics
 pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
     info!("🩺 BearDog Doctor - Health Diagnostics");
@@ -168,12 +183,12 @@ async fn check_hsm() -> HealthCheck {
 }
 
 async fn check_server_connectivity() -> HealthCheck {
-    // Check if server is running
-    let socket_path = "/tmp/beardog.sock";
+    // Check if server is running using discovered socket path
+    let socket_path = discover_socket_path();
 
-    if std::path::Path::new(socket_path).exists() {
+    if std::path::Path::new(&socket_path).exists() {
         // Try to connect
-        match tokio::net::UnixStream::connect(socket_path).await {
+        match tokio::net::UnixStream::connect(&socket_path).await {
             Ok(_) => HealthCheck {
                 name: "Server Connectivity".to_string(),
                 healthy: true,
@@ -192,7 +207,10 @@ async fn check_server_connectivity() -> HealthCheck {
             name: "Server Connectivity".to_string(),
             healthy: true,
             message: "Server not running (expected in CLI mode)".to_string(),
-            details: Some("Use 'beardog server' to start server mode".to_string()),
+            details: Some(format!(
+                "Use 'beardog server' to start. Socket path: {}",
+                socket_path
+            )),
         }
     }
 }
