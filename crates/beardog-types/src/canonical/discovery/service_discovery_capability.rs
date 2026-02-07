@@ -922,31 +922,61 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
     }
 }
 
-// Detection functions (to be implemented in future)
+// ============================================================================
+// Detection functions - Phase 2 Implementation Stubs
+// ============================================================================
+// These functions will auto-detect available discovery backends.
+// Currently stubbed out; implementation tracking:
+// - Kubernetes: Check KUBERNETES_SERVICE_HOST, service account token
+// - Consul: Check CONSUL_HTTP_ADDR, local agent at 127.0.0.1:8500
+// - etcd: Check ETCD_ENDPOINTS, standard locations
+// ============================================================================
+
+/// Auto-detect Kubernetes availability
+///
+/// # Phase 2 Implementation
+///
+/// Will check for:
+/// - KUBERNETES_SERVICE_HOST environment variable
+/// - Service account token at /var/run/secrets/kubernetes.io/
+/// - Accessible API server endpoint
 #[allow(dead_code)]
 async fn detect_kubernetes() -> Result<KubernetesDiscovery, DiscoveryError> {
-    // Check for K8s service account, env vars, etc.
     Err(DiscoveryError::BackendUnavailable {
         provider: "kubernetes".to_string(),
-        reason: "Not in Kubernetes cluster".to_string(),
+        reason: "Kubernetes auto-detection not yet implemented (Phase 2)".to_string(),
     })
 }
 
+/// Auto-detect Consul availability
+///
+/// # Phase 2 Implementation
+///
+/// Will check for:
+/// - CONSUL_HTTP_ADDR environment variable
+/// - Local agent at 127.0.0.1:8500
+/// - DNS-based agent discovery
 #[allow(dead_code)]
 async fn detect_consul() -> Result<ConsulDiscovery, DiscoveryError> {
-    // Check for Consul agent at standard locations
     Err(DiscoveryError::BackendUnavailable {
         provider: "consul".to_string(),
-        reason: "Consul not available".to_string(),
+        reason: "Consul auto-detection not yet implemented (Phase 2)".to_string(),
     })
 }
 
+/// Auto-detect etcd availability
+///
+/// # Phase 2 Implementation
+///
+/// Will check for:
+/// - ETCD_ENDPOINTS environment variable
+/// - Standard etcd ports (2379, 4001)
+/// - Cluster member discovery
 #[allow(dead_code)]
 async fn detect_etcd() -> Result<EtcdDiscovery, DiscoveryError> {
-    // Check for etcd at standard locations
     Err(DiscoveryError::BackendUnavailable {
         provider: "etcd".to_string(),
-        reason: "etcd not available".to_string(),
+        reason: "etcd auto-detection not yet implemented (Phase 2)".to_string(),
     })
 }
 

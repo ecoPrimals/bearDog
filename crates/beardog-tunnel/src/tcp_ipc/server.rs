@@ -145,7 +145,9 @@ impl TcpIpcServer {
                             // Serialization of json! macro is infallible, but handle gracefully
                             if let Ok(response) = serde_json::to_string(&error_response) {
                                 let response = response + "\n";
-                                writer.write_all(response.as_bytes()).await.ok();
+                                if let Err(e) = writer.write_all(response.as_bytes()).await {
+                                    warn!("Failed to write error response to client: {}", e);
+                                }
                             }
                             continue;
                         }
