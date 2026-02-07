@@ -109,13 +109,22 @@ pub struct PrimalResponse {
 #[async_trait::async_trait]
 pub trait PrimalDiscoveryClient: Send + Sync + std::fmt::Debug {
     /// Discover primals with specific capabilities
-    fn discover_primals(
+    ///
+    /// # Async Support
+    ///
+    /// This method is now async to support proper network/IPC operations.
+    /// Implementations should use async runtime (tokio) for I/O operations.
+    async fn discover_primals(
         &self,
         capabilities: Vec<UniversalCapabilityType>,
     ) -> Result<Vec<UniversalServiceDescriptor>>;
 
     /// Send request to primal with capability
-    fn send_request(
+    ///
+    /// # Async Support
+    ///
+    /// This method is now async to support proper HTTP/IPC operations.
+    async fn send_request(
         &self,
         service: &UniversalServiceDescriptor,
         request: PrimalRequest,

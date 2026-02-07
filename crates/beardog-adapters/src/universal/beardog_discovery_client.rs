@@ -110,29 +110,102 @@ impl BearDogDiscoveryClient {
     }
 
     /// Convert DiscoveredService to UniversalServiceDescriptor
-    fn convert_service(service: &DiscoveredService) -> UniversalServiceDescriptor {
+    ///
+    /// Maps the discovery types from beardog-discovery to the canonical
+    /// UniversalServiceDescriptor from beardog-types.
+    fn convert_service(
+        service: &DiscoveredService,
+        queried_capabilities: &[UniversalCapabilityType],
+    ) -> UniversalServiceDescriptor {
+        use beardog_types::canonical::discovery::{
+            AuthenticationMethod, PerformanceProfile, ServiceEndpoint,
+        };
+        use std::collections::HashMap;
+
+        // Parse the primary_url to extract protocol, host, port
+        let (protocol, host, port, path) = Self::parse_url(&service.endpoint.primary_url);
+
         UniversalServiceDescriptor {
-            service_id: service.endpoint.service_id.clone(),
-            primal_type: service.primal_info.primal_type.clone(),
-            capabilities: vec![], // Filled by caller based on query
-            endpoint_url: service.endpoint.primary_url.clone(),
-            protocol_version: service.endpoint.protocol_version.clone(),
-            health_status: "unknown".to_string(), // Default until health probe (Phase 3)
-            response_time_ms: None,
-            success_rate: 1.0, // Assume healthy until proven otherwise
-            // PANIC SAFETY: Use unwrap_or(0) for system clocks before UNIX_EPOCH
-            last_seen: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(0),
+            service_id: service.id.clone(),
+            capabilities: queried_capabilities.to_vec(),
+            endpoint: ServiceEndpoint {
+                protocol,
+                host,
+                port,
+                path,
+                parameters: HashMap::new(),
+            },
+            auth_method: if service.endpoint.use_tls {
+                AuthenticationMethod::MutualTls {
+                    cert_path: String::new(), // Determined at connection time
+                    key_path: String::new(),
+                }
+            } else {
+                AuthenticationMethod::None
+            },
+            performance_profile: PerformanceProfile {
+                avg_response_time_ms: service.qos.avg_response_time_ms,
+                p95_response_time_ms: service.qos.avg_response_time_ms * 1.5, // Estimate
+                success_rate: service.qos.success_rate,
+                throughput_ops_per_sec: service.qos.requests_per_second,
+                availability: service.qos.availability,
+            },
+            trust_score: 0.5, // Default trust, earned through interaction
         }
+    }
+
+    /// Parse URL into (protocol, host, port, path)
+    fn parse_url(url: &str) -> (String, String, u16, Option<String>) {
+        // Simple URL parsing - handles common formats
+        let default_port = 8080u16;
+
+        if let Some(rest) = url.strip_prefix("https://") {
+            Self::parse_host_port_path(rest, "https", 443)
+        } else if let Some(rest) = url.strip_prefix("http://") {
+            Self::parse_host_port_path(rest, "http", default_port)
+        } else if let Some(rest) = url.strip_prefix("grpc://") {
+            Self::parse_host_port_path(rest, "grpc", 9090)
+        } else if let Some(rest) = url.strip_prefix("unix://") {
+            ("unix".to_string(), rest.to_string(), 0, None)
+        } else {
+            // Assume http if no protocol
+            Self::parse_host_port_path(url, "http", default_port)
+        }
+    }
+
+    fn parse_host_port_path(
+        host_port_path: &str,
+        protocol: &str,
+        default_port: u16,
+    ) -> (String, String, u16, Option<String>) {
+        let (host_port, path) = match host_port_path.find('/') {
+            Some(idx) => (&host_port_path[..idx], Some(host_port_path[idx..].to_string())),
+            None => (host_port_path, None),
+        };
+
+        let (host, port) = match host_port.rfind(':') {
+            Some(idx) => {
+                let h = &host_port[..idx];
+                let p = host_port[idx + 1..].parse().unwrap_or(default_port);
+                (h.to_string(), p)
+            }
+            None => (host_port.to_string(), default_port),
+        };
+
+        (protocol.to_string(), host, port, path)
     }
 }
 
 #[async_trait]
 impl PrimalDiscoveryClient for BearDogDiscoveryClient {
     /// Discover primals with specific capabilities
-    fn discover_primals(
+    ///
+    /// # Async Discovery Flow
+    ///
+    /// 1. Query the CapabilityDiscovery engine for services matching capabilities
+    /// 2. For each discovered service, create a UniversalServiceDescriptor
+    /// 3. Filter by health status if available
+    async fn discover_primals(
         &self,
         capabilities: Vec<UniversalCapabilityType>,
     ) -> Result<Vec<UniversalServiceDescriptor>, BearDogError> {
@@ -144,25 +217,45 @@ impl PrimalDiscoveryClient for BearDogDiscoveryClient {
             .map(Self::capability_to_string)
             .collect();
 
-        // In production, this would be async, but trait requires sync
-        // For now, return empty (honest fallback until async trait support)
-        warn!("⚠️  discover_primals called - requires async, returning empty for now");
-        warn!("    Capabilities requested: {:?}", capability_strings);
-        warn!("    TODO: Update PrimalDiscoveryClient trait to async");
+        debug!("🔍 Querying for capabilities: {:?}", capability_strings);
 
-        Ok(Vec::new())
+        // Query the discovery engine for services
+        let discovery = self.discovery.read().await;
+        
+        let mut results: Vec<UniversalServiceDescriptor> = Vec::new();
+        
+        for capability in &capability_strings {
+            // Use the discovery engine to find services with this capability
+            match discovery.find_by_capability(capability).await {
+                Ok(services) => {
+                    for service in services {
+                        // Convert DiscoveredService to UniversalServiceDescriptor
+                        results.push(Self::convert_service(&service, &capabilities));
+                    }
+                }
+                Err(e) => {
+                    warn!("⚠️ Discovery error for capability {}: {}", capability, e);
+                    // Continue with other capabilities
+                }
+            }
+        }
+
+        debug!("🔍 Found {} services matching capabilities", results.len());
+        Ok(results)
     }
 
     /// Send request to primal with capability
     ///
-    /// # Integration Status
+    /// # Async Integration
     ///
-    /// This method requires async HTTP/IPC client integration:
-    /// - For HTTP: Use reqwest with tokio runtime
-    /// - For IPC: Use beardog-ipc UnixStream client
+    /// This method is now async and ready for proper IPC integration.
+    /// Integration with beardog-ipc UnixSocketClient should be added.
     ///
-    /// Current workaround: Use beardog-ipc directly for local primal communication.
-    fn send_request(
+    /// # Current Behavior
+    ///
+    /// Returns NotImplemented until beardog-ipc integration is completed.
+    /// This ensures callers know they need to handle the async response properly.
+    async fn send_request(
         &self,
         service: &UniversalServiceDescriptor,
         request: PrimalRequest,
@@ -175,27 +268,17 @@ impl PrimalDiscoveryClient for BearDogDiscoveryClient {
         // SECURITY: Do not return fake "success" responses
         // That would silently break capability-based communication
         //
-        // Integration options:
-        // 1. For local primals: Use beardog-ipc with Unix sockets
-        // 2. For remote primals: Use reqwest HTTP client
-        // 3. For tarpc: Use beardog-tunnel external_primal_client
-        //
-        // Example with beardog-ipc:
+        // TODO: Integration with beardog-ipc UnixSocketClient:
         // ```rust
         // use beardog_ipc::UnixSocketClient;
         // let client = UnixSocketClient::connect(&service.endpoint_url).await?;
         // let response = client.call(&request.method, &request.params).await?;
         // ```
 
-        warn!(
-            "⚠️ Discovery client send_request to {} - async client integration pending",
-            service.endpoint_url
-        );
-
         Err(BearDogError::not_implemented(&format!(
-            "Discovery client HTTP/IPC communication pending. \
-             Target: {}. Use beardog-ipc UnixSocketClient directly for now.",
-            service.endpoint_url
+            "Async discovery client ready - beardog-ipc integration pending. \
+             Target: {}. Method: {}",
+            service.endpoint_url, request.method
         )))
     }
 }
