@@ -527,8 +527,51 @@ impl HsmManager {
     /// * `HsmPerformanceTracker` - Detailed performance metrics
     /// * Provider statistics available through performance tracking
     pub fn get_routing_metrics(&self) -> std::collections::HashMap<String, u64> {
-        // Stub implementation
-        std::collections::HashMap::new()
+        // Use tokio's block_in_place to get async metrics synchronously
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                let metrics = self.performance_tracker.get_all_metrics().await;
+                let mut result = std::collections::HashMap::new();
+
+                // Add summary metrics
+                result.insert("total_providers".to_string(), metrics.len() as u64);
+
+                let mut total_ops: u64 = 0;
+                let mut total_success: u64 = 0;
+                let mut total_failed: u64 = 0;
+
+                // Add per-provider metrics
+                for (provider_id, op_metrics) in metrics.iter() {
+                    result.insert(
+                        format!("{}_total_ops", provider_id),
+                        op_metrics.total_operations,
+                    );
+                    result.insert(
+                        format!("{}_success_ops", provider_id),
+                        op_metrics.successful_operations,
+                    );
+                    result.insert(
+                        format!("{}_failed_ops", provider_id),
+                        op_metrics.failed_operations,
+                    );
+                    result.insert(
+                        format!("{}_avg_latency_ms", provider_id),
+                        op_metrics.average_latency_ms as u64,
+                    );
+
+                    total_ops += op_metrics.total_operations;
+                    total_success += op_metrics.successful_operations;
+                    total_failed += op_metrics.failed_operations;
+                }
+
+                // Add aggregate metrics
+                result.insert("total_operations".to_string(), total_ops);
+                result.insert("total_success".to_string(), total_success);
+                result.insert("total_failed".to_string(), total_failed);
+
+                result
+            })
+        })
     }
 
     /// Generate a new cryptographic key

@@ -429,30 +429,38 @@ impl ExternalPrimalConnection for TarpcPrimalConnection {
             stats.bytes_sent += request.len() as u64;
         }
 
-        // TODO: Implement actual tarpc request
-        // For now, return a placeholder response
-        let response = vec![0u8; 32];
-
-        // Update response stats
-        {
-            let mut stats = self.stats.blocking_write();
-            stats.responses_received += 1;
-            stats.bytes_received += response.len() as u64;
-        }
-
-        debug!(
-            "📥 Received response from {} ({} bytes)",
-            self.endpoint,
-            response.len()
+        // External primal communication requires:
+        // 1. Shared tarpc service definition between primals
+        // 2. Socket/network path discovery via beardog-discovery
+        // 3. TLS mutual authentication via genetic lineage
+        //
+        // Current Status: Integration pending
+        // - beardog-discovery crate ready (45 tests pass)
+        // - beardog-ipc/tarpc_client.rs has connection infrastructure
+        // - Needs service definition and discovery wiring
+        //
+        // For now, return error to prevent silent failures in production
+        warn!(
+            "⚠️ External primal request to {} - tarpc integration pending",
+            self.endpoint
         );
-        Ok(response)
+
+        Err(BearDogError::not_implemented(
+            "External primal communication via tarpc pending integration. \
+             Use Unix socket IPC or HTTP for now.",
+        ))
     }
 
     fn health_check(&self) -> Result<bool, BearDogError> {
         debug!("🏥 Health checking connection to {}", self.endpoint);
 
-        // TODO: Implement actual health check
-        let is_healthy = true;
+        // Health check would ping the remote primal
+        // For tarpc: send a lightweight status request
+        // For HTTP: HEAD request to /health endpoint
+        // For Unix socket: connect + disconnect test
+        //
+        // Current Status: Returns unhealthy since tarpc not yet wired
+        let is_healthy = false;
 
         {
             let mut status = self.status.blocking_write();
@@ -462,6 +470,11 @@ impl ExternalPrimalConnection for TarpcPrimalConnection {
                 ConnectionStatus::Unhealthy
             };
         }
+
+        warn!(
+            "⚠️ External primal health check for {} - tarpc integration pending",
+            self.endpoint
+        );
 
         Ok(is_healthy)
     }

@@ -537,7 +537,23 @@ impl PrimalDiscovery {
         }
     }
 
-    /// Discover from mDNS (COMPLETE IMPLEMENTATION)
+    /// Discover from mDNS
+    ///
+    /// # Integration Status
+    ///
+    /// The beardog-discovery crate has a complete mDNS implementation (45 tests pass).
+    /// Integration requires:
+    /// 1. Add `beardog-discovery` to beardog-core/Cargo.toml
+    /// 2. Enable the `mdns` feature
+    /// 3. Convert between DiscoveredService and DiscoveredPrimal types
+    ///
+    /// # Current Behavior
+    ///
+    /// - With `mdns` feature: Logs warning, returns empty
+    /// - Without `mdns` feature: Logs warning, returns empty
+    ///
+    /// Production deployments should use Unix socket discovery (via beardog-ipc)
+    /// or HTTP-based service registries until mDNS integration is complete.
     async fn discover_from_mdns(
         &mut self,
         _query: &DiscoveryQuery,
@@ -545,54 +561,37 @@ impl PrimalDiscovery {
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 mDNS discovery for service: {}", service_type);
 
-        // Wire to beardog-discovery crate (production mDNS implementation)
-        // NOTE: beardog-discovery ready (45 tests pass), pending integration wiring
+        // beardog-discovery crate has complete mDNS implementation
+        // Integration pending: add dependency and wire up
+        //
+        // Example usage when wired up:
+        // ```rust
+        // use beardog_discovery::mdns::MdnsDiscovery;
+        //
+        // let mdns = MdnsDiscovery::new()?;
+        // let services = mdns.discover(&capability).await?;
+        //
+        // // Convert DiscoveredService -> DiscoveredPrimal
+        // let primals = services.into_iter()
+        //     .map(|s| DiscoveredPrimal { ... })
+        //     .collect();
+        // ```
+
         #[cfg(feature = "mdns")]
         {
-            warn!("mDNS feature enabled but beardog-discovery crate not yet wired up (integration work pending)");
-            // Future implementation will use:
-            // use beardog_discovery::mdns::MdnsDiscovery;
-
-            // Placeholder implementation - return empty for now
+            warn!(
+                "mDNS discovery requested for '{}' - beardog-discovery integration pending. \
+                 Use Unix socket or HTTP discovery instead.",
+                service_type
+            );
             Ok(Vec::new())
-
-            /* Future implementation:
-            let mdns = MdnsDiscovery::new()
-                .map_err(|e| BearDogError::system(format!("mDNS init failed: {}", e)))?;
-
-            let capability = _query.capabilities.first()
-                .map(|c| format!("{:?}", c))
-                .unwrap_or_else(|| "generic".to_string());
-
-            let discovered = mdns
-                .discover(&capability)
-                .await
-                .map_err(|e| BearDogError::system(format!("mDNS discovery failed: {}", e)))?;
-
-            info!("✅ mDNS discovered {} primals", discovered.len());
-
-            // Convert to DiscoveredPrimal format
-            let primals = discovered
-                .into_iter()
-                .map(|service| DiscoveredPrimal {
-                    name: service.service_id.clone(),
-                    capabilities: vec![capability.clone()],
-                    endpoints: vec![Endpoint {
-                        protocol: Protocol::Http,
-                        address: service.endpoint.primary_url.parse().unwrap(),
-                    }],
-                    trust_score: service.trust_score,
-                    discovered_at: std::time::SystemTime::now(),
-                })
-                .collect();
-
-            Ok(primals)
-            */
         }
 
         #[cfg(not(feature = "mdns"))]
         {
-            warn!("mDNS feature not enabled, returning empty results");
+            debug!(
+                "mDNS feature not enabled. Enable with: cargo build --features mdns"
+            );
             Ok(Vec::new())
         }
     }
