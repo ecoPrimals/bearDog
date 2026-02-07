@@ -1,6 +1,6 @@
 [package]
 name = "beardog-capabilities"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 authors = ["ecoPrimals Team"]
 description = "Capability-based primal interaction framework for BearDog - enabling sovereign service discovery and dynamic capability negotiation"

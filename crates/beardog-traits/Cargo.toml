@@ -1,6 +1,6 @@
 [package]
 name = "beardog-traits"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 authors = [ "BearDog Team <team@beardog.dev>",]
 description = "Unified trait system for BearDog ecosystem - provides common abstractions for security, genetics, monitoring, and performance"

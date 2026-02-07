@@ -1,6 +1,6 @@
 [package]
 name = "beardog-installer"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 authors = ["ecoPrimals Team"]
 description = "Universal genomeBin installer - Pure Rust, async, platform-agnostic"

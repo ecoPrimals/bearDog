@@ -1,6 +1,6 @@
 [package]
 name = "beardog-config"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 authors = ["BearDog Team"]
 description = "Configuration management for BearDog with zero hardcoding"

@@ -1,6 +1,6 @@
 [package]
 name = "beardog-discovery"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 authors = ["BearDog Team"]
 description = "Capability-based service discovery for BearDog - zero hardcoded knowledge"

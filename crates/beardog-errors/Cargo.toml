@@ -1,6 +1,6 @@
 [package]
 name = "beardog-errors"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 description = "Comprehensive error handling for the BearDog distributed security ecosystem"
 license = "AGPL-3.0-only"

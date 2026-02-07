@@ -410,7 +410,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-adapters"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "beardog-config",
@@ -462,7 +462,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-capabilities"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "beardog-errors",
@@ -554,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-config"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "beardog-errors",
  "dirs",
@@ -649,7 +649,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-discovery"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -672,7 +672,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-errors"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "chrono",
  "serde",
@@ -712,7 +712,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-hid"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "beardog-errors",
@@ -724,7 +724,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-installer"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -853,7 +853,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-security"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -929,7 +929,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-traits"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "beardog-errors",
@@ -1056,7 +1056,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-utils"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "beardog-errors",
  "beardog-types",

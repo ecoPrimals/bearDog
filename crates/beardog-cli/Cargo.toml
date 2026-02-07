@@ -27,7 +27,7 @@ workspace = true
 [dependencies]
 argon2.workspace = true
 beardog = { path = "../beardog" }  # For neural_registration module
-beardog-security = { version = "0.1.0", path = "../beardog-security" }
+beardog-security = { path = "../beardog-security" }
 beardog-ipc = { path = "../beardog-ipc" }  # Neural API registration
 chacha20poly1305 = "0.10"
 hkdf = "0.12.4"
