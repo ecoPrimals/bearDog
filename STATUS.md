@@ -89,12 +89,27 @@ Phase 2: Songbird (protocol) → BearDog (ALL crypto) → Tor Network
 - ✅ **McEliece Decapsulation**: Random bytes → Explicit error (was security vulnerability!)
 - ✅ **Discovery Client**: Fake "fallback" success → Proper error with guidance
 
+### Round 4: Dependency Evolution
+- ✅ **Removed Unused**: `cryptoki`, `lettre`, `ctap-hid-fido2` (C/FFI deps, unused)
+- ✅ **Version Alignment**: `mdns-sd` 0.7/0.10 → 0.11 (all crates)
+- ✅ **Version Alignment**: `tokio-tungstenite` 0.20 → 0.24 (workspace)
+- ✅ **Stable Release**: `scrypt` 0.12.0-rc.9 → 0.11 (stable)
+- ✅ **Documentation**: Solo V2 architecture updated (beardog-hid, not ctap-hid-fido2)
+- **Impact**: Cargo.lock reduced ~260 lines (fewer transitive deps)
+
+### Round 5: Config-Based Evolution
+- ✅ **capabilities.rs**: Hardcoded `127.0.0.1` → `BEARDOG_CONFIG.network.api.bind_address`
+- ✅ **multi_transport.rs**: Hardcoded addresses → `BEARDOG_BIND_ADDR` env var discovery
+- ✅ **TLS Config**: Hardcoded `false` → `BEARDOG_CONFIG.network.api.tls_enabled`
+
 ### Audit Results
 | Category | Count | Status |
 |----------|-------|--------|
 | Unsafe Code | 0 | ✅ Zero in production |
-| Production Mocks | 30 identified | 🔧 5 fixed, 25 catalogued |
-| Hardcoded Values | 20+ locations | 🔧 4 fixed, rest documented |
+| Production Mocks | 30 identified | 🔧 7 fixed, 23 catalogued |
+| Hardcoded Values | 20+ locations | 🔧 8 fixed, rest documented |
+| Unused Deps | 3 | ✅ Removed (cryptoki, lettre, ctap-hid-fido2) |
+| RC Versions | 1 | ✅ Fixed (scrypt 0.11 stable) |
 
 ### Method Count Update
 - **Total**: 85 crypto methods (was 83)
