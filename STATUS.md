@@ -25,7 +25,7 @@
 
 **Achievement**: Complete Tor v3 onion address derivation and identity generation for Songbird integration
 
-**New Crypto Methods**:
+**New Crypto Methods (Phase 1 - Complete)**:
 - `beardog.crypto.derive_onion_address` - Derive .onion from Ed25519 public key
 - `beardog.crypto.generate_onion_identity` - Generate complete onion identity (keypair + address)
 
@@ -39,15 +39,34 @@
 
 **Method Count**: 83 crypto methods (up from 81)
 
-**Specification**: `specs/current/security/TOR_CAPABILITY_SPECIFICATION.md`
+### Phase Status
 
-**Integration Architecture**:
-```
-Songbird (protocol) → BearDog (crypto) → Tor Layer (daemon/pure)
-```
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Complete | Identity + basic crypto (BiomeOS testing) |
+| Phase 2 | 📋 Planning | Pure Rust Tor protocol specs |
 
-**Phase 1**: Tor daemon routing, BearDog provides identity keys  
-**Phase 2**: Pure Rust Tor protocol in Songbird, BearDog provides ALL crypto
+### Phase 2 Planning (Pure Rust Tor)
+
+**Planned Methods**:
+- `beardog.crypto.tor_ntor_client_init` - Start ntor handshake
+- `beardog.crypto.tor_ntor_client_finish` - Complete handshake
+- `beardog.crypto.tor_ntor_server_respond` - Server-side ntor
+- `beardog.crypto.tor_cell_encrypt` - Relay cell encryption
+- `beardog.crypto.tor_cell_decrypt` - Relay cell decryption
+- `beardog.crypto.tor_blind_key` - Blinded key derivation
+
+**Specifications**:
+- `specs/current/security/TOR_CAPABILITY_SPECIFICATION.md` - Main spec
+- `specs/current/security/TOR_PHASE2_NTOR_HANDSHAKE.md` - ntor protocol
+- `specs/current/security/TOR_PHASE2_CELL_CRYPTO.md` - Cell encryption
+- `TOR_PHASE2_EVOLUTION.md` - Root tracking document
+
+**Architecture**:
+```
+Phase 1: Songbird → BearDog (identity) → Tor Daemon (routing)
+Phase 2: Songbird (protocol) → BearDog (ALL crypto) → Tor Network
+```
 
 ---
 

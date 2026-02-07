@@ -278,32 +278,43 @@ beardog-cli crypto sign-ed25519 --key-id onion_identity --message "test"
 
 ---
 
-## Future Work
+## Phase 2: Pure Rust Tor (Planning)
 
-### Phase 2 Requirements
+Phase 2 evolves from Tor daemon dependency to **Pure Rust Tor protocol** in Songbird.
 
-When Songbird implements pure Rust Tor, BearDog will need:
+### Phase 2 Specifications
 
-1. **ntor Handshake Support**
-   - Specific HKDF construction for ntor
-   - May require new method: `beardog.crypto.ntor_handshake`
+| Spec | Description | Status |
+|------|-------------|--------|
+| [TOR_PHASE2_NTOR_HANDSHAKE.md](TOR_PHASE2_NTOR_HANDSHAKE.md) | ntor circuit key exchange | Planning |
+| [TOR_PHASE2_CELL_CRYPTO.md](TOR_PHASE2_CELL_CRYPTO.md) | Cell encryption/decryption | Planning |
 
-2. **Cell Digest Computation**
-   - Running digest for RELAY cells
-   - SHA1 (legacy) or SHA3 (modern)
+### Phase 2 Methods (Planned)
 
-3. **Blinded Key Derivation**
-   - For hidden service descriptors
-   - Ed25519 key blinding per spec
+| Method | Purpose | Priority |
+|--------|---------|----------|
+| `beardog.crypto.tor_ntor_client_init` | Start client ntor handshake | P0 |
+| `beardog.crypto.tor_ntor_client_finish` | Complete client handshake | P0 |
+| `beardog.crypto.tor_ntor_server_respond` | Server-side ntor | P0 |
+| `beardog.crypto.tor_cell_encrypt` | Encrypt relay cell | P0 |
+| `beardog.crypto.tor_cell_decrypt` | Decrypt relay cell | P0 |
+| `beardog.crypto.tor_digest_init` | Init running digest | P1 |
+| `beardog.crypto.tor_blind_key` | Blinded key derivation | P1 |
 
 ### Timeline
 
 | Milestone | Target | Dependencies |
 |-----------|--------|--------------|
-| Phase 1 Validation | Feb 2026 | Tor daemon installed |
+| Phase 1 Validation | Feb 2026 | Tor daemon (BiomeOS testing) |
+| ntor Handshake | Q2 2026 | curve25519-dalek |
+| Cell Crypto | Q2 2026 | ntor complete |
 | AES-128-CTR | Q2 2026 | RustCrypto stable |
 | Pure Rust Tor | Q3 2026 | Songbird protocol impl |
 | Post-Quantum Tor | 2027 | Tor spec updates |
+
+### Tracking Document
+
+See [TOR_PHASE2_EVOLUTION.md](../../../TOR_PHASE2_EVOLUTION.md) at repository root.
 
 ---
 
@@ -311,12 +322,18 @@ When Songbird implements pure Rust Tor, BearDog will need:
 
 - [Tor Protocol Specification](https://spec.torproject.org/tor-spec)
 - [Onion Service v3 Specification](https://spec.torproject.org/rend-spec-v3)
+- [ntor Handshake Paper](https://www.cypherpunks.ca/~iang/pubs/ntor.pdf)
 - [BearDog Crypto API](../../docs/BEARDOG_RPC_API.md)
 - [Songbird Integration](../otherTeams/SONGBIRD_INTEGRATION.md)
 
 ---
 
 ## Changelog
+
+### v1.1.0 (February 7, 2026)
+- Added Phase 2 specification links
+- Added planned methods table
+- Added tracking document reference
 
 ### v1.0.0 (February 7, 2026)
 - Initial specification
