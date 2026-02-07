@@ -69,9 +69,31 @@ impl Default for MultiTransportConfig {
         let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
             .unwrap_or_else(|_| "127.0.0.1".to_string());
         
+        // Safe address parsing with fallback to known-good defaults
+        // This prevents panics from malformed BEARDOG_BIND_ADDR values
+        let tarpc_addr = format!("{}:9901", bind_addr)
+            .parse()
+            .unwrap_or_else(|_| {
+                tracing::warn!(
+                    "Failed to parse tarpc address '{}:9901', using 127.0.0.1:9901",
+                    bind_addr
+                );
+                "127.0.0.1:9901".parse().expect("hardcoded address is valid")
+            });
+        
+        let jsonrpc_addr = format!("{}:9900", bind_addr)
+            .parse()
+            .unwrap_or_else(|_| {
+                tracing::warn!(
+                    "Failed to parse jsonrpc address '{}:9900', using 127.0.0.1:9900",
+                    bind_addr
+                );
+                "127.0.0.1:9900".parse().expect("hardcoded address is valid")
+            });
+        
         Self {
-            tarpc_addr: format!("{}:9901", bind_addr).parse().unwrap(),
-            jsonrpc_addr: format!("{}:9900", bind_addr).parse().unwrap(),
+            tarpc_addr,
+            jsonrpc_addr,
             enable_tarpc: true,
             enable_jsonrpc: true,
             shutdown_timeout: Duration::from_secs(30),
@@ -115,15 +137,42 @@ impl MultiTransportConfig {
 
     /// Create from router config and base port
     ///
-    /// Uses config-based bind address with self-knowledge pattern
+    /// Uses config-based bind address with self-knowledge pattern.
+    /// Falls back to localhost if the provided address is invalid.
     pub fn from_router_config(router: &RouterConfig, base_port: u16) -> Self {
         // Self-knowledge: discover bind address from config or environment
         let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
             .unwrap_or_else(|_| "127.0.0.1".to_string());
         
+        // Safe address parsing with fallback - prevents panics from invalid env vars
+        let tarpc_port = base_port.saturating_add(1);
+        let tarpc_addr = format!("{}:{}", bind_addr, tarpc_port)
+            .parse()
+            .unwrap_or_else(|_| {
+                tracing::warn!(
+                    "Failed to parse tarpc address '{}:{}', using 127.0.0.1:{}",
+                    bind_addr, tarpc_port, tarpc_port
+                );
+                format!("127.0.0.1:{}", tarpc_port)
+                    .parse()
+                    .expect("hardcoded localhost address is valid")
+            });
+        
+        let jsonrpc_addr = format!("{}:{}", bind_addr, base_port)
+            .parse()
+            .unwrap_or_else(|_| {
+                tracing::warn!(
+                    "Failed to parse jsonrpc address '{}:{}', using 127.0.0.1:{}",
+                    bind_addr, base_port, base_port
+                );
+                format!("127.0.0.1:{}", base_port)
+                    .parse()
+                    .expect("hardcoded localhost address is valid")
+            });
+        
         Self {
-            tarpc_addr: format!("{}:{}", bind_addr, base_port + 1).parse().unwrap(),
-            jsonrpc_addr: format!("{}:{}", bind_addr, base_port).parse().unwrap(),
+            tarpc_addr,
+            jsonrpc_addr,
             enable_tarpc: router.enable_tarpc,
             enable_jsonrpc: router.enable_jsonrpc,
             shutdown_timeout: Duration::from_secs(30),

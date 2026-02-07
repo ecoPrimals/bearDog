@@ -399,7 +399,18 @@ impl PrimalCommunicationAdapter {
 
 impl Default for PrimalCommunicationAdapter {
     fn default() -> Self {
-        Self::new().expect("Failed to create default adapter")
+        // SAFETY: new() only creates a HashMap and default config, which cannot fail.
+        // If it somehow fails, we create a minimal fallback to avoid panicking.
+        Self::new().unwrap_or_else(|e| {
+            tracing::error!(
+                "Unexpected failure creating PrimalCommunicationAdapter: {}. Using minimal fallback.",
+                e
+            );
+            Self {
+                discovered_endpoints: std::collections::HashMap::new(),
+                config: CommunicationConfig::default(),
+            }
+        })
     }
 }
 

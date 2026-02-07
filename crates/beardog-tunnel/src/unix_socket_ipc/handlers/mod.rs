@@ -139,9 +139,21 @@ impl HandlerRegistry {
     /// # Arguments
     ///
     /// * `identity` - Primal identity (family and node) for handlers that need it
+    ///
+    /// # Panics
+    ///
+    /// This function is panic-free under normal operation. The only panic path
+    /// would be if lock acquisition fails during construction, which should never
+    /// happen since we hold the only reference at that point.
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
-        // DEEP DEBT FIX (Feb 2, 2026): Create registry in two phases to avoid blocking_write panic
-        // Phase 1: Create registry with placeholder for introspection
+        // DEEP DEBT FIX (Feb 4, 2026): Two-phase construction for IntrospectionHandler
+        // 
+        // IntrospectionHandler needs a reference to the registry to list available methods.
+        // We solve this with two phases:
+        // 1. Create registry with all handlers except introspection
+        // 2. Create introspection handler with registry reference, then add it
+        
+        // Phase 1: Create registry with initial handlers
         let registry = Arc::new(Self {
             handlers: tokio::sync::RwLock::new(vec![
                 Arc::new(health::HealthHandler),
@@ -158,18 +170,27 @@ impl HandlerRegistry {
         });
 
         // Phase 2: Add introspection handler that references registry
-        // Note: This creates a weak cycle that's acceptable (registry -> introspection -> Arc<registry>)
-        // The introspection handler only reads from registry, doesn't own it exclusively
+        // Note: This creates an Arc cycle (registry -> introspection -> Arc<registry>)
+        // which is intentional - introspection needs to list all methods including itself
         let introspection = Arc::new(introspection::IntrospectionHandler::new(registry.clone()));
 
-        // Add introspection synchronously to the vec (before async runtime starts)
-        // This is safe because we're still in sync context during HandlerRegistry::new()
-        // FIXED: Use try_write() instead of blocking_write() to avoid panic in async context
-        registry
-            .handlers
-            .try_write()
-            .expect("Failed to acquire write lock during initialization (no contention expected)")
-            .push(introspection);
+        // PANIC SAFETY: try_write() with graceful fallback
+        // This should always succeed since we just created the registry and
+        // the only other reference (introspection) hasn't escaped this function yet.
+        // If it somehow fails, we log an error but don't panic.
+        match registry.handlers.try_write() {
+            Ok(mut handlers) => {
+                handlers.push(introspection);
+            }
+            Err(_) => {
+                // This should never happen, but if it does, log and continue
+                // The registry will work but introspection methods won't be available
+                tracing::error!(
+                    "UNEXPECTED: Failed to acquire write lock during HandlerRegistry initialization. \
+                     Introspection handler will not be available. This is a bug."
+                );
+            }
+        }
 
         registry
     }

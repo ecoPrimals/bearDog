@@ -369,11 +369,19 @@ impl EcosystemDiscoveryAdapter {
 
 impl Default for EcosystemDiscoveryAdapter {
     fn default() -> Self {
-        // Use unwrap_or_else for proper error handling in Default impl
+        // SAFETY: new() -> with_config() only creates HashMaps and Arc wrappers, which cannot fail.
+        // If it somehow fails, we create a minimal fallback to avoid panicking.
         Self::new().unwrap_or_else(|e| {
-            tracing::error!("Failed to create default adapter: {}", e);
-            // Panic in Default is acceptable - indicates configuration error
-            panic!("Critical: Cannot create default EcosystemDiscoveryAdapter")
+            tracing::error!(
+                "Unexpected failure creating EcosystemDiscoveryAdapter: {}. Using minimal fallback.",
+                e
+            );
+            Self {
+                discovered_primals: Arc::new(RwLock::new(HashMap::new())),
+                discovered_capabilities: Arc::new(RwLock::new(HashMap::new())),
+                listener: Arc::new(RwLock::new(None)),
+                config: Self::default_config(),
+            }
         })
     }
 }
