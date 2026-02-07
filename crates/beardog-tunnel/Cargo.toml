@@ -91,6 +91,7 @@ ctap-hid-fido2 = { version = "3.5", optional = true }
 beardog-hid = { path = "../beardog-hid", optional = true }
 
 base64 = "0.21"  # Required for Unix socket IPC (evolved from HTTP to pure IPC)
+data-encoding = "2.5"  # Base32 encoding for Tor v3 onion addresses (Feb 7, 2026)
 
 # DEFERRED Phase 7: AES legacy modes - RustCrypto RC version conflicts (like P-521/Ed448)
 # These dependencies were added for Phase 7 but deferred due to RC version incompatibilities.

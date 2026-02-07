@@ -197,6 +197,55 @@ pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, Stri
     }))
 }
 
+/// Handle crypto.ed25519_generate_keypair method
+///
+/// Generates a new Ed25519 keypair for signing/identity.
+/// Used by Songbird's Sovereign Onion Service for identity generation.
+///
+/// # Parameters
+///
+/// - `purpose`: Purpose string (optional, for logging)
+///
+/// # Returns
+///
+/// - `public_key`: Base64-encoded Ed25519 public key (32 bytes)
+/// - `secret_key`: Base64-encoded Ed25519 secret key (32 bytes)
+/// - `algorithm`: "Ed25519"
+pub async fn handle_ed25519_generate_keypair(params: Option<&Value>) -> Result<Value, String> {
+    let purpose = params
+        .and_then(|p| p.get("purpose"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("identity");
+
+    debug!(
+        "🔑 Generating Ed25519 keypair (purpose: {})",
+        purpose
+    );
+
+    // Use ed25519-dalek for key generation
+    use ed25519_dalek::{SigningKey, VerifyingKey};
+
+    // Generate a random 32-byte seed
+    let mut seed_bytes = [0u8; 32];
+    rand::Rng::fill(&mut rand::rngs::OsRng, &mut seed_bytes);
+
+    // Create signing key from the seed
+    let signing_key = SigningKey::from_bytes(&seed_bytes);
+    let verifying_key: VerifyingKey = (&signing_key).into();
+
+    // Encode keys
+    let public_key_b64 = base64::engine::general_purpose::STANDARD.encode(verifying_key.as_bytes());
+    let secret_key_b64 = base64::engine::general_purpose::STANDARD.encode(signing_key.as_bytes());
+
+    info!("✅ Ed25519 keypair generated (purpose: {})", purpose);
+
+    Ok(serde_json::json!({
+        "public_key": public_key_b64,
+        "secret_key": secret_key_b64,
+        "algorithm": "Ed25519",
+    }))
+}
+
 /// Handle crypto.x25519_generate_ephemeral method
 ///
 /// Generates an ephemeral X25519 keypair for key exchange.

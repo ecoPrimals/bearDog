@@ -112,6 +112,7 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_ecdhe_p256_generate,
     handle_ecdhe_p384_compute_shared,
     handle_ecdhe_p384_generate,
+    handle_ed25519_generate_keypair,
     handle_hash_for_cipher,
     handle_hmac_sha256,
     // Asymmetric crypto handlers
@@ -144,6 +145,7 @@ impl MethodHandler for CryptoHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![
             // Core crypto operations (EdDSA)
+            "crypto.ed25519_generate_keypair",
             "crypto.sign_ed25519",
             "crypto.verify_ed25519",
             // ECDSA signature algorithms (TLS 1.3)
@@ -247,6 +249,7 @@ impl MethodHandler for CryptoHandler {
             // Pattern: Same as TLS 1.3 delegation (TRUE PRIMAL compliance)
             // ═══════════════════════════════════════════════════════════════
             "beardog.crypto.sha3_256",               // Onion address derivation (Tor v3)
+            "beardog.crypto.ed25519_generate_keypair", // Onion identity generation
             "beardog.crypto.sign_ed25519",           // Onion identity keys
             "beardog.crypto.verify_ed25519",         // Identity verification
             "beardog.crypto.x25519_generate_ephemeral", // Session key generation
@@ -255,6 +258,9 @@ impl MethodHandler for CryptoHandler {
             "beardog.crypto.chacha20_poly1305_decrypt", // Data decryption
             "beardog.crypto.hmac_sha256",            // HKDF for session keys
             "beardog.crypto.blake3_hash",            // General hashing
+            // Tor v3 Onion Address Operations (Feb 7, 2026)
+            "beardog.crypto.derive_onion_address",   // Tor v3 onion address from Ed25519 pubkey
+            "beardog.crypto.generate_onion_identity", // Generate identity + derive address
         ]
     }
 
@@ -266,8 +272,13 @@ impl MethodHandler for CryptoHandler {
     ) -> Result<serde_json::Value, String> {
         match method {
             // ====================================================================
-            // Core Crypto Operations (8 methods)
+            // Core Crypto Operations (9 methods) - Ed25519 keypair added Feb 6, 2026
             // ====================================================================
+            "crypto.ed25519_generate_keypair" => {
+                info!("🔑 Crypto: ed25519_generate_keypair (Songbird Onion Identity)");
+                handle_ed25519_generate_keypair(params).await
+            }
+
             "crypto.sign_ed25519" => {
                 info!("✍️  Crypto: sign_ed25519");
                 handle_sign_ed25519(params).await
@@ -823,6 +834,11 @@ impl MethodHandler for CryptoHandler {
                     .map_err(|e| e.to_string())
             }
 
+            "beardog.crypto.ed25519_generate_keypair" => {
+                info!("🧅 Crypto: beardog.crypto.ed25519_generate_keypair (Songbird Onion Identity)");
+                handle_ed25519_generate_keypair(params).await
+            }
+
             "beardog.crypto.sign_ed25519" => {
                 info!("🧅 Crypto: beardog.crypto.sign_ed25519 (Songbird Onion Service)");
                 handle_sign_ed25519(params).await
@@ -863,6 +879,19 @@ impl MethodHandler for CryptoHandler {
                 handle_blake3_hash(params).await
             }
 
+            // Tor v3 Onion Address Operations (Feb 7, 2026)
+            "beardog.crypto.derive_onion_address" => {
+                info!("🧅 Crypto: beardog.crypto.derive_onion_address (Tor v3)");
+                let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+                super::super::crypto_handlers_hashing::handle_derive_onion_address(params_ref)
+                    .map_err(|e| e.to_string())
+            }
+
+            "beardog.crypto.generate_onion_identity" => {
+                info!("🧅 Crypto: beardog.crypto.generate_onion_identity (Tor v3)");
+                super::super::crypto_handlers_hashing::handle_generate_onion_identity(params).await
+            }
+
             _ => Err(format!("Unknown crypto method: {}", method)),
         }
     }
@@ -877,12 +906,13 @@ mod tests {
         let handler = CryptoHandler;
         let methods = handler.methods();
 
-        // Should have 81 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service)
+        // Should have 83 methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3)
         // Breakdown: 2 Ed25519 + 4 ECDSA + 4 RSA + 6 key exchange (X25519 x2, ECDH x4)
         //           + 6 AEAD (ChaCha20 x2, AES-GCM x4) + 11 hash/HMAC (added hash_for_cipher)
         //           + 6 password + 6 TLS 1.3 + 9 TLS 1.2 + 10 genetic (added device enrollment!)
         //           + 8 semantic aliases + 9 beardog.crypto.* (Songbird Onion Service)
-        assert_eq!(methods.len(), 81);
+        //           + 2 Tor v3 (derive_onion_address, generate_onion_identity)
+        assert_eq!(methods.len(), 83);
 
         // Verify all core crypto methods are present
         assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -939,6 +969,7 @@ mod tests {
 
         // Verify beardog.crypto.* namespace (Feb 6, 2026 - Songbird Onion Service)
         assert!(methods.contains(&"beardog.crypto.sha3_256"));
+        assert!(methods.contains(&"beardog.crypto.ed25519_generate_keypair"));
         assert!(methods.contains(&"beardog.crypto.sign_ed25519"));
         assert!(methods.contains(&"beardog.crypto.verify_ed25519"));
         assert!(methods.contains(&"beardog.crypto.x25519_generate_ephemeral"));
@@ -947,6 +978,10 @@ mod tests {
         assert!(methods.contains(&"beardog.crypto.chacha20_poly1305_decrypt"));
         assert!(methods.contains(&"beardog.crypto.hmac_sha256"));
         assert!(methods.contains(&"beardog.crypto.blake3_hash"));
+
+        // Verify Tor v3 methods (Feb 7, 2026 - Phase 1 Tor Integration)
+        assert!(methods.contains(&"beardog.crypto.derive_onion_address"));
+        assert!(methods.contains(&"beardog.crypto.generate_onion_identity"));
     }
 
     #[test]
@@ -954,8 +989,8 @@ mod tests {
         let handler = CryptoHandler;
         assert_eq!(
             handler.methods().len(),
-            81,
-            "Should have exactly 81 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service - Feb 6, 2026)"
+            83,
+            "Should have exactly 83 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 - Feb 7, 2026)"
         );
     }
 }

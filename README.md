@@ -12,7 +12,7 @@
 
 **BearDog** is a world-class cryptographic service provider - the **first true ecoBin** and the **central crypto authority** for the ecoPrimals ecosystem.
 
-**Status**: ✅ **LEGENDARY (99/100)** | **Zero C Dependencies** | 🦀 **Pure Rust HID!** | 🏆 **30+ Corrupted Files Fixed!** (February 4, 2026)
+**Status**: ✅ **LEGENDARY (99/100)** | **Zero C Dependencies** | 🧅 **Tor v3 Onion Crypto!** | 🦀 **Pure Rust HID!** (February 7, 2026)
 
 ---
 
@@ -58,9 +58,10 @@ BearDog provides **secure cryptographic operations** for all primals through the
 | **Signatures** | Ed25519, ECDSA (P-256, P-384), RSA (PKCS#1, PSS) |
 | **Key Exchange** | X25519, ECDHE (P-256, P-384) |
 | **AEAD** | ChaCha20-Poly1305, AES-128-GCM, AES-256-GCM |
-| **Hashing** | BLAKE3, SHA-256, SHA-384, SHA-512, HMAC |
+| **Hashing** | BLAKE3, SHA-256, SHA-384, SHA-512, SHA3-256, HMAC |
 | **KDF** | HKDF (TLS 1.3), TLS 1.2 PRF, PBKDF2, Argon2id |
 | **Certificates** | X.509 generation, parsing, validation |
+| **Tor v3 Onion** | Onion address derivation, identity generation |
 
 ---
 
@@ -178,6 +179,21 @@ BEARDOG_SOCKET=@biomeos_beardog ./beardog server
 ---
 
 ## 🏆 Recent Achievements
+
+### 🧅 Tor v3 Onion Capability (February 7, 2026)
+
+**Achievement**: Complete Tor v3 onion address derivation and identity generation for Songbird integration
+
+**New Crypto Methods**:
+- `beardog.crypto.derive_onion_address` - Derive .onion from Ed25519 public key
+- `beardog.crypto.generate_onion_identity` - Generate complete onion identity (keypair + address)
+
+**Phase 1 (Active)**: Tor daemon routing, BearDog provides identity keys  
+**Phase 2 (Future)**: Pure Rust Tor protocol in Songbird, BearDog provides ALL crypto
+
+**Specification**: `specs/current/security/TOR_CAPABILITY_SPECIFICATION.md`
+
+---
 
 ### 🔧 Massive File Corruption Fix + Self-Knowledge Pattern (February 4, 2026)
 

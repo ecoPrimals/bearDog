@@ -94,37 +94,38 @@ impl SoloV2Provider {
             // Use beardog-hid to discover FIDO2-compliant devices (Pure Rust - ecoBin compliant)
             // This is vendor-agnostic and works with ANY CTAP2/FIDO2 token
 
-            let hid_devices = beardog_hid::discover().map_err(|e| {
+            // Use tokio runtime handle to call async function from sync context
+            let hid_devices = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(beardog_hid::discover())
+            })
+            .map_err(|e| {
                 BearDogError::system(format!("Failed to discover HID devices: {}", e))
             })?;
 
             let mut devices = Vec::new();
 
-            // FIDO2/CTAP2 standard HID usage page and usage
-            const FIDO_USAGE_PAGE: u16 = 0xF1D0;
-            const FIDO_USAGE: u16 = 0x01;
-
             for device in &hid_devices {
-                // Check if device implements FIDO2/CTAP2
-                if device.usage_page == FIDO_USAGE_PAGE && device.usage == FIDO_USAGE {
+                // Check if device is a known FIDO2-compliant device by VID/PID
+                if beardog_hid::types::is_fido2_device(device.vendor_id, device.product_id) {
                     let device_info = SoloV2DeviceInfo {
-                        device_id: device
-                            .serial_number
-                            .clone()
-                            .unwrap_or_else(|| {
-                                format!("{:04x}:{:04x}", device.vendor_id, device.product_id)
-                            }),
-                        product_name: device
-                            .product
-                            .clone()
-                            .unwrap_or_else(|| "Unknown FIDO2 Device".to_string()),
-                        firmware_version: device
-                            .product
-                            .clone()
-                            .unwrap_or_else(|| "unknown".to_string()),
+                        device_id: if device.serial.is_empty() {
+                            format!("{}:{}", device.vendor_id, device.product_id)
+                        } else {
+                            device.serial.clone()
+                        },
+                        product_name: if device.product.is_empty() {
+                            "Unknown FIDO2 Device".to_string()
+                        } else {
+                            device.product.clone()
+                        },
+                        firmware_version: if device.product.is_empty() {
+                            "unknown".to_string()
+                        } else {
+                            device.product.clone()
+                        },
                         is_connected: true,
-                        vendor_id: device.vendor_id,
-                        product_id: device.product_id,
+                        vendor_id: device.vendor_id.0,
+                        product_id: device.product_id.0,
                     };
                     devices.push(device_info);
                 }

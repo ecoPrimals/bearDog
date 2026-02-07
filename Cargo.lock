@@ -1004,6 +1004,7 @@ dependencies = [
  "core-foundation",
  "core-foundation-sys",
  "ctap-hid-fido2",
+ "data-encoding",
  "ecdsa",
  "ed25519-dalek",
  "ed448-goldilocks",

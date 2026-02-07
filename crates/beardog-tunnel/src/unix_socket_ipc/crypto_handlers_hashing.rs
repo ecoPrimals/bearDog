@@ -281,6 +281,162 @@ pub fn handle_sha3_256(params: &Value) -> Result<Value, BearDogError> {
 }
 
 // ============================================================================
+// TOR V3 ONION ADDRESS DERIVATION
+// ============================================================================
+
+/// Handle `beardog.crypto.derive_onion_address` - Tor v3 onion address derivation
+///
+/// Derives a Tor v3 onion address from an Ed25519 public key.
+/// Follows the Tor rend-spec-v3 specification.
+///
+/// **Algorithm**:
+/// ```text
+/// checksum = sha3_256(".onion checksum" || public_key || version)[0:2]
+/// onion_address = base32(public_key || checksum || version).onion
+/// ```
+///
+/// **Input**:
+/// ```json
+/// {
+///   "public_key": "base64_encoded_32_byte_ed25519_public_key"
+/// }
+/// ```
+///
+/// **Output**:
+/// ```json
+/// {
+///   "onion_address": "56char.onion",
+///   "public_key": "base64_encoded_public_key",
+///   "checksum": "hex_encoded_2_byte_checksum",
+///   "version": 3
+/// }
+/// ```
+///
+/// **Reference**: https://spec.torproject.org/rend-spec-v3#encoding-onion-addresses
+pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError> {
+    // Extract public key
+    let pubkey_b64 = params
+        .get("public_key")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'public_key' parameter"))?;
+
+    // Decode public key (must be 32 bytes for Ed25519)
+    let public_key = BASE64
+        .decode(pubkey_b64)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 public_key: {}", e)))?;
+
+    if public_key.len() != 32 {
+        return Err(BearDogError::invalid_input(&format!(
+            "Ed25519 public key must be 32 bytes, got {}",
+            public_key.len()
+        )));
+    }
+
+    // Tor v3 version byte
+    const TOR_V3_VERSION: u8 = 0x03;
+
+    // Compute checksum: SHA3-256(".onion checksum" || pubkey || version)[0:2]
+    let mut hasher = Sha3_256::new();
+    hasher.update(b".onion checksum");
+    hasher.update(&public_key);
+    hasher.update(&[TOR_V3_VERSION]);
+    let hash = hasher.finalize();
+    let checksum = &hash[0..2];
+
+    // Build onion address bytes: pubkey (32) || checksum (2) || version (1) = 35 bytes
+    let mut onion_bytes = Vec::with_capacity(35);
+    onion_bytes.extend_from_slice(&public_key);
+    onion_bytes.extend_from_slice(checksum);
+    onion_bytes.push(TOR_V3_VERSION);
+
+    // Base32 encode (lowercase, no padding)
+    let onion_base32 = data_encoding::BASE32_NOPAD
+        .encode(&onion_bytes)
+        .to_lowercase();
+
+    // Full onion address
+    let onion_address = format!("{}.onion", onion_base32);
+
+    Ok(json!({
+        "onion_address": onion_address,
+        "public_key": pubkey_b64,
+        "checksum": hex::encode(checksum),
+        "version": TOR_V3_VERSION as u32
+    }))
+}
+
+/// Handle `beardog.crypto.generate_onion_identity` - Generate Tor v3 onion identity
+///
+/// Generates a new Ed25519 keypair and derives the corresponding Tor v3 onion address.
+/// This is a convenience method that combines key generation with address derivation.
+///
+/// **Input**:
+/// ```json
+/// {
+///   "purpose": "hidden_service"  // optional, for audit trail
+/// }
+/// ```
+///
+/// **Output**:
+/// ```json
+/// {
+///   "public_key": "base64_encoded_32_byte_public_key",
+///   "secret_key": "base64_encoded_64_byte_secret_key",
+///   "onion_address": "56char.onion",
+///   "version": 3,
+///   "purpose": "hidden_service"
+/// }
+/// ```
+pub async fn handle_generate_onion_identity(
+    params: Option<&Value>,
+) -> Result<Value, String> {
+    use ed25519_dalek::SigningKey;
+    use rand::RngCore;
+
+    // Extract optional purpose
+    let purpose = params
+        .and_then(|p| p.get("purpose"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("hidden_service");
+
+    // Generate Ed25519 keypair using random seed
+    let mut seed = [0u8; 32];
+    rand::thread_rng().fill_bytes(&mut seed);
+    let signing_key = SigningKey::from_bytes(&seed);
+    let verifying_key = signing_key.verifying_key();
+
+    // Get key bytes
+    let secret_bytes = signing_key.to_bytes();
+    let public_bytes = verifying_key.to_bytes();
+
+    // Derive onion address
+    let onion_params = json!({
+        "public_key": BASE64.encode(&public_bytes)
+    });
+    let onion_result = handle_derive_onion_address(&onion_params)
+        .map_err(|e| format!("Failed to derive onion address: {}", e))?;
+
+    let onion_address = onion_result
+        .get("onion_address")
+        .and_then(|v| v.as_str())
+        .ok_or("Failed to get onion address")?;
+
+    // Encode keys
+    // Note: Ed25519 secret key is 32 bytes seed, but some implementations expect 64 bytes (seed + public)
+    let mut full_secret = Vec::with_capacity(64);
+    full_secret.extend_from_slice(&secret_bytes);
+    full_secret.extend_from_slice(&public_bytes);
+
+    Ok(json!({
+        "public_key": BASE64.encode(&public_bytes),
+        "secret_key": BASE64.encode(&full_secret),
+        "onion_address": onion_address,
+        "version": 3,
+        "purpose": purpose
+    }))
+}
+
+// ============================================================================
 // UNIT TESTS
 // ============================================================================
 
@@ -532,5 +688,88 @@ mod tests {
         let sha3 = handle_sha3_256(&json!({"data": &data})).unwrap();
 
         assert_ne!(sha2.get("hash").unwrap(), sha3.get("hash").unwrap());
+    }
+
+    // Tor v3 Onion Address Tests (February 7, 2026)
+
+    #[test]
+    fn test_derive_onion_address_format() {
+        // Test with a known Ed25519 public key (32 bytes)
+        let test_pubkey = [0u8; 32]; // All zeros for test
+        let params = json!({
+            "public_key": BASE64.encode(&test_pubkey)
+        });
+
+        let result = handle_derive_onion_address(&params).unwrap();
+
+        // Verify onion address format
+        let onion_address = result.get("onion_address").unwrap().as_str().unwrap();
+        assert!(onion_address.ends_with(".onion"));
+        assert_eq!(onion_address.len(), 62); // 56 chars + ".onion" (6 chars)
+
+        // Verify version is 3
+        assert_eq!(result.get("version").unwrap().as_u64().unwrap(), 3);
+
+        // Verify checksum is present
+        assert!(result.get("checksum").is_some());
+    }
+
+    #[test]
+    fn test_derive_onion_address_consistency() {
+        // Same public key should always produce same onion address
+        let test_pubkey = [42u8; 32]; // Non-zero for variety
+        let params = json!({
+            "public_key": BASE64.encode(&test_pubkey)
+        });
+
+        let result1 = handle_derive_onion_address(&params).unwrap();
+        let result2 = handle_derive_onion_address(&params).unwrap();
+
+        assert_eq!(
+            result1.get("onion_address").unwrap().as_str().unwrap(),
+            result2.get("onion_address").unwrap().as_str().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_derive_onion_address_invalid_key_length() {
+        // Public key must be exactly 32 bytes
+        let short_key = [0u8; 16];
+        let params = json!({
+            "public_key": BASE64.encode(&short_key)
+        });
+
+        let result = handle_derive_onion_address(&params);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("32 bytes"));
+    }
+
+    #[test]
+    fn test_derive_onion_address_missing_params() {
+        let params = json!({});
+        let result = handle_derive_onion_address(&params);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Missing 'public_key'"));
+    }
+
+    #[test]
+    fn test_derive_onion_address_base32_lowercase() {
+        // Tor v3 addresses use lowercase base32
+        let test_pubkey = [255u8; 32]; // High values
+        let params = json!({
+            "public_key": BASE64.encode(&test_pubkey)
+        });
+
+        let result = handle_derive_onion_address(&params).unwrap();
+        let onion_address = result.get("onion_address").unwrap().as_str().unwrap();
+
+        // Remove ".onion" suffix and verify lowercase
+        let addr_part = &onion_address[..56];
+        assert!(addr_part
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
     }
 }
