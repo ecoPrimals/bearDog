@@ -162,8 +162,13 @@ mod tests {
 
     #[test]
     fn test_xdg_socket_path() {
-        // Set XDG_RUNTIME_DIR
-        std::env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
+        // Use a temp directory we can control (not /run/user which requires permissions)
+        let temp_dir = std::env::temp_dir();
+        let xdg_runtime = temp_dir.join(format!("xdg_test_{}", std::process::id()));
+        std::fs::create_dir_all(&xdg_runtime).ok();
+        
+        // Set XDG_RUNTIME_DIR to our temp directory
+        std::env::set_var("XDG_RUNTIME_DIR", xdg_runtime.to_str().unwrap());
 
         let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
 
@@ -171,12 +176,16 @@ mod tests {
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
-                assert!(path.to_str().unwrap().contains("/run/user/1000/biomeos"));
+                // Should be in XDG_RUNTIME_DIR/biomeos/beardog.sock
+                assert!(path.to_str().unwrap().contains("biomeos"));
                 assert!(path.to_str().unwrap().ends_with("beardog.sock"));
                 println!("✅ XDG-compliant path: {}", path.display());
             }
             _ => panic!("Expected Filesystem endpoint"),
         }
+        
+        // Cleanup
+        std::fs::remove_dir_all(&xdg_runtime).ok();
     }
 
     #[test]

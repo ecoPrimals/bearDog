@@ -125,7 +125,8 @@ async fn test_rfc8448_handshake_key_derivation() {
         "pre_master_secret": BASE64.encode(&ecdh_secret),
         "client_random": BASE64.encode(&client_random),
         "server_random": BASE64.encode(&server_random),
-        "transcript_hash": BASE64.encode(computed_transcript_hash)
+        "transcript_hash": BASE64.encode(computed_transcript_hash),
+        "cipher_suite": 0x1301  // TLS_AES_128_GCM_SHA256 (RFC 8446)
     });
 
     let result = handle_tls_derive_handshake_secrets(Some(&params))
@@ -180,8 +181,9 @@ async fn test_rfc8448_handshake_key_derivation() {
     }
 
     // Derive expected keys from RFC 8448 secrets
-    let expected_client_key = hkdf_expand_label(&expected_client_secret, "key", &[], 32);
-    let expected_server_key = hkdf_expand_label(&expected_server_secret, "key", &[], 32);
+    // Key length is 16 for AES-128-GCM (cipher suite 0x1301)
+    let expected_client_key = hkdf_expand_label(&expected_client_secret, "key", &[], 16);
+    let expected_server_key = hkdf_expand_label(&expected_server_secret, "key", &[], 16);
 
     // ========================================================================
     // Validate Keys
@@ -266,7 +268,8 @@ async fn test_rfc8448_base64_inputs() {
         "pre_master_secret": ecdh_secret_b64,
         "client_random": client_random_b64,
         "server_random": server_random_b64,
-        "transcript_hash": transcript_hash_b64
+        "transcript_hash": transcript_hash_b64,
+        "cipher_suite": 0x1301  // TLS_AES_128_GCM_SHA256 (RFC 8446)
     });
 
     let result = handle_tls_derive_handshake_secrets(Some(&params))

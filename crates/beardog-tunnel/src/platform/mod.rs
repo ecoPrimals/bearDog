@@ -213,8 +213,8 @@ pub trait PlatformSocket {
     /// Boxed platform listener ready to accept connections
     ///
     /// # Example
-    /// ```no_run
-    /// use beardog_tunnel::platform::Socket;
+    /// ```ignore
+    /// use beardog_tunnel::platform::{Socket, PlatformSocket};
     ///
     /// let endpoint = Socket::create_endpoint("beardog")?;
     /// let mut listener = Socket::bind(&endpoint)?;

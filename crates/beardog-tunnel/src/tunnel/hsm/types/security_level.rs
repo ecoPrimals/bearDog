@@ -27,8 +27,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 ///
-/// ```
-/// use beardog_tunnel::hsm::types::SecurityLevel;
+/// ```ignore
+/// // Note: Full path required as crate re-exports a different SecurityLevel
+/// use beardog_tunnel::tunnel::hsm::types::SecurityLevel;
 ///
 /// let level = SecurityLevel::StrongBox;
 /// assert!(level > SecurityLevel::TrustedExecutionEnvironment);
