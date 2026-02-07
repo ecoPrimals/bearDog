@@ -90,19 +90,23 @@ pub use protocol_router::{Protocol, ProtocolCapabilities, ProtocolDetector, Rout
 /// Primal IPC Protocol version
 pub const PROTOCOL_VERSION: &str = "1.0";
 
-/// Default Songbird socket path (fallback only - prefer runtime discovery)
+/// Default discovery socket path (fallback only - prefer runtime discovery)
 ///
 /// EVOLUTION NOTE: This constant exists as a fallback for compatibility.
 /// Modern code should use `discover_ipc_socket()` for runtime discovery.
 /// See: primal_discovery.rs for capability-based discovery pattern.
-pub const SONGBIRD_SOCKET: &str = "/primal/songbird";
+///
+/// SELF-KNOWLEDGE PRINCIPLE (Feb 4, 2026): Primals should only know themselves.
+/// The fallback uses a generic "/primal/discovery" endpoint that any discovery
+/// service can bind to, rather than hardcoding a specific primal name.
+pub const DISCOVERY_SOCKET_FALLBACK: &str = "/primal/discovery";
 
 /// Discover IPC socket path via capability-based discovery
 ///
-/// Priority order (zero hardcoding principle):
-/// 1. Environment variable: `IPC_SOCKET` or `SONGBIRD_SOCKET`
+/// Priority order (zero hardcoding + self-knowledge principles):
+/// 1. Environment variable: `IPC_SOCKET` or `DISCOVERY_SOCKET`
 /// 2. Discovery via beardog-discovery (when available)
-/// 3. Fallback: `/primal/songbird` (compatibility)
+/// 3. Fallback: `/primal/discovery` (generic endpoint any discovery service can bind)
 ///
 /// # Example
 /// ```no_run
@@ -121,8 +125,8 @@ pub async fn discover_ipc_socket() -> String {
         return socket;
     }
 
-    if let Ok(socket) = std::env::var("SONGBIRD_SOCKET") {
-        tracing::info!("📡 IPC socket from SONGBIRD_SOCKET env: {}", socket);
+    if let Ok(socket) = std::env::var("DISCOVERY_SOCKET") {
+        tracing::info!("📡 IPC socket from DISCOVERY_SOCKET env: {}", socket);
         return socket;
     }
 
@@ -130,9 +134,11 @@ pub async fn discover_ipc_socket() -> String {
     // This will use capability-based discovery to find IPC services dynamically
     // Example: let ipc_services = beardog_discovery::discover_capability("ipc").await?;
 
-    // 3. Fallback (compatibility - will be removed when discovery is complete)
-    tracing::debug!("📡 IPC socket using fallback: {}", SONGBIRD_SOCKET);
-    SONGBIRD_SOCKET.to_string()
+    // 3. Fallback (generic discovery endpoint - any primal can bind here)
+    // This follows the self-knowledge principle: we don't hardcode "songbird",
+    // we use a generic endpoint any discovery service can claim.
+    tracing::debug!("📡 IPC socket using fallback: {}", DISCOVERY_SOCKET_FALLBACK);
+    DISCOVERY_SOCKET_FALLBACK.to_string()
 }
 
 /// Default heartbeat interval (30 seconds)

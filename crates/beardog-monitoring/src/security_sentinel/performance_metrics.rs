@@ -368,27 +368,63 @@ impl PerformanceMetricsCollector {
         *current = thresholds;
     }
 
-    // Private collection methods (simulated for now)
+    // Private collection methods
+    //
+    // DEEP DEBT EVOLUTION (Feb 4, 2026):
+    // These methods previously returned hardcoded fake values (45.0, 62.0, etc.)
+    // which silently gave incorrect metrics in production.
+    // 
+    // Now they return explicit NotImplemented errors to be honest about status.
+    // Real implementations require platform-specific system APIs:
+    // - Linux: /proc/stat, /proc/meminfo, sysinfo()
+    // - macOS: host_processor_info(), host_statistics64()
+    // - Windows: GetSystemTimes(), GlobalMemoryStatusEx()
+    //
+    // Phase 2 TODO: Implement using sysinfo crate (pure Rust, cross-platform)
 
     fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
-        // In production, this would use system APIs
-        Ok(45.0)
+        // Returns NotImplemented instead of fake value
+        // Phase 2: Use sysinfo::System::cpu_usage()
+        Err(BearDogError::not_implemented(
+            "CPU usage collection not implemented. \
+             Requires sysinfo crate or platform-specific APIs."
+        ))
     }
 
     fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
-        Ok(62.0)
+        // Returns NotImplemented instead of fake value
+        // Phase 2: Use sysinfo::System::used_memory() / total_memory()
+        Err(BearDogError::not_implemented(
+            "Memory usage collection not implemented. \
+             Requires sysinfo crate or platform-specific APIs."
+        ))
     }
 
     fn collect_response_time(&self) -> Result<f64, BearDogError> {
-        Ok(250.0)
+        // Returns NotImplemented instead of fake value
+        // Phase 2: Integrate with request tracing middleware
+        Err(BearDogError::not_implemented(
+            "Response time collection not implemented. \
+             Requires request tracing integration."
+        ))
     }
 
     fn collect_error_rate(&self) -> Result<f64, BearDogError> {
-        Ok(1.5)
+        // Returns NotImplemented instead of fake value
+        // Phase 2: Integrate with error tracking middleware
+        Err(BearDogError::not_implemented(
+            "Error rate collection not implemented. \
+             Requires error tracking integration."
+        ))
     }
 
     fn collect_throughput(&self) -> Result<f64, BearDogError> {
-        Ok(150.0)
+        // Returns NotImplemented instead of fake value
+        // Phase 2: Integrate with request counter middleware
+        Err(BearDogError::not_implemented(
+            "Throughput collection not implemented. \
+             Requires request counter integration."
+        ))
     }
 }
 

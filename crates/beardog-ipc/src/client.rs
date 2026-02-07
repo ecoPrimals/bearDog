@@ -6,7 +6,7 @@ use crate::{
     error::{IpcError, IpcResult},
     protocol::{JsonRpcRequest, JsonRpcResponse},
     types::{Capability, ServiceInfo},
-    SONGBIRD_SOCKET,
+    DISCOVERY_SOCKET_FALLBACK,
 };
 use serde_json::json;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -31,7 +31,7 @@ impl SongbirdClient {
     /// Create a new Songbird client
     pub fn new() -> Self {
         Self {
-            socket_path: SONGBIRD_SOCKET.to_string(),
+            socket_path: DISCOVERY_SOCKET_FALLBACK.to_string(),
             request_id: Arc::new(AtomicU64::new(1)),
             primal_name: Arc::new(RwLock::new(None)),
         }
@@ -320,7 +320,7 @@ mod tests {
     #[test]
     fn test_client_creation() {
         let client = SongbirdClient::new();
-        assert_eq!(client.socket_path, SONGBIRD_SOCKET);
+        assert_eq!(client.socket_path, DISCOVERY_SOCKET_FALLBACK);
     }
 
     #[test]

@@ -468,10 +468,10 @@ impl BeardogBtspProvider {
     ///
     /// Zero hardcoding - everything discovered at runtime!
     ///
-    /// Discovery follows this priority:
+    /// Discovery follows this priority (self-knowledge principle):
     /// 1. Environment variable (DISCOVERY_SOCKET)
     /// 2. Capability registry query
-    /// 3. Primal IPC protocol standard namespace (/primal/songbird)
+    /// 3. Generic Primal IPC discovery endpoint (/primal/discovery)
     /// 4. Local fallback for development
     async fn discover_peer_addresses_via_capability(
         &self,
@@ -541,15 +541,16 @@ impl BeardogBtspProvider {
         Ok(vec![])
     }
 
-    /// Get discovery socket paths with zero hardcoding
+    /// Get discovery socket paths with zero hardcoding + self-knowledge
     ///
     /// Priority:
     /// 1. DISCOVERY_SOCKET environment variable
-    /// 2. Standard Primal IPC namespace (/primal/songbird)
+    /// 2. Generic Primal IPC discovery endpoint (/primal/discovery)
     /// 3. Development fallback (/tmp/beardog-discovery)
     ///
-    /// This implements the zero-hardcoding principle while maintaining
-    /// Primal IPC protocol compliance.
+    /// SELF-KNOWLEDGE PRINCIPLE (Feb 4, 2026): Primals only know themselves.
+    /// Instead of hardcoding "songbird", we use a generic "/primal/discovery"
+    /// endpoint that any discovery service can bind to.
     fn get_discovery_socket_paths() -> Vec<&'static str> {
         // Check environment first (highest priority)
         if let Ok(_custom_socket) = std::env::var("DISCOVERY_SOCKET") {
@@ -558,10 +559,11 @@ impl BeardogBtspProvider {
             // For now, document the pattern
         }
 
-        // Standard Primal IPC protocol namespace (convention, not hardcoding)
+        // Generic Primal IPC protocol namespace (self-knowledge principle)
+        // Any discovery service can bind to /primal/discovery
         // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
         vec![
-            "/primal/songbird",       // Primal IPC protocol standard
+            "/primal/discovery",      // Generic discovery endpoint (any primal can bind)
             "/tmp/beardog-discovery", // Development fallback
         ]
     }
