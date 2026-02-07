@@ -861,18 +861,33 @@ impl QuantumCryptoEngine {
         private_key: &[u8],
         encapsulated_key: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        if private_key.len() < 32 || encapsulated_key.len() < 64 {
+        // Validate inputs even though implementation is pending
+        // This ensures callers get proper errors for invalid inputs
+        if private_key.len() < 32 {
             return Err(BearDogError::Cryptographic(
-                "Invalid key sizes for McEliece".to_string(),
+                format!("McEliece private key too short: {} bytes (min 32)", private_key.len()),
+            ));
+        }
+        if encapsulated_key.len() < 64 {
+            return Err(BearDogError::Cryptographic(
+                format!("McEliece encapsulated key too short: {} bytes (min 64)", encapsulated_key.len()),
             ));
         }
 
-        // Placeholder for actual McEliece decapsulation
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
-        let mut shared_secret = vec![0u8; 32];
-        rng.fill_bytes(&mut shared_secret);
-        Ok(shared_secret)
+        // SECURITY: Do NOT return random data as a placeholder!
+        // That would silently produce incorrect decapsulation results.
+        //
+        // McEliece implementation requires pqcrypto crate:
+        // pqcrypto-mceliece = "0.3"
+        //
+        // When implementing:
+        // 1. Add pqcrypto-mceliece to Cargo.toml
+        // 2. Use mceliece6960119::decapsulate(encapsulated_key, private_key)
+        // 3. Return the decapsulated shared secret
+        Err(BearDogError::not_implemented(
+            "McEliece decapsulation requires pqcrypto-mceliece crate integration. \
+             Use X25519 key exchange for now (classical security) or Kyber (NIST PQC standard).",
+        ))
     }
 
     fn combine_secrets(

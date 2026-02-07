@@ -153,6 +153,14 @@ impl PrimalDiscoveryClient for BearDogDiscoveryClient {
     }
 
     /// Send request to primal with capability
+    ///
+    /// # Integration Status
+    ///
+    /// This method requires async HTTP/IPC client integration:
+    /// - For HTTP: Use reqwest with tokio runtime
+    /// - For IPC: Use beardog-ipc UnixStream client
+    ///
+    /// Current workaround: Use beardog-ipc directly for local primal communication.
     fn send_request(
         &self,
         service: &UniversalServiceDescriptor,
@@ -163,22 +171,31 @@ impl PrimalDiscoveryClient for BearDogDiscoveryClient {
             service.primal_type, service.service_id
         );
 
-        // In production, this would make an actual HTTP/IPC call
-        warn!("⚠️  send_request called - requires async HTTP client");
-        warn!("    Target: {}", service.endpoint_url);
-        warn!("    Capability: {}", request.capability);
-        warn!("    TODO: Implement actual IPC/HTTP communication");
+        // SECURITY: Do not return fake "success" responses
+        // That would silently break capability-based communication
+        //
+        // Integration options:
+        // 1. For local primals: Use beardog-ipc with Unix sockets
+        // 2. For remote primals: Use reqwest HTTP client
+        // 3. For tarpc: Use beardog-tunnel external_primal_client
+        //
+        // Example with beardog-ipc:
+        // ```rust
+        // use beardog_ipc::UnixSocketClient;
+        // let client = UnixSocketClient::connect(&service.endpoint_url).await?;
+        // let response = client.call(&request.method, &request.params).await?;
+        // ```
 
-        // Return fallback response
-        Ok(PrimalResponse {
-            status: "fallback".to_string(),
-            data: serde_json::json!({
-                "note": "BearDogDiscoveryClient wired but not fully implemented",
-                "next_step": "Add async HTTP/IPC client",
-                "request": request.capability,
-            }),
-            service_id: service.service_id.clone(),
-        })
+        warn!(
+            "⚠️ Discovery client send_request to {} - async client integration pending",
+            service.endpoint_url
+        );
+
+        Err(BearDogError::not_implemented(&format!(
+            "Discovery client HTTP/IPC communication pending. \
+             Target: {}. Use beardog-ipc UnixSocketClient directly for now.",
+            service.endpoint_url
+        )))
     }
 }
 
