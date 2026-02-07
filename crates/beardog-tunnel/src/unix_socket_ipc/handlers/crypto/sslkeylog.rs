@@ -284,11 +284,28 @@ mod tests {
     #[test]
     fn test_export_with_handshake_secrets() {
         use std::fs;
+        use std::time::{SystemTime, UNIX_EPOCH};
 
-        // Use a temp directory that's guaranteed to exist
+        // Generate unique temp file per test run to avoid parallel test conflicts
+        let unique_id = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
         let temp_dir = std::env::temp_dir();
-        let temp_file = temp_dir.join("beardog-test-keylog.log");
+        let temp_file = temp_dir.join(format!("beardog-keylog-{}-{}.log", std::process::id(), unique_id));
         let temp_file_str = temp_file.to_string_lossy().to_string();
+
+        // Create a scope guard for cleanup
+        struct CleanupGuard {
+            path: std::path::PathBuf,
+        }
+        impl Drop for CleanupGuard {
+            fn drop(&mut self) {
+                let _ = std::fs::remove_file(&self.path);
+                std::env::remove_var("SSLKEYLOGFILE");
+            }
+        }
+        let _guard = CleanupGuard { path: temp_file.clone() };
         
         std::env::set_var("SSLKEYLOGFILE", &temp_file_str);
 
@@ -313,9 +330,5 @@ mod tests {
         assert!(content.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET"));
         assert!(content.contains("SERVER_HANDSHAKE_TRAFFIC_SECRET"));
         assert!(content.contains(&hex::encode(&client_random)));
-
-        // Clean up
-        let _ = fs::remove_file(&temp_file);
-        std::env::remove_var("SSLKEYLOGFILE");
     }
 }
