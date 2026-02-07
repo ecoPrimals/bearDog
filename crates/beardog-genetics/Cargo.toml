@@ -21,10 +21,16 @@ chacha20poly1305 = "0.10"  # BirdSong encryption
 parking_lot = "0.12"  # Faster RwLock for BirdSong
 
 [features]
+# Platform features for entropy collection
+microphone = []  # Enable microphone-based entropy collection (requires platform audio APIs)
+camera = []      # Enable camera-based entropy collection (requires platform camera APIs)
+
+# Architecture features (reserved for future use)
 zero-cost-architecture = []
 universal-discovery = []
 primal-sovereignty = []
 ecosystem = []
+
 default = []
 genetics_tests_disabled_during_refactor = []
 

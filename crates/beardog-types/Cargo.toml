@@ -47,6 +47,8 @@ serial_test = { workspace = true }
 
 [features]
 default = [ "config",]
+# Enable test utilities for external testing
+test-utils = []
 # REMOVED: crypto feature (ring is C-dependent, replaced by RustCrypto throughout beardog)
 # crypto = [ "ring",]
 # REMOVED: network feature (reqwest not needed!)
