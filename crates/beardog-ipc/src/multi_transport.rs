@@ -65,9 +65,13 @@ pub struct MultiTransportConfig {
 
 impl Default for MultiTransportConfig {
     fn default() -> Self {
+        // Self-knowledge: discover bind address from environment
+        let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
+            .unwrap_or_else(|_| "127.0.0.1".to_string());
+        
         Self {
-            tarpc_addr: "127.0.0.1:9901".parse().unwrap(),
-            jsonrpc_addr: "127.0.0.1:9900".parse().unwrap(),
+            tarpc_addr: format!("{}:9901", bind_addr).parse().unwrap(),
+            jsonrpc_addr: format!("{}:9900", bind_addr).parse().unwrap(),
             enable_tarpc: true,
             enable_jsonrpc: true,
             shutdown_timeout: Duration::from_secs(30),
@@ -110,10 +114,16 @@ impl MultiTransportConfig {
     }
 
     /// Create from router config and base port
+    ///
+    /// Uses config-based bind address with self-knowledge pattern
     pub fn from_router_config(router: &RouterConfig, base_port: u16) -> Self {
+        // Self-knowledge: discover bind address from config or environment
+        let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
+            .unwrap_or_else(|_| "127.0.0.1".to_string());
+        
         Self {
-            tarpc_addr: format!("127.0.0.1:{}", base_port + 1).parse().unwrap(),
-            jsonrpc_addr: format!("127.0.0.1:{}", base_port).parse().unwrap(),
+            tarpc_addr: format!("{}:{}", bind_addr, base_port + 1).parse().unwrap(),
+            jsonrpc_addr: format!("{}:{}", bind_addr, base_port).parse().unwrap(),
             enable_tarpc: router.enable_tarpc,
             enable_jsonrpc: router.enable_jsonrpc,
             shutdown_timeout: Duration::from_secs(30),

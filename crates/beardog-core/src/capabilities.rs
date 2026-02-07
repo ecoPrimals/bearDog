@@ -202,13 +202,17 @@ impl BearDogCapabilities {
                     path: socket_path,
                     permissions: 0o600,
                 },
-                IpcEndpoint::Http {
-                    // Use config-based port instead of hardcoded value
-                    bind_addr: {
-                        use beardog_config::global::BEARDOG_CONFIG;
-                        format!("127.0.0.1:{}", BEARDOG_CONFIG.network.ports.api_port)
-                    },
-                    tls: false,
+                {
+                    use beardog_config::global::BEARDOG_CONFIG;
+                    IpcEndpoint::Http {
+                        // Use config-based address and port (no hardcoding)
+                        bind_addr: format!(
+                            "{}:{}",
+                            BEARDOG_CONFIG.network.api.bind_address,
+                            BEARDOG_CONFIG.network.ports.api_port
+                        ),
+                        tls: BEARDOG_CONFIG.network.api.tls_enabled,
+                    }
                 },
             ],
             metadata,
