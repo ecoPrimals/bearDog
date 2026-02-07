@@ -63,32 +63,61 @@ pub struct MultiTransportConfig {
     pub shutdown_timeout: Duration,
 }
 
+/// Default port for tarpc server (can be overridden by BEARDOG_TARPC_PORT)
+const DEFAULT_TARPC_PORT: u16 = 9901;
+
+/// Default port for JSON-RPC server (can be overridden by BEARDOG_JSONRPC_PORT)
+const DEFAULT_JSONRPC_PORT: u16 = 9900;
+
+/// Default shutdown timeout in seconds (can be overridden by BEARDOG_SHUTDOWN_TIMEOUT)
+const DEFAULT_SHUTDOWN_TIMEOUT_SECS: u64 = 30;
+
 impl Default for MultiTransportConfig {
     fn default() -> Self {
-        // Self-knowledge: discover bind address from environment
+        // Self-knowledge: discover configuration from environment
+        // All values can be overridden by environment variables
         let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
             .unwrap_or_else(|_| "127.0.0.1".to_string());
         
+        let tarpc_port: u16 = std::env::var("BEARDOG_TARPC_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(DEFAULT_TARPC_PORT);
+        
+        let jsonrpc_port: u16 = std::env::var("BEARDOG_JSONRPC_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(DEFAULT_JSONRPC_PORT);
+        
+        let shutdown_timeout_secs: u64 = std::env::var("BEARDOG_SHUTDOWN_TIMEOUT")
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(DEFAULT_SHUTDOWN_TIMEOUT_SECS);
+        
         // Safe address parsing with fallback to known-good defaults
         // This prevents panics from malformed BEARDOG_BIND_ADDR values
-        let tarpc_addr = format!("{}:9901", bind_addr)
+        let tarpc_addr = format!("{}:{}", bind_addr, tarpc_port)
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
-                    "Failed to parse tarpc address '{}:9901', using 127.0.0.1:9901",
-                    bind_addr
+                    "Failed to parse tarpc address '{}:{}', using 127.0.0.1:{}",
+                    bind_addr, tarpc_port, DEFAULT_TARPC_PORT
                 );
-                "127.0.0.1:9901".parse().expect("hardcoded address is valid")
+                format!("127.0.0.1:{}", DEFAULT_TARPC_PORT)
+                    .parse()
+                    .expect("hardcoded address is valid")
             });
         
-        let jsonrpc_addr = format!("{}:9900", bind_addr)
+        let jsonrpc_addr = format!("{}:{}", bind_addr, jsonrpc_port)
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
-                    "Failed to parse jsonrpc address '{}:9900', using 127.0.0.1:9900",
-                    bind_addr
+                    "Failed to parse jsonrpc address '{}:{}', using 127.0.0.1:{}",
+                    bind_addr, jsonrpc_port, DEFAULT_JSONRPC_PORT
                 );
-                "127.0.0.1:9900".parse().expect("hardcoded address is valid")
+                format!("127.0.0.1:{}", DEFAULT_JSONRPC_PORT)
+                    .parse()
+                    .expect("hardcoded address is valid")
             });
         
         Self {
@@ -96,7 +125,7 @@ impl Default for MultiTransportConfig {
             jsonrpc_addr,
             enable_tarpc: true,
             enable_jsonrpc: true,
-            shutdown_timeout: Duration::from_secs(30),
+            shutdown_timeout: Duration::from_secs(shutdown_timeout_secs),
         }
     }
 }
