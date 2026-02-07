@@ -102,6 +102,14 @@ Phase 2: Songbird (protocol) → BearDog (ALL crypto) → Tor Network
 - ✅ **multi_transport.rs**: Hardcoded addresses → `BEARDOG_BIND_ADDR` env var discovery
 - ✅ **TLS Config**: Hardcoded `false` → `BEARDOG_CONFIG.network.api.tls_enabled`
 
+### Round 6: Test Infrastructure Evolution
+- ✅ **sslkeylog test**: Parallel-safe with unique temp files (PID + nanosecond)
+- ✅ **RFC 8448 test**: Fixed cipher_suite parameter + key length (32→16)
+- ✅ **Unix platform test**: Use temp directory instead of /run/user
+- ✅ **Doc tests**: Fixed import paths and marked platform-specific as ignore
+- 📋 **phase8_https tests**: Disabled (need API migration)
+- 📋 **unibin tests**: Disabled (CLI interface changed)
+
 ### Audit Results
 | Category | Count | Status |
 |----------|-------|--------|
@@ -114,6 +122,11 @@ Phase 2: Songbird (protocol) → BearDog (ALL crypto) → Tor Network
 ### Method Count Update
 - **Total**: 85 crypto methods (was 83)
 - **New**: `safe_chacha20_with_nonce()` variant
+
+### Test Results (Feb 4, 2026)
+- ✅ **1522+ tests pass** when run single-threaded
+- ⚠️ **2 tests flaky** in parallel (env var races - need serial_test infra)
+- 📋 **35 tests disabled** (API mismatch - need migration)
 
 ---
 
