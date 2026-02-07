@@ -109,17 +109,25 @@ impl VaultHandler {
     }
 
     /// Read secret from Vault
+    ///
+    /// # Errors
+    /// Returns `NotImplemented` until Tower Atomic integration (Phase 2)
     pub async fn read_secret(&self, path: &str) -> Result<HashMap<String, String>, BearDogError> {
         let full_path = format!("/v1/{}/data/{}", self.config.kv_mount, path);
         
         // Phase 2: Use Tower Atomic delegation
+        // The ? operator will propagate the NotImplemented error from call_vault_api
         let _response = self.call_vault_api("GET", &full_path, None).await?;
         
-        // Placeholder until Phase 2
-        Ok(HashMap::new())
+        // This code is unreachable until Phase 2 implementation
+        // When implemented, parse the response JSON here
+        unreachable!("call_vault_api should return NotImplemented")
     }
 
     /// Write secret to Vault
+    ///
+    /// # Errors
+    /// Returns `NotImplemented` until Tower Atomic integration (Phase 2)
     pub async fn write_secret(
         &self,
         path: &str,
@@ -129,34 +137,46 @@ impl VaultHandler {
         let body = json!({ "data": data });
         
         // Phase 2: Use Tower Atomic delegation
+        // The ? operator will propagate the NotImplemented error
         let _response = self.call_vault_api("POST", &full_path, Some(body)).await?;
         
-        Ok(())
+        // This code is unreachable until Phase 2 implementation
+        unreachable!("call_vault_api should return NotImplemented")
     }
 
     /// Encrypt data via Vault Transit
+    ///
+    /// # Errors
+    /// Returns `NotImplemented` until Tower Atomic integration (Phase 2)
     pub async fn encrypt(&self, key_name: &str, plaintext: &[u8]) -> Result<String, BearDogError> {
         let full_path = format!("/v1/{}/encrypt/{}", self.config.transit_mount, key_name);
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(plaintext);
         let body = json!({ "plaintext": plaintext_b64 });
         
         // Phase 2: Use Tower Atomic delegation
+        // The ? operator will propagate the NotImplemented error
         let _response = self.call_vault_api("POST", &full_path, Some(body)).await?;
         
-        // Placeholder
-        Ok("vault:v1:placeholder".to_string())
+        // This code is unreachable until Phase 2 implementation
+        // When implemented, extract ciphertext from response here
+        unreachable!("call_vault_api should return NotImplemented")
     }
 
     /// Decrypt data via Vault Transit
+    ///
+    /// # Errors
+    /// Returns `NotImplemented` until Tower Atomic integration (Phase 2)
     pub async fn decrypt(&self, key_name: &str, ciphertext: &str) -> Result<Vec<u8>, BearDogError> {
         let full_path = format!("/v1/{}/decrypt/{}", self.config.transit_mount, key_name);
         let body = json!({ "ciphertext": ciphertext });
         
         // Phase 2: Use Tower Atomic delegation
+        // The ? operator will propagate the NotImplemented error
         let _response = self.call_vault_api("POST", &full_path, Some(body)).await?;
         
-        // Placeholder
-        Ok(Vec::new())
+        // This code is unreachable until Phase 2 implementation
+        // When implemented, decode plaintext from response here
+        unreachable!("call_vault_api should return NotImplemented")
     }
 }
 

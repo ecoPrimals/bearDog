@@ -56,61 +56,90 @@ impl ProductionUniversalAdapter {
 
     /// Execute operation on a specific system
     ///
+    /// # Important: Not Yet Implemented
+    ///
+    /// This method is a placeholder for routing operations to specific subsystems.
+    /// Currently returns an explicit error to prevent silent failures in production.
+    ///
+    /// # Implementation Required
+    ///
+    /// To implement this properly:
+    /// 1. Define a SystemRouter trait for pluggable system backends
+    /// 2. Implement routers for: hsm, service_mesh, api_gateway, etc.
+    /// 3. Register routers during adapter initialization
+    /// 4. Route operations through the appropriate backend
+    ///
     /// # Errors
-    /// Returns `Err(BearDogError)` if the system operation fails
+    /// Returns `Err(BearDogError::not_implemented)` until real routing is implemented
     pub fn execute_on_system(
         &self,
         system: &str,
         operation: &str,
         _params: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
-        info!("Executing {} operation on {} system", operation, system);
+        // Log the attempted operation for debugging
+        tracing::warn!(
+            "⚠️ execute_on_system called but not implemented: system={}, operation={}",
+            system,
+            operation
+        );
 
-        // For now, return a success response
-        // In production, this would route to the appropriate system
-        use serde_json::{Map, Value};
-        let mut response = Map::new();
-        response.insert("system".to_string(), Value::String(system.to_string()));
-        response.insert(
-            "operation".to_string(),
-            Value::String(operation.to_string()),
-        );
-        response.insert("status".to_string(), Value::String("success".to_string()));
-        response.insert(
-            "message".to_string(),
-            Value::String(format!("Operation {operation} completed on {system}")),
-        );
-        Ok(Value::Object(response))
+        // Return explicit error instead of fake success
+        // This prevents silent failures in production
+        Err(BearDogError::not_implemented(&format!(
+            "System operation routing not implemented. \
+             Attempted: {operation} on {system}. \
+             Use direct IPC to target primals instead."
+        )))
     }
 
     /// Performs health check on all systems
     ///
+    /// # Important: Returns Stub Status
+    ///
+    /// This method returns a response indicating that health checks are not yet
+    /// implemented with real system probing. The status is marked as "unknown"
+    /// rather than falsely claiming "healthy".
+    ///
+    /// # Implementation Required
+    ///
+    /// To implement real health checks:
+    /// 1. Define health check endpoints for each subsystem
+    /// 2. Implement timeout-based probing
+    /// 3. Aggregate results with proper error handling
+    /// 4. Consider circuit breaker patterns for failing systems
+    ///
     /// # Errors
-    /// Returns `Err(BearDogError)` if the health check fails
+    /// Returns `Err(BearDogError)` if the health check aggregation fails
     pub fn health_check_all(&self) -> Result<serde_json::Value, BearDogError> {
-        info!("Performing health check on all systems");
+        tracing::warn!("⚠️ health_check_all: Real health probing not implemented");
 
         use serde_json::{Map, Value};
 
+        // Return honest "unknown" status instead of fake "healthy"
         let mut systems = Map::new();
-        systems.insert("hsm".to_string(), Value::String("healthy".to_string()));
+        systems.insert("hsm".to_string(), Value::String("unknown".to_string()));
         systems.insert(
             "service_mesh".to_string(),
-            Value::String("healthy".to_string()),
+            Value::String("unknown".to_string()),
         );
         systems.insert(
             "api_gateway".to_string(),
-            Value::String("healthy".to_string()),
+            Value::String("unknown".to_string()),
         );
         systems.insert(
             "service_registry".to_string(),
-            Value::String("healthy".to_string()),
+            Value::String("unknown".to_string()),
         );
 
         let mut response = Map::new();
         response.insert(
             "overall_status".to_string(),
-            Value::String("healthy".to_string()),
+            Value::String("unknown".to_string()),
+        );
+        response.insert(
+            "note".to_string(),
+            Value::String("Health probing not implemented - status is assumed unknown".to_string()),
         );
         response.insert("systems".to_string(), Value::Object(systems));
         response.insert(

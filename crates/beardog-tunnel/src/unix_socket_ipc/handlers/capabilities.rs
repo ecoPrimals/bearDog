@@ -3,20 +3,13 @@
 //! Provides self-description and identity endpoints for service discovery.
 //! Every primal should expose these methods to enable capability-based discovery.
 
+use super::utils::get_primal_name;
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tracing::info;
-
-/// Get the primal name using self-knowledge pattern.
-/// Uses PRIMAL_NAME or BEARDOG_NAME env var, falls back to "beardog".
-fn get_primal_name() -> String {
-    std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string())
-}
 
 /// Handler for capabilities and identity methods
 ///

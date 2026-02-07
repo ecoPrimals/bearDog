@@ -7,19 +7,12 @@
 //! These methods enable runtime capability discovery by allowing other primals
 //! and services to query what this primal provides without manual configuration.
 
+use super::utils::get_primal_name;
 use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use serde_json::{json, Value};
 use std::sync::Arc;
-
-/// Get the primal name using self-knowledge pattern.
-/// Uses PRIMAL_NAME or BEARDOG_NAME env var, falls back to "beardog".
-fn get_primal_name() -> String {
-    std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string())
-}
 
 /// Handler for primal introspection methods
 pub struct IntrospectionHandler {

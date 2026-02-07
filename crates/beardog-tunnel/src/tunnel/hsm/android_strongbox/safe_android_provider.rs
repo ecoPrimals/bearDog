@@ -315,10 +315,13 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
     fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
         info!("📋 Safe Android: Getting key info for \"{}\"", key_id);
 
+        // Retrieve actual algorithm from key metadata instead of hardcoded value
+        let algorithm = self.keystore.get_key_algorithm(key_id)?;
+
         Ok(KeyInfo {
             id: key_id.to_string(),
             key_id: key_id.to_string(),      // Alias for compatibility
-            algorithm: Algorithm::EcdsaP256, // Placeholder
+            algorithm,
             hardware_backed: C::hardware_backed(),
         })
     }
@@ -352,9 +355,10 @@ impl SafeAndroidKeystore {
     ) -> Result<SafeKeyHandle, BearDogError> {
         debug!("🔑 Generating key {} with {:?}", key_id, algorithm);
 
-        // Store metadata
+        // Store metadata with both key type and algorithm for accurate retrieval
         let metadata = SafeKeyMetadata {
-            algorithm: KeyType::from(algorithm),
+            key_type: KeyType::from(algorithm),
+            algorithm,
             created_at: std::time::SystemTime::now(),
             usage_count: 0,
         };
@@ -476,6 +480,17 @@ impl SafeAndroidKeystore {
         Ok(keys.contains_key(key_id))
     }
 
+    /// Gets the algorithm for a key
+    ///
+    /// # Errors
+    /// Returns `NotFound` if the key doesn't exist
+    pub fn get_key_algorithm(&self, key_id: &str) -> Result<Algorithm, BearDogError> {
+        let keys = self.keys.blocking_read();
+        keys.get(key_id)
+            .map(|metadata| metadata.algorithm)
+            .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))
+    }
+
     /// Detects device information safely
     ///
     /// # Platform Support
@@ -565,8 +580,13 @@ impl SafeAndroidKeystore {
 /// Safe key metadata
 #[derive(Debug, Clone)]
 pub struct SafeKeyMetadata {
-    algorithm: KeyType,
+    /// The key type category (symmetric/asymmetric)
+    key_type: KeyType,
+    /// The actual cryptographic algorithm used
+    algorithm: Algorithm,
+    /// When the key was created
     created_at: std::time::SystemTime,
+    /// How many times the key has been used
     usage_count: u64,
 }
 

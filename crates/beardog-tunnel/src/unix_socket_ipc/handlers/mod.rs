@@ -38,6 +38,9 @@ use std::sync::Arc;
 // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
 pub mod beacon;
 
+// Shared utilities (self-knowledge pattern, etc.)
+pub mod utils;
+
 // Existing handlers
 pub mod btsp;
 pub mod capabilities;
