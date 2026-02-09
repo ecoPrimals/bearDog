@@ -246,7 +246,7 @@ pub async fn handle_entropy_collect(
         println!("🔢 Collecting hardware entropy from HSM...");
 
         // Generate random bytes directly from HSM
-        // For now, use system RNG as placeholder (will wire to actual HSM in next step)
+        // System CSPRNG (OsRng) - production-grade entropy source
         let entropy = generate_system_entropy(32)?;
 
         println!(

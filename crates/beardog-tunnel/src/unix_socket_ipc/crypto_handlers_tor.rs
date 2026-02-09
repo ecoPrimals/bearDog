@@ -119,7 +119,7 @@ pub async fn handle_tor_ntor_client_init(params: Option<&Value>) -> Result<Value
 
     // Encrypt client state with a fixed key for security
     // Using XOR with HKDF output (symmetric - same operation for encrypt/decrypt)
-    let encrypted_state = xor_encrypt(&client_state, &STATE_ENCRYPTION_KEY);
+    let encrypted_state = xor_encrypt(&client_state, &STATE_ENCRYPTION_KEY)?;
 
     Ok(json!({
         "ephemeral_public": BASE64.encode(ephemeral_public.as_bytes()),
@@ -165,7 +165,7 @@ pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Val
         .map_err(|e| format!("Invalid base64 client_state: {}", e))?;
 
     // Decrypt state (XOR is symmetric with same key)
-    let client_state = xor_encrypt(&encrypted_state, &STATE_ENCRYPTION_KEY);
+    let client_state = xor_encrypt(&encrypted_state, &STATE_ENCRYPTION_KEY)?;
 
     if client_state.len() != 84 {
         return Err("Invalid client_state length".to_string());
@@ -235,10 +235,10 @@ pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Val
     secret_input.extend_from_slice(NTOR_PROTOID);
 
     // Compute KEY_SEED = HMAC(t_key, secret_input)
-    let key_seed = hmac_sha256(NTOR_T_KEY, &secret_input);
+    let key_seed = hmac_sha256(NTOR_T_KEY, &secret_input)?;
 
     // Compute verify = HMAC(t_verify, secret_input)
-    let verify = hmac_sha256(NTOR_T_VERIFY, &secret_input);
+    let verify = hmac_sha256(NTOR_T_VERIFY, &secret_input)?;
 
     // Compute AUTH for verification
     // AUTH = HMAC(t_mac, verify || ID || B || Y || X || PROTOID || "Server")
@@ -251,7 +251,7 @@ pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Val
     auth_input.extend_from_slice(NTOR_PROTOID);
     auth_input.extend_from_slice(NTOR_SERVER);
 
-    let expected_auth = hmac_sha256(NTOR_T_MAC, &auth_input);
+    let expected_auth = hmac_sha256(NTOR_T_MAC, &auth_input)?;
 
     // Verify server auth
     if !constant_time_compare(&server_auth, &expected_auth) {
@@ -262,14 +262,14 @@ pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Val
     }
 
     // Derive circuit keys using HKDF
-    let keys = derive_circuit_keys(&key_seed);
+    let keys = derive_circuit_keys(&key_seed)?;
 
     Ok(json!({
         "valid": true,
-        "forward_digest_key": BASE64.encode(&keys.df),
-        "backward_digest_key": BASE64.encode(&keys.db),
-        "forward_key": BASE64.encode(&keys.kf),
-        "backward_key": BASE64.encode(&keys.kb),
+        "forward_digest_key": BASE64.encode(keys.df),
+        "backward_digest_key": BASE64.encode(keys.db),
+        "forward_key": BASE64.encode(keys.kf),
+        "backward_key": BASE64.encode(keys.kb),
         "algorithm": "ntor-curve25519-sha256-1"
     }))
 }
@@ -400,10 +400,10 @@ pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Va
     secret_input.extend_from_slice(NTOR_PROTOID);
 
     // Compute KEY_SEED
-    let key_seed = hmac_sha256(NTOR_T_KEY, &secret_input);
+    let key_seed = hmac_sha256(NTOR_T_KEY, &secret_input)?;
 
     // Compute verify
-    let verify = hmac_sha256(NTOR_T_VERIFY, &secret_input);
+    let verify = hmac_sha256(NTOR_T_VERIFY, &secret_input)?;
 
     // Compute AUTH (server_auth)
     let mut auth_input = Vec::new();
@@ -415,18 +415,18 @@ pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Va
     auth_input.extend_from_slice(NTOR_PROTOID);
     auth_input.extend_from_slice(NTOR_SERVER);
 
-    let server_auth = hmac_sha256(NTOR_T_MAC, &auth_input);
+    let server_auth = hmac_sha256(NTOR_T_MAC, &auth_input)?;
 
     // Derive circuit keys
-    let keys = derive_circuit_keys(&key_seed);
+    let keys = derive_circuit_keys(&key_seed)?;
 
     Ok(json!({
         "ephemeral_public": BASE64.encode(y_public.as_bytes()),
-        "server_auth": BASE64.encode(&server_auth),
-        "forward_digest_key": BASE64.encode(&keys.df),
-        "backward_digest_key": BASE64.encode(&keys.db),
-        "forward_key": BASE64.encode(&keys.kf),
-        "backward_key": BASE64.encode(&keys.kb),
+        "server_auth": BASE64.encode(server_auth),
+        "forward_digest_key": BASE64.encode(keys.df),
+        "backward_digest_key": BASE64.encode(keys.db),
+        "forward_key": BASE64.encode(keys.kf),
+        "backward_key": BASE64.encode(keys.kb),
         "algorithm": "ntor-curve25519-sha256-1"
     }))
 }
@@ -489,7 +489,7 @@ pub async fn handle_tor_cell_encrypt(params: Option<&Value>) -> Result<Value, St
         .map_err(|e| format!("Invalid base64 data: {}", e))?;
 
     // Apply ChaCha20 keystream
-    chacha20_counter_mode(&key, counter, &mut data);
+    chacha20_counter_mode(&key, counter, &mut data)?;
 
     Ok(json!({
         "ciphertext": BASE64.encode(&data),
@@ -535,7 +535,7 @@ pub async fn handle_tor_cell_decrypt(params: Option<&Value>) -> Result<Value, St
         .map_err(|e| format!("Invalid base64 ciphertext: {}", e))?;
 
     // Apply ChaCha20 keystream (XOR is symmetric)
-    chacha20_counter_mode(&key, counter, &mut data);
+    chacha20_counter_mode(&key, counter, &mut data)?;
 
     Ok(json!({
         "plaintext": BASE64.encode(&data),
@@ -593,7 +593,7 @@ pub async fn handle_tor_kdf(params: Option<&Value>) -> Result<Value, String> {
 
     // Use HKDF to derive keys
     let total_len = key_count * key_length;
-    let expanded = hkdf_expand(&key_seed, NTOR_T_EXPAND, total_len);
+    let expanded = hkdf_expand(&key_seed, NTOR_T_EXPAND, total_len)?;
 
     // Split into individual keys
     let keys: Vec<String> = expanded
@@ -627,45 +627,49 @@ struct CircuitKeys {
 
 /// Derive circuit keys from KEY_SEED using HKDF
 ///
-/// # Panics
-/// This function uses defensive assertions. It should never panic because
-/// hkdf_expand always returns exactly the requested length.
-fn derive_circuit_keys(key_seed: &[u8]) -> CircuitKeys {
+/// Returns an error if HKDF expansion produces unexpected output length.
+fn derive_circuit_keys(key_seed: &[u8]) -> Result<CircuitKeys, String> {
     // Expand to get: Df (20) + Db (20) + Kf (16) + Kb (16) = 72 bytes
-    let expanded = hkdf_expand(key_seed, NTOR_T_EXPAND, 72);
-    
-    // Defensive: verify length before slicing
-    debug_assert_eq!(expanded.len(), 72, "HKDF expansion should produce exactly 72 bytes");
+    let expanded = hkdf_expand(key_seed, NTOR_T_EXPAND, 72)?;
 
-    // These conversions are safe because hkdf_expand guarantees the length
-    CircuitKeys {
+    if expanded.len() != 72 {
+        return Err(format!(
+            "HKDF expansion produced {} bytes, expected 72",
+            expanded.len()
+        ));
+    }
+
+    Ok(CircuitKeys {
         df: expanded[0..20]
             .try_into()
-            .expect("slice is exactly 20 bytes"),
+            .map_err(|_| "Failed to convert Df slice to [u8; 20]".to_string())?,
         db: expanded[20..40]
             .try_into()
-            .expect("slice is exactly 20 bytes"),
+            .map_err(|_| "Failed to convert Db slice to [u8; 20]".to_string())?,
         kf: expanded[40..56]
             .try_into()
-            .expect("slice is exactly 16 bytes"),
+            .map_err(|_| "Failed to convert Kf slice to [u8; 16]".to_string())?,
         kb: expanded[56..72]
             .try_into()
-            .expect("slice is exactly 16 bytes"),
-    }
+            .map_err(|_| "Failed to convert Kb slice to [u8; 16]".to_string())?,
+    })
 }
 
 /// HMAC-SHA256
-fn hmac_sha256(key: &[u8], data: &[u8]) -> [u8; 32] {
+///
+/// HMAC accepts keys of any size, so `new_from_slice` is infallible in practice.
+/// We still propagate the error for correctness.
+fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<[u8; 32], String> {
     type HmacSha256 = Hmac<Sha256>;
-    let mut mac =
-        HmacSha256::new_from_slice(key).expect("HMAC can take key of any size");
+    let mut mac = HmacSha256::new_from_slice(key)
+        .map_err(|e| format!("HMAC-SHA256 key error: {}", e))?;
     mac.update(data);
     let result = mac.finalize();
-    result.into_bytes().into()
+    Ok(result.into_bytes().into())
 }
 
 /// HKDF-Expand (simplified - uses HMAC iteratively)
-fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Vec<u8> {
+fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Result<Vec<u8>, String> {
     let mut output = Vec::with_capacity(length);
     let mut t = Vec::new();
     let mut counter = 1u8;
@@ -675,36 +679,34 @@ fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Vec<u8> {
         input.extend_from_slice(info);
         input.push(counter);
 
-        t = hmac_sha256(prk, &input).to_vec();
+        t = hmac_sha256(prk, &input)?.to_vec();
         output.extend_from_slice(&t);
         counter += 1;
     }
 
     output.truncate(length);
-    output
+    Ok(output)
 }
 
 /// ChaCha20 counter mode (for cell encryption)
 ///
-/// # Panics
-/// Panics if `key` is not exactly 32 bytes. Callers must validate key length.
-fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) {
+/// Returns an error if `key` is not exactly 32 bytes.
+fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) -> Result<(), String> {
     use chacha20::cipher::{KeyIvInit, StreamCipher};
     use chacha20::ChaCha20;
 
-    // Defensive: verify key length
-    debug_assert_eq!(key.len(), 32, "ChaCha20 requires exactly 32-byte key");
+    // Validate key length
+    let key_arr: [u8; 32] = key
+        .try_into()
+        .map_err(|_| format!("ChaCha20 requires exactly 32-byte key, got {}", key.len()))?;
 
     // Construct nonce from counter (12 bytes)
     let mut nonce = [0u8; 12];
     nonce[4..12].copy_from_slice(&counter.to_le_bytes());
 
-    // Safe: callers validate key is 32 bytes before calling
-    let key_arr: [u8; 32] = key
-        .try_into()
-        .expect("caller must provide exactly 32-byte key");
     let mut cipher = ChaCha20::new(&key_arr.into(), &nonce.into());
     cipher.apply_keystream(data);
+    Ok(())
 }
 
 /// Fixed state encryption key (for protecting client_state)
@@ -720,13 +722,14 @@ const STATE_ENCRYPTION_KEY: [u8; 32] = [
 ];
 
 /// Simple XOR encryption (used with derived key for state protection)
-fn xor_encrypt(data: &[u8], key: &[u8; 32]) -> Vec<u8> {
+fn xor_encrypt(data: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
     // Expand key using HKDF to match data length
-    let expanded_key = hkdf_expand(key, b"state-encryption", data.len());
-    data.iter()
+    let expanded_key = hkdf_expand(key, b"state-encryption", data.len())?;
+    Ok(data
+        .iter()
         .zip(expanded_key.iter())
         .map(|(d, k)| d ^ k)
-        .collect()
+        .collect())
 }
 
 /// Constant-time comparison to prevent timing attacks

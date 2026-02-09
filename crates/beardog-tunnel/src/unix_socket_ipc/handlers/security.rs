@@ -6,6 +6,7 @@
 //! - BirdSong encryption/decryption for secure discovery
 //! - JWT secret generation for authentication systems
 
+use super::utils::get_primal_name;
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
@@ -203,7 +204,7 @@ impl SecurityHandler {
             "peer_family": peer_family,
             "our_family": our_family,
             "our_node": our_node,
-            "evaluated_by": "beardog",
+            "evaluated_by": get_primal_name(),
             "capabilities": {                      // Capability hints (Phase 1)
                 "allowed": allowed_caps,
                 "denied": denied_caps,
@@ -233,7 +234,7 @@ impl SecurityHandler {
         );
 
         Ok(serde_json::json!({
-            "primal": "beardog",
+            "primal": get_primal_name(),
             "family": family_id,
             "node": node_id,
             "encryption_tag": encryption_tag,
@@ -374,7 +375,7 @@ impl SecurityHandler {
             "strength": strength,
             "byte_length": byte_length,
             "encoded_length": secret_b64.len(),
-            "provider": "beardog",
+            "provider": get_primal_name(),
             "generated_at": Utc::now().to_rfc3339(),
         }))
     }

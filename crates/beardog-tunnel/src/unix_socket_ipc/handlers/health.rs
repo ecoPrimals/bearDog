@@ -3,6 +3,7 @@
 //! Provides universal health/status/ping endpoints that work across all primals.
 //! These methods are essential for service discovery, load balancing, and monitoring.
 
+use super::utils::get_primal_name;
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
@@ -37,7 +38,7 @@ impl MethodHandler for HealthHandler {
 
         Ok(serde_json::json!({
             "status": "healthy",
-            "primal": "beardog",
+            "primal": get_primal_name(),
             "version": env!("CARGO_PKG_VERSION"),
             "protocol": "JSON-RPC",
             "timestamp": Utc::now().to_rfc3339(),

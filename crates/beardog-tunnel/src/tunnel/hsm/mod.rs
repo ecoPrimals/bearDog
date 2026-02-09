@@ -56,9 +56,6 @@ pub mod health;
 pub mod performance;
 pub mod unified_provider;
 
-// Stub types (temporary)
-pub mod stub_types;
-
 // Re-exports for convenience
 pub use config::HsmConfig;
 pub use failover::HsmFailoverManager;

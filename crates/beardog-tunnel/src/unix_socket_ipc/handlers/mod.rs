@@ -51,6 +51,7 @@ pub mod federation;
 pub mod graph_security;
 pub mod health;
 pub mod introspection; // Primal introspection (primal.info, rpc.methods)
+pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;
 
 /// Trait for JSON-RPC method handlers
@@ -166,6 +167,8 @@ impl HandlerRegistry {
                 Arc::new(graph_security::GraphSecurityHandler),
                 // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
                 Arc::new(beacon::BeaconHandler::new()),
+                // Secret Storage (Feb 2026 - Evolution)
+                Arc::new(secrets::SecretsHandler::new(identity.clone())),
             ]),
         });
 

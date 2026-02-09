@@ -1,7 +1,7 @@
 //! Global Configuration Singleton
 //!
 //! Provides thread-safe access to the global BearDog configuration.
-//! Uses `once_cell` for lazy initialization that happens exactly once.
+//! Uses `std::sync::LazyLock` for lazy initialization that happens exactly once.
 //!
 //! ## Usage Pattern
 //!
@@ -15,7 +15,7 @@
 //!
 //! ## Design Rationale
 //!
-//! - **Thread-safe**: Uses `Lazy<T>` from `once_cell` for safe concurrent access
+//! - **Thread-safe**: Uses `LazyLock<T>` from std for safe concurrent access
 //! - **Lazy initialization**: Configuration is loaded only when first accessed
 //! - **Environment-aware**: Automatically loads from environment variables
 //! - **Fallback to defaults**: Always works even without configuration file
@@ -28,8 +28,7 @@
 //! 3. Secure defaults from `BearDogConfig::default()`
 
 use crate::BearDogConfig;
-use once_cell::sync::Lazy;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use tracing::{info, warn};
 
 /// Global BearDog configuration singleton
@@ -48,7 +47,7 @@ use tracing::{info, warn};
 /// let api_port = BEARDOG_CONFIG.network.api.port;
 /// println!("API running on port {}", api_port);
 /// ```
-pub static BEARDOG_CONFIG: Lazy<Arc<BearDogConfig>> = Lazy::new(|| {
+pub static BEARDOG_CONFIG: LazyLock<Arc<BearDogConfig>> = LazyLock::new(|| {
     info!("🔧 Initializing global BearDog configuration");
 
     let config = load_global_config();

@@ -17,15 +17,14 @@
 
 use crate::graph_security::collaboration_service::CollaborationService;
 use beardog_errors::BearDogError;
-use once_cell::sync::Lazy;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use tracing::{debug, info};
 
 /// Module-level CollaborationService (initialized once on first use)
 ///
 /// This static service is shared across all graph security operations for
 /// efficient runtime capability discovery.
-static COLLABORATION: Lazy<Arc<CollaborationService>> = Lazy::new(|| {
+static COLLABORATION: LazyLock<Arc<CollaborationService>> = LazyLock::new(|| {
     debug!("🏗️  Initializing graph security CollaborationService");
     info!("✅ Graph security CollaborationService initialized (using fallback data)");
     Arc::new(CollaborationService::new())

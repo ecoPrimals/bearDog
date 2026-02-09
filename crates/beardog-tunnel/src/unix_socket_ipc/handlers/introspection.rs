@@ -67,6 +67,7 @@ impl IntrospectionHandler {
                 "genetic",     // Genetic lineage operations
                 "federation",  // Sub-federation key derivation
                 "encryption",  // Encryption/decryption
+                "secrets",     // Encrypted secret storage (family-scoped)
                 "btsp"         // BTSP provider
             ],
             "protocol": {

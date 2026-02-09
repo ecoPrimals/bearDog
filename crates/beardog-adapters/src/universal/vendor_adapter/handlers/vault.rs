@@ -68,8 +68,9 @@ impl VaultHandler {
         let base_url = base_url.into();
         let token = token.into();
 
-        // Phase 2: Connect to Songbird via Tower Atomic
-        // let client = AtomicClient::connect("songbird").await?;
+        // Phase 2: Connect to HTTP provider via Tower Atomic (capability-based discovery)
+        // let http_provider = std::env::var("HTTP_PROVIDER").unwrap_or_else(|_| "songbird".to_string());
+        // let client = AtomicClient::connect(&http_provider).await?;
 
         Ok(Self {
             instance_id: Uuid::new_v4(),
@@ -86,11 +87,12 @@ impl VaultHandler {
         path: &str,
         body: Option<serde_json::Value>,
     ) -> Result<serde_json::Value, BearDogError> {
-        // Phase 2: Implement Tower Atomic delegation to Songbird
+        // Phase 2: Implement Tower Atomic delegation via capability-based discovery
         // Example implementation (ready to uncomment):
-        // 
-        // let mut songbird = AtomicClient::connect("songbird").await?;
-        // let response = songbird.call("http.request", json!({
+        //
+        // let http_provider = std::env::var("HTTP_PROVIDER").unwrap_or_else(|_| "songbird".to_string());
+        // let mut client = AtomicClient::connect(&http_provider).await?;
+        // let response = client.call("http.request", json!({
         //     "method": method,
         //     "url": format!("{}{}", self.base_url, path),
         //     "headers": {

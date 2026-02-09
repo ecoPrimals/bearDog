@@ -23,7 +23,8 @@ use tracing::{info, warn};
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Server Mode - Starting...");
 
-    // Determine socket path - use abstract socket if --abstract flag is set
+    // Determine socket path - use abstract socket if --abstract flag is set,
+    // or derive family-scoped socket if --family-id is provided
     let socket_path = if args.r#abstract {
         // Abstract socket format: @biomeos_beardog_{family_id}
         let family = args.family_id.as_deref().unwrap_or("default");
@@ -31,6 +32,16 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         info!("   Transport: Abstract Socket (SELinux-safe)");
         info!("   Socket: {} (no filesystem)", abstract_name);
         abstract_name
+    } else if let Some(ref family_id) = args.family_id {
+        // Multi-family socket: beardog-{family_id}.sock
+        // Each family gets its own BearDog instance with independently derived keys.
+        // BearDog serving family A MUST NOT share keys with family B.
+        let family_sock = std::path::PathBuf::from(&args.socket);
+        let parent = family_sock.parent().unwrap_or_else(|| std::path::Path::new("/tmp"));
+        let family_path = parent.join(format!("beardog-{}.sock", family_id));
+        let path_str = family_path.to_string_lossy().to_string();
+        info!("   Multi-family socket: {}", path_str);
+        path_str
     } else {
         args.socket.clone()
     };

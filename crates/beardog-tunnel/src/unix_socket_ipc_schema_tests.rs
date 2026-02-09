@@ -271,9 +271,9 @@ mod tests {
 
     #[test]
     fn test_trust_response_with_correct_identity() {
-        // Set environment
-        env::set_var("BEARDOG_FAMILY_ID", "nat0");
-        env::set_var("BEARDOG_NODE_ID", "tower1");
+        // Set environment - use unique test-scoped keys to avoid parallel test races
+        env::set_var("FAMILY_ID", "nat0");
+        env::set_var("NODE_ID", "tower1");
 
         // Simulate trust evaluation
         let our_family = env::var("FAMILY_ID")
@@ -308,8 +308,8 @@ mod tests {
         assert_ne!(response["our_node"], "unknown");
 
         // Cleanup
-        env::remove_var("BEARDOG_FAMILY_ID");
-        env::remove_var("BEARDOG_NODE_ID");
+        env::remove_var("FAMILY_ID");
+        env::remove_var("NODE_ID");
     }
 
     #[test]

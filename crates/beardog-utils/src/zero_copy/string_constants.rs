@@ -5,18 +5,17 @@
 // This module provides functionality for the BearDog ecosystem.
 
 
-use once_cell::sync::Lazy;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 pub mod capabilities {
     use super::*;
 
-    pub static AUTHENTICATION: Lazy<Arc<String>> = Lazy::new(|| Arc::new("authentication".to_string()));
-pub static ENCRYPTION: Lazy<Arc<String>> = Lazy::new(|| Arc::new("encryption ".to_string()));
-pub static SECURITY: Lazy<Arc<String>> = Lazy::new(|| Arc::new("security".to_string()));
-pub static KEY_GENERATION: Lazy<Arc<String>> = Lazy::new(|| Arc::new("key_generation".to_string()));
-pub static SIGNING: Lazy<Arc<String>> = Lazy::new(|| Arc::new("signing".to_string()));
-pub static VERIFICATION: Lazy<Arc<String>> = Lazy::new(|| Arc::new("verification".to_string()));
+    pub static AUTHENTICATION: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("authentication".to_string()));
+pub static ENCRYPTION: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("encryption ".to_string()));
+pub static SECURITY: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("security".to_string()));
+pub static KEY_GENERATION: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("key_generation".to_string()));
+pub static SIGNING: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("signing".to_string()));
+pub static VERIFICATION: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("verification".to_string()));
 
 
 /// Authentication operation.
@@ -39,11 +38,11 @@ pub static VERIFICATION: Lazy<Arc<String>> = Lazy::new(|| Arc::new("verification
 pub mod error_messages {
     use super::*;
 
-    pub static OPERATION_FAILED: Lazy<Arc<String>> = Lazy::new(|| Arc::new("Operation failed".to_string()));
-    pub static NETWORK_OPERATION_FAILED: Lazy<Arc<String>> = Lazy::new(|| Arc::new("Network operation failed".to_string()));
-    pub static CONFIGURATION_ERROR: Lazy<Arc<String>> = Lazy::new(|| Arc::new("Configuration error".to_string()));
-    pub static AUTHENTICATION_FAILED: Lazy<Arc<String>> = Lazy::new(|| Arc::new("Authentication failed".to_string()));
-    pub static VALIDATION_FAILED: Lazy<Arc<String>> = Lazy::new(|| Arc::new("Validation failed".to_string()));
+    pub static OPERATION_FAILED: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("Operation failed".to_string()));
+    pub static NETWORK_OPERATION_FAILED: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("Network operation failed".to_string()));
+    pub static CONFIGURATION_ERROR: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("Configuration error".to_string()));
+    pub static AUTHENTICATION_FAILED: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("Authentication failed".to_string()));
+    pub static VALIDATION_FAILED: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("Validation failed".to_string()));
 
 
 /// Operation Failed operation.
@@ -66,12 +65,12 @@ pub mod error_messages {
 pub mod components {
     use super::*;
 
-    pub static CORE: Lazy<Arc<String>> = Lazy::new(|| Arc::new("core".to_string()));
-    pub static API: Lazy<Arc<String>> = Lazy::new(|| Arc::new("api".to_string()));
-    pub static GENETICS: Lazy<Arc<String>> = Lazy::new(|| Arc::new("genetics".to_string()));
-    pub static WORKFLOW: Lazy<Arc<String>> = Lazy::new(|| Arc::new("workflow ".to_string()));
-    pub static COMPLIANCE: Lazy<Arc<String>> = Lazy::new(|| Arc::new("compliance".to_string()));
-    pub static HSM: Lazy<Arc<String>> = Lazy::new(|| Arc::new("hsm".to_string()));
+    pub static CORE: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("core".to_string()));
+    pub static API: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("api".to_string()));
+    pub static GENETICS: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("genetics".to_string()));
+    pub static WORKFLOW: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("workflow ".to_string()));
+    pub static COMPLIANCE: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("compliance".to_string()));
+    pub static HSM: LazyLock<Arc<String>> = LazyLock::new(|| Arc::new("hsm".to_string()));
 
 
 /// Core operation.

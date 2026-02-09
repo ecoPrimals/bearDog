@@ -29,6 +29,7 @@ impl MethodHandler for CapabilitiesHandler {
         vec![
             "capabilities",
             "get_capabilities",
+            "discover_capabilities",
             "identity",
             "whoami",
             "get_identity",
@@ -43,6 +44,7 @@ impl MethodHandler for CapabilitiesHandler {
     ) -> Result<serde_json::Value, String> {
         match method {
             "capabilities" | "get_capabilities" => self.handle_capabilities().await,
+            "discover_capabilities" => self.handle_discover_capabilities().await,
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
             _ => Err(format!("Method not found: {}", method)),
         }
@@ -138,6 +140,31 @@ impl CapabilitiesHandler {
         }))
     }
 
+    /// Handle discover_capabilities request
+    ///
+    /// Returns a flat list of capability strings for ecosystem consistency.
+    /// This mirrors Songbird's `discover_capabilities` format, enabling
+    /// uniform capability discovery across all primals.
+    async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
+        info!("🔍 discover_capabilities requested");
+
+        Ok(serde_json::json!({
+            "capabilities": [
+                "crypto.sha256",
+                "crypto.sha512",
+                "crypto.sign",
+                "crypto.verify",
+                "crypto.key_exchange",
+                "crypto.encrypt",
+                "crypto.decrypt",
+                "crypto.hmac",
+                "jwt.provision",
+                "secrets.store",
+                "secrets.retrieve"
+            ]
+        }))
+    }
+
     /// Handle identity request
     ///
     /// Returns the primal's identity including family and node IDs,
@@ -156,7 +183,7 @@ impl CapabilitiesHandler {
         );
 
         Ok(serde_json::json!({
-            "primal": "beardog",
+            "primal": get_primal_name(),
             "family": family_id,
             "node": node_id,
             "encryption_tag": encryption_tag,
@@ -175,9 +202,10 @@ mod tests {
         let handler = CapabilitiesHandler::new(identity);
         let methods = handler.methods();
 
-        assert_eq!(methods.len(), 5);
+        assert_eq!(methods.len(), 6);
         assert!(methods.contains(&"capabilities"));
         assert!(methods.contains(&"get_capabilities"));
+        assert!(methods.contains(&"discover_capabilities"));
         assert!(methods.contains(&"identity"));
         assert!(methods.contains(&"whoami"));
         assert!(methods.contains(&"get_identity"));
@@ -216,6 +244,37 @@ mod tests {
         assert!(response["family"].is_string());
         assert!(response["node"].is_string());
         assert!(response["encryption_tag"].is_string());
+    }
+
+    #[tokio::test]
+    async fn test_discover_capabilities_response() {
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = CapabilitiesHandler::new(identity);
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let result = handler
+            .handle("discover_capabilities", None, &btsp_provider)
+            .await;
+
+        assert!(result.is_ok());
+        let response = result.unwrap();
+
+        // Must have flat capabilities array
+        let caps = response["capabilities"].as_array().unwrap();
+        assert!(caps.len() >= 11, "Expected at least 11 capabilities");
+
+        // Verify required capabilities per ecoBin v2.0
+        let cap_strs: Vec<&str> = caps.iter().map(|v| v.as_str().unwrap()).collect();
+        assert!(cap_strs.contains(&"crypto.sha256"));
+        assert!(cap_strs.contains(&"crypto.sign"));
+        assert!(cap_strs.contains(&"crypto.verify"));
+        assert!(cap_strs.contains(&"crypto.key_exchange"));
+        assert!(cap_strs.contains(&"crypto.encrypt"));
+        assert!(cap_strs.contains(&"crypto.decrypt"));
+        assert!(cap_strs.contains(&"crypto.hmac"));
+        assert!(cap_strs.contains(&"jwt.provision"));
+        assert!(cap_strs.contains(&"secrets.store"));
+        assert!(cap_strs.contains(&"secrets.retrieve"));
     }
 
     #[tokio::test]

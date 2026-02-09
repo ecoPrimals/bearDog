@@ -1,39 +1,37 @@
 # BearDog
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](STATUS.md)
-[![Tests](https://img.shields.io/badge/tests-7682+-brightgreen.svg)](STATUS.md)
-[![Coverage](https://img.shields.io/badge/coverage-70.96%25-yellow.svg)](STATUS.md)
-[![Grade](https://img.shields.io/badge/grade-A+_LEGENDARY-gold.svg)](STATUS.md)
+[![Tests](https://img.shields.io/badge/tests-8789-brightgreen.svg)](STATUS.md)
 [![Pure Rust](https://img.shields.io/badge/rust-100%25_pure-orange.svg)](STATUS.md)
 
-**BearDog** is the cryptographic service provider for the ecoPrimals ecosystem - a world-class **100% Pure Rust** security platform with zero C dependencies.
+**BearDog** is the cryptographic service provider for the ecoPrimals ecosystem -- a **100% Pure Rust** security platform with zero C dependencies.
 
-**Version**: 0.9.0 | **Grade**: A+ LEGENDARY (99/100) | **Status**: Production Ready
+**Status**: Production Ready | **Crates**: 31 | **Grade**: A+ LEGENDARY
 
 ---
 
 ## Overview
 
-BearDog provides secure cryptographic operations for all primals through the **Tower Atomic Pattern**:
+BearDog provides secure cryptographic operations for all primals through the **Tower Atomic Pattern**. Each primal delegates crypto to BearDog via JSON-RPC over Unix sockets, keeping a single auditable crypto codebase.
 
 ```
 ┌─────────────┐                    ┌─────────────┐
-│  Songbird   │ ←─ JSON-RPC ────→ │  BearDog    │
-│ (TLS Proto) │    Unix Socket     │  (Crypto)   │
+│  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
+│ (Protocol)  │    Unix Socket     │  (Crypto)   │
 └─────────────┘                    └─────────────┘
-     Pure Rust                        Pure Rust
-     No crypto code                   91 crypto methods
+     Zero crypto code                 All crypto operations
 ```
 
 ### Key Features
 
-- **100% Pure Rust** - Zero C dependencies
-- **91 Crypto Methods** - Complete JSON-RPC API
-- **Tor v3 Support** - Onion address + ntor handshake
-- **Universal IPC** - Multi-transport, platform-agnostic
-- **HSM Integration** - Hardware, software, mobile
-- **Dark Forest Beacon** - Zero metadata leakage
-- **7,682+ Tests** - 100% passing
+- **100% Pure Rust** -- Zero C dependencies (RustCrypto suite)
+- **91+ Crypto Methods** -- Complete JSON-RPC API
+- **Tor v3 Support** -- Onion address derivation + ntor handshake + cell crypto
+- **Multi-Family Support** -- `--family-id` flag for per-family instances
+- **Secret Storage** -- Encrypted secrets with family-scoped keys
+- **Universal IPC** -- Multi-transport, platform-agnostic
+- **HSM Integration** -- Hardware, software, mobile backends
+- **Dark Forest Beacon** -- Zero metadata leakage discovery
 
 ---
 
@@ -42,7 +40,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 ### Prerequisites
 
 ```bash
-# Rust 1.75+ required
+# Rust 1.80+ required (uses std::sync::LazyLock)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
@@ -58,11 +56,16 @@ cargo test --workspace
 ### Run
 
 ```bash
-# Universal command - auto-detects platform
+# Default -- auto-detects platform transport
 cargo run --release --bin beardog -- server
 
-# Or with custom socket
+# With family isolation (multi-family architecture)
+./beardog server --family-id alpha
+
+# Custom socket path
 ./beardog server --socket /custom/path.sock
+
+# TCP transport (Android, Windows, cross-device)
 ./beardog server --listen 0.0.0.0:9900
 ```
 
@@ -72,13 +75,13 @@ cargo run --release --bin beardog -- server
 
 | Platform | Transport | Status |
 |----------|-----------|--------|
-| Linux | Unix sockets | ✅ Production |
-| macOS | Unix sockets | ✅ Production |
-| Android | Abstract sockets + TCP | ✅ Production |
-| Windows | Named pipes + TCP | ✅ Ready |
-| iOS | TCP | ✅ Ready |
+| Linux | Unix sockets | Production |
+| macOS | Unix sockets | Production |
+| Android | Abstract sockets + TCP | Production |
+| Windows | Named pipes + TCP | Ready |
+| iOS | TCP | Ready |
 
-**Zero configuration required** - BearDog auto-detects the platform and binds appropriate transports.
+BearDog auto-detects the platform and binds appropriate transports.
 
 ---
 
@@ -94,31 +97,25 @@ cargo run --release --bin beardog -- server
 | **Hashing** | BLAKE3, SHA-256/384/512, SHA3-256 |
 | **KDF** | HKDF, TLS 1.2/1.3 PRF, PBKDF2, Argon2id |
 | **Tor** | Onion address, ntor handshake, cell crypto |
+| **Secrets** | Encrypted storage with family-scoped keys |
 
-### JSON-RPC Methods (91 total)
+### JSON-RPC Method Categories
 
-```bash
-# Cryptographic Operations
-beardog.crypto.sign_ed25519
-beardog.crypto.verify_ed25519
-beardog.crypto.x25519_diffie_hellman
-beardog.crypto.chacha20_poly1305_encrypt
-beardog.crypto.blake3_hash
+```
+crypto.*       - Hash, sign, verify, encrypt, decrypt, key exchange
+tls.*          - TLS 1.2/1.3 key derivation and handshake
+tor.*          - Onion identity, ntor, cell crypto
+genetic.*      - Lineage keys, beacon, challenge-response
+secrets.*      - Store, retrieve, list, delete encrypted secrets
+btsp.*         - Secure tunnel configuration
+```
 
-# Tor Operations
-beardog.crypto.derive_onion_address
-beardog.crypto.generate_onion_identity
-beardog.crypto.tor_ntor_client_init
-beardog.crypto.tor_cell_encrypt
+### Introspection
 
-# TLS Operations
-beardog.tls.derive_keys
-beardog.tls.sign_handshake
-beardog.tls.verify_certificate
-
-# Genetic Operations
-beardog.genetic.derive_lineage_key
-beardog.genetic.mix_entropy
+```
+discover_capabilities  - List all capabilities
+primal.info            - Primal identity and metadata
+rpc.methods            - List all available methods
 ```
 
 ---
@@ -127,45 +124,45 @@ beardog.genetic.mix_entropy
 
 ### Tower Atomic Pattern
 
-BearDog implements the Tower Atomic Pattern - all primals delegate cryptographic operations to BearDog via JSON-RPC:
+All primals delegate cryptographic operations to BearDog via JSON-RPC:
 
-- **Separation of Concerns**: Protocol logic in primals, crypto in BearDog
-- **Security**: Single auditable crypto codebase
-- **Flexibility**: HSM abstraction (hardware, software, mobile)
+- **Separation of Concerns** -- Protocol logic stays in primals, crypto stays in BearDog
+- **Single Audit Surface** -- One codebase to review for crypto correctness
+- **HSM Abstraction** -- Software, hardware (PKCS#11), or mobile (StrongBox) backends
+- **Family Isolation** -- Each family gets its own BearDog instance with independently derived keys
 
-### HSM Support
+### Multi-Family Architecture
 
-| Type | Implementation | Status |
-|------|----------------|--------|
-| Software | In-memory secure storage | ✅ Production |
-| PKCS#11 | YubiKey, Luna, etc. | ✅ Production |
-| Android | StrongBox | ✅ Production |
-| iOS | Secure Enclave | ✅ Ready |
-| TPM 2.0 | Platform TPM | ✅ Ready |
+```bash
+# Family A gets its own socket and key material
+./beardog server --family-id alpha   # beardog-alpha.sock
+
+# Family B is fully isolated
+./beardog server --family-id bravo   # beardog-bravo.sock
+```
+
+Key material is derived from the family seed. A BearDog instance serving family A never shares keys with family B.
 
 ---
 
-## Quality Metrics
+## Quality
 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Tests** | 7,682+ passing (100%) |
-| **Coverage** | 70.96% |
-| **Unsafe Code** | 0 blocks |
-| **C Dependencies** | 0 |
-| **Deep Debt Rounds** | 20/20 complete |
+| **Tests** | 8,789 passing (28 crates) |
+| **Pure Rust** | 100% -- zero C dependencies |
+| **Unsafe Code** | 0 production blocks |
+| **Production panics** | 0 -- all `Result<T, E>` |
+| **Crates** | 31 workspace crates |
 
-### Deep Debt Principles
+### Standards
 
-All principles at A+ or A++ (100/100):
-
-1. ✅ **Pure Rust** - Zero external C code
-2. ✅ **Smart Refactoring** - All files < 1,100 lines
-3. ✅ **Safe Code** - Zero unsafe blocks
-4. ✅ **Agnostic Config** - Capability-based discovery
-5. ✅ **Runtime Discovery** - Environment-aware
-6. ✅ **Production Mocks** - Test isolation only
+- **Pure Rust** -- No C dependencies anywhere
+- **Zero Hardcoding** -- Environment variables and capability discovery
+- **Result<T, E>** -- No `unwrap()`/`expect()` in production code
+- **< 1000 LOC** -- File size discipline (exceptions justified)
+- **std over external** -- `std::sync::LazyLock` over `once_cell`, etc.
 
 ---
 
@@ -173,22 +170,11 @@ All principles at A+ or A++ (100/100):
 
 | Document | Description |
 |----------|-------------|
-| [STATUS.md](STATUS.md) | Current status and metrics |
-| [START_HERE.md](START_HERE.md) | Quick start guide |
-| [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture overview |
+| [STATUS.md](STATUS.md) | Canonical status and metrics |
+| [START_HERE.md](START_HERE.md) | Quick start and onboarding |
+| [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture pattern |
+| [ROADMAP.md](ROADMAP.md) | Current priorities and roadmap |
 | `specs/current/security/` | Security specifications |
-
----
-
-## Contributing
-
-BearDog follows strict standards:
-
-- **Pure Rust** - No C dependencies
-- **Zero Hardcoding** - Use environment variables
-- **Result<T, E>** - No unwrap/panic in production
-- **< 1000 LOC** - File size discipline
-- **Tests Required** - All changes need tests
 
 ---
 
@@ -198,6 +184,4 @@ See [LICENSE](LICENSE) file.
 
 ---
 
-**BearDog**: 100% Pure Rust Cryptographic Service Provider
-
-*Grade: A+ LEGENDARY (99/100) | 28 crates | 91 methods | 7,682+ tests*
+**BearDog**: 100% Pure Rust Cryptographic Service Provider for the ecoPrimals Ecosystem

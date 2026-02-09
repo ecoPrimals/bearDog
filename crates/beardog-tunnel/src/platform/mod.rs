@@ -138,7 +138,10 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 #[cfg(target_family = "wasm")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
     // WASM: Use in-process channels (no true IPC in browser)
-    SocketEndpoint::InProcess("beardog".to_string())
+    let primal_name = std::env::var("PRIMAL_NAME")
+        .or_else(|_| std::env::var("BEARDOG_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string());
+    SocketEndpoint::InProcess(primal_name)
 }
 
 /// Convert socket endpoint to string path (for CLI defaults)

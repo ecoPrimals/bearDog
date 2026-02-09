@@ -61,9 +61,18 @@ pub struct RegistrationResponse {
     pub registered_at: String,
 }
 
+/// Default UPA service provider (environment-discoverable)
+///
+/// Priority:
+/// 1. `UPA_PROVIDER` env var (operator override)
+/// 2. `"songbird"` (default UPA implementation)
+fn discover_upa_provider() -> String {
+    std::env::var("UPA_PROVIDER").unwrap_or_else(|_| "songbird".to_string())
+}
+
 /// UPA client for service registration and discovery
 pub struct UpaClient {
-    /// Tower Atomic client for Songbird
+    /// Tower Atomic client for UPA provider
     client: AtomicClient,
     /// Cached registration token
     token: Arc<ArcSwap<Option<String>>>,
@@ -72,7 +81,11 @@ pub struct UpaClient {
 impl UpaClient {
     /// Create a new UPA client
     ///
-    /// Connects to Songbird's UPA service via Tower Atomic (Unix socket).
+    /// Discovers the UPA provider at runtime:
+    /// 1. `UPA_PROVIDER` env var (operator override)
+    /// 2. Default: `"songbird"` (standard UPA implementation)
+    ///
+    /// Connects via Tower Atomic (Unix socket).
     ///
     /// # Example
     ///
@@ -86,18 +99,19 @@ impl UpaClient {
     /// }
     /// ```
     pub async fn new() -> Result<Self, BearDogError> {
-        info!("🔌 Connecting to Songbird UPA via Tower Atomic");
+        let provider = discover_upa_provider();
+        info!("🔌 Connecting to UPA provider '{}' via Tower Atomic", provider);
 
-        let client = AtomicClient::connect("songbird")
+        let client = AtomicClient::connect(&provider)
             .await
             .map_err(|e| {
                 BearDogError::ConnectionFailed(format!(
-                    "Failed to connect to Songbird UPA: {}",
-                    e
+                    "Failed to connect to UPA provider '{}': {}",
+                    provider, e
                 ))
             })?;
 
-        info!("✅ Connected to Songbird UPA");
+        info!("✅ Connected to UPA provider '{}'", provider);
 
         Ok(Self {
             client,
