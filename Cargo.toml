@@ -6,10 +6,6 @@ members = [
     "showcase/05-mixed-entropy",
 ]
 exclude = [
-    "android",
-    "ecosystem-bindings",
-    "crates/beardog-crypto",
-    "crates/beardog-networking",
     "crates/beardog",
     "crates/beardog-integration",  # Legacy HTTP/reqwest - evolved to Tower Atomic
     "showcase/00-local-primal/01-hello-beardog",
