@@ -1,5 +1,8 @@
 # 🐻 BearDog Project Status
 
+> **⚠️ HISTORICAL SNAPSHOT** — This is a point-in-time record from Dec 4, 2025.
+> For current metrics see [STATUS.md](../STATUS.md) (12,344+ tests, 30 crates, 78.6% coverage).
+
 **Last Updated**: December 4, 2025 (Comprehensive Audit)  
 **Grade**: **A- (91/100)** - Production Ready  
 **Status**: ✅ **Production Ready** - All Phase 1 workflows operational

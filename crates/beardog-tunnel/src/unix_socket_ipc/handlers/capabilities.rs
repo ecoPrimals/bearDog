@@ -131,6 +131,12 @@ impl CapabilitiesHandler {
                         "verify_certificate"
                     ],
                     "description": "TLS 1.3 cryptographic operations - HKDF key derivation, Ed25519 handshake signing, X.509 certificate verification"
+                },
+                {
+                    "type": "relay",
+                    "version": "1.0",
+                    "methods": ["authorize"],
+                    "description": "Relay authorization - lineage-gated access control for relay-assisted coordinated punch"
                 }
             ],
             "version": env!("CARGO_PKG_VERSION"),
@@ -160,7 +166,8 @@ impl CapabilitiesHandler {
                 "crypto.hmac",
                 "jwt.provision",
                 "secrets.store",
-                "secrets.retrieve"
+                "secrets.retrieve",
+                "relay.authorize"
             ]
         }))
     }
@@ -261,7 +268,7 @@ mod tests {
 
         // Must have flat capabilities array
         let caps = response["capabilities"].as_array().unwrap();
-        assert!(caps.len() >= 11, "Expected at least 11 capabilities");
+        assert!(caps.len() >= 12, "Expected at least 12 capabilities");
 
         // Verify required capabilities per ecoBin v2.0
         let cap_strs: Vec<&str> = caps.iter().map(|v| v.as_str().unwrap()).collect();

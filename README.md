@@ -30,6 +30,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **Tor v3 Support** -- Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** -- `--family-id` flag for per-family instances
 - **Secret Storage** -- Encrypted secrets with family-scoped keys
+- **Relay Authorization** -- Lineage-gated access for relay-assisted coordinated punch
 - **Universal IPC** -- Multi-transport, platform-agnostic
 - **HSM Integration** -- Hardware, software, mobile backends
 - **Dark Forest Beacon** -- Zero metadata leakage discovery
@@ -110,6 +111,8 @@ tls.*          - TLS 1.2/1.3 key derivation and handshake
 tor.*          - Onion identity, ntor, cell crypto
 genetic.*      - Lineage keys, beacon, challenge-response
 secrets.*      - Store, retrieve, list, delete encrypted secrets
+relay.*        - Lineage-gated relay authorization (coordinated punch)
+beacon.*       - Dark Forest beacon generation, encryption, meeting exchange
 btsp.*         - Secure tunnel configuration
 ```
 

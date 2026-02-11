@@ -50,6 +50,12 @@ Current coverage is 78.6% (up from ~62% baseline). Targeting 90% across all crat
 
 **Crates in progress**: beardog-types (78.60%), beardog-tunnel (75.60%).
 
+### Relay-Assisted Coordinated Punch (BearDog Step 3 — Complete)
+
+BearDog now provides `relay.authorize` for lineage-gated relay authorization. When Songbird's relay server receives an allocation request, it calls BearDog to verify the requester's family membership before forwarding traffic. This is BearDog's role in the relay-assisted coordinated punch protocol that improves symmetric-NAT-to-symmetric-NAT success rates from ~5% to 60-80%.
+
+**What BearDog owns**: `relay.authorize` (identity verification). **What BearDog does NOT own**: UDP sockets, relay forwarding, STUN probes, punch timing (all Songbird).
+
 ---
 
 ## Future Work

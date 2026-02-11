@@ -51,6 +51,7 @@ pub mod federation;
 pub mod graph_security;
 pub mod health;
 pub mod introspection; // Primal introspection (primal.info, rpc.methods)
+pub mod relay; // Relay authorization (lineage-gated, for Songbird relay server)
 pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;
 
@@ -169,6 +170,8 @@ impl HandlerRegistry {
                 Arc::new(beacon::BeaconHandler::new()),
                 // Secret Storage (Feb 2026 - Evolution)
                 Arc::new(secrets::SecretsHandler::new(identity.clone())),
+                // Relay Authorization (Feb 2026 - Coordinated Punch)
+                Arc::new(relay::RelayHandler::new(identity.clone())),
             ]),
         });
 

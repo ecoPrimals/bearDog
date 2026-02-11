@@ -96,6 +96,7 @@
 - **Dark Forest Beacon** -- Zero metadata leakage discovery
 - **Multi-Family Isolation** -- `--family-id` for per-family key material
 - **Secret Storage** -- Encrypted secrets with family-scoped keys
+- **Relay Authorization** -- Lineage-gated relay access for coordinated punch
 - **HSM Abstraction** -- Software, hardware (PKCS#11), mobile (StrongBox)
 - **Universal IPC** -- Multi-transport, platform-agnostic
 

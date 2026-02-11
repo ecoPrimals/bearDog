@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### February 11, 2026 -- Relay Authorization & Documentation
+
+- `relay.authorize` JSON-RPC method: lineage-gated relay authorization for coordinated punch
+- BearDog verifies family membership before allowing Songbird relay sessions
+- Blake3-based lineage proof verification for cross-family relay trust
+- `relay` capability type added to `discover_capabilities` response
+- 12 new relay handler tests (family match, denial, proof validation, isolation)
+- Specs directory rewritten with current metrics (was stale since Oct 2025)
+- Primal contracts updated with relay, beacon, and secrets API documentation
+
 ### February 11, 2026 -- Test Coverage Push
 
 - Expanded test coverage from ~62% baseline to 78.6% overall

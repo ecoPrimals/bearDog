@@ -1,5 +1,9 @@
 # Current Implementation Status - January 26, 2026
 
+> **⚠️ HISTORICAL SNAPSHOT** — This is a point-in-time record from Jan 26, 2026.
+> For current metrics see [STATUS.md](../../STATUS.md) (12,344+ tests, 30 crates, 78.6% coverage).
+> For current method inventory see [PRIMAL_CONTRACTS.md](../../docs/PRIMAL_CONTRACTS.md) (91+ JSON-RPC methods).
+
 **Date**: January 26, 2026  
 **Grade**: A+++ (100/100) - PERFECT SCORE!  
 **Status**: PRODUCTION-READY++ (Elite-Tier)

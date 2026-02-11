@@ -1,5 +1,7 @@
 # Test Coverage Status - November 2025
 
+> **⚠️ HISTORICAL SNAPSHOT** — Point-in-time from Nov 2025. Current: 12,344+ tests, 78.6% coverage. See [STATUS.md](../../../STATUS.md).
+
 **Last Updated**: November 5, 2025  
 **Status**: ✅ Test Coverage Sprint Complete  
 **Grade**: **A+ (95/100)** 🏆

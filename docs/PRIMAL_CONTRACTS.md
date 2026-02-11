@@ -34,7 +34,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **46 JSON-RPC methods** across 5 categories:
+BearDog provides **91+ JSON-RPC methods** across 11 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -43,12 +43,14 @@ BearDog provides **46 JSON-RPC methods** across 5 categories:
 - Hashing: BLAKE3, SHA-256, SHA-384, SHA-512
 - Authentication: HMAC-SHA256
 
-### **2. Genetic Cryptography** (8 methods)
+### **2. Genetic Cryptography** (11 methods)
 - Lineage key derivation (family-based)
 - Beacon key derivation (TRUE Dark Forest)
 - Entropy mixing (3-tier: Human/Supervised/Machine)
-- Lineage verification
+- Lineage verification + proof generation
 - Challenge-response authentication
+- Lineage certificate enrollment + verification
+- Device enrollment (parent→child derivation)
 
 ### **3. TLS/HTTPS Support** (4 methods)
 - Handshake secret derivation (HKDF)
@@ -56,12 +58,51 @@ BearDog provides **46 JSON-RPC methods** across 5 categories:
 - Certificate verification (X.509)
 - Handshake signing (Ed25519)
 
-### **4. Password Hashing** (3 methods)
+### **4. Tor v3 Onion** (8 methods)
+- Onion address derivation from Ed25519
+- Identity generation (keypair + .onion)
+- ntor handshake (client init, finish, server respond)
+- Cell encryption/decryption (ChaCha20)
+- HKDF-SHA256 key expansion
+
+### **5. Secret Storage** (4 methods)
+- `secrets.store` — Encrypt and store with family-scoped key
+- `secrets.retrieve` — Decrypt and return secret
+- `secrets.list` — List stored secret names (not values)
+- `secrets.delete` — Remove a stored secret
+
+### **6. Beacon (Dark Forest)** (7 methods)
+- `beacon.generate` — Generate beacon seed
+- `beacon.get_id` — Get public beacon ID
+- `beacon.encrypt` — Encrypt with beacon seed
+- `beacon.try_decrypt` — Decrypt with our seed
+- `beacon.try_decrypt_any` — Decrypt with any known beacon
+- `beacon.list_known` — List known beacon IDs
+- `beacon.add_known` — Add known beacon from meeting
+
+### **7. Relay Authorization** (1 method)
+- `relay.authorize` — Lineage-gated relay authorization
+
+### **8. Federation** (2 methods)
+- `federation.verify_family_member` — Verify genetic relationship
+- `federation.derive_subfed_key` — Derive sub-federation key
+
+### **9. Password Hashing** (3 methods)
 - Argon2id (OWASP recommended, memory-hard)
 - PBKDF2-SHA256 (legacy compatibility)
 - Constant-time verification
 
-### **5. HSM Management** (11 methods)
+### **10. Security** (6 methods)
+- Trust evaluation, JWT verification, graph security
+
+### **11. Introspection** (6 methods)
+- `discover_capabilities`, `capabilities`, `get_capabilities`
+- `primal.info`, `rpc.methods`, `identity`/`whoami`
+
+### **BTSP (Tunnel)** (6 methods)
+- Contact exchange, tunnel establish/encrypt/decrypt/status/close
+
+### **HSM Management** (11 methods)
 - Key generation (ephemeral, persistent)
 - Key storage (StrongBox on Android)
 - Entropy management
@@ -492,6 +533,327 @@ BearDog provides **46 JSON-RPC methods** across 5 categories:
 
 ═══════════════════════════════════════════════════════════════════
 
+## 🗄️ **SECRET STORAGE**
+
+### **Store Secret**
+
+**Method**: `secrets.store`
+
+**Purpose**: Encrypt and store a named secret using family-scoped key (HKDF-SHA256 + ChaCha20-Poly1305)
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "secrets.store",
+  "params": {
+    "name": "api_key_prod",
+    "value": "base64_encoded_secret_value",
+    "metadata": {"service": "payment-gateway"}
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "stored": true,
+    "name": "api_key_prod",
+    "encrypted_size_bytes": 128
+  },
+  "id": 1
+}
+```
+
+**Security**: Per-secret encryption key derived via HKDF-SHA256 from family seed + secret name. Stored as ChaCha20-Poly1305 ciphertext. Only same-family nodes can decrypt.
+
+---
+
+### **Retrieve Secret**
+
+**Method**: `secrets.retrieve`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "secrets.retrieve",
+  "params": {
+    "name": "api_key_prod"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "name": "api_key_prod",
+    "value": "base64_encoded_decrypted_value",
+    "metadata": {"service": "payment-gateway"}
+  },
+  "id": 1
+}
+```
+
+---
+
+### **List Secrets**
+
+**Method**: `secrets.list`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "secrets.list",
+  "params": {},
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "secrets": ["api_key_prod", "db_password", "signing_key"],
+    "count": 3
+  },
+  "id": 1
+}
+```
+
+**Security**: Returns names only, never values.
+
+---
+
+### **Delete Secret**
+
+**Method**: `secrets.delete`
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "secrets.delete",
+  "params": {
+    "name": "api_key_prod"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "deleted": true,
+    "name": "api_key_prod"
+  },
+  "id": 1
+}
+```
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔦 **DARK FOREST BEACON**
+
+### **Generate Beacon**
+
+**Method**: `beacon.generate`
+
+**Purpose**: Generate a beacon seed for Dark Forest discovery — pure noise, zero metadata leakage
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "beacon.generate",
+  "params": {},
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "beacon_id": "hex_encoded_public_beacon_id",
+    "generated": true
+  },
+  "id": 1
+}
+```
+
+---
+
+### **Encrypt Beacon**
+
+**Method**: `beacon.encrypt`
+
+**Purpose**: Encrypt payload with beacon seed — output indistinguishable from random noise
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "beacon.encrypt",
+  "params": {
+    "plaintext": "base64_encoded_payload"
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "ciphertext": "base64_encoded_noise",
+    "beacon_id": "hex_encoded_beacon_id"
+  },
+  "id": 1
+}
+```
+
+**Security**: Ciphertext is pure noise — no headers, no magic bytes, no structure.
+
+---
+
+### **Try Decrypt Beacon**
+
+**Method**: `beacon.try_decrypt`
+
+**Purpose**: Attempt to decrypt beacon with our seed. Returns null if not our beacon.
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "beacon.try_decrypt",
+  "params": {
+    "ciphertext": "base64_encoded_noise"
+  },
+  "id": 1
+}
+```
+
+**Response** (success):
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "decrypted": true,
+    "plaintext": "base64_encoded_payload"
+  },
+  "id": 1
+}
+```
+
+**Response** (not our beacon):
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "decrypted": false,
+    "plaintext": null
+  },
+  "id": 1
+}
+```
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔀 **RELAY AUTHORIZATION**
+
+### **Authorize Relay**
+
+**Method**: `relay.authorize`
+
+**Purpose**: Lineage-gated authorization for relay-assisted NAT traversal. BearDog acts as the cryptographic authority — verifies genetic lineage before authorizing relay access.
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "relay.authorize",
+  "params": {
+    "requester_node_id": "pixel_node2",
+    "requester_family_id": "pixel_tower_family",
+    "lineage_proof": "base64_encoded_blake3_proof"
+  },
+  "id": 1
+}
+```
+
+**Response** (authorized — same family):
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "authorized": true,
+    "masking_level": "transparent",
+    "ttl_seconds": 300,
+    "reason": "family_member",
+    "our_family_id": "pixel_tower_family",
+    "provider": "beardog"
+  },
+  "id": 1
+}
+```
+
+**Response** (authorized — different family, valid lineage proof):
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "authorized": true,
+    "masking_level": "standard",
+    "ttl_seconds": 120,
+    "reason": "lineage_verified",
+    "our_family_id": "pixel_tower_family",
+    "provider": "beardog"
+  },
+  "id": 1
+}
+```
+
+**Response** (denied):
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "authorized": false,
+    "masking_level": "blocked",
+    "ttl_seconds": 0,
+    "reason": "lineage_verification_failed",
+    "our_family_id": "pixel_tower_family",
+    "provider": "beardog"
+  },
+  "id": 1
+}
+```
+
+**Authorization Logic**:
+1. **Same `family_id`** → authorized, masking `"transparent"`, TTL 300s
+2. **Different family + valid Blake3 lineage proof** → authorized, masking `"standard"`, TTL 120s
+3. **Different family + invalid/missing proof** → denied, masking `"blocked"`, TTL 0
+
+**Integration**: Songbird's relay server calls this via Neural API → routes to BearDog → BearDog verifies lineage → returns authorization decision. BearDog never touches a network socket.
+
+**Performance**: ~200μs (Blake3 verification)
+
+═══════════════════════════════════════════════════════════════════
+
 ## 📡 **DISCOVERY PROTOCOL**
 
 ### **How Primals Find BearDog**
@@ -539,7 +901,15 @@ BearDog advertises capabilities via Dark Forest beacons:
     "genetic.lineage",
     "genetic.beacon",
     "hsm.strongbox",
-    "tls.1.3"
+    "tls.1.3",
+    "secrets.store",
+    "secrets.retrieve",
+    "secrets.list",
+    "secrets.delete",
+    "beacon.generate",
+    "beacon.encrypt",
+    "beacon.try_decrypt",
+    "relay.authorize"
   ],
   "timestamp": 1738531200
 }
@@ -576,6 +946,9 @@ BearDog advertises capabilities via Dark Forest beacons:
 | -32603 | Internal error | Crypto operation failed |
 | -32000 | HSM error | Hardware security module error |
 | -32001 | Lineage error | Genetic verification failed |
+| -32002 | Secret not found | Named secret does not exist |
+| -32003 | Relay denied | Relay authorization rejected |
+| -32004 | Beacon error | Beacon operation failed |
 
 ### **Best Practices**
 
@@ -702,7 +1075,7 @@ print(response['result']['hash'])
 19. `crypto.blake3_hash` - BLAKE3 hashing
 20. `crypto.hmac_sha256` - HMAC-SHA256
 
-### **Genetic Cryptography (8 methods)**
+### **Genetic Cryptography (11 methods)**
 
 21. `genetic.derive_lineage_key` - Lineage-based key derivation
 22. `genetic.derive_lineage_beacon_key` - Beacon key (TRUE Dark Forest)
@@ -712,21 +1085,102 @@ print(response['result']['hash'])
 26. `genetic.generate_challenge` - Challenge generation
 27. `genetic.respond_to_challenge` - Challenge response
 28. `genetic.verify_challenge_response` - Response verification
+29. `genetic.enroll_lineage_certificate` - Lineage certificate enrollment
+30. `genetic.verify_lineage_certificate` - Certificate verification
+31. `genetic.enroll_device` - Device enrollment (parent→child)
 
 ### **TLS/HTTPS (4 methods)**
 
-29. `tls.derive_secrets` - Handshake secret derivation
-30. `tls.derive_application_secrets` - Application secret derivation
-31. `tls.sign_handshake` - Handshake signing
-32. `tls.verify_certificate` - Certificate verification
+32. `tls.derive_secrets` - Handshake secret derivation
+33. `tls.derive_application_secrets` - Application secret derivation
+34. `tls.sign_handshake` - Handshake signing
+35. `tls.verify_certificate` - Certificate verification
+
+### **Tor v3 Onion (8 methods)**
+
+36. `tor.derive_onion_address` - Derive .onion from Ed25519
+37. `tor.generate_identity` - Generate keypair + .onion address
+38. `tor.ntor_client_init` - ntor handshake client init
+39. `tor.ntor_server_respond` - ntor handshake server respond
+40. `tor.ntor_client_finish` - ntor handshake client finish
+41. `tor.encrypt_cell` - Cell encryption (ChaCha20)
+42. `tor.decrypt_cell` - Cell decryption (ChaCha20)
+43. `tor.hkdf_expand` - HKDF-SHA256 key expansion
+
+### **Secret Storage (4 methods)**
+
+44. `secrets.store` - Encrypt and store secret
+45. `secrets.retrieve` - Decrypt and return secret
+46. `secrets.list` - List stored secret names
+47. `secrets.delete` - Remove a stored secret
+
+### **Dark Forest Beacon (7 methods)**
+
+48. `beacon.generate` - Generate beacon seed
+49. `beacon.get_id` - Get public beacon ID
+50. `beacon.encrypt` - Encrypt with beacon seed
+51. `beacon.try_decrypt` - Decrypt with our seed
+52. `beacon.try_decrypt_any` - Decrypt with any known beacon
+53. `beacon.list_known` - List known beacon IDs
+54. `beacon.add_known` - Add known beacon from meeting
+
+### **Relay Authorization (1 method)**
+
+55. `relay.authorize` - Lineage-gated relay authorization
+
+### **Federation (2 methods)**
+
+56. `federation.verify_family_member` - Verify genetic relationship
+57. `federation.derive_subfed_key` - Derive sub-federation key
 
 ### **Password Hashing (3 methods)**
 
-33. `crypto.argon2id_hash` - Argon2id password hashing
-34. `crypto.argon2id_verify` - Argon2id verification
-35. `crypto.pbkdf2_sha256` - PBKDF2 key derivation
+58. `crypto.argon2id_hash` - Argon2id password hashing
+59. `crypto.argon2id_verify` - Argon2id verification
+60. `crypto.pbkdf2_sha256` - PBKDF2 key derivation
 
-### **Total**: **46 JSON-RPC methods**
+### **BTSP Tunnel (6 methods)**
+
+61. `btsp.exchange_contacts` - Exchange contact information
+62. `btsp.establish` - Establish encrypted tunnel
+63. `btsp.encrypt` - Encrypt tunnel payload
+64. `btsp.decrypt` - Decrypt tunnel payload
+65. `btsp.status` - Tunnel status check
+66. `btsp.close` - Close tunnel
+
+### **Security (6 methods)**
+
+67. `security.evaluate_trust` - Trust evaluation
+68. `security.verify_jwt` - JWT verification
+69. `security.graph_query` - Security graph query
+70. `security.validate_permissions` - Permission validation
+71. `security.check_authorization` - Authorization check
+72. `security.audit_log` - Audit log entry
+
+### **Introspection (6 methods)**
+
+73. `discover_capabilities` - List all capability categories
+74. `capabilities` - Detailed capability information
+75. `get_capabilities` - Flat list of all methods
+76. `primal.info` - Primal metadata
+77. `rpc.methods` - Available RPC methods
+78. `identity` / `whoami` - Node identity
+
+### **HSM Management (11 methods)**
+
+79. `hsm.generate_key` - Key generation
+80. `hsm.import_key` - Key import
+81. `hsm.export_key` - Key export
+82. `hsm.delete_key` - Key deletion
+83. `hsm.list_keys` - List managed keys
+84. `hsm.get_entropy` - Hardware entropy
+85. `hsm.create_session` - HSM session creation
+86. `hsm.close_session` - HSM session teardown
+87. `hsm.sign` - HSM-backed signing
+88. `hsm.verify` - HSM-backed verification
+89. `hsm.status` - HSM health status
+
+### **Total**: **91+ JSON-RPC methods**
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -815,11 +1269,16 @@ BearDog uses **genetic lineage** for authentication:
 - BearDog source: `phase1/beardog/crates/beardog-tunnel/`
 - Crypto handlers: `src/unix_socket_ipc/handlers/crypto/`
 - Genetic handlers: `src/unix_socket_ipc/crypto_handlers_genetic.rs`
+- Secret handlers: `src/unix_socket_ipc/handlers/secrets.rs`
+- Beacon handlers: `src/unix_socket_ipc/handlers/beacon.rs`
+- Relay handler: `src/unix_socket_ipc/handlers/relay.rs`
+- Capabilities: `src/unix_socket_ipc/handlers/capabilities.rs`
+- Handler registry: `src/unix_socket_ipc/handlers/mod.rs`
 
 ═══════════════════════════════════════════════════════════════════
 
-**Document Version**: 1.0.0  
-**Last Updated**: February 2, 2026  
+**Document Version**: 2.0.0  
+**Last Updated**: February 11, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)
 

@@ -40,10 +40,7 @@ use parking_lot::RwLock;
 use tracing::{debug, info, warn};
 
 use crate::tunnel::hsm::manager::HsmManager;
-use beardog_capabilities::traits::{
-    PeerEndpoint, SecureTunnelProvider, TunnelHandle as CapabilityTunnelHandle,
-    TunnelStatus as CapabilityTunnelStatus,
-};
+use beardog_capabilities::traits::PeerEndpoint;
 use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::{BirdSongManager, LineageHint};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;

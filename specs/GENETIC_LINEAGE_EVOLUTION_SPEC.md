@@ -350,9 +350,14 @@ All new methods have comprehensive tests:
 | Issue | Priority | Status |
 |-------|----------|--------|
 | Lineage DERIVATION | Critical | ✅ BearDog Complete |
+| Relay Authorization | High | ✅ BearDog Complete (Feb 11, 2026) |
 | TLS Handshake | High | ⏳ Songbird Investigation |
 | BirdSong family_id | Medium | ⏳ Songbird Fix |
 | Songbird `health` | Medium | ⏳ Songbird Implementation |
+
+> **Note**: `relay.authorize` (added Feb 11, 2026) uses lineage verification
+> as its authorization mechanism. See [PRIMAL_CONTRACTS.md](../docs/PRIMAL_CONTRACTS.md)
+> for the full relay authorization contract.
 
 ---
 

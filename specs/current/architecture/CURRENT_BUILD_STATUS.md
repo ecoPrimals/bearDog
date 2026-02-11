@@ -1,5 +1,7 @@
 # BearDog Current Build Status Specification
 
+> **⚠️ HISTORICAL SNAPSHOT** — Point-in-time from Oct 2025. Current: 12,344+ tests, 30 crates, 0 errors. See [STATUS.md](../../../STATUS.md).
+
 ---
 ✅ **UPDATE** (October 3, 2025)
 
