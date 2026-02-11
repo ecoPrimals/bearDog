@@ -10,7 +10,7 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Build** | Clean | Zero errors, minimal warnings |
-| **Tests** | 12,300+ passing | 30 crates |
+| **Tests** | 12,740+ passing | 30 crates |
 | **Coverage** | 78.6% | Up from 62% baseline, targeting 90% |
 | **Pure Rust** | 100% | Zero C dependencies |
 | **Unsafe Code** | 0 blocks | Zero unsafe in production |
@@ -22,7 +22,7 @@
 ## Codebase Metrics
 
 - **Crates**: 30 in workspace
-- **Lines of Code**: ~400,000+ (production Rust)
+- **Lines of Code**: ~524,000 (production Rust, post-cleanup)
 - **Test Coverage**: 78.6% line coverage (llvm-cov)
 - **Crypto Methods**: 91+ JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS

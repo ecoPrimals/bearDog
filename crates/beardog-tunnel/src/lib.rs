@@ -158,7 +158,7 @@ pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
 
 // Re-export BTSP types for Songbird integration
 pub use btsp_provider::{
-    BeardogBtspProvider, BtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
+    BeardogBtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle,
     TunnelStatus,
 };
 
