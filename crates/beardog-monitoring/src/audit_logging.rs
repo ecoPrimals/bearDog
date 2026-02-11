@@ -466,8 +466,36 @@ impl IntegrityValidator {
 
 
     fn generate_or_load_key() -> Result<Vec<u8>, BearDogError> {
+        // Derive a deterministic audit HMAC key from the machine ID.
+        // On Linux: /etc/machine-id provides a stable per-host identifier.
+        // Fallback: hostname + process info for non-Linux or containerized envs.
+        let seed = Self::read_machine_identity();
+        
+        // HKDF-style derivation: SHA-256(seed || "beardog-audit-integrity-v1")
+        use sha2::{Sha256, Digest};
+        let mut hasher = Sha256::new();
+        hasher.update(seed.as_bytes());
+        hasher.update(b"beardog-audit-integrity-v1");
+        let derived = hasher.finalize();
+        
+        Ok(derived.to_vec())
+    }
 
-        Ok(b"audit_integrity_key_placeholder".to_vec())
+    /// Read a stable machine identity for key derivation.
+    fn read_machine_identity() -> String {
+        // Try /etc/machine-id (Linux, systemd)
+        if let Ok(id) = std::fs::read_to_string("/etc/machine-id") {
+            let trimmed = id.trim();
+            if !trimmed.is_empty() {
+                return trimmed.to_string();
+            }
+        }
+        // Fallback: hostname
+        if let Ok(hostname) = std::env::var("HOSTNAME") {
+            return hostname;
+        }
+        // Last resort: use a fixed per-process derivation
+        format!("beardog-{}", std::process::id())
     }
 }
 

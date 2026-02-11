@@ -239,10 +239,6 @@ pub struct SovereigntyMonitoringConfig {
     pub violation_patterns: Vec<ViolationPattern>,
 }
 
-// Backward compatibility alias - will be removed in v4.0
-#[deprecated(since = "3.1.0", note = "Use SovereigntyMonitoringConfig instead")]
-pub type MonitoringConfig = SovereigntyMonitoringConfig;
-
 #[derive(Debug, Clone)]
 pub struct ViolationPattern {
     /// Name of the item

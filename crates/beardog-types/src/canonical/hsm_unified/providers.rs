@@ -3,9 +3,6 @@
 // This module provides HSM provider configuration with universal capability discovery.
 // Hardcoded cloud providers are deprecated in favor of dynamic discovery.
 
-// MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
-// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
-// Target: Replace with capability-based discovery for vendor/primal agnosticism
 use crate::canonical::capabilities::CapabilityType;
 use serde::{Deserialize, Serialize};
 
@@ -322,12 +319,12 @@ impl HsmProviderMigrationHelper {
          );\n\
          \n\
          Benefits:\n\
-         ✅ Works with ANY HSM provider (universal_cloud, universal_cloud, universal_cloud, Luna, nCipher, etc.)\n\
+         ✅ Works with ANY HSM provider (discovered dynamically at runtime)\n\
          ✅ Dynamic discovery - no hardcoded endpoints\n\
          ✅ Automatic failover between providers\n\
          ✅ Future-proof architecture\n\
          \n\
-         See: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md"
+         See: ARCHITECTURE.md for capability-based patterns"
     }
 }
 

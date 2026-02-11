@@ -1,6 +1,3 @@
-// MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
-// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
-// Target: Replace with capability-based discovery for vendor/primal agnosticism
 use beardog_errors::BearDogError;
 
 #[cfg(test)]

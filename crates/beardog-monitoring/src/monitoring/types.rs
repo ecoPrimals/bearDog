@@ -279,17 +279,7 @@ pub enum AlertSeverity {
 pub type AlertLevel = AlertSeverity;
 
 /// Monitoring configuration
-///
-/// ⚠️  CONSOLIDATED: This local `MonitoringConfig` has been replaced.
-/// Use `beardog_types::canonical::monitoring::MonitoringConfig` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::monitoring::MonitoringConfig instead"
-)]
-pub use beardog_types::canonical::monitoring::MonitoringConfig as LocalMonitoringConfig;
-
-// Temporary backward compatibility - will be removed in v4.0
-// For now, keep a simplified local version that wraps the canonical one
+/// Local monitoring configuration for simplified use cases.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     /// Whether monitoring is enabled

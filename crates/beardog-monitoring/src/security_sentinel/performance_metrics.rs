@@ -176,6 +176,9 @@ pub struct PerformanceMetricsCollector {
 
     /// Maximum history size
     max_history_size: usize,
+
+    /// Real system metrics collector (pure Rust /proc parsing)
+    system_metrics: super::system_metrics::SystemMetrics,
 }
 
 impl Default for PerformanceMetricsCollector {
@@ -191,6 +194,7 @@ impl PerformanceMetricsCollector {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
             thresholds: Arc::new(RwLock::new(PerformanceThresholds::default())),
             max_history_size: 1000,
+            system_metrics: super::system_metrics::SystemMetrics::new(),
         }
     }
 
@@ -200,6 +204,7 @@ impl PerformanceMetricsCollector {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
             thresholds: Arc::new(RwLock::new(thresholds)),
             max_history_size,
+            system_metrics: super::system_metrics::SystemMetrics::new(),
         }
     }
 
@@ -368,63 +373,38 @@ impl PerformanceMetricsCollector {
         *current = thresholds;
     }
 
-    // Private collection methods
+    // Private collection methods — delegated to SystemMetrics.
     //
-    // DEEP DEBT EVOLUTION (Feb 4, 2026):
-    // These methods previously returned hardcoded fake values (45.0, 62.0, etc.)
-    // which silently gave incorrect metrics in production.
-    // 
-    // Now they return explicit NotImplemented errors to be honest about status.
-    // Real implementations require platform-specific system APIs:
-    // - Linux: /proc/stat, /proc/meminfo, sysinfo()
-    // - macOS: host_processor_info(), host_statistics64()
-    // - Windows: GetSystemTimes(), GlobalMemoryStatusEx()
-    //
-    // Phase 2 TODO: Implement using sysinfo crate (pure Rust, cross-platform)
+    // EVOLVED (Feb 11, 2026): From NotImplemented stubs to real implementations.
+    // CPU/memory: Pure Rust /proc/stat + /proc/meminfo parsing (Linux).
+    // Response time/error rate/throughput: Atomic counters fed by record_request().
 
     fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
-        // Returns NotImplemented instead of fake value
-        // Phase 2: Use sysinfo::System::cpu_usage()
-        Err(BearDogError::not_implemented(
-            "CPU usage collection not implemented. \
-             Requires sysinfo crate or platform-specific APIs."
-        ))
+        self.system_metrics.collect_cpu_usage()
     }
 
     fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
-        // Returns NotImplemented instead of fake value
-        // Phase 2: Use sysinfo::System::used_memory() / total_memory()
-        Err(BearDogError::not_implemented(
-            "Memory usage collection not implemented. \
-             Requires sysinfo crate or platform-specific APIs."
-        ))
+        self.system_metrics.collect_memory_usage()
     }
 
     fn collect_response_time(&self) -> Result<f64, BearDogError> {
-        // Returns NotImplemented instead of fake value
-        // Phase 2: Integrate with request tracing middleware
-        Err(BearDogError::not_implemented(
-            "Response time collection not implemented. \
-             Requires request tracing integration."
-        ))
+        self.system_metrics.collect_response_time()
     }
 
     fn collect_error_rate(&self) -> Result<f64, BearDogError> {
-        // Returns NotImplemented instead of fake value
-        // Phase 2: Integrate with error tracking middleware
-        Err(BearDogError::not_implemented(
-            "Error rate collection not implemented. \
-             Requires error tracking integration."
-        ))
+        self.system_metrics.collect_error_rate()
     }
 
     fn collect_throughput(&self) -> Result<f64, BearDogError> {
-        // Returns NotImplemented instead of fake value
-        // Phase 2: Integrate with request counter middleware
-        Err(BearDogError::not_implemented(
-            "Throughput collection not implemented. \
-             Requires request counter integration."
-        ))
+        self.system_metrics.collect_throughput()
+    }
+
+    /// Record a completed request for throughput/latency/error tracking.
+    ///
+    /// Callers feed request data here; the collector aggregates it for
+    /// the next `collect_metrics()` call.
+    pub fn record_request(&self, duration: std::time::Duration, is_error: bool) {
+        self.system_metrics.record_request(duration, is_error);
     }
 }
 
@@ -453,8 +433,33 @@ mod tests {
     #[tokio::test]
     async fn test_collector_creation() {
         let collector = PerformanceMetricsCollector::new();
+        // First collection establishes CPU baseline — cpu_usage is 0.0 on first read.
+        // Memory usage is real on Linux.
         let metrics = collector.collect_metrics().await.unwrap();
-        assert!(metrics.cpu_usage > 0.0);
+        assert!(metrics.cpu_usage >= 0.0, "CPU usage should be non-negative");
+        #[cfg(target_os = "linux")]
+        assert!(metrics.memory_usage > 0.0, "Memory usage should be > 0 on Linux");
+    }
+
+    #[tokio::test]
+    async fn test_collector_second_read_has_real_cpu() {
+        let collector = PerformanceMetricsCollector::new();
+        // Establish baseline
+        let _first = collector.collect_metrics().await.unwrap();
+        // Small delay for CPU delta
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let second = collector.collect_metrics().await.unwrap();
+        assert!(second.cpu_usage >= 0.0 && second.cpu_usage <= 100.0);
+    }
+
+    #[tokio::test]
+    async fn test_collector_record_request() {
+        let collector = PerformanceMetricsCollector::new();
+        collector.record_request(std::time::Duration::from_millis(42), false);
+        collector.record_request(std::time::Duration::from_millis(100), true);
+        let metrics = collector.collect_metrics().await.unwrap();
+        // Response time should reflect the recorded requests
+        assert!(metrics.response_time >= 0.0);
     }
 
     #[test]

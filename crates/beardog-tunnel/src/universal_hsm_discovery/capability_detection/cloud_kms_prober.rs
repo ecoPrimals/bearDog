@@ -1,8 +1,5 @@
 //! Cloud KMS Capability Prober
 //!
-//! MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
-//! to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
-//! Target: Replace with capability-based discovery for vendor/primal agnosticism
 
 use super::super::*;
 use crate::tunnel::hsm::types::capability::HsmCapabilities;

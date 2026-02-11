@@ -252,5 +252,8 @@ impl Default for SecuritySentinel {
     }
 }
 
+pub mod performance_metrics;
+pub mod system_metrics;
+
 #[cfg(test)]
 mod comprehensive_tests;

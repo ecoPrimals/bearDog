@@ -5,9 +5,6 @@
 
 #![allow(deprecated)]
 
-// MODERNIZATION NOTE: This file contains primal-specific references that should be migrated
-// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
-// Target: Replace with capability-based discovery for vendor/primal agnosticism
 // Removed unused compute types - these are handled by universal adapters
 // Removed unused CapabilityType - using ServiceCapabilityType instead
 pub use beardog_types::canonical::capabilities::ServiceCapabilityType;

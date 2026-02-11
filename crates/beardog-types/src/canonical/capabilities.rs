@@ -308,7 +308,7 @@ pub struct UniversalCapability {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderInfo {
-    /// Provider identifier (e.g., "`universal_cloud`", "`universal_cloud`", `ServiceCapabilityType::ServiceMesh`)
+    /// Provider identifier (discovered dynamically via capability-based discovery)
     pub provider_id: String,
     /// Human-readable provider name
     pub provider_name: String,

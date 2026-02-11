@@ -301,10 +301,6 @@ pub struct ImprovedMonitoringConfig {
     pub enable_alerting: bool,
 }
 
-// Backward compatibility alias - will be removed in v4.0
-#[deprecated(since = "3.1.0", note = "Use ImprovedMonitoringConfig instead")]
-pub type MonitoringConfig = ImprovedMonitoringConfig;
-
 pub struct MetricCollectionConfig {
     /// Number of batch_size
     pub batch_size: usize,

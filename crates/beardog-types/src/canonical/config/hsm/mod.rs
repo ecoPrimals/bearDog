@@ -82,7 +82,7 @@ pub struct UnifiedHsmConfig {
     /// Mobile HSM configuration (Android Keystore, iOS Secure Enclave)
     /// The mobile value
     pub mobile: UnifiedMobileHsmConfig,
-    /// Cloud HSM configuration (`universal_cloud` `universal_hsm`, `universal_cloud` Dedicated HSM, etc.)
+    /// Cloud HSM configuration (discovered via capability-based providers)
     /// The cloud value
     pub cloud: UnifiedCloudHsmConfig,
 

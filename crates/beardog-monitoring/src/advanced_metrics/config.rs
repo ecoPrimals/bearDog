@@ -68,13 +68,6 @@ pub struct MetricsHealthCheckConfig {
     pub alert_on_degraded: bool,
 }
 
-/// Deprecated: Use `MetricsHealthCheckConfig` instead
-#[deprecated(
-    since = "3.6.0",
-    note = "Use `MetricsHealthCheckConfig` for metrics health monitoring"
-)]
-pub type HealthCheckConfig = MetricsHealthCheckConfig;
-
 /// Anomaly detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnomalyConfig {
