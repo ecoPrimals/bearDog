@@ -124,6 +124,7 @@ pub trait UniversalCryptoProvider: Send + Sync + std::fmt::Debug {
 
 /// Helper trait for generating nonces/IVs
 pub trait NonceGenerator {
+    /// Generate a cryptographically random nonce of the specified size
     fn generate_nonce(&self, size: usize) -> Vec<u8>;
 }
 

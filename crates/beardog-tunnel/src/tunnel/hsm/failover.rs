@@ -18,16 +18,22 @@ pub struct HsmFailoverManager {
 /// Circuit breaker for failover
 #[derive(Debug, Clone)]
 pub struct CircuitBreaker {
+    /// Maximum failures before tripping the breaker
     pub max_failures: u32,
+    /// Timeout before attempting recovery
     pub timeout: Duration,
+    /// Current circuit breaker state
     pub state: CircuitBreakerState,
 }
 
 /// Circuit breaker state
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CircuitBreakerState {
+    /// Normal operation — requests flow through
     Closed,
+    /// Breaker tripped — requests are rejected
     Open,
+    /// Testing recovery — limited requests allowed
     HalfOpen,
 }
 

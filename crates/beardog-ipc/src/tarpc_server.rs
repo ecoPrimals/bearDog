@@ -36,10 +36,10 @@ use crate::tarpc_types::*;
 pub struct BearDogCryptoServer {
     /// Server start time for uptime tracking
     start_time: std::time::Instant,
-    
+
     /// Primal name (self-knowledge)
     primal_name: String,
-    
+
     /// Version
     version: String,
 }
@@ -69,7 +69,7 @@ impl BearDogCryptoServer {
             match listener.accept().await {
                 Ok((stream, peer_addr)) => {
                     debug!("📥 tarpc connection from {}", peer_addr);
-                    
+
                     let server = self.clone();
                     tokio::spawn(async move {
                         let transport = tarpc::serde_transport::new(
@@ -80,7 +80,7 @@ impl BearDogCryptoServer {
                         );
 
                         let channel = server::BaseChannel::with_defaults(transport);
-                        
+
                         // Use the tarpc-generated serve() method from the impl
                         channel
                             .execute(server.serve())
@@ -88,7 +88,7 @@ impl BearDogCryptoServer {
                                 tokio::spawn(response);
                             })
                             .await;
-                        
+
                         debug!("📤 tarpc connection closed from {}", peer_addr);
                     });
                 }
@@ -125,7 +125,7 @@ impl BearDogCrypto for BearDogCryptoServer {
         // Generate 32 random bytes for the signing key
         let mut secret_bytes = [0u8; 32];
         OsRng.fill_bytes(&mut secret_bytes);
-        
+
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let verifying_key = signing_key.verifying_key();
 
@@ -142,7 +142,7 @@ impl BearDogCrypto for BearDogCryptoServer {
         // Generate 32 random bytes for the secret key
         let mut secret_bytes = [0u8; 32];
         OsRng.fill_bytes(&mut secret_bytes);
-        
+
         let static_secret = StaticSecret::from(secret_bytes);
         let public_key = PublicKey::from(&static_secret);
 
@@ -185,13 +185,10 @@ impl BearDogCrypto for BearDogCryptoServer {
     async fn sign_ed25519(self, _: Context, request: SignRequest) -> CryptoResult<SignResponse> {
         use ed25519_dalek::{Signature, Signer, SigningKey};
 
-        let key_bytes: [u8; 32] = request
-            .private_key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid Ed25519 private key length".to_string(),
-            })?;
+        let key_bytes: [u8; 32] = request.private_key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid Ed25519 private key length".to_string(),
+        })?;
 
         let signing_key = SigningKey::from_bytes(&key_bytes);
         let signature: Signature = signing_key.sign(&request.data);
@@ -204,21 +201,15 @@ impl BearDogCrypto for BearDogCryptoServer {
     async fn verify_ed25519(self, _: Context, request: VerifyRequest) -> CryptoResult<bool> {
         use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
-        let key_bytes: [u8; 32] = request
-            .public_key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid Ed25519 public key length".to_string(),
-            })?;
+        let key_bytes: [u8; 32] = request.public_key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid Ed25519 public key length".to_string(),
+        })?;
 
-        let sig_bytes: [u8; 64] = request
-            .signature
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid Ed25519 signature length".to_string(),
-            })?;
+        let sig_bytes: [u8; 64] = request.signature.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid Ed25519 signature length".to_string(),
+        })?;
 
         let verifying_key = VerifyingKey::from_bytes(&key_bytes).map_err(|e| CryptoError {
             code: -32000,
@@ -232,19 +223,15 @@ impl BearDogCrypto for BearDogCryptoServer {
     async fn sign_ecdsa_p256(self, _: Context, request: SignRequest) -> CryptoResult<SignResponse> {
         use p256::ecdsa::{signature::Signer, Signature, SigningKey};
 
-        let key_bytes: [u8; 32] = request
-            .private_key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid P-256 private key length (expected 32 bytes)".to_string(),
-            })?;
+        let key_bytes: [u8; 32] = request.private_key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid P-256 private key length (expected 32 bytes)".to_string(),
+        })?;
 
-        let signing_key = SigningKey::from_bytes(&key_bytes.into())
-            .map_err(|e| CryptoError {
-                code: -32000,
-                message: format!("Invalid P-256 private key: {}", e),
-            })?;
+        let signing_key = SigningKey::from_bytes(&key_bytes.into()).map_err(|e| CryptoError {
+            code: -32000,
+            message: format!("Invalid P-256 private key: {}", e),
+        })?;
 
         let signature: Signature = signing_key.sign(&request.data);
 
@@ -256,19 +243,15 @@ impl BearDogCrypto for BearDogCryptoServer {
     async fn sign_ecdsa_p384(self, _: Context, request: SignRequest) -> CryptoResult<SignResponse> {
         use p384::ecdsa::{signature::Signer, Signature, SigningKey};
 
-        let key_bytes: [u8; 48] = request
-            .private_key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid P-384 private key length (expected 48 bytes)".to_string(),
-            })?;
+        let key_bytes: [u8; 48] = request.private_key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid P-384 private key length (expected 48 bytes)".to_string(),
+        })?;
 
-        let signing_key = SigningKey::from_bytes(&key_bytes.into())
-            .map_err(|e| CryptoError {
-                code: -32000,
-                message: format!("Invalid P-384 private key: {}", e),
-            })?;
+        let signing_key = SigningKey::from_bytes(&key_bytes.into()).map_err(|e| CryptoError {
+            code: -32000,
+            message: format!("Invalid P-384 private key: {}", e),
+        })?;
 
         let signature: Signature = signing_key.sign(&request.data);
 
@@ -288,21 +271,23 @@ impl BearDogCrypto for BearDogCryptoServer {
     ) -> CryptoResult<SharedSecret> {
         use x25519_dalek::{PublicKey, StaticSecret};
 
-        let our_secret_bytes: [u8; 32] = request
-            .our_private_key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid X25519 private key length".to_string(),
-            })?;
+        let our_secret_bytes: [u8; 32] =
+            request
+                .our_private_key
+                .try_into()
+                .map_err(|_| CryptoError {
+                    code: -32000,
+                    message: "Invalid X25519 private key length".to_string(),
+                })?;
 
-        let their_public_bytes: [u8; 32] = request
-            .their_public_key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid X25519 public key length".to_string(),
-            })?;
+        let their_public_bytes: [u8; 32] =
+            request
+                .their_public_key
+                .try_into()
+                .map_err(|_| CryptoError {
+                    code: -32000,
+                    message: "Invalid X25519 public key length".to_string(),
+                })?;
 
         let our_secret = StaticSecret::from(our_secret_bytes);
         let their_public = PublicKey::from(their_public_bytes);
@@ -328,14 +313,13 @@ impl BearDogCrypto for BearDogCryptoServer {
                 message: "Invalid P-256 private key length (expected 32 bytes)".to_string(),
             })?;
 
-        let our_secret = SecretKey::from_bytes(&key_bytes.into())
-            .map_err(|e| CryptoError {
-                code: -32000,
-                message: format!("Invalid P-256 private key: {}", e),
-            })?;
+        let our_secret = SecretKey::from_bytes(&key_bytes.into()).map_err(|e| CryptoError {
+            code: -32000,
+            message: format!("Invalid P-256 private key: {}", e),
+        })?;
 
-        let their_public = PublicKey::from_sec1_bytes(&request.their_public_key)
-            .map_err(|e| CryptoError {
+        let their_public =
+            PublicKey::from_sec1_bytes(&request.their_public_key).map_err(|e| CryptoError {
                 code: -32000,
                 message: format!("Invalid P-256 public key: {}", e),
             })?;
@@ -362,13 +346,10 @@ impl BearDogCrypto for BearDogCryptoServer {
         };
         use rand::RngCore;
 
-        let key: [u8; 32] = request
-            .key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid key length (expected 32 bytes)".to_string(),
-            })?;
+        let key: [u8; 32] = request.key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid key length (expected 32 bytes)".to_string(),
+        })?;
 
         let cipher = ChaCha20Poly1305::new(&key.into());
 
@@ -386,12 +367,12 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let nonce = Nonce::from_slice(&nonce_bytes);
 
-        let ciphertext = cipher.encrypt(nonce, request.plaintext.as_ref()).map_err(|e| {
-            CryptoError {
+        let ciphertext = cipher
+            .encrypt(nonce, request.plaintext.as_ref())
+            .map_err(|e| CryptoError {
                 code: -32000,
                 message: format!("Encryption failed: {}", e),
-            }
-        })?;
+            })?;
 
         // ChaCha20-Poly1305 appends the 16-byte tag to ciphertext
         let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
@@ -413,21 +394,15 @@ impl BearDogCrypto for BearDogCryptoServer {
             ChaCha20Poly1305, Nonce,
         };
 
-        let key: [u8; 32] = request
-            .key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid key length (expected 32 bytes)".to_string(),
-            })?;
+        let key: [u8; 32] = request.key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid key length (expected 32 bytes)".to_string(),
+        })?;
 
-        let nonce_bytes: [u8; 12] = request
-            .nonce
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid nonce length (expected 12 bytes)".to_string(),
-            })?;
+        let nonce_bytes: [u8; 12] = request.nonce.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid nonce length (expected 12 bytes)".to_string(),
+        })?;
 
         let cipher = ChaCha20Poly1305::new(&key.into());
         let nonce = Nonce::from_slice(&nonce_bytes);
@@ -457,13 +432,10 @@ impl BearDogCrypto for BearDogCryptoServer {
         };
         use rand::RngCore;
 
-        let key: [u8; 32] = request
-            .key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid key length (expected 32 bytes)".to_string(),
-            })?;
+        let key: [u8; 32] = request.key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid key length (expected 32 bytes)".to_string(),
+        })?;
 
         let cipher = Aes256Gcm::new(&key.into());
 
@@ -480,12 +452,12 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let nonce = Nonce::from_slice(&nonce_bytes);
 
-        let ciphertext = cipher.encrypt(nonce, request.plaintext.as_ref()).map_err(|e| {
-            CryptoError {
+        let ciphertext = cipher
+            .encrypt(nonce, request.plaintext.as_ref())
+            .map_err(|e| CryptoError {
                 code: -32000,
                 message: format!("Encryption failed: {}", e),
-            }
-        })?;
+            })?;
 
         let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
 
@@ -506,21 +478,15 @@ impl BearDogCrypto for BearDogCryptoServer {
             Aes256Gcm, Nonce,
         };
 
-        let key: [u8; 32] = request
-            .key
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid key length (expected 32 bytes)".to_string(),
-            })?;
+        let key: [u8; 32] = request.key.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid key length (expected 32 bytes)".to_string(),
+        })?;
 
-        let nonce_bytes: [u8; 12] = request
-            .nonce
-            .try_into()
-            .map_err(|_| CryptoError {
-                code: -32000,
-                message: "Invalid nonce length (expected 12 bytes)".to_string(),
-            })?;
+        let nonce_bytes: [u8; 12] = request.nonce.try_into().map_err(|_| CryptoError {
+            code: -32000,
+            message: "Invalid nonce length (expected 12 bytes)".to_string(),
+        })?;
 
         let cipher = Aes256Gcm::new(&key.into());
         let nonce = Nonce::from_slice(&nonce_bytes);
@@ -597,8 +563,14 @@ impl BearDogCrypto for BearDogCryptoServer {
         let mut client_secret = vec![0u8; 32];
         let mut server_secret = vec![0u8; 32];
 
-        let client_info = format!("tls13 c hs traffic {}", hex::encode(&request.transcript_hash));
-        let server_info = format!("tls13 s hs traffic {}", hex::encode(&request.transcript_hash));
+        let client_info = format!(
+            "tls13 c hs traffic {}",
+            hex::encode(&request.transcript_hash)
+        );
+        let server_info = format!(
+            "tls13 s hs traffic {}",
+            hex::encode(&request.transcript_hash)
+        );
 
         hkdf.expand(client_info.as_bytes(), &mut client_secret)
             .map_err(|e| CryptoError {
@@ -631,8 +603,14 @@ impl BearDogCrypto for BearDogCryptoServer {
         let mut client_secret = vec![0u8; 32];
         let mut server_secret = vec![0u8; 32];
 
-        let client_info = format!("tls13 c ap traffic {}", hex::encode(&request.transcript_hash));
-        let server_info = format!("tls13 s ap traffic {}", hex::encode(&request.transcript_hash));
+        let client_info = format!(
+            "tls13 c ap traffic {}",
+            hex::encode(&request.transcript_hash)
+        );
+        let server_info = format!(
+            "tls13 s ap traffic {}",
+            hex::encode(&request.transcript_hash)
+        );
 
         hkdf.expand(client_info.as_bytes(), &mut client_secret)
             .map_err(|e| CryptoError {
@@ -680,14 +658,18 @@ impl BearDogCrypto for BearDogCryptoServer {
         use hkdf::Hkdf;
         use sha2::Sha256;
 
-        let info = format!("beardog-lineage-{}-gen{}", request.context, request.generation);
+        let info = format!(
+            "beardog-lineage-{}-gen{}",
+            request.context, request.generation
+        );
         let hkdf = Hkdf::<Sha256>::new(None, &request.family_seed);
 
         let mut key = vec![0u8; 32];
-        hkdf.expand(info.as_bytes(), &mut key).map_err(|e| CryptoError {
-            code: -32000,
-            message: format!("Lineage derivation failed: {}", e),
-        })?;
+        hkdf.expand(info.as_bytes(), &mut key)
+            .map_err(|e| CryptoError {
+                code: -32000,
+                message: format!("Lineage derivation failed: {}", e),
+            })?;
 
         Ok(LineageKey {
             key,

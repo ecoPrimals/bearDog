@@ -161,3 +161,7 @@ mod simd_crypto_comprehensive_tests;
 // November 19, 2025: Comprehensive HSM error path tests (modern concurrent patterns)
 #[cfg(test)]
 mod hsm_error_path_comprehensive_tests;
+
+// February 2026: Coverage gap tests (authorization_types, metrics, config, genesis types, etc.)
+#[cfg(test)]
+mod coverage_gap_tests;

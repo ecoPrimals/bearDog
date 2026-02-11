@@ -873,7 +873,11 @@ impl GeneticEvolutionEngine {
         let population = self.population_manager.get_population();
         population
             .into_iter()
-            .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap())
+            .max_by(|a, b| {
+                a.fitness_score
+                    .partial_cmp(&b.fitness_score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
     }
 }
 

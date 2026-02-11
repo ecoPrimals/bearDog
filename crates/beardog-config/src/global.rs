@@ -300,4 +300,64 @@ mod tests {
         assert!(discovery_port() > 0);
         assert!(admin_port() > 0);
     }
+
+    #[test]
+    fn test_metrics_port() {
+        let port = metrics_port();
+        assert!(port > 0);
+    }
+
+    #[test]
+    fn test_health_port() {
+        let port = health_port();
+        assert!(port > 0);
+    }
+
+    #[test]
+    fn test_https_port() {
+        let port = https_port();
+        assert!(port > 0);
+    }
+
+    #[test]
+    fn test_api_host() {
+        let host = api_host();
+        assert!(!host.is_empty());
+    }
+
+    #[test]
+    fn test_bind_address() {
+        let addr = bind_address();
+        assert!(!addr.is_empty());
+    }
+
+    #[test]
+    fn test_external_host() {
+        let host = external_host();
+        assert!(!host.is_empty());
+    }
+
+    #[test]
+    fn test_connection_timeout() {
+        let timeout = connection_timeout_secs();
+        assert!(timeout > 0);
+    }
+
+    #[test]
+    fn test_http_request_timeout() {
+        let timeout = http_request_timeout_secs();
+        assert!(timeout > 0);
+    }
+
+    #[test]
+    fn test_dns_resolution_timeout() {
+        let timeout = dns_resolution_timeout_secs();
+        assert!(timeout > 0);
+    }
+
+    #[test]
+    fn test_health_check_timeout() {
+        let timeout = health_check_timeout_secs();
+        assert!(timeout > 0);
+    }
 }

@@ -75,6 +75,7 @@ use tracing::{debug, info};
 
 // Import shared utility functions
 use super::utils::derive_key_from_id;
+/// Handle Ed25519 signature operations via JSON-RPC
 
 pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
@@ -217,10 +218,7 @@ pub async fn handle_ed25519_generate_keypair(params: Option<&Value>) -> Result<V
         .and_then(|v| v.as_str())
         .unwrap_or("identity");
 
-    debug!(
-        "🔑 Generating Ed25519 keypair (purpose: {})",
-        purpose
-    );
+    debug!("🔑 Generating Ed25519 keypair (purpose: {})", purpose);
 
     // Use ed25519-dalek for key generation
     use ed25519_dalek::{SigningKey, VerifyingKey};
@@ -485,8 +483,12 @@ mod tests {
         assert!(value["secret_key"].is_string());
 
         // Verify key sizes (32 bytes each)
-        let public_key = BASE64.decode(value["public_key"].as_str().unwrap()).unwrap();
-        let secret_key = BASE64.decode(value["secret_key"].as_str().unwrap()).unwrap();
+        let public_key = BASE64
+            .decode(value["public_key"].as_str().unwrap())
+            .unwrap();
+        let secret_key = BASE64
+            .decode(value["secret_key"].as_str().unwrap())
+            .unwrap();
         assert_eq!(public_key.len(), 32);
         assert_eq!(secret_key.len(), 32);
     }

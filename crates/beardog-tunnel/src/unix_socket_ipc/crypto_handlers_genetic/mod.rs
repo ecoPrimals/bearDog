@@ -27,8 +27,7 @@ pub use challenge::{
     handle_generate_challenge, handle_respond_to_challenge, handle_verify_challenge_response,
 };
 pub use enrollment::{
-    handle_derive_device_seed, handle_sign_lineage_certificate,
-    handle_verify_lineage_certificate,
+    handle_derive_device_seed, handle_sign_lineage_certificate, handle_verify_lineage_certificate,
 };
 pub use lineage::{
     handle_derive_lineage_beacon_key, handle_derive_lineage_key, handle_generate_lineage_proof,

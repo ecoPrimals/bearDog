@@ -18,9 +18,13 @@ use tracing::{info, warn};
 /// Mobile HSM setup configuration
 #[derive(Debug, Clone)]
 pub struct MobileHsmSetup {
+    /// Whether mobile HSM is required for critical operations
     pub require_mobile_for_critical: bool,
+    /// Whether GrapheneOS-specific optimizations are enabled
     pub enable_graphene_optimizations: bool,
+    /// Software HSM fallback configuration
     pub software_hsm_config: SoftwareHsmConfig,
+    /// Android-specific HSM configuration
     pub android_config: AndroidHsmConfig,
 }
 

@@ -181,7 +181,10 @@ impl ServiceRegistryDiscovery {
         let mdns = match crate::mdns::MdnsDiscovery::new() {
             Ok(m) => m,
             Err(e) => {
-                warn!("⚠️ mDNS initialization failed: {} - using fallback discovery", e);
+                warn!(
+                    "⚠️ mDNS initialization failed: {} - using fallback discovery",
+                    e
+                );
                 return Ok(Vec::new());
             }
         };
@@ -190,7 +193,10 @@ impl ServiceRegistryDiscovery {
         let services = match mdns.discover(capability).await {
             Ok(s) => s,
             Err(e) => {
-                warn!("⚠️ mDNS discovery failed: {} - continuing with empty results", e);
+                warn!(
+                    "⚠️ mDNS discovery failed: {} - continuing with empty results",
+                    e
+                );
                 return Ok(Vec::new());
             }
         };
@@ -210,7 +216,11 @@ impl ServiceRegistryDiscovery {
             })
             .collect();
 
-        info!("✅ mDNS discovered {} providers for {}", providers.len(), capability);
+        info!(
+            "✅ mDNS discovered {} providers for {}",
+            providers.len(),
+            capability
+        );
         Ok(providers)
     }
 

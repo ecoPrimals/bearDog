@@ -51,6 +51,10 @@ pub use error::*;
 #[cfg(test)]
 mod deploy_comprehensive_tests;
 
+// February 2026: Coverage expansion tests
+#[cfg(test)]
+mod coverage_tests;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
     /// Target deployment environment (dev, staging, prod)

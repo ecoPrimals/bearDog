@@ -1,12 +1,13 @@
 # BearDog
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](STATUS.md)
-[![Tests](https://img.shields.io/badge/tests-8789-brightgreen.svg)](STATUS.md)
+[![Tests](https://img.shields.io/badge/tests-12300+-brightgreen.svg)](STATUS.md)
+[![Coverage](https://img.shields.io/badge/coverage-78.6%25-yellow.svg)](STATUS.md)
 [![Pure Rust](https://img.shields.io/badge/rust-100%25_pure-orange.svg)](STATUS.md)
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem -- a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Crates**: 31 | **Grade**: A+ LEGENDARY
+**Status**: Production Ready | **Crates**: 30 | **Tests**: 12,300+
 
 ---
 
@@ -92,10 +93,12 @@ BearDog auto-detects the platform and binds appropriate transports.
 | Category | Algorithms |
 |----------|-----------|
 | **Signatures** | Ed25519, ECDSA (P-256/P-384), RSA |
-| **Key Exchange** | X25519, ECDHE |
-| **AEAD** | ChaCha20-Poly1305, AES-GCM |
+| **Key Exchange** | X25519, ECDHE (P-256/P-384) |
+| **AEAD** | ChaCha20-Poly1305, AES-128/256-GCM |
 | **Hashing** | BLAKE3, SHA-256/384/512, SHA3-256 |
+| **MAC** | HMAC-SHA256/384/512, HMAC-BLAKE3 |
 | **KDF** | HKDF, TLS 1.2/1.3 PRF, PBKDF2, Argon2id |
+| **Passwords** | Argon2id, bcrypt, scrypt |
 | **Tor** | Onion address, ntor handshake, cell crypto |
 | **Secrets** | Encrypted storage with family-scoped keys |
 
@@ -150,11 +153,11 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Tests** | 8,789 passing (28 crates) |
+| **Tests** | 12,300+ passing (30 crates) |
+| **Coverage** | 78.6% line coverage (llvm-cov) |
 | **Pure Rust** | 100% -- zero C dependencies |
 | **Unsafe Code** | 0 production blocks |
 | **Production panics** | 0 -- all `Result<T, E>` |
-| **Crates** | 31 workspace crates |
 
 ### Standards
 
@@ -170,11 +173,11 @@ Key material is derived from the family seed. A BearDog instance serving family 
 
 | Document | Description |
 |----------|-------------|
-| [STATUS.md](STATUS.md) | Canonical status and metrics |
+| [STATUS.md](STATUS.md) | Current status and metrics |
 | [START_HERE.md](START_HERE.md) | Quick start and onboarding |
 | [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture pattern |
 | [ROADMAP.md](ROADMAP.md) | Current priorities and roadmap |
-| `specs/current/security/` | Security specifications |
+| [ROOT_INDEX.md](ROOT_INDEX.md) | Complete documentation index |
 
 ---
 

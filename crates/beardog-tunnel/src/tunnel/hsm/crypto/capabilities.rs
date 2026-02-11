@@ -9,25 +9,33 @@ use std::collections::HashMap;
 /// Capabilities of a crypto provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoCapabilities {
+    /// Name of the crypto provider
     pub provider_name: String,
+    /// Version of the crypto provider
     pub provider_version: String,
 
-    /// What algorithms this provider supports
+    /// Supported symmetric encryption algorithms
     pub symmetric_algorithms: Vec<SymmetricAlgorithm>,
+    /// Supported asymmetric encryption algorithms
     pub asymmetric_algorithms: Vec<AsymmetricAlgorithm>,
+    /// Supported digital signature algorithms
     pub signature_algorithms: Vec<SignatureAlgorithm>,
+    /// Supported hash algorithms
     pub hash_algorithms: Vec<HashAlgorithm>,
+    /// Supported key derivation functions
     pub kdf_algorithms: Vec<KdfAlgorithm>,
 
     /// Performance characteristics
     pub performance_profile: PerformanceProfile,
 
-    /// Security features
+    /// Side-channel attack resistance level
     pub side_channel_resistance: SideChannelResistance,
+    /// Operations guaranteed to execute in constant time
     pub constant_time_ops: Vec<String>,
 
-    /// Platform support
+    /// Platforms this provider runs on
     pub supported_platforms: Vec<Platform>,
+    /// Hardware acceleration features used
     pub hardware_acceleration: Vec<HardwareFeature>,
 }
 
@@ -83,21 +91,33 @@ pub enum SideChannelResistance {
 /// Supported platforms
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Platform {
+    /// Linux (x86_64, aarch64)
     Linux,
+    /// macOS (Apple Silicon, Intel)
     MacOs,
+    /// Windows (x86_64)
     Windows,
+    /// Android (ARM, ARM64)
     Android,
+    /// iOS (ARM64)
     Ios,
+    /// WebAssembly
     Wasm,
+    /// Custom platform identifier
     Custom(String),
 }
 
 /// Hardware acceleration features
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HardwareFeature {
+    /// Intel AES-NI hardware acceleration
     AesNi,
+    /// Intel AVX2 SIMD instructions
     Avx2,
+    /// Intel AVX-512 SIMD instructions
     Avx512,
+    /// ARM NEON SIMD instructions
     Neon,
+    /// Custom hardware feature identifier
     Custom(String),
 }

@@ -29,3 +29,7 @@ mod population_evolution_integration_tests;
 // December 6, 2025: Phase 2 Advanced Test Coverage - Edge cases and error paths
 #[cfg(test)]
 mod genetics_advanced_coverage_tests;
+
+// February 2026: Coverage gap tests targeting 90% threshold
+#[cfg(test)]
+mod coverage_gap_tests;

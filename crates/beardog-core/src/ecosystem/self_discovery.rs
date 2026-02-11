@@ -124,7 +124,7 @@ impl SelfDiscoveryManager {
     ///
     /// # Errors
     /// - Returns `BearDogError` if capability discovery initialization fails
-    pub async fn new(
+    pub fn new(
         identity: SelfIdentity,
         config: UniversalIntegrationConfig,
     ) -> Result<Self, BearDogError> {

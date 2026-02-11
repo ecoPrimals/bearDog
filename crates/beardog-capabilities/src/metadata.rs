@@ -239,8 +239,8 @@ mod tests {
 
     #[test]
     fn test_capability_endpoint_creation() {
-        let metadata = CapabilityMetadata::new("tunnel", "1.0")
-            .with_endpoint("http://localhost:8080/tunnel");
+        let metadata =
+            CapabilityMetadata::new("tunnel", "1.0").with_endpoint("http://localhost:8080/tunnel");
 
         let primal = PrimalInfo {
             id: "primal-001".to_string(),
@@ -249,11 +249,8 @@ mod tests {
             version: "1.0.0".to_string(),
         };
 
-        let endpoint = CapabilityEndpoint::new(
-            metadata,
-            primal,
-            "http://localhost:8080/tunnel".to_string(),
-        );
+        let endpoint =
+            CapabilityEndpoint::new(metadata, primal, "http://localhost:8080/tunnel".to_string());
 
         assert_eq!(endpoint.metadata.id, "tunnel");
         assert_eq!(endpoint.provider.id, "primal-001");
@@ -295,10 +292,17 @@ mod tests {
     #[test]
     fn test_capability_metadata_with_extra() {
         let mut metadata = CapabilityMetadata::new("custom", "1.0");
-        metadata.extra.insert("custom_key".to_string(), "custom_value".to_string());
-        metadata.extra.insert("another_key".to_string(), "another_value".to_string());
+        metadata
+            .extra
+            .insert("custom_key".to_string(), "custom_value".to_string());
+        metadata
+            .extra
+            .insert("another_key".to_string(), "another_value".to_string());
 
         assert_eq!(metadata.extra.len(), 2);
-        assert_eq!(metadata.extra.get("custom_key"), Some(&"custom_value".to_string()));
+        assert_eq!(
+            metadata.extra.get("custom_key"),
+            Some(&"custom_value".to_string())
+        );
     }
 }

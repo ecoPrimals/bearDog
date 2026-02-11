@@ -86,7 +86,7 @@ mod tests {
         // Remove env vars to test default
         std::env::remove_var("PRIMAL_NAME");
         std::env::remove_var("BEARDOG_NAME");
-        
+
         assert_eq!(get_primal_name(), "beardog");
     }
 

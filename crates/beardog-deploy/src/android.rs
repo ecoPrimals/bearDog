@@ -317,3 +317,101 @@ impl AndroidDeployment {
             .unwrap_or(false)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_with_ndk_path() {
+        let d = AndroidDeployment::new(Some("/opt/ndk".to_string()), 33);
+        assert!(format!("{:?}", d).contains("/opt/ndk"));
+    }
+
+    #[test]
+    fn test_new_without_ndk_path() {
+        let d = AndroidDeployment::new(None, 28);
+        assert!(format!("{:?}", d).contains("None"));
+    }
+
+    #[test]
+    fn test_check_command_available_rustc() {
+        // rustc should always be available in our build environment
+        assert!(AndroidDeployment::check_command_available("rustc"));
+    }
+
+    #[test]
+    fn test_check_command_available_nonexistent() {
+        assert!(!AndroidDeployment::check_command_available(
+            "nonexistent_command_xyz_12345"
+        ));
+    }
+
+    #[test]
+    fn test_check_command_available_cargo() {
+        assert!(AndroidDeployment::check_command_available("cargo"));
+    }
+
+    #[test]
+    fn test_check_rustup_available() {
+        // rustup should be available in dev environment
+        let result = AndroidDeployment::check_rustup_available();
+        // Just exercise the code path; result depends on environment
+        let _ = result;
+    }
+
+    #[test]
+    fn test_check_rust_compiler() {
+        // Should succeed in our build environment
+        assert!(AndroidDeployment::check_rust_compiler().is_ok());
+    }
+
+    #[test]
+    fn test_find_ndk_path_with_provided_path_nonexistent() {
+        let d = AndroidDeployment::new(Some("/nonexistent/ndk".to_string()), 33);
+        let result = d.find_ndk_path();
+        // Should fail because path doesn't exist and env vars likely not set
+        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+            assert!(result.is_err());
+        }
+    }
+
+    #[test]
+    fn test_find_ndk_path_no_path_no_env() {
+        let d = AndroidDeployment::new(None, 33);
+        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+            assert!(d.find_ndk_path().is_err());
+        }
+    }
+
+    #[test]
+    fn test_verify_environment_exercises_chain() {
+        let d = AndroidDeployment::new(None, 33);
+        // Exercise the full verify chain, result depends on environment
+        let _ = d.verify_environment();
+    }
+
+    #[test]
+    fn test_verify_android_ndk_no_ndk() {
+        let d = AndroidDeployment::new(None, 33);
+        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+            assert!(d.verify_android_ndk().is_err());
+        }
+    }
+
+    #[test]
+    fn test_verify_cargo_ndk() {
+        // Exercise verify_cargo_ndk - will check if cargo-ndk is installed
+        let _ = AndroidDeployment::verify_cargo_ndk();
+    }
+
+    #[test]
+    fn test_is_target_installed() {
+        // Check a target we know exists
+        if AndroidDeployment::check_rustup_available() {
+            // Check the host target - should be installed
+            let result = AndroidDeployment::is_target_installed("x86_64-unknown-linux-gnu");
+            assert!(result.is_ok());
+        }
+    }
+}

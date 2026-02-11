@@ -113,21 +113,28 @@ pub struct SoftwareHsmConfig {
     pub encryption_algorithm: Algorithm,
 }
 
+/// Audit logging for HSM operations
 pub mod audit;
 
+/// Core software HSM implementation
 pub mod core;
 
-// ✅ ENABLED: Real crypto providers with production implementations
+/// Cryptographic provider implementations (pure Rust)
 pub mod crypto_providers;
 
+/// HSM health monitoring
 pub mod health;
 
+/// Key storage management
 pub mod keystore;
 
+/// Secure memory management
 pub mod memory;
 
+/// Persistent encrypted storage
 pub mod storage;
 
+/// Software HSM type definitions
 pub mod types;
 
 pub use types::*;
@@ -159,8 +166,10 @@ pub use self::keystore::KeyStoreStatistics;
 
 use beardog_types::constants::domains::ecosystem::version::SOFTWARE_HSM_VERSION;
 
+/// Software HSM version string
 pub const VERSION: &str = SOFTWARE_HSM_VERSION;
 
+/// Software HSM build information
 pub const BUILD_INFO: &str = concat!(
     "BearDog Software HSM v",
     env!("CARGO_PKG_VERSION"),

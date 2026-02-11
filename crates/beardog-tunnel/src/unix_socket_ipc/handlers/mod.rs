@@ -148,12 +148,12 @@ impl HandlerRegistry {
     /// happen since we hold the only reference at that point.
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
         // DEEP DEBT FIX (Feb 4, 2026): Two-phase construction for IntrospectionHandler
-        // 
+        //
         // IntrospectionHandler needs a reference to the registry to list available methods.
         // We solve this with two phases:
         // 1. Create registry with all handlers except introspection
         // 2. Create introspection handler with registry reference, then add it
-        
+
         // Phase 1: Create registry with initial handlers
         let registry = Arc::new(Self {
             handlers: tokio::sync::RwLock::new(vec![
@@ -290,10 +290,11 @@ mod tests {
     }
 
     /// Helper to create a test BTSP provider
-    fn create_test_provider() -> Arc<BeardogBtspProvider> {
-        // This would need proper initialization in a real test
-        // For now, we'll skip testing that requires a real provider
-        unimplemented!("Test provider creation needs HSM setup")
+    ///
+    /// Uses the minimal test provider from `test_helpers`, which bypasses
+    /// full HSM initialization while providing a valid `BeardogBtspProvider`.
+    async fn create_test_provider() -> Arc<BeardogBtspProvider> {
+        crate::test_helpers::mocks::create_minimal_beardog_provider().await
     }
 
     #[tokio::test]

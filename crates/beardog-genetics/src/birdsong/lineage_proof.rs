@@ -333,6 +333,172 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_generate_proof_chain_not_found() {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager);
+
+        let result = proof_manager.generate_proof("nonexistent", "node-1");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Chain not found"));
+    }
+
+    #[tokio::test]
+    async fn test_generate_proof_node_not_found() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+
+        let result = proof_manager.generate_proof(&chain.chain_id, "nonexistent");
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_proof_chain_not_found() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+
+        let proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
+
+        // Verify against wrong chain ID
+        let result = proof_manager.verify_proof(&proof, "nonexistent");
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_proof_root_mismatch() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        // Create two separate chains
+        let chain1 = chain_manager
+            .generate_root_chain("root-1".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain1.chain_id, "root-1", "child-1".to_string(), None)
+            .await?;
+
+        let chain2 = chain_manager
+            .generate_root_chain("root-2".to_string(), None)
+            .await?;
+
+        // Generate proof for chain1
+        let proof = proof_manager.generate_proof(&chain1.chain_id, "child-1")?;
+
+        // Verify against chain2 (root mismatch)
+        let result = proof_manager.verify_proof(&proof, &chain2.chain_id)?;
+        assert!(!result.valid);
+        assert!(result
+            .failure_reason
+            .as_ref()
+            .unwrap()
+            .contains("Root mismatch"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_proof_merkle_mismatch() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+
+        let mut proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
+
+        // Tamper with merkle root
+        proof.merkle_root = vec![0u8; 32];
+
+        let result = proof_manager.verify_proof(&proof, &chain.chain_id)?;
+        assert!(!result.valid);
+        assert!(result
+            .failure_reason
+            .as_ref()
+            .unwrap()
+            .contains("Merkle root mismatch"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_proof_path_length_mismatch() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+
+        let mut proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
+
+        // Tamper with path to cause length mismatch
+        proof.path.push("extra-node".to_string());
+
+        let result = proof_manager.verify_proof(&proof, &chain.chain_id)?;
+        assert!(!result.valid);
+        assert!(result
+            .failure_reason
+            .as_ref()
+            .unwrap()
+            .contains("Path length mismatch"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_is_descendant_no_relationship() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+
+        // child-1 is not an ancestor of root
+        assert!(!proof_manager.is_descendant(&chain.chain_id, "child-1", "root")?);
+
+        // non-existent node
+        assert!(!proof_manager.is_descendant(&chain.chain_id, "root", "non-existent")?);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_common_ancestor_no_match() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+
+        // Single chain, one node
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+
+        // Non-existent nodes
+        assert!(proof_manager
+            .get_common_ancestor(&chain.chain_id, "nonexistent-a", "nonexistent-b")
+            .is_none());
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn test_common_ancestor() -> Result<(), BearDogError> {
         // Setup
         let chain_manager = Arc::new(LineageChainManager::new());

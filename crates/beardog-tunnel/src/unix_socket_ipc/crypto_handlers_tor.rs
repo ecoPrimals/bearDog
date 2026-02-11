@@ -337,10 +337,7 @@ pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Va
         .map_err(|e| format!("Invalid base64 node_id: {}", e))?;
 
     if node_id.len() != 20 {
-        return Err(format!(
-            "node_id must be 20 bytes, got {}",
-            node_id.len()
-        ));
+        return Err(format!("node_id must be 20 bytes, got {}", node_id.len()));
     }
 
     // Extract onion secret key (b)
@@ -661,8 +658,8 @@ fn derive_circuit_keys(key_seed: &[u8]) -> Result<CircuitKeys, String> {
 /// We still propagate the error for correctness.
 fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<[u8; 32], String> {
     type HmacSha256 = Hmac<Sha256>;
-    let mut mac = HmacSha256::new_from_slice(key)
-        .map_err(|e| format!("HMAC-SHA256 key error: {}", e))?;
+    let mut mac =
+        HmacSha256::new_from_slice(key).map_err(|e| format!("HMAC-SHA256 key error: {}", e))?;
     mac.update(data);
     let result = mac.finalize();
     Ok(result.into_bytes().into())
@@ -710,15 +707,15 @@ fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) -> Result<()
 }
 
 /// Fixed state encryption key (for protecting client_state)
-/// 
+///
 /// NOTE: In a production system, this would be derived from a session key
 /// or use proper AEAD. For the ntor handshake, the client state only needs
 /// to be protected during the brief handshake period (milliseconds to seconds).
 const STATE_ENCRYPTION_KEY: [u8; 32] = [
-    0x62, 0x65, 0x61, 0x72, 0x64, 0x6f, 0x67, 0x2d,  // "beardog-"
-    0x6e, 0x74, 0x6f, 0x72, 0x2d, 0x73, 0x74, 0x61,  // "ntor-sta"
-    0x74, 0x65, 0x2d, 0x6b, 0x65, 0x79, 0x2d, 0x76,  // "te-key-v"
-    0x31, 0x2d, 0x70, 0x72, 0x6f, 0x64, 0x00, 0x01,  // "1-prod.."
+    0x62, 0x65, 0x61, 0x72, 0x64, 0x6f, 0x67, 0x2d, // "beardog-"
+    0x6e, 0x74, 0x6f, 0x72, 0x2d, 0x73, 0x74, 0x61, // "ntor-sta"
+    0x74, 0x65, 0x2d, 0x6b, 0x65, 0x79, 0x2d, 0x76, // "te-key-v"
+    0x31, 0x2d, 0x70, 0x72, 0x6f, 0x64, 0x00, 0x01, // "1-prod.."
 ];
 
 /// Simple XOR encryption (used with derived key for state protection)

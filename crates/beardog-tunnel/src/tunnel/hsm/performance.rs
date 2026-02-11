@@ -15,12 +15,19 @@ pub struct HsmPerformanceTracker {
 /// Metrics for a single operation
 #[derive(Debug, Clone)]
 pub struct OperationMetrics {
+    /// Total number of times this operation was invoked
     pub total_count: u64,
+    /// Number of successful completions
     pub success_count: u64,
+    /// Number of failures
     pub failure_count: u64,
+    /// Total cumulative duration in milliseconds
     pub total_duration_ms: u64,
+    /// Average duration per operation in milliseconds
     pub avg_duration_ms: f64,
+    /// Fastest operation duration in milliseconds
     pub min_duration_ms: u64,
+    /// Slowest operation duration in milliseconds
     pub max_duration_ms: u64,
 }
 

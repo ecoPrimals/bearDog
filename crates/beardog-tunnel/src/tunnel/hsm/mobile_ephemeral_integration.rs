@@ -19,20 +19,30 @@ use tracing::{debug, info};
 /// Human entropy data collected from mobile sensors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyData {
+    /// Sensor readings keyed by sensor type
     pub sensor_data: HashMap<String, f64>,
+    /// Raw environmental context bytes
     pub environmental_context: Vec<u8>,
+    /// Session identifier for context binding
     pub session_context: String,
+    /// User identifier for audit
     pub user_id: String,
+    /// When the entropy was collected
     pub timestamp: SystemTime,
 }
 
 /// Mobile ephemeral key configuration
 #[derive(Debug, Clone)]
 pub struct MobileEphemeralConfig {
+    /// Maximum key lifetime in minutes before expiry
     pub max_lifetime_minutes: u64,
+    /// Whether to prefer hardware-backed key storage
     pub prefer_hardware_backing: bool,
+    /// Whether to bind keys to biometric authentication
     pub enable_biometric_binding: bool,
+    /// Whether user presence is required for key use
     pub require_user_presence: bool,
+    /// Minimum entropy quality threshold (0.0 to 1.0)
     pub entropy_quality_threshold: f64,
 }
 
@@ -58,11 +68,17 @@ pub struct MobileEphemeralKeyManager {
 /// Ephemeral key metadata
 #[derive(Debug, Clone)]
 pub struct EphemeralKeyMetadata {
+    /// Unique key identifier
     pub key_id: String,
+    /// When the key was created
     pub created_at: SystemTime,
+    /// When the key expires and must be destroyed
     pub expires_at: SystemTime,
+    /// Entropy quality score of the key material
     pub entropy_quality: f64,
+    /// Whether the key is stored in hardware
     pub hardware_backed: bool,
+    /// Whether the key is bound to biometric authentication
     pub biometric_bound: bool,
 }
 

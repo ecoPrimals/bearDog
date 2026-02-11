@@ -112,6 +112,7 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
     SocketEndpoint::Abstract("@biomeos_beardog".to_string())
 }
 
+/// Returns the default socket endpoint for the current Unix platform
 #[cfg(all(unix, not(target_os = "android")))]
 pub fn default_socket_endpoint() -> SocketEndpoint {
     // Linux/macOS: Use filesystem Unix sockets

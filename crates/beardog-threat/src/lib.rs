@@ -72,6 +72,19 @@ mod threat_comprehensive_tests;
 #[cfg(test)]
 mod tests;
 
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    clippy::manual_range_contains,
+    clippy::assertions_on_constants,
+    clippy::useless_vec,
+    clippy::absurd_extreme_comparisons,
+    unused_comparisons,
+    clippy::float_cmp
+)]
+#[cfg(test)]
+mod coverage_gap_tests;
+
 /// Core threat detection engine and analysis
 ///
 /// Provides the main threat detection engine and related security analysis operations.

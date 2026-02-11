@@ -13,7 +13,7 @@
 // NOTE: TrustManager implementation was removed - dead code
 // The trust management logic lives directly on BeardogBtspProvider
 // See btsp_provider.rs for:
-//   - pin_peer_key() 
+//   - pin_peer_key()
 //   - establish_mtls()
 //   - generate_session_key()
 //   - cleanup_session_key()

@@ -32,11 +32,14 @@ pub use key::KeyType;
 // Capability requirements from local definition
 pub use capability::CapabilityRequirements;
 
-// HsmCapabilities stub for compatibility
+/// HSM hardware capability detection results
 #[derive(Debug, Clone)]
 pub struct HsmCapabilities {
+    /// Whether the HSM supports key generation operations
     pub supports_key_generation: bool,
+    /// Whether the HSM supports signing operations
     pub supports_signing: bool,
+    /// Whether the HSM supports encryption operations
     pub supports_encryption: bool,
 }
 
@@ -57,30 +60,38 @@ impl Default for HsmCapabilities {
 /// This enum consolidates algorithm specifications from multiple sources.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Algorithm {
-    // Symmetric encryption
+    /// AES-256 in GCM mode (symmetric encryption)
     Aes256Gcm,
+    /// ChaCha20-Poly1305 authenticated encryption
     ChaCha20Poly1305,
 
-    // Elliptic curve (key exchange and general)
+    /// Elliptic Curve Cryptography with P-256 curve
     EccP256,
+    /// Elliptic Curve Cryptography with P-384 curve
     EccP384,
 
-    // ECDSA signatures (explicit signature variants)
-    EcdsaP256,   // ECDSA with P-256 curve
-    EcdsaP384,   // ECDSA with P-384 curve
-    EcdsaSha256, // ECDSA with SHA-256 hash
+    /// ECDSA with P-256 curve
+    EcdsaP256,
+    /// ECDSA with P-384 curve
+    EcdsaP384,
+    /// ECDSA with SHA-256 hash
+    EcdsaSha256,
 
-    // RSA variants
+    /// RSA with SHA-256 hash
     RsaSha256,
-    RsaPss2048, // RSA-PSS with 2048-bit key
-    RsaPss3072, // RSA-PSS with 3072-bit key
-    RsaPss4096, // RSA-PSS with 4096-bit key
+    /// RSA-PSS with 2048-bit key
+    RsaPss2048,
+    /// RSA-PSS with 3072-bit key
+    RsaPss3072,
+    /// RSA-PSS with 4096-bit key
+    RsaPss4096,
 
-    // Key derivation
+    /// HKDF with SHA-256 for key derivation
     HkdfSha256,
 
-    // Modern signatures and key exchange
+    /// Ed25519 digital signatures
     Ed25519,
+    /// X25519 key exchange
     X25519,
 }
 
@@ -663,17 +674,45 @@ impl Default for AndroidHealthMonitor {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum HsmOperation {
     /// Key generation
-    KeyGeneration { key_id: String, key_size: u32 },
+    KeyGeneration {
+        /// Unique identifier for the key
+        key_id: String,
+        /// Key size in bits
+        key_size: u32,
+    },
     /// Encryption operation
-    Encryption { key_id: String, algorithm: String },
+    Encryption {
+        /// Key identifier used for encryption
+        key_id: String,
+        /// Algorithm name
+        algorithm: String,
+    },
     /// Decryption operation
-    Decryption { key_id: String, algorithm: String },
+    Decryption {
+        /// Key identifier used for decryption
+        key_id: String,
+        /// Algorithm name
+        algorithm: String,
+    },
     /// Signing operation
-    Signing { key_id: String, algorithm: String },
+    Signing {
+        /// Key identifier used for signing
+        key_id: String,
+        /// Algorithm name
+        algorithm: String,
+    },
     /// Verification operation
-    Verification { key_id: String, algorithm: String },
+    Verification {
+        /// Key identifier used for verification
+        key_id: String,
+        /// Algorithm name
+        algorithm: String,
+    },
     /// Key deletion
-    KeyDeletion { key_id: String },
+    KeyDeletion {
+        /// Key identifier to delete
+        key_id: String,
+    },
 }
 
 /// HSM operation result

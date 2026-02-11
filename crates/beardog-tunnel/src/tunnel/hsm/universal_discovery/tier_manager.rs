@@ -15,9 +15,13 @@ pub struct TierManager {
 /// Tier scoring weights
 #[derive(Debug, Clone)]
 pub struct TierScoringWeights {
+    /// Weight for security evaluation (0.0 to 1.0)
     pub security_weight: f64,
+    /// Weight for performance evaluation (0.0 to 1.0)
     pub performance_weight: f64,
+    /// Weight for availability evaluation (0.0 to 1.0)
     pub availability_weight: f64,
+    /// Weight for compliance evaluation (0.0 to 1.0)
     pub compliance_weight: f64,
 }
 

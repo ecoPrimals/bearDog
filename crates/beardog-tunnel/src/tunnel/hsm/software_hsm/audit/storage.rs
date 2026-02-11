@@ -18,6 +18,7 @@ pub struct PersistentAuditStorage {
     max_cache_size: usize,
     stats_cache: Arc<RwLock<Option<StorageStats>>>,
     stats_cache_timestamp: Arc<RwLock<chrono::DateTime<chrono::Utc>>>,
+    /// Time-to-live for statistics cache in seconds
     pub stats_cache_ttl: u64,
 }
 
@@ -175,8 +176,12 @@ impl PersistentAuditStorage {
 /// Storage statistics
 #[derive(Debug, Clone)]
 pub struct StorageStats {
+    /// Path to the audit log file
     pub file_path: std::path::PathBuf,
+    /// Size of the audit log file in bytes
     pub file_size_bytes: u64,
+    /// Number of entries in the cache
     pub cache_size: usize,
+    /// Maximum cache capacity
     pub max_cache_size: usize,
 }

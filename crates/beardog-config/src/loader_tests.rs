@@ -99,4 +99,23 @@ mod tests {
         // Note: Can't build twice as build() consumes self
         // This test just verifies the pattern works once
     }
+
+    #[test]
+    fn test_config_loader_with_cli_args() {
+        let mut args = std::collections::HashMap::new();
+        args.insert("port".to_string(), "7070".to_string());
+
+        let config = ConfigLoader::new()
+            .with_cli_args(args)
+            .build()
+            .expect("Should build with CLI args");
+
+        assert_eq!(config.network.api.port, 7070);
+    }
+
+    #[test]
+    fn test_config_loader_with_file_nonexistent() {
+        let result = ConfigLoader::new().with_file("/nonexistent/config.toml");
+        assert!(result.is_err());
+    }
 }

@@ -143,13 +143,16 @@ impl HsmAutoInitConfig {
 /// * [`HsmTier`] - HSM security tiers
 /// * [`HsmProvider`] - HSM provider trait
 pub struct HsmProviderSelection {
+    /// Selected HSM provider instance
     pub provider: Arc<dyn HsmProvider>,
 
+    /// Identifier of the selected provider
     pub provider_id: String,
 
-    /// The tier value
+    /// Security tier of the selected provider
     pub tier: HsmTier,
 
+    /// Selection confidence score (0.0 to 1.0)
     pub confidence: f64,
 
     /// The estimated latency ms value
@@ -244,12 +247,6 @@ impl HsmManager {
     ///
     /// Returns a new `HsmManager` instance ready to register and manage HSM providers.
     ///
-    /// # Panics
-    ///
-    /// This function will panic if the capability detector cannot be initialized,
-    /// which should never happen under normal circumstances as it only allocates
-    /// internal data structures.
-    ///
     /// # Example
     ///
     /// ```ignore
@@ -269,12 +266,8 @@ impl HsmManager {
             config: HsmManagerConfig::default(),
             health_monitor: Arc::new(DefaultHsmHealthMonitor::default()),
             failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
-            // Capability detector creation is infallible (just HashMap)
-            // Using expect since this should never fail in practice
-            capability_detector: Arc::new(
-                DefaultHsmCapabilityDetector::new()
-                    .expect("DefaultHsmCapabilityDetector::new() is infallible"),
-            ),
+            // DefaultHsmCapabilityDetector::default() is infallible (only allocates a HashMap)
+            capability_detector: Arc::new(DefaultHsmCapabilityDetector::default()),
             performance_tracker: Arc::new(HsmPerformanceTracker::default()),
             operation_router: Arc::new(RwLock::new(HsmOperationRouter::default())),
         }

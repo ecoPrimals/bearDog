@@ -139,7 +139,8 @@ impl SocketConfig {
         // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
         // Uses PRIMAL_NAME env var for self-knowledge, defaults to "beardog"
         if Path::new("/primal").exists() {
-            let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+            let primal_name =
+                std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
             return Self {
                 socket_path: PathBuf::from(format!("/primal/{}", primal_name)),
                 family_id,

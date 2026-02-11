@@ -357,7 +357,9 @@ mod tests {
     #[tokio::test]
     async fn test_get_user_permissions() {
         let service = CollaborationService::new();
-        let result = service.get_user_permissions("user-123", "resource-456").await;
+        let result = service
+            .get_user_permissions("user-123", "resource-456")
+            .await;
 
         assert!(result.is_ok());
         let perms = result.unwrap();

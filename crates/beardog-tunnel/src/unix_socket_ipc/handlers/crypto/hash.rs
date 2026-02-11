@@ -179,6 +179,7 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
         "cipher_suite": cipher_suite
     }))
 }
+/// Handle BLAKE3 hash operations via JSON-RPC
 
 pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.blake3_hash")?;

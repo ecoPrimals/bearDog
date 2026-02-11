@@ -54,7 +54,10 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
         let hid_info = hid_devices
             .iter()
-            .find(|d| d.path.contains(&device_info.device_path.to_string_lossy().to_string()))
+            .find(|d| {
+                d.path
+                    .contains(&device_info.device_path.to_string_lossy().to_string())
+            })
             .ok_or_else(|| {
                 beardog_errors::BearDogError::system("Device not found in HID list".to_string())
             })?;
@@ -113,16 +116,16 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
             let mut response = vec![0u8; 64];
 
             // Use tokio timeout for read
-            let read_result =
-                tokio::time::timeout(tokio::time::Duration::from_secs(1), hid_device.read(&mut response)).await;
+            let read_result = tokio::time::timeout(
+                tokio::time::Duration::from_secs(1),
+                hid_device.read(&mut response),
+            )
+            .await;
 
             match read_result {
                 Ok(Ok(bytes_read)) if bytes_read > 0 => {
                     println!("   ✅ Got {} bytes!", bytes_read);
-                    println!(
-                        "   Response hex: {:02x?}",
-                        &response[..bytes_read.min(32)]
-                    );
+                    println!("   Response hex: {:02x?}", &response[..bytes_read.min(32)]);
                     println!();
 
                     // Parse response

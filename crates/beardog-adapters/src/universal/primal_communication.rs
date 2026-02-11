@@ -287,7 +287,7 @@ impl PrimalCommunicationAdapter {
         for capability in capabilities {
             let endpoint = PrimalEndpoint {
                 endpoint_id: format!("test-endpoint-{}", uuid::Uuid::new_v4()),
-                base_url: "http://localhost:8080".to_string(),
+                base_url: format!("http://localhost:{}", beardog_config::DEFAULT_API_PORT),
                 capabilities: vec![capability.to_string()],
                 security_requirements: SecurityRequirements::default(),
                 discovered_at: Utc::now(),

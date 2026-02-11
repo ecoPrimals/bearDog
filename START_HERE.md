@@ -2,7 +2,7 @@
 
 BearDog is the cryptographic service provider for the ecoPrimals ecosystem. It provides secure crypto operations for all primals through the Tower Atomic Pattern via JSON-RPC over Unix sockets.
 
-**Status**: Production Ready | **Pure Rust**: 100% | **Tests**: 8,789 passing
+**Status**: Production Ready | **Pure Rust**: 100% | **Tests**: 12,300+ passing
 
 ---
 
@@ -144,13 +144,11 @@ cargo build --all-features --release                   # Build
 | Document | Description |
 |----------|-------------|
 | [README.md](README.md) | Project overview |
-| [STATUS.md](STATUS.md) | Canonical status and metrics |
+| [STATUS.md](STATUS.md) | Current status and metrics |
 | [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture pattern |
 | [ROADMAP.md](ROADMAP.md) | Current priorities |
 | [ROOT_INDEX.md](ROOT_INDEX.md) | Complete documentation index |
-| `specs/current/security/` | Security specifications |
-| `docs/sessions/` | Session archives |
 
 ---
 
-**Last Updated**: February 9, 2026
+**Last Updated**: February 11, 2026

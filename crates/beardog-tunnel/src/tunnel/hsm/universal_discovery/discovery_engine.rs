@@ -81,36 +81,56 @@ pub struct SmartCardDiscoverer {
 /// Network scanning configuration
 #[derive(Debug, Clone)]
 pub struct NetworkScanConfig {
+    /// IP address ranges to scan (CIDR notation)
     pub ip_ranges: Vec<String>,
+    /// Timeout per scan in milliseconds
     pub timeout_ms: u32,
+    /// Number of parallel scan workers
     pub parallel_scans: usize,
 }
 
 /// USB enumeration configuration
 #[derive(Debug, Clone)]
 pub struct UsbEnumerationConfig {
+    /// Interval between USB scans in milliseconds
     pub scan_interval_ms: u32,
+    /// Whether to automatically detect new USB HSM devices
     pub auto_detect: bool,
 }
 
 /// TPM interface types
 #[derive(Debug, Clone)]
 pub enum TpmInterfaceType {
+    /// TPM 1.2 (legacy)
     Tpm12,
+    /// TPM 2.0 (modern)
     Tpm20,
+    /// Firmware-based TPM (fTPM)
     FirmwareTpm,
+    /// Software-emulated TPM
     SoftwareTpm,
 }
 
 /// Software HSM implementations
 #[derive(Debug, Clone)]
 pub enum SoftwareHsmImplementation {
+    /// BearDog's native software HSM
     BearDogNative,
+    /// OpenSSL-based provider
     OpenSsl,
+    /// SoftHSM2 PKCS#11 provider
     SoftHsm,
+    /// Microsoft CNG provider
     MicrosoftCng,
+    /// macOS Keychain provider
     MacOsKeychain,
-    Custom { name: String, path: PathBuf },
+    /// Custom HSM implementation
+    Custom {
+        /// Implementation name
+        name: String,
+        /// Path to the provider library
+        path: PathBuf,
+    },
 }
 
 /// Android StrongBox discoverer
@@ -234,13 +254,13 @@ impl Pkcs11Discoverer {
                 .filter(|p| !p.is_empty())
                 .map(PathBuf::from)
                 .collect();
-            
+
             if !custom_paths.is_empty() {
                 tracing::debug!("Using custom HSM library paths from BEARDOG_HSM_LIBRARY_PATHS");
                 return custom_paths;
             }
         }
-        
+
         // Platform-appropriate default paths
         vec![
             PathBuf::from("/usr/lib"),

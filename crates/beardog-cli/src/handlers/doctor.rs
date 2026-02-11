@@ -176,7 +176,10 @@ async fn check_key_storage() -> HealthCheck {
             name: "Key Storage".to_string(),
             healthy: false,
             message: "Key storage not accessible".to_string(),
-            details: Some(format!("Cannot create key storage directory: {}", key_dir.display())),
+            details: Some(format!(
+                "Cannot create key storage directory: {}",
+                key_dir.display()
+            )),
         }
     }
 }

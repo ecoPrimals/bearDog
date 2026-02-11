@@ -20,9 +20,13 @@ pub struct UnifiedHsmProvider {
 /// Provider registration info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderInfo {
+    /// Unique provider identifier
     pub id: String,
+    /// Human-readable provider name
     pub name: String,
+    /// HSM security tier
     pub tier: HsmTier,
+    /// Whether the provider is currently available
     pub is_available: bool,
 }
 

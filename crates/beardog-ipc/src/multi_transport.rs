@@ -49,25 +49,25 @@ use crate::tarpc_server::BearDogCryptoServer;
 pub struct MultiTransportConfig {
     /// tarpc server address (default: 127.0.0.1:9901)
     pub tarpc_addr: SocketAddr,
-    
+
     /// JSON-RPC server address (default: 127.0.0.1:9900)
     pub jsonrpc_addr: SocketAddr,
-    
+
     /// Enable tarpc server
     pub enable_tarpc: bool,
-    
+
     /// Enable JSON-RPC server
     pub enable_jsonrpc: bool,
-    
+
     /// Graceful shutdown timeout
     pub shutdown_timeout: Duration,
 }
 
 /// Default port for tarpc server (can be overridden by BEARDOG_TARPC_PORT)
-const DEFAULT_TARPC_PORT: u16 = 9901;
+const DEFAULT_TARPC_PORT: u16 = beardog_config::DEFAULT_TCP_IPC_PORT + 1;
 
 /// Default port for JSON-RPC server (can be overridden by BEARDOG_JSONRPC_PORT)
-const DEFAULT_JSONRPC_PORT: u16 = 9900;
+const DEFAULT_JSONRPC_PORT: u16 = beardog_config::DEFAULT_TCP_IPC_PORT;
 
 /// Default shutdown timeout in seconds (can be overridden by BEARDOG_SHUTDOWN_TIMEOUT)
 const DEFAULT_SHUTDOWN_TIMEOUT_SECS: u64 = 30;
@@ -76,24 +76,24 @@ impl Default for MultiTransportConfig {
     fn default() -> Self {
         // Self-knowledge: discover configuration from environment
         // All values can be overridden by environment variables
-        let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
-            .unwrap_or_else(|_| "127.0.0.1".to_string());
-        
+        let bind_addr =
+            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+
         let tarpc_port: u16 = std::env::var("BEARDOG_TARPC_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(DEFAULT_TARPC_PORT);
-        
+
         let jsonrpc_port: u16 = std::env::var("BEARDOG_JSONRPC_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(DEFAULT_JSONRPC_PORT);
-        
+
         let shutdown_timeout_secs: u64 = std::env::var("BEARDOG_SHUTDOWN_TIMEOUT")
             .ok()
             .and_then(|t| t.parse().ok())
             .unwrap_or(DEFAULT_SHUTDOWN_TIMEOUT_SECS);
-        
+
         // Safe address parsing with fallback to known-good defaults
         // This prevents panics from malformed BEARDOG_BIND_ADDR values
         let tarpc_addr = format!("{}:{}", bind_addr, tarpc_port)
@@ -101,25 +101,29 @@ impl Default for MultiTransportConfig {
             .unwrap_or_else(|_| {
                 tracing::warn!(
                     "Failed to parse tarpc address '{}:{}', using 127.0.0.1:{}",
-                    bind_addr, tarpc_port, DEFAULT_TARPC_PORT
+                    bind_addr,
+                    tarpc_port,
+                    DEFAULT_TARPC_PORT
                 );
                 format!("127.0.0.1:{}", DEFAULT_TARPC_PORT)
                     .parse()
                     .expect("hardcoded address is valid")
             });
-        
+
         let jsonrpc_addr = format!("{}:{}", bind_addr, jsonrpc_port)
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
                     "Failed to parse jsonrpc address '{}:{}', using 127.0.0.1:{}",
-                    bind_addr, jsonrpc_port, DEFAULT_JSONRPC_PORT
+                    bind_addr,
+                    jsonrpc_port,
+                    DEFAULT_JSONRPC_PORT
                 );
                 format!("127.0.0.1:{}", DEFAULT_JSONRPC_PORT)
                     .parse()
                     .expect("hardcoded address is valid")
             });
-        
+
         Self {
             tarpc_addr,
             jsonrpc_addr,
@@ -140,27 +144,27 @@ impl MultiTransportConfig {
     /// - `BEARDOG_ENABLE_JSONRPC`: Enable JSON-RPC (default: true)
     pub fn from_env() -> Self {
         let mut config = Self::default();
-        
+
         if let Ok(addr) = std::env::var("BEARDOG_TARPC_ADDR") {
             if let Ok(parsed) = addr.parse() {
                 config.tarpc_addr = parsed;
             }
         }
-        
+
         if let Ok(addr) = std::env::var("BEARDOG_JSONRPC_ADDR") {
             if let Ok(parsed) = addr.parse() {
                 config.jsonrpc_addr = parsed;
             }
         }
-        
+
         if let Ok(val) = std::env::var("BEARDOG_ENABLE_TARPC") {
             config.enable_tarpc = val != "0" && val.to_lowercase() != "false";
         }
-        
+
         if let Ok(val) = std::env::var("BEARDOG_ENABLE_JSONRPC") {
             config.enable_jsonrpc = val != "0" && val.to_lowercase() != "false";
         }
-        
+
         config
     }
 
@@ -170,9 +174,9 @@ impl MultiTransportConfig {
     /// Falls back to localhost if the provided address is invalid.
     pub fn from_router_config(router: &RouterConfig, base_port: u16) -> Self {
         // Self-knowledge: discover bind address from config or environment
-        let bind_addr = std::env::var("BEARDOG_BIND_ADDR")
-            .unwrap_or_else(|_| "127.0.0.1".to_string());
-        
+        let bind_addr =
+            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+
         // Safe address parsing with fallback - prevents panics from invalid env vars
         let tarpc_port = base_port.saturating_add(1);
         let tarpc_addr = format!("{}:{}", bind_addr, tarpc_port)
@@ -180,25 +184,29 @@ impl MultiTransportConfig {
             .unwrap_or_else(|_| {
                 tracing::warn!(
                     "Failed to parse tarpc address '{}:{}', using 127.0.0.1:{}",
-                    bind_addr, tarpc_port, tarpc_port
+                    bind_addr,
+                    tarpc_port,
+                    tarpc_port
                 );
                 format!("127.0.0.1:{}", tarpc_port)
                     .parse()
                     .expect("hardcoded localhost address is valid")
             });
-        
+
         let jsonrpc_addr = format!("{}:{}", bind_addr, base_port)
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
                     "Failed to parse jsonrpc address '{}:{}', using 127.0.0.1:{}",
-                    bind_addr, base_port, base_port
+                    bind_addr,
+                    base_port,
+                    base_port
                 );
                 format!("127.0.0.1:{}", base_port)
                     .parse()
                     .expect("hardcoded localhost address is valid")
             });
-        
+
         Self {
             tarpc_addr,
             jsonrpc_addr,
@@ -230,7 +238,7 @@ impl MultiTransportConfig {
 pub struct MultiTransportHandle {
     /// Shutdown signal sender
     shutdown_tx: broadcast::Sender<()>,
-    
+
     /// Configuration (for introspection)
     config: MultiTransportConfig,
 }
@@ -296,26 +304,36 @@ impl MultiTransportServer {
     /// This function spawns server tasks and returns immediately.
     pub async fn start(self) -> anyhow::Result<MultiTransportHandle> {
         let (shutdown_tx, _) = broadcast::channel(1);
-        
+
         info!("🌐 Starting BearDog Multi-Transport Server");
         info!("   Configuration:");
-        info!("   - tarpc:    {} ({})", 
-            self.config.tarpc_addr, 
-            if self.config.enable_tarpc { "enabled" } else { "disabled" }
+        info!(
+            "   - tarpc:    {} ({})",
+            self.config.tarpc_addr,
+            if self.config.enable_tarpc {
+                "enabled"
+            } else {
+                "disabled"
+            }
         );
-        info!("   - JSON-RPC: {} ({})", 
+        info!(
+            "   - JSON-RPC: {} ({})",
             self.config.jsonrpc_addr,
-            if self.config.enable_jsonrpc { "enabled" } else { "disabled" }
+            if self.config.enable_jsonrpc {
+                "enabled"
+            } else {
+                "disabled"
+            }
         );
 
         // Start tarpc server
         if self.config.enable_tarpc {
             let tarpc_addr = self.config.tarpc_addr;
             let mut shutdown_rx = shutdown_tx.subscribe();
-            
+
             tokio::spawn(async move {
                 let server = BearDogCryptoServer::new();
-                
+
                 tokio::select! {
                     result = server.run(tarpc_addr) => {
                         if let Err(e) = result {
@@ -333,7 +351,7 @@ impl MultiTransportServer {
         if self.config.enable_jsonrpc {
             let jsonrpc_addr = self.config.jsonrpc_addr;
             let mut shutdown_rx = shutdown_tx.subscribe();
-            
+
             tokio::spawn(async move {
                 // JSON-RPC server implementation would go here
                 // For now, we just listen and respond with capabilities
@@ -344,22 +362,22 @@ impl MultiTransportServer {
                         return;
                     }
                 };
-                
+
                 info!("📡 BearDog JSON-RPC server listening on {}", jsonrpc_addr);
-                
+
                 loop {
                     tokio::select! {
                         accept = listener.accept() => {
                             match accept {
                                 Ok((mut stream, peer)) => {
                                     info!("📥 JSON-RPC connection from {}", peer);
-                                    
+
                                     // Handle JSON-RPC in spawned task
                                     tokio::spawn(async move {
                                         // Simple JSON-RPC handler (placeholder)
                                         // Real implementation would dispatch to handlers
                                         use tokio::io::{AsyncReadExt, AsyncWriteExt};
-                                        
+
                                         let mut buf = vec![0u8; 4096];
                                         if let Ok(n) = stream.read(&mut buf).await {
                                             if n > 0 {
@@ -378,7 +396,7 @@ impl MultiTransportServer {
                                                     },
                                                     "id": 1
                                                 });
-                                                
+
                                                 let _ = stream.write_all(
                                                     response.to_string().as_bytes()
                                                 ).await;
@@ -411,16 +429,16 @@ impl MultiTransportServer {
     /// Blocks until shutdown is signaled.
     pub async fn run(self) -> anyhow::Result<()> {
         let handle = self.start().await?;
-        
+
         // Wait for Ctrl+C or other termination signal
         tokio::signal::ctrl_c().await?;
-        
+
         info!("Shutdown signal received, stopping servers...");
         handle.shutdown();
-        
+
         // Give servers time to clean up
         tokio::time::sleep(Duration::from_millis(100)).await;
-        
+
         info!("Multi-transport server stopped");
         Ok(())
     }
@@ -485,7 +503,7 @@ mod tests {
         // Clear any existing env vars
         std::env::remove_var("BEARDOG_TARPC_ADDR");
         std::env::remove_var("BEARDOG_JSONRPC_ADDR");
-        
+
         let config = MultiTransportConfig::from_env();
         assert!(config.enable_tarpc);
         assert!(config.enable_jsonrpc);
@@ -495,7 +513,7 @@ mod tests {
     fn test_config_capabilities() {
         let config = MultiTransportConfig::default();
         let caps = config.capabilities();
-        
+
         assert!(caps.supported.contains(&"tarpc".to_string()));
         assert!(caps.supported.contains(&"json-rpc".to_string()));
         assert_eq!(caps.recommended, "tarpc");
@@ -522,13 +540,13 @@ mod tests {
     #[test]
     fn test_protocol_selector_frequency() {
         let available = vec![Protocol::Tarpc, Protocol::JsonRpc];
-        
+
         // High frequency should use tarpc
         assert_eq!(
             ProtocolSelector::for_frequency(200, &available),
             Protocol::Tarpc
         );
-        
+
         // Low frequency should use JSON-RPC
         assert_eq!(
             ProtocolSelector::for_frequency(5, &available),

@@ -247,4 +247,81 @@ mod tests {
         let shared_config = patterns::optimize_config_sharing(&config);
         assert_eq!(shared_config.len(), 3);
     }
+
+    #[test]
+    fn test_clone_optimizer_default() {
+        let optimizer = CloneOptimizer::default();
+        assert_eq!(optimizer.get_stats().types_analyzed, 0);
+        assert_eq!(optimizer.get_stats().optimizations_applied, 0);
+    }
+
+    #[test]
+    fn test_analyze_all_patterns() {
+        let mut optimizer = CloneOptimizer::new();
+
+        let s1 = optimizer.analyze_type("A", "shared_across_threads");
+        assert!(matches!(s1, CloneOptimizationStrategy::SharedOwnership));
+
+        let s2 = optimizer.analyze_type("B", "occasional_modification");
+        assert!(matches!(s2, CloneOptimizationStrategy::CopyOnWrite));
+
+        let s3 = optimizer.analyze_type("C", "read_only_access");
+        assert!(matches!(s3, CloneOptimizationStrategy::BorrowInstead));
+
+        let s4 = optimizer.analyze_type("D", "string_operations");
+        assert!(matches!(s4, CloneOptimizationStrategy::ZeroCopy));
+
+        let s5 = optimizer.analyze_type("E", "unknown_pattern");
+        assert!(matches!(s5, CloneOptimizationStrategy::BorrowInstead));
+
+        assert_eq!(optimizer.get_stats().types_analyzed, 5);
+    }
+
+    #[test]
+    fn test_get_optimization_existing() {
+        let mut optimizer = CloneOptimizer::new();
+        optimizer.analyze_type("MyType", "shared_across_threads");
+
+        let opt = optimizer.get_optimization("MyType");
+        assert!(opt.is_some());
+        assert!(matches!(
+            opt.unwrap(),
+            CloneOptimizationStrategy::SharedOwnership
+        ));
+    }
+
+    #[test]
+    fn test_get_optimization_missing() {
+        let optimizer = CloneOptimizer::new();
+        assert!(optimizer.get_optimization("NonExistent").is_none());
+    }
+
+    #[test]
+    fn test_shared_ownership_from_arc() {
+        let arc = Arc::new(vec![10, 20, 30]);
+        let shared = SharedOwnership::from_arc(arc);
+        assert_eq!(shared.len(), 3);
+        assert_eq!(shared[0], 10);
+    }
+
+    #[test]
+    fn test_copy_on_write_from_borrowed() {
+        static DATA: Vec<i32> = Vec::new();
+        let cow = CopyOnWrite::from_borrowed(&DATA);
+        assert_eq!(cow.len(), 0);
+    }
+
+    #[test]
+    fn test_copy_on_write_to_mut_triggers_copy() {
+        let mut cow = CopyOnWrite::new(vec![1, 2, 3]);
+        cow.to_mut().push(4);
+        assert_eq!(cow.len(), 4);
+    }
+
+    #[test]
+    fn test_create_copy_on_write_pattern() {
+        static VALUE: i32 = 42;
+        let cow = patterns::create_copy_on_write(&VALUE);
+        assert_eq!(*cow, 42);
+    }
 }

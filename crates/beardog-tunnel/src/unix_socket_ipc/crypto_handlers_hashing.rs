@@ -387,9 +387,7 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
 ///   "purpose": "hidden_service"
 /// }
 /// ```
-pub async fn handle_generate_onion_identity(
-    params: Option<&Value>,
-) -> Result<Value, String> {
+pub async fn handle_generate_onion_identity(params: Option<&Value>) -> Result<Value, String> {
     use ed25519_dalek::SigningKey;
     use rand::RngCore;
 

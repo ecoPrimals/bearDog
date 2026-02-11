@@ -236,6 +236,7 @@ pub struct ResilienceConfig {
     pub enable_circuit_breaker: bool,
     /// Number of `failure_threshold`
     pub failure_threshold: u32,
+    /// Timeout before recovery attempt after circuit breaker trips
     pub recovery_timeout: Duration,
     /// Number of `max_retries`
     pub max_retries: u32,
@@ -245,9 +246,11 @@ pub struct ResilienceConfig {
     pub enable_health_checks: bool,
     /// The health check interval value
     pub health_check_interval: Duration,
+    /// Timeout for individual health check probes
     pub health_check_timeout: Duration,
     /// Whether `enable_graceful_shutdown` is enabled
     pub enable_graceful_shutdown: bool,
+    /// Maximum time to wait for graceful shutdown
     pub shutdown_timeout: Duration,
     /// Whether `enable_auto_recovery` is enabled
     pub enable_auto_recovery: bool,
@@ -261,9 +264,11 @@ pub struct ResilienceConfig {
     pub backup_sync_interval: Duration,
     /// Whether `enable_disaster_recovery` is enabled
     pub enable_disaster_recovery: bool,
+    /// Timeout for disaster recovery operations
     pub disaster_recovery_timeout: Duration,
     /// Whether `enable_self_healing` is enabled
     pub enable_self_healing: bool,
+    /// Maximum time for self-healing operations
     pub healing_timeout: Duration,
 }
 
@@ -296,25 +301,39 @@ impl Default for ResilienceConfig {
 /// Tunnel-specific monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TunnelMonitoringConfig {
+    /// Whether metrics collection is enabled
     pub enable_metrics: bool,
+    /// Port for metrics endpoint
     pub metrics_port: u16,
+    /// Whether distributed tracing is enabled
     pub enable_tracing: bool,
+    /// Trace sampling rate (0.0 to 1.0)
     pub trace_sample_rate: f64,
+    /// Whether structured logging is enabled
     pub enable_logging: bool,
+    /// Log level filter (e.g. "info", "debug", "trace")
     pub log_level: String,
+    /// Whether the health check endpoint is exposed
     pub enable_health_endpoint: bool,
+    /// Port for health check endpoint
     pub health_endpoint_port: u16,
+    /// Whether runtime profiling is enabled
     pub enable_profiling: bool,
+    /// Port for profiling endpoint
     pub profiling_port: u16,
+    /// Whether alerting is enabled
     pub enable_alerts: bool,
+    /// Threshold configuration for alerts
     pub alert_thresholds: AlertThresholds,
+    /// Window duration for metric aggregation
     pub aggregation_window: Duration,
 }
 
-// Backward compatibility alias
+/// Backward compatibility alias for [`TunnelMonitoringConfig`]
 #[deprecated(since = "3.1.0", note = "Use TunnelMonitoringConfig instead")]
 pub type MonitoringConfig = TunnelMonitoringConfig;
 
+/// Threshold values that trigger monitoring alerts
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
     /// The cpu threshold value

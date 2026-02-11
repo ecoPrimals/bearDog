@@ -330,3 +330,40 @@ fn test_hid_device_info_clone() {
     assert_eq!(info.vendor_id, cloned.vendor_id);
     assert_eq!(info.product_id, cloned.product_id);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// lib.rs wrapper function tests — cover discover() and open_device()
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn test_lib_discover_wrapper() {
+    // Calls the public discover() wrapper in lib.rs
+    let result = crate::discover().await;
+    // Either succeeds with a list or fails (both valid in CI)
+    match result {
+        Ok(devices) => {
+            for d in &devices {
+                assert!(!d.path.is_empty());
+            }
+        }
+        Err(e) => {
+            let msg = e.to_string();
+            assert!(
+                msg.contains("Failed") || msg.contains("Permission") || msg.contains("No such")
+            );
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_lib_open_device_nonexistent() {
+    // Calls the public open_device() wrapper in lib.rs
+    let result = crate::open_device("/dev/hidraw_does_not_exist_99").await;
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn test_lib_open_device_invalid_path() {
+    let result = crate::open_device("/nonexistent/path").await;
+    assert!(result.is_err());
+}

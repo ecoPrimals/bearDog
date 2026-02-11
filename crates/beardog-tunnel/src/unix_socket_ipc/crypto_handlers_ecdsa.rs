@@ -55,9 +55,7 @@ use p256::ecdsa::{
 };
 // Removed unused: ToEncodedPoint (not needed for DER signature format)
 use p384::ecdsa::{
-    Signature as P384Signature,
-    SigningKey as P384SigningKey,
-    VerifyingKey as P384VerifyingKey,
+    Signature as P384Signature, SigningKey as P384SigningKey, VerifyingKey as P384VerifyingKey,
 };
 // Removed unused: Verifier trait, ToEncodedPoint
 // Note: P-521 imports commented out due to rand_core version conflict

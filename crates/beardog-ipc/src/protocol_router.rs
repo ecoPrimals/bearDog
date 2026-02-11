@@ -31,13 +31,13 @@ use tracing::debug;
 pub enum Protocol {
     /// tarpc binary RPC (highest performance)
     Tarpc,
-    
+
     /// JSON-RPC 2.0 (flexible, human-readable)
     JsonRpc,
-    
+
     /// HTTP/1.1 (legacy compatibility)
     Http,
-    
+
     /// Unknown/unrecognized protocol
     Unknown,
 }
@@ -46,7 +46,7 @@ impl Protocol {
     /// Protocol priority (higher = preferred)
     pub fn priority(&self) -> u8 {
         match self {
-            Protocol::Tarpc => 3,   // Highest
+            Protocol::Tarpc => 3, // Highest
             Protocol::JsonRpc => 2,
             Protocol::Http => 1,
             Protocol::Unknown => 0,
@@ -101,16 +101,16 @@ impl ProtocolDetector {
     /// peeked bytes back to the stream if needed.
     pub async fn detect(&self, stream: &mut TcpStream) -> io::Result<(Protocol, Vec<u8>)> {
         let mut buf = vec![0u8; self.peek_size];
-        
+
         // Read first bytes (this consumes them from the stream)
         let n = stream.read(&mut buf).await?;
         if n == 0 {
             return Ok((Protocol::Unknown, vec![]));
         }
-        
+
         buf.truncate(n);
         let protocol = Self::detect_from_bytes(&buf);
-        
+
         debug!("Detected protocol: {} from {} bytes", protocol, n);
         Ok((protocol, buf))
     }
@@ -126,7 +126,7 @@ impl ProtocolDetector {
         // The length should be reasonable (< 16MB)
         if bytes.len() >= 4 {
             let frame_len = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
-            
+
             // If frame length looks valid for tarpc (non-zero, < 16MB, not ASCII)
             // and first byte after length is not ASCII text
             if frame_len > 0 && frame_len < 16 * 1024 * 1024 {
@@ -143,7 +143,9 @@ impl ProtocolDetector {
         }
 
         // Check for JSON-RPC (starts with '{' or whitespace then '{')
-        let trimmed = bytes.iter().skip_while(|&&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r');
+        let trimmed = bytes
+            .iter()
+            .skip_while(|&&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r');
         if let Some(&first_char) = trimmed.clone().next() {
             if first_char == b'{' {
                 // Likely JSON - check for JSON-RPC fields
@@ -195,13 +197,13 @@ impl Default for ProtocolDetector {
 pub struct RouterConfig {
     /// Enable tarpc handling
     pub enable_tarpc: bool,
-    
+
     /// Enable JSON-RPC handling
     pub enable_jsonrpc: bool,
-    
+
     /// Enable HTTP handling
     pub enable_http: bool,
-    
+
     /// Preferred protocol (for capability negotiation)
     pub preferred: Protocol,
 }
@@ -256,7 +258,7 @@ impl RouterConfig {
     /// Get list of supported protocols
     pub fn supported_protocols(&self) -> Vec<Protocol> {
         let mut protocols = Vec::new();
-        
+
         if self.enable_tarpc {
             protocols.push(Protocol::Tarpc);
         }
@@ -266,7 +268,7 @@ impl RouterConfig {
         if self.enable_http {
             protocols.push(Protocol::Http);
         }
-        
+
         protocols
     }
 
@@ -286,13 +288,13 @@ impl RouterConfig {
 pub struct ProtocolCapabilities {
     /// Supported protocols in priority order
     pub supported: Vec<String>,
-    
+
     /// Recommended protocol for this connection
     pub recommended: String,
-    
+
     /// High-performance protocols available
     pub high_performance: Vec<String>,
-    
+
     /// Protocol version info
     pub versions: std::collections::HashMap<String, String>,
 }
@@ -309,12 +311,12 @@ impl ProtocolCapabilities {
             high_performance.push("tarpc".to_string());
             versions.insert("tarpc".to_string(), "0.34".to_string());
         }
-        
+
         if config.enable_jsonrpc {
             supported.push("json-rpc".to_string());
             versions.insert("json-rpc".to_string(), "2.0".to_string());
         }
-        
+
         if config.enable_http {
             supported.push("http".to_string());
             versions.insert("http".to_string(), "1.1".to_string());
@@ -416,7 +418,10 @@ mod tests {
     #[test]
     fn test_detect_jsonrpc() {
         let bytes = br#"{"jsonrpc": "2.0", "method": "test", "id": 1}"#;
-        assert_eq!(ProtocolDetector::detect_from_bytes(bytes), Protocol::JsonRpc);
+        assert_eq!(
+            ProtocolDetector::detect_from_bytes(bytes),
+            Protocol::JsonRpc
+        );
     }
 
     #[test]
@@ -464,7 +469,7 @@ mod tests {
     fn test_capabilities_from_config() {
         let config = RouterConfig::default();
         let caps = ProtocolCapabilities::from_config(&config);
-        
+
         assert!(caps.supported.contains(&"tarpc".to_string()));
         assert!(caps.supported.contains(&"json-rpc".to_string()));
         assert!(caps.high_performance.contains(&"tarpc".to_string()));
@@ -475,7 +480,10 @@ mod tests {
     fn test_detect_json_without_jsonrpc_field() {
         // Plain JSON that's not explicitly JSON-RPC should still be treated as JSON-RPC
         let bytes = br#"{"method": "crypto.sign", "params": {}}"#;
-        assert_eq!(ProtocolDetector::detect_from_bytes(bytes), Protocol::JsonRpc);
+        assert_eq!(
+            ProtocolDetector::detect_from_bytes(bytes),
+            Protocol::JsonRpc
+        );
     }
 
     #[test]

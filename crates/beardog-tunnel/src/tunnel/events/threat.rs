@@ -17,6 +17,7 @@ pub enum SuspiciousActivityType {
     Unknown,
 }
 
+/// Actions taken to mitigate detected threats
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ThreatMitigationAction {
     /// Represents isolate traffic variant

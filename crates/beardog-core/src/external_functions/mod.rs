@@ -140,11 +140,11 @@ mod tests {
         };
 
         // Load policies
-        checker.load_policy(policy1).await.unwrap();
-        checker.load_policy(policy2).await.unwrap();
+        checker.load_policy(policy1).unwrap();
+        checker.load_policy(policy2).unwrap();
 
         // Test list_policies
-        let policies = checker.list_policies().await.unwrap();
+        let policies = checker.list_policies().unwrap();
         assert!(!policies.is_empty());
         assert!(policies.contains(&"parameter_validation".to_string()));
         assert!(policies.contains(&"memory_bounds".to_string()));

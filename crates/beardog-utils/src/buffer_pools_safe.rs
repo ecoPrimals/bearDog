@@ -173,4 +173,66 @@ mod tests {
         assert_eq!(stats.buffers_allocated, 2);
         assert_eq!(stats.buffers_returned, 2);
     }
+
+    #[test]
+    fn test_buffer_pool_default() {
+        let pool = SafeBufferPool::default();
+        assert_eq!(pool.get_stats().buffers_allocated, 0);
+    }
+
+    #[test]
+    fn test_pool_clear() {
+        let mut pool = SafeBufferPool::new(5);
+        let buf = pool.get_buffer(256);
+        pool.return_buffer(buf);
+        assert_eq!(pool.get_stats().buffers_returned, 1);
+
+        pool.clear();
+        let stats = pool.get_stats();
+        assert_eq!(stats.buffers_allocated, 0);
+        assert_eq!(stats.buffers_returned, 0);
+    }
+
+    #[test]
+    fn test_pool_peak_usage() {
+        let mut pool = SafeBufferPool::new(5);
+        let b1 = pool.get_buffer(64);
+        let b2 = pool.get_buffer(64);
+        assert_eq!(pool.get_stats().peak_usage, 2);
+
+        pool.return_buffer(b1);
+        assert_eq!(pool.get_stats().current_usage, 1);
+        assert_eq!(pool.get_stats().peak_usage, 2);
+
+        pool.return_buffer(b2);
+        assert_eq!(pool.get_stats().current_usage, 0);
+    }
+
+    #[test]
+    fn test_pool_exceeds_max_size() {
+        let mut pool = SafeBufferPool::new(1); // max 1 buffer per pool
+        let b1 = pool.get_buffer(64);
+        let b2 = pool.get_buffer(64);
+
+        pool.return_buffer(b1); // accepted
+        pool.return_buffer(b2); // should be dropped (pool full)
+
+        // Only 1 should be returned to pool
+        assert_eq!(pool.get_stats().buffers_returned, 1);
+    }
+
+    #[test]
+    fn test_size_classes() {
+        let mut pool = SafeBufferPool::new(5);
+
+        // Test all size class boundaries
+        let _ = pool.get_buffer(32);    // class: 64
+        let _ = pool.get_buffer(128);   // class: 256
+        let _ = pool.get_buffer(512);   // class: 1024
+        let _ = pool.get_buffer(2048);  // class: 4096
+        let _ = pool.get_buffer(8192);  // class: 16384
+        let _ = pool.get_buffer(32768); // class: > 16384
+
+        assert_eq!(pool.get_stats().buffers_allocated, 6);
+    }
 }

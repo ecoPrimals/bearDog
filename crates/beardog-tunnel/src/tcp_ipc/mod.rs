@@ -33,8 +33,8 @@
 //! beardog server --socket /run/user/1000/biomeos/beardog.sock
 //! ```
 
-pub mod server;
 pub mod client;
+pub mod server;
 
-pub use server::TcpIpcServer;
 pub use client::TcpIpcClient;
+pub use server::TcpIpcServer;

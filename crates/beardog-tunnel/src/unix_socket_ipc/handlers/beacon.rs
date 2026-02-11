@@ -156,7 +156,9 @@ pub async fn handle_beacon_encrypt(
         .as_str()
         .ok_or("Missing 'plaintext' field")?;
 
-    let plaintext = BASE64.decode(plaintext_b64).map_err(|e| format!("Invalid base64: {}", e))?;
+    let plaintext = BASE64
+        .decode(plaintext_b64)
+        .map_err(|e| format!("Invalid base64: {}", e))?;
 
     let beacon = beacon_manager
         .get_or_create_beacon()
@@ -205,14 +207,16 @@ pub async fn handle_beacon_try_decrypt(
 
     let params = params.ok_or("Missing params")?;
 
-    let ciphertext = BASE64.decode(
-        params["ciphertext"]
-            .as_str()
-            .ok_or("Missing 'ciphertext' field")?,
-    )
-    .map_err(|e| format!("Invalid base64: {}", e))?;
+    let ciphertext = BASE64
+        .decode(
+            params["ciphertext"]
+                .as_str()
+                .ok_or("Missing 'ciphertext' field")?,
+        )
+        .map_err(|e| format!("Invalid base64: {}", e))?;
 
-    let nonce_vec = BASE64.decode(params["nonce"].as_str().ok_or("Missing 'nonce' field")?)
+    let nonce_vec = BASE64
+        .decode(params["nonce"].as_str().ok_or("Missing 'nonce' field")?)
         .map_err(|e| format!("Invalid nonce base64: {}", e))?;
 
     if nonce_vec.len() != 12 {
@@ -269,14 +273,16 @@ pub async fn handle_beacon_try_decrypt_any(
 
     let params = params.ok_or("Missing params")?;
 
-    let ciphertext = BASE64.decode(
-        params["ciphertext"]
-            .as_str()
-            .ok_or("Missing 'ciphertext' field")?,
-    )
-    .map_err(|e| format!("Invalid base64: {}", e))?;
+    let ciphertext = BASE64
+        .decode(
+            params["ciphertext"]
+                .as_str()
+                .ok_or("Missing 'ciphertext' field")?,
+        )
+        .map_err(|e| format!("Invalid base64: {}", e))?;
 
-    let nonce_vec = BASE64.decode(params["nonce"].as_str().ok_or("Missing 'nonce' field")?)
+    let nonce_vec = BASE64
+        .decode(params["nonce"].as_str().ok_or("Missing 'nonce' field")?)
         .map_err(|e| format!("Invalid nonce base64: {}", e))?;
 
     if nonce_vec.len() != 12 {
@@ -600,18 +606,24 @@ mod tests {
         let manager = Arc::new(BeaconManager::new());
 
         // Missing ciphertext
-        let result = handle_beacon_try_decrypt(&manager, Some(&json!({
-            "nonce": "AAAA",
-            "timestamp": 12345
-        })))
+        let result = handle_beacon_try_decrypt(
+            &manager,
+            Some(&json!({
+                "nonce": "AAAA",
+                "timestamp": 12345
+            })),
+        )
         .await;
         assert!(result.is_err());
 
         // Missing nonce
-        let result = handle_beacon_try_decrypt(&manager, Some(&json!({
-            "ciphertext": "AAAA",
-            "timestamp": 12345
-        })))
+        let result = handle_beacon_try_decrypt(
+            &manager,
+            Some(&json!({
+                "ciphertext": "AAAA",
+                "timestamp": 12345
+            })),
+        )
         .await;
         assert!(result.is_err());
     }
@@ -621,9 +633,12 @@ mod tests {
         let manager = Arc::new(BeaconManager::new());
 
         // Invalid hex characters
-        let result = handle_beacon_add_known(&manager, Some(&json!({
-            "beacon_seed_hex": "not_valid_hex_!@#$%"
-        })))
+        let result = handle_beacon_add_known(
+            &manager,
+            Some(&json!({
+                "beacon_seed_hex": "not_valid_hex_!@#$%"
+            })),
+        )
         .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Invalid hex"));
@@ -635,18 +650,24 @@ mod tests {
 
         // Too short (16 bytes instead of 32)
         let short_seed = "aa".repeat(16);
-        let result = handle_beacon_add_known(&manager, Some(&json!({
-            "beacon_seed_hex": short_seed
-        })))
+        let result = handle_beacon_add_known(
+            &manager,
+            Some(&json!({
+                "beacon_seed_hex": short_seed
+            })),
+        )
         .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("32 bytes"));
 
         // Too long (64 bytes)
         let long_seed = "bb".repeat(64);
-        let result = handle_beacon_add_known(&manager, Some(&json!({
-            "beacon_seed_hex": long_seed
-        })))
+        let result = handle_beacon_add_known(
+            &manager,
+            Some(&json!({
+                "beacon_seed_hex": long_seed
+            })),
+        )
         .await;
         assert!(result.is_err());
     }
@@ -656,11 +677,14 @@ mod tests {
         let manager = Arc::new(BeaconManager::new());
 
         // Invalid base64 should be handled (may encrypt as raw string)
-        let result = handle_beacon_encrypt(&manager, Some(&json!({
-            "plaintext": "!!!not-valid-base64!!!"
-        })))
+        let result = handle_beacon_encrypt(
+            &manager,
+            Some(&json!({
+                "plaintext": "!!!not-valid-base64!!!"
+            })),
+        )
         .await;
-        
+
         // Should either succeed (treating as bytes) or fail with clear error
         // The current implementation accepts any string as plaintext
         assert!(result.is_ok() || result.is_err());
@@ -685,7 +709,7 @@ mod tests {
         });
 
         let result = handle_beacon_try_decrypt(&manager, Some(&decrypt_params)).await;
-        
+
         // Should either fail or return decrypted=false
         if result.is_ok() {
             assert_eq!(result.unwrap()["decrypted"], false);
@@ -709,16 +733,22 @@ mod tests {
         let manager = Arc::new(BeaconManager::new());
 
         // Number instead of string
-        let result = handle_beacon_encrypt(&manager, Some(&json!({
-            "plaintext": 12345
-        })))
+        let result = handle_beacon_encrypt(
+            &manager,
+            Some(&json!({
+                "plaintext": 12345
+            })),
+        )
         .await;
         assert!(result.is_err());
 
         // Array instead of string
-        let result = handle_beacon_encrypt(&manager, Some(&json!({
-            "plaintext": ["a", "b", "c"]
-        })))
+        let result = handle_beacon_encrypt(
+            &manager,
+            Some(&json!({
+                "plaintext": ["a", "b", "c"]
+            })),
+        )
         .await;
         assert!(result.is_err());
     }
@@ -727,9 +757,12 @@ mod tests {
     async fn test_chaos_beacon_add_known_empty_seed() {
         let manager = Arc::new(BeaconManager::new());
 
-        let result = handle_beacon_add_known(&manager, Some(&json!({
-            "beacon_seed_hex": ""
-        })))
+        let result = handle_beacon_add_known(
+            &manager,
+            Some(&json!({
+                "beacon_seed_hex": ""
+            })),
+        )
         .await;
         assert!(result.is_err());
     }
@@ -849,7 +882,7 @@ mod tests {
     #[tokio::test]
     async fn test_e2e_dark_forest_meeting() {
         // Simulate two devices meeting in the Dark Forest
-        // 
+        //
         // In a real meeting scenario:
         // 1. Devices meet physically (proximity/NFC/QR)
         // 2. Exchange beacon seeds securely
@@ -882,10 +915,12 @@ mod tests {
             .add_known_beacon(BeaconSeed::generate())
             .await
             .expect("add known A failed");
-        
+
         // Create message encrypted with shared beacon
         let secret_message = b"Family recognition signal";
-        let encrypted = shared_beacon.encrypt(secret_message).expect("encrypt failed");
+        let encrypted = shared_beacon
+            .encrypt(secret_message)
+            .expect("encrypt failed");
 
         // Add shared beacon to B's known list
         // (Simulates: B met the entity that owns shared_beacon)
@@ -897,15 +932,19 @@ mod tests {
 
         // Test that A can encrypt and decrypt its own messages
         let plaintext_a = BASE64.encode(b"Message from A");
-        let encrypt_result = handle_beacon_encrypt(&manager_a, Some(&json!({ "plaintext": plaintext_a })))
-            .await
-            .expect("encrypt failed");
+        let encrypt_result =
+            handle_beacon_encrypt(&manager_a, Some(&json!({ "plaintext": plaintext_a })))
+                .await
+                .expect("encrypt failed");
 
-        let decrypt_result = handle_beacon_try_decrypt(&manager_a, Some(&json!({
-            "ciphertext": encrypt_result["ciphertext"],
-            "nonce": encrypt_result["nonce"],
-            "timestamp": encrypt_result["timestamp"]
-        })))
+        let decrypt_result = handle_beacon_try_decrypt(
+            &manager_a,
+            Some(&json!({
+                "ciphertext": encrypt_result["ciphertext"],
+                "nonce": encrypt_result["nonce"],
+                "timestamp": encrypt_result["timestamp"]
+            })),
+        )
         .await
         .expect("decrypt failed");
 
@@ -913,11 +952,14 @@ mod tests {
         assert_eq!(decrypt_result["plaintext"], plaintext_a);
 
         // Test that B cannot decrypt A's message (different beacons)
-        let decrypt_attempt = handle_beacon_try_decrypt(&manager_b, Some(&json!({
-            "ciphertext": encrypt_result["ciphertext"],
-            "nonce": encrypt_result["nonce"],
-            "timestamp": encrypt_result["timestamp"]
-        })))
+        let decrypt_attempt = handle_beacon_try_decrypt(
+            &manager_b,
+            Some(&json!({
+                "ciphertext": encrypt_result["ciphertext"],
+                "nonce": encrypt_result["nonce"],
+                "timestamp": encrypt_result["timestamp"]
+            })),
+        )
         .await
         .expect("should return result");
 

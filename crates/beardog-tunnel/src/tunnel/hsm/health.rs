@@ -9,18 +9,26 @@ use tracing::{debug, info, warn};
 /// HSM health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum HsmHealthStatus {
+    /// HSM is functioning normally
     Healthy,
+    /// HSM is operational but experiencing issues
     Degraded,
+    /// HSM is not functioning correctly
     Unhealthy,
+    /// HSM health status cannot be determined
     Unknown,
 }
 
 /// HSM health check result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmHealthCheck {
+    /// Current health status
     pub status: HsmHealthStatus,
+    /// Human-readable status message
     pub message: String,
+    /// When the last health check was performed
     pub last_check: chrono::DateTime<chrono::Utc>,
+    /// Number of errors since last healthy state
     pub error_count: u32,
 }
 

@@ -166,7 +166,7 @@ mod tests {
         let temp_dir = std::env::temp_dir();
         let xdg_runtime = temp_dir.join(format!("xdg_test_{}", std::process::id()));
         std::fs::create_dir_all(&xdg_runtime).ok();
-        
+
         // Set XDG_RUNTIME_DIR to our temp directory
         std::env::set_var("XDG_RUNTIME_DIR", xdg_runtime.to_str().unwrap());
 
@@ -183,7 +183,7 @@ mod tests {
             }
             _ => panic!("Expected Filesystem endpoint"),
         }
-        
+
         // Cleanup
         std::fs::remove_dir_all(&xdg_runtime).ok();
     }

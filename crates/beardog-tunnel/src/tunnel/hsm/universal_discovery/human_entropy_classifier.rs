@@ -10,8 +10,11 @@ use tracing::{debug, info};
 
 /// Human entropy classifier for HSM tier elevation
 pub struct HumanEntropyClassifier {
+    /// Assesses entropy quality from human sources
     quality_assessor: EntropyQualityAssessor,
+    /// Evaluates specific human entropy methods
     method_evaluator: HumanEntropyMethodEvaluator,
+    /// Criteria for tier elevation decisions
     elevation_criteria: TierElevationCriteria,
 }
 
@@ -32,32 +35,49 @@ pub struct HumanEntropyMethodEvaluator {
 /// Tier elevation criteria
 #[derive(Debug, Clone)]
 pub struct TierElevationCriteria {
+    /// Minimum quality score required for tier elevation
     pub min_quality_score: f64,
+    /// Whether real-time entropy collection is required
     pub require_realtime: bool,
+    /// Whether biometric entropy source is required
     pub require_biometric: bool,
+    /// Whether quality assessment must pass
     pub require_quality_assessment: bool,
 }
 
 /// Entropy quality algorithms
 #[derive(Debug, Clone)]
 pub enum EntropyQualityAlgorithm {
+    /// Shannon entropy measurement
     Shannon,
+    /// Min-entropy (worst-case) measurement
     MinEntropy,
+    /// Compression ratio analysis
     Compression,
+    /// Statistical randomness tests
     Statistical,
+    /// Behavioral pattern analysis
     Behavioral,
 }
 
 /// Human entropy assessment result
 #[derive(Debug, Clone)]
 pub struct HumanEntropyAssessment {
+    /// Whether this HSM supports ephemeral seed creation
     pub supports_ephemeral_seeds: bool,
+    /// Overall quality score (0.0 to 1.0)
     pub quality_score: f64,
+    /// Per-method quality scores
     pub method_scores: HashMap<HumanEntropyMethod, f64>,
+    /// Entropy collection efficiency rating
     pub collection_efficiency: f64,
+    /// Whether real-time entropy collection is supported
     pub realtime_capability: bool,
+    /// Biometric integration quality score
     pub biometric_integration_quality: f64,
+    /// Whether tier elevation is recommended
     pub recommended_tier_elevation: bool,
+    /// When the assessment was performed
     pub assessed_at: chrono::DateTime<chrono::Utc>,
 }
 

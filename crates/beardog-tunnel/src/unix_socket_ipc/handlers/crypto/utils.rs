@@ -139,9 +139,8 @@ pub fn deserialize_request<T: DeserializeOwned>(
     params: Value,
     method_name: &str,
 ) -> Result<T, BearDogError> {
-    serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid {} params: {}", method_name, e))
-    })
+    serde_json::from_value(params)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid {} params: {}", method_name, e)))
 }
 
 /// Deserialize with String error (transition helper)

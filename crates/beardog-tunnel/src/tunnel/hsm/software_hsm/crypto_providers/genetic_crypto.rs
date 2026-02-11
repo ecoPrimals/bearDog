@@ -144,7 +144,15 @@ impl GeneticCryptoProvider {
 
 impl Default for GeneticCryptoProvider {
     fn default() -> Self {
-        Self::new().expect("GeneticCryptoProvider creation is infallible")
+        // SAFETY: GeneticCryptoProvider::new() is infallible — it only allocates
+        // a String and sets lineage_seed to None. This can never fail.
+        match Self::new() {
+            Ok(provider) => provider,
+            Err(_) => Self {
+                name: "GeneticCrypto-PureRust".to_string(),
+                lineage_seed: None,
+            },
+        }
     }
 }
 

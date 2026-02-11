@@ -101,10 +101,7 @@ impl SecretsHandler {
     fn derive_secret_key(&self, secret_name: &str) -> Result<[u8; 32], String> {
         let family_id = self.identity.family_id();
 
-        let hk = Hkdf::<Sha256>::new(
-            Some(b"beardog-secrets-v1"),
-            family_id.as_bytes(),
-        );
+        let hk = Hkdf::<Sha256>::new(Some(b"beardog-secrets-v1"), family_id.as_bytes());
 
         let mut okm = [0u8; 32];
         // info field provides per-secret key isolation
@@ -391,7 +388,10 @@ mod tests {
         // Derive keys for the same name - they should differ between families
         let key_a = handler_a.derive_secret_key("shared-key").unwrap();
         let key_b = handler_b.derive_secret_key("shared-key").unwrap();
-        assert_ne!(key_a, key_b, "Different families must derive different keys");
+        assert_ne!(
+            key_a, key_b,
+            "Different families must derive different keys"
+        );
     }
 
     #[tokio::test]
@@ -472,7 +472,10 @@ mod tests {
 
         // Retrieve should return latest value
         let retrieve_params = serde_json::json!({ "name": "mutable-key" });
-        let result = handler.handle_retrieve(Some(&retrieve_params)).await.unwrap();
+        let result = handler
+            .handle_retrieve(Some(&retrieve_params))
+            .await
+            .unwrap();
         assert_eq!(result["value"], "version-2");
     }
 }

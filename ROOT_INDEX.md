@@ -1,6 +1,6 @@
 # BearDog Documentation Index
 
-**Last Updated**: February 9, 2026
+**Last Updated**: February 11, 2026
 
 Complete guide to BearDog documentation, organized by purpose.
 
@@ -24,7 +24,7 @@ Complete guide to BearDog documentation, organized by purpose.
 | Document | Description |
 |----------|-------------|
 | [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | How BearDog provides crypto atoms to other primals |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Module structure, crate organization, data flow |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Module structure, crate organization, trait hierarchy |
 | [UNIBIN_ECOBIN_EXPLAINED.md](UNIBIN_ECOBIN_EXPLAINED.md) | Binary architecture standards (UniBin, ecoBin v2.0) |
 
 ### Principles & Standards
@@ -40,8 +40,8 @@ Complete guide to BearDog documentation, organized by purpose.
 
 | Document | Description |
 |----------|-------------|
-| [STATUS.md](STATUS.md) | **Canonical status** -- metrics, evolution history, quality |
-| [CURRENT_STATUS.md](CURRENT_STATUS.md) | Redirect to STATUS.md (backward compat) |
+| [STATUS.md](STATUS.md) | **Canonical status** -- metrics, coverage, platform support |
+| [CHANGELOG.md](CHANGELOG.md) | Release history and notable changes |
 
 ---
 
@@ -87,9 +87,7 @@ Complete guide to BearDog documentation, organized by purpose.
 
 ## Session Archives
 
-Historical session documentation is in `docs/sessions/2026-01-30/` (40+ documents covering platform evolution, deep debt execution, StrongBox refactor, and genomeBin implementation).
-
-Older archives are in `archives/` organized by date and topic.
+Historical session documentation is in `archives/` organized by date and topic.
 
 ---
 
@@ -106,4 +104,4 @@ TOWER_ATOMIC_PATTERN.md -> docs/PRIMAL_CONTRACTS.md -> START_HERE.md
 
 ---
 
-**Last Updated**: February 9, 2026
+**Last Updated**: February 11, 2026

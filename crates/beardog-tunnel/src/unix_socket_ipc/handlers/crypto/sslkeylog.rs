@@ -333,7 +333,11 @@ mod tests {
         // Clean up env var immediately after use
         std::env::remove_var("SSLKEYLOGFILE");
 
-        assert!(result.is_ok(), "export_to_sslkeylogfile failed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "export_to_sslkeylogfile failed: {:?}",
+            result
+        );
 
         // Verify file was created and contains expected entries
         if temp_file.exists() {

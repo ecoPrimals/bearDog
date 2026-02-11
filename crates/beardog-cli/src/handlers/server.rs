@@ -37,7 +37,9 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         // Each family gets its own BearDog instance with independently derived keys.
         // BearDog serving family A MUST NOT share keys with family B.
         let family_sock = std::path::PathBuf::from(&args.socket);
-        let parent = family_sock.parent().unwrap_or_else(|| std::path::Path::new("/tmp"));
+        let parent = family_sock
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("/tmp"));
         let family_path = parent.join(format!("beardog-{}.sock", family_id));
         let path_str = family_path.to_string_lossy().to_string();
         info!("   Multi-family socket: {}", path_str);

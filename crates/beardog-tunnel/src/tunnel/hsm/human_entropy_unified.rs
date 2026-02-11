@@ -17,12 +17,16 @@ pub struct UnifiedHumanEntropyClassifier {
 /// Tier elevation criteria
 #[derive(Debug, Clone)]
 pub struct TierElevationCriteria {
+    /// Minimum entropy quality score for tier elevation
     #[allow(dead_code)] // Future implementation
     pub min_quality_score: f64,
+    /// Whether biometric entropy is required
     #[allow(dead_code)] // Future implementation
     pub require_biometric: bool,
+    /// Whether multiple entropy sources are required
     #[allow(dead_code)] // Future implementation
     pub require_multiple_sources: bool,
+    /// Whether real-time collection is required
     #[allow(dead_code)] // Future implementation
     pub require_realtime: bool,
 }
@@ -172,19 +176,28 @@ impl UnifiedHumanEntropyClassifier {
 /// Human entropy classification result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyClassification {
+    /// Overall entropy quality score (0.0 to 1.0)
     pub quality_score: f64,
+    /// Number of entropy sources contributing
     pub source_count: usize,
+    /// Whether biometric entropy is present
     pub has_biometric: bool,
+    /// Whether entropy is collected in real-time
     pub is_realtime: bool,
+    /// Whether tier elevation criteria are met
     pub meets_elevation_criteria: bool,
+    /// Recommended HSM tier based on classification
     pub recommended_tier: HsmTier,
 }
 
-/// HSM capabilities
+/// HSM capabilities for human entropy operations
 #[derive(Debug, Clone)]
 pub struct HsmCapabilities {
+    /// Whether ephemeral seed generation is supported
     pub supports_ephemeral_seeds: bool,
+    /// Whether biometric entropy sources are available
     pub supports_biometric: bool,
+    /// Whether real-time entropy collection is supported
     pub supports_realtime_entropy: bool,
 }
 
@@ -205,9 +218,13 @@ impl Default for HsmCapabilities {
 /// Entropy source types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EntropySource {
+    /// Biometric input (fingerprint, face, voice)
     Biometric,
+    /// Touch screen interaction patterns
     TouchPattern,
+    /// Device sensor data (accelerometer, gyroscope)
     Sensors,
+    /// Manually entered randomness
     Manual,
 }
 

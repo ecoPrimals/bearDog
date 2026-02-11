@@ -483,4 +483,349 @@ mod tests {
         let ts_bytes = &message[node_id.len()..node_id.len() + 8];
         assert_eq!(u64::from_be_bytes(ts_bytes.try_into().unwrap()), timestamp);
     }
+
+    // === PhysicalChannelProof verify tests ===
+
+    #[test]
+    fn test_proof_verify_hardware_key_no_attestation() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_hardware_key_with_attestation() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "permissionless");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![1u8; 64]),
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_proof_verify_qr_code_with_codes() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::QrCodeWithOob,
+            attestation: None,
+            verification_codes: Some(vec!["CODE123".to_string()]),
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_qr_code_no_codes() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::QrCodeWithOob,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_qr_code_empty_codes() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::QrCodeWithOob,
+            attestation: None,
+            verification_codes: Some(vec![]),
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_bluetooth_with_pairing() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::Bluetooth,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: Some(vec![1u8; 32]),
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_bluetooth_no_pairing() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::Bluetooth,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_nfc_with_attestation() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::Nfc,
+            attestation: Some(vec![1u8; 32]),
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_verify_nfc_no_attestation() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::Nfc,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+    }
+
+    #[test]
+    fn test_proof_trust_level() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert_eq!(proof.trust_level(), TrustLevel::Maximum);
+    }
+
+    // === Hardware attestation mode tests ===
+
+    #[test]
+    fn test_attestation_software_mode_short() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "software");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![1u8; 16]), // too short for software mode
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_software_mode_valid() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "software");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![1u8; 64]),
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_software_mode_zero_hash() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "software");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![0u8; 64]), // all zeros
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_permissionless_mode() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "permissionless");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![42u8; 1]), // any non-empty
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_permissionless_mode_empty() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "permissionless");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![]), // empty
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_hardware_mode() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "hardware");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![1u8; 128]),
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        // On linux, this uses verify_tpm_attestation which checks len >= 64
+        let result = proof.verify().unwrap();
+        assert!(result);
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_unknown_mode() {
+        std::env::set_var("BEARDOG_ATTESTATION_MODE", "unknown_mode");
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![1u8; 64]), // valid for software fallback
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(proof.verify().unwrap());
+        std::env::remove_var("BEARDOG_ATTESTATION_MODE");
+    }
+
+    #[test]
+    fn test_attestation_empty_attestation() {
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: Some(vec![]),
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+        assert!(!proof.verify().unwrap());
+    }
+
+    // === GeneticLineage tests ===
+
+    #[test]
+    fn test_genetic_lineage_depth() {
+        let mut nodes = std::collections::HashMap::new();
+        nodes.insert(
+            "root".to_string(),
+            super::super::LineageNode {
+                node_id: "root".to_string(),
+                parent_id: None,
+                public_key: vec![1u8; 32],
+                depth: 0,
+                created_at: chrono::Utc::now(),
+                metadata: super::super::types::LineageMetadata::default(),
+            },
+        );
+        nodes.insert(
+            "child".to_string(),
+            super::super::LineageNode {
+                node_id: "child".to_string(),
+                parent_id: Some("root".to_string()),
+                public_key: vec![2u8; 32],
+                depth: 1,
+                created_at: chrono::Utc::now(),
+                metadata: super::super::types::LineageMetadata::default(),
+            },
+        );
+
+        let lineage = GeneticLineage {
+            genetic_id: vec![1u8; 32],
+            lineage_chain: super::super::LineageChain {
+                chain_id: "test-chain".to_string(),
+                root_node: super::super::LineageNode {
+                    node_id: "root".to_string(),
+                    parent_id: None,
+                    public_key: vec![1u8; 32],
+                    depth: 0,
+                    created_at: chrono::Utc::now(),
+                    metadata: super::super::types::LineageMetadata::default(),
+                },
+                nodes,
+                relationships: vec![],
+                created_at: chrono::Utc::now(),
+            },
+            genesis_witness: GenesisWitness {
+                device_id: "witness".to_string(),
+                public_key: vec![1u8; 32],
+                physical_channel: PhysicalChannelType::HardwareKey,
+                timestamp: 1735000000,
+                signature: vec![0u8; 64],
+            },
+            birth_timestamp: 1735000000,
+            trust_level: TrustLevel::High,
+        };
+
+        assert_eq!(lineage.depth(), 2);
+    }
+
+    #[test]
+    fn test_genetic_lineage_hint() {
+        let mut nodes = std::collections::HashMap::new();
+        nodes.insert(
+            "root".to_string(),
+            super::super::LineageNode {
+                node_id: "root".to_string(),
+                parent_id: None,
+                public_key: vec![1u8; 32],
+                depth: 0,
+                created_at: chrono::Utc::now(),
+                metadata: super::super::types::LineageMetadata::default(),
+            },
+        );
+
+        let lineage = GeneticLineage {
+            genetic_id: vec![1u8; 32],
+            lineage_chain: super::super::LineageChain {
+                chain_id: "test-chain".to_string(),
+                root_node: super::super::LineageNode {
+                    node_id: "root".to_string(),
+                    parent_id: None,
+                    public_key: vec![1u8; 32],
+                    depth: 0,
+                    created_at: chrono::Utc::now(),
+                    metadata: super::super::types::LineageMetadata::default(),
+                },
+                nodes,
+                relationships: vec![],
+                created_at: chrono::Utc::now(),
+            },
+            genesis_witness: GenesisWitness {
+                device_id: "witness".to_string(),
+                public_key: vec![1u8; 32],
+                physical_channel: PhysicalChannelType::HardwareKey,
+                timestamp: 1735000000,
+                signature: vec![0u8; 64],
+            },
+            birth_timestamp: 1735000000,
+            trust_level: TrustLevel::High,
+        };
+
+        let hint = lineage.lineage_hint();
+        assert_eq!(hint.root_id, "root");
+        assert_eq!(hint.min_depth, 0);
+        assert_eq!(hint.max_depth, 1);
+        assert_eq!(hint.biome_filter, Some("genesis".to_string()));
+    }
 }

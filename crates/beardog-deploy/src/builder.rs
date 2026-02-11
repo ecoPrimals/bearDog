@@ -249,7 +249,7 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if example app compilation fails
-    /// Builds `example_app`
+    #[allow(dead_code)]
     async fn build_example_app(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         let android_dir = self.project_root.join("android");
 
@@ -274,5 +274,87 @@ impl RustBuilder {
 
         info!("✅ Android example app built successfully");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rust_builder_new() {
+        let builder = RustBuilder::new(std::path::Path::new("/tmp/project"));
+        let debug = format!("{:?}", builder);
+        assert!(debug.contains("RustBuilder"));
+    }
+
+    #[test]
+    fn test_rust_builder_new_various_paths() {
+        for p in ["/tmp", ".", "/home/user/project", "/opt/beardog"] {
+            let b = RustBuilder::new(std::path::Path::new(p));
+            assert!(format!("{:?}", b).contains("RustBuilder"));
+        }
+    }
+
+    #[test]
+    fn test_get_host_architecture_linux() {
+        let result = RustBuilder::get_host_architecture();
+        if cfg!(target_os = "linux") && cfg!(target_arch = "x86_64") {
+            assert_eq!(result.unwrap(), "linux-x86_64");
+        } else if cfg!(target_os = "macos") {
+            assert_eq!(result.unwrap(), "darwin-x86_64");
+        }
+    }
+
+    #[test]
+    fn test_get_ndk_path_unset() {
+        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+            let result = RustBuilder::get_ndk_path();
+            assert!(result.is_err());
+        }
+    }
+
+    #[test]
+    fn test_configure_target_toolchain_aarch64() {
+        let path = std::path::Path::new("/fake/toolchain/bin");
+        assert!(RustBuilder::configure_target_toolchain("aarch64-linux-android", path).is_ok());
+    }
+
+    #[test]
+    fn test_configure_target_toolchain_armv7() {
+        let path = std::path::Path::new("/fake/toolchain/bin");
+        assert!(
+            RustBuilder::configure_target_toolchain("armv7-linux-androideabi", path).is_ok()
+        );
+    }
+
+    #[test]
+    fn test_configure_target_toolchain_unsupported() {
+        let path = std::path::Path::new("/fake/toolchain/bin");
+        let result = RustBuilder::configure_target_toolchain("riscv64-unknown-linux-gnu", path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_set_aarch64_toolchain() {
+        let path = std::path::Path::new("/fake/bin");
+        RustBuilder::set_aarch64_toolchain(path, "28");
+        // Verify env vars were set (they're process-global but test exercises the code)
+        assert!(std::env::var("CC_aarch64_linux_android").is_ok());
+    }
+
+    #[test]
+    fn test_set_armv7_toolchain() {
+        let path = std::path::Path::new("/fake/bin");
+        RustBuilder::set_armv7_toolchain(path, "28");
+        assert!(std::env::var("CC_armv7_linux_androideabi").is_ok());
+    }
+
+    #[test]
+    fn test_setup_build_environment_no_ndk() {
+        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+            let result = RustBuilder::setup_build_environment("aarch64-linux-android");
+            assert!(result.is_err());
+        }
     }
 }

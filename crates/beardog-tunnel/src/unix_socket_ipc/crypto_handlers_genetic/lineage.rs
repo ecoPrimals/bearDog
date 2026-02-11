@@ -404,8 +404,14 @@ mod tests {
             result.get("domain").and_then(|v| v.as_str()),
             Some("birdsong_beacon_v1")
         );
-        assert_eq!(result.get("key_size_bytes").and_then(|v| v.as_u64()), Some(32));
-        assert_eq!(result.get("deterministic").and_then(|v| v.as_bool()), Some(true));
+        assert_eq!(
+            result.get("key_size_bytes").and_then(|v| v.as_u64()),
+            Some(32)
+        );
+        assert_eq!(
+            result.get("deterministic").and_then(|v| v.as_bool()),
+            Some(true)
+        );
 
         let key_hex = result.get("beacon_key").and_then(|v| v.as_str()).unwrap();
         let key_bytes = hex::decode(key_hex)?;
@@ -426,13 +432,17 @@ mod tests {
         let key1 = result1.get("beacon_key").and_then(|v| v.as_str()).unwrap();
         let key2 = result2.get("beacon_key").and_then(|v| v.as_str()).unwrap();
 
-        assert_eq!(key1, key2, "Same lineage seed should produce identical keys");
+        assert_eq!(
+            key1, key2,
+            "Same lineage seed should produce identical keys"
+        );
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_derive_lineage_beacon_key_different_seeds() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_derive_lineage_beacon_key_different_seeds(
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let seed1 = BASE64.encode(b"family_alpha_seed_value_here_");
         let seed2 = BASE64.encode(b"family_beta_seed_different!!!");
 
@@ -442,7 +452,10 @@ mod tests {
         let key1 = result1.get("beacon_key").and_then(|v| v.as_str()).unwrap();
         let key2 = result2.get("beacon_key").and_then(|v| v.as_str()).unwrap();
 
-        assert_ne!(key1, key2, "Different lineage seeds should produce different keys");
+        assert_ne!(
+            key1, key2,
+            "Different lineage seeds should produce different keys"
+        );
 
         Ok(())
     }

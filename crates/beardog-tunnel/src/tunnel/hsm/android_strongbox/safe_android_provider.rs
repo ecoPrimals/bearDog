@@ -320,7 +320,7 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
 
         Ok(KeyInfo {
             id: key_id.to_string(),
-            key_id: key_id.to_string(),      // Alias for compatibility
+            key_id: key_id.to_string(), // Alias for compatibility
             algorithm,
             hardware_backed: C::hardware_backed(),
         })

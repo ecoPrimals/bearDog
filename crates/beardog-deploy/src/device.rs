@@ -603,3 +603,178 @@ impl DeviceManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_detect_device_type_from_env_default() {
+        // When no device env vars set, should return SoftwareHsm
+        if std::env::var("DEVICE_STRONGBOX_CAPABLE").is_err()
+            && std::env::var("DEVICE_SECURE_ENCLAVE_CAPABLE").is_err()
+            && std::env::var("DEVICE_HARDWARE_HSM_CAPABLE").is_err()
+        {
+            assert_eq!(
+                DeviceManager::detect_device_type_from_env(),
+                DeviceType::SoftwareHsm
+            );
+        }
+    }
+
+    #[test]
+    fn test_detect_capabilities_from_env_defaults() {
+        if std::env::var("DEVICE_STRONGBOX_CAPABLE").is_err()
+            && std::env::var("DEVICE_BIOMETRIC_CAPABLE").is_err()
+            && std::env::var("DEVICE_SECURE_STORAGE_CAPABLE").is_err()
+        {
+            let caps = DeviceManager::detect_capabilities_from_env();
+            assert!(caps.contains(&"software_crypto".to_string()));
+            assert!(caps.contains(&"basic_auth".to_string()));
+        }
+    }
+
+    #[test]
+    fn test_build_device_metadata_structure() {
+        let metadata = DeviceManager::build_device_metadata("test-123");
+        assert_eq!(metadata["device_id"], "test-123");
+        assert!(metadata.contains_key("storage_available"));
+        assert!(metadata.contains_key("strongbox_supported"));
+        assert!(metadata.contains_key("secure_enclave_supported"));
+        assert!(metadata.contains_key("manufacturer"));
+        assert!(metadata.contains_key("model"));
+        assert!(metadata.contains_key("os_version"));
+        assert_eq!(metadata.len(), 7);
+    }
+
+    #[test]
+    fn test_build_device_metadata_various_ids() {
+        for id in ["a", "device-1", "pixel8a_strongbox", "long-id-with-many-parts"] {
+            let m = DeviceManager::build_device_metadata(id);
+            assert_eq!(m["device_id"], id);
+        }
+    }
+
+    #[test]
+    fn test_detect_android_devices_exercises_adb() {
+        let mgr = DeviceManager::new();
+        // Exercises the adb code path — result depends on environment
+        let _ = mgr.detect_android_devices();
+    }
+
+    #[test]
+    fn test_check_device_always_returns_device() {
+        let mgr = DeviceManager::new();
+        let device = mgr.check_device().expect("should always return a device via fallback");
+        assert!(!device.id.is_empty());
+        assert!(!device.name.is_empty());
+        assert!(
+            matches!(device.status, DeviceStatus::Available | DeviceStatus::Connected),
+            "status should be Available or Connected"
+        );
+    }
+
+    #[test]
+    fn test_check_devices_returns_nonempty() {
+        let mgr = DeviceManager::new();
+        let devices = mgr.check_devices().expect("should return devices");
+        assert!(!devices.is_empty());
+    }
+
+    #[test]
+    fn test_deploy_app_debug_no_apk() {
+        let mgr = DeviceManager::new();
+        let result = mgr.deploy_app(false);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deploy_app_release_no_apk() {
+        let mgr = DeviceManager::new();
+        let result = mgr.deploy_app(true);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deploy_to_android_nonexistent_apk() {
+        let mgr = DeviceManager::new();
+        let result = mgr.deploy_to_android("dev-0", "/nonexistent.apk");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_run_app_exercises_path() {
+        let mgr = DeviceManager::new();
+        let _ = mgr.run_app(&[]);
+        let _ = mgr.run_app(&["--verbose".to_string()]);
+    }
+
+    #[test]
+    fn test_show_logs_exercises_path() {
+        let mgr = DeviceManager::new();
+        let _ = mgr.show_logs("com.beardog.test", false);
+        let _ = mgr.show_logs("com.beardog.test", true);
+    }
+
+    #[test]
+    fn test_device_type_eq_and_clone() {
+        let a = DeviceType::AndroidStrongBox;
+        let b = a.clone();
+        assert_eq!(a, b);
+        assert_ne!(a, DeviceType::IosSecureEnclave);
+    }
+
+    #[test]
+    fn test_device_status_eq_and_clone() {
+        let a = DeviceStatus::Available;
+        let b = a.clone();
+        assert_eq!(a, b);
+        assert_ne!(a, DeviceStatus::Error);
+    }
+
+    #[test]
+    fn test_device_info_debug_format() {
+        let info = DeviceInfo {
+            id: "dbg-test".to_string(),
+            name: "Debug".to_string(),
+            device_type: DeviceType::Unknown,
+            status: DeviceStatus::Disconnected,
+            capabilities: vec![],
+            metadata: HashMap::new(),
+        };
+        let dbg = format!("{:?}", info);
+        assert!(dbg.contains("dbg-test"));
+        assert!(dbg.contains("Unknown"));
+        assert!(dbg.contains("Disconnected"));
+    }
+
+    #[test]
+    fn test_detect_device_capabilities_exercises_path() {
+        let mgr = DeviceManager::new();
+        let caps = mgr.detect_device_capabilities("fake-device", false);
+        assert!(caps.contains(&"android".to_string()));
+        assert!(caps.contains(&"keystore".to_string()));
+        // Without strongbox, should not contain "strongbox"
+        assert!(!caps.contains(&"strongbox".to_string()));
+    }
+
+    #[test]
+    fn test_detect_device_capabilities_with_strongbox() {
+        let mgr = DeviceManager::new();
+        let caps = mgr.detect_device_capabilities("fake-device", true);
+        assert!(caps.contains(&"strongbox".to_string()));
+    }
+
+    #[test]
+    fn test_has_strongbox_support_exercises_path() {
+        let mgr = DeviceManager::new();
+        // Will return false without real device, but exercises path
+        let _ = mgr.has_strongbox_support("fake-device");
+    }
+
+    #[test]
+    fn test_get_device_property_exercises_path() {
+        let mgr = DeviceManager::new();
+        let _ = mgr.get_device_property("fake-device", "ro.build.version.sdk");
+    }
+}

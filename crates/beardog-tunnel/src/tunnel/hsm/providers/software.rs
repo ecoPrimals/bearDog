@@ -49,6 +49,7 @@ pub struct SoftwareCapabilities {
 // Note: Custom(String) variant removed - use provider configuration instead
 pub use beardog_types::hsm::providers::CryptoProviderType;
 
+/// Parse a provider type string into a `CryptoProviderType`
 // Helper function for legacy code migration
 pub fn parse_provider_type(s: &str) -> CryptoProviderType {
     match s {

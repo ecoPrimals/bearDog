@@ -1,8 +1,7 @@
 # BearDog Roadmap
 
-**Updated**: February 9, 2026
+**Updated**: February 11, 2026
 **Status**: Production Ready
-**Grade**: A+ LEGENDARY (99/100)
 
 ---
 
@@ -20,12 +19,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 - Tor v3 onion address derivation + ntor handshake + cell crypto
 - Dark Forest beacon (zero metadata leakage discovery)
 - Universal IPC (Unix sockets, abstract sockets, TCP)
-- Android StrongBox integration (100% complete)
+- Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox)
 - `once_cell` migrated to `std::sync::LazyLock`
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- 8,789 tests across 28 packages
-- 20/20 deep debt evolution rounds
+- 12,300+ tests across 30 crates
+- Deep debt evolution (20/20 rounds)
+- Doc comments added (328 warnings resolved)
+- Smart refactoring of oversized files
 
 ### Platform Coverage
 
@@ -36,7 +37,18 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 | Android (ARM64) | Abstract sockets + TCP | Ready |
 | Windows (x86_64, ARM64) | Named pipes + TCP | Ready |
 | iOS (ARM64) | TCP | Ready |
-| WASM | In-process | Ready |
+
+---
+
+## In Progress
+
+### Test Coverage to 90%
+
+Current coverage is 78.6% (up from ~62% baseline). Targeting 90% across all crates.
+
+**Crates above 90%**: beardog-workflows (96.75%), beardog-threat (96.99%), beardog-monitoring (93.05%), beardog-hid (92.86%), beardog-utils (92.28%), beardog-config (92.06%), beardog-security (91.94%), beardog-genetics (90.87%), beardog-adapters (90.20%).
+
+**Crates in progress**: beardog-types (78.60%), beardog-tunnel (75.60%).
 
 ---
 
@@ -48,17 +60,10 @@ These items are enhancements -- nothing is blocking production use.
 
 Current in-memory storage backend evolves to persistent NestGate-backed storage via capability discovery. BearDog discovers NestGate's `storage.store` / `storage.retrieve` at runtime. No code changes needed in BearDog -- the discovery pattern is already implemented.
 
-### Graph Security Phase 2-3 (optional, ~5 hours)
+### Graph Security Phase 2-3 (optional)
 
 - Phase 2: Public key infrastructure (storage/retrieval, trust_db integration)
 - Phase 3: Signature verification (Ed25519 helpers, chain of custody validation)
-
-### Test Coverage to 90% (ongoing)
-
-Current coverage is 70.96%. Incremental improvement through:
-- E2E test scenarios
-- Fault injection / chaos tests
-- Edge case coverage for crypto handlers
 
 ### Semantic Method Naming Phase 3 (ecosystem coordination)
 
@@ -83,4 +88,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: February 9, 2026
+**Last Updated**: February 11, 2026

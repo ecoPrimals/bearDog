@@ -17,20 +17,25 @@ pub struct CryptoRequirements {
     pub algorithm: Option<CryptoAlgorithm>,
 
     /// Security requirements
-    pub min_security_level: u8, // Security level (0-10)
+    /// Minimum security level (0-10)
+    pub min_security_level: u8,
+    /// Whether constant-time operations are required
     pub require_constant_time: bool,
+    /// Whether side-channel attack protection is required
     pub side_channel_protection: bool,
 
-    /// Performance requirements
+    /// Maximum acceptable latency in microseconds
     pub max_latency_us: Option<u64>,
+    /// Minimum required throughput in MB/s
     pub min_throughput_mbps: Option<f64>,
 
-    /// Platform requirements
+    /// Whether hardware acceleration is required
     pub require_hardware_accel: bool,
+    /// Platform-specific requirement (if any)
     pub platform_specific: Option<Platform>,
 
-    /// Preference ordering
-    pub prefer_performance: bool, // vs prefer_security
+    /// Whether to prefer performance over security
+    pub prefer_performance: bool,
 }
 
 impl Default for CryptoRequirements {

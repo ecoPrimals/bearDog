@@ -2,7 +2,7 @@
 //!
 //! Provides multi-platform HSM support with zero-cost abstractions.
 
-// Core HSM implementations
+/// Core HSM implementations
 pub mod software_hsm;
 
 #[cfg(target_os = "android")]
@@ -21,7 +21,9 @@ pub mod solo_v2;
 // ARCHIVED: capabilities.rs → HsmCapabilityDetector is in manager/capability.rs
 pub mod config;
 pub mod manager;
+/// HSM provider implementations
 pub mod providers;
+/// HSM type definitions and enums
 pub mod types;
 
 // Platform abstractions
@@ -48,6 +50,7 @@ pub mod native_device_detection;
 
 // Key management
 pub mod human_entropy_unified;
+/// Key lifecycle management
 pub mod key_manager;
 
 // Performance and health
@@ -94,24 +97,32 @@ pub use android_strongbox::AndroidStrongBox;
 #[cfg(target_os = "ios")]
 pub use ios_secure_enclave::IosSecureEnclave;
 
-// Request/Response types for compatibility
+/// Request to generate a new key in the HSM
 #[derive(Debug, Clone)]
 pub struct GenerateKeyRequest {
+    /// Unique identifier for the key to generate
     pub key_id: String,
+    /// Type of key to generate
     pub key_type: KeyType,
 }
 
+/// Information about an HSM device
 #[derive(Debug, Clone)]
 pub struct HsmInfo {
+    /// Unique HSM device identifier
     pub hsm_id: String,
+    /// HSM device type (e.g., "software", "hardware")
     pub hsm_type: String,
+    /// Whether the HSM is currently available
     pub is_available: bool,
 }
 
-// Security requirements
+/// Security requirements for HSM operations
 #[derive(Debug, Clone)]
 pub struct SecurityRequirements {
+    /// Minimum required security level
     pub min_security_level: SecurityLevel,
+    /// Whether hardware-backed operations are required
     pub require_hardware: bool,
 }
 

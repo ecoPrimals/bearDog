@@ -71,10 +71,15 @@ pub fn get_supported_storage_backends() -> Vec<KeyStorageType> {
 /// Crypto provider capabilities
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CryptoProviderCapabilities {
+    /// AES encryption support
     pub supports_aes: bool,
+    /// ChaCha20-Poly1305 support
     pub supports_chacha20: bool,
+    /// Elliptic curve cryptography support
     pub supports_ecc: bool,
+    /// RSA encryption/signing support
     pub supports_rsa: bool,
+    /// Hardware acceleration availability
     pub supports_hardware_acceleration: bool,
 }
 

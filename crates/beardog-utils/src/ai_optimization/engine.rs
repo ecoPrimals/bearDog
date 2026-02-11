@@ -408,3 +408,315 @@ impl AIOptimizationEngine {
         Ok(load_avg)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_engine() -> AIOptimizationEngine {
+        AIOptimizationEngine::new(Duration::from_secs(60))
+            .expect("Engine construction should succeed")
+    }
+
+    // ── Constructor & Stats ──────────────────────────────────────────
+
+    #[test]
+    fn test_new_creates_engine_with_defaults() {
+        let engine = make_engine();
+        assert!(engine.is_learning_enabled);
+        assert_eq!(engine.optimization_interval, Duration::from_secs(60));
+    }
+
+    #[test]
+    fn test_get_stats_initial() {
+        let engine = make_engine();
+        let stats = engine.get_stats().expect("get_stats should succeed");
+        assert_eq!(stats.total_optimizations, 0);
+        assert_eq!(stats.successful_optimizations, 0);
+        assert_eq!(stats.anomalies_detected, 0);
+    }
+
+    // ── Private metric collectors ────────────────────────────────────
+
+    #[test]
+    fn test_get_cpu_usage_returns_valid_range() {
+        let engine = make_engine();
+        let cpu = engine.get_cpu_usage().expect("cpu usage should succeed");
+        assert!(cpu >= 0.0, "CPU usage should be non-negative");
+        assert!(cpu <= 100.0, "CPU usage should be at most 100");
+    }
+
+    #[test]
+    fn test_get_memory_usage_returns_valid_range() {
+        let engine = make_engine();
+        let mem = engine
+            .get_memory_usage()
+            .expect("memory usage should succeed");
+        assert!(mem >= 0.0, "Memory usage should be non-negative");
+        assert!(mem <= 100.0, "Memory usage should be at most 100");
+    }
+
+    #[tokio::test]
+    async fn test_measure_network_latency_returns_positive() {
+        let engine = make_engine();
+        let latency = engine
+            .measure_network_latency()
+            .await
+            .expect("latency measurement should succeed");
+        assert!(latency >= 1.0, "Latency should be at least 1ms");
+    }
+
+    #[test]
+    fn test_measure_crypto_throughput_returns_positive() {
+        let engine = make_engine();
+        let throughput = engine
+            .measure_crypto_throughput()
+            .expect("crypto throughput should succeed");
+        assert!(throughput > 0.0, "Throughput should be positive");
+    }
+
+    #[tokio::test]
+    async fn test_measure_response_time_returns_non_negative() {
+        let engine = make_engine();
+        let rt = engine
+            .measure_response_time()
+            .await
+            .expect("response time should succeed");
+        assert!(rt >= 0.0, "Response time should be non-negative");
+    }
+
+    #[test]
+    fn test_calculate_error_rate_returns_baseline() {
+        let engine = make_engine();
+        let rate = engine
+            .calculate_error_rate()
+            .expect("error rate should succeed");
+        assert!((rate - 0.001).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_get_system_load_returns_non_negative() {
+        let engine = make_engine();
+        let load = engine
+            .get_system_load()
+            .expect("system load should succeed");
+        assert!(load >= 0.0, "System load should be non-negative");
+    }
+
+    // ── Collect / Update / Recommend / Apply ─────────────────────────
+
+    #[tokio::test]
+    async fn test_collect_performance_sample() {
+        let engine = make_engine();
+        let sample = engine
+            .collect_performance_sample()
+            .await
+            .expect("sample collection should succeed");
+
+        assert!(sample.timestamp > 0);
+        assert!(sample.cpu_usage >= 0.0);
+        assert!(sample.memory_usage >= 0.0);
+        assert!(sample.network_latency >= 1.0);
+        assert!(sample.crypto_throughput > 0.0);
+        assert!(sample.response_time >= 0.0);
+        assert!((sample.error_rate - 0.001).abs() < f64::EPSILON);
+        assert!(sample.system_load >= 0.0);
+    }
+
+    #[tokio::test]
+    async fn test_update_models_with_sample() {
+        let engine = make_engine();
+        let sample = engine
+            .collect_performance_sample()
+            .await
+            .expect("sample collection should succeed");
+
+        engine
+            .update_models(&sample)
+            .await
+            .expect("update_models should succeed");
+    }
+
+    #[tokio::test]
+    async fn test_update_models_high_cpu_updates_weights() {
+        let engine = make_engine();
+        let sample = PerformanceSample {
+            timestamp: 1234,
+            cpu_usage: 0.95,
+            memory_usage: 0.8,
+            network_latency: 5.0,
+            crypto_throughput: 1000.0,
+            response_time: 2.0,
+            error_rate: 0.001,
+            system_load: 0.9,
+        };
+
+        engine
+            .update_models(&sample)
+            .await
+            .expect("update_models should succeed with high cpu");
+
+        let model = engine.performance_model.read().await;
+        assert_eq!(model.last_updated, 1234);
+    }
+
+    #[test]
+    fn test_generate_recommendations() {
+        let engine = make_engine();
+        let recs = engine
+            .generate_recommendations()
+            .expect("recommendations should succeed");
+
+        assert_eq!(recs.len(), 1);
+        assert!(matches!(
+            recs[0].optimization_type,
+            OptimizationType::ThreadPool
+        ));
+        assert_eq!(recs[0].confidence, 0.85);
+        assert!(matches!(recs[0].priority, RecommendationPriority::Medium));
+    }
+
+    #[test]
+    fn test_apply_optimizations_empty() {
+        let engine = make_engine();
+        engine
+            .apply_optimizations(&[])
+            .expect("empty optimizations should succeed");
+    }
+
+    #[test]
+    fn test_apply_optimizations_with_recommendations() {
+        let engine = make_engine();
+        let recs = engine
+            .generate_recommendations()
+            .expect("recommendations should succeed");
+        engine
+            .apply_optimizations(&recs)
+            .expect("apply_optimizations should succeed");
+
+        let stats = engine.get_stats().expect("stats should succeed");
+        assert_eq!(stats.total_optimizations, 1);
+    }
+
+    #[test]
+    fn test_execute_optimization_thread_pool() {
+        let engine = make_engine();
+        let rec = OptimizationRecommendation {
+            optimization_type: OptimizationType::ThreadPool,
+            confidence: 0.9,
+            expected_improvement: 20.0,
+            parameters: std::collections::HashMap::new(),
+            reasoning: "test".to_string(),
+            priority: RecommendationPriority::High,
+        };
+        engine
+            .execute_optimization(&rec)
+            .expect("execute ThreadPool should succeed");
+    }
+
+    #[test]
+    fn test_execute_optimization_simd() {
+        let engine = make_engine();
+        let rec = OptimizationRecommendation {
+            optimization_type: OptimizationType::Simd,
+            confidence: 0.8,
+            expected_improvement: 10.0,
+            parameters: std::collections::HashMap::new(),
+            reasoning: "simd test".to_string(),
+            priority: RecommendationPriority::Low,
+        };
+        engine
+            .execute_optimization(&rec)
+            .expect("execute Simd should succeed");
+    }
+
+    #[test]
+    fn test_execute_optimization_memory() {
+        let engine = make_engine();
+        let rec = OptimizationRecommendation {
+            optimization_type: OptimizationType::Memory,
+            confidence: 0.7,
+            expected_improvement: 5.0,
+            parameters: std::collections::HashMap::new(),
+            reasoning: "mem test".to_string(),
+            priority: RecommendationPriority::Medium,
+        };
+        engine
+            .execute_optimization(&rec)
+            .expect("execute Memory should succeed");
+    }
+
+    #[test]
+    fn test_execute_optimization_other_variants() {
+        let engine = make_engine();
+        for opt_type in [
+            OptimizationType::Network,
+            OptimizationType::Cache,
+            OptimizationType::GarbageCollection,
+            OptimizationType::Pool,
+            OptimizationType::Crypto,
+        ] {
+            let rec = OptimizationRecommendation {
+                optimization_type: opt_type,
+                confidence: 0.6,
+                expected_improvement: 3.0,
+                parameters: std::collections::HashMap::new(),
+                reasoning: "test".to_string(),
+                priority: RecommendationPriority::Low,
+            };
+            engine
+                .execute_optimization(&rec)
+                .expect("execute other type should succeed");
+        }
+    }
+
+    #[test]
+    fn test_learn_from_results() {
+        let engine = make_engine();
+        engine
+            .learn_from_results()
+            .expect("learn_from_results should succeed");
+    }
+
+    // ── Full cycle test ──────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn test_full_optimization_cycle() {
+        let engine = make_engine();
+
+        // Step 1: collect a sample
+        let sample = engine
+            .collect_performance_sample()
+            .await
+            .expect("sample");
+
+        // Step 2: update models
+        engine.update_models(&sample).await.expect("update");
+
+        // Step 3: generate recommendations
+        let recs = engine.generate_recommendations().expect("recs");
+
+        // Step 4: apply optimizations
+        engine.apply_optimizations(&recs).expect("apply");
+
+        // Step 5: learn
+        engine.learn_from_results().expect("learn");
+
+        // Step 6: verify stats
+        let stats = engine.get_stats().expect("stats");
+        assert_eq!(stats.total_optimizations, 1);
+    }
+
+    #[test]
+    fn test_stats_after_multiple_optimizations() {
+        let engine = make_engine();
+        let recs = engine.generate_recommendations().expect("recs");
+
+        for _ in 0..5 {
+            engine.apply_optimizations(&recs).expect("apply");
+        }
+
+        let stats = engine.get_stats().expect("stats");
+        assert_eq!(stats.total_optimizations, 5);
+    }
+}

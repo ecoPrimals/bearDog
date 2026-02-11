@@ -19,6 +19,7 @@ pub enum ComplianceType {
     ExportControl,
 }
 
+/// Geographic regions for data sovereignty compliance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GeographicRegion {
     /// Represents e u variant
@@ -37,6 +38,7 @@ pub enum GeographicRegion {
     Other(String),
 }
 
+/// Data routing restrictions for compliance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RoutingRestriction {
     /// Represents no cloud storage variant

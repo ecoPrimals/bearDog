@@ -157,7 +157,7 @@ impl BearDogDiscoveryClient {
     /// Parse URL into (protocol, host, port, path)
     fn parse_url(url: &str) -> (String, String, u16, Option<String>) {
         // Simple URL parsing - handles common formats
-        let default_port = 8080u16;
+        let default_port = beardog_config::DEFAULT_API_PORT;
 
         if let Some(rest) = url.strip_prefix("https://") {
             Self::parse_host_port_path(rest, "https", 443)

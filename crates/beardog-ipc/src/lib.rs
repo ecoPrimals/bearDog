@@ -50,16 +50,16 @@ pub mod types;
 // tarpc high-performance RPC (Protocol Graduation: JSON-RPC → tarpc)
 // Walk → Run pattern: JSON-RPC for flexibility, tarpc for speed
 #[cfg(feature = "tarpc")]
-pub mod tarpc_types;
+pub mod tarpc_client;
 #[cfg(feature = "tarpc")]
 pub mod tarpc_server;
 #[cfg(feature = "tarpc")]
-pub mod tarpc_client;
+pub mod tarpc_types;
 
 // Protocol routing and multi-transport (always available for discovery)
-pub mod protocol_router;
 #[cfg(feature = "tarpc")]
 pub mod multi_transport;
+pub mod protocol_router;
 
 pub use client::SongbirdClient;
 pub use error::{IpcError, IpcResult};
@@ -76,13 +76,13 @@ pub use registry_client::{JsonRpcRequest, PrimalRegistryClient};
 
 // tarpc types, server, client (when feature enabled)
 #[cfg(feature = "tarpc")]
-pub use tarpc_types::*;
-#[cfg(feature = "tarpc")]
-pub use tarpc_server::BearDogCryptoServer;
+pub use multi_transport::{MultiTransportConfig, MultiTransportServer, ProtocolSelector};
 #[cfg(feature = "tarpc")]
 pub use tarpc_client::TarpcCryptoClient;
 #[cfg(feature = "tarpc")]
-pub use multi_transport::{MultiTransportConfig, MultiTransportServer, ProtocolSelector};
+pub use tarpc_server::BearDogCryptoServer;
+#[cfg(feature = "tarpc")]
+pub use tarpc_types::*;
 
 // Protocol routing (always available)
 pub use protocol_router::{Protocol, ProtocolCapabilities, ProtocolDetector, RouterConfig};
@@ -137,9 +137,15 @@ pub async fn discover_ipc_socket() -> String {
     // 3. Fallback (generic discovery endpoint - any primal can bind here)
     // This follows the self-knowledge principle: we don't hardcode "songbird",
     // we use a generic endpoint any discovery service can claim.
-    tracing::debug!("📡 IPC socket using fallback: {}", DISCOVERY_SOCKET_FALLBACK);
+    tracing::debug!(
+        "📡 IPC socket using fallback: {}",
+        DISCOVERY_SOCKET_FALLBACK
+    );
     DISCOVERY_SOCKET_FALLBACK.to_string()
 }
 
 /// Default heartbeat interval (30 seconds)
 pub const DEFAULT_HEARTBEAT_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
+
+#[cfg(test)]
+mod coverage_tests;

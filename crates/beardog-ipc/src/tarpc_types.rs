@@ -116,7 +116,8 @@ pub trait BearDogCrypto {
     async fn tls_derive_handshake_secrets(request: TlsSecretsRequest) -> CryptoResult<TlsSecrets>;
 
     /// Derive TLS 1.3 application secrets
-    async fn tls_derive_application_secrets(request: TlsSecretsRequest) -> CryptoResult<TlsSecrets>;
+    async fn tls_derive_application_secrets(request: TlsSecretsRequest)
+        -> CryptoResult<TlsSecrets>;
 
     /// Sign TLS handshake
     async fn tls_sign_handshake(request: TlsSignRequest) -> CryptoResult<SignResponse>;

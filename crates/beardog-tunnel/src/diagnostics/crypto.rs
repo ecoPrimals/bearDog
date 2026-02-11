@@ -83,6 +83,7 @@ pub fn log_aes256_gcm_encrypt(
     eprintln!("════════════════════════════════════════════════════════");
 }
 
+/// No-op diagnostic log for AES-256-GCM encryption (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
 pub fn log_aes256_gcm_encrypt(
@@ -116,6 +117,7 @@ pub fn log_chacha20_poly1305_encrypt(
     eprintln!("════════════════════════════════════════════════════════");
 }
 
+/// No-op diagnostic log for ChaCha20-Poly1305 encryption (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
 pub fn log_chacha20_poly1305_encrypt(
@@ -161,6 +163,7 @@ pub fn log_chacha20_poly1305_decrypt(
     eprintln!("════════════════════════════════════════════════════════");
 }
 
+/// No-op diagnostic log for ChaCha20-Poly1305 decryption (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
 pub fn log_chacha20_poly1305_decrypt(
@@ -184,6 +187,7 @@ pub fn log_hkdf_derivation(input_len: usize, salt_len: usize, info: &str, output
     eprintln!("════════════════════════════════════════════════════════");
 }
 
+/// No-op diagnostic log for HKDF key derivation (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
 pub fn log_hkdf_derivation(_input_len: usize, _salt_len: usize, _info: &str, _output_len: usize) {}

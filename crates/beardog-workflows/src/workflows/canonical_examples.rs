@@ -903,4 +903,150 @@ mod tests {
         assert!(workflow.data.is_some());
         assert!(matches!(workflow.status, ExampleWorkflowStatus::Started));
     }
+
+    #[tokio::test]
+    async fn test_run_comprehensive_example() {
+        let result = super::run_comprehensive_example().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_processor_empty_name_validation() {
+        let processor = ExampleWorkflowProcessor::new("EmptyNameTest");
+        let mut workflow = ExampleWorkflow::new("empty-name", "");
+        workflow.name = String::new();
+        let result = processor
+            .process(workflow, ProcessingContext::default())
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_example_workflow_serialization_roundtrip() {
+        let workflow = ExampleWorkflow::new("serde-1", "Serde Test")
+            .with_data(serde_json::json!({"key": "value"}));
+        let json = serde_json::to_string(&workflow).unwrap();
+        let restored: ExampleWorkflow = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.id.as_str(), "serde-1");
+        assert_eq!(restored.name, "Serde Test");
+        assert!(restored.data.is_some());
+    }
+
+    #[test]
+    fn test_example_workflow_status_serialization() {
+        for status in [
+            ExampleWorkflowStatus::Created,
+            ExampleWorkflowStatus::Started,
+            ExampleWorkflowStatus::Processing,
+            ExampleWorkflowStatus::Completed,
+            ExampleWorkflowStatus::Failed("test error".to_string()),
+            ExampleWorkflowStatus::Cancelled,
+        ] {
+            let json = serde_json::to_string(&status).unwrap();
+            let restored: ExampleWorkflowStatus = serde_json::from_str(&json).unwrap();
+            assert_eq!(status, restored);
+        }
+    }
+
+    #[test]
+    fn test_processing_context_serialization() {
+        let ctx = ProcessingContext {
+            user_id: "user-42".to_string(),
+            timeout_seconds: 120,
+            retry_count: 5,
+        };
+        let json = serde_json::to_string(&ctx).unwrap();
+        let restored: ProcessingContext = serde_json::from_str(&json).unwrap();
+        assert_eq!(ctx, restored);
+    }
+
+    #[test]
+    fn test_start_workflow_command_serialization() {
+        let cmd = StartWorkflowCommand::new(ProcessingContext::default());
+        let json = serde_json::to_string(&cmd).unwrap();
+        let restored: StartWorkflowCommand = serde_json::from_str(&json).unwrap();
+        assert_eq!(cmd, restored);
+    }
+
+    #[test]
+    fn test_example_workflow_id_hash() {
+        use std::collections::HashSet;
+        let mut set = HashSet::new();
+        set.insert(ExampleWorkflowId("a".to_string()));
+        set.insert(ExampleWorkflowId("b".to_string()));
+        set.insert(ExampleWorkflowId("a".to_string())); // duplicate
+        assert_eq!(set.len(), 2);
+    }
+
+    #[test]
+    fn test_example_workflow_debug() {
+        let workflow = ExampleWorkflow::new("debug-1", "Debug Test");
+        let debug = format!("{:?}", workflow);
+        assert!(debug.contains("debug-1"));
+        assert!(debug.contains("Debug Test"));
+    }
+
+    #[test]
+    fn test_in_memory_repository_clone() {
+        let repo = InMemoryWorkflowRepository::new();
+        let cloned = repo.clone();
+        assert!(cloned.is_empty());
+    }
+
+    #[test]
+    fn test_logging_observer_serialization() {
+        let observer = LoggingWorkflowObserver::new("SerdeObserver");
+        let json = serde_json::to_string(&observer).unwrap();
+        let restored: LoggingWorkflowObserver = serde_json::from_str(&json).unwrap();
+        assert_eq!(observer, restored);
+    }
+
+    #[tokio::test]
+    async fn test_repository_concurrent_operations() {
+        let repo = Arc::new(InMemoryWorkflowRepository::new());
+        let mut handles = vec![];
+
+        // Concurrent saves
+        for i in 0..8 {
+            let r = Arc::clone(&repo);
+            handles.push(tokio::spawn(async move {
+                let workflow = ExampleWorkflow::new(
+                    &format!("concurrent-{}", i),
+                    &format!("Concurrent {}", i),
+                );
+                r.save(workflow).await
+            }));
+        }
+
+        for h in handles {
+            let result = h.await.unwrap();
+            assert!(result.is_ok());
+        }
+
+        assert_eq!(repo.len(), 8);
+
+        // Concurrent reads
+        let all = repo.list_all().await.unwrap();
+        assert_eq!(all.len(), 8);
+    }
+
+    #[tokio::test]
+    async fn test_service_create_and_find_workflow() {
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("ServiceTest");
+        let observer = LoggingWorkflowObserver::new("ServiceObserver");
+
+        let mut service = WorkflowService::new(repo, processor);
+        service.add_observer(observer);
+
+        let wf = ExampleWorkflow::new("svc-1", "Service Test");
+        service.create_workflow(wf.clone()).await.unwrap();
+
+        let found = service
+            .repository()
+            .find_by_id(wf.id())
+            .await
+            .unwrap();
+        assert!(found.is_some());
+    }
 }

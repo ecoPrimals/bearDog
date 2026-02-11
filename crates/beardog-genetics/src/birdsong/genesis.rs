@@ -831,4 +831,172 @@ mod tests {
             "Same inputs must produce same genetic ID (deterministic)"
         );
     }
+
+    // === Witness Authority Tests ===
+
+    #[tokio::test]
+    async fn test_verify_witness_authority_permissionless_mode() {
+        std::env::set_var("BEARDOG_GENESIS_MODE", "permissionless");
+        let provider = GenesisLineageProvider::new().await.unwrap();
+
+        let witness = GenesisWitness {
+            device_id: "any-device".into(),
+            public_key: vec![1u8; 32],
+            physical_channel: PhysicalChannelType::HardwareKey,
+            timestamp: 1735000000,
+            signature: vec![0u8; 64],
+        };
+
+        let result = provider.verify_witness_authority(&witness);
+        std::env::remove_var("BEARDOG_GENESIS_MODE");
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_verify_witness_authority_invalid_pubkey_length() {
+        let provider = GenesisLineageProvider::new().await.unwrap();
+
+        let witness = GenesisWitness {
+            device_id: "device".into(),
+            public_key: vec![1u8; 16], // wrong length
+            physical_channel: PhysicalChannelType::HardwareKey,
+            timestamp: 1735000000,
+            signature: vec![0u8; 64],
+        };
+
+        let result = provider.verify_witness_authority(&witness);
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_verify_witness_authority_empty_signature() {
+        let provider = GenesisLineageProvider::new().await.unwrap();
+
+        let witness = GenesisWitness {
+            device_id: "device".into(),
+            public_key: vec![1u8; 32],
+            physical_channel: PhysicalChannelType::HardwareKey,
+            timestamp: 1735000000,
+            signature: vec![], // empty
+        };
+
+        let result = provider.verify_witness_authority(&witness);
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_verify_witness_authority_unknown_mode() {
+        std::env::set_var("BEARDOG_GENESIS_MODE", "unknown_mode");
+        let provider = GenesisLineageProvider::new().await.unwrap();
+
+        let witness = GenesisWitness {
+            device_id: "device".into(),
+            public_key: vec![1u8; 32],
+            physical_channel: PhysicalChannelType::HardwareKey,
+            timestamp: 1735000000,
+            signature: vec![0u8; 64],
+        };
+
+        // Unknown mode defaults to permissioned, no witnesses → falls back
+        // but since the device is not registered and list is empty,
+        // it returns error for unknown device
+        let result = provider.verify_witness_authority(&witness);
+        std::env::remove_var("BEARDOG_GENESIS_MODE");
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_verify_witness_authority_pubkey_mismatch() {
+        let provider = GenesisLineageProvider::new().await.unwrap();
+        // Register with one key
+        provider.add_trusted_witness("device", vec![1u8; 32]);
+
+        // Try with different key
+        let witness = GenesisWitness {
+            device_id: "device".into(),
+            public_key: vec![2u8; 32], // different!
+            physical_channel: PhysicalChannelType::HardwareKey,
+            timestamp: 1735000000,
+            signature: vec![0u8; 64],
+        };
+
+        let result = provider.verify_witness_authority(&witness);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("does not match"));
+    }
+
+    // === Genesis Ceremony Tests ===
+
+    #[tokio::test]
+    async fn test_conduct_genesis_ceremony_failed_proof() {
+        let provider = GenesisLineageProvider::new().await.unwrap();
+
+        let witness = GenesisWitness {
+            device_id: "witness-device".into(),
+            public_key: vec![1u8; 32],
+            physical_channel: PhysicalChannelType::HardwareKey,
+            timestamp: 1735000000,
+            signature: vec![0u8; 64],
+        };
+
+        // HardwareKey with no attestation → verify returns false
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::HardwareKey,
+            attestation: None,
+            verification_codes: None,
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+
+        let result = provider
+            .conduct_genesis_ceremony("node-1", &witness, &proof)
+            .await
+            .unwrap();
+
+        assert!(!result.success);
+        assert!(result.error.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_conduct_genesis_ceremony_lineage_failure() {
+        let provider = GenesisLineageProvider::new().await.unwrap();
+
+        // Register a DIFFERENT witness to make the list non-empty,
+        // so the actual witness gets rejected
+        provider.add_trusted_witness("other-device", vec![99u8; 32]);
+
+        let witness = GenesisWitness {
+            device_id: "unregistered-device".into(),
+            public_key: vec![1u8; 32],
+            physical_channel: PhysicalChannelType::QrCodeWithOob,
+            timestamp: 1735000000,
+            signature: vec![0u8; 64],
+        };
+
+        // QrCodeWithOob with valid codes → verify returns true
+        let proof = PhysicalChannelProof {
+            channel_type: PhysicalChannelType::QrCodeWithOob,
+            attestation: None,
+            verification_codes: Some(vec!["CODE123".to_string()]),
+            pairing_data: None,
+            timestamp: 1735000000,
+        };
+
+        let result = provider
+            .conduct_genesis_ceremony("node-1", &witness, &proof)
+            .await
+            .unwrap();
+
+        // Physical proof passes, but witness authority should fail
+        assert!(!result.success);
+        assert!(result.error.is_some());
+    }
+
+    // === Get Lineage Tests ===
+
+    #[tokio::test]
+    async fn test_get_lineage_not_found() {
+        let provider = GenesisLineageProvider::new().await.unwrap();
+        assert!(provider.get_lineage("nonexistent").is_none());
+    }
 }

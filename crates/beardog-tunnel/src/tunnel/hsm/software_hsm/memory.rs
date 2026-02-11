@@ -5,7 +5,9 @@ use zeroize::Zeroize;
 /// Memory protection configuration
 #[derive(Clone, Debug)]
 pub struct MemoryProtectionConfig {
+    /// Whether memory protection is enabled
     pub enable_protection: bool,
+    /// Whether to zero memory on deallocation
     pub clear_on_drop: bool,
 }
 

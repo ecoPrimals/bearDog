@@ -55,11 +55,17 @@ pub enum TrustLevel {
 /// Peer trust record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PeerTrustRecord {
+    /// Unique peer identifier
     pub peer_id: String,
+    /// Peer's public key bytes
     pub public_key: Vec<u8>,
+    /// Current trust level for this peer
     pub trust_level: TrustLevel,
+    /// When this peer was first encountered
     pub first_seen: DateTime<Utc>,
+    /// When this peer was last seen
     pub last_seen: DateTime<Utc>,
+    /// Total number of connections from this peer
     pub connection_count: u64,
 }
 

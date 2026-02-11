@@ -341,4 +341,110 @@ mod tests {
         let uevent = "HID_ID=invalid\n";
         assert!(parse_hid_id(uevent).is_err());
     }
+
+    #[test]
+    fn test_parse_hid_id_invalid_vendor_hex() {
+        // Three colon-separated parts but vendor is not valid hex
+        let uevent = "HID_ID=0003:ZZZZZZZZ:0000BEEE\n";
+        let result = parse_hid_id(uevent);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Invalid vendor ID"));
+    }
+
+    #[test]
+    fn test_parse_hid_id_invalid_product_hex() {
+        // Valid vendor but invalid product hex
+        let uevent = "HID_ID=0003:00001209:XYZXYZXY\n";
+        let result = parse_hid_id(uevent);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid product ID")
+        );
+    }
+
+    #[test]
+    fn test_parse_hid_id_empty_content() {
+        let result = parse_hid_id("");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_hid_id_multiline_with_other_fields() {
+        let uevent = "DRIVER=hid-generic\nHID_ID=0003:00001050:00000407\nHID_NAME=Yubico YubiKey\n";
+        let (vid, pid) = parse_hid_id(uevent).unwrap();
+        assert_eq!(vid, 0x1050);
+        assert_eq!(pid, 0x0407);
+    }
+
+    #[test]
+    fn test_parse_hid_id_vendor_overflow() {
+        // u16 max is 0xFFFF = 65535. Provide a number > 65535 as vendor.
+        let uevent = "HID_ID=0003:000FFFFF:00000001\n";
+        let result = parse_hid_id(uevent);
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_read_string_file_valid() {
+        // Create a temporary file and read it
+        let dir = std::env::temp_dir();
+        let test_path = dir.join("beardog_hid_test_string_file.txt");
+        tokio::fs::write(&test_path, "  Test Content  \n").await.unwrap();
+        let result = read_string_file(test_path.to_str().unwrap()).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "Test Content");
+        let _ = tokio::fs::remove_file(&test_path).await;
+    }
+
+    #[tokio::test]
+    async fn test_read_string_file_nonexistent() {
+        let result = read_string_file("/tmp/beardog_hid_nonexistent_file_xyz").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_read_device_info_invalid_path() {
+        // read_device_info is private; test via LinuxHidDevice::open
+        // which will fail at opening, covering the error path
+        let result = LinuxHidDevice::open("/dev/nonexistent_hidraw").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_open_dev_null_covers_sysfs_failure() {
+        // /dev/null exists and is readable/writable, so open() succeeds at the file level
+        // but read_device_info() fails because /sys/class/hidraw/null doesn't exist.
+        // This covers the open success path + read_device_info entry + sysfs error.
+        let result = LinuxHidDevice::open("/dev/null").await;
+        assert!(result.is_err());
+        if let Err(e) = result {
+            let err_msg = e.to_string();
+            // Should fail at reading sysfs info, not at opening the device
+            assert!(
+                err_msg.contains("uevent") || err_msg.contains("Failed to read")
+                    || err_msg.contains("No such file")
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_read_device_info_directly() {
+        // Test read_device_info with a path that has a valid file_name component
+        // but points to a non-hidraw location in sysfs
+        let result = LinuxHidDevice::read_device_info("/dev/null").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_read_device_info_root_path() {
+        // "/" has no file_name() component, triggers invalid path error
+        let result = LinuxHidDevice::read_device_info("/").await;
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert!(e.to_string().contains("Invalid hidraw path"));
+        }
+    }
 }

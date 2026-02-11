@@ -62,7 +62,10 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
         let hid_info = hid_devices
             .iter()
-            .find(|d| d.path.contains(&device_info.device_path.to_string_lossy().to_string()))
+            .find(|d| {
+                d.path
+                    .contains(&device_info.device_path.to_string_lossy().to_string())
+            })
             .ok_or_else(|| {
                 beardog_errors::BearDogError::system("Device not found in HID list".to_string())
             })?;

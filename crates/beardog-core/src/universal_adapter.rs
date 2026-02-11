@@ -180,7 +180,7 @@ impl UniversalAdapter {
 
         // Step 3: Initialize routing (how to choose best?)
         info!("   3️⃣  Initializing capability router...");
-        let router = CapabilityRouter::new().await?;
+        let router = CapabilityRouter::new()?;
         info!("   ✅ Routing engine ready");
 
         // Get cache TTL from environment (default: 5 minutes)

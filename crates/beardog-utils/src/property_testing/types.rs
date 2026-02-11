@@ -385,4 +385,89 @@ mod tests {
         assert!(config.verbose);
         assert!(!config.enable_shrinking);
     }
+
+    #[test]
+    fn test_generate_report_empty() {
+        let framework = PropertyBasedTestFramework::default();
+        let report = framework.generate_property_test_report();
+
+        assert_eq!(report["success_rate"], "0.00%");
+        assert_eq!(report["total_tests"], "0");
+        assert_eq!(report["passed_tests"], "0");
+        assert_eq!(report["failed_tests"], "0");
+    }
+
+    #[test]
+    fn test_generate_report_with_results() {
+        let mut framework = PropertyBasedTestFramework::default();
+        framework.record_result(1, "idempotency", true);
+        framework.record_result(2, "idempotency", true);
+        framework.record_result(3, "commutativity", false);
+        framework.record_result(4, "commutativity", true);
+
+        let report = framework.generate_property_test_report();
+
+        assert_eq!(report["total_tests"], "4");
+        assert_eq!(report["passed_tests"], "3");
+        assert_eq!(report["failed_tests"], "1");
+        assert_eq!(report["success_rate"], "75.00%");
+
+        // Property-specific stats should be present
+        assert!(report.contains_key("property_idempotency_success_rate"));
+        assert_eq!(report["property_idempotency_success_rate"], "100.0%");
+        assert!(report.contains_key("property_commutativity_success_rate"));
+        assert_eq!(report["property_commutativity_success_rate"], "50.0%");
+    }
+
+    #[test]
+    fn test_log_statistics_with_data() {
+        let mut framework = PropertyBasedTestFramework::default();
+        framework.record_result(1, "test", true);
+        framework.record_result(2, "test", false);
+        framework.statistics.average_execution_time_ms = 1.5;
+        framework.statistics.min_execution_time_ms = 0.5;
+        framework.statistics.max_execution_time_ms = 3.0;
+        framework.statistics.properties_tested = 1;
+
+        // Should not panic with non-zero stats and success_rate branch
+        framework.log_statistics();
+    }
+
+    #[test]
+    fn test_property_value_variants() {
+        let s = PropertyValue::String("hello".to_string());
+        let i = PropertyValue::Integer(42);
+        let f = PropertyValue::Float(3.14);
+        let b = PropertyValue::Boolean(true);
+        let bytes = PropertyValue::Bytes(vec![1, 2, 3]);
+
+        assert!(matches!(s, PropertyValue::String(_)));
+        assert!(matches!(i, PropertyValue::Integer(42)));
+        assert!(matches!(f, PropertyValue::Float(_)));
+        assert!(matches!(b, PropertyValue::Boolean(true)));
+        assert!(matches!(bytes, PropertyValue::Bytes(_)));
+    }
+
+    #[test]
+    fn test_record_result_error_message() {
+        let mut framework = PropertyBasedTestFramework::default();
+        framework.record_result(10, "failing", false);
+
+        let result = &framework.results[0];
+        assert!(!result.passed);
+        assert_eq!(
+            result.error_message,
+            Some("Property violation detected".to_string())
+        );
+        assert_eq!(result.execution_time_ms, 0.0);
+        assert_eq!(result.test_case_id, 10);
+        assert_eq!(result.property_name, "failing");
+    }
+
+    #[test]
+    fn test_record_result_no_error_message_on_pass() {
+        let mut framework = PropertyBasedTestFramework::default();
+        framework.record_result(1, "passing", true);
+        assert!(framework.results[0].error_message.is_none());
+    }
 }

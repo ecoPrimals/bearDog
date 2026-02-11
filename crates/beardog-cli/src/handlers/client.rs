@@ -105,8 +105,9 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
                 // Send command to server
                 match send_command(&mut writer, &mut reader, input).await {
                     Ok(response) => {
-                        let output = serde_json::to_string_pretty(&response)
-                            .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {}\"}}", e));
+                        let output = serde_json::to_string_pretty(&response).unwrap_or_else(|e| {
+                            format!("{{\"error\": \"JSON serialization failed: {}\"}}", e)
+                        });
                         println!("{}", output);
                     }
                     Err(e) => {
@@ -128,12 +129,13 @@ async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), Bear
     // We need to create a new connection for the command
     // Unix streams don't support try_clone in the same way as TCP streams
     let socket_path = discover_socket_path();
-    let new_stream = UnixStream::connect(&socket_path)
-        .await
-        .map_err(|e| BearDogError::Network {
-            message: format!("Failed to connect for command: {}", e),
-            category: Default::default(),
-        })?;
+    let new_stream =
+        UnixStream::connect(&socket_path)
+            .await
+            .map_err(|e| BearDogError::Network {
+                message: format!("Failed to connect for command: {}", e),
+                category: Default::default(),
+            })?;
 
     let (reader, mut writer) = new_stream.into_split();
     let mut reader = BufReader::new(reader);

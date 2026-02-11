@@ -9,10 +9,15 @@ use tracing::info;
 /// Device information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceInfo {
+    /// Device manufacturer (e.g., "Google", "Apple")
     pub manufacturer: String,
+    /// Device model name
     pub model: String,
+    /// Operating system version string
     pub os_version: String,
+    /// Mobile platform type
     pub platform: SmartphonePlatform,
+    /// Hardware security capabilities
     pub security_capabilities: SecurityCapabilities,
 }
 
@@ -21,17 +26,24 @@ pub struct DeviceInfo {
 #[allow(clippy::upper_case_acronyms)] // iOS is the correct branding
 #[allow(non_camel_case_types)] // iOS is the correct branding
 pub enum SmartphonePlatform {
+    /// Android (Google)
     Android,
+    /// iOS (Apple)
     iOS,
+    /// Other mobile platform
     Other(String),
 }
 
 /// Security capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityCapabilities {
+    /// Whether Android StrongBox is available
     pub has_strongbox: bool,
+    /// Whether Apple Secure Enclave is available
     pub has_secure_enclave: bool,
+    /// Whether a Trusted Execution Environment is available
     pub has_tee: bool,
+    /// Whether biometric authentication is available
     pub has_biometric: bool,
 }
 

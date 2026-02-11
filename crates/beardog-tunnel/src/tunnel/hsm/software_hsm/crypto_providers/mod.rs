@@ -1,7 +1,10 @@
+/// Crypto provider factory and capability detection
 pub mod factory;
-pub mod genetic_crypto; // RECOMMENDED: 100% Pure Rust, zero FFI
-                        // openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, RustCrypto)
-                        // pub mod ring_crypto;  // REMOVED: Has C dependencies, use RustCrypto instead (100% Pure Rust!)
+/// Genetic crypto provider (100% Pure Rust, zero FFI)
+pub mod genetic_crypto;
+// openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, RustCrypto)
+// pub mod ring_crypto;  // REMOVED: Has C dependencies, use RustCrypto instead (100% Pure Rust!)
+/// RustCrypto-based provider (100% Pure Rust)
 pub mod rust_crypto;
 
 #[cfg(test)]

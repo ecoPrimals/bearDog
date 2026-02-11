@@ -49,13 +49,13 @@ pub struct TarpcCryptoClient {
 struct TarpcClientInner {
     /// The actual tarpc client (wrapped for reconnection)
     client: RwLock<Option<BearDogCryptoClient>>,
-    
+
     /// Server address for reconnection
     addr: SocketAddr,
-    
+
     /// Connection timeout
     connect_timeout: Duration,
-    
+
     /// Request timeout
     request_timeout: Duration,
 }
@@ -79,7 +79,7 @@ impl TarpcCryptoClient {
         request_timeout: Duration,
     ) -> anyhow::Result<Self> {
         let client = Self::create_client(addr, connect_timeout).await?;
-        
+
         Ok(Self {
             inner: Arc::new(TarpcClientInner {
                 client: RwLock::new(Some(client)),
@@ -90,9 +90,12 @@ impl TarpcCryptoClient {
         })
     }
 
-    async fn create_client(addr: SocketAddr, timeout: Duration) -> anyhow::Result<BearDogCryptoClient> {
+    async fn create_client(
+        addr: SocketAddr,
+        timeout: Duration,
+    ) -> anyhow::Result<BearDogCryptoClient> {
         let stream = tokio::time::timeout(timeout, TcpStream::connect(addr)).await??;
-        
+
         let transport = tarpc::serde_transport::new(
             tokio_util::codec::LengthDelimitedCodec::builder()
                 .max_frame_length(16 * 1024 * 1024) // 16MB max
@@ -101,7 +104,7 @@ impl TarpcCryptoClient {
         );
 
         let client = BearDogCryptoClient::new(client::Config::default(), transport).spawn();
-        
+
         info!("🔗 Connected to BearDog tarpc server at {}", addr);
         Ok(client)
     }
@@ -163,36 +166,48 @@ impl TarpcCryptoClient {
     pub async fn generate_ed25519(&self) -> anyhow::Result<CryptoResult<KeyPair>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.generate_ed25519(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.generate_ed25519(self.context()).await)
+            .await
     }
 
     /// Generate an X25519 ephemeral keypair
     pub async fn generate_x25519_ephemeral(&self) -> anyhow::Result<CryptoResult<KeyPair>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.generate_x25519_ephemeral(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.generate_x25519_ephemeral(self.context()).await)
+            .await
     }
 
     /// Generate a P-256 ECDH keypair
     pub async fn generate_ecdh_p256(&self) -> anyhow::Result<CryptoResult<KeyPair>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.generate_ecdh_p256(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.generate_ecdh_p256(self.context()).await)
+            .await
     }
 
     /// Generate a P-384 ECDH keypair
     pub async fn generate_ecdh_p384(&self) -> anyhow::Result<CryptoResult<KeyPair>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.generate_ecdh_p384(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.generate_ecdh_p384(self.context()).await)
+            .await
     }
 
     // ============================================================
@@ -200,33 +215,59 @@ impl TarpcCryptoClient {
     // ============================================================
 
     /// Sign data with Ed25519
-    pub async fn sign_ed25519(&self, data: Vec<u8>, private_key: Vec<u8>) -> anyhow::Result<CryptoResult<SignResponse>> {
+    pub async fn sign_ed25519(
+        &self,
+        data: Vec<u8>,
+        private_key: Vec<u8>,
+    ) -> anyhow::Result<CryptoResult<SignResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
         let request = SignRequest { data, private_key };
-        self.handle_error(client.sign_ed25519(self.context(), request).await).await
+        self.handle_error(client.sign_ed25519(self.context(), request).await)
+            .await
     }
 
     /// Verify Ed25519 signature
-    pub async fn verify_ed25519(&self, data: Vec<u8>, signature: Vec<u8>, public_key: Vec<u8>) -> anyhow::Result<CryptoResult<bool>> {
+    pub async fn verify_ed25519(
+        &self,
+        data: Vec<u8>,
+        signature: Vec<u8>,
+        public_key: Vec<u8>,
+    ) -> anyhow::Result<CryptoResult<bool>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = VerifyRequest { data, signature, public_key };
-        self.handle_error(client.verify_ed25519(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = VerifyRequest {
+            data,
+            signature,
+            public_key,
+        };
+        self.handle_error(client.verify_ed25519(self.context(), request).await)
+            .await
     }
 
     /// Sign data with ECDSA P-256
-    pub async fn sign_ecdsa_p256(&self, data: Vec<u8>, private_key: Vec<u8>) -> anyhow::Result<CryptoResult<SignResponse>> {
+    pub async fn sign_ecdsa_p256(
+        &self,
+        data: Vec<u8>,
+        private_key: Vec<u8>,
+    ) -> anyhow::Result<CryptoResult<SignResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
         let request = SignRequest { data, private_key };
-        self.handle_error(client.sign_ecdsa_p256(self.context(), request).await).await
+        self.handle_error(client.sign_ecdsa_p256(self.context(), request).await)
+            .await
     }
 
     // ============================================================
@@ -242,10 +283,22 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<EncryptResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = EncryptRequest { plaintext, key, nonce, aad: None };
-        self.handle_error(client.chacha20_poly1305_encrypt(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = EncryptRequest {
+            plaintext,
+            key,
+            nonce,
+            aad: None,
+        };
+        self.handle_error(
+            client
+                .chacha20_poly1305_encrypt(self.context(), request)
+                .await,
+        )
+        .await
     }
 
     /// Decrypt with ChaCha20-Poly1305
@@ -258,10 +311,23 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<DecryptResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = DecryptRequest { ciphertext, key, nonce, tag, aad: None };
-        self.handle_error(client.chacha20_poly1305_decrypt(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = DecryptRequest {
+            ciphertext,
+            key,
+            nonce,
+            tag,
+            aad: None,
+        };
+        self.handle_error(
+            client
+                .chacha20_poly1305_decrypt(self.context(), request)
+                .await,
+        )
+        .await
     }
 
     /// Encrypt with AES-256-GCM
@@ -273,10 +339,18 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<EncryptResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = EncryptRequest { plaintext, key, nonce, aad: None };
-        self.handle_error(client.aes256_gcm_encrypt(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = EncryptRequest {
+            plaintext,
+            key,
+            nonce,
+            aad: None,
+        };
+        self.handle_error(client.aes256_gcm_encrypt(self.context(), request).await)
+            .await
     }
 
     /// Decrypt with AES-256-GCM
@@ -289,10 +363,19 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<DecryptResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = DecryptRequest { ciphertext, key, nonce, tag, aad: None };
-        self.handle_error(client.aes256_gcm_decrypt(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = DecryptRequest {
+            ciphertext,
+            key,
+            nonce,
+            tag,
+            aad: None,
+        };
+        self.handle_error(client.aes256_gcm_decrypt(self.context(), request).await)
+            .await
     }
 
     // ============================================================
@@ -303,28 +386,41 @@ impl TarpcCryptoClient {
     pub async fn blake3_hash(&self, data: Vec<u8>) -> anyhow::Result<CryptoResult<HashResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.blake3_hash(self.context(), data).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.blake3_hash(self.context(), data).await)
+            .await
     }
 
     /// Hash with SHA-256
     pub async fn sha256_hash(&self, data: Vec<u8>) -> anyhow::Result<CryptoResult<HashResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.sha256_hash(self.context(), data).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.sha256_hash(self.context(), data).await)
+            .await
     }
 
     /// HMAC-SHA256
-    pub async fn hmac_sha256(&self, key: Vec<u8>, data: Vec<u8>) -> anyhow::Result<CryptoResult<HashResponse>> {
+    pub async fn hmac_sha256(
+        &self,
+        key: Vec<u8>,
+        data: Vec<u8>,
+    ) -> anyhow::Result<CryptoResult<HashResponse>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
         let request = HmacRequest { key, data };
-        self.handle_error(client.hmac_sha256(self.context(), request).await).await
+        self.handle_error(client.hmac_sha256(self.context(), request).await)
+            .await
     }
 
     // ============================================================
@@ -339,10 +435,16 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<SharedSecret>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = KeyExchangeRequest { our_private_key, their_public_key };
-        self.handle_error(client.x25519_key_exchange(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = KeyExchangeRequest {
+            our_private_key,
+            their_public_key,
+        };
+        self.handle_error(client.x25519_key_exchange(self.context(), request).await)
+            .await
     }
 
     /// P-256 ECDH key exchange
@@ -353,10 +455,16 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<SharedSecret>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = KeyExchangeRequest { our_private_key, their_public_key };
-        self.handle_error(client.ecdh_p256_key_exchange(self.context(), request).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = KeyExchangeRequest {
+            our_private_key,
+            their_public_key,
+        };
+        self.handle_error(client.ecdh_p256_key_exchange(self.context(), request).await)
+            .await
     }
 
     // ============================================================
@@ -371,14 +479,21 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<TlsSecrets>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = TlsSecretsRequest { 
-            shared_secret, 
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = TlsSecretsRequest {
+            shared_secret,
             transcript_hash,
             cipher_suite: "TLS_AES_256_GCM_SHA384".to_string(), // Default TLS 1.3 suite
         };
-        self.handle_error(client.tls_derive_handshake_secrets(self.context(), request).await).await
+        self.handle_error(
+            client
+                .tls_derive_handshake_secrets(self.context(), request)
+                .await,
+        )
+        .await
     }
 
     /// Derive TLS 1.3 application secrets
@@ -389,14 +504,21 @@ impl TarpcCryptoClient {
     ) -> anyhow::Result<CryptoResult<TlsSecrets>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        let request = TlsSecretsRequest { 
-            shared_secret, 
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        let request = TlsSecretsRequest {
+            shared_secret,
             transcript_hash,
             cipher_suite: "TLS_AES_256_GCM_SHA384".to_string(), // Default TLS 1.3 suite
         };
-        self.handle_error(client.tls_derive_application_secrets(self.context(), request).await).await
+        self.handle_error(
+            client
+                .tls_derive_application_secrets(self.context(), request)
+                .await,
+        )
+        .await
     }
 
     // ============================================================
@@ -407,35 +529,46 @@ impl TarpcCryptoClient {
     pub async fn primal_info(&self) -> anyhow::Result<PrimalInfo> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.primal_info(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.primal_info(self.context()).await)
+            .await
     }
 
     /// Get available RPC methods
     pub async fn rpc_methods(&self) -> anyhow::Result<Vec<MethodInfo>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.rpc_methods(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.rpc_methods(self.context()).await)
+            .await
     }
 
     /// Get primal capabilities
     pub async fn primal_capabilities(&self) -> anyhow::Result<Vec<Capability>> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
-        self.handle_error(client.primal_capabilities(self.context()).await).await
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
+        self.handle_error(client.primal_capabilities(self.context()).await)
+            .await
     }
 
     /// Health check
     pub async fn health(&self) -> anyhow::Result<HealthStatus> {
         self.ensure_connected().await?;
         let read = self.inner.client.read().await;
-        let client = read.as_ref().ok_or_else(|| anyhow::anyhow!("Not connected"))?;
-        
+        let client = read
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
+
         self.handle_error(client.health(self.context()).await).await
     }
 }
@@ -452,17 +585,17 @@ mod tests {
             connect_timeout: Duration::from_secs(5),
             request_timeout: Duration::from_secs(30),
         };
-        
+
         let outer = TarpcCryptoClient {
             inner: Arc::new(client),
         };
-        
+
         let ctx = outer.context();
         // Deadline should be ~30s from now
         let deadline = ctx.deadline;
         let expected_min = std::time::SystemTime::now() + Duration::from_secs(29);
         let expected_max = std::time::SystemTime::now() + Duration::from_secs(31);
-        
+
         assert!(deadline >= expected_min);
         assert!(deadline <= expected_max);
     }

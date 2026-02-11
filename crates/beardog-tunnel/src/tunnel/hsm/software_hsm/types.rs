@@ -28,9 +28,15 @@ pub enum StorageBackend {
     /// In-memory storage (ephemeral)
     InMemory,
     /// File-based storage
-    File { path: String },
+    File {
+        /// Path to the storage file
+        path: String,
+    },
     /// Database storage
-    Database { connection_string: String },
+    Database {
+        /// Database connection string
+        connection_string: String,
+    },
 }
 
 /// Trait for storage backend implementations

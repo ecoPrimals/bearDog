@@ -260,4 +260,79 @@ mod tests {
         assert!(metrics.contains_key("sha256_throughput_mbps"));
         assert_eq!(metrics["safety_score"], 1.0);
     }
+
+    #[test]
+    fn test_benchmark_operations() {
+        let accelerator = SimdCryptoAccelerator::default();
+        let results = accelerator
+            .benchmark_operations()
+            .expect("benchmark should succeed");
+
+        assert!(results.contains_key("aes_encrypt_ns_per_kb"));
+        assert!(results.contains_key("sha256_hash_ns_per_kb"));
+        assert!(*results.get("aes_encrypt_ns_per_kb").unwrap() > 0);
+        assert!(*results.get("sha256_hash_ns_per_kb").unwrap() > 0);
+    }
+
+    #[test]
+    fn test_capabilities_accessor() {
+        let accelerator = SimdCryptoAccelerator::default();
+        let caps = accelerator.capabilities();
+        // Capabilities are platform-dependent; just verify access works
+        let _ = caps.has_aes_ni;
+        let _ = caps.has_avx2;
+        let _ = caps.has_sse42;
+        let _ = caps.has_sha_extensions;
+    }
+
+    #[test]
+    fn test_aes_encrypt_empty_error() {
+        let accelerator = SimdCryptoAccelerator::default();
+        let result = accelerator.safe_aes_encrypt(&[], b"key");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_sha256_empty_error() {
+        let accelerator = SimdCryptoAccelerator::default();
+        let result = accelerator.safe_sha256(&[]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_aes_encrypt_decrypt_roundtrip() {
+        let accelerator = SimdCryptoAccelerator::default();
+        let plaintext = b"Roundtrip test data!";
+        let key = b"sixteen_byte_key";
+
+        let ciphertext = accelerator
+            .safe_aes_encrypt(plaintext, key)
+            .expect("encrypt");
+        // XOR cipher is its own inverse
+        let decrypted = accelerator
+            .safe_aes_encrypt(&ciphertext, key)
+            .expect("decrypt");
+        assert_eq!(decrypted, plaintext);
+    }
+
+    #[test]
+    fn test_simd_config_default() {
+        let config = SimdConfig::default();
+        assert!(config.prefer_safe_software);
+        assert!(config.enable_timing_attack_protection);
+        assert!(config.use_constant_time_ops);
+    }
+
+    #[test]
+    fn test_simd_config_custom() {
+        let config = SimdConfig {
+            prefer_safe_software: false,
+            enable_timing_attack_protection: false,
+            use_constant_time_ops: false,
+        };
+        let accelerator = SimdCryptoAccelerator::new(config);
+        // Should still work; config doesn't change behavior in current impl
+        let hash = accelerator.safe_sha256(b"test").expect("sha256");
+        assert_eq!(hash.len(), 32);
+    }
 }

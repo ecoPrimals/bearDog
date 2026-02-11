@@ -98,9 +98,7 @@ impl SoloV2Provider {
             let hid_devices = tokio::task::block_in_place(|| {
                 tokio::runtime::Handle::current().block_on(beardog_hid::discover())
             })
-            .map_err(|e| {
-                BearDogError::system(format!("Failed to discover HID devices: {}", e))
-            })?;
+            .map_err(|e| BearDogError::system(format!("Failed to discover HID devices: {}", e)))?;
 
             let mut devices = Vec::new();
 

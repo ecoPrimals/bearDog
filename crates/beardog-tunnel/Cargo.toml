@@ -10,7 +10,6 @@ categories = [ "network-programming", "security", "development-tools",]
 
 [dependencies]
 # BearDog internal crates
-beardog = { path = "../beardog" }
 beardog-config = { path = "../beardog-config" }
 beardog-errors = { path = "../beardog-errors" }
 beardog-genetics = { path = "../beardog-genetics" }

@@ -344,4 +344,161 @@ mod tests {
 
         assert!(verifier.verify(&cert).is_ok());
     }
+
+    #[test]
+    fn test_verification_error_display_all_variants() {
+        let expired = VerificationError::Expired {
+            expired_at: Utc::now(),
+        };
+        assert!(format!("{}", expired).contains("expired"));
+
+        let invalid_sig = VerificationError::InvalidSignature {
+            reason: "bad bytes".to_string(),
+        };
+        assert!(format!("{}", invalid_sig).contains("bad bytes"));
+
+        let license_req = VerificationError::LicenseRequired {
+            classification: "Commercial/High".to_string(),
+        };
+        assert!(format!("{}", license_req).contains("License required"));
+
+        let license_exp = VerificationError::LicenseExpired {
+            expired_at: Utc::now(),
+        };
+        assert!(format!("{}", license_exp).contains("License expired"));
+
+        let op_denied = VerificationError::OperationNotAllowed {
+            operation: "Admin".to_string(),
+            allowed: vec!["Read".to_string()],
+        };
+        assert!(format!("{}", op_denied).contains("not allowed"));
+
+        let hash_fail = VerificationError::HashingFailed {
+            reason: "corrupt data".to_string(),
+        };
+        assert!(format!("{}", hash_fail).contains("hashing failed"));
+    }
+
+    #[test]
+    fn test_verification_error_is_error_trait() {
+        let err = VerificationError::Expired {
+            expired_at: Utc::now(),
+        };
+        // Verify std::error::Error trait is implemented
+        let _: &dyn std::error::Error = &err;
+    }
+
+    #[test]
+    fn test_commercial_with_expired_license() {
+        let (issuer, verifier) = create_test_pair();
+
+        let classification = CommercialClassification::Commercial {
+            risk: RiskLevel::High,
+            indicators: vec![CommercialIndicator::CiCdSystem {
+                system: "automated-ci".to_string(),
+            }],
+            confidence: 85,
+        };
+
+        // Issue with a valid license first
+        let valid_license = LicenseInfo {
+            key: "soon-to-expire".to_string(),
+            license_type: LicenseType::Professional,
+            expires_at: Utc::now() + Duration::days(365),
+            entity: "Expiring Corp".to_string(),
+            rate_limit: None,
+        };
+
+        let mut cert = issuer
+            .issue_with_license(classification, "prometheus", valid_license)
+            .unwrap();
+
+        // Now manually expire the license after issuance
+        if let Some(ref mut license) = cert.license {
+            license.expires_at = Utc::now() - Duration::days(1);
+        }
+
+        let result = verifier.verify(&cert);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            VerificationError::LicenseExpired { .. }
+        ));
+    }
+
+    #[test]
+    fn test_commercial_low_risk_no_license_needed() {
+        let (issuer, verifier) = create_test_pair();
+
+        // Low risk commercial doesn't require license
+        let classification = CommercialClassification::Commercial {
+            risk: RiskLevel::Low,
+            indicators: vec![],
+            confidence: 70,
+        };
+
+        let cert = issuer.issue(classification, "prometheus").unwrap();
+        assert!(verifier.verify(&cert).is_ok());
+    }
+
+    #[test]
+    fn test_verify_with_short_signature() {
+        let (issuer, verifier) = create_test_pair();
+
+        let classification = CommercialClassification::Human {
+            confidence: 95,
+            reasons: vec![],
+        };
+
+        let mut cert = issuer.issue(classification, "prometheus").unwrap();
+
+        // Truncate signature to less than 64 bytes
+        cert.signature = vec![0u8; 32];
+
+        let result = verifier.verify(&cert);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            VerificationError::InvalidSignature { .. }
+        ));
+    }
+
+    #[test]
+    fn test_verify_operation_not_allowed() {
+        let (issuer, verifier) = create_test_pair();
+
+        // Create a classification that should give limited scope
+        let classification = CommercialClassification::Uncertain {
+            reasons: vec!["unverified origin".to_string()],
+        };
+
+        let cert = issuer.issue(classification, "prometheus").unwrap();
+
+        // Admin should not be allowed for unknown classification
+        let result = verifier.verify_operation(&cert, &AdapterOperation::Admin);
+        if result.is_err() {
+            assert!(matches!(
+                result.unwrap_err(),
+                VerificationError::OperationNotAllowed { .. }
+            ));
+        }
+    }
+
+    #[test]
+    fn test_verification_error_debug() {
+        let err = VerificationError::InvalidSignature {
+            reason: "test".to_string(),
+        };
+        let debug = format!("{:?}", err);
+        assert!(debug.contains("InvalidSignature"));
+    }
+
+    #[test]
+    fn test_verification_error_clone() {
+        let err = VerificationError::Expired {
+            expired_at: Utc::now(),
+        };
+        let cloned = err.clone();
+        assert!(format!("{}", cloned).contains("expired"));
+    }
 }

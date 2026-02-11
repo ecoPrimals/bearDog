@@ -138,9 +138,9 @@ pub async fn handle_sign_lineage_certificate(params: Value) -> Result<Value, Bea
 
     use ed25519_dalek::{Signer, SigningKey, VerifyingKey};
 
-    let parent_seed_array: [u8; 32] = parent_seed
-        .try_into()
-        .map_err(|_| BearDogError::internal("Failed to convert parent seed to array".to_string()))?;
+    let parent_seed_array: [u8; 32] = parent_seed.try_into().map_err(|_| {
+        BearDogError::internal("Failed to convert parent seed to array".to_string())
+    })?;
 
     let signing_key = SigningKey::from_bytes(&parent_seed_array);
     let parent_public_key = VerifyingKey::from(&signing_key);
@@ -224,27 +224,27 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
         failure_reason: None,
     };
 
-    let parent_pubkey_bytes = BASE64.decode(&cert.parent_public_key).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid parent_public_key: {}", e))
-    })?;
+    let parent_pubkey_bytes = BASE64
+        .decode(&cert.parent_public_key)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid parent_public_key: {}", e)))?;
 
-    let signature_bytes = BASE64.decode(&cert.parent_signature).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid parent_signature: {}", e))
-    })?;
+    let signature_bytes = BASE64
+        .decode(&cert.parent_signature)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid parent_signature: {}", e)))?;
 
-    let child_pubkey_bytes = BASE64.decode(&cert.child_public_key).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid child_public_key: {}", e))
-    })?;
+    let child_pubkey_bytes = BASE64
+        .decode(&cert.child_public_key)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid child_public_key: {}", e)))?;
 
     use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
-    let parent_pubkey_array: [u8; 32] = parent_pubkey_bytes.try_into().map_err(|_| {
-        BearDogError::invalid_input("parent_public_key must be 32 bytes")
-    })?;
+    let parent_pubkey_array: [u8; 32] = parent_pubkey_bytes
+        .try_into()
+        .map_err(|_| BearDogError::invalid_input("parent_public_key must be 32 bytes"))?;
 
-    let signature_array: [u8; 64] = signature_bytes.try_into().map_err(|_| {
-        BearDogError::invalid_input("parent_signature must be 64 bytes")
-    })?;
+    let signature_array: [u8; 64] = signature_bytes
+        .try_into()
+        .map_err(|_| BearDogError::invalid_input("parent_signature must be 64 bytes"))?;
 
     let verifying_key = VerifyingKey::from_bytes(&parent_pubkey_array)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid public key: {}", e)))?;
@@ -308,8 +308,10 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
         }
     }
 
-    let valid =
-        details.signature_valid && details.not_expired && details.family_id_matches && details.chain_verified;
+    let valid = details.signature_valid
+        && details.not_expired
+        && details.family_id_matches
+        && details.chain_verified;
 
     if valid {
         info!(
@@ -382,8 +384,14 @@ mod tests {
         let resp1: DeriveDeviceSeedResponse = serde_json::from_value(result1)?;
         let resp2: DeriveDeviceSeedResponse = serde_json::from_value(result2)?;
 
-        assert_ne!(resp1.device_seed, resp2.device_seed, "Different devices should have different derived seeds");
-        assert_ne!(resp1.derivation_proof, resp2.derivation_proof, "Derivation proofs should be unique per device");
+        assert_ne!(
+            resp1.device_seed, resp2.device_seed,
+            "Different devices should have different derived seeds"
+        );
+        assert_ne!(
+            resp1.derivation_proof, resp2.derivation_proof,
+            "Derivation proofs should be unique per device"
+        );
 
         Ok(())
     }
@@ -399,10 +407,15 @@ mod tests {
             "device_id": "test-device",
         });
 
-        let resp1: DeriveDeviceSeedResponse = serde_json::from_value(handle_derive_device_seed(params.clone()).await?)?;
-        let resp2: DeriveDeviceSeedResponse = serde_json::from_value(handle_derive_device_seed(params).await?)?;
+        let resp1: DeriveDeviceSeedResponse =
+            serde_json::from_value(handle_derive_device_seed(params.clone()).await?)?;
+        let resp2: DeriveDeviceSeedResponse =
+            serde_json::from_value(handle_derive_device_seed(params).await?)?;
 
-        assert_eq!(resp1.device_seed, resp2.device_seed, "Same inputs should produce same device seed");
+        assert_eq!(
+            resp1.device_seed, resp2.device_seed,
+            "Same inputs should produce same device seed"
+        );
 
         Ok(())
     }
@@ -437,7 +450,8 @@ mod tests {
         }))
         .await?;
 
-        let verify_response: VerifyLineageCertificateResponse = serde_json::from_value(verify_result)?;
+        let verify_response: VerifyLineageCertificateResponse =
+            serde_json::from_value(verify_result)?;
 
         assert!(verify_response.valid, "Certificate should be valid");
         assert!(verify_response.details.signature_valid);
@@ -448,7 +462,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_verify_lineage_certificate_wrong_family() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_verify_lineage_certificate_wrong_family() -> Result<(), Box<dyn std::error::Error>>
+    {
         let parent_seed = BASE64.encode(b"parent_device_seed_for_test!!!!!");
 
         use ed25519_dalek::SigningKey;
@@ -471,7 +486,8 @@ mod tests {
             "trust_anchors": [],
         }))
         .await?;
-        let verify_response: VerifyLineageCertificateResponse = serde_json::from_value(verify_result)?;
+        let verify_response: VerifyLineageCertificateResponse =
+            serde_json::from_value(verify_result)?;
 
         assert!(!verify_response.valid);
         assert!(!verify_response.details.family_id_matches);
@@ -503,7 +519,8 @@ mod tests {
 
         for i in 0..10 {
             let root = root_seed.clone();
-            let entropy = BASE64.encode(format!("entropy_for_device_{:02}_padding!!", i).as_bytes());
+            let entropy =
+                BASE64.encode(format!("entropy_for_device_{:02}_padding!!", i).as_bytes());
             let device_id = format!("device-{}", i);
 
             tasks.spawn(async move {
@@ -527,7 +544,11 @@ mod tests {
             .iter()
             .map(|r| r.get("device_seed").unwrap().as_str().unwrap())
             .collect();
-        assert_eq!(seeds.len(), 10, "All concurrent derivations should be unique");
+        assert_eq!(
+            seeds.len(),
+            10,
+            "All concurrent derivations should be unique"
+        );
 
         Ok(())
     }
@@ -559,7 +580,9 @@ mod tests {
         // Genesis signs certificate for USB Tower
         use ed25519_dalek::SigningKey;
         let usb_signing_key = SigningKey::from_bytes(
-            &BASE64.decode(&usb_seed.device_seed)?[..32].try_into().unwrap()
+            &BASE64.decode(&usb_seed.device_seed)?[..32]
+                .try_into()
+                .unwrap(),
         );
         let usb_pubkey = BASE64.encode(usb_signing_key.verifying_key().to_bytes());
 

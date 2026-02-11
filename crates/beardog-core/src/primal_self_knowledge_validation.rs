@@ -35,7 +35,7 @@ mod self_knowledge_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // Should be able to list its own capabilities
-        let caps = primal.get_self_capabilities().await;
+        let caps = primal.get_self_capabilities();
         assert!(caps.is_ok(), "Should know own capabilities");
     }
 
@@ -70,7 +70,7 @@ mod runtime_discovery_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // Discovery should execute without panicking, even if no services found
-        let result = primal.discover_by_capability(vec![]).await;
+        let result = primal.discover_by_capability(vec![]);
 
         // Even if no primals are found, discovery should execute without errors
         assert!(result.is_ok(), "Discovery should execute successfully");
@@ -81,10 +81,10 @@ mod runtime_discovery_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // First discovery
-        let result1 = primal.discover_by_capability(vec![]).await;
+        let result1 = primal.discover_by_capability(vec![]);
 
         // Second discovery (should query again, not use static list)
-        let result2 = primal.discover_by_capability(vec![]).await;
+        let result2 = primal.discover_by_capability(vec![]);
 
         // Both should succeed (even if empty)
         assert!(result1.is_ok());
@@ -97,7 +97,7 @@ mod runtime_discovery_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // No configuration loaded, should still attempt discovery
-        let result = primal.discover_by_capability(vec![]).await;
+        let result = primal.discover_by_capability(vec![]);
 
         // Should not error even if no configuration
         assert!(
@@ -124,7 +124,7 @@ mod sovereignty_tests {
         let identity = primal.get_self_identity();
         assert!(identity.is_ok(), "Primal should know its own identity");
 
-        let caps = primal.get_self_capabilities().await;
+        let caps = primal.get_self_capabilities();
         assert!(caps.is_ok(), "Primal should know its own capabilities");
     }
 
@@ -134,7 +134,7 @@ mod sovereignty_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // Discovery should execute (not fail with "not implemented")
-        let result = primal.discover_by_capability(vec![]).await;
+        let result = primal.discover_by_capability(vec![]);
 
         // Should attempt discovery even if mechanisms aren't fully implemented yet
         assert!(result.is_ok(), "Discovery mechanism should be present");
@@ -155,15 +155,15 @@ mod integration_validation {
         assert!(identity.is_ok());
 
         // 2. Primal can query its capabilities
-        let self_caps = primal.get_self_capabilities().await;
+        let self_caps = primal.get_self_capabilities();
         assert!(self_caps.is_ok());
 
         // 3. Primal can attempt discovery (even if none found)
-        let discovered = primal.discover_by_capability(vec![]).await;
+        let discovered = primal.discover_by_capability(vec![]);
         assert!(discovered.is_ok());
 
         // 4. Discovery is repeatable
-        let discovered2 = primal.discover_by_capability(vec![]).await;
+        let discovered2 = primal.discover_by_capability(vec![]);
         assert!(discovered2.is_ok());
     }
 

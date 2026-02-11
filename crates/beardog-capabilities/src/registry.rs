@@ -376,11 +376,7 @@ mod tests {
 
     #[test]
     fn test_discovery_config() {
-        let registry = CapabilityRegistry::new(
-            "my-primal",
-            "storage",
-            "http://localhost:9000",
-        );
+        let registry = CapabilityRegistry::new("my-primal", "storage", "http://localhost:9000");
 
         let config = registry.discovery_config();
         assert_eq!(config.http, "http://localhost:9000/capabilities");
@@ -391,11 +387,7 @@ mod tests {
 
     #[test]
     fn test_empty_registry() {
-        let registry = CapabilityRegistry::new(
-            "empty-primal",
-            "test",
-            "http://localhost:8080",
-        );
+        let registry = CapabilityRegistry::new("empty-primal", "test", "http://localhost:8080");
 
         assert!(registry.list_capabilities().is_empty());
         let advertisement = registry.build_advertisement();
@@ -405,11 +397,8 @@ mod tests {
 
     #[test]
     fn test_register_multiple_and_query() {
-        let registry = CapabilityRegistry::new(
-            "multi-cap-primal",
-            "compute",
-            "http://localhost:8080",
-        );
+        let registry =
+            CapabilityRegistry::new("multi-cap-primal", "compute", "http://localhost:8080");
 
         for i in 1..=5 {
             let id = format!("capability_{}", i);
@@ -426,11 +415,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_advertise() {
-        let registry = CapabilityRegistry::new(
-            "advertise-test",
-            "test",
-            "http://localhost:8080",
-        );
+        let registry = CapabilityRegistry::new("advertise-test", "test", "http://localhost:8080");
 
         let metadata = CapabilityMetadata::new("test", "1.0");
         registry.register("test", MockCapability, metadata);

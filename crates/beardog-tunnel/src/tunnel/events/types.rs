@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+/// Tunnel security level configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityLevel {
     /// Number of level
@@ -14,11 +15,14 @@ pub struct SecurityLevel {
     pub authentication_strength: u32,
     /// The threat detection accuracy value
     pub threat_detection_accuracy: f64,
+    /// Runtime performance overhead factor
     pub performance_overhead: f64,
 }
 
+/// Network evidence for security event analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkEvidence {
+    /// When the evidence was captured
     pub timestamp: SystemTime,
     /// The source ip value
     pub source_ip: String,
@@ -45,6 +49,7 @@ pub enum OptimizationType {
     Reliability,
 }
 
+/// Reason for tunnel disconnection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DisconnectReason {
     /// State indicating userrequested
@@ -57,6 +62,7 @@ pub enum DisconnectReason {
     Unknown,
 }
 
+/// Threat severity classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ThreatLevel {
     /// Represents low variant
@@ -69,6 +75,7 @@ pub enum ThreatLevel {
     Critical,
 }
 
+/// Performance impact classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PerformanceImpact {
     /// No none specified

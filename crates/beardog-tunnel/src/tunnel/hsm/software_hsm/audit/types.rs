@@ -7,11 +7,17 @@ use std::collections::HashMap;
 /// Audit log entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditLogEntry {
+    /// When the operation occurred
     pub timestamp: DateTime<Utc>,
+    /// Name of the operation performed
     pub operation: String,
+    /// User who initiated the operation (if authenticated)
     pub user_id: Option<String>,
+    /// Key involved in the operation (if applicable)
     pub key_id: Option<String>,
+    /// Outcome of the operation
     pub result: OperationResult,
+    /// Additional context about the operation
     pub metadata: HashMap<String, String>,
 }
 
@@ -44,19 +50,28 @@ impl AuditLogEntry {
 /// Operation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OperationResult {
+    /// Operation completed successfully
     Success,
+    /// Operation failed with the given error message
     Failure(String),
 }
 
 /// Audit log filter
 #[derive(Debug, Clone, Default)]
 pub struct AuditLogFilter {
+    /// Filter by operation name
     pub operation: Option<String>,
+    /// Filter by user identifier
     pub user_id: Option<String>,
+    /// Filter by key identifier
     pub key_id: Option<String>,
+    /// Filter by operation result
     pub result: Option<OperationResult>,
+    /// Filter entries after this time
     pub from_time: Option<DateTime<Utc>>,
+    /// Filter entries before this time
     pub to_time: Option<DateTime<Utc>>,
+    /// Maximum number of entries to return
     pub limit: Option<usize>,
 }
 
@@ -100,10 +115,12 @@ impl AuditLogFilter {
 /// Audit logger trait
 #[async_trait::async_trait]
 pub trait AuditLogger: Send + Sync {
+    /// Record an audit log entry
     async fn log_operation(
         &self,
         operation: &AuditLogEntry,
     ) -> Result<(), beardog_errors::BearDogError>;
+    /// Retrieve audit log entries matching the given filter
     async fn get_audit_log(
         &self,
         filter: &AuditLogFilter,

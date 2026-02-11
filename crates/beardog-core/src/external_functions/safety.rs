@@ -119,7 +119,7 @@ impl SafetyChecker {
     /// # Errors
     ///
     /// Returns an error if policy validation fails
-    pub async fn load_policy(&mut self, policy: SafetyPolicy) -> Result<(), BearDogError> {
+    pub fn load_policy(&mut self, policy: SafetyPolicy) -> Result<(), BearDogError> {
         // Validate policy before loading
         if policy.policy_id.is_empty() {
             return Err(BearDogError::validation("Policy ID cannot be empty"));
@@ -140,7 +140,7 @@ impl SafetyChecker {
     /// # Errors
     ///
     /// Returns an error if policy retrieval fails
-    pub async fn list_policies(&self) -> Result<Vec<String>, BearDogError> {
+    pub fn list_policies(&self) -> Result<Vec<String>, BearDogError> {
         Ok(self.loaded_policies.keys().cloned().collect())
     }
 
@@ -149,7 +149,7 @@ impl SafetyChecker {
     /// # Errors
     ///
     /// Returns an error if policy doesn't exist
-    pub async fn remove_policy(&mut self, policy_id: &str) -> Result<(), BearDogError> {
+    pub fn remove_policy(&mut self, policy_id: &str) -> Result<(), BearDogError> {
         if self.loaded_policies.remove(policy_id).is_none() {
             return Err(BearDogError::validation("Policy not found"));
         }

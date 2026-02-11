@@ -318,4 +318,67 @@ mod lib_tests {
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("WorkflowConfig"));
     }
+
+    #[tokio::test]
+    async fn test_beardog_workflow_system_execute_workflow() {
+        use workflows::{
+            ExampleWorkflow, ExampleWorkflowProcessor, InMemoryWorkflowRepository,
+            LoggingWorkflowObserver, ProcessingContext,
+        };
+
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("exec-processor");
+        let observer = LoggingWorkflowObserver::new("exec-observer");
+
+        let mut system = BearDogWorkflowSystem::new(repo, processor, observer);
+
+        let workflow = ExampleWorkflow::new("exec-1", "Execute Test");
+        let context = ProcessingContext::default();
+
+        let result = system.execute_workflow(workflow, context).await;
+        assert!(result.is_ok());
+        let completed = result.unwrap();
+        assert!(matches!(
+            completed.status,
+            workflows::ExampleWorkflowStatus::Completed
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_beardog_workflow_system_execute_multiple_concurrent() {
+        use std::sync::Arc;
+        use tokio::sync::Mutex;
+        use workflows::{
+            ExampleWorkflow, ExampleWorkflowProcessor, InMemoryWorkflowRepository,
+            LoggingWorkflowObserver, ProcessingContext,
+        };
+
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("concurrent-proc");
+        let observer = LoggingWorkflowObserver::new("concurrent-obs");
+
+        let system = Arc::new(Mutex::new(BearDogWorkflowSystem::new(
+            repo, processor, observer,
+        )));
+
+        let mut handles = vec![];
+        for i in 0..4 {
+            let sys = Arc::clone(&system);
+            handles.push(tokio::spawn(async move {
+                let mut locked = sys.lock().await;
+                let workflow = ExampleWorkflow::new(
+                    &format!("concurrent-{}", i),
+                    &format!("Concurrent Test {}", i),
+                );
+                locked
+                    .execute_workflow(workflow, ProcessingContext::default())
+                    .await
+            }));
+        }
+
+        for h in handles {
+            let result = h.await.unwrap();
+            assert!(result.is_ok());
+        }
+    }
 }

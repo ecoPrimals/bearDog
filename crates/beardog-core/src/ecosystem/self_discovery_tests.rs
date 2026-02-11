@@ -113,7 +113,7 @@ mod tests {
         let identity = create_test_identity();
         let config = create_test_config();
 
-        let manager = SelfDiscoveryManager::new(identity, config).await;
+        let manager = SelfDiscoveryManager::new(identity, config);
         assert!(manager.is_ok());
 
         let manager = manager.unwrap();
@@ -125,9 +125,7 @@ mod tests {
         let identity = create_test_identity();
         let config = create_test_config();
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         let identity = manager.identity();
         assert_eq!(identity.name, "TestService");
@@ -140,9 +138,8 @@ mod tests {
         let identity = create_test_identity();
         let config = create_test_config();
 
-        let mut manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let mut manager =
+            SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         manager.update_health_status(HealthStatus::Degraded);
         assert_eq!(manager.identity().health_status, HealthStatus::Degraded);
@@ -159,9 +156,7 @@ mod tests {
         let identity = create_test_identity();
         let config = create_test_config();
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         let result = manager.register_self();
         assert!(result.is_ok());
@@ -173,9 +168,7 @@ mod tests {
         let mut config = create_test_config();
         config.required_capabilities = vec![ServiceCapabilityType::Security];
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         let result = manager.discover_required_capabilities();
         // Should fail because no services are found
@@ -189,9 +182,7 @@ mod tests {
         config.optional_capabilities =
             vec![ServiceCapabilityType::Custom("OptionalFeature".to_string())];
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         let result = manager.discover_optional_capabilities();
         assert!(result.is_ok());
@@ -256,9 +247,7 @@ mod tests {
         let identity = create_test_identity();
         let config = create_test_config();
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         let debug_str = format!("{:?}", manager);
         assert!(debug_str.contains("SelfDiscoveryManager"));
@@ -275,9 +264,7 @@ mod tests {
 
         let config = create_test_config();
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         assert_eq!(manager.identity().capabilities.len(), 3);
     }
@@ -292,9 +279,7 @@ mod tests {
             "https://discovery3.test.com".to_string(),
         ];
 
-        let manager = SelfDiscoveryManager::new(identity, config)
-            .await
-            .expect("Should create manager");
+        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
 
         let result = manager.register_self();
         assert!(result.is_ok());

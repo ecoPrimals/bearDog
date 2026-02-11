@@ -29,7 +29,7 @@
 //! use beardog_core::self_knowledge::SimpleCapability;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
-//! let mut router = CapabilityRouter::new().await?;
+//! let mut router = CapabilityRouter::new()?;
 //!
 //! // Route by capability, not by service name!
 //! let decision = router.route(
@@ -220,7 +220,7 @@ impl Default for RequestContext {
 
 impl CapabilityRouter {
     /// Create a new capability router
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🧭 Initializing capability-based router...");
 
         let discovery = PrimalDiscovery::from_env()?;
@@ -463,7 +463,7 @@ mod tests {
     async fn test_router_initialization() {
         std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
 
-        let router = CapabilityRouter::new().await.unwrap();
+        let router = CapabilityRouter::new().unwrap();
         assert_eq!(router.default_strategy, SelectionStrategy::HighestTrust);
         assert!(router.load_tracker.is_empty());
         assert!(router.rr_counters.is_empty());

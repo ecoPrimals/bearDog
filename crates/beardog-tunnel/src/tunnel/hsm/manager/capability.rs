@@ -91,15 +91,21 @@ pub struct DefaultHsmCapabilityDetector {
     provider_capabilities: Arc<RwLock<HashMap<String, Vec<HsmCapability>>>>,
 }
 
+impl Default for DefaultHsmCapabilityDetector {
+    fn default() -> Self {
+        Self {
+            provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+        }
+    }
+}
+
 impl DefaultHsmCapabilityDetector {
     /// Create a new capability detector
     ///
     /// # Errors
     /// Returns an error if initialization fails
     pub fn new() -> Result<Self, BearDogError> {
-        Ok(Self {
-            provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-        })
+        Ok(Self::default())
     }
 
     /// Check hardware HSM availability

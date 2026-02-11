@@ -560,4 +560,201 @@ mod tests {
         let memory = ConstMetrics::memory_requirements(8192, 10, 512, 64);
         assert_eq!(memory, 8192 * 10 + 512 * 64 + 10 * 64);
     }
+
+    // ── Additional edge-case coverage ───────────────────────────────
+
+    #[test]
+    fn test_const_config_default() {
+        let config: ConstConfig = ConstConfig::default();
+        assert_eq!(config.buffer_size(), 4096);
+        assert_eq!(config.cache_size(), 512);
+        assert!(config.logging_enabled());
+        assert_eq!(config.hash_rounds(), 12);
+    }
+
+    #[test]
+    fn test_const_config_total_memory_usage() {
+        let config: ConstConfig = ConstConfig::default();
+        let expected = 4096 * 512 + 512 * 64;
+        assert_eq!(config.total_memory_usage(), expected);
+    }
+
+    #[test]
+    fn test_const_config_validate_ok() {
+        let config: ConstConfig = ConstConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_const_config_validate_memory_limit() {
+        // Create a config with huge buffer * cache to exceed 100MB
+        let config: ConstConfig<524288, 512, true, 12> = ConstConfig::default();
+        let result = config.validate();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_const_config_validate_buffer_too_large() {
+        // Buffer > 1MB limit
+        let config: ConstConfig<{ 1024 * 1024 + 1 }, 8, true, 12> = ConstConfig::default();
+        let result = config.validate();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_const_config_new_valid() {
+        let result = ConstConfig::<4096, 512, true, 12>::new();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_const_config_new_buffer_zero() {
+        let result = ConstConfig::<0, 512, true, 12>::new();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Buffer size must be greater than 0");
+    }
+
+    #[test]
+    fn test_const_config_new_cache_zero() {
+        let result = ConstConfig::<4096, 0, true, 12>::new();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Cache size must be greater than 0");
+    }
+
+    #[test]
+    fn test_const_config_new_hash_rounds_too_low() {
+        let result = ConstConfig::<4096, 512, true, 3>::new();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Hash rounds must be at least 4 for security"
+        );
+    }
+
+    #[test]
+    fn test_const_config_new_hash_rounds_too_high() {
+        let result = ConstConfig::<4096, 512, true, 32>::new();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Hash rounds must not exceed 31 to prevent DoS"
+        );
+    }
+
+    #[test]
+    fn test_const_config_logging_disabled() {
+        let config: ConstConfig<4096, 512, false, 12> = ConstConfig::default();
+        assert!(!config.logging_enabled());
+    }
+
+    #[test]
+    fn test_const_buffer_default() {
+        let buffer = ConstBuffer::<64>::default();
+        assert_eq!(buffer.capacity(), 64);
+        assert_eq!(buffer.len(), 0);
+        assert!(buffer.is_empty());
+    }
+
+    #[test]
+    fn test_const_buffer_full() {
+        let mut buffer = ConstBuffer::<2>::new().unwrap();
+        assert!(!buffer.is_full());
+        assert_eq!(buffer.remaining(), 2);
+
+        buffer.push(1).unwrap();
+        assert!(!buffer.is_full());
+        assert_eq!(buffer.remaining(), 1);
+
+        buffer.push(2).unwrap();
+        assert!(buffer.is_full());
+        assert_eq!(buffer.remaining(), 0);
+    }
+
+    #[test]
+    fn test_const_buffer_push_when_full() {
+        let mut buffer = ConstBuffer::<1>::new().unwrap();
+        buffer.push(42).unwrap();
+        let err = buffer.push(99).unwrap_err();
+        assert!(err.to_string().contains("Buffer full"));
+    }
+
+    #[test]
+    fn test_const_buffer_pop_when_empty() {
+        let mut buffer = ConstBuffer::<4>::new().unwrap();
+        assert_eq!(buffer.pop(), None);
+    }
+
+    #[test]
+    fn test_const_buffer_as_slice() {
+        let mut buffer = ConstBuffer::<8>::new().unwrap();
+        buffer.push(10).unwrap();
+        buffer.push(20).unwrap();
+        buffer.push(30).unwrap();
+        assert_eq!(buffer.as_slice(), &[10, 20, 30]);
+    }
+
+    #[test]
+    fn test_const_buffer_clear() {
+        let mut buffer = ConstBuffer::<8>::new().unwrap();
+        buffer.push(1).unwrap();
+        buffer.push(2).unwrap();
+        buffer.clear();
+        assert!(buffer.is_empty());
+        assert_eq!(buffer.len(), 0);
+        assert_eq!(buffer.as_slice(), &[] as &[u8]);
+    }
+
+    #[test]
+    fn test_const_buffer_zero_size_error() {
+        let result = ConstBuffer::<0>::new();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Buffer size must be greater than 0");
+    }
+
+    #[test]
+    fn test_const_math_edge_cases() {
+        assert_eq!(ConstMath::factorial(0), 1);
+        assert_eq!(ConstMath::factorial(1), 1);
+        assert_eq!(ConstMath::pow(5, 0), 1);
+        assert_eq!(ConstMath::pow(5, 1), 5);
+        assert_eq!(ConstMath::pow(2, 3), 8); // odd exp
+        assert_eq!(ConstMath::pow(3, 4), 81); // even exp
+        assert_eq!(ConstMath::gcd(10, 0), 10);
+        assert!(!ConstMath::is_prime(0));
+        assert!(!ConstMath::is_prime(1));
+        assert!(ConstMath::is_prime(2));
+        assert!(!ConstMath::is_prime(4));
+        assert!(ConstMath::is_prime(7));
+        assert_eq!(ConstMath::fibonacci(0), 0);
+        assert_eq!(ConstMath::fibonacci(1), 1);
+    }
+
+    #[test]
+    fn test_const_tables_is_small_prime_above_1000() {
+        assert!(ConstTables::is_small_prime(1009)); // prime > 1000
+        assert!(!ConstTables::is_small_prime(1010)); // composite > 1000
+    }
+
+    #[test]
+    fn test_const_tables_fast_sin_wraparound() {
+        let sin_360 = ConstTables::fast_sin(360);
+        let sin_0 = ConstTables::fast_sin(0);
+        assert!((sin_360 - sin_0).abs() < f64::EPSILON as f32);
+    }
+
+    #[test]
+    fn test_const_str_eq_different_lengths() {
+        assert!(!ConstStr::eq("hi", "hello"));
+    }
+
+    #[test]
+    fn test_const_str_hash_empty() {
+        assert_eq!(ConstStr::hash(""), 0);
+    }
+
+    #[test]
+    fn test_const_metrics_zero_values() {
+        let throughput = ConstMetrics::theoretical_throughput(64, 1, 1);
+        assert!(throughput > 0);
+    }
 }

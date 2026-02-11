@@ -25,28 +25,41 @@ pub struct MemoryHsmStorage {
 /// Stored key with encryption
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StoredKey {
+    /// Unique key identifier
     pub key_id: String,
+    /// AES-256-GCM encrypted key material
     pub encrypted_data: Vec<u8>,
+    /// Nonce used for encryption
     pub nonce: Vec<u8>,
+    /// Key metadata (type, algorithm, size)
     pub metadata: KeyMetadata,
+    /// When the key was stored
     pub created_at: DateTime<Utc>,
+    /// When the key was last accessed
     pub last_accessed: DateTime<Utc>,
 }
 
 /// Key metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KeyMetadata {
+    /// Key type (e.g., "symmetric", "asymmetric")
     pub key_type: String,
+    /// Algorithm name (e.g., "AES-256-GCM")
     pub algorithm: String,
+    /// Key size in bytes
     pub size_bytes: usize,
 }
 
 /// Storage statistics
 #[derive(Clone, Debug, Default)]
 pub struct StorageStats {
+    /// Total number of keys in storage
     pub total_keys: usize,
+    /// Total encrypted data size in bytes
     pub total_size: usize,
+    /// Number of operations performed
     pub operations_count: u64,
+    /// Timestamp of the last operation
     pub last_operation: Option<DateTime<Utc>>,
 }
 

@@ -12,7 +12,9 @@ use tracing::{info, warn};
 
 pub mod android_safe;
 pub mod biometric;
+/// iOS safe FFI wrappers
 pub mod ios_safe;
+/// Safe FFI trait definitions for platform-specific HSM operations
 pub mod traits;
 
 // Export traits but be careful about HsmKey re-export

@@ -28,19 +28,29 @@ pub enum IpcMessage {
 
     /// Register client
     Register {
+        /// Unique primal identifier
         primal_id: String,
+        /// Capabilities offered by this primal
         capabilities: Vec<String>,
     },
 
     /// Heartbeat
-    Ping { from: String },
+    Ping {
+        /// Sender primal identifier
+        from: String,
+    },
 
     /// Heartbeat response
-    Pong { to: String },
+    Pong {
+        /// Recipient primal identifier
+        to: String,
+    },
 
     /// Generic event notification
     Event {
+        /// Event type identifier
         event_type: String,
+        /// Event payload
         data: serde_json::Value,
     },
 }

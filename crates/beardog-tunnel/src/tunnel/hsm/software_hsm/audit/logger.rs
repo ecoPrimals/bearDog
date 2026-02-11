@@ -11,12 +11,19 @@ use std::sync::Arc;
 /// Context for crypto operations logging
 #[derive(Debug, Clone)]
 pub struct CryptoOperationLog {
+    /// Type of crypto operation performed
     pub operation_type: String,
+    /// User who initiated the operation
     pub user_id: Option<String>,
+    /// Key used in the operation
     pub key_id: Option<String>,
+    /// Algorithm used
     pub algorithm: String,
+    /// Size of data processed in bytes
     pub data_size: usize,
+    /// Whether the operation succeeded
     pub success: bool,
+    /// Processing time in milliseconds
     pub processing_time_ms: Option<u64>,
 }
 

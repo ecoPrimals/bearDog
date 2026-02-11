@@ -271,7 +271,7 @@ impl PrimalDiscovery {
 
         // 3. Service registry (if configured)
         if primals.is_empty() {
-            if let Ok(registry_primals) = self.discover_via_registry(capability).await {
+            if let Ok(registry_primals) = self.discover_via_registry(capability) {
                 primals.extend(registry_primals);
             }
         }
@@ -357,7 +357,7 @@ impl PrimalDiscovery {
     }
 
     /// Discover via service registry (if configured)
-    async fn discover_via_registry(&self, _capability: &str) -> Result<Vec<DiscoveredPrimal>> {
+    fn discover_via_registry(&self, _capability: &str) -> Result<Vec<DiscoveredPrimal>> {
         // Service registry URL from environment (not hardcoded)
         let registry_url = std::env::var("BEARDOG_SERVICE_REGISTRY_URL").ok();
 
@@ -366,7 +366,7 @@ impl PrimalDiscovery {
             return Ok(Vec::new());
         }
 
-        // Future: Query service registry
+        // Future: Query service registry (will become async when registry client is implemented)
         Ok(Vec::new())
     }
 
@@ -561,7 +561,7 @@ impl PrimalSelfKnowledge {
     /// # Errors
     ///
     /// Returns error if capabilities cannot be retrieved or converted.
-    pub async fn get_self_capabilities(&self) -> Result<Vec<UniversalCapabilityType>> {
+    pub fn get_self_capabilities(&self) -> Result<Vec<UniversalCapabilityType>> {
         // Convert string capabilities to UniversalCapabilityType
         // This is a simplified mapping - real implementation would be more comprehensive
         Ok(vec![]) // Placeholder - capabilities are stored as strings in PrimalIdentity
@@ -572,7 +572,7 @@ impl PrimalSelfKnowledge {
     /// # Errors
     ///
     /// Returns error if the discovery mechanism fails or encounters network issues.
-    pub async fn discover_by_capability(
+    pub fn discover_by_capability(
         &self,
         _capabilities: Vec<UniversalCapabilityType>,
     ) -> Result<Vec<UniversalServiceDescriptor>> {

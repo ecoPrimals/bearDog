@@ -275,12 +275,12 @@ impl PrimalDiscovery {
         let method = self.method.clone();
 
         match method {
-            DiscoveryMethod::Environment => self.discover_from_env_vars(&env_vars, &query).await,
+            DiscoveryMethod::Environment => self.discover_from_env_vars(&env_vars, &query),
             DiscoveryMethod::Multi(methods) => {
                 // Try each method in order
                 for method in methods {
                     if matches!(method, DiscoveryMethod::Environment) {
-                        if let Ok(results) = self.discover_from_env_vars(&env_vars, &query).await {
+                        if let Ok(results) = self.discover_from_env_vars(&env_vars, &query) {
                             if !results.is_empty() {
                                 return Ok(results);
                             }
@@ -307,7 +307,7 @@ impl PrimalDiscovery {
         let method = self.method.clone();
 
         match method {
-            DiscoveryMethod::Environment => self.discover_from_env(&query).await,
+            DiscoveryMethod::Environment => self.discover_from_env(&query),
             DiscoveryMethod::UniversalPrimalAuthority { registry_addr } => {
                 self.discover_from_upa(&query, &registry_addr).await
             }
@@ -323,19 +323,18 @@ impl PrimalDiscovery {
     ///
     /// This method reads from the actual environment at runtime, making it suitable
     /// for production but not concurrent-safe for tests.
-    async fn discover_from_env(
+    fn discover_from_env(
         &mut self,
         query: &DiscoveryQuery,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         self.discover_from_env_vars(&env::vars().collect(), query)
-            .await
     }
 
     /// Discover from explicit environment map
     ///
     /// This method accepts an explicit environment map, making it concurrent-safe
     /// for testing while maintaining the same logic as `discover_from_env()`.
-    async fn discover_from_env_vars(
+    fn discover_from_env_vars(
         &mut self,
         env_vars: &HashMap<String, String>,
         query: &DiscoveryQuery,
@@ -589,9 +588,7 @@ impl PrimalDiscovery {
 
         #[cfg(not(feature = "mdns"))]
         {
-            debug!(
-                "mDNS feature not enabled. Enable with: cargo build --features mdns"
-            );
+            debug!("mDNS feature not enabled. Enable with: cargo build --features mdns");
             Ok(Vec::new())
         }
     }
@@ -642,7 +639,7 @@ impl PrimalDiscovery {
 
         for method in methods {
             let result = match method {
-                DiscoveryMethod::Environment => self.discover_from_env(query).await,
+                DiscoveryMethod::Environment => self.discover_from_env(query),
                 DiscoveryMethod::UniversalPrimalAuthority { registry_addr } => {
                     self.discover_from_upa(query, registry_addr).await
                 }
