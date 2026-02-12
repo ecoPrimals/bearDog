@@ -243,4 +243,3 @@ fn test_device_manager_concurrent_creation() {
         h.join().unwrap();
     }
 }
-

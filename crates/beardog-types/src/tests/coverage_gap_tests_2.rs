@@ -83,11 +83,11 @@ mod compliance_tests {
 // canonical/config/domains/workflow/ (engine, mod, retry, persistence, escalation)
 // ===========================================================================
 mod workflow_domain_tests {
-    use crate::canonical::config::domains::workflow::ConsolidatedWorkflowConfig;
     use crate::canonical::config::domains::workflow::engine::WorkflowEngineConfig;
-    use crate::canonical::config::domains::workflow::retry::RetryConfig;
-    use crate::canonical::config::domains::workflow::persistence::PersistenceConfig;
     use crate::canonical::config::domains::workflow::escalation::WorkflowEscalationConfig;
+    use crate::canonical::config::domains::workflow::persistence::PersistenceConfig;
+    use crate::canonical::config::domains::workflow::retry::RetryConfig;
+    use crate::canonical::config::domains::workflow::ConsolidatedWorkflowConfig;
 
     #[test]
     fn test_consolidated_workflow_config_default() {

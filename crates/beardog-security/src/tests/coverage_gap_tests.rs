@@ -120,7 +120,10 @@ mod coverage_gap_tests {
 
         #[test]
         fn test_resource_classification_variants() {
-            assert_eq!(ResourceClassification::Public, ResourceClassification::Public);
+            assert_eq!(
+                ResourceClassification::Public,
+                ResourceClassification::Public
+            );
             assert_ne!(
                 ResourceClassification::Confidential,
                 ResourceClassification::TopSecret
@@ -250,14 +253,12 @@ mod coverage_gap_tests {
         fn test_extended_metrics() {
             let ext = ExtendedMetrics {
                 base_metrics: KeyManagerMetrics::default(),
-                recent_operations: vec![
-                    OperationMetrics {
-                        operation_type: "store".to_string(),
-                        duration: Duration::from_millis(1),
-                        success: true,
-                        error: None,
-                    },
-                ],
+                recent_operations: vec![OperationMetrics {
+                    operation_type: "store".to_string(),
+                    duration: Duration::from_millis(1),
+                    success: true,
+                    error: None,
+                }],
                 timestamp: chrono::Utc::now(),
             };
             assert_eq!(ext.base_metrics.total_keys, 0);
@@ -891,4 +892,3 @@ mod coverage_gap_tests {
         }
     }
 }
-

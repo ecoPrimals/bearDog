@@ -3,8 +3,8 @@
 
 #[cfg(test)]
 mod resilience_methods_tests {
-    use crate::canonical::providers_unified::resilience::*;
     use crate::canonical::config::r#trait::BearDogConfig;
+    use crate::canonical::providers_unified::resilience::*;
     use std::time::Duration;
 
     #[test]
@@ -337,7 +337,14 @@ mod hsm_keys_methods_tests {
         assert!(key.metadata.tags.contains(&"production".to_string()));
         // Adding same tag again should not duplicate
         key.add_tag("production".to_string());
-        assert_eq!(key.metadata.tags.iter().filter(|t| *t == "production").count(), 1);
+        assert_eq!(
+            key.metadata
+                .tags
+                .iter()
+                .filter(|t| *t == "production")
+                .count(),
+            1
+        );
         key.remove_tag("production");
         assert!(!key.metadata.tags.contains(&"production".to_string()));
     }
@@ -354,7 +361,7 @@ mod hsm_keys_methods_tests {
     fn test_hsm_key_is_expired() {
         let mut key = HsmKey::new("key-1".into(), "AES".into(), 256);
         assert!(!key.is_expired()); // No expiry set
-        // Set to past
+                                    // Set to past
         key.expires_at = Some(SystemTime::now() - Duration::from_secs(100));
         assert!(key.is_expired());
     }
@@ -501,7 +508,9 @@ mod hsm_keys_methods_tests {
     #[test]
     fn test_operation_result_variants() {
         let _ = OperationResult::Success;
-        let _ = OperationResult::Failed { error: "test error".into() };
+        let _ = OperationResult::Failed {
+            error: "test error".into(),
+        };
         let _ = OperationResult::Pending;
         let _ = OperationResult::Cancelled;
     }
@@ -680,13 +689,20 @@ mod hsm_config_methods_tests {
     #[test]
     fn test_auth_method_variants() {
         let _ = AuthMethod::None;
-        let _ = AuthMethod::Password { password: "secret".to_string() };
+        let _ = AuthMethod::Password {
+            password: "secret".to_string(),
+        };
         let _ = AuthMethod::Certificate {
             cert_path: "/path/cert".to_string(),
             key_path: "/path/key".to_string(),
         };
-        let _ = AuthMethod::Token { token_id: 1, pin: None };
-        let _ = AuthMethod::Biometric { method: "fingerprint".to_string() };
+        let _ = AuthMethod::Token {
+            token_id: 1,
+            pin: None,
+        };
+        let _ = AuthMethod::Biometric {
+            method: "fingerprint".to_string(),
+        };
         assert!(matches!(AuthMethod::default(), AuthMethod::None));
     }
 
@@ -808,8 +824,7 @@ mod hsm_status_methods_tests {
 
     #[test]
     fn test_hsm_operation_result_with_metadata() {
-        let r = HsmOperationResult::<String>::success("ok".into())
-            .with_metadata("key", "value");
+        let r = HsmOperationResult::<String>::success("ok".into()).with_metadata("key", "value");
         assert!(r.metadata.contains_key("key"));
     }
 
@@ -936,8 +951,14 @@ mod adapter_certificate_tests {
     fn test_adapter_classification() {
         assert!(!AdapterClassification::Human.requires_payment());
         assert!(AdapterClassification::Commercial.requires_payment());
-        assert_eq!(AdapterClassification::Human.description(), "Human usage (free)");
-        assert_eq!(AdapterClassification::Commercial.description(), "Commercial usage (paid)");
+        assert_eq!(
+            AdapterClassification::Human.description(),
+            "Human usage (free)"
+        );
+        assert_eq!(
+            AdapterClassification::Commercial.description(),
+            "Commercial usage (paid)"
+        );
     }
 }
 
@@ -975,11 +996,26 @@ mod monitoring_level_tests {
 
     #[test]
     fn test_typical_interval() {
-        assert_eq!(MonitoringLevel::Minimal.typical_interval(), Duration::from_secs(300));
-        assert_eq!(MonitoringLevel::Basic.typical_interval(), Duration::from_secs(120));
-        assert_eq!(MonitoringLevel::Standard.typical_interval(), Duration::from_secs(60));
-        assert_eq!(MonitoringLevel::Detailed.typical_interval(), Duration::from_secs(30));
-        assert_eq!(MonitoringLevel::Verbose.typical_interval(), Duration::from_secs(10));
+        assert_eq!(
+            MonitoringLevel::Minimal.typical_interval(),
+            Duration::from_secs(300)
+        );
+        assert_eq!(
+            MonitoringLevel::Basic.typical_interval(),
+            Duration::from_secs(120)
+        );
+        assert_eq!(
+            MonitoringLevel::Standard.typical_interval(),
+            Duration::from_secs(60)
+        );
+        assert_eq!(
+            MonitoringLevel::Detailed.typical_interval(),
+            Duration::from_secs(30)
+        );
+        assert_eq!(
+            MonitoringLevel::Verbose.typical_interval(),
+            Duration::from_secs(10)
+        );
     }
 }
 
@@ -1251,7 +1287,8 @@ mod config_trait_methods_tests {
             Duration::from_secs(1),
             Duration::from_secs(10),
             "test"
-        ).is_ok());
+        )
+        .is_ok());
     }
 
     #[test]
@@ -1290,10 +1327,14 @@ mod config_trait_methods_tests {
     #[test]
     fn test_validate_field_consistency() {
         assert!(validation::validate_field_consistency(
-            true, "field_a", true, "field_b",
+            true,
+            "field_a",
+            true,
+            "field_b",
             |a: &bool, b: &bool| *a == *b,
             "fields must match"
-        ).is_ok());
+        )
+        .is_ok());
     }
 
     #[test]
@@ -1305,11 +1346,19 @@ mod config_trait_methods_tests {
     #[test]
     fn test_validate_environment_compatibility() {
         assert!(validation::validate_environment_compatibility(
-            "development", "debug_mode", "true", false
-        ).is_ok());
+            "development",
+            "debug_mode",
+            "true",
+            false
+        )
+        .is_ok());
         assert!(validation::validate_environment_compatibility(
-            "production", "debug_mode", "true", false
-        ).is_err());
+            "production",
+            "debug_mode",
+            "true",
+            false
+        )
+        .is_err());
     }
 }
 
@@ -1750,7 +1799,8 @@ mod config_utils_methods_tests {
 
         let save_result = UnifiedConfigUtils::save_to_file(&config, &path);
         if save_result.is_ok() {
-            let load_result = UnifiedConfigUtils::load_from_file::<ConsolidatedMonitoringConfig, _>(&path);
+            let load_result =
+                UnifiedConfigUtils::load_from_file::<ConsolidatedMonitoringConfig, _>(&path);
             let _ = load_result;
         }
         let _ = std::fs::remove_dir_all(&dir);
@@ -1792,11 +1842,7 @@ mod crypto_config_tests {
 
     #[test]
     fn test_crypto_key_pair_new() {
-        let kp = CryptoKeyPair::new(
-            vec![1, 2, 3],
-            vec![4, 5, 6],
-            KeyPairAlgorithm::Ed25519,
-        );
+        let kp = CryptoKeyPair::new(vec![1, 2, 3], vec![4, 5, 6], KeyPairAlgorithm::Ed25519);
         assert_eq!(kp.public_key, vec![1, 2, 3]);
         assert_eq!(kp.private_key, vec![4, 5, 6]);
         assert!(matches!(kp.algorithm, KeyPairAlgorithm::Ed25519));
@@ -1807,8 +1853,12 @@ mod crypto_config_tests {
         let _ = KeyPairAlgorithm::Ed25519;
         let _ = KeyPairAlgorithm::Rsa { bits: 2048 };
         let _ = KeyPairAlgorithm::Rsa { bits: 4096 };
-        let _ = KeyPairAlgorithm::Ec { curve: "P-256".to_string() };
-        let _ = KeyPairAlgorithm::Ec { curve: "secp256k1".to_string() };
+        let _ = KeyPairAlgorithm::Ec {
+            curve: "P-256".to_string(),
+        };
+        let _ = KeyPairAlgorithm::Ec {
+            curve: "secp256k1".to_string(),
+        };
     }
 
     #[test]
@@ -1826,26 +1876,29 @@ mod crypto_config_tests {
 
 #[cfg(test)]
 mod config_loader_tests {
-    use crate::canonical::config::r#trait::*;
     use crate::canonical::config::domains::monitoring_config::ConsolidatedMonitoringConfig;
+    use crate::canonical::config::r#trait::*;
 
     #[test]
     fn test_config_loader_from_env_with_prefix() {
-        let result = ConfigLoader::from_env_with_prefix::<ConsolidatedMonitoringConfig>("BEARDOG_TEST_");
+        let result =
+            ConfigLoader::from_env_with_prefix::<ConsolidatedMonitoringConfig>("BEARDOG_TEST_");
         let _ = result;
     }
 
     #[test]
     fn test_config_loader_from_toml_file() {
         let path = std::env::temp_dir().join("beardog_test_cfg.toml");
-        let result = ConfigLoader::from_toml_file::<ConsolidatedMonitoringConfig>(path.to_str().unwrap());
+        let result =
+            ConfigLoader::from_toml_file::<ConsolidatedMonitoringConfig>(path.to_str().unwrap());
         let _ = result;
     }
 
     #[test]
     fn test_config_loader_from_json_file() {
         let path = std::env::temp_dir().join("beardog_test_cfg.json");
-        let result = ConfigLoader::from_json_file::<ConsolidatedMonitoringConfig>(path.to_str().unwrap());
+        let result =
+            ConfigLoader::from_json_file::<ConsolidatedMonitoringConfig>(path.to_str().unwrap());
         let _ = result;
     }
 
@@ -1950,7 +2003,11 @@ mod create_tunnel_legacy_tests {
     fn test_create_tunnel_legacy_config_none() {
         let config = create_tunnel_legacy_config(None, None, None);
         match config {
-            LegacyHsmConfig::TunnelHsm { hardware_config, software_config, mobile_config } => {
+            LegacyHsmConfig::TunnelHsm {
+                hardware_config,
+                software_config,
+                mobile_config,
+            } => {
                 assert!(hardware_config.is_none());
                 assert!(software_config.is_none());
                 assert!(mobile_config.is_none());
@@ -1965,7 +2022,11 @@ mod create_tunnel_legacy_tests {
         let sw = serde_json::json!({"type": "software"});
         let config = create_tunnel_legacy_config(Some(hw), Some(sw), None);
         match config {
-            LegacyHsmConfig::TunnelHsm { hardware_config, software_config, .. } => {
+            LegacyHsmConfig::TunnelHsm {
+                hardware_config,
+                software_config,
+                ..
+            } => {
                 assert!(hardware_config.is_some());
                 assert!(software_config.is_some());
             }

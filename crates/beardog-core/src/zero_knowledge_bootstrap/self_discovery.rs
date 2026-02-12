@@ -427,7 +427,7 @@ impl SelfDiscoveryEngine {
         // Get bind address from centralized config
         let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| {
             use beardog_config::global::BEARDOG_CONFIG;
-            BEARDOG_CONFIG.network.addresses.bind_address.to_string()
+            BEARDOG_CONFIG.network.addresses.bind_address.clone()
         });
 
         UniversalEndpoint {

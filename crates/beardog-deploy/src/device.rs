@@ -649,7 +649,12 @@ mod tests {
 
     #[test]
     fn test_build_device_metadata_various_ids() {
-        for id in ["a", "device-1", "pixel8a_strongbox", "long-id-with-many-parts"] {
+        for id in [
+            "a",
+            "device-1",
+            "pixel8a_strongbox",
+            "long-id-with-many-parts",
+        ] {
             let m = DeviceManager::build_device_metadata(id);
             assert_eq!(m["device_id"], id);
         }
@@ -665,11 +670,16 @@ mod tests {
     #[test]
     fn test_check_device_always_returns_device() {
         let mgr = DeviceManager::new();
-        let device = mgr.check_device().expect("should always return a device via fallback");
+        let device = mgr
+            .check_device()
+            .expect("should always return a device via fallback");
         assert!(!device.id.is_empty());
         assert!(!device.name.is_empty());
         assert!(
-            matches!(device.status, DeviceStatus::Available | DeviceStatus::Connected),
+            matches!(
+                device.status,
+                DeviceStatus::Available | DeviceStatus::Connected
+            ),
             "status should be Available or Connected"
         );
     }

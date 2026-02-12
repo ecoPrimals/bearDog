@@ -88,9 +88,7 @@ impl RelayHandler {
             .and_then(|v| v.as_str())
             .ok_or("Missing 'requester_family_id' parameter")?;
 
-        let lineage_proof = params
-            .get("lineage_proof")
-            .and_then(|v| v.as_str());
+        let lineage_proof = params.get("lineage_proof").and_then(|v| v.as_str());
 
         debug!(
             "🔐 relay.authorize: requester={}, family={}, has_proof={}",
@@ -429,11 +427,15 @@ mod tests {
         use base64::Engine;
         let proof_b64 = BASE64.encode(proof.as_bytes());
 
-        assert!(handler.verify_lineage_proof("peer-family", &proof_b64).unwrap());
+        assert!(handler
+            .verify_lineage_proof("peer-family", &proof_b64)
+            .unwrap());
 
         // Invalid proof
         let bad_proof = BASE64.encode(b"garbage");
-        assert!(!handler.verify_lineage_proof("peer-family", &bad_proof).unwrap());
+        assert!(!handler
+            .verify_lineage_proof("peer-family", &bad_proof)
+            .unwrap());
 
         // Invalid base64
         assert!(handler.verify_lineage_proof("peer-family", "!!!").is_err());
@@ -461,4 +463,3 @@ mod tests {
         assert_eq!(result_b["authorized"], false);
     }
 }
-

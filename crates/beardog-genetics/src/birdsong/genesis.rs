@@ -835,6 +835,7 @@ mod tests {
     // === Witness Authority Tests ===
 
     #[tokio::test]
+    #[serial_test::serial] // Environment variable test - must run serially
     async fn test_verify_witness_authority_permissionless_mode() {
         std::env::set_var("BEARDOG_GENESIS_MODE", "permissionless");
         let provider = GenesisLineageProvider::new().await.unwrap();
@@ -885,6 +886,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial] // Environment variable test - must run serially
     async fn test_verify_witness_authority_unknown_mode() {
         std::env::set_var("BEARDOG_GENESIS_MODE", "unknown_mode");
         let provider = GenesisLineageProvider::new().await.unwrap();
@@ -897,11 +899,12 @@ mod tests {
             signature: vec![0u8; 64],
         };
 
-        // Unknown mode defaults to permissioned, no witnesses → falls back
-        // but since the device is not registered and list is empty,
-        // it returns error for unknown device
+        // Unknown mode defaults to permissioned behavior (secure default).
+        // Unlike explicit "permissioned" mode, unknown modes do NOT fall back to permissionless
+        // when the trusted witnesses list is empty - they return an error.
         let result = provider.verify_witness_authority(&witness);
         std::env::remove_var("BEARDOG_GENESIS_MODE");
+        // Unknown genesis mode with unregistered device → error
         assert!(result.is_err());
     }
 

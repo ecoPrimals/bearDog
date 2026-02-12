@@ -42,10 +42,12 @@ mod hsm_mod_defaults {
         let timeout_err = std::io::Error::new(std::io::ErrorKind::TimedOut, "connection timed out");
         assert!(c.should_retry_error(&timeout_err));
         // Connection errors should be retried
-        let conn_err = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "connection refused");
+        let conn_err =
+            std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "connection refused");
         assert!(c.should_retry_error(&conn_err));
         // Auth errors should not be retried
-        let auth_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "unauthorized access");
+        let auth_err =
+            std::io::Error::new(std::io::ErrorKind::PermissionDenied, "unauthorized access");
         assert!(!c.should_retry_error(&auth_err));
     }
 
@@ -372,7 +374,8 @@ mod config_trait_validation {
             std::time::Duration::from_secs(1),
             std::time::Duration::from_secs(60),
             "test"
-        ).is_ok());
+        )
+        .is_ok());
     }
 
     #[test]
@@ -383,7 +386,8 @@ mod config_trait_validation {
             std::time::Duration::from_secs(1),
             std::time::Duration::from_secs(60),
             "test"
-        ).is_err());
+        )
+        .is_err());
     }
 
     #[test]
@@ -459,7 +463,8 @@ mod config_trait_validation {
             "debug_mode",
             "true",
             false,
-        ).is_ok());
+        )
+        .is_ok());
     }
 
     #[test]
@@ -469,29 +474,34 @@ mod config_trait_validation {
             "debug_mode",
             "true",
             false,
-        ).is_err());
+        )
+        .is_err());
     }
 }
 
 mod config_trait_loader {
-    use crate::canonical::config::r#trait::ConfigLoader;
     use crate::canonical::config::domains::monitoring_config::ConsolidatedMonitoringConfig;
+    use crate::canonical::config::r#trait::ConfigLoader;
 
     #[test]
     fn test_config_loader_from_env() {
-        let result = ConfigLoader::from_env_with_prefix::<ConsolidatedMonitoringConfig>("BEARDOG_TEST_NONEXIST_");
+        let result = ConfigLoader::from_env_with_prefix::<ConsolidatedMonitoringConfig>(
+            "BEARDOG_TEST_NONEXIST_",
+        );
         let _ = result;
     }
 
     #[test]
     fn test_config_loader_from_toml_nonexistent() {
-        let result = ConfigLoader::from_toml_file::<ConsolidatedMonitoringConfig>("/nonexistent/path.toml");
+        let result =
+            ConfigLoader::from_toml_file::<ConsolidatedMonitoringConfig>("/nonexistent/path.toml");
         assert!(result.is_err());
     }
 
     #[test]
     fn test_config_loader_from_json_nonexistent() {
-        let result = ConfigLoader::from_json_file::<ConsolidatedMonitoringConfig>("/nonexistent/path.json");
+        let result =
+            ConfigLoader::from_json_file::<ConsolidatedMonitoringConfig>("/nonexistent/path.json");
         assert!(result.is_err());
     }
 
@@ -682,7 +692,9 @@ mod config_utils_extra_methods {
 
     #[test]
     fn test_validate_config_file_nonexistent() {
-        assert!(!UnifiedConfigUtils::validate_config_file("/nonexistent/file.toml"));
+        assert!(!UnifiedConfigUtils::validate_config_file(
+            "/nonexistent/file.toml"
+        ));
     }
 
     #[test]
@@ -695,7 +707,8 @@ mod config_utils_extra_methods {
     #[test]
     fn test_auto_load_config() {
         // Will likely fail since no config files exist
-        let result = UnifiedConfigUtils::auto_load_config::<serde_json::Value>("beardog_test_nonexist_xyz");
+        let result =
+            UnifiedConfigUtils::auto_load_config::<serde_json::Value>("beardog_test_nonexist_xyz");
         assert!(result.is_err());
     }
 
@@ -710,9 +723,13 @@ mod config_utils_extra_methods {
         let path = dir.join("default.toml");
 
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-        struct Cfg { name: String }
+        struct Cfg {
+            name: String,
+        }
 
-        let cfg = Cfg { name: "default".to_string() };
+        let cfg = Cfg {
+            name: "default".to_string(),
+        };
         let result = UnifiedConfigUtils::create_default_config(cfg, &path);
         assert!(result.is_ok());
 
@@ -730,7 +747,9 @@ mod config_utils_extra_methods {
 
     #[test]
     fn test_shared_config_via_utils() {
-        let val = UnifiedConfigUtils::get_shared_config::<String, _>("test_scm_key_11", || "value11".to_string());
+        let val = UnifiedConfigUtils::get_shared_config::<String, _>("test_scm_key_11", || {
+            "value11".to_string()
+        });
         assert_eq!(*val, "value11");
         let stats = UnifiedConfigUtils::get_shared_config_stats();
         let _ = format!("{stats:?}");
@@ -738,16 +757,21 @@ mod config_utils_extra_methods {
 
     #[test]
     fn test_serialize_deserialize_arc_str() {
-        use serde::{Serialize, Deserialize};
+        use serde::{Deserialize, Serialize};
         use std::sync::Arc;
 
         #[derive(Serialize, Deserialize)]
         struct Wrapper {
-            #[serde(serialize_with = "serialize_arc_str", deserialize_with = "deserialize_arc_str")]
+            #[serde(
+                serialize_with = "serialize_arc_str",
+                deserialize_with = "deserialize_arc_str"
+            )]
             value: Arc<str>,
         }
 
-        let w = Wrapper { value: Arc::from("test") };
+        let w = Wrapper {
+            value: Arc::from("test"),
+        };
         let json = serde_json::to_string(&w).unwrap();
         let w2: Wrapper = serde_json::from_str(&json).unwrap();
         assert_eq!(&*w2.value, "test");
@@ -1308,10 +1332,23 @@ mod genetics_constraints_extra {
     #[test]
     fn test_key_operation_variants() {
         let ops: Vec<KeyOperation> = vec![
-            KeyOperation::Read { path: "test".to_string(), project: None },
-            KeyOperation::Write { path: "test".to_string(), size_bytes: 100, project: None },
-            KeyOperation::Delete { path: "test".to_string() },
-            KeyOperation::RpcCall { target_service: "svc".to_string(), method: "call".to_string(), project: None },
+            KeyOperation::Read {
+                path: "test".to_string(),
+                project: None,
+            },
+            KeyOperation::Write {
+                path: "test".to_string(),
+                size_bytes: 100,
+                project: None,
+            },
+            KeyOperation::Delete {
+                path: "test".to_string(),
+            },
+            KeyOperation::RpcCall {
+                target_service: "svc".to_string(),
+                method: "call".to_string(),
+                project: None,
+            },
         ];
         for op in &ops {
             let _ = format!("{op:?}");
@@ -1327,11 +1364,7 @@ mod hsm_unified_cloud_defaults {
 
     #[test]
     fn test_cloud_provider_variants() {
-        let providers = [
-            CloudProvider::Aws,
-            CloudProvider::Azure,
-            CloudProvider::Gcp,
-        ];
+        let providers = [CloudProvider::Aws, CloudProvider::Azure, CloudProvider::Gcp];
         for p in &providers {
             let name = p.default_hsm_service_name();
             assert!(!name.is_empty());
@@ -1490,9 +1523,17 @@ mod hsm_config_extra_defaults {
     fn test_auth_method_variants() {
         let methods = [
             AuthMethod::None,
-            AuthMethod::Password { password: "test".to_string() },
-            AuthMethod::Token { token_id: 1, pin: None },
-            AuthMethod::Certificate { cert_path: "/tmp/cert.pem".to_string(), key_path: "/tmp/key.pem".to_string() },
+            AuthMethod::Password {
+                password: "test".to_string(),
+            },
+            AuthMethod::Token {
+                token_id: 1,
+                pin: None,
+            },
+            AuthMethod::Certificate {
+                cert_path: "/tmp/cert.pem".to_string(),
+                key_path: "/tmp/key.pem".to_string(),
+            },
         ];
         for m in &methods {
             let _ = format!("{m:?}");
@@ -1908,9 +1949,15 @@ mod hsm_unified_providers_defaults {
     fn test_hsm_provider_type_variants() {
         let types = [
             HsmProviderType::Software,
-            HsmProviderType::Hardware { capabilities: vec![] },
-            HsmProviderType::Network { capabilities: vec![] },
-            HsmProviderType::Cloud { capabilities: vec![] },
+            HsmProviderType::Hardware {
+                capabilities: vec![],
+            },
+            HsmProviderType::Network {
+                capabilities: vec![],
+            },
+            HsmProviderType::Cloud {
+                capabilities: vec![],
+            },
         ];
         for t in &types {
             let _ = format!("{t:?}");
@@ -1978,4 +2025,3 @@ mod security_advanced_defaults {
         let _ = format!("{c:?}");
     }
 }
-

@@ -64,8 +64,8 @@ impl ProductionUniversalAdapter {
     /// # Implementation Required
     ///
     /// To implement this properly:
-    /// 1. Define a SystemRouter trait for pluggable system backends
-    /// 2. Implement routers for: hsm, service_mesh, api_gateway, etc.
+    /// 1. Define a `SystemRouter` trait for pluggable system backends
+    /// 2. Implement routers for: hsm, `service_mesh`, `api_gateway`, etc.
     /// 3. Register routers during adapter initialization
     /// 4. Route operations through the appropriate backend
     ///

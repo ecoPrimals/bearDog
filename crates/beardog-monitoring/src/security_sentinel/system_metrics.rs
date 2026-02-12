@@ -23,7 +23,14 @@ struct CpuSnapshot {
 
 impl CpuSnapshot {
     fn total(&self) -> u64 {
-        self.user + self.nice + self.system + self.idle + self.iowait + self.irq + self.softirq + self.steal
+        self.user
+            + self.nice
+            + self.system
+            + self.idle
+            + self.iowait
+            + self.irq
+            + self.softirq
+            + self.steal
     }
 
     fn busy(&self) -> u64 {
@@ -50,7 +57,9 @@ fn read_cpu_snapshot() -> Result<CpuSnapshot, BearDogError> {
         .collect();
 
     if fields.len() < 4 {
-        return Err(BearDogError::internal("Malformed /proc/stat cpu line".into()));
+        return Err(BearDogError::internal(
+            "Malformed /proc/stat cpu line".into(),
+        ));
     }
 
     Ok(CpuSnapshot {
@@ -158,9 +167,10 @@ impl SystemMetrics {
     #[cfg(target_os = "linux")]
     pub fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
         let current = read_cpu_snapshot()?;
-        let mut prev_guard = self.prev_cpu.lock().map_err(|e| {
-            BearDogError::internal(format!("CPU snapshot lock poisoned: {e}"))
-        })?;
+        let mut prev_guard = self
+            .prev_cpu
+            .lock()
+            .map_err(|e| BearDogError::internal(format!("CPU snapshot lock poisoned: {e}")))?;
 
         let usage = if let Some(prev) = *prev_guard {
             let total_delta = current.total().saturating_sub(prev.total());
@@ -230,9 +240,10 @@ impl SystemMetrics {
     /// Resets the request counter and window after reading.
     pub fn collect_throughput(&self) -> Result<f64, BearDogError> {
         let count = self.request_count.swap(0, Ordering::Relaxed);
-        let mut start = self.window_start.lock().map_err(|e| {
-            BearDogError::internal(format!("Throughput window lock poisoned: {e}"))
-        })?;
+        let mut start = self
+            .window_start
+            .lock()
+            .map_err(|e| BearDogError::internal(format!("Throughput window lock poisoned: {e}")))?;
         let elapsed = start.elapsed();
         *start = std::time::Instant::now();
 
@@ -304,7 +315,10 @@ mod tests {
         // Small sleep so elapsed > 0
         std::thread::sleep(std::time::Duration::from_millis(10));
         let throughput = metrics.collect_throughput().unwrap();
-        assert!(throughput > 0.0, "Expected positive throughput, got {throughput}");
+        assert!(
+            throughput > 0.0,
+            "Expected positive throughput, got {throughput}"
+        );
     }
 
     #[cfg(target_os = "linux")]
@@ -317,7 +331,10 @@ mod tests {
         // Brief delay for CPU delta
         std::thread::sleep(std::time::Duration::from_millis(50));
         let second = metrics.collect_cpu_usage().unwrap();
-        assert!(second >= 0.0 && second <= 100.0, "CPU should be 0-100, got {second}");
+        assert!(
+            second >= 0.0 && second <= 100.0,
+            "CPU should be 0-100, got {second}"
+        );
     }
 
     #[cfg(target_os = "linux")]
@@ -325,7 +342,10 @@ mod tests {
     fn test_collect_memory_usage_linux() {
         let metrics = SystemMetrics::new();
         let usage = metrics.collect_memory_usage().unwrap();
-        assert!(usage > 0.0 && usage < 100.0, "Memory should be 0-100, got {usage}");
+        assert!(
+            usage > 0.0 && usage < 100.0,
+            "Memory should be 0-100, got {usage}"
+        );
     }
 
     #[cfg(target_os = "linux")]
@@ -341,7 +361,9 @@ mod tests {
     fn test_read_memory_usage_reasonable() {
         let usage = read_memory_usage().unwrap();
         // On any real system, memory usage should be between 1% and 99%
-        assert!(usage > 1.0 && usage < 99.0, "Memory usage {usage}% seems unreasonable");
+        assert!(
+            usage > 1.0 && usage < 99.0,
+            "Memory usage {usage}% seems unreasonable"
+        );
     }
 }
-

@@ -226,22 +226,20 @@ mod production_environment_tests {
 
     #[test]
     fn test_environment_config_with_override() {
-        let c = EnvironmentConfig::new(EnvironmentType::Development)
-            .with_override("key1", "value1");
+        let c =
+            EnvironmentConfig::new(EnvironmentType::Development).with_override("key1", "value1");
         assert_eq!(c.get_override("key1"), Some(&"value1".to_string()));
     }
 
     #[test]
     fn test_environment_config_with_secrets_provider() {
-        let c = EnvironmentConfig::default()
-            .with_secrets_provider(ModernSecretsConfig::default());
+        let c = EnvironmentConfig::default().with_secrets_provider(ModernSecretsConfig::default());
         let _ = format!("{c:?}");
     }
 
     #[test]
     fn test_environment_config_with_secrets_rotation() {
-        let c = EnvironmentConfig::default()
-            .with_secrets_rotation(true, Duration::from_secs(3600));
+        let c = EnvironmentConfig::default().with_secrets_rotation(true, Duration::from_secs(3600));
         let _ = format!("{c:?}");
     }
 
@@ -719,15 +717,13 @@ mod receipt_tests {
 
     #[test]
     fn test_receipt_with_metadata() {
-        let r = OperationReceipt::new("op")
-            .with_metadata("extra", serde_json::json!(42));
+        let r = OperationReceipt::new("op").with_metadata("extra", serde_json::json!(42));
         let _ = format!("{r:?}");
     }
 
     #[test]
     fn test_receipt_with_parent() {
-        let r = OperationReceipt::new("op")
-            .with_parent_receipt("parent-123");
+        let r = OperationReceipt::new("op").with_parent_receipt("parent-123");
         let _ = format!("{r:?}");
     }
 

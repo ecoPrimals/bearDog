@@ -348,7 +348,10 @@ mod tests {
         let uevent = "HID_ID=0003:ZZZZZZZZ:0000BEEE\n";
         let result = parse_hid_id(uevent);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid vendor ID"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid vendor ID"));
     }
 
     #[test]
@@ -357,12 +360,10 @@ mod tests {
         let uevent = "HID_ID=0003:00001209:XYZXYZXY\n";
         let result = parse_hid_id(uevent);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Invalid product ID")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid product ID"));
     }
 
     #[test]
@@ -392,7 +393,9 @@ mod tests {
         // Create a temporary file and read it
         let dir = std::env::temp_dir();
         let test_path = dir.join("beardog_hid_test_string_file.txt");
-        tokio::fs::write(&test_path, "  Test Content  \n").await.unwrap();
+        tokio::fs::write(&test_path, "  Test Content  \n")
+            .await
+            .unwrap();
         let result = read_string_file(test_path.to_str().unwrap()).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "Test Content");
@@ -424,7 +427,8 @@ mod tests {
             let err_msg = e.to_string();
             // Should fail at reading sysfs info, not at opening the device
             assert!(
-                err_msg.contains("uevent") || err_msg.contains("Failed to read")
+                err_msg.contains("uevent")
+                    || err_msg.contains("Failed to read")
                     || err_msg.contains("No such file")
             );
         }

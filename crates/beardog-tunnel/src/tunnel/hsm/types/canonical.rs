@@ -8,24 +8,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Memory protection levels for key storage
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum MemoryProtectionLevel {
     /// No memory protection
     None,
     /// Low security memory protection
     Low,
     /// Medium security memory protection
+    #[default]
     Medium,
     /// High security memory protection
     High,
     /// Maximum security memory protection
     Maximum,
-}
-
-impl Default for MemoryProtectionLevel {
-    fn default() -> Self {
-        Self::Medium
-    }
 }
 
 /// Performance metrics for HSM operations

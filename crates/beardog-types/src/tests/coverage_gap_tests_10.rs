@@ -286,8 +286,7 @@ mod config_source_tests_extra {
     fn test_composite_config_source_priority() {
         let s1 = TestConfigSource::with_values(vec![("k".to_string(), "v1".to_string())]);
         let s2 = TestConfigSource::with_values(vec![("k".to_string(), "v2".to_string())]);
-        let composite = CompositeConfigSource::new(vec![Box::new(s1)])
-            .with_priority(Box::new(s2));
+        let composite = CompositeConfigSource::new(vec![Box::new(s1)]).with_priority(Box::new(s2));
         // Priority source should override
         let val = composite.get("k");
         assert!(val.is_some());
@@ -297,8 +296,7 @@ mod config_source_tests_extra {
     fn test_composite_config_source_fallback() {
         let s1 = TestConfigSource::new();
         let s2 = TestConfigSource::with_values(vec![("k".to_string(), "fallback".to_string())]);
-        let composite = CompositeConfigSource::new(vec![Box::new(s1)])
-            .with_fallback(Box::new(s2));
+        let composite = CompositeConfigSource::new(vec![Box::new(s1)]).with_fallback(Box::new(s2));
         let val = composite.get("k");
         assert_eq!(val, Some("fallback".to_string()));
     }
@@ -463,9 +461,12 @@ mod config_utils_tests_extra {
     #[test]
     fn test_shared_config_operations() {
         UnifiedConfigUtils::clear_shared_configs();
-        let c = UnifiedConfigUtils::get_shared_config::<String, _>("test_key", || "test_value".to_string());
+        let c = UnifiedConfigUtils::get_shared_config::<String, _>("test_key", || {
+            "test_value".to_string()
+        });
         assert_eq!(*c, "test_value");
-        let c2 = UnifiedConfigUtils::get_shared_config::<String, _>("test_key", || "other".to_string());
+        let c2 =
+            UnifiedConfigUtils::get_shared_config::<String, _>("test_key", || "other".to_string());
         assert_eq!(*c2, "test_value"); // cached
         let stats = UnifiedConfigUtils::get_shared_config_stats();
         assert!(stats.active_configs > 0);
@@ -503,7 +504,8 @@ mod config_utils_tests_extra {
 
     #[test]
     fn test_load_from_file_nonexistent() {
-        let result = UnifiedConfigUtils::load_from_file::<serde_json::Value, _>("/nonexistent/config.json");
+        let result =
+            UnifiedConfigUtils::load_from_file::<serde_json::Value, _>("/nonexistent/config.json");
         assert!(result.is_err());
     }
 
@@ -523,7 +525,10 @@ mod config_utils_tests_extra {
             value: i32,
         }
 
-        let cfg = TestCfg { name: "test".to_string(), value: 42 };
+        let cfg = TestCfg {
+            name: "test".to_string(),
+            value: 42,
+        };
         let path = dir.join("test.toml");
         let save_result = UnifiedConfigUtils::save_to_file(&cfg, &path);
         assert!(save_result.is_ok());
@@ -550,7 +555,9 @@ mod config_utils_tests_extra {
             name: String,
         }
 
-        let cfg = TestCfg { name: "json_test".to_string() };
+        let cfg = TestCfg {
+            name: "json_test".to_string(),
+        };
         let path = dir.join("test.json");
         let save_result = UnifiedConfigUtils::save_to_file(&cfg, &path);
         assert!(save_result.is_ok());
@@ -572,7 +579,9 @@ mod config_utils_tests_extra {
 
     #[test]
     fn test_auto_load_config_nonexistent() {
-        let result = UnifiedConfigUtils::auto_load_config::<serde_json::Value>("beardog_test_nonexistent_xyz");
+        let result = UnifiedConfigUtils::auto_load_config::<serde_json::Value>(
+            "beardog_test_nonexistent_xyz",
+        );
         assert!(result.is_err());
     }
 
@@ -613,10 +622,15 @@ mod config_utils_tests_extra {
             name: String,
         }
 
-        let cfg = Cfg { name: "env_test".to_string() };
+        let cfg = Cfg {
+            name: "env_test".to_string(),
+        };
         let _ = UnifiedConfigUtils::save_to_file(&cfg, &path);
 
-        let result = UnifiedConfigUtils::load_with_env_overrides::<Cfg>(path.to_str().unwrap(), "TEST_BEARDOG_X_");
+        let result = UnifiedConfigUtils::load_with_env_overrides::<Cfg>(
+            path.to_str().unwrap(),
+            "TEST_BEARDOG_X_",
+        );
         // May or may not work depending on environment
         let _ = result;
 
@@ -631,8 +645,14 @@ mod config_utils_tests_extra {
             b: String,
         }
 
-        let base = Cfg { a: 1, b: "base".to_string() };
-        let over = Cfg { a: 2, b: "override".to_string() };
+        let base = Cfg {
+            a: 1,
+            b: "base".to_string(),
+        };
+        let over = Cfg {
+            a: 2,
+            b: "override".to_string(),
+        };
         let result = UnifiedConfigUtils::merge_configs(base, over);
         assert!(result.is_ok());
     }
@@ -647,9 +667,13 @@ mod service_discovery_extra_tests {
     #[test]
     fn test_service_health_variants() {
         let _ = ServiceHealth::Healthy;
-        let _ = ServiceHealth::Unhealthy { reason: "test".to_string() };
+        let _ = ServiceHealth::Unhealthy {
+            reason: "test".to_string(),
+        };
         let _ = ServiceHealth::Unknown;
-        let _ = ServiceHealth::Degraded { reason: "degraded".to_string() };
+        let _ = ServiceHealth::Degraded {
+            reason: "degraded".to_string(),
+        };
     }
 
     #[test]
@@ -690,13 +714,29 @@ mod service_discovery_extra_tests {
     #[test]
     fn test_discovery_error_variants() {
         let errors: Vec<DiscoveryError> = vec![
-            DiscoveryError::ServiceNotFound { criteria: "test".to_string() },
-            DiscoveryError::BackendUnavailable { provider: "k8s".to_string(), reason: "down".to_string() },
-            DiscoveryError::InvalidDescriptor { reason: "bad".to_string() },
-            DiscoveryError::RegistrationFailed { reason: "fail".to_string() },
-            DiscoveryError::NetworkError { details: "timeout".to_string() },
-            DiscoveryError::Timeout { operation: "search".to_string(), duration_ms: 5000 },
-            DiscoveryError::PermissionDenied { resource: "svc".to_string() },
+            DiscoveryError::ServiceNotFound {
+                criteria: "test".to_string(),
+            },
+            DiscoveryError::BackendUnavailable {
+                provider: "k8s".to_string(),
+                reason: "down".to_string(),
+            },
+            DiscoveryError::InvalidDescriptor {
+                reason: "bad".to_string(),
+            },
+            DiscoveryError::RegistrationFailed {
+                reason: "fail".to_string(),
+            },
+            DiscoveryError::NetworkError {
+                details: "timeout".to_string(),
+            },
+            DiscoveryError::Timeout {
+                operation: "search".to_string(),
+                duration_ms: 5000,
+            },
+            DiscoveryError::PermissionDenied {
+                resource: "svc".to_string(),
+            },
         ];
         for e in &errors {
             let msg = format!("{e}");
@@ -784,14 +824,31 @@ mod key_management_extra_tests {
     #[test]
     fn test_kms_error_variants() {
         let errors: Vec<KmsError> = vec![
-            KmsError::KeyNotFound { key_id: "test_id".to_string() },
-            KmsError::ProviderUnavailable { provider: "aws".to_string(), reason: "down".to_string() },
-            KmsError::OperationNotSupported { operation: "wrap".to_string() },
-            KmsError::InvalidKeySpec { reason: "bad size".to_string() },
-            KmsError::CryptoError { details: "padding".to_string() },
-            KmsError::PermissionDenied { resource: "key-1".to_string() },
-            KmsError::RateLimitExceeded { retry_after_seconds: 60 },
-            KmsError::NetworkError { details: "timeout".to_string() },
+            KmsError::KeyNotFound {
+                key_id: "test_id".to_string(),
+            },
+            KmsError::ProviderUnavailable {
+                provider: "aws".to_string(),
+                reason: "down".to_string(),
+            },
+            KmsError::OperationNotSupported {
+                operation: "wrap".to_string(),
+            },
+            KmsError::InvalidKeySpec {
+                reason: "bad size".to_string(),
+            },
+            KmsError::CryptoError {
+                details: "padding".to_string(),
+            },
+            KmsError::PermissionDenied {
+                resource: "key-1".to_string(),
+            },
+            KmsError::RateLimitExceeded {
+                retry_after_seconds: 60,
+            },
+            KmsError::NetworkError {
+                details: "timeout".to_string(),
+            },
         ];
         for e in &errors {
             let msg = format!("{e}");
@@ -904,13 +961,11 @@ mod hsm_unified_migration_extra_tests {
     #[test]
     fn test_migrate_hsm_configs() {
         let service = HsmMigrationService::default();
-        let configs = vec![
-            LegacyHsmConfig::TunnelHsm {
-                hardware_config: None,
-                software_config: None,
-                mobile_config: None,
-            },
-        ];
+        let configs = vec![LegacyHsmConfig::TunnelHsm {
+            hardware_config: None,
+            software_config: None,
+            mobile_config: None,
+        }];
         let result = service.migrate_hsm_configs(configs);
         match result {
             Ok(r) => {
@@ -1257,4 +1312,3 @@ mod discovery_builder_tests_extra {
         let _ = format!("{config:?}");
     }
 }
-

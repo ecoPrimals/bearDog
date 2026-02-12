@@ -396,7 +396,12 @@ mod tests {
             .await
             .unwrap();
         let result = manager
-            .add_child(&chain.chain_id, "nonexistent-parent", "child-1".to_string(), None)
+            .add_child(
+                &chain.chain_id,
+                "nonexistent-parent",
+                "child-1".to_string(),
+                None,
+            )
             .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Parent not found"));

@@ -90,6 +90,14 @@ pub mod simd_crypto;
 /// **"Never let a bird be alone in the dark forest"**
 pub mod genesis;
 
+/// Quantum-resistant cryptography module
+///
+/// Post-quantum cryptographic operations following NIST PQC standards:
+/// - **ML-KEM** (Kyber) - Key Encapsulation Mechanism
+/// - **ML-DSA** (Dilithium) - Digital Signatures
+/// - **SPHINCS+** - Stateless hash-based signatures
+pub mod quantum_crypto;
+
 // DISABLED: Module files are corrupted with syntax errors and need reconstruction
 // See MODULE_STRUCTURE_ISSUES.md for details
 // pub mod orchestration;

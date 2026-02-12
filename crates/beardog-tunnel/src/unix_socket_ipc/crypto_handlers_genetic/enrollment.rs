@@ -84,8 +84,8 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
     mac.update(request.device_id.as_bytes());
     let proof = mac.finalize().into_bytes();
 
-    let device_seed_b64 = BASE64.encode(&device_seed);
-    let proof_b64 = BASE64.encode(&proof);
+    let device_seed_b64 = BASE64.encode(device_seed);
+    let proof_b64 = BASE64.encode(proof);
 
     info!(
         "✅ Derived device seed for '{}' (32 bytes, unique derivation)",

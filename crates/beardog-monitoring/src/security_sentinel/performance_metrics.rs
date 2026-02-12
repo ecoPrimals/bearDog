@@ -94,20 +94,15 @@ impl Default for PerformanceMetrics {
 // ============================================================
 
 /// Metric trend direction
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum MetricTrend {
     /// Increasing trend
     Increasing,
     /// Decreasing trend
     Decreasing,
-    /// Stable trend
+    /// Stable trend (default)
+    #[default]
     Stable,
-}
-
-impl Default for MetricTrend {
-    fn default() -> Self {
-        Self::Stable
-    }
 }
 
 /// Performance trends analysis
@@ -273,9 +268,9 @@ impl PerformanceMetricsCollector {
 
         // PANIC SAFETY: Use if-let for defensive coding even though len() >= 2 is checked
         let window_minutes = match (recent_metrics.first(), recent_metrics.last()) {
-            (Some(first), Some(last)) => {
-                (last.timestamp - first.timestamp).num_minutes().unsigned_abs()
-            }
+            (Some(first), Some(last)) => (last.timestamp - first.timestamp)
+                .num_minutes()
+                .unsigned_abs(),
             _ => 0, // Should never happen given len() >= 2 check above
         };
 
@@ -305,12 +300,11 @@ impl PerformanceMetricsCollector {
             return MetricTrend::Stable;
         }
 
-        let values: Vec<f64> = metrics.iter().map(|m| extractor(m)).collect();
+        let values: Vec<f64> = metrics.iter().map(extractor).collect();
         let mid = values.len() / 2;
 
         let first_half: f64 = values[0..mid].iter().sum::<f64>() / mid as f64;
-        let second_half: f64 =
-            values[mid..].iter().sum::<f64>() / (values.len() - mid) as f64;
+        let second_half: f64 = values[mid..].iter().sum::<f64>() / (values.len() - mid) as f64;
 
         if first_half == 0.0 {
             return MetricTrend::Stable;
@@ -438,7 +432,10 @@ mod tests {
         let metrics = collector.collect_metrics().await.unwrap();
         assert!(metrics.cpu_usage >= 0.0, "CPU usage should be non-negative");
         #[cfg(target_os = "linux")]
-        assert!(metrics.memory_usage > 0.0, "Memory usage should be > 0 on Linux");
+        assert!(
+            metrics.memory_usage > 0.0,
+            "Memory usage should be > 0 on Linux"
+        );
     }
 
     #[tokio::test]

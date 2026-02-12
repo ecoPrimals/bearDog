@@ -5,8 +5,8 @@
 // constraints/builtin.rs - 146 uncov
 // ===========================================================================
 mod builtin_constraints_tests {
-    use crate::constraints::*;
     use crate::constraints::builtin::*;
+    use crate::constraints::*;
 
     fn make_context() -> ConstraintContext {
         ConstraintContext::new()
@@ -70,9 +70,7 @@ mod builtin_constraints_tests {
 
     #[test]
     fn test_cpu_quota_constraint() {
-        let c = CpuQuotaConstraint {
-            max_percent: 99,
-        };
+        let c = CpuQuotaConstraint { max_percent: 99 };
         let ctx = make_context();
         let result = c.is_satisfied(&ctx);
         assert!(result.is_ok());
@@ -83,9 +81,7 @@ mod builtin_constraints_tests {
 
     #[test]
     fn test_cpu_quota_constraint_zero() {
-        let c = CpuQuotaConstraint {
-            max_percent: 0,
-        };
+        let c = CpuQuotaConstraint { max_percent: 0 };
         let ctx = make_context();
         let result = c.is_satisfied(&ctx);
         assert!(result.is_ok());
@@ -107,9 +103,7 @@ mod builtin_constraints_tests {
     #[test]
     fn test_expiry_constraint_not_expired() {
         let future = (chrono::Utc::now() + chrono::Duration::days(30)).to_rfc3339();
-        let c = ExpiryConstraint {
-            expires_at: future,
-        };
+        let c = ExpiryConstraint { expires_at: future };
         let ctx = make_context();
         let result = c.is_satisfied(&ctx);
         assert!(result.is_ok());
@@ -121,9 +115,7 @@ mod builtin_constraints_tests {
     #[test]
     fn test_expiry_constraint_expired() {
         let past = (chrono::Utc::now() - chrono::Duration::days(1)).to_rfc3339();
-        let c = ExpiryConstraint {
-            expires_at: past,
-        };
+        let c = ExpiryConstraint { expires_at: past };
         let ctx = make_context();
         let result = c.is_satisfied(&ctx);
         assert!(result.is_ok());
@@ -133,7 +125,9 @@ mod builtin_constraints_tests {
     #[test]
     fn test_composite_constraint_and() {
         let c1 = Box::new(CpuQuotaConstraint { max_percent: 99 }) as Box<dyn Constraint>;
-        let c2 = Box::new(MemoryQuotaConstraint { max_bytes: 16_000_000_000 }) as Box<dyn Constraint>;
+        let c2 = Box::new(MemoryQuotaConstraint {
+            max_bytes: 16_000_000_000,
+        }) as Box<dyn Constraint>;
         let composite = CompositeConstraint::and(vec![c1, c2]);
         let ctx = make_context();
         let result = composite.is_satisfied(&ctx);
@@ -146,7 +140,9 @@ mod builtin_constraints_tests {
     #[test]
     fn test_composite_constraint_or() {
         let c1 = Box::new(CpuQuotaConstraint { max_percent: 0 }) as Box<dyn Constraint>;
-        let c2 = Box::new(MemoryQuotaConstraint { max_bytes: 16_000_000_000 }) as Box<dyn Constraint>;
+        let c2 = Box::new(MemoryQuotaConstraint {
+            max_bytes: 16_000_000_000,
+        }) as Box<dyn Constraint>;
         let composite = CompositeConstraint::or(vec![c1, c2]);
         let ctx = make_context();
         let result = composite.is_satisfied(&ctx);
@@ -156,9 +152,7 @@ mod builtin_constraints_tests {
     #[test]
     fn test_composite_constraint_not() {
         let past = (chrono::Utc::now() - chrono::Duration::days(1)).to_rfc3339();
-        let c = Box::new(ExpiryConstraint {
-            expires_at: past,
-        }) as Box<dyn Constraint>;
+        let c = Box::new(ExpiryConstraint { expires_at: past }) as Box<dyn Constraint>;
         let composite = CompositeConstraint::not(c);
         let ctx = make_context();
         let result = composite.is_satisfied(&ctx);
@@ -171,8 +165,8 @@ mod builtin_constraints_tests {
 // constraints/novel.rs - 159 uncov
 // ===========================================================================
 mod novel_constraints_tests {
-    use crate::constraints::*;
     use crate::constraints::novel::*;
+    use crate::constraints::*;
 
     fn make_context() -> ConstraintContext {
         ConstraintContext::new()
@@ -252,7 +246,8 @@ mod novel_constraints_tests {
             max_value: Some(30.0),
         };
         let mut ctx = make_context();
-        ctx.environment.insert("temp".to_string(), serde_json::json!(22.5));
+        ctx.environment
+            .insert("temp".to_string(), serde_json::json!(22.5));
         let result = c.is_satisfied(&ctx);
         assert!(result.is_ok());
         assert!(result.unwrap());
@@ -311,9 +306,7 @@ mod novel_constraints_tests {
 
     #[test]
     fn test_system_load_constraint() {
-        let c = SystemLoadConstraint {
-            max_load_1m: 10.0,
-        };
+        let c = SystemLoadConstraint { max_load_1m: 10.0 };
         let ctx = make_context();
         let _ = c.is_satisfied(&ctx);
         let _ = c.description();
@@ -348,9 +341,7 @@ mod novel_constraints_tests {
 
     #[test]
     fn test_battery_constraint() {
-        let c = BatteryConstraint {
-            min_percent: 10,
-        };
+        let c = BatteryConstraint { min_percent: 10 };
         let ctx = make_context();
         let _ = c.is_satisfied(&ctx);
         let _ = c.description();

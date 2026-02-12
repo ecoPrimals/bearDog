@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct BearDogConfig {
     /// Environment in which the system is running (development, production, etc.)
     pub environment: String,
-    /// BearDog system version
+    /// `BearDog` system version
     pub version: String,
     /// Unique identifier for this node instance
     pub node_id: String,

@@ -136,10 +136,7 @@ fn test_capability_discovery_as_str() {
 
 #[test]
 fn test_capability_custom_as_str() {
-    assert_eq!(
-        Capability::Custom("my_cap".to_string()).as_str(),
-        "my_cap"
-    );
+    assert_eq!(Capability::Custom("my_cap".to_string()).as_str(), "my_cap");
 }
 
 #[test]
@@ -221,10 +218,7 @@ fn test_service_info_not_available() {
 #[test]
 fn test_service_info_with_metadata() {
     let mut metadata = HashMap::new();
-    metadata.insert(
-        "description".to_string(),
-        serde_json::json!("Test service"),
-    );
+    metadata.insert("description".to_string(), serde_json::json!("Test service"));
     let info = ServiceInfo {
         name: "test".to_string(),
         endpoint: "/test".to_string(),
@@ -915,7 +909,6 @@ fn test_registry_client_zero_vendor_hardcoding() {
     }
 }
 
-
 // ============================================================================
 // discover_ipc_socket tests
 // ============================================================================
@@ -1042,4 +1035,3 @@ fn test_capability_serde_concurrent() {
         h.join().unwrap();
     }
 }
-

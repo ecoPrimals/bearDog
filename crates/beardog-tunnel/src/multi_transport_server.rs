@@ -215,7 +215,7 @@ impl MultiTransportServer {
 
         let mut join_set = JoinSet::new();
         for task in self.tasks {
-            join_set.spawn(async move { task.await });
+            join_set.spawn(task);
         }
 
         // Wait for all tasks to complete

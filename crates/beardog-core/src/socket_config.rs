@@ -142,7 +142,7 @@ impl SocketConfig {
             let primal_name =
                 std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
             return Self {
-                socket_path: PathBuf::from(format!("/primal/{}", primal_name)),
+                socket_path: PathBuf::from(format!("/primal/{primal_name}")),
                 family_id,
                 node_id,
                 source: SocketPathSource::PrimalNamespace,
@@ -162,7 +162,7 @@ impl SocketConfig {
         // Tier 5: Fallback to /tmp (last resort)
         // Uses PRIMAL_NAME env var for self-knowledge, defaults to "beardog"
         let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
-        let tmp_path = format!("/tmp/{}-{family_id}-{node_id}.sock", primal_name);
+        let tmp_path = format!("/tmp/{primal_name}-{family_id}-{node_id}.sock");
         Self {
             socket_path: PathBuf::from(tmp_path),
             family_id,

@@ -113,7 +113,7 @@ impl IntrospectionHandler {
 
             by_namespace
                 .entry(namespace)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(method.to_string());
         }
 

@@ -37,11 +37,13 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[repr(u8)]
+#[derive(Default)]
 pub enum SecurityLevel {
     /// Software implementation - no hardware security
     ///
     /// Keys stored in process memory, protected only by OS isolation.
     /// Suitable for development and testing only.
+    #[default]
     Software = 0,
 
     /// Trusted Execution Environment (TEE)
@@ -122,12 +124,6 @@ impl SecurityLevel {
             Self::HardwareSecurityModule => "hsm",
             Self::StrongBox => "strongbox",
         }
-    }
-}
-
-impl Default for SecurityLevel {
-    fn default() -> Self {
-        Self::Software
     }
 }
 

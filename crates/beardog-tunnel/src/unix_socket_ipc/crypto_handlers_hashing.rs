@@ -339,7 +339,7 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
     let mut hasher = Sha3_256::new();
     hasher.update(b".onion checksum");
     hasher.update(&public_key);
-    hasher.update(&[TOR_V3_VERSION]);
+    hasher.update([TOR_V3_VERSION]);
     let hash = hasher.finalize();
     let checksum = &hash[0..2];
 
@@ -409,7 +409,7 @@ pub async fn handle_generate_onion_identity(params: Option<&Value>) -> Result<Va
 
     // Derive onion address
     let onion_params = json!({
-        "public_key": BASE64.encode(&public_bytes)
+        "public_key": BASE64.encode(public_bytes)
     });
     let onion_result = handle_derive_onion_address(&onion_params)
         .map_err(|e| format!("Failed to derive onion address: {}", e))?;
@@ -426,7 +426,7 @@ pub async fn handle_generate_onion_identity(params: Option<&Value>) -> Result<Va
     full_secret.extend_from_slice(&public_bytes);
 
     Ok(json!({
-        "public_key": BASE64.encode(&public_bytes),
+        "public_key": BASE64.encode(public_bytes),
         "secret_key": BASE64.encode(&full_secret),
         "onion_address": onion_address,
         "version": 3,

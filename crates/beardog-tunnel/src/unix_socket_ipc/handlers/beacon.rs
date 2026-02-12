@@ -169,7 +169,7 @@ pub async fn handle_beacon_encrypt(
 
     Ok(json!({
         "ciphertext": BASE64.encode(&encrypted.ciphertext),
-        "nonce": BASE64.encode(&encrypted.nonce),
+        "nonce": BASE64.encode(encrypted.nonce),
         "timestamp": encrypted.timestamp
     }))
 }

@@ -195,15 +195,11 @@ mod management_tests {
         );
         assert_eq!(
             health.components.get("detection_rules"),
-            Some(
-                &beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy
-            )
+            Some(&beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy)
         );
         assert_eq!(
             health.components.get("threat_status"),
-            Some(
-                &beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy
-            )
+            Some(&beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy)
         );
         assert_eq!(health.details, "Threat management system health check");
     }
@@ -218,9 +214,7 @@ mod management_tests {
         let health = engine.get_system_health();
         assert_eq!(
             health.components.get("detection_rules"),
-            Some(
-                &beardog_types::canonical::providers_unified::traits::HealthStatus::Degraded
-            )
+            Some(&beardog_types::canonical::providers_unified::traits::HealthStatus::Degraded)
         );
     }
 
@@ -246,9 +240,7 @@ mod management_tests {
         );
         assert_eq!(
             health.components.get("threat_status"),
-            Some(
-                &beardog_types::canonical::providers_unified::traits::HealthStatus::Degraded
-            )
+            Some(&beardog_types::canonical::providers_unified::traits::HealthStatus::Degraded)
         );
     }
 
@@ -381,9 +373,9 @@ mod management_tests {
 #[cfg(test)]
 mod types_mod_tests {
     use crate::threat::types::{
-        DetectionMethod, DetectionRule, MitigationStep, RuleCondition, SecurityEvent,
-        ThreatAction, ThreatEvent, ThreatRuleType, ThreatSeverity, ThreatSource, ThreatStatus,
-        ThreatTarget, ThreatType,
+        DetectionMethod, DetectionRule, MitigationStep, RuleCondition, SecurityEvent, ThreatAction,
+        ThreatEvent, ThreatRuleType, ThreatSeverity, ThreatSource, ThreatStatus, ThreatTarget,
+        ThreatType,
     };
 
     #[test]
@@ -1087,7 +1079,10 @@ mod ml_models_gap_tests {
         let mut model = MlModel::new("Meta Test", "desc", MlModelType::Clustering, vec![]);
         model.add_metadata("framework", "pytorch");
         model.add_metadata("gpu", "A100");
-        assert_eq!(model.metadata.get("framework"), Some(&"pytorch".to_string()));
+        assert_eq!(
+            model.metadata.get("framework"),
+            Some(&"pytorch".to_string())
+        );
         assert_eq!(model.metadata.len(), 2);
     }
 
@@ -1249,7 +1244,10 @@ mod rules_gap_tests {
         );
         let validation = rule.validate();
         assert!(validation.is_valid);
-        assert!(validation.warnings.iter().any(|w| w.contains("description")));
+        assert!(validation
+            .warnings
+            .iter()
+            .any(|w| w.contains("description")));
     }
 
     #[test]
@@ -1376,7 +1374,9 @@ mod rules_gap_tests {
 #[cfg(test)]
 mod response_gap_tests {
     use crate::threat::handlers::response::{AutomatedThreatResponseHandler, ThreatResponseConfig};
-    use crate::threat::types::{ThreatEvent, ThreatSeverity, ThreatSource, ThreatTarget, ThreatType};
+    use crate::threat::types::{
+        ThreatEvent, ThreatSeverity, ThreatSource, ThreatTarget, ThreatType,
+    };
 
     fn make_handler(enabled: bool) -> AutomatedThreatResponseHandler {
         AutomatedThreatResponseHandler::new(ThreatResponseConfig {
@@ -1499,9 +1499,7 @@ mod ml_engine_gap_tests {
             _request: &serde_json::Value,
         ) -> Pin<Box<dyn Future<Output = Result<serde_json::Value, BearDogError>> + Send + '_>>
         {
-            Box::pin(async {
-                Err(BearDogError::unavailable("ML service unavailable".into()))
-            })
+            Box::pin(async { Err(BearDogError::unavailable("ML service unavailable".into())) })
         }
     }
 

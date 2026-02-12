@@ -104,20 +104,25 @@ mod beardog_config_trait_tests {
 
     #[test]
     fn test_discovery_unified_config_validate() {
-        let c = crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::default();
+        let c =
+            crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::default();
         let _ = c.validate();
     }
 
     #[test]
     fn test_discovery_unified_config_merge() {
-        let c1 = crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::default();
-        let c2 = crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::default();
+        let c1 =
+            crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::default();
+        let c2 =
+            crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::default();
         let _ = c1.merge(&c2);
     }
 
     #[test]
     fn test_discovery_unified_config_from_env() {
-        let _ = crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::from_env();
+        let _ =
+            crate::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig::from_env(
+            );
     }
 
     #[test]
@@ -152,7 +157,8 @@ mod adapter_submethods_tests {
 
     #[test]
     fn test_core_adapter_config_with_defaults() {
-        let c = crate::canonical::config::domains::adapter::core::CoreAdapterConfig::with_defaults();
+        let c =
+            crate::canonical::config::domains::adapter::core::CoreAdapterConfig::with_defaults();
         let _ = format!("{c:?}");
     }
 
@@ -753,4 +759,3 @@ mod config_network_domain_tests {
         let _ = format!("{c2:?}");
     }
 }
-

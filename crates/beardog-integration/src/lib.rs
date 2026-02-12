@@ -208,9 +208,18 @@ impl BearDogIntegration {
             tokio::spawn(async move { api_server::start_api_server(api_config).await });
 
         // Wait for either task to complete (or fail)
-        let result = tokio::try_join!(async { heartbeat_handle.await.unwrap() }, async {
-            api_handle.await.unwrap()
-        },);
+        let result = tokio::try_join!(
+            async {
+                heartbeat_handle
+                    .await
+                    .map_err(|e| BearDogError::internal(format!("Heartbeat task panicked: {e}")))?
+            },
+            async {
+                api_handle
+                    .await
+                    .map_err(|e| BearDogError::internal(format!("API server task panicked: {e}")))?
+            },
+        );
 
         match result {
             Ok(_) => {

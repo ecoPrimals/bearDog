@@ -544,7 +544,7 @@ impl PrimalDiscovery {
     /// Integration requires:
     /// 1. Add `beardog-discovery` to beardog-core/Cargo.toml
     /// 2. Enable the `mdns` feature
-    /// 3. Convert between DiscoveredService and DiscoveredPrimal types
+    /// 3. Convert between `DiscoveredService` and `DiscoveredPrimal` types
     ///
     /// # Current Behavior
     ///

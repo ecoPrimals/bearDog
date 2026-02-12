@@ -256,22 +256,17 @@ pub struct KeyGenerationCapabilities {
 }
 
 /// Tamper resistance level
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum TamperResistanceLevel {
     /// No tamper resistance
     None,
     /// Software-based tamper detection
+    #[default]
     Software,
     /// Hardware-based tamper detection
     Hardware,
     /// Military-grade tamper resistance
     MilitaryGrade,
-}
-
-impl Default for TamperResistanceLevel {
-    fn default() -> Self {
-        Self::Software
-    }
 }
 
 #[cfg(test)]

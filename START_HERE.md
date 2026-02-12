@@ -1,8 +1,8 @@
-# BearDog -- Start Here
+# BearDog — Start Here
 
 BearDog is the cryptographic service provider for the ecoPrimals ecosystem. It provides secure crypto operations for all primals through the Tower Atomic Pattern via JSON-RPC over Unix sockets.
 
-**Status**: Production Ready | **Pure Rust**: 100% | **Tests**: 12,300+ passing
+**Status**: Production Ready | **Pure Rust**: 100% | **Tests**: 12,751+ passing
 
 ---
 
@@ -21,13 +21,13 @@ sudo apt-get install build-essential pkg-config
 ### 2. Build & Test
 
 ```bash
-cargo build --all-features --release
+cargo build --release
 cargo test --workspace
 ```
 
 ### 3. Run BearDog
 
-**Unix Socket (Linux/macOS -- default)**:
+**Unix Socket (Linux/macOS — default)**:
 
 ```bash
 cargo run --release --bin beardog -- server
@@ -102,6 +102,7 @@ BearDog exposes 91+ methods organized by domain:
 | `genetic.*` | `genetic.derive_lineage_key`, `genetic.mix_entropy` |
 | `secrets.*` | `secrets.store`, `secrets.retrieve`, `secrets.list`, `secrets.delete` |
 | `btsp.*` | `btsp.configure_tls`, `btsp.verify_peer` |
+| `quantum.*` | `quantum.generate_kem_keypair`, `quantum.sign`, `quantum.verify` |
 
 Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 
@@ -111,19 +112,20 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 
 ### Standards
 
-- **Pure Rust** -- No C dependencies
-- **Zero Hardcoding** -- Use environment variables for configuration
-- **Result<T, E>** -- No `unwrap()`/`expect()` in production code
-- **Serial Env Tests** -- Use `#[serial_test::serial]` for env var tests
-- **< 1000 LOC** -- File size discipline (exceptions justified)
+- **Pure Rust** — No C dependencies
+- **Zero Hardcoding** — Use environment variables for configuration
+- **Result<T, E>** — No `unwrap()`/`expect()` in production code
+- **Serial Env Tests** — Use `#[serial_test::serial]` for env var tests
+- **< 1000 LOC** — File size discipline (exceptions justified)
+- **Constant-Time** — Use `subtle` crate for secret comparisons
 
 ### Workflow
 
 ```bash
-cargo fmt                                              # Format
-cargo clippy --all-targets --all-features -- -D warnings  # Lint
-cargo test --workspace                                 # Test
-cargo build --all-features --release                   # Build
+cargo fmt --all                      # Format
+cargo clippy --workspace             # Lint (0 errors expected)
+cargo test --workspace               # Test (12,751+ tests)
+cargo build --release                # Build
 ```
 
 ### Environment Variables
@@ -136,6 +138,18 @@ cargo build --all-features --release                   # Build
 | `BEARDOG_SOCKET` | Socket path override | auto-detected |
 | `UPA_PROVIDER` | UPA provider primal | `songbird` |
 | `IPC_SOCKET` | IPC socket override | auto-detected |
+
+---
+
+## Quality Metrics
+
+| Metric | Value |
+|--------|-------|
+| Tests | 12,751+ passing |
+| Coverage | 78.6% |
+| Clippy | 0 errors |
+| Unsafe | 0 blocks |
+| Pure Rust | 100% |
 
 ---
 

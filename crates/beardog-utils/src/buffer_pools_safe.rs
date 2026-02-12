@@ -226,11 +226,11 @@ mod tests {
         let mut pool = SafeBufferPool::new(5);
 
         // Test all size class boundaries
-        let _ = pool.get_buffer(32);    // class: 64
-        let _ = pool.get_buffer(128);   // class: 256
-        let _ = pool.get_buffer(512);   // class: 1024
-        let _ = pool.get_buffer(2048);  // class: 4096
-        let _ = pool.get_buffer(8192);  // class: 16384
+        let _ = pool.get_buffer(32); // class: 64
+        let _ = pool.get_buffer(128); // class: 256
+        let _ = pool.get_buffer(512); // class: 1024
+        let _ = pool.get_buffer(2048); // class: 4096
+        let _ = pool.get_buffer(8192); // class: 16384
         let _ = pool.get_buffer(32768); // class: > 16384
 
         assert_eq!(pool.get_stats().buffers_allocated, 6);

@@ -92,7 +92,7 @@ pub async fn handle_derive_lineage_beacon_key(params: Value) -> Result<Value, Be
     hkdf.expand(domain, &mut okm)
         .map_err(|e| BearDogError::system(format!("HKDF beacon key derivation failed: {}", e)))?;
 
-    let beacon_key_hex = hex::encode(&okm);
+    let beacon_key_hex = hex::encode(okm);
 
     info!("✅ Derived BirdSong beacon key: 32 bytes (HKDF-SHA256, domain-separated)");
     debug!("   Domain: birdsong_beacon_v1, Deterministic: true, Algorithm: ChaCha20-Poly1305");

@@ -23,7 +23,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 - HSM abstraction (software, PKCS#11, StrongBox)
 - `once_cell` migrated to `std::sync::LazyLock`
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- 12,300+ tests across 30 crates
+- 12,751+ tests across 30 crates
 - Deep debt evolution (20/20 rounds)
 - Doc comments added (328 warnings resolved)
 - Smart refactoring of oversized files

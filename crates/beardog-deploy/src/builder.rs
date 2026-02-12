@@ -323,9 +323,7 @@ mod tests {
     #[test]
     fn test_configure_target_toolchain_armv7() {
         let path = std::path::Path::new("/fake/toolchain/bin");
-        assert!(
-            RustBuilder::configure_target_toolchain("armv7-linux-androideabi", path).is_ok()
-        );
+        assert!(RustBuilder::configure_target_toolchain("armv7-linux-androideabi", path).is_ok());
     }
 
     #[test]

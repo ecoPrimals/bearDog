@@ -144,7 +144,10 @@ mod hsm_config_tests {
     fn test_auth_method_variants() {
         let a = AuthMethod::None;
         let _ = format!("{a:?}");
-        let b = AuthMethod::Token { token_id: 1, pin: None };
+        let b = AuthMethod::Token {
+            token_id: 1,
+            pin: None,
+        };
         let _ = format!("{b:?}");
         let c = AuthMethod::Certificate {
             cert_path: "/tmp/cert".to_string(),
@@ -192,7 +195,9 @@ mod hsm_config_tests {
             LegacyHsmProviderType::Network,
             LegacyHsmProviderType::Cloud,
             LegacyHsmProviderType::Mobile,
-            LegacyHsmProviderType::Custom { name: "test".to_string() },
+            LegacyHsmProviderType::Custom {
+                name: "test".to_string(),
+            },
         ];
         for v in variants {
             let s = format!("{v}");

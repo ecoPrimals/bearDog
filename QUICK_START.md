@@ -1,106 +1,133 @@
-# 🚀 QUICK START - BearDog Server v0.15.0
+# BearDog Quick Start
 
-**Status**: ✅ READY TO RUN  
-**Location**: `/home/eastgate/Development/ecoPrimals/phase1/beardog`
+**Status**: Production Ready | **Tests**: 12,751+ | **Coverage**: 78.6%
 
 ---
 
-## 🎯 ONE COMMAND TO START
+## Prerequisites
 
 ```bash
-./start-beardog-server.sh
+# Rust 1.80+ required
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
-
-**Default**: Starts on `http://127.0.0.1:9000`
 
 ---
 
-## ✅ VERIFY IT'S RUNNING
+## Build
 
 ```bash
-curl http://127.0.0.1:9000/health
+cd /home/eastgate/Development/ecoPrimals/phase1/beardog
+cargo build --release
 ```
-
-Expected: `{"status":"healthy","version":"0.15.0",...}`
 
 ---
 
-## 🎵 TEST V2 API (SONGBIRD NEEDS THIS)
+## Run BearDog Server
+
+### Default (Unix Socket)
 
 ```bash
-# Encrypt
-curl -X POST http://127.0.0.1:9000/api/v2/birdsong/encrypt \
-  -H "Content-Type: application/json" \
-  -d '{"plaintext":"dGVzdA=="}'
-
-# Decrypt
-curl -X POST http://127.0.0.1:9000/api/v2/birdsong/decrypt \
-  -H "Content-Type: application/json" \
-  -d '{"ciphertext":"<from_above>"}'
+cargo run --release --bin beardog -- server
+# Socket: /run/user/$UID/beardog.sock (Linux)
+# Socket: /tmp/beardog.sock (macOS)
 ```
 
----
-
-## 🐦 START SONGBIRD
+### With Family Isolation
 
 ```bash
-cd /path/to/songbird
-SONGBIRD_BEARDOG_ENDPOINT="http://127.0.0.1:9000" cargo run
+# Family Alpha
+./target/release/beardog server --family-id alpha
+# Socket: beardog-alpha.sock
+
+# Family Bravo (fully isolated)
+./target/release/beardog server --family-id bravo
+# Socket: beardog-bravo.sock
 ```
 
----
+### TCP Transport (Android/Windows/Cross-Device)
 
-## 🎊 WHAT TO LOOK FOR
-
-### In BearDog Logs:
-```
-✅ HSM Manager initialized
-✅ Genetic Engine initialized
-🚀 BearDog Server Starting on 127.0.0.1:9000
-🎵 BirdSong v2 encrypt for family: ...
-✅ BirdSong v2 encrypted successfully
-```
-
-### In Songbird Logs:
-```
-✅ BearDog BirdSong provider initialized
-📡 Broadcasting encrypted discovery with genetic lineage
-🎵 Received encrypted discovery packet
-✅ Decrypted successfully - same family detected!
-🤝 Auto-trust: Limited trust granted based on lineage
-```
-
----
-
-## 🔧 CONFIGURATION
-
-### Custom Port:
 ```bash
-BEARDOG_BIND_ADDR="127.0.0.1:8080" ./start-beardog-server.sh
+./target/release/beardog server --listen 127.0.0.1:9900
 ```
 
-### Debug Logs:
+---
+
+## Test the API
+
+### Using Example Client
+
 ```bash
-RUST_LOG="debug" ./start-beardog-server.sh
+cargo run --release --example crypto_client
+```
+
+### Manual JSON-RPC (via socat)
+
+```bash
+# Check capabilities
+echo '{"jsonrpc":"2.0","method":"discover_capabilities","params":{},"id":1}' | \
+  socat - UNIX-CONNECT:/run/user/$UID/beardog.sock
+
+# Get primal info
+echo '{"jsonrpc":"2.0","method":"primal.info","params":{},"id":2}' | \
+  socat - UNIX-CONNECT:/run/user/$UID/beardog.sock
+
+# BLAKE3 hash
+echo '{"jsonrpc":"2.0","method":"crypto.blake3_hash","params":{"data":"dGVzdA=="},"id":3}' | \
+  socat - UNIX-CONNECT:/run/user/$UID/beardog.sock
 ```
 
 ---
 
-## 📚 FULL DOCUMENTATION
+## Verify
 
-- **`BEARDOG_SERVER_V2_API_READY.md`** - Complete guide
-- **`SOLUTION_COMPLETE_V2_API_READY.md`** - How we solved it
-- **`BEARDOG_V2_API_DEPLOYMENT_SUCCESS.md`** - Success details
+```bash
+# Run all tests
+cargo test --workspace
+
+# Run clippy (should be 0 errors)
+cargo clippy --workspace
+
+# Check format
+cargo fmt --all --check
+```
 
 ---
 
-## ✨ FILES
+## Environment Variables
 
-- **Binary**: `primalBins/beardog-server-v0.15.0-with-v2-api` (6.1MB)
-- **Startup**: `start-beardog-server.sh`
-- **Source**: `beardog-server.rs`
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `PRIMAL_NAME` | Primal identity | `beardog` |
+| `FAMILY_ID` | Family identifier | (none) |
+| `BEARDOG_SOCKET` | Socket path override | auto-detected |
+| `IPC_SOCKET` | IPC socket override | auto-detected |
+| `RUST_LOG` | Log level | `info` |
 
 ---
 
-**🎉 Ready for the first genetic federation! 🐻🐕🎵🐦**
+## JSON-RPC Methods (91+)
 
+```
+crypto.*       Hash, sign, verify, encrypt, decrypt
+tls.*          TLS 1.2/1.3 key derivation
+tor.*          Onion identity, ntor handshake
+genetic.*      Lineage keys, entropy mixing
+secrets.*      Encrypted secret storage
+beacon.*       Dark Forest discovery
+relay.*        Lineage-gated authorization
+```
+
+---
+
+## Next Steps
+
+| Document | Description |
+|----------|-------------|
+| [README.md](README.md) | Full project overview |
+| [STATUS.md](STATUS.md) | Current metrics |
+| [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture |
+| [ROADMAP.md](ROADMAP.md) | Priorities |
+
+---
+
+**BearDog**: 100% Pure Rust Cryptographic Service Provider

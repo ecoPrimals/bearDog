@@ -1,7 +1,7 @@
-# 🔧 Environment Variables Reference
+# Environment Variables Reference
 
-**Version**: 0.15.0  
-**Date**: January 6, 2026  
+**Version**: 0.9.0  
+**Date**: February 11, 2026  
 **Status**: ✅ Complete Reference
 
 ---
@@ -644,7 +644,7 @@ export BEARDOG_BIND_ADDR=0.0.0.0:9000
 
 ---
 
-_Last Updated: January 6, 2026_  
-_Version: 0.15.0_  
+_Last Updated: February 11, 2026_  
+_Version: 0.9.0_  
 _Status: Production Ready_
 

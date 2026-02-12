@@ -747,4 +747,3 @@ mod monitoring_mod_extra_tests {
         let _ = format!("{c:?}");
     }
 }
-

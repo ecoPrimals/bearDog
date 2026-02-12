@@ -19,6 +19,16 @@ mod production_monitoring_basic_tests;
     clippy::float_cmp
 )]
 mod coverage_gap_tests_1;
+mod coverage_gap_tests_10;
+mod coverage_gap_tests_11;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_tests_12;
 #[allow(
     unused_imports,
     clippy::module_inception,
@@ -76,13 +86,3 @@ mod coverage_gap_tests_7;
 )]
 mod coverage_gap_tests_8;
 mod coverage_gap_tests_9;
-mod coverage_gap_tests_10;
-mod coverage_gap_tests_11;
-#[allow(
-    unused_imports,
-    clippy::module_inception,
-    dead_code,
-    deprecated,
-    clippy::float_cmp
-)]
-mod coverage_gap_tests_12;

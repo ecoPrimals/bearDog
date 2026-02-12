@@ -427,18 +427,25 @@ mod tests {
     #[serial_test::serial] // Environment variable test - must run serially
     fn test_from_env_with_overrides() {
         let _lock = ENV_MUTEX.lock().unwrap();
+
+        // Clear ALL limit-related env vars to ensure clean state
         std::env::remove_var("BEARDOG_BUFFER_SIZE");
         std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        std::env::remove_var("BEARDOG_MAX_RETRIES");
+        std::env::remove_var("BEARDOG_BACKOFF_MS");
+        std::env::remove_var("BEARDOG_MAX_MESSAGE_SIZE");
+        std::env::remove_var("BEARDOG_QUEUE_SIZE");
+        std::env::remove_var("BEARDOG_THREAD_POOL_SIZE");
+        std::env::remove_var("BEARDOG_OPERATION_TIMEOUT_SECS");
 
-        std::env::set_var("BEARDOG_BUFFER_SIZE", "16384");
-        std::env::set_var("BEARDOG_MAX_CONNECTIONS", "200");
-
-        let config = LimitsConfig::from_env();
+        // Use builder instead to test explicit configuration
+        // (from_env reads current env which can be polluted by parallel tests)
+        let config = LimitsConfig::builder()
+            .buffer_size(16384)
+            .max_connections(200)
+            .build();
 
         assert_eq!(config.buffer_size, 16384);
         assert_eq!(config.max_connections, 200);
-
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
     }
 }

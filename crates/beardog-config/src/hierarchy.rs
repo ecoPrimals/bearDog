@@ -446,10 +446,7 @@ mod tests {
         args.insert("port".to_string(), "7777".to_string());
         args.insert("log-level".to_string(), "debug".to_string());
 
-        let config = ConfigHierarchy::new()
-            .with_cli_args(args)
-            .build()
-            .unwrap();
+        let config = ConfigHierarchy::new().with_cli_args(args).build().unwrap();
 
         assert_eq!(config.network.api.port, 7777);
         assert_eq!(config.monitoring.log_level, "debug");
@@ -483,7 +480,10 @@ mod tests {
             .with_cli_arg("config".to_string(), "/tmp/beardog/config.toml".to_string())
             .build()
             .unwrap();
-        assert_eq!(config.paths.config_dir, std::path::PathBuf::from("/tmp/beardog"));
+        assert_eq!(
+            config.paths.config_dir,
+            std::path::PathBuf::from("/tmp/beardog")
+        );
     }
 
     #[test]
@@ -505,10 +505,7 @@ mod tests {
     #[test]
     fn test_with_env_vars() {
         // Just test that it doesn't panic (env vars are unpredictable)
-        let config = ConfigHierarchy::new()
-            .with_env_vars()
-            .build()
-            .unwrap();
+        let config = ConfigHierarchy::new().with_env_vars().build().unwrap();
         assert!(config.network.api.port > 0);
     }
 
@@ -551,7 +548,10 @@ mod tests {
     #[test]
     fn test_apply_env_overrides_paths() {
         let mut env = HashMap::new();
-        env.insert("BEARDOG_CONFIG_DIR".to_string(), "/custom/config".to_string());
+        env.insert(
+            "BEARDOG_CONFIG_DIR".to_string(),
+            "/custom/config".to_string(),
+        );
         env.insert("BEARDOG_DATA_DIR".to_string(), "/custom/data".to_string());
         env.insert("BEARDOG_LOG_DIR".to_string(), "/custom/logs".to_string());
 

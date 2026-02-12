@@ -1042,11 +1042,7 @@ mod tests {
         let wf = ExampleWorkflow::new("svc-1", "Service Test");
         service.create_workflow(wf.clone()).await.unwrap();
 
-        let found = service
-            .repository()
-            .find_by_id(wf.id())
-            .await
-            .unwrap();
+        let found = service.repository().find_by_id(wf.id()).await.unwrap();
         assert!(found.is_some());
     }
 }

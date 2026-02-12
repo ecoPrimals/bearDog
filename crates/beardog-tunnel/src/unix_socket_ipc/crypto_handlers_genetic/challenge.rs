@@ -33,7 +33,7 @@ pub async fn handle_generate_challenge(params: Value) -> Result<Value, BearDogEr
     let mut nonce = [0u8; 32];
     use rand::RngCore;
     rand::thread_rng().fill_bytes(&mut nonce);
-    let nonce_hex = hex::encode(&nonce);
+    let nonce_hex = hex::encode(nonce);
 
     use uuid::Uuid;
     let challenge_id = Uuid::new_v4().to_string();
@@ -88,7 +88,7 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
         .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {}", e)))?;
     mac.update(&nonce_bytes);
     let response_bytes = mac.finalize().into_bytes();
-    let response_hex = hex::encode(&response_bytes);
+    let response_hex = hex::encode(response_bytes);
 
     let mut hasher = blake3::Hasher::new();
     hasher.update(&seed_bytes);

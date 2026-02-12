@@ -8,13 +8,16 @@ mod config_utils_tests {
 
     #[test]
     fn test_unified_config_utils_load_from_file_nonexistent() {
-        let result = UnifiedConfigUtils::load_from_file::<serde_json::Value, _>("/nonexistent/path.toml");
+        let result =
+            UnifiedConfigUtils::load_from_file::<serde_json::Value, _>("/nonexistent/path.toml");
         assert!(result.is_err());
     }
 
     #[test]
     fn test_unified_config_utils_validate_config_file_nonexistent() {
-        assert!(!UnifiedConfigUtils::validate_config_file("/nonexistent/path.toml"));
+        assert!(!UnifiedConfigUtils::validate_config_file(
+            "/nonexistent/path.toml"
+        ));
     }
 
     #[test]
@@ -31,7 +34,8 @@ mod config_utils_tests {
 
     #[test]
     fn test_unified_config_utils_auto_load_config_missing() {
-        let result = UnifiedConfigUtils::auto_load_config::<serde_json::Value>("beardog-nonexistent-test");
+        let result =
+            UnifiedConfigUtils::auto_load_config::<serde_json::Value>("beardog-nonexistent-test");
         assert!(result.is_err());
     }
 
@@ -77,21 +81,24 @@ mod config_utils_tests {
     #[test]
     fn test_unified_config_utils_get_shared_config() {
         UnifiedConfigUtils::clear_shared_configs();
-        let v: std::sync::Arc<String> = UnifiedConfigUtils::get_shared_config("test_key_6", || "test_val".to_string());
+        let v: std::sync::Arc<String> =
+            UnifiedConfigUtils::get_shared_config("test_key_6", || "test_val".to_string());
         assert_eq!(*v, "test_val");
         UnifiedConfigUtils::remove_shared_config("test_key_6");
     }
 
     #[test]
     fn test_unified_config_utils_remove_shared_config() {
-        let _: std::sync::Arc<String> = UnifiedConfigUtils::get_shared_config("rm_test_6", || "v".to_string());
+        let _: std::sync::Arc<String> =
+            UnifiedConfigUtils::get_shared_config("rm_test_6", || "v".to_string());
         assert!(UnifiedConfigUtils::remove_shared_config("rm_test_6"));
         assert!(!UnifiedConfigUtils::remove_shared_config("rm_test_6"));
     }
 
     #[test]
     fn test_unified_config_utils_clear_shared_configs() {
-        let _: std::sync::Arc<String> = UnifiedConfigUtils::get_shared_config("clear_test_6", || "v".to_string());
+        let _: std::sync::Arc<String> =
+            UnifiedConfigUtils::get_shared_config("clear_test_6", || "v".to_string());
         UnifiedConfigUtils::clear_shared_configs();
         let stats = UnifiedConfigUtils::get_shared_config_stats();
         assert_eq!(stats.active_configs, 0);
@@ -184,9 +191,9 @@ mod resilience_from_env_tests {
 // canonical/providers_unified/migration.rs - 129 uncov (0% coverage)
 // ===========================================================================
 mod providers_migration_tests {
+    use crate::canonical::providers_unified::core::ProviderType;
     use crate::canonical::providers_unified::migration::*;
     use crate::canonical::providers_unified::CanonicalProviderConfig;
-    use crate::canonical::providers_unified::core::ProviderType;
 
     #[test]
     fn test_migrate_from_legacy() {

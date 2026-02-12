@@ -711,7 +711,10 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
-            ConstraintViolationError::UseCountExceeded { max_uses: 100, current_uses: 100 }
+            ConstraintViolationError::UseCountExceeded {
+                max_uses: 100,
+                current_uses: 100
+            }
         ));
     }
 

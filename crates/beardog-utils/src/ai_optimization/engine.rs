@@ -685,10 +685,7 @@ mod tests {
         let engine = make_engine();
 
         // Step 1: collect a sample
-        let sample = engine
-            .collect_performance_sample()
-            .await
-            .expect("sample");
+        let sample = engine.collect_performance_sample().await.expect("sample");
 
         // Step 2: update models
         engine.update_models(&sample).await.expect("update");

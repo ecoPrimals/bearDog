@@ -11,7 +11,6 @@ use std::collections::HashMap;
 // ═══════════════════════════════════════════════════════════════════
 
 mod genesis_types_tests {
-    use super::*;
     use crate::birdsong::genesis_types::*;
     use ed25519_dalek::{Signer, SigningKey};
 
@@ -19,8 +18,7 @@ mod genesis_types_tests {
         let signing_key = SigningKey::from_bytes(&[42u8; 32]);
         let public_key = signing_key.verifying_key().to_bytes().to_vec();
         let timestamp = 1735000000u64;
-        let message =
-            GenesisWitness::create_signing_message(new_node_id, timestamp, &public_key);
+        let message = GenesisWitness::create_signing_message(new_node_id, timestamp, &public_key);
         let signature = signing_key.sign(&message).to_bytes().to_vec();
 
         GenesisWitness {
@@ -69,10 +67,7 @@ mod genesis_types_tests {
         }
     }
 
-    fn make_test_lineage(
-        node_id: &str,
-        trust: TrustLevel,
-    ) -> GeneticLineage {
+    fn make_test_lineage(node_id: &str, trust: TrustLevel) -> GeneticLineage {
         use crate::birdsong::types::LineageMetadata;
         use crate::birdsong::{LineageChain, LineageNode};
 
@@ -1051,7 +1046,10 @@ mod evolution_tests {
         engine.record_operation(&op);
 
         assert_eq!(engine.usage_stats().total_operations, 1);
-        assert!(engine.usage_stats().domains_accessed.contains_key("climate"));
+        assert!(engine
+            .usage_stats()
+            .domains_accessed
+            .contains_key("climate"));
         assert!(engine.usage_stats().first_operation.is_some());
         assert!(engine.usage_stats().last_operation.is_some());
     }
@@ -1394,9 +1392,7 @@ mod engine_tests {
     fn test_initialize_and_shutdown() {
         let mut manager = EntropyHierarchyManager::default();
         let entropy = make_human_entropy();
-        manager
-            .create_human_seed(entropy, vec![1, 2, 3])
-            .unwrap();
+        manager.create_human_seed(entropy, vec![1, 2, 3]).unwrap();
 
         assert!(manager.initialize().is_ok());
         assert_eq!(manager.active_seeds.len(), 1);
@@ -2036,10 +2032,7 @@ mod types_tests {
             OperationType::Decrypt
         );
         assert_eq!(
-            KeyOperation::Encrypt {
-                recipients: vec![]
-            }
-            .operation_type(),
+            KeyOperation::Encrypt { recipients: vec![] }.operation_type(),
             OperationType::Encrypt
         );
         assert_eq!(

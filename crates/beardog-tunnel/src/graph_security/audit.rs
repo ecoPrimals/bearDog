@@ -179,7 +179,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
 
             // Verify signature using Ed25519
             // Note: Public key retrieval pending CollaborationService integration
-            if let Some(public_key_b64) = version.created_by.as_ref().and_then(|_| {
+            if let Some(public_key_b64) = version.created_by.as_ref().and({
                 // TODO: Replace with actual public key from CollaborationService
                 // For now, we validate the signature format is correct
                 None::<String>

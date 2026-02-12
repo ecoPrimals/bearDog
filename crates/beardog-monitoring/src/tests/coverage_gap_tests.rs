@@ -131,8 +131,7 @@ fn test_anomaly_detector_detects_anomaly() {
     };
     let detector = AnomalyDetector::new(config);
 
-    let mut metrics: Vec<MetricDataPoint> =
-        (0..5).map(|_| make_data_point(10.0)).collect();
+    let mut metrics: Vec<MetricDataPoint> = (0..5).map(|_| make_data_point(10.0)).collect();
     // Add anomalous value far above threshold
     metrics.push(make_data_point(100.0));
 
@@ -151,8 +150,7 @@ fn test_anomaly_detector_no_anomalies() {
     };
     let detector = AnomalyDetector::new(config);
 
-    let metrics: Vec<MetricDataPoint> =
-        (0..5).map(|_| make_data_point(10.0)).collect();
+    let metrics: Vec<MetricDataPoint> = (0..5).map(|_| make_data_point(10.0)).collect();
     let anomalies = detector.detect_anomalies(&metrics);
     assert!(anomalies.is_empty());
 }
@@ -174,9 +172,7 @@ fn test_trend_analyzer_increasing_trend() {
     let config = TrendConfig::default();
     let analyzer = TrendAnalyzer::new(config);
 
-    let metrics: Vec<MetricDataPoint> = (0..10)
-        .map(|i| make_data_point(i as f64 * 10.0))
-        .collect();
+    let metrics: Vec<MetricDataPoint> = (0..10).map(|i| make_data_point(i as f64 * 10.0)).collect();
 
     let trend = analyzer.analyze_trends(&metrics);
     assert_eq!(trend.direction, TrendDirection::Increasing);
@@ -202,8 +198,7 @@ fn test_trend_analyzer_stable_trend() {
     let config = TrendConfig::default();
     let analyzer = TrendAnalyzer::new(config);
 
-    let metrics: Vec<MetricDataPoint> =
-        (0..5).map(|_| make_data_point(50.0)).collect();
+    let metrics: Vec<MetricDataPoint> = (0..5).map(|_| make_data_point(50.0)).collect();
 
     let trend = analyzer.analyze_trends(&metrics);
     assert_eq!(trend.direction, TrendDirection::Stable);
@@ -214,9 +209,7 @@ fn test_trend_analyzer_more_than_10_points_uses_last_10() {
     let config = TrendConfig::default();
     let analyzer = TrendAnalyzer::new(config);
 
-    let metrics: Vec<MetricDataPoint> = (0..20)
-        .map(|i| make_data_point(i as f64 * 5.0))
-        .collect();
+    let metrics: Vec<MetricDataPoint> = (0..20).map(|i| make_data_point(i as f64 * 5.0)).collect();
 
     let trend = analyzer.analyze_trends(&metrics);
     assert_eq!(trend.direction, TrendDirection::Increasing);
@@ -516,7 +509,10 @@ fn test_system_health() {
 async fn test_metrics_collector_record_all_types() {
     let collector = MetricsCollector::new();
 
-    collector.record_counter("requests", 100).await.expect("counter");
+    collector
+        .record_counter("requests", 100)
+        .await
+        .expect("counter");
     collector.record_gauge("cpu", 75.5).await.expect("gauge");
     collector
         .record_histogram("latency", vec![1.0, 2.0, 3.0])

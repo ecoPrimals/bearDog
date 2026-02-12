@@ -1,13 +1,13 @@
 # BearDog
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](STATUS.md)
-[![Tests](https://img.shields.io/badge/tests-12300+-brightgreen.svg)](STATUS.md)
+[![Tests](https://img.shields.io/badge/tests-12,751+-brightgreen.svg)](STATUS.md)
 [![Coverage](https://img.shields.io/badge/coverage-78.6%25-yellow.svg)](STATUS.md)
 [![Pure Rust](https://img.shields.io/badge/rust-100%25_pure-orange.svg)](STATUS.md)
 
-**BearDog** is the cryptographic service provider for the ecoPrimals ecosystem -- a **100% Pure Rust** security platform with zero C dependencies.
+**BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Crates**: 30 | **Tests**: 12,300+
+**Status**: Production Ready | **Crates**: 30 | **Tests**: 12,751+
 
 ---
 
@@ -25,15 +25,16 @@ BearDog provides secure cryptographic operations for all primals through the **T
 
 ### Key Features
 
-- **100% Pure Rust** -- Zero C dependencies (RustCrypto suite)
-- **91+ Crypto Methods** -- Complete JSON-RPC API
-- **Tor v3 Support** -- Onion address derivation + ntor handshake + cell crypto
-- **Multi-Family Support** -- `--family-id` flag for per-family instances
-- **Secret Storage** -- Encrypted secrets with family-scoped keys
-- **Relay Authorization** -- Lineage-gated access for relay-assisted coordinated punch
-- **Universal IPC** -- Multi-transport, platform-agnostic
-- **HSM Integration** -- Hardware, software, mobile backends
-- **Dark Forest Beacon** -- Zero metadata leakage discovery
+- **100% Pure Rust** — Zero C dependencies (RustCrypto suite)
+- **91+ Crypto Methods** — Complete JSON-RPC API
+- **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
+- **Multi-Family Support** — `--family-id` flag for per-family instances
+- **Secret Storage** — Encrypted secrets with family-scoped keys
+- **Relay Authorization** — Lineage-gated access for relay-assisted coordinated punch
+- **Universal IPC** — Multi-transport, platform-agnostic
+- **HSM Integration** — Hardware, software, mobile backends
+- **Dark Forest Beacon** — Zero metadata leakage discovery
+- **Quantum-Resistant** — Post-quantum crypto module (ML-KEM, ML-DSA, SPHINCS+)
 
 ---
 
@@ -58,7 +59,7 @@ cargo test --workspace
 ### Run
 
 ```bash
-# Default -- auto-detects platform transport
+# Default — auto-detects platform transport
 cargo run --release --bin beardog -- server
 
 # With family isolation (multi-family architecture)
@@ -102,6 +103,7 @@ BearDog auto-detects the platform and binds appropriate transports.
 | **Passwords** | Argon2id, bcrypt, scrypt |
 | **Tor** | Onion address, ntor handshake, cell crypto |
 | **Secrets** | Encrypted storage with family-scoped keys |
+| **Post-Quantum** | Kyber (ML-KEM), Dilithium (ML-DSA), SPHINCS+ |
 
 ### JSON-RPC Method Categories
 
@@ -114,6 +116,7 @@ secrets.*      - Store, retrieve, list, delete encrypted secrets
 relay.*        - Lineage-gated relay authorization (coordinated punch)
 beacon.*       - Dark Forest beacon generation, encryption, meeting exchange
 btsp.*         - Secure tunnel configuration
+quantum.*      - Post-quantum cryptographic operations
 ```
 
 ### Introspection
@@ -132,10 +135,10 @@ rpc.methods            - List all available methods
 
 All primals delegate cryptographic operations to BearDog via JSON-RPC:
 
-- **Separation of Concerns** -- Protocol logic stays in primals, crypto stays in BearDog
-- **Single Audit Surface** -- One codebase to review for crypto correctness
-- **HSM Abstraction** -- Software, hardware (PKCS#11), or mobile (StrongBox) backends
-- **Family Isolation** -- Each family gets its own BearDog instance with independently derived keys
+- **Separation of Concerns** — Protocol logic stays in primals, crypto stays in BearDog
+- **Single Audit Surface** — One codebase to review for crypto correctness
+- **HSM Abstraction** — Software, hardware (PKCS#11), or mobile (StrongBox) backends
+- **Family Isolation** — Each family gets its own BearDog instance with independently derived keys
 
 ### Multi-Family Architecture
 
@@ -156,19 +159,20 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Tests** | 12,300+ passing (30 crates) |
+| **Tests** | 12,751+ passing (30 crates) |
 | **Coverage** | 78.6% line coverage (llvm-cov) |
-| **Pure Rust** | 100% -- zero C dependencies |
+| **Pure Rust** | 100% — zero C dependencies |
 | **Unsafe Code** | 0 production blocks |
-| **Production panics** | 0 -- all `Result<T, E>` |
+| **Clippy** | 0 errors (pedantic level) |
+| **Production panics** | 0 — all `Result<T, E>` |
 
 ### Standards
 
-- **Pure Rust** -- No C dependencies anywhere
-- **Zero Hardcoding** -- Environment variables and capability discovery
-- **Result<T, E>** -- No `unwrap()`/`expect()` in production code
-- **< 1000 LOC** -- File size discipline (exceptions justified)
-- **std over external** -- `std::sync::LazyLock` over `once_cell`, etc.
+- **Pure Rust** — No C dependencies anywhere
+- **Zero Hardcoding** — Environment variables and capability discovery
+- **Result<T, E>** — No `unwrap()`/`expect()` in production code
+- **< 1000 LOC** — File size discipline (exceptions justified)
+- **std over external** — `std::sync::LazyLock` over `once_cell`, etc.
 
 ---
 
@@ -186,7 +190,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 
 ## License
 
-See [LICENSE](LICENSE) file.
+AGPL-3.0-only — See [LICENSE](LICENSE) file.
 
 ---
 

@@ -97,11 +97,7 @@ impl SecureTunnelProvider for BeardogBtspProvider {
             }
         }
 
-        debug!(
-            "🔒 Encrypted {} bytes for tunnel {}",
-            data.len(),
-            handle.id
-        );
+        debug!("🔒 Encrypted {} bytes for tunnel {}", data.len(), handle.id);
 
         Ok(ciphertext)
     }

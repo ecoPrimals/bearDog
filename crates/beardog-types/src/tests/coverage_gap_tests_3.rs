@@ -48,7 +48,9 @@ mod config_trait_tests {
 
     #[test]
     fn test_config_loader_from_env_with_prefix() {
-        let result = ConfigLoader::from_env_with_prefix::<crate::canonical::config::domains::monitoring_config::ConsolidatedMonitoringConfig>("TEST");
+        let result = ConfigLoader::from_env_with_prefix::<
+            crate::canonical::config::domains::monitoring_config::ConsolidatedMonitoringConfig,
+        >("TEST");
         // May or may not succeed
         let _ = result;
     }
@@ -82,7 +84,8 @@ mod config_trait_tests {
             Duration::from_secs(1),
             Duration::from_secs(10),
             "test"
-        ).is_ok());
+        )
+        .is_ok());
     }
 
     #[test]
@@ -143,7 +146,9 @@ mod config_utils_tests {
     #[test]
     fn test_validate_config_file() {
         // Nonexistent file should return false
-        assert!(!UnifiedConfigUtils::validate_config_file("/tmp/nonexistent_config_xyz.toml"));
+        assert!(!UnifiedConfigUtils::validate_config_file(
+            "/tmp/nonexistent_config_xyz.toml"
+        ));
     }
 
     #[test]
@@ -181,8 +186,18 @@ mod service_discovery_tests {
     #[test]
     fn test_service_health_variants() {
         let _ = format!("{:?}", ServiceHealth::Healthy);
-        let _ = format!("{:?}", ServiceHealth::Degraded { reason: "degraded".to_string() });
-        let _ = format!("{:?}", ServiceHealth::Unhealthy { reason: "down".to_string() });
+        let _ = format!(
+            "{:?}",
+            ServiceHealth::Degraded {
+                reason: "degraded".to_string()
+            }
+        );
+        let _ = format!(
+            "{:?}",
+            ServiceHealth::Unhealthy {
+                reason: "down".to_string()
+            }
+        );
         let _ = format!("{:?}", ServiceHealth::Unknown);
     }
 
